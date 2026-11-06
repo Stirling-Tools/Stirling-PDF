@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -41,7 +42,9 @@ import io.github.pixee.security.Filenames;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AttachmentInfo;
+import stirling.software.common.model.api.misc.AttachmentPinSpec;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.PdfAttachmentPinUtils;
 
 @Slf4j
 @Service
@@ -270,6 +273,7 @@ public class AttachmentService implements AttachmentServiceInterface {
 
         Map<String, PDComplexFileSpecification> embeddedFiles = new LinkedHashMap<>();
         collectEmbeddedFiles(embeddedFilesTree, embeddedFiles);
+        Map<String, AttachmentPinSpec> pins = PdfAttachmentPinUtils.findPins(document);
 
         for (Map.Entry<String, PDComplexFileSpecification> entry : embeddedFiles.entrySet()) {
             PDComplexFileSpecification fileSpecification = entry.getValue();
@@ -299,6 +303,12 @@ public class AttachmentService implements AttachmentServiceInterface {
                                 description,
                                 creationDate,
                                 modificationDate);
+                AttachmentPinSpec pin = pins.get(filename.toLowerCase(Locale.ROOT));
+                if (pin != null) {
+                    attachmentInfo.setPinPageIndex(pin.pageIndex());
+                    attachmentInfo.setPinX(pin.x());
+                    attachmentInfo.setPinY(pin.y());
+                }
 
                 attachments.add(attachmentInfo);
             }

@@ -6,6 +6,7 @@ import {
   extractAttachments as apiExtractAttachments,
   extractSingleAttachment as apiExtractSingleAttachment,
   parseBlobError,
+  type AttachmentPin,
 } from "@editor/services/attachmentService";
 import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
 
@@ -21,6 +22,8 @@ export interface DraftAttachmentRow {
   file?: File;
   /** Fetch generation this row was staged in, so a late list response can keep it. */
   stagedGen?: number;
+  /** Clickable page pin that opens this attachment. */
+  pin?: AttachmentPin;
 }
 
 interface UseAttachmentManagerOptions {
@@ -59,6 +62,10 @@ export function useAttachmentManager({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [placingPinId, setPlacingPinId] = useState<string | null>(null);
+  /** Row ids whose saved pin should be removed; names resolve at save time. */
+  const [pinRemovalRowIds, setPinRemovalRowIds] = useState<string[]>([]);
+  const [pinDirty, setPinDirty] = useState<boolean>(false);
 
   // Generation counter to prevent race conditions on fast file switches
   const genRef = useRef<number>(0);
@@ -76,6 +83,9 @@ export function useAttachmentManager({
     : "";
 
   const fetchAttachmentsForFile = useCallback(async (file: File | null) => {
+    setPlacingPinId(null);
+    setPinRemovalRowIds([]);
+    setPinDirty(false);
     if (!file) {
       setRows([]);
       return;
@@ -92,6 +102,14 @@ export function useAttachmentManager({
         size: att.size,
         contentType: att.contentType,
         kind: "existing",
+        pin:
+          att.pinPageIndex != null && att.pinX != null && att.pinY != null
+            ? {
+                pageIndex: att.pinPageIndex,
+                x: att.pinX,
+                y: att.pinY,
+              }
+            : undefined,
       }));
       // A user can pick files while the list request is in flight; keep the
       // rows staged for this generation instead of dropping them on the floor.
@@ -237,6 +255,53 @@ export function useAttachmentManager({
     [onError, t],
   );
 
+  const startPinPlacement = useCallback((id: string) => {
+    setPlacingPinId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const cancelPinPlacement = useCallback(() => {
+    setPlacingPinId(null);
+  }, []);
+
+  const placePin = useCallback(
+    (pageIndex: number, x: number, y: number) => {
+      const target = rows.find((row) => row.id === placingPinId);
+      if (!target) {
+        setPlacingPinId(null);
+        return;
+      }
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === target.id ? { ...row, pin: { pageIndex, x, y } } : row,
+        ),
+      );
+      setPinRemovalRowIds((prev) => prev.filter((id) => id !== target.id));
+      setPinDirty(true);
+      setPlacingPinId(null);
+    },
+    [placingPinId, rows],
+  );
+
+  /** Remove a pin; existing attachments queue a server-side removal. */
+  const clearPin = useCallback(
+    (id: string) => {
+      const target = rows.find((row) => row.id === id);
+      if (!target?.pin) {
+        return;
+      }
+      if (target.kind !== "staged") {
+        setPinRemovalRowIds((prev) =>
+          prev.includes(id) ? prev : [...prev, id],
+        );
+      }
+      setRows((prev) =>
+        prev.map((row) => (row.id === id ? { ...row, pin: undefined } : row)),
+      );
+      setPinDirty(true);
+    },
+    [rows],
+  );
+
   const extractAllZip = useCallback(async () => {
     if (!activeFile) return;
     setActiveAction("extractAll");
@@ -271,8 +336,17 @@ export function useAttachmentManager({
   );
 
   const pendingChangesCount = useMemo(() => {
-    return rows.filter((r) => r.kind !== "existing").length;
-  }, [rows]);
+    const rowChanges = rows.filter((r) => r.kind !== "existing").length;
+    // A pin placed on a staged or renamed row is part of that row's change;
+    // only a pin edit on an otherwise untouched row adds another count.
+    const pinChange =
+      pinDirty &&
+      (pinRemovalRowIds.length > 0 ||
+        rows.some((r) => r.kind === "existing" && r.pin))
+        ? 1
+        : 0;
+    return rowChanges + pinChange;
+  }, [rows, pinDirty, pinRemovalRowIds]);
 
   const hasChanges = pendingChangesCount > 0;
 
@@ -296,10 +370,28 @@ export function useAttachmentManager({
           .filter((r) => r.kind === "staged" && r.file)
           .map((r) => r.file as File);
 
+        const pins = rows
+          .filter((r) => r.kind !== "deleted" && r.pin)
+          .map((r) => ({
+            filename: r.name,
+            pageIndex: r.pin!.pageIndex,
+            x: r.pin!.x,
+            y: r.pin!.y,
+          }));
+
+        // Resolve at save time: renamed rows use their new name, deleted rows
+        // use the name the server still has on disk.
+        const pinRemovals = pinRemovalRowIds
+          .map((id) => rows.find((row) => row.id === id))
+          .filter((row): row is DraftAttachmentRow => row !== undefined)
+          .map((row) => (row.kind === "deleted" ? row.originalName : row.name));
+
         const updatedBlob = await applyBatchAttachmentOps(activeFile, {
           renames,
           deletions,
           additions,
+          pins,
+          pinRemovals,
           convertToPdfA3b,
         });
 
@@ -317,8 +409,19 @@ export function useAttachmentManager({
           size: att.size,
           contentType: att.contentType,
           kind: "existing",
+          pin:
+            att.pinPageIndex != null && att.pinX != null && att.pinY != null
+              ? {
+                  pageIndex: att.pinPageIndex,
+                  x: att.pinX,
+                  y: att.pinY,
+                }
+              : undefined,
         }));
         setRows(freshRows);
+        setPinRemovalRowIds([]);
+        setPinDirty(false);
+        setPlacingPinId(null);
 
         if (onFileUpdated) {
           skipNextFetchRef.current = true;
@@ -341,7 +444,7 @@ export function useAttachmentManager({
         }
       }
     },
-    [activeFile, rows, onFileUpdated, onError],
+    [activeFile, rows, pinRemovalRowIds, onFileUpdated, onError],
   );
 
   const discardDraft = useCallback(() => {
@@ -355,12 +458,17 @@ export function useAttachmentManager({
     isLoading,
     isSaving,
     activeAction,
+    placingPinId,
     stageFiles,
     toggleDeleteRow,
     restoreRow,
     renameRow,
     extractAllZip,
     extractSingle,
+    startPinPlacement,
+    cancelPinPlacement,
+    placePin,
+    clearPin,
     saveDraft,
     discardDraft,
   };

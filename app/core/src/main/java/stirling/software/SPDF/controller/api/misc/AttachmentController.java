@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.pdfbox.Loader;
@@ -33,11 +35,13 @@ import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.api.misc.AttachmentPinSpec;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfAttachmentPinUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -368,6 +372,10 @@ public class AttachmentController {
                             try {
                                 pdfAttachmentService.renameAttachment(
                                         document, renameOp.getOldName(), renameOp.getNewName());
+                                // Remove the existing pin after the successful rename.
+                                PdfAttachmentPinUtils.removePins(
+                                        document,
+                                        List.of(renameOp.getOldName(), renameOp.getNewName()));
                             } catch (IOException | RuntimeException e) {
                                 log.warn(
                                         "Batch rename from '{}' to '{}' skipped: {}",
@@ -384,6 +392,14 @@ public class AttachmentController {
                 pdfAttachmentService.addAttachment(document, additions);
             }
 
+            if (!convertToPdfA3b && opsData != null) {
+                if (opsData.getDeletions() != null) {
+                    PdfAttachmentPinUtils.removePins(document, opsData.getDeletions());
+                }
+                PdfAttachmentPinUtils.applyPins(
+                        document, opsData.getPins(), opsData.getPinRemovals());
+            }
+
             String originalFileName =
                     Filenames.toSimpleFileName(sourceFileName(fileInput, request.getFileId()));
             if (originalFileName == null || originalFileName.isEmpty()) {
@@ -395,10 +411,33 @@ public class AttachmentController {
                             : originalFileName;
 
             if (convertToPdfA3b) {
+                Map<String, AttachmentPinSpec> preservedPins =
+                        PdfAttachmentPinUtils.findPins(document);
                 byte[] pdfaBytes = convertPDFToPDFA.convertPDDocumentToPDFA(document, "pdfa-3b");
                 try (PDDocument pdfaDocument = Loader.loadPDF(pdfaBytes)) {
                     convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
                     ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
+                    // Ghostscript strips page annotations during PDF/A conversion,
+                    // so reapply preserved and requested pins to the converted
+                    // document or the attachment links disappear from the output.
+                    List<String> removals = new ArrayList<>();
+                    List<AttachmentPinSpec> requestedPins = new ArrayList<>();
+                    if (opsData != null) {
+                        if (opsData.getDeletions() != null) {
+                            removals.addAll(opsData.getDeletions());
+                        }
+                        if (opsData.getPinRemovals() != null) {
+                            removals.addAll(opsData.getPinRemovals());
+                        }
+                        if (opsData.getPins() != null) {
+                            requestedPins.addAll(opsData.getPins());
+                        }
+                    }
+
+                    List<AttachmentPinSpec> pinsToApply =
+                            PdfAttachmentPinUtils.mergePins(
+                                    preservedPins.values(), requestedPins, removals);
+                    PdfAttachmentPinUtils.applyPins(pdfaDocument, pinsToApply, removals, true);
                     String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
                     return WebResponseUtils.pdfDocToWebResponse(
                             pdfaDocument, outputFilename, tempFileManager);
@@ -419,6 +458,8 @@ public class AttachmentController {
     public static class BatchOpsData {
         private List<RenameOp> renames;
         private List<String> deletions;
+        private List<AttachmentPinSpec> pins;
+        private List<String> pinRemovals;
     }
 
     @Data

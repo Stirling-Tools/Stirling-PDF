@@ -1,6 +1,7 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useAttachmentManager } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
+import { applyBatchAttachmentOps } from "@editor/services/attachmentService";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -74,6 +75,65 @@ describe("useAttachmentManager", () => {
       name: "evidence.pdf",
     });
     expect(result.current.hasChanges).toBe(true);
+  });
+
+  test("places a pin and sends it with the batch save", async () => {
+    listAttachments.mockResolvedValue([
+      {
+        filename: "existing.pdf",
+        size: 12,
+        contentType: "application/pdf",
+        pinPageIndex: 0,
+        pinX: 0.2,
+        pinY: 0.8,
+      },
+    ]);
+    vi.mocked(applyBatchAttachmentOps).mockResolvedValue(new Blob(["pdf"]));
+
+    const activeFile = pdfFile("document.pdf");
+    const { result } = renderHook(() => useAttachmentManager({ activeFile }));
+
+    await waitFor(() => {
+      expect(result.current.rows).toHaveLength(1);
+    });
+    expect(result.current.rows[0].pin).toEqual({
+      pageIndex: 0,
+      x: 0.2,
+      y: 0.8,
+    });
+
+    act(() => {
+      result.current.startPinPlacement(result.current.rows[0].id);
+    });
+    act(() => {
+      result.current.placePin(1, 0.4, 0.6);
+    });
+
+    expect(result.current.rows[0].pin).toEqual({
+      pageIndex: 1,
+      x: 0.4,
+      y: 0.6,
+    });
+    expect(result.current.hasChanges).toBe(true);
+
+    await act(async () => {
+      await result.current.saveDraft();
+    });
+
+    expect(applyBatchAttachmentOps).toHaveBeenCalledWith(
+      activeFile,
+      expect.objectContaining({
+        pins: [
+          {
+            filename: "existing.pdf",
+            pageIndex: 1,
+            x: 0.4,
+            y: 0.6,
+          },
+        ],
+        pinRemovals: [],
+      }),
+    );
   });
 
   test("drops rows staged for the previous file when the next list lands", async () => {

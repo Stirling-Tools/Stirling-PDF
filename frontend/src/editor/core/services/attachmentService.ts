@@ -2,6 +2,14 @@ import apiClient from "@editor/services/apiClient";
 import axios from "axios";
 import JSZip from "jszip";
 
+export interface AttachmentPin {
+  pageIndex: number;
+  /** Normalized horizontal position across the displayed page. */
+  x: number;
+  /** Normalized vertical position down the displayed page. */
+  y: number;
+}
+
 export interface AttachmentInfo {
   filename: string;
   size?: number;
@@ -9,6 +17,9 @@ export interface AttachmentInfo {
   description?: string;
   creationDate?: string;
   modificationDate?: string;
+  pinPageIndex?: number;
+  pinX?: number;
+  pinY?: number;
 }
 
 /**
@@ -220,18 +231,24 @@ export async function applyBatchAttachmentOps(
     renames: { oldName: string; newName: string }[];
     deletions: string[];
     additions: File[];
+    pins?: Array<AttachmentPin & { filename: string }>;
+    pinRemovals?: string[];
     convertToPdfA3b?: boolean;
   },
 ): Promise<Blob> {
   const formData = new FormData();
   formData.append("fileInput", fileInput);
-  formData.append(
-    "opsJson",
-    JSON.stringify({
-      renames: ops.renames,
-      deletions: ops.deletions,
-    }),
-  );
+  const opsJson: Record<string, unknown> = {
+    renames: ops.renames,
+    deletions: ops.deletions,
+  };
+  if (ops.pins?.length) {
+    opsJson.pins = ops.pins;
+  }
+  if (ops.pinRemovals?.length) {
+    opsJson.pinRemovals = ops.pinRemovals;
+  }
+  formData.append("opsJson", JSON.stringify(opsJson));
   ops.additions.forEach((att) => {
     formData.append("attachments", att);
   });
@@ -250,6 +267,11 @@ export async function applyBatchAttachmentOps(
     const status = axios.isAxiosError(err) ? err.response?.status : undefined;
     if (status !== 404 && status !== 501) {
       throw err;
+    }
+    if (ops.pins?.length || ops.pinRemovals?.length) {
+      throw new Error("Attachment pins require server-side batch processing.", {
+        cause: err,
+      });
     }
     // Client-side sequential fallback if running against legacy server
     let currentFile: File = fileInput;

@@ -99,6 +99,24 @@ describe("attachmentService CRUD", () => {
     );
   });
 
+  it("includes attachment pins in the batch payload", async () => {
+    post.mockResolvedValue(blobResponse());
+    await applyBatchAttachmentOps(pdfFile(), {
+      renames: [],
+      deletions: [],
+      additions: [],
+      pins: [{ filename: "a.txt", pageIndex: 2, x: 0.25, y: 0.75 }],
+      pinRemovals: ["b.txt"],
+    });
+    const formData = post.mock.calls[0][1] as FormData;
+    expect(JSON.parse(formData.get("opsJson") as string)).toEqual({
+      renames: [],
+      deletions: [],
+      pins: [{ filename: "a.txt", pageIndex: 2, x: 0.25, y: 0.75 }],
+      pinRemovals: ["b.txt"],
+    });
+  });
+
   it("applies batch operations via the batch endpoint", async () => {
     post.mockResolvedValue(blobResponse());
     const result = await applyBatchAttachmentOps(pdfFile(), {
