@@ -88,6 +88,30 @@ class ConfigControllerMoreTest {
     @DisplayName("getAppConfig")
     class GetAppConfig {
 
+        @Test
+        void automaticSyncDefaultsOff() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            assertThat(applicationProperties.getStorage().isAutoSyncEnabled()).isFalse();
+            assertThat(bodyOf(newController().getAppConfig(mock(HttpServletRequest.class))))
+                    .containsEntry("storageAutoSyncEnabled", false);
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "true,true,true,true",
+            "true,true,false,false",
+            "true,false,true,false",
+            "false,true,true,false"
+        })
+        void automaticSyncRequiresLoginStorageAndExplicitOptIn(
+                boolean login, boolean storage, boolean autoSync, boolean expected) {
+            applicationProperties.getSecurity().setEnableLogin(login);
+            applicationProperties.getStorage().setEnabled(storage);
+            applicationProperties.getStorage().setAutoSyncEnabled(autoSync);
+            assertThat(bodyOf(newController().getAppConfig(mock(HttpServletRequest.class))))
+                    .containsEntry("storageAutoSyncEnabled", expected);
+        }
+
         @ParameterizedTest
         @CsvSource({
             "false,true,true,false,false",
