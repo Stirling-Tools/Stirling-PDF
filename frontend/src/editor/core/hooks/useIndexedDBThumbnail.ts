@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StirlingFileStub } from "@editor/types/fileContext";
 import { useIndexedDB } from "@editor/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@editor/utils/thumbnailUtils";
@@ -20,22 +20,39 @@ export function useIndexedDBThumbnail(
 } {
   const [thumb, setThumb] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  // A rendered thumbnail stays with this hook even after the stub drops its
+  // copy: eviction strips data-URL thumbnails from stubs, and regenerating here
+  // would immediately push the total back over budget and evict another file.
+  // Keyed by file version so a genuinely changed file still refreshes.
+  const renderedForRef = useRef<string | null>(null);
   const indexedDB = useIndexedDB();
   const { updateStirlingFileStub } = useFileManagement();
   const selectors = useFileSelectors();
+
+  const fileVersion = file
+    ? `${file.id}:${file.lastModified}:${file.size}`
+    : null;
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadThumbnail() {
-      if (!file) {
+      if (!file || !fileVersion) {
         setThumb(null);
+        renderedForRef.current = null;
         return;
       }
 
       // Tier 1: stored thumbnail on the stub.
       if (file.thumbnailUrl) {
         setThumb(file.thumbnailUrl);
+        renderedForRef.current = fileVersion;
+        return;
+      }
+
+      // Already rendered this exact version; the stub copy was evicted, keep
+      // the one on screen instead of regenerating and evicting a neighbour.
+      if (renderedForRef.current === fileVersion) {
         return;
       }
 
@@ -66,6 +83,7 @@ export function useIndexedDBThumbnail(
         const thumbnail = await generateThumbnailForFile(loadedFile);
         if (cancelled) return;
 
+        renderedForRef.current = fileVersion;
         setThumb(thumbnail);
 
         if (file.id && indexedDB && thumbnail) {
@@ -104,6 +122,7 @@ export function useIndexedDBThumbnail(
     // stuck forever).
   }, [
     file,
+    fileVersion,
     file?.thumbnailUrl,
     file?.id,
     indexedDB,
