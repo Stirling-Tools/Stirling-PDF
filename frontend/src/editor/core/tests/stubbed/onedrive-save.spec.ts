@@ -15,13 +15,17 @@ interface SaveCall {
   name: string | null;
 }
 
+interface MicrosoftConfig {
+  saveMode?: string;
+  allowUserSaveMode?: boolean;
+  allowEditorSaves?: boolean;
+}
+
+const EDITED_COPY = { itemId: null, name: "Report (edited).pdf" };
+
 async function stubMicrosoft(
   page: Page,
-  config: {
-    saveMode?: string;
-    allowUserSaveMode?: boolean;
-    allowEditorSaves?: boolean;
-  } = {},
+  config: MicrosoftConfig = {},
 ): Promise<SaveCall[]> {
   await page.route("**/api/v1/config/app-config", (route: Route) =>
     route.fulfill({
@@ -130,6 +134,16 @@ async function openFromOneDrive(page: Page, unsaved: boolean): Promise<void> {
   });
 }
 
+async function startWithOneDriveFile(
+  page: Page,
+  { unsaved, ...config }: MicrosoftConfig & { unsaved: boolean },
+): Promise<SaveCall[]> {
+  const calls = await stubMicrosoft(page, config);
+  await page.goto("/editor");
+  await openFromOneDrive(page, unsaved);
+  return calls;
+}
+
 async function openInViewer(page: Page): Promise<void> {
   const item = page.locator(".file-sidebar-file-item").first();
   await item.hover();
@@ -160,6 +174,30 @@ async function openFileCards(page: Page): Promise<Locator> {
   return card;
 }
 
+async function nthSave(calls: SaveCall[], n: number): Promise<SaveCall> {
+  await expect.poll(() => calls.length).toBe(n);
+  return calls[n - 1];
+}
+
+async function expectOtherDestinations(page: Page): Promise<void> {
+  await expect(
+    page.getByRole("menuitem", { name: /Download a copy/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { name: /Save to a OneDrive folder/ }),
+  ).toBeVisible();
+}
+
+function toolbarUnsavedDot(page: Page): Locator {
+  return page.locator(".workbench-bar-unsaved-dot");
+}
+
+function sidebarUnsavedDot(page: Page): Locator {
+  return page
+    .getByTestId("file-onedrive-badge")
+    .locator(".file-sidebar-cloud-badge-dot");
+}
+
 async function shot(page: Page, name: string): Promise<void> {
   if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${name}.png`) });
 }
@@ -168,54 +206,50 @@ test.describe("Saving files opened from OneDrive", () => {
   test.use({ autoGoto: false });
 
   test("Save updates the original in OneDrive by default", async ({ page }) => {
-    const calls = await stubMicrosoft(page);
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, { unsaved: true });
     await openInViewer(page);
 
     const save = page.getByRole("button", {
       name: "Update Report.pdf in OneDrive",
     });
     await expect(save).toBeVisible();
-    await expect(page.locator(".workbench-bar-unsaved-dot")).toBeVisible();
+    await expect(toolbarUnsavedDot(page)).toBeVisible();
     await shot(page, "1-replace-unsaved");
     await save.click();
 
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({ itemId: "item-1" });
+    expect(await nthSave(calls, 1)).toMatchObject({ itemId: "item-1" });
     await expect(page.getByText("Saved to OneDrive").first()).toBeVisible();
-    await expect(page.locator(".workbench-bar-unsaved-dot")).toHaveCount(0);
+    await expect(toolbarUnsavedDot(page)).toHaveCount(0);
   });
 
   test("Save a copy makes one copy, then keeps updating it", async ({
     page,
   }) => {
-    const calls = await stubMicrosoft(page, { saveMode: "copy" });
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, {
+      unsaved: true,
+      saveMode: "copy",
+    });
     await openInViewer(page);
 
     await page
       .getByRole("button", { name: "Save a copy of Report.pdf to OneDrive" })
       .click();
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({
-      itemId: null,
+    expect(await nthSave(calls, 1)).toMatchObject({
+      ...EDITED_COPY,
       parentId: "folder-1",
-      name: "Report (edited).pdf",
     });
 
     await page
       .getByRole("button", { name: "Update Report (edited).pdf in OneDrive" })
       .click();
-    await expect.poll(() => calls.length).toBe(2);
-    expect(calls[1]).toMatchObject({ itemId: "copy-1" });
+    expect(await nthSave(calls, 2)).toMatchObject({ itemId: "copy-1" });
   });
 
   test("Ask me offers a copy and remembers the choice", async ({ page }) => {
-    const calls = await stubMicrosoft(page, { saveMode: "ask" });
-    await page.goto("/editor");
-    await openFromOneDrive(page, false);
+    const calls = await startWithOneDriveFile(page, {
+      unsaved: false,
+      saveMode: "ask",
+    });
     await openInViewer(page);
 
     await page.getByRole("button", { name: "Save Report.pdf…" }).click();
@@ -227,11 +261,7 @@ test.describe("Saving files opened from OneDrive", () => {
     await dialog.getByText("Remember my choice").click();
     await dialog.getByRole("button", { name: "Save", exact: true }).click();
 
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({
-      itemId: null,
-      name: "Report (edited).pdf",
-    });
+    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
     const stored = await page.evaluate(() =>
       localStorage.getItem("stirlingpdf_preferences"),
     );
@@ -239,18 +269,11 @@ test.describe("Saving files opened from OneDrive", () => {
   });
 
   test("the menu offers the other destinations", async ({ page }) => {
-    const calls = await stubMicrosoft(page);
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, { unsaved: true });
     await openInViewer(page);
 
     await page.getByRole("button", { name: "More save options" }).click();
-    await expect(
-      page.getByRole("menuitem", { name: /Download a copy/ }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("menuitem", { name: /Save to a OneDrive folder/ }),
-    ).toBeVisible();
+    await expectOtherDestinations(page);
     await expect(
       page.getByRole("menuitem", { name: /Update Report\.pdf/ }),
     ).toHaveCount(0);
@@ -259,15 +282,10 @@ test.describe("Saving files opened from OneDrive", () => {
       .getByRole("menuitem", { name: /Save a copy next to it/ })
       .click();
 
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({
-      itemId: null,
-      name: "Report (edited).pdf",
-    });
+    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
   });
 
   test("the result of a tool offers the same save menu", async ({ page }) => {
-    const calls = await stubMicrosoft(page);
     await page.route("**/api/v1/general/rotate-pdf", (route: Route) =>
       route.fulfill({
         path: SAMPLE_PDF,
@@ -277,8 +295,7 @@ test.describe("Saving files opened from OneDrive", () => {
         },
       }),
     );
-    await page.goto("/editor");
-    await openFromOneDrive(page, false);
+    const calls = await startWithOneDriveFile(page, { unsaved: false });
     await openInViewer(page);
 
     await page.getByText("Rotate", { exact: true }).first().click();
@@ -290,34 +307,26 @@ test.describe("Saving files opened from OneDrive", () => {
     );
 
     await page.getByTestId("download-result-menu").click();
-    await expect(
-      page.getByRole("menuitem", { name: /Download a copy/ }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("menuitem", { name: /Save to a OneDrive folder/ }),
-    ).toBeVisible();
+    await expectOtherDestinations(page);
     await shot(page, "7-result-save-menu");
     await page
       .getByRole("menuitem", { name: /Save a copy next to it/ })
       .click();
 
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({
-      itemId: null,
-      name: "Report (edited).pdf",
-    });
+    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
   });
 
   test("turning off editor saves hides OneDrive saving", async ({ page }) => {
-    const calls = await stubMicrosoft(page, { allowEditorSaves: false });
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, {
+      unsaved: true,
+      allowEditorSaves: false,
+    });
     await openInViewer(page);
 
     await expect(
       page.getByRole("button", { name: "More save options" }),
     ).toHaveCount(0);
-    await expect(page.locator(".workbench-bar-unsaved-dot")).toHaveCount(0);
+    await expect(toolbarUnsavedDot(page)).toHaveCount(0);
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download", exact: true }).click();
     await download;
@@ -341,41 +350,28 @@ test.describe("Saving files opened from OneDrive", () => {
   });
 
   test("a file card saves to OneDrive like the toolbar", async ({ page }) => {
-    const calls = await stubMicrosoft(page);
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, { unsaved: true });
     const card = await openFileCards(page);
 
     await expect(card.getByTestId("file-card-save-status")).toBeVisible();
     await expect(
       card.getByRole("button", { name: "Download a copy" }),
     ).toBeVisible();
-    await expect(
-      page
-        .getByTestId("file-onedrive-badge")
-        .locator(".file-sidebar-cloud-badge-dot"),
-    ).toBeVisible();
+    await expect(sidebarUnsavedDot(page)).toBeVisible();
     await shot(page, "5-file-card");
     await card
       .getByRole("button", { name: "Update Report.pdf in OneDrive" })
       .click();
 
-    await expect.poll(() => calls.length).toBe(1);
-    expect(calls[0]).toMatchObject({ itemId: "item-1" });
+    expect(await nthSave(calls, 1)).toMatchObject({ itemId: "item-1" });
     await expect(card.getByTestId("file-card-save-status")).toHaveCount(0);
-    await expect(
-      page
-        .getByTestId("file-onedrive-badge")
-        .locator(".file-sidebar-cloud-badge-dot"),
-    ).toHaveCount(0);
+    await expect(sidebarUnsavedDot(page)).toHaveCount(0);
   });
 
   test("closing a card with unsaved OneDrive edits offers to save them", async ({
     page,
   }) => {
-    const calls = await stubMicrosoft(page);
-    await page.goto("/editor");
-    await openFromOneDrive(page, true);
+    const calls = await startWithOneDriveFile(page, { unsaved: true });
     const card = await openFileCards(page);
 
     await card.getByRole("button", { name: "Close", exact: true }).click();
@@ -384,7 +380,7 @@ test.describe("Saving files opened from OneDrive", () => {
     await shot(page, "6-close-unsaved");
     await dialog.getByRole("button", { name: /Save and close/i }).click();
 
-    await expect.poll(() => calls.length).toBe(1);
+    await nthSave(calls, 1);
     await expect(page.getByTestId("file-thumbnail")).toHaveCount(0);
   });
 });
