@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,8 +93,20 @@ class ConvertOfficeControllerTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         controller = newController();
+        lenient()
+                .when(tempFileManager.createTempDirectory())
+                .thenAnswer(inv -> Files.createTempDirectory(tempDir, "work-"));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            org.apache.commons.io.FileUtils.deleteDirectory(
+                                    inv.<Path>getArgument(0).toFile());
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
         lenient().when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
         lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("unoconvert");
         lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
@@ -296,9 +309,7 @@ class ConvertOfficeControllerTest {
         }
 
         private Set<Path> officeWorkDirs() throws IOException {
-            try (var dirs =
-                    Files.newDirectoryStream(
-                            Path.of(System.getProperty("java.io.tmpdir")), "office2pdf_*")) {
+            try (var dirs = Files.newDirectoryStream(tempDir, "work-*")) {
                 Set<Path> found = new HashSet<>();
                 dirs.forEach(found::add);
                 return found;
@@ -458,6 +469,39 @@ class ConvertOfficeControllerTest {
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessageContaining("exit 3");
             }
+        }
+
+        @Test
+        @DisplayName("failed conversion removes the work directory")
+        void failedConversionRemovesWorkDir() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
+            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            List<Path> workDirs = new ArrayList<>();
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                mockExecutor(pe, 1);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                // ProcessExecutor reports a non-zero exit by throwing, not by returning the rc.
+                when(executor.runCommandWithOutputHandling(any(List.class)))
+                        .thenAnswer(
+                                inv -> {
+                                    List<String> command = inv.getArgument(0);
+                                    Path workDir = Path.of(command.getLast()).getParent();
+                                    workDirs.add(workDir);
+                                    Files.write(workDir.resolve("partial.tmp"), new byte[] {1});
+                                    throw new IOException("soffice exited with code 1");
+                                });
+
+                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
+                        .isInstanceOf(IOException.class);
+            }
+
+            assertThat(workDirs).hasSize(1);
+            Mockito.verify(tempFileManager).deleteTempDirectory(workDirs.getFirst());
+            assertThat(workDirs.getFirst()).doesNotExist();
         }
 
         @Test
