@@ -22,8 +22,6 @@ import stirling.software.proprietary.policy.source.Source;
 public abstract class CloudDriveInputSource<L extends CloudLocation, F extends CloudFile>
         implements InputSource {
 
-    public static final int MAX_FILES = 10_000;
-
     private final CloudDrive<L, F> drive;
 
     protected CloudDriveInputSource(CloudDrive<L, F> drive) {
@@ -65,12 +63,12 @@ public abstract class CloudDriveInputSource<L extends CloudLocation, F extends C
             throws IOException {
         L location = drive.resolve(spec.type(), spec.options(), owner);
         List<F> files = drive.list(location);
-        if (files.size() >= MAX_FILES) {
+        if (files.size() >= CloudDrive.MAX_FILES) {
             log.warn(
                     "{} listing of {} hit the {}-file cap; the rest are picked up later",
                     drive.label(),
                     location.location(),
-                    MAX_FILES);
+                    CloudDrive.MAX_FILES);
         }
         if (location.snapshot()) {
             return files.stream()

@@ -107,16 +107,16 @@ public record MicrosoftDriveConfig(
 
     public String location() {
         StringBuilder label = new StringBuilder();
-        if (credential instanceof AccountCredential account) {
-            label.append("account:").append(account.accountId());
-        } else if (drive == MicrosoftDrive.ONEDRIVE) {
-            label.append(((AppCredential) credential).tenantId()).append(":onedrive:").append(user);
-        } else {
-            label.append(((AppCredential) credential).tenantId())
-                    .append(":sharepoint:")
-                    .append(siteHost)
-                    .append(sitePath.isEmpty() ? "" : "/" + sitePath)
-                    .append(library == null ? "" : "#" + library);
+        switch (credential) {
+            case AccountCredential account -> label.append("account:").append(account.accountId());
+            case AppCredential app when drive == MicrosoftDrive.ONEDRIVE ->
+                    label.append(app.tenantId()).append(":onedrive:").append(user);
+            case AppCredential app ->
+                    label.append(app.tenantId())
+                            .append(":sharepoint:")
+                            .append(siteHost)
+                            .append(sitePath.isEmpty() ? "" : "/" + sitePath)
+                            .append(library == null ? "" : "#" + library);
         }
         if (folderLink != null) {
             label.append(" link:").append(folderLink);

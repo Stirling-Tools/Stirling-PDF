@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -26,6 +25,8 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.connectedaccount.OAuthHttp;
+import stirling.software.proprietary.policy.remote.CloudDrive;
 import stirling.software.proprietary.policy.remote.CloudHttp;
 
 import tools.jackson.databind.JsonNode;
@@ -33,8 +34,6 @@ import tools.jackson.databind.JsonNode;
 @Slf4j
 @Component
 public class GraphDriveClient {
-
-    public static final int MAX_FILES = 10_000;
 
     static final long SIMPLE_UPLOAD_LIMIT = 4L * 1024 * 1024;
     static final int UPLOAD_CHUNK = 320 * 1024 * 32;
@@ -127,7 +126,7 @@ public class GraphDriveClient {
         List<DriveFile> files = new ArrayList<>();
         Deque<String> folders = new ArrayDeque<>();
         folders.add(config.directory());
-        while (!folders.isEmpty() && files.size() < MAX_FILES) {
+        while (!folders.isEmpty() && files.size() < CloudDrive.MAX_FILES) {
             String folder = folders.removeFirst();
             String url =
                     endpoints.graphUrl()
@@ -136,7 +135,7 @@ public class GraphDriveClient {
                             + "?$select="
                             + ITEM_FIELDS
                             + "&$top=200";
-            while (url != null && files.size() < MAX_FILES) {
+            while (url != null && files.size() < CloudDrive.MAX_FILES) {
                 JsonNode page = getJsonAbsolute(config, url, "list folder '" + folder + "'");
                 for (JsonNode item : page.path("value")) {
                     String name = text(item, "name");
@@ -150,7 +149,7 @@ public class GraphDriveClient {
                         }
                     } else if (item.has("file")) {
                         files.add(toFile(root.driveId(), root.key(), path, item));
-                        if (files.size() >= MAX_FILES) {
+                        if (files.size() >= CloudDrive.MAX_FILES) {
                             break;
                         }
                     }
@@ -477,7 +476,7 @@ public class GraphDriveClient {
     }
 
     private static String segment(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+        return OAuthHttp.encode(value);
     }
 
     private static JsonNode parse(String body) {

@@ -10,6 +10,8 @@ import java.util.Set;
 
 public interface CloudDrive<L extends CloudLocation, F extends CloudFile> {
 
+    int MAX_FILES = 10_000;
+
     Set<String> types();
 
     L resolve(String type, Map<String, Object> options, String owner);

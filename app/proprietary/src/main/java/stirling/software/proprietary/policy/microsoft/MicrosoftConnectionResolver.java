@@ -1,7 +1,6 @@
 package stirling.software.proprietary.policy.microsoft;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -13,12 +12,11 @@ import stirling.software.proprietary.connectedaccount.ConnectedAccount;
 import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.service.ConnectionLookup;
+import stirling.software.proprietary.policy.remote.LocationOptions;
 
 @Service
 @RequiredArgsConstructor
 public class MicrosoftConnectionResolver {
-
-    private static final Set<String> PER_USE_KEYS = Set.of("directory", "mode", "recursive");
 
     private final ConnectionLookup connections;
     private final ConnectedAccountAccess accountAccess;
@@ -40,7 +38,7 @@ public class MicrosoftConnectionResolver {
                                 options,
                                 IntegrationType.MICROSOFT_365,
                                 "Microsoft 365",
-                                PER_USE_KEYS,
+                                LocationOptions.PER_USE_KEYS,
                                 owner),
                         appDefaults());
         if (expected != null && config.drive() != expected) {
