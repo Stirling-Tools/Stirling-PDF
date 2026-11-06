@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+import { StrictMode } from "react";
 import {
   MemoryRouter,
   Route,
@@ -9,70 +10,78 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { TeamWelcomeBanner } from "@editor/components/shared/TeamWelcomeBanner";
-import {
-  markTeamWelcome,
-  resetTeamWelcomeForTests,
-} from "@editor/billing/teamWelcome";
+import { TEAM_WELCOME_STATE } from "@editor/billing/teamWelcome";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
 
-let navigateTo: (path: string) => void = () => {};
+const TITLE = "Your Team plan is active.";
+
+let navigateTo: ReturnType<typeof useNavigate> = () => {};
 
 function Shell() {
   navigateTo = useNavigate();
-  return <output data-testid="location">{useLocation().pathname}</output>;
+  const { pathname, state } = useLocation();
+  return (
+    <>
+      <output data-testid="location">{pathname}</output>
+      <output data-testid="state">{JSON.stringify(state)}</output>
+    </>
+  );
 }
 
 // The banner sits in a slot that outlives navigation, as AppLayout's does.
 function renderApp(entry: string) {
   render(
-    <MantineProvider>
-      <MemoryRouter initialEntries={[entry]}>
-        <TeamWelcomeBanner />
-        <Routes>
-          <Route path="*" element={<Shell />} />
-        </Routes>
-      </MemoryRouter>
-    </MantineProvider>,
+    <StrictMode>
+      <MantineProvider>
+        <MemoryRouter initialEntries={[entry]}>
+          <TeamWelcomeBanner />
+          <Routes>
+            <Route path="*" element={<Shell />} />
+          </Routes>
+        </MemoryRouter>
+      </MantineProvider>
+    </StrictMode>,
   );
 }
 
+const arriveFromPurchase = () =>
+  act(() => {
+    navigateTo("/editor", { state: TEAM_WELCOME_STATE });
+  });
+
 describe("TeamWelcomeBanner", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-    resetTeamWelcomeForTests();
-  });
-
-  it("shows nothing without a recent Team purchase", () => {
+  it("shows nothing on an ordinary visit", () => {
     renderApp("/editor");
-    expect(screen.queryByText("You're on Team.")).toBeNull();
+    expect(screen.queryByText(TITLE)).toBeNull();
   });
 
-  it("appears when the buyer arrives at the editor after paying in billing", () => {
+  it("appears when billing sends the buyer to the editor, and clears the state", () => {
     renderApp("/settings/billing");
-    expect(screen.queryByText("You're on Team.")).toBeNull();
+    expect(screen.queryByText(TITLE)).toBeNull();
 
-    act(() => {
-      markTeamWelcome();
-      navigateTo("/editor");
-    });
+    arriveFromPurchase();
 
-    expect(screen.getByText("You're on Team.")).toBeInTheDocument();
+    expect(screen.getByText(TITLE)).toBeInTheDocument();
+    expect(screen.getByTestId("location")).toHaveTextContent("/editor");
+    expect(screen.getByTestId("state")).toHaveTextContent("null");
   });
 
   it("sends the buyer to the invite screen and does not come back", () => {
-    markTeamWelcome();
-    renderApp("/editor");
+    renderApp("/settings/billing");
+    arriveFromPurchase();
 
     fireEvent.click(screen.getByRole("button", { name: /Invite people/ }));
 
     expect(screen.getByTestId("location")).toHaveTextContent(
       "/settings/people",
     );
-    expect(screen.queryByText("You're on Team.")).toBeNull();
-    act(() => navigateTo("/editor"));
-    expect(screen.queryByText("You're on Team.")).toBeNull();
+    expect(screen.queryByText(TITLE)).toBeNull();
+    act(() => {
+      navigateTo("/editor");
+    });
+    expect(screen.queryByText(TITLE)).toBeNull();
   });
 });

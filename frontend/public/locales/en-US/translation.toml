@@ -13312,7 +13312,7 @@ title = "Team Members"
 [teamWelcome]
 invite = "Invite people"
 message = "Invite your team so they can start working with you."
-title = "You're on Team."
+title = "Your Team plan is active."
 
 [textAlign]
 center = "Center"

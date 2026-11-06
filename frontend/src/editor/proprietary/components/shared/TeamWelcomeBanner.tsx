@@ -2,36 +2,33 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppBanner } from "@editor/components/shared/AppBanner";
-import {
-  dismissTeamWelcome,
-  takeTeamWelcome,
-} from "@editor/billing/teamWelcome";
+import { isTeamWelcome } from "@editor/billing/teamWelcome";
 
 /** One-time prompt after buying Team: the editor is where the buyer lands, and inviting is the next step. */
 export function TeamWelcomeBanner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search, hash, state } = useLocation();
   const [show, setShow] = useState(false);
+  const welcomed = isTeamWelcome(state);
 
-  // The banner slot lives for the whole session and the buyer arrives by client-side navigation,
-  // so the mark is checked on every arrival, not only on mount.
+  // The banner slot outlives navigation, so the state is checked on every arrival. Clearing it
+  // keeps a reload or a return to this history entry from showing the banner again.
   useEffect(() => {
-    if (takeTeamWelcome()) setShow(true);
-  }, [pathname]);
+    if (!welcomed) return;
+    setShow(true);
+    navigate({ pathname, search, hash }, { replace: true, state: null });
+  }, [welcomed, navigate, pathname, search, hash]);
 
   if (!show) return null;
 
-  const close = () => {
-    dismissTeamWelcome();
-    setShow(false);
-  };
+  const close = () => setShow(false);
 
   return (
     <AppBanner
       tone="promo"
       icon="users"
-      title={t("teamWelcome.title", "You're on Team.")}
+      title={t("teamWelcome.title", "Your Team plan is active.")}
       message={t(
         "teamWelcome.message",
         "Invite your team so they can start working with you.",

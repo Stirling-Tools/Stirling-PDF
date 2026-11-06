@@ -43,7 +43,7 @@ import {
   TEAM_CHECKOUT_PARAM,
   requestsTeamCheckout,
 } from "@editor/routes/teamCheckoutLink";
-import { markTeamWelcome } from "@editor/billing/teamWelcome";
+import { TEAM_WELCOME_STATE } from "@editor/billing/teamWelcome";
 import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
 import { SubscribedPlanView } from "@editor/portal/components/billing/SubscribedPlanView";
 import {
@@ -319,8 +319,7 @@ export function Usage({
   // Someone who came to buy Team is done with billing once they have it; the editor is where they
   // invite their team.
   const welcomeToTeam = useCallback(() => {
-    markTeamWelcome();
-    navigate(EDITOR_BASENAME);
+    navigate(EDITOR_BASENAME, { state: TEAM_WELCOME_STATE });
   }, [navigate]);
 
   const handledTeamRequest = useRef(false);
