@@ -13,7 +13,7 @@ vi.mock("react-i18next", () => ({
   }),
   // The copy as plain text, so tests read it the way the buyer does.
   Trans: ({ defaults }: { defaults: string }) =>
-    defaults.replace(/<\/?\w+>/g, ""),
+    defaults.split(/<\/?\w+>/).join(""),
 }));
 
 const render = (ui: ReactElement) =>
