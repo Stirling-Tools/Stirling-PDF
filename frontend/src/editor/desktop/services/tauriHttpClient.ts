@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
 import { enforceDocumentPrivacy } from "@editor/services/documentPrivacyService";
+import { inMemoryFile } from "@editor/utils/inMemoryFile";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -15,16 +16,9 @@ import {
 async function withInMemoryFiles(form: FormData): Promise<FormData> {
   const copy = new FormData();
   for (const [key, value] of form.entries()) {
-    if (typeof value === "string") {
-      copy.append(key, value);
-      continue;
-    }
     copy.append(
       key,
-      new File([await value.arrayBuffer()], value.name, {
-        type: value.type,
-        lastModified: value.lastModified,
-      }),
+      typeof value === "string" ? value : await inMemoryFile(value),
     );
   }
   return copy;
