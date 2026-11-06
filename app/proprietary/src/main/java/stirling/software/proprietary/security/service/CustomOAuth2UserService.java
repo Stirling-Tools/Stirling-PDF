@@ -1,14 +1,16 @@
 package stirling.software.proprietary.security.service;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -51,12 +53,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         // valueOf, or NPE on toUpperCase) is caught and wrapped as OAuth2AuthenticationException
         // by the existing handlers below, matching the pre-debugLogging behaviour.
         String usernameAttributeKey = null;
+        OidcUser user = null;
 
         try {
             usernameAttributeKey =
                     UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
                             .getName();
-            OidcUser user = delegate.loadUser(userRequest);
+            user = delegate.loadUser(userRequest);
 
             if (debugLogging) {
                 logClaimDump(
@@ -65,7 +68,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                         usernameAttributeKey,
                         user.getIdToken(),
                         user.getUserInfo(),
-                        user.getAttributes(),
                         false);
             }
 
@@ -107,35 +109,50 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             // before delegate.loadUser ran — that error message is self-explanatory and a claim
             // dump would have no resolved-key to compare against.
             if (debugLogging && usernameAttributeKey != null) {
-                // The DefaultOidcUser constructor (or our own checks) rejected the chosen
-                // username attribute. Dump the claims we DID receive so the operator can pick
-                // a different value for security.oauth2.useAsUsername.
                 logClaimDump(
                         "OAuth2/OIDC login FAILED - dumping received claims",
                         registrationId,
                         usernameAttributeKey,
                         userRequest.getIdToken(),
-                        null,
-                        userRequest.getIdToken() == null
-                                ? Collections.emptyMap()
-                                : userRequest.getIdToken().getClaims(),
+                        user != null ? user.getUserInfo() : fetchUserInfo(userRequest),
                         true);
             }
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
         } catch (Exception e) {
             log.error("Unexpected error loading OIDC user", e);
-            if (debugLogging && usernameAttributeKey != null && userRequest.getIdToken() != null) {
+            if (debugLogging && usernameAttributeKey != null) {
                 logClaimDump(
-                        "OAuth2/OIDC login FAILED (unexpected error) - dumping ID token claims",
+                        "OAuth2/OIDC login FAILED (unexpected error) - dumping received claims",
                         registrationId,
                         usernameAttributeKey,
                         userRequest.getIdToken(),
-                        null,
-                        userRequest.getIdToken().getClaims(),
+                        user != null ? user.getUserInfo() : fetchUserInfo(userRequest),
                         true);
             }
             throw new OAuth2AuthenticationException("Unexpected error during authentication");
         }
+    }
+
+    private OidcUserInfo fetchUserInfo(OidcUserRequest userRequest) {
+        DefaultOAuth2UserService fetcher = newUserInfoFetcher();
+        AtomicReference<Map<String, Object>> attributes = new AtomicReference<>();
+        fetcher.setAttributesConverter(
+                request ->
+                        response -> {
+                            attributes.set(response);
+                            return response;
+                        });
+        try {
+            fetcher.loadUser(userRequest);
+        } catch (RuntimeException e) {
+            log.debug("UserInfo fetch for the failure dump did not complete: {}", e.getMessage());
+        }
+        Map<String, Object> claims = attributes.get();
+        return (claims == null || claims.isEmpty()) ? null : new OidcUserInfo(claims);
+    }
+
+    DefaultOAuth2UserService newUserInfoFetcher() {
+        return new DefaultOAuth2UserService();
     }
 
     /**
@@ -147,7 +164,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
      * @param usernameAttributeKey the claim key the application is configured to use as username
      * @param idToken the decoded ID token, may be null on unexpected failures
      * @param userInfo the decoded UserInfo response, may be null if the provider returned none
-     * @param mergedAttributes the merged attribute map Spring uses for {@code getAttribute()}
      * @param failure true if logging in the error path (uses ERROR level), false for INFO
      */
     private void logClaimDump(
@@ -156,8 +172,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             String usernameAttributeKey,
             OidcIdToken idToken,
             OidcUserInfo userInfo,
-            Map<String, Object> mergedAttributes,
             boolean failure) {
+        Map<String, Object> mergedAttributes = mergeClaims(userInfo, idToken);
         StringBuilder sb = new StringBuilder();
         sb.append("\n========== [OAUTH2 DEBUG] ").append(banner).append(" ==========\n");
         sb.append("Provider registrationId : ").append(registrationId).append('\n');
@@ -185,7 +201,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                     .append(") --\n");
             appendClaims(sb, userInfo.getClaims());
         } else {
-            sb.append("\n-- UserInfo endpoint claims: none returned --\n");
+            sb.append("\n-- UserInfo endpoint: not retrieved --\n");
         }
 
         if (mergedAttributes != null) {
@@ -225,6 +241,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         } else {
             log.info(sb.toString());
         }
+    }
+
+    private static Map<String, Object> mergeClaims(OidcUserInfo userInfo, OidcIdToken idToken) {
+        Map<String, Object> claims = new HashMap<>();
+        if (userInfo != null && userInfo.getClaims() != null) {
+            claims.putAll(userInfo.getClaims());
+        }
+        if (idToken != null && idToken.getClaims() != null) {
+            claims.putAll(idToken.getClaims());
+        }
+        return claims;
     }
 
     private static void appendClaims(StringBuilder sb, Map<String, Object> claims) {

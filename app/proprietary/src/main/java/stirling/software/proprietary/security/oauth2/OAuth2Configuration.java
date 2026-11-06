@@ -22,6 +22,8 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +109,7 @@ public class OAuth2Configuration {
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
                                 .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername().getName())
+                                .userNameAttributeName(userNameAttribute(keycloak))
                                 .clientName(keycloak.getClientName())
                                 .redirectUri(redirectUri(keycloak.getName()))
                                 .build())
@@ -237,12 +239,18 @@ public class OAuth2Configuration {
                                 .clientId(oidcProvider.getClientId())
                                 .clientSecret(oidcProvider.getClientSecret())
                                 .scope(oidcProvider.getScopes())
-                                .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
+                                .userNameAttributeName(userNameAttribute(oidcProvider))
                                 .clientName(clientName)
                                 .redirectUri(redirectUri(name))
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
+    }
+
+    String userNameAttribute(Provider provider) {
+        return provider.getScopes().contains(OidcScopes.OPENID)
+                ? IdTokenClaimNames.SUB
+                : provider.getUseAsUsername().getName();
     }
 
     private String redirectUri(String registrationId) {
