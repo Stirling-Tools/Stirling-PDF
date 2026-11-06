@@ -111,7 +111,7 @@ describe("ownership handover", () => {
     expect(
       screen.getByRole("button", { name: "Transfer ownership" }),
     ).toBeDisabled();
-    fireEvent.focus(input);
+    fireEvent.focusIn(input);
     await click(
       await screen.findByRole("option", { name: "cloud@example.com" }),
     );
@@ -134,7 +134,7 @@ describe("ownership handover", () => {
     const input = await screen.findByRole("combobox", {
       name: "Stirling account",
     });
-    fireEvent.focus(input);
+    fireEvent.focusIn(input);
     await screen.findByRole("option", { name: "cloud@example.com" });
     fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
     expect(input).toHaveAttribute("aria-expanded", "false");
@@ -209,7 +209,7 @@ describe("ownership handover", () => {
       .mockResolvedValue(awaiting);
     vi.mocked(adapter.invite!).mockResolvedValue(awaiting);
     show();
-    fireEvent.focus(
+    fireEvent.focusIn(
       await screen.findByRole("combobox", { name: "Stirling account" }),
     );
     await click(
@@ -244,18 +244,18 @@ describe("ownership handover", () => {
     const input = await screen.findByRole("combobox", {
       name: "Stirling account",
     });
-    fireEvent.focus(input);
+    fireEvent.focusIn(input);
     await click(
       await screen.findByRole("option", { name: "jamie@example.com" }),
     );
-    fireEvent.blur(input);
-    fireEvent.focus(input);
+    fireEvent.focusOut(input);
+    fireEvent.focusIn(input);
     expect(adapter.loadCandidates).toHaveBeenCalledOnce();
     expect(adapter.cancel).not.toHaveBeenCalled();
     expect(adapter.selectCloud).not.toHaveBeenCalled();
     expect(adapter.prepare).toHaveBeenCalledOnce();
     expect(input).toHaveValue("jamie@example.com");
-    fireEvent.blur(input);
+    fireEvent.focusOut(input);
     await confirm();
     expect(adapter.completeLocal).toHaveBeenCalledOnce();
   });
@@ -485,7 +485,7 @@ describe("ownership handover", () => {
     const input = await screen.findByRole("combobox", {
       name: "Stirling account",
     });
-    fireEvent.focus(input);
+    fireEvent.focusIn(input);
     expect(await screen.findAllByRole("option")).toHaveLength(8);
     fireEvent.change(input, { target: { value: "member7@" } });
     expect(screen.getAllByRole("option")).toHaveLength(1);
@@ -546,10 +546,10 @@ describe("ownership handover", () => {
     const details = await screen.findByRole("button", {
       name: "Billing details",
     });
-    fireEvent.focus(details);
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "Billing contact details do not change automatically.",
-    );
+    act(() => details.focus());
+    expect(
+      await screen.findByRole("dialog", { name: "Billing details" }),
+    ).toHaveTextContent("Billing contact details do not change automatically.");
     expect(screen.getByText(/You keep administrator access/)).toBeVisible();
   });
 

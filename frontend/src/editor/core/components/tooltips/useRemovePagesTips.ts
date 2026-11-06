@@ -42,7 +42,10 @@ export const useRemovePagesTips = (): TooltipContent => {
         ),
         bullets: [
           t("removePages.tooltip.examples.bullet1", "Remove first page: 1"),
-          t("removePages.tooltip.examples.bullet2", "Remove last 3 pages: -3"),
+          t(
+            "removePages.tooltip.examples.bullet2",
+            "Remove last 3 pages: enter the final range, e.g. 498-500",
+          ),
           t(
             "removePages.tooltip.examples.bullet3",
             "Remove every other page: 2n",

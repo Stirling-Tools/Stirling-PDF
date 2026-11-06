@@ -26,10 +26,53 @@ describe("PDF owner-password policy", () => {
     expect(settings.honorOwnerPasswords).toBe(true);
     expect(settings._pending?.honorOwnerPasswords).toBe(false);
     expect(
-      saveSecuritySettings({ honorOwnerPasswords: false }).deltaSettings[
-        "security.honorOwnerPasswords"
-      ],
+      saveSecuritySettings(
+        { honorOwnerPasswords: false },
+        { enterprise: false },
+      ).deltaSettings["security.honorOwnerPasswords"],
     ).toBe(false);
+  });
+});
+
+describe("audit retention bounds", () => {
+  it("clamps non-Enterprise retention to the 30-day window", () => {
+    const saved = saveSecuritySettings(
+      { audit: { retentionDays: 0 } },
+      { enterprise: false },
+    ).deltaSettings["premium.enterpriseFeatures.audit.retentionDays"];
+    expect(saved).toBe(30);
+
+    const over = saveSecuritySettings(
+      { audit: { retentionDays: 120 } },
+      { enterprise: false },
+    ).deltaSettings["premium.enterpriseFeatures.audit.retentionDays"];
+    expect(over).toBe(30);
+  });
+
+  it("keeps indefinite retention on Enterprise", () => {
+    const saved = saveSecuritySettings(
+      { audit: { retentionDays: 0 } },
+      { enterprise: true },
+    ).deltaSettings["premium.enterpriseFeatures.audit.retentionDays"];
+    expect(saved).toBe(0);
+  });
+
+  it("forces the normalized retention when a downgrade leaves a stale value", () => {
+    const result = saveSecuritySettings(
+      { audit: { retentionDays: 0 } },
+      { enterprise: false },
+    );
+    expect(result.forceKeys).toContain(
+      "premium.enterpriseFeatures.audit.retentionDays",
+    );
+  });
+
+  it("does not force retention that already fits the non-Enterprise window", () => {
+    const result = saveSecuritySettings(
+      { audit: { retentionDays: 14 } },
+      { enterprise: false },
+    );
+    expect(result.forceKeys).toBeUndefined();
   });
 });
 

@@ -12,6 +12,7 @@ import type {
 interface SettingsSaveResult {
   sectionData: Record<string, unknown>;
   deltaSettings: Record<string, unknown>;
+  forceKeys?: string[];
 }
 
 export async function fetchSecuritySettings(): Promise<
@@ -70,8 +71,23 @@ export async function fetchSecuritySettings(): Promise<
 
 export function saveSecuritySettings(
   settings: SecuritySettingsData,
+  options: { enterprise: boolean },
 ): SettingsSaveResult {
   const { audit, html, ...securitySettings } = settings;
+
+  // Non-Enterprise cleanup clamps to 30 days. Persist a value the service will
+  // actually honour so a later Enterprise downgrade cannot leave a stale 0.
+  const savedRetentionDays = audit
+    ? options.enterprise
+      ? audit.retentionDays
+      : audit.retentionDays == null || audit.retentionDays <= 0
+        ? 30
+        : Math.min(audit.retentionDays, 30)
+    : undefined;
+  const retentionNeedsWrite =
+    !options.enterprise &&
+    audit?.retentionDays != null &&
+    audit.retentionDays !== savedRetentionDays;
 
   const deltaSettings: Record<string, unknown> = {
     "security.enableLogin": securitySettings.enableLogin,
@@ -92,7 +108,7 @@ export function saveSecuritySettings(
     // Premium audit settings
     "premium.enterpriseFeatures.audit.enabled": audit?.enabled,
     "premium.enterpriseFeatures.audit.level": audit?.level,
-    "premium.enterpriseFeatures.audit.retentionDays": audit?.retentionDays,
+    "premium.enterpriseFeatures.audit.retentionDays": savedRetentionDays,
     "premium.enterpriseFeatures.audit.captureFileHash": audit?.captureFileHash,
     "premium.enterpriseFeatures.audit.capturePdfAuthor":
       audit?.capturePdfAuthor,
@@ -123,6 +139,9 @@ export function saveSecuritySettings(
   return {
     sectionData: {},
     deltaSettings,
+    forceKeys: retentionNeedsWrite
+      ? ["premium.enterpriseFeatures.audit.retentionDays"]
+      : undefined,
   };
 }
 

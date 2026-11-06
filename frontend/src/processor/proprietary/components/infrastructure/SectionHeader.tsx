@@ -1,4 +1,4 @@
-import { InfoHint } from "@processor/components/InfoHint";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 
 export interface SectionHeaderProps {
   title: string;
@@ -21,7 +21,9 @@ export function SectionHeader({
     <header className="portal-infra__section-head">
       <div className="portal-infra__section-title-row">
         <h2 className="portal-infra__section-title">{title}</h2>
-        {hint ? <InfoHint content={hint} label={hintLabel ?? title} /> : null}
+        {hint ? (
+          <InfoTooltip label={hint} ariaLabel={hintLabel ?? title} />
+        ) : null}
       </div>
       {sub ? <p className="portal-infra__section-sub">{sub}</p> : null}
     </header>

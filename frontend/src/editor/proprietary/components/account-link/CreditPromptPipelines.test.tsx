@@ -74,11 +74,11 @@ describe("active pipelines in the credit prompt", () => {
     expect(
       screen.getByText("Editor · before download, Finance inbox"),
     ).toBeTruthy();
-    expect(screen.queryByRole("tooltip")).toBeNull();
-    fireEvent.focus(
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.focusIn(
       screen.getByRole("button", { name: "Triggered this prompt" }),
     );
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+    expect(await screen.findByRole("dialog")).toHaveTextContent(
       "Triggered this prompt",
     );
     expect(setEnabled).not.toHaveBeenCalled();

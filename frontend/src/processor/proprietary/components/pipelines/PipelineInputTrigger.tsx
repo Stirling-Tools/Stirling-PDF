@@ -2,9 +2,8 @@
 // passes through, so the two get different controls.
 
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@mantine/core";
-import { Icon } from "@editor/ui/Icon";
 import { FormField, Input, Select } from "@editor/ui";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 
 export type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 export type EditorRunOn = "upload" | "export";
@@ -50,21 +49,17 @@ export function PipelineInputTrigger({
     return (
       <FormField
         label={
-          <Tooltip
-            label={t(
-              "portal.pipelines.builder.runOnTooltip",
-              "Choose when this pipeline runs on your files: when you add them, or when you export them.",
-            )}
-            position="right"
-            withinPortal
-            multiline
-            w={260}
-          >
-            <span className="portal-builder__label-hint">
-              {label}
-              <Icon name="info" size={"0.875rem"} />
-            </span>
-          </Tooltip>
+          <span className="portal-builder__label-hint">
+            {label}
+            <InfoTooltip
+              label={t(
+                "portal.pipelines.builder.runOnTooltip",
+                "Choose when this pipeline runs on your files: when you add them, or when you export them.",
+              )}
+              position="right"
+              width={280}
+            />
+          </span>
         }
       >
         <Select

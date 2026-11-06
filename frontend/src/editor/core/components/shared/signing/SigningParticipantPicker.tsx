@@ -1,8 +1,6 @@
 import { Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@editor/ui/ActionIcon";
-import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import UserSelector from "@editor/components/shared/UserSelector";
 
 /** Updates the request's participants directly; sending the request is the commit point. */
@@ -21,22 +19,16 @@ export function SigningParticipantPicker({
       <div className="signing-request__heading">
         <Group gap="xs">
           <h2>{t("signWorkspace.participants", "Participants")}</h2>
-          <Tooltip
-            content={t(
+          <InfoTooltip
+            label={t(
               "signMenu.anyOrder",
               "Participants can sign in any order. The owner finalizes the document after reviewing the collected signatures.",
             )}
-          >
-            <ActionIcon
-              variant="quiet"
-              aria-label={t(
-                "signWorkspace.signingOrderHelp",
-                "About signing order",
-              )}
-            >
-              <Icon name="info" size={16} />
-            </ActionIcon>
-          </Tooltip>
+            ariaLabel={t(
+              "signWorkspace.signingOrderHelp",
+              "About signing order",
+            )}
+          />
         </Group>
         <span className="signing-request__selection-count" role="status">
           {t("signWorkspace.participantsSelected", "{{count}} selected", {

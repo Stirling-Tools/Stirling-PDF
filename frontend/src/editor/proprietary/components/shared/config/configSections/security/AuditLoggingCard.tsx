@@ -5,14 +5,32 @@ import { NumberInput, Stack, Paper, Group } from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import type { SecurityCardProps } from "@editor/components/shared/config/configSections/security/securityCardProps";
 
+interface AuditLoggingCardProps extends SecurityCardProps {
+  /** Enterprise licenses may keep audit events indefinitely. */
+  enterprise: boolean;
+}
+
 /** What the audit trail records and how long it is kept. */
 export function AuditLoggingCard({
   settings,
   setSettings,
   isFieldPending,
   loginEnabled,
-}: SecurityCardProps) {
+  enterprise,
+}: AuditLoggingCardProps) {
   const { t } = useTranslation();
+  const retentionMax = enterprise ? 3650 : 30;
+  const retentionValue = settings?.audit?.retentionDays;
+  // A downgraded Enterprise instance can still hold 0 or a value above the
+  // non-EE ceiling. Show what the cleanup service will actually apply.
+  const displayedRetention =
+    retentionValue == null
+      ? 90
+      : enterprise
+        ? retentionValue
+        : retentionValue <= 0
+          ? 30
+          : Math.min(retentionValue, 30);
 
   return (
     <Paper withBorder p="md" radius="md">
@@ -84,21 +102,31 @@ export function AuditLoggingCard({
                 <PendingBadge show={isFieldPending("audit.retentionDays")} />
                 <InfoTooltip
                   label={t(
-                    "admin.settings.security.audit.retentionDays.description",
-                    "Number of days to retain audit logs",
+                    enterprise
+                      ? "admin.settings.security.audit.retentionDays.description"
+                      : "admin.settings.security.audit.retentionDays.descriptionLimited",
+                    enterprise
+                      ? "Number of days to retain audit logs. Set 0 to keep them indefinitely."
+                      : "Number of days to retain audit logs. Non-Enterprise deployments keep them for at most 30 days.",
                   )}
                 />
               </Group>
             }
-            value={settings?.audit?.retentionDays || 90}
-            onChange={(value) =>
+            value={displayedRetention}
+            onChange={(value) => {
+              const next = Number(value);
               setSettings({
                 ...settings,
-                audit: { ...settings?.audit, retentionDays: Number(value) },
-              })
-            }
-            min={1}
-            max={3650}
+                audit: {
+                  ...settings?.audit,
+                  retentionDays: enterprise
+                    ? next
+                    : Math.min(Math.max(next, 1), 30),
+                },
+              });
+            }}
+            min={enterprise ? 0 : 1}
+            max={retentionMax}
             disabled={!loginEnabled}
           />
         </div>

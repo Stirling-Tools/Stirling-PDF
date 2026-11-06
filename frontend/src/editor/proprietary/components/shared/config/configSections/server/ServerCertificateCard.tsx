@@ -104,7 +104,7 @@ export function ServerCertificateCard({
                 <InfoTooltip
                   label={t(
                     "admin.settings.features.serverCertificate.validity.description",
-                    "Number of days the certificate will be valid",
+                    "How long the generated certificate stays valid, from 1 to 3650 days. The default is 365.",
                   )}
                 />
               </Group>

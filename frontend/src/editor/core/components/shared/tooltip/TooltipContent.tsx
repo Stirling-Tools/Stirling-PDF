@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "@editor/components/shared/tooltip/Tooltip.module.css";
-import { TooltipTip } from "@editor/types/tips";
+import type { TooltipTip } from "@editor/types/tips";
+import "@editor/ui/InfoTooltip.css";
 
 interface TooltipContentProps {
   content?: React.ReactNode;
@@ -8,6 +9,11 @@ interface TooltipContentProps {
   extraRightPadding?: number;
 }
 
+/**
+ * Structured explanation body shared by the legacy rich tooltip and the
+ * standard `InfoTooltip`. It never parses HTML: callers pass text or JSX, so a
+ * translation can never inject markup into the page.
+ */
 export const TooltipContent: React.FC<TooltipContentProps> = ({
   content,
   tips,
@@ -15,77 +21,43 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
 }) => {
   return (
     <div
-      className={`${styles["tooltip-body"]}`}
-      style={{
-        color: "var(--c-text)",
-        padding: `16px ${16 + extraRightPadding}px 16px 16px`,
-        fontSize: "14px",
-        lineHeight: "1.6",
-      }}
+      className={styles["tooltip-body"]}
+      style={{ paddingRight: 16 + extraRightPadding }}
     >
-      <div style={{ color: "var(--c-text)" }}>
-        {tips ? (
-          <>
-            {tips.map((tip, index) => (
-              <div
-                key={index}
-                style={{ marginBottom: index < tips.length - 1 ? "24px" : "0" }}
-              >
-                {tip.title && (
-                  <div
-                    style={{
-                      display: "inline-block",
-                      backgroundColor: "var(--c-primary-tint)",
-                      color: "var(--c-text)",
-                      padding: "6px 12px",
-                      borderRadius: "16px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    {tip.title}
-                  </div>
-                )}
-                {tip.description && (
-                  <p
-                    style={{
-                      margin: "0 0 12px 0",
-                      color: "var(--c-text-muted)",
-                      fontSize: "13px",
-                    }}
-                    dangerouslySetInnerHTML={{ __html: tip.description }}
-                  />
-                )}
-                {tip.bullets && tip.bullets.length > 0 && (
-                  <ul
-                    style={{
-                      margin: "0",
-                      paddingLeft: "16px",
-                      color: "var(--c-text-muted)",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {tip.bullets.map((bullet, bulletIndex) => (
-                      <li
-                        key={bulletIndex}
-                        style={{ marginBottom: "6px" }}
-                        dangerouslySetInnerHTML={{ __html: bullet }}
-                      />
-                    ))}
-                  </ul>
-                )}
-                {tip.body && (
-                  <div style={{ marginTop: "12px" }}>{tip.body}</div>
-                )}
-              </div>
-            ))}
-            {content && <div style={{ marginTop: "24px" }}>{content}</div>}
-          </>
-        ) : (
-          content
-        )}
-      </div>
+      {tips ? (
+        <>
+          {tips.map((tip, index) => (
+            <section
+              className="sui-info-panel__section"
+              key={`${tip.title ?? "tip"}-${index}`}
+            >
+              {tip.title && (
+                <h3 className="sui-info-panel__section-title" dir="auto">
+                  {tip.title}
+                </h3>
+              )}
+              {tip.description && (
+                <p className="sui-info-panel__text" dir="auto">
+                  {tip.description}
+                </p>
+              )}
+              {tip.bullets && tip.bullets.length > 0 && (
+                <ul className="sui-info-panel__list">
+                  {tip.bullets.map((bullet, bulletIndex) => (
+                    <li key={bulletIndex}>{bullet}</li>
+                  ))}
+                </ul>
+              )}
+              {tip.body && (
+                <div className="sui-info-panel__body-extra">{tip.body}</div>
+              )}
+            </section>
+          ))}
+          {content && <div className="sui-info-panel__extra">{content}</div>}
+        </>
+      ) : (
+        <div className="sui-info-panel__text">{content}</div>
+      )}
     </div>
   );
 };

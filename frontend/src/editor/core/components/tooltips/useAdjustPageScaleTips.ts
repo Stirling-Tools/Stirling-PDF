@@ -13,7 +13,6 @@ export const useAdjustPageScaleTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("adjustPageScale.tooltip.description.title", "Description"),
         description: t(
           "adjustPageScale.tooltip.description.text",
           "Adjust the size of PDF content and change the page dimensions.",

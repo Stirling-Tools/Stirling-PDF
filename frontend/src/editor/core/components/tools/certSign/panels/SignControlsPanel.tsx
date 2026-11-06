@@ -3,7 +3,7 @@ import { Group, Menu, Modal, Text } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { StatusBadge } from "@editor/ui/StatusBadge";
 import "@editor/components/shared/signing/signingDetail.css";
 import { useTranslation } from "react-i18next";
@@ -342,23 +342,16 @@ export default function SignControlsPanel({
           <StatusBadge tone="neutral" showDot={false} size="sm">
             {t("signingDetail.optional", "Optional")}
           </StatusBadge>
-          <Tooltip
-            content={t(
+          <InfoTooltip
+            label={t(
               "signMenu.optionalMarks",
               "Visible marks are optional. Complete & Sign also works with a certificate alone.",
             )}
-          >
-            <ActionIcon
-              variant="tertiary"
-              size="sm"
-              aria-label={t(
-                "signingDetail.visibleSignatureHelp",
-                "About visible signatures",
-              )}
-            >
-              <Icon name="info" size={16} />
-            </ActionIcon>
-          </Tooltip>
+            ariaLabel={t(
+              "signingDetail.visibleSignatureHelp",
+              "About visible signatures",
+            )}
+          />
         </Group>
       </div>
       {!sortedSavedSignatures.length && !signatureConfig.signatureData ? (

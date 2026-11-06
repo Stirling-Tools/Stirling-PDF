@@ -10,36 +10,17 @@ export const useScannerImageSplitTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("scannerImageSplit.tooltip.whatThisDoes", "What this does"),
         description: t(
           "scannerImageSplit.tooltip.whatThisDoesDesc",
           "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.",
         ),
       },
       {
-        title: t("scannerImageSplit.tooltip.whenToUse", "When to use"),
-        bullets: [
-          t(
-            "scannerImageSplit.tooltip.useCase1",
-            "Scan whole album pages in one go",
-          ),
-          t(
-            "scannerImageSplit.tooltip.useCase2",
-            "Split flatbed batches into separate files",
-          ),
-          t(
-            "scannerImageSplit.tooltip.useCase3",
-            "Break collages into individual photos",
-          ),
-          t("scannerImageSplit.tooltip.useCase4", "Pull photos from documents"),
-        ],
-      },
-      {
         title: t("scannerImageSplit.tooltip.quickFixes", "Quick fixes"),
         bullets: [
           t(
             "scannerImageSplit.tooltip.problem1",
-            "Photos not detected → increase Tolerance to 30–50",
+            "Photos not detected -> lower Tolerance (try 10-20) so each photo stands out from the background",
           ),
           t(
             "scannerImageSplit.tooltip.problem2",
@@ -68,15 +49,11 @@ export const useScannerImageSplitTips = (): TooltipContent => {
             "Leave a small gap (≈1 cm) between photos",
           ),
           t("scannerImageSplit.tooltip.tip3", "Scan at 300–600 DPI"),
-          t("scannerImageSplit.tooltip.tip4", "Clean the scanner glass"),
+          t(
+            "scannerImageSplit.tooltip.headsUpDesc",
+            "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space.",
+          ),
         ],
-      },
-      {
-        title: t("scannerImageSplit.tooltip.headsUp", "Heads-up"),
-        description: t(
-          "scannerImageSplit.tooltip.headsUpDesc",
-          "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space.",
-        ),
       },
     ],
   };

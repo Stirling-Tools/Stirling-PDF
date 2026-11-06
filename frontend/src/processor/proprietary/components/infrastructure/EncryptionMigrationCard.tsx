@@ -9,7 +9,7 @@ import {
   Modal,
   StatusBadge,
 } from "@editor/ui";
-import { InfoHint } from "@processor/components/InfoHint";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import type { StatusTone } from "@editor/ui";
 import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
 import type {
@@ -123,11 +123,11 @@ export function EncryptionMigrationCard({
                 label={
                   <>
                     {t("portal.infrastructure.encryption.migration.skipped")}
-                    <InfoHint
-                      content={t(
+                    <InfoTooltip
+                      label={t(
                         "portal.infrastructure.encryption.migration.skippedNote",
                       )}
-                      label={t(
+                      ariaLabel={t(
                         "portal.infrastructure.encryption.migration.skippedHelp",
                       )}
                     />

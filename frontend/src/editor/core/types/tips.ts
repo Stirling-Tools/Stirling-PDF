@@ -1,15 +1,17 @@
+import type { ReactNode } from "react";
+
 export interface TooltipTip {
   title?: string;
-  description?: string;
-  bullets?: string[];
-  body?: React.ReactNode;
+  /** Body copy. JSX is allowed; arbitrary HTML strings are not parsed. */
+  description?: ReactNode;
+  bullets?: ReactNode[];
+  body?: ReactNode;
 }
 
 export interface TooltipContent {
   header?: {
     title: string;
-    logo?: string | React.ReactNode;
   };
   tips?: TooltipTip[];
-  content?: React.ReactNode;
+  content?: ReactNode;
 }

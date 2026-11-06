@@ -3,9 +3,8 @@ import { Collapse } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { SigningParticipantPicker } from "@editor/components/shared/signing/SigningParticipantPicker";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import SignatureSettingsInput, {
@@ -128,22 +127,16 @@ export function CreateSessionFlow({
           <fieldset className="signing-request__calendar" disabled={creating}>
             <legend>
               {t("signMenu.dueDate", "Due date (optional)")}
-              <Tooltip
-                content={t(
+              <InfoTooltip
+                label={t(
                   "signWorkspace.dueDateHelp",
                   "This is a target date. Participants can still sign after it.",
                 )}
-              >
-                <ActionIcon
-                  variant="quiet"
-                  aria-label={t(
-                    "signWorkspace.dueDateHelpLabel",
-                    "About due dates",
-                  )}
-                >
-                  <Icon name="info" size={16} />
-                </ActionIcon>
-              </Tooltip>
+                ariaLabel={t(
+                  "signWorkspace.dueDateHelpLabel",
+                  "About due dates",
+                )}
+              />
             </legend>
             <div className="signing-request__date-value">
               <span aria-live="polite">
