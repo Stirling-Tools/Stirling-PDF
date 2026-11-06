@@ -10,7 +10,13 @@ import {
   classifyOneDriveFailure,
   getOneDriveConfig,
   getOneDrivePickerService,
+  isUserCancelled,
 } from "@editor/services/oneDrivePickerService";
+import {
+  oneDriveConnectFailedMessage,
+  oneDriveFailureMessage,
+  oneDrivePickerLabels,
+} from "@editor/services/oneDriveMessages";
 
 interface UseOneDrivePickerOptions {
   multiple?: boolean;
@@ -81,12 +87,7 @@ export function useOneDrivePicker(): UseOneDrivePickerReturn {
           );
           if (!connection.account) {
             if (connection.outcome === "error") {
-              setError(
-                t(
-                  "provider.onedrive.errors.connectFailed",
-                  "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts.",
-                ),
-              );
+              setError(oneDriveConnectFailedMessage(t));
             }
             return [];
           }
@@ -99,57 +100,20 @@ export function useOneDrivePicker(): UseOneDrivePickerReturn {
             multiple: options.multiple ?? true,
             extensions: acceptToExtensions(options.accept),
             locale: i18n?.language,
-            labels: {
-              title: t(
-                "provider.onedrive.pickerTitle",
-                "Choose files from OneDrive",
-              ),
-              close: t("close", "Close"),
-              loading: t(
-                "provider.onedrive.pickerLoading",
-                "Connecting to OneDrive…",
-              ),
-            },
+            labels: oneDrivePickerLabels(
+              t,
+              t("provider.onedrive.pickerTitle", "Choose files from OneDrive"),
+            ),
           },
           account && !account.personal ? { accountId: account.id } : undefined,
         );
       } catch (err) {
-        if (
-          (err as { errorCode?: string } | null)?.errorCode === "user_cancelled"
-        ) {
-          return [];
-        }
+        if (isUserCancelled(err)) return [];
         console.error("OneDrive picker error:", err);
         const failure = classifyOneDriveFailure(err);
         setReconnectNeeded(failure === "reconnect");
-        if (failure === "popupBlocked") {
-          setError(
-            t(
-              "provider.onedrive.errors.popupBlocked",
-              "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again.",
-            ),
-          );
-        } else if (failure === "reconnect") {
-          setError(
-            t(
-              "provider.onedrive.errors.reconnect",
-              "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts.",
-            ),
-          );
-        } else if (failure === "network") {
-          setError(
-            t(
-              "provider.onedrive.errors.unreachable",
-              "Couldn't reach OneDrive. Check your connection and try again.",
-            ),
-          );
-        } else if (failure === "server") {
-          setError(
-            t(
-              "provider.onedrive.errors.serverError",
-              "OneDrive or the Stirling server had a problem. Try again, or ask your administrator if it keeps happening.",
-            ),
-          );
+        if (failure) {
+          setError(oneDriveFailureMessage(t, failure));
         } else {
           setError(
             err instanceof Error
@@ -165,15 +129,18 @@ export function useOneDrivePicker(): UseOneDrivePickerReturn {
         setIsLoading(false);
       }
     },
-    [oneDriveConfig, useAccounts, connected, i18n?.language, t],
+    [oneDriveConfig, useAccounts, connected.connect, i18n?.language, t],
   );
 
-  return {
-    isEnabled,
-    isLoading,
-    error,
-    reconnectNeeded,
-    clearError,
-    openPicker,
-  };
+  return useMemo(
+    () => ({
+      isEnabled,
+      isLoading,
+      error,
+      reconnectNeeded,
+      clearError,
+      openPicker,
+    }),
+    [isEnabled, isLoading, error, reconnectNeeded, clearError, openPicker],
+  );
 }
