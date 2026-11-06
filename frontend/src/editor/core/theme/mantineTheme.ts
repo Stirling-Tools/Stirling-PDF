@@ -194,6 +194,7 @@ export const appCssVariablesResolver: CSSVariablesResolver = () => ({
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
+  defaultRadius: "md",
 
   // Color palette
   colors: {
@@ -282,7 +283,7 @@ export const mantineTheme = createTheme({
     Button: {
       styles: {
         root: {
-          fontWeight: "var(--font-weight-medium)",
+          fontWeight: "var(--font-weight-semibold)",
           transition: "all 0.2s ease",
         },
       },
@@ -458,6 +459,8 @@ export const mantineTheme = createTheme({
       styles: {
         input: {
           borderColor: "var(--c-border)",
+          // The md default radius rounds a 20px checkbox into a circle.
+          borderRadius: "var(--radius-sm)",
           "&:checked": {
             backgroundColor: "var(--color-primary-500)",
             borderColor: "var(--color-primary-500)",
