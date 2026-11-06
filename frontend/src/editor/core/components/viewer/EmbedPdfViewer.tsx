@@ -1,4 +1,3 @@
-import { protectLikeOriginal } from "@editor/services/rightsManagedPdf";
 import React, {
   useCallback,
   useEffect,
@@ -76,7 +75,10 @@ import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrati
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
-import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
+import {
+  useRightsManagedExport,
+  useRightsManagedPdf,
+} from "@editor/hooks/useRightsManagedPdf";
 import { RightsManagedPdfPanel } from "@editor/components/viewer/RightsManagedPdfPanel";
 import { RightsManagedPdfBanner } from "@editor/components/viewer/RightsManagedPdfBanner";
 
@@ -702,30 +704,23 @@ const EmbedPdfViewerContent = ({
     setActiveFileId,
   ]);
   const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
-  const rightsManaged = useRightsManagedPdf(previewFile ?? currentFile);
+  const viewedFile = previewFile ?? currentFile;
+  const rightsManaged = useRightsManagedPdf(viewedFile);
   const rightsManagedOpened =
     rightsManaged.status === "opened" ? rightsManaged.opened : null;
-  const exportProtect = React.useMemo(
-    () =>
-      rightsManagedOpened
-        ? async (bytes: ArrayBuffer) =>
-            (
-              await protectLikeOriginal(
-                rightsManagedOpened,
-                new File([bytes], rightsManagedOpened.original.name, {
-                  type: "application/pdf",
-                }),
-              )
-            ).arrayBuffer()
-        : undefined,
-    [rightsManagedOpened],
-  );
-  const protectExportedFile = React.useMemo(
-    () =>
-      rightsManagedOpened
-        ? (plain: File) => protectLikeOriginal(rightsManagedOpened, plain)
-        : undefined,
-    [rightsManagedOpened],
+  const rightsManagedExport = useRightsManagedExport(rightsManagedOpened);
+  const versionFile = useCallback(
+    async (source: File, contents: Blob) => {
+      const plain = new File([contents], versionFileName(), {
+        type: "application/pdf",
+      });
+      const file = rightsManagedExport
+        ? await rightsManagedExport.protectFile(plain)
+        : plain;
+      rememberPlainPdfExport(source, file);
+      return file;
+    },
+    [versionFileName, rightsManagedExport],
   );
 
   // Lineage root of the open document: saves and tool outputs add a child record,
@@ -763,9 +758,7 @@ const EmbedPdfViewerContent = ({
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
-  const pdfAccess = usePdfAccess(
-    rightsManagedOpened?.plaintext ?? previewFile ?? currentFile,
-  );
+  const pdfAccess = usePdfAccess(rightsManagedOpened?.plaintext ?? viewedFile);
   const isCurrentFileEncrypted =
     isStoredFileEncrypted || Boolean(pdfAccess?.encrypted);
   const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
@@ -1264,15 +1257,7 @@ const EmbedPdfViewerContent = ({
           "[Viewer] Applying form fill changes - reloading filled PDF",
         );
 
-        // Convert Blob to File
-        const filename = versionFileName();
-        const plain = new File([filledBlob], filename, {
-          type: "application/pdf",
-        });
-        const file = protectExportedFile
-          ? await protectExportedFile(plain)
-          : plain;
-        rememberPlainPdfExport(currentFile, file);
+        const file = await versionFile(currentFile, filledBlob);
 
         // Get current file info for creating the updated version
         const currentFileId = currentFileStableId;
@@ -1319,9 +1304,8 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
-      versionFileName,
+      versionFile,
       currentFile,
-      protectExportedFile,
       currentFileStableId,
       selectedTool,
       fetchFormFields,
@@ -1355,14 +1339,7 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
-        const filename = versionFileName();
-        const plain = new File([modifiedBlob], filename, {
-          type: "application/pdf",
-        });
-        const file = protectExportedFile
-          ? await protectExportedFile(plain)
-          : plain;
-        rememberPlainPdfExport(currentFile, file);
+        const file = await versionFile(currentFile, modifiedBlob);
 
         const currentFileId = currentFileStableId;
         if (!currentFileId) throw new Error("Current file ID not found");
@@ -1387,9 +1364,8 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
-      versionFileName,
+      versionFile,
       currentFile,
-      protectExportedFile,
       activeFiles,
       actions,
       selectors,
@@ -1952,9 +1928,9 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
-      ) : rightsManaged.status === "locked" && (previewFile ?? currentFile) ? (
+      ) : rightsManaged.status === "locked" && viewedFile ? (
         <RightsManagedPdfPanel
-          file={(previewFile ?? currentFile)!}
+          file={viewedFile}
           onClose={previewFile ? onClose : undefined}
         />
       ) : isCurrentFileLocked ? (
@@ -2020,7 +1996,7 @@ const EmbedPdfViewerContent = ({
               file={effectiveFile.file}
               url={effectiveFile.url}
               exportOriginal={rightsManagedOpened?.original}
-              exportProtect={exportProtect}
+              exportProtect={rightsManagedExport?.protectBytes}
               fileName={
                 previewFile
                   ? previewFile.name

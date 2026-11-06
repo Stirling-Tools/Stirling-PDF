@@ -5,7 +5,6 @@ import React, {
   useRef,
   useEffect,
   forwardRef,
-  useSyncExternalStore,
   type RefCallback,
 } from "react";
 import { Loader, Menu, Tooltip } from "@mantine/core";
@@ -89,9 +88,8 @@ import {
   getRightsManagedThumbnail,
   isKnownRightsManagedPdf,
   isMicrosoftProtectedPdf,
-  rightsManagedPdfRevision,
-  subscribeRightsManagedPdfs,
 } from "@editor/services/rightsManagedPdf";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
 import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -538,11 +536,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   ) {
     const { t } = useTranslation();
     const labelName = useLabelName();
-    useSyncExternalStore(
-      subscribeRightsManagedPdfs,
-      rightsManagedPdfRevision,
-      rightsManagedPdfRevision,
-    );
+    useRightsManagedPdfRevision();
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();

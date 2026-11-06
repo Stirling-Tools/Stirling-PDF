@@ -1,8 +1,9 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   getOpenedRightsManagedPdf,
   getRightsManagedThumbnail,
   isMicrosoftProtectedPdf,
+  protectLikeOriginal,
   rightsManagedPdfRevision,
   subscribeRightsManagedPdfs,
   type OpenedRightsManagedPdf,
@@ -14,14 +15,18 @@ export type RightsManagedPdfState =
   | { status: "locked" }
   | { status: "opened"; opened: OpenedRightsManagedPdf };
 
-export function useRightsManagedPdf(
-  file: File | null | undefined,
-): RightsManagedPdfState {
-  useSyncExternalStore(
+export function useRightsManagedPdfRevision(): number {
+  return useSyncExternalStore(
     subscribeRightsManagedPdfs,
     rightsManagedPdfRevision,
     rightsManagedPdfRevision,
   );
+}
+
+export function useRightsManagedPdf(
+  file: File | null | undefined,
+): RightsManagedPdfState {
+  useRightsManagedPdfRevision();
   const [detected, setDetected] = useState<{
     file: File;
     isProtected: boolean;
@@ -48,10 +53,31 @@ export function useRightsManagedPdf(
 export function useRightsManagedThumbnail(
   file: Blob | string | null | undefined,
 ): string | undefined {
-  useSyncExternalStore(
-    subscribeRightsManagedPdfs,
-    rightsManagedPdfRevision,
-    rightsManagedPdfRevision,
-  );
+  useRightsManagedPdfRevision();
   return getRightsManagedThumbnail(file);
+}
+
+export interface RightsManagedExport {
+  protectFile: (plain: File) => Promise<File>;
+  protectBytes: (bytes: ArrayBuffer) => Promise<ArrayBuffer>;
+}
+
+export function useRightsManagedExport(
+  opened: OpenedRightsManagedPdf | null,
+): RightsManagedExport | undefined {
+  return useMemo(() => {
+    if (!opened) return undefined;
+    const protectFile = (plain: File) => protectLikeOriginal(opened, plain);
+    return {
+      protectFile,
+      protectBytes: async (bytes: ArrayBuffer) =>
+        (
+          await protectFile(
+            new File([bytes], opened.original.name, {
+              type: "application/pdf",
+            }),
+          )
+        ).arrayBuffer(),
+    };
+  }, [opened]);
 }

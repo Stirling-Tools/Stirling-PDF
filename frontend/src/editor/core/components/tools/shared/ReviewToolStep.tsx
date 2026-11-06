@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useSyncExternalStore } from "react";
+import React, { useEffect, useRef } from "react";
 import { Menu, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -16,10 +16,9 @@ import i18n from "@editor/i18n";
 import {
   getOpenedRightsManagedPdf,
   getRightsManagedThumbnail,
-  rightsManagedPdfRevision,
   rightsManagedSaveBlocked,
-  subscribeRightsManagedPdfs,
 } from "@editor/services/rightsManagedPdf";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import type { FileId } from "@editor/types/file";
@@ -113,11 +112,7 @@ function ReviewStepContent<TParams = unknown>({
     }
   };
 
-  useSyncExternalStore(
-    subscribeRightsManagedPdfs,
-    rightsManagedPdfRevision,
-    rightsManagedPdfRevision,
-  );
+  useRightsManagedPdfRevision();
   const previewFiles =
     operation.files?.map((file, index) => ({
       file,
