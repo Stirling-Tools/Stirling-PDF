@@ -52,6 +52,14 @@ describe("templateFromField", () => {
     });
   });
 
+  it("leaves out the filled-in value and the extracted label", () => {
+    const template = templateFromField(
+      field({ value: "Ada Lovelace", label: "Name" }),
+    );
+    expect(template?.defaultValue).toBeUndefined();
+    expect(template?.label).toBeUndefined();
+  });
+
   it("uses staged geometry and properties", () => {
     const template = templateFromField(field(), {
       targetName: "Name",

@@ -354,7 +354,7 @@ function FieldRow({ field, pageIdx, selectedRowRef }: FieldRowProps) {
           </Text>
         </Group>
         <Group gap={2} wrap="nowrap">
-          {!deleted && (
+          {!deleted && field.widgets?.[0]?.cropBoxHeight != null && (
             <DuplicateFieldMenu
               getSource={() =>
                 templateFromField(field, modifiedFields[field.name])

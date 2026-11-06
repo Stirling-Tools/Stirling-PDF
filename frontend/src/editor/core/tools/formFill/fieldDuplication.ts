@@ -40,7 +40,9 @@ export function templateFromField(
 
   return {
     name: staged?.name ?? field.name,
-    label: staged?.label ?? field.label,
+    // Only a label the user typed: the extracted one may be derived from the name, and writing
+    // it into the copy would give every copy the original's label.
+    label: staged?.label,
     type: effective.type,
     pageIndex: anchor.pageIndex,
     x: left,
@@ -50,7 +52,8 @@ export function templateFromField(
     required: staged?.required ?? field.required,
     multiSelect: staged?.multiSelect ?? field.multiSelect,
     options: effective.options ?? undefined,
-    defaultValue: staged?.defaultValue ?? (field.value || undefined),
+    // field.value is what has been filled in, not a default, so a copy starts empty.
+    defaultValue: staged?.defaultValue,
     tooltip: staged?.tooltip ?? field.tooltip ?? undefined,
     fontSize: staged?.fontSize ?? anchor.fontSize,
     readOnly: effective.readOnly,
