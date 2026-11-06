@@ -24,14 +24,6 @@ import tools.jackson.databind.ObjectMapper;
  * Checks that an OpenID Connect issuer answers discovery. OAuth sign-in and MCP's OAuth mode both
  * read {@code <issuer>/.well-known/openid-configuration}; an issuer that does not answer stops
  * sign-in from being registered, so the setup wizard checks it before saving.
- *
- * <p>The admin chooses the host, so this is a bounded SSRF surface that only ever answers true or
- * false. Loopback and private hosts are allowed because a self-hosted identity provider usually
- * lives on one. Link-local addresses and the cloud metadata services outside that range are
- * refused, redirects are not followed, and the document is read up to a fixed size. The host is
- * resolved once for that check and again by the client, so a name that changes its answer between
- * the two can still be fetched from; all that tells the caller is whether the address advertised
- * the issuer.
  */
 @Service
 @Slf4j
