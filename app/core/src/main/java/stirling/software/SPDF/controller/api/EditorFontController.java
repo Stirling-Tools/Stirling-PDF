@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
@@ -62,6 +61,6 @@ public class EditorFontController {
                 .header("X-Content-Type-Options", "nosniff")
                 .contentType(MediaType.parseMediaType("font/" + font.format()))
                 .contentLength(font.size())
-                .body(new FileSystemResource(font.path()));
+                .body(font.resource());
     }
 }

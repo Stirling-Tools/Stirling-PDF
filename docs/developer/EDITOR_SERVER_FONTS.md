@@ -1,8 +1,9 @@
 # Server fonts for the PDF text editor
 
-Admins drop `.ttf` / `.otf` files into the existing custom fonts folder. Every user of the PDF
-text editor sees them in the font picker under "Server fonts", and picking one embeds the real
-face into the saved PDF.
+The font picker's "Server fonts" group lists the fonts bundled with Stirling-PDF (Liberation,
+DejaVu, Noto Sans and most of the Noto script faces in `app/core/src/main/resources/static/fonts/`) plus
+any `.ttf` / `.otf` an admin drops into the custom fonts folder. Picking one embeds the real face
+into the saved PDF.
 
 ## For operators
 
@@ -16,10 +17,13 @@ volumes:
 ```
 
 - New, changed or removed files are picked up within 30 seconds. No restart.
+- A family in this folder replaces the bundled family of the same name (compared
+  case-insensitively), so admins can override a bundled font with their own cut.
 - Only TrueType-outline fonts are listed. These are skipped and logged:
   - `.woff` / `.woff2` (PDFium cannot embed them; the Sign tool still uses them)
   - `.ttc` collections
   - CFF-flavoured `.otf` (PostScript outlines cannot be embedded as TrueType)
+  - variable fonts (a PDF embeds only the default instance, which for Noto Sans KR / SC is Thin)
   - fonts whose OS/2 `fsType` forbids embedding (restricted licence, or bitmap-only)
   - files over 64 MB, and anything FontBox cannot parse
 - Files in this folder are also served publicly at `/fonts/<name>`, as they were before this
@@ -47,7 +51,7 @@ once, and if the face is still missing the picker says so and leaves the text un
 
 Backend (`app/core`):
 
-- `EditorFontRegistry` walks the folder, parses each file with FontBox for family (name ID 16,
+- `EditorFontRegistry` indexes the bundled fonts from the classpath once, walks the folder, parses each file with FontBox for family (name ID 16,
   falling back to 1), style (17, falling back to 2), weight and italic flags, applies the skip
   rules above, and hashes the file. Results are cached by path, size and mtime, so a rescan only
   re-parses changed files.

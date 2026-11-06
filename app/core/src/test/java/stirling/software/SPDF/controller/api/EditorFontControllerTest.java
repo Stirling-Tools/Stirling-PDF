@@ -17,6 +17,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -69,7 +70,8 @@ class EditorFontControllerTest {
     void fontBytesAreImmutableAndContentAddressed() throws Exception {
         Path font = tempDir.resolve("Acme.ttf");
         Files.write(font, new byte[] {0, 1, 0, 0});
-        when(registry.resolve(ID)).thenReturn(Optional.of(new FontFile(font, "ttf", 4)));
+        when(registry.resolve(ID))
+                .thenReturn(Optional.of(new FontFile(new FileSystemResource(font), "ttf", 4)));
 
         mvc.perform(get("/api/v1/ui-data/editor-fonts/" + ID))
                 .andExpect(status().isOk())

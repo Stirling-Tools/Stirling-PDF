@@ -9,14 +9,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.FileSystemResource;
 
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFamily;
@@ -31,7 +34,7 @@ class EditorFontRegistryTest {
     @BeforeEach
     void setUp() {
         clock = new MutableClock(Instant.parse("2026-11-05T10:00:00Z"));
-        registry = new EditorFontRegistry(root, clock);
+        registry = new EditorFontRegistry(root, null, clock);
     }
 
     @Test
@@ -62,7 +65,8 @@ class EditorFontRegistryTest {
 
     @Test
     void emptyWhenFolderIsMissing() {
-        EditorFontRegistry missing = new EditorFontRegistry(root.resolve("does-not-exist"), clock);
+        EditorFontRegistry missing =
+                new EditorFontRegistry(root.resolve("does-not-exist"), null, clock);
 
         assertThat(missing.snapshot().manifest().families()).isEmpty();
     }
@@ -103,6 +107,56 @@ class EditorFontRegistryTest {
     }
 
     @Test
+    void listsTheFontsBundledWithTheApp() throws Exception {
+        EditorFontRegistry withBundled =
+                new EditorFontRegistry(root, EditorFontRegistry.BUNDLED_FONTS, clock);
+
+        List<EditorFontFamily> families = withBundled.snapshot().manifest().families();
+
+        assertThat(families)
+                .extracting(EditorFontFamily::family)
+                .contains("Liberation Sans", "DejaVu Serif", "Noto Sans", "Noto Sans JP")
+                .doesNotContain("Tangerine", "Noto Sans KR", "Noto Sans SC", "Noto Sans TC");
+        EditorFontFace regular = family(families, "Liberation Sans").faces().get(0);
+        assertThat(family(families, "Liberation Sans").faces()).hasSize(4);
+        assertThat(regular.style()).isEqualTo("Regular");
+        assertThat(withBundled.resolve(regular.id()))
+                .hasValueSatisfying(
+                        file -> {
+                            try (InputStream in = file.resource().getInputStream()) {
+                                byte[] bytes = in.readAllBytes();
+                                assertThat(bytes).hasSize((int) regular.size());
+                                assertThat(
+                                                HexFormat.of()
+                                                        .formatHex(
+                                                                MessageDigest.getInstance("SHA-256")
+                                                                        .digest(bytes)))
+                                        .isEqualTo(regular.id());
+                            } catch (Exception e) {
+                                throw new AssertionError(e);
+                            }
+                        });
+    }
+
+    @Test
+    void customFolderReplacesABundledFamily() throws IOException {
+        Path custom = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", custom);
+        EditorFontRegistry withBundled =
+                new EditorFontRegistry(root, EditorFontRegistry.BUNDLED_FONTS, clock);
+
+        EditorFontFamily dejaVu =
+                family(withBundled.snapshot().manifest().families(), "DejaVu Sans");
+
+        assertThat(dejaVu.faces()).hasSize(1);
+        assertThat(withBundled.resolve(dejaVu.faces().get(0).id()))
+                .hasValueSatisfying(
+                        file ->
+                                assertThat(file.resource())
+                                        .isEqualTo(new FileSystemResource(custom)));
+    }
+
+    @Test
     void resolvesOnlyKnownWellFormedIds() throws IOException {
         Path font = root.resolve("DejaVuSans.ttf");
         copyFixture("DejaVuSans.ttf", font);
@@ -111,7 +165,7 @@ class EditorFontRegistryTest {
         assertThat(registry.resolve(id))
                 .hasValueSatisfying(
                         file -> {
-                            assertThat(file.path()).isEqualTo(font);
+                            assertThat(file.resource()).isEqualTo(new FileSystemResource(font));
                             assertThat(file.format()).isEqualTo("ttf");
                         });
         assertThat(registry.resolve("0".repeat(64))).isEmpty();
@@ -148,6 +202,10 @@ class EditorFontRegistryTest {
         String newId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
         assertThat(newId).isNotEqualTo(oldId);
         assertThat(registry.resolve(newId)).isPresent();
+    }
+
+    private static EditorFontFamily family(List<EditorFontFamily> families, String name) {
+        return families.stream().filter(f -> f.family().equals(name)).findFirst().orElseThrow();
     }
 
     private static void copyFixture(String name, Path target) throws IOException {

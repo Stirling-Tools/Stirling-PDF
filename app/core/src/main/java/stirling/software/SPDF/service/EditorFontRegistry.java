@@ -14,12 +14,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -33,8 +35,12 @@ import org.apache.fontbox.ttf.OpenTypeFont;
 import org.apache.fontbox.ttf.TTFParser;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +51,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Service
 public class EditorFontRegistry {
 
+    static final String BUNDLED_FONTS = "classpath:static/fonts/*";
     static final long MAX_FONT_BYTES = 64L * 1024 * 1024;
     static final Duration RESCAN_INTERVAL = Duration.ofSeconds(30);
     private static final int MAX_DEPTH = 4;
@@ -75,26 +82,43 @@ public class EditorFontRegistry {
 
     public record Snapshot(EditorFontManifest manifest, String etag) {}
 
-    public record FontFile(Path path, String format, long size) {}
+    public record FontFile(Resource resource, String format, long size) {}
 
     private record IndexedFace(String family, EditorFontFace face, Path path, long modified) {}
+
+    private record BundledFace(String family, EditorFontFace face, Resource resource) {}
+
+    private record FaceInfo(
+            String family,
+            String style,
+            boolean bold,
+            boolean italic,
+            int weight,
+            String postscriptName) {}
 
     private record ScanEntry(long size, long modified, IndexedFace face) {}
 
     private final Path root;
+    private final String bundledPattern;
     private final Clock clock;
     private final Map<Path, ScanEntry> scanned = new HashMap<>();
-    private volatile Map<String, IndexedFace> byId = Map.of();
+    private List<BundledFace> bundled;
+    private volatile Map<String, FontFile> byId = Map.of();
+    private volatile Map<String, IndexedFace> customById = Map.of();
     private volatile Snapshot snapshot = emptySnapshot();
     private volatile Instant lastScan = Instant.MIN;
 
     @Autowired
     public EditorFontRegistry() {
-        this(Path.of(InstallationPathConfig.getStaticPath(), "fonts"), Clock.systemUTC());
+        this(
+                Path.of(InstallationPathConfig.getStaticPath(), "fonts"),
+                BUNDLED_FONTS,
+                Clock.systemUTC());
     }
 
-    EditorFontRegistry(Path root, Clock clock) {
+    EditorFontRegistry(Path root, String bundledPattern, Clock clock) {
         this.root = root;
+        this.bundledPattern = bundledPattern;
         this.clock = clock;
     }
 
@@ -108,15 +132,11 @@ public class EditorFontRegistry {
             return Optional.empty();
         }
         refreshIfDue(false);
-        IndexedFace face = byId.get(id);
-        if (face != null && !isUnchanged(face)) {
+        IndexedFace custom = customById.get(id);
+        if (custom != null && !isUnchanged(custom)) {
             refreshIfDue(true);
-            face = byId.get(id);
         }
-        if (face == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new FontFile(face.path(), face.face().format(), face.face().size()));
+        return Optional.ofNullable(byId.get(id));
     }
 
     private boolean isUnchanged(IndexedFace face) {
@@ -146,6 +166,9 @@ public class EditorFontRegistry {
             return;
         }
         lastScan = clock.instant();
+        if (bundled == null) {
+            bundled = loadBundled();
+        }
         Map<Path, ScanEntry> next = new HashMap<>();
         for (Path path : listFontFiles()) {
             BasicFileAttributes attrs;
@@ -200,15 +223,87 @@ public class EditorFontRegistry {
             return null;
         }
         String format = formatOf(path);
-        try (RandomAccessRead in = new RandomAccessReadBufferedFile(path.toFile());
-                TrueTypeFont font =
-                        "otf".equals(format)
-                                ? new OTFParser().parse(in)
-                                : new TTFParser().parse(in)) {
+        try (RandomAccessRead in = new RandomAccessReadBufferedFile(path.toFile())) {
+            FaceInfo info = describe(in, format, path);
+            if (info == null) {
+                return null;
+            }
+            return new IndexedFace(
+                    info.family(), faceOf(info, sha256(path), format, size), path, modified);
+        } catch (IOException | RuntimeException e) {
+            log.warn("Skipping editor font {}: {}", path, e.getMessage());
+            return null;
+        }
+    }
+
+    private List<BundledFace> loadBundled() {
+        if (bundledPattern == null) {
+            return List.of();
+        }
+        Resource[] resources;
+        try {
+            resources = new PathMatchingResourcePatternResolver().getResources(bundledPattern);
+        } catch (IOException e) {
+            log.warn("Could not list bundled editor fonts: {}", e.getMessage());
+            return List.of();
+        }
+        List<BundledFace> faces = new ArrayList<>();
+        for (Resource resource : resources) {
+            String filename = resource.getFilename();
+            String format = filename == null ? null : formatOf(Path.of(filename));
+            if (format == null) {
+                continue;
+            }
+            try (InputStream in = resource.getInputStream()) {
+                byte[] bytes = in.readNBytes((int) MAX_FONT_BYTES + 1);
+                if (bytes.length > MAX_FONT_BYTES) {
+                    continue;
+                }
+                FaceInfo info;
+                try (RandomAccessRead buffer = new RandomAccessReadBuffer(bytes)) {
+                    info = describe(buffer, format, filename);
+                }
+                if (info != null) {
+                    String id = HexFormat.of().formatHex(newDigest().digest(bytes));
+                    faces.add(
+                            new BundledFace(
+                                    info.family(),
+                                    faceOf(info, id, format, bytes.length),
+                                    resource));
+                }
+            } catch (IOException | RuntimeException e) {
+                log.warn("Skipping bundled editor font {}: {}", filename, e.getMessage());
+            }
+        }
+        return List.copyOf(faces);
+    }
+
+    private static EditorFontFace faceOf(FaceInfo info, String id, String format, long size) {
+        return new EditorFontFace(
+                id,
+                info.style(),
+                info.bold(),
+                info.italic(),
+                info.weight(),
+                info.postscriptName(),
+                format,
+                size);
+    }
+
+    private static FaceInfo describe(RandomAccessRead in, String format, Object source)
+            throws IOException {
+        try (TrueTypeFont font =
+                "otf".equals(format) ? new OTFParser().parse(in) : new TTFParser().parse(in)) {
             if (font instanceof OpenTypeFont otf && otf.isPostScript()) {
                 log.info(
                         "Skipping editor font {}: CFF outlines cannot be embedded as TrueType",
-                        path);
+                        source);
+                return null;
+            }
+            if (font.getTableMap().containsKey("fvar")) {
+                log.info(
+                        "Skipping editor font {}: variable fonts embed only their default instance",
+                        source);
                 return null;
             }
             OS2WindowsMetricsTable os2 = font.getOS2Windows();
@@ -216,7 +311,7 @@ public class EditorFontRegistry {
             if ((fsType & (FS_TYPE_RESTRICTED | FS_TYPE_BITMAP_ONLY)) != 0) {
                 log.info(
                         "Skipping editor font {}: its licence forbids embedding (fsType {})",
-                        path,
+                        source,
                         fsType);
                 return null;
             }
@@ -226,7 +321,7 @@ public class EditorFontRegistry {
                             name(naming, NAME_TYPOGRAPHIC_FAMILY),
                             naming == null ? null : naming.getFontFamily());
             if (family == null) {
-                log.info("Skipping editor font {}: no family name", path);
+                log.info("Skipping editor font {}: no family name", source);
                 return null;
             }
             String style =
@@ -245,14 +340,7 @@ public class EditorFontRegistry {
                     (fsSelection & (FS_SELECTION_ITALIC | FS_SELECTION_OBLIQUE)) != 0
                             || (macStyle & MAC_STYLE_ITALIC) != 0;
             if (weight < 0) weight = bold ? 700 : 400;
-            String id = sha256(path);
-            EditorFontFace face =
-                    new EditorFontFace(
-                            id, style, bold, italic, weight, postscriptName, format, size);
-            return new IndexedFace(family, face, path, modified);
-        } catch (IOException | RuntimeException e) {
-            log.warn("Skipping editor font {}: {}", path, e.getMessage());
-            return null;
+            return new FaceInfo(family, style, bold, italic, weight, postscriptName);
         }
     }
 
@@ -300,12 +388,24 @@ public class EditorFontRegistry {
     }
 
     private void publish() {
-        Map<String, IndexedFace> ids = new LinkedHashMap<>();
+        Map<String, FontFile> files = new LinkedHashMap<>();
+        Map<String, IndexedFace> customs = new LinkedHashMap<>();
         Map<String, List<EditorFontFace>> grouped = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (ScanEntry entry : new TreeMap<>(scanned).values()) {
             IndexedFace face = entry.face();
-            if (face == null || ids.containsKey(face.face().id())) continue;
-            ids.put(face.face().id(), face);
+            if (face == null || files.containsKey(face.face().id())) continue;
+            customs.put(face.face().id(), face);
+            files.put(face.face().id(), fileOf(face.face(), new FileSystemResource(face.path())));
+            grouped.computeIfAbsent(face.family(), k -> new ArrayList<>()).add(face.face());
+        }
+        Set<String> customFamilies = new HashSet<>();
+        for (String family : grouped.keySet()) {
+            customFamilies.add(family.toLowerCase(Locale.ROOT));
+        }
+        for (BundledFace face : bundled) {
+            if (customFamilies.contains(face.family().toLowerCase(Locale.ROOT))
+                    || files.containsKey(face.face().id())) continue;
+            files.put(face.face().id(), fileOf(face.face(), face.resource()));
             grouped.computeIfAbsent(face.family(), k -> new ArrayList<>()).add(face.face());
         }
         List<EditorFontFamily> families = new ArrayList<>();
@@ -317,8 +417,13 @@ public class EditorFontRegistry {
                             .thenComparing(EditorFontFace::style));
             families.add(new EditorFontFamily(group.getKey(), List.copyOf(faces)));
         }
-        byId = Map.copyOf(ids);
+        customById = Map.copyOf(customs);
+        byId = Map.copyOf(files);
         snapshot = new Snapshot(new EditorFontManifest(List.copyOf(families)), etagOf(families));
+    }
+
+    private static FontFile fileOf(EditorFontFace face, Resource resource) {
+        return new FontFile(resource, face.format(), face.size());
     }
 
     private static String etagOf(List<EditorFontFamily> families) {
