@@ -3,10 +3,9 @@ import { FileStoreContext } from "@editor/contexts/file/contexts";
 import { startEagerWasmCompilation } from "@editor/services/wasmPrecompiler";
 
 /**
- * Starts the PDFium WASM download and compile only once a document is actually
- * in play: documents already open, a document added, an OS file drag, or the
- * file picker opening. A page the user merely visits fetches nothing, so the
- * engine cost lands only on sessions that will open a PDF.
+ * Starts the PDFium WASM download and compile once the browser is idle after boot,
+ * or sooner on a sign of a document: one already open or added, an OS file drag,
+ * or the file picker opening. Every tool's preflight needs the engine.
  */
 export function usePdfEngineWarmUp(): void {
   const store = useContext(FileStoreContext);
@@ -52,11 +51,21 @@ export function usePdfEngineWarmUp(): void {
       }
     };
 
+    // Idle preload so the first tool run never waits on the download.
+    const idle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(warmUpOnce, { timeout: 5_000 })
+        : undefined;
+    const fallback =
+      idle === undefined ? setTimeout(warmUpOnce, 2_000) : undefined;
+
     window.addEventListener("dragenter", onDragEnter, { passive: true });
     window.addEventListener("click", onFilePickerIntent, { passive: true });
     window.addEventListener("focusin", onFilePickerIntent);
 
     return () => {
+      if (idle !== undefined) window.cancelIdleCallback?.(idle);
+      clearTimeout(fallback);
       unsubscribe?.();
       window.removeEventListener("dragenter", onDragEnter);
       window.removeEventListener("click", onFilePickerIntent);

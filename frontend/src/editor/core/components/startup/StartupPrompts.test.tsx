@@ -51,6 +51,10 @@ const h = vi.hoisted<{
   tracking: vi.fn(),
 }));
 vi.mock("@editor/pages/HomePage", () => ({ default: () => null }));
+// AppRoot preloads PDFium at idle; loading the real engine stalls these tests.
+vi.mock("@editor/services/wasmPrecompiler", () => ({
+  startEagerWasmCompilation: vi.fn(),
+}));
 vi.mock("@editor/pages/SettingsPage", () => ({ default: () => null }));
 vi.mock("@editor/components/docs/DocsPage", () => ({ default: () => null }));
 vi.mock("@editor/components/shared/NavigationWarningModal", () => ({

@@ -66,19 +66,30 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
 }
 
 /**
- * PDFium rejects some damaged files the server can still recover, so unparseable
- * bytes with no encryption hint are passed through unchanged. Access is not
- * recorded for them: nothing has proved them unencrypted.
+ * Damaged bytes (the server may recover them) and a slow local check (the engine is
+ * still downloading) must not block a tool, so files with no encryption hint pass
+ * through unchanged. Access is not recorded for them: nothing has proved them unencrypted.
  */
+const passedThrough = new WeakSet<Blob>();
+
 async function ensureAccessUnlessDamaged(
   file: StirlingFile,
   signal?: AbortSignal,
 ): Promise<PdfAccess | undefined> {
+  // Preflight's verdict is consumed once, so processing does not wait out a second inspection.
+  if (passedThrough.delete(file)) return undefined;
   try {
     return await ensureLocalPdfAccess(file, signal);
   } catch (error) {
-    if (isDamagedPdfError(error) && !(await looksEncryptedFromTrailer(file)))
+    const timedOut =
+      error instanceof DOMException && error.name === "TimeoutError";
+    if (
+      (timedOut || isDamagedPdfError(error)) &&
+      !(await looksEncryptedFromTrailer(file))
+    ) {
+      passedThrough.add(file);
       return undefined;
+    }
     throw error;
   }
 }
@@ -96,13 +107,25 @@ export async function preflightPdfOperation(
   const changesProtection =
     endpoint === "/api/v1/security/add-password" ||
     endpoint === "/api/v1/security/remove-password";
+  const isPdf = (file: StirlingFile) =>
+    file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  // Inspect the whole selection at once; the access service bounds concurrent workers.
+  const inspections = new Map(
+    changesProtection
+      ? []
+      : files.filter(isPdf).map((file) => {
+          const inspection = ensureAccessUnlessDamaged(file, signal);
+          inspection.catch(() => {});
+          return [file, inspection] as const;
+        }),
+  );
   for (const file of files) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
-    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (!isPdf(file)) continue;
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
-      : await ensureAccessUnlessDamaged(file, signal);
+      : await inspections.get(file);
     const encrypted =
       access?.encrypted ??
       (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));

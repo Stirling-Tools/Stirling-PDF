@@ -57,8 +57,24 @@ describe("damaged PDFs", () => {
     );
   });
 
+  it("lets a timed-out check through unless the file looks encrypted", async () => {
+    inspect.mockImplementation(async () => {
+      throw new DOMException("timed out", "TimeoutError");
+    });
+    const plain = pdf("%PDF-1.7");
+    await expect(
+      preflightPdfOperation([plain], repair, false, vi.fn()),
+    ).resolves.toBe(true);
+    expect(getPdfAccess(plain)).toBeUndefined();
+    // Processing reuses preflight's verdict instead of waiting out another inspection.
+    await expect(prepareUnlockedFile(plain, repair)).resolves.toBe(plain);
+    expect(inspect).toHaveBeenCalledOnce();
+    await expect(
+      prepareUnlockedFile(pdf("%PDF-1.7 trailer << /Encrypt 5 0 R >>"), repair),
+    ).rejects.toMatchObject({ name: "TimeoutError" });
+  });
+
   it.each([
-    ["a timeout", new DOMException("timed out", "TimeoutError")],
     ["a password failure", Object.assign(new Error("x"), { code: 4 })],
     ["a memory failure", new Error("Unable to allocate memory for this PDF")],
   ])("does not treat %s as damage", async (_, error) => {
