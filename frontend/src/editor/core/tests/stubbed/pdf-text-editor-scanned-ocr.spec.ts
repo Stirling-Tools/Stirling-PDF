@@ -774,3 +774,28 @@ test("only blurry scans get softened edits", async ({ page }) => {
   await replaceRunText(page, south.id, south.text.replace("SOUTH", "EAST"));
   expect(await blockSoftness(page, south.id)).toBeGreaterThan(0);
 });
+
+test("a scanned edit applies the best font, and the picker offers others", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await openForm(page);
+  const line = (await runs(page)).find((r) => r.renderMode === 3)!;
+  const choices = page.getByTestId("pdf-editor-scan-font-choice");
+  const open = page.getByTestId("pdf-editor-scan-font-open");
+  await page.getByTestId(`pdf-editor-run-${line.id}`).click();
+  await expect(open).toHaveCount(0);
+
+  await replaceRunText(page, line.id, `${line.text}X`);
+  await expect(choices).toHaveCount(0);
+  await page.getByTestId(`pdf-editor-run-${line.id}`).click();
+  await open.click();
+  await expect(choices.first()).toBeVisible({ timeout: 30_000 });
+  expect(await choices.count()).toBeGreaterThan(1);
+  await expect(choices.first()).toHaveAttribute("aria-checked", "true");
+
+  const before = await bitmapSig(page);
+  await choices.nth(1).click();
+  await expect(choices).toHaveCount(0);
+  await settle(page, before);
+});

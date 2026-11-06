@@ -17,6 +17,8 @@ import {
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
   LoadProgress,
@@ -79,6 +81,7 @@ export function EditorSidebar({
   }, [hasSelection]);
 
   const fontNote = useSelectedFontNote(state, selection);
+  const scanFontMatch = useScanFontMatch(store, state, selection);
 
   const editorDocument = store.document;
   const reviewingAccessibility = useMemo(
@@ -154,6 +157,7 @@ export function EditorSidebar({
                 selection={selection}
                 geometry={geometry}
                 fontNote={fontNote}
+                scanFontMatch={scanFontMatch}
                 canGroup={canGroup}
                 canUngroup={canUngroup}
                 onGroup={onGroup}
@@ -190,6 +194,7 @@ export function EditorSidebar({
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
+      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Tabs>
   );
 }

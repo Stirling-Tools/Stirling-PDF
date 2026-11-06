@@ -7,6 +7,7 @@ import {
   INK_SCALE,
   capturePatch,
   measureScanInk,
+  renderLuma,
   sampleBackground,
   type PixelPatch,
   type ScanInk,
@@ -25,13 +26,11 @@ import {
   removeMemberPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
-  COURIER,
-  FACES,
-  HELVETICA,
   clampStretch,
   fitFace,
   isEvenlySpaced,
   matchScan,
+  withScanCache,
   median,
   placeText,
   blurRgba,
@@ -39,9 +38,22 @@ import {
   toInkOnly,
   opaqueStroke,
   spanOf,
+  textAdvance,
   topShare,
-  type Face,
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import {
+  COURIER,
+  HELVETICA,
+  scanFaces,
+  type Face,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import {
+  buildGlyphAtlas,
+  canCompose,
+  composeText,
+  type GlyphAtlas,
+  type ScannedWord,
+} from "@editor/tools/pdfTextEditor/commands/scanGlyphs";
 
 // Editing OCR text on a scanned page. The words live twice: as pixels in the
 // scan and as invisible (Tr 3) text. An edit draws only the words the user
@@ -91,6 +103,13 @@ export interface ScanOverride {
   family?: string;
   fontSize?: number;
   fill?: RGBA;
+  style?: ScanStyle;
+}
+
+export interface RankedStyle {
+  face: Face;
+  style: ScanStyle;
+  score: number;
 }
 
 interface SpanInk {
@@ -118,12 +137,18 @@ export interface ScanEditState {
   patches: Map<string, PixelPatch | null>;
   override: ScanOverride;
   /** The block's style, and its glyph height above the baseline. */
-  block?: { style: ScanStyle; top: number } | null;
+  block?: {
+    style: ScanStyle;
+    top: number;
+    ranked: RankedStyle[];
+    ref: SpanInk;
+  } | null;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
   face?: Face | null;
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
+  atlas?: GlyphAtlas | null;
 }
 
 interface PlacedWord {
@@ -407,15 +432,176 @@ function scanPixelSpan(
   }
 }
 
-// The face, weight, size and letter width that redraw `ref` most like the
-// scan; the size is shared by every span in `spans`.
-function fitStyle(
+const BY_WIDTH = 3;
+const BY_RENDER = 2;
+const CROWDED = 12;
+const BY_WIDTH_CROWDED = 5;
+const BY_RENDER_CROWDED = 3;
+const WIDTH_SLACK = 0.25;
+const OFFERED = 3;
+
+const preferredFaces = new WeakMap<EditorDocument, string>();
+
+export function preferredScanFace(doc: EditorDocument): string | null {
+  return preferredFaces.get(doc) ?? null;
+}
+
+export function setPreferredScanFace(
+  doc: EditorDocument,
+  label: string | null,
+): void {
+  if (label) preferredFaces.set(doc, label);
+  else preferredFaces.delete(doc);
+}
+
+function halfDensityXHeight(
+  doc: EditorDocument,
+  page: Page,
+  s: SpanInk,
+): number | null {
+  if (s.ink.xLine === null) return null;
+  const rect = s.ink.rect;
+  const img = renderLuma(doc.module, page, rect, 0);
+  if (!img) return null;
+  const { data, width, height } = img;
+  const paper = 0.299 * s.paper.r + 0.587 * s.paper.g + 0.114 * s.paper.b;
+  const depth = Math.max(30, paper - Math.min(...data));
+  const row = (y: number) => {
+    let sum = 0;
+    for (let x = 0; x < width; x++)
+      sum += Math.max(0, paper - data[y * width + x]);
+    return sum / (width * depth);
+  };
+  const rows = Array.from({ length: height }, (_, y) => row(y));
+  const rowOf = (pageY: number) =>
+    ((rect.y + rect.height - pageY) / rect.height) * height;
+  const xRow = rowOf(s.ink.xLine);
+  const baseRow = rowOf(s.baseline);
+  const from = Math.round(xRow + (baseRow - xRow) * 0.25);
+  const to = Math.round(baseRow - (baseRow - xRow) * 0.25);
+  if (to <= from || from < 0 || to >= height) return null;
+  const plateau = median(rows.slice(from, to + 1));
+  if (plateau <= 0) return null;
+  const half = plateau / 2;
+  const crossing = (start: number, step: number) => {
+    for (let y = start; y >= 0 && y < height; y += step) {
+      const next = y + step;
+      if (next < 0 || next >= height) return null;
+      if (rows[next] < half) {
+        const t = (rows[y] - half) / Math.max(1e-6, rows[y] - rows[next]);
+        return y + t * step;
+      }
+    }
+    return null;
+  };
+  const centre = Math.round((from + to) / 2);
+  const up = crossing(centre, -1);
+  const down = crossing(centre, 1);
+  if (up === null || down === null) return null;
+  return ((down - up) / height) * rect.height;
+}
+
+function widthMisfit(
+  doc: EditorDocument,
+  page: Page,
+  face: Face,
+  family: string,
+  ref: SpanInk,
+  words: Array<{ text: string; width: number }>,
+  xHeight: number | null,
+): number {
+  const size = xHeight ? xHeight / (face.xh / 1000) : sizeFor(face, ref);
+  const line = textAdvance(doc, page, face, family, ref.original);
+  if (!line || size <= 2) return Infinity;
+  const span = Math.min(
+    ...[0.88, 0.91, 0.94, 0.97, 1].map((k) =>
+      Math.abs(Math.log(ref.ink.body.width / ((line * size * k) / 1000))),
+    ),
+  );
+  const ratios = words
+    .map((w) => {
+      const adv = textAdvance(doc, page, face, family, w.text);
+      return adv ? w.width / adv : 0;
+    })
+    .filter((r) => r > 0);
+  if (ratios.length < 4) return span;
+  const k = median(ratios);
+  return span + 2 * median(ratios.map((r) => Math.abs(r / k - 1)));
+}
+
+function shortlist(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  ref: SpanInk,
+  faces: Face[],
+  quickScore: (face: Face) => number,
+): Face[] {
+  const crowded = faces.length > CROWDED;
+  const byWidth = crowded ? BY_WIDTH_CROWDED : BY_WIDTH;
+  const byRender = crowded ? BY_RENDER_CROWDED : BY_RENDER;
+  if (faces.length <= byWidth + byRender) return faces;
+  const words = wordsOf(state.lines)
+    .map((w) => ({ text: w.text.trim(), width: w.width }))
+    .filter((w) => w.text.length >= 2 && w.width > 0)
+    .slice(0, 24);
+  const xHeight = halfDensityXHeight(doc, page, ref);
+  const misfit = (face: Face) =>
+    Math.min(
+      ...[...new Set([face.family, face.bold])].map((family) =>
+        widthMisfit(doc, page, face, family, ref, words, xHeight),
+      ),
+    );
+  const scored = faces
+    .map((face) => ({ face, misfit: misfit(face) }))
+    .filter((f) => Number.isFinite(f.misfit))
+    .sort((p, q) => p.misfit - q.misfit);
+  const plausible = scored.filter(
+    (f) => f.misfit <= scored[0].misfit + WIDTH_SLACK,
+  );
+  const kept = plausible.slice(0, byWidth).map((f) => f.face);
+  const rest = plausible
+    .slice(byWidth)
+    .map((f) => ({ face: f.face, score: quickScore(f.face) }))
+    .sort((p, q) => q.score - p.score)
+    .slice(0, byRender);
+  kept.push(...rest.map((f) => f.face));
+  const preferred = preferredScanFace(doc);
+  const pick = faces.find((f) => f.label === preferred);
+  if (pick && !kept.includes(pick)) kept.push(pick);
+  return kept;
+}
+
+interface Candidate {
+  face: Face;
+  family: string;
+  size: number;
+  stretch: number;
+  k: number;
+  softness: number;
+  score: number;
+  strokeRatio: number;
+}
+
+function rankStyles(
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
   spans: SpanInk[],
   ref: SpanInk,
-): ScanStyle | null {
+): RankedStyle[] {
+  return withScanCache(ref.ink, () =>
+    rankStylesUncached(doc, page, state, spans, ref),
+  );
+}
+
+function rankStylesUncached(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  spans: SpanInk[],
+  ref: SpanInk,
+): RankedStyle[] {
   const fit = (face: Face, family: string, k: number) => {
     const size = sizeFor(face, ref) * k;
     const natural = spanOf(doc, page, ref.original, family, size);
@@ -423,40 +609,75 @@ function fitStyle(
     return { face, family, size, stretch, k };
   };
   // Typewriter evidence is sturdier than pixels on a blurry low-res scan, so
-  // it settles the face; the pixels still pick the weight.
+  // it wins close calls.
   const typewriter =
     faceFor(doc, page, state) === COURIER ||
     isEvenlySpaced(ref.ink.glyphCenters, ref.original);
+  const all = scanFaces();
+  const mono = all.filter((f) => f.kind === "mono");
+  const familiesOf = (face: Face) => [...new Set([face.family, face.bold])];
+  const quickScore = (face: Face) =>
+    Math.max(
+      ...familiesOf(face).map((family) => {
+        const c = fit(face, family, 0.94);
+        return matchScan(
+          doc,
+          page,
+          ref.ink,
+          {
+            text: ref.original,
+            x: ref.ink.body.x,
+            baseline: ref.baseline,
+            family,
+            size: c.size,
+            stretch: c.stretch,
+          },
+          undefined,
+          true,
+        ).score;
+      }),
+    );
+  const faces = shortlist(doc, page, state, ref, all, quickScore);
+  if (typewriter) for (const f of mono) if (!faces.includes(f)) faces.push(f);
   // Fit size for both weights before choosing one. Blur and overshoot can
   // inflate glyph height enough to favour the wrong face at the initial size.
-  const faces = typewriter ? [COURIER] : FACES;
   const sizes = faces
     .flatMap((face) =>
-      [face.family, face.bold].flatMap((family) =>
+      familiesOf(face).flatMap((family) =>
         [0.88, 0.91, 0.94, 0.97, 1, 1.03].map((k) => fit(face, family, k)),
       ),
     )
     .filter((c) => c.size > 2)
     .map((c) => ({
       ...c,
-      score: matchScan(doc, page, ref.ink, {
-        text: ref.original,
-        x: ref.ink.body.x,
-        baseline: ref.baseline,
-        family: c.family,
-        size: c.size,
-        stretch: c.stretch,
-      }).score,
+      score: matchScan(
+        doc,
+        page,
+        ref.ink,
+        {
+          text: ref.original,
+          x: ref.ink.body.x,
+          baseline: ref.baseline,
+          family: c.family,
+          size: c.size,
+          stretch: c.stretch,
+        },
+        undefined,
+        true,
+      ).score,
     }));
-  if (sizes.length === 0) return null;
+  if (sizes.length === 0) return [];
   const best = <T extends { score: number }>(cs: T[]) =>
     cs.reduce((p, q) => (q.score > p.score ? q : p));
   const floor = Math.round(scanPixelSpan(doc, page, ref.ink.rect) / 2);
   // Compare the tuned faces at the scan's softness. Blurring both images
   // gives the scan a second blur, which makes regular strokes look bold.
-  const candidates = faces
-    .flatMap((face) => [face.family, face.bold])
-    .map((family) => sizes.filter((c) => c.family === family))
+  const candidates: Candidate[] = faces
+    .flatMap((face) =>
+      familiesOf(face).map((family) =>
+        sizes.filter((c) => c.face === face && c.family === family),
+      ),
+    )
     .filter((cs) => cs.length > 0)
     .map((cs) => {
       const c = best(cs);
@@ -478,30 +699,56 @@ function fitStyle(
         strokeRatio: match.weight,
       };
     });
-  let chosen = best(candidates);
-  // A typewritten block nearby tips a close call its way.
-  const mono = candidates.filter((c) => c.face === COURIER);
-  if (
-    !typewriter &&
-    nearbyFace(doc, page, state) === COURIER &&
-    best(mono).score > chosen.score - 0.1
-  )
-    chosen = best(mono);
   // Regular and bold can have almost the same blurred outlines. Settle close
   // matches using stroke thickness, rather than rewarding blur as extra ink.
-  const weights = candidates.filter(
-    (c) => c.face === chosen.face && c.score >= chosen.score - 0.1,
-  );
-  chosen = weights.reduce((p, q) =>
-    Math.abs(Math.log(q.strokeRatio)) < Math.abs(Math.log(p.strokeRatio))
-      ? q
-      : p,
-  );
+  const perFace = faces
+    .map((face) => {
+      const cuts = candidates.filter((c) => c.face === face);
+      if (cuts.length === 0) return null;
+      const top = best(cuts);
+      const weighted = cuts
+        .filter((c) => c.score >= top.score - 0.1)
+        .reduce((p, q) =>
+          Math.abs(Math.log(q.strokeRatio)) < Math.abs(Math.log(p.strokeRatio))
+            ? q
+            : p,
+        );
+      return { ...weighted, score: top.score };
+    })
+    .filter((c): c is Candidate => c !== null)
+    .sort((p, q) => q.score - p.score);
+  if (perFace.length === 0) return [];
+  const lead = perFace[0].score - 0.1;
+  const nudge = (pick: Candidate | undefined) => {
+    if (!pick || pick === perFace[0] || pick.score < lead) return;
+    perFace.splice(perFace.indexOf(pick), 1);
+    perFace.unshift(pick);
+  };
+  if (typewriter || nearbyFace(doc, page, state) === COURIER)
+    nudge(perFace.find((c) => c.face.kind === "mono"));
+  nudge(perFace.find((c) => c.face.label === preferredScanFace(doc)));
+  return perFace.slice(0, OFFERED).map((c) => ({
+    face: c.face,
+    score: c.score,
+    style: finishStyle(doc, page, spans, ref, c),
+  }));
+}
+
+function finishStyle(
+  doc: EditorDocument,
+  page: Page,
+  spans: SpanInk[],
+  ref: SpanInk,
+  chosen: Candidate,
+): ScanStyle {
   const { softness } = chosen;
   // Blur thickens scanned strokes past any bold; add outline until the drawn
   // strokes, softened the same way, are as thick as the scanned ones.
   // Only past bold: on regular text blur alone would read as extra weight.
-  const weight = (chosen.family === chosen.face.bold ? [0, 0.025, 0.05] : [0])
+  const isBoldCut =
+    chosen.family === chosen.face.bold &&
+    chosen.face.bold !== chosen.face.family;
+  const weight = (isBoldCut ? [0, 0.025, 0.05] : [0])
     .map((k) => k * chosen.size)
     .map((w) => ({
       w,
@@ -519,6 +766,7 @@ function fitStyle(
           weight: w,
         },
         softness,
+        true,
       ).weight,
     }))
     .reduce((p, q) =>
@@ -539,6 +787,18 @@ function fitStyle(
   };
 }
 
+// The face, weight, size and letter width that redraw `ref` most like the
+// scan; the size is shared by every span in `spans`.
+function fitStyle(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  spans: SpanInk[],
+  ref: SpanInk,
+): ScanStyle | null {
+  return rankStyles(doc, page, state, spans, ref)[0]?.style ?? null;
+}
+
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
 // sets at another size (a label and its value on one OCR line) gets its own.
@@ -555,8 +815,16 @@ function styleFor(
     const ref = lines.length
       ? lines.reduce((p, q) => (q.original.length > p.original.length ? q : p))
       : null;
-    const style = ref ? fitStyle(doc, page, state, lines, ref) : null;
-    state.block = style ? { style, top: median(lines.map(inkTop)) } : null;
+    const ranked = ref ? rankStyles(doc, page, state, lines, ref) : [];
+    state.block =
+      ref && ranked.length > 0
+        ? {
+            style: ranked[0].style,
+            top: median(lines.map(inkTop)),
+            ranked,
+            ref,
+          }
+        : null;
   }
   if (!state.block || !span) return state.block?.style ?? null;
   const top = inkTop(span);
@@ -652,6 +920,45 @@ function patchOf(
   return state.patches.get(key) ?? null;
 }
 
+function atlasOf(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): GlyphAtlas | null {
+  if (state.atlas !== undefined) return state.atlas;
+  const top = state.block?.top ?? state.lines[0].height;
+  const pitch =
+    state.lines.length > 1 ? linePitch(state, fallbackStyle(state)) : Infinity;
+  const descent = top * 0.35;
+  const frame = Math.min(top * 1.45, pitch * 0.95);
+  const words: ScannedWord[] = [];
+  state.lines.forEach((line, li) =>
+    line.words.forEach((_, wi) => {
+      const span = spanInk(doc, page, state, li, wi, wi);
+      if (!span || inkTop(span) > top * 1.3) return;
+      const patch = capturePatch(doc.module, page, {
+        x: span.ink.rect.x,
+        y: span.baseline - descent,
+        width: span.ink.rect.width,
+        height: frame,
+      });
+      if (!patch) return;
+      toInkOnly(patch, span.paper);
+      words.push({
+        text: span.original.replace(/\s+/g, ""),
+        rgba: patch.rgba,
+        width: patch.width,
+        height: patch.height,
+        left: patch.rect.x,
+        scale: patch.width / patch.rect.width,
+        spans: span.ink.glyphSpans,
+      });
+    }),
+  );
+  state.atlas = buildGlyphAtlas(words, descent);
+  return state.atlas;
+}
+
 // Make the page show `text` for this run. Words the user kept stay the scan's
 // own pixels, moved as a copy when something before them changed width or
 // wrapped; typed words are drawn in the block's style; removed ones covered.
@@ -670,12 +977,14 @@ export function renderScanEdit(
   const o = state.override;
   const restyle =
     o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
-  const block = styleFor(doc, page, state, null) ?? fallbackStyle(state);
+  const fitted = styleFor(doc, page, state, null) ?? fallbackStyle(state);
+  const block = o.style ?? fitted;
   const inkOf = (w: LayoutWord) =>
     spanInk(doc, page, state, w.line, w.index, w.index);
   const styleOf = (anchor: LayoutWord | null): ScanStyle => {
-    const base =
-      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? block;
+    const own =
+      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? fitted;
+    const base = own === fitted ? block : own;
     return {
       family: o.family ?? base.family,
       fontSize: o.fontSize ?? base.fontSize,
@@ -688,6 +997,11 @@ export function renderScanEdit(
   const lineBase = (li: number) =>
     lineInk(doc, page, state, li)?.baseline ?? state.lines[li].baseline;
   const scanWord = (w: LayoutWord) => state.lines[w.line].words[w.index];
+  const atlas = restyle || o.style ? null : atlasOf(doc, page, state);
+  const composed = (t: string) =>
+    atlas && canCompose(atlas, t)
+      ? composeText(atlas, t, wordSpace(state, block) * atlas.scale)
+      : null;
 
   const layout = layoutScanEdit({
     lines: state.lines.map((l, li) => ({
@@ -705,6 +1019,9 @@ export function renderScanEdit(
     wordWidth: (w) =>
       inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x,
     textWidth: (t, anchor) => {
+      const glyphs = atlas ? composed(t) : null;
+      if (glyphs && atlas)
+        return (glyphs.inkRight - glyphs.inkLeft) / atlas.scale;
       const st = styleOf(anchor);
       return spanOf(doc, page, t, st.family, st.fontSize) * st.stretch;
     },
@@ -770,6 +1087,8 @@ export function renderScanEdit(
     if (ink?.dropTrail) s = s.replace(/[\]|)]$/, "");
     if (!s) return;
     const st = styleOf(anchor);
+    const start = atAnchor && ink ? ink.ink.body.x + o.dx : x;
+    if (drawScanned(s, start, baseline, st)) return;
     const ptrs = placeText(doc, page, {
       text: s,
       x,
@@ -808,6 +1127,45 @@ export function renderScanEdit(
     }
     state.created.push(...ptrs);
     state.textPtrs.push(...ptrs);
+  };
+
+  const drawScanned = (
+    s: string,
+    start: number,
+    baseline: number,
+    st: ScanStyle,
+  ): boolean => {
+    const glyphs = atlas ? composed(s) : null;
+    if (!glyphs || !atlas) return false;
+    const img = createBitmapImageObject(
+      m,
+      doc.docPtr,
+      page.pagePtr,
+      glyphs,
+      start - glyphs.inkLeft / atlas.scale,
+      baseline - atlas.descent,
+      glyphs.width / atlas.scale,
+      glyphs.height / atlas.scale,
+    );
+    if (!img) return false;
+    m.FPDFPage_InsertObject(page.pagePtr, img);
+    const hidden = emitTextLine({
+      doc,
+      page,
+      text: s,
+      x: start,
+      y: baseline,
+      fontSize: st.fontSize,
+      fill: BLACK,
+      originalFontPtr: 0,
+      fallbackFamily: st.family,
+      renderMode: INVISIBLE,
+      tagMarks: run.tagMarks,
+    });
+    opaqueStroke(m, hidden);
+    state.created.push(img, ...hidden);
+    state.textPtrs.push(...hidden);
+    return true;
   };
 
   // Crisp vector text on a blurry scan stands out, so blurry blocks get their
@@ -972,6 +1330,7 @@ export function scanDrawnSize(
   if (!state) return null;
   return (
     state.override.fontSize ??
+    state.override.style?.fontSize ??
     (styleFor(doc, page, state, null) ?? fallbackStyle(state)).fontSize
   );
 }
@@ -992,4 +1351,109 @@ export function setScanOverride(
   state.override = next(prev);
   renderScanEdit(doc, page, run, state, run.text);
   return prev;
+}
+
+function onOriginalScan<T>(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  fn: () => T,
+): T {
+  const m = doc.module;
+  for (const p of state.created) m.FPDFPage_RemoveObject(page.pagePtr, p);
+  try {
+    return fn();
+  } finally {
+    for (const p of state.created) m.FPDFPage_InsertObject(page.pagePtr, p);
+  }
+}
+
+export function scanStyleChoices(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): RankedStyle[] {
+  const state = scanEditOf(doc, run);
+  if (!state) return [];
+  styleFor(doc, page, state, null);
+  return state.block?.ranked ?? [];
+}
+
+export function rerankScanStyles(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): RankedStyle[] {
+  const state = scanEditOf(doc, run);
+  if (!state) return [];
+  const before = state.block;
+  if (before === undefined || before === null)
+    return scanStyleChoices(doc, page, run);
+  const ranked = onOriginalScan(doc, page, state, () =>
+    rankStyles(
+      doc,
+      page,
+      state,
+      state.lines
+        .map((_, li) => lineInk(doc, page, state, li))
+        .filter((s): s is SpanInk => s !== null && s.original.length > 0),
+      before.ref,
+    ),
+  );
+  if (ranked.length === 0) return before.ranked;
+  state.block = {
+    ...before,
+    ranked,
+    style: state.created.length > 0 ? before.style : ranked[0].style,
+  };
+  return ranked;
+}
+
+interface ScanStylePreview {
+  scan: PixelPatch;
+  drawn: PixelPatch;
+}
+
+export function previewScanStyle(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  style: ScanStyle,
+): ScanStylePreview | null {
+  const state = scanEditOf(doc, run);
+  const ref = state?.block?.ref;
+  if (!state || !ref) return null;
+  return onOriginalScan(doc, page, state, () =>
+    previewOnScan(doc, page, ref, style),
+  );
+}
+
+function previewOnScan(
+  doc: EditorDocument,
+  page: Page,
+  ref: SpanInk,
+  style: ScanStyle,
+): ScanStylePreview | null {
+  const m = doc.module;
+  const rect = ref.ink.rect;
+  const scan = capturePatch(m, page, rect);
+  if (!scan) return null;
+  const cover = emitFillRect(m, page, rect, ref.paper, 0);
+  const ptrs = placeText(doc, page, {
+    text: ref.original,
+    x: ref.ink.body.x,
+    baseline: ref.baseline,
+    family: style.family,
+    size: style.fontSize,
+    stretch: style.stretch,
+    inkLeft: ref.ink.body.x,
+    fill: style.ink,
+    weight: style.weight,
+  });
+  const drawn = capturePatch(m, page, rect);
+  for (const p of [cover, ...ptrs])
+    if (p) removeAndDestroyObject(m, page.pagePtr, p);
+  if (!drawn) return null;
+  if (style.softness > 0) blurRgba(drawn, style.softness);
+  return { scan, drawn };
 }

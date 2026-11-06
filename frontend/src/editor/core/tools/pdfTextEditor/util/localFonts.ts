@@ -1,6 +1,8 @@
 // Local Font Access API wrapper. Chromium-only and permission-gated, so every
 // entry point degrades to null instead of throwing.
 
+import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
+
 export interface LocalFont {
   family: string;
   fullName: string;
@@ -84,6 +86,52 @@ let pending: Promise<LocalFont[] | null> | null = null;
 export async function listLocalFonts(): Promise<LocalFont[] | null> {
   if (!pending) pending = queryOnce();
   return pending;
+}
+
+export async function retryLocalFonts(): Promise<LocalFont[] | null> {
+  if (pending && (await pending) === null) pending = null;
+  return listLocalFonts();
+}
+
+export type LocalFontPermission =
+  | "granted"
+  | "prompt"
+  | "denied"
+  | "unsupported";
+
+async function permissionStatus(): Promise<PermissionStatus | null> {
+  try {
+    return await navigator.permissions.query({
+      name: "local-fonts" as PermissionName,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function localFontPermission(): Promise<LocalFontPermission> {
+  if (!isLocalFontAccessSupported()) return "unsupported";
+  return (await permissionStatus())?.state ?? "prompt";
+}
+
+export function watchLocalFontPermission(
+  listener: (permission: LocalFontPermission) => void,
+): () => void {
+  if (!isLocalFontAccessSupported()) return () => {};
+  let status: PermissionStatus | null = null;
+  let stopped = false;
+  const onChange = () => {
+    if (status) listener(status.state);
+  };
+  void permissionStatus().then((s) => {
+    if (stopped || !s) return;
+    status = s;
+    s.addEventListener("change", onChange);
+  });
+  return () => {
+    stopped = true;
+    status?.removeEventListener("change", onChange);
+  };
 }
 
 /**
@@ -270,6 +318,11 @@ async function readFaceBytes(source: unknown): Promise<Uint8Array | null> {
 const bytesByFamily = new Map<string, Uint8Array>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
 
+export function registerFontBytes(family: string, bytes: Uint8Array): void {
+  const key = normaliseName(family);
+  if (key && bytes.length > 0) bytesByFamily.set(key, bytes);
+}
+
 /** Already-read bytes for a family, or null. Never prompts, never awaits. */
 export function getLocalFontBytes(family: string): Uint8Array | null {
   return bytesByFamily.get(normaliseName(family)) ?? null;
@@ -292,7 +345,8 @@ export async function loadLocalFontBytes(
     const picked = pickLocalFontFace(fonts, family);
     if (!picked) return null;
     const entry = faceEntries.find((candidate) => candidate.font === picked);
-    const bytes = entry ? await readFaceBytes(entry.source) : null;
+    const file = entry ? await readFaceBytes(entry.source) : null;
+    const bytes = file ? fontFace(file, picked.postscriptName) : null;
     if (bytes) bytesByFamily.set(key, bytes);
     return bytes;
   })();

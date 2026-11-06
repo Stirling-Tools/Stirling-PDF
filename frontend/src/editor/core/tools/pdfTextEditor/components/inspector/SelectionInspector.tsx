@@ -16,6 +16,8 @@ import { modShortcut } from "@editor/utils/hotkeys";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
+import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
+import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -25,6 +27,7 @@ interface Props {
   geometry: SelectionGeometry;
   /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
   fontNote: string | null;
+  scanFontMatch?: ScanFontMatch | null;
   canGroup: boolean;
   canUngroup: boolean;
   onGroup: () => void;
@@ -44,6 +47,7 @@ export function SelectionInspector({
   selection,
   geometry,
   fontNote,
+  scanFontMatch,
   canGroup,
   canUngroup,
   onGroup,
@@ -62,6 +66,7 @@ export function SelectionInspector({
         shapeCount={shapeCount}
         fontNote={hasRunSelection ? fontNote : null}
       />
+      {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
       {runCount + imageCount > 0 && (
         <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
       )}
