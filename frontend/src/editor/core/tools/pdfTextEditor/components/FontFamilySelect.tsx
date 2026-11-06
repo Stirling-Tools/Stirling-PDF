@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
-import { Group, Select, Text, Tooltip } from "@mantine/core";
+import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
 import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -9,8 +9,14 @@ import {
   isLocalFontAccessSupported,
   listLocalFonts,
   loadedLocalFonts,
+  normaliseName,
   subscribeLocalFonts,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  loadedServerFonts,
+  loadServerFonts,
+  subscribeServerFonts,
+} from "@editor/tools/pdfTextEditor/util/serverFonts";
 
 export interface FontFamilyOption {
   value: string;
@@ -28,11 +34,11 @@ export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
   { value: "Courier-Bold", label: "Courier Bold" },
 ];
 
-type DeviceFontNotice = "unavailable" | "none";
+type DeviceFontNotice = "unavailable" | "none" | "serverFontFailed";
 
 interface FontFamilySelectProps {
   value: string | null;
-  onChange: (family: string) => void;
+  onChange: (family: string) => void | Promise<boolean>;
   mixed?: boolean;
   disabled?: boolean;
   touch?: boolean;
@@ -48,6 +54,7 @@ export function FontFamilySelect({
 }: FontFamilySelectProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [notice, setNotice] = useState<DeviceFontNotice | null>(null);
   const supported = useMemo(() => isLocalFontAccessSupported(), []);
   // Read the fonts from the module, not local state: switching files remounts
@@ -58,15 +65,32 @@ export function FontFamilySelect({
     loadedLocalFonts,
   );
 
-  const deviceFamilies = useMemo(() => {
-    if (!localFonts) return [];
+  const serverFonts = useSyncExternalStore(
+    subscribeServerFonts,
+    loadedServerFonts,
+    loadedServerFonts,
+  );
+
+  const serverFamilies = useMemo(() => {
+    if (!serverFonts) return [];
     const builtIn = new Set(
       BUILT_IN_FONT_FAMILIES.map((option) => option.value.toLowerCase()),
     );
-    return groupByFamily(localFonts)
+    return groupByFamily(serverFonts)
       .map((family) => family.family)
       .filter((family) => !builtIn.has(family.toLowerCase()));
-  }, [localFonts]);
+  }, [serverFonts]);
+
+  const deviceFamilies = useMemo(() => {
+    if (!localFonts) return [];
+    const hidden = new Set([
+      ...BUILT_IN_FONT_FAMILIES.map((option) => normaliseName(option.value)),
+      ...serverFamilies.map(normaliseName),
+    ]);
+    return groupByFamily(localFonts)
+      .map((family) => family.family)
+      .filter((family) => !hidden.has(normaliseName(family)));
+  }, [localFonts, serverFamilies]);
 
   const loadDeviceFonts = useCallback(async () => {
     setLoading(true);
@@ -85,8 +109,9 @@ export function FontFamilySelect({
   const isKnown = useCallback(
     (family: string) =>
       BUILT_IN_FONT_FAMILIES.some((option) => option.value === family) ||
+      serverFamilies.includes(family) ||
       deviceFamilies.includes(family),
-    [deviceFamilies],
+    [serverFamilies, deviceFamilies],
   );
 
   // The run's own face when we hold no bytes for it. Shown so the user can see
@@ -97,7 +122,11 @@ export function FontFamilySelect({
   );
 
   const data = useMemo<ComboboxData>(() => {
-    if (deviceFamilies.length === 0 && !documentFamily) {
+    if (
+      serverFamilies.length === 0 &&
+      deviceFamilies.length === 0 &&
+      !documentFamily
+    ) {
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
@@ -113,6 +142,15 @@ export function FontFamilySelect({
       group: t("pdfTextEditor.fontPicker.builtInGroup", "Built-in fonts"),
       items: BUILT_IN_FONT_FAMILIES,
     });
+    if (serverFamilies.length > 0) {
+      groups.push({
+        group: t("pdfTextEditor.fontPicker.serverGroup", "Server fonts"),
+        items: serverFamilies.map((family) => ({
+          value: family,
+          label: family,
+        })),
+      });
+    }
     if (deviceFamilies.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.deviceGroup", "Device fonts"),
@@ -123,7 +161,21 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [deviceFamilies, documentFamily, t]);
+  }, [serverFamilies, deviceFamilies, documentFamily, t]);
+
+  const applyFamily = useCallback(
+    async (family: string) => {
+      setNotice(null);
+      setApplying(true);
+      try {
+        const applied = await onChange(family);
+        if (applied === false) setNotice("serverFontFailed");
+      } finally {
+        setApplying(false);
+      }
+    },
+    [onChange],
+  );
 
   // Mantine shows nothing for a value with no matching option; the document
   // font is in `data` precisely so a recognised face still gets named.
@@ -147,9 +199,13 @@ export function FontFamilySelect({
         data={data}
         value={selected}
         onChange={(next) => {
-          if (next) onChange(next);
+          if (next) void applyFamily(next);
         }}
-        disabled={disabled}
+        onDropdownOpen={() => {
+          void loadServerFonts();
+        }}
+        rightSection={applying ? <Loader size="xs" /> : undefined}
+        disabled={disabled || applying}
         placeholder={
           mixed
             ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
@@ -195,10 +251,15 @@ export function FontFamilySelect({
                 "pdfTextEditor.fontPicker.deviceFontsUnavailable",
                 "Device fonts are unavailable. The built-in fonts still work.",
               )
-            : t(
-                "pdfTextEditor.fontPicker.deviceFontsNone",
-                "No extra device fonts were found.",
-              )}
+            : notice === "serverFontFailed"
+              ? t(
+                  "pdfTextEditor.fontPicker.serverFontFailed",
+                  "That server font could not be downloaded. The text was left unchanged.",
+                )
+              : t(
+                  "pdfTextEditor.fontPicker.deviceFontsNone",
+                  "No extra device fonts were found.",
+                )}
         </Text>
       )}
     </Group>

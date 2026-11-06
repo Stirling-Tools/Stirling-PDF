@@ -14,7 +14,8 @@ import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFo
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
-import { loadedLocalFonts } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { loadedExternalFonts } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import { isServerFontFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 
@@ -111,10 +112,11 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const changeFontFamily = useCallback(
-    async (family: string) => {
+    async (family: string): Promise<boolean> => {
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      await ensureDeviceFontReady(family);
+      const ready = await ensureDeviceFontReady(family);
+      if (!ready && isServerFontFamily(family)) return false;
       dispatchPerRun(
         (run) =>
           new SetFontFamilyCommand({
@@ -123,12 +125,13 @@ export function useSelectionActions(store: EditorStore) {
             nextFamily: family,
           }),
       );
+      return true;
     },
     [dispatchPerRun],
   );
 
   const toggleItalic = useCallback(async () => {
-    const fonts = loadedLocalFonts();
+    const fonts = loadedExternalFonts();
     const targets: Array<{
       pageIndex: number;
       runId: string;
@@ -152,10 +155,18 @@ export function useSelectionActions(store: EditorStore) {
       });
     });
     // Embedding is async and Command.apply is not, so warm the bytes first.
+    const ready: typeof targets = [];
     for (const target of targets) {
-      if (target.device) await ensureDeviceFontReady(target.family);
+      if (
+        target.device &&
+        !(await ensureDeviceFontReady(target.family)) &&
+        isServerFontFamily(target.family)
+      ) {
+        continue;
+      }
+      ready.push(target);
     }
-    const cmds = targets.map(
+    const cmds = ready.map(
       (target) =>
         new SetFontFamilyCommand({
           pageIndex: target.pageIndex,

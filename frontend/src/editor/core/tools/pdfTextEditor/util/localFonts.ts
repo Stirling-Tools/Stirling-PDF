@@ -190,7 +190,7 @@ export function groupByFamily(fonts: LocalFont[]): LocalFontFamily[] {
 }
 
 /** Case/separator-insensitive key, so "Segoe-UI" and "Segoe UI" are one name. */
-function normaliseName(name: string): string {
+export function normaliseName(name: string): string {
   return name
     .trim()
     .toLowerCase()
