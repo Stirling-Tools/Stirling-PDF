@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -226,6 +227,28 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             @Param("principals") List<String> principals,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
+            Pageable pageable);
+
+    /** Bounded batches for full-window infrastructure counts, excluding polling noise. */
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes"
+                    + " AND e.timestamp >= :since AND e.timestamp <= :until")
+    Slice<PersistentAuditEvent> findInfraEventsBetween(
+            @Param("excludedTypes") List<String> excludedTypes,
+            @Param("since") Instant since,
+            @Param("until") Instant until,
+            Pageable pageable);
+
+    /** The full-window scan constrained to the caller's permitted principals. */
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes"
+                    + " AND e.principal IN :principals"
+                    + " AND e.timestamp >= :since AND e.timestamp <= :until")
+    Slice<PersistentAuditEvent> findScopedInfraEventsBetween(
+            @Param("excludedTypes") List<String> excludedTypes,
+            @Param("principals") List<String> principals,
+            @Param("since") Instant since,
+            @Param("until") Instant until,
             Pageable pageable);
 
     // Export versions (non-paged)

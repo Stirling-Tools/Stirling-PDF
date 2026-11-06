@@ -7,14 +7,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Headline counts for the infrastructure audit-log tab, derived from the returned events. */
+/** Infrastructure audit counts over the full preceding 24 hours in the permitted scope. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class InfraAuditSummary {
 
-    @Schema(description = "Total events in the returned window", example = "40")
+    @Schema(description = "Total infrastructure events in the preceding 24 hours", example = "40")
     private int totalEvents;
 
     @Schema(description = "Policy-run events", example = "3")
