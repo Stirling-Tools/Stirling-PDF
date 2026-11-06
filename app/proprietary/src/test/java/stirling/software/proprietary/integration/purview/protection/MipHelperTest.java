@@ -4,10 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
-
-import stirling.software.common.model.ApplicationProperties;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -28,17 +25,7 @@ class MipHelperTest {
     @TempDir Path dir;
 
     private MipHelper helperRunning(String script) throws IOException {
-        Path helper = dir.resolve("fake-mip");
-        Files.writeString(helper, "#!/bin/sh\n" + script, StandardCharsets.UTF_8);
-        Files.setPosixFilePermissions(helper, PosixFilePermissions.fromString("rwx------"));
-        ApplicationProperties properties = new ApplicationProperties();
-        properties
-                .getPremium()
-                .getProFeatures()
-                .getMicrosoft()
-                .getRightsManagement()
-                .setHelperPath(helper.toString());
-        return new MipHelper(properties);
+        return new MipHelper(FakeMipHelper.propertiesRunning(dir, script));
     }
 
     @Test
@@ -124,14 +111,8 @@ class MipHelperTest {
 
     @Test
     void isUnavailableWhenNoHelperIsInstalled() {
-        ApplicationProperties properties = new ApplicationProperties();
-        properties
-                .getPremium()
-                .getProFeatures()
-                .getMicrosoft()
-                .getRightsManagement()
-                .setHelperPath(dir.resolve("missing").toString());
-        MipHelper helper = new MipHelper(properties);
+        MipHelper helper =
+                new MipHelper(FakeMipHelper.propertiesWithHelperAt(dir.resolve("missing")));
 
         assertThat(helper.available()).isFalse();
         assertThatThrownBy(() -> helper.run("inspect", Map.of(), scope -> "t"))
@@ -140,24 +121,16 @@ class MipHelperTest {
                         e -> assertThat(e.getCode()).isEqualTo("unavailable"));
     }
 
-    @Test
-    void asksForTheResourceEvenWhenTheSdkScopeIsATenantId() {
+    @ParameterizedTest
+    @CsvSource({
+        "https://aadrm.com, 7148cdae-b3f2-44ef-abef-481ba8a97af3, https://aadrm.com/.default",
+        "'', https://syncservice.o365syncservice.com/.default,"
+                + " https://syncservice.o365syncservice.com/.default"
+    })
+    void asksForTheResourceAndFallsBackToAScopeUrl(String resource, String scope, String expected) {
         JsonNode request =
-                new ObjectMapper()
-                        .readTree(
-                                "{\"resource\":\"https://aadrm.com\",\"scope\":\"7148cdae-b3f2-44ef-abef-481ba8a97af3\"}");
+                new ObjectMapper().createObjectNode().put("resource", resource).put("scope", scope);
 
-        assertThat(MipHelper.scopeFor(request)).isEqualTo("https://aadrm.com/.default");
-    }
-
-    @Test
-    void fallsBackToAScopeUrlWhenThereIsNoResource() {
-        JsonNode request =
-                new ObjectMapper()
-                        .readTree(
-                                "{\"resource\":\"\",\"scope\":\"https://syncservice.o365syncservice.com/.default\"}");
-
-        assertThat(MipHelper.scopeFor(request))
-                .isEqualTo("https://syncservice.o365syncservice.com/.default");
+        assertThat(MipHelper.scopeFor(request)).isEqualTo(expected);
     }
 }

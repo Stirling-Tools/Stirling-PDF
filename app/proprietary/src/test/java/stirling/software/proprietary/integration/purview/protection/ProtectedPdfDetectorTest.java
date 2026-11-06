@@ -7,21 +7,21 @@ import java.io.IOException;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class ProtectedPdfDetectorTest {
 
-    @Test
-    void recognisesMicrosoftWrapperListedAsAssociatedFile() throws IOException {
+    @ParameterizedTest
+    @CsvSource({"true, false", "false, true"})
+    void recognisesMicrosoftWrapperWhereverItIsListed(
+            boolean listInAssociatedFiles, boolean listInNameTree) throws IOException {
         try (PDDocument document =
-                Loader.loadPDF(ProtectedPdfFixtures.wrapper("MicrosoftIRMServices", true, false))) {
-            assertThat(ProtectedPdfDetector.isMicrosoftProtected(document)).isTrue();
-        }
-    }
-
-    @Test
-    void recognisesMicrosoftWrapperListedOnlyInNameTree() throws IOException {
-        try (PDDocument document =
-                Loader.loadPDF(ProtectedPdfFixtures.wrapper("MicrosoftIRMServices", false, true))) {
+                Loader.loadPDF(
+                        ProtectedPdfFixtures.wrapper(
+                                ProtectedPdfDetector.MICROSOFT_SUBTYPE,
+                                listInAssociatedFiles,
+                                listInNameTree))) {
             assertThat(ProtectedPdfDetector.isMicrosoftProtected(document)).isTrue();
         }
     }
