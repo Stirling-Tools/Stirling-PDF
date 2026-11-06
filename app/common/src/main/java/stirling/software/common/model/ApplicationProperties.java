@@ -1432,8 +1432,9 @@ public class ApplicationProperties {
         public static class S3 {
             /**
              * Optional custom endpoint (e.g. {@code https://<account>.r2.cloudflarestorage.com},
-             * {@code https://<project>.supabase.co/storage/v1/s3}, or {@code http://localhost:9000}
-             * for MinIO). Blank = use AWS regional default.
+             * {@code https://<project>.supabase.co/storage/v1/s3}, {@code
+             * https://<branch-id>.storage.<cell>.<region>.aws.neon.tech} for Neon, or {@code
+             * http://localhost:9000} for MinIO). Blank = use AWS regional default.
              */
             private String endpoint = "";
 
@@ -1446,8 +1447,8 @@ public class ApplicationProperties {
 
             /**
              * When {@code true} use path-style URLs ({@code <endpoint>/<bucket>/<key>}) instead of
-             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO and most S3-compatible
-             * gateways require path-style; AWS S3 prefers virtual-hosted.
+             * virtual-hosted ({@code <bucket>.<endpoint>/<key>}). MinIO, Supabase, Neon and most
+             * S3-compatible gateways require path-style; AWS S3 prefers virtual-hosted.
              */
             private boolean pathStyleAccess = false;
 
