@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { IconName } from "@editor/ui/Icon";
 import type { SaveStoredFile } from "@editor/hooks/useSaveStoredFile";
-import type { SaveMenuItem } from "@editor/services/saveTargets";
+import {
+  sharedSaveTarget,
+  type SaveMenuItem,
+} from "@editor/services/saveTargets";
 import type { SaveHomeMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
@@ -37,26 +40,18 @@ export function useSaveButton({
 }: Options): SaveButton {
   const { t } = useTranslation();
   const unsaved = targets.some(saver.isUnsaved);
-  const handled = targets
-    .map((stub) => ({ stub, target: saver.targetFor(stub) }))
-    .filter((entry) => entry.target);
-  const first = handled[0]?.target;
-  const allOneTarget =
-    handled.length > 0 &&
-    handled.length === targets.length &&
-    handled.every((entry) => entry.target === first);
-
+  const shared = sharedSaveTarget(targets, saver.targetFor);
   const stub = singleFile ? targets[0] : undefined;
   const target = stub ? saver.targetFor(stub) : undefined;
   const plan = stub ? saver.planFor(stub) : null;
 
   let label: string | undefined;
-  if (allOneTarget && first) {
+  if (shared) {
     label =
-      handled.length > 1
-        ? first.saveAllLabel()
+      targets.length > 1
+        ? shared.saveAllLabel()
         : saver.targetSaveLabel(targets[0]);
-  } else if (handled.length > 0) {
+  } else if (targets.some((entry) => saver.targetFor(entry))) {
     label = t(
       "saveFile.toolbar.mixed",
       "Save all, each back to where it came from",
@@ -68,7 +63,7 @@ export function useSaveButton({
   } else if (stub && plan === "ask") {
     label = t("saveFile.toolbar.ask", "Save {{name}}…", { name: stub.name });
   }
-  const icon = allOneTarget ? first?.icon : undefined;
+  const icon = shared?.icon;
 
   if (!savesToDisk && !target) return { label, icon, unsaved };
 
