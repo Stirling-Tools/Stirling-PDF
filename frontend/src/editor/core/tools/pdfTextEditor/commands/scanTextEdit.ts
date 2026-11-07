@@ -135,6 +135,7 @@ export interface ScanEditState {
     ranked: RankedStyle[];
     ref: SpanInk;
     preferred: string | null;
+    drawn?: boolean;
   } | null;
   undrawableWithFaces?: number;
   /** Styles for text in the block that the scan sets at another size. */
@@ -458,7 +459,7 @@ function fittedForOtherPreference(
   state: ScanEditState,
 ): boolean {
   const block = state.block;
-  if (!block || state.edited) return false;
+  if (!block || block.drawn) return false;
   const preferred = preferredScanFace(doc);
   return (
     preferred !== null &&
@@ -569,7 +570,7 @@ export function drawnBlockStyle(
 ): ScanStyle | null {
   const block = state.block;
   if (!block) return null;
-  if (state.edited) return block.style;
+  if (block.drawn) return block.style;
   return preferredStyle(doc, block.ranked) ?? block.style;
 }
 
@@ -608,7 +609,7 @@ function styleFor(
   if (known) return known.style;
   const ranked = rank(doc, page, state, [span], span);
   if (ranked.length === 0) return block.style;
-  const style = state.edited
+  const style = block.drawn
     ? ranked[0].style
     : (preferredStyle(doc, ranked) ?? ranked[0].style);
   state.classes.push({ style, top });
@@ -750,14 +751,14 @@ export function renderScanEdit(
   state: ScanEditState,
   text: string,
 ): boolean {
-  const firstDraw = !state.edited;
   const drawn = upright(doc, page, state, () =>
     renderUprightScanEdit(doc, page, run, state, text),
   );
-  if (firstDraw && state.edited && state.block)
+  if (drawn && state.block && !state.block.drawn)
     state.block = {
       ...state.block,
       style: preferredStyle(doc, state.block.ranked) ?? state.block.style,
+      drawn: true,
     };
   return drawn;
 }

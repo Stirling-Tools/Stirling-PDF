@@ -325,6 +325,36 @@ describe("matching a face to scanned text", () => {
   );
 
   test(
+    "a picked face still wins when the block's first edit only deleted words",
+    { timeout: 120_000 },
+    async () => {
+      const sample = { ...samples[0], text: "Quarterly review" };
+      const probe = await buildScan([sample], SCAN);
+      let runnerUp: RankedStyle;
+      try {
+        const run = probe.page.runs.find(isScanRun)!;
+        runnerUp = (await choicesFor(probe.doc, probe.page, run))[1];
+      } finally {
+        probe.doc.dispose();
+      }
+      const { doc, page } = await buildScan([sample], SCAN);
+      try {
+        const run = page.runs.find(isScanRun)!;
+        setPreferredScanFace(doc, runnerUp.face.label);
+        const state = scanEditOf(doc, run)!;
+        expect(renderScanEdit(doc, page, run, state, "Quarterly")).toBe(true);
+        expect(state.block).toBeUndefined();
+        renderScanEdit(doc, page, run, state, "Quarterly reviews");
+        expect(drawnBlockStyle(doc, state)?.family).toBe(
+          runnerUp.style.family,
+        );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
     "undoing a pick redraws the block in its own best face",
     { timeout: 120_000 },
     async () => {
