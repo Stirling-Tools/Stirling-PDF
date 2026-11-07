@@ -290,7 +290,14 @@ export default function WorkbenchBar({
         return;
       }
 
-      const viewExport = await viewFileActions?.getExportFiles?.();
+      const savesHome =
+        !forceNewFile &&
+        selectors
+          .getStirlingFileStubs(exportTargetIds as FileId[])
+          .some((stub) => saver.targetFor(stub) || stub.localFilePath);
+      const viewExport = await viewFileActions?.getExportFiles?.({
+        commitEdits: savesHome,
+      });
       if (viewExport === null) return;
       const filesToExport = viewExport
         ? viewExport.map((entry) => entry.file)
@@ -298,10 +305,12 @@ export default function WorkbenchBar({
           ? selectedFiles
           : activeFiles;
       const stubs = viewExport
-        ? viewExport.map((entry) =>
-            entry.fileId
-              ? selectors.getStirlingFileStub(entry.fileId)
-              : undefined,
+        ? viewExport.map(
+            (entry) =>
+              entry.stub ??
+              (entry.fileId
+                ? selectors.getStirlingFileStub(entry.fileId)
+                : undefined),
           )
         : filesToExport.map((file) =>
             isStirlingFile(file)
@@ -369,6 +378,7 @@ export default function WorkbenchBar({
       selectors,
       fileActions,
       saver,
+      exportTargetIds,
     ],
   );
 

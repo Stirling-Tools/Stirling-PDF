@@ -1,5 +1,6 @@
 import React from "react";
 import type { FileId } from "@editor/types/file";
+import type { StirlingFileStub } from "@editor/types/fileContext";
 
 /** "bar-lead" follows the view switcher, for content naming what the view is showing;
  *  "bar" renders among the bar's own actions on the right; top/middle/bottom are lanes
@@ -57,6 +58,11 @@ export interface WorkbenchExportFile {
    *  to its disk location and lets export policies version it. Omit for bytes
    *  the workbench does not hold, such as unsaved edits. */
   fileId?: FileId;
+  stub?: StirlingFileStub;
+}
+
+export interface WorkbenchExportOptions {
+  commitEdits?: boolean;
 }
 
 /**
@@ -68,6 +74,8 @@ export interface WorkbenchViewFileActions {
    * The files to download in place of the open ones, or null to cancel. The bar
    * cancels silently, so a view returning null has already told the user why.
    */
-  getExportFiles?: () => Promise<WorkbenchExportFile[] | null>;
+  getExportFiles?: (
+    options?: WorkbenchExportOptions,
+  ) => Promise<WorkbenchExportFile[] | null>;
   onClose?: () => void;
 }
