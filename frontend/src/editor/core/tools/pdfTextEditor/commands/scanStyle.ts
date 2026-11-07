@@ -28,7 +28,14 @@ const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 
 /** How tall the tallest glyph of `text` is, as a share of the em. */
 export function topShare(face: Face, text: string): number {
-  if (/[A-Z0-9]/.test(text))
+  const tops = face.metrics?.get(face.family)?.tops;
+  if (tops) {
+    let tallest = 0;
+    for (const ch of text)
+      tallest = Math.max(tallest, tops.get(ch.codePointAt(0)!) ?? 0);
+    if (tallest > 0) return tallest / 1000;
+  }
+  if (/[\p{Lu}\p{Nd}]/u.test(text))
     return Math.max(face.cap, /[bdfhklt]/.test(text) ? face.asc : 0) / 1000;
   if (/[bdfhklt]/.test(text)) return face.asc / 1000;
   return face.xh / 1000;
@@ -146,7 +153,7 @@ export function isEvenlySpaced(centers: number[], text: string): boolean {
   if (centers.length > chars.length * 1.1 + 1) return false;
   if (centers.length < chars.length * 0.9) return false;
   const steps = centers.slice(1).map((c, i) => c - centers[i]);
-  const pitch = (centers[centers.length - 1] - centers[0]) / (chars.length - 1);
+  const pitch = median(steps);
   const onGrid = steps.filter((st) => {
     const n = Math.max(1, Math.round(st / pitch));
     return Math.abs(st / pitch - n) < 0.15;

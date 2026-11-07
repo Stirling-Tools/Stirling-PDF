@@ -32,6 +32,7 @@ import {
   setPreferredScanFace,
   type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
+import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import {
   faceFromBytes,
   resetScanFaces,
@@ -147,6 +148,30 @@ const line = (
   accept,
   kind,
   bold,
+});
+
+describe("spotting typewriter spacing", () => {
+  const PITCH = 7.2;
+  const centresOn = (text: string, cell: number) =>
+    [...text].flatMap((ch, i) => (/\s/.test(ch) ? [] : [i * cell]));
+
+  test("reads a monospaced line with spaces as typewriter text", () => {
+    for (const text of [
+      "Invoice 4471 for Jane Example is due on 30 June",
+      "DATE OF BIRTH 12 MAY 1987",
+    ])
+      expect(isEvenlySpaced(centresOn(text, PITCH), text)).toBe(true);
+  });
+
+  test("does not read proportional glyph steps as typewriter text", () => {
+    const text = "Invoice for Jane Example";
+    let x = 0;
+    const centres = [...text].flatMap((ch, i) => {
+      x += PITCH * (0.5 + ((i * 7) % 5) * 0.17);
+      return /\s/.test(ch) ? [] : [x];
+    });
+    expect(isEvenlySpaced(centres, text)).toBe(false);
+  });
 });
 
 describe("matching a face to scanned text", () => {
@@ -610,6 +635,45 @@ describe("matching scanned text in other scripts", () => {
         expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
           "Noto Sans JP",
         );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "sizes caps-only Cyrillic and a Japanese line without digits by their own glyph height",
+    { timeout: 120_000 },
+    async () => {
+      const japanese = await staticFace(
+        "Noto Sans JP",
+        "NotoSansJP-Regular.ttf",
+      );
+      setBundledScanFaces([...bundled, japanese!]);
+      const lines: ScanLineSpec[] = [
+        {
+          family: "DejaVu Sans",
+          text: "СЧЕТ НА ОПЛАТУ ДЛЯ ИВАНА ПЕТРОВА",
+          size: 14,
+          ocrFamily: "DejaVu Sans",
+        },
+        {
+          family: "Noto Sans JP",
+          text: "請求書 六月 三十日 までに お支払い ください",
+          size: 14,
+          ocrFamily: "Noto Sans JP",
+        },
+      ];
+      const { doc, page } = await buildScan(lines, SCAN);
+      try {
+        for (const spec of lines) {
+          const run = page.runs.find(
+            (r) => isScanRun(r) && r.text.startsWith(spec.text.slice(0, 3)),
+          )!;
+          await choicesFor(doc, page, run);
+          const size = scanEditOf(doc, run)!.block!.style.fontSize;
+          expect(Math.abs(size / spec.size - 1)).toBeLessThan(0.1);
+        }
       } finally {
         doc.dispose();
       }

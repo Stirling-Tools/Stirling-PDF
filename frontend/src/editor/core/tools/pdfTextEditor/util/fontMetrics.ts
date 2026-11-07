@@ -7,6 +7,7 @@ export interface FontMetrics {
   xh: number;
   asc: number;
   advances: Map<number, number>;
+  tops: Map<number, number>;
   kind: FaceKind;
   weight: number;
   restricted: boolean;
@@ -79,17 +80,17 @@ export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
     const advanceOf = (gid: number) =>
       dv.getUint16(hmtx.offset + Math.min(gid, numHMetrics - 1) * 4);
 
-    const advances = new Map<number, number>();
-    for (const [cp, gid] of cmap)
-      if (gid > 0) advances.set(cp, em(advanceOf(gid)));
-    if (!advances.has(0x20)) return null;
-
     const glyphTop = glyphTopReader(dv, t, head.offset);
-    const top = (ch: string) => {
-      const gid = cmap.get(ch.charCodeAt(0));
-      const y = gid ? glyphTop(gid) : null;
-      return y === null ? null : em(y);
-    };
+    const advances = new Map<number, number>();
+    const tops = new Map<number, number>();
+    for (const [cp, gid] of cmap) {
+      if (gid <= 0) continue;
+      advances.set(cp, em(advanceOf(gid)));
+      const y = glyphTop(gid);
+      if (y !== null) tops.set(cp, em(y));
+    }
+    if (!advances.has(0x20)) return null;
+    const top = (ch: string) => tops.get(ch.charCodeAt(0)) ?? null;
 
     const os2 = t.get(TAG("OS/2"));
     let weight = 400;
@@ -120,6 +121,7 @@ export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
       xh,
       asc,
       advances,
+      tops,
       kind: kindOf(fixedPitch, panose),
       weight,
       restricted,
