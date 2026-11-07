@@ -33,6 +33,7 @@ import {
   type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
+  faceCovers,
   faceFromBytes,
   resetScanFaces,
   setBundledScanFaces,
@@ -457,12 +458,20 @@ describe("matching scanned text in other scripts", () => {
     },
   );
 
+  test("the bundled Chinese and Korean fonts can be matched", async () => {
+    const chinese = await staticFace("Noto Sans SC", "NotoSansSC-Regular.ttf");
+    const korean = await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
+    expect(chinese && faceCovers(chinese, "华级们这说话东车书门关进")).toBe(
+      true,
+    );
+    expect(korean && faceCovers(korean, "청구서 김민준 님 납부")).toBe(true);
+  });
+
   test(
     "offers nothing it cannot draw and leaves the scan alone when an edit cannot be drawn",
     { timeout: 120_000 },
     async () => {
-      const korean = await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
-      expect(korean).toBeNull();
+      await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
       resetDroppedBase14Chars();
       const { doc, page } = await buildScan(
         [

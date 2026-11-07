@@ -130,8 +130,14 @@ class EditorFontRegistryTest {
 
         assertThat(families)
                 .extracting(EditorFontFamily::family)
-                .contains("Liberation Sans", "DejaVu Serif", "Noto Sans", "Noto Sans JP")
-                .doesNotContain("Tangerine", "Noto Sans KR", "Noto Sans SC", "Noto Sans TC");
+                .contains(
+                        "Liberation Sans",
+                        "DejaVu Serif",
+                        "Noto Sans",
+                        "Noto Sans JP",
+                        "Noto Sans KR",
+                        "Noto Sans SC")
+                .doesNotContain("Tangerine", "Noto Sans TC");
         EditorFontFace regular = family(families, "Liberation Sans").faces().get(0);
         assertThat(family(families, "Liberation Sans").faces()).hasSize(4);
         assertThat(regular.style()).isEqualTo("Regular");
