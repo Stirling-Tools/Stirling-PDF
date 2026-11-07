@@ -325,9 +325,34 @@ function strokeWidth(
   return runs ? inked / runs : 0;
 }
 
-function percentile(values: Float32Array, p: number): number {
-  const sorted = Float32Array.from(values).sort();
-  return sorted[Math.floor((sorted.length - 1) * p)];
+function nthSmallest(values: Float32Array | Float64Array, n: number): number {
+  let lo = 0;
+  let hi = values.length - 1;
+  while (lo < hi) {
+    const pivot = values[(lo + hi) >> 1];
+    let i = lo;
+    let j = hi;
+    while (i <= j) {
+      while (values[i] < pivot) i++;
+      while (values[j] > pivot) j--;
+      if (i <= j) {
+        const t = values[i];
+        values[i] = values[j];
+        values[j] = t;
+        i++;
+        j--;
+      }
+    }
+    if (n <= j) hi = j;
+    else if (n >= i) lo = i;
+    else break;
+  }
+  return values[n];
+}
+
+function percentiles(values: Float32Array, ps: number[]): number[] {
+  const copy = Float32Array.from(values);
+  return ps.map((p) => nthSmallest(copy, Math.floor((copy.length - 1) * p)));
 }
 
 export interface ScanMatch {
@@ -337,7 +362,7 @@ export interface ScanMatch {
   weight: number;
 }
 
-type ScanImage = { img: Luma; stroke: number } | null;
+type ScanImage = { img: Luma; stroke: number; edge?: number } | null;
 
 interface FitMemory {
   scans: Map<number, ScanImage>;
@@ -441,7 +466,8 @@ function scanImage(
 
 // Each image cut halfway between its own paper and its own darkest ink.
 function midTone(img: { data: Float32Array }): number {
-  return (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
+  const [paper, ink] = percentiles(img.data, [0.85, 0.01]);
+  return (paper + ink) / 2;
 }
 
 function drawnLuma(
@@ -503,7 +529,10 @@ function measureMatch(
     score: rough
       ? windowCorrelation(scan, drawn, 0, scan.width, 0).r
       : slidingCorrelation(scan, drawn),
-    weight: strokeWidth(drawn, midTone(drawn)) / Math.max(0.5, scanned.stroke),
+    weight:
+      softness === undefined
+        ? 1
+        : strokeWidth(drawn, midTone(drawn)) / Math.max(0.5, scanned.stroke),
   };
 }
 
@@ -511,7 +540,8 @@ function measureMatch(
 // over the steepest gradients. Blur widens it; noise and colour do not.
 function edgeWidth(img: { data: Float32Array; width: number; height: number }) {
   const { data, width, height } = img;
-  const contrast = percentile(data, 0.95) - percentile(data, 0.02);
+  const [paper, ink] = percentiles(data, [0.95, 0.02]);
+  const contrast = paper - ink;
   if (contrast < 20) return 0;
   const grads: number[] = [];
   for (let y = 0; y < height - 1; y++)
@@ -524,8 +554,11 @@ function edgeWidth(img: { data: Float32Array; width: number; height: number }) {
       if (g > contrast * 0.05) grads.push(g);
     }
   if (grads.length === 0) return 0;
-  grads.sort((p, q) => p - q);
-  return contrast / grads[Math.floor(grads.length * 0.9)];
+  const steep = nthSmallest(
+    Float64Array.from(grads),
+    Math.floor(grads.length * 0.9),
+  );
+  return contrast / steep;
 }
 
 /**
@@ -553,7 +586,7 @@ function measureSoftness(
   const probe = probeOf(ink.rect);
   const scan = scanImage(doc, page, ink, probe, 0);
   if (!scan) return 0;
-  const target = edgeWidth(scan.img);
+  const target = (scan.edge ??= edgeWidth(scan.img));
   checkDeadline();
   const sheet = doc.scratchPageFor(page);
   const ptrs = placeText(sheet.doc, sheet.page, {
