@@ -139,6 +139,7 @@ export class EditTextCommand implements Command {
   private createdPtrs: number[] = [];
   /** Set when apply went through the word-level scanned-OCR path. */
   private scanEdited = false;
+  private scanRefused = false;
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   /** Rotation of the run when apply() snapshotted it; re-applied on revert. */
@@ -186,7 +187,13 @@ export class EditTextCommand implements Command {
       run.scanEdit ??= captureScanEdit(doc.module, run, page);
       if (run.scanEdit) {
         this.scanEdited = true;
-        renderScanEdit(doc, page, run, run.scanEdit, this.nextText);
+        this.scanRefused = !renderScanEdit(
+          doc,
+          page,
+          run,
+          run.scanEdit,
+          this.nextText,
+        );
         return;
       }
     }
@@ -1314,6 +1321,7 @@ export class EditTextCommand implements Command {
     return (
       adjacent instanceof EditTextCommand &&
       this.scanEdited &&
+      !this.scanRefused &&
       adjacent.scanEdited &&
       adjacent.pageIndex === this.pageIndex &&
       adjacent.runId === this.runId

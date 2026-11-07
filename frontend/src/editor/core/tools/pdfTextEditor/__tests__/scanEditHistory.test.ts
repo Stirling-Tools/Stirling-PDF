@@ -51,7 +51,7 @@ function fixture() {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  renderScanEdit.mockClear();
+  renderScanEdit.mockReset();
 });
 
 afterEach(() => {
@@ -77,6 +77,27 @@ describe("undoing typing in scanned text", () => {
     history.redo(doc);
     expect(renderScanEdit.mock.calls.map((c) => c[4])).toEqual(["Joe"]);
     expect(run.text).toBe("Joe");
+  });
+
+  it("redoes a burst to its last drawn text when its last step was refused", () => {
+    const { doc, run } = fixture();
+    renderScanEdit.mockImplementation((_d, _p, r, _s, text) => {
+      if (/\p{Script=Hebrew}/u.test(text)) return false;
+      r.text = text;
+      return true;
+    });
+    const history = new HistoryStack();
+    for (const nextText of ["Janet", "Janetש"])
+      history.execute(
+        new EditTextCommand({ pageIndex: 0, runId: run.id, nextText }),
+        doc,
+      );
+    expect(run.text).toBe("Janet");
+
+    history.undo(doc);
+    expect(run.text).toBe("Jane");
+    history.redo(doc);
+    expect(run.text).toBe("Janet");
   });
 });
 
