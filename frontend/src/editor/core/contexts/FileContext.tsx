@@ -84,6 +84,10 @@ import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
 
 import { reportFilesRemoved } from "@editor/services/failureReporting";
 import {
+  clearRightsManagedPdfs,
+  forgetRightsManagedPdfs,
+} from "@editor/services/rightsManagedPdf";
+import {
   addPendingUnlocks,
   setPendingUnlocks,
 } from "@editor/services/pendingUnlocks";
@@ -1087,7 +1091,7 @@ function FileContextInner({
       inputStirlingFileStubs: StirlingFileStub[],
       outputFileIds: FileId[],
     ): Promise<void> => {
-      return undoConsumeFiles(
+      await undoConsumeFiles(
         inputFiles,
         inputStirlingFileStubs,
         outputFileIds,
@@ -1096,6 +1100,7 @@ function FileContextInner({
         indexedDB,
         outputFileIds.map((id) => stateRef.current.files.byId[id]),
       );
+      forgetRightsManagedPdfs(outputFileIds);
     },
     [indexedDB, dispatchWithUnlock],
   );
@@ -1141,6 +1146,7 @@ function FileContextInner({
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
         cancelPendingAdmissions(fileIds);
         forgetPdfAccess(fileIds);
+        forgetRightsManagedPdfs(fileIds);
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
 
@@ -1172,6 +1178,7 @@ function FileContextInner({
         ownerRequests.current.clear();
         cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
         clearPdfAccess();
+        clearRightsManagedPdfs();
         lifecycleManager.cleanupAllFiles();
         filesRef.current.clear();
         dispatch({ type: "RESET_CONTEXT" });
@@ -1185,6 +1192,7 @@ function FileContextInner({
         ownerRequests.current.clear();
         cancelPendingAdmissions([...pendingAdmissions.current.keys()]);
         clearPdfAccess();
+        clearRightsManagedPdfs();
         // First clear all files from memory
         lifecycleManager.cleanupAllFiles();
         filesRef.current.clear();
@@ -1317,6 +1325,7 @@ function FileContextInner({
             pending.resolve(false);
           pendingAdmissions.current.clear();
           clearPdfAccess();
+          clearRightsManagedPdfs();
           lifecycleManager.destroy();
         }
       });

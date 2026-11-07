@@ -2,6 +2,7 @@ import type { StirlingFileStub } from "@editor/types/fileContext";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
+import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 import { inMemoryFile } from "@editor/utils/inMemoryFile";
 import type { ConnectedAccount } from "@editor/services/connectedAccountsService";
 
@@ -24,6 +25,7 @@ export class OneDriveSaveError extends Error {
       | "reconnect"
       | "network"
       | "server"
+      | "unprotected"
       | "failed",
     message: string,
   ) {
@@ -63,6 +65,14 @@ export async function saveToOneDrive(
   file: File,
   target: OneDriveSaveTarget,
 ): Promise<CloudOrigin> {
+  const origin = target.kind === "folder" ? null : target.origin;
+  const isProtected = await isMicrosoftProtectedPdf(file);
+  if (origin?.protected && !isProtected) {
+    throw new OneDriveSaveError(
+      "unprotected",
+      "This copy is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
+    );
+  }
   const accountId = targetAccountId(target);
   const form = new FormData();
   form.append("fileInput", await inMemoryFile(file));
@@ -107,6 +117,7 @@ export async function saveToOneDrive(
       name: saved.name,
       eTag: saved.eTag,
       webUrl: saved.webUrl,
+      protected: isProtected,
       stirlingCopy:
         target.kind !== "replace" || Boolean(target.origin.stirlingCopy),
     };

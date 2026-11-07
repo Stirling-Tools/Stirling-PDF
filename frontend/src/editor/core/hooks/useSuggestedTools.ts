@@ -3,7 +3,11 @@ import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useToolNavigation } from "@editor/hooks/useToolNavigation";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useToolRecommendations } from "@editor/hooks/useToolRecommendations";
-import { isComingSoonTool } from "@editor/data/toolsTaxonomy";
+import {
+  isComingSoonTool,
+  type ToolRegistryEntry,
+} from "@editor/data/toolsTaxonomy";
+import { supportsRightsManaged } from "@editor/services/pdfSessionUnlock";
 import { isValidToolId, ToolId } from "@editor/types/toolId";
 
 export interface SuggestedTool {
@@ -31,6 +35,15 @@ const SUGGESTION_COUNT = 4;
 // Well past what is shown: tools on equal scores are reordered here, so they
 // have to survive the server's own limit to be reordered at all.
 const FETCH_LIMIT = 12;
+
+function keepsRightsManagement(tool: ToolRegistryEntry): boolean {
+  const config = tool.operationConfig;
+  if (!config) return false;
+  if (typeof config.endpoint === "string")
+    return supportsRightsManaged(config.endpoint);
+  const endpoints = config.endpoints ?? [];
+  return endpoints.length > 0 && endpoints.every(supportsRightsManaged);
+}
 
 function curatedRank(id: ToolId): number {
   const index = FALLBACK_TOOL_IDS.indexOf(id);
@@ -64,7 +77,9 @@ function orderRanked(ranked: { toolKey: string; score: number }[]): ToolId[] {
  * shrinks. Falls back to the curated list entirely when the backend has no
  * usage data - a fresh install, tracking off, or no login to attribute runs to.
  */
-export function useSuggestedTools(): SuggestedTool[] {
+export function useSuggestedTools({
+  rightsManaged = false,
+}: { rightsManaged?: boolean } = {}): SuggestedTool[] {
   const { selectedTool } = useNavigationState();
   const { getToolNavigation } = useToolNavigation();
   const { getSelectedTool, toolAvailability } = useToolWorkflow();
@@ -85,6 +100,7 @@ export function useSuggestedTools(): SuggestedTool[] {
       // tool this install has disabled or cannot run is one of those.
       if (!tool || isComingSoonTool(id, tool)) continue;
       if (toolAvailability[id]?.available === false) continue;
+      if (rightsManaged && !keepsRightsManagement(tool)) continue;
 
       seen.add(id);
       suggestions.push({
@@ -103,5 +119,6 @@ export function useSuggestedTools(): SuggestedTool[] {
     getToolNavigation,
     getSelectedTool,
     toolAvailability,
+    rightsManaged,
   ]);
 }

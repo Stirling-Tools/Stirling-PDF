@@ -2,6 +2,10 @@ import type { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 import { fileStorage } from "@editor/services/fileStorage";
 import { splitFileName } from "@editor/utils/fileUtils";
+import {
+  isKnownRightsManagedPdf,
+  isMicrosoftProtectedPdf,
+} from "@editor/services/rightsManagedPdf";
 
 /** The subset of `useFileHandler().addFiles` a duplicate needs. */
 type AddFilesFn = (
@@ -62,6 +66,7 @@ export async function duplicateStoredFile(
     },
   );
   if (!copy) return null;
+  if (isKnownRightsManagedPdf(stub.id)) void isMicrosoftProtectedPdf(copy);
 
   const inherited: Parameters<typeof fileStorage.updateFileMetadata>[1] = {};
   if (stub.classificationLabels) {

@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from "react";
 import { Text, Modal, Group, Loader, Stack, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
@@ -7,7 +13,7 @@ import { alert } from "@editor/components/toast";
 import { useTranslation } from "react-i18next";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
@@ -38,6 +44,8 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useAuth } from "@editor/auth/UseSession";
 import { useFileThumbnail } from "@editor/hooks/useFileThumbnail";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { useRightsManagedPdf } from "@editor/hooks/useRightsManagedPdf";
+import { openWithOnlyConnectedAccount } from "@editor/services/rightsManagedPdf";
 import { Tooltip as StirlingTooltip } from "@editor/components/shared/Tooltip";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
@@ -71,6 +79,33 @@ interface FileEditorThumbnailProps {
   toolMode?: boolean;
   isSupported?: boolean;
   policies?: FileItemPolicyRef[];
+}
+
+function FileNameBadge({
+  icon,
+  tooltip,
+  label,
+  testId,
+}: {
+  icon: IconName;
+  tooltip: string;
+  label: string;
+  testId?: string;
+}) {
+  return (
+    <StirlingTooltip content={tooltip} position="top" maxWidth={230} arrow>
+      <span
+        className={styles.unlockedIndicator}
+        role="img"
+        aria-label={label}
+        tabIndex={0}
+        data-no-select
+        data-testid={testId}
+      >
+        <Icon name={icon} size={14} />
+      </span>
+    </StirlingTooltip>
+  );
 }
 
 const FileEditorThumbnail = ({
@@ -114,6 +149,14 @@ const FileEditorThumbnail = ({
     [activeFiles, file.id],
   );
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+  const rightsManaged = useRightsManagedPdf(actualFile);
+  const isRightsManaged =
+    rightsManaged.status === "locked" || rightsManaged.status === "opened";
+
+  useEffect(() => {
+    if (rightsManaged.status === "locked" && actualFile)
+      void openWithOnlyConnectedAccount(actualFile);
+  }, [rightsManaged.status, actualFile]);
 
   const isZipFile = zipFileService.isZipFileStub(file);
 
@@ -174,8 +217,10 @@ const FileEditorThumbnail = ({
 
   const pageLabel = useMemo(
     () =>
-      pageCount > 0 ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}` : "",
-    [pageCount],
+      pageCount > 0 && !isRightsManaged
+        ? `${pageCount} ${pageCount === 1 ? "Page" : "Pages"}`
+        : "",
+    [pageCount, isRightsManaged],
   );
 
   const dateLabel = useMemo(() => {
@@ -744,29 +789,33 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
-          {pdfAccess?.encrypted && (
-            <StirlingTooltip
-              content={t(
-                "encryptedPdfUnlock.sessionSuccessBody",
-                "Unlocked for this session. Password protection is retained.",
+          {isRightsManaged ? (
+            <FileNameBadge
+              icon="shield"
+              tooltip={t(
+                "rightsManagedPdf.title",
+                "Protected by Microsoft Purview",
               )}
-              position="top"
-              maxWidth={230}
-              arrow
-            >
-              <span
-                className={styles.unlockedIndicator}
-                role="img"
-                aria-label={t(
+              label={t(
+                "rightsManagedPdf.title",
+                "Protected by Microsoft Purview",
+              )}
+              testId="rights-managed-badge"
+            />
+          ) : (
+            pdfAccess?.encrypted && (
+              <FileNameBadge
+                icon="lock-open"
+                tooltip={t(
+                  "encryptedPdfUnlock.sessionSuccessBody",
+                  "Unlocked for this session. Password protection is retained.",
+                )}
+                label={t(
                   "encryptedPdfUnlock.sessionSuccessTitle",
                   "PDF unlocked",
                 )}
-                tabIndex={0}
-                data-no-select
-              >
-                <Icon name="lock-open" size={14} />
-              </span>
-            </StirlingTooltip>
+              />
+            )
           )}
           <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>
