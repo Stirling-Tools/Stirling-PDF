@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.context.request.WebRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -33,11 +32,8 @@ public class EditorFontController {
 
     @GetMapping("/editor-fonts")
     @Operation(summary = "List the server-provided fonts the PDF text editor can embed")
-    public ResponseEntity<EditorFontManifest> manifest(WebRequest request) {
+    public ResponseEntity<EditorFontManifest> manifest() {
         Snapshot snapshot = registry.snapshot();
-        if (request.checkNotModified(snapshot.etag())) {
-            return null;
-        }
         return ResponseEntity.ok()
                 .cacheControl(MANIFEST_CACHE)
                 .eTag(snapshot.etag())
@@ -46,13 +42,10 @@ public class EditorFontController {
 
     @GetMapping("/editor-fonts/{id}")
     @Operation(summary = "Download one server-provided editor font face by its content hash")
-    public ResponseEntity<Resource> font(@PathVariable String id, WebRequest request) {
+    public ResponseEntity<Resource> font(@PathVariable String id) {
         Optional<FontFile> file = registry.resolve(id);
         if (file.isEmpty()) {
             return ResponseEntity.notFound().build();
-        }
-        if (request.checkNotModified(id)) {
-            return null;
         }
         FontFile font = file.get();
         return ResponseEntity.ok()

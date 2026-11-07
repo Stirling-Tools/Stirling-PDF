@@ -103,6 +103,15 @@ describe("analyzePageFonts", () => {
     expect(fonts[0].pages).toEqual([1, 3]);
   });
 
+  it("names a run drawn in a server or device face by its family", () => {
+    const fonts = analyzePageFonts([
+      mkPage(0, [mkRun("a", "device:Liberation Serif")]),
+    ]);
+    expect(fonts).toHaveLength(1);
+    expect(fonts[0].name).toBe("Liberation Serif");
+    expect(fonts[0].status).toBe("embedded");
+  });
+
   it("returns nothing when there are no runs", () => {
     expect(analyzePageFonts([mkPage(0, [])])).toEqual([]);
   });

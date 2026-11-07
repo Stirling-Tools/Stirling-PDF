@@ -27,10 +27,11 @@ const FONT_ID = /^[0-9a-f]{64}$/;
 
 let resolved: LocalFont[] | null = null;
 let manifestPending: Promise<LocalFont[] | null> | null = null;
+let manifestGeneration = 0;
 let faceByFont = new Map<LocalFont, ServerFontFace>();
 const listeners = new Set<() => void>();
 const bytesByFaceId = new Map<string, Uint8Array>();
-const bytesByName = new Map<string, Uint8Array>();
+const faceIdByName = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
 const cssFacesRegistered = new Set<string>();
 
@@ -86,26 +87,45 @@ function publish(families: ServerFontFamily[]): LocalFont[] {
   }
   faceByFont = byFont;
   resolved = fonts;
-  for (const listener of [...listeners]) listener();
+  notifyListeners();
   return fonts;
+}
+
+function notifyListeners(): void {
+  for (const listener of [...listeners]) listener();
+}
+
+async function fetchManifest(): Promise<ServerFontFamily[] | null> {
+  try {
+    const res = await apiClient.get<unknown>(SERVER_FONTS_URL, {
+      suppressErrorToast: true,
+    });
+    return readFamilies(res.data);
+  } catch {
+    return null;
+  }
 }
 
 export function loadServerFonts(): Promise<LocalFont[] | null> {
   if (resolved) return Promise.resolve(resolved);
   if (!manifestPending) {
-    manifestPending = (async () => {
-      try {
-        const res = await apiClient.get<unknown>(SERVER_FONTS_URL, {
-          suppressErrorToast: true,
-        });
-        return publish(readFamilies(res.data));
-      } catch {
-        manifestPending = null;
-        return null;
-      }
-    })();
+    const generation = manifestGeneration;
+    manifestPending = fetchManifest().then((families) => {
+      if (generation !== manifestGeneration) return null;
+      if (families && families.length > 0) return publish(families);
+      manifestPending = null;
+      return null;
+    });
   }
   return manifestPending;
+}
+
+export function forgetServerFontList(): void {
+  manifestGeneration++;
+  resolved = null;
+  manifestPending = null;
+  faceByFont = new Map();
+  notifyListeners();
 }
 
 export function loadedServerFonts(): LocalFont[] | null {
@@ -123,13 +143,22 @@ export function serverFaceFor(requested: string): ServerFontFace | null {
   return font ? (faceByFont.get(font) ?? null) : null;
 }
 
-export function isServerFontFamily(family: string): boolean {
-  const key = normaliseName(family);
-  return !!resolved?.some((font) => normaliseName(font.family) === key);
+export function getServerFaceId(requested: string): string | null {
+  return faceIdByName.get(normaliseName(requested)) ?? null;
 }
 
 export function getServerFontBytes(requested: string): Uint8Array | null {
-  return bytesByName.get(normaliseName(requested)) ?? null;
+  const id = getServerFaceId(requested);
+  return id ? (bytesByFaceId.get(id) ?? null) : null;
+}
+
+function cssFamilyForFace(id: string): string {
+  return `serverface-${id}`;
+}
+
+export function serverFontCssFamily(requested: string): string | null {
+  const id = getServerFaceId(requested);
+  return id && cssFacesRegistered.has(id) ? cssFamilyForFace(id) : null;
 }
 
 const facePending = new Map<string, Promise<Uint8Array | null>>();
@@ -175,25 +204,23 @@ async function downloadFace(id: string): Promise<Uint8Array | null> {
 }
 
 async function registerCssFace(
-  name: string,
   face: ServerFontFace,
   bytes: Uint8Array,
 ): Promise<void> {
-  const key = normaliseName(name);
-  if (cssFacesRegistered.has(key)) return;
+  if (cssFacesRegistered.has(face.id)) return;
   if (typeof FontFace === "undefined" || typeof document === "undefined") {
     return;
   }
   const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
   if (!fonts) return;
   try {
-    const css = new FontFace(name, bytes.slice(), {
+    const css = new FontFace(cssFamilyForFace(face.id), bytes.slice(), {
       style: face.italic ? "italic" : "normal",
       weight: "1 1000",
     });
     await css.load();
     fonts.add(css);
-    cssFacesRegistered.add(key);
+    cssFacesRegistered.add(face.id);
   } catch {
     return;
   }
@@ -204,7 +231,7 @@ export async function loadServerFontBytes(
 ): Promise<Uint8Array | null> {
   const key = normaliseName(requested);
   if (!key) return null;
-  const cached = bytesByName.get(key);
+  const cached = getServerFontBytes(requested);
   if (cached) return cached;
   return shared(bytesPending, key, async () => {
     await loadServerFonts();
@@ -212,8 +239,8 @@ export async function loadServerFontBytes(
     if (!face) return null;
     const bytes = await fetchFaceBytes(face.id);
     if (!bytes) return null;
-    await registerCssFace(requested.trim(), face, bytes);
-    bytesByName.set(key, bytes);
+    await registerCssFace(face, bytes);
+    faceIdByName.set(key, face.id);
     return bytes;
   });
 }
@@ -223,7 +250,7 @@ export function resetServerFontsCache(): void {
   manifestPending = null;
   faceByFont = new Map();
   bytesByFaceId.clear();
-  bytesByName.clear();
+  faceIdByName.clear();
   bytesPending.clear();
   facePending.clear();
   cssFacesRegistered.clear();

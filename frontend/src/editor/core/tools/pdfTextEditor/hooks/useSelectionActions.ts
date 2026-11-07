@@ -10,12 +10,18 @@ import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetT
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
-import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  deviceFontDrawsAnyOf,
+  ensureDeviceFontReady,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isItalicFamily,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { loadedExternalFonts } from "@editor/tools/pdfTextEditor/util/externalFonts";
-import { isServerFontFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
+import { serverFaceFor } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 
@@ -24,14 +30,28 @@ interface SelectedRun {
   id: string;
   pageIndex: number;
   fontId: string;
+  text: string;
   fill: { r: number; g: number; b: number; a: number };
 }
 
-/** Bundle of callbacks that operate on the current selection. */
+export type FontPickFailure = "serverFontFailed" | "noGlyphs";
+
 async function serverFontUnavailable(family: string): Promise<boolean> {
-  return !(await ensureDeviceFontReady(family)) && isServerFontFamily(family);
+  return (
+    !(await ensureDeviceFontReady(family)) && serverFaceFor(family) !== null
+  );
 }
 
+async function fontPickFailure(
+  family: string,
+  text: string,
+): Promise<FontPickFailure | null> {
+  if (nearestStandardFont(family) === family) return null;
+  if (await serverFontUnavailable(family)) return "serverFontFailed";
+  return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
+}
+
+/** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
     (visit: (run: SelectedRun) => void) => {
@@ -54,6 +74,14 @@ export function useSelectionActions(store: EditorStore) {
   // `deleteSelection` groups its deletes. Select-all now reaches the whole
   // document, so a per-run dispatch left the user hundreds of undos behind and
   // the first Ctrl+Z looked like the restyle had only covered part of the file.
+  const dispatchAll = useCallback(
+    (cmds: Command[]) => {
+      if (cmds.length === 1) store.dispatch(cmds[0]);
+      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+    },
+    [store],
+  );
+
   const dispatchPerRun = useCallback(
     (build: (run: SelectedRun) => Command | null) => {
       const cmds: Command[] = [];
@@ -61,10 +89,9 @@ export function useSelectionActions(store: EditorStore) {
         const cmd = build(run);
         if (cmd) cmds.push(cmd);
       });
-      if (cmds.length === 1) store.dispatch(cmds[0]);
-      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+      dispatchAll(cmds);
     },
-    [store, forEachSelectedRun],
+    [forEachSelectedRun, dispatchAll],
   );
 
   const changeFontSize = useCallback(
@@ -116,24 +143,35 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const changeFontFamily = useCallback(
-    async (family: string): Promise<boolean> => {
+    async (family: string): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      const targets: SelectedRun[] = [];
+      forEachSelectedRun((run) => targets.push(run));
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      if (await serverFontUnavailable(family)) return false;
-      dispatchPerRun(
-        (run) =>
-          new SetFontFamilyCommand({
-            pageIndex: run.pageIndex,
-            runId: run.id,
-            nextFamily: family,
-          }),
+      const failure = await fontPickFailure(
+        family,
+        targets.map((run) => run.text).join(""),
       );
-      return true;
+      if (failure) return failure;
+      if (store.document !== doc) return null;
+      dispatchAll(
+        targets.map(
+          (run) =>
+            new SetFontFamilyCommand({
+              pageIndex: run.pageIndex,
+              runId: run.id,
+              nextFamily: family,
+            }),
+        ),
+      );
+      return null;
     },
-    [dispatchPerRun],
+    [store, forEachSelectedRun, dispatchAll],
   );
 
   const toggleItalic = useCallback(async () => {
+    const doc = store.document;
     const fonts = loadedExternalFonts();
     const targets: Array<{
       pageIndex: number;
@@ -164,17 +202,18 @@ export function useSelectionActions(store: EditorStore) {
         continue;
       ready.push(target);
     }
-    const cmds = ready.map(
-      (target) =>
-        new SetFontFamilyCommand({
-          pageIndex: target.pageIndex,
-          runId: target.runId,
-          nextFamily: target.family,
-        }),
+    if (store.document !== doc) return;
+    dispatchAll(
+      ready.map(
+        (target) =>
+          new SetFontFamilyCommand({
+            pageIndex: target.pageIndex,
+            runId: target.runId,
+            nextFamily: target.family,
+          }),
+      ),
     );
-    if (cmds.length === 1) store.dispatch(cmds[0]);
-    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-  }, [store, forEachSelectedRun]);
+  }, [store, forEachSelectedRun, dispatchAll]);
 
   const deleteSelection = useCallback(() => {
     const sel = store.selection.value;

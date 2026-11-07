@@ -1,4 +1,5 @@
 import {
+  getLocalFaceKey,
   getLocalFontBytes,
   loadedLocalFonts,
   loadLocalFontBytes,
@@ -7,6 +8,7 @@ import {
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
+  getServerFaceId,
   getServerFontBytes,
   loadedServerFonts,
   loadServerFontBytes,
@@ -51,6 +53,13 @@ export function subscribeExternalFonts(listener: () => void): () => void {
 
 export function getExternalFontBytes(family: string): Uint8Array | null {
   return getServerFontBytes(family) ?? getLocalFontBytes(family);
+}
+
+export function externalFaceKey(family: string): string {
+  const server = getServerFaceId(family);
+  if (server) return `server:${server}`;
+  const local = getLocalFaceKey(family);
+  return local ? `local:${local}` : normaliseName(family);
 }
 
 export async function loadExternalFontBytes(

@@ -4,7 +4,9 @@ import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
+  faceStyleFlags,
   groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
@@ -37,19 +39,33 @@ export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
 
 const BUILT_IN_NAMES = BUILT_IN_FONT_FAMILIES.map((option) => option.value);
 
-function familiesExcept(fonts: LocalFont[] | null, taken: string[]): string[] {
+function familyOptions(
+  fonts: LocalFont[] | null,
+  taken: string[],
+): FontFamilyOption[] {
   if (!fonts) return [];
   const hidden = new Set(taken.map(normaliseName));
-  return groupByFamily(fonts)
-    .map((family) => family.family)
-    .filter((family) => !hidden.has(normaliseName(family)));
+  const withBold = new Set<string>();
+  for (const font of fonts) {
+    const flags = faceStyleFlags(font);
+    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
+  }
+  return groupByFamily(fonts).flatMap(({ family }) => {
+    const key = normaliseName(family);
+    if (hidden.has(key)) return [];
+    const options = [{ value: family, label: family }];
+    if (withBold.has(key)) {
+      options.push({ value: `${family} Bold`, label: `${family} Bold` });
+    }
+    return options;
+  });
 }
 
-type DeviceFontNotice = "unavailable" | "none" | "serverFontFailed";
+type DeviceFontNotice = "unavailable" | "none" | FontPickFailure;
 
 interface FontFamilySelectProps {
   value: string | null;
-  onChange: (family: string) => void | Promise<boolean>;
+  onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
   disabled?: boolean;
   touch?: boolean;
@@ -82,14 +98,18 @@ export function FontFamilySelect({
     loadedServerFonts,
   );
 
-  const serverFamilies = useMemo(
-    () => familiesExcept(serverFonts, BUILT_IN_NAMES),
+  const serverOptions = useMemo(
+    () => familyOptions(serverFonts, BUILT_IN_NAMES),
     [serverFonts],
   );
 
-  const deviceFamilies = useMemo(
-    () => familiesExcept(localFonts, [...BUILT_IN_NAMES, ...serverFamilies]),
-    [localFonts, serverFamilies],
+  const deviceOptions = useMemo(
+    () =>
+      familyOptions(localFonts, [
+        ...BUILT_IN_NAMES,
+        ...serverOptions.map((option) => option.value),
+      ]),
+    [localFonts, serverOptions],
   );
 
   const loadDeviceFonts = useCallback(async () => {
@@ -108,10 +128,10 @@ export function FontFamilySelect({
 
   const isKnown = useCallback(
     (family: string) =>
-      BUILT_IN_FONT_FAMILIES.some((option) => option.value === family) ||
-      serverFamilies.includes(family) ||
-      deviceFamilies.includes(family),
-    [serverFamilies, deviceFamilies],
+      [...BUILT_IN_FONT_FAMILIES, ...serverOptions, ...deviceOptions].some(
+        (option) => option.value === family,
+      ),
+    [serverOptions, deviceOptions],
   );
 
   // The run's own face when we hold no bytes for it. Shown so the user can see
@@ -123,8 +143,8 @@ export function FontFamilySelect({
 
   const data = useMemo<ComboboxData>(() => {
     if (
-      serverFamilies.length === 0 &&
-      deviceFamilies.length === 0 &&
+      serverOptions.length === 0 &&
+      deviceOptions.length === 0 &&
       !documentFamily
     ) {
       return BUILT_IN_FONT_FAMILIES;
@@ -142,40 +162,59 @@ export function FontFamilySelect({
       group: t("pdfTextEditor.fontPicker.builtInGroup", "Built-in fonts"),
       items: BUILT_IN_FONT_FAMILIES,
     });
-    if (serverFamilies.length > 0) {
+    if (serverOptions.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.serverGroup", "Server fonts"),
-        items: serverFamilies.map((family) => ({
-          value: family,
-          label: family,
-        })),
+        items: serverOptions,
       });
     }
-    if (deviceFamilies.length > 0) {
+    if (deviceOptions.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.deviceGroup", "Device fonts"),
-        items: deviceFamilies.map((family) => ({
-          value: family,
-          label: family,
-        })),
+        items: deviceOptions,
       });
     }
     return groups;
-  }, [serverFamilies, deviceFamilies, documentFamily, t]);
+  }, [serverOptions, deviceOptions, documentFamily, t]);
 
   const applyFamily = useCallback(
     async (family: string) => {
       setNotice(null);
       setApplying(true);
       try {
-        const applied = await onChange(family);
-        if (applied === false) setNotice("serverFontFailed");
+        const failure = await onChange(family);
+        if (failure) setNotice(failure);
       } finally {
         setApplying(false);
       }
     },
     [onChange],
   );
+
+  const noticeText = (kind: DeviceFontNotice): string => {
+    switch (kind) {
+      case "unavailable":
+        return t(
+          "pdfTextEditor.fontPicker.deviceFontsUnavailable",
+          "Device fonts are unavailable. The built-in fonts still work.",
+        );
+      case "none":
+        return t(
+          "pdfTextEditor.fontPicker.deviceFontsNone",
+          "No extra device fonts were found.",
+        );
+      case "serverFontFailed":
+        return t(
+          "pdfTextEditor.fontPicker.serverFontFailed",
+          "That server font could not be downloaded. The text was left unchanged.",
+        );
+      case "noGlyphs":
+        return t(
+          "pdfTextEditor.fontPicker.noGlyphs",
+          "This font has no characters for the selected text. The text was left unchanged.",
+        );
+    }
+  };
 
   // Mantine shows nothing for a value with no matching option; the document
   // font is in `data` precisely so a recognised face still gets named.
@@ -218,7 +257,7 @@ export function FontFamilySelect({
         )}
         data-testid="pdf-editor-font-family"
       />
-      {supported && deviceFamilies.length === 0 && (
+      {supported && deviceOptions.length === 0 && (
         <Tooltip
           label={t(
             "pdfTextEditor.fontPicker.useDeviceFonts",
@@ -246,20 +285,7 @@ export function FontFamilySelect({
       )}
       {notice && (
         <Text size="xs" c="dimmed" data-testid="pdf-editor-device-fonts-notice">
-          {notice === "unavailable"
-            ? t(
-                "pdfTextEditor.fontPicker.deviceFontsUnavailable",
-                "Device fonts are unavailable. The built-in fonts still work.",
-              )
-            : notice === "serverFontFailed"
-              ? t(
-                  "pdfTextEditor.fontPicker.serverFontFailed",
-                  "That server font could not be downloaded. The text was left unchanged.",
-                )
-              : t(
-                  "pdfTextEditor.fontPicker.deviceFontsNone",
-                  "No extra device fonts were found.",
-                )}
+          {noticeText(notice)}
         </Text>
       )}
     </Group>
