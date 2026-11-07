@@ -14,6 +14,7 @@ import {
   type FaceKind,
   type FontMetrics,
 } from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import { encodesInBase14 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 
 type FaceSource = "base14" | "bundled" | "device";
 
@@ -248,12 +249,6 @@ const SCRIPTS: ScriptFonts[] = [
   },
 ];
 
-const WIN_ANSI_EXTRAS = new Set([
-  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017d, 0x017e, 0x0192, 0x02c6,
-  0x02dc, 0x2013, 0x2014, 0x2018, 0x2019, 0x201a, 0x201c, 0x201d, 0x201e,
-  0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039, 0x203a, 0x20ac, 0x2122,
-]);
-
 const COVERAGE = 0.9;
 
 export function faceCovers(face: Face, text: string): boolean {
@@ -264,7 +259,7 @@ export function faceCovers(face: Face, text: string): boolean {
     if (/\s/.test(ch)) continue;
     const cp = ch.codePointAt(0)!;
     total++;
-    if (advances ? advances.has(cp) : cp <= 0xff || WIN_ANSI_EXTRAS.has(cp))
+    if (advances ? advances.has(cp) : encodesInBase14(cp))
       drawable++;
   }
   return drawable >= total * COVERAGE;

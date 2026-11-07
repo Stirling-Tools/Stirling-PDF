@@ -25,7 +25,10 @@ import {
   applyTagMarks,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  encodesInBase14,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
   scratchPtr,
@@ -171,12 +174,9 @@ export function sanitizeForBase14(text: string): string {
     const cp = ch.codePointAt(0) ?? 0;
     if (cp === 0x09 || cp === 0x0a || cp === 0x0d) {
       out += ch;
-    } else if (cp < 0x20 || cp === 0x7f || (cp >= 0x80 && cp <= 0x9f)) {
-      // C0/DEL/C1 controls are un-encodable in WinAnsi - drop them.
-      continue;
     } else if (cp === 0x00a0) {
       out += " ";
-    } else if (cp <= 0xff) {
+    } else if (encodesInBase14(cp)) {
       out += ch;
     }
     // else: unrepresentable in base-14 - drop it (no tofu).
@@ -725,7 +725,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
   const emitWord = (text: string, x: number): number => {
-    // base-14 can only render Latin-1; drop the rest so PDFium never emits
+    // base-14 can only render WinAnsi; drop the rest so PDFium never emits
     // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number => {
@@ -754,7 +754,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         );
         if (dp) return dp;
       }
-      // Some chars are outside base-14's Latin-1 range.
+      // Some chars are outside base-14's WinAnsi range.
       if ([...text].length > [...base14Text].length) {
         const fp = emitFallbackTextObject(
           opts.doc,
