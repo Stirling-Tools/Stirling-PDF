@@ -1310,6 +1310,16 @@ export class EditTextCommand implements Command {
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
 
+  supersedes(adjacent: Command): boolean {
+    return (
+      adjacent instanceof EditTextCommand &&
+      this.scanEdited &&
+      adjacent.scanEdited &&
+      adjacent.pageIndex === this.pageIndex &&
+      adjacent.runId === this.runId
+    );
+  }
+
   /** The text this edit produced - lets the history compare adjacent edits. */
   get resultText(): string {
     return this.nextText;
