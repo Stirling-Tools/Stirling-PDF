@@ -30,6 +30,7 @@ import {
 import {
   FIT_PAUSED,
   blurRgba,
+  checkDeadline,
   fitFace,
   median,
   placeText,
@@ -388,6 +389,7 @@ function spanInk(
     if (w.x > words[to].x + 0.5) x1 = Math.min(x1, w.x - 0.3);
     if (w.right < words[from].x + 0.5) x0 = Math.max(x0, w.right + 0.3);
   }
+  checkDeadline();
   const ink = measureScanInk(doc.module, page, {
     x0,
     x1,

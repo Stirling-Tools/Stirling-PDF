@@ -390,6 +390,7 @@ export const FIT_PAUSED = Symbol("fit paused");
 export function withFitDeadline<T>(deadline: number, fit: () => T): T {
   const outer = fitDeadline;
   fitDeadline = deadline;
+  measuredThisSlice = false;
   try {
     return fit();
   } finally {
@@ -405,7 +406,6 @@ export function withScanCache<T>(ink: object, fit: () => T): T {
       softness: new Map(),
       measures: new Map(),
     });
-  measuredThisSlice = false;
   try {
     const result = fit();
     fitMemory.delete(ink);
@@ -448,7 +448,7 @@ const probeOf = (rect: PageRect): PageRect => ({
   height: rect.height + 2,
 });
 
-function checkDeadline(): void {
+export function checkDeadline(): void {
   if (
     measuredThisSlice &&
     fitDeadline !== Infinity &&

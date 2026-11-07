@@ -680,6 +680,36 @@ describe("editing scanned text on a page turned with /Rotate", () => {
   );
 });
 
+describe("fitting a long block in slices", () => {
+  test(
+    "measures one line in a slice that is already over",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        Array.from({ length: 10 }, () => ({
+          family: "Carlito",
+          text: SENTENCES[0],
+          size: 12,
+        })),
+        { dpi: 150, blur: 0.5, noise: 6 },
+        18,
+      );
+      try {
+        const run = page.runs.find(
+          (r) => isScanRun(r) && r.text.split("\n").length >= 6,
+        )!;
+        const state = scanEditOf(doc, run)!;
+        expect(prefitScanRun(doc, page, run, performance.now() - 1)).toBe(
+          false,
+        );
+        expect(state.inks.size).toBe(1);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("editing light text on a dark fill", () => {
   test(
     "fits the face and redraws the edit light",
