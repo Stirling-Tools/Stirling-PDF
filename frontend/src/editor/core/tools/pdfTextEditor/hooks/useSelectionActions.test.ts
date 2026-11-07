@@ -213,6 +213,38 @@ describe("useSelectionActions font changes", () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it("skips runs removed during the download and records nothing when none remain", async () => {
+    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    serveFaces(
+      () =>
+        new Promise((resolve) => {
+          finishDownload = resolve;
+        }),
+    );
+    await loadServerFonts();
+    const runs = [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")];
+    const { store, dispatch } = fakeStore(runs, ["a", "b"]);
+
+    const picked = actionsFor(store).changeFontFamily("Acme Sans");
+    runs.splice(1, 1);
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    finishDownload(fontBytes());
+
+    expect(await picked).toBeNull();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Acme Sans"]);
+
+    dispatch.mockClear();
+    runs.push(run("c", "base14:Helvetica"));
+    const { store: other, dispatch: otherDispatch } = fakeStore(runs, ["c"]);
+    const removedAll = actionsFor(other).changeFontFamily("Acme Sans Italic");
+    runs.splice(0, runs.length, run("c2", "base14:Helvetica"));
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(3));
+    finishDownload(fontBytes());
+
+    expect(await removedAll).toBeNull();
+    expect(otherDispatch).not.toHaveBeenCalled();
+  });
+
   it("keeps a run's font when its italic face cannot be downloaded", async () => {
     serveFaces(async (id) => {
       if (id === ITALIC) throw new Error("gone");
