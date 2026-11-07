@@ -19,6 +19,7 @@ import {
 } from "@editor/services/pdfPermissions";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { readCipherProfile } from "@editor/utils/pdfCipherProfile";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -84,9 +85,10 @@ async function ensureAccessUnlessDamaged(
 }
 
 /** Combined output copies one input's protection, so every protected input must share it. */
-function hasMixedProtection(files: readonly File[]): boolean {
+async function hasMixedProtection(files: readonly File[]): Promise<boolean> {
+  if (files.length < 2) return false;
   const [first, ...rest] = files.map((file) => getPdfAccess(file));
-  return rest.some(
+  const settingsDiffer = rest.some(
     (access) =>
       !first ||
       !access ||
@@ -95,6 +97,9 @@ function hasMixedProtection(files: readonly File[]): boolean {
       access.password !== first.password ||
       access.openingPassword !== first.openingPassword,
   );
+  if (settingsDiffer) return true;
+  const [cipher, ...others] = await Promise.all(files.map(readCipherProfile));
+  return !cipher || others.some((other) => other !== cipher);
 }
 
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
@@ -137,7 +142,7 @@ export async function preflightPdfOperation(
       );
     protectedFiles.push(file);
   }
-  if (combinesFiles && hasMixedProtection(protectedFiles))
+  if (combinesFiles && (await hasMixedProtection(protectedFiles)))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.mixedProtection",
@@ -288,7 +293,9 @@ export async function protectUnlockedResults(
   )
     return outputs;
   if (
-    hasMixedProtection(inputs.filter((file) => getPdfAccess(file)?.encrypted))
+    await hasMixedProtection(
+      inputs.filter((file) => getPdfAccess(file)?.encrypted),
+    )
   )
     throw new Error(
       i18n.t(

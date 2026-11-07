@@ -151,6 +151,15 @@ test("identically protected PDFs merge and keep their protection", async ({
     encryptionRevision: 3,
     pageCount: 2,
   });
+  // The output carries the first input's owner password, not the second's.
+  const body = await response.body();
+  expect(
+    (await inspect(page, body, "statement-owner-a")).ownerAuthenticated,
+  ).toBe(true);
+  const second = await inspect(page, body, "statement-owner-b").catch(
+    () => undefined,
+  );
+  expect(second?.ownerAuthenticated).not.toBe(true);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 

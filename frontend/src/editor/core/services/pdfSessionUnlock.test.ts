@@ -23,8 +23,12 @@ import {
   changePdfSecurity,
 } from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
+import { readCipherProfile } from "@editor/utils/pdfCipherProfile";
 
 vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
+vi.mock("@editor/utils/pdfCipherProfile", () => ({
+  readCipherProfile: vi.fn(async () => "RC4-128"),
+}));
 const post = vi.mocked(apiClient.post);
 const access: PdfAccess = {
   password: " password\n",
@@ -466,14 +470,59 @@ describe("session PDF access", () => {
     );
     expect(requestOwner).not.toHaveBeenCalled();
     post.mockResolvedValue({ data: new Blob(["protected merge"]) });
-    await protectUnlockedResults(
+    const outputs = await protectUnlockedResults(
       [new File(["merged"], "merged.pdf")],
       files,
       merge,
     );
+    expect(outputs).toHaveLength(1);
+    expect(new TextDecoder().decode(await readBlobBytes(outputs[0]))).toBe(
+      "protected merge",
+    );
     expect(post).toHaveBeenCalledTimes(1);
     const form = post.mock.calls[0][1] as FormData;
     expect((form.get("sourceFile") as File).name).toBe("first.pdf");
+  });
+
+  it.each([
+    ["password", { password: "other" }],
+    ["encryption revision", { encryptionRevision: 4 }],
+  ])(
+    "rejects a merge whose middle input differs only by %s",
+    async (_field, change) => {
+      const files = ["first", "middle", "last"].map((name) =>
+        createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
+      );
+      files.forEach((file, index) =>
+        rememberPdfAccess(
+          file,
+          index === 1 ? { ...access, ...change } : access,
+        ),
+      );
+      const requestOwner = vi.fn();
+      await expect(
+        preflightPdfOperation(
+          files,
+          "/api/v1/general/merge-pdfs",
+          true,
+          requestOwner,
+        ),
+      ).rejects.toThrow("separate protection settings");
+      expect(requestOwner).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a merge whose inputs use different ciphers", async () => {
+    vi.mocked(readCipherProfile)
+      .mockResolvedValueOnce("RC4-128")
+      .mockResolvedValueOnce("AES-128");
+    const files = ["first", "second"].map((name) =>
+      createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
+    );
+    files.forEach((file) => rememberPdfAccess(file, access));
+    await expect(
+      preflightPdfOperation(files, "/api/v1/general/merge-pdfs", true, vi.fn()),
+    ).rejects.toThrow("separate protection settings");
   });
 
   it("returns no partial output if protection restoration fails", async () => {
