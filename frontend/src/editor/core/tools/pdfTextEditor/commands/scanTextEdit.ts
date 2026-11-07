@@ -10,7 +10,8 @@ import {
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import type { Affine, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { invertAffine } from "@editor/tools/pdfTextEditor/model/affine";
 import {
   capturePatch,
   measureScanInk,
@@ -198,6 +199,32 @@ function fontOf(m: WrappedPdfiumModule, ptr: number): number {
   }
 }
 
+const affineOf = (v: Float32Array): Affine => ({
+  a: v[0],
+  b: v[1],
+  c: v[2],
+  d: v[3],
+  e: v[4],
+  f: v[5],
+});
+
+function pageMatrixReader(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+): (ptr: number, container: number) => Affine | null {
+  const runOwn = run.containerPtr ? readMatrix(m, run.pdfiumObjPtr) : null;
+  const form = runOwn
+    ? compose(run.matrix, invertAffine(affineOf(runOwn)))
+    : null;
+  return (ptr, container) => {
+    if (container !== 0 && (container !== run.containerPtr || !form))
+      return null;
+    const own = readMatrix(m, ptr);
+    if (!own) return null;
+    return form ? compose(form, affineOf(own)) : affineOf(own);
+  };
+}
+
 function captureRotatedScanEdit(
   m: WrappedPdfiumModule,
   run: TextRun,
@@ -210,25 +237,17 @@ function captureRotatedScanEdit(
   const baseline = compose(frame.toUpright, run.matrix).f;
   const box = applyRect(frame.toUpright, run.bounds);
   const length = Math.max(1, run.text.trimEnd().length);
+  const pageMatrix = pageMatrixReader(m, run);
   const words: ScanWord[] = ptrs.map((ptr, w) => {
     const start = starts[w];
     const end = start + texts[w].trimEnd().length;
-    const own = readMatrix(m, ptr);
+    const own = pageMatrix(ptr, run.containerPtr);
     return {
       text: texts[w],
       start,
       x: box.x + (box.width * start) / length,
       right: box.x + (box.width * Math.min(end, length)) / length,
-      baseline: own
-        ? compose(frame.toUpright, {
-            a: own[0],
-            b: own[1],
-            c: own[2],
-            d: own[3],
-            e: own[4],
-            f: own[5],
-          }).f
-        : baseline,
+      baseline: own ? compose(frame.toUpright, own).f : baseline,
       ptr,
       container: run.containerPtr,
       fontSize: run.fontSize,
@@ -274,6 +293,7 @@ export function captureScanEdit(
   const top = run.bounds.y + run.bounds.height;
   const height = Math.max(2, top - slots[0].baselineY);
   const lines: ScanLine[] = [];
+  const pageMatrix = pageMatrixReader(m, run);
   for (const [i, s] of slots.entries()) {
     const n = s.mergedFromPtrs.length;
     if (
@@ -284,6 +304,7 @@ export function captureScanEdit(
       s.mergedFromPtrs.some((p) => !p)
     )
       return null;
+    const container = s.containerPtr || run.containerPtr;
     lines.push({
       text: texts[i],
       baseline: s.baselineY,
@@ -293,9 +314,9 @@ export function captureScanEdit(
         start: s.mergedFromCharStarts[w],
         x: s.mergedFromBounds[w].x,
         right: s.mergedFromBounds[w].right,
-        baseline: readMatrix(m, ptr)?.[5] ?? s.baselineY,
+        baseline: pageMatrix(ptr, container)?.f ?? s.baselineY,
         ptr,
-        container: s.containerPtr || run.containerPtr,
+        container,
         fontSize: s.fontSize,
       })),
     });

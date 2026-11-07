@@ -65,6 +65,10 @@ import {
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
+  buildClassicPdf,
+  streamBody,
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import {
   FONT_DIR,
   buildScan,
   readBundledFaces,
@@ -1306,4 +1310,47 @@ describe("edits that need no font, and text no font can draw", () => {
       expect(await fitAfter(true)).toEqual(await fitAfter(false));
     },
   );
+});
+
+describe("reading scanned words inside a form", () => {
+  test("puts each word on its baseline on the page, not in the form", async () => {
+    const form =
+      "BT /F1 12 Tf 3 Tr 1 0 0 1 50 100 Tm (Hello) Tj 1 0 0 1 82 100.5 Tm (world) Tj ET";
+    const bytes = buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Fx 6 0 R >> >> /Contents 4 0 R >>",
+        },
+        { num: 4, body: streamBody("", "q 1 0 0 1 0 300 cm /Fx Do Q") },
+        {
+          num: 5,
+          body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        },
+        {
+          num: 6,
+          body: streamBody(
+            "/Type /XObject /Subtype /Form /BBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >>",
+            form,
+          ),
+        },
+      ],
+      1,
+    );
+    const doc = await EditorDocument.open(bytes);
+    try {
+      const page = doc.page(0);
+      PdfiumTextReader.populate(doc, page);
+      const run = page.runs.find(isScanRun)!;
+      expect(run.containerPtr).not.toBe(0);
+      const state = scanEditOf(doc, run)!;
+      expect(
+        state.lines.flatMap((l) => l.words.map((w) => w.baseline)),
+      ).toEqual([400, 400.5]);
+    } finally {
+      doc.dispose();
+    }
+  });
 });
