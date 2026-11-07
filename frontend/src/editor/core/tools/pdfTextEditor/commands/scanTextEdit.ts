@@ -546,9 +546,6 @@ function fitBlock(
   };
 }
 
-// One style for the whole block, fitted to its longest line, so an edit never
-// switches face or size part way through a sentence. Only text the scan itself
-// sets at another size (a label and its value on one OCR line) gets its own.
 function withPreferredFit(
   doc: EditorDocument,
   page: Page,
