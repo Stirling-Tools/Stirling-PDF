@@ -154,12 +154,12 @@ public class CbrUtils {
                 document.save(baos);
                 byte[] pdfBytes = baos.toByteArray();
 
-                // Apply Ghostscript optimization if requested
+                // Apply in-process ebook optimization if requested
                 if (optimizeForEbook) {
                     try {
-                        return GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                        return GeneralUtils.optimizePdfForEbook(pdfBytes);
                     } catch (IOException e) {
-                        log.warn("Ghostscript optimization failed, returning unoptimized PDF", e);
+                        log.warn("Ebook PDF optimization failed, returning unoptimized PDF", e);
                     }
                 }
 

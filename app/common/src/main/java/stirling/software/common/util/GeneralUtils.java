@@ -31,6 +31,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.doc.CompressOptions;
+import stirling.software.jpdfium.doc.PdfCompressor;
 
 @Slf4j
 @UtilityClass
@@ -1281,77 +1284,35 @@ public class GeneralUtils {
     }
 
     /**
-     * Optimizes a PDF using Ghostscript with ebook settings for better e-reader compatibility. Uses
-     * -dPDFSETTINGS=/ebook -dFastWebView=true settings to create an optimized PDF.
+     * Optimizes a PDF for ebook readers in-process: downsamples embedded images to 150 DPI,
+     * recompresses them at moderate quality, and compacts streams. Text stays selectable because
+     * pages are never rasterized.
+     *
+     * <p>Image downsampling is verified against page previews and rolled back when the visual drift
+     * exceeds the compressor's tolerance; the result is never larger than the input.
      *
      * @param inputPdfBytes Original PDF as byte array
      * @return Optimized PDF as byte array
-     * @throws IOException if Ghostscript optimization fails
+     * @throws IOException if the input is not a valid PDF or optimization fails
      */
-    public byte[] optimizePdfWithGhostscript(byte[] inputPdfBytes) throws IOException {
-        Path tempInput = null;
-        Path tempOutput = null;
+    public byte[] optimizePdfForEbook(byte[] inputPdfBytes) throws IOException {
+        if (inputPdfBytes == null || inputPdfBytes.length == 0) {
+            throw new IOException("Cannot optimize an empty PDF");
+        }
 
-        try {
-            tempInput = Files.createTempFile("gs_input_", ".pdf");
-            tempOutput = Files.createTempFile("gs_output_", ".pdf");
-
-            Files.write(tempInput, inputPdfBytes);
-
-            List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-sDEVICE=pdfwrite");
-            command.add("-dPDFSETTINGS=/ebook");
-            command.add("-dFastWebView=true");
-            command.add("-dNOPAUSE");
-            command.add("-dQUIET");
-            command.add("-dBATCH");
-            command.add("-sOutputFile=" + tempOutput.toString());
-            command.add(tempInput.toString());
-
-            ProcessExecutor.ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
-
-            ExceptionUtils.GhostscriptException detectedError =
-                    ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
-            if (detectedError != null) {
-                log.warn(
-                        "Ghostscript ebook optimization reported a critical error: {}",
-                        detectedError.getMessage());
-                throw detectedError;
-            }
-
-            if (result.getRc() != 0) {
-                log.warn(
-                        "Ghostscript ebook optimization failed with return code: {}",
-                        result.getRc());
-                throw ExceptionUtils.createGhostscriptCompressionException(result.getMessages());
-            }
-
-            return Files.readAllBytes(tempOutput);
-
-        } catch (Exception e) {
-            log.warn("Ghostscript ebook optimization failed", e);
-            if (e instanceof ExceptionUtils.GhostscriptException ghostscriptException) {
-                throw ghostscriptException;
-            }
-            throw ExceptionUtils.createGhostscriptCompressionException(e);
-        } finally {
-            if (tempInput != null) {
-                try {
-                    Files.deleteIfExists(tempInput);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temp input file: {}", tempInput, e);
-                }
-            }
-            if (tempOutput != null) {
-                try {
-                    Files.deleteIfExists(tempOutput);
-                } catch (IOException e) {
-                    log.warn("Failed to delete temp output file: {}", tempOutput, e);
-                }
-            }
+        // Matches Ghostscript's /ebook profile: 150 DPI images at moderate quality. Metadata is
+        // kept so converted ebooks retain their title and author.
+        CompressOptions options =
+                CompressOptions.builder()
+                        .imageQuality(75)
+                        .maxImageDpi(150)
+                        .convertPngToJpeg(true)
+                        .removeMetadata(false)
+                        .build();
+        try (PdfDocument document = PdfDocument.open(inputPdfBytes)) {
+            return PdfCompressor.compress(document, options).bytes();
+        } catch (RuntimeException | LinkageError e) {
+            throw new IOException("JPDFium ebook optimization failed", e);
         }
     }
 

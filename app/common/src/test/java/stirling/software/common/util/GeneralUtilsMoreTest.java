@@ -7,14 +7,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,7 +37,8 @@ import stirling.software.common.configuration.InstallationPathConfig;
 /**
  * Branch-coverage gap tests for {@link GeneralUtils}. Targets size parsing/formatting, page-list
  * and range handling, version comparison, URL validation, script/pipeline extraction validation,
- * and the Ghostscript optimize failure paths not exercised by the existing GeneralUtils*Test files.
+ * and the ebook optimization success and failure paths not exercised by the existing
+ * GeneralUtils*Test files.
  */
 class GeneralUtilsMoreTest {
 
@@ -381,52 +389,61 @@ class GeneralUtilsMoreTest {
     }
 
     @Nested
-    @DisplayName("optimizePdfWithGhostscript failure handling")
-    class OptimizeGhostscriptTests {
+    @DisplayName("optimizePdfForEbook")
+    class OptimizeForEbookTests {
 
         @Test
-        @DisplayName("non-zero return code raises a Ghostscript exception")
-        void nonZeroReturnCode() throws Exception {
-            ProcessExecutor.ProcessExecutorResult result =
-                    mock(ProcessExecutor.ProcessExecutorResult.class);
-            when(result.getMessages()).thenReturn("some ghostscript chatter");
-            when(result.getRc()).thenReturn(1);
+        @DisplayName("optimizes a readable PDF in process without rasterizing its text")
+        void optimizesReadablePdf() throws Exception {
+            byte[] input = textPdf("ebook");
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            // doReturn avoids referencing the checked-exception-declaring method during stubbing
-            Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(Mockito.anyList());
+            try (MockedStatic<ProcessExecutor> processExecutor =
+                    Mockito.mockStatic(ProcessExecutor.class)) {
+                byte[] optimized = GeneralUtils.optimizePdfForEbook(input);
 
-            try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                assertThrows(
-                        IOException.class,
-                        () -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}));
+                assertThat(optimized).isNotEmpty();
+                assertThat(optimized.length).isLessThanOrEqualTo(input.length);
+                try (PDDocument document = Loader.loadPDF(optimized)) {
+                    assertEquals(1, document.getNumberOfPages());
+                    assertThat(new PDFTextStripper().getText(document)).contains("ebook");
+                }
+                processExecutor.verifyNoInteractions();
             }
         }
 
         @Test
-        @DisplayName("detected critical Ghostscript error is rethrown")
-        void criticalErrorDetected() throws Exception {
-            ProcessExecutor.ProcessExecutorResult result =
-                    mock(ProcessExecutor.ProcessExecutorResult.class);
-            when(result.getMessages()).thenReturn("Page 1\ncould not draw this page");
+        @DisplayName("invalid PDF bytes surface as IOException")
+        void invalidPdfBytes() {
+            assertThatThrownBy(() -> GeneralUtils.optimizePdfForEbook(new byte[] {1, 2, 3}))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("JPDFium");
+        }
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(Mockito.anyList());
+        @Test
+        @DisplayName("null and empty input surface as IOException")
+        void nullAndEmptyInput() {
+            assertThatThrownBy(() -> GeneralUtils.optimizePdfForEbook(null))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("empty PDF");
+            assertThatThrownBy(() -> GeneralUtils.optimizePdfForEbook(new byte[0]))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("empty PDF");
+        }
 
-            try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.GHOSTSCRIPT))
-                        .thenReturn(executor);
-                assertThatThrownBy(
-                                () -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}))
-                        .isInstanceOf(ExceptionUtils.GhostscriptException.class);
+        private static byte[] textPdf(String text) throws IOException {
+            try (PDDocument document = new PDDocument()) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+                try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                    content.beginText();
+                    content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                    content.newLineAtOffset(72, 720);
+                    content.showText(text);
+                    content.endText();
+                }
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                document.save(output);
+                return output.toByteArray();
             }
         }
     }

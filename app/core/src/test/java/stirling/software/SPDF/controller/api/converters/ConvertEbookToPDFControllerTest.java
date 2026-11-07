@@ -212,9 +212,8 @@ class ConvertEbookToPDFControllerTest {
     }
 
     @Test
-    void convertEbookToPdf_withOptimizeForEbookUsesGhostscript() throws Exception {
+    void convertEbookToPdf_withOptimizeForEbookUsesInProcessOptimizer() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-        when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
 
         MockMultipartFile ebookFile =
                 new MockMultipartFile(
@@ -271,7 +270,7 @@ class ConvertEbookToPDFControllerTest {
             gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
                     .thenReturn("ebook_convertedToPDF.pdf");
             byte[] optimizedBytes = "optimized".getBytes(StandardCharsets.UTF_8);
-            gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
+            gu.when(() -> GeneralUtils.optimizePdfForEbook(Mockito.any(byte[].class)))
                     .thenReturn(optimizedBytes);
 
             ResponseEntity<Resource> expectedResponse = streamingOk(optimizedBytes);
@@ -281,7 +280,7 @@ class ConvertEbookToPDFControllerTest {
             ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
 
             assertSame(expectedResponse, response);
-            gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)));
+            gu.verify(() -> GeneralUtils.optimizePdfForEbook(Mockito.any(byte[].class)));
             Mockito.verifyNoInteractions(pdfDocumentFactory);
             Mockito.verify(tempFileManager).deleteTempDirectory(workingDir);
             assertEquals(workingDir, deletedDir.get());
@@ -300,6 +299,63 @@ class ConvertEbookToPDFControllerTest {
                                     }
                                 });
             }
+        }
+    }
+
+    @Test
+    void convertEbookToPdf_fallsBackToOriginalWhenOptimizationFails() throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+        MockMultipartFile ebookFile =
+                new MockMultipartFile(
+                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
+
+        ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
+        request.setFileInput(ebookFile);
+        request.setOptimizeForEbook(true);
+
+        Path workingDir = Files.createTempDirectory("ebook-convert-opt-fail-test-");
+        when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
+        byte[] originalBytes = "original-pdf".getBytes(StandardCharsets.UTF_8);
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+
+            ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.CALIBRE)).thenReturn(executor);
+
+            ProcessExecutorResult execResult = Mockito.mock(ProcessExecutorResult.class);
+            when(execResult.getRc()).thenReturn(0);
+
+            Path expectedOutput = workingDir.resolve("ebook.pdf");
+            when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
+                    .thenAnswer(
+                            invocation -> {
+                                Files.write(expectedOutput, originalBytes);
+                                return execResult;
+                            });
+
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
+                    .thenReturn("ebook_convertedToPDF.pdf");
+            gu.when(() -> GeneralUtils.optimizePdfForEbook(Mockito.any(byte[].class)))
+                    .thenThrow(new IOException("native optimizer unavailable"));
+
+            ResponseEntity<Resource> expectedResponse = streamingOk(originalBytes);
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
+                    .thenReturn(expectedResponse);
+
+            ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
+
+            assertSame(expectedResponse, response);
+            ArgumentCaptor<TempFile> outputCaptor = ArgumentCaptor.forClass(TempFile.class);
+            wr.verify(
+                    () ->
+                            WebResponseUtils.pdfFileToWebResponse(
+                                    outputCaptor.capture(), eq("ebook_convertedToPDF.pdf")));
+            assertArrayEquals(originalBytes, Files.readAllBytes(outputCaptor.getValue().getPath()));
+        } finally {
+            deleteRecursively(workingDir);
         }
     }
 

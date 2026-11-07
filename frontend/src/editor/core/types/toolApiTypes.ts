@@ -310,13 +310,13 @@ export interface ContainsTextRequest {
 }
 export interface ConvertCbrToPdfRequest {
   /**
-   * Optimize the output PDF for ebook reading using Ghostscript
+   * Optimize the output PDF for ebook reading
    */
   optimizeForEbook?: boolean;
 }
 export interface ConvertCbzToPdfRequest {
   /**
-   * Optimize the output PDF for ebook reading using Ghostscript
+   * Optimize the output PDF for ebook reading
    */
   optimizeForEbook?: boolean;
 }

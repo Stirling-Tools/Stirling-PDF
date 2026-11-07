@@ -400,7 +400,7 @@ class CbrToPdfParams(ApiModel):
     This endpoint converts a CBR (RAR) comic book archive to a PDF file. Input:CBR Output:PDF Type:SISO
     """
 
-    optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading using Ghostscript")
+    optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading")
 
 
 class CbzToPdfParams(ApiModel):
@@ -408,7 +408,7 @@ class CbzToPdfParams(ApiModel):
     This endpoint converts a CBZ (ZIP) comic book archive to a PDF file. Input:CBZ Output:PDF Type:SISO
     """
 
-    optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading using Ghostscript")
+    optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading")
 
 
 class LineArtEdgeLevel(IntEnum):

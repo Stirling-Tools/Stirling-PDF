@@ -34,8 +34,7 @@ import stirling.software.common.service.PdfMetadataService;
 /**
  * Gap-filling tests for {@link CbzUtils#convertCbzToPdf} that build real in-memory CBZ (ZIP)
  * archives containing real PNG images and convert them with a real {@link
- * CustomPDFDocumentFactory}. No external process is launched (optimizeForEbook is left off so
- * Ghostscript is never invoked).
+ * CustomPDFDocumentFactory}. No external process is launched (optimizeForEbook is left off).
  */
 class CbzUtilsMoreTest {
 

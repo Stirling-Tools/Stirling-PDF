@@ -119,7 +119,7 @@ public class CbzUtils {
                     if (optimizeForEbook) {
                         try {
                             byte[] pdfBytes = Files.readAllBytes(pdfTempFile.getPath());
-                            byte[] optimized = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                            byte[] optimized = GeneralUtils.optimizePdfForEbook(pdfBytes);
                             pdfTempFile.close();
                             TempFile optimizedFile = new TempFile(tempFileManager, ".pdf");
                             try {
@@ -130,9 +130,7 @@ public class CbzUtils {
                                 throw e;
                             }
                         } catch (IOException e) {
-                            log.warn(
-                                    "Ghostscript optimization failed, returning unoptimized PDF",
-                                    e);
+                            log.warn("Ebook PDF optimization failed, returning unoptimized PDF", e);
                         }
                     }
 

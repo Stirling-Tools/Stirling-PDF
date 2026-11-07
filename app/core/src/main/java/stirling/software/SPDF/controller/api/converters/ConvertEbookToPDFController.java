@@ -63,10 +63,6 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Calibre");
     }
 
-    private boolean isGhostscriptEnabled() {
-        return endpointConfiguration.isGroupEnabled("Ghostscript");
-    }
-
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/ebook/pdf",
@@ -91,12 +87,6 @@ public class ConvertEbookToPDFController {
         }
 
         boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
-        if (optimizeForEbook && !isGhostscriptEnabled()) {
-            log.warn(
-                    "Ghostscript optimization requested but Ghostscript is not enabled/available"
-                            + " for ebook conversion");
-            optimizeForEbook = false;
-        }
         boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
         boolean includeTableOfContents = Boolean.TRUE.equals(request.getIncludeTableOfContents());
         boolean includePageNumbers = Boolean.TRUE.equals(request.getIncludePageNumbers());
@@ -178,11 +168,11 @@ public class ConvertEbookToPDFController {
                 if (optimizeForEbook) {
                     byte[] pdfBytes = Files.readAllBytes(outputPath);
                     try {
-                        byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                        byte[] optimizedPdf = GeneralUtils.optimizePdfForEbook(pdfBytes);
                         Files.write(tempOut.getPath(), optimizedPdf);
                     } catch (IOException e) {
                         log.warn(
-                                "Ghostscript optimization failed for ebook conversion, returning"
+                                "Ebook PDF optimization failed for ebook conversion, returning"
                                         + " original PDF",
                                 e);
                         Files.write(tempOut.getPath(), pdfBytes);

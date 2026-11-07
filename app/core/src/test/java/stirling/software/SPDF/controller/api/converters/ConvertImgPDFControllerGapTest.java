@@ -31,7 +31,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertCbrToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertCbzToPdfRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToCbrRequest;
@@ -60,7 +59,6 @@ class ConvertImgPDFControllerGapTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
 
     @InjectMocks private ConvertImgPDFController controller;
 
@@ -94,16 +92,14 @@ class ConvertImgPDFControllerGapTest {
     class ConvertCbzToPdf {
 
         @Test
-        @DisplayName("disables ebook optimization when Ghostscript is not enabled")
-        void disablesOptimizationWhenGhostscriptMissing() throws Exception {
+        @DisplayName("leaves ebook optimization off when not requested")
+        void leavesOptimizationOffWhenNotRequested() throws Exception {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput", "book.cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
-            request.setOptimizeForEbook(true);
-
-            Mockito.when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+            request.setOptimizeForEbook(false);
 
             TempFile tempFile = Mockito.mock(TempFile.class);
             @SuppressWarnings("unchecked")
@@ -141,16 +137,14 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
-        @DisplayName("keeps ebook optimization when Ghostscript is enabled")
-        void keepsOptimizationWhenGhostscriptEnabled() throws Exception {
+        @DisplayName("forwards ebook optimization without requiring Ghostscript")
+        void forwardsOptimizationWithoutGhostscript() throws Exception {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput", "book.cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
-
-            Mockito.when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
 
             TempFile tempFile = Mockito.mock(TempFile.class);
             @SuppressWarnings("unchecked")
@@ -229,16 +223,14 @@ class ConvertImgPDFControllerGapTest {
     class ConvertCbrToPdf {
 
         @Test
-        @DisplayName("disables ebook optimization when Ghostscript is not enabled")
-        void disablesOptimizationWhenGhostscriptMissing() throws Exception {
+        @DisplayName("leaves ebook optimization off when not requested")
+        void leavesOptimizationOffWhenNotRequested() throws Exception {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput", "book.cbr", "application/x-rar", new byte[] {1});
             ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
             request.setFileInput(file);
-            request.setOptimizeForEbook(true);
-
-            Mockito.when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+            request.setOptimizeForEbook(false);
 
             byte[] pdfBytes = "converted-pdf".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(pdfBytes);
@@ -275,16 +267,14 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
-        @DisplayName("keeps ebook optimization when Ghostscript is enabled")
-        void keepsOptimizationWhenGhostscriptEnabled() throws Exception {
+        @DisplayName("forwards ebook optimization without requiring Ghostscript")
+        void forwardsOptimizationWithoutGhostscript() throws Exception {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput", "story.cbr", "application/x-rar", new byte[] {1});
             ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
-
-            Mockito.when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
 
             byte[] pdfBytes = "converted-pdf".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(pdfBytes);

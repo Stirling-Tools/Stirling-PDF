@@ -29,7 +29,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.converters.ConvertCbrToPdfRequest;
@@ -69,14 +68,9 @@ public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final EndpointConfiguration endpointConfiguration;
     private static final Pattern EXTENSION_PATTERN =
             RegexPatternUtils.getInstance().getPattern(RegexPatternUtils.getExtensionRegex());
     private static final String DEFAULT_COMIC_NAME = "comic";
-
-    private boolean isGhostscriptEnabled() {
-        return endpointConfiguration.isGroupEnabled("Ghostscript");
-    }
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -314,12 +308,6 @@ public class ConvertImgPDFController {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
-        // Disable optimization if Ghostscript is not available
-        if (optimizeForEbook && !isGhostscriptEnabled()) {
-            log.warn("Ghostscript optimization requested but Ghostscript is not enabled/available");
-            optimizeForEbook = false;
-        }
-
         TempFile pdfFile =
                 CbzUtils.convertCbzToPdf(
                         file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
@@ -369,12 +357,6 @@ public class ConvertImgPDFController {
             throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
-
-        // Disable optimization if Ghostscript is not available
-        if (optimizeForEbook && !isGhostscriptEnabled()) {
-            log.warn("Ghostscript optimization requested but Ghostscript is not enabled/available");
-            optimizeForEbook = false;
-        }
 
         byte[] pdfBytes =
                 CbrUtils.convertCbrToPdf(
