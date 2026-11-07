@@ -3,8 +3,11 @@ package stirling.software.SPDF.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.time.Clock;
@@ -12,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.HexFormat;
@@ -23,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -137,7 +140,6 @@ public class EditorFontRegistry {
         if (!force && !isScanDue()) {
             return;
         }
-        lastScan = clock.instant();
         if (bundled == null) {
             bundled = loadBundled();
         }
@@ -161,6 +163,7 @@ public class EditorFontRegistry {
         scanned.clear();
         scanned.putAll(next);
         publish();
+        lastScan = clock.instant();
     }
 
     private List<Path> listFontFiles() {
@@ -173,16 +176,44 @@ public class EditorFontRegistry {
         } catch (IOException e) {
             return List.of();
         }
-        try (Stream<Path> walk = Files.walk(root, MAX_DEPTH)) {
-            return walk.filter(Files::isRegularFile)
-                    .filter(p -> formatOf(p) != null)
-                    .filter(p -> resolvesInside(p, realRoot))
-                    .sorted()
-                    .toList();
-        } catch (IOException | RuntimeException e) {
+        List<Path> found = new ArrayList<>();
+        try {
+            Files.walkFileTree(
+                    realRoot,
+                    EnumSet.noneOf(FileVisitOption.class),
+                    MAX_DEPTH,
+                    new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                            Path path = root.resolve(realRoot.relativize(file));
+                            if (Files.isRegularFile(path)
+                                    && isFontFile(path)
+                                    && resolvesInside(path, realRoot)) {
+                                found.add(path);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException e) {
+                            log.warn(
+                                    "Skipping editor fonts under {}: {}",
+                                    root.resolve(realRoot.relativize(file)),
+                                    e.toString());
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
             log.warn("Could not list editor fonts in {}: {}", root, e.getMessage());
             return List.of();
         }
+        found.sort(null);
+        return found;
+    }
+
+    private static boolean isFontFile(Path path) {
+        String name = path.getFileName().toString();
+        return EditorFontReader.formatOf(name) != null || EditorFontReader.isUnsupported(name);
     }
 
     private static boolean resolvesInside(Path path, Path realRoot) {
@@ -198,6 +229,10 @@ public class EditorFontRegistry {
     }
 
     private IndexedFace index(Path path, long size, long modified) {
+        if (formatOf(path) == null) {
+            log.info("Skipping editor font {}: only .ttf and .otf files are supported", path);
+            return null;
+        }
         if (size > MAX_FONT_BYTES) {
             log.warn(
                     "Skipping editor font {}: {} bytes exceeds the {} byte limit",
@@ -267,9 +302,8 @@ public class EditorFontRegistry {
             customFamilies.add(family.toLowerCase(Locale.ROOT));
         }
         for (BundledFace face : bundled) {
-            if (customFamilies.contains(face.family().toLowerCase(Locale.ROOT))
-                    || files.containsKey(face.face().id())) continue;
-            files.put(face.face().id(), fileOf(face.face(), face.resource()));
+            if (files.putIfAbsent(face.face().id(), fileOf(face.face(), face.resource())) != null
+                    || customFamilies.contains(face.family().toLowerCase(Locale.ROOT))) continue;
             grouped.computeIfAbsent(face.family(), k -> new ArrayList<>()).add(face.face());
         }
         List<EditorFontFamily> families = new ArrayList<>();

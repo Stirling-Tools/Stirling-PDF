@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.fontbox.ttf.HeaderTable;
@@ -12,7 +13,6 @@ import org.apache.fontbox.ttf.NamingTable;
 import org.apache.fontbox.ttf.OS2WindowsMetricsTable;
 import org.apache.fontbox.ttf.OTFParser;
 import org.apache.fontbox.ttf.OpenTypeFont;
-import org.apache.fontbox.ttf.TTFParser;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
@@ -24,6 +24,7 @@ import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 @Slf4j
 final class EditorFontReader {
 
+    private static final int FS_TYPE_USAGE_MASK = 0x000F;
     private static final int FS_TYPE_RESTRICTED = 0x0002;
     private static final int FS_TYPE_BITMAP_ONLY = 0x0200;
     private static final int FS_SELECTION_ITALIC = 0x0001;
@@ -33,6 +34,9 @@ final class EditorFontReader {
     private static final int MAC_STYLE_ITALIC = 0x0002;
     private static final int NAME_TYPOGRAPHIC_FAMILY = 16;
     private static final int NAME_TYPOGRAPHIC_SUBFAMILY = 17;
+
+    private static final List<String> UNSUPPORTED_EXTENSIONS =
+            List.of(".ttc", ".otc", ".woff", ".woff2");
 
     record ReadFace(String family, EditorFontFace face) {}
 
@@ -45,12 +49,14 @@ final class EditorFontReader {
         return null;
     }
 
+    static boolean isUnsupported(String filename) {
+        String name = filename.toLowerCase(Locale.ROOT);
+        return UNSUPPORTED_EXTENSIONS.stream().anyMatch(name::endsWith);
+    }
+
     static ReadFace read(byte[] bytes, String format, Object source) {
         try (RandomAccessRead in = new RandomAccessReadBuffer(bytes);
-                TrueTypeFont font =
-                        "otf".equals(format)
-                                ? new OTFParser().parse(in)
-                                : new TTFParser().parse(in)) {
+                TrueTypeFont font = new OTFParser().parse(in)) {
             String unusable = whyUnusable(font);
             if (unusable != null) {
                 log.info("Skipping editor font {}: {}", source, unusable);
@@ -107,7 +113,8 @@ final class EditorFontReader {
         }
         OS2WindowsMetricsTable os2 = font.getOS2Windows();
         int fsType = os2 == null ? 0 : os2.getFsType() & 0xFFFF;
-        if ((fsType & (FS_TYPE_RESTRICTED | FS_TYPE_BITMAP_ONLY)) != 0) {
+        if ((fsType & FS_TYPE_USAGE_MASK) == FS_TYPE_RESTRICTED
+                || (fsType & FS_TYPE_BITMAP_ONLY) != 0) {
             return "its licence forbids embedding (fsType " + fsType + ")";
         }
         return null;

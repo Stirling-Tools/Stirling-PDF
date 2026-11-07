@@ -1,20 +1,30 @@
 package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Enumeration;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +33,7 @@ import org.springframework.core.io.FileSystemResource;
 
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFamily;
+import stirling.software.SPDF.service.EditorFontRegistry.Snapshot;
 
 class EditorFontRegistryTest {
 
@@ -96,6 +107,32 @@ class EditorFontRegistryTest {
     }
 
     @Test
+    void listsFontsThatAlsoGrantALessRestrictiveEmbedding() throws IOException {
+        Path previewAndPrint = root.resolve("PreviewAndPrint.ttf");
+        copyFixture("DejaVuSans.ttf", previewAndPrint);
+        setFsType(previewAndPrint, 0x0006);
+        Path editable = root.resolve("Editable.ttf");
+        copyFixture("DejaVuSans-Bold.ttf", editable);
+        setFsType(editable, 0x000E);
+
+        List<EditorFontFamily> families = registry.snapshot().manifest().families();
+
+        assertThat(families).extracting(EditorFontFamily::family).containsExactly("DejaVu Sans");
+        assertThat(families.get(0).faces()).hasSize(2);
+    }
+
+    @Test
+    void groupsFacesUnderTheirTypographicFamilyName() throws IOException {
+        Path light = root.resolve("DejaVuSans-Light.ttf");
+        copyFixture("DejaVuSans.ttf", light);
+        setLegacyFamilyName(light, "DejaVu Thin");
+
+        List<EditorFontFamily> families = registry.snapshot().manifest().families();
+
+        assertThat(families).extracting(EditorFontFamily::family).containsExactly("DejaVu Sans");
+    }
+
+    @Test
     void ignoresLinksThatLeadOutOfTheFolder(@TempDir Path outside) throws IOException {
         Path elsewhere = outside.resolve("DejaVuSans.ttf");
         copyFixture("DejaVuSans.ttf", elsewhere);
@@ -108,6 +145,72 @@ class EditorFontRegistryTest {
         assertThat(families)
                 .extracting(EditorFontFamily::family)
                 .containsExactly("Liberation Sans");
+    }
+
+    @Test
+    void followsAFontsFolderThatIsItselfALink(@TempDir Path outside) throws IOException {
+        copyFixture("DejaVuSans.ttf", outside.resolve("DejaVuSans.ttf"));
+        Path link = Files.createSymbolicLink(root.resolve("fonts"), outside);
+
+        EditorFontRegistry linked = new EditorFontRegistry(link, null, clock);
+
+        assertThat(linked.snapshot().manifest().families())
+                .extracting(EditorFontFamily::family)
+                .containsExactly("DejaVu Sans");
+    }
+
+    @Test
+    void anUnreadableFolderHidesOnlyItsOwnFonts() throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        copyFixture("DejaVuSans.ttf", root.resolve("DejaVuSans.ttf"));
+        Path locked = root.resolve("locked");
+        copyFixture("LiberationSans-Regular.ttf", locked.resolve("LiberationSans-Regular.ttf"));
+        Set<PosixFilePermission> original = Files.getPosixFilePermissions(locked);
+        Files.setPosixFilePermissions(locked, Set.of());
+        try {
+            assumeFalse(Files.isReadable(locked), "running with permission to read any folder");
+
+            List<EditorFontFamily> families = registry.snapshot().manifest().families();
+
+            assertThat(families)
+                    .extracting(EditorFontFamily::family)
+                    .containsExactly("DejaVu Sans");
+            assertThat(registry.resolve(families.get(0).faces().get(0).id())).isPresent();
+        } finally {
+            Files.setPosixFilePermissions(locked, original);
+        }
+    }
+
+    @Test
+    void requestsDuringTheFirstScanWaitForItsResult() throws Exception {
+        copyFixture("DejaVuSans.ttf", root.resolve("DejaVuSans.ttf"));
+        EditorFontRegistry withBundled =
+                new EditorFontRegistry(root, EditorFontRegistry.BUNDLED_FONTS, clock);
+        CountDownLatch scanning = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicReference<Snapshot> first = new AtomicReference<>();
+        AtomicReference<Snapshot> during = new AtomicReference<>();
+        Thread firstRequest = new Thread(() -> first.set(withBundled.snapshot()));
+        firstRequest.setContextClassLoader(
+                new PausingClassLoader(
+                        EditorFontRegistryTest.class.getClassLoader(), scanning, release));
+        Thread laterRequest = new Thread(() -> during.set(withBundled.snapshot()));
+
+        firstRequest.start();
+        assertThat(scanning.await(30, TimeUnit.SECONDS)).isTrue();
+        laterRequest.start();
+        while (laterRequest.getState() != Thread.State.BLOCKED
+                && laterRequest.getState() != Thread.State.TERMINATED) {
+            Thread.onSpinWait();
+        }
+        release.countDown();
+        firstRequest.join();
+        laterRequest.join();
+
+        assertThat(during.get().manifest().families())
+                .extracting(EditorFontFamily::family)
+                .contains("DejaVu Sans", "Liberation Sans");
+        assertThat(during.get().etag()).isEqualTo(first.get().etag());
     }
 
     @Test
@@ -169,6 +272,30 @@ class EditorFontRegistryTest {
                         file ->
                                 assertThat(file.resource())
                                         .isEqualTo(new FileSystemResource(custom)));
+    }
+
+    @Test
+    void bundledFacesHiddenByACustomFamilyStillResolve() throws IOException {
+        EditorFontRegistry withBundled =
+                new EditorFontRegistry(root, EditorFontRegistry.BUNDLED_FONTS, clock);
+        String boldId =
+                family(withBundled.snapshot().manifest().families(), "DejaVu Sans").faces().stream()
+                        .filter(EditorFontFace::bold)
+                        .findFirst()
+                        .orElseThrow()
+                        .id();
+
+        copyFixture("DejaVuSans.ttf", root.resolve("DejaVuSans.ttf"));
+        clock.advance(EditorFontRegistry.RESCAN_INTERVAL.plusSeconds(1));
+
+        assertThat(family(withBundled.snapshot().manifest().families(), "DejaVu Sans").faces())
+                .extracting(EditorFontFace::id)
+                .doesNotContain(boldId);
+        assertThat(withBundled.resolve(boldId))
+                .hasValueSatisfying(
+                        file ->
+                                assertThat(file.resource().getFilename())
+                                        .isEqualTo("DejaVuSans-Bold.ttf"));
     }
 
     @Test
@@ -234,19 +361,74 @@ class EditorFontRegistryTest {
 
     private static void setFsType(Path font, int fsType) throws IOException {
         byte[] bytes = Files.readAllBytes(font);
+        ByteBuffer.wrap(bytes).putShort(tableOffset(bytes, "OS/2") + 8, (short) fsType);
+        Files.write(font, bytes);
+    }
+
+    private static void setLegacyFamilyName(Path font, String family) throws IOException {
+        byte[] bytes = Files.readAllBytes(font);
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        int name = tableOffset(bytes, "name");
+        int count = buffer.getShort(name + 2) & 0xFFFF;
+        int strings = name + (buffer.getShort(name + 4) & 0xFFFF);
+        for (int i = 0; i < count; i++) {
+            int record = name + 6 + i * 12;
+            if (buffer.getShort(record + 6) != 1) continue;
+            boolean windows = buffer.getShort(record) == 3;
+            byte[] value =
+                    family.getBytes(
+                            windows ? StandardCharsets.UTF_16BE : StandardCharsets.US_ASCII);
+            int length = buffer.getShort(record + 8) & 0xFFFF;
+            assertThat(value).as("same-length family name").hasSize(length);
+            System.arraycopy(
+                    value, 0, bytes, strings + (buffer.getShort(record + 10) & 0xFFFF), length);
+        }
+        Files.write(font, bytes);
+    }
+
+    private static int tableOffset(byte[] bytes, String table) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int tables = buffer.getShort(4) & 0xFFFF;
         for (int i = 0; i < tables; i++) {
             int record = 12 + i * 16;
-            String tag = new String(bytes, record, 4, StandardCharsets.US_ASCII);
-            if ("OS/2".equals(tag)) {
-                int offset = buffer.getInt(record + 8);
-                buffer.putShort(offset + 8, (short) fsType);
-                Files.write(font, bytes);
-                return;
+            if (table.equals(new String(bytes, record, 4, StandardCharsets.US_ASCII))) {
+                return buffer.getInt(record + 8);
             }
         }
-        throw new IllegalStateException("no OS/2 table in " + font);
+        throw new IllegalStateException("no " + table + " table");
+    }
+
+    private static final class PausingClassLoader extends ClassLoader {
+        private final CountDownLatch scanning;
+        private final CountDownLatch release;
+
+        PausingClassLoader(ClassLoader parent, CountDownLatch scanning, CountDownLatch release) {
+            super(parent);
+            this.scanning = scanning;
+            this.release = release;
+        }
+
+        @Override
+        public URL getResource(String name) {
+            pauseOnFonts(name);
+            return super.getResource(name);
+        }
+
+        @Override
+        public Enumeration<URL> getResources(String name) throws IOException {
+            pauseOnFonts(name);
+            return super.getResources(name);
+        }
+
+        private void pauseOnFonts(String name) {
+            if (!name.startsWith("static/fonts")) return;
+            scanning.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private static final class MutableClock extends Clock {
