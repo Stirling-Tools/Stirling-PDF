@@ -4125,7 +4125,6 @@ pdfxDefault = "PDF/X-4:2008 (default)"
 pdfxNote = "PDF/X-1a and PDF/X-3 are CMYK, no-transparency print profiles; PDF/X-4 and PDF/X-6 support live transparency."
 pdfxOptions = "PDF/X Options"
 pdfxStrict = "Fail if the output has non-embedded fonts"
-
 selectSourceFormatFirst = "Choose a source format first"
 settings = "Settings"
 single = "Single"
