@@ -3,6 +3,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { parseFontMetrics } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   getExternalFontBytes,
@@ -90,7 +91,7 @@ function deviceFontCovers(
   if (!coverageByFamily.has(key)) {
     let parsed: Map<number, number> | null = null;
     try {
-      parsed = parseTrueTypeCmap(bytes);
+      parsed = parseFontMetrics(bytes)?.advances ?? parseTrueTypeCmap(bytes);
     } catch {
       parsed = null;
     }

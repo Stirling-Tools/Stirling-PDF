@@ -319,14 +319,9 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   return `${italic}${bold}${sizePx}px ${stack}`;
 }
 
-const embeddedMetrics = new WeakMap<Uint8Array, FontMetrics | null>();
-
 function embeddedMetricsFor(family: string): FontMetrics | null {
   const bytes = getExternalFontBytes(family);
-  if (!bytes) return null;
-  if (!embeddedMetrics.has(bytes))
-    embeddedMetrics.set(bytes, parseFontMetrics(bytes));
-  return embeddedMetrics.get(bytes) ?? null;
+  return bytes ? parseFontMetrics(bytes) : null;
 }
 
 const BASE14_SPACE: Array<[RegExp, number]> = [

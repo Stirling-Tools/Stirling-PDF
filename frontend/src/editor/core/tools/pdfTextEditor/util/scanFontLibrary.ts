@@ -1,9 +1,13 @@
+import { getFontBaseUrl } from "@editor/services/fontBaseUrl";
 import {
   faceStyleFlags,
   retryLocalFonts,
   loadLocalFontBytes,
   loadedLocalFonts,
+  normaliseName,
   pickLocalFontFace,
+  registerFontBytes,
+  type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   loadServerFontBytes,
@@ -28,6 +32,7 @@ export interface Face {
   kind: FaceKind;
   source: FaceSource;
   metrics?: Map<string, FontMetrics>;
+  twin?: Face;
 }
 
 export const HELVETICA: Face = {
@@ -62,28 +67,34 @@ export const COURIER: Face = {
 };
 export const BASE14_FACES: Face[] = [HELVETICA, TIMES, COURIER];
 
-export const BUNDLED_SCAN_FONTS: Array<
-  Pick<Face, "label" | "family" | "bold">
-> = [
+type BundledScanFont = Pick<Face, "label" | "family" | "bold"> & {
+  files: [regular: string, bold: string];
+};
+
+export const BUNDLED_SCAN_FONTS: BundledScanFont[] = [
   {
     label: "Calibri (Carlito)",
     family: "Carlito",
     bold: "Carlito Bold",
+    files: ["Carlito-Regular.ttf", "Carlito-Bold.ttf"],
   },
   {
     label: "Cambria (Caladea)",
     family: "Caladea",
     bold: "Caladea Bold",
+    files: ["Caladea-Regular.ttf", "Caladea-Bold.ttf"],
   },
   {
     label: "DejaVu Sans",
     family: "DejaVu Sans",
     bold: "DejaVu Sans Bold",
+    files: ["DejaVuSans.ttf", "DejaVuSans-Bold.ttf"],
   },
   {
     label: "DejaVu Serif",
     family: "DejaVu Serif",
     bold: "DejaVu Serif Bold",
+    files: ["DejaVuSerif.ttf", "DejaVuSerif-Bold.ttf"],
   },
 ];
 
@@ -143,6 +154,7 @@ const DEVICE_TEXT_FAMILIES = [
 ];
 
 type Script =
+  | "greekCyrillic"
   | "hangul"
   | "kana"
   | "han"
@@ -158,9 +170,28 @@ interface ScriptFonts {
   chars: RegExp;
   server: RegExp;
   device: string[];
+  servedBy?: Script;
+  clones?: Record<string, { label: string; twin: Face }>;
 }
 
 const SCRIPTS: ScriptFonts[] = [
+  {
+    script: "greekCyrillic",
+    chars: /[\u0370-\u03ff\u0400-\u04ff]/,
+    server: /^Liberation (Sans|Serif|Mono)$/,
+    device: [],
+    clones: {
+      "Liberation Sans": { label: "Arial (Liberation Sans)", twin: HELVETICA },
+      "Liberation Serif": {
+        label: "Times New Roman (Liberation Serif)",
+        twin: TIMES,
+      },
+      "Liberation Mono": {
+        label: "Courier New (Liberation Mono)",
+        twin: COURIER,
+      },
+    },
+  },
   {
     script: "hangul",
     chars: /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/,
@@ -195,6 +226,7 @@ const SCRIPTS: ScriptFonts[] = [
     script: "han",
     chars: /[\u3400-\u4dbf\u4e00-\u9fff]/,
     server: /\b(SC|TC|HK|JP|Chinese)\b/i,
+    servedBy: "kana",
     device: [
       "Microsoft YaHei",
       "SimSun",
@@ -259,10 +291,16 @@ export function faceCovers(face: Face, text: string): boolean {
     if (/\s/.test(ch)) continue;
     const cp = ch.codePointAt(0)!;
     total++;
-    if (advances ? advances.has(cp) : encodesInBase14(cp))
-      drawable++;
+    if (advances ? advances.has(cp) : encodesInBase14(cp)) drawable++;
   }
   return drawable >= total * COVERAGE;
+}
+
+export function candidateFaces(text: string): Face[] {
+  return scanFaces().filter(
+    (face) =>
+      faceCovers(face, text) && !(face.twin && faceCovers(face.twin, text)),
+  );
 }
 
 function scriptsOf(text: string): ScriptFonts[] {
@@ -278,9 +316,11 @@ let device: Face[] = [];
 let deviceRead = false;
 let bundledJob: Promise<void> | null = null;
 let deviceJob: Promise<number> | null = null;
+let generation = 0;
 const listeners = new Set<() => void>();
 
 function notify(): void {
+  generation++;
   for (const listener of [...listeners]) listener();
 }
 
@@ -289,15 +329,24 @@ export function subscribeScanFaces(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+export function scanFacesGeneration(): number {
+  return generation;
+}
+
 export function scanFaces(): Face[] {
   return [...BASE14_FACES, ...bundled, ...scriptFaces, ...device];
+}
+
+function hasFaceFor(family: string): boolean {
+  const key = normaliseName(family);
+  return scanFaces().some((face) => normaliseName(face.family) === key);
 }
 
 export function deviceScanFaceCount(): number | null {
   return deviceRead ? device.length : null;
 }
 
-type FaceSpec = Pick<Face, "label" | "family" | "bold" | "source">;
+type FaceSpec = Pick<Face, "label" | "family" | "bold" | "source" | "twin">;
 
 function drawableMetrics(
   bytes: Uint8Array | null,
@@ -331,16 +380,46 @@ export function faceFromBytes(
   };
 }
 
+type FontBytesLoader = (family: string) => Promise<Uint8Array | null>;
+
 async function loadFace(
   spec: FaceSpec,
-  load: (family: string) => Promise<Uint8Array | null>,
+  load: FontBytesLoader,
   hasBold = true,
-): Promise<Face | null> {
+): Promise<Face | "unusable" | null> {
   const [regular, boldBytes] = await Promise.all([
     load(spec.family),
     hasBold ? load(spec.bold) : Promise.resolve(null),
   ]);
-  return regular ? faceFromBytes(spec, regular, boldBytes) : null;
+  if (!regular) return null;
+  return faceFromBytes(spec, regular, boldBytes) ?? "unusable";
+}
+
+async function loadJarFontBytes(
+  family: string,
+  file: string,
+): Promise<Uint8Array | null> {
+  const base = getFontBaseUrl();
+  if (!base) return null;
+  try {
+    const res = await fetch(`${base}/${file}`);
+    const bytes = res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+    if (!bytes || bytes.length === 0) return null;
+    registerFontBytes(family, bytes);
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+function bundledFontBytes(spec: BundledScanFont): FontBytesLoader {
+  return async (family) =>
+    (await loadServerFontBytes(family)) ??
+    loadJarFontBytes(family, spec.files[family === spec.family ? 0 : 1]);
+}
+
+function isFace(face: Face | "unusable" | null): face is Face {
+  return face !== null && face !== "unusable";
 }
 
 export function loadBundledScanFaces(): Promise<void> {
@@ -348,46 +427,82 @@ export function loadBundledScanFaces(): Promise<void> {
   const job = (async () => {
     const faces = await Promise.all(
       BUNDLED_SCAN_FONTS.map((spec) =>
-        loadFace({ ...spec, source: "bundled" }, loadServerFontBytes),
+        loadFace(
+          {
+            label: spec.label,
+            family: spec.family,
+            bold: spec.bold,
+            source: "bundled",
+          },
+          bundledFontBytes(spec),
+        ),
       ),
     );
-    bundled = faces.filter((f): f is Face => f !== null);
-    if (bundled.length < BUNDLED_SCAN_FONTS.length) bundledJob = null;
+    bundled = faces.filter(isFace);
+    if (faces.includes(null)) bundledJob = null;
     notify();
   })();
   bundledJob = job;
   return job;
 }
 
-async function loadServerScript(script: ScriptFonts): Promise<void> {
-  const fonts = await loadServerFonts();
-  if (!fonts) return;
-  const families = [...new Set(fonts.map((f) => f.family))].filter(
-    (family) =>
-      script.server.test(family) &&
-      !serverFamiliesTaken.has(family) &&
-      !scanFaces().some((face) => face.family === family),
+function serverCandidates(script: ScriptFonts, fonts: LocalFont[]): string[] {
+  const families = [...new Set(fonts.map((f) => f.family))];
+  const named = script.device.flatMap((name) =>
+    families.filter((family) => normaliseName(family) === normaliseName(name)),
   );
-  for (const family of families) serverFamiliesTaken.add(family);
-  for (const family of families) {
+  const matched = families.filter((family) => script.server.test(family));
+  return [...new Set([...named, ...matched])];
+}
+
+async function loadServerScript(script: ScriptFonts): Promise<boolean> {
+  const fonts = await loadServerFonts();
+  if (!fonts) return false;
+  for (const family of serverCandidates(script, fonts)) {
+    if (hasFaceFor(family)) {
+      if (!script.clones) break;
+      continue;
+    }
+    const key = normaliseName(family);
+    if (serverFamiliesTaken.has(key)) continue;
+    serverFamiliesTaken.add(key);
+    const clone = script.clones?.[family];
     const face = await loadFace(
-      { label: family, family, bold: `${family} Bold`, source: "bundled" },
+      {
+        label: clone?.label ?? family,
+        family,
+        bold: `${family} Bold`,
+        source: "bundled",
+        twin: clone?.twin,
+      },
       loadServerFontBytes,
       fonts.some((f) => f.family === family && faceStyleFlags(f).bold),
     );
-    if (face) {
-      scriptFaces = [...scriptFaces, face];
-      notify();
+    if (face === null) {
+      serverFamiliesTaken.delete(key);
+      return false;
     }
+    if (face === "unusable") continue;
+    scriptFaces = [...scriptFaces, face];
+    notify();
+    if (!script.clones) break;
   }
+  return true;
 }
 
 export function loadScriptScanFaces(text: string): Promise<void> {
-  const jobs = scriptsOf(text).map((script) => {
+  const scripts = scriptsOf(text);
+  const jobs = scripts.map((script) => {
     neededScripts.add(script.script);
+    if (scripts.some((other) => other.script === script.servedBy))
+      return undefined;
     let job = scriptJobs.get(script.script);
     if (!job) {
-      job = loadServerScript(script).catch(() => undefined);
+      job = loadServerScript(script)
+        .catch(() => false)
+        .then((settled) => {
+          if (!settled) scriptJobs.delete(script.script);
+        });
       scriptJobs.set(script.script, job);
     }
     return job;
@@ -422,11 +537,29 @@ async function deviceFace(family: string): Promise<Face | null> {
     return null;
   const bold = `${family} Bold`;
   const boldFace = pickLocalFontFace(fonts, bold);
-  return loadFace(
+  const face = await loadFace(
     { label: family, family, bold, source: "device" },
     loadLocalFontBytes,
     !!boldFace && faceStyleFlags(boldFace).bold,
   );
+  return isFace(face) ? face : null;
+}
+
+function sameOutlines(a: Face, b: Face): boolean {
+  const key = a.metrics?.get(a.family)?.outlines;
+  return !!key && key === b.metrics?.get(b.family)?.outlines;
+}
+
+async function readDeviceFaces(families: string[]): Promise<Face[]> {
+  const faces: Face[] = [];
+  for (const family of families) {
+    if (serverFamiliesTaken.has(normaliseName(family)) || hasFaceFor(family))
+      continue;
+    const face = await deviceFace(family);
+    if (face && !faces.some((other) => sameOutlines(other, face)))
+      faces.push(face);
+  }
+  return faces;
 }
 
 export function loadDeviceScanFaces(): Promise<number> {
@@ -437,14 +570,14 @@ export function loadDeviceScanFaces(): Promise<number> {
       deviceJob = null;
       return 0;
     }
-    const families = new Set([
-      ...DEVICE_TEXT_FAMILIES,
-      ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
-        (s) => s.device,
-      ),
+    device = await readDeviceFaces([
+      ...new Set([
+        ...DEVICE_TEXT_FAMILIES,
+        ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
+          (s) => s.device,
+        ),
+      ]),
     ]);
-    const faces = await Promise.all([...families].map(deviceFace));
-    device = faces.filter((f): f is Face => f !== null);
     deviceRead = true;
     notify();
     return device.length;
