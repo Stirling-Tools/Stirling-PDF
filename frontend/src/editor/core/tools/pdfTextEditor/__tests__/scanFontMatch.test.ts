@@ -659,6 +659,25 @@ describe("editing scanned text on a page turned with /Rotate", () => {
       doc.dispose();
     }
   });
+
+  test(
+    "fits the face of a sideways scan on a turned page",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6, sideways: true, rotate: 1 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
+          "Calibri (Carlito)",
+        );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
 });
 
 describe("editing light text on a dark fill", () => {

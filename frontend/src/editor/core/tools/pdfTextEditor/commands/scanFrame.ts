@@ -94,8 +94,14 @@ export function scanFrameFor(
   const cy = bounds.y + bounds.height / 2;
   const toUpright: Affine = {
     ...turn,
-    e: page.width / 2 - (turn.a * cx + turn.c * cy),
-    f: page.height / 2 - (turn.b * cx + turn.d * cy),
+    e:
+      page.display.cropLeft +
+      page.display.cropWidth / 2 -
+      (turn.a * cx + turn.c * cy),
+    f:
+      page.display.cropBottom +
+      page.display.cropHeight / 2 -
+      (turn.b * cx + turn.d * cy),
   };
   return { toUpright, fromUpright: invert(toUpright) };
 }
