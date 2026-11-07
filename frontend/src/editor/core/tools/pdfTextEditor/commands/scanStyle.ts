@@ -1,7 +1,11 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
-import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import {
+  blurLuma,
+  renderLuma,
+  type Luma,
+} from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitTextLine,
   measureObjSpanPt,
@@ -221,8 +225,6 @@ export function placeText(
   return ptrs;
 }
 
-type Luma = { data: Float32Array; width: number; height: number };
-
 function windowCorrelation(
   scan: Luma,
   drawn: Luma,
@@ -368,6 +370,7 @@ interface FitMemory {
   scans: Map<number, ScanImage>;
   matches: Map<string, ScanMatch>;
   softness: Map<string, number>;
+  measures: Map<string, number | null>;
 }
 
 const fitMemory = new WeakMap<object, FitMemory>();
@@ -392,6 +395,7 @@ export function withScanCache<T>(ink: object, fit: () => T): T {
       scans: new Map(),
       matches: new Map(),
       softness: new Map(),
+      measures: new Map(),
     });
   measuredThisSlice = false;
   try {
@@ -402,6 +406,14 @@ export function withScanCache<T>(ink: object, fit: () => T): T {
     if (e !== FIT_PAUSED) fitMemory.delete(ink);
     throw e;
   }
+}
+
+export function rememberForFit(
+  ink: object,
+  key: string,
+  measure: () => number | null,
+): number | null {
+  return remember(fitMemory.get(ink)?.measures, key, measure);
 }
 
 function remember<K, V>(
@@ -458,8 +470,12 @@ function scanImage(
   blur: number,
 ): ScanImage {
   return remember(fitMemory.get(ink)?.scans, blur, () => {
-    checkDeadline();
-    const img = renderLuma(doc.module, page, probe, blur);
+    const sharp = blur === 0 ? null : scanImage(doc, page, ink, probe, 0);
+    if (blur !== 0 && !sharp) return null;
+    if (!sharp) checkDeadline();
+    const img = sharp
+      ? blurLuma(sharp.img, blur)
+      : renderLuma(doc.module, page, probe, 0);
     return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
   });
 }
@@ -594,15 +610,16 @@ function measureSoftness(
     inkLeft: ink.body.x,
     fill: BLACK,
   });
+  const sharp = renderLuma(m, sheet.page, probe, 0);
+  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
+  if (!sharp) return 0;
   let best = { r: 0, err: Infinity };
   for (const r of [0, 1, 2]) {
-    const drawn = renderLuma(m, sheet.page, probe, r);
-    if (!drawn) continue;
+    const drawn = blurLuma(sharp, r);
     // Ties go to the sharper: crisp text should stay crisp.
     const err = Math.abs(edgeWidth(drawn) - target) + r * 0.05;
     if (err < best.err) best = { r, err };
   }
-  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
   return best.r;
 }
 

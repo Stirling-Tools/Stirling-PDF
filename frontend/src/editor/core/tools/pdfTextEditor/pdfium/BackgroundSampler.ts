@@ -561,42 +561,54 @@ export function renderLuma(
   page: Page,
   rect: PageRect,
   blur = 2,
-): { data: Float32Array; width: number; height: number } | null {
+): Luma | null {
   try {
     const slice = renderSlice(m, page, rect, 0, INK_SCALE);
     if (!slice) return null;
     const { rgba, width, height, stride } = slice;
-    let data = new Float32Array(width * height);
+    const data = new Float32Array(width * height);
     for (let y = 0; y < height; y++)
       for (let x = 0; x < width; x++) {
         const i = y * stride + x * 4;
         data[y * width + x] = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
       }
-    // Box blur rows then columns: scans are soft, drawn text is crisp.
-    for (const [dx, dy] of [
-      [1, 0],
-      [0, 1],
-    ]) {
-      const out = new Float32Array(data.length);
-      for (let y = 0; y < height; y++)
-        for (let x = 0; x < width; x++) {
-          let sum = 0;
-          let n = 0;
-          for (let k = -blur; k <= blur; k++) {
-            const xx = x + k * dx;
-            const yy = y + k * dy;
-            if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
-            sum += data[yy * width + xx];
-            n++;
-          }
-          out[y * width + x] = sum / n;
-        }
-      data = out;
-    }
-    return { data, width, height };
+    return blurLuma({ data, width, height }, blur);
   } catch {
     return null;
   }
+}
+
+export interface Luma {
+  data: Float32Array;
+  width: number;
+  height: number;
+}
+
+// Box blur rows then columns: scans are soft, drawn text is crisp.
+export function blurLuma(img: Luma, blur: number): Luma {
+  const { width, height } = img;
+  let data = img.data;
+  for (const [dx, dy] of [
+    [1, 0],
+    [0, 1],
+  ]) {
+    const out = new Float32Array(data.length);
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        let sum = 0;
+        let n = 0;
+        for (let k = -blur; k <= blur; k++) {
+          const xx = x + k * dx;
+          const yy = y + k * dy;
+          if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
+          sum += data[yy * width + xx];
+          n++;
+        }
+        out[y * width + x] = sum / n;
+      }
+    data = out;
+  }
+  return { data, width, height };
 }
 
 // The darker part of the ink pixels: glyph edges anti-alias toward the paper,
