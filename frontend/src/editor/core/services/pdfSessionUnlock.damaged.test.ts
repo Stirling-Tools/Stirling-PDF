@@ -80,6 +80,24 @@ describe("damaged PDFs", () => {
     });
   });
 
+  it("drops pass-through verdicts when preflight does not proceed", async () => {
+    inspect.mockImplementation(async (file) => {
+      if ((file as File).name === "broken.pdf") throw new Error("broken");
+      throw new DOMException("timed out", "TimeoutError");
+    });
+    const plain = pdf("%PDF-1.7");
+    const broken = createStirlingFile(
+      new File(["%PDF-1.7"], "broken.pdf", { type: "application/pdf" }),
+    );
+    await expect(
+      preflightPdfOperation([plain, broken], repair, true, vi.fn()),
+    ).rejects.toThrow("broken");
+    inspect.mockClear();
+    // A later operation inspects again rather than reusing the abandoned verdict.
+    await expect(prepareUnlockedFile(plain, repair)).resolves.toBe(plain);
+    expect(inspect).toHaveBeenCalledOnce();
+  });
+
   it("cancels pending inspections when preflight fails early", async () => {
     let laterSignal: AbortSignal | undefined;
     inspect.mockImplementation(async (file, signal) => {

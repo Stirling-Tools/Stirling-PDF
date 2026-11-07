@@ -76,6 +76,7 @@ const passedThrough = new WeakSet<Blob>();
 async function ensureAccessUnlessDamaged(
   file: StirlingFile,
   signal?: AbortSignal,
+  onPassThrough?: (file: StirlingFile) => void,
 ): Promise<PdfAccess | undefined> {
   // Preflight's verdict is consumed once, so processing does not wait out a second inspection.
   if (passedThrough.delete(file)) return undefined;
@@ -88,7 +89,7 @@ async function ensureAccessUnlessDamaged(
       (timedOut || isDamagedPdfError(error)) &&
       !(await looksEncryptedFromTrailer(file))
     ) {
-      passedThrough.add(file);
+      onPassThrough?.(file);
       return undefined;
     }
     throw error;
@@ -110,15 +111,20 @@ export async function preflightPdfOperation(
     done.signal,
     ...(signal ? [signal] : []),
   ]);
+  // Pass-through verdicts only reach processing when this preflight lets it proceed.
+  const passes = new Set<StirlingFile>();
   try {
-    return await runPreflight(
+    const proceed = await runPreflight(
       files,
       endpoint,
       combinesFiles,
       requestOwner,
       combined.signal,
       isKnownEncrypted,
+      (file) => passes.add(file),
     );
+    if (proceed) for (const file of passes) passedThrough.add(file);
+    return proceed;
   } finally {
     done.abort();
     combined.dispose();
@@ -132,6 +138,7 @@ async function runPreflight(
   requestOwner: (file: StirlingFile) => Promise<boolean>,
   signal: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean,
+  onPassThrough: (file: StirlingFile) => void,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
@@ -144,7 +151,11 @@ async function runPreflight(
     changesProtection
       ? []
       : files.filter(isPdf).map((file) => {
-          const inspection = ensureAccessUnlessDamaged(file, signal);
+          const inspection = ensureAccessUnlessDamaged(
+            file,
+            signal,
+            onPassThrough,
+          );
           inspection.catch(() => {});
           return [file, inspection] as const;
         }),
