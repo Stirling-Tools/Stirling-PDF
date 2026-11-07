@@ -387,9 +387,7 @@ async function loadServerScript(script: ScriptFonts): Promise<void> {
   }
 }
 
-export function loadScriptScanFaces(
-  scripts: readonly Script[],
-): Promise<void> {
+export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
   const wanted = SCRIPTS.filter((s) => scripts.includes(s.script));
   const jobs = wanted.map((script) => {
     neededScripts.add(script.script);
