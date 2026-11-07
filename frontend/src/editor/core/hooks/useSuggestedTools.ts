@@ -7,7 +7,7 @@ import {
   isComingSoonTool,
   type ToolRegistryEntry,
 } from "@editor/data/toolsTaxonomy";
-import { supportsRightsManaged } from "@editor/services/pdfSessionUnlock";
+import { rightsManagedToolRule } from "@editor/services/rightsManagedTools";
 import { isValidToolId, ToolId } from "@editor/types/toolId";
 
 export interface SuggestedTool {
@@ -36,13 +36,16 @@ const SUGGESTION_COUNT = 4;
 // have to survive the server's own limit to be reordered at all.
 const FETCH_LIMIT = 12;
 
+const keepsRightsManagedProtection = (endpoint: string) =>
+  rightsManagedToolRule(endpoint).supported;
+
 function keepsRightsManagement(tool: ToolRegistryEntry): boolean {
   const config = tool.operationConfig;
   if (!config) return false;
   if (typeof config.endpoint === "string")
-    return supportsRightsManaged(config.endpoint);
+    return keepsRightsManagedProtection(config.endpoint);
   const endpoints = config.endpoints ?? [];
-  return endpoints.length > 0 && endpoints.every(supportsRightsManaged);
+  return endpoints.length > 0 && endpoints.every(keepsRightsManagedProtection);
 }
 
 function curatedRank(id: ToolId): number {

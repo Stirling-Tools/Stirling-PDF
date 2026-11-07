@@ -510,10 +510,54 @@ class PasswordProtectionControllerTest {
                 () -> controller.prepare(request(original, USER), "/api/v1/misc/compress-pdf"));
         assertThrows(
                 ResponseStatusException.class,
-                () -> controller.prepare(request(original, OWNER), "/api/v1/security/auto-redact"));
+                () -> controller.prepare(request(original, OWNER), "/api/v1/security/cert-sign"));
         try (var stream =
                         controller
                                 .prepare(request(original, USER), "/api/v1/general/rotate-pdf")
+                                .getBody()
+                                .getInputStream();
+                var working = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(working.isEncrypted());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "/api/v1/security/add-watermark, modify",
+        "/api/v1/misc/ocr-pdf, modify",
+        "/api/v1/misc/flatten, annotations",
+        "/api/v1/security/sanitize-pdf, annotations",
+        "/api/v1/general/booklet-imposition, assemble",
+        "/api/v1/general/multi-page-layout, annotations",
+        "/api/v1/misc/remove-blanks, extract",
+        "/api/v1/misc/auto-rename, extract"
+    })
+    void preparationRequiresEveryPermissionTheToolNeeds(String endpoint, String forbidden)
+            throws Exception {
+        var restricted = new AccessPermission();
+        switch (forbidden) {
+            case "modify" -> restricted.setCanModify(false);
+            case "annotations" -> restricted.setCanModifyAnnotations(false);
+            case "assemble" -> restricted.setCanAssembleDocument(false);
+            case "extract" -> restricted.setCanExtractContent(false);
+            default -> throw new IllegalArgumentException(forbidden);
+        }
+        byte[] original = protectedPdf(USER, OWNER, 256, restricted);
+        assertThrows(
+                ResponseStatusException.class,
+                () -> controller.prepare(request(original, USER), endpoint));
+        try (var stream =
+                        controller
+                                .prepare(request(original, OWNER), endpoint)
+                                .getBody()
+                                .getInputStream();
+                var working = Loader.loadPDF(stream.readAllBytes())) {
+            assertFalse(working.isEncrypted());
+        }
+        byte[] unrestricted = protectedPdf(USER, OWNER, 256, new AccessPermission());
+        try (var stream =
+                        controller
+                                .prepare(request(unrestricted, USER), endpoint)
                                 .getBody()
                                 .getInputStream();
                 var working = Loader.loadPDF(stream.readAllBytes())) {

@@ -181,6 +181,7 @@ describe("useSuggestedTools", () => {
   it("only suggests tools that keep Microsoft Purview protection for a protected result", () => {
     expect(setup([{ toolKey: "rotate", score: 9 }], null, {}, true)).toEqual([
       "compress",
+      "sanitize",
       "split",
     ]);
   });

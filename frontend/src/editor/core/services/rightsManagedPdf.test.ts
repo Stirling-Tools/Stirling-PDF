@@ -5,7 +5,10 @@ import { PDFDocument, PDFName, PDFString } from "@cantoo/pdf-lib";
 import apiClient from "@editor/services/apiClient";
 import {
   getPdfAccess,
+  inspectLocalPdfAccess,
+  rememberPdfAccess,
   rememberUnencryptedPdf,
+  type PdfAccess,
 } from "@editor/services/pdfAccessService";
 import { createStirlingFile } from "@editor/types/fileContext";
 import {
@@ -32,9 +35,25 @@ import { pdfAllows } from "@editor/services/pdfPermissions";
 vi.mock("@editor/services/apiClient", () => ({
   default: { post: vi.fn(), get: vi.fn() },
 }));
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
+  inspectLocalPdfAccess: vi.fn(),
+}));
+const inspect = vi.mocked(inspectLocalPdfAccess);
 const post = vi.mocked(apiClient.post);
 const get = vi.mocked(apiClient.get);
 const rotate = "/api/v1/general/rotate-pdf";
+const merge = "/api/v1/general/merge-pdfs";
+const plaintextAccess: PdfAccess = {
+  password: "",
+  encrypted: false,
+  signed: false,
+  ownerAuthenticated: false,
+  permissions: -1,
+  pageCount: 1,
+};
 
 async function wrapper(
   subtype: string,
@@ -170,6 +189,8 @@ function preflight(
 beforeEach(() => {
   post.mockReset();
   get.mockReset();
+  inspect.mockReset();
+  inspect.mockResolvedValue(plaintextAccess);
   clearRightsManagedPdfs();
 });
 afterEach(clearRightsManagedPdfs);
@@ -374,11 +395,77 @@ describe("tools on protected PDFs", () => {
     await expect(preflight([original])).rejects.toThrow("do not allow changes");
   });
 
-  it("refuses tools that cannot keep the protection", async () => {
+  it.each([
+    ["/api/v1/security/add-watermark"],
+    ["/api/v1/misc/add-stamp"],
+    ["/api/v1/misc/ocr-pdf"],
+    ["/api/v1/security/sanitize-pdf"],
+  ])("runs %s, which takes and returns PDFs", async (endpoint) => {
+    const original = await openedFile({ edit: true });
+    await expect(preflight([original], endpoint)).resolves.toBe(true);
+    const working = await prepareUnlockedFile(original, endpoint);
+    expect(await working.text()).toBe("%PDF-1.7 plaintext");
+  });
+
+  it.each([
+    ["/api/v1/convert/pdf/img", "doesn't make PDFs"],
+    ["/api/v1/security/add-password", "sensitivity label"],
+    ["/api/v1/security/cert-sign", "digitally signed PDF"],
+    ["/api/v1/ai/tools/classify-and-label", "AI engine"],
+    ["/api/v1/misc/add-attachments", "attachments"],
+    [undefined, "cannot keep Microsoft Purview protection"],
+  ])("refuses %s and says why", async (endpoint, reason) => {
     const original = await openedFile({ edit: true });
     await expect(
-      preflight([original], "/api/v1/convert/pdf/img"),
-    ).rejects.toThrow("cannot keep Microsoft Purview protection");
+      preflightPdfOperation([original], endpoint, false, async () => true),
+    ).rejects.toThrow(reason);
+    await expect(prepareUnlockedFile(original, endpoint)).rejects.toThrow(
+      reason,
+    );
+  });
+
+  it("needs the copy right for a tool that names the file from its text", async () => {
+    const autoRename = "/api/v1/misc/auto-rename";
+    await expect(
+      preflight([await openedFile({ edit: true })], autoRename),
+    ).rejects.toThrow("copying");
+    await expect(
+      preflight([await openedFile({ edit: true, copy: true })], autoRename),
+    ).resolves.toBe(true);
+  });
+
+  it("leaves digitally signed content view-only", async () => {
+    const original = await openedFile({ edit: true });
+    inspect.mockResolvedValue({ ...plaintextAccess, signed: true });
+    await expect(preflight([original])).rejects.toThrow("digital signatures");
+    await expect(prepareUnlockedFile(original, rotate)).rejects.toThrow(
+      "digital signatures",
+    );
+  });
+
+  it("will not combine Purview protection with a password-protected PDF", async () => {
+    const original = await openedFile({ edit: true });
+    const locked = createStirlingFile(
+      new File(["%PDF-1.7 encrypted"], "locked.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    rememberPdfAccess(locked, {
+      ...plaintextAccess,
+      password: "reader",
+      encrypted: true,
+    });
+    await expect(preflight([original, locked], merge, true)).rejects.toThrow(
+      "password-protected",
+    );
+    await expect(
+      protectUnlockedResults(
+        [new File(["%PDF"], "merged.pdf", { type: "application/pdf" })],
+        [original, locked],
+        merge,
+      ),
+    ).rejects.toThrow("password-protected");
+    expect(post).toHaveBeenCalledTimes(1);
   });
 
   it("runs on the decrypted copy and re-protects every result like the original", async () => {

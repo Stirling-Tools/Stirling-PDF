@@ -9,6 +9,7 @@ import { useFileContext } from "@editor/contexts/FileContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
+import { rightsManagedToolAccepts } from "@editor/services/rightsManagedTools";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
@@ -207,11 +208,12 @@ export const useToolOperation = <TParams>(
         typeof config.endpoint === "function"
           ? config.endpoint(params)
           : config.endpoint;
-      return selectedFiles.filter((file) =>
-        toolAcceptsFile(
-          endpoint ?? undefined,
-          selectors.getStirlingFileStub(file.fileId) ?? file,
-        ),
+      return selectedFiles.filter(
+        (file) =>
+          toolAcceptsFile(
+            endpoint ?? undefined,
+            selectors.getStirlingFileStub(file.fileId) ?? file,
+          ) && rightsManagedToolAccepts(endpoint ?? undefined, file.fileId),
       );
     },
     [config.endpoint, selectors],

@@ -31,23 +31,47 @@ public final class PdfSessionPermissions {
     public static void requireOperation(
             PDDocument document, String endpoint, boolean honorOwnerPasswords) throws IOException {
         var permission = document.getCurrentAccessPermission();
+        boolean assemble =
+                document.isEncrypted() && document.getEncryption().getRevision() == 2
+                        ? permission.canModify()
+                        : permission.canAssembleDocument();
         boolean permitted =
                 switch (endpoint) {
                     case "/api/v1/general/rotate-pdf",
                             "/api/v1/general/remove-pages",
                             "/api/v1/general/rearrange-pages",
                             "/api/v1/general/merge-pdfs" ->
-                            document.isEncrypted() && document.getEncryption().getRevision() == 2
-                                    ? permission.canModify()
-                                    : permission.canAssembleDocument();
+                            assemble;
                     case "/api/v1/general/split-pages",
                             "/api/v1/general/split-pdf-by-sections",
                             "/api/v1/general/split-by-size-or-count",
                             "/api/v1/general/split-pdf-by-chapters",
                             "/api/v1/general/split-for-poster-print",
-                            "/api/v1/misc/auto-split-pdf" ->
+                            "/api/v1/misc/auto-split-pdf",
+                            "/api/v1/misc/auto-rename" ->
                             permission.canExtractContent();
-                    case "/api/v1/misc/compress-pdf" -> permission.canModify();
+                    case "/api/v1/misc/compress-pdf",
+                            "/api/v1/security/add-watermark",
+                            "/api/v1/misc/add-stamp",
+                            "/api/v1/misc/add-page-numbers",
+                            "/api/v1/general/scale-pages",
+                            "/api/v1/general/crop",
+                            "/api/v1/misc/replace-invert-pdf",
+                            "/api/v1/general/remove-image-pdf",
+                            "/api/v1/security/auto-redact",
+                            "/api/v1/misc/ocr-pdf",
+                            "/api/v1/misc/repair" ->
+                            permission.canModify();
+                    case "/api/v1/misc/flatten",
+                            "/api/v1/security/sanitize-pdf",
+                            "/api/v1/misc/unlock-pdf-forms" ->
+                            permission.canModify() && permission.canModifyAnnotations();
+                    case "/api/v1/general/booklet-imposition",
+                            "/api/v1/general/pdf-to-single-page" ->
+                            permission.canModify() && assemble;
+                    case "/api/v1/general/multi-page-layout" ->
+                            permission.canModify() && assemble && permission.canModifyAnnotations();
+                    case "/api/v1/misc/remove-blanks" -> assemble && permission.canExtractContent();
                     default ->
                             throw new ResponseStatusException(
                                     HttpStatus.BAD_REQUEST,

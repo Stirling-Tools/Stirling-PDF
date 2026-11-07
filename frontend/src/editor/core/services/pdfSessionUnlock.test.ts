@@ -317,7 +317,7 @@ describe("session PDF access", () => {
     await expect(
       preflightPdfOperation(
         files,
-        "/api/v1/security/auto-redact",
+        "/api/v1/security/cert-sign",
         false,
         requestOwner,
       ),
@@ -418,7 +418,7 @@ describe("session PDF access", () => {
   });
 
   it.each([
-    ["/api/v1/security/auto-redact", access, "cannot yet preserve"],
+    ["/api/v1/security/cert-sign", access, "cannot yet preserve"],
     [rotate, { ...access, signed: true }, "digital signatures"],
     [rotate, { ...access, permissions: -4 & ~1024 }, "permissions password"],
   ])(
@@ -431,6 +431,38 @@ describe("session PDF access", () => {
       await expect(prepareUnlockedFile(original, endpoint)).rejects.toThrow(
         message,
       );
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["/api/v1/security/add-watermark", PdfPermissionFlag.ModifyContents],
+    ["/api/v1/misc/ocr-pdf", PdfPermissionFlag.ModifyContents],
+    ["/api/v1/misc/flatten", PdfPermissionFlag.ModifyAnnotations],
+    ["/api/v1/general/booklet-imposition", PdfPermissionFlag.AssembleDocument],
+    ["/api/v1/general/multi-page-layout", PdfPermissionFlag.ModifyAnnotations],
+    ["/api/v1/misc/remove-blanks", PdfPermissionFlag.CopyContents],
+    ["/api/v1/misc/auto-rename", PdfPermissionFlag.CopyContents],
+  ])(
+    "asks for the permissions password when %s needs a forbidden permission",
+    async (endpoint, forbidden) => {
+      const file = createStirlingFile(new File(["encrypted"], "locked.pdf"));
+      rememberPdfAccess(file, { ...access, permissions: -4 & ~forbidden });
+      const requestOwner = vi.fn(async () => false);
+      expect(
+        await preflightPdfOperation([file], endpoint, false, requestOwner),
+      ).toBe(false);
+      expect(requestOwner).toHaveBeenCalledWith(file);
+      await expect(prepareUnlockedFile(file, endpoint)).rejects.toThrow(
+        "permissions password",
+      );
+
+      rememberPdfAccess(file, access);
+      requestOwner.mockClear();
+      expect(
+        await preflightPdfOperation([file], endpoint, false, requestOwner),
+      ).toBe(true);
+      expect(requestOwner).not.toHaveBeenCalled();
       expect(post).not.toHaveBeenCalled();
     },
   );

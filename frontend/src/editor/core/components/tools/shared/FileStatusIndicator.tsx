@@ -5,14 +5,17 @@ import { Icon } from "@editor/ui/Icon";
 import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import { useFileManager } from "@editor/hooks/useFileManager";
-import { StirlingFile, StirlingFileStub } from "@editor/types/fileContext";
+import { StirlingFile } from "@editor/types/fileContext";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
-import { ProtectedPdfToolNotice } from "@editor/components/tools/shared/ProtectedPdfToolNotice";
+import {
+  ProtectedPdfToolNotice,
+  type UnavailableProtectedFile,
+} from "@editor/components/tools/shared/ProtectedPdfToolNotice";
 
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
   minFiles?: number;
-  unavailableFiles?: readonly StirlingFileStub[];
+  unavailableFiles?: readonly UnavailableProtectedFile[];
 }
 
 const FileStatusIndicator = ({
