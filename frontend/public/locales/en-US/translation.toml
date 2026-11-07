@@ -4673,7 +4673,6 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
-couldNotSave = "Could not save {{name}}"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
@@ -12035,6 +12034,15 @@ title = "Sanitize PDF"
 
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
+
+[saveFile.menu]
+download = "Download a copy"
+more = "More save options"
+saveCopyElsewhere = "Save a copy somewhere else…"
+saveToComputer = "Save to this computer…"
+
+[saveFile.toolbar]
+mixed = "Save all, each back to where it came from"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
