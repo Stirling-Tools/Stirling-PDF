@@ -471,7 +471,7 @@ function placementKey(
 function scanImage(
   doc: EditorDocument,
   page: Page,
-  ink: { rect: PageRect },
+  ink: { rect: PageRect; reversed?: boolean },
   probe: PageRect,
   blur: number,
 ): ScanImage {
@@ -482,6 +482,8 @@ function scanImage(
     const img = sharp
       ? blurLuma(sharp.img, blur)
       : renderLuma(doc.module, page, probe, 0, fitScale(ink));
+    if (img && !sharp && ink.reversed)
+      for (let i = 0; i < img.data.length; i++) img.data[i] = 255 - img.data[i];
     return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
   });
 }
@@ -670,17 +672,21 @@ export function blurRgba(
 export function toInkOnly(
   img: { rgba: Uint8Array; width: number; height: number },
   paper: RGBA,
+  lightInk = false,
 ): void {
   const { rgba } = img;
-  const lum = (i: number) =>
-    0.299 * rgba[i] + 0.587 * rgba[i + 1] + 0.114 * rgba[i + 2];
   const paperL = 0.299 * paper.r + 0.587 * paper.g + 0.114 * paper.b;
-  let darkest = paperL;
-  for (let i = 0; i < rgba.length; i += 4) darkest = Math.min(darkest, lum(i));
-  const span = Math.max(60, paperL - darkest);
+  const inkiness = (i: number) => {
+    const l = 0.299 * rgba[i] + 0.587 * rgba[i + 1] + 0.114 * rgba[i + 2];
+    return lightInk ? l - paperL : paperL - l;
+  };
+  let deepest = 0;
+  for (let i = 0; i < rgba.length; i += 4)
+    deepest = Math.max(deepest, inkiness(i));
+  const span = Math.max(60, deepest);
   const bg = [paper.r, paper.g, paper.b];
   for (let i = 0; i < rgba.length; i += 4) {
-    const a = Math.min(1, Math.max(0, (paperL - lum(i)) / span));
+    const a = Math.min(1, Math.max(0, inkiness(i) / span));
     if (a < 0.04) {
       rgba[i + 3] = 0;
       continue;

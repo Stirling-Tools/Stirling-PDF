@@ -515,6 +515,44 @@ describe("editing scanned text on a page turned with /Rotate", () => {
   });
 });
 
+describe("editing light text on a dark fill", () => {
+  test(
+    "fits the face and redraws the edit light",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6, reversed: true },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
+          "Calibri (Carlito)",
+        );
+        const state = scanEditOf(doc, run)!;
+        const jane = state.lines[0].words.find(
+          (w) => w.text.trim() === "Jane",
+        )!;
+        renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Mary"));
+        const band = renderLuma(
+          doc.module,
+          page,
+          {
+            x: jane.x - 1,
+            y: state.lines[0].baseline - 3,
+            width: jane.right - jane.x + 2,
+            height: 13,
+          },
+          0,
+        )!;
+        expect(band.data.filter((l) => l > 160).length).toBeGreaterThan(50);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("matching scanned text in other scripts", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.6, noise: 8 };
   const russian: ScanLineSpec = {

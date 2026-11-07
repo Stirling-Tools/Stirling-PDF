@@ -205,7 +205,7 @@ function softenedCopy(
   const { doc, page } = canvas;
   const m = doc.module;
   const sheet = doc.scratchPageFor(page);
-  const ptrs = placeText(sheet.doc, sheet.page, placement);
+  const ptrs = placeText(sheet.doc, sheet.page, { ...placement, fill: BLACK });
   try {
     keepClear(m, ptrs, limit);
     const box = measureObjBoundsPt(m, ptrs);
@@ -221,6 +221,8 @@ function softenedCopy(
     if (!patch) return 0;
     blurRgba(patch, style.softness);
     toInkOnly(patch, WHITE);
+    for (let i = 0; i < patch.rgba.length; i += 4)
+      patch.rgba.set([placement.fill.r, placement.fill.g, placement.fill.b], i);
     return pasteImage(canvas, patch, patch.rect);
   } finally {
     for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);

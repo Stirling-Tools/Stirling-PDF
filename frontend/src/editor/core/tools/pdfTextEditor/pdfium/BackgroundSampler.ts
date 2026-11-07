@@ -199,6 +199,7 @@ export interface ScanInk {
   /** A box edge sits just left / right of the glyphs (OCR may read it as "["). */
   edgeLeft: boolean;
   edgeRight: boolean;
+  reversed: boolean;
 }
 
 /** Where to look: an x span and the rows the OCR says hold the glyphs. */
@@ -243,24 +244,33 @@ export function measureScanInk(
     const coreTop = Math.max(0, toPxY(region.top));
     const coreBottom = Math.min(height - 1, toPxY(region.bottom));
     if (x1 <= x0 || coreBottom < coreTop) return null;
-    // The paper is what most of the slice is. Sampled from a ring instead, a
-    // ruled line under the ring passed for paper and hid every thin stroke.
-    const sample: number[] = [];
-    for (let y = 0; y < height; y += 2)
-      for (let x = x0; x <= x1; x += 2) {
-        const i = y * stride + x * 4;
-        sample.push(luma(rgba[i], rgba[i + 1], rgba[i + 2]));
-      }
-    sample.sort((p, q) => p - q);
-    // Bright enough to clear the ink, not so bright that grain sets it.
-    const paper = sample[Math.floor(sample.length * 0.75)] ?? 255;
+    const lumaAt = (i: number) => luma(rgba[i], rgba[i + 1], rgba[i + 2]);
+    const core: number[] = [];
+    for (let y = coreTop; y <= coreBottom; y += 2)
+      for (let x = x0; x <= x1; x += 2) core.push(lumaAt(y * stride + x * 4));
+    core.sort((p, q) => p - q);
+    const ground = core[Math.floor(core.length * 0.65)] ?? 255;
+    const reversed =
+      ground < 110 && (core[Math.floor(core.length * 0.97)] ?? 0) > ground + 60;
+    const tone = reversed ? (i: number) => 255 - lumaAt(i) : lumaAt;
+    const slicePaper = () => {
+      // The paper is what most of the slice is. Sampled from a ring instead, a
+      // ruled line under the ring passed for paper and hid every thin stroke.
+      const sample: number[] = [];
+      for (let y = 0; y < height; y += 2)
+        for (let x = x0; x <= x1; x += 2)
+          sample.push(lumaAt(y * stride + x * 4));
+      sample.sort((p, q) => p - q);
+      // Bright enough to clear the ink, not so bright that grain sets it.
+      return sample[Math.floor(sample.length * 0.75)] ?? 255;
+    };
+    const paper = reversed ? 255 - ground : slicePaper();
     // Faint anti-aliased edges still show once the paper around them is
     // covered, so the extent uses a softer cut than the colour does.
     const ink = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
       for (let x = x0; x <= x1; x++) {
-        const i = y * stride + x * 4;
-        const l = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
+        const l = tone(y * stride + x * 4);
         ink[y * width + x] = l < paper - 60 ? 2 : l < paper - 30 ? 1 : 0;
       }
     }
@@ -445,8 +455,7 @@ export function measureScanInk(
       for (let x = left; x <= right; x++) {
         if (ink[y * width + x] !== 2) continue;
         const i = y * stride + x * 4;
-        const px = [rgba[i], rgba[i + 1], rgba[i + 2]] as const;
-        dark.push([luma(...px), ...px]);
+        dark.push([tone(i), rgba[i], rgba[i + 1], rgba[i + 2]]);
       }
     }
     // Pixel rows/cols back to raw page space through the display map.
@@ -508,6 +517,7 @@ export function measureScanInk(
       edgeRight: edgeCols.some(
         (c) => c > solidRight && c - solidRight < scale * 6,
       ),
+      reversed,
     };
   } catch {
     return null;
