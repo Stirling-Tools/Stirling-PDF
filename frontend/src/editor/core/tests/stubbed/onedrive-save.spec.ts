@@ -368,6 +368,33 @@ test.describe("Saving files opened from OneDrive", () => {
     await expect(sidebarUnsavedDot(page)).toHaveCount(0);
   });
 
+  test("Save in the page editor sends its unsaved edits to OneDrive", async ({
+    page,
+  }) => {
+    const calls = await startWithOneDriveFile(page, { unsaved: false });
+    await openFileCards(page);
+    await page
+      .locator('[data-tour="view-switcher"]')
+      .first()
+      .locator(".mantine-SegmentedControl-label", { hasText: "Page Editor" })
+      .click();
+    const track = page.getByTestId("page-tracks").locator("section").first();
+    const firstPage = track.locator("[data-page-id]").first();
+    await expect(firstPage).toBeVisible({ timeout: 30_000 });
+    await firstPage.hover();
+    await firstPage.getByRole("button", { name: "Rotate right" }).click();
+    await expect(track).toContainText("edited");
+
+    await page
+      .getByRole("button", { name: "Update Report.pdf in OneDrive" })
+      .click();
+
+    expect(await nthSave(calls, 1)).toMatchObject({ itemId: "item-1" });
+    await expect(track).toContainText("v2", { timeout: 30_000 });
+    await expect(track).not.toContainText("edited");
+    await expect(toolbarUnsavedDot(page)).toHaveCount(0);
+  });
+
   test("closing a card with unsaved OneDrive edits offers to save them", async ({
     page,
   }) => {
