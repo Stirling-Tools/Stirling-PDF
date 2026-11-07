@@ -1,19 +1,30 @@
 import i18n from "i18next";
 import { isMicrosoftProtectedPdf } from "@editor/services/rightsManagedPdf";
 
+export interface DerivedOutput {
+  output: Blob;
+  sources: readonly Blob[];
+}
+
 export async function assertOutputsKeepPurviewProtection(
-  parents: readonly Blob[],
-  outputs: readonly Blob[],
+  derived: readonly DerivedOutput[],
 ): Promise<void> {
-  if (outputs.length === 0) return;
-  const protectedParents = await Promise.all(
-    parents.map((parent) => isMicrosoftProtectedPdf(parent)),
+  const checked = new Map<Blob, Promise<boolean>>();
+  const isProtected = (blob: Blob) => {
+    let result = checked.get(blob);
+    if (!result) {
+      result = isMicrosoftProtectedPdf(blob);
+      checked.set(blob, result);
+    }
+    return result;
+  };
+  const leaks = await Promise.all(
+    derived.map(async ({ output, sources }) => {
+      const fromProtected = await Promise.all(sources.map(isProtected));
+      return fromProtected.some(Boolean) && !(await isProtected(output));
+    }),
   );
-  if (!protectedParents.some(Boolean)) return;
-  const protectedOutputs = await Promise.all(
-    outputs.map((output) => isMicrosoftProtectedPdf(output)),
-  );
-  if (protectedOutputs.every(Boolean)) return;
+  if (!leaks.some(Boolean)) return;
   throw new Error(
     i18n.t(
       "rightsManagedPdf.unprotectedVersionBlocked",

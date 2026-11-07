@@ -15,30 +15,41 @@ const pdf = (isProtected: boolean) => {
 };
 
 describe("assertOutputsKeepPurviewProtection", () => {
-  it("refuses a decrypted output of a protected parent", async () => {
+  it.each([
+    ["re-protected outputs", [{ output: pdf(true), sources: [pdf(true)] }]],
+    ["ordinary files", [{ output: pdf(false), sources: [pdf(false)] }]],
+    [
+      "plain files edited alongside a protected one",
+      [
+        { output: pdf(true), sources: [pdf(true)] },
+        { output: pdf(false), sources: [pdf(false)] },
+      ],
+    ],
+  ])("accepts %s", async (_, derived) => {
     await expect(
-      assertOutputsKeepPurviewProtection([pdf(true)], [pdf(false)]),
-    ).rejects.toThrow("unprotected copy of a Microsoft Purview protected PDF");
-  });
-
-  it("refuses when any one of several outputs lost its protection", async () => {
-    await expect(
-      assertOutputsKeepPurviewProtection(
-        [pdf(false), pdf(true)],
-        [pdf(true), pdf(false)],
-      ),
-    ).rejects.toThrow();
-  });
-
-  it("accepts re-protected outputs", async () => {
-    await expect(
-      assertOutputsKeepPurviewProtection([pdf(true)], [pdf(true)]),
+      assertOutputsKeepPurviewProtection(derived),
     ).resolves.toBeUndefined();
   });
 
-  it("leaves ordinary files alone", async () => {
-    await expect(
-      assertOutputsKeepPurviewProtection([pdf(false)], [pdf(false)]),
-    ).resolves.toBeUndefined();
+  it.each([
+    [
+      "a decrypted version of a protected file",
+      [{ output: pdf(false), sources: [pdf(true)] }],
+    ],
+    [
+      "an unprotected merge of a protected and a plain file",
+      [{ output: pdf(false), sources: [pdf(false), pdf(true)] }],
+    ],
+    [
+      "one decrypted output among several",
+      [
+        { output: pdf(true), sources: [pdf(true)] },
+        { output: pdf(false), sources: [pdf(true)] },
+      ],
+    ],
+  ])("refuses %s", async (_, derived) => {
+    await expect(assertOutputsKeepPurviewProtection(derived)).rejects.toThrow(
+      "unprotected copy of a Microsoft Purview protected PDF",
+    );
   });
 });

@@ -705,16 +705,19 @@ export async function consumeFiles(
     );
   }
 
-  const parentIds = new Set<FileId>(inputFileIds);
-  for (const stub of outputStirlingFileStubs) {
-    if (stub.parentFileId) parentIds.add(stub.parentFileId);
-    for (const id of stub.sourceFileIds ?? []) parentIds.add(id);
-  }
-  await assertOutputsKeepPurviewProtection(
-    [...parentIds]
+  const storedFiles = (ids: readonly FileId[]) =>
+    ids
       .map((id) => filesRef.current.get(id))
-      .filter((file): file is File => Boolean(file)),
-    outputStirlingFiles,
+      .filter((file): file is File => Boolean(file));
+  await assertOutputsKeepPurviewProtection(
+    outputStirlingFiles.map((output, index) => {
+      const stub = outputStirlingFileStubs[index];
+      const own = stub.parentFileId ? [stub.parentFileId] : [...inputFileIds];
+      return {
+        output,
+        sources: storedFiles([...own, ...(stub.sourceFileIds ?? [])]),
+      };
+    }),
   );
 
   // Store StirlingFiles in filesRef using their existing IDs (no ID generation needed)
