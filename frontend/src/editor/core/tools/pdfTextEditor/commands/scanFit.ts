@@ -8,6 +8,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   clampStretch,
+  fitScale,
   isEvenlySpaced,
   matchScan,
   median,
@@ -212,7 +213,7 @@ function halfDensityXHeight(
 ): number | null {
   if (s.ink.xLine === null) return null;
   const rect = s.ink.rect;
-  const img = renderLuma(doc.module, page, rect, 0);
+  const img = renderLuma(doc.module, page, rect, 0, fitScale(s.ink));
   if (!img) return null;
   const { data, width, height } = img;
   const paper = 0.299 * s.paper.r + 0.587 * s.paper.g + 0.114 * s.paper.b;

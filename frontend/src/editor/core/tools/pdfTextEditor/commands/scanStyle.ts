@@ -2,6 +2,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
+  INK_SCALE,
   blurLuma,
   renderLuma,
   type Luma,
@@ -428,6 +429,11 @@ function remember<K, V>(
   return value;
 }
 
+const FIT_PROBE_PX = 96;
+
+export const fitScale = (ink: { rect: PageRect }) =>
+  Math.min(INK_SCALE, FIT_PROBE_PX / (ink.rect.height + 2));
+
 const probeOf = (rect: PageRect): PageRect => ({
   x: rect.x - 1,
   y: rect.y - 1,
@@ -475,7 +481,7 @@ function scanImage(
     if (!sharp) checkDeadline();
     const img = sharp
       ? blurLuma(sharp.img, blur)
-      : renderLuma(doc.module, page, probe, 0);
+      : renderLuma(doc.module, page, probe, 0, fitScale(ink));
     return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
   });
 }
@@ -489,15 +495,24 @@ function midTone(img: { data: Float32Array }): number {
 function drawnLuma(
   doc: EditorDocument,
   page: Page,
-  probe: PageRect,
+  ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
-  inkLeft: number,
   blur: number,
-) {
+): Luma | null {
   const m = doc.module;
   const sheet = doc.scratchPageFor(page);
-  const ptrs = placeText(sheet.doc, sheet.page, { ...c, inkLeft, fill: BLACK });
-  const drawn = renderLuma(m, sheet.page, probe, blur);
+  const ptrs = placeText(sheet.doc, sheet.page, {
+    ...c,
+    inkLeft: ink.body.x,
+    fill: BLACK,
+  });
+  const drawn = renderLuma(
+    m,
+    sheet.page,
+    probeOf(ink.rect),
+    blur,
+    fitScale(ink),
+  );
   for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
   return drawn;
 }
@@ -539,7 +554,11 @@ function measureMatch(
   if (!scanned) return none;
   const scan = scanned.img;
   checkDeadline();
-  const drawn = drawnLuma(doc, page, probe, c, ink.body.x, softness ?? 2);
+  const blur =
+    softness === undefined
+      ? 2
+      : Math.round((softness * fitScale(ink)) / INK_SCALE);
+  const drawn = drawnLuma(doc, page, ink, c, blur);
   if (!drawn || drawn.data.length !== scan.data.length) return none;
   return {
     score: rough
@@ -598,20 +617,11 @@ function measureSoftness(
   ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
-  const m = doc.module;
-  const probe = probeOf(ink.rect);
-  const scan = scanImage(doc, page, ink, probe, 0);
+  const scan = scanImage(doc, page, ink, probeOf(ink.rect), 0);
   if (!scan) return 0;
   const target = (scan.edge ??= edgeWidth(scan.img));
   checkDeadline();
-  const sheet = doc.scratchPageFor(page);
-  const ptrs = placeText(sheet.doc, sheet.page, {
-    ...c,
-    inkLeft: ink.body.x,
-    fill: BLACK,
-  });
-  const sharp = renderLuma(m, sheet.page, probe, 0);
-  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
+  const sharp = drawnLuma(doc, page, ink, c, 0);
   if (!sharp) return 0;
   let best = { r: 0, err: Infinity };
   for (const r of [0, 1, 2]) {
@@ -620,7 +630,7 @@ function measureSoftness(
     const err = Math.abs(edgeWidth(drawn) - target) + r * 0.05;
     if (err < best.err) best = { r, err };
   }
-  return best.r;
+  return Math.round((best.r * INK_SCALE) / fitScale(ink));
 }
 
 /** Box-blur an RGBA image in place, `r` pixels each way. */

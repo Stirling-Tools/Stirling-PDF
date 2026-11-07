@@ -555,15 +555,16 @@ export function capturePatch(
   }
 }
 
-/** Luma of a page area at the ink-measuring resolution, softened by `blur` px. */
+/** Luma of a page area at `scale` px per point, softened by `blur` px. */
 export function renderLuma(
   m: WrappedPdfiumModule,
   page: Page,
   rect: PageRect,
   blur = 2,
+  scale = INK_SCALE,
 ): Luma | null {
   try {
-    const slice = renderSlice(m, page, rect, 0, INK_SCALE);
+    const slice = renderSlice(m, page, rect, 0, scale);
     if (!slice) return null;
     const { rgba, width, height, stride } = slice;
     const data = new Float32Array(width * height);
