@@ -27,13 +27,14 @@ const FONT_ID = /^[0-9a-f]{64}$/;
 
 let resolved: LocalFont[] | null = null;
 let manifestPending: Promise<LocalFont[] | null> | null = null;
-let manifestGeneration = 0;
+let generation = 0;
 let faceByFont = new Map<LocalFont, ServerFontFace>();
 const listeners = new Set<() => void>();
 const bytesByFaceId = new Map<string, Uint8Array>();
 const faceIdByName = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
-const cssFacesRegistered = new Set<string>();
+const facePending = new Map<string, Promise<Uint8Array | null>>();
+const cssFacesRegistered = new Map<string, FontFace>();
 
 function readFace(value: unknown): ServerFontFace | null {
   if (!value || typeof value !== "object") return null;
@@ -109,9 +110,9 @@ async function fetchManifest(): Promise<ServerFontFamily[] | null> {
 export function loadServerFonts(): Promise<LocalFont[] | null> {
   if (resolved) return Promise.resolve(resolved);
   if (!manifestPending) {
-    const generation = manifestGeneration;
+    const started = generation;
     manifestPending = fetchManifest().then((families) => {
-      if (generation !== manifestGeneration) return null;
+      if (started !== generation) return null;
       if (families && families.length > 0) return publish(families);
       manifestPending = null;
       return null;
@@ -120,11 +121,27 @@ export function loadServerFonts(): Promise<LocalFont[] | null> {
   return manifestPending;
 }
 
-export function forgetServerFontList(): void {
-  manifestGeneration++;
+function documentFonts(): FontFaceSet | null {
+  if (typeof document === "undefined") return null;
+  return (document as Document & { fonts?: FontFaceSet }).fonts ?? null;
+}
+
+function clearServerFontState(): void {
+  generation++;
   resolved = null;
   manifestPending = null;
   faceByFont = new Map();
+  bytesByFaceId.clear();
+  faceIdByName.clear();
+  bytesPending.clear();
+  facePending.clear();
+  const fonts = documentFonts();
+  for (const css of cssFacesRegistered.values()) fonts?.delete(css);
+  cssFacesRegistered.clear();
+}
+
+export function forgetServerFontList(): void {
+  clearServerFontState();
   notifyListeners();
 }
 
@@ -161,8 +178,6 @@ export function serverFontCssFamily(requested: string): string | null {
   return id && cssFacesRegistered.has(id) ? cssFamilyForFace(id) : null;
 }
 
-const facePending = new Map<string, Promise<Uint8Array | null>>();
-
 function shared<T>(
   pending: Map<string, Promise<T>>,
   key: string,
@@ -170,7 +185,9 @@ function shared<T>(
 ): Promise<T> {
   const inFlight = pending.get(key);
   if (inFlight) return inFlight;
-  const job = run().finally(() => pending.delete(key));
+  const job = run().finally(() => {
+    if (pending.get(key) === job) pending.delete(key);
+  });
   pending.set(key, job);
   return job;
 }
@@ -182,6 +199,7 @@ function fetchFaceBytes(id: string): Promise<Uint8Array | null> {
 }
 
 async function downloadFace(id: string): Promise<Uint8Array | null> {
+  const started = generation;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await apiClient.get<ArrayBuffer>(
@@ -191,6 +209,7 @@ async function downloadFace(id: string): Promise<Uint8Array | null> {
           suppressErrorToast: true,
         },
       );
+      if (started !== generation) return null;
       const bytes = new Uint8Array(res.data);
       if (bytes.length > 0) {
         bytesByFaceId.set(id, bytes);
@@ -208,19 +227,19 @@ async function registerCssFace(
   bytes: Uint8Array,
 ): Promise<void> {
   if (cssFacesRegistered.has(face.id)) return;
-  if (typeof FontFace === "undefined" || typeof document === "undefined") {
-    return;
-  }
-  const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+  if (typeof FontFace === "undefined") return;
+  const fonts = documentFonts();
   if (!fonts) return;
+  const started = generation;
   try {
     const css = new FontFace(cssFamilyForFace(face.id), bytes.slice(), {
       style: face.italic ? "italic" : "normal",
       weight: "1 1000",
     });
     await css.load();
+    if (started !== generation || cssFacesRegistered.has(face.id)) return;
     fonts.add(css);
-    cssFacesRegistered.add(face.id);
+    cssFacesRegistered.set(face.id, css);
   } catch {
     return;
   }
@@ -234,24 +253,20 @@ export async function loadServerFontBytes(
   const cached = getServerFontBytes(requested);
   if (cached) return cached;
   return shared(bytesPending, key, async () => {
+    const started = generation;
     await loadServerFonts();
+    if (started !== generation) return null;
     const face = serverFaceFor(requested);
     if (!face) return null;
     const bytes = await fetchFaceBytes(face.id);
-    if (!bytes) return null;
+    if (!bytes || started !== generation) return null;
     await registerCssFace(face, bytes);
+    if (started !== generation) return null;
     faceIdByName.set(key, face.id);
     return bytes;
   });
 }
 
 export function resetServerFontsCache(): void {
-  resolved = null;
-  manifestPending = null;
-  faceByFont = new Map();
-  bytesByFaceId.clear();
-  faceIdByName.clear();
-  bytesPending.clear();
-  facePending.clear();
-  cssFacesRegistered.clear();
+  clearServerFontState();
 }

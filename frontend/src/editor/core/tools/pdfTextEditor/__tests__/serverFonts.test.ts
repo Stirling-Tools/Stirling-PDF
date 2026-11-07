@@ -172,6 +172,90 @@ describe("server fonts", () => {
     unsubscribe();
   });
 
+  it("drops the old backend's faces and bytes when the backend changes", async () => {
+    const added: unknown[] = [];
+    const removed: unknown[] = [];
+    vi.stubGlobal(
+      "FontFace",
+      class {
+        load() {
+          return Promise.resolve(this);
+        }
+      },
+    );
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: {
+        add: (css: unknown) => added.push(css),
+        delete: (css: unknown) => removed.push(css),
+      },
+    });
+    serveManifestAndFaces();
+    expect((await loadServerFontBytes("Acme Sans"))?.[0]).toBe(1);
+    expect(serverFontCssFamily("Acme Sans")).toBe(`serverface-${REGULAR}`);
+
+    forgetServerFontList();
+
+    expect(getServerFontBytes("Acme Sans")).toBeNull();
+    expect(getExternalFontBytes("Acme Sans")).toBeNull();
+    expect(serverFontCssFamily("Acme Sans")).toBeNull();
+    expect(removed).toEqual(added);
+
+    const OTHER = "8".repeat(64);
+    get.mockImplementation(async (url: string) => {
+      if (url === SERVER_FONTS_URL) {
+        return {
+          data: {
+            families: [
+              {
+                family: "Acme Sans",
+                faces: [face(OTHER, "Regular", false, false)],
+              },
+            ],
+          },
+        };
+      }
+      return { data: bytesFor(url.slice(SERVER_FONTS_URL.length + 1)) };
+    });
+    expect((await loadServerFontBytes("Acme Sans"))?.[0]).toBe(8);
+    expect(getServerFontBytes("Acme Sans")?.[0]).toBe(8);
+    expect(serverFontCssFamily("Acme Sans")).toBe(`serverface-${OTHER}`);
+  });
+
+  it("ignores a face download that finishes after the backend changed", async () => {
+    let finishOldDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    get.mockImplementation((url: string) => {
+      if (url === SERVER_FONTS_URL) return Promise.resolve({ data: MANIFEST });
+      return new Promise((resolve) => {
+        finishOldDownload = resolve;
+      });
+    });
+    const fromOldServer = loadServerFontBytes("Acme Sans");
+    await vi.waitFor(() => expect(faceRequests()).toHaveLength(1));
+
+    forgetServerFontList();
+    let finishNewDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    get.mockImplementation((url: string) => {
+      if (url === SERVER_FONTS_URL) return Promise.resolve({ data: MANIFEST });
+      return new Promise((resolve) => {
+        finishNewDownload = resolve;
+      });
+    });
+    const fromNewServer = loadServerFontBytes("Acme Sans");
+    await vi.waitFor(() => expect(faceRequests()).toHaveLength(2));
+
+    finishOldDownload({ data: new Uint8Array([7, 7, 7, 7]).buffer });
+    expect(await fromOldServer).toBeNull();
+    expect(getServerFontBytes("Acme Sans")).toBeNull();
+    const askedAgain = loadServerFontBytes("Acme Sans");
+
+    finishNewDownload({ data: bytesFor(REGULAR) });
+    expect((await fromNewServer)?.[0]).toBe(1);
+    expect(getServerFontBytes("Acme Sans")?.[0]).toBe(1);
+    expect((await askedAgain)?.[0]).toBe(1);
+    expect(faceRequests()).toHaveLength(2);
+  });
+
   it("registers a downloaded face under its own alias, not the family name", async () => {
     const families: string[] = [];
     vi.stubGlobal(
