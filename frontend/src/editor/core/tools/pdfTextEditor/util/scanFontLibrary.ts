@@ -141,7 +141,7 @@ const DEVICE_TEXT_FAMILIES = [
   "Rockwell",
 ];
 
-type Script =
+export type Script =
   | "hangul"
   | "kana"
   | "han"
@@ -270,8 +270,8 @@ export function faceCovers(face: Face, text: string): boolean {
   return drawable >= total * COVERAGE;
 }
 
-function scriptsOf(text: string): ScriptFonts[] {
-  return SCRIPTS.filter((s) => s.chars.test(text));
+export function scanScriptsOf(text: string): Script[] {
+  return SCRIPTS.filter((s) => s.chars.test(text)).map((s) => s.script);
 }
 
 let bundled: Face[] = [];
@@ -387,8 +387,11 @@ async function loadServerScript(script: ScriptFonts): Promise<void> {
   }
 }
 
-export function loadScriptScanFaces(text: string): Promise<void> {
-  const jobs = scriptsOf(text).map((script) => {
+export function loadScriptScanFaces(
+  scripts: readonly Script[],
+): Promise<void> {
+  const wanted = SCRIPTS.filter((s) => scripts.includes(s.script));
+  const jobs = wanted.map((script) => {
     neededScripts.add(script.script);
     let job = scriptJobs.get(script.script);
     if (!job) {
