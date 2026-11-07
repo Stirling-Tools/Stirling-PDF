@@ -337,4 +337,36 @@ describe("useSelectionActions on unfitted scanned text", () => {
     for (const [, , , deadline] of vi.mocked(prefitScanRun).mock.calls)
       expect(Number.isFinite(deadline)).toBe(true);
   });
+
+  it("builds each change from the run as it is once the fit has finished", async () => {
+    const fitted = new Set<string>();
+    vi.mocked(scanRunNeedsFit).mockImplementation(
+      (_doc, r) => !fitted.has(r.id),
+    );
+    const runs = [
+      run("scan", "base14:Helvetica"),
+      run("gone", "base14:Helvetica"),
+    ];
+    vi.mocked(prefitScanRun).mockImplementation((_doc, _page, r) => {
+      if (runs[0].fill.a === 255) {
+        runs[0].fill = { ...runs[0].fill, a: 128 };
+        runs.splice(1, 1);
+        return false;
+      }
+      fitted.add(r.id);
+      return true;
+    });
+    const { store, dispatch } = fakeStore(runs, ["scan", "gone"]);
+    const { result } = renderHook(() => useSelectionActions(store));
+
+    act(() => result.current.changeFill("#ff0000"));
+
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+    const dispatched = dispatch.mock.calls[0][0] as {
+      runId: string;
+      nextFill: { r: number; a: number };
+    };
+    expect(dispatched.runId).toBe("scan");
+    expect(dispatched.nextFill).toMatchObject({ r: 255, a: 128 });
+  });
 });

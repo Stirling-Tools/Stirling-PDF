@@ -58,12 +58,12 @@ async function fontPickFailure(
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
-function liveRunIds(store: EditorStore): Set<string> {
-  const ids = new Set<string>();
+function liveRuns(store: EditorStore): Map<string, TextRun> {
+  const runs = new Map<string, TextRun>();
   for (const page of store.document?.loadedPages() ?? []) {
-    for (const run of page.runs) ids.add(run.id);
+    for (const run of page.runs) runs.set(run.id, run);
   }
-  return ids;
+  return runs;
 }
 
 /** Bundle of callbacks that operate on the current selection. */
@@ -119,17 +119,20 @@ export function useSelectionActions(store: EditorStore) {
 
   const dispatchPerRun = useCallback(
     (build: (run: SelectedRun) => Command | null) => {
-      const cmds: Command[] = [];
       const targets: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
-        const cmd = build(run);
-        if (!cmd) return;
-        cmds.push(cmd);
         targets.push({ page, run: run as TextRun });
       });
-      return dispatchAfterScanFit(targets, () => cmds);
+      return dispatchAfterScanFit(targets, () => {
+        const live = liveRuns(store);
+        return targets.flatMap(({ run: target }) => {
+          const run = live.get(target.id);
+          const cmd = run && !run.locked ? build(run) : null;
+          return cmd ? [cmd] : [];
+        });
+      });
     },
-    [forEachSelectedRun, dispatchAfterScanFit],
+    [store, forEachSelectedRun, dispatchAfterScanFit],
   );
 
   const changeFontSize = useCallback(
@@ -200,7 +203,7 @@ export function useSelectionActions(store: EditorStore) {
       await dispatchAfterScanFit(
         targets.map((run, i) => ({ page: pages[i], run: run as TextRun })),
         () => {
-          const live = liveRunIds(store);
+          const live = liveRuns(store);
           return targets
             .filter((run) => live.has(run.id))
             .map(
@@ -256,7 +259,7 @@ export function useSelectionActions(store: EditorStore) {
     await dispatchAfterScanFit(
       ready.map((target) => target.fit),
       () => {
-        const live = liveRunIds(store);
+        const live = liveRuns(store);
         return ready
           .filter((target) => live.has(target.runId))
           .map(

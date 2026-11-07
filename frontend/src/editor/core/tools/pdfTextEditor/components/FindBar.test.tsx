@@ -20,6 +20,7 @@ import {
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 function setup() {
@@ -47,7 +48,7 @@ function setup() {
       <FindBar store={store} pages={pages} onClose={vi.fn()} />
     </MantineProvider>,
   );
-  return { dispatch };
+  return { dispatch, runs };
 }
 
 describe("Replace all on unfitted scanned text", () => {
@@ -84,5 +85,38 @@ describe("Replace all on unfitted scanned text", () => {
     expect(fitted).toEqual(new Set(["a", "b"]));
     for (const [, , , deadline] of vi.mocked(prefitScanRun).mock.calls)
       expect(Number.isFinite(deadline)).toBe(true);
+  });
+
+  it("replaces in the text each run holds once the fit has finished", async () => {
+    const fitted = new Set<string>();
+    vi.mocked(scanRunNeedsFit).mockImplementation(
+      (_doc, r) => !fitted.has(r.id),
+    );
+    const { dispatch, runs } = setup();
+    vi.mocked(prefitScanRun).mockImplementation((_doc, _page, r) => {
+      if (r.id === "a" && !runs[0].text.endsWith("Doe")) {
+        runs[0].text = "Invoice for Jane Doe";
+        return false;
+      }
+      fitted.add(r.id);
+      return true;
+    });
+    fireEvent.change(screen.getByTestId("pdf-editor-find-input"), {
+      target: { value: "Jane" },
+    });
+    fireEvent.change(screen.getByTestId("pdf-editor-replace-input"), {
+      target: { value: "Mary" },
+    });
+
+    fireEvent.click(screen.getByTestId("pdf-editor-replace-all"));
+
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+    const { commands } = dispatch.mock.calls[0][0] as unknown as {
+      commands: EditTextCommand[];
+    };
+    expect(commands.map((c) => c.resultText)).toEqual([
+      "Invoice for Mary Doe",
+      "Mary Example",
+    ]);
   });
 });
