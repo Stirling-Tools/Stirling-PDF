@@ -8,10 +8,12 @@ import java.util.Optional;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +35,7 @@ import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -48,6 +51,9 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RequiredArgsConstructor
 public class AttachmentController {
+
+    private static final String ENCRYPTED_PDF_UNSUPPORTED =
+            "This tool doesn't support encrypted PDFs. Remove the password first.";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -88,7 +94,7 @@ public class AttachmentController {
 
         if (convertToPdfA3b) {
             byte[] pdfaBytes;
-            try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+            try (PDDocument document = loadUnencrypted(request, false)) {
                 pdfaBytes = convertPDFToPDFA.convertPDDocumentToPDFA(document, "pdfa-3b");
             }
 
@@ -104,7 +110,7 @@ public class AttachmentController {
                         pdfaDocument, outputFilename, tempFileManager);
             }
         } else {
-            try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+            try (PDDocument document = loadUnencrypted(request, false)) {
                 pdfAttachmentService.addAttachment(document, attachments);
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
@@ -123,6 +129,15 @@ public class AttachmentController {
      */
     private static String sourceFileName(MultipartFile fileInput, String fileId) {
         return fileInput != null ? fileInput.getOriginalFilename() : fileId;
+    }
+
+    private PDDocument loadUnencrypted(PDFFile request, boolean readOnly) throws IOException {
+        PDDocument document = pdfDocumentFactory.load(request, readOnly);
+        if (document.isEncrypted()) {
+            document.close();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ENCRYPTED_PDF_UNSUPPORTED);
+        }
+        return document;
     }
 
     private void validateAttachmentRequest(List<MultipartFile> attachments) {
@@ -170,7 +185,7 @@ public class AttachmentController {
                     "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
     public ResponseEntity<Resource> extractAttachments(
             @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(request, true)) {
+        try (PDDocument document = loadUnencrypted(request, true)) {
             Optional<byte[]> extracted = pdfAttachmentService.extractAttachments(document);
 
             if (extracted.isEmpty()) {
@@ -207,7 +222,7 @@ public class AttachmentController {
             description = "This endpoint lists all embedded attachments in a PDF.")
     public ResponseEntity<List<stirling.software.SPDF.model.api.misc.AttachmentInfo>>
             listAttachments(@ModelAttribute ListAttachmentsRequest request) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(request, true)) {
+        try (PDDocument document = loadUnencrypted(request, true)) {
             List<stirling.software.SPDF.model.api.misc.AttachmentInfo> attachments =
                     pdfAttachmentService.listAttachments(document);
 
@@ -239,7 +254,7 @@ public class AttachmentController {
                     "error.newNameRequired", "New attachment name cannot be null or empty");
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+        try (PDDocument document = loadUnencrypted(request, false)) {
             pdfAttachmentService.renameAttachment(document, attachmentName, newName);
 
             return WebResponseUtils.pdfDocToWebResponse(
@@ -271,7 +286,7 @@ public class AttachmentController {
                     "error.attachmentNameRequired", "Attachment name cannot be null or empty");
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+        try (PDDocument document = loadUnencrypted(request, false)) {
             pdfAttachmentService.deleteAttachment(document, attachmentName);
 
             return WebResponseUtils.pdfDocToWebResponse(
@@ -300,7 +315,7 @@ public class AttachmentController {
                     "error.attachmentNameRequired", "Attachment name cannot be null or empty");
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(request, true)) {
+        try (PDDocument document = loadUnencrypted(request, true)) {
             Optional<byte[]> extracted =
                     pdfAttachmentService.extractSingleAttachment(document, attachmentName);
 
@@ -351,7 +366,7 @@ public class AttachmentController {
             opsData = objectMapper.readValue(opsJson, BatchOpsData.class);
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(request, false)) {
+        try (PDDocument document = loadUnencrypted(request, false)) {
             if (opsData != null) {
                 if (opsData.getDeletions() != null) {
                     for (String delName : opsData.getDeletions()) {

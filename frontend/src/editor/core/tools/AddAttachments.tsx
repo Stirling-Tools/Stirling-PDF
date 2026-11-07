@@ -10,6 +10,7 @@ import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { useAddAttachmentsParameters } from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAddAttachmentsOperation } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { useUnprotectedFiles } from "@editor/hooks/tools/addAttachments/useUnprotectedFiles";
 import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
 import AddAttachmentsSettings from "@editor/components/tools/addAttachments/AddAttachmentsSettings";
 import { useAddAttachmentsTips } from "@editor/components/tooltips/useAddAttachmentsTips";
@@ -26,6 +27,10 @@ const AddAttachments = ({
 
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
+  const eligibleFiles = useUnprotectedFiles(
+    operation.getEligibleFiles?.(params.parameters, selectedFiles) ??
+      selectedFiles,
+  );
 
   const { enabled: addEndpointEnabled, loading: endpointLoading } =
     useEndpointEnabled("add-attachments");
@@ -41,7 +46,7 @@ const AddAttachments = ({
 
   const handleExecute = async () => {
     try {
-      await operation.executeOperation(params.parameters, selectedFiles);
+      await operation.executeOperation(params.parameters, eligibleFiles);
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
@@ -56,7 +61,7 @@ const AddAttachments = ({
     }
   };
 
-  const hasFiles = selectedFiles.length > 0;
+  const hasFiles = eligibleFiles.length > 0;
   const hasResults =
     operation.files.length > 0 || operation.downloadUrl !== null;
 
@@ -94,7 +99,7 @@ const AddAttachments = ({
           parameters={params.parameters}
           onParameterChange={params.updateParameter}
           disabled={endpointLoading}
-          activeFile={selectedFiles[0] || null}
+          activeFile={eligibleFiles[0] || null}
           onFileUpdated={(updatedFile) => {
             void addFiles([updatedFile], { selectFiles: true });
             if (onComplete) {
@@ -111,9 +116,7 @@ const AddAttachments = ({
 
   return createToolFlow({
     files: {
-      selectedFiles:
-        operation.getEligibleFiles?.(params.parameters, selectedFiles) ??
-        selectedFiles,
+      selectedFiles: eligibleFiles,
       isCollapsed: hasResults,
     },
     steps: getSteps(),
