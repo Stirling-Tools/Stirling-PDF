@@ -10,7 +10,7 @@ import { BaseToolProps, ToolComponent } from "@editor/types/tool";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { useAddAttachmentsParameters } from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAddAttachmentsOperation } from "@editor/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { useUnprotectedFiles } from "@editor/hooks/tools/addAttachments/useUnprotectedFiles";
+import { useFilesWithoutPurview } from "@editor/hooks/tools/addAttachments/useFilesWithoutPurview";
 import { useAccordionSteps } from "@editor/hooks/tools/shared/useAccordionSteps";
 import AddAttachmentsSettings from "@editor/components/tools/addAttachments/AddAttachmentsSettings";
 import { useAddAttachmentsTips } from "@editor/components/tooltips/useAddAttachmentsTips";
@@ -27,7 +27,7 @@ const AddAttachments = ({
 
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
-  const eligibleFiles = useUnprotectedFiles(
+  const eligibleFiles = useFilesWithoutPurview(
     operation.getEligibleFiles?.(params.parameters, selectedFiles) ??
       selectedFiles,
   );

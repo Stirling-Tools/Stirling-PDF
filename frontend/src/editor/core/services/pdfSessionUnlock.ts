@@ -77,6 +77,11 @@ const SESSION_OPERATIONS = new Map<string, readonly PdfPermissionFlag[]>([
   ["/api/v1/general/multi-page-layout", [modify, assemble, annotate]],
   ["/api/v1/misc/remove-blanks", [assemble, copy]],
   ["/api/v1/misc/auto-rename", [copy]],
+  ["/api/v1/misc/list-attachments", []],
+  ["/api/v1/misc/extract-attachments", [copy]],
+  ["/api/v1/misc/extract-single-attachment", [copy]],
+  ["/api/v1/misc/add-attachments", [modify]],
+  ["/api/v1/misc/batch-process-attachments", [modify]],
 ]);
 
 async function requestWorkingPdf(
@@ -125,7 +130,7 @@ function allowsOperation(
  * recorded for them: nothing has proved them unencrypted.
  */
 async function ensureAccessUnlessDamaged(
-  file: StirlingFile,
+  file: File,
   signal?: AbortSignal,
 ): Promise<PdfAccess | undefined> {
   try {
@@ -276,7 +281,7 @@ export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
  * Navigation cancels fresh permission reads; preparation stops on explicit cancellation or source closure.
  */
 export async function prepareUnlockedFile(
-  file: StirlingFile,
+  file: File,
   endpoint: string | undefined,
   inspectionSignal?: AbortSignal,
   cancelToken?: CancelToken,

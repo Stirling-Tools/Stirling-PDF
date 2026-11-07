@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import AddAttachments from "@editor/tools/AddAttachments";
 import apiClient from "@editor/services/apiClient";
@@ -193,15 +193,14 @@ afterEach(() => {
 });
 
 describe("Manage Attachments file eligibility", () => {
-  test("manages the PDF it lists, not a password-protected one ahead of it", async () => {
+  test("offers a password-protected PDF, since its edits keep the password", async () => {
     const locked = passwordProtectedPdf("locked.pdf");
     const plain = createTestStirlingFile("plain.pdf");
     openWorkspace([locked, plain], [locked]);
 
     renderTool();
 
-    await waitFor(() => expect(listedFileNames()).toEqual(["plain.pdf"]));
-    expect(await screen.findByText("plain.pdf")).toBeInTheDocument();
+    expect(await screen.findByText(/2 files/)).toBeInTheDocument();
   });
 
   test("never offers a Microsoft Purview protected PDF", async () => {
@@ -213,28 +212,6 @@ describe("Manage Attachments file eligibility", () => {
 
     await waitFor(() => expect(listedFileNames()).toEqual(["plain.pdf"]));
     expect(screen.queryByText("purview.pdf")).not.toBeInTheDocument();
-  });
-
-  test("stops offering a PDF once the session finds it is encrypted", async () => {
-    const report = createTestStirlingFile("report.pdf");
-    openWorkspace([report]);
-    renderTool();
-    expect(await screen.findByText("report.pdf")).toBeInTheDocument();
-
-    act(() => {
-      rememberPdfAccess(report, {
-        password: "",
-        encrypted: true,
-        signed: false,
-        ownerAuthenticated: false,
-        permissions: -4,
-        pageCount: 1,
-      });
-    });
-
-    await waitFor(() =>
-      expect(screen.queryByText("report.pdf")).not.toBeInTheDocument(),
-    );
   });
 
   test("never offers a Purview protected PDF that has been opened", async () => {

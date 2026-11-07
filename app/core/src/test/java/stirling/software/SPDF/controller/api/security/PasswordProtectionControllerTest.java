@@ -536,7 +536,11 @@ class PasswordProtectionControllerTest {
         "/api/v1/general/split-pdf-by-chapters, extract",
         "/api/v1/general/multi-page-layout, annotations",
         "/api/v1/misc/remove-blanks, extract",
-        "/api/v1/misc/auto-rename, extract"
+        "/api/v1/misc/auto-rename, extract",
+        "/api/v1/misc/add-attachments, modify",
+        "/api/v1/misc/batch-process-attachments, modify",
+        "/api/v1/misc/extract-attachments, extract",
+        "/api/v1/misc/extract-single-attachment, extract"
     })
     void preparationRequiresEveryPermissionTheToolNeeds(String endpoint, String forbidden)
             throws Exception {
