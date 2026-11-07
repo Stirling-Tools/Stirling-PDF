@@ -75,6 +75,7 @@ import {
   type GlyphAtlas,
   type ScannedWord,
 } from "@editor/tools/pdfTextEditor/commands/scanGlyphs";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 
 // Editing OCR text on a scanned page. The words live twice: as pixels in the
 // scan and as invisible (Tr 3) text. An edit draws only the words the user
@@ -91,6 +92,7 @@ interface ScanWord {
   start: number;
   x: number;
   right: number;
+  baseline: number;
   ptr: number;
   extraPtrs?: number[];
   container: number;
@@ -210,11 +212,22 @@ function captureRotatedScanEdit(
   const words: ScanWord[] = ptrs.map((ptr, w) => {
     const start = starts[w];
     const end = start + texts[w].trimEnd().length;
+    const own = readMatrix(m, ptr);
     return {
       text: texts[w],
       start,
       x: box.x + (box.width * start) / length,
       right: box.x + (box.width * Math.min(end, length)) / length,
+      baseline: own
+        ? compose(frame.toUpright, {
+            a: own[0],
+            b: own[1],
+            c: own[2],
+            d: own[3],
+            e: own[4],
+            f: own[5],
+          }).f
+        : baseline,
       ptr,
       container: run.containerPtr,
       fontSize: run.fontSize,
@@ -279,6 +292,7 @@ export function captureScanEdit(
         start: s.mergedFromCharStarts[w],
         x: s.mergedFromBounds[w].x,
         right: s.mergedFromBounds[w].right,
+        baseline: readMatrix(m, ptr)?.[5] ?? s.baselineY,
         ptr,
         container: s.containerPtr || run.containerPtr,
         fontSize: s.fontSize,
@@ -381,12 +395,16 @@ function spanInk(
   const words = line.words;
   const prev = words[from - 1];
   const next = words[to + 1];
+  const own = words.slice(from, to + 1).map((w) => w.baseline);
+  const low = Math.min(...own);
+  const high = Math.max(...own);
+  const mid = (low + high) / 2;
   // Stay clear of the neighbouring words' ink, however close they sit.
   let x0 = prev ? (prev.right + words[from].x) / 2 : words[from].x - 2;
   let x1 = next ? (words[to].right + next.x) / 2 : words[to].right + 2;
   // OCR word boxes can overrun into words the OCR put in another block.
   for (const w of otherWords(page, state)) {
-    if (Math.abs(w.baseline - line.baseline) > line.height * 0.5) continue;
+    if (Math.abs(w.baseline - mid) > line.height * 0.5) continue;
     if (w.x > words[to].x + 0.5) x1 = Math.min(x1, w.x - 0.3);
     if (w.right < words[from].x + 0.5) x0 = Math.max(x0, w.right + 0.3);
   }
@@ -394,8 +412,8 @@ function spanInk(
   const ink = measureScanInk(doc.module, page, {
     x0,
     x1,
-    bottom: line.baseline - line.height * 0.1,
-    top: line.baseline + line.height * 0.9,
+    bottom: low - line.height * 0.1,
+    top: high + line.height * 0.9,
   });
   let result: SpanInk | null = null;
   if (ink) {
@@ -408,9 +426,9 @@ function spanInk(
       paper: ink.paper,
       baseline:
         ink.baseline !== null &&
-        Math.abs(ink.baseline - line.baseline) < line.height * 0.4
+        Math.abs(ink.baseline - mid) < line.height * 0.4
           ? ink.baseline
-          : line.baseline,
+          : mid,
       original: raw.slice(dropLead ? 1 : 0, dropTrail ? -1 : undefined),
       dropLead,
       dropTrail,
@@ -988,7 +1006,7 @@ function renderUprightScanEdit(
     const line = state.lines[w.line];
     const rect = ink?.ink.rect ?? {
       x: sw.x - 0.5,
-      y: line.baseline - line.height * 0.35,
+      y: sw.baseline - line.height * 0.35,
       width: sw.right - sw.x + 1,
       height: line.height * 1.7,
     };
@@ -1006,15 +1024,44 @@ function renderUprightScanEdit(
     return next.length === 0 ? Infinity : Math.min(...next) - wordGap(size);
   };
 
+  const baselineAt = (li: number, x: number) => {
+    const words = state.lines[li].words;
+    const centres = words.map((w) => (w.x + w.right) / 2);
+    const mean = words.reduce((sum, w) => sum + w.baseline, 0) / words.length;
+    const correction = lineBase(li) - mean;
+    const after = centres.findIndex((c) => c >= x);
+    if (after <= 0)
+      return words[after < 0 ? words.length - 1 : 0].baseline + correction;
+    const a = words[after - 1];
+    const b = words[after];
+    const t =
+      (x - centres[after - 1]) / (centres[after] - centres[after - 1] || 1);
+    return a.baseline + (b.baseline - a.baseline) * t + correction;
+  };
+  const baselineFor = (
+    li: number,
+    layoutBaseline: number,
+    x: number,
+    anchor: LayoutWord | null,
+  ) => {
+    if (li >= state.lines.length) return layoutBaseline;
+    const shift = layoutBaseline - lineBase(li);
+    if (anchor && anchor.line === li)
+      return (inkOf(anchor)?.baseline ?? scanWord(anchor).baseline) + shift;
+    return baselineAt(li, x - o.dx) + shift;
+  };
+
   let fromAtlas = 0;
   let inFont = 0;
   const drawTyped = (
     t: string,
     x: number,
-    baseline: number,
+    line: number,
+    layoutBaseline: number,
     anchor: LayoutWord | null,
     atAnchor: boolean,
   ) => {
+    const baseline = baselineFor(line, layoutBaseline, x, anchor);
     const ink = anchor ? inkOf(anchor) : null;
     let s = t;
     // OCR reads a box edge hugging the text as a bracket; never draw it.
@@ -1023,7 +1070,7 @@ function renderUprightScanEdit(
     if (!s) return;
     const st = styleOf(anchor);
     const start = atAnchor && ink ? ink.ink.body.x + o.dx : x;
-    const limit = nextWordLimit(start, baseline, st.fontSize);
+    const limit = nextWordLimit(start, layoutBaseline, st.fontSize);
     const glyphs = composed(s);
     const a = atlas();
     if (
@@ -1042,7 +1089,7 @@ function renderUprightScanEdit(
   for (const k of moving) {
     const sw = scanWord(k.word);
     if (!k.patch) {
-      drawTyped(k.word.text, k.x, k.baseline, k.word, false);
+      drawTyped(k.word.text, k.x, k.line, k.baseline, k.word, false);
       continue;
     }
     const inkOnly = { ...k.patch, rgba: k.patch.rgba.slice() };
@@ -1057,14 +1104,21 @@ function renderUprightScanEdit(
       canvas,
       sw.text.trimEnd() || sw.text,
       { left: k.x, right: k.x + sw.right - sw.x },
-      k.baseline,
+      sw.baseline + k.baseline - lineBase(k.word.line),
       sw.fontSize,
       { originalFontPtr: state.fontPtr, family: "Helvetica" },
     );
   }
   for (const t of layout.typed)
     if (!unshown.has(t))
-      drawTyped(t.text, t.x + o.dx, t.baseline + o.dy, t.anchor, t.atAnchor);
+      drawTyped(
+        t.text,
+        t.x + o.dx,
+        t.line,
+        t.baseline + o.dy,
+        t.anchor,
+        t.atAnchor,
+      );
 
   syncOriginalWords(
     canvas,
@@ -1116,7 +1170,7 @@ function syncOriginalWords(
           canvas,
           word.text.trimEnd() || word.text,
           { left: word.x, right: word.right },
-          line.baseline,
+          word.baseline,
           word.fontSize,
           { originalFontPtr: state.fontPtr, family: "Helvetica" },
         );

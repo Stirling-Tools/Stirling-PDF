@@ -52,6 +52,7 @@ export interface ScanOptions {
   sideways?: boolean;
   rotate?: number;
   reversed?: boolean;
+  skew?: number;
 }
 
 export const FONT_DIR = path.join(
@@ -122,6 +123,7 @@ function typeset(
   lines: ScanLineSpec[],
   pitch: number,
   height: number,
+  skew = 0,
 ): WordBox[] {
   const boxes: WordBox[] = [];
   lines.forEach((line, i) => {
@@ -130,12 +132,13 @@ function typeset(
     const space = (spaceAdvance(line.family) * line.size) / 1000;
     let x = 30;
     for (const word of line.text.split(" ")) {
+      const wordBaseline = baseline + skew * (x - 30);
       const ptrs = emitTextLine({
         doc,
         page,
         text: word,
         x,
-        y: baseline,
+        y: wordBaseline,
         fontSize: line.size,
         fill: BLACK,
         originalFontPtr: 0,
@@ -148,7 +151,7 @@ function typeset(
         text: word,
         left: span.left,
         right: span.right,
-        baseline,
+        baseline: wordBaseline,
         size: line.size,
         ocrFamily: line.ocrFamily ?? "Helvetica",
       });
@@ -246,7 +249,7 @@ export async function buildScan(
   try {
     const cleanPage = clean.page(0);
     PdfiumTextReader.populate(clean, cleanPage);
-    const boxes = typeset(clean, cleanPage, lines, pitch, height);
+    const boxes = typeset(clean, cleanPage, lines, pitch, height, opts.skew);
     const render = capturePatch(clean.module, cleanPage, {
       x: 0,
       y: 0,

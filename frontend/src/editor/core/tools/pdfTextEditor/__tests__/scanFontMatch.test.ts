@@ -26,6 +26,7 @@ import {
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import {
   drawnBlockStyle,
   isScanRun,
@@ -704,6 +705,73 @@ describe("fitting a long block in slices", () => {
           false,
         );
         expect(state.inks.size).toBe(1);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
+describe("editing a skewed scan", () => {
+  const SKEWED: ScanOptions = { dpi: 200, blur: 0.5, noise: 6, skew: 0.018 };
+  const baselineOf = (doc: EditorDocument, ptr: number) =>
+    readMatrix(doc.module, ptr)![5];
+
+  test(
+    "draws a replaced word on that word's own baseline",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SKEWED,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const june = words.find((w) => w.text.trim() === "June")!;
+        const truth = baselineOf(doc, june.ptr);
+        expect(truth - baselineOf(doc, words[0].ptr)).toBeGreaterThan(3);
+        renderScanEdit(doc, page, run, state, run.text.replace("June", "Mary"));
+        expect(state.textPtrs.length).toBeGreaterThan(0);
+        for (const ptr of state.textPtrs)
+          expect(Math.abs(baselineOf(doc, ptr) - truth)).toBeLessThan(0.6);
+        const own = words.indexOf(june);
+        expect(
+          Math.abs(state.inks.get(`0:${own}:${own}`)!.baseline - truth),
+        ).toBeLessThan(0.6);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "draws an inserted word on the line's baseline where it lands",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SKEWED,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const thirty = words.find((w) => w.text.trim() === "30")!;
+        const june = words.find((w) => w.text.trim() === "June")!;
+        const truth =
+          (baselineOf(doc, thirty.ptr) + baselineOf(doc, june.ptr)) / 2;
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          state,
+          run.text.replace("30 June", "30 late June"),
+        );
+        expect(state.textPtrs.length).toBeGreaterThan(0);
+        for (const ptr of state.textPtrs)
+          expect(Math.abs(baselineOf(doc, ptr) - truth)).toBeLessThan(0.8);
       } finally {
         doc.dispose();
       }

@@ -34,6 +34,7 @@ export interface LayoutInput {
 export interface PlacedWord {
   word: LayoutWord;
   x: number;
+  line: number;
   baseline: number;
   /** False when the word stays exactly where the scan has it. */
   moved: boolean;
@@ -42,6 +43,7 @@ export interface PlacedWord {
 export interface TypedText {
   text: string;
   x: number;
+  line: number;
   baseline: number;
   /** The scanned word it replaces, if any: its style, and where it started. */
   anchor: LayoutWord | null;
@@ -152,6 +154,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     layout.typed.push({
       text,
       x,
+      line,
       baseline: baselineOf(line),
       anchor,
       atAnchor:
@@ -196,6 +199,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     layout.kept.push({
       word: w,
       x,
+      line: op.line,
       baseline,
       moved: w.line !== op.line || Math.abs(x - w.x) > 0.3,
     });
