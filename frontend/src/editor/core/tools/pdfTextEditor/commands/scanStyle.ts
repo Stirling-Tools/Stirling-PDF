@@ -147,7 +147,7 @@ export function isEvenlySpaced(centers: number[], text: string): boolean {
   if (centers.length > chars.length * 1.1 + 1) return false;
   if (centers.length < chars.length * 0.9) return false;
   const steps = centers.slice(1).map((c, i) => c - centers[i]);
-  const pitch = (centers[centers.length - 1] - centers[0]) / (chars.length - 1);
+  const pitch = median(steps);
   const onGrid = steps.filter((st) => {
     const n = Math.max(1, Math.round(st / pitch));
     return Math.abs(st / pitch - n) < 0.15;

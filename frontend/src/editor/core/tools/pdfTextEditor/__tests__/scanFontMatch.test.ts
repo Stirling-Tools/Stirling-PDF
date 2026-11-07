@@ -32,6 +32,7 @@ import {
   setPreferredScanFace,
   type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
+import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import {
   faceFromBytes,
   resetScanFaces,
@@ -147,6 +148,30 @@ const line = (
   accept,
   kind,
   bold,
+});
+
+describe("spotting typewriter spacing", () => {
+  const PITCH = 7.2;
+  const centresOn = (text: string, cell: number) =>
+    [...text].flatMap((ch, i) => (/\s/.test(ch) ? [] : [i * cell]));
+
+  test("reads a monospaced line with spaces as typewriter text", () => {
+    for (const text of [
+      "Invoice 4471 for Jane Example is due on 30 June",
+      "DATE OF BIRTH 12 MAY 1987",
+    ])
+      expect(isEvenlySpaced(centresOn(text, PITCH), text)).toBe(true);
+  });
+
+  test("does not read proportional glyph steps as typewriter text", () => {
+    const text = "Invoice for Jane Example";
+    let x = 0;
+    const centres = [...text].flatMap((ch, i) => {
+      x += PITCH * (0.5 + ((i * 7) % 5) * 0.17);
+      return /\s/.test(ch) ? [] : [x];
+    });
+    expect(isEvenlySpaced(centres, text)).toBe(false);
+  });
 });
 
 describe("matching a face to scanned text", () => {
