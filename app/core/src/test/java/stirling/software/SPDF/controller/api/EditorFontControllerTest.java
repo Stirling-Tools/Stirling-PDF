@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,6 +22,8 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.config.EndpointInterceptor;
 import stirling.software.SPDF.service.EditorFontRegistry;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFamily;
@@ -30,6 +33,7 @@ import stirling.software.SPDF.service.EditorFontRegistry.Snapshot;
 
 class EditorFontControllerTest {
 
+    private static final String MANIFEST = "/api/v1/ui-data/editor-fonts";
     private static final String ID = "a".repeat(64);
     private static final String ETAG = "0123456789abcdef0123456789abcdef";
 
@@ -49,12 +53,17 @@ class EditorFontControllerTest {
                                 new EditorFontManifest(
                                         List.of(new EditorFontFamily("Acme Sans", List.of(face)))),
                                 ETAG));
-        mvc = MockMvcBuilders.standaloneSetup(new EditorFontController(registry)).build();
+        EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
+        when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(true);
+        mvc =
+                MockMvcBuilders.standaloneSetup(new EditorFontController(registry))
+                        .addInterceptors(new EndpointInterceptor(endpoints))
+                        .build();
     }
 
     @Test
     void manifestIsRevalidatedByEtag() throws Exception {
-        mvc.perform(get("/api/v1/ui-data/editor-fonts"))
+        mvc.perform(get(MANIFEST).servletPath(MANIFEST))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", "\"" + ETAG + "\""))
                 .andExpect(header().string("Cache-Control", Matchers.containsString("no-cache")))
@@ -62,8 +71,9 @@ class EditorFontControllerTest {
                 .andExpect(jsonPath("$.families[0].faces[0].id").value(ID))
                 .andExpect(jsonPath("$.families[0].faces[0].path").doesNotExist());
 
-        mvc.perform(get("/api/v1/ui-data/editor-fonts").header("If-None-Match", "\"" + ETAG + "\""))
-                .andExpect(status().isNotModified());
+        mvc.perform(get(MANIFEST).servletPath(MANIFEST).header("If-None-Match", "\"" + ETAG + "\""))
+                .andExpect(status().isNotModified())
+                .andExpect(header().string("Cache-Control", "no-cache, private"));
     }
 
     @Test
@@ -73,7 +83,7 @@ class EditorFontControllerTest {
         when(registry.resolve(ID))
                 .thenReturn(Optional.of(new FontFile(new FileSystemResource(font), "ttf", 4)));
 
-        mvc.perform(get("/api/v1/ui-data/editor-fonts/" + ID))
+        mvc.perform(get(MANIFEST + "/" + ID).servletPath(MANIFEST + "/" + ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "font/ttf"))
                 .andExpect(header().string("Cache-Control", Matchers.containsString("immutable")))
@@ -83,9 +93,15 @@ class EditorFontControllerTest {
                 .andExpect(content().bytes(new byte[] {0, 1, 0, 0}));
 
         mvc.perform(
-                        get("/api/v1/ui-data/editor-fonts/" + ID)
+                        get(MANIFEST + "/" + ID)
+                                .servletPath(MANIFEST + "/" + ID)
                                 .header("If-None-Match", "\"" + ID + "\""))
-                .andExpect(status().isNotModified());
+                .andExpect(status().isNotModified())
+                .andExpect(header().string("Cache-Control", Matchers.containsString("immutable")))
+                .andExpect(
+                        header().string(
+                                        "Cache-Control",
+                                        Matchers.not(Matchers.containsString("no-store"))));
     }
 
     @Test
