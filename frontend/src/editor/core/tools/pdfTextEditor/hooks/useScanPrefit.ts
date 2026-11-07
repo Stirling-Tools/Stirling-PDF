@@ -4,6 +4,8 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   prefitScanRun,
@@ -22,6 +24,36 @@ import { noteRankedWithCurrentFaces } from "@editor/tools/pdfTextEditor/util/sca
 export const FIT_SLICE_MS = 12;
 export const FIT_GAP_MS = 4;
 const UNSHOWN_RECHECK_MS = 500;
+
+export interface ScanFitTarget {
+  page: Page;
+  run: TextRun;
+}
+
+export function scanRunsToFit(
+  doc: EditorDocument,
+  targets: ScanFitTarget[],
+): ScanFitTarget[] {
+  return targets.filter((t) => scanRunNeedsFit(doc, t.run));
+}
+
+const nextSlice = () =>
+  new Promise<void>((resolve) => setTimeout(resolve, FIT_GAP_MS));
+
+export async function prefitInSlices(
+  doc: EditorDocument,
+  targets: ScanFitTarget[],
+): Promise<void> {
+  for (const { page, run } of targets) {
+    try {
+      while (!prefitScanRun(doc, page, run, performance.now() + FIT_SLICE_MS))
+        await nextSlice();
+    } catch {
+      continue;
+    }
+    await nextSlice();
+  }
+}
 
 const scriptsByPage = new WeakMap<PageSnapshot, Script[] | null>();
 

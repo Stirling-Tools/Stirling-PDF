@@ -543,6 +543,7 @@ export function useToolbarController(
       selection.shapeIds.length,
     canAlignLines,
     disabled:
+      sel.fittingScan ||
       !state.hasDocument ||
       (selection.runIds.length === 0 && selection.imageIds.length === 0),
   };

@@ -15,6 +15,11 @@ import type {
   TextMatch,
 } from "@editor/tools/pdfTextEditor/util/textMatching";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import {
+  prefitInSlices,
+  scanRunsToFit,
+  type ScanFitTarget,
+} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   PageSnapshot,
@@ -58,6 +63,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   const [ignoreAccents, setIgnoreAccents] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [replaceCount, setReplaceCount] = useState<number | null>(null);
+  const [replacing, setReplacing] = useState(false);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -173,10 +179,12 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
    * batched into a single CompositeCommand so "Undo undoes the whole
    * Replace all".
    */
-  const doReplaceAll = useCallback(() => {
-    if (!query || matches.length === 0) return;
+  const doReplaceAll = useCallback(async () => {
+    const doc = store.document;
+    if (!doc || replacing || !query || matches.length === 0) return;
     let n = 0;
     const cmds: EditTextCommand[] = [];
+    const targets: ScanFitTarget[] = [];
     for (const m of matches) {
       // Skip locked runs: the lock is a user instruction, not a hint.
       if (m.run.locked) continue;
@@ -189,12 +197,25 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           nextText: updated,
         }),
       );
+      const page = doc.loadedPages().find((p) => p.index === m.pageIndex);
+      const run = page?.findRun(m.runId);
+      if (page && run) targets.push({ page, run });
       n += 1;
+    }
+    const unfitted = scanRunsToFit(doc, targets);
+    if (unfitted.length > 0) {
+      setReplacing(true);
+      try {
+        await prefitInSlices(doc, unfitted);
+      } finally {
+        setReplacing(false);
+      }
+      if (store.document !== doc) return;
     }
     if (cmds.length === 1) store.dispatch(cmds[0]);
     else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
     setReplaceCount(n);
-  }, [query, replace, matches, store]);
+  }, [query, replace, matches, store, replacing]);
 
   const countLabel =
     matches.length === 0
@@ -351,7 +372,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              if (e.shiftKey) doReplaceAll();
+              if (e.shiftKey) void doReplaceAll();
               else doReplaceOne();
             } else if (e.key === "Escape") {
               e.preventDefault();
@@ -366,7 +387,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             variant="tertiary"
             accent="neutral"
             onClick={doReplaceOne}
-            disabled={matches.length === 0 || !query}
+            disabled={replacing || matches.length === 0 || !query}
             data-testid="pdf-editor-replace-one"
           >
             {t("pdfTextEditor.find.replace", "Replace")}
@@ -375,8 +396,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             size="sm"
             variant="tertiary"
             accent="neutral"
-            onClick={doReplaceAll}
-            disabled={matches.length === 0 || !query}
+            onClick={() => void doReplaceAll()}
+            loading={replacing}
+            disabled={replacing || matches.length === 0 || !query}
             data-testid="pdf-editor-replace-all"
           >
             {t("pdfTextEditor.find.replaceAll", "Replace all")}
