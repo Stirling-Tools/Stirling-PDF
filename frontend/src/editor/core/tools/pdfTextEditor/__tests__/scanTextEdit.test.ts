@@ -55,6 +55,7 @@ function fixture() {
             ptr: 11,
             container: 90,
             fontSize: 12,
+            baseline: 690,
           },
         ],
       },
