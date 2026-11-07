@@ -111,6 +111,22 @@ class SplitPdfByChaptersControllerTest {
         return entries;
     }
 
+    private List<String> outlineEntries(byte[] pdfBytes) throws IOException {
+        List<String> entries = new ArrayList<>();
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDDocumentOutline outline = doc.getDocumentCatalog().getDocumentOutline();
+            if (outline == null) {
+                return entries;
+            }
+            for (PDOutlineItem item : outline.children()) {
+                PDPage page = item.findDestinationPage(doc);
+                int pageIndex = page == null ? -1 : doc.getPages().indexOf(page);
+                entries.add(item.getTitle() + "@" + pageIndex);
+            }
+        }
+        return entries;
+    }
+
     private int totalPagesOf(List<byte[]> entries) throws IOException {
         int total = 0;
         for (byte[] data : entries) {
@@ -141,6 +157,30 @@ class SplitPdfByChaptersControllerTest {
         List<byte[]> outputs = unzip(response.getBody());
         assertThat(outputs).hasSize(3);
         assertThat(totalPagesOf(outputs)).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("Should remap each chapter bookmark onto its split part")
+    void shouldPreserveChapterBookmarks() throws Exception {
+        byte[] pdfBytes = createPdfWithBookmarks(6, "Chapter 1", "Chapter 2", "Chapter 3");
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
+        request.setFileInput(file);
+        request.setBookmarkLevel(0);
+        request.setIncludeMetadata(false);
+        request.setAllowDuplicates(false);
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(3);
+        assertThat(outlineEntries(outputs.get(0))).containsExactly("Chapter 1@0");
+        assertThat(outlineEntries(outputs.get(1))).containsExactly("Chapter 2@0");
+        assertThat(outlineEntries(outputs.get(2))).containsExactly("Chapter 3@0");
     }
 
     @Test

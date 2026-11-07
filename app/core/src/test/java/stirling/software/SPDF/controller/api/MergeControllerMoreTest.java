@@ -9,8 +9,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -22,7 +24,9 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -105,6 +109,43 @@ class MergeControllerMoreTest {
                 name,
                 MediaType.APPLICATION_PDF_VALUE,
                 buildPdf(pages, title, modMillis));
+    }
+
+    private static MockMultipartFile pdfWithBookmarks(String name, int pages, int... bookmarkPages)
+            throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            for (int i = 0; i < pages; i++) {
+                document.addPage(new PDPage(PDRectangle.A4));
+            }
+            PDDocumentOutline outline = new PDDocumentOutline();
+            document.getDocumentCatalog().setDocumentOutline(outline);
+            for (int pageIndex : bookmarkPages) {
+                PDOutlineItem item = new PDOutlineItem();
+                item.setTitle(name + "-" + pageIndex);
+                PDPageFitDestination destination = new PDPageFitDestination();
+                destination.setPage(document.getPage(pageIndex));
+                item.setDestination(destination);
+                outline.addLast(item);
+            }
+            document.save(baos);
+            return new MockMultipartFile(
+                    "fileInput", name, MediaType.APPLICATION_PDF_VALUE, baos.toByteArray());
+        }
+    }
+
+    private static List<String> outlineEntries(PDDocument document) throws IOException {
+        List<String> entries = new ArrayList<>();
+        PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
+        if (outline == null) {
+            return entries;
+        }
+        for (PDOutlineItem item : outline.children()) {
+            PDPage page = item.findDestinationPage(document);
+            int pageIndex = page == null ? -1 : document.getPages().indexOf(page);
+            entries.add(item.getTitle() + "@" + pageIndex);
+        }
+        return entries;
     }
 
     private static MockMultipartFile png(String name) throws IOException {
@@ -287,6 +328,25 @@ class MergeControllerMoreTest {
                 PDDocumentOutline outline = result.getDocumentCatalog().getDocumentOutline();
                 assertThat(outline).isNotNull();
                 assertThat(outline.children().iterator().hasNext()).isTrue();
+            }
+        }
+
+        @Test
+        @DisplayName("source bookmarks are re-offset onto the merged page sequence")
+        void preservesSourceBookmarks() throws Exception {
+            MockMultipartFile[] files = {
+                pdfWithBookmarks("first.pdf", 2, 0, 1), pdfWithBookmarks("second.pdf", 3, 0, 2)
+            };
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(5);
+                assertThat(outlineEntries(result))
+                        .containsExactly(
+                                "first.pdf-0@0",
+                                "first.pdf-1@1",
+                                "second.pdf-0@2",
+                                "second.pdf-2@4");
             }
         }
 

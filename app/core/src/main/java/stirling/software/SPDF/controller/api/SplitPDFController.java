@@ -41,11 +41,18 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
+import stirling.software.jpdfium.model.StorageOptions;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPDFController {
+
+    private static final StorageOptions FILE_STORAGE = StorageOptions.builder().file().build();
+
+    /** The source is an untouched temp copy, so its file always matches the live document. */
+    private static final StorageOptions FILE_STORAGE_REUSING_SOURCE =
+            StorageOptions.builder().file().reuseSourceFile(true).build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -122,18 +129,43 @@ public class SplitPDFController {
             File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
             throws IOException {
         try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
+            boolean preserveBookmarks = !sourceDoc.bookmarks().isEmpty();
             int previousPageNumber = 0;
             for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
                 int splitPoint = pageNumbers.get(splitIndex);
                 try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-                    try (PdfDocument splitDoc =
-                            PdfSplit.extractPageRange(sourceDoc, previousPageNumber, splitPoint)) {
-                        splitDoc.save(splitTemp.getPath());
-                    }
+                    extractRange(
+                            source,
+                            sourceDoc,
+                            previousPageNumber,
+                            splitPoint,
+                            splitTemp.getPath(),
+                            preserveBookmarks);
                     writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
                 }
                 previousPageNumber = splitPoint + 1;
             }
+        }
+    }
+
+    private void extractRange(
+            File source,
+            PdfDocument sourceDoc,
+            int fromPage,
+            int toPage,
+            Path outputPath,
+            boolean preserveBookmarks)
+            throws IOException {
+        if (preserveBookmarks) {
+            // extractPageRangeToFile does not remap the source outline onto the kept pages.
+            try (PdfDocument splitDoc =
+                    PdfSplit.extractPageRange(
+                            sourceDoc, fromPage, toPage, FILE_STORAGE_REUSING_SOURCE)) {
+                splitDoc.save(outputPath);
+            }
+        } else {
+            PdfSplit.extractPageRangeToFile(
+                    source.toPath(), fromPage, toPage, outputPath, FILE_STORAGE);
         }
     }
 

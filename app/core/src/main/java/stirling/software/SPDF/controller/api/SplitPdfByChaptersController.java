@@ -47,11 +47,16 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
+import stirling.software.jpdfium.model.StorageOptions;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfByChaptersController {
+
+    /** The source is an untouched temp copy, so its file always matches the live document. */
+    private static final StorageOptions FILE_STORAGE_REUSING_SOURCE =
+            StorageOptions.builder().file().reuseSourceFile(true).build();
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -258,7 +263,10 @@ public class SplitPdfByChaptersController {
         int from = range[0];
         int to = range[1];
         try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            try (PdfDocument splitDoc = PdfSplit.extractPageRange(sourceDocument, from, to)) {
+            // extractPageRangeToFile does not remap the source outline onto the chapter pages.
+            try (PdfDocument splitDoc =
+                    PdfSplit.extractPageRange(
+                            sourceDocument, from, to, FILE_STORAGE_REUSING_SOURCE)) {
                 splitDoc.save(splitTemp.getPath());
             }
             Path finalPath = splitTemp.getPath();
