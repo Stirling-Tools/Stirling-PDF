@@ -54,22 +54,15 @@ export interface ScanOptions {
   reversed?: boolean;
 }
 
-const FONT_DIR = path.join(
+export const FONT_DIR = path.join(
   import.meta.dirname,
   "../../../../../../../app/core/src/main/resources/static/fonts",
 );
 
-const BUNDLED_FILES: Record<string, [string, string]> = {
-  Carlito: ["Carlito-Regular.ttf", "Carlito-Bold.ttf"],
-  Caladea: ["Caladea-Regular.ttf", "Caladea-Bold.ttf"],
-  "DejaVu Sans": ["DejaVuSans.ttf", "DejaVuSans-Bold.ttf"],
-  "DejaVu Serif": ["DejaVuSerif.ttf", "DejaVuSerif-Bold.ttf"],
-};
-
 export async function readBundledFaces(): Promise<Face[]> {
   const faces: Face[] = [];
   for (const spec of BUNDLED_SCAN_FONTS) {
-    const [regularFile, boldFile] = BUNDLED_FILES[spec.family];
+    const [regularFile, boldFile] = spec.files;
     const regular = new Uint8Array(
       await readFile(path.join(FONT_DIR, regularFile)),
     );
@@ -79,7 +72,12 @@ export async function readBundledFaces(): Promise<Face[]> {
     registerFontBytes(spec.family, regular);
     registerFontBytes(spec.bold, boldBytes);
     const face = faceFromBytes(
-      { ...spec, source: "bundled" },
+      {
+        label: spec.label,
+        family: spec.family,
+        bold: spec.bold,
+        source: "bundled",
+      },
       regular,
       boldBytes,
     );

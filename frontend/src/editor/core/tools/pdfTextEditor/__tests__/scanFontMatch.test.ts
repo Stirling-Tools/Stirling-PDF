@@ -11,6 +11,10 @@ import {
   test,
   vi,
 } from "vitest";
+
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
@@ -34,7 +38,13 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import {
+  SERVER_FONTS_URL,
+  resetServerFontsCache,
+} from "@editor/tools/pdfTextEditor/util/serverFonts";
+import {
+  faceCovers,
   faceFromBytes,
+  loadScriptScanFaces,
   resetScanFaces,
   setBundledScanFaces,
   type Face,
@@ -614,20 +624,28 @@ describe("matching scanned text in other scripts", () => {
     "picks the script's own face when the server has one",
     { timeout: 120_000 },
     async () => {
-      const japanese = await staticFace(
-        "Noto Sans JP",
-        "NotoSansJP-Regular.ttf",
+      const id = "a".repeat(64);
+      const bytes = await readFile(
+        path.join(STATIC_FONTS, "NotoSansJP-Regular.ttf"),
       );
-      setBundledScanFaces([...bundled, japanese!]);
+      get.mockImplementation(async (url: string) =>
+        url === SERVER_FONTS_URL
+          ? {
+              data: {
+                families: [
+                  {
+                    family: "Noto Sans JP",
+                    faces: [{ id, style: "Regular", weight: 400 }],
+                  },
+                ],
+              },
+            }
+          : { data: new Uint8Array(bytes).buffer },
+      );
+      const text = "請求書 4471 六月 三十日 までに お支払い ください";
+      await loadScriptScanFaces(text);
       const { doc, page } = await buildScan(
-        [
-          {
-            family: "Noto Sans JP",
-            text: "請求書 4471 六月 三十日 までに お支払い ください",
-            size: 14,
-            ocrFamily: "Noto Sans JP",
-          },
-        ],
+        [{ family: "Noto Sans JP", text, size: 14, ocrFamily: "Noto Sans JP" }],
         SCAN,
       );
       try {
@@ -637,9 +655,20 @@ describe("matching scanned text in other scripts", () => {
         );
       } finally {
         doc.dispose();
+        resetScanFaces();
+        resetServerFontsCache();
       }
     },
   );
+
+  test("the bundled Chinese and Korean fonts can be matched", async () => {
+    const chinese = await staticFace("Noto Sans SC", "NotoSansSC-Regular.ttf");
+    const korean = await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
+    expect(chinese && faceCovers(chinese, "华级们这说话东车书门关进")).toBe(
+      true,
+    );
+    expect(korean && faceCovers(korean, "청구서 김민준 님 납부")).toBe(true);
+  });
 
   test(
     "sizes caps-only Cyrillic and a Japanese line without digits by their own glyph height",
@@ -684,8 +713,7 @@ describe("matching scanned text in other scripts", () => {
     "offers nothing it cannot draw and leaves the scan alone when an edit cannot be drawn",
     { timeout: 120_000 },
     async () => {
-      const korean = await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
-      expect(korean).toBeNull();
+      await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
       resetDroppedBase14Chars();
       const { doc, page } = await buildScan(
         [

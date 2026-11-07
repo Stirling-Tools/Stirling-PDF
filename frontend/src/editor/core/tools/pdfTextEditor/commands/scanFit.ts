@@ -21,8 +21,7 @@ import {
   type ScanMatch,
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import {
-  faceCovers,
-  scanFaces,
+  candidateFaces,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
@@ -356,7 +355,7 @@ function rankUncached(
   // it wins close calls.
   const typewriter =
     input.wordsLookMono() || isEvenlySpaced(ref.ink.glyphCenters, ref.original);
-  const all = scanFaces().filter((f) => faceCovers(f, ref.original));
+  const all = candidateFaces(ref.original);
   if (all.length === 0) return [];
   const quickScore = (face: Face) =>
     Math.max(

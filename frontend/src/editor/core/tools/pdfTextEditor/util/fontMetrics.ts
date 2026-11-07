@@ -13,6 +13,7 @@ export interface FontMetrics {
   restricted: boolean;
   variableWeight: number | null;
   cff: boolean;
+  outlines: string;
 }
 
 const TAG = (s: string) =>
@@ -21,13 +22,20 @@ const TAG = (s: string) =>
   (s.charCodeAt(2) << 8) |
   s.charCodeAt(3);
 
-function tables(dv: DataView): Map<number, { offset: number; length: number }> {
-  const out = new Map<number, { offset: number; length: number }>();
+interface TableRecord {
+  checksum: number;
+  offset: number;
+  length: number;
+}
+
+function tables(dv: DataView): Map<number, TableRecord> {
+  const out = new Map<number, TableRecord>();
   const count = dv.getUint16(4);
   for (let i = 0; i < count; i++) {
     const rec = 12 + i * 16;
     if (rec + 16 > dv.byteLength) break;
     out.set(dv.getUint32(rec) | 0, {
+      checksum: dv.getUint32(rec + 4),
       offset: dv.getUint32(rec + 8),
       length: dv.getUint32(rec + 12),
     });
@@ -60,7 +68,14 @@ function defaultWeight(
   return null;
 }
 
+const parsed = new WeakMap<Uint8Array, FontMetrics | null>();
+
 export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
+  if (!parsed.has(bytes)) parsed.set(bytes, readFontMetrics(bytes));
+  return parsed.get(bytes) ?? null;
+}
+
+function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
   if (bytes.length < 12) return null;
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const scaler = dv.getUint32(0);
@@ -127,15 +142,20 @@ export function parseFontMetrics(bytes: Uint8Array): FontMetrics | null {
       restricted,
       variableWeight: defaultWeight(dv, t.get(TAG("fvar"))),
       cff: t.has(TAG("CFF ")) || t.has(TAG("CFF2")),
+      outlines: outlinesKey(t.get(TAG("glyf"))),
     };
   } catch {
     return null;
   }
 }
 
+function outlinesKey(glyf: TableRecord | undefined): string {
+  return glyf ? `${glyf.checksum}:${glyf.length}` : "";
+}
+
 function glyphTopReader(
   dv: DataView,
-  t: Map<number, { offset: number; length: number }>,
+  t: Map<number, TableRecord>,
   headOffset: number,
 ): (gid: number) => number | null {
   const loca = t.get(TAG("loca"));
