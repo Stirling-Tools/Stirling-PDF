@@ -48,6 +48,7 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
+  shownInViewer: boolean;
 
   constructor(opts: {
     index: number;
@@ -75,6 +76,7 @@ export class Page {
     this.fills = [];
     this.needsGenerateContent = false;
     this.regenerated = false;
+    this.shownInViewer = false;
   }
 
   setRuns(runs: TextRun[]): void {

@@ -344,6 +344,94 @@ async function savedText(doc: EditorDocument): Promise<string> {
   }
 }
 
+async function savedFonts(doc: EditorDocument) {
+  const { blob } = await exportToBlob(doc, "scan.pdf");
+  const text = new TextDecoder("latin1").decode(await blob.arrayBuffer());
+  return {
+    names: [
+      ...new Set(
+        [...text.matchAll(/\/BaseFont\s*\/([^\s/<>[\]()]+)/g)].map((m) => m[1]),
+      ),
+    ],
+    embedded: text.split("/FontFile2").length - 1,
+  };
+}
+
+describe("what an edit leaves in the saved file", () => {
+  test("keeps only the face the edit draws", { timeout: 120_000 }, async () => {
+    const { doc, page } = await buildScan(
+      [
+        {
+          family: "Carlito",
+          text: SENTENCES[0],
+          size: 12,
+        },
+      ],
+      {
+        dpi: 300,
+        blur: 0.3,
+        noise: 4,
+      },
+    );
+    try {
+      const run = page.runs.find(isScanRun)!;
+      const [top] = await choicesFor(doc, page, run);
+      expect(top.style.family).toBe("Carlito");
+      const state = scanEditOf(doc, run)!;
+      state.override.style = { ...top.style, softness: 0 };
+      renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Quiz"));
+      expect(drawnFontNames(doc, state.textPtrs)).toContain("Carlito");
+      const saved = await savedFonts(doc);
+      expect(saved.embedded).toBe(1);
+      expect(saved.names.filter((n) => !n.startsWith("Helvetica"))).toEqual([
+        "Carlito",
+      ]);
+    } finally {
+      doc.dispose();
+    }
+  });
+});
+
+describe("softening typed words to the scan", () => {
+  test(
+    "keeps the ascenders and descenders the replaced word did not have",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const [top] = await choicesFor(doc, page, run);
+        expect(top.style.softness).toBeGreaterThan(0);
+        const state = scanEditOf(doc, run)!;
+        const on = state.lines[0].words.find((w) => w.text.trim() === "on")!;
+        const baseline = state.lines[0].baseline;
+        const inked = (bottom: number, top: number) => {
+          const img = renderLuma(
+            doc.module,
+            page,
+            {
+              x: on.x,
+              y: baseline + bottom,
+              width: on.right - on.x,
+              height: top - bottom,
+            },
+            0,
+          )!;
+          return img.data.filter((l) => l < 128).length;
+        };
+        renderScanEdit(doc, page, run, state, run.text.replace(" on ", " by "));
+        expect(inked(7, 9)).toBeGreaterThan(0);
+        expect(inked(-2.5, -1)).toBeGreaterThan(0);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("editing sideways scanned text", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
   const line: ScanLineSpec = {
@@ -387,6 +475,77 @@ describe("editing sideways scanned text", () => {
           if (Math.abs(before[i] - after[i]) > 40) changed++;
         expect(changed).toBeGreaterThan(50);
         expect(await savedText(doc)).toContain("Mary");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
+describe("editing scanned text on a page turned with /Rotate", () => {
+  test("fits the face and draws the edit", { timeout: 120_000 }, async () => {
+    const { doc, page } = await buildScan(
+      [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+      { dpi: 200, blur: 0.5, noise: 6, rotate: 1 },
+    );
+    try {
+      const run = page.runs.find(isScanRun)!;
+      expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
+        "Calibri (Carlito)",
+      );
+      const state = scanEditOf(doc, run)!;
+      const jane = state.lines[0].words.find((w) => w.text.trim() === "Jane")!;
+      const band = {
+        x: jane.x - 1,
+        y: state.lines[0].baseline - 3,
+        width: jane.right - jane.x + 2,
+        height: 13,
+      };
+      const before = renderLuma(doc.module, page, band, 0)!.data;
+      renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Mary"));
+      const after = renderLuma(doc.module, page, band, 0)!.data;
+      let changed = 0;
+      for (let i = 0; i < before.length; i++)
+        if (Math.abs(before[i] - after[i]) > 40) changed++;
+      expect(changed).toBeGreaterThan(50);
+      expect(state.textPtrs.length).toBeGreaterThan(0);
+    } finally {
+      doc.dispose();
+    }
+  });
+});
+
+describe("editing light text on a dark fill", () => {
+  test(
+    "fits the face and redraws the edit light",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6, reversed: true },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
+          "Calibri (Carlito)",
+        );
+        const state = scanEditOf(doc, run)!;
+        const jane = state.lines[0].words.find(
+          (w) => w.text.trim() === "Jane",
+        )!;
+        renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Mary"));
+        const band = renderLuma(
+          doc.module,
+          page,
+          {
+            x: jane.x - 1,
+            y: state.lines[0].baseline - 3,
+            width: jane.right - jane.x + 2,
+            height: 13,
+          },
+          0,
+        )!;
+        expect(band.data.filter((l) => l > 160).length).toBeGreaterThan(50);
       } finally {
         doc.dispose();
       }

@@ -8,9 +8,11 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   clampStretch,
+  fitScale,
   isEvenlySpaced,
   matchScan,
   median,
+  rememberForFit,
   softnessOf,
   spanOf,
   textAdvance,
@@ -211,7 +213,7 @@ function halfDensityXHeight(
 ): number | null {
   if (s.ink.xLine === null) return null;
   const rect = s.ink.rect;
-  const img = renderLuma(doc.module, page, rect, 0);
+  const img = renderLuma(doc.module, page, rect, 0, fitScale(s.ink));
   if (!img) return null;
   const { data, width, height } = img;
   const paper = 0.299 * s.paper.r + 0.587 * s.paper.g + 0.114 * s.paper.b;
@@ -296,7 +298,9 @@ function shortlist(
     .map((w) => ({ text: w.text.trim(), width: w.width }))
     .filter((w) => w.text.length >= 2 && w.width > 0)
     .slice(0, 24);
-  const xHeight = halfDensityXHeight(doc, page, input.ref);
+  const xHeight = rememberForFit(input.ref.ink, "xHeight", () =>
+    halfDensityXHeight(doc, page, input.ref),
+  );
   const scored = faces
     .map((face) => ({
       face,
@@ -341,7 +345,10 @@ function rankUncached(
   const { ref } = input;
   const fit = (face: Face, family: string, k: number) => {
     const size = sizeFor(face, ref) * k;
-    const natural = spanOf(doc, page, ref.original, family, size);
+    const natural =
+      rememberForFit(ref.ink, `span|${family}|${size}`, () =>
+        spanOf(doc, page, ref.original, family, size),
+      ) ?? 0;
     const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
     return { face, family, size, stretch, k };
   };

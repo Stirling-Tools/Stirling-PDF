@@ -16,6 +16,7 @@ import {
 
 const SLICE_MS = 12;
 const GAP_MS = 4;
+const UNSHOWN_RECHECK_MS = 500;
 
 function nextScanRun(
   doc: EditorDocument,
@@ -23,14 +24,25 @@ function nextScanRun(
   wanted: string[],
 ) {
   let fallback = null;
-  for (const page of doc.loadedPages())
+  for (const page of doc.loadedPages()) {
+    if (!page.shownInViewer) continue;
     for (const run of page.runs) {
       if (skipped.has(run) || !scanRunNeedsFit(doc, run)) continue;
       if (wanted.includes(run.id)) return { page, run };
       fallback ??= { page, run };
     }
+  }
   return fallback;
 }
+
+const awaitsViewer = (doc: EditorDocument) =>
+  doc
+    .loadedPages()
+    .some(
+      (page) =>
+        !page.shownInViewer &&
+        page.runs.some((run) => scanRunNeedsFit(doc, run)),
+    );
 
 export function useScanPrefit(
   store: EditorStore,
@@ -68,7 +80,9 @@ export function useScanPrefit(
       if (hovered) wanted.push(hovered);
       const next = !stopped && doc ? nextScanRun(doc, skipped, wanted) : null;
       if (!doc || !next) {
-        idle = true;
+        if (doc && !stopped && awaitsViewer(doc))
+          timer = window.setTimeout(step, UNSHOWN_RECHECK_MS);
+        else idle = true;
         return;
       }
       try {

@@ -78,6 +78,7 @@ import {
 // room), so OCR misreads never reach the page.
 
 const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
+const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };
 const REFERENCE_CHARS = 72;
 
 interface ScanWord {
@@ -571,16 +572,32 @@ function wordSpace(state: ScanEditState, style: ScanStyle): number {
   return gaps.length ? median(gaps) : style.fontSize * 0.28;
 }
 
-function fallbackStyle(state: ScanEditState): ScanStyle {
+function fallbackStyle(state: ScanEditState, ink = BLACK): ScanStyle {
   return {
     family: HELVETICA.family,
     fontSize: state.lines[0].height / (HELVETICA.cap / 1000),
     stretch: 1,
-    ink: BLACK,
+    ink,
     weight: 0,
     hollow: 0,
     softness: 0,
   };
+}
+
+function inkAgainst(
+  m: WrappedPdfiumModule,
+  page: Page,
+  state: ScanEditState,
+): RGBA {
+  const line = state.lines[0];
+  const words = line.words;
+  const { fill } = sampleBackground(m, page, {
+    x: words[0].x,
+    y: line.baseline - line.height * 0.2,
+    width: words[words.length - 1].right - words[0].x,
+    height: line.height * 1.2,
+  });
+  return 0.299 * fill.r + 0.587 * fill.g + 0.114 * fill.b < 128 ? WHITE : BLACK;
 }
 
 // The scanned pixels of one word, copied once: the scan under a word never
@@ -620,7 +637,7 @@ function atlasOf(
         height: frame,
       });
       if (!patch) return;
-      toInkOnly(patch, span.paper);
+      toInkOnly(patch, span.paper, span.ink.reversed);
       words.push({
         text: span.original.replace(/\s+/g, ""),
         rgba: patch.rgba,
@@ -690,6 +707,7 @@ function renderUprightScanEdit(
     tagMarks: run.tagMarks,
     created: state.created,
     textPtrs: state.textPtrs,
+    searchableFontPtr: state.fontPtr,
   };
 
   const shift = state.frame
@@ -708,7 +726,8 @@ function renderUprightScanEdit(
     );
     return;
   }
-  const fitted = fittedStyle ?? fallbackStyle(state);
+  const fitted =
+    fittedStyle ?? fallbackStyle(state, inkAgainst(m, page, state));
   const block = o.style ?? fitted;
   const inkOf = (w: LayoutWord) =>
     spanInk(doc, page, state, w.line, w.index, w.index);
@@ -846,16 +865,7 @@ function renderUprightScanEdit(
       drawFromAtlas(canvas, atlas, glyphs, s, start, baseline, st, limit)
     )
       return;
-    drawInFont(
-      canvas,
-      s,
-      x,
-      start,
-      baseline,
-      st,
-      limit,
-      ink ? { rect: ink.ink.rect, paper: ink.paper } : null,
-    );
+    drawInFont(canvas, s, x, start, baseline, st, limit);
   };
 
   // Moved words: the scan's own pixels at their new spot, plus invisible text.
@@ -866,7 +876,7 @@ function renderUprightScanEdit(
       continue;
     }
     const inkOnly = { ...k.patch, rgba: k.patch.rgba.slice() };
-    if (k.ink) toInkOnly(inkOnly, k.ink.paper);
+    if (k.ink) toInkOnly(inkOnly, k.ink.paper, k.ink.ink.reversed);
     const r = k.patch.rect;
     pasteImage(canvas, inkOnly, {
       ...r,
@@ -1108,8 +1118,9 @@ function previewOnScan(
   const rect = ref.ink.rect;
   const scan = capturePatch(m, page, rect);
   if (!scan) return null;
-  const cover = emitFillRect(m, page, rect, ref.paper, 0);
-  const ptrs = placeText(doc, page, {
+  const sheet = doc.scratchPageFor(page);
+  const cover = emitFillRect(m, sheet.page, rect, ref.paper);
+  const ptrs = placeText(sheet.doc, sheet.page, {
     text: ref.original,
     x: ref.ink.body.x,
     baseline: ref.baseline,
@@ -1121,9 +1132,9 @@ function previewOnScan(
     weight: style.weight,
     hollow: style.hollow,
   });
-  const drawn = capturePatch(m, page, rect);
+  const drawn = capturePatch(m, sheet.page, rect);
   for (const p of [cover, ...ptrs])
-    if (p) removeAndDestroyObject(m, page.pagePtr, p);
+    removeAndDestroyObject(m, sheet.page.pagePtr, p);
   if (!drawn) return null;
   if (style.softness > 0) blurRgba(drawn, style.softness);
   return { scan, drawn };

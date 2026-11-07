@@ -50,6 +50,8 @@ export interface ScanOptions {
   blur: number;
   noise: number;
   sideways?: boolean;
+  rotate?: number;
+  reversed?: boolean;
 }
 
 const FONT_DIR = path.join(
@@ -221,7 +223,8 @@ function degrade(
   };
   const rgba = new Uint8Array(width * height * 4);
   for (let i = 0; i < grey.length; i++) {
-    const paper = grey[i] * 0.93 + 4;
+    const tone = grey[i] * 0.93 + 4;
+    const paper = opts.reversed ? 255 - tone : tone;
     const v = Math.max(
       0,
       Math.min(255, paper + (rand() - 0.5) * 2 * opts.noise),
@@ -294,6 +297,7 @@ export async function buildScan(
     }
     if (opts.sideways)
       moveAllObjects(m, page, { a: 0, b: 1, c: -1, d: 0, e: height, f: 0 });
+    if (opts.rotate) m.FPDFPage_SetRotation(page.pagePtr, opts.rotate);
     page.markDirty();
     page.markNeedsGenerate();
     const { blob } = await exportToBlob(scanned, "scan.pdf");

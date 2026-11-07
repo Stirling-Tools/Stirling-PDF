@@ -1,6 +1,7 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 
 // Render the area of the page surrounding a text run and pick the dominant
 // background color.
@@ -15,7 +16,7 @@ export interface SampleResult {
 }
 
 interface Slice {
-  /** Display-space point at the bitmap's top-left pixel. */
+  /** Crop-space point at the bitmap's top-left pixel. */
   left: number;
   top: number;
   scale: number;
@@ -23,6 +24,19 @@ interface Slice {
   width: number;
   height: number;
   stride: number;
+}
+
+function rawView(page: Page): DisplayTransform {
+  const d = page.display;
+  return DisplayTransform.fromCropAndRotate(
+    d.cropLeft,
+    d.cropBottom,
+    d.cropWidth,
+    d.cropHeight,
+    0,
+    d.cropWidth,
+    d.cropHeight,
+  );
 }
 
 // Rasterize `bounds` grown by `margin` points; null when it has no area.
@@ -34,9 +48,9 @@ function renderSlice(
   scale = SAMPLE_SCALE,
 ): Slice | null {
   // No flush needed: the render path draws from the in-memory object list.
-  // The rendered bitmap is CropBox/rotation (display) space; the run bounds
-  // are raw PDF.
-  const d = page.display;
+  // The bitmap is raw PDF space cropped to the CropBox, with /Rotate undone,
+  // so its rows run along the page's own x axis.
+  const d = rawView(page);
   const cs = [
     d.apply(bounds.x, bounds.y),
     d.apply(bounds.x + bounds.width, bounds.y),
@@ -44,8 +58,14 @@ function renderSlice(
     d.apply(bounds.x + bounds.width, bounds.y + bounds.height),
   ];
   const left = Math.max(0, Math.min(...cs.map((c) => c.x)) - margin);
-  const right = Math.min(page.width, Math.max(...cs.map((c) => c.x)) + margin);
-  const top = Math.min(page.height, Math.max(...cs.map((c) => c.y)) + margin);
+  const right = Math.min(
+    d.displayWidth,
+    Math.max(...cs.map((c) => c.x)) + margin,
+  );
+  const top = Math.min(
+    d.displayHeight,
+    Math.max(...cs.map((c) => c.y)) + margin,
+  );
   const bottom = Math.max(0, Math.min(...cs.map((c) => c.y)) - margin);
   const widthPts = right - left;
   const heightPts = top - bottom;
@@ -59,11 +79,11 @@ function renderSlice(
     m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, w, h, 0xffffffff);
     // PDFium renders the WHOLE page sized to (pageW*scale, pageH*scale)
     // at the bitmap's origin. We translate so our slice lands at 0,0.
-    const fullW = Math.round(page.width * scale);
-    const fullH = Math.round(page.height * scale);
+    const fullW = Math.round(d.displayWidth * scale);
+    const fullH = Math.round(d.displayHeight * scale);
     const startX = -Math.round(left * scale);
     // CSS-style y: PDFium origin is page top-left in render coords.
-    const startY = -Math.round((page.height - top) * scale);
+    const startY = -Math.round((d.displayHeight - top) * scale);
     // 0x01 = FPDF_ANNOT, 0x10 = FPDF_REVERSE_BYTE_ORDER (gives RGBA).
     m.FPDF_RenderPageBitmap(
       bitmapPtr,
@@ -72,7 +92,7 @@ function renderSlice(
       startY,
       fullW,
       fullH,
-      0,
+      (4 - page.display.rotate) & 3,
       0x01 | 0x10,
     );
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
@@ -179,6 +199,7 @@ export interface ScanInk {
   /** A box edge sits just left / right of the glyphs (OCR may read it as "["). */
   edgeLeft: boolean;
   edgeRight: boolean;
+  reversed: boolean;
 }
 
 /** Where to look: an x span and the rows the OCR says hold the glyphs. */
@@ -200,13 +221,10 @@ export function measureScanInk(
   region: ScanRegion,
 ): ScanInk | null {
   try {
-    const d = page.display;
+    const d = rawView(page);
     const o = d.apply(0, 0);
     const ux = d.apply(1, 0);
     const uy = d.apply(0, 1);
-    // Rows of the bitmap only line up with text rows on an upright page.
-    if (Math.abs(ux.y - o.y) > 1e-6 || ux.x - o.x <= 0 || uy.y - o.y <= 0)
-      return null;
     const boxH = region.top - region.bottom;
     const box = {
       x: region.x0,
@@ -226,24 +244,33 @@ export function measureScanInk(
     const coreTop = Math.max(0, toPxY(region.top));
     const coreBottom = Math.min(height - 1, toPxY(region.bottom));
     if (x1 <= x0 || coreBottom < coreTop) return null;
-    // The paper is what most of the slice is. Sampled from a ring instead, a
-    // ruled line under the ring passed for paper and hid every thin stroke.
-    const sample: number[] = [];
-    for (let y = 0; y < height; y += 2)
-      for (let x = x0; x <= x1; x += 2) {
-        const i = y * stride + x * 4;
-        sample.push(luma(rgba[i], rgba[i + 1], rgba[i + 2]));
-      }
-    sample.sort((p, q) => p - q);
-    // Bright enough to clear the ink, not so bright that grain sets it.
-    const paper = sample[Math.floor(sample.length * 0.75)] ?? 255;
+    const lumaAt = (i: number) => luma(rgba[i], rgba[i + 1], rgba[i + 2]);
+    const core: number[] = [];
+    for (let y = coreTop; y <= coreBottom; y += 2)
+      for (let x = x0; x <= x1; x += 2) core.push(lumaAt(y * stride + x * 4));
+    core.sort((p, q) => p - q);
+    const ground = core[Math.floor(core.length * 0.65)] ?? 255;
+    const reversed =
+      ground < 110 && (core[Math.floor(core.length * 0.97)] ?? 0) > ground + 60;
+    const tone = reversed ? (i: number) => 255 - lumaAt(i) : lumaAt;
+    const slicePaper = () => {
+      // The paper is what most of the slice is. Sampled from a ring instead, a
+      // ruled line under the ring passed for paper and hid every thin stroke.
+      const sample: number[] = [];
+      for (let y = 0; y < height; y += 2)
+        for (let x = x0; x <= x1; x += 2)
+          sample.push(lumaAt(y * stride + x * 4));
+      sample.sort((p, q) => p - q);
+      // Bright enough to clear the ink, not so bright that grain sets it.
+      return sample[Math.floor(sample.length * 0.75)] ?? 255;
+    };
+    const paper = reversed ? 255 - ground : slicePaper();
     // Faint anti-aliased edges still show once the paper around them is
     // covered, so the extent uses a softer cut than the colour does.
     const ink = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
       for (let x = x0; x <= x1; x++) {
-        const i = y * stride + x * 4;
-        const l = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
+        const l = tone(y * stride + x * 4);
         ink[y * width + x] = l < paper - 60 ? 2 : l < paper - 30 ? 1 : 0;
       }
     }
@@ -428,8 +455,7 @@ export function measureScanInk(
       for (let x = left; x <= right; x++) {
         if (ink[y * width + x] !== 2) continue;
         const i = y * stride + x * 4;
-        const px = [rgba[i], rgba[i + 1], rgba[i + 2]] as const;
-        dark.push([luma(...px), ...px]);
+        dark.push([tone(i), rgba[i], rgba[i + 1], rgba[i + 2]]);
       }
     }
     // Pixel rows/cols back to raw page space through the display map.
@@ -491,6 +517,7 @@ export function measureScanInk(
       edgeRight: edgeCols.some(
         (c) => c > solidRight && c - solidRight < scale * 6,
       ),
+      reversed,
     };
   } catch {
     return null;
@@ -512,12 +539,7 @@ export function capturePatch(
   rect: PageRect,
 ): PixelPatch | null {
   try {
-    const d = page.display;
-    const o = d.apply(0, 0);
-    const ux = d.apply(1, 0);
-    const uy = d.apply(0, 1);
-    // Display space must be raw page space shifted, or the copy lands skewed.
-    if (ux.x - o.x !== 1 || uy.y - o.y !== 1 || ux.y !== o.y) return null;
+    const o = rawView(page).apply(0, 0);
     const slice = renderSlice(m, page, rect, 0, INK_SCALE);
     if (!slice) return null;
     const { width, height, stride, scale } = slice;
@@ -543,48 +565,61 @@ export function capturePatch(
   }
 }
 
-/** Luma of a page area at the ink-measuring resolution, softened by `blur` px. */
+/** Luma of a page area at `scale` px per point, softened by `blur` px. */
 export function renderLuma(
   m: WrappedPdfiumModule,
   page: Page,
   rect: PageRect,
   blur = 2,
-): { data: Float32Array; width: number; height: number } | null {
+  scale = INK_SCALE,
+): Luma | null {
   try {
-    const slice = renderSlice(m, page, rect, 0, INK_SCALE);
+    const slice = renderSlice(m, page, rect, 0, scale);
     if (!slice) return null;
     const { rgba, width, height, stride } = slice;
-    let data = new Float32Array(width * height);
+    const data = new Float32Array(width * height);
     for (let y = 0; y < height; y++)
       for (let x = 0; x < width; x++) {
         const i = y * stride + x * 4;
         data[y * width + x] = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
       }
-    // Box blur rows then columns: scans are soft, drawn text is crisp.
-    for (const [dx, dy] of [
-      [1, 0],
-      [0, 1],
-    ]) {
-      const out = new Float32Array(data.length);
-      for (let y = 0; y < height; y++)
-        for (let x = 0; x < width; x++) {
-          let sum = 0;
-          let n = 0;
-          for (let k = -blur; k <= blur; k++) {
-            const xx = x + k * dx;
-            const yy = y + k * dy;
-            if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
-            sum += data[yy * width + xx];
-            n++;
-          }
-          out[y * width + x] = sum / n;
-        }
-      data = out;
-    }
-    return { data, width, height };
+    return blurLuma({ data, width, height }, blur);
   } catch {
     return null;
   }
+}
+
+export interface Luma {
+  data: Float32Array;
+  width: number;
+  height: number;
+}
+
+// Box blur rows then columns: scans are soft, drawn text is crisp.
+export function blurLuma(img: Luma, blur: number): Luma {
+  const { width, height } = img;
+  let data = img.data;
+  for (const [dx, dy] of [
+    [1, 0],
+    [0, 1],
+  ]) {
+    const out = new Float32Array(data.length);
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        let sum = 0;
+        let n = 0;
+        for (let k = -blur; k <= blur; k++) {
+          const xx = x + k * dx;
+          const yy = y + k * dy;
+          if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
+          sum += data[yy * width + xx];
+          n++;
+        }
+        out[y * width + x] = sum / n;
+      }
+    data = out;
+  }
+  return { data, width, height };
 }
 
 // The darker part of the ink pixels: glyph edges anti-alias toward the paper,
