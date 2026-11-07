@@ -21,6 +21,7 @@ export class OneDriveSaveError extends Error {
   constructor(
     readonly code:
       | "conflict"
+      | "missing"
       | "reconnect"
       | "network"
       | "server"
@@ -142,6 +143,12 @@ function saveError(error: unknown): OneDriveSaveError {
     return new OneDriveSaveError(
       "conflict",
       "The file changed in OneDrive since you opened it.",
+    );
+  }
+  if (response.status === 410 && response.data?.code === "missing") {
+    return new OneDriveSaveError(
+      "missing",
+      "The file was moved or deleted in OneDrive.",
     );
   }
   if ([401, 403, 409].includes(response.status)) {

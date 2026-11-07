@@ -108,6 +108,11 @@ describe("saveToOneDrive", () => {
 
   it.each([
     ["a changed file", failure(409, { code: "conflict" }), "conflict"],
+    [
+      "a file deleted in OneDrive",
+      failure(410, { code: "missing" }),
+      "missing",
+    ],
     ["an account that must sign in again", failure(409), "reconnect"],
     ["a rejected account", failure(401), "reconnect"],
     [

@@ -69,6 +69,9 @@ public class ConnectedDriveController {
         } catch (ConnectedDriveWriter.ConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("code", "conflict", "message", e.getMessage()));
+        } catch (ConnectedDriveWriter.MissingException e) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body(Map.of("code", "missing", "message", e.getMessage()));
         } catch (AccountReconnectRequiredException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         } catch (IOException e) {
