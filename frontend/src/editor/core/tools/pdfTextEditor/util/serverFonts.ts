@@ -113,7 +113,7 @@ export function loadServerFonts(): Promise<LocalFont[] | null> {
     const started = generation;
     manifestPending = fetchManifest().then((families) => {
       if (started !== generation) return null;
-      if (families && families.length > 0) return publish(families);
+      if (families) return publish(families);
       manifestPending = null;
       return null;
     });

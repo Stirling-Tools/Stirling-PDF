@@ -130,11 +130,16 @@ describe("server fonts", () => {
     expect(await loadServerFonts()).toHaveLength(3);
   });
 
-  it("asks again after the server answered with no fonts", async () => {
-    get.mockResolvedValueOnce({ data: { families: [] } });
-    expect(await loadServerFonts()).toBeNull();
-    expect(loadedServerFonts()).toBeNull();
+  it("keeps an empty answer for the session instead of asking again", async () => {
+    get.mockResolvedValue({ data: { families: [] } });
 
+    expect(await loadServerFonts()).toEqual([]);
+    expect(await loadServerFonts()).toEqual([]);
+    expect(loadedServerFonts()).toEqual([]);
+    expect(await loadServerFontBytes("Acme Sans")).toBeNull();
+    expect(get).toHaveBeenCalledTimes(1);
+
+    forgetServerFontList();
     serveManifestAndFaces();
     expect(await loadServerFonts()).toHaveLength(3);
   });
