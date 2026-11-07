@@ -260,25 +260,34 @@ function scoreFace(
   return score - Math.min(style.length, 32) / 100;
 }
 
-// The installed face best answering a family name, or null. An exact family
-// hit wins, so "Arial Black" is not read as a bold cut of "Arial".
-export function pickLocalFontFace(
+const STYLE_WORDS = /^(bold|italic|oblique|regular|book|normal|roman)$/;
+
+function installedFamilyOf(
   fonts: LocalFont[],
   requested: string,
+): RequestedFace | null {
+  const key = normaliseName(requested);
+  let best: RequestedFace | null = null;
+  for (const font of fonts) {
+    const family = normaliseName(font.family);
+    if (!key.startsWith(`${family} `)) continue;
+    if (best && normaliseName(best.family).length >= family.length) continue;
+    const rest = key.slice(family.length + 1).split(" ");
+    if (!rest.every((word) => STYLE_WORDS.test(word))) continue;
+    best = {
+      family: font.family,
+      bold: rest.includes("bold"),
+      italic: rest.includes("italic") || rest.includes("oblique"),
+    };
+  }
+  return best;
+}
+
+function bestFace(
+  group: LocalFont[],
+  wantBold: boolean,
+  wantItalic: boolean,
 ): LocalFont | null {
-  const wanted = splitRequested(requested);
-  const exact = fonts.filter(
-    (font) => normaliseName(font.family) === normaliseName(requested),
-  );
-  const group =
-    exact.length > 0
-      ? exact
-      : fonts.filter(
-          (font) => normaliseName(font.family) === normaliseName(wanted.family),
-        );
-  if (group.length === 0) return null;
-  const wantBold = exact.length > 0 ? false : wanted.bold;
-  const wantItalic = exact.length > 0 ? false : wanted.italic;
   let best: LocalFont | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
   for (const font of group) {
@@ -289,6 +298,24 @@ export function pickLocalFontFace(
     }
   }
   return best;
+}
+
+// The installed face best answering a family name, or null. An exact family
+// hit wins, so "Arial Black" is not read as a bold cut of "Arial".
+export function pickLocalFontFace(
+  fonts: LocalFont[],
+  requested: string,
+): LocalFont | null {
+  const exact = fonts.filter(
+    (font) => normaliseName(font.family) === normaliseName(requested),
+  );
+  if (exact.length > 0) return bestFace(exact, false, false);
+  const wanted =
+    installedFamilyOf(fonts, requested) ?? splitRequested(requested);
+  const group = fonts.filter(
+    (font) => normaliseName(font.family) === normaliseName(wanted.family),
+  );
+  return bestFace(group, wanted.bold, wanted.italic);
 }
 
 interface BlobSource {
