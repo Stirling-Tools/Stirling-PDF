@@ -18,6 +18,8 @@ struct ProvisioningConfig<'a> {
     local_processing_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     login_agreement_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    block_signed_pdf_edits: Option<bool>,
     /// Optional headless-install update policy.
     /// One of `"prompt"` (default), `"auto"`, or `"disabled"`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -68,6 +70,7 @@ fn main() -> Result<(), String> {
     let mut cloud_only_arg: Option<String> = None;
     let mut local_processing_only_arg: Option<String> = None;
     let mut login_agreement_value: Option<String> = None;
+    let mut block_signed_pdf_edits_arg: Option<String> = None;
     let mut update_mode_arg: Option<String> = None;
 
     let mut args = env::args().skip(1);
@@ -110,6 +113,12 @@ fn main() -> Result<(), String> {
                     .ok_or_else(|| "--login-agreement requires a value".to_string())?;
                 login_agreement_value = Some(value);
             }
+            "--block-signed-pdf-edits" => {
+                block_signed_pdf_edits_arg = Some(
+                    args.next()
+                        .ok_or("--block-signed-pdf-edits requires a value")?,
+                );
+            }
             "--update-mode" => {
                 let value = args
                     .next()
@@ -146,6 +155,7 @@ fn main() -> Result<(), String> {
     let require_sign_in = parse_policy_bool(require_sign_in_arg.as_deref())?;
     let cloud_only = parse_policy_bool(cloud_only_arg.as_deref())?;
     let local_processing_only = parse_policy_bool(local_processing_only_arg.as_deref())?;
+    let block_signed_pdf_edits = parse_policy_bool(block_signed_pdf_edits_arg.as_deref())?;
 
     // Nothing to write — avoid clobbering an existing provisioning file when the
     // MSI is invoked without any provisioning directives
@@ -156,6 +166,7 @@ fn main() -> Result<(), String> {
         && require_sign_in.is_none()
         && cloud_only.is_none()
         && local_processing_only.is_none()
+        && block_signed_pdf_edits.is_none()
     {
         return Ok(());
     }
@@ -178,6 +189,7 @@ fn main() -> Result<(), String> {
         cloud_only,
         local_processing_only,
         login_agreement_enabled: login_agreement,
+        block_signed_pdf_edits,
         update_mode,
     };
 
@@ -252,11 +264,30 @@ mod tests {
             cloud_only: Some(true),
             local_processing_only: Some(true),
             login_agreement_enabled: None,
+            block_signed_pdf_edits: None,
             update_mode: None,
         };
         assert_eq!(
             serde_json::to_value(config).unwrap(),
             serde_json::json!({"requireSignIn": true, "cloudOnly": true, "localProcessingOnly": true})
+        );
+    }
+
+    #[test]
+    fn signed_pdf_edit_policy_is_written_only_when_supplied() {
+        let config = ProvisioningConfig {
+            server_url: None,
+            lock_connection_mode: None,
+            require_sign_in: None,
+            cloud_only: None,
+            local_processing_only: None,
+            login_agreement_enabled: None,
+            block_signed_pdf_edits: parse_policy_bool(Some("true")).unwrap(),
+            update_mode: None,
+        };
+        assert_eq!(
+            serde_json::to_value(config).unwrap(),
+            serde_json::json!({"blockSignedPdfEdits": true})
         );
     }
 }

@@ -27,6 +27,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.ToolRequestEndpoint;
 
 @Aspect
 @Component
@@ -343,6 +344,7 @@ public class AutoJobAspect {
                 jobOwnershipService != null
                         ? jobOwnershipService.getCurrentUserId().orElse(null)
                         : null;
+        final String endpoint = ToolRequestEndpoint.pathOf(request);
         return () -> {
             final Map<String, String> previous = MDC.getCopyOfContextMap();
             try {
@@ -355,7 +357,7 @@ public class AutoJobAspect {
                 if (caller != null && MDC.get(AUDIT_PRINCIPAL_MDC_KEY) == null) {
                     MDC.put(AUDIT_PRINCIPAL_MDC_KEY, caller);
                 }
-                return supplier.get();
+                return ToolRequestEndpoint.callWith(endpoint, supplier);
             } finally {
                 // Restore previous state (or clear if there was none)
                 if (previous != null) {

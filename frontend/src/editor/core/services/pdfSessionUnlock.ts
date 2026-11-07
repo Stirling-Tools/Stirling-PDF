@@ -3,8 +3,10 @@ import {
   getPdfAccess,
   pdfAccessLifetime,
   rememberPdfAccess,
+  signedPdfEditsBlocked,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
+import { toolIOFor } from "@editor/types/toolIO";
 import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
@@ -60,6 +62,36 @@ async function requestWorkingPdf(
   }
 }
 
+const ADDS_SIGNATURE = new Set([
+  "/api/v1/security/cert-sign",
+  "/api/v1/security/timestamp-pdf",
+]);
+
+function rewritesPdf(endpoint: string | undefined): boolean {
+  if (!endpoint || ADDS_SIGNATURE.has(endpoint)) return false;
+  const produces = toolIOFor(endpoint)?.produces;
+  return produces === "PDF" || produces === "PDF_ENCRYPTED";
+}
+
+export class SignedPdfEditsBlockedError extends Error {}
+
+function signedEditsBlockedError(): Error {
+  return new SignedPdfEditsBlockedError(
+    i18n.t(
+      "signedPdf.editsBlocked",
+      "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
+    ),
+  );
+}
+
+function assertSignedPdfEditable(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+): void {
+  if (signedPdfEditsBlocked(access) && rewritesPdf(endpoint))
+    throw signedEditsBlockedError();
+}
+
 /** These interactive operations restore protection before exposing or persisting any result. */
 export function supportsSessionUnlock(endpoint: string | undefined): boolean {
   return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
@@ -103,6 +135,7 @@ export async function preflightPdfOperation(
     const access = changesProtection
       ? getPdfAccess(file)
       : await ensureAccessUnlessDamaged(file, signal);
+    assertSignedPdfEditable(access, endpoint);
     const encrypted =
       access?.encrypted ??
       (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));
@@ -153,6 +186,7 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
 export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
+  if (signedPdfEditsBlocked(access)) throw signedEditsBlockedError();
   if (access?.encrypted && access.signed)
     throw new Error(
       i18n.t(
@@ -189,6 +223,7 @@ export async function prepareUnlockedFile(
   const access =
     getPdfAccess(file) ??
     (await ensureAccessUnlessDamaged(file, inspectionSignal));
+  assertSignedPdfEditable(access, endpoint);
   if (!access?.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(

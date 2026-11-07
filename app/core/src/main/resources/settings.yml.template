@@ -12,6 +12,7 @@
 
 security:
   honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
+  blockSignedPdfEdits: false # Refuse changes to digitally signed PDFs; viewing, converting and adding another signature stay allowed.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1

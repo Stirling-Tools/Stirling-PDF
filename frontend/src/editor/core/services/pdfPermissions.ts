@@ -1,4 +1,7 @@
-import type { PdfAccess } from "@editor/services/pdfAccessService";
+import {
+  signedPdfEditsBlocked,
+  type PdfAccess,
+} from "@editor/services/pdfAccessService";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
 type PermissionAccess = Pick<
@@ -45,4 +48,8 @@ export function canPrintPdf(access: PermissionAccess | undefined): boolean {
     pdfAllows(access, PdfPermissionFlag.Print) &&
     pdfAllows(access, PdfPermissionFlag.PrintHighQuality)
   );
+}
+
+export function pdfEditingLocked(access: PdfAccess | undefined): boolean {
+  return !access || access.encrypted || signedPdfEditsBlocked(access);
 }

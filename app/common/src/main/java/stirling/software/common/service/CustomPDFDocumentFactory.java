@@ -53,6 +53,8 @@ public class CustomPDFDocumentFactory {
     // class without a full Spring context. When null, falls back to Files.createTempFile().
     private final TempFileManager tempFileManager;
 
+    private SignedPdfEditGuard signedPdfEditGuard;
+
     /** Primary constructor used by Spring. Both collaborators are required in production. */
     @Autowired
     public CustomPDFDocumentFactory(
@@ -67,6 +69,11 @@ public class CustomPDFDocumentFactory {
      */
     public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
         this(pdfMetadataService, null);
+    }
+
+    @Autowired(required = false)
+    void setSignedPdfEditGuard(SignedPdfEditGuard signedPdfEditGuard) {
+        this.signedPdfEditGuard = signedPdfEditGuard;
     }
 
     /** Documents ≤ this size are loaded entirely into heap — no temp files needed. */
@@ -698,6 +705,9 @@ public class CustomPDFDocumentFactory {
     private PDDocument maybePostProcess(PDDocument doc, boolean readOnly) throws IOException {
         correctInflatedPageCount(doc);
         if (!readOnly) {
+            if (signedPdfEditGuard != null) {
+                signedPdfEditGuard.check(doc);
+            }
             pdfMetadataService.setDefaultMetadata(doc);
             removePassword(doc);
         }

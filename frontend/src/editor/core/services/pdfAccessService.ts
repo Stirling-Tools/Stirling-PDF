@@ -47,6 +47,19 @@ export function setPdfAccessPolicy(
   publish();
 }
 
+let blockSignedPdfEdits = false;
+export function setSignedPdfEditPolicy(block: boolean): void {
+  if (blockSignedPdfEdits === block) return;
+  blockSignedPdfEdits = block;
+  publish();
+}
+
+export function signedPdfEditsBlocked(
+  access: Pick<PdfAccess, "signed"> | undefined,
+): boolean {
+  return blockSignedPdfEdits && access?.signed === true;
+}
+
 /** Aborted by logout or FileContext teardown, independently of individual document closures. */
 export function pdfAccessSessionLifetime(): AbortSignal {
   return sessionLifetime.signal;
@@ -70,11 +83,12 @@ export function pdfAccessLifetime(file: Blob): AbortSignal {
 export function rememberUnencryptedPdf(
   file: Blob,
   pageCount: number,
+  signed = false,
 ): PdfAccess {
   return rememberPdfAccess(file, {
     password: "",
     encrypted: false,
-    signed: false,
+    signed,
     ownerAuthenticated: false,
     permissions: -4,
     pageCount,

@@ -28,7 +28,7 @@ import { useViewer } from "@editor/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@editor/components/viewer/LocalEmbedPDF";
 import { PdfProtectionStatus } from "@editor/components/viewer/PdfProtectionStatus";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
-import { canPrintPdf } from "@editor/services/pdfPermissions";
+import { canPrintPdf, pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
@@ -1962,15 +1962,15 @@ const EmbedPdfViewerContent = ({
                       : undefined
               }
               enableAnnotations={
-                shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableAnnotations && !pdfEditingLocked(pdfAccess)
               }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={
-                shouldEnableRedaction && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableRedaction && !pdfEditingLocked(pdfAccess)
               }
               enableFormFill={
-                shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
+                shouldEnableFormFill && !pdfEditingLocked(pdfAccess)
               }
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}

@@ -189,6 +189,25 @@ export default function AdminSecurityPage() {
               })
             }
           />
+          <SettingsToggleRow
+            label={t(
+              "admin.settings.security.blockSignedPdfEdits.label",
+              "Block changes to signed PDFs",
+            )}
+            info={t(
+              "admin.settings.security.blockSignedPdfEdits.description",
+              "Digitally signed PDFs can still be viewed, printed, converted or signed again, but no tool can change them.",
+            )}
+            pending={security.isFieldPending("blockSignedPdfEdits")}
+            checked={security.settings?.blockSignedPdfEdits ?? false}
+            disabled={!loginEnabled}
+            onChange={(checked) =>
+              security.setSettings({
+                ...security.settings,
+                blockSignedPdfEdits: checked,
+              })
+            }
+          />
         </SettingsCard>
         <SettingsCard
           id="securityAuthentication"

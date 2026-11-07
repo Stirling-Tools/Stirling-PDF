@@ -44,7 +44,7 @@ const protectedAccess = {
   pageCount: 1,
 };
 
-function viewer(file: File) {
+function viewer(file: File, signatureCount = 0) {
   const buffer = new ArrayBuffer(8);
   bindPdfViewerSource(buffer, file);
   const opened = PdfTaskHelper.create<PdfDocumentObject>();
@@ -52,6 +52,9 @@ function viewer(file: File) {
   const raw = {
     openDocumentBuffer: vi.fn(() => opened),
     closeDocument: close,
+    getSignatures: vi.fn(() =>
+      PdfTaskHelper.resolve(new Array(signatureCount).fill({})),
+    ),
   };
   const engine = withPdfViewerAccess(raw as unknown as PdfEngine<Blob>);
   return { engine, opened, close, raw, buffer };
@@ -78,6 +81,22 @@ describe("viewer permission readiness", () => {
     await task.toPromise();
     expect(ready).toHaveBeenCalledOnce();
     expect(raw.openDocumentBuffer).toHaveBeenCalledOnce();
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("records whether an unencrypted PDF is signed from the document it opened", async () => {
+    const file = new File(["PDF"], "signed.pdf");
+    const read = vi.fn();
+    Object.defineProperty(file, "arrayBuffer", { value: read });
+    const { engine, opened, raw, buffer } = viewer(file, 1);
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({
+      encrypted: false,
+      signed: true,
+    });
+    expect(raw.getSignatures).toHaveBeenCalledExactlyOnceWith(document);
     expect(read).not.toHaveBeenCalled();
   });
 

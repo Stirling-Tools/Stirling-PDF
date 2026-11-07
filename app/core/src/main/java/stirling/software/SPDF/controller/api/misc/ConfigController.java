@@ -260,6 +260,9 @@ public class ConfigController {
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());
             configData.put(
+                    "blockSignedPdfEdits",
+                    applicationProperties.getSecurity().isBlockSignedPdfEdits());
+            configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
 

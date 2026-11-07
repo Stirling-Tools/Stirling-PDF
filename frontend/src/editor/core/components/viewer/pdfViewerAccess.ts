@@ -71,8 +71,20 @@ export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
           return;
         }
         if (!document.isEncrypted) {
-          rememberUnencryptedPdf(source, document.pageCount);
-          task.resolve(document);
+          engine.getSignatures(document).wait(
+            (signatures) => {
+              rememberUnencryptedPdf(
+                source,
+                document.pageCount,
+                signatures.length > 0,
+              );
+              task.resolve(document);
+            },
+            () => {
+              rememberUnencryptedPdf(source, document.pageCount);
+              task.resolve(document);
+            },
+          );
           return;
         }
         void ensureLocalPdfAccess(
