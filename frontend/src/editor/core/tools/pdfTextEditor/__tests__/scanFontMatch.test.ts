@@ -19,6 +19,7 @@ import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
+  emitFillRect,
   getDroppedBase14Chars,
   resetDroppedBase14Chars,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -1128,6 +1129,43 @@ describe("edits that need no font, and text no font can draw", () => {
         expect(getDroppedBase14Chars()).toEqual(
           expect.arrayContaining(["И", "в"]),
         );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "draws typing in a face that covers it when the scan is too faint to fit one",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const blank = emitFillRect(
+          doc.module,
+          page,
+          { x: 0, y: 0, width: page.width, height: page.height },
+          { r: 255, g: 255, b: 255 },
+          0,
+        );
+        expect(blank).not.toBe(0);
+        expect(
+          renderScanEdit(
+            doc,
+            page,
+            run,
+            state,
+            run.text.replace("Jane", "Иван"),
+          ),
+        ).toBe(true);
+        expect(state.block).toBeNull();
+        expect(state.textPtrs.length).toBeGreaterThan(0);
+        expect(drawnFontNames(doc, state.textPtrs)).not.toContain("Helvetica");
       } finally {
         doc.dispose();
       }

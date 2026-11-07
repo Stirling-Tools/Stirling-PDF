@@ -637,10 +637,15 @@ function wordSpace(state: ScanEditState, style: ScanStyle): number {
   return gaps.length ? median(gaps) : style.fontSize * 0.28;
 }
 
-function fallbackStyle(state: ScanEditState, ink = BLACK): ScanStyle {
+function fallbackStyle(
+  state: ScanEditState,
+  ink = BLACK,
+  text = state.lines.map((l) => l.text).join(" "),
+): ScanStyle {
+  const face = scanFaces().find((f) => faceCovers(f, text)) ?? HELVETICA;
   return {
-    family: HELVETICA.family,
-    fontSize: state.lines[0].height / (HELVETICA.cap / 1000),
+    family: face.family,
+    fontSize: state.lines[0].height / (face.cap / 1000),
     stretch: 1,
     ink,
     weight: 0,
@@ -808,7 +813,7 @@ function renderUprightScanEdit(
   let fittedStyle: ScanStyle | undefined;
   const fitted = () =>
     (fittedStyle ??=
-      blockFit() ?? fallbackStyle(state, inkAgainst(m, page, state)));
+      blockFit() ?? fallbackStyle(state, inkAgainst(m, page, state), text));
   const block = () => o.style ?? fitted();
   const spacing = o.style ?? (needsFont ? fitted() : fallbackStyle(state));
   const inkOf = (w: LayoutWord) =>
