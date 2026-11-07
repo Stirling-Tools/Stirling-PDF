@@ -338,7 +338,7 @@ export const useToolOperation = <TParams>(
           (file) =>
             fileActions.requestPdfOwnerAccess(
               file.fileId,
-              t(`${config.operationType}.title`, config.operationType),
+              t(`home.${config.operationType}.title`, config.operationType),
             ),
           cancellation.signal,
           (file) =>
