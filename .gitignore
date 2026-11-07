@@ -313,3 +313,5 @@ scripts/pdf-collection/
 # Local screenshot artifacts from *-screenshots.spec.ts
 frontend/screenshots/
 frontend/src-tauri/libs/.variant
+# Backend AOT cache trained by desktop:aot
+frontend/src-tauri/libs/*.aot
