@@ -690,6 +690,7 @@ function renderUprightScanEdit(
     tagMarks: run.tagMarks,
     created: state.created,
     textPtrs: state.textPtrs,
+    searchableFontPtr: state.fontPtr,
   };
 
   const shift = state.frame
@@ -1108,8 +1109,9 @@ function previewOnScan(
   const rect = ref.ink.rect;
   const scan = capturePatch(m, page, rect);
   if (!scan) return null;
-  const cover = emitFillRect(m, page, rect, ref.paper, 0);
-  const ptrs = placeText(doc, page, {
+  const sheet = doc.scratchPageFor(page);
+  const cover = emitFillRect(m, sheet.page, rect, ref.paper);
+  const ptrs = placeText(sheet.doc, sheet.page, {
     text: ref.original,
     x: ref.ink.body.x,
     baseline: ref.baseline,
@@ -1121,9 +1123,9 @@ function previewOnScan(
     weight: style.weight,
     hollow: style.hollow,
   });
-  const drawn = capturePatch(m, page, rect);
+  const drawn = capturePatch(m, sheet.page, rect);
   for (const p of [cover, ...ptrs])
-    if (p) removeAndDestroyObject(m, page.pagePtr, p);
+    removeAndDestroyObject(m, sheet.page.pagePtr, p);
   if (!drawn) return null;
   if (style.softness > 0) blurRgba(drawn, style.softness);
   return { scan, drawn };

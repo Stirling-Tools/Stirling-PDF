@@ -3,7 +3,6 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
-  emitFillRect,
   emitTextLine,
   measureObjSpanPt,
   removeAndDestroyObject,
@@ -47,9 +46,10 @@ export function spanOf(
   family: string,
   size: number,
 ): number {
+  const sheet = doc.scratchPageFor(page);
   const ptrs = emitTextLine({
-    doc,
-    page,
+    doc: sheet.doc,
+    page: sheet.page,
     text,
     x: 0,
     y: 0,
@@ -60,7 +60,8 @@ export function spanOf(
     tagMarks: [],
   });
   const span = measureObjSpanPt(doc.module, ptrs);
-  for (const p of ptrs) removeAndDestroyObject(doc.module, page.pagePtr, p);
+  for (const p of ptrs)
+    removeAndDestroyObject(doc.module, sheet.page.pagePtr, p);
   return span ? span.right - span.left : 0;
 }
 
@@ -443,6 +444,22 @@ function midTone(img: { data: Float32Array }): number {
   return (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
 }
 
+function drawnLuma(
+  doc: EditorDocument,
+  page: Page,
+  probe: PageRect,
+  c: Omit<Placement, "inkLeft" | "fill">,
+  inkLeft: number,
+  blur: number,
+) {
+  const m = doc.module;
+  const sheet = doc.scratchPageFor(page);
+  const ptrs = placeText(sheet.doc, sheet.page, { ...c, inkLeft, fill: BLACK });
+  const drawn = renderLuma(m, sheet.page, probe, blur);
+  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
+  return drawn;
+}
+
 /** How much `c` drawn on the spot looks like the scanned pixels there. */
 export function matchScan(
   doc: EditorDocument,
@@ -468,7 +485,6 @@ function measureMatch(
   softness: number | undefined,
   rough: boolean,
 ): ScanMatch {
-  const m = doc.module;
   const probe = probeOf(ink.rect);
   const none = { score: 0, weight: 1 };
   const scanned = scanImage(
@@ -481,10 +497,7 @@ function measureMatch(
   if (!scanned) return none;
   const scan = scanned.img;
   checkDeadline();
-  const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
-  const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
-  const drawn = renderLuma(m, page, probe, softness ?? 2);
-  for (const p of [cover, ...ptrs]) removeAndDestroyObject(m, page.pagePtr, p);
+  const drawn = drawnLuma(doc, page, probe, c, ink.body.x, softness ?? 2);
   if (!drawn || drawn.data.length !== scan.data.length) return none;
   return {
     score: rough
@@ -542,17 +555,21 @@ function measureSoftness(
   if (!scan) return 0;
   const target = edgeWidth(scan.img);
   checkDeadline();
-  const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
-  const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
+  const sheet = doc.scratchPageFor(page);
+  const ptrs = placeText(sheet.doc, sheet.page, {
+    ...c,
+    inkLeft: ink.body.x,
+    fill: BLACK,
+  });
   let best = { r: 0, err: Infinity };
   for (const r of [0, 1, 2]) {
-    const drawn = renderLuma(m, page, probe, r);
+    const drawn = renderLuma(m, sheet.page, probe, r);
     if (!drawn) continue;
     // Ties go to the sharper: crisp text should stay crisp.
     const err = Math.abs(edgeWidth(drawn) - target) + r * 0.05;
     if (err < best.err) best = { r, err };
   }
-  for (const p of [cover, ...ptrs]) removeAndDestroyObject(m, page.pagePtr, p);
+  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
   return best.r;
 }
 

@@ -2,10 +2,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import {
-  capturePatch,
-  sampleBackground,
-} from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import { capturePatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitTextLine,
   measureObjSpanPt,
@@ -16,6 +13,7 @@ import {
   opaqueStroke,
   placeText,
   toInkOnly,
+  type Placement,
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import type { ScanStyle } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import type {
@@ -30,6 +28,7 @@ import {
 
 export const INVISIBLE = 3;
 const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
+const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };
 const MIN_WORD_GAP = 0.15;
 const MAX_SQUEEZE = 0.85;
 
@@ -39,6 +38,7 @@ export interface Canvas {
   tagMarks: readonly TagMark[];
   created: number[];
   textPtrs: number[];
+  searchableFontPtr: number;
 }
 
 export function pasteImage(
@@ -138,7 +138,7 @@ export function drawFromAtlas(
   });
   if (!img) return false;
   emitSearchable(canvas, text, start, baseline, style.fontSize, {
-    originalFontPtr: 0,
+    originalFontPtr: canvas.searchableFontPtr,
     family: style.family,
   });
   return true;
@@ -155,8 +155,7 @@ export function drawInFont(
   replaced: { rect: PageRect; paper: RGBA } | null,
 ): void {
   const { doc, page } = canvas;
-  const m = doc.module;
-  const ptrs = placeText(doc, page, {
+  const placement: Placement = {
     text,
     x,
     baseline,
@@ -167,27 +166,29 @@ export function drawInFont(
     fill: style.ink,
     weight: style.weight,
     hollow: style.hollow,
-  });
-  keepClear(canvas, ptrs, limit);
-  const soft =
-    style.softness > 0
-      ? softenedCopy(canvas, ptrs, style, baseline, replaced)
-      : 0;
-  if (!soft) {
-    canvas.created.push(...ptrs);
-    canvas.textPtrs.push(...ptrs);
+  };
+  if (
+    style.softness > 0 &&
+    softenedCopy(canvas, placement, style, baseline, limit, replaced)
+  ) {
+    emitSearchable(canvas, text, x, baseline, style.fontSize, {
+      originalFontPtr: canvas.searchableFontPtr,
+      family: style.family,
+    });
     return;
   }
-  for (const p of ptrs) removeAndDestroyObject(m, page.pagePtr, p);
-  emitSearchable(canvas, text, x, baseline, style.fontSize, {
-    originalFontPtr: 0,
-    family: style.family,
-  });
+  const ptrs = placeText(doc, page, placement);
+  keepClear(doc.module, ptrs, limit);
+  canvas.created.push(...ptrs);
+  canvas.textPtrs.push(...ptrs);
 }
 
-function keepClear(canvas: Canvas, ptrs: number[], limit: number): void {
+function keepClear(
+  m: EditorDocument["module"],
+  ptrs: number[],
+  limit: number,
+): void {
   if (limit === Infinity) return;
-  const m = canvas.doc.module;
   const span = measureObjSpanPt(m, ptrs);
   if (!span) return;
   const scale = squeezeToFit(span.left, span.right, limit);
@@ -200,33 +201,42 @@ function keepClear(canvas: Canvas, ptrs: number[], limit: number): void {
 // typed words as a picture softened to match.
 function softenedCopy(
   canvas: Canvas,
-  ptrs: number[],
+  placement: Placement,
   style: ScanStyle,
   baseline: number,
+  limit: number,
   replaced: { rect: PageRect; paper: RGBA } | null,
 ): number {
   const { doc, page } = canvas;
   const m = doc.module;
-  const span = measureObjSpanPt(m, ptrs);
-  if (!span) return 0;
-  // Just the glyphs and the blur's reach: a taller copy would also blur a
-  // rule or the next line's ink sitting close above or below.
-  const margin = style.softness / 4 + 0.25;
-  const rect = {
-    x: span.left - margin,
-    y: baseline - style.fontSize * 0.25 - margin,
-    width: span.right - span.left + margin * 2,
-    height: style.fontSize * 1.03 + margin * 2,
-  };
-  if (replaced) {
-    const within = replaced.rect;
-    const top = Math.min(rect.y + rect.height, within.y + within.height);
-    const bottom = Math.max(rect.y, within.y);
-    if (top > bottom) Object.assign(rect, { y: bottom, height: top - bottom });
+  const sheet = doc.scratchPageFor(page);
+  const ptrs = placeText(sheet.doc, sheet.page, placement);
+  try {
+    keepClear(m, ptrs, limit);
+    const span = measureObjSpanPt(m, ptrs);
+    if (!span) return 0;
+    // Just the glyphs and the blur's reach: a taller copy would also blur a
+    // rule or the next line's ink sitting close above or below.
+    const margin = style.softness / 4 + 0.25;
+    const rect = {
+      x: span.left - margin,
+      y: baseline - style.fontSize * 0.25 - margin,
+      width: span.right - span.left + margin * 2,
+      height: style.fontSize * 1.03 + margin * 2,
+    };
+    if (replaced) {
+      const within = replaced.rect;
+      const top = Math.min(rect.y + rect.height, within.y + within.height);
+      const bottom = Math.max(rect.y, within.y);
+      if (top > bottom)
+        Object.assign(rect, { y: bottom, height: top - bottom });
+    }
+    const patch = capturePatch(m, sheet.page, rect);
+    if (!patch) return 0;
+    blurRgba(patch, style.softness);
+    toInkOnly(patch, WHITE);
+    return pasteImage(canvas, patch, patch.rect);
+  } finally {
+    for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
   }
-  const patch = capturePatch(m, page, rect);
-  if (!patch) return 0;
-  blurRgba(patch, style.softness);
-  toInkOnly(patch, replaced?.paper ?? sampleBackground(m, page, rect).fill);
-  return pasteImage(canvas, patch, patch.rect);
 }

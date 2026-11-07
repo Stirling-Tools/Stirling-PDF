@@ -344,6 +344,54 @@ async function savedText(doc: EditorDocument): Promise<string> {
   }
 }
 
+async function savedFonts(doc: EditorDocument) {
+  const { blob } = await exportToBlob(doc, "scan.pdf");
+  const text = new TextDecoder("latin1").decode(await blob.arrayBuffer());
+  return {
+    names: [
+      ...new Set(
+        [...text.matchAll(/\/BaseFont\s*\/([^\s/<>[\]()]+)/g)].map((m) => m[1]),
+      ),
+    ],
+    embedded: text.split("/FontFile2").length - 1,
+  };
+}
+
+describe("what an edit leaves in the saved file", () => {
+  test("keeps only the face the edit draws", { timeout: 120_000 }, async () => {
+    const { doc, page } = await buildScan(
+      [
+        {
+          family: "Carlito",
+          text: SENTENCES[0],
+          size: 12,
+        },
+      ],
+      {
+        dpi: 300,
+        blur: 0.3,
+        noise: 4,
+      },
+    );
+    try {
+      const run = page.runs.find(isScanRun)!;
+      const [top] = await choicesFor(doc, page, run);
+      expect(top.style.family).toBe("Carlito");
+      const state = scanEditOf(doc, run)!;
+      state.override.style = { ...top.style, softness: 0 };
+      renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Quiz"));
+      expect(drawnFontNames(doc, state.textPtrs)).toContain("Carlito");
+      const saved = await savedFonts(doc);
+      expect(saved.embedded).toBe(1);
+      expect(saved.names.filter((n) => !n.startsWith("Helvetica"))).toEqual([
+        "Carlito",
+      ]);
+    } finally {
+      doc.dispose();
+    }
+  });
+});
+
 describe("editing sideways scanned text", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
   const line: ScanLineSpec = {

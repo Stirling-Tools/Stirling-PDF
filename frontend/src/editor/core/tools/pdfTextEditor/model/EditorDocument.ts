@@ -82,6 +82,7 @@ export class EditorDocument {
   private formEnvPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
+  private scratch: EditorDocument | null = null;
 
   private constructor(
     module: WrappedPdfiumModule,
@@ -568,9 +569,49 @@ export class EditorDocument {
     return Array.from(this.pageCache.values());
   }
 
+  scratchPageFor(page: Page): { doc: EditorDocument; page: Page } {
+    this.scratch ??= new EditorDocument(
+      this.module,
+      this.module.FPDF_CreateNewDocument(),
+      EMPTY,
+      null,
+    );
+    return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
+  }
+
+  private blankPageLike(like: Page): Page {
+    const cached = this.pageCache.get(like.index);
+    if (cached) return cached;
+    const m = this.module;
+    const d = like.display;
+    const pagePtr = m.FPDFPage_New(
+      this.docPtr,
+      this.pageCache.size,
+      d.cropWidth,
+      d.cropHeight,
+    );
+    if (!pagePtr) throw new Error("EditorDocument: failed to add a page");
+    const right = d.cropLeft + d.cropWidth;
+    const top = d.cropBottom + d.cropHeight;
+    m.FPDFPage_SetMediaBox(pagePtr, d.cropLeft, d.cropBottom, right, top);
+    m.FPDFPage_SetCropBox(pagePtr, d.cropLeft, d.cropBottom, right, top);
+    m.FPDFPage_SetRotation(pagePtr, d.rotate);
+    const page = new Page({
+      index: like.index,
+      pagePtr,
+      width: like.width,
+      height: like.height,
+      display: d,
+    });
+    this.pageCache.set(like.index, page);
+    return page;
+  }
+
   dispose(): void {
     if (this._disposed) return;
     this._disposed = true;
+    this.scratch?.dispose();
+    this.scratch = null;
     if (this.formEnvPtr) {
       const m = this.module as unknown as {
         FORM_OnBeforeClosePage?: (pagePtr: number, env: number) => void;
