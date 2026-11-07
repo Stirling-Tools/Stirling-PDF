@@ -1,0 +1,260 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
+  SetFontFamilyCommand: class {
+    constructor(readonly opts: { runId: string; nextFamily: string }) {}
+  },
+}));
+vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
+  CompositeCommand: class {
+    constructor(readonly commands: unknown[]) {}
+  },
+}));
+
+import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  SERVER_FONTS_URL,
+  loadServerFonts,
+  resetServerFontsCache,
+} from "@editor/tools/pdfTextEditor/util/serverFonts";
+import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+
+const REGULAR = "1".repeat(64);
+const ITALIC = "2".repeat(64);
+const HEBREW = "5".repeat(64);
+
+const HEBREW_TTF = readFileSync(
+  path.resolve(
+    __dirname,
+    "../../../../../../../app/core/src/main/resources/static/fonts/NotoSansHebrew-Regular.ttf",
+  ),
+);
+
+function face(id: string, style: string, italic: boolean) {
+  return { id, style, bold: false, italic, weight: 400, postscriptName: "" };
+}
+
+const MANIFEST = {
+  families: [
+    {
+      family: "Acme Sans",
+      faces: [face(REGULAR, "Regular", false), face(ITALIC, "Italic", true)],
+    },
+    { family: "Noto Sans Hebrew", faces: [face(HEBREW, "Regular", false)] },
+  ],
+};
+
+interface FakeRun {
+  id: string;
+  pageIndex: number;
+  fontId: string;
+  text: string;
+  locked: boolean;
+  fill: { r: number; g: number; b: number; a: number };
+}
+
+function run(id: string, fontId: string, text = "Hello"): FakeRun {
+  return {
+    id,
+    pageIndex: 0,
+    fontId,
+    text,
+    locked: false,
+    fill: { r: 0, g: 0, b: 0, a: 255 },
+  };
+}
+
+function fakeStore(runs: FakeRun[], selected: string[]) {
+  const openDocument = () => ({ loadedPages: () => [{ runs }] });
+  let doc = openDocument();
+  const selection = { value: { runIds: selected } };
+  const dispatch = vi.fn();
+  const store = {
+    selection,
+    dispatch,
+    get document() {
+      return doc;
+    },
+  } as unknown as EditorStore;
+  return {
+    store,
+    dispatch,
+    select: (ids: string[]) => {
+      selection.value = { runIds: ids };
+    },
+    openAnotherDocument: () => {
+      doc = openDocument();
+    },
+  };
+}
+
+interface Recorded {
+  opts?: { runId: string; nextFamily: string };
+  commands?: Recorded[];
+}
+
+function dispatchedChanges(dispatch: ReturnType<typeof vi.fn>): string[] {
+  const flatten = (cmd: Recorded): Recorded[] =>
+    cmd.commands ? cmd.commands.flatMap(flatten) : [cmd];
+  return dispatch.mock.calls
+    .flatMap(([cmd]) => flatten(cmd as Recorded))
+    .map((cmd) => `${cmd.opts?.runId}:${cmd.opts?.nextFamily}`);
+}
+
+function serveFaces(serve: (id: string) => Promise<{ data: ArrayBuffer }>) {
+  get.mockImplementation(async (url: string) => {
+    if (url === SERVER_FONTS_URL) return { data: MANIFEST };
+    return serve(url.slice(SERVER_FONTS_URL.length + 1));
+  });
+}
+
+function fontBytes(): { data: ArrayBuffer } {
+  return { data: new Uint8Array([0, 1, 0, 0]).buffer };
+}
+
+function actionsFor(store: EditorStore) {
+  return renderHook(() => useSelectionActions(store)).result.current;
+}
+
+describe("useSelectionActions font changes", () => {
+  beforeEach(() => {
+    get.mockReset();
+    resetServerFontsCache();
+    resetLocalFontsCache();
+    resetDeviceFontEmbedCache();
+  });
+
+  afterEach(() => {
+    delete (window as unknown as { queryLocalFonts?: unknown }).queryLocalFonts;
+  });
+
+  it("applies a built-in font without asking for device fonts", async () => {
+    const queryLocalFonts = vi.fn(async () => []);
+    (window as unknown as { queryLocalFonts: unknown }).queryLocalFonts =
+      queryLocalFonts;
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Times-Roman")).toBeNull();
+
+    expect(queryLocalFonts).not.toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
+  });
+
+  it("leaves the text alone when a server font cannot be downloaded", async () => {
+    serveFaces(async () => {
+      throw new Error("gone");
+    });
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBe(
+      "serverFontFailed",
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("changes the runs that were selected when the font was picked", async () => {
+    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    serveFaces(
+      () =>
+        new Promise((resolve) => {
+          finishDownload = resolve;
+        }),
+    );
+    await loadServerFonts();
+    const { store, dispatch, select } = fakeStore(
+      [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")],
+      ["a"],
+    );
+
+    const picked = actionsFor(store).changeFontFamily("Acme Sans");
+    select(["b"]);
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    finishDownload(fontBytes());
+
+    expect(await picked).toBeNull();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Acme Sans"]);
+  });
+
+  it("drops a font change when another document opened during the download", async () => {
+    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    serveFaces(
+      () =>
+        new Promise((resolve) => {
+          finishDownload = resolve;
+        }),
+    );
+    await loadServerFonts();
+    const { store, dispatch, openAnotherDocument } = fakeStore(
+      [run("a", "base14:Helvetica")],
+      ["a"],
+    );
+
+    const picked = actionsFor(store).changeFontFamily("Acme Sans");
+    openAnotherDocument();
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    finishDownload(fontBytes());
+
+    expect(await picked).toBeNull();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps a run's font when its italic face cannot be downloaded", async () => {
+    serveFaces(async (id) => {
+      if (id === ITALIC) throw new Error("gone");
+      return fontBytes();
+    });
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "device:Acme Sans")],
+      ["a"],
+    );
+
+    await actionsFor(store).toggleItalic();
+
+    expect(get).toHaveBeenCalledWith(
+      `${SERVER_FONTS_URL}/${ITALIC}`,
+      expect.anything(),
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("refuses a font that has none of the selected characters", async () => {
+    serveFaces(async () => ({
+      data: HEBREW_TTF.buffer.slice(
+        HEBREW_TTF.byteOffset,
+        HEBREW_TTF.byteOffset + HEBREW_TTF.byteLength,
+      ),
+    }));
+    await loadServerFonts();
+    const english = fakeStore([run("a", "base14:Helvetica", "Hello")], ["a"]);
+    const mixed = fakeStore(
+      [run("b", "base14:Helvetica", "Hello שלום")],
+      ["b"],
+    );
+
+    expect(
+      await actionsFor(english.store).changeFontFamily("Noto Sans Hebrew"),
+    ).toBe("noGlyphs");
+    expect(english.dispatch).not.toHaveBeenCalled();
+
+    expect(
+      await actionsFor(mixed.store).changeFontFamily("Noto Sans Hebrew"),
+    ).toBeNull();
+    expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
+  });
+});

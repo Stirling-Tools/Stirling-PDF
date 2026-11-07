@@ -6,6 +6,7 @@ const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
+import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   SERVER_FONTS_URL,
   resetServerFontsCache,
@@ -26,12 +27,24 @@ const MANIFEST = {
           format: "ttf",
           size: 4,
         },
+        {
+          id: "2".repeat(64),
+          style: "Bold",
+          bold: true,
+          italic: false,
+          weight: 700,
+          postscriptName: "AcmeSans-Bold",
+          format: "ttf",
+          size: 4,
+        },
       ],
     },
   ],
 };
 
-function renderPicker(onChange: (family: string) => Promise<boolean>) {
+function renderPicker(
+  onChange: (family: string) => Promise<FontPickFailure | null>,
+) {
   render(
     <MantineProvider env="test">
       <FontFamilySelect value="Helvetica" onChange={onChange} />
@@ -52,7 +65,7 @@ describe("font picker server fonts", () => {
   });
 
   it("asks the server for its font list only when the picker opens", async () => {
-    const input = renderPicker(async () => true);
+    const input = renderPicker(async () => null);
     expect(get).not.toHaveBeenCalled();
 
     fireEvent.click(input);
@@ -62,8 +75,22 @@ describe("font picker server fonts", () => {
     expect(get).toHaveBeenCalledWith(SERVER_FONTS_URL, expect.anything());
   });
 
+  it("offers the bold cut of a server family that has one", async () => {
+    const onChange = vi.fn(async () => null);
+    const input = renderPicker(onChange);
+
+    fireEvent.click(input);
+    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith("Acme Sans Bold"),
+    );
+  });
+
   it("reports a server font that could not be applied", async () => {
-    const onChange = vi.fn(async () => false);
+    const onChange = vi.fn(
+      async (): Promise<FontPickFailure> => "serverFontFailed",
+    );
     const input = renderPicker(onChange);
 
     fireEvent.click(input);
@@ -71,7 +98,7 @@ describe("font picker server fonts", () => {
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("Acme Sans"));
     expect(
-      await screen.findByTestId("pdf-editor-device-fonts-notice"),
+      await screen.findByText("pdfTextEditor.fontPicker.serverFontFailed"),
     ).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
+  externalFaceKey,
   getExternalFontBytes,
   loadExternalFontBytes,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
@@ -26,7 +27,7 @@ const DEVICE_FONT_ID_PREFIX = "__device_font:";
 
 /** Owned-font id for a family, stable across emits of the same document. */
 export function deviceFontIdFor(family: string): string {
-  return `${DEVICE_FONT_ID_PREFIX}${family.trim().toLowerCase()}`;
+  return `${DEVICE_FONT_ID_PREFIX}${externalFaceKey(family)}`;
 }
 
 interface ExtendedPdfiumRuntime {
@@ -79,13 +80,10 @@ export function resetDeviceFontEmbedCache(): void {
   emitCountByDoc = new WeakMap<EditorDocument, Map<string, number>>();
 }
 
-// True if the face covers every non-whitespace code point. Fails open, leaving
-// the width self-check as the backstop.
-function deviceFontCovers(
+function coverageOf(
   family: string,
   bytes: Uint8Array,
-  text: string,
-): boolean {
+): Map<number, number> | null {
   const key = deviceFontIdFor(family);
   if (!coverageByFamily.has(key)) {
     let parsed: Map<number, number> | null = null;
@@ -96,14 +94,37 @@ function deviceFontCovers(
     }
     coverageByFamily.set(key, parsed);
   }
-  const coverage = coverageByFamily.get(key) ?? null;
-  if (!coverage) return true;
+  return coverageByFamily.get(key) ?? null;
+}
+
+function visibleCodePoints(text: string): number[] {
+  const out: number[] = [];
   for (const ch of text) {
     if (/\s/.test(ch)) continue;
     const cp = ch.codePointAt(0);
-    if (cp === undefined || !coverage.has(cp)) return false;
+    if (cp !== undefined) out.push(cp);
   }
-  return true;
+  return out;
+}
+
+// True if the face covers every non-whitespace code point. Fails open, leaving
+// the width self-check as the backstop.
+function deviceFontCovers(
+  family: string,
+  bytes: Uint8Array,
+  text: string,
+): boolean {
+  const coverage = coverageOf(family, bytes);
+  if (!coverage) return true;
+  return visibleCodePoints(text).every((cp) => coverage.has(cp));
+}
+
+export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
+  const bytes = getExternalFontBytes(family);
+  const coverage = bytes ? coverageOf(family, bytes) : null;
+  const codePoints = visibleCodePoints(text);
+  if (!coverage || codePoints.length === 0) return true;
+  return codePoints.some((cp) => coverage.has(cp));
 }
 
 // Read the family's font file so a later synchronous emit can embed it. The UI

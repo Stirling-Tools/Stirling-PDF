@@ -1,16 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
 import {
   SERVER_FONTS_URL,
+  forgetServerFontList,
   getServerFontBytes,
-  isServerFontFamily,
   loadServerFontBytes,
   loadServerFonts,
   loadedServerFonts,
   resetServerFontsCache,
+  serverFaceFor,
+  serverFontCssFamily,
+  subscribeServerFonts,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   getExternalFontBytes,
@@ -18,12 +21,16 @@ import {
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   listLocalFonts,
+  pickLocalFontFace,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { deviceFontIdFor } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   italicCapability,
   resetDocumentFontMatchCache,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
+
+const requestsAtImport = get.mock.calls.length;
 
 const REGULAR = "1".repeat(64);
 const ITALIC = "2".repeat(64);
@@ -76,6 +83,11 @@ function faceRequests(): string[] {
 }
 
 describe("server fonts", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (document as unknown as { fonts?: unknown }).fonts;
+  });
+
   beforeEach(() => {
     get.mockReset();
     resetServerFontsCache();
@@ -85,6 +97,7 @@ describe("server fonts", () => {
   });
 
   it("fetches nothing until asked", () => {
+    expect(requestsAtImport).toBe(0);
     expect(loadedServerFonts()).toBeNull();
     expect(get).not.toHaveBeenCalled();
   });
@@ -105,8 +118,8 @@ describe("server fonts", () => {
       "Italic",
       "Bold",
     ]);
-    expect(isServerFontFamily("acme-sans")).toBe(true);
-    expect(isServerFontFamily("Other")).toBe(false);
+    expect(serverFaceFor("acme-sans")?.id).toBe(REGULAR);
+    expect(serverFaceFor("Other")).toBeNull();
   });
 
   it("retries the manifest after a failed fetch", async () => {
@@ -115,6 +128,91 @@ describe("server fonts", () => {
 
     serveManifestAndFaces();
     expect(await loadServerFonts()).toHaveLength(3);
+  });
+
+  it("asks again after the server answered with no fonts", async () => {
+    get.mockResolvedValueOnce({ data: { families: [] } });
+    expect(await loadServerFonts()).toBeNull();
+    expect(loadedServerFonts()).toBeNull();
+
+    serveManifestAndFaces();
+    expect(await loadServerFonts()).toHaveLength(3);
+  });
+
+  it("forgets the list when the backend changes, ignoring the old answer", async () => {
+    let answerOldServer: (value: { data: unknown }) => void = () => {};
+    get.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          answerOldServer = resolve;
+        }),
+    );
+    const fromOldServer = loadServerFonts();
+    const listener = vi.fn();
+    const unsubscribe = subscribeServerFonts(listener);
+
+    forgetServerFontList();
+    expect(listener).toHaveBeenCalledTimes(1);
+    get.mockResolvedValueOnce({
+      data: {
+        families: [
+          {
+            family: "Beta Serif",
+            faces: [face("5".repeat(64), "Regular", false, false)],
+          },
+        ],
+      },
+    });
+    const fromNewServer = await loadServerFonts();
+    answerOldServer({ data: MANIFEST });
+
+    expect(await fromOldServer).toBeNull();
+    expect(fromNewServer?.map((font) => font.family)).toEqual(["Beta Serif"]);
+    expect(loadedServerFonts()).toBe(fromNewServer);
+    unsubscribe();
+  });
+
+  it("registers a downloaded face under its own alias, not the family name", async () => {
+    const families: string[] = [];
+    vi.stubGlobal(
+      "FontFace",
+      class {
+        constructor(family: string) {
+          families.push(family);
+        }
+        load() {
+          return Promise.resolve(this);
+        }
+      },
+    );
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: { add: vi.fn() },
+    });
+    serveManifestAndFaces();
+    await loadServerFonts();
+
+    expect(serverFontCssFamily("Acme Sans")).toBeNull();
+    await loadServerFontBytes("Acme Sans");
+
+    expect(families).toEqual([`serverface-${REGULAR}`]);
+    expect(serverFontCssFamily("acme-sans")).toBe(`serverface-${REGULAR}`);
+  });
+
+  it("embeds one face once whichever spelling asked for it", async () => {
+    serveManifestAndFaces();
+    await loadServerFonts();
+
+    await loadServerFontBytes("Acme Sans");
+    await loadServerFontBytes("Acme Sans Regular");
+    await loadServerFontBytes("Acme Sans Italic");
+
+    expect(deviceFontIdFor("Acme Sans Regular")).toBe(
+      deviceFontIdFor("Acme Sans"),
+    );
+    expect(deviceFontIdFor("Acme Sans Italic")).not.toBe(
+      deviceFontIdFor("Acme Sans"),
+    );
   });
 
   it("downloads only the face that answers the request", async () => {
@@ -228,6 +326,44 @@ describe("server fonts", () => {
     expect(italicCapability("device:Acme Sans Bold", true)).toEqual({
       family: null,
       source: null,
+    });
+  });
+
+  it("italicises a server Times New Roman with its own italic face", async () => {
+    get.mockResolvedValue({
+      data: {
+        families: [
+          {
+            family: "Times New Roman",
+            faces: [
+              face("6".repeat(64), "Regular", false, false),
+              face("7".repeat(64), "Italic", false, true),
+            ],
+          },
+        ],
+      },
+    });
+    expect(italicCapability("pdf:1:Times New Roman", true)).toEqual({
+      family: "Times-Italic",
+      source: "base14",
+    });
+
+    const fonts = await loadServerFonts();
+
+    expect(italicCapability("device:Times New Roman", true)).toEqual({
+      family: "Times New Roman Italic",
+      source: "device",
+    });
+    expect(italicCapability("device:Times New Roman Italic", false)).toEqual({
+      family: "Times New Roman",
+      source: "device",
+    });
+    expect(
+      pickLocalFontFace(fonts ?? [], "Times New Roman Italic")?.style,
+    ).toBe("Italic");
+    expect(italicCapability("base14:Times-Roman", true)).toEqual({
+      family: "Times-Italic",
+      source: "base14",
     });
   });
 });

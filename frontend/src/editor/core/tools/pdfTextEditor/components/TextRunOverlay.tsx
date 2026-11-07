@@ -49,6 +49,7 @@ import {
   resetTextMetricsCache,
 } from "@editor/tools/pdfTextEditor/util/textMetrics";
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
@@ -77,13 +78,15 @@ function cssFontFamilyFor(fontId: string): string {
   // The document's own face, when PDFium gave us bytes a FontFace accepts.
   // An unresolved name costs nothing: the browser moves on to the next entry.
   const own = ownFaceFor(fontId);
-  // An edit that outgrew a subset now re-emits in the user's INSTALLED face
+  // An edit that outgrew a subset now re-emits in an installed or server face
   // (`device:Calibri`), so the page really is Calibri. Naming it first keeps
   // the overlay measuring and drawing what the page renders; without it
   // nearestStandardFont collapses it to Helvetica and every advance the
   // overlay predicts is a different font's.
   if (fontId.startsWith("device:")) {
-    return `"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    const server = serverFontCssFamily(family);
+    const served = server ? `"${server}", ` : "";
+    return `${served}"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
   }
   const standard = nearestStandardFont(family);
   if (standard.startsWith("Times")) {

@@ -110,6 +110,7 @@ export function resetLocalFontsCache(): void {
   faceEntries = [];
   resolved = null;
   bytesByFamily.clear();
+  faceKeyByFamily.clear();
   bytesPending.clear();
 }
 
@@ -155,17 +156,47 @@ export interface RequestedFace {
   italic: boolean;
 }
 
+const STYLE_WORDS = /\b(bold|italic|oblique|regular|book|normal|roman)\b/gi;
+
+function styleAxes(text: string): { bold: boolean; italic: boolean } {
+  return {
+    bold: /\bbold\b/i.test(text),
+    italic: /\b(italic|oblique)\b/i.test(text),
+  };
+}
+
 // Split a picker value into family plus style axes, so "Segoe UI Bold" finds
 // "Segoe UI". A bare name yields the upright regular cut.
 export function splitRequested(requested: string): RequestedFace {
   const spaced = requested.trim().replace(/[_-]+/g, " ");
-  const bold = /\bbold\b/i.test(spaced);
-  const italic = /\b(italic|oblique)\b/i.test(spaced);
-  const family = spaced
-    .replace(/\b(bold|italic|oblique|regular|book|normal|roman)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return { family: family || spaced, bold, italic };
+  const family = spaced.replace(STYLE_WORDS, " ").replace(/\s+/g, " ").trim();
+  return { family: family || spaced, ...styleAxes(spaced) };
+}
+
+export function knownFamilyOf(
+  fonts: LocalFont[],
+  requested: string,
+): RequestedFace | null {
+  const name = normaliseName(requested);
+  let best: RequestedFace | null = null;
+  let bestLength = 0;
+  for (const font of fonts) {
+    const family = normaliseName(font.family);
+    if (!family || family.length <= bestLength) continue;
+    if (name !== family && !name.startsWith(`${family} `)) continue;
+    const rest = name.slice(family.length);
+    if (rest.replace(STYLE_WORDS, "").trim()) continue;
+    best = { family: font.family, ...styleAxes(rest) };
+    bestLength = family.length;
+  }
+  return best;
+}
+
+export function resolveRequested(
+  fonts: LocalFont[],
+  requested: string,
+): RequestedFace {
+  return knownFamilyOf(fonts, requested) ?? splitRequested(requested);
 }
 
 // The style words of a face. The family is excluded on purpose so a face of
@@ -218,23 +249,13 @@ export function pickLocalFontFace(
   fonts: LocalFont[],
   requested: string,
 ): LocalFont | null {
-  const wanted = splitRequested(requested);
-  const exact = fonts.filter(
-    (font) => normaliseName(font.family) === normaliseName(requested),
-  );
-  const group =
-    exact.length > 0
-      ? exact
-      : fonts.filter(
-          (font) => normaliseName(font.family) === normaliseName(wanted.family),
-        );
-  if (group.length === 0) return null;
-  const wantBold = exact.length > 0 ? false : wanted.bold;
-  const wantItalic = exact.length > 0 ? false : wanted.italic;
+  const wanted = resolveRequested(fonts, requested);
+  const family = normaliseName(wanted.family);
   let best: LocalFont | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
-  for (const font of group) {
-    const score = scoreFace(font, wantBold, wantItalic);
+  for (const font of fonts) {
+    if (normaliseName(font.family) !== family) continue;
+    const score = scoreFace(font, wanted.bold, wanted.italic);
     if (score > bestScore) {
       best = font;
       bestScore = score;
@@ -268,11 +289,17 @@ async function readFaceBytes(source: unknown): Promise<Uint8Array | null> {
 }
 
 const bytesByFamily = new Map<string, Uint8Array>();
+const faceKeyByFamily = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
 
 /** Already-read bytes for a family, or null. Never prompts, never awaits. */
 export function getLocalFontBytes(family: string): Uint8Array | null {
   return bytesByFamily.get(normaliseName(family)) ?? null;
+}
+
+/** Which installed face the bytes for `family` were read from, or null. */
+export function getLocalFaceKey(family: string): string | null {
+  return faceKeyByFamily.get(normaliseName(family)) ?? null;
 }
 
 // The font file bytes behind a family name, cached for the session. Null when
@@ -293,7 +320,10 @@ export async function loadLocalFontBytes(
     if (!picked) return null;
     const entry = faceEntries.find((candidate) => candidate.font === picked);
     const bytes = entry ? await readFaceBytes(entry.source) : null;
-    if (bytes) bytesByFamily.set(key, bytes);
+    if (bytes) {
+      bytesByFamily.set(key, bytes);
+      faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);
+    }
     return bytes;
   })();
   bytesPending.set(key, job);
