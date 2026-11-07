@@ -119,6 +119,11 @@ function deviceFontCovers(
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
+export function deviceFontCoverage(family: string): Map<number, number> | null {
+  const bytes = getExternalFontBytes(family);
+  return bytes ? coverageOf(family, bytes) : null;
+}
+
 export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
   const bytes = getExternalFontBytes(family);
   const coverage = bytes ? coverageOf(family, bytes) : null;
