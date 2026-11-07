@@ -199,8 +199,8 @@ function DeviceFontsNote({
   deviceFonts: ScanFontMatch["deviceFonts"];
 }) {
   const { t } = useTranslation();
-  const { permission, count, loading, load } = deviceFonts;
-  if (permission === "unsupported") return null;
+  const { available, permission, count, loading, load } = deviceFonts;
+  if (!available || permission === "unsupported") return null;
   if (count !== null && count > 0)
     return (
       <Group

@@ -14,6 +14,7 @@ import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalF
 import {
   BUNDLED_SCAN_FONTS,
   candidateFaces,
+  deviceFontsCouldCover,
   loadBundledScanFaces,
   loadDeviceScanFaces,
   loadScriptScanFaces,
@@ -251,6 +252,18 @@ function stubDeviceFonts(faces: StubFace[]): void {
         blob: async () => ({ arrayBuffer: async () => bytesOf(file) }),
       }));
 }
+
+describe("which scripts device fonts are tried for", () => {
+  it("tries device fonts for Latin, Cyrillic and listed scripts", () => {
+    expect(deviceFontsCouldCover("Invoice 4471 for Jane")).toBe(true);
+    expect(deviceFontsCouldCover("Счёт для Ивана")).toBe(true);
+    expect(deviceFontsCouldCover("청구서 4471")).toBe(true);
+  });
+
+  it("does not for a script no listed device font draws", () => {
+    expect(deviceFontsCouldCover("ინვოისი 4471")).toBe(false);
+  });
+});
 
 describe("device scan faces", () => {
   it("loads the bold cut of a family whose name contains a style word", async () => {

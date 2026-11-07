@@ -44,6 +44,7 @@ import {
   type LocalFontPermission,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
+  deviceFontsCouldCover,
   deviceScanFaceCount,
   faceCovers,
   loadDeviceScanFaces,
@@ -70,6 +71,7 @@ export interface ScanFontMatch {
   show: () => void;
   close: () => void;
   deviceFonts: {
+    available: boolean;
     permission: LocalFontPermission;
     loading: boolean;
     count: number | null;
@@ -294,6 +296,7 @@ export function useScanFontMatch(
     },
     close: () => setPicking(null),
     deviceFonts: {
+      available: !!targetRun && deviceFontsCouldCover(targetRun.run.text),
       permission,
       loading: loadingDevice,
       count: deviceScanFaceCount(),

@@ -303,6 +303,18 @@ export function candidateFaces(text: string): Face[] {
   );
 }
 
+const DEVICE_TEXT_SCRIPTS =
+  /[\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}]/u;
+
+export function deviceFontsCouldCover(text: string): boolean {
+  for (const ch of text) {
+    if (!/\p{L}/u.test(ch) || DEVICE_TEXT_SCRIPTS.test(ch)) continue;
+    if (!SCRIPTS.some((s) => s.device.length > 0 && s.chars.test(ch)))
+      return false;
+  }
+  return true;
+}
+
 export function scanScriptsOf(text: string): Script[] {
   return SCRIPTS.filter((s) => s.chars.test(text)).map((s) => s.script);
 }

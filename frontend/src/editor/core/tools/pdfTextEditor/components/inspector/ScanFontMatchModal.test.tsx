@@ -17,6 +17,7 @@ function match(overrides: Partial<ScanFontMatch> = {}): ScanFontMatch {
     show: vi.fn(),
     close: vi.fn(),
     deviceFonts: {
+      available: true,
       permission: "unsupported",
       loading: false,
       count: null,
@@ -54,5 +55,28 @@ describe("scan font picker hint", () => {
     expect(
       screen.getByText("pdfTextEditor.scanFont.hintOthers"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("scan font picker device fonts prompt", () => {
+  const prompting = (available: boolean) =>
+    match({
+      deviceFonts: {
+        available,
+        permission: "prompt",
+        loading: false,
+        count: null,
+        load: vi.fn(),
+      },
+    });
+
+  it("asks for device fonts when the text's script has candidates", () => {
+    renderModal(prompting(true));
+    expect(screen.getByTestId("pdf-editor-scan-font-device")).toBeVisible();
+  });
+
+  it("does not ask when no device font could draw the text's script", () => {
+    renderModal(prompting(false));
+    expect(screen.queryByTestId("pdf-editor-scan-font-device")).toBeNull();
   });
 });
