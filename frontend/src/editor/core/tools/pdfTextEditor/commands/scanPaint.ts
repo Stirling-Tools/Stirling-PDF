@@ -69,19 +69,25 @@ export interface SearchableFont {
   family: string;
 }
 
+export interface Span {
+  left: number;
+  right: number;
+}
+
 export function invisibleText(
   canvas: Canvas,
   text: string,
-  x: number,
+  span: Span,
   baseline: number,
   fontSize: number,
   font: SearchableFont,
 ): number[] {
+  const m = canvas.doc.module;
   const ptrs = emitTextLine({
     doc: canvas.doc,
     page: canvas.page,
     text,
-    x,
+    x: span.left,
     y: baseline,
     fontSize,
     fill: BLACK,
@@ -90,19 +96,33 @@ export function invisibleText(
     renderMode: INVISIBLE,
     tagMarks: canvas.tagMarks,
   });
-  opaqueStroke(canvas.doc.module, ptrs);
+  opaqueStroke(m, ptrs);
+  fitToSpan(m, ptrs, span);
   return ptrs;
+}
+
+function fitToSpan(
+  m: EditorDocument["module"],
+  ptrs: number[],
+  target: Span,
+): void {
+  const span = measureObjSpanPt(m, ptrs);
+  if (!span || span.right - span.left < 1e-3 || target.right <= target.left)
+    return;
+  const sx = (target.right - target.left) / (span.right - span.left);
+  for (const p of ptrs)
+    transformObject(m, p, sx, 0, 0, 1, target.left - sx * span.left, 0);
 }
 
 export function emitSearchable(
   canvas: Canvas,
   text: string,
-  x: number,
+  span: Span,
   baseline: number,
   fontSize: number,
   font: SearchableFont,
 ): void {
-  const ptrs = invisibleText(canvas, text, x, baseline, fontSize, font);
+  const ptrs = invisibleText(canvas, text, span, baseline, fontSize, font);
   canvas.created.push(...ptrs);
   canvas.textPtrs.push(...ptrs);
 }
@@ -131,14 +151,19 @@ export function drawFromAtlas(
 ): boolean {
   const left = start - glyphs.inkLeft / atlas.scale;
   const width = glyphs.width / atlas.scale;
+  const squeeze = squeezeToFit(left, left + width, limit);
   const img = pasteImage(canvas, glyphs, {
     x: left,
     y: baseline - atlas.descent,
-    width: width * squeezeToFit(left, left + width, limit),
+    width: width * squeeze,
     height: glyphs.height / atlas.scale,
   });
   if (!img) return false;
-  emitSearchable(canvas, text, start, baseline, style.fontSize, {
+  const ink = {
+    left: left + (glyphs.inkLeft / atlas.scale) * squeeze,
+    right: left + (glyphs.inkRight / atlas.scale) * squeeze,
+  };
+  emitSearchable(canvas, text, ink, baseline, style.fontSize, {
     originalFontPtr: canvas.searchableFontPtr,
     family: style.family,
   });
@@ -167,8 +192,10 @@ export function drawInFont(
     weight: style.weight,
     hollow: style.hollow,
   };
-  if (style.softness > 0 && softenedCopy(canvas, placement, style, limit)) {
-    emitSearchable(canvas, text, x, baseline, style.fontSize, {
+  const softened =
+    style.softness > 0 ? softenedCopy(canvas, placement, style, limit) : null;
+  if (softened) {
+    emitSearchable(canvas, text, softened, baseline, style.fontSize, {
       originalFontPtr: canvas.searchableFontPtr,
       family: style.family,
     });
@@ -201,7 +228,7 @@ function softenedCopy(
   placement: Placement,
   style: ScanStyle,
   limit: number,
-): number {
+): Span | null {
   const { doc, page } = canvas;
   const m = doc.module;
   const sheet = doc.scratchPageFor(page);
@@ -209,7 +236,7 @@ function softenedCopy(
   try {
     keepClear(m, ptrs, limit);
     const box = measureObjBoundsPt(m, ptrs);
-    if (!box) return 0;
+    if (!box) return null;
     const margin =
       style.softness / 4 + Math.max(style.weight, style.hollow) / 2 + 0.25;
     const patch = capturePatch(m, sheet.page, {
@@ -218,12 +245,14 @@ function softenedCopy(
       width: box.right - box.left + margin * 2,
       height: box.top - box.bottom + margin * 2,
     });
-    if (!patch) return 0;
+    if (!patch) return null;
     blurRgba(patch, style.softness);
     toInkOnly(patch, WHITE);
     for (let i = 0; i < patch.rgba.length; i += 4)
       patch.rgba.set([placement.fill.r, placement.fill.g, placement.fill.b], i);
-    return pasteImage(canvas, patch, patch.rect);
+    return pasteImage(canvas, patch, patch.rect)
+      ? { left: box.left, right: box.right }
+      : null;
   } finally {
     for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
   }

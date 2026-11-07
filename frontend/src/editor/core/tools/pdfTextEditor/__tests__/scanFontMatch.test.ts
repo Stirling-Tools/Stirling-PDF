@@ -31,6 +31,7 @@ import {
   renderScanEdit,
   scanEditOf,
   scanRunNeedsFit,
+  scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   preferredScanFace,
@@ -836,6 +837,133 @@ describe("drawing typed words from the scan's own letters", () => {
       const fromFont = await retypeAsJane(true);
       expect(fromScan).toBeGreaterThan(0.75);
       expect(fromScan).toBeGreaterThan(fromFont + 0.2);
+    },
+  );
+});
+
+describe("edits that need no font, and text no font can draw", () => {
+  const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
+
+  test(
+    "deletes words from a block no font can draw, and a refused edit leaves the deletion as it was",
+    { timeout: 120_000 },
+    async () => {
+      await staticFace("Noto Sans KR", "NotoSansKR-Regular.ttf");
+      const { doc, page } = await buildScan(
+        [
+          {
+            family: "Noto Sans KR",
+            text: "청구서 4471 김민준 님 6월 30일까지 납부",
+            size: 14,
+            ocrFamily: "Noto Sans KR",
+          },
+        ],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const original = run.text;
+        const line = state.lines[0];
+        const region = {
+          x: 20,
+          y: line.baseline - 6,
+          width: 500,
+          height: line.height + 8,
+        };
+        expect(scanTypingDropped(run)).toBe(true);
+        const deleted = original.replace("김민준 ", "");
+        expect(renderScanEdit(doc, page, run, state, deleted)).toBe(true);
+        expect(run.text).toBe(deleted);
+        expect(state.lifted.size).toBeGreaterThan(0);
+        expect(scanRunNeedsFit(doc, run)).toBe(true);
+        const afterDelete = renderLuma(doc.module, page, region, 0)!.data;
+        const leaves = [...run.paragraphLeafPtrs];
+
+        expect(
+          renderScanEdit(
+            doc,
+            page,
+            run,
+            state,
+            deleted.replace("님", "이서연"),
+          ),
+        ).toBe(false);
+        expect(run.text).toBe(deleted);
+        expect(run.paragraphLeafPtrs).toEqual(leaves);
+        expect(renderLuma(doc.module, page, region, 0)!.data).toEqual(
+          afterDelete,
+        );
+
+        expect(renderScanEdit(doc, page, run, state, original)).toBe(true);
+        expect(state.lifted.size).toBe(0);
+        expect(await savedText(doc)).toContain("김민준");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "refuses typed Hebrew in a block whose face covers it, rather than drawing it backwards",
+    { timeout: 120_000 },
+    async () => {
+      resetDroppedBase14Chars();
+      const { doc, page } = await buildScan(
+        [{ family: "DejaVu Sans", text: SENTENCES[0], size: 12 }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        expect(scanTypingDropped(run)).toBe(false);
+        expect(
+          renderScanEdit(
+            doc,
+            page,
+            run,
+            state,
+            run.text.replace("Jane", "שרה"),
+          ),
+        ).toBe(false);
+        expect(state.created).toEqual([]);
+        expect(getDroppedBase14Chars()).toEqual(
+          expect.arrayContaining(["ש", "ר", "ה"]),
+        );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "keeps the spaces between words whose hidden copies were redrawn",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const original = run.text;
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          state,
+          original
+            .replace("Invoice", "Invoices issued")
+            .replace("Jane", "Mary"),
+        );
+        const edited = await savedText(doc);
+        expect(edited).toContain("issued 4471 for Mary Example is due");
+        renderScanEdit(doc, page, run, state, original);
+        expect(await savedText(doc)).toContain(SENTENCES[0]);
+      } finally {
+        doc.dispose();
+      }
     },
   );
 });
