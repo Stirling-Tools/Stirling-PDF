@@ -21,6 +21,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -291,8 +292,8 @@ public class MergeController {
             }
 
             if (generateTocPage) {
-                File tocPage = generateTocPage(toFileWithPageCount(files));
-                inputPaths.addFirst(tocPage.toPath());
+                File tocDocument = generateToc(toFileWithPageCount(files));
+                inputPaths.addFirst(tocDocument.toPath());
             }
 
             int[] pageCounts;
@@ -395,96 +396,25 @@ public class MergeController {
                 throw e;
             }
         }
-
-        result.sort(Comparator.comparingInt(o -> o.pageCount));
         return result.toArray(MultipartFileWithPdfPageCount[]::new);
     }
 
-    private File generateTocPage(MultipartFileWithPdfPageCount[] files) throws IOException {
+    private File generateToc(MultipartFileWithPdfPageCount[] files) throws IOException {
         File tocPage = tempFileManager.createTempFile(".pdf");
-        PDType1Font titleFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-        PDFont contentFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
+        int filesToGenerate = (files.length / 32) + 1;
+        int totalPages = filesToGenerate + 1;
 
         try (PDDocument document = new PDDocument()) {
-            PDPage blankPage = new PDPage(PDRectangle.A4);
-            float pageWidth = PDRectangle.A4.getWidth();
-            float pageHeight = PDRectangle.A4.getHeight();
-
-            int titleFontSize = 16;
-            int contentFontSize = 10;
-
-            try (PDPageContentStream cs =
-                    new PDPageContentStream(
-                            document,
-                            blankPage,
-                            PDPageContentStream.AppendMode.APPEND,
-                            false,
-                            false)) {
-                cs.beginText();
-                cs.setFont(titleFont, titleFontSize);
-                String title = "Contents";
-
-                float centeredTitle =
-                        pageWidth / 2
-                                - (titleFont.getStringWidth(title) / 1000f * titleFontSize) / 2;
-                cs.newLineAtOffset(centeredTitle, pageHeight - 50);
-                cs.showText(title);
-                cs.endText();
-
-                float tocContentStartHeight = pageHeight - 130;
-
-                float lineHeight = 20;
-                int tocContentPadding = 80;
-                int totalPages = 0;
-
-                String space = " ";
-                float spaceWidth = contentFont.getStringWidth(space) / 1000 * contentFontSize;
-
-                for (int i = 0; i < files.length; i++) {
-                    MultipartFile multipartFile = files[i].file;
-
-                    cs.beginText();
-                    cs.newLineAtOffset(tocContentPadding, tocContentStartHeight - (i * lineHeight));
-
-                    totalPages += files[i].pageCount();
-
-                    float target = pageWidth - tocContentPadding;
-                    float pageCountWidth =
-                            contentFont.getStringWidth(String.valueOf(totalPages))
-                                    / 1000
-                                    * contentFontSize;
-
-                    String entryName =
-                            FilenameUtils.removeExtension(multipartFile.getOriginalFilename());
-
-                    StringBuilder dots = new StringBuilder();
-                    String dot = ".";
-
-                    float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
-
-                    float j =
-                            tocContentPadding
-                                    + contentFont.getStringWidth(entryName)
-                                            / 1000
-                                            * contentFontSize;
-
-                    float numberMargin = dotWidth * 2;
-                    while (j < target - pageCountWidth - spaceWidth - numberMargin) {
-                        dots.append(dot);
-                        j += dotWidth;
-                    }
-
-                    cs.setFont(contentFont, contentFontSize);
-                    cs.showText(entryName + space + dots);
-
-                    cs.newLineAtOffset(target - tocContentPadding - pageCountWidth, 0);
-                    cs.showText(String.valueOf(totalPages));
-
-                    cs.endText();
-                }
+            for (int i = 0; i < filesToGenerate; i++) {
+                totalPages +=
+                        addTocPage(
+                                Arrays.copyOfRange(
+                                        files, (i * 32), Math.min((i * 32) + 31, files.length)),
+                                document,
+                                totalPages,
+                                i == 0);
             }
-
-            document.addPage(blankPage);
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 document.save(baos);
@@ -492,7 +422,152 @@ public class MergeController {
                 Files.write(tocPage.toPath(), baos.toByteArray());
             }
         }
+
         return tocPage;
+    }
+
+    private static int addTocPage(
+            MultipartFileWithPdfPageCount[] files,
+            PDDocument document,
+            int startPage,
+            boolean generateTitle)
+            throws IOException {
+        PDPage blankPage = new PDPage(PDRectangle.A4);
+        float pageWidth = PDRectangle.A4.getWidth();
+        float pageHeight = PDRectangle.A4.getHeight();
+
+        PDFont contentFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
+        int contentFontSize = 10;
+        int totalPages = 0;
+
+        try (PDPageContentStream cs =
+                new PDPageContentStream(
+                        document, blankPage, PDPageContentStream.AppendMode.APPEND, false, false)) {
+
+            if (generateTitle) {
+                addTocTitle(cs, pageWidth, pageHeight);
+            }
+
+            float tocContentStartHeight = pageHeight - 130;
+            float lineHeight = 20;
+            int tocContentPadding = 80;
+
+            String space = " ";
+            String dot = ".";
+
+            for (int i = 0; i < files.length; i++) {
+                cs.beginText();
+                MultipartFile multipartFile = files[i].file;
+                cs.newLineAtOffset(tocContentPadding, tocContentStartHeight - (i * lineHeight));
+
+                float target = pageWidth - tocContentPadding;
+                int currentDocumentPageStart = startPage + totalPages;
+                float pageCountWidth =
+                        contentFont.getStringWidth(String.valueOf(currentDocumentPageStart))
+                                / 1000
+                                * contentFontSize;
+
+                String entryName =
+                        fitTextToWidth(
+                                FilenameUtils.removeExtension(multipartFile.getOriginalFilename()),
+                                contentFont,
+                                contentFontSize,
+                                target - tocContentPadding,
+                                true);
+
+                float spaceWidth = contentFont.getStringWidth(space) / 1000 * contentFontSize;
+
+                float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
+                float numberMargin = dotWidth * 2;
+
+                float end = target - pageCountWidth - spaceWidth - numberMargin;
+                float start =
+                        tocContentPadding
+                                + contentFont.getStringWidth(entryName) / 1000 * contentFontSize;
+                StringBuilder dots = generateDots(contentFont, contentFontSize, start, end);
+
+                cs.setFont(contentFont, contentFontSize);
+                cs.showText(entryName + space + dots);
+
+                cs.newLineAtOffset(target - tocContentPadding - pageCountWidth, 0);
+                cs.showText(String.valueOf(currentDocumentPageStart));
+                cs.endText();
+
+                totalPages += files[i].pageCount();
+            }
+        }
+
+        document.addPage(blankPage);
+        return totalPages;
+    }
+
+    private static void addTocTitle(PDPageContentStream cs, float pageWidth, float pageHeight)
+            throws IOException {
+        PDType1Font titleFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+        int titleFontSize = 16;
+
+        cs.beginText();
+        cs.setFont(titleFont, titleFontSize);
+        String title = "Contents";
+        float centeredTitle =
+                pageWidth / 2 - (titleFont.getStringWidth(title) / 1000f * titleFontSize) / 2;
+        cs.newLineAtOffset(centeredTitle, pageHeight - 70);
+        cs.showText(title);
+        cs.endText();
+    }
+
+    private static @NonNull StringBuilder generateDots(
+            PDFont contentFont, int contentFontSize, float start, float end) throws IOException {
+        StringBuilder dots = new StringBuilder();
+        String dot = ".";
+
+        float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
+        float j = start;
+        while (j < end) {
+            dots.append(dot);
+            j += dotWidth;
+        }
+
+        return dots;
+    }
+
+    public static String fitTextToWidth(
+            String text, PDFont font, float fontSize, float maxWidthPt, boolean withEllipsis)
+            throws IOException {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        if (getTextWidth(text, font, fontSize) <= maxWidthPt) {
+            return text;
+        }
+
+        String suffix = withEllipsis ? "…" : "";
+        float suffixWidth = getTextWidth(suffix, font, fontSize);
+        float targetWidth = maxWidthPt - suffixWidth;
+
+        if (targetWidth <= 0) {
+            return suffix;
+        }
+
+        int end = text.length();
+        while (end > 0 && getTextWidth(text.substring(0, end), font, fontSize) > targetWidth) {
+            end--;
+        }
+
+        String cut = text.substring(0, end);
+
+        int lastSpace = cut.lastIndexOf(' ');
+        if (lastSpace > end / 2) {
+            cut = cut.substring(0, lastSpace);
+        }
+
+        return cut.trim() + suffix;
+    }
+
+    private static float getTextWidth(String text, PDFont font, float fontSize) throws IOException {
+        return (font.getStringWidth(text) / 1000f) * fontSize;
     }
 
     private record MultipartFileWithPdfPageCount(MultipartFile file, int pageCount) {}
