@@ -33,7 +33,10 @@ import { useWheelZoom } from "@editor/hooks/useWheelZoom";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileId } from "@editor/types/file";
-import { WorkbenchExportFile } from "@editor/types/workbenchBar";
+import {
+  WorkbenchExportFile,
+  WorkbenchExportOptions,
+} from "@editor/types/workbenchBar";
 import { useWorkbenchViewFileActions } from "@editor/hooks/useWorkbenchViewFileActions";
 import { CloseFilesConfirmModal } from "@editor/components/shared/CloseFilesConfirmModal";
 import { alert } from "@editor/components/toast";
@@ -802,46 +805,62 @@ export default function PageTracks() {
     void save();
   }, [save]);
 
-  // Downloads what the editor shows: an unchanged track is its stored file, an
-  // edited one or a split is rendered from its pages without being saved.
-  const getExportFiles = useCallback(async (): Promise<
-    WorkbenchExportFile[] | null
-  > => {
-    const lookup = {
-      getStub: fileSelectors.getStirlingFileStub,
-      getFile: fileSelectors.getFile,
-      signal: inspectionLifetime.current.signal,
-    };
-    const trackIds = workspace.order.filter(
-      (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
-    );
-    try {
-      assertFilesNotBlocked(
-        policyIdsForTracks(
-          workspace,
-          trackIds.filter((id) => changedSet.has(id)),
-          lookup.getStub,
-        ),
+  // Exports what the editor shows: an unchanged track is its stored file, an
+  // edited one or a split is rendered from its pages without being saved. A save
+  // home versions the edits first, so the home and the workbench hold the same file.
+  const getExportFiles = useCallback(
+    async ({ commitEdits = false }: WorkbenchExportOptions = {}): Promise<
+      WorkbenchExportFile[] | null
+    > => {
+      const committed =
+        commitEdits && changedSet.size > 0 ? await save() : undefined;
+      if (committed === null) return null;
+      const lookup = {
+        getStub: fileSelectors.getStirlingFileStub,
+        getFile: fileSelectors.getFile,
+        signal: inspectionLifetime.current.signal,
+      };
+      const trackIds = workspace.order.filter(
+        (id) => (workspace.tracks[id]?.pages.length ?? 0) > 0,
       );
-      const files: WorkbenchExportFile[] = [];
-      for (const id of trackIds) {
-        const track = workspace.tracks[id];
-        if (!track) continue;
-        if (!changedSet.has(id)) {
-          const file = lookup.getFile(id);
-          if (file) files.push({ file, fileId: id });
-          continue;
+      try {
+        assertFilesNotBlocked(
+          policyIdsForTracks(
+            workspace,
+            trackIds.filter((id) => changedSet.has(id)),
+            lookup.getStub,
+          ),
+        );
+        const files: WorkbenchExportFile[] = [];
+        for (const id of trackIds) {
+          const track = workspace.tracks[id];
+          if (!track) continue;
+          const version = committed?.get(id);
+          if (version) {
+            files.push({
+              file: version.file,
+              fileId: version.stub.id,
+              stub: version.stub,
+            });
+            continue;
+          }
+          if (!changedSet.has(id)) {
+            const file = lookup.getFile(id);
+            if (file) files.push({ file, fileId: id });
+            continue;
+          }
+          const built = await buildTrackFile(track, lookup);
+          if (built) files.push({ file: built.file });
         }
-        const built = await buildTrackFile(track, lookup);
-        if (built) files.push({ file: built.file });
+        return files;
+      } catch (error) {
+        if (lookup.signal.aborted) return null;
+        alertExportFailure(error, t);
+        return null;
       }
-      return files;
-    } catch (error) {
-      if (lookup.signal.aborted) return null;
-      alertExportFailure(error, t);
-      return null;
-    }
-  }, [changedSet, fileSelectors, t, workspace]);
+    },
+    [changedSet, fileSelectors, save, t, workspace],
+  );
 
   const [downloadingSelection, setDownloadingSelection] = useState(false);
   const downloadSelection = useCallback(
@@ -922,7 +941,7 @@ export default function PageTracks() {
       return;
     }
     // Saving versions the file under a new id; one that emptied is already closed.
-    const savedId = versioned.get(request);
+    const savedId = versioned.get(request)?.stub.id;
     if (savedId) setCloseOnceSaved(savedId);
   }, [closeRequest, closeRequestEdits, fileActions, save]);
 
