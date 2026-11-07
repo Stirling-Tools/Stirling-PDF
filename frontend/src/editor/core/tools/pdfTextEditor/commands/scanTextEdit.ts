@@ -42,6 +42,8 @@ import {
   preferredScanFace,
   preferredStyle,
   rankStyles,
+  withPreferredFace,
+  type FitInput,
   type FitWord,
   type RankedStyle,
   type ScanStyle,
@@ -62,6 +64,7 @@ import {
   HELVETICA,
   faceCovers,
   scanFaces,
+  scanFacesGeneration,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import {
@@ -128,10 +131,12 @@ export interface ScanEditState {
   block?: {
     style: ScanStyle;
     top: number;
+    xHeight: number | null;
     ranked: RankedStyle[];
     ref: SpanInk;
     preferred: string | null;
   } | null;
+  undrawableWithFaces?: number;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
   face?: Face | null;
@@ -426,21 +431,27 @@ function inkedLines(doc: EditorDocument, page: Page, state: ScanEditState) {
     );
 }
 
-function rank(
+const fitInput = (
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
   spans: SpanInk[],
   ref: SpanInk,
-): RankedStyle[] {
-  return rankStyles(doc, page, {
-    spans,
-    ref,
-    words: wordsOf(state.lines),
-    wordsLookMono: () => faceFor(doc, page, state) === COURIER,
-    neighboursLookMono: () => nearbyFace(doc, page, state) === COURIER,
-  });
-}
+): FitInput => ({
+  spans,
+  ref,
+  words: wordsOf(state.lines),
+  wordsLookMono: () => faceFor(doc, page, state) === COURIER,
+  neighboursLookMono: () => nearbyFace(doc, page, state) === COURIER,
+});
+
+const rank = (
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  spans: SpanInk[],
+  ref: SpanInk,
+) => rankStyles(doc, page, fitInput(doc, page, state, spans, ref));
 
 function fittedForOtherPreference(
   doc: EditorDocument,
@@ -450,16 +461,23 @@ function fittedForOtherPreference(
   if (!block || state.edited) return false;
   const preferred = preferredScanFace(doc);
   return (
+    preferred !== null &&
     block.preferred !== preferred &&
     !block.ranked.some((r) => r.face.label === preferred)
   );
 }
 
+const undrawableWithFewerFaces = (state: ScanEditState) =>
+  state.block === null && state.undrawableWithFaces !== scanFacesGeneration();
+
 export function scanRunNeedsFit(doc: EditorDocument, run: TextRun): boolean {
   if (!isScanRun(run)) return false;
   const state = run.scanEdit;
   return (
-    !state || state.block === undefined || fittedForOtherPreference(doc, state)
+    !state ||
+    state.block === undefined ||
+    undrawableWithFewerFaces(state) ||
+    fittedForOtherPreference(doc, state)
   );
 }
 
@@ -514,14 +532,48 @@ function fitBlock(
   const ref = referenceSpan(doc, page, state, longest);
   const ranked = rank(doc, page, state, spans, ref);
   if (ranked.length === 0) return null;
+  const xHeights = spans.flatMap((s) =>
+    s.ink.xLine === null ? [] : [s.ink.xLine - s.baseline],
+  );
   return {
     style: ranked[0].style,
     top: median(spans.map(inkTop)),
+    xHeight: xHeights.length ? median(xHeights) : null,
     ranked,
     ref,
     preferred: preferredScanFace(doc),
   };
 }
+
+// One style for the whole block, fitted to its longest line, so an edit never
+// switches face or size part way through a sentence. Only text the scan itself
+// sets at another size (a label and its value on one OCR line) gets its own.
+function withPreferredFit(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  block: NonNullable<ScanEditState["block"]>,
+): ScanEditState["block"] {
+  const spans = inkedLines(doc, page, state).map((l) => l.ink);
+  const input = fitInput(doc, page, state, spans, block.ref);
+  return {
+    ...block,
+    ranked: withPreferredFace(doc, page, input, block.ranked),
+    preferred: preferredScanFace(doc),
+  };
+}
+
+export function drawnBlockStyle(
+  doc: EditorDocument,
+  state: ScanEditState,
+): ScanStyle | null {
+  const block = state.block;
+  if (!block) return null;
+  if (state.edited) return block.style;
+  return preferredStyle(doc, block.ranked) ?? block.style;
+}
+
+const X_HEIGHT_ONLY = /^[acemnorsuvwxz\s\p{P}]+$/u;
 
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
@@ -532,22 +584,33 @@ function styleFor(
   state: ScanEditState,
   span: SpanInk | null,
 ): ScanStyle | null {
-  if (fittedForOtherPreference(doc, state)) {
-    state.block = undefined;
-    state.classes = [];
+  if (undrawableWithFewerFaces(state)) state.block = undefined;
+  if (state.block === undefined) {
+    state.block = fitBlock(doc, page, state);
+    if (state.block === null) state.undrawableWithFaces = scanFacesGeneration();
   }
-  if (state.block === undefined) state.block = fitBlock(doc, page, state);
-  if (!state.block) return null;
-  const blockStyle =
-    preferredStyle(doc, state.block.ranked) ?? state.block.style;
+  if (state.block && fittedForOtherPreference(doc, state))
+    state.block = withPreferredFit(doc, page, state, state.block);
+  const block = state.block;
+  const blockStyle = drawnBlockStyle(doc, state);
+  if (!block || !blockStyle) return null;
   if (!span) return blockStyle;
   const top = inkTop(span);
   const near = (t: number) => Math.abs(top / t - 1) < 0.25;
-  if (near(state.block.top)) return blockStyle;
+  if (near(block.top)) return blockStyle;
+  if (
+    block.xHeight !== null &&
+    X_HEIGHT_ONLY.test(span.original) &&
+    near(block.xHeight)
+  )
+    return blockStyle;
   const known = state.classes.find((c) => near(c.top));
   if (known) return known.style;
-  const style = rank(doc, page, state, [span], span)[0]?.style;
-  if (!style) return state.block.style;
+  const ranked = rank(doc, page, state, [span], span);
+  if (ranked.length === 0) return block.style;
+  const style = state.edited
+    ? ranked[0].style
+    : (preferredStyle(doc, ranked) ?? ranked[0].style);
   state.classes.push({ style, top });
   return style;
 }
@@ -685,9 +748,15 @@ export function renderScanEdit(
   state: ScanEditState,
   text: string,
 ): void {
+  const firstDraw = !state.edited;
   upright(doc, page, state, () =>
     renderUprightScanEdit(doc, page, run, state, text),
   );
+  if (firstDraw && state.edited && state.block)
+    state.block = {
+      ...state.block,
+      style: preferredStyle(doc, state.block.ranked) ?? state.block.style,
+    };
 }
 
 function renderUprightScanEdit(

@@ -11,6 +11,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import {
+  drawnBlockStyle,
   previewScanStyle,
   rerankScanStyles,
   scanBlockUndrawable,
@@ -18,7 +19,6 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   preferredScanFace,
-  preferredStyle,
   type RankedStyle,
   type ScanStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
@@ -124,11 +124,8 @@ function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
 
 function drawnStyle(doc: EditorDocument, run: TextRun): ScanStyle | undefined {
   const state = scanEditOf(doc, run);
-  const block = state?.block;
-  return (
-    state?.override.style ??
-    (block ? (preferredStyle(doc, block.ranked) ?? block.style) : undefined)
-  );
+  if (!state) return undefined;
+  return state.override.style ?? drawnBlockStyle(doc, state) ?? undefined;
 }
 
 interface ScanRunRef {
@@ -213,7 +210,7 @@ export function useScanFontMatch(
         return;
       }
       noteRankedWithCurrentFaces(fitted);
-      if (undrawable && fitted[0])
+      if (undrawable && fitted[0] && run && scanEditOf(doc, run)?.edited)
         store.dispatch(
           new SetScanStyleCommand({
             pageIndex: picking.pageIndex,

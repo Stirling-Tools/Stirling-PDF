@@ -26,6 +26,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
+  drawnBlockStyle,
   isScanRun,
   prefitScanRun,
   renderScanEdit,
@@ -33,9 +34,12 @@ import {
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
+  CLOSE_CALL,
   preferredScanFace,
+  preferredStyle,
   setPreferredScanFace,
   type RankedStyle,
+  type ScanStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
@@ -44,6 +48,9 @@ import {
   resetServerFontsCache,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
+  COURIER,
+  HELVETICA,
+  TIMES,
   faceCovers,
   faceFromBytes,
   loadScriptScanFaces,
@@ -54,6 +61,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
+  FONT_DIR,
   buildScan,
   readBundledFaces,
   type ScanLineSpec,
@@ -95,8 +103,7 @@ afterAll(() => {
 });
 
 interface Sample extends ScanLineSpec {
-  accept: string[];
-  kind: "sans" | "serif" | "mono";
+  accept: string;
   bold: boolean;
 }
 
@@ -150,8 +157,7 @@ function boldCut(choice: RankedStyle | undefined): boolean {
 
 const line = (
   family: string,
-  accept: string[],
-  kind: Sample["kind"],
+  accept: string,
   i: number,
   bold = false,
 ): Sample => ({
@@ -159,7 +165,6 @@ const line = (
   text: SENTENCES[i % SENTENCES.length],
   size: 12,
   accept,
-  kind,
   bold,
 });
 
@@ -187,15 +192,54 @@ describe("spotting typewriter spacing", () => {
   });
 });
 
+describe("letting a picked face win close calls", () => {
+  const doc = {} as EditorDocument;
+  const style = (family: string): ScanStyle => ({
+    family,
+    fontSize: 12,
+    stretch: 1,
+    ink: { r: 0, g: 0, b: 0, a: 255 },
+    weight: 0,
+    hollow: 0,
+    softness: 0,
+  });
+  const ranked: RankedStyle[] = [
+    { face: HELVETICA, style: style("Helvetica"), score: 0.9 },
+    { face: TIMES, style: style("Times-Roman"), score: 0.9 - CLOSE_CALL / 2 },
+    { face: COURIER, style: style("Courier"), score: 0.9 - CLOSE_CALL * 2 },
+  ];
+  const drawnWith = (label: string | null) => {
+    setPreferredScanFace(doc, label);
+    return preferredStyle(doc, ranked)?.family ?? null;
+  };
+
+  test("draws a pick that is a close call", () => {
+    expect(drawnWith(TIMES.label)).toBe("Times-Roman");
+  });
+
+  test("keeps the best fit when the pick is well behind it", () => {
+    expect(drawnWith(COURIER.label)).toBeNull();
+  });
+
+  test("keeps the best fit when the pick is not among the choices", () => {
+    expect(drawnWith("Calibri (Carlito)")).toBeNull();
+    expect(drawnWith(null)).toBeNull();
+  });
+
+  test("still draws the pick once it is the best fit", () => {
+    expect(drawnWith(HELVETICA.label)).toBe("Helvetica");
+  });
+});
+
 describe("matching a face to scanned text", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
   const samples: Sample[] = [
-    line("Carlito", ["Calibri (Carlito)"], "sans", 0),
-    line("Caladea Bold", ["Cambria (Caladea)"], "serif", 1, true),
-    line("Helvetica-Bold", ["Helvetica / Arial"], "sans", 0, true),
-    line("Times-Roman", ["Times"], "serif", 1),
-    line("Courier", ["Courier"], "mono", 0),
-    line("DejaVu Sans", ["DejaVu Sans"], "sans", 1),
+    line("Carlito", "Calibri (Carlito)", 0),
+    line("Caladea Bold", "Cambria (Caladea)", 1, true),
+    line("Helvetica-Bold", "Helvetica / Arial", 0, true),
+    line("Times-Roman", "Times", 1),
+    line("Courier", "Courier", 0),
+    line("DejaVu Sans", "DejaVu Sans", 1),
   ];
 
   test(
@@ -213,10 +257,13 @@ describe("matching a face to scanned text", () => {
         expect(report).toEqual(
           samples.map((s) => ({
             set: s.family,
-            picked: s.accept[0],
+            picked: s.accept,
             bold: s.bold,
           })),
         );
+        const scores = picked[0].map((c) => c.score);
+        expect([...scores].sort((a, b) => b - a)).toEqual(scores);
+        expect(new Set(picked[0].map((c) => c.face.label)).size).toBe(3);
       } finally {
         doc.dispose();
       }
@@ -244,25 +291,32 @@ describe("matching a face to scanned text", () => {
   );
 
   test(
-    "a face picked in one block wins close calls in blocks fitted before",
+    "a picked face wins a close call and stays once the block is drawn",
     { timeout: 120_000 },
     async () => {
-      const lines = [samples[0], { ...samples[0], text: "Quarterly review" }];
-      const { doc, page } = await buildScan(lines, SCAN);
+      const { doc, page } = await buildScan(
+        [{ ...samples[0], text: "Quarterly review" }],
+        SCAN,
+      );
       try {
-        const runs = page.runs.filter(isScanRun);
-        for (const run of runs) await choicesFor(doc, page, run);
-        const later = runs[1];
-        const ranked = scanEditOf(doc, later)!.block!.ranked;
-        const runnerUp = ranked.find(
-          (r) => r !== ranked[0] && r.score >= ranked[0].score - 0.1,
-        )!;
+        const run = page.runs.find(isScanRun)!;
+        const [best, runnerUp] = await choicesFor(doc, page, run);
+        expect(runnerUp.score).toBeGreaterThanOrEqual(best.score - CLOSE_CALL);
         setPreferredScanFace(doc, runnerUp.face.label);
-        const state = scanEditOf(doc, later)!;
-        renderScanEdit(doc, page, later, state, "Quiz");
-        expect(drawnFontNames(doc, state.textPtrs)).toContain(
+        const state = scanEditOf(doc, run)!;
+        const drawnFamily = () =>
+          drawnFontNames(doc, state.textPtrs).map((n) => n.replace(/ /g, ""));
+        renderScanEdit(doc, page, run, state, "Quiz");
+        expect(drawnFamily()).toContain(
           runnerUp.style.family.replace(/ /g, ""),
         );
+        expect(drawnBlockStyle(doc, state)).toBe(runnerUp.style);
+        setPreferredScanFace(doc, null);
+        renderScanEdit(doc, page, run, state, "Quizzes");
+        expect(drawnFamily()).toContain(
+          runnerUp.style.family.replace(/ /g, ""),
+        );
+        expect(drawnBlockStyle(doc, state)).toBe(runnerUp.style);
       } finally {
         doc.dispose();
       }
@@ -278,9 +332,10 @@ describe("matching a face to scanned text", () => {
       try {
         const run = page.runs.filter(isScanRun)[1];
         const ranked = await choicesFor(doc, page, run);
-        const runnerUp = ranked.find(
-          (r) => r !== ranked[0] && r.score >= ranked[0].score - 0.1,
-        )!;
+        const runnerUp = ranked[1];
+        expect(runnerUp.score).toBeGreaterThanOrEqual(
+          ranked[0].score - CLOSE_CALL,
+        );
         const state = scanEditOf(doc, run)!;
         renderScanEdit(doc, page, run, state, "Quiz");
         const band = {
@@ -308,7 +363,7 @@ describe("matching a face to scanned text", () => {
   );
 
   test(
-    "refits an untouched block when the picked font was not among its choices",
+    "scores the picked font in an untouched block that did not offer it",
     { timeout: 120_000 },
     async () => {
       const { doc, page } = await buildScan([samples[0]], SCAN);
@@ -318,27 +373,17 @@ describe("matching a face to scanned text", () => {
         expect(before.map((c) => c.face.label)).not.toContain("Courier");
         setPreferredScanFace(doc, "Courier");
         expect(scanRunNeedsFit(doc, run)).toBe(true);
-        await choicesFor(doc, page, run);
+        const after = await choicesFor(doc, page, run);
         expect(scanRunNeedsFit(doc, run)).toBe(false);
         expect(scanEditOf(doc, run)!.block!.preferred).toBe("Courier");
+        expect(
+          after.every((c) => before.includes(c) || c.face.label === "Courier"),
+        ).toBe(true);
       } finally {
         doc.dispose();
       }
     },
   );
-
-  test("offers the runners-up, best first", { timeout: 120_000 }, async () => {
-    const { doc, page } = await buildScan([samples[0]], SCAN);
-    try {
-      const [choices] = await choicesByLine(doc, page, [samples[0]]);
-      expect(choices.length).toBe(3);
-      const scores = choices.map((c) => c.score);
-      expect([...scores].sort((a, b) => b - a)).toEqual(scores);
-      expect(new Set(choices.map((c) => c.face.label)).size).toBe(3);
-    } finally {
-      doc.dispose();
-    }
-  });
 });
 
 function inkProfile(
@@ -391,13 +436,8 @@ function likeness(
   return ab / Math.sqrt(aa * bb);
 }
 
-const STATIC_FONTS = path.join(
-  import.meta.dirname,
-  "../../../../../../../app/core/src/main/resources/static/fonts",
-);
-
 async function staticFace(family: string, file: string): Promise<Face | null> {
-  const bytes = new Uint8Array(await readFile(path.join(STATIC_FONTS, file)));
+  const bytes = new Uint8Array(await readFile(path.join(FONT_DIR, file)));
   registerFontBytes(family, bytes);
   return faceFromBytes(
     { label: family, family, bold: `${family} Bold`, source: "bundled" },
@@ -499,6 +539,7 @@ describe("softening typed words to the scan", () => {
           return img.data.filter((l) => l < 128).length;
         };
         renderScanEdit(doc, page, run, state, run.text.replace(" on ", " by "));
+        expect(state.classes).toEqual([]);
         expect(inked(7, 9)).toBeGreaterThan(0);
         expect(inked(-2.5, -1)).toBeGreaterThan(0);
       } finally {
@@ -667,7 +708,7 @@ describe("matching scanned text in other scripts", () => {
     async () => {
       const id = "a".repeat(64);
       const bytes = await readFile(
-        path.join(STATIC_FONTS, "NotoSansJP-Regular.ttf"),
+        path.join(FONT_DIR, "NotoSansJP-Regular.ttf"),
       );
       get.mockImplementation(async (url: string) =>
         url === SERVER_FONTS_URL
@@ -794,6 +835,37 @@ describe("matching scanned text in other scripts", () => {
       }
     },
   );
+
+  test(
+    "refits a block no face could draw once a face for it arrives",
+    { timeout: 120_000 },
+    async () => {
+      const japanese = await staticFace(
+        "Noto Sans JP",
+        "NotoSansJP-Regular.ttf",
+      );
+      const text = "請求書 六月 三十日 までに お支払い ください";
+      const { doc, page } = await buildScan(
+        [{ family: "Noto Sans JP", text, size: 14, ocrFamily: "Noto Sans JP" }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        expect(await choicesFor(doc, page, run)).toEqual([]);
+        expect(scanRunNeedsFit(doc, run)).toBe(false);
+        setBundledScanFaces([...bundled, japanese!]);
+        expect(scanRunNeedsFit(doc, run)).toBe(true);
+        const state = scanEditOf(doc, run)!;
+        renderScanEdit(doc, page, run, state, run.text.replace("六月", "七月"));
+        expect(state.block?.ranked[0]?.face.label).toBe("Noto Sans JP");
+        expect(drawnFontNames(doc, state.textPtrs)).toEqual([
+          expect.stringMatching(/^NotoSansJP/),
+        ]);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
 });
 
 describe("drawing typed words from the scan's own letters", () => {
@@ -804,38 +876,43 @@ describe("drawing typed words from the scan's own letters", () => {
     size: 12,
   };
 
-  async function retypeAsJane(forceFont: boolean): Promise<number> {
-    setBundledScanFaces(bundled.filter((f) => f.family !== spec.family));
-    const { doc, page } = await buildScan([spec], SCAN);
-    try {
-      const run = page.runs.find(isScanRun)!;
-      const state = scanEditOf(doc, run)!;
-      const words = state.lines[0].words;
-      const jane = words.find((w) => w.text.trim() === "Jane")!;
-      const june = words.find((w) => w.text.trim() === "June")!;
-      const baseline = state.lines[0].baseline;
-      const width = jane.right - jane.x + 3;
-      const scanned = inkProfile(page, doc, jane.x - 2, width, baseline);
-      const [best] = await choicesFor(doc, page, run);
-      if (forceFont) state.override.style = best.style;
-      renderScanEdit(doc, page, run, state, run.text.replace("June", "Jane"));
-      return likeness(
-        scanned,
-        inkProfile(page, doc, june.x - 2, width, baseline),
-      );
-    } finally {
-      doc.dispose();
-    }
-  }
-
   test(
     "looks more like the scan than the best-fitting font does",
     { timeout: 60_000 },
     async () => {
-      const fromScan = await retypeAsJane(false);
-      const fromFont = await retypeAsJane(true);
-      expect(fromScan).toBeGreaterThan(0.75);
-      expect(fromScan).toBeGreaterThan(fromFont + 0.2);
+      setBundledScanFaces(bundled.filter((f) => f.family !== spec.family));
+      const { doc, page } = await buildScan([spec], SCAN);
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const jane = words.find((w) => w.text.trim() === "Jane")!;
+        const june = words.find((w) => w.text.trim() === "June")!;
+        const baseline = state.lines[0].baseline;
+        const width = jane.right - jane.x + 3;
+        const scanned = inkProfile(page, doc, jane.x - 2, width, baseline);
+        const [best] = await choicesFor(doc, page, run);
+        const retyped = () => {
+          renderScanEdit(
+            doc,
+            page,
+            run,
+            state,
+            run.text.replace("June", "Jane"),
+          );
+          return likeness(
+            scanned,
+            inkProfile(page, doc, june.x - 2, width, baseline),
+          );
+        };
+        const fromScan = retyped();
+        state.override.style = best.style;
+        const fromFont = retyped();
+        expect(fromScan).toBeGreaterThan(0.75);
+        expect(fromScan).toBeGreaterThan(fromFont + 0.2);
+      } finally {
+        doc.dispose();
+      }
     },
   );
 });

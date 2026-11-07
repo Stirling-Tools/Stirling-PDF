@@ -14,6 +14,7 @@ import {
   loadBundledScanFaces,
   loadScriptScanFaces,
   scanScriptsOf,
+  subscribeScanFaces,
   type Script,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { noteRankedWithCurrentFaces } from "@editor/tools/pdfTextEditor/util/scanRankingFaces";
@@ -153,6 +154,7 @@ export function useScanPrefit(
     document.addEventListener("pointerover", onPointerOver);
     document.addEventListener("visibilitychange", wake);
     const unsubscribePreferred = subscribePreferredScanFace(wake);
+    const unsubscribeFaces = subscribeScanFaces(wake);
     const unsubscribeNear = store.subscribeNearViewport(wake);
     const unsubscribeSelection = store.selection.subscribe(wake);
     void Promise.all([
@@ -169,6 +171,7 @@ export function useScanPrefit(
       resume.current = () => {};
       window.clearTimeout(timer);
       unsubscribePreferred();
+      unsubscribeFaces();
       unsubscribeNear();
       unsubscribeSelection();
       document.removeEventListener("pointerover", onPointerOver);
