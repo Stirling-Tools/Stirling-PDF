@@ -48,6 +48,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
             CacheControl.maxAge(Duration.ofDays(1))
                     .cachePublic()
                     .staleWhileRevalidate(Duration.ofDays(7));
+    private static final List<String> BRANDING_FOLDERS =
+            List.of(
+                    "icons",
+                    "modern-logo",
+                    "pdfjs",
+                    "pdfium",
+                    "locales",
+                    "css",
+                    "js",
+                    "vendor",
+                    "samples",
+                    "og_images",
+                    "Login");
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -103,46 +116,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/android-chrome-*.png",
                         "/mstile-*.png",
                         "/safari-pinned-tab.svg",
-                        "/icons/**",
-                        "/modern-logo/**",
-                        "/3rdPartyLicenses.json",
-                        "/pdfjs/**",
-                        "/pdfium/**",
-                        "/locales/**",
-                        "/css/**",
-                        "/js/**",
-                        "/vendor/**",
-                        "/samples/**",
-                        "/og_images/**",
-                        "/Login/**")
-                .addResourceLocations(
-                        staticPath,
-                        "classpath:/static/",
-                        staticPath + "pdfjs/",
-                        "classpath:/static/pdfjs/",
-                        staticPath + "pdfium/",
-                        "classpath:/static/pdfium/",
-                        staticPath + "locales/",
-                        "classpath:/static/locales/",
-                        staticPath + "css/",
-                        "classpath:/static/css/",
-                        staticPath + "js/",
-                        "classpath:/static/js/",
-                        staticPath + "vendor/",
-                        "classpath:/static/vendor/",
-                        staticPath + "samples/",
-                        "classpath:/static/samples/",
-                        staticPath + "og_images/",
-                        "classpath:/static/og_images/",
-                        staticPath + "Login/",
-                        "classpath:/static/Login/",
-                        staticPath + "icons/",
-                        "classpath:/static/icons/",
-                        staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/")
+                        "/3rdPartyLicenses.json")
+                .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
+        for (String folder : BRANDING_FOLDERS) {
+            registry.addResourceHandler("/" + folder + "/**")
+                    .addResourceLocations(
+                            staticPath + folder + "/", "classpath:/static/" + folder + "/")
+                    .setCacheControl(STABLE_ONE_DAY)
+                    .resourceChain(true)
+                    .addResolver(new PreferredEncodingResourceResolver());
+        }
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.

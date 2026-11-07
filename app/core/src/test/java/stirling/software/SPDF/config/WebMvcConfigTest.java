@@ -7,10 +7,15 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,16 +30,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.annotation.AnnotationConfigUtils;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.CorsRegistration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistration;
@@ -44,6 +57,7 @@ import org.springframework.web.servlet.resource.ResourceResolverChain;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,8 +115,8 @@ class WebMvcConfigTest {
     class AddResourceHandlers {
 
         @Test
-        @DisplayName("registers all six resource handler groups")
-        void registersSixHandlerGroups() {
+        @DisplayName("registers every resource handler group")
+        void registersEveryHandlerGroup() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
             ResourceHandlerRegistration registration =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
@@ -110,8 +124,9 @@ class WebMvcConfigTest {
 
             config.addResourceHandlers(registry);
 
-            // SW/PWA, assets, images, fonts, branding, catch-all = 6 handler registrations.
-            verify(registry, times(6)).addResourceHandler(any(String[].class));
+            // SW/PWA, assets, images, fonts, branding root files, 11 branding folders,
+            // catch-all = 17 handler registrations.
+            verify(registry, times(17)).addResourceHandler(any(String[].class));
         }
 
         @Test
@@ -164,7 +179,7 @@ class WebMvcConfigTest {
             // 17 MB CJK face is still cheap because an unchanged file answers the
             // conditional request with 304.
             ArgumentCaptor<String[]> patterns = ArgumentCaptor.forClass(String[].class);
-            verify(registry, times(6)).addResourceHandler(patterns.capture());
+            verify(registry, times(17)).addResourceHandler(patterns.capture());
             assertThat(patterns.getAllValues().get(3)).containsExactly("/fonts/**");
 
             ArgumentCaptor<CacheControl> caches = ArgumentCaptor.forClass(CacheControl.class);
@@ -174,28 +189,67 @@ class WebMvcConfigTest {
         }
 
         @Test
-        @DisplayName("serves only the bundled fonts, never the custom folder")
-        void fontsComeOnlyFromTheJar() {
-            ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
-            ResourceHandlerRegistration other =
-                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
-            ResourceHandlerRegistration fonts =
-                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
-            when(registry.addResourceHandler(any(String[].class)))
-                    .thenAnswer(
-                            call ->
-                                    List.of(call.getArguments()).contains("/fonts/**")
-                                            ? fonts
-                                            : other);
-            when(fonts.addResourceLocations(any(String[].class))).thenReturn(fonts);
+        @DisplayName("keeps custom fonts off every public prefix while bundled assets resolve")
+        void customFontsStayPrivate(@TempDir Path root, @TempDir Path outside) throws Exception {
+            Path fonts = Files.createDirectories(root.resolve("fonts"));
+            Files.writeString(fonts.resolve("Custom.ttf"), "custom");
+            Files.createSymbolicLink(
+                    fonts.resolve("leak.ttf"),
+                    Files.writeString(outside.resolve("target.ttf"), "outside"));
+            Files.writeString(root.resolve("favicon.ico"), "custom-icon");
+            Files.writeString(
+                    Files.createDirectories(root.resolve("js")).resolve("custom.js"), "js");
 
-            config.addResourceHandlers(registry);
+            MockMvc mvc = resourceMvc(root);
 
-            ArgumentCaptor<String[]> locations = ArgumentCaptor.forClass(String[].class);
-            verify(fonts).addResourceLocations(locations.capture());
-            assertThat(locations.getValue()).containsExactly("classpath:/static/fonts/");
+            for (String prefix : PUBLIC_PREFIXES) {
+                for (String file : List.of("Custom.ttf", "leak.ttf")) {
+                    mvc.perform(get(prefix + "/fonts/" + file)).andExpect(status().isNotFound());
+                }
+            }
+            mvc.perform(get("/css/fonts/bootstrap-icons.woff2")).andExpect(status().isOk());
+            mvc.perform(get("/fonts/DejaVuSans.ttf")).andExpect(status().isOk());
+            mvc.perform(get("/favicon.ico")).andExpect(content().string("custom-icon"));
+            mvc.perform(get("/js/custom.js")).andExpect(content().string("js"));
+        }
+
+        private static final List<String> PUBLIC_PREFIXES =
+                List.of(
+                        "",
+                        "/images",
+                        "/icons",
+                        "/modern-logo",
+                        "/pdfjs",
+                        "/pdfium",
+                        "/locales",
+                        "/css",
+                        "/js",
+                        "/vendor",
+                        "/samples",
+                        "/og_images",
+                        "/Login");
+
+        private MockMvc resourceMvc(Path staticRoot) throws Exception {
+            when(endpointInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+            when(pdfMetricsInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+            GenericWebApplicationContext context =
+                    new GenericWebApplicationContext(new MockServletContext());
+            AnnotationConfigUtils.registerAnnotationConfigProcessors(context);
+            context.registerBean(ResourceMvc.class);
+            context.getBeanFactory().registerSingleton("webMvcConfig", config);
+            try (MockedStatic<InstallationPathConfig> paths =
+                    mockStatic(InstallationPathConfig.class)) {
+                paths.when(InstallationPathConfig::getStaticPath)
+                        .thenReturn(staticRoot + File.separator);
+                context.refresh();
+            }
+            return MockMvcBuilders.webAppContextSetup(context).build();
         }
     }
+
+    @Configuration(proxyBeanMethods = false)
+    @EnableWebMvc
+    static class ResourceMvc {}
 
     @Nested
     @DisplayName("addCorsMappings")
