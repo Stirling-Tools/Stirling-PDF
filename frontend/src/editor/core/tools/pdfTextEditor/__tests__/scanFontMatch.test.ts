@@ -345,9 +345,7 @@ describe("matching a face to scanned text", () => {
         expect(renderScanEdit(doc, page, run, state, "Quarterly")).toBe(true);
         expect(state.block).toBeUndefined();
         renderScanEdit(doc, page, run, state, "Quarterly reviews");
-        expect(drawnBlockStyle(doc, state)?.family).toBe(
-          runnerUp.style.family,
-        );
+        expect(drawnBlockStyle(doc, state)?.family).toBe(runnerUp.style.family);
       } finally {
         doc.dispose();
       }
