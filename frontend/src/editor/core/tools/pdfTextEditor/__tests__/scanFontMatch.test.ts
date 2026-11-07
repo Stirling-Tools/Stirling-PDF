@@ -458,6 +458,45 @@ describe("matching scanned text in other scripts", () => {
   );
 
   test(
+    "sizes caps-only Cyrillic and a Japanese line without digits by their own glyph height",
+    { timeout: 120_000 },
+    async () => {
+      const japanese = await staticFace(
+        "Noto Sans JP",
+        "NotoSansJP-Regular.ttf",
+      );
+      setBundledScanFaces([...bundled, japanese!]);
+      const lines: ScanLineSpec[] = [
+        {
+          family: "DejaVu Sans",
+          text: "СЧЕТ НА ОПЛАТУ ДЛЯ ИВАНА ПЕТРОВА",
+          size: 14,
+          ocrFamily: "DejaVu Sans",
+        },
+        {
+          family: "Noto Sans JP",
+          text: "請求書 六月 三十日 までに お支払い ください",
+          size: 14,
+          ocrFamily: "Noto Sans JP",
+        },
+      ];
+      const { doc, page } = await buildScan(lines, SCAN);
+      try {
+        for (const spec of lines) {
+          const run = page.runs.find(
+            (r) => isScanRun(r) && r.text.startsWith(spec.text.slice(0, 3)),
+          )!;
+          await choicesFor(doc, page, run);
+          const size = scanEditOf(doc, run)!.block!.style.fontSize;
+          expect(Math.abs(size / spec.size - 1)).toBeLessThan(0.1);
+        }
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
     "offers nothing it cannot draw and leaves the scan alone when an edit cannot be drawn",
     { timeout: 120_000 },
     async () => {

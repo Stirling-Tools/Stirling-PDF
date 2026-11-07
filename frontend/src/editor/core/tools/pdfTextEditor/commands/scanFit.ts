@@ -89,7 +89,7 @@ export const inkTop = (s: SpanInk) =>
 // its x-height; ascenders, overshoot and blur all read taller than the face.
 // OCR's letter case is unreliable, so the scan's own rows decide.
 export function sizeFor(face: Face, s: SpanInk): number {
-  if (s.ink.xLine !== null)
+  if (s.ink.xLine !== null && /[\p{Lu}\p{Ll}]/u.test(s.original))
     return (s.ink.xLine - s.baseline) / (face.xh / 1000);
   return inkTop(s) / topShare(face, s.original);
 }
