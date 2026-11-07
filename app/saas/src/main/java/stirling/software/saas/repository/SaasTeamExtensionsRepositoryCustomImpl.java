@@ -5,6 +5,8 @@ import org.hibernate.query.NativeQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import stirling.software.saas.model.SaasTeamExtensions;
+
 /** See {@link SaasTeamExtensionsRepositoryCustom}. */
 class SaasTeamExtensionsRepositoryCustomImpl implements SaasTeamExtensionsRepositoryCustom {
 
@@ -18,7 +20,7 @@ class SaasTeamExtensionsRepositoryCustomImpl implements SaasTeamExtensionsReposi
                 .unwrap(NativeQuery.class)
                 // The claim writes only saas_team_extensions; declaring it keeps the commit from
                 // evicting every cached region. The subqueries are reads.
-                .addSynchronizedQuerySpace("saas_team_extensions")
+                .addSynchronizedEntityClass(SaasTeamExtensions.class)
                 .executeUpdate();
     }
 }
