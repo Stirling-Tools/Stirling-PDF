@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.13.*"
 
 [[package]]
@@ -414,6 +414,7 @@ wheels = [
 name = "engine"
 version = "0.1.0"
 source = { editable = "." }
+default-groups = []
 
 [package.dev-dependencies]
 cucumber = [
@@ -518,7 +519,7 @@ tools = [
     { name = "brotli", specifier = ">=1.2.1" },
     { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "fpdf2", specifier = ">=2.8.9" },
+    { name = "fpdf2", specifier = ">=2.9.0" },
     { name = "openai", specifier = ">=3.19.2" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "tomli-w", specifier = ">=1.2.0" },
@@ -571,16 +572,15 @@ woff = [
 
 [[package]]
 name = "fpdf2"
-version = "2.8.9"
+version = "2.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "defusedxml" },
     { name = "fonttools" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/12/23/84dbe637708c2690972eff5df233a7c9f8d4bde809f714839dc1b08f5e5e/fpdf2-2.8.9.tar.gz", hash = "sha256:5b0b3786f5236a2b3cc83c1fee567df17ddd314f8c4e13d820d8f09b617ab4f0", size = 380865, upload-time = "2026-09-29T13:11:54.506Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/be/440da8ede1cf7aaff73be5c5a6d0dc6f2938df6604ffbc313f9c6dc63f55/fpdf2-2.9.0.tar.gz", hash = "sha256:af2e7e06a5a2f9e32e24b146b56f58166142dfff45f55370ab03bfac9c8e3e21", size = 408671, upload-time = "2026-10-29T23:13:20.353Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/41/16/42cc18bba1561692a235fd232b38947e54f059150065d43d631b57a0085a/fpdf2-2.8.9-py3-none-any.whl", hash = "sha256:6e1d94af6d6311950a23dec7fb5fc84b000203eb59aee8e76c1e701b12a14976", size = 341268, upload-time = "2026-09-29T13:11:52.796Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/b0/f0e770163d0e635c81e8ba117686e31c6b172715e1185ff00ea2eb0b2f3d/fpdf2-2.9.0-py3-none-any.whl", hash = "sha256:e57f9eb183a61bbfc1a16ccb3eb68654f9ef3de0d9a78e37015a0df2eb29ab89", size = 360586, upload-time = "2026-10-29T23:13:18.341Z" },
 ]
 
 [[package]]
