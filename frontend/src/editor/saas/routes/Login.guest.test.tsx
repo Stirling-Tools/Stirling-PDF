@@ -79,6 +79,30 @@ describe("SaaS login with a guest session", () => {
     expect(screen.getByText("Enterprise page")).toBeInTheDocument();
   });
 
+  it("offers a guest heading to /team no way to skip, since a guest cannot buy Team", () => {
+    mount("/login?next=%2Fteam");
+    expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers a signed-out visitor heading to /team no way to skip either", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam%3Futm_campaign%3Dnov");
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps skip on a plain sign-in", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login");
+    expect(screen.getByRole("button", { name: /skip/i })).toBeInTheDocument();
+  });
+
   it("leaves no remembered destination behind once it has sent them on", () => {
     auth.isAnonymous = false;
     mount("/login?next=%2Fenterprise");
