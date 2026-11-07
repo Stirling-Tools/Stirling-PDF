@@ -715,6 +715,13 @@ function atlasOf(
   return state.atlas;
 }
 
+function styleCovers(style: ScanStyle, text: string): boolean {
+  const face = scanFaces().find(
+    (f) => f.family === style.family || f.bold === style.family,
+  );
+  return !face || faceCovers(face, text);
+}
+
 function implausibleLine(line: ScanLine): boolean {
   const chars = line.text.replace(/\s/g, "").length;
   if (chars <= 3 || line.words.length === 0) return false;
@@ -856,6 +863,11 @@ function renderUprightScanEdit(
       !!blockFit() ||
       scanFaces().some((f) => faceCovers(f, t)));
 
+  const inkWidth = (w: LayoutWord) =>
+    inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x;
+  const shows = (t: string, anchor: LayoutWord | null) =>
+    !!composed(t) || styleCovers(styleOf(anchor), t);
+
   const plan = onOriginalScan(doc, page, state, () => {
     const layout = layoutScanEdit({
       lines: state.lines.map((l, li) => ({
@@ -870,9 +882,9 @@ function renderUprightScanEdit(
       text,
       pitch: linePitch(state, spacing),
       space,
-      wordWidth: (w) =>
-        inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x,
+      wordWidth: inkWidth,
       textWidth: (t, anchor) => {
+        if (!shows(t, anchor)) return anchor ? inkWidth(anchor) : 0;
         const glyphs = composed(t);
         const a = atlas();
         if (glyphs && a) return (glyphs.inkRight - glyphs.inkLeft) / a.scale;
@@ -914,10 +926,20 @@ function renderUprightScanEdit(
       return null;
     }
     for (const d of drawn) styleOf(d.anchor);
-    return { layout, kept, moving };
+    const unshown = new Set(
+      layout.typed.filter((t) => !shows(t.text, t.anchor)),
+    );
+    if (unshown.size > 0)
+      recordUndrawableChars(
+        [...unshown].map((t) => t.text.replace(/\s+/g, "")).join(""),
+      );
+    return { layout, kept, moving, unshown };
   });
   if (!plan) return false;
-  const { layout, kept, moving } = plan;
+  const { layout, kept, moving, unshown } = plan;
+  const keptScan = new Set(
+    [...unshown].flatMap((t) => (t.anchor ? [t.anchor] : [])),
+  );
 
   for (const p of state.created) removeAndDestroyObject(m, page.pagePtr, p);
   state.created = [];
@@ -946,7 +968,7 @@ function renderUprightScanEdit(
     const ptr = emitFillRect(m, page, rect, paper, 0);
     if (ptr) state.created.push(ptr);
   };
-  for (const w of layout.removed) coverWord(w);
+  for (const w of layout.removed) if (!keptScan.has(w)) coverWord(w);
   for (const k of moving) coverWord(k.word);
 
   const nextWordLimit = (start: number, baseline: number, size: number) => {
@@ -1013,15 +1035,17 @@ function renderUprightScanEdit(
     );
   }
   for (const t of layout.typed)
-    drawTyped(t.text, t.x + o.dx, t.baseline + o.dy, t.anchor, t.atAnchor);
+    if (!unshown.has(t))
+      drawTyped(t.text, t.x + o.dx, t.baseline + o.dy, t.anchor, t.atAnchor);
 
   syncOriginalWords(
     canvas,
     state,
     new Set(
-      [...layout.removed, ...moving.map((k) => k.word)].map(
-        (w) => `${w.line}:${w.index}`,
-      ),
+      [
+        ...layout.removed.filter((w) => !keptScan.has(w)),
+        ...moving.map((k) => k.word),
+      ].map((w) => `${w.line}:${w.index}`),
     ),
   );
   attachToRun(run, state);

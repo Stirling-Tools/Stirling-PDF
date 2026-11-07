@@ -1063,6 +1063,43 @@ describe("edits that need no font, and text no font can draw", () => {
   );
 
   test(
+    "keeps a word's scan pixels when its replacement is in a script the block's font cannot draw",
+    { timeout: 120_000 },
+    async () => {
+      resetDroppedBase14Chars();
+      setBundledScanFaces([]);
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const line = state.lines[0];
+        const jane = line.words.find((w) => w.text.trim() === "Jane")!;
+        const band = {
+          x: jane.x - 1,
+          y: line.baseline - 3,
+          width: jane.right - jane.x + 2,
+          height: 13,
+        };
+        const before = renderLuma(doc.module, page, band, 0)!.data;
+        renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Иван"));
+        const after = renderLuma(doc.module, page, band, 0)!.data;
+        let changed = 0;
+        for (let i = 0; i < before.length; i++)
+          if (Math.abs(before[i] - after[i]) > 40) changed++;
+        expect(changed).toBeLessThan(10);
+        expect(getDroppedBase14Chars()).toEqual(
+          expect.arrayContaining(["И", "в"]),
+        );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
     "keeps the spaces between words whose hidden copies were redrawn",
     { timeout: 120_000 },
     async () => {
