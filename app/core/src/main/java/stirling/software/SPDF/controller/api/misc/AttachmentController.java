@@ -133,7 +133,8 @@ public class AttachmentController {
 
     private PDDocument loadUnencrypted(PDFFile request, boolean readOnly) throws IOException {
         PDDocument document = pdfDocumentFactory.load(request, readOnly);
-        if (document.isEncrypted()) {
+        boolean mayRead = readOnly && document.getCurrentAccessPermission().canExtractContent();
+        if (document.isEncrypted() && !mayRead) {
             document.close();
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ENCRYPTED_PDF_UNSUPPORTED);
         }

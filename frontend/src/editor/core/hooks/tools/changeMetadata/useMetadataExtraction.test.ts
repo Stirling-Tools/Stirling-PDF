@@ -33,13 +33,14 @@ vi.mock("@editor/hooks/tools/shared/useViewScopedFiles", () => ({
 
 const COVER = "%PDF-1.7 cover /MicrosoftIRMServices";
 const REPORT = "%PDF-1.7 quarterly report";
+const SECOND = "%PDF-1.7 second report";
 const coverInfo = { Title: "Protected document", Author: "Microsoft" };
 const reportInfo = { Title: "Quarterly report", Author: "Alice Example" };
 
 function extract() {
-  const params = { updateParameter: vi.fn() };
-  renderHook(() => useMetadataExtraction(params));
-  return params.updateParameter;
+  const updateParameter = vi.fn();
+  const hook = renderHook(() => useMetadataExtraction({ updateParameter }));
+  return Object.assign(updateParameter, { rerender: hook.rerender });
 }
 
 beforeEach(() => {
@@ -124,6 +125,61 @@ describe("useMetadataExtraction", () => {
     expect(updateParameter).not.toHaveBeenCalledWith(
       "title",
       "Protected document",
+    );
+  });
+
+  it("does not copy a decrypted PDF's metadata onto other files in the run", async () => {
+    const file = createStirlingFile(pdfFile(COVER));
+    const other = createStirlingFile(pdfFile(REPORT));
+    await openInViewer(file, REPORT);
+    scope.files = [file];
+    pdfjs.getDocument.mockImplementation(
+      servePdfs(
+        { text: COVER, info: coverInfo },
+        { text: REPORT, info: reportInfo },
+      ),
+    );
+
+    const updateParameter = extract();
+    await waitFor(() =>
+      expect(updateParameter).toHaveBeenCalledWith("title", "Quarterly report"),
+    );
+    updateParameter.mockClear();
+
+    scope.files = [file, other];
+    updateParameter.rerender();
+
+    await waitFor(() =>
+      expect(updateParameter).toHaveBeenCalledWith("title", ""),
+    );
+    expect(updateParameter).toHaveBeenCalledWith("author", "");
+    expect(updateParameter).not.toHaveBeenCalledWith(
+      "title",
+      "Quarterly report",
+    );
+  });
+
+  it("re-reads the metadata when the first file changes", async () => {
+    const first = createStirlingFile(pdfFile(REPORT));
+    const second = createStirlingFile(pdfFile(SECOND));
+    scope.files = [first];
+    pdfjs.getDocument.mockImplementation(
+      servePdfs(
+        { text: REPORT, info: reportInfo },
+        { text: SECOND, info: { Title: "Second", Author: "Bob" } },
+      ),
+    );
+
+    const updateParameter = extract();
+    await waitFor(() =>
+      expect(updateParameter).toHaveBeenCalledWith("title", "Quarterly report"),
+    );
+
+    scope.files = [second];
+    updateParameter.rerender();
+
+    await waitFor(() =>
+      expect(updateParameter).toHaveBeenCalledWith("title", "Second"),
     );
   });
 });

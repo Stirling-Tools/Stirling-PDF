@@ -9,8 +9,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.Loader;
@@ -46,6 +48,28 @@ public class ProtectedPdfRuns {
     private static final byte[] PDF_2_HEADER = "%PDF-2".getBytes(StandardCharsets.US_ASCII);
     private static final byte[] PDF_HEADER = "%PDF-".getBytes(StandardCharsets.US_ASCII);
     private static final String REMOVE_PASSWORD = "/api/v1/security/remove-password";
+    private static final Set<String> PURVIEW_UNSUPPORTED =
+            Set.of(
+                    "/api/v1/security/add-password",
+                    "/api/v1/security/remove-password",
+                    "/api/v1/integration/purview-apply-label",
+                    "/api/v1/integration/purview-read-label",
+                    "/api/v1/security/cert-sign",
+                    "/api/v1/security/timestamp-pdf",
+                    "/api/v1/security/remove-cert-sign",
+                    "/api/v1/ai/tools/classify-and-label",
+                    "/api/v1/docparse/ingest",
+                    "/api/v1/form/form-detection/detect",
+                    "/api/v1/misc/add-attachments",
+                    "/api/v1/misc/batch-process-attachments",
+                    "/api/v1/misc/delete-attachment",
+                    "/api/v1/misc/rename-attachment",
+                    "/api/v1/general/edit-table-of-contents",
+                    "/api/v1/general/overlay-pdfs",
+                    "/api/v1/convert/pdf/ua",
+                    "/api/v1/convert/pdf/pdfa");
+    private static final Set<String> PURVIEW_NEEDS_COPY =
+            Set.of("/api/v1/misc/auto-rename", "/api/v1/general/split-pdf-by-chapters");
 
     private final RightsManagementService rightsManagement;
     private final ConnectedAccountService accounts;
@@ -67,19 +91,19 @@ public class ProtectedPdfRuns {
         private final List<Original> originals;
         private final ConnectedAccount account;
         private final Path workDir;
-        private final boolean keepsPasswords;
+        private final Set<Integer> passwordInputs;
 
         private Unlocked(
                 PolicyInputs inputs,
                 List<Original> originals,
                 ConnectedAccount account,
                 Path workDir,
-                boolean keepsPasswords) {
+                Set<Integer> passwordInputs) {
             this.inputs = inputs;
             this.originals = originals;
             this.account = account;
             this.workDir = workDir;
-            this.keepsPasswords = keepsPasswords;
+            this.passwordInputs = passwordInputs;
         }
 
         public PolicyInputs inputs() {
@@ -91,11 +115,15 @@ public class ProtectedPdfRuns {
         }
 
         public List<Resource> protect(PolicyExecutionResult result) throws IOException {
-            if (keepsPasswords) {
-                for (Resource file : result.files()) {
-                    if (protectionOf(file) != Protection.PASSWORD) {
-                        throw passwordDropped();
-                    }
+            for (int i = 0; i < result.files().size(); i++) {
+                Integer origin = i < result.origins().size() ? result.origins().get(i) : null;
+                boolean mustKeepPassword =
+                        origin == null
+                                ? !passwordInputs.isEmpty()
+                                : passwordInputs.contains(origin);
+                if (mustKeepPassword
+                        && protectionOf(result.files().get(i)) != Protection.PASSWORD) {
+                    throw passwordDropped();
                 }
             }
             if (!hasProtectedInputs()) {
@@ -172,10 +200,10 @@ public class ProtectedPdfRuns {
     public Unlocked unlock(PolicyInputs inputs, RunAccount runAccount, List<PipelineStep> steps)
             throws IOException {
         if (steps.isEmpty()) {
-            return new Unlocked(inputs, List.of(), null, null, false);
+            return new Unlocked(inputs, List.of(), null, null, Set.of());
         }
         boolean firstStepTakesEncryptedPdfs = takesEncryptedPdfs(steps.getFirst());
-        boolean passwordInputs = false;
+        Set<Integer> passwordIndexes = new HashSet<>();
         List<Integer> protectedIndexes = new ArrayList<>();
         for (int i = 0; i < inputs.primary().size(); i++) {
             Protection protection = protectionOf(inputs.primary().get(i));
@@ -185,20 +213,22 @@ public class ProtectedPdfRuns {
                 if (!firstStepTakesEncryptedPdfs) {
                     throw passwordProtectedInput();
                 }
-                passwordInputs = true;
+                passwordIndexes.add(i);
             }
         }
-        if (passwordInputs && !protectedIndexes.isEmpty()) {
+        if (!passwordIndexes.isEmpty() && !protectedIndexes.isEmpty()) {
             throw ExceptionUtils.createRightsManagedInputException(
                     "A Microsoft Purview protected PDF can't be combined with a password-protected"
                             + " PDF in one run, because the result can only keep one kind of"
                             + " protection.");
         }
-        boolean keepsPasswords = passwordInputs && !removesPasswords(steps.getFirst());
+        Set<Integer> keptPasswords =
+                removesPasswords(steps.getFirst()) ? Set.of() : Set.copyOf(passwordIndexes);
         if (protectedIndexes.isEmpty()) {
-            return new Unlocked(inputs, List.of(), null, null, keepsPasswords);
+            return new Unlocked(inputs, List.of(), null, null, keptPasswords);
         }
         String firstName = nameOf(inputs.primary().get(protectedIndexes.getFirst()));
+        requirePurviewSteps(firstName, steps);
         if (!rightsManagement.available()) {
             throw ExceptionUtils.createRightsManagedInputException(
                     firstName
@@ -218,6 +248,7 @@ public class ProtectedPdfRuns {
                         copyToTemp(input, Files.createTempFile(workDir, "original-", ".pdf"));
                 RightsManagementService.Opened opened = open(account, original, name);
                 requireEdit(name, opened.protection());
+                requireCopyWhereNeeded(name, opened.protection(), steps);
                 Path plaintext =
                         Files.write(
                                 Files.createTempFile(workDir, "plaintext-", ".pdf"), opened.pdf());
@@ -230,11 +261,11 @@ public class ProtectedPdfRuns {
                             Arrays.asList(originals),
                             account,
                             workDir,
-                            false);
+                            Set.of());
             return unlocked;
         } finally {
             if (unlocked == null) {
-                new Unlocked(inputs, List.of(), null, workDir, false).close();
+                new Unlocked(inputs, List.of(), null, workDir, Set.of()).close();
             }
         }
     }
@@ -299,6 +330,46 @@ public class ProtectedPdfRuns {
                         + (owner == null || owner.isBlank()
                                 ? "."
                                 : ". Ask " + owner + " for edit rights."));
+    }
+
+    private void requirePurviewSteps(String name, List<PipelineStep> steps) throws IOException {
+        for (PipelineStep step : steps) {
+            if (!keepsPurviewProtection(step)) {
+                throw ExceptionUtils.createRightsManagedInputException(
+                        name
+                                + " is protected with Microsoft Purview, and "
+                                + step.operation()
+                                + " cannot keep that protection, so the file was not processed.");
+            }
+        }
+    }
+
+    private boolean keepsPurviewProtection(PipelineStep step) {
+        String operation = step.operation();
+        if (operation == null || PURVIEW_UNSUPPORTED.contains(operation)) {
+            return false;
+        }
+        return toolIO.find(operation)
+                .filter(spec -> spec.acceptsFormat(ToolFormat.PDF))
+                .map(spec -> spec.resolveOutput(step.parameters()).format() == ToolFormat.PDF)
+                .orElse(false);
+    }
+
+    private static void requireCopyWhereNeeded(
+            String name, ProtectionInfo protection, List<PipelineStep> steps) throws IOException {
+        if (protection.permissions().copy()) {
+            return;
+        }
+        for (PipelineStep step : steps) {
+            if (PURVIEW_NEEDS_COPY.contains(step.operation())) {
+                throw ExceptionUtils.createRightsManagedInputException(
+                        "Your Microsoft account can't copy content from "
+                                + name
+                                + ", which "
+                                + step.operation()
+                                + " needs.");
+            }
+        }
     }
 
     private boolean takesEncryptedPdfs(PipelineStep step) {

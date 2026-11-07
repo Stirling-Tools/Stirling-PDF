@@ -10,6 +10,7 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 import { rightsManagedToolAccepts } from "@editor/services/rightsManagedTools";
+import { isKnownRightsManagedPdf } from "@editor/services/rightsManagedPdf";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
@@ -178,7 +179,8 @@ export const useToolOperation = <TParams>(
       if (
         !runtimeEndpoint ||
         config.toolType === ToolType.custom ||
-        !notificationsAvailable
+        !notificationsAvailable ||
+        fileIds.some(isKnownRightsManagedPdf)
       ) {
         return;
       }

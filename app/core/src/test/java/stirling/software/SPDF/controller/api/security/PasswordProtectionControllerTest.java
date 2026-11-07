@@ -529,6 +529,11 @@ class PasswordProtectionControllerTest {
         "/api/v1/misc/flatten, annotations",
         "/api/v1/security/sanitize-pdf, annotations",
         "/api/v1/general/booklet-imposition, assemble",
+        "/api/v1/general/booklet-imposition, annotations",
+        "/api/v1/general/pdf-to-single-page, annotations",
+        "/api/v1/general/scale-pages, annotations",
+        "/api/v1/general/crop, annotations",
+        "/api/v1/general/split-pdf-by-chapters, extract",
         "/api/v1/general/multi-page-layout, annotations",
         "/api/v1/misc/remove-blanks, extract",
         "/api/v1/misc/auto-rename, extract"

@@ -53,6 +53,8 @@ class ProtectedPdfRunsTest {
     private static final String ROTATE_PDF = "/api/v1/general/rotate-pdf";
     private static final String REMOVE_PASSWORD = "/api/v1/security/remove-password";
     private static final String ANY_FILE_STEP = "/api/v1/misc/any-file-step";
+    private static final String CERT_SIGN = "/api/v1/security/cert-sign";
+    private static final String AUTO_RENAME = "/api/v1/misc/auto-rename";
     private static final List<PipelineStep> ROTATE =
             List.of(new PipelineStep(ROTATE_PDF, Map.of()));
     private static final ToolIOSource TOOL_IO =
@@ -74,6 +76,18 @@ class ProtectedPdfRunsTest {
                             new ToolIOSpec(
                                     Set.of(ToolFormat.ANY),
                                     ToolFormat.ANY,
+                                    ToolArity.SISO,
+                                    List.of()),
+                            CERT_SIGN,
+                            new ToolIOSpec(
+                                    Set.of(ToolFormat.PDF),
+                                    ToolFormat.PDF,
+                                    ToolArity.SISO,
+                                    List.of()),
+                            AUTO_RENAME,
+                            new ToolIOSpec(
+                                    Set.of(ToolFormat.PDF),
+                                    ToolFormat.PDF,
                                     ToolArity.SISO,
                                     List.of())));
 
@@ -184,6 +198,35 @@ class ProtectedPdfRunsTest {
                                             "locked.pdf")),
                             0);
             assertThat(unlocked.protect(kept)).isEqualTo(kept.files());
+        }
+    }
+
+    @Test
+    void aPlainInputRunAlongsideAPasswordProtectedOneMayStayPlain() throws IOException {
+        PolicyInputs inputs =
+                PolicyInputs.of(
+                        List.of(
+                                named(ProtectedPdfFixtures.plain(), "plain.pdf"),
+                                named(ProtectedPdfFixtures.passwordProtected(""), "locked.pdf")));
+        List<PipelineStep> anyFile = List.of(new PipelineStep(ANY_FILE_STEP, Map.of()));
+
+        try (ProtectedPdfRuns.Unlocked unlocked = runs.unlock(inputs, sourceAccount(), anyFile)) {
+            PolicyExecutionResult outputs =
+                    result(
+                            List.of(
+                                    named(ProtectedPdfFixtures.plain(), "plain.pdf"),
+                                    named(
+                                            ProtectedPdfFixtures.passwordProtected(""),
+                                            "locked.pdf")),
+                            0,
+                            1);
+            assertThat(unlocked.protect(outputs)).isEqualTo(outputs.files());
+            PolicyExecutionResult merged =
+                    result(
+                            List.of(named(ProtectedPdfFixtures.plain(), "merged.pdf")),
+                            (Integer) null);
+            assertThatThrownBy(() -> unlocked.protect(merged))
+                    .isInstanceOf(ExceptionUtils.PdfPasswordException.class);
         }
     }
 
@@ -381,6 +424,45 @@ class ProtectedPdfRunsTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {CERT_SIGN, ANY_FILE_STEP, "/api/v1/misc/unknown-step"})
+    void aStepThatCannotKeepPurviewProtectionIsRefusedBeforeOpeningTheFile(String operation)
+            throws IOException {
+        List<PipelineStep> steps =
+                List.of(
+                        new PipelineStep(ROTATE_PDF, Map.of()),
+                        new PipelineStep(operation, Map.of()));
+
+        assertThatThrownBy(() -> runs.unlock(protectedInput(), sourceAccount(), steps))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("secret.pdf")
+                .hasMessageContaining(operation);
+        verify(rightsManagement, never()).open(any(), any());
+    }
+
+    @Test
+    void aStepThatReadsTheTextNeedsTheCopyRight() throws IOException {
+        List<PipelineStep> rename = List.of(new PipelineStep(AUTO_RENAME, Map.of()));
+
+        assertThatThrownBy(() -> runs.unlock(protectedInput(), sourceAccount(), rename))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("copy")
+                .hasMessageContaining(AUTO_RENAME);
+    }
+
+    @Test
+    void theCopyRightLetsATextReadingStepRun() throws IOException {
+        when(rightsManagement.open(eq(account), any()))
+                .thenReturn(new RightsManagementService.Opened(PLAINTEXT, protection(true, true)));
+        List<PipelineStep> rename = List.of(new PipelineStep(AUTO_RENAME, Map.of()));
+
+        try (ProtectedPdfRuns.Unlocked unlocked =
+                runs.unlock(protectedInput(), sourceAccount(), rename)) {
+            assertThat(unlocked.inputs().primary().getFirst().getContentAsByteArray())
+                    .isEqualTo(PLAINTEXT);
+        }
+    }
+
     private PolicyInputs protectedInput() {
         return PolicyInputs.of(List.of(named(wrapper, "secret.pdf")));
     }
@@ -410,6 +492,10 @@ class ProtectedPdfRunsTest {
     }
 
     private static ProtectionInfo protection(boolean edit) {
+        return protection(edit, false);
+    }
+
+    private static ProtectionInfo protection(boolean edit, boolean copy) {
         return new ProtectionInfo(
                 null,
                 List.of(edit ? "EDIT" : "VIEW"),
@@ -422,7 +508,7 @@ class ProtectedPdfRunsTest {
                 null,
                 true,
                 null,
-                new ProtectionInfo.Permissions(true, false, false, edit, false, false, false));
+                new ProtectionInfo.Permissions(true, false, copy, edit, false, false, false));
     }
 
     private static Resource named(byte[] bytes, String name) {

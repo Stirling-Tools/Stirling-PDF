@@ -2120,6 +2120,7 @@ const EmbedPdfViewerContent = ({
           bookmarkVisible={isBookmarkSidebarVisible}
           documentCacheKey={bookmarkCacheKey}
           preloadCacheKeys={allBookmarkCacheKeys}
+          contentLocked={rightsManagedOpened !== null}
         />
       )}
       <LayerSidebar

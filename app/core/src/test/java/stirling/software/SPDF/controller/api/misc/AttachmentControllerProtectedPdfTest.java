@@ -111,7 +111,7 @@ class AttachmentControllerProtectedPdfTest {
                 "attachments", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "notes".getBytes());
     }
 
-    static Stream<Named<AttachmentCall>> endpoints() {
+    static Stream<Named<AttachmentCall>> writeEndpoints() {
         return Stream.of(
                 Named.of(
                         "add-attachments",
@@ -154,7 +154,11 @@ class AttachmentControllerProtectedPdfTest {
                             request.setFileInput(pdf);
                             request.setAttachmentName("payload.bin");
                             return controller.deleteAttachment(request);
-                        }),
+                        }));
+    }
+
+    static Stream<Named<AttachmentCall>> readEndpoints() {
+        return Stream.of(
                 Named.of(
                         "list-attachments",
                         (controller, pdf) -> {
@@ -181,9 +185,29 @@ class AttachmentControllerProtectedPdfTest {
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("endpoints")
+    @MethodSource("writeEndpoints")
     void refusesAPdfProtectedOnlyByAPermissionsPassword(AttachmentCall endpoint) throws Exception {
-        MockMultipartFile restricted = ownerPasswordOnlyPdf();
+        assertRefused(endpoint, ownerPasswordOnlyPdf());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("readEndpoints")
+    void refusesToReadAttachmentsWhenCopyingIsForbidden(AttachmentCall endpoint) throws Exception {
+        AccessPermission permissions = new AccessPermission();
+        permissions.setCanExtractContent(false);
+        assertRefused(endpoint, pdf(new StandardProtectionPolicy("owner secret", "", permissions)));
+    }
+
+    @Test
+    void listsAttachmentsOfAPdfThatOnlyForbidsChanges() throws Exception {
+        ListAttachmentsRequest request = new ListAttachmentsRequest();
+        request.setFileInput(ownerPasswordOnlyPdf());
+
+        assertEquals(List.of(), controller.listAttachments(request).getBody());
+    }
+
+    private void assertRefused(AttachmentCall endpoint, MockMultipartFile restricted)
+            throws IOException {
 
         ResponseStatusException refused =
                 assertThrows(

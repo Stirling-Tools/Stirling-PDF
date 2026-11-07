@@ -73,7 +73,10 @@ const EXCLUDED = new Map<string, () => string>([
   ["/api/v1/convert/pdf/pdfa", forbidsEncryption],
 ]);
 
-const NEEDS_COPY = new Set(["/api/v1/misc/auto-rename"]);
+const NEEDS_COPY = new Set([
+  "/api/v1/misc/auto-rename",
+  "/api/v1/general/split-pdf-by-chapters",
+]);
 
 export function rightsManagedToolRule(
   endpoint: string | undefined,
@@ -111,7 +114,10 @@ function hasSignatures(opened: OpenedRightsManagedPdf): Promise<boolean> {
   if (!signed) {
     signed = inspectLocalPdfAccess(opened.plaintext).then(
       (access) => access.signed,
-      () => false,
+      () => {
+        signedContent.delete(opened);
+        return false;
+      },
     );
     signedContent.set(opened, signed);
   }

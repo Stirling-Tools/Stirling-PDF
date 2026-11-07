@@ -54,8 +54,6 @@ public final class PdfSessionPermissions {
                             "/api/v1/security/add-watermark",
                             "/api/v1/misc/add-stamp",
                             "/api/v1/misc/add-page-numbers",
-                            "/api/v1/general/scale-pages",
-                            "/api/v1/general/crop",
                             "/api/v1/misc/replace-invert-pdf",
                             "/api/v1/general/remove-image-pdf",
                             "/api/v1/security/auto-redact",
@@ -65,12 +63,13 @@ public final class PdfSessionPermissions {
                             permission.canModify();
                     case "/api/v1/misc/flatten",
                             "/api/v1/security/sanitize-pdf",
-                            "/api/v1/misc/unlock-pdf-forms" ->
+                            "/api/v1/misc/unlock-pdf-forms",
+                            "/api/v1/general/scale-pages",
+                            "/api/v1/general/crop" ->
                             permission.canModify() && permission.canModifyAnnotations();
                     case "/api/v1/general/booklet-imposition",
-                            "/api/v1/general/pdf-to-single-page" ->
-                            permission.canModify() && assemble;
-                    case "/api/v1/general/multi-page-layout" ->
+                            "/api/v1/general/pdf-to-single-page",
+                            "/api/v1/general/multi-page-layout" ->
                             permission.canModify() && assemble && permission.canModifyAnnotations();
                     case "/api/v1/misc/remove-blanks" -> assemble && permission.canExtractContent();
                     default ->

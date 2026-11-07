@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { extractPDFMetadata } from "@editor/services/pdfMetadataService";
 import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
-import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import {
+  ChangeMetadataParameters,
+  defaultParameters,
+} from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { useReadablePdf } from "@editor/hooks/useReadablePdf";
+import { ExtractedPDFMetadata } from "@editor/types/metadata";
 
 interface MetadataExtractionParams {
   updateParameter: <K extends keyof ChangeMetadataParameters>(
@@ -11,72 +15,95 @@ interface MetadataExtractionParams {
   ) => void;
 }
 
+interface Prefill {
+  fileId: string;
+  decrypted: boolean;
+}
+
+function applyMetadata(
+  updateParameter: MetadataExtractionParams["updateParameter"],
+  metadata: ExtractedPDFMetadata,
+) {
+  updateParameter("title", metadata.title);
+  updateParameter("author", metadata.author);
+  updateParameter("subject", metadata.subject);
+  updateParameter("keywords", metadata.keywords);
+  updateParameter("creator", metadata.creator);
+  updateParameter("producer", metadata.producer);
+  updateParameter(
+    "creationDate",
+    metadata.creationDate ? new Date(metadata.creationDate) : null,
+  );
+  updateParameter(
+    "modificationDate",
+    metadata.modificationDate ? new Date(metadata.modificationDate) : null,
+  );
+  updateParameter("trapped", metadata.trapped);
+  updateParameter("customMetadata", metadata.customMetadata);
+}
+
+function clearMetadata(
+  updateParameter: MetadataExtractionParams["updateParameter"],
+) {
+  updateParameter("title", defaultParameters.title);
+  updateParameter("author", defaultParameters.author);
+  updateParameter("subject", defaultParameters.subject);
+  updateParameter("keywords", defaultParameters.keywords);
+  updateParameter("creator", defaultParameters.creator);
+  updateParameter("producer", defaultParameters.producer);
+  updateParameter("creationDate", defaultParameters.creationDate);
+  updateParameter("modificationDate", defaultParameters.modificationDate);
+  updateParameter("trapped", defaultParameters.trapped);
+  updateParameter("customMetadata", defaultParameters.customMetadata);
+}
+
 export const useMetadataExtraction = (params: MetadataExtractionParams) => {
   const selectedFiles = useViewScopedFiles();
-  const readable = useReadablePdf(selectedFiles[0]);
+  const source = selectedFiles[0];
+  const readable = useReadablePdf(source);
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
-  const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
-  const previousFileCountRef = useRef(0);
+  const [prefill, setPrefill] = useState<Prefill | null>(null);
+  const updateParameter = useRef(params.updateParameter);
+  const decrypted =
+    readable !== null &&
+    (readable.file !== source || readable.password !== undefined);
+  const target =
+    readable && source && (!decrypted || selectedFiles.length === 1)
+      ? source.fileId
+      : null;
 
-  // Reset extraction state only when files are cleared (length goes to 0)
   useEffect(() => {
-    if (previousFileCountRef.current > 0 && selectedFiles.length === 0) {
-      setHasExtractedMetadata(false);
-    }
-    previousFileCountRef.current = selectedFiles.length;
-  }, [selectedFiles]);
+    updateParameter.current = params.updateParameter;
+  });
 
-  // Extract metadata from first file when files change
   useEffect(() => {
-    const extractMetadata = async () => {
-      if (!readable) {
-        return;
-      }
+    if (!prefill || prefill.fileId === target) return;
+    if (prefill.decrypted) clearMetadata(updateParameter.current);
+    setPrefill(null);
+  }, [prefill, target]);
 
-      if (hasExtractedMetadata) {
-        return;
-      }
-
-      setIsExtractingMetadata(true);
-
-      const result = await extractPDFMetadata(readable.file, readable.password);
-
+  useEffect(() => {
+    if (!readable || !target || prefill) return;
+    let cancelled = false;
+    setIsExtractingMetadata(true);
+    void extractPDFMetadata(readable.file, readable.password).then((result) => {
+      if (cancelled) return;
       if (result.success) {
-        const metadata = result.metadata;
-
-        // Pre-populate all fields with extracted metadata
-        params.updateParameter("title", metadata.title);
-        params.updateParameter("author", metadata.author);
-        params.updateParameter("subject", metadata.subject);
-        params.updateParameter("keywords", metadata.keywords);
-        params.updateParameter("creator", metadata.creator);
-        params.updateParameter("producer", metadata.producer);
-        params.updateParameter(
-          "creationDate",
-          metadata.creationDate ? new Date(metadata.creationDate) : null,
-        );
-        params.updateParameter(
-          "modificationDate",
-          metadata.modificationDate
-            ? new Date(metadata.modificationDate)
-            : null,
-        );
-        params.updateParameter("trapped", metadata.trapped);
-        params.updateParameter("customMetadata", metadata.customMetadata);
-
-        setHasExtractedMetadata(true);
+        applyMetadata(updateParameter.current, result.metadata);
+        setPrefill({ fileId: target, decrypted });
       } else {
         console.warn("Failed to extract metadata:", result.error);
       }
-
+      setIsExtractingMetadata(false);
+    });
+    return () => {
+      cancelled = true;
       setIsExtractingMetadata(false);
     };
-
-    extractMetadata();
-  }, [readable, hasExtractedMetadata, params]);
+  }, [readable, target, prefill, decrypted]);
 
   return {
     isExtractingMetadata,
-    hasExtractedMetadata,
+    hasExtractedMetadata: prefill !== null,
   };
 };
