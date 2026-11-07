@@ -44,8 +44,8 @@ export class SetScanStyleCommand implements Command {
     if (!prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (run) setScanOverride(doc, page, run, () => prev);
     setPreferredScanFace(doc, this.prevPreferred);
+    if (run) setScanOverride(doc, page, run, () => prev);
     this.prev = null;
   }
 
