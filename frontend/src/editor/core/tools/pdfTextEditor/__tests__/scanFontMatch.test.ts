@@ -32,6 +32,7 @@ import {
   isScanRun,
   prefitScanRun,
   renderScanEdit,
+  scanDrawnSize,
   scanEditOf,
   scanRunNeedsFit,
   scanTypingDropped,
@@ -1268,6 +1269,41 @@ describe("edits that need no font, and text no font can draw", () => {
       } finally {
         doc.dispose();
       }
+    },
+  );
+
+  test(
+    "fits a block on the scan alone after a deletion has covered words",
+    { timeout: 120_000 },
+    async () => {
+      const fitAfter = async (deleteFirst: boolean) => {
+        const { doc, page } = await buildScan(
+          [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+          SCAN,
+        );
+        try {
+          const run = page.runs.find(isScanRun)!;
+          const state = scanEditOf(doc, run)!;
+          const deleted = run.text.replace("Invoice ", "");
+          if (deleteFirst) {
+            expect(renderScanEdit(doc, page, run, state, deleted)).toBe(true);
+            expect(state.created.length).toBeGreaterThan(0);
+            expect(state.block).toBeUndefined();
+          }
+          const size = scanDrawnSize(doc, page, run);
+          state.block = undefined;
+          while (!prefitScanRun(doc, page, run, Infinity));
+          const style = state.block!.style;
+          return {
+            size: size?.toFixed(2),
+            family: style.family,
+            fontSize: style.fontSize.toFixed(2),
+          };
+        } finally {
+          doc.dispose();
+        }
+      };
+      expect(await fitAfter(true)).toEqual(await fitAfter(false));
     },
   );
 });

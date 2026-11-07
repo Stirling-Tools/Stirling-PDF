@@ -150,6 +150,7 @@ export interface ScanEditState {
   atlasChars?: Set<string>;
   frame?: ScanFrame;
   upright?: boolean;
+  offScan?: boolean;
   edited?: boolean;
   typedFromScan?: boolean;
 }
@@ -599,6 +600,17 @@ const X_HEIGHT_ONLY = /^[acemnorsuvwxz\s\p{P}]+$/u;
 // switches face or size part way through a sentence. Only text the scan itself
 // sets at another size (a label and its value on one OCR line) gets its own.
 function styleFor(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  span: SpanInk | null,
+): ScanStyle | null {
+  return onOriginalScan(doc, page, state, () =>
+    styleOnScan(doc, page, state, span),
+  );
+}
+
+function styleOnScan(
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
@@ -1269,12 +1281,16 @@ function onOriginalScan<T>(
   state: ScanEditState,
   fn: () => T,
 ): T {
+  if (state.offScan) return fn();
   const m = doc.module;
-  for (const p of state.created) m.FPDFPage_RemoveObject(page.pagePtr, p);
+  const created = [...state.created];
+  for (const p of created) m.FPDFPage_RemoveObject(page.pagePtr, p);
+  state.offScan = true;
   try {
     return fn();
   } finally {
-    for (const p of state.created) m.FPDFPage_InsertObject(page.pagePtr, p);
+    state.offScan = false;
+    for (const p of created) m.FPDFPage_InsertObject(page.pagePtr, p);
   }
 }
 
