@@ -6,7 +6,10 @@ import {
 } from "@editor/constants/planConstants";
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
+  useTranslation: () => ({
+    t: (_key: string, fallback: string, values?: Record<string, unknown>) =>
+      fallback.replace(/\{\{(\w+)\}\}/g, (_, name) => String(values?.[name])),
+  }),
 }));
 
 describe("self-hosted authentication entitlements", () => {

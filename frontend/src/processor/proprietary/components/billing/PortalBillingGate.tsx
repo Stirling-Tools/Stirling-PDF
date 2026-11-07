@@ -14,6 +14,7 @@ import { SaasSessionBanner } from "@editor/portal/components/account-link/SaasSe
 import { FreeTierPlanView } from "@editor/portal/components/billing/FreeTierPlanView";
 import { Usage } from "@editor/portal/views/Usage";
 import type { Wallet } from "@editor/portal/api/billing";
+import { requestsTeamCheckout } from "@editor/routes/teamCheckoutLink";
 import { legacyProcurementTarget } from "@processor/components/procurement/enterprisePath";
 
 /**
@@ -37,7 +38,7 @@ export function PortalBillingGate() {
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
   const prompted = useRef(false);
-  const accountLinkRequested = searchParams.get("upgrade") === "team";
+  const accountLinkRequested = requestsTeamCheckout(searchParams);
 
   useEffect(() => {
     if (!accountLinkRequested || link?.isLinked) prompted.current = false;
