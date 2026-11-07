@@ -18,7 +18,10 @@ import {
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
-import { scanTypingDropped } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  scanBlockMisaligned,
+  scanTypingDropped,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
@@ -84,7 +87,7 @@ export function EditorSidebar({
   const fontNote = useSelectedFontNote(
     state,
     selection,
-    selectionDropsTyping(store, state, selection),
+    selectedScanNote(store, state, selection),
   );
   const scanFontMatch = useScanFontMatch(store, state, selection);
 
@@ -230,27 +233,32 @@ function NothingSelected(props: ScanHintProps) {
   );
 }
 
-function selectionDropsTyping(
+type ScanNote = "misaligned" | "dropsTyping" | null;
+
+function selectedScanNote(
   store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
-): boolean {
+): ScanNote {
   const doc = store.document;
-  if (!doc) return false;
+  if (!doc) return null;
   const picked = new Set(selection.runIds);
-  return state.pages.some((page) =>
-    page.runs.some((r) => {
-      if (!picked.has(r.id)) return false;
+  const runs = state.pages.flatMap((page) =>
+    page.runs.flatMap((r) => {
+      if (!picked.has(r.id)) return [];
       const run = doc.page(page.pageIndex).findRun(r.id);
-      return !!run && scanTypingDropped(run);
+      return run ? [run] : [];
     }),
   );
+  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
+  return null;
 }
 
 function useSelectedFontNote(
   state: EditorViewState,
   selection: SelectionState,
-  dropsTyping: boolean,
+  scanNote: ScanNote,
 ): string | null {
   const { t } = useTranslation();
   return useMemo(() => {
@@ -258,7 +266,12 @@ function useSelectedFontNote(
     if (!note) return null;
     switch (note.kind) {
       case "scanned":
-        return dropsTyping
+        if (scanNote === "misaligned")
+          return t(
+            "pdfTextEditor.inspector.scannedTextMisaligned",
+            "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted.",
+          );
+        return scanNote === "dropsTyping"
           ? t(
               "pdfTextEditor.inspector.scannedTextNoFont",
               "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
@@ -285,7 +298,7 @@ function useSelectedFontNote(
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
     }
-  }, [state.pages, selection.runIds, dropsTyping, t]);
+  }, [state.pages, selection.runIds, scanNote, t]);
 }
 
 function EmptySidebar({

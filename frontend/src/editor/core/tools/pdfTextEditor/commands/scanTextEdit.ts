@@ -1325,6 +1325,13 @@ export function scanTypingDropped(run: TextRun): boolean {
   );
 }
 
+export function scanBlockMisaligned(
+  doc: EditorDocument,
+  run: TextRun,
+): boolean {
+  return scanEditOf(doc, run)?.lines.some(implausibleLine) ?? false;
+}
+
 export function scanBlockUndrawable(
   doc: EditorDocument,
   run: TextRun,

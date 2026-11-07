@@ -30,6 +30,7 @@ import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import {
   drawnBlockStyle,
   isScanRun,
+  scanBlockMisaligned,
   prefitScanRun,
   renderScanEdit,
   scanDrawnSize,
@@ -47,6 +48,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import {
   SERVER_FONTS_URL,
   resetServerFontsCache,
@@ -1351,6 +1353,54 @@ describe("reading scanned words inside a form", () => {
       ).toEqual([400, 400.5]);
     } finally {
       doc.dispose();
+    }
+  });
+});
+
+describe("scanned text whose OCR words do not line up with the scan", () => {
+  const ocrPage = async (scale: number) => {
+    const bytes = buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+        },
+        {
+          num: 4,
+          body: streamBody(
+            "",
+            `BT /F1 12 Tf 3 Tr ${scale} Tz 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET`,
+          ),
+        },
+        {
+          num: 5,
+          body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        },
+      ],
+      1,
+    );
+    const doc = await EditorDocument.open(bytes);
+    const page = doc.page(0);
+    PdfiumTextReader.populate(doc, page);
+    return { doc, page, run: page.runs.find(isScanRun)! };
+  };
+
+  test("flags the block so the inspector can say it cannot be edited", async () => {
+    const plausible = await ocrPage(100);
+    const squeezed = await ocrPage(5);
+    try {
+      expect(scanBlockMisaligned(plausible.doc, plausible.run)).toBe(false);
+      expect(scanBlockMisaligned(squeezed.doc, squeezed.run)).toBe(true);
+      new DeleteObjectCommand({
+        pageIndex: 0,
+        runId: squeezed.run.id,
+      }).apply(squeezed.doc);
+      expect(squeezed.page.findRun(squeezed.run.id)).toBe(squeezed.run);
+    } finally {
+      plausible.doc.dispose();
+      squeezed.doc.dispose();
     }
   });
 });
