@@ -19,6 +19,7 @@ import {
 } from "@editor/services/pdfPermissions";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -102,6 +103,35 @@ export async function preflightPdfOperation(
   requestOwner: (file: StirlingFile) => Promise<boolean>,
   signal?: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
+): Promise<boolean> {
+  // Inspections still pending when preflight exits early stop holding worker slots.
+  const done = new AbortController();
+  const combined = combineAbortSignals([
+    done.signal,
+    ...(signal ? [signal] : []),
+  ]);
+  try {
+    return await runPreflight(
+      files,
+      endpoint,
+      combinesFiles,
+      requestOwner,
+      combined.signal,
+      isKnownEncrypted,
+    );
+  } finally {
+    done.abort();
+    combined.dispose();
+  }
+}
+
+async function runPreflight(
+  files: readonly StirlingFile[],
+  endpoint: string | undefined,
+  combinesFiles: boolean,
+  requestOwner: (file: StirlingFile) => Promise<boolean>,
+  signal: AbortSignal,
+  isKnownEncrypted: (file: StirlingFile) => boolean,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =

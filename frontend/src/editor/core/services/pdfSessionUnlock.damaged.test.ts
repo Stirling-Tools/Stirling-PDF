@@ -69,9 +69,40 @@ describe("damaged PDFs", () => {
     // Processing reuses preflight's verdict instead of waiting out another inspection.
     await expect(prepareUnlockedFile(plain, repair)).resolves.toBe(plain);
     expect(inspect).toHaveBeenCalledOnce();
+    // Encrypted-looking files never get a cached pass, however often they are checked.
+    const encrypted = pdf("%PDF-1.7 trailer << /Encrypt 5 0 R >>");
+    for (let attempt = 0; attempt < 2; attempt++)
+      await expect(
+        preflightPdfOperation([encrypted], repair, false, vi.fn()),
+      ).rejects.toMatchObject({ name: "TimeoutError" });
+    await expect(prepareUnlockedFile(encrypted, repair)).rejects.toMatchObject({
+      name: "TimeoutError",
+    });
+  });
+
+  it("cancels pending inspections when preflight fails early", async () => {
+    let laterSignal: AbortSignal | undefined;
+    inspect.mockImplementation(async (file, signal) => {
+      if ((file as File).name === "first.pdf") throw new Error("broken");
+      laterSignal = signal;
+      return new Promise(() => {});
+    });
+    const named = (name: string) =>
+      createStirlingFile(
+        new File(["%PDF-1.7"], name, { type: "application/pdf" }),
+      );
+    const caller = new AbortController();
     await expect(
-      prepareUnlockedFile(pdf("%PDF-1.7 trailer << /Encrypt 5 0 R >>"), repair),
-    ).rejects.toMatchObject({ name: "TimeoutError" });
+      preflightPdfOperation(
+        [named("first.pdf"), named("second.pdf")],
+        repair,
+        true,
+        vi.fn(),
+        caller.signal,
+      ),
+    ).rejects.toThrow("broken");
+    expect(laterSignal?.aborted).toBe(true);
+    expect(caller.signal.aborted).toBe(false);
   });
 
   it.each([
