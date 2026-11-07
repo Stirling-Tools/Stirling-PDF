@@ -76,7 +76,7 @@ const CROWDED = 12;
 const BY_WIDTH_CROWDED = 5;
 const BY_RENDER_CROWDED = 3;
 const WIDTH_SLACK = 0.25;
-const CLOSE_CALL = 0.1;
+export const CLOSE_CALL = 0.1;
 const OFFERED = 3;
 const HOLLOW_STROKES = [0.025, 0.05];
 const HOLLOW_HEAVIER = 2;
@@ -121,7 +121,7 @@ export function preferredStyle(
   ranked: RankedStyle[],
 ): ScanStyle | null {
   const pick = ranked.find((r) => r.face.label === preferredScanFace(doc));
-  if (!pick || pick === ranked[0]) return null;
+  if (!pick) return null;
   return pick.score >= ranked[0].score - CLOSE_CALL ? pick.style : null;
 }
 
@@ -336,21 +336,65 @@ export function rankStyles(
   return withScanCache(input.ref.ink, () => rankUncached(doc, page, input));
 }
 
+function fitCut(
+  doc: EditorDocument,
+  page: Page,
+  ref: SpanInk,
+  face: Face,
+  family: string,
+  k: number,
+) {
+  const size = sizeFor(face, ref) * k;
+  const natural =
+    rememberForFit(ref.ink, `span|${family}|${size}`, () =>
+      spanOf(doc, page, ref.original, family, size),
+    ) ?? 0;
+  const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
+  return { face, family, size, stretch, k };
+}
+
+const toRanked = (
+  doc: EditorDocument,
+  page: Page,
+  input: FitInput,
+  c: Candidate,
+): RankedStyle => ({
+  face: c.face,
+  score: c.score,
+  style: finishStyle(doc, page, input.spans, input.ref, c),
+});
+
+export function withPreferredFace(
+  doc: EditorDocument,
+  page: Page,
+  input: FitInput,
+  ranked: RankedStyle[],
+): RankedStyle[] {
+  const label = preferredScanFace(doc);
+  const pick = candidateFaces(input.ref.original).find(
+    (f) => f.label === label,
+  );
+  if (!pick || ranked.some((r) => r.face === pick)) return ranked;
+  const choice = withScanCache(input.ref.ink, () => {
+    const [scored] = measureFaces(doc, page, input.ref, [pick]);
+    return scored ? toRanked(doc, page, input, scored) : null;
+  });
+  if (!choice) return ranked;
+  const at = ranked.findIndex((r) => r.score < choice.score);
+  const merged = [...ranked];
+  merged.splice(at === -1 ? merged.length : at, 0, choice);
+  const offered = merged.slice(0, OFFERED);
+  const close = choice.score >= ranked[0].score - CLOSE_CALL;
+  if (close && !offered.includes(choice)) offered[OFFERED - 1] = choice;
+  return offered;
+}
+
 function rankUncached(
   doc: EditorDocument,
   page: Page,
   input: FitInput,
 ): RankedStyle[] {
   const { ref } = input;
-  const fit = (face: Face, family: string, k: number) => {
-    const size = sizeFor(face, ref) * k;
-    const natural =
-      rememberForFit(ref.ink, `span|${family}|${size}`, () =>
-        spanOf(doc, page, ref.original, family, size),
-      ) ?? 0;
-    const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
-    return { face, family, size, stretch, k };
-  };
   // Typewriter evidence is sturdier than pixels on a blurry low-res scan, so
   // it wins close calls.
   const typewriter =
@@ -361,20 +405,45 @@ function rankUncached(
     Math.max(
       ...familiesOf(face).map(
         (family) =>
-          compare(doc, page, ref, fit(face, family, 0.94), undefined, true)
-            .score,
+          compare(
+            doc,
+            page,
+            ref,
+            fitCut(doc, page, ref, face, family, 0.94),
+            undefined,
+            true,
+          ).score,
       ),
     );
   const faces = shortlist(doc, page, input, all, quickScore);
   if (typewriter)
     for (const f of all)
       if (f.kind === "mono" && !faces.includes(f)) faces.push(f);
+  const perFace = measureFaces(doc, page, ref, faces);
+  if (perFace.length === 0) return [];
+  const nudge = (pick: Candidate | undefined) => {
+    if (!pick || pick === perFace[0]) return;
+    if (pick.score < perFace[0].score - CLOSE_CALL) return;
+    perFace.splice(perFace.indexOf(pick), 1);
+    perFace.unshift(pick);
+  };
+  if (typewriter || input.neighboursLookMono())
+    nudge(perFace.find((c) => c.face.kind === "mono"));
+  return perFace.slice(0, OFFERED).map((c) => toRanked(doc, page, input, c));
+}
+
+function measureFaces(
+  doc: EditorDocument,
+  page: Page,
+  ref: SpanInk,
+  faces: Face[],
+): Candidate[] {
   // Fit size for both weights before choosing one. Blur and overshoot can
   // inflate glyph height enough to favour the wrong face at the initial size.
   const sizes = faces
     .flatMap((face) =>
       familiesOf(face).flatMap((family) =>
-        SIZE_STEPS.map((k) => fit(face, family, k)),
+        SIZE_STEPS.map((k) => fitCut(doc, page, ref, face, family, k)),
       ),
     )
     .filter((c) => c.size > 2)
@@ -414,7 +483,7 @@ function rankUncached(
     });
   // Regular and bold can have almost the same blurred outlines. Settle close
   // matches using stroke thickness, rather than rewarding blur as extra ink.
-  const perFace = faces
+  return faces
     .map((face) => {
       const cuts = candidates.filter((c) => c.face === face);
       if (cuts.length === 0) return null;
@@ -427,21 +496,6 @@ function rankUncached(
     })
     .filter((c): c is Candidate => c !== null)
     .sort((p, q) => q.score - p.score);
-  if (perFace.length === 0) return [];
-  const nudge = (pick: Candidate | undefined) => {
-    if (!pick || pick === perFace[0]) return;
-    if (pick.score < perFace[0].score - CLOSE_CALL) return;
-    perFace.splice(perFace.indexOf(pick), 1);
-    perFace.unshift(pick);
-  };
-  if (typewriter || input.neighboursLookMono())
-    nudge(perFace.find((c) => c.face.kind === "mono"));
-  nudge(perFace.find((c) => c.face.label === preferredScanFace(doc)));
-  return perFace.slice(0, OFFERED).map((c) => ({
-    face: c.face,
-    score: c.score,
-    style: finishStyle(doc, page, input.spans, ref, c),
-  }));
 }
 
 function finishStyle(
