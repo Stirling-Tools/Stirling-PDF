@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.resource.EncodedResourceResolver;
 import org.springframework.web.servlet.resource.HttpResource;
 import org.springframework.web.servlet.resource.ResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
+import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -61,6 +64,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     "samples",
                     "og_images",
                     "Login");
+    private static final String PRIVATE_FONTS_FOLDER = "fonts";
+    private static final int MAX_DECODE_PASSES = 4;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -136,6 +141,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
+                .addResolver(new BundledOnlyFolderResolver(PRIVATE_FONTS_FOLDER))
                 .addResolver(new PreferredEncodingResourceResolver());
     }
 
@@ -241,6 +247,86 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             httpResource
                                     .getResponseHeaders()
                                     .getFirst(HttpHeaders.CONTENT_ENCODING));
+        }
+    }
+
+    static final class BundledOnlyFolderResolver implements ResourceResolver {
+
+        private final String folder;
+
+        BundledOnlyFolderResolver(String folder) {
+            this.folder = folder.toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public Resource resolveResource(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveResource(
+                    request, requestPath, allowedLocations(requestPath, locations));
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, allowedLocations(resourcePath, locations));
+        }
+
+        List<? extends Resource> allowedLocations(String path, List<? extends Resource> locations) {
+            if (!targetsFolder(path)) {
+                return locations;
+            }
+            return locations.stream()
+                    .filter(location -> location instanceof ClassPathResource)
+                    .toList();
+        }
+
+        boolean targetsFolder(String path) {
+            if (path == null) {
+                return false;
+            }
+            String decoded = fullyDecoded(path);
+            if (decoded == null) {
+                return true;
+            }
+            for (String segment : decoded.split("[/\\\\]")) {
+                String name = windowsName(segment);
+                if (!name.isEmpty()) {
+                    return name.toLowerCase(Locale.ROOT).equals(folder);
+                }
+            }
+            return false;
+        }
+
+        private static String fullyDecoded(String path) {
+            String current = path;
+            for (int pass = 0; pass < MAX_DECODE_PASSES; pass++) {
+                String next;
+                try {
+                    next = UriUtils.decode(current, StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
+                if (next.equals(current)) {
+                    return current;
+                }
+                current = next;
+            }
+            return null;
+        }
+
+        private static String windowsName(String segment) {
+            int stream = segment.indexOf(':');
+            String name = stream >= 0 ? segment.substring(0, stream) : segment;
+            int end = name.length();
+            while (end > 0 && (name.charAt(end - 1) == '.' || name.charAt(end - 1) == ' ')) {
+                end--;
+            }
+            return name.substring(0, end);
         }
     }
 

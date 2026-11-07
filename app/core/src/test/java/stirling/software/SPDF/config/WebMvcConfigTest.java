@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -212,6 +214,66 @@ class WebMvcConfigTest {
             mvc.perform(get("/favicon.ico")).andExpect(content().string("custom-icon"));
             mvc.perform(get("/js/custom.js")).andExpect(content().string("js"));
         }
+
+        @Test
+        @DisplayName("keeps custom fonts private when the folder is named in another case")
+        void customFontsStayPrivateUnderAnyCase(@TempDir Path root) throws Exception {
+            Path fonts = Files.createDirectories(root.resolve("fonts"));
+            Files.writeString(fonts.resolve("Custom.ttf"), "custom");
+            for (String alias : FOLDER_ALIASES) {
+                if (!Files.exists(root.resolve(alias))) {
+                    Files.createSymbolicLink(root.resolve(alias), fonts);
+                }
+            }
+
+            MockMvc mvc = resourceMvc(root);
+
+            for (String alias : FOLDER_ALIASES) {
+                mvc.perform(get(URI.create("/" + alias + "/Custom.ttf")))
+                        .andExpect(status().isNotFound());
+            }
+            mvc.perform(get(URI.create("/%46onts/Custom.ttf"))).andExpect(status().isNotFound());
+            mvc.perform(get(URI.create("/Fonts/DejaVuSans.ttf"))).andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("limits every spelling of the fonts folder to bundled locations")
+        void bundledOnlyResolverMatchesEverySpelling(@TempDir Path root) {
+            WebMvcConfig.BundledOnlyFolderResolver resolver =
+                    new WebMvcConfig.BundledOnlyFolderResolver("fonts");
+            Resource custom = new FileSystemResource(root);
+            Resource bundled = new ClassPathResource("static/");
+            List<Resource> locations = List.of(custom, bundled);
+
+            for (String path :
+                    List.of(
+                            "fonts/Custom.ttf",
+                            "Fonts/Custom.ttf",
+                            "FONTS/Custom.ttf",
+                            "/fOnTs/Custom.ttf",
+                            "%46onts/Custom.ttf",
+                            "%2546onts/Custom.ttf",
+                            "%46ONTS%2fCustom.ttf",
+                            "Fonts\\Custom.ttf",
+                            "./Fonts/Custom.ttf",
+                            "fonts./Custom.ttf",
+                            "Fonts .  /Custom.ttf",
+                            "fonts::$INDEX_ALLOCATION/Custom.ttf",
+                            "%zzonts/Custom.ttf")) {
+                assertThat(List.<Resource>copyOf(resolver.allowedLocations(path, locations)))
+                        .as(path)
+                        .containsExactly(bundled);
+            }
+            for (String path :
+                    List.of("index.html", "js/fonts/a.ttf", "fontsx/a.ttf", "myfonts/a.ttf")) {
+                assertThat(List.<Resource>copyOf(resolver.allowedLocations(path, locations)))
+                        .as(path)
+                        .containsExactly(custom, bundled);
+            }
+        }
+
+        private static final List<String> FOLDER_ALIASES =
+                List.of("Fonts", "FONTS", "fOnTs", "fonts.");
 
         private static final List<String> PUBLIC_PREFIXES =
                 List.of(
