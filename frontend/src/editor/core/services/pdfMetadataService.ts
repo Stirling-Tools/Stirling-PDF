@@ -133,6 +133,7 @@ function getStringMetadata(info: Record<string, unknown>, key: string): string {
  */
 export async function extractPDFMetadata(
   file: File,
+  password?: string,
 ): Promise<MetadataExtractionResponse> {
   // Use existing PDF validation
   const isValidPDF = await FileAnalyzer.isValidPDF(file);
@@ -152,6 +153,7 @@ export async function extractPDFMetadata(
     pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
       disableAutoFetch: true,
       disableStream: true,
+      password,
     });
     metadata = await pdfDoc.getMetadata();
   } catch (error) {

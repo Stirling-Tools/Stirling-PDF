@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { extractPDFMetadata } from "@editor/services/pdfMetadataService";
 import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import { useReadablePdf } from "@editor/hooks/useReadablePdf";
 
 interface MetadataExtractionParams {
   updateParameter: <K extends keyof ChangeMetadataParameters>(
@@ -12,6 +13,7 @@ interface MetadataExtractionParams {
 
 export const useMetadataExtraction = (params: MetadataExtractionParams) => {
   const selectedFiles = useViewScopedFiles();
+  const readable = useReadablePdf(selectedFiles[0]);
   const [isExtractingMetadata, setIsExtractingMetadata] = useState(false);
   const [hasExtractedMetadata, setHasExtractedMetadata] = useState(false);
   const previousFileCountRef = useRef(0);
@@ -27,10 +29,9 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
   // Extract metadata from first file when files change
   useEffect(() => {
     const extractMetadata = async () => {
-      if (selectedFiles.length === 0) {
+      if (!readable) {
         return;
       }
-      const firstFile = selectedFiles[0];
 
       if (hasExtractedMetadata) {
         return;
@@ -38,7 +39,7 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
 
       setIsExtractingMetadata(true);
 
-      const result = await extractPDFMetadata(firstFile);
+      const result = await extractPDFMetadata(readable.file, readable.password);
 
       if (result.success) {
         const metadata = result.metadata;
@@ -72,7 +73,7 @@ export const useMetadataExtraction = (params: MetadataExtractionParams) => {
     };
 
     extractMetadata();
-  }, [selectedFiles, hasExtractedMetadata, params]);
+  }, [readable, hasExtractedMetadata, params]);
 
   return {
     isExtractingMetadata,
