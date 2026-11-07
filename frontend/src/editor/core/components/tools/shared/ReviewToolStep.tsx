@@ -15,10 +15,7 @@ import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
-import {
-  saveTargetLabel,
-  sharedSaveTarget,
-} from "@editor/services/saveTargets";
+import { sharedSaveTarget } from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
 
 /**
@@ -78,7 +75,9 @@ function ReviewStepContent<TParams = unknown>({
     outputStubs.every((stub) => saver.targetFor(stub));
   const oneTarget = sharedSaveTarget(outputStubs, saver.targetFor);
   const saveLabel = oneTarget
-    ? saveTargetLabel(oneTarget, outputStubs)
+    ? outputStubs.length > 1
+      ? oneTarget.saveAllLabel()
+      : saver.targetSaveLabel(outputStubs[0])
     : terminology.download;
   const saveButton = useSaveButton({
     saver,

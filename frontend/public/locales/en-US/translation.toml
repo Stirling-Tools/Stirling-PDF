@@ -1258,6 +1258,10 @@ system = "System"
 title = "System Settings"
 ui = "User Interface"
 
+[admin.settings.general.allowUserSaveMode]
+description = "Turn off to apply the setting above to everyone."
+label = "Let people choose what Save does"
+
 [admin.settings.general.appName]
 description = "The name displayed in the browser tab and home page"
 label = "Application Name"
@@ -1356,6 +1360,10 @@ label = "Home Description"
 description = "Languages that users can select from (leave empty to enable all languages)"
 label = "Available Languages"
 placeholder = "Select languages"
+
+[admin.settings.general.saveMode]
+description = "For a file that came from someone's computer or a connected drive. People start with this and can change it in their preferences."
+label = "What Save does"
 
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
@@ -11840,13 +11848,39 @@ title = "Sanitize PDF"
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
 
+[saveFile]
+noFreeCopyName = "Couldn't find a free name for the copy next to {{name}}."
+
+[saveFile.ask]
+copy = "Save a copy next to it"
+copyHint = "Saves {{name}} in {{home}}. Later saves update that copy."
+download = "Download instead"
+otherHint = "Leaves {{home}} untouched."
+remember = "Remember my choice"
+rememberHint = "Change it later in Settings > Preferences."
+replace = "Update the original"
+replaceHint = "Replaces it in {{home}}."
+thisFolder = "the same folder"
+title = "Save \"{{name}}\""
+
 [saveFile.menu]
+copy = "Save a copy next to it"
 download = "Download a copy"
+inHome = "In {{home}}"
 more = "More save options"
+sameFolder = "In the same folder"
 saveCopyElsewhere = "Save a copy somewhere else…"
 saveToComputer = "Save to this computer…"
+update = "Update {{name}}"
+
+[saveFile.mode]
+ask = "Ask me"
+copy = "Save a copy next to it"
+replace = "Update it"
 
 [saveFile.toolbar]
+ask = "Save {{name}}…"
+copy = "Save a copy of {{name}} next to it"
 mixed = "Save all, each back to where it came from"
 
 [scalePages]
@@ -12055,6 +12089,9 @@ hideUnavailableToolsDescription = "Remove tools that have been disabled by your 
 language = "Language"
 languageDescription = "Choose the display language"
 logout = "Log out"
+saveMode = "When I save a file"
+saveModeDescription = "What Save does for a file that came from your computer or a connected drive. Other options are always in the menu next to Save."
+saveModeLocked = "Set by your administrator"
 setAsDefault = "Set as Default"
 theme = "Theme"
 themeAccent = "Accent colour"

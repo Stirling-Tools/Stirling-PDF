@@ -391,6 +391,7 @@ const FileEditor = ({
                   onSaveFile={handleSaveFile}
                   unsaved={saver.isUnsaved(record)}
                   saveTarget={saver.targetFor(record)}
+                  targetLabel={saver.targetSaveLabel(record)}
                   onUnzipFile={handleUnzipFile}
                   toolMode={toolMode}
                   isSupported={isFileSupported(record.name)}

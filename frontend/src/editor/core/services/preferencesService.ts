@@ -1,3 +1,4 @@
+import { DEFAULT_SAVE_MODE, type SaveMode } from "@editor/services/saveMode";
 import {
   type ToolPanelMode,
   DEFAULT_TOOL_PANEL_MODE,
@@ -35,6 +36,7 @@ export interface UserPreferences {
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
   pdfRenderMode: PdfRenderMode;
+  saveMode: SaveMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -53,6 +55,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   pdfRenderMode: "normal",
+  saveMode: DEFAULT_SAVE_MODE,
 };
 
 const STORAGE_KEY = "stirlingpdf_preferences";
