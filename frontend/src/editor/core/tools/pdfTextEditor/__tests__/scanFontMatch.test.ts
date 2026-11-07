@@ -985,6 +985,11 @@ describe("drawing typed words from the scan's own letters", () => {
         };
         const fromScan = retyped();
         expect(state.typedFromScan).toBe(true);
+        const measuredAlone = (text: string) => {
+          const i = words.findIndex((w) => w.text.trim() === text);
+          return state.inks.has(`0:${i}:${i}`);
+        };
+        expect(["4471", "for", "is"].filter(measuredAlone)).toEqual([]);
         state.override.style = best.style;
         const fromFont = retyped();
         expect(state.typedFromScan).toBe(false);

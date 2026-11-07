@@ -39,6 +39,19 @@ function run(
 }
 
 describe("layoutScanEdit", () => {
+  it("measures no word on a line the edit left alone", () => {
+    const measured: string[] = [];
+    run(block("NORTH HARBOUR CO", "TEL 123"), "NORTH HARBOUR CO\nFAX 123", {
+      wordWidth: (w) => {
+        measured.push(w.text);
+        return w.text.length * 5;
+      },
+    });
+    expect(
+      measured.filter((t) => ["NORTH", "HARBOUR", "CO"].includes(t)),
+    ).toEqual([]);
+  });
+
   it("leaves an unchanged block exactly as scanned", () => {
     const l = run(
       block("NORTH HARBOUR CO", "TEL 123"),

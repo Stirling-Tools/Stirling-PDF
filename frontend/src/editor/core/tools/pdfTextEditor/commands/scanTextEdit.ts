@@ -145,6 +145,7 @@ export interface ScanEditState {
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
   atlas?: GlyphAtlas | null;
+  atlasChars?: Set<string>;
   frame?: ScanFrame;
   upright?: boolean;
   edited?: boolean;
@@ -682,8 +683,12 @@ function atlasOf(
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
+  needed: Set<string>,
 ): GlyphAtlas | null {
-  if (state.atlas !== undefined) return state.atlas;
+  const known = state.atlasChars ?? new Set<string>();
+  if (state.atlas !== undefined && [...needed].every((ch) => known.has(ch)))
+    return state.atlas;
+  const chars = new Set([...known, ...needed]);
   const top = state.block?.top ?? state.lines[0].height;
   const pitch =
     state.lines.length > 1 ? linePitch(state, fallbackStyle(state)) : Infinity;
@@ -691,7 +696,8 @@ function atlasOf(
   const frame = Math.min(top * 1.45, pitch * 0.95);
   const words: ScannedWord[] = [];
   state.lines.forEach((line, li) =>
-    line.words.forEach((_, wi) => {
+    line.words.forEach((word, wi) => {
+      if (![...word.text].some((ch) => chars.has(ch))) return;
       const span = spanInk(doc, page, state, li, wi, wi);
       if (!span || inkTop(span) > top * 1.3) return;
       const patch = capturePatch(doc.module, page, {
@@ -714,6 +720,7 @@ function atlasOf(
     }),
   );
   state.atlas = buildGlyphAtlas(words, descent);
+  state.atlasChars = chars;
   return state.atlas;
 }
 
@@ -843,11 +850,12 @@ function renderUprightScanEdit(
   const scanWord = (w: LayoutWord) => state.lines[w.line].words[w.index];
   const space = wordSpace(state, spacing);
   let atlasMemo: GlyphAtlas | null | undefined;
+  let typed = new Set<string>();
   const atlas = () => {
     if (atlasMemo !== undefined) return atlasMemo;
     if (restyle || o.style) return (atlasMemo = null);
     blockFit();
-    return (atlasMemo = atlasOf(doc, page, state));
+    return (atlasMemo = atlasOf(doc, page, state, typed));
   };
   const composedCache = new Map<string, ComposedText | null>();
   const composed = (t: string) => {
@@ -871,18 +879,31 @@ function renderUprightScanEdit(
     !!composed(t) || styleCovers(styleOf(anchor), t);
 
   const plan = onOriginalScan(doc, page, state, () => {
-    const layout = layoutScanEdit({
-      lines: state.lines.map((l, li) => ({
-        baseline: lineBase(li),
-        words: l.words.map((w, wi) => ({
-          line: li,
-          index: wi,
-          text: w.text.trim(),
-          x: w.x,
-        })),
+    const lines = state.lines.map((l, li) => ({
+      baseline: lineBase(li),
+      words: l.words.map((w, wi) => ({
+        line: li,
+        index: wi,
+        text: w.text.trim(),
+        x: w.x,
       })),
+    }));
+    const pitch = linePitch(state, spacing);
+    typed = new Set(
+      layoutScanEdit({
+        lines,
+        text,
+        pitch,
+        space,
+        wordWidth: (w) => scanWord(w).right - w.x,
+        textWidth: () => 0,
+        redraw: restyle,
+      }).typed.flatMap((t) => [...t.text.replace(/\s+/g, "")]),
+    );
+    const layout = layoutScanEdit({
+      lines,
       text,
-      pitch: linePitch(state, spacing),
+      pitch,
       space,
       wordWidth: inkWidth,
       textWidth: (t, anchor) => {

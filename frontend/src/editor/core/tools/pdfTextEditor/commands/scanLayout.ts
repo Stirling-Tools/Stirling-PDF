@@ -116,16 +116,18 @@ export function layoutScanEdit(input: LayoutInput): Layout {
   const lineStart = (line: number) =>
     (lines[line] ?? lines[0]).words.find((w) => w.text)?.x ??
     lines[0].words[0].x;
+  const besideInScan = (a: LayoutWord, b: LayoutWord) =>
+    a.line === b.line &&
+    !lines[a.line].words.slice(a.index + 1, b.index).some((w) => w.text);
   // Words that sat side by side in the scan keep the gap they had.
-  const gap = (a: LayoutWord | null, b: LayoutWord | null) => {
-    if (!a || !b || a.line !== b.line) return input.space;
-    const between = lines[a.line].words.slice(a.index + 1, b.index);
-    if (between.some((w) => w.text)) return input.space;
-    return b.x - (a.x + input.wordWidth(a));
-  };
+  const gap = (a: LayoutWord | null, b: LayoutWord | null) =>
+    !a || !b || !besideInScan(a, b)
+      ? input.space
+      : b.x - (a.x + input.wordWidth(a));
 
   const layout: Layout = { kept: [], removed: [], typed: [] };
-  let pen: number | null = null;
+  let pen: (() => number) | null = null;
+  let lastKept: { word: LayoutWord; x: number } | null = null;
   let penLine = -1;
   let prev: LayoutWord | null = null;
   // Removed words since the last kept one: the first stands for typed text.
@@ -136,6 +138,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     if (line === penLine) return;
     pen = null;
     prev = null;
+    lastKept = null;
     penLine = line;
   };
   const flushTyped = () => {
@@ -144,7 +147,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     const line = pending.line;
     // A line starts where it always did, so deleting its first word pulls
     // the rest left rather than leaving a hole.
-    const x = pen === null ? lineStart(line) : pen + gap(prev, anchor);
+    const x = pen === null ? lineStart(line) : pen() + gap(prev, anchor);
     const text = pending.text.join(" ");
     layout.typed.push({
       text,
@@ -154,8 +157,10 @@ export function layoutScanEdit(input: LayoutInput): Layout {
       atAnchor:
         !!anchor && anchor.line === line && Math.abs(x - anchor.x) < 0.5,
     });
-    pen = x + input.textWidth(text, anchor);
+    const end = x + input.textWidth(text, anchor);
+    pen = () => end;
     prev = anchor;
+    lastKept = null;
     dels = [];
     pending = null;
   };
@@ -178,7 +183,11 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     flushTyped();
     const w = op.word;
     const flowed: number =
-      pen === null ? lineStart(op.line) : pen + gap(prev, w);
+      pen === null
+        ? lineStart(op.line)
+        : lastKept && besideInScan(lastKept.word, w)
+          ? w.x + (lastKept.x - lastKept.word.x)
+          : pen() + gap(prev, w);
     const x =
       w.line === op.line && Math.abs(flowed - w.x) < input.space * SNAP_BACK
         ? w.x
@@ -190,8 +199,9 @@ export function layoutScanEdit(input: LayoutInput): Layout {
       baseline,
       moved: w.line !== op.line || Math.abs(x - w.x) > 0.3,
     });
-    pen = x + input.wordWidth(w);
+    pen = () => x + input.wordWidth(w);
     prev = w;
+    lastKept = { word: w, x };
     dels = [];
   }
   flushTyped();
