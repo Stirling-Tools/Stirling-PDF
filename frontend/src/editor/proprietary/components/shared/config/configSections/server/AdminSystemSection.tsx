@@ -181,6 +181,8 @@ export default function AdminSystemSection() {
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,
+        "system.saveMode": settings.system?.saveMode,
+        "system.allowUserSaveMode": settings.system?.allowUserSaveMode,
         "premium.proFeatures.customMetadata.autoUpdateMetadata":
           settings.customMetadata?.autoUpdateMetadata,
         "premium.proFeatures.customMetadata.author":

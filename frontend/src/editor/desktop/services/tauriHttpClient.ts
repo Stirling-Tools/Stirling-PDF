@@ -1,6 +1,7 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
 import { enforceDocumentPrivacy } from "@editor/services/documentPrivacyService";
+import { inMemoryFile } from "@editor/utils/inMemoryFile";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -11,6 +12,17 @@ import {
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
  * Provides axios-compatible API while bypassing CORS restrictions
  */
+
+async function withInMemoryFiles(form: FormData): Promise<FormData> {
+  const copy = new FormData();
+  for (const [key, value] of form.entries()) {
+    copy.append(
+      key,
+      typeof value === "string" ? value : await inMemoryFile(value),
+    );
+  }
+  return copy;
+}
 
 export interface TauriHttpResponse<T = any> {
   data: T;
@@ -227,8 +239,7 @@ class TauriHttpClient {
 
     if (finalConfig.data) {
       if (finalConfig.data instanceof FormData) {
-        // FormData can be passed directly
-        body = finalConfig.data;
+        body = await withInMemoryFiles(finalConfig.data);
         // Drop any caller-supplied Content-Type so the native fetch generates
         // multipart/form-data WITH its boundary (matches axios's FormData
         // handling). A boundary-less "multipart/form-data" header makes the

@@ -1333,6 +1333,8 @@ public class ApplicationProperties {
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private String saveMode = "replace";
+        private boolean allowUserSaveMode = true;
         private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
@@ -1910,6 +1912,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
 
                 public boolean accountConnectionsReady() {
                     return enabled

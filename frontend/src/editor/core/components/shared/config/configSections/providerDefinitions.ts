@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { absoluteWithBasePath } from "@editor/constants/app";
+import { ONEDRIVE_REDIRECT_PATH } from "@editor/services/oneDrivePickerService";
 import { connectCallbackPath } from "@editor/services/connectedAccountsService";
 export type ProviderType =
   | "oauth2"
@@ -930,6 +931,7 @@ const useGoogleDriveProvider = (): Provider => {
 
 const useMicrosoftProvider = (): Provider => {
   const { t } = useTranslation();
+  const pickerRedirect = absoluteWithBasePath(ONEDRIVE_REDIRECT_PATH);
 
   return {
     id: "microsoft",
@@ -948,7 +950,7 @@ const useMicrosoftProvider = (): Provider => {
         ),
         description: t(
           "provider.microsoft.enabled.description",
-          "Let people use OneDrive and SharePoint in pipelines",
+          "Let people open files from OneDrive and SharePoint, and use them in pipelines",
         ),
         defaultValue: false,
       },
@@ -974,6 +976,19 @@ const useMicrosoftProvider = (): Provider => {
           "Add this as a Web redirect URI on the Entra app registration.",
         ),
         value: absoluteWithBasePath(connectCallbackPath("microsoft")),
+      },
+      {
+        key: "pickerRedirectUri",
+        type: "copy",
+        label: t(
+          "provider.microsoft.pickerRedirectUri.label",
+          "Single-page application redirect URI",
+        ),
+        description: t(
+          "provider.microsoft.pickerRedirectUri.description",
+          "Add this as a Single-page application redirect URI on the same app registration, for signing in from the editor.",
+        ),
+        value: pickerRedirect,
       },
       {
         key: "tenant",
@@ -1005,6 +1020,19 @@ const useMicrosoftProvider = (): Provider => {
         description: t(
           "provider.microsoft.allowAccountConnections.description",
           "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections.",
+        ),
+        defaultValue: true,
+      },
+      {
+        key: "allowEditorSaves",
+        type: "switch",
+        label: t(
+          "provider.microsoft.allowEditorSaves.label",
+          "Let the editor save back to OneDrive",
+        ),
+        description: t(
+          "provider.microsoft.allowEditorSaves.description",
+          "Turn off to keep edits in Stirling: files opened from OneDrive then download instead, and the server refuses saves to OneDrive.",
         ),
         defaultValue: true,
       },

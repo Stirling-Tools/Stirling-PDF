@@ -31,6 +31,7 @@ import { FolderProvider } from "@editor/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@editor/components/session/WorkbenchSessionPersistence";
 import { retireLegacyFolderWorker } from "@editor/services/retireLegacyFolderWorker";
 import type { UserPreferences } from "@editor/services/preferencesService";
+import { parseSaveMode } from "@editor/services/saveMode";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -99,6 +100,8 @@ function ServerDefaultsSync() {
       ) {
         serverDefaults.defaultStartupView = config.defaultStartupView;
       }
+      const saveMode = parseSaveMode(config.saveMode);
+      if (saveMode) serverDefaults.saveMode = saveMode;
       updateServerDefaults(serverDefaults);
     }
   }, [config, configFromServer, updateServerDefaults]);

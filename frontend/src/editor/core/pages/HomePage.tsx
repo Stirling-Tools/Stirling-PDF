@@ -894,7 +894,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
           ref={ref}
           {...props}
           onUploadFiles={handleUpload}
-          onPickGoogleDriveFiles={handleUpload}
+          onPickCloudFiles={handleUpload}
           extraActions={[
             {
               icon: <Icon name="folder-plus" />,

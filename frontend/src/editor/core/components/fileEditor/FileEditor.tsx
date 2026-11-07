@@ -19,6 +19,7 @@ import { alert } from "@editor/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { FileItemPolicyRef } from "@editor/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
@@ -48,6 +49,7 @@ const FileEditor = ({
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
   const { actions: fileActions } = useFileActions();
+  const saver = useSaveStoredFile();
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
   const activeStirlingFileStubs = useMemo(
@@ -221,40 +223,33 @@ const FileEditor = ({
     async (fileId: FileId) => {
       const record = stubsRef.current.find((r) => r.id === fileId);
       const file = record ? selectors.getFile(record.id) : null;
-      console.log("[FileEditor] handleDownloadFile called:", {
+      if (!record || !file) return;
+      // Beside a save to another home this is a one-off copy, not a new disk link.
+      const linksToDisk = !saver.targetFor(record);
+      const result = await downloadFile({
+        data: file,
+        filename: record.name,
+        localPath: linksToDisk ? record.localFilePath : undefined,
         fileId,
-        hasRecord: !!record,
-        hasFile: !!file,
-        localFilePath: record?.localFilePath,
-        isDirty: record?.isDirty,
       });
-      if (record && file) {
-        const result = await downloadFile({
-          data: file,
-          filename: file.name,
-          localPath: record.localFilePath,
-          fileId,
+      if (linksToDisk && result.savedPath) {
+        fileActions.updateStirlingFileStub(fileId, {
+          localFilePath: record.localFilePath ?? result.savedPath,
+          isDirty: false,
         });
-        console.log("[FileEditor] Download complete, checking dirty state:", {
-          localFilePath: record.localFilePath,
-          isDirty: record.isDirty,
-          savedPath: result.savedPath,
-        });
-        if (result.savedPath) {
-          console.log("[FileEditor] Marking file as clean:", fileId);
-          fileActions.updateStirlingFileStub(fileId, {
-            localFilePath: record.localFilePath ?? result.savedPath,
-            isDirty: false,
-          });
-        } else {
-          console.log("[FileEditor] Skipping clean mark:", {
-            savedPath: result.savedPath,
-            isDirty: record.isDirty,
-          });
-        }
       }
     },
-    [selectors, fileActions],
+    [selectors, fileActions, saver],
+  );
+
+  const handleSaveFile = useCallback(
+    async (fileId: FileId) => {
+      const record = stubsRef.current.find((r) => r.id === fileId);
+      if (!record) return false;
+      const file = selectors.getFile(fileId) ?? undefined;
+      return (await saver.saveStoredFile(record, file)) === "saved";
+    },
+    [saver, selectors],
   );
 
   const handleUnzipFile = useCallback(
@@ -393,6 +388,10 @@ const FileEditor = ({
                   onViewFile={handleViewFile}
                   onReorderFiles={handleReorderFiles}
                   onDownloadFile={handleDownloadFile}
+                  onSaveFile={handleSaveFile}
+                  unsaved={saver.isUnsaved(record)}
+                  saveTarget={saver.targetFor(record)}
+                  targetLabel={saver.targetSaveLabel(record)}
                   onUnzipFile={handleUnzipFile}
                   toolMode={toolMode}
                   isSupported={isFileSupported(record.name)}

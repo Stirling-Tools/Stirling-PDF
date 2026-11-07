@@ -110,11 +110,12 @@ premium:
       allowAccountConnections: true # set to 'false' to stop users connecting their own Google account
       accountScope: drive # Drive scope requested when a user connects: 'drive' (every file) or 'drive.file' (only files they pick or Stirling creates)
     microsoft:
-      enabled: false # Enable OneDrive and SharePoint (connected accounts, pipeline locations)
+      enabled: false # Enable OneDrive and SharePoint (editor picker, connected accounts, pipeline locations)
       clientId: "" # Application (client) ID of the Microsoft Entra app registration
       tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
       clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
       allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
+      allowEditorSaves: true # set to 'false' to stop the editor saving files back to OneDrive; the server then refuses those saves
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking
@@ -192,6 +193,8 @@ system:
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enableEasterEggs: true # Set to 'false' to remove the app's hidden novelty features
+  saveMode: replace # What the editor's Save does for a file that came from somewhere: 'replace' (update it), 'copy' (save a copy next to it) or 'ask'
+  allowUserSaveMode: true # set to 'false' to apply saveMode to everyone
   enableFeedback: true # Set to 'false' to disable ability to send feedback to Stirling from the app
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled

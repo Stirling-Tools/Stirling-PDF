@@ -1,19 +1,21 @@
 import { useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
-import { useFileSelectors, useFileActions } from "@editor/contexts/FileContext";
-import { downloadFile } from "@editor/services/downloadService";
+import { useFileSelectors } from "@editor/contexts/FileContext";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useTranslation } from "react-i18next";
 
 export function useExitWarning() {
   const { t } = useTranslation();
   const selectors = useFileSelectors();
-  const { actions: fileActions } = useFileActions();
+  const saver = useSaveStoredFile();
   const selectorsRef = useRef(selectors);
+  const saverRef = useRef(saver);
   const isClosingRef = useRef(false);
 
   selectorsRef.current = selectors;
+  saverRef.current = saver;
 
   useEffect(() => {
     const appWindow = getCurrentWindow();
@@ -26,7 +28,8 @@ export function useExitWarning() {
       }
 
       const allStubs = selectorsRef.current.getStirlingFileStubs();
-      const dirtyStubs = allStubs.filter((stub) => stub.isDirty);
+      // Disk edits and edits not yet sent to a save target both count.
+      const dirtyStubs = allStubs.filter(saverRef.current.isUnsaved);
 
       // Nothing unsaved: don't preventDefault, so the window closes natively
       // without depending on the JS dialog/destroy round-trip below.
@@ -111,47 +114,20 @@ export function useExitWarning() {
         fn();
       });
     };
-  }, [fileActions, t]);
+  }, [t]);
 
   const saveDirtyFiles = async (dirtyStubs: StirlingFileStub[]) => {
-    const filesById = new Map(
-      selectorsRef.current.getFiles().map((file) => [file.fileId, file]),
-    );
     let failedCount = 0;
     let cancelled = false;
-
     for (const stub of dirtyStubs) {
-      const file = filesById.get(stub.id);
-      if (!file || !stub.localFilePath) {
-        if (!file) {
-          failedCount += 1;
-          continue;
-        }
+      const file = selectorsRef.current.getFile(stub.id);
+      const outcome = await saverRef.current.saveStoredFile(stub, file);
+      if (outcome === "cancelled") {
+        cancelled = true;
+        break;
       }
-
-      try {
-        const result = await downloadFile({
-          data: file,
-          filename: file.name,
-          localPath: stub.localFilePath,
-        });
-
-        if (result.cancelled) {
-          cancelled = true;
-          break;
-        }
-
-        if (result.savedPath) {
-          fileActions.updateStirlingFileStub(stub.id, {
-            localFilePath: stub.localFilePath ?? result.savedPath,
-            isDirty: false,
-          });
-        }
-      } catch {
-        failedCount += 1;
-      }
+      if (outcome === "failed") failedCount += 1;
     }
-
     return { failedCount, cancelled };
   };
 }
