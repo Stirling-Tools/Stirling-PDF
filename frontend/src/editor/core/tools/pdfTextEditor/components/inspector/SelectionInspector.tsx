@@ -291,7 +291,7 @@ function GeometrySection({
           <Field
             label={t("pdfTextEditor.inspector.width", "Width")}
             hint={
-              isImage
+              isImage || !setWidth
                 ? undefined
                 : t(
                     "pdfTextEditor.inspector.widthHint",
@@ -301,8 +301,9 @@ function GeometrySection({
           >
             <PointsInput
               value={bounds.width}
-              onCommit={setWidth}
+              onCommit={setWidth ?? (() => undefined)}
               min={1}
+              disabled={!setWidth}
               label={t("pdfTextEditor.inspector.width", "Width")}
               testId="pdf-editor-size-w"
             />
