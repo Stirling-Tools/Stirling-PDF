@@ -261,6 +261,21 @@ public class CropController {
         return GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
     }
 
+    /** Display-space pixel bounds converted to PDF points at the render scale. */
+    private record CropBounds(float x, float y, float width, float height) {
+        static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
+            if (pixelBounds == null || pixelBounds.length != 4) {
+                throw new IllegalArgumentException(
+                        "pixelBounds array must contain exactly 4 elements");
+            }
+            return new CropBounds(
+                    pixelBounds[0] * scaleX,
+                    pixelBounds[1] * scaleY,
+                    (pixelBounds[2] - pixelBounds[0]) * scaleX,
+                    (pixelBounds[3] - pixelBounds[1]) * scaleY);
+        }
+    }
+
     /**
      * Maps a bottom-up display-space pixel box to PDF user space. The crop box origin and page
      * rotation are applied so auto-crop lands on the same content for every /Rotate value.
@@ -271,10 +286,11 @@ public class CropController {
         Rect cropBox = page.getCropBox().orElse(page.getMediaBox());
         float scaleX = display.width() / image.getWidth();
         float scaleY = display.height() / image.getHeight();
-        float dx = bounds[0] * scaleX;
-        float dy = bounds[1] * scaleY;
-        float width = (bounds[2] - bounds[0]) * scaleX;
-        float height = (bounds[3] - bounds[1]) * scaleY;
+        CropBounds displayBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
+        float dx = displayBounds.x();
+        float dy = displayBounds.y();
+        float width = displayBounds.width();
+        float height = displayBounds.height();
         float boxWidth = cropBox.width();
         float boxHeight = cropBox.height();
 
