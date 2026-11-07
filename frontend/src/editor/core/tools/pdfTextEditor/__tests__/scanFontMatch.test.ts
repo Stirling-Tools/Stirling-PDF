@@ -482,6 +482,39 @@ describe("editing sideways scanned text", () => {
   );
 });
 
+describe("editing scanned text on a page turned with /Rotate", () => {
+  test("fits the face and draws the edit", { timeout: 120_000 }, async () => {
+    const { doc, page } = await buildScan(
+      [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+      { dpi: 200, blur: 0.5, noise: 6, rotate: 1 },
+    );
+    try {
+      const run = page.runs.find(isScanRun)!;
+      expect((await choicesFor(doc, page, run))[0]?.face.label).toBe(
+        "Calibri (Carlito)",
+      );
+      const state = scanEditOf(doc, run)!;
+      const jane = state.lines[0].words.find((w) => w.text.trim() === "Jane")!;
+      const band = {
+        x: jane.x - 1,
+        y: state.lines[0].baseline - 3,
+        width: jane.right - jane.x + 2,
+        height: 13,
+      };
+      const before = renderLuma(doc.module, page, band, 0)!.data;
+      renderScanEdit(doc, page, run, state, run.text.replace("Jane", "Mary"));
+      const after = renderLuma(doc.module, page, band, 0)!.data;
+      let changed = 0;
+      for (let i = 0; i < before.length; i++)
+        if (Math.abs(before[i] - after[i]) > 40) changed++;
+      expect(changed).toBeGreaterThan(50);
+      expect(state.textPtrs.length).toBeGreaterThan(0);
+    } finally {
+      doc.dispose();
+    }
+  });
+});
+
 describe("matching scanned text in other scripts", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.6, noise: 8 };
   const russian: ScanLineSpec = {

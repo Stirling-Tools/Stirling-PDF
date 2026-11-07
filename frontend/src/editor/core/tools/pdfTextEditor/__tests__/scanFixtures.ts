@@ -50,6 +50,7 @@ export interface ScanOptions {
   blur: number;
   noise: number;
   sideways?: boolean;
+  rotate?: number;
 }
 
 const FONT_DIR = path.join(
@@ -294,6 +295,7 @@ export async function buildScan(
     }
     if (opts.sideways)
       moveAllObjects(m, page, { a: 0, b: 1, c: -1, d: 0, e: height, f: 0 });
+    if (opts.rotate) m.FPDFPage_SetRotation(page.pagePtr, opts.rotate);
     page.markDirty();
     page.markNeedsGenerate();
     const { blob } = await exportToBlob(scanned, "scan.pdf");
