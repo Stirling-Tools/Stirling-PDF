@@ -2,6 +2,8 @@ package stirling.software.proprietary.policy.engine;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.Optional;
+
 import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
 import stirling.software.proprietary.integration.purview.protection.RightsManagementService;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -14,6 +16,7 @@ public final class ProtectedPdfRunsFixtures {
         return new ProtectedPdfRuns(
                 mock(RightsManagementService.class),
                 mock(ConnectedAccountService.class),
-                mock(UserRepository.class));
+                mock(UserRepository.class),
+                operation -> Optional.empty());
     }
 }

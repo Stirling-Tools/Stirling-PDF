@@ -14,6 +14,8 @@ import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 
 public final class ProtectedPdfFixtures {
 
@@ -65,6 +67,20 @@ public final class ProtectedPdfFixtures {
     public static byte[] plain() throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage());
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    public static byte[] passwordProtected(String openingPassword) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            AccessPermission permissions = new AccessPermission();
+            permissions.setCanModify(false);
+            document.protect(
+                    new StandardProtectionPolicy(
+                            "permissions-secret", openingPassword, permissions));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.save(out);
             return out.toByteArray();

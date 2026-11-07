@@ -416,8 +416,7 @@ public class PolicyEngine {
                     return;
                 }
                 try (ProtectedPdfRuns.Unlocked unlocked =
-                        protectedPdfRuns.unlock(
-                                inputs, runAccount, !run.getDefinition().steps().isEmpty())) {
+                        protectedPdfRuns.unlock(inputs, runAccount, run.getDefinition().steps())) {
                     result = executeUnlocked(run.getDefinition(), unlocked, listener);
                     if (!run.beginDelivery()) {
                         // Cancelled while the steps ran: discard the produced files —
