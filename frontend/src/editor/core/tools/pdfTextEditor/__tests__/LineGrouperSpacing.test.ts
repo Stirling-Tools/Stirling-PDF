@@ -169,3 +169,27 @@ describe("LineGrouper inter-run space synthesis", () => {
     expect(text).toBe("Water");
   });
 });
+
+describe("LineGrouper text layers", () => {
+  it("keeps visible text out of a line of invisible OCR words", () => {
+    const [typed, ...ocr] = lineOf(
+      [
+        { text: "Receipt", width: 35, gapAfter: 3.2 },
+        { text: "4471", width: 20, gapAfter: 3.2 },
+        { text: "for", width: 14 },
+      ],
+      10,
+    );
+    for (const run of ocr) run.renderMode = 3;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([typed, ...ocr]);
+    page.loaded = true;
+    const groups = LineGrouper.apply(page);
+    expect(
+      groups.map((g) => [g.representative.text, g.representative.renderMode]),
+    ).toEqual([
+      ["Receipt", 0],
+      ["4471 for", 3],
+    ]);
+  });
+});

@@ -9,6 +9,7 @@ import type {
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -446,11 +447,14 @@ export function PageView({
                 : null
             }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            onWrap={
+              isScanRun(run)
+                ? undefined
+                : (maxWidthPt) =>
+                    onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
             }
             onResize={
-              onResizeRun
+              onResizeRun && !isScanRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }

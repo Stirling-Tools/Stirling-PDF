@@ -18,6 +18,7 @@ import {
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import { scanTypingDropped } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
@@ -80,7 +81,11 @@ export function EditorSidebar({
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
 
-  const fontNote = useSelectedFontNote(state, selection);
+  const fontNote = useSelectedFontNote(
+    state,
+    selection,
+    selectionDropsTyping(store, state, selection),
+  );
   const scanFontMatch = useScanFontMatch(store, state, selection);
 
   const editorDocument = store.document;
@@ -232,9 +237,27 @@ function NothingSelected(props: ScanHintProps) {
  * glyph, or an embedded face whose coverage we could not read. A font that can
  * render everything says nothing, because "all fine" is not worth a line.
  */
+function selectionDropsTyping(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): boolean {
+  const doc = store.document;
+  if (!doc) return false;
+  const picked = new Set(selection.runIds);
+  return state.pages.some((page) =>
+    page.runs.some((r) => {
+      if (!picked.has(r.id)) return false;
+      const run = doc.page(page.pageIndex).findRun(r.id);
+      return !!run && scanTypingDropped(run);
+    }),
+  );
+}
+
 function useSelectedFontNote(
   state: EditorViewState,
   selection: SelectionState,
+  dropsTyping: boolean,
 ): string | null {
   const { t } = useTranslation();
   return useMemo(() => {
@@ -251,10 +274,15 @@ function useSelectedFontNote(
     if (fontIds.size === 0) return null;
     // OCR text is invisible; its font says nothing about what an edit draws.
     if (scanned === selection.runIds.length)
-      return t(
-        "pdfTextEditor.inspector.scannedText",
-        "Scanned text · changed words are covered and redrawn in a matching font.",
-      );
+      return dropsTyping
+        ? t(
+            "pdfTextEditor.inspector.scannedTextNoFont",
+            "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
+          )
+        : t(
+            "pdfTextEditor.inspector.scannedText",
+            "Scanned text · changed words are covered and redrawn in a matching font.",
+          );
 
     const fonts = analyzePageFonts(state.pages).filter((f) =>
       // analyzePageFonts keys by display name + status, so match on the names
@@ -282,7 +310,7 @@ function useSelectedFontNote(
       "pdfTextEditor.inspector.fontEmbedded",
       "Embedded font · a character it lacks falls back to Helvetica.",
     );
-  }, [state.pages, selection.runIds, t]);
+  }, [state.pages, selection.runIds, dropsTyping, t]);
 }
 
 function EmptySidebar({
