@@ -197,6 +197,12 @@ export function PageView({
   }, []);
 
   useEffect(() => {
+    if (!nearViewport) return;
+    store.setPageNearViewport(page.pageIndex, true);
+    return () => store.setPageNearViewport(page.pageIndex, false);
+  }, [store, page.pageIndex, nearViewport]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!nearViewport) {
       // Far from the viewport: free the bitmap (a 4x-zoom A4 canvas is ~32MB).

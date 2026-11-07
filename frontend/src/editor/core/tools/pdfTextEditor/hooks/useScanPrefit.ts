@@ -4,6 +4,7 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
   prefitScanRun,
   scanRunNeedsFit,
@@ -12,59 +13,91 @@ import { subscribePreferredScanFace } from "@editor/tools/pdfTextEditor/commands
 import {
   loadBundledScanFaces,
   loadScriptScanFaces,
+  scanScriptsOf,
+  type Script,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { noteRankedWithCurrentFaces } from "@editor/tools/pdfTextEditor/util/scanRankingFaces";
 
-const SLICE_MS = 12;
-const GAP_MS = 4;
+export const FIT_SLICE_MS = 12;
+export const FIT_GAP_MS = 4;
 const UNSHOWN_RECHECK_MS = 500;
+
+const scriptsByPage = new WeakMap<PageSnapshot, Script[] | null>();
+
+function pageScripts(page: PageSnapshot): Script[] | null {
+  let scripts = scriptsByPage.get(page);
+  if (scripts === undefined) {
+    const text = page.runs
+      .filter((run) => run.renderMode === 3)
+      .map((run) => run.text);
+    scripts = text.length > 0 ? scanScriptsOf(text.join(" ")) : null;
+    scriptsByPage.set(page, scripts);
+  }
+  return scripts;
+}
 
 function nextScanRun(
   doc: EditorDocument,
+  store: EditorStore,
   skipped: WeakSet<object>,
   wanted: string[],
 ) {
   let fallback = null;
   for (const page of doc.loadedPages()) {
     if (!page.shownInViewer) continue;
+    const near = store.isPageNearViewport(page.index);
     for (const run of page.runs) {
+      const isWanted = wanted.includes(run.id);
+      if (!isWanted && (!near || fallback)) continue;
       if (skipped.has(run) || !scanRunNeedsFit(doc, run)) continue;
-      if (wanted.includes(run.id)) return { page, run };
-      fallback ??= { page, run };
+      if (isWanted) return { page, run };
+      fallback = { page, run };
     }
   }
   return fallback;
 }
 
-const awaitsViewer = (doc: EditorDocument) =>
+const awaitsViewer = (
+  doc: EditorDocument,
+  store: EditorStore,
+  wanted: string[],
+) =>
   doc
     .loadedPages()
     .some(
       (page) =>
         !page.shownInViewer &&
-        page.runs.some((run) => scanRunNeedsFit(doc, run)),
+        page.runs.some(
+          (run) =>
+            (store.isPageNearViewport(page.index) || wanted.includes(run.id)) &&
+            scanRunNeedsFit(doc, run),
+        ),
     );
 
 export function useScanPrefit(
   store: EditorStore,
   state: EditorViewState,
 ): void {
-  const scannedText = useMemo(
-    () =>
-      state.pages
-        .flatMap((page) => page.runs)
-        .filter((run) => run.renderMode === 3)
-        .map((run) => run.text)
-        .join(" "),
-    [state.pages],
-  );
-  const hasScannedText = scannedText.length > 0;
+  const { hasScannedText, scripts } = useMemo(() => {
+    const found = new Set<Script>();
+    let scanned = false;
+    for (const page of state.pages) {
+      const own = pageScripts(page);
+      if (!own) continue;
+      scanned = true;
+      for (const script of own) found.add(script);
+    }
+    return { hasScannedText: scanned, scripts: [...found].sort() };
+  }, [state.pages]);
+  const scriptKey = scripts.join(" ");
   const resume = useRef<() => void>(() => {});
-  const text = useRef(scannedText);
-  text.current = scannedText;
+  const scriptsRef = useRef(scripts);
+  scriptsRef.current = scripts;
 
   useEffect(() => {
     if (!hasScannedText) return;
     let stopped = false;
+    let ready = false;
     let timer = 0;
     let idle = true;
     let hovered: string | null = null;
@@ -72,15 +105,26 @@ export function useScanPrefit(
     const onPointerOver = (e: PointerEvent) => {
       const el =
         e.target instanceof Element ? e.target.closest("[data-run-id]") : null;
-      hovered = el?.getAttribute("data-run-id") ?? hovered;
+      const id = el?.getAttribute("data-run-id");
+      if (!id || id === hovered) return;
+      hovered = id;
+      resume.current();
     };
     const step = () => {
       const doc = store.document;
       const wanted = [...store.selection.value.runIds];
       if (hovered) wanted.push(hovered);
-      const next = !stopped && doc ? nextScanRun(doc, skipped, wanted) : null;
+      const next =
+        !stopped && doc && !document.hidden
+          ? nextScanRun(doc, store, skipped, wanted)
+          : null;
       if (!doc || !next) {
-        if (doc && !stopped && awaitsViewer(doc))
+        if (
+          doc &&
+          !stopped &&
+          !document.hidden &&
+          awaitsViewer(doc, store, wanted)
+        )
           timer = window.setTimeout(step, UNSHOWN_RECHECK_MS);
         else idle = true;
         return;
@@ -90,36 +134,50 @@ export function useScanPrefit(
           doc,
           next.page,
           next.run,
-          performance.now() + SLICE_MS,
+          performance.now() + FIT_SLICE_MS,
         );
+        const ranked = next.run.scanEdit?.block?.ranked;
         if (finished && scanRunNeedsFit(doc, next.run)) skipped.add(next.run);
+        else if (finished && ranked) noteRankedWithCurrentFaces(ranked);
       } catch {
         skipped.add(next.run);
       }
-      timer = window.setTimeout(step, GAP_MS);
+      timer = window.setTimeout(step, FIT_GAP_MS);
     };
     resume.current = () => {
-      if (stopped || !idle) return;
+      if (stopped || !ready || !idle) return;
       idle = false;
-      timer = window.setTimeout(step, GAP_MS);
+      timer = window.setTimeout(step, FIT_GAP_MS);
     };
+    const wake = () => resume.current();
     document.addEventListener("pointerover", onPointerOver);
-    const unsubscribe = subscribePreferredScanFace(() => resume.current());
+    document.addEventListener("visibilitychange", wake);
+    const unsubscribePreferred = subscribePreferredScanFace(wake);
+    const unsubscribeNear = store.subscribeNearViewport(wake);
+    const unsubscribeSelection = store.selection.subscribe(wake);
     void Promise.all([
       loadBundledScanFaces(),
-      loadScriptScanFaces(text.current),
-    ]).then(() => resume.current());
+      loadScriptScanFaces(scriptsRef.current),
+    ])
+      .catch(() => undefined)
+      .then(() => {
+        ready = true;
+        resume.current();
+      });
     return () => {
       stopped = true;
       resume.current = () => {};
       window.clearTimeout(timer);
-      unsubscribe();
+      unsubscribePreferred();
+      unsubscribeNear();
+      unsubscribeSelection();
       document.removeEventListener("pointerover", onPointerOver);
+      document.removeEventListener("visibilitychange", wake);
     };
   }, [store, hasScannedText]);
 
   useEffect(() => {
     if (!hasScannedText) return;
-    void loadScriptScanFaces(scannedText).then(() => resume.current());
-  }, [hasScannedText, scannedText]);
+    void loadScriptScanFaces(scriptsRef.current).then(() => resume.current());
+  }, [hasScannedText, scriptKey]);
 }

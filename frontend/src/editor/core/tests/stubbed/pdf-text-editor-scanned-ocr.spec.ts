@@ -775,27 +775,50 @@ test("only blurry scans get softened edits", async ({ page }) => {
   expect(await blockSoftness(page, south.id)).toBeGreaterThan(0);
 });
 
-test("a scanned edit applies the best font, and the picker offers others", async ({
+test("a scanned edit applies the best font, the picker swaps it, and undo puts it back", async ({
   page,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(150_000);
   await openForm(page);
   const line = (await runs(page)).find((r) => r.renderMode === 3)!;
+  const runBox = page.getByTestId(`pdf-editor-run-${line.id}`);
   const choices = page.getByTestId("pdf-editor-scan-font-choice");
+  const applied = choices.and(page.locator('[aria-pressed="true"]'));
   const open = page.getByTestId("pdf-editor-scan-font-open");
-  await page.getByTestId(`pdf-editor-run-${line.id}`).click();
+  const label = (i: number) => choices.nth(i).locator("p").first().innerText();
+  await runBox.click();
   await expect(open).toHaveCount(0);
 
   await replaceRunText(page, line.id, `${line.text}X`);
   await expect(choices).toHaveCount(0);
-  await page.getByTestId(`pdf-editor-run-${line.id}`).click();
+  await runBox.click();
   await open.click();
   await expect(choices.first()).toBeVisible({ timeout: 30_000 });
   expect(await choices.count()).toBeGreaterThan(1);
-  await expect(choices.first()).toHaveAttribute("aria-checked", "true");
+  await expect(choices.first()).toHaveAttribute("aria-pressed", "true");
+  const best = await label(0);
+  const runnerUp = await label(1);
 
-  const before = await bitmapSig(page);
+  await snap(page, "edited");
+  const edited = await bitmapSig(page);
   await choices.nth(1).click();
   await expect(choices).toHaveCount(0);
-  await settle(page, before);
+  await settle(page, edited);
+
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(runnerUp);
+  await page.getByTestId("pdf-editor-scan-font-done").click();
+  await expect(choices).toHaveCount(0);
+
+  const picked = await bitmapSig(page);
+  await page.getByTestId("pdf-editor-undo").click();
+  await settle(page, picked);
+  await snap(page, "undone");
+  expect(await diff(page, "edited", "undone")).toBeLessThan(20);
+
+  await runBox.click();
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(best);
 });

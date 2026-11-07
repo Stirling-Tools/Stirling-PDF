@@ -33,10 +33,12 @@ import {
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
+  preferredScanFace,
   setPreferredScanFace,
   type RankedStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import { isEvenlySpaced } from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
 import {
   SERVER_FONTS_URL,
   resetServerFontsCache,
@@ -46,6 +48,7 @@ import {
   faceFromBytes,
   loadScriptScanFaces,
   resetScanFaces,
+  scanScriptsOf,
   setBundledScanFaces,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
@@ -260,6 +263,44 @@ describe("matching a face to scanned text", () => {
         expect(drawnFontNames(doc, state.textPtrs)).toContain(
           runnerUp.style.family.replace(/ /g, ""),
         );
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "undoing a pick redraws the block in its own best face",
+    { timeout: 120_000 },
+    async () => {
+      const lines = [samples[0], { ...samples[0], text: "Quarterly review" }];
+      const { doc, page } = await buildScan(lines, SCAN);
+      try {
+        const run = page.runs.filter(isScanRun)[1];
+        const ranked = await choicesFor(doc, page, run);
+        const runnerUp = ranked.find(
+          (r) => r !== ranked[0] && r.score >= ranked[0].score - 0.1,
+        )!;
+        const state = scanEditOf(doc, run)!;
+        renderScanEdit(doc, page, run, state, "Quiz");
+        const band = {
+          x: run.bounds.x - 4,
+          y: run.bounds.y,
+          width: run.bounds.width + 8,
+          height: run.bounds.height,
+        };
+        const best = renderLuma(doc.module, page, band, 0)!.data;
+        const pick = new SetScanStyleCommand({
+          pageIndex: 0,
+          runId: run.id,
+          choice: runnerUp,
+        });
+        pick.apply(doc);
+        expect(preferredScanFace(doc)).toBe(runnerUp.face.label);
+        expect(renderLuma(doc.module, page, band, 0)!.data).not.toEqual(best);
+        pick.revert(doc);
+        expect(preferredScanFace(doc)).toBeNull();
+        expect(renderLuma(doc.module, page, band, 0)!.data).toEqual(best);
       } finally {
         doc.dispose();
       }
@@ -643,7 +684,7 @@ describe("matching scanned text in other scripts", () => {
           : { data: new Uint8Array(bytes).buffer },
       );
       const text = "請求書 4471 六月 三十日 までに お支払い ください";
-      await loadScriptScanFaces(text);
+      await loadScriptScanFaces(scanScriptsOf(text));
       const { doc, page } = await buildScan(
         [{ family: "Noto Sans JP", text, size: 14, ocrFamily: "Noto Sans JP" }],
         SCAN,

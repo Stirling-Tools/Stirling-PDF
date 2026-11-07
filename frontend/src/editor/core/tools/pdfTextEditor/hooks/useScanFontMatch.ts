@@ -16,7 +16,26 @@ import {
   scanBlockUndrawable,
   scanEditOf,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
-import type { RankedStyle } from "@editor/tools/pdfTextEditor/commands/scanFit";
+import {
+  preferredScanFace,
+  preferredStyle,
+  type RankedStyle,
+  type ScanStyle,
+} from "@editor/tools/pdfTextEditor/commands/scanFit";
+import {
+  FIT_PAUSED,
+  withFitDeadline,
+} from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import {
+  FIT_GAP_MS,
+  FIT_SLICE_MS,
+} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
+import {
+  noteRankedWithCurrentFaces,
+  rankedWithCurrentFaces,
+} from "@editor/tools/pdfTextEditor/util/scanRankingFaces";
 import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
 import type { PixelPatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
@@ -78,6 +97,38 @@ interface Ranked {
   ranked: RankedStyle[];
   scan: string | null;
   previews: Array<string | null>;
+}
+
+function currentRanking(
+  doc: EditorDocument,
+  run: TextRun,
+): RankedStyle[] | null {
+  const block = scanEditOf(doc, run)?.block;
+  if (!block || !rankedWithCurrentFaces(block.ranked)) return null;
+  const preferred = preferredScanFace(doc);
+  const fresh =
+    !preferred ||
+    block.preferred === preferred ||
+    block.ranked.some((r) => r.face.label === preferred);
+  return fresh ? block.ranked : null;
+}
+
+function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
+  try {
+    return withFitDeadline(performance.now() + FIT_SLICE_MS, fit);
+  } catch (e) {
+    if (e === FIT_PAUSED) return FIT_PAUSED;
+    throw e;
+  }
+}
+
+function drawnStyle(doc: EditorDocument, run: TextRun): ScanStyle | undefined {
+  const state = scanEditOf(doc, run);
+  const block = state?.block;
+  return (
+    state?.override.style ??
+    (block ? (preferredStyle(doc, block.ranked) ?? block.style) : undefined)
+  );
 }
 
 interface ScanRunRef {
@@ -145,14 +196,23 @@ export function useScanFontMatch(
 
   useEffect(() => {
     if (!picking) return;
-    let cancelled = false;
-    const id = window.setTimeout(() => {
+    let timer = 0;
+    let undrawable: boolean | null = null;
+    const attempt = () => {
       const doc = store.document;
-      if (!doc || cancelled) return;
+      if (!doc) return;
       const page = doc.page(picking.pageIndex);
       const run = page.findRun(picking.runId);
-      const undrawable = !!run && scanBlockUndrawable(doc, run);
-      const fitted = run ? rerankScanStyles(doc, page, run) : [];
+      undrawable ??= !!run && scanBlockUndrawable(doc, run);
+      const fitted = run
+        ? (currentRanking(doc, run) ??
+          inSlice(() => rerankScanStyles(doc, page, run)))
+        : [];
+      if (fitted === FIT_PAUSED) {
+        timer = window.setTimeout(attempt, FIT_GAP_MS);
+        return;
+      }
+      noteRankedWithCurrentFaces(fitted);
       if (undrawable && fitted[0])
         store.dispatch(
           new SetScanStyleCommand({
@@ -161,53 +221,54 @@ export function useScanFontMatch(
             choice: fitted[0],
           }),
         );
-      const ref =
-        run && fitted[0]
-          ? previewScanStyle(doc, page, run, fitted[0].style)
-          : null;
+      const previews = fitted.map((choice) =>
+        run ? previewScanStyle(doc, page, run, choice.style) : null,
+      );
       setRanked({
         runId: picking.runId,
         drawable: !!run && scanFaces().some((f) => faceCovers(f, run.text)),
         ranked: fitted,
-        scan: ref ? patchUrl(ref.scan) : null,
-        previews: fitted.map((choice) => {
-          const p = run ? previewScanStyle(doc, page, run, choice.style) : null;
-          return p ? patchUrl(p.drawn) : null;
-        }),
+        scan: previews[0] ? patchUrl(previews[0].scan) : null,
+        previews: previews.map((p) => (p ? patchUrl(p.drawn) : null)),
       });
-    }, 0);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(id);
     };
+    timer = window.setTimeout(attempt, 0);
+    return () => window.clearTimeout(timer);
   }, [store, picking, facesVersion]);
 
   const targetRun = runOf(store, target);
-  const scanState = targetRun ? scanEditOf(targetRun.doc, targetRun.run) : null;
-  const activeStyle = scanState?.override.style ?? scanState?.block?.style;
+  const activeStyle = targetRun
+    ? drawnStyle(targetRun.doc, targetRun.run)
+    : undefined;
+  const isActive = (choice: RankedStyle) =>
+    !!activeStyle &&
+    activeStyle.family === choice.style.family &&
+    activeStyle.fontSize === choice.style.fontSize;
 
   const choose = useCallback(
     (index: number) => {
       if (!target || !ranked || ranked.runId !== target.runId) return;
       const choice = ranked.ranked[index];
       if (!choice) return;
-      store.dispatch(
-        new SetScanStyleCommand({
-          pageIndex: target.pageIndex,
-          runId: target.runId,
-          choice,
-        }),
-      );
+      if (!isActive(choice))
+        store.dispatch(
+          new SetScanStyleCommand({
+            pageIndex: target.pageIndex,
+            runId: target.runId,
+            choice,
+          }),
+        );
       setPicking(null);
     },
-    [store, target, ranked],
+    [store, target, ranked, isActive],
   );
 
   if (!target) return null;
   const selectedRun = runOf(store, selected);
   const undrawable =
     !!selectedRun && scanBlockUndrawable(selectedRun.doc, selectedRun.run);
-  const redrawn = !!selectedRun?.run.scanEdit?.created.length;
+  const scanEdit = selectedRun?.run.scanEdit;
+  const redrawn = !!scanEdit?.created.length || !!scanEdit?.override.style;
   const current = ranked && ranked.runId === target.runId ? ranked : null;
   return {
     status: !current
@@ -222,16 +283,16 @@ export function useScanFontMatch(
       label: choice.face.label,
       match: Math.round(Math.max(0, choice.score) * 100),
       preview: current?.previews[i] ?? null,
-      active:
-        !!activeStyle &&
-        activeStyle.family === choice.style.family &&
-        activeStyle.fontSize === choice.style.fontSize,
+      active: isActive(choice),
     })),
     choose,
     open: !!picking,
     canShow: redrawn || undrawable,
     undrawable,
-    show: () => setPicking(selected),
+    show: () => {
+      setRanked(null);
+      setPicking(selected);
+    },
     close: () => setPicking(null),
     deviceFonts: {
       permission,

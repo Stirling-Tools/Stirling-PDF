@@ -20,6 +20,7 @@ import {
   resetScanFaces,
   scanFaces,
   scanFacesGeneration,
+  scanScriptsOf,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { FONT_DIR } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
 
@@ -175,8 +176,8 @@ describe("bundled scan faces", () => {
 describe("script scan faces", () => {
   it("loads the server's Japanese font once for Japanese text", async () => {
     serve();
-    await loadScriptScanFaces("請求書 お支払い ください");
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い ください"));
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
 
     expect(labels().filter((label) => label === "Noto Sans JP")).toHaveLength(
       1,
@@ -187,7 +188,7 @@ describe("script scan faces", () => {
 
   it("loads one Chinese font for Chinese text", async () => {
     serve();
-    await loadScriptScanFaces("发票 请于六月三十日前付款");
+    await loadScriptScanFaces(scanScriptsOf("发票 请于六月三十日前付款"));
 
     expect(labels()).toContain("Noto Sans SC");
     expect(downloads("NotoSansJP-Regular.ttf")).toBe(0);
@@ -195,27 +196,27 @@ describe("script scan faces", () => {
 
   it("tries again after the font list failed to load", async () => {
     get.mockRejectedValue(new Error("restarting"));
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     expect(labels()).not.toContain("Noto Sans JP");
 
     serve();
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     expect(labels()).toContain("Noto Sans JP");
   });
 
   it("tries again after the font download failed", async () => {
     serve(ALL_FAMILIES, new Set(["NotoSansJP-Regular.ttf"]));
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     expect(labels()).not.toContain("Noto Sans JP");
 
     serve();
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     expect(labels()).toContain("Noto Sans JP");
   });
 
   it("offers the Liberation clones for Cyrillic but not where base-14 can draw", async () => {
     serve();
-    await loadScriptScanFaces("Счёт для Ивана");
+    await loadScriptScanFaces(scanScriptsOf("Счёт для Ивана"));
 
     expect(labels()).toEqual(
       expect.arrayContaining([
@@ -283,7 +284,7 @@ describe("device scan faces", () => {
 
   it("skips families the server or base-14 already provide", async () => {
     serve();
-    await loadScriptScanFaces("請求書 お支払い");
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     stubDeviceFonts([
       { family: "Noto Sans JP", style: "Regular", file: "Caladea-Regular.ttf" },
       { family: "Helvetica", style: "Regular", file: "Carlito-Regular.ttf" },
@@ -301,7 +302,7 @@ describe("device scan faces", () => {
 
   it("keeps one face when two families share the same outlines", async () => {
     serve([]);
-    await loadScriptScanFaces("发票");
+    await loadScriptScanFaces(scanScriptsOf("发票"));
     stubDeviceFonts([
       { family: "Heiti SC", style: "Regular", file: "DejaVuSans.ttf" },
       { family: "Heiti TC", style: "Regular", file: "DejaVuSans.ttf" },

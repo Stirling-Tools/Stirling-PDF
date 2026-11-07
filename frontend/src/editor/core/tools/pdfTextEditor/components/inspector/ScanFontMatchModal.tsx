@@ -29,7 +29,7 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
       data-testid="pdf-editor-scan-font-match"
     >
       <Stack gap="sm">
-        {match.status !== "noFont" && (
+        {(match.status === "matching" || match.status === "ready") && (
           <Text size="sm" c="dimmed">
             {t(
               "pdfTextEditor.scanFont.hint",
@@ -38,7 +38,11 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
           </Text>
         )}
         {match.status === "matching" && (
-          <Group gap="xs" data-testid="pdf-editor-scan-font-matching">
+          <Group
+            gap="xs"
+            role="status"
+            data-testid="pdf-editor-scan-font-matching"
+          >
             <Loader size="xs" />
             <Text size="sm" c="dimmed">
               {t("pdfTextEditor.scanFont.matching", "Matching fonts…")}
@@ -49,7 +53,7 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
           <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-none">
             {t(
               "pdfTextEditor.scanFont.noFont",
-              "None of the available fonts can draw this script, so typed text cannot be redrawn yet. Allow fonts on this computer to add one.",
+              "None of the available fonts can draw this script, so typed text cannot be redrawn yet.",
             )}
           </Text>
         )}
@@ -96,7 +100,7 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
                 </Text>
               </Stack>
             )}
-            <Stack gap={6} role="radiogroup" aria-labelledby={choicesLabelId}>
+            <Stack gap={6} role="group" aria-labelledby={choicesLabelId}>
               <Text
                 id={choicesLabelId}
                 size="xs"
@@ -109,10 +113,9 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
               {match.choices.map((choice, i) => (
                 <button
                   type="button"
-                  role="radio"
                   key={choice.label}
                   onClick={() => match.choose(i)}
-                  aria-checked={choice.active}
+                  aria-pressed={choice.active}
                   data-testid="pdf-editor-scan-font-choice"
                   data-active={choice.active || undefined}
                   style={{
@@ -154,15 +157,7 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
                       </Text>
                     </Group>
                     {choice.preview && (
-                      <img
-                        src={choice.preview}
-                        alt={t(
-                          "pdfTextEditor.scanFont.previewAlt",
-                          "The scanned line redrawn in {{font}}",
-                          { font: choice.label },
-                        )}
-                        style={lineImage}
-                      />
+                      <img src={choice.preview} alt="" style={lineImage} />
                     )}
                   </Stack>
                 </button>
@@ -195,7 +190,12 @@ function DeviceFontsNote({
   if (permission === "unsupported") return null;
   if (count !== null && count > 0)
     return (
-      <Group gap={6} wrap="nowrap" data-testid="pdf-editor-scan-font-device-on">
+      <Group
+        gap={6}
+        wrap="nowrap"
+        role="status"
+        data-testid="pdf-editor-scan-font-device-on"
+      >
         <Icon
           name="circle-check"
           size={14}
@@ -214,7 +214,7 @@ function DeviceFontsNote({
     );
   if (permission === "granted")
     return (
-      <Text size="xs" c="dimmed">
+      <Text size="xs" c="dimmed" role="status">
         {loading
           ? t(
               "pdfTextEditor.scanFont.deviceReading",

@@ -153,7 +153,7 @@ const DEVICE_TEXT_FAMILIES = [
   "Rockwell",
 ];
 
-type Script =
+export type Script =
   | "greekCyrillic"
   | "hangul"
   | "kana"
@@ -303,8 +303,8 @@ export function candidateFaces(text: string): Face[] {
   );
 }
 
-function scriptsOf(text: string): ScriptFonts[] {
-  return SCRIPTS.filter((s) => s.chars.test(text));
+export function scanScriptsOf(text: string): Script[] {
+  return SCRIPTS.filter((s) => s.chars.test(text)).map((s) => s.script);
 }
 
 let bundled: Face[] = [];
@@ -490,11 +490,11 @@ async function loadServerScript(script: ScriptFonts): Promise<boolean> {
   return true;
 }
 
-export function loadScriptScanFaces(text: string): Promise<void> {
-  const scripts = scriptsOf(text);
-  const jobs = scripts.map((script) => {
+export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
+  const wanted = SCRIPTS.filter((s) => scripts.includes(s.script));
+  const jobs = wanted.map((script) => {
     neededScripts.add(script.script);
-    if (scripts.some((other) => other.script === script.servedBy))
+    if (wanted.some((other) => other.script === script.servedBy))
       return undefined;
     let job = scriptJobs.get(script.script);
     if (!job) {

@@ -147,6 +147,8 @@ export class EditorStore {
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
   private _pendingPasswordFile: File | null = null;
+  private nearViewportPages = new Set<number>();
+  private nearViewportListeners = new Set<() => void>();
 
   constructor() {
     this.history = new HistoryStack();
@@ -230,6 +232,22 @@ export class EditorStore {
   setFindOpen(findOpen: boolean): void {
     if (this.state.findOpen === findOpen) return;
     this.patch({ findOpen });
+  }
+
+  setPageNearViewport(pageIndex: number, near: boolean): void {
+    if (this.nearViewportPages.has(pageIndex) === near) return;
+    if (near) this.nearViewportPages.add(pageIndex);
+    else this.nearViewportPages.delete(pageIndex);
+    for (const listener of [...this.nearViewportListeners]) listener();
+  }
+
+  isPageNearViewport(pageIndex: number): boolean {
+    return this.nearViewportPages.has(pageIndex);
+  }
+
+  subscribeNearViewport(listener: () => void): () => void {
+    this.nearViewportListeners.add(listener);
+    return () => this.nearViewportListeners.delete(listener);
   }
 
   setHelpOpen(helpOpen: boolean): void {
