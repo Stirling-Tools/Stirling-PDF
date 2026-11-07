@@ -97,10 +97,10 @@ public class ExternalAppDepConfig {
                                                 return null;
                                             })
                             .toList();
+            // Python / OpenCV probes chain several processes, so overlap them with the rest.
+            Future<?> python = pool.submit(this::checkPythonAndOpenCV);
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
-
-            // Python / OpenCV special handling
-            checkPythonAndOpenCV();
+            awaitPythonCheck(python);
 
             disableCalibreUnlessConfined();
 
@@ -294,6 +294,16 @@ public class ExternalAppDepConfig {
             return m.find() ? Optional.of(m.group(1)) : Optional.empty();
         } catch (Exception e) {
             return Optional.empty();
+        }
+    }
+
+    private void awaitPythonCheck(Future<?> python) {
+        try {
+            python.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            log.warn("Python/OpenCV dependency check failed", e.getCause());
         }
     }
 
