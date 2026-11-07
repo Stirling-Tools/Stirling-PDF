@@ -34,6 +34,8 @@ static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
 // Set by the event loop when the backend exits, so cleanup can wait for it.
 static BACKEND_EXITED: AtomicBool = AtomicBool::new(true);
 static BACKEND_SHUTDOWN_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
+// Set once the JVM reports it skipped the AOT cache, so the warning is logged once per launch.
+static AOT_CACHE_REJECTED: AtomicBool = AtomicBool::new(false);
 
 // Helper function to reset starting flag
 fn reset_starting_flag() {
@@ -77,6 +79,20 @@ fn check_backend_status() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+/// JDK AOT cache that train-aot-cache.mjs writes beside the jar, one per CPU architecture.
+fn aot_cache_path(libs_dir: &Path) -> PathBuf {
+    libs_dir.join(format!("stirling-{}.aot", std::env::consts::ARCH))
+}
+
+/// The JVM still starts when it skips the cache (stale, wrong build), it is just slower.
+fn note_aot_rejection(output: &str) {
+    if output.contains("][aot") && output.contains("[error")
+        && !AOT_CACHE_REJECTED.swap(true, Ordering::Relaxed)
+    {
+        add_log("⚠️ AOT cache was not used, so startup is slower. Reinstalling restores it.".to_string());
+    }
 }
 
 // Find the bundled JRE and return the java executable path
@@ -315,6 +331,9 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
 
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
+    let aot_cache = jar_path.parent().map(aot_cache_path).filter(|path| path.is_file());
+    let aot_option = aot_cache.as_ref().map(|path| format!("-XX:AOTCache={}", path.display()));
+    AOT_CACHE_REJECTED.store(false, Ordering::Relaxed);
 
     let mut java_options = vec![
         "-Xmx2g",
@@ -333,6 +352,16 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Enable the login agreement on local desktop installs when it has been provisioned.
     if crate::commands::connection::login_agreement_enabled(app) {
         java_options.push("-Dlegal.loginAgreement.enabled=true");
+    }
+
+    match &aot_option {
+        Some(option) => {
+            java_options.push(option);
+            // Checksums the cache so a corrupt file falls back instead of crashing the JVM.
+            java_options.push("-XX:+VerifySharedSpaces");
+            add_log(format!("⚡ Using AOT cache: {}", option));
+        }
+        None => add_log("ℹ️ No AOT cache for this architecture, starting without it".to_string()),
     }
 
     java_options.push("-jar");
@@ -437,6 +466,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     // Strip exactly one trailing newline to avoid double newlines
                     let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📤 Backend: {}", output_str));
+                    note_aot_rejection(output_str);
 
                     // Look for actual runtime port from web server initialization
                     // Format: "Stirling-PDF running on port: PORT"
@@ -460,6 +490,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                     // Strip exactly one trailing newline to avoid double newlines
                     let output_str = output_str.strip_suffix('\n').unwrap_or(&output_str);
                     add_log(format!("📥 Backend Error: {}", output_str));
+                    note_aot_rejection(output_str);
 
                     // Look for error indicators
                     if output_str.contains("ERROR") || output_str.contains("Exception") || output_str.contains("FATAL") {
@@ -617,7 +648,7 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_stirling_jar, version_key};
+    use super::{aot_cache_path, find_stirling_jar, version_key};
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {
@@ -756,5 +787,13 @@ mod tests {
 
         assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn aot_cache_path_names_the_cache_after_the_rust_target_arch() {
+        let path = aot_cache_path(std::path::Path::new("libs"));
+        let expected = format!("stirling-{}.aot", std::env::consts::ARCH);
+        assert_eq!(path.file_name().unwrap().to_str().unwrap(), expected);
+        assert_eq!(path.parent().unwrap(), std::path::Path::new("libs"));
     }
 }
