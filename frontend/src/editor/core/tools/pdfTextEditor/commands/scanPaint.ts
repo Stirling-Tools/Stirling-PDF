@@ -5,6 +5,7 @@ import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks"
 import { capturePatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitTextLine,
+  measureObjBoundsPt,
   measureObjSpanPt,
   removeAndDestroyObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -152,7 +153,6 @@ export function drawInFont(
   baseline: number,
   style: ScanStyle,
   limit: number,
-  replaced: { rect: PageRect; paper: RGBA } | null,
 ): void {
   const { doc, page } = canvas;
   const placement: Placement = {
@@ -167,10 +167,7 @@ export function drawInFont(
     weight: style.weight,
     hollow: style.hollow,
   };
-  if (
-    style.softness > 0 &&
-    softenedCopy(canvas, placement, style, baseline, limit, replaced)
-  ) {
+  if (style.softness > 0 && softenedCopy(canvas, placement, style, limit)) {
     emitSearchable(canvas, text, x, baseline, style.fontSize, {
       originalFontPtr: canvas.searchableFontPtr,
       family: style.family,
@@ -203,9 +200,7 @@ function softenedCopy(
   canvas: Canvas,
   placement: Placement,
   style: ScanStyle,
-  baseline: number,
   limit: number,
-  replaced: { rect: PageRect; paper: RGBA } | null,
 ): number {
   const { doc, page } = canvas;
   const m = doc.module;
@@ -213,25 +208,16 @@ function softenedCopy(
   const ptrs = placeText(sheet.doc, sheet.page, placement);
   try {
     keepClear(m, ptrs, limit);
-    const span = measureObjSpanPt(m, ptrs);
-    if (!span) return 0;
-    // Just the glyphs and the blur's reach: a taller copy would also blur a
-    // rule or the next line's ink sitting close above or below.
-    const margin = style.softness / 4 + 0.25;
-    const rect = {
-      x: span.left - margin,
-      y: baseline - style.fontSize * 0.25 - margin,
-      width: span.right - span.left + margin * 2,
-      height: style.fontSize * 1.03 + margin * 2,
-    };
-    if (replaced) {
-      const within = replaced.rect;
-      const top = Math.min(rect.y + rect.height, within.y + within.height);
-      const bottom = Math.max(rect.y, within.y);
-      if (top > bottom)
-        Object.assign(rect, { y: bottom, height: top - bottom });
-    }
-    const patch = capturePatch(m, sheet.page, rect);
+    const box = measureObjBoundsPt(m, ptrs);
+    if (!box) return 0;
+    const margin =
+      style.softness / 4 + Math.max(style.weight, style.hollow) / 2 + 0.25;
+    const patch = capturePatch(m, sheet.page, {
+      x: box.left - margin,
+      y: box.bottom - margin,
+      width: box.right - box.left + margin * 2,
+      height: box.top - box.bottom + margin * 2,
+    });
     if (!patch) return 0;
     blurRgba(patch, style.softness);
     toInkOnly(patch, WHITE);

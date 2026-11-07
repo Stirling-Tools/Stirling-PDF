@@ -847,16 +847,7 @@ function renderUprightScanEdit(
       drawFromAtlas(canvas, atlas, glyphs, s, start, baseline, st, limit)
     )
       return;
-    drawInFont(
-      canvas,
-      s,
-      x,
-      start,
-      baseline,
-      st,
-      limit,
-      ink ? { rect: ink.ink.rect, paper: ink.paper } : null,
-    );
+    drawInFont(canvas, s, x, start, baseline, st, limit);
   };
 
   // Moved words: the scan's own pixels at their new spot, plus invisible text.

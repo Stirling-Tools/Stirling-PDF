@@ -392,6 +392,46 @@ describe("what an edit leaves in the saved file", () => {
   });
 });
 
+describe("softening typed words to the scan", () => {
+  test(
+    "keeps the ascenders and descenders the replaced word did not have",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const [top] = await choicesFor(doc, page, run);
+        expect(top.style.softness).toBeGreaterThan(0);
+        const state = scanEditOf(doc, run)!;
+        const on = state.lines[0].words.find((w) => w.text.trim() === "on")!;
+        const baseline = state.lines[0].baseline;
+        const inked = (bottom: number, top: number) => {
+          const img = renderLuma(
+            doc.module,
+            page,
+            {
+              x: on.x,
+              y: baseline + bottom,
+              width: on.right - on.x,
+              height: top - bottom,
+            },
+            0,
+          )!;
+          return img.data.filter((l) => l < 128).length;
+        };
+        renderScanEdit(doc, page, run, state, run.text.replace(" on ", " by "));
+        expect(inked(7, 9)).toBeGreaterThan(0);
+        expect(inked(-2.5, -1)).toBeGreaterThan(0);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("editing sideways scanned text", () => {
   const SCAN: ScanOptions = { dpi: 200, blur: 0.5, noise: 6 };
   const line: ScanLineSpec = {

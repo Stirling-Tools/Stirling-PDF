@@ -1221,9 +1221,19 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
+  const box = measureObjBoundsPt(m, ptrs);
+  return box && { left: box.left, right: box.right };
+}
+
+export function measureObjBoundsPt(
+  m: WrappedPdfiumModule,
+  ptrs: number[],
+): { left: number; bottom: number; right: number; top: number } | null {
   const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
   let left = Infinity;
+  let bottom = Infinity;
   let right = -Infinity;
+  let top = -Infinity;
   for (const ptr of ptrs) {
     if (!ptr) continue;
     try {
@@ -1236,10 +1246,12 @@ export function measureObjSpanPt(
     const lo = m.pdfium.getValue(buf, "float");
     const hi = m.pdfium.getValue(buf + 8, "float");
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
-    if (lo < left) left = lo;
-    if (hi > right) right = hi;
+    left = Math.min(left, lo);
+    right = Math.max(right, hi);
+    bottom = Math.min(bottom, m.pdfium.getValue(buf + 4, "float"));
+    top = Math.max(top, m.pdfium.getValue(buf + 12, "float"));
   }
-  return right > left ? { left, right } : null;
+  return right > left ? { left, bottom, right, top } : null;
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
