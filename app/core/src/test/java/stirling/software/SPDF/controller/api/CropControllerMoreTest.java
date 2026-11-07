@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +37,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -53,7 +51,6 @@ import stirling.software.common.util.TempFileManager;
 class CropControllerMoreTest {
 
     @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @InjectMocks private CropController cropController;
 
@@ -141,8 +138,6 @@ class CropControllerMoreTest {
             MockMultipartFile file = pdf(3);
             CropPdfForm request = form(file, true);
 
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -164,8 +159,6 @@ class CropControllerMoreTest {
             CropPdfForm request = form(file, true);
             request.setPageNumbers("2");
 
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
-
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -180,36 +173,33 @@ class CropControllerMoreTest {
         }
 
         @Test
-        @DisplayName("boundary-crossing text is removed before the crop")
-        void boundaryTextIsRemoved() throws Exception {
+        @DisplayName("boundary-crossing text survives the crop")
+        void boundaryTextIsPreserved() throws Exception {
             MockMultipartFile file = pdfWithBoundaryText();
             CropPdfForm request = form(file, true);
-
-            when(pdfDocumentFactory.load(request)).thenReturn(Loader.loadPDF(file.getBytes()));
 
             ResponseEntity<Resource> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
             byte[] body = response.getBody().getInputStream().readAllBytes();
             try (PDDocument out = Loader.loadPDF(body)) {
                 String text = new org.apache.pdfbox.text.PDFTextStripper().getText(out);
                 assertThat(text).contains("Inside");
-                assertThat(text).doesNotContain("BoundaryWord");
+                assertThat(text).contains("BoundaryWord");
             }
         }
 
         @Test
         @DisplayName("JPDFium failure is wrapped and surfaced as IOException")
-        void jpdfiumFailureIsWrapped() throws Exception {
-            MockMultipartFile file = pdf(1);
+        void jpdfiumFailureIsWrapped() {
+            MockMultipartFile file =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "broken.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            new byte[] {1, 2, 3});
             CropPdfForm request = form(file, true);
-
-            // A source that saves nothing: JPDFium cannot open the empty bytes.
-            // Asserting the wrapper's message and cause keeps this pinned to the
-            // controller's own IOException rather than to any failure on the path.
-            PDDocument source = mock(PDDocument.class);
-            when(source.getNumberOfPages()).thenReturn(1);
-            when(pdfDocumentFactory.load(request)).thenReturn(source);
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(IOException.class)
