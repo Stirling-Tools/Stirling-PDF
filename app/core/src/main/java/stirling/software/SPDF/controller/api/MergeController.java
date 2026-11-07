@@ -7,9 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -289,7 +291,7 @@ public class MergeController {
             }
 
             if (generateTocPage) {
-                File tocPage = generateTocPage(filesSortedByPageCount(files));
+                File tocPage = generateTocPage(toFileWithPageCount(files));
                 inputPaths.addFirst(tocPage.toPath());
             }
 
@@ -381,31 +383,29 @@ public class MergeController {
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
 
-    private MultipartFileWithPdfPageCount[] filesSortedByPageCount(MultipartFile[] files) {
-        return Arrays.stream(files)
-                .map(file -> {
-                            try {
-                                try (PdfDocument pdf =
-                                        PdfDocument.open(
-                                                tempFileManager.convertMultipartFileToFile(file))) {
-                                    int pageCount = pdf.pageCount();
-                                    return new MultipartFileWithPdfPageCount(file, pageCount);
-                                }
-                            } catch (IOException e) {
-                                log.error("Unable to open file as PDF: {}", e.getMessage());
-                                throw e;
-                            }
-                        })
-                .sorted(Comparator.comparingInt(o -> o.pageCount))
-                .toArray(MultipartFileWithPdfPageCount[]::new);
+    private MultipartFileWithPdfPageCount[] toFileWithPageCount(MultipartFile[] files)
+            throws IOException {
+        List<MultipartFileWithPdfPageCount> result = new ArrayList<>(files.length);
+        for (MultipartFile file : files) {
+            try (PdfDocument pdf =
+                    PdfDocument.open(tempFileManager.convertMultipartFileToFile(file))) {
+                result.add(new MultipartFileWithPdfPageCount(file, pdf.pageCount()));
+            } catch (IOException e) {
+                log.error("Unable to open file as PDF: {}", e.getMessage());
+                throw e;
+            }
+        }
+
+        result.sort(Comparator.comparingInt(o -> o.pageCount));
+        return result.toArray(MultipartFileWithPdfPageCount[]::new);
     }
 
     private File generateTocPage(MultipartFileWithPdfPageCount[] files) throws IOException {
         File tocPage = tempFileManager.createTempFile(".pdf");
         PDType1Font titleFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+        PDFont contentFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
         try (PDDocument document = new PDDocument()) {
-
             PDPage blankPage = new PDPage(PDRectangle.A4);
             float pageWidth = PDRectangle.A4.getWidth();
             float pageHeight = PDRectangle.A4.getHeight();
@@ -435,37 +435,51 @@ public class MergeController {
 
                 float lineHeight = 20;
                 int tocContentPadding = 80;
+                int totalPages = 0;
+
+                String space = " ";
+                float spaceWidth = contentFont.getStringWidth(space) / 1000 * contentFontSize;
 
                 for (int i = 0; i < files.length; i++) {
                     MultipartFile multipartFile = files[i].file;
 
                     cs.beginText();
-                    cs.setFont(titleFont, contentFontSize);
                     cs.newLineAtOffset(tocContentPadding, tocContentStartHeight - (i * lineHeight));
 
-                    int pageCount = files[i].pageCount();
+                    totalPages += files[i].pageCount();
 
                     float target = pageWidth - tocContentPadding;
-                    float pageCountSize =
-                            titleFont.getStringWidth(String.valueOf(pageCount))
+                    float pageCountWidth =
+                            contentFont.getStringWidth(String.valueOf(totalPages))
                                     / 1000
                                     * contentFontSize;
 
-                    String entryName = multipartFile.getName();
+                    String entryName =
+                            FilenameUtils.removeExtension(multipartFile.getOriginalFilename());
 
                     StringBuilder dots = new StringBuilder();
                     String dot = ".";
-                    for (float j =
-                                    tocContentPadding
-                                            + titleFont.getStringWidth(entryName)
-                                                    / 1000
-                                                    * contentFontSize;
-                            j < target - pageCountSize;
-                            j += titleFont.getStringWidth(dot) / 1000 * contentFontSize) {
+
+                    float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
+
+                    float j =
+                            tocContentPadding
+                                    + contentFont.getStringWidth(entryName)
+                                            / 1000
+                                            * contentFontSize;
+
+                    float numberMargin = dotWidth * 2;
+                    while (j < target - pageCountWidth - spaceWidth - numberMargin) {
                         dots.append(dot);
+                        j += dotWidth;
                     }
 
-                    cs.showText(entryName + dots + pageCount);
+                    cs.setFont(contentFont, contentFontSize);
+                    cs.showText(entryName + space + dots);
+
+                    cs.newLineAtOffset(target - tocContentPadding - pageCountWidth, 0);
+                    cs.showText(String.valueOf(totalPages));
+
                     cs.endText();
                 }
             }
