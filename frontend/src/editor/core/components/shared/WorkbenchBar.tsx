@@ -294,7 +294,7 @@ export default function WorkbenchBar({
         !forceNewFile &&
         selectors
           .getStirlingFileStubs(exportTargetIds as FileId[])
-          .some((stub) => saver.targetFor(stub) || stub.localFilePath);
+          .some((stub) => saver.planFor(stub) !== null);
       const viewExport = await viewFileActions?.getExportFiles?.({
         commitEdits: savesHome,
       });
