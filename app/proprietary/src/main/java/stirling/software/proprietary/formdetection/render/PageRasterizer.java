@@ -1,33 +1,26 @@
 package stirling.software.proprietary.formdetection.render;
 
-import java.io.IOException;
 import java.util.function.Consumer;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.stereotype.Service;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.doc.PdfFormRenderer;
 import stirling.software.jpdfium.model.PageSize;
+import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.RenderResult;
+import stirling.software.jpdfium.transform.PdfPageGeometry;
 
 /**
  * Renders pages to RGBA via JPDFium at roughly the model input size, one at a time so a large
- * document cannot exhaust the heap. Rotation and crop box come from PDFBox, not JPDFium.
+ * document cannot exhaust the heap. Form widgets are painted by {@link PdfFormRenderer}, including
+ * widgets without an appearance stream.
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class PageRasterizer {
-
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     /** The PDF cannot be opened or rendered: a bad request, not an engine failure. */
     public static class UnreadablePdfException extends RuntimeException {
@@ -91,8 +84,7 @@ public class PageRasterizer {
         if (pdfBytes == null || pdfBytes.length == 0) {
             throw new UnreadablePdfException("The uploaded file is empty", null);
         }
-        try (PdfDocument doc = openForRender(pdfBytes);
-                PDDocument boxDoc = openForGeometry(pdfBytes)) {
+        try (PdfDocument doc = openForRender(pdfBytes)) {
             int count = pageCount(doc);
             // Checked before the loop: rendering first and counting after would let a huge upload
             // exhaust the heap on its way to being rejected.
@@ -102,39 +94,30 @@ public class PageRasterizer {
             for (int i = 0; i < count; i++) {
                 // Rendered in a helper so a PDFium failure is classified as bad input, while
                 // anything the handler throws propagates untouched.
-                handler.accept(renderPage(doc, boxDoc, i, inputSize));
+                handler.accept(renderPage(doc, i, inputSize));
             }
-        } catch (IOException e) {
-            throw new UnreadablePdfException("Failed to read the PDF", e);
         }
     }
 
-    private RasterPage renderPage(PdfDocument doc, PDDocument boxDoc, int index, int inputSize) {
-        try (PdfPage page = doc.page(index)) {
-            PageSize size = page.size();
+    private RasterPage renderPage(PdfDocument doc, int index, int inputSize) {
+        try {
+            PageSize size;
+            Rect cropBox;
+            try (PdfPage page = doc.page(index)) {
+                size = page.size();
+                cropBox = page.getCropBox().orElseGet(page::getMediaBox);
+            }
+            int rotation = normalizeRotation(PdfPageGeometry.getRotation(doc, index));
+
             float maxSide = Math.max(size.width(), size.height());
             int dpi = maxSide <= 0 ? 150 : Math.round(72f * inputSize / maxSide);
             dpi = Math.max(36, Math.min(dpi, 300));
-            RenderResult r = page.renderAt(dpi);
+            // Form rendering builds widget appearances, so fields that have no /AP stream still
+            // reach the detector instead of rendering blank.
+            RenderResult r = PdfFormRenderer.renderPage(doc, index, dpi);
+            flattenOverWhite(r.rgba());
             float scaleX = size.width() > 0 ? r.width() / size.width() : dpi / 72f;
             float scaleY = size.height() > 0 ? r.height() / size.height() : dpi / 72f;
-
-            int rotation = 0;
-            float userW = size.width();
-            float userH = size.height();
-            float llx = 0;
-            float lly = 0;
-            if (boxDoc != null && index < boxDoc.getNumberOfPages()) {
-                PDPage boxPage = boxDoc.getPage(index);
-                rotation = normalizeRotation(boxPage.getRotation());
-                PDRectangle crop = boxPage.getCropBox();
-                userW = crop.getWidth();
-                userH = crop.getHeight();
-                llx = crop.getLowerLeftX();
-                lly = crop.getLowerLeftY();
-            } else if (boxDoc == null) {
-                log.warn("Page geometry unavailable; assuming unrotated page with origin (0,0)");
-            }
 
             return new RasterPage(
                     index,
@@ -146,10 +129,10 @@ public class PageRasterizer {
                     scaleX,
                     scaleY,
                     rotation,
-                    userW,
-                    userH,
-                    llx,
-                    lly);
+                    cropBox.width(),
+                    cropBox.height(),
+                    cropBox.x(),
+                    cropBox.y());
         } catch (RuntimeException e) {
             throw new UnreadablePdfException("Failed to render page " + (index + 1), e);
         }
@@ -172,12 +155,22 @@ public class PageRasterizer {
         }
     }
 
-    private PDDocument openForGeometry(byte[] pdfBytes) {
-        try {
-            return pdfDocumentFactory.load(pdfBytes);
-        } catch (IOException e) {
-            log.warn("Could not open PDF with PDFBox for page geometry: {}", e.getMessage());
-            return null;
+    /**
+     * Form rendering leaves unpainted page area transparent, while the detector preprocesses by
+     * drawing RGBA over its pad colour. Flatten to opaque white so blank areas stay white instead
+     * of taking on that pad colour.
+     */
+    static void flattenOverWhite(byte[] rgba) {
+        for (int i = 0; i < rgba.length; i += 4) {
+            int alpha = rgba[i + 3] & 0xFF;
+            if (alpha == 255) {
+                continue;
+            }
+            int inverse = 255 - alpha;
+            rgba[i] = (byte) (((rgba[i] & 0xFF) * alpha + 255 * inverse) / 255);
+            rgba[i + 1] = (byte) (((rgba[i + 1] & 0xFF) * alpha + 255 * inverse) / 255);
+            rgba[i + 2] = (byte) (((rgba[i + 2] & 0xFF) * alpha + 255 * inverse) / 255);
+            rgba[i + 3] = (byte) 255;
         }
     }
 
