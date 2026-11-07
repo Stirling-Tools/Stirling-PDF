@@ -3,15 +3,16 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -22,6 +23,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.jspecify.annotations.NonNull;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -56,6 +59,7 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private static final String TOC_FONT_PATH = "static/fonts/NotoSans-Regular.ttf";
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
@@ -436,7 +440,10 @@ public class MergeController {
         float pageWidth = PDRectangle.A4.getWidth();
         float pageHeight = PDRectangle.A4.getHeight();
 
-        PDFont contentFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDFont contentFont;
+        try (InputStream fontStream = new ClassPathResource(TOC_FONT_PATH).getInputStream()) {
+            contentFont = PDType0Font.load(document, fontStream);
+        }
 
         int contentFontSize = 10;
         int totalPages = 0;
@@ -470,7 +477,8 @@ public class MergeController {
 
                 String entryName =
                         fitTextToWidth(
-                                FilenameUtils.removeExtension(multipartFile.getOriginalFilename()),
+                                replaceUnsupportedCharacters(
+                                        contentFont, getTocTitle(multipartFile, i)),
                                 contentFont,
                                 contentFontSize,
                                 target - tocContentPadding,
@@ -668,12 +676,7 @@ public class MergeController {
 
         if (generateToc) {
             for (int i = 0; i < files.length; i++) {
-                String filename = files[i].getOriginalFilename();
-                String title = GeneralUtils.removeExtension(filename);
-                if (title == null || title.isBlank()) {
-                    title = "Document " + (i + 1);
-                }
-                builder.add(title, pageOffsets[i]);
+                builder.add(getTocTitle(files[i], i), pageOffsets[i]);
             }
         }
 
@@ -715,5 +718,31 @@ public class MergeController {
                     "Source bookmark traversal hit {}-node cap; remaining bookmarks dropped",
                     maxNodes);
         }
+    }
+
+    private static String getTocTitle(MultipartFile file, int index) {
+        String title = GeneralUtils.removeExtension(file.getOriginalFilename());
+        if (title == null || title.isBlank()) {
+            return "Document " + (index + 1);
+        }
+        return title;
+    }
+
+    private static String replaceUnsupportedCharacters(PDFont font, String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        StringBuilder result = new StringBuilder();
+        text.codePoints()
+                .forEach(
+                        codePoint -> {
+                            String character = Character.toString(codePoint);
+                            result.append(
+                                    TextEncodingHelper.fontSupportsCharacter(font, character)
+                                            ? character
+                                            : "?");
+                        });
+
+        return result.toString();
     }
 }
