@@ -98,6 +98,15 @@ class ConnectedDriveWriterTest {
     }
 
     @Test
+    void aDeletedFileIsReportedAsMissingSoTheUserCanSaveACopy() throws IOException {
+        respond = request -> new Response(404, "{\"error\":{\"code\":\"itemNotFound\"}}");
+
+        Path content = file(10);
+        assertThatThrownBy(() -> writer.save(33L, REPLACE, content))
+                .isInstanceOf(ConnectedDriveWriter.MissingException.class);
+    }
+
+    @Test
     void creatingAFileRenamesRatherThanReplacingAnExistingOne() throws IOException {
         respond = savedWith(201);
 

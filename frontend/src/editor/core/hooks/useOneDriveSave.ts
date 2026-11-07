@@ -151,7 +151,8 @@ export function useOneDriveSave(): OneDriveSave {
       } catch (error) {
         const code = error instanceof OneDriveSaveError ? error.code : "failed";
         const copyTarget =
-          code === "conflict" && target.kind === "replace"
+          (code === "conflict" || code === "missing") &&
+          target.kind === "replace"
             ? target.origin
             : null;
         const toastId: string = saveFailed(
@@ -160,7 +161,12 @@ export function useOneDriveSave(): OneDriveSave {
                 "oneDriveSave.conflict",
                 "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead.",
               )
-            : oneDriveFailureMessage(t, code),
+            : code === "missing"
+              ? t(
+                  "oneDriveSave.missing",
+                  "This file was moved or deleted in OneDrive. Save your version as a copy instead.",
+                )
+              : oneDriveFailureMessage(t, code),
           copyTarget
             ? {
                 isPersistentPopup: true,

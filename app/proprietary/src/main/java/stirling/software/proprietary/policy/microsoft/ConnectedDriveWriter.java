@@ -67,6 +67,12 @@ public class ConnectedDriveWriter {
         }
     }
 
+    public static class MissingException extends IOException {
+        public MissingException(String message) {
+            super(message);
+        }
+    }
+
     public SavedItem save(long accountId, Target target, Path content) throws IOException {
         String token = accounts.accessToken(accountId, List.of());
         long size = Files.size(content);
@@ -204,8 +210,11 @@ public class ConnectedDriveWriter {
     }
 
     private static void requireNoConflict(HttpResponse<String> response, Target target)
-            throws ConflictException {
+            throws ConflictException, MissingException {
         int status = response.statusCode();
+        if (status == 404 && target instanceof Replace) {
+            throw new MissingException("The file was moved or deleted in OneDrive");
+        }
         if (status == 412 || status == 409) {
             throw new ConflictException(
                     target instanceof Replace
