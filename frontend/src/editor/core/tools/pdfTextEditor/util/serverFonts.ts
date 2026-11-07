@@ -10,12 +10,8 @@ export const SERVER_FONTS_URL = "/api/v1/ui-data/editor-fonts";
 export interface ServerFontFace {
   id: string;
   style: string;
-  bold: boolean;
   italic: boolean;
-  weight: number;
   postscriptName: string;
-  format: string;
-  size: number;
 }
 
 interface ServerFontFamily {
@@ -42,13 +38,9 @@ function readFace(value: unknown): ServerFontFace | null {
   return {
     id: face.id,
     style: typeof face.style === "string" ? face.style.trim() : "",
-    bold: face.bold === true,
     italic: face.italic === true,
-    weight: typeof face.weight === "number" ? face.weight : 400,
     postscriptName:
       typeof face.postscriptName === "string" ? face.postscriptName : "",
-    format: typeof face.format === "string" ? face.format : "ttf",
-    size: typeof face.size === "number" ? face.size : 0,
   };
 }
 

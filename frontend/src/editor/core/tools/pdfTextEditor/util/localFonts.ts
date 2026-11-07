@@ -297,7 +297,13 @@ export function pickLocalFontFace(
   fonts: LocalFont[],
   requested: string,
 ): LocalFont | null {
-  const wanted = resolveRequested(fonts, requested);
+  return pickRequestedFace(fonts, resolveRequested(fonts, requested));
+}
+
+export function pickRequestedFace(
+  fonts: LocalFont[],
+  wanted: RequestedFace,
+): LocalFont | null {
   const family = normaliseName(wanted.family);
   let best: LocalFont | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;

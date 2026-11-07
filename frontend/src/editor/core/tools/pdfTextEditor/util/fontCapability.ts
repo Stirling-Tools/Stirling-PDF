@@ -9,6 +9,7 @@ import {
   faceStyleFlags,
   knownFamilyOf,
   pickLocalFontFace,
+  pickRequestedFace,
   resolveRequested,
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -51,16 +52,15 @@ function deviceFaceFor(
 ): string | null {
   const req = resolveRequested(fonts, family);
   if (!req.family) return null;
-  const wanted = [req.family, req.bold ? "Bold" : "", italic ? "Italic" : ""]
-    .filter(Boolean)
-    .join(" ");
-  const face = pickLocalFontFace(fonts, wanted);
+  const face = pickRequestedFace(fonts, { ...req, italic });
   if (!face) return null;
-  // pickLocalFontFace always returns SOMETHING from a matching family, so the
+  // pickRequestedFace always returns SOMETHING from a matching family, so the
   // style has to be checked: a family with no italic cut answers with upright.
   const flags = faceStyleFlags(face);
   if (flags.italic !== italic) return null;
-  return wanted;
+  return [req.family, req.bold ? "Bold" : "", italic ? "Italic" : ""]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /**
