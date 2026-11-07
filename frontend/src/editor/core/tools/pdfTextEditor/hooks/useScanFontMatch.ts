@@ -66,6 +66,7 @@ export interface ScanFontMatch {
   open: boolean;
   canShow: boolean;
   undrawable: boolean;
+  typedFromScan: boolean;
   show: () => void;
   close: () => void;
   deviceFonts: {
@@ -124,7 +125,7 @@ function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
 
 function drawnStyle(doc: EditorDocument, run: TextRun): ScanStyle | undefined {
   const state = scanEditOf(doc, run);
-  if (!state) return undefined;
+  if (!state || state.typedFromScan) return undefined;
   return state.override.style ?? drawnBlockStyle(doc, state) ?? undefined;
 }
 
@@ -286,6 +287,7 @@ export function useScanFontMatch(
     open: !!picking,
     canShow: redrawn || undrawable,
     undrawable,
+    typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
     show: () => {
       setRanked(null);
       setPicking(selected);

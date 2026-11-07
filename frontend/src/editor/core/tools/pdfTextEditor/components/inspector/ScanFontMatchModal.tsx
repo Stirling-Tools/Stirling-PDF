@@ -30,12 +30,25 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
     >
       <Stack gap="sm">
         {(match.status === "matching" || match.status === "ready") && (
-          <Text size="sm" c="dimmed">
-            {t(
-              "pdfTextEditor.scanFont.hint",
-              "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
-            )}
-          </Text>
+          <Stack gap={4}>
+            <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-hint">
+              {match.typedFromScan
+                ? t(
+                    "pdfTextEditor.scanFont.hintFromScan",
+                    "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead.",
+                  )
+                : t(
+                    "pdfTextEditor.scanFont.hint",
+                    "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
+                  )}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t(
+                "pdfTextEditor.scanFont.hintOthers",
+                "Your pick is also used for scanned text you have not edited yet.",
+              )}
+            </Text>
+          </Stack>
         )}
         {match.status === "matching" && (
           <Group

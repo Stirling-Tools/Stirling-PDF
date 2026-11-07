@@ -1,0 +1,58 @@
+import { MantineProvider } from "@mantine/core";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
+import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+
+function match(overrides: Partial<ScanFontMatch> = {}): ScanFontMatch {
+  return {
+    status: "ready",
+    scan: null,
+    choices: [{ label: "Carlito", match: 90, preview: null, active: false }],
+    choose: vi.fn(),
+    open: true,
+    canShow: true,
+    undrawable: false,
+    typedFromScan: false,
+    show: vi.fn(),
+    close: vi.fn(),
+    deviceFonts: {
+      permission: "unsupported",
+      loading: false,
+      count: null,
+      load: vi.fn(),
+    },
+    ...overrides,
+  };
+}
+
+function renderModal(m: ScanFontMatch) {
+  render(
+    <MantineProvider env="test">
+      <ScanFontMatchModal match={m} />
+    </MantineProvider>,
+  );
+}
+
+describe("scan font picker hint", () => {
+  it("says the typing came from the scan's own letters when it did", () => {
+    renderModal(match({ typedFromScan: true }));
+    expect(screen.getByTestId("pdf-editor-scan-font-hint")).toHaveTextContent(
+      "pdfTextEditor.scanFont.hintFromScan",
+    );
+  });
+
+  it("says the typing is drawn in a font otherwise", () => {
+    renderModal(match());
+    expect(screen.getByTestId("pdf-editor-scan-font-hint")).toHaveTextContent(
+      /^pdfTextEditor\.scanFont\.hint$/,
+    );
+  });
+
+  it("says a pick also steers scanned text not yet edited", () => {
+    renderModal(match());
+    expect(
+      screen.getByText("pdfTextEditor.scanFont.hintOthers"),
+    ).toBeInTheDocument();
+  });
+});

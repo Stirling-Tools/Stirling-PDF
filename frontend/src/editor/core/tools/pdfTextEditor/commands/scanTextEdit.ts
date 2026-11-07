@@ -147,6 +147,7 @@ export interface ScanEditState {
   frame?: ScanFrame;
   upright?: boolean;
   edited?: boolean;
+  typedFromScan?: boolean;
 }
 
 interface PlacedWord {
@@ -955,6 +956,8 @@ function renderUprightScanEdit(
     return next.length === 0 ? Infinity : Math.min(...next) - wordGap(size);
   };
 
+  let fromAtlas = 0;
+  let inFont = 0;
   const drawTyped = (
     t: string,
     x: number,
@@ -977,8 +980,11 @@ function renderUprightScanEdit(
       a &&
       glyphs &&
       drawFromAtlas(canvas, a, glyphs, s, start, baseline, st, limit)
-    )
+    ) {
+      fromAtlas++;
       return;
+    }
+    inFont++;
     drawInFont(canvas, s, x, start, baseline, st, limit);
   };
 
@@ -1020,6 +1026,7 @@ function renderUprightScanEdit(
   );
   attachToRun(run, state);
   state.edited = true;
+  state.typedFromScan = fromAtlas > 0 && inFont === 0;
   // Show what is drawn, not OCR's guesses, so size and colour controls start
   // from the right values.
   const shown = o.style ?? fittedStyle;

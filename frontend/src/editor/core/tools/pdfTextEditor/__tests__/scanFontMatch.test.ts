@@ -954,8 +954,10 @@ describe("drawing typed words from the scan's own letters", () => {
           );
         };
         const fromScan = retyped();
+        expect(state.typedFromScan).toBe(true);
         state.override.style = best.style;
         const fromFont = retyped();
+        expect(state.typedFromScan).toBe(false);
         expect(fromScan).toBeGreaterThan(0.75);
         expect(fromScan).toBeGreaterThan(fromFont + 0.2);
       } finally {
