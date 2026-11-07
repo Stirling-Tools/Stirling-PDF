@@ -438,6 +438,7 @@ describe("session PDF access", () => {
   it.each([
     ["/api/v1/security/add-watermark", PdfPermissionFlag.ModifyContents],
     ["/api/v1/misc/ocr-pdf", PdfPermissionFlag.ModifyContents],
+    ["/api/v1/misc/update-metadata", PdfPermissionFlag.ModifyContents],
     ["/api/v1/misc/flatten", PdfPermissionFlag.ModifyAnnotations],
     ["/api/v1/general/booklet-imposition", PdfPermissionFlag.AssembleDocument],
     ["/api/v1/general/multi-page-layout", PdfPermissionFlag.ModifyAnnotations],

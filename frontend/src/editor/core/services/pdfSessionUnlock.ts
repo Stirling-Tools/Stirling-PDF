@@ -68,6 +68,7 @@ const SESSION_OPERATIONS = new Map<string, readonly PdfPermissionFlag[]>([
   ["/api/v1/security/auto-redact", [modify]],
   ["/api/v1/misc/ocr-pdf", [modify]],
   ["/api/v1/misc/repair", [modify]],
+  ["/api/v1/misc/update-metadata", [modify]],
   ["/api/v1/misc/flatten", [modify, annotate]],
   ["/api/v1/security/sanitize-pdf", [modify, annotate]],
   ["/api/v1/misc/unlock-pdf-forms", [modify, annotate]],

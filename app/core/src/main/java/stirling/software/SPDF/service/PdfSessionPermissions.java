@@ -60,7 +60,8 @@ public final class PdfSessionPermissions {
                             "/api/v1/general/remove-image-pdf",
                             "/api/v1/security/auto-redact",
                             "/api/v1/misc/ocr-pdf",
-                            "/api/v1/misc/repair" ->
+                            "/api/v1/misc/repair",
+                            "/api/v1/misc/update-metadata" ->
                             permission.canModify();
                     case "/api/v1/misc/flatten",
                             "/api/v1/security/sanitize-pdf",

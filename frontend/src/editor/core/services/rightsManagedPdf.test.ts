@@ -400,6 +400,7 @@ describe("tools on protected PDFs", () => {
     ["/api/v1/misc/add-stamp"],
     ["/api/v1/misc/ocr-pdf"],
     ["/api/v1/security/sanitize-pdf"],
+    ["/api/v1/misc/update-metadata"],
   ])("runs %s, which takes and returns PDFs", async (endpoint) => {
     const original = await openedFile({ edit: true });
     await expect(preflight([original], endpoint)).resolves.toBe(true);

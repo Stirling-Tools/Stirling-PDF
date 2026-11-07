@@ -69,7 +69,6 @@ const EXCLUDED = new Map<string, () => string>([
   ["/api/v1/misc/rename-attachment", holdsPayload],
   ["/api/v1/general/edit-table-of-contents", readsStoredFile],
   ["/api/v1/general/overlay-pdfs", readsStoredFile],
-  ["/api/v1/misc/update-metadata", readsStoredFile],
   ["/api/v1/convert/pdf/ua", readsStoredFile],
   ["/api/v1/convert/pdf/pdfa", forbidsEncryption],
 ]);

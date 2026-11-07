@@ -525,6 +525,7 @@ class PasswordProtectionControllerTest {
     @CsvSource({
         "/api/v1/security/add-watermark, modify",
         "/api/v1/misc/ocr-pdf, modify",
+        "/api/v1/misc/update-metadata, modify",
         "/api/v1/misc/flatten, annotations",
         "/api/v1/security/sanitize-pdf, annotations",
         "/api/v1/general/booklet-imposition, assemble",
