@@ -58,6 +58,14 @@ async function fontPickFailure(
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
+function liveRunIds(store: EditorStore): Set<string> {
+  const ids = new Set<string>();
+  for (const page of store.document?.loadedPages() ?? []) {
+    for (const run of page.runs) ids.add(run.id);
+  }
+  return ids;
+}
+
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
   const [fittingScan, setFittingScan] = useState(false);
@@ -191,15 +199,19 @@ export function useSelectionActions(store: EditorStore) {
       if (store.document !== doc) return null;
       await dispatchAfterScanFit(
         targets.map((run, i) => ({ page: pages[i], run: run as TextRun })),
-        () =>
-          targets.map(
-            (run) =>
-              new SetFontFamilyCommand({
-                pageIndex: run.pageIndex,
-                runId: run.id,
-                nextFamily: family,
-              }),
-          ),
+        () => {
+          const live = liveRunIds(store);
+          return targets
+            .filter((run) => live.has(run.id))
+            .map(
+              (run) =>
+                new SetFontFamilyCommand({
+                  pageIndex: run.pageIndex,
+                  runId: run.id,
+                  nextFamily: family,
+                }),
+            );
+        },
       );
       return null;
     },
@@ -243,15 +255,19 @@ export function useSelectionActions(store: EditorStore) {
     if (store.document !== doc) return;
     await dispatchAfterScanFit(
       ready.map((target) => target.fit),
-      () =>
-        ready.map(
-          (target) =>
-            new SetFontFamilyCommand({
-              pageIndex: target.pageIndex,
-              runId: target.runId,
-              nextFamily: target.family,
-            }),
-        ),
+      () => {
+        const live = liveRunIds(store);
+        return ready
+          .filter((target) => live.has(target.runId))
+          .map(
+            (target) =>
+              new SetFontFamilyCommand({
+                pageIndex: target.pageIndex,
+                runId: target.runId,
+                nextFamily: target.family,
+              }),
+          );
+      },
     );
   }, [store, forEachSelectedRun, dispatchAfterScanFit]);
 

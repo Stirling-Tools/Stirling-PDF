@@ -9,7 +9,7 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
+import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -230,13 +230,6 @@ function NothingSelected(props: ScanHintProps) {
   );
 }
 
-/**
- * One line about the selected runs' font - or nothing at all.
- *
- * It speaks only when a character the user types might not survive: a missing
- * glyph, or an embedded face whose coverage we could not read. A font that can
- * render everything says nothing, because "all fine" is not worth a line.
- */
 function selectionDropsTyping(
   store: EditorStore,
   state: EditorViewState,
@@ -261,55 +254,37 @@ function useSelectedFontNote(
 ): string | null {
   const { t } = useTranslation();
   return useMemo(() => {
-    if (selection.runIds.length === 0) return null;
-    const picked = new Set(selection.runIds);
-    const fontIds = new Set<string>();
-    let scanned = 0;
-    for (const page of state.pages)
-      for (const run of page.runs)
-        if (picked.has(run.id)) {
-          fontIds.add(run.fontId);
-          if (run.renderMode === 3) scanned++;
-        }
-    if (fontIds.size === 0) return null;
-    // OCR text is invisible; its font says nothing about what an edit draws.
-    if (scanned === selection.runIds.length)
-      return dropsTyping
-        ? t(
-            "pdfTextEditor.inspector.scannedTextNoFont",
-            "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
-          )
-        : t(
-            "pdfTextEditor.inspector.scannedText",
-            "Scanned text · changed words are covered and redrawn in a matching font.",
-          );
-
-    const fonts = analyzePageFonts(state.pages).filter((f) =>
-      // analyzePageFonts keys by display name + status, so match on the names
-      // the selected runs' fonts resolve to.
-      Array.from(fontIds).some((id) => id.endsWith(f.name)),
-    );
-    if (fonts.length !== 1) return null;
-    const font = fonts[0];
-    const gaps = font.coverage.known ? font.coverage.missing : [];
-    if (gaps.length > 0) {
-      return t(
-        "pdfTextEditor.inspector.fontGap",
-        "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica.",
-        {
-          name: font.name,
-          glyphs: gaps.slice(0, 6).join(" "),
-        },
-      );
+    const note = selectedFontNote(state.pages, selection.runIds);
+    if (!note) return null;
+    switch (note.kind) {
+      case "scanned":
+        return dropsTyping
+          ? t(
+              "pdfTextEditor.inspector.scannedTextNoFont",
+              "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
+            )
+          : t(
+              "pdfTextEditor.inspector.scannedText",
+              "Scanned text · changed words are covered and redrawn in a matching font.",
+            );
+      case "embeddedUnknown":
+        return t(
+          "pdfTextEditor.inspector.fontEmbedded",
+          "Embedded font · a character it lacks falls back to Helvetica.",
+        );
+      case "deviceUnknown":
+        return t(
+          "pdfTextEditor.inspector.fontUnknownCoverage",
+          "{{name}} · a character it lacks falls back to {{fallback}}.",
+          { name: note.name, fallback: note.fallback },
+        );
+      case "gap":
+        return t(
+          "pdfTextEditor.inspector.fontGap",
+          "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}.",
+          { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
+        );
     }
-    // Silent when the font can render anything the user types: a standard
-    // base-14 face, or an embedded one whose cmap we read and found complete.
-    if (font.status === "standard") return null;
-    if (font.coverage.known) return null;
-    return t(
-      "pdfTextEditor.inspector.fontEmbedded",
-      "Embedded font · a character it lacks falls back to Helvetica.",
-    );
   }, [state.pages, selection.runIds, dropsTyping, t]);
 }
 

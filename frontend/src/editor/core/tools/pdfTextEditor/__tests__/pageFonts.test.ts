@@ -112,6 +112,14 @@ describe("analyzePageFonts", () => {
     expect(fonts[0].status).toBe("embedded");
   });
 
+  it("counts a device face with a standard family name as embedded", () => {
+    const fonts = analyzePageFonts([
+      mkPage(0, [mkRun("a", "device:Times New Roman")]),
+    ]);
+    expect(fonts[0].status).toBe("embedded");
+    expect(fonts[0].coverage.known).toBe(false);
+  });
+
   it("returns nothing when there are no runs", () => {
     expect(analyzePageFonts([mkPage(0, [])])).toEqual([]);
   });
