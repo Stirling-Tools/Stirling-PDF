@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/components/tools/validateSignature/reportView/styles.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const ThumbnailPreview = ({
   thumbnailUrl,
@@ -12,7 +13,7 @@ const ThumbnailPreview = ({
   const { t } = useTranslation();
   if (thumbnailUrl) {
     return (
-      <div className="thumbnail-container">
+      <div className={`thumbnail-container ${privateContentClassName}`}>
         <img
           src={thumbnailUrl}
           alt={t(
