@@ -78,4 +78,22 @@ test.describe("Saving files that live on disk", () => {
       page.getByRole("menuitem", { name: /Save a copy somewhere else/ }),
     ).toBeVisible();
   });
+
+  test("a narrow window marks unsaved disk edits in More actions", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 740, height: 900 });
+    await openDirtyReport(page);
+
+    const more = page.getByRole("button", { name: "More actions" });
+    await expect(more.locator(".workbench-bar-unsaved-dot")).toBeVisible({
+      timeout: 20_000,
+    });
+    await more.click();
+    await expect(
+      page
+        .getByRole("menuitem", { name: "Save", exact: true })
+        .locator(".workbench-bar-menu-unsaved-dot"),
+    ).toBeVisible();
+  });
 });
