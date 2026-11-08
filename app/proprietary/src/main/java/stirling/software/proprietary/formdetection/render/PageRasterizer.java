@@ -16,8 +16,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.model.PageSize;
-import stirling.software.jpdfium.model.RenderFlags;
-import stirling.software.jpdfium.model.RenderQuality;
 import stirling.software.jpdfium.model.RenderResult;
 
 /**
@@ -28,9 +26,6 @@ import stirling.software.jpdfium.model.RenderResult;
 @Service
 @RequiredArgsConstructor
 public class PageRasterizer {
-
-    private static final RenderQuality DETECTION_RENDER =
-            RenderQuality.custom(RenderFlags.ANNOTATIONS | RenderFlags.NO_SMOOTH_IMAGE);
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -120,7 +115,7 @@ public class PageRasterizer {
             float maxSide = Math.max(size.width(), size.height());
             int dpi = maxSide <= 0 ? 150 : Math.round(72f * inputSize / maxSide);
             dpi = Math.max(36, Math.min(dpi, 300));
-            RenderResult r = page.renderAt(dpi, DETECTION_RENDER);
+            RenderResult r = page.renderAt(dpi);
             float scaleX = size.width() > 0 ? r.width() / size.width() : dpi / 72f;
             float scaleY = size.height() > 0 ? r.height() / size.height() : dpi / 72f;
 
