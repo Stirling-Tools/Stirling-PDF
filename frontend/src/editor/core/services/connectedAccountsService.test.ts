@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { AxiosError, AxiosHeaders } from "axios";
+import type { TFunction } from "i18next";
 import {
   connectAccount,
+  connectErrorMessage,
   PopupBlockedError,
 } from "@editor/services/connectedAccountsService";
 
@@ -50,6 +53,8 @@ describe("connectAccount", () => {
     expect(order).toEqual(["open", "post"]);
     expect(api.post).toHaveBeenCalledWith(
       "/api/v1/connected-accounts/microsoft/connect",
+      undefined,
+      { suppressErrorToast: true },
     );
   });
 
@@ -76,5 +81,48 @@ describe("connectAccount", () => {
       PopupBlockedError,
     );
     expect(api.post).not.toHaveBeenCalled();
+  });
+});
+
+function httpError(status: number, data: unknown): AxiosError {
+  return new AxiosError(
+    `Request failed with status code ${status}`,
+    "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      status,
+      statusText: "",
+      data,
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    },
+  );
+}
+
+describe("connectErrorMessage", () => {
+  const t = ((_key: string, fallback: string) => fallback) as TFunction;
+
+  it("shows the server's reason instead of the HTTP status", () => {
+    const error = httpError(409, {
+      status: 409,
+      title: "Conflict",
+      detail: "Google account connections are not set up on this server.",
+    });
+    expect(connectErrorMessage(error, t)).toBe(
+      "Google account connections are not set up on this server.",
+    );
+  });
+
+  it("falls back to a readable message when the server gives no reason", () => {
+    const message = connectErrorMessage(httpError(502, ""), t);
+    expect(message).not.toMatch(/status code/);
+    expect(message.trim()).not.toBe("");
+  });
+
+  it("explains a blocked pop-up", () => {
+    expect(connectErrorMessage(new PopupBlockedError(), t)).toMatch(
+      /blocked the sign-in window/,
+    );
   });
 });

@@ -64,7 +64,8 @@ public class ConnectedAccountController {
         CloudProvider cloud = provider(provider);
         if (!service.isAvailable(cloud)) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, provider + " account connections are not set up");
+                    HttpStatus.CONFLICT,
+                    cloud.displayName() + " account connections are not set up on this server.");
         }
         String base = publicBaseUrl();
         ConnectedAccountService.ConnectStart start =

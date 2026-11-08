@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import apiClient from "@editor/services/apiClient";
+import { extractAxiosErrorMessage } from "@editor/services/httpErrorUtils";
 
 export type CloudProvider = "microsoft" | "google";
 
@@ -58,6 +59,8 @@ export async function connectAccount(
   try {
     const response = await apiClient.post<{ authorizationUrl: string }>(
       `${BASE}/${provider}/connect`,
+      undefined,
+      { suppressErrorToast: true },
     );
     url = response.data.authorizationUrl;
   } catch (error) {
@@ -81,7 +84,7 @@ export function connectErrorMessage(error: unknown, t: TFunction): string {
       "Your browser blocked the sign-in window. Allow pop-ups for this site and try again.",
     );
   }
-  return error instanceof Error ? error.message : String(error);
+  return extractAxiosErrorMessage(error).body;
 }
 
 export class PopupBlockedError extends Error {
