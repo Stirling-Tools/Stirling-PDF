@@ -109,6 +109,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
+import stirling.software.common.util.misc.CmykProfileResolver;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
 import stirling.software.jpdfium.doc.PdfXStandard;
@@ -765,17 +766,25 @@ public class ConvertPDFToPDFA {
                                 + profile.getDisplayName());
             }
 
-            PdfXOptions options =
+            PdfXOptions.Builder optionsBuilder =
                     PdfXOptions.builder()
                             .standard(profile.getStandard())
-                            .useCompactCmyk()
                             .convertForms(true)
                             .convertSpecialColors(true)
                             .convertLosslessImages(true)
                             .strictImages(true)
                             .requireEmbeddedFonts(strict)
-                            .title(baseFileName)
-                            .build();
+                            .title(baseFileName);
+            byte[] cmykProfile = CmykProfileResolver.profile();
+            if (cmykProfile != null) {
+                optionsBuilder
+                        .outputIntentProfile(cmykProfile)
+                        .conditionIdentifier("Stirling PDF CMYK")
+                        .info(CmykProfileResolver.source());
+            } else {
+                optionsBuilder.useCompactCmyk();
+            }
+            PdfXOptions options = optionsBuilder.build();
 
             TempFile inputTemp = null;
             TempFile outputTemp = null;
