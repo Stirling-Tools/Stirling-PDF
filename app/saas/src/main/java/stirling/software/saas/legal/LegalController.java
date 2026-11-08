@@ -1,6 +1,7 @@
 package stirling.software.saas.legal;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -55,10 +56,23 @@ public class LegalController {
 
     public record ConsentRequest(String documentId, String context) {}
 
-    /** Fetch a legal document's current version as markdown. 404 for an unknown document. */
+    /**
+     * The documents a visitor may read before signing in. The enterprise agreement is not one: it
+     * is served with its deal through the procurement controller.
+     */
+    private static final Set<String> PUBLIC_DOCUMENT_IDS = Set.of("eula", "sla", "subprocessors");
+
+    /**
+     * Fetch a legal document's current version as markdown. 404 for an unknown document. Public:
+     * visitors are asked to agree to these before they have an account, so they must be able to
+     * read them first.
+     */
     @GetMapping("/{docId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<LegalDocumentResponse> document(@PathVariable String docId) {
+        if (!PUBLIC_DOCUMENT_IDS.contains(docId)) {
+            return ResponseEntity.notFound().build();
+        }
         return registry.meta(docId)
                 .<ResponseEntity<LegalDocumentResponse>>map(
                         meta ->

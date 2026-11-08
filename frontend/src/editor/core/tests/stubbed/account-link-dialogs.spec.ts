@@ -106,20 +106,24 @@ for (const path of ["/settings/account-link", "/settings/billing"]) {
   });
 }
 
-test("dismissing the trial connection prerequisite does not reopen it", async ({
+test("the Enterprise page asks an unlinked server to connect first, and only on request", async ({
   page,
 }) => {
-  await page.goto("/settings/billing?procurement=start");
+  await page.goto("/enterprise");
+  const connect = page.getByRole("button", {
+    name: "Link account",
+    exact: true,
+  });
+  await expect(connect).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await connect.click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Not now", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Connect a Stirling account", exact: true })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(connect).toBeVisible();
 });
 
 test("late exhausted-credit responses do not reopen a dismissed dialog", async ({

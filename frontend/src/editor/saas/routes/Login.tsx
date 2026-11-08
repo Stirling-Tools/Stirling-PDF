@@ -16,6 +16,7 @@ import {
 } from "@editor/constants/app";
 import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 import {
+  clearPendingDestination,
   rememberPendingDestination,
   takePendingDestination,
 } from "@editor/services/pendingDestination";
@@ -33,7 +34,9 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 export default function Login() {
   const navigate = useNavigate();
-  const { session, loading, refreshSession } = useAuth();
+  const { session, isAnonymous, loading, refreshSession } = useAuth();
+  // A guest session is not a sign-in: guests come here to sign in, so they get the form.
+  const signedIn = !!session && !isAnonymous;
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,17 +72,21 @@ export default function Login() {
     }
   }, []);
 
+  /** On to where the visitor was heading, which is then no longer remembered. */
+  const continueToNext = () => {
+    clearPendingDestination();
+    navigate(nextPath ?? "/", { replace: true });
+  };
+
   useEffect(() => {
-    if (session && !loading && nextPath) {
-      navigate(nextPath, { replace: true });
-    }
-  }, [session, loading, nextPath, navigate]);
+    if (signedIn && !loading && nextPath) continueToNext();
+  }, [signedIn, loading, nextPath, navigate]);
 
   // Stashed as well as held in the URL: leaving to create an account loses the
   // query string, and the confirmation link cannot carry a `next`.
   useEffect(() => {
-    if (nextPath) rememberPendingDestination(nextPath);
-  }, [nextPath]);
+    if (nextPath && !signedIn) rememberPendingDestination(nextPath);
+  }, [nextPath, signedIn]);
 
   const baseUrl = getBaseUrl();
 
@@ -104,7 +111,7 @@ export default function Login() {
   }
 
   // Show logged in state if authenticated (unless bouncing back to `next`)
-  if (session && !loading) {
+  if (signedIn && !loading) {
     if (nextPath) {
       return null;
     }
@@ -245,6 +252,12 @@ export default function Login() {
   };
 
   const handleAnonymousSignIn = async () => {
+    // Already a guest: carry on as that guest. Signing in anonymously again would swap their
+    // session for a brand-new guest account.
+    if (session && isAnonymous) {
+      continueToNext();
+      return;
+    }
     try {
       setIsSigningIn(true);
       setError(null);
@@ -260,10 +273,8 @@ export default function Login() {
         // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
 
-        console.log(
-          "[Login] Session refreshed, user will be redirected by auth state change",
-        );
-        // User will be redirected by the auth state change after session refresh
+        // A guest session does not count as signed in here, so nothing else moves them on.
+        continueToNext();
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
@@ -327,12 +338,8 @@ export default function Login() {
             <span className="oauth-btn-group">
               <Icon
                 name="link"
-                style={{
-                  width: "1.75rem",
-                  height: "1.75rem",
-                  marginRight: "0.5rem",
-                  flexShrink: 0,
-                }}
+                className="oauth-icon-medium"
+                style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
               <span className="oauth-btn-label">
                 {t("login.useMagicLink", "Use magic link")}
@@ -424,7 +431,12 @@ export default function Login() {
       >
         <Button
           variant="tertiary"
-          onClick={() => navigate("/signup")}
+          onClick={() =>
+            navigate(
+              "/signup" +
+                (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
+            )
+          }
           style={{
             background: "none",
             border: "none",

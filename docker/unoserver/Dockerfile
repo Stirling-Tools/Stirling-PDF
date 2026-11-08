@@ -41,7 +41,16 @@ RUN set -eux; \
     apt-get upgrade -y --no-install-recommends; \
     apt-get install -y --no-install-recommends \
       software-properties-common ca-certificates curl gnupg tini; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    ppa_attempt=1; \
+    until add-apt-repository -y --no-update ppa:libreoffice/ppa; do \
+      if [ "${ppa_attempt}" -ge 4 ]; then \
+        echo "LibreOffice PPA setup failed after ${ppa_attempt} attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed; retrying in $((ppa_attempt * 5)) seconds" >&2; \
+      sleep "$((ppa_attempt * 5))"; \
+      ppa_attempt=$((ppa_attempt + 1)); \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       python3 python3-venv python3-uno python3-packaging \
