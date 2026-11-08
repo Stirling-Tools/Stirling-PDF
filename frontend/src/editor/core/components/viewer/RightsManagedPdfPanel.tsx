@@ -214,6 +214,7 @@ export function RightsManagedPdfPanel({
             }
             allowDeselect={false}
             w="100%"
+            maw={320}
           />
         )}
         {status === null || (busy && !error) ? null : error?.owner ? (
