@@ -12,7 +12,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.function.PDFunction;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType0;
 import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType3;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDShadingPattern;
@@ -26,17 +28,16 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 /**
  * Handles the CMYK cases JPDFium's shading rewrite cannot cover yet.
  *
- * <p>JPDFium converts axial shadings whose function is a three-component {@link PDFunctionType2}.
- * Other shading types or functions are left untouched by the in-process pass; Ghostscript is used
- * for those documents only, when it is installed. A failure here is non-fatal and the caller can
- * continue with the in-process result.
+ * <p>JPDFium converts function-based shadings whose function is a Type 0 sampled function, a Type 2
+ * exponential function, or a Type 3 stitch of those. Mesh shadings and PostScript calculator
+ * functions are left to Ghostscript when it is installed.
  */
 @Slf4j
 public final class CmykGhostscriptFallback {
 
     private CmykGhostscriptFallback() {}
 
-    /** True when the PDF contains a shading JPDFium's simple Type 2 rewrite does not cover. */
+    /** True when the PDF contains a shading JPDFium's in-process rewrite does not cover. */
     public static boolean needsGhostscript(byte[] pdf) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdf)) {
             for (PDPage page : document.getPages()) {
@@ -130,9 +131,33 @@ public final class CmykGhostscriptFallback {
     }
 
     private static boolean isUnsupported(PDShading shading) throws IOException {
-        if (shading.getShadingType() != PDShading.SHADING_TYPE2) return true;
-        PDFunction function = shading.getFunction();
-        if (!(function instanceof PDFunctionType2 type2)) return true;
-        return type2.getC0().size() != 3 || type2.getC1().size() != 3;
+        int type = shading.getShadingType();
+        if (type < PDShading.SHADING_TYPE1 || type > PDShading.SHADING_TYPE3) return true;
+        return !isSupportedFunction(shading.getFunction());
+    }
+
+    private static boolean isSupportedFunction(PDFunction function) throws IOException {
+        if (function instanceof PDFunctionType2 type2) {
+            int components = type2.getC0().size();
+            return (components == 3 || components == 4) && type2.getC1().size() == components;
+        }
+        int outputs = outputComponents(function);
+        if (outputs != 3 && outputs != 4) return false;
+        if (function instanceof PDFunctionType0 type0) {
+            return type0.getBitsPerSample() == 8
+                    && (type0.getOrder() == 1 || type0.getOrder() == 3);
+        }
+        if (function instanceof PDFunctionType3 type3) {
+            for (var child : type3.getFunctions()) {
+                if (!isSupportedFunction(PDFunction.create(child))) return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static int outputComponents(PDFunction function) {
+        var range = function.getCOSObject().getCOSArray(COSName.RANGE);
+        return range == null ? -1 : range.size() / 2;
     }
 }
