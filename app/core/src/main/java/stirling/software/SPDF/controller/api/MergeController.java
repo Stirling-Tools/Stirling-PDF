@@ -56,11 +56,14 @@ import stirling.software.jpdfium.PdfMerge;
 import stirling.software.jpdfium.doc.Bookmark;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor;
 import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
+import stirling.software.jpdfium.model.StorageOptions;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class MergeController {
+    private static final StorageOptions FILE_STORAGE = StorageOptions.builder().file().build();
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -433,7 +436,6 @@ public class MergeController {
             return new int[0];
         }
 
-        List<PdfDocument> docs = new ArrayList<>(inputPaths.size());
         int[] pageCounts = new int[inputPaths.size()];
         int[] pageOffsets = new int[inputPaths.size()];
         List<List<Bookmark>> sourceBookmarks = new ArrayList<>(inputPaths.size());
@@ -441,35 +443,40 @@ public class MergeController {
         try {
             for (int i = 0; i < inputPaths.size(); i++) {
                 Path p = inputPaths.get(i);
-                PdfDocument doc = PdfDocument.open(p);
-                docs.add(doc);
-                pageCounts[i] = doc.pageCount();
-                pageOffsets[i] = runningOffset;
-                sourceBookmarks.add(doc.bookmarks());
+                try (PdfDocument doc = PdfDocument.open(p)) {
+                    pageCounts[i] = doc.pageCount();
+                    pageOffsets[i] = runningOffset;
+                    sourceBookmarks.add(doc.bookmarks());
+                }
                 runningOffset += pageCounts[i];
             }
 
             BookmarkTree combinedTree =
                     buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
 
-            try (PdfDocument merged = PdfMerge.merge(docs)) {
-                if (combinedTree.entries().isEmpty()) {
-                    merged.save(outputPath);
-                } else {
-                    PdfBookmarkEditor.setBookmarks(merged, combinedTree, outputPath);
-                }
+            if (combinedTree.entries().isEmpty()) {
+                PdfMerge.mergeFilesToFile(inputPaths, outputPath, FILE_STORAGE);
+            } else {
+                mergeWithBookmarks(inputPaths, combinedTree, outputPath);
             }
         } catch (RuntimeException e) {
             throw new IOException("JPDFium merge failed", e);
-        } finally {
-            for (PdfDocument doc : docs) {
-                try {
-                    doc.close();
-                } catch (Exception ignored) {
-                }
-            }
         }
         return pageCounts;
+    }
+
+    /**
+     * {@code mergeFilesToFile} deliberately never merges outlines, so merge to an intermediate file
+     * and apply the combined tree as a separate step.
+     */
+    private void mergeWithBookmarks(List<Path> inputPaths, BookmarkTree tree, Path outputPath)
+            throws IOException {
+        try (TempFile mergedPdf = new TempFile(tempFileManager, ".pdf")) {
+            PdfMerge.mergeFilesToFile(inputPaths, mergedPdf.getPath(), FILE_STORAGE);
+            try (PdfDocument merged = PdfDocument.open(mergedPdf.getPath())) {
+                PdfBookmarkEditor.setBookmarks(merged, tree, outputPath);
+            }
+        }
     }
 
     private BookmarkTree buildCombinedBookmarkTree(

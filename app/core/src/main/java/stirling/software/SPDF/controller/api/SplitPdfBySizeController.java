@@ -41,11 +41,18 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
+import stirling.software.jpdfium.model.StorageOptions;
 
 @GeneralApi
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfBySizeController {
+
+    private static final StorageOptions FILE_STORAGE = StorageOptions.builder().file().build();
+
+    /** The source is an untouched temp copy, so its file always matches the live document. */
+    private static final StorageOptions FILE_STORAGE_REUSING_SOURCE =
+            StorageOptions.builder().file().reuseSourceFile(true).build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -88,6 +95,7 @@ public class SplitPdfBySizeController {
                 }
 
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
+                    boolean preserveBookmarks = !sourceDocument.bookmarks().isEmpty();
                     List<int[]> ranges = computeRanges(request, sourceDocument);
 
                     int fileIndex = 1;
@@ -102,7 +110,8 @@ public class SplitPdfBySizeController {
                                 zipOut,
                                 filename,
                                 fileIndex++,
-                                hasForm);
+                                hasForm,
+                                preserveBookmarks);
                     }
                 }
             }
@@ -149,7 +158,8 @@ public class SplitPdfBySizeController {
             ZipOutputStream zipOut,
             String baseFilename,
             int fileIndex,
-            boolean hasForm)
+            boolean hasForm,
+            boolean preserveBookmarks)
             throws IOException {
         if (hasForm) {
             // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary, breaking form
@@ -158,7 +168,7 @@ public class SplitPdfBySizeController {
             writeRangeViaPdfBox(sourceFile, range, zipOut, baseFilename, fileIndex);
         } else {
             try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-                extractRangeToFile(sourceDoc, range, splitTemp.getPath());
+                extractRangeToFile(sourceDoc, range, splitTemp.getPath(), preserveBookmarks);
                 writeEntry(zipOut, baseFilename, fileIndex, splitTemp.getPath());
             }
         }
@@ -188,11 +198,26 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void extractRangeToFile(PdfDocument sourceDoc, int[] range, Path outputPath)
+    private void extractRangeToFile(
+            PdfDocument sourceDoc, int[] range, Path outputPath, boolean preserveBookmarks)
             throws IOException {
         int from = range[0];
         int to = range[range.length - 1];
-        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
+        if (preserveBookmarks) {
+            // extractPageRangeToFile does not remap the source outline onto the kept pages.
+            extractRange(sourceDoc, from, to, outputPath);
+        } else {
+            PdfSplit.extractPageRangeToFile(
+                    sourceDoc.sourcePath(), from, to, outputPath, FILE_STORAGE);
+        }
+    }
+
+    /** File-backed extract that also remaps the source outline onto the kept pages. */
+    private void extractRange(PdfDocument sourceDoc, int fromPage, int toPage, Path outputPath)
+            throws IOException {
+        try (PdfDocument split =
+                PdfSplit.extractPageRange(
+                        sourceDoc, fromPage, toPage, FILE_STORAGE_REUSING_SOURCE)) {
             split.save(outputPath);
         }
     }
@@ -256,9 +281,7 @@ public class SplitPdfBySizeController {
 
     private long saveRange(PdfDocument sourceDoc, int from, int to, File output)
             throws IOException {
-        try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
-            split.save(output.toPath());
-        }
+        extractRange(sourceDoc, from, to, output.toPath());
         return output.length();
     }
 

@@ -23,6 +23,9 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
@@ -102,6 +105,43 @@ class SplitPDFControllerTest {
             doc.save(pdfPath.toFile());
             return Files.readAllBytes(pdfPath);
         }
+    }
+
+    private byte[] createPdfWithBookmarks(int numPages, int... bookmarkPages) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            for (int i = 0; i < numPages; i++) {
+                doc.addPage(new PDPage(PDRectangle.A4));
+            }
+            PDDocumentOutline outline = new PDDocumentOutline();
+            doc.getDocumentCatalog().setDocumentOutline(outline);
+            for (int pageIndex : bookmarkPages) {
+                PDOutlineItem item = new PDOutlineItem();
+                item.setTitle("bm-" + pageIndex);
+                PDPageFitDestination destination = new PDPageFitDestination();
+                destination.setPage(doc.getPage(pageIndex));
+                item.setDestination(destination);
+                outline.addLast(item);
+            }
+            Path pdfPath = tempDir.resolve("bookmarks.pdf");
+            doc.save(pdfPath.toFile());
+            return Files.readAllBytes(pdfPath);
+        }
+    }
+
+    private List<String> outlineEntries(byte[] pdfBytes) throws IOException {
+        List<String> entries = new ArrayList<>();
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+            PDDocumentOutline outline = doc.getDocumentCatalog().getDocumentOutline();
+            if (outline == null) {
+                return entries;
+            }
+            for (PDOutlineItem item : outline.children()) {
+                PDPage page = item.findDestinationPage(doc);
+                int pageIndex = page == null ? -1 : doc.getPages().indexOf(page);
+                entries.add(item.getTitle() + "@" + pageIndex);
+            }
+        }
+        return entries;
     }
 
     private List<String> fieldNamesOf(byte[] pdfBytes) throws IOException {
@@ -293,6 +333,28 @@ class SplitPDFControllerTest {
         List<byte[]> outputs = unzip(response.getBody());
         assertThat(outputs).hasSize(3);
         assertThat(pageCountsOf(outputs)).containsExactly(1, 1, 1);
+    }
+
+    @Test
+    @DisplayName("Should remap source bookmarks onto each split part")
+    void shouldPreserveBookmarksWhenSplitting() throws Exception {
+        byte[] pdfBytes = createPdfWithBookmarks(6, 0, 2, 5);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        SplitPagesRequest request = new SplitPagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("3");
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(outputs).hasSize(2);
+        assertThat(pageCountsOf(outputs)).containsExactly(3, 3);
+        assertThat(outlineEntries(outputs.get(0))).containsExactly("bm-0@0", "bm-2@2");
+        assertThat(outlineEntries(outputs.get(1))).containsExactly("bm-5@2");
     }
 
     @Test
