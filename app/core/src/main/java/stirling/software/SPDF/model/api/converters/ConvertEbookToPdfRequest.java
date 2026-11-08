@@ -11,6 +11,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ConvertEbookToPdfRequest {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description =
                     "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2,"
@@ -27,21 +30,21 @@ public class ConvertEbookToPdfRequest {
             allowableValues = {"true", "false"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean embedAllFonts;
+    private Boolean embedAllFonts = false;
 
     @Schema(
             description = "Add a generated table of contents to the resulting PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean includeTableOfContents;
+    private Boolean includeTableOfContents = false;
 
     @Schema(
             description = "Add page numbers to the generated PDF",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean includePageNumbers;
+    private Boolean includePageNumbers = false;
 
     @Schema(
             description =
@@ -49,5 +52,5 @@ public class ConvertEbookToPdfRequest {
                             + " eInk devices)",
             allowableValues = {"true", "false"},
             defaultValue = "false")
-    private Boolean optimizeForEbook;
+    private Boolean optimizeForEbook = false;
 }

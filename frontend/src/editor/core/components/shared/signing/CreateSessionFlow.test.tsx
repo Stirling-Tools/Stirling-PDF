@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
 import UserSelector from "@editor/components/shared/UserSelector";
 import { qk } from "@editor/query/keys";
@@ -15,6 +15,13 @@ vi.mock("@editor/hooks/useIsMobile", () => ({
 }));
 beforeEach(() => {
   viewport.mobile = false;
+  // The date picker opens on the current month. Pin it so the fixed
+  // October 2026 dates below stay on screen as the real clock advances.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 15, 12, 0, 0));
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 vi.mock("react-i18next", () => ({
