@@ -651,6 +651,58 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    /**
+     * Embeds the fonts JPDFium cannot substitute by running Ghostscript's pdfwrite pass. This is
+     * the fallback for composite Type0/CID and symbol fonts; it only runs when unsupported fonts
+     * remain after the in-process substitute and Ghostscript is installed.
+     */
+    private void embedPdfxFontsWithGhostscript(Path pdfPath) throws IOException {
+        Path output = Files.createTempFile(pdfPath.getParent(), "pdfx-fonts-", ".pdf");
+        try {
+            List<String> command =
+                    new ArrayList<>(
+                            List.of(
+                                    "gs",
+                                    "-sDEVICE=pdfwrite",
+                                    "-dCompatibilityLevel=1.6",
+                                    "-dPDFSETTINGS=/prepress",
+                                    "-dEmbedAllFonts=true",
+                                    "-dSubsetFonts=true",
+                                    "-dPreserveAnnots=true",
+                                    "-dNOPAUSE",
+                                    "-dQUIET",
+                                    "-dBATCH",
+                                    "-sOutputFile=" + output,
+                                    pdfPath.toString()));
+            ProcessExecutorResult result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(command);
+            if (result.getRc() != 0) {
+                throw new IOException(
+                        "Ghostscript font embedding failed with return code "
+                                + result.getRc()
+                                + ": "
+                                + result.getMessages());
+            }
+            if (Files.size(output) == 0) {
+                throw new IOException("Ghostscript font embedding produced an empty PDF");
+            }
+            Files.move(output, pdfPath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Embedded PDF/X fonts with Ghostscript for {}", pdfPath.getFileName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Ghostscript font embedding was interrupted", e);
+        } finally {
+            Files.deleteIfExists(output);
+        }
+    }
+
+    private static Set<String> findUnembeddedFontNamesInFile(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            return findUnembeddedFontNames(document);
+        }
+    }
+
     private int replacePdfxFonts(PDDocument document, PDResources resources, int depth)
             throws IOException {
         if (resources == null || depth > 8) return 0;
@@ -818,14 +870,22 @@ public class ConvertPDFToPDFA {
                 embedPdfxFonts(inputTemp.getFile().toPath());
                 try (PDDocument prepared = Loader.loadPDF(inputTemp.getFile())) {
                     requireSanitizablePageCount(prepared, maxConversionPages);
-                    Set<String> unsupportedFonts = findUnembeddedFontNames(prepared);
-                    if (!unsupportedFonts.isEmpty()) {
-                        throw new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST,
-                                "PDF/X requires embedded fonts. These fonts could not be"
-                                        + " substituted automatically: "
-                                        + String.join(", ", unsupportedFonts));
+                }
+                Set<String> unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                if (!unsupportedFonts.isEmpty() && isGhostscriptAvailable()) {
+                    try {
+                        embedPdfxFontsWithGhostscript(inputTemp.getPath());
+                        unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                    } catch (IOException e) {
+                        log.warn("Ghostscript PDF/X font fallback failed", e);
                     }
+                }
+                if (!unsupportedFonts.isEmpty()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "PDF/X requires embedded fonts. These fonts could not be"
+                                    + " substituted automatically: "
+                                    + String.join(", ", unsupportedFonts));
                 }
 
                 PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);

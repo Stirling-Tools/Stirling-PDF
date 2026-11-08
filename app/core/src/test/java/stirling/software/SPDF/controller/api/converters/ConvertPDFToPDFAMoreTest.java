@@ -236,6 +236,13 @@ class ConvertPDFToPDFAMoreTest {
             PDResources resources = new PDResources();
             resources.put(COSName.getPDFName("F1"), font);
             page.setResources(resources);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 12);
+                content.newLineAtOffset(100, 700);
+                content.showText("\u03b1\u03b2\u03b3");
+                content.endText();
+            }
             document.save(output);
             return new MockMultipartFile(
                     "fileInput", "symbol-font.pdf", "application/pdf", output.toByteArray());
@@ -612,8 +619,9 @@ class ConvertPDFToPDFAMoreTest {
         }
 
         @Test
-        @DisplayName("PDF/X rejects Symbol fonts that cannot be substituted")
-        void pdfXRejectsSymbolFontByDefault() throws Exception {
+        @DisplayName("PDF/X embeds Symbol fonts with Ghostscript when available")
+        void pdfXEmbedsSymbolFontWithGhostscript() throws Exception {
+            assumeTrue(ghostscriptAvailable(), "Ghostscript is not installed");
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
@@ -622,9 +630,48 @@ class ConvertPDFToPDFAMoreTest {
             request.setOutputFormat("pdfx-1a");
             request.setStrict(false);
 
-            assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                    .isInstanceOf(ResponseStatusException.class)
-                    .hasMessageContaining("Symbol");
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    PDResources resources = output.getPage(0).getResources();
+                    assertThat(resources.getFontNames()).isNotEmpty();
+                    for (var name : resources.getFontNames()) {
+                        PDFont font = resources.getFont(name);
+                        assertThat(font.isEmbedded()).as("font %s", font.getName()).isTrue();
+                    }
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X rejects Symbol fonts when Ghostscript is unavailable")
+        void pdfXRejectsSymbolFontWithoutGhostscript() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(symbolFontPdfFile());
+            request.setOutputFormat("pdfx-1a");
+            request.setStrict(false);
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+                pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
+                        .thenReturn(executor);
+                when(executor.runCommandWithOutputHandling(any(List.class)))
+                        .thenThrow(new IOException("gs missing"));
+
+                assertThatThrownBy(() -> newController().pdfToPdfA(request))
+                        .isInstanceOf(ResponseStatusException.class)
+                        .hasMessageContaining("Symbol");
+            }
         }
 
         @Test
