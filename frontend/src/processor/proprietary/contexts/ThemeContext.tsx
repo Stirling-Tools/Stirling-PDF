@@ -23,7 +23,18 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export function ThemeProvider({
+  children,
+  forcedTheme,
+}: {
+  children: ReactNode;
+  /**
+   * Pins the scheme without touching the saved preference, for hosts that own the theme such as
+   * Storybook's toolbar. Writing the shared preference makes open tabs flip each other back through
+   * storage events.
+   */
+  forcedTheme?: Theme;
+}) {
   // Mirror the shared theme MODE; re-read on cross-tab storage changes and,
   // while on "system", on OS scheme changes.
   const [mode, setMode] = useState<ThemeMode>(() =>
@@ -43,7 +54,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const theme = resolveColorScheme(mode, systemScheme);
+  const theme = forcedTheme ?? resolveColorScheme(mode, systemScheme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -51,6 +62,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ThemeContextValue>(() => {
     const setTheme = (next: Theme) => {
+      if (forcedTheme) return;
       preferencesService.setPreference("theme", next);
       setMode(next);
     };
@@ -59,7 +71,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setTheme,
       toggle: () => setTheme(theme === "light" ? "dark" : "light"),
     };
-  }, [theme]);
+  }, [theme, forcedTheme]);
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
