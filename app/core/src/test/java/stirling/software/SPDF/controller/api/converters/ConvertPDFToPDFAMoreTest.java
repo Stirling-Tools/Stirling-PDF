@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -244,6 +245,50 @@ class ConvertPDFToPDFAMoreTest {
             document.save(output);
             return new MockMultipartFile(
                     "fileInput", "symbol-font.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
+    private MockMultipartFile type0FontPdfFile() throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (PDDocument document = new PDDocument();
+                InputStream fontStream =
+                        ConvertPDFToPDFA.class.getResourceAsStream(
+                                "/static/fonts/DejaVuSans.ttf")) {
+            assertThat(fontStream).as("bundled DejaVuSans.ttf").isNotNull();
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDType0Font font = PDType0Font.load(document, fontStream);
+            PDResources resources = new PDResources();
+            resources.put(COSName.getPDFName("F1"), font);
+            page.setResources(resources);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 24);
+                content.newLineAtOffset(100, 700);
+                content.showText("Type0 subset text");
+                content.endText();
+            }
+            document.save(output);
+        }
+        try (PDDocument saved = Loader.loadPDF(output.toByteArray())) {
+            COSDictionary fonts =
+                    (COSDictionary)
+                            saved.getPage(0)
+                                    .getResources()
+                                    .getCOSObject()
+                                    .getDictionaryObject(COSName.FONT);
+            COSDictionary font =
+                    (COSDictionary) fonts.getDictionaryObject(COSName.getPDFName("F1"));
+            COSArray descendants = (COSArray) font.getDictionaryObject(COSName.DESCENDANT_FONTS);
+            COSDictionary cid = (COSDictionary) descendants.getObject(0);
+            COSDictionary descriptor = (COSDictionary) cid.getDictionaryObject(COSName.FONT_DESC);
+            descriptor.removeItem(COSName.FONT_FILE2);
+            descriptor.removeItem(COSName.FONT_FILE3);
+            descriptor.removeItem(COSName.FONT_FILE);
+            ByteArrayOutputStream stripped = new ByteArrayOutputStream();
+            saved.save(stripped);
+            return new MockMultipartFile(
+                    "fileInput", "type0-font.pdf", "application/pdf", stripped.toByteArray());
         }
     }
 
@@ -613,6 +658,41 @@ class ConvertPDFToPDFAMoreTest {
             try (PDDocument document = new PDDocument()) {
                 assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
                 verify(resources, never()).put(any(COSName.class), any(PDFont.class));
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X rasterizes unsupported Type0 fonts when Ghostscript is unavailable")
+        void pdfX1aRasterizesType0FontWithoutGhostscript() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(type0FontPdfFile());
+            request.setOutputFormat("pdfx-1a");
+            request.setStrict(false);
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
+                ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
+                pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
+                        .thenReturn(executor);
+                when(executor.runCommandWithOutputHandling(any(List.class)))
+                        .thenThrow(new IOException("gs missing"));
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    PDResources resources = output.getPage(0).getResources();
+                    assertThat(resources.getFontNames()).isEmpty();
+                    assertThat(resources.getXObjectNames()).isNotEmpty();
+                }
             }
         }
 

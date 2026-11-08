@@ -112,10 +112,13 @@ import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
 import stirling.software.common.util.misc.CmykGhostscriptFallback;
 import stirling.software.common.util.misc.CmykProfileResolver;
+import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
 import stirling.software.jpdfium.doc.PdfXStandard;
 import stirling.software.jpdfium.exception.JPDFiumException;
+import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -698,6 +701,43 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    /** Page indices that still contain a non-embedded font after in-process substitution. */
+    private static Set<Integer> pagesWithUnembeddedFonts(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            Set<Integer> pages = new HashSet<>();
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                Set<String> missing = new HashSet<>();
+                collectUnembeddedFontNames(document.getPage(i).getResources(), missing, 0);
+                if (!missing.isEmpty()) {
+                    pages.add(i);
+                }
+            }
+            return pages;
+        }
+    }
+
+    /**
+     * Rasterizes pages whose fonts JPDFium cannot embed without Ghostscript. The page becomes a 300
+     * dpi image, so the PDF/X output is valid but its text is no longer selectable.
+     */
+    private void flattenUnsupportedFontPages(Path pdfPath, Set<Integer> pages) throws IOException {
+        byte[] input = Files.readAllBytes(pdfPath);
+        try (PdfDocument document = PdfDocument.open(input)) {
+            int flattened = 0;
+            for (int pageIndex : pages) {
+                if (pageIndex >= 0 && pageIndex < document.pageCount()) {
+                    document.flattenPage(pageIndex, FlattenMode.FULL, 300);
+                    flattened++;
+                }
+            }
+            if (flattened == 0) {
+                throw new IOException("No PDF/X page could be rasterized for unsupported fonts");
+            }
+            document.saveTo(pdfPath, SaveOptions.validated());
+            log.info("Rasterized {} PDF/X page(s) with unsupported fonts", flattened);
+        }
+    }
+
     private static Set<String> findUnembeddedFontNamesInFile(Path pdfPath) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
             return findUnembeddedFontNames(document);
@@ -897,6 +937,17 @@ public class ConvertPDFToPDFA {
                         unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
                     } catch (IOException e) {
                         log.warn("Ghostscript PDF/X font fallback failed", e);
+                    }
+                }
+                if (!unsupportedFonts.isEmpty()) {
+                    try {
+                        Set<Integer> pages = pagesWithUnembeddedFonts(inputTemp.getPath());
+                        if (!pages.isEmpty()) {
+                            flattenUnsupportedFontPages(inputTemp.getPath(), pages);
+                            unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
+                        }
+                    } catch (IOException | RuntimeException e) {
+                        log.warn("Could not rasterize PDF/X pages with unsupported fonts", e);
                     }
                 }
                 if (!unsupportedFonts.isEmpty()) {
