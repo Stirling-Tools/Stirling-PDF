@@ -1,4 +1,8 @@
-import type { AxiosInstance } from "axios";
+import {
+  CanceledError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 /**
  * Works around WebKit sending a File as an empty request body (Content-Length: 0), which the
@@ -12,6 +16,8 @@ import type { AxiosInstance } from "axios";
 const DESKTOP_COPY_BUDGET_BYTES = 512 * 1024 * 1024;
 // iOS kills a tab well short of 1 GB on many devices, and the copy sits beside the original.
 const TOUCH_COPY_BUDGET_BYTES = 192 * 1024 * 1024;
+
+const inMemoryCopies = new WeakSet<FormData>();
 
 export function uploadsNeedInMemoryFiles(userAgent: string): boolean {
   return /AppleWebKit/.test(userAgent) && !/Chrome\//.test(userAgent);
@@ -33,10 +39,12 @@ export function copyBudgetBytes(maxTouchPoints: number): number {
 export async function inMemoryFormData(
   form: FormData,
   budgetBytes: number,
+  throwIfCancelled: () => void = () => {},
 ): Promise<FormData> {
   const copy = new FormData();
   let remaining = budgetBytes;
   for (const [key, value] of form.entries()) {
+    throwIfCancelled();
     if (typeof value === "string") {
       copy.append(key, value);
       continue;
@@ -55,6 +63,8 @@ export async function inMemoryFormData(
       new File([await value.arrayBuffer()], value.name, options),
     );
   }
+  throwIfCancelled();
+  inMemoryCopies.add(copy);
   return copy;
 }
 
@@ -65,8 +75,20 @@ function thisBrowserNeedsInMemoryFiles(): boolean {
   );
 }
 
-function inMemoryFormDataForThisDevice(form: FormData): Promise<FormData> {
-  return inMemoryFormData(form, copyBudgetBytes(navigator.maxTouchPoints ?? 0));
+function inMemoryFormDataForThisDevice(
+  form: FormData,
+  throwIfCancelled?: () => void,
+): Promise<FormData> {
+  return inMemoryFormData(
+    form,
+    copyBudgetBytes(navigator.maxTouchPoints ?? 0),
+    throwIfCancelled,
+  );
+}
+
+function throwIfRequestCancelled(config: InternalAxiosRequestConfig): void {
+  config.cancelToken?.throwIfRequested();
+  if (config.signal?.aborted) throw new CanceledError(undefined, config);
 }
 
 /**
@@ -89,8 +111,13 @@ export function installInMemoryUploads(
 ): void {
   if (!thisBrowserNeedsInMemoryFiles()) return;
   client.interceptors.request.use(async (config) =>
-    config.data instanceof FormData
-      ? { ...config, data: await inMemoryFormDataForThisDevice(config.data) }
+    config.data instanceof FormData && !inMemoryCopies.has(config.data)
+      ? {
+          ...config,
+          data: await inMemoryFormDataForThisDevice(config.data, () =>
+            throwIfRequestCancelled(config),
+          ),
+        }
       : config,
   );
 }

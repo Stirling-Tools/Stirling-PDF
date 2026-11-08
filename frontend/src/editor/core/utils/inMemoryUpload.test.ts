@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { InternalAxiosRequestConfig } from "axios";
+import axios, { isCancel, type InternalAxiosRequestConfig } from "axios";
 import {
   copyBudgetBytes,
   inMemoryFormData,
@@ -137,5 +137,48 @@ describe("installInMemoryUploads", () => {
 
     const json = { data: { a: 1 } } as InternalAxiosRequestConfig;
     expect(await interceptor(json)).toBe(json);
+  });
+
+  function safariInterceptor() {
+    vi.stubGlobal("navigator", { userAgent: SAFARI, maxTouchPoints: 0 });
+    const { client, use } = fakeClient();
+    installInMemoryUploads(client as never);
+    return use.mock.calls[0][0] as (
+      config: InternalAxiosRequestConfig,
+    ) => Promise<InternalAxiosRequestConfig>;
+  }
+
+  it("sends a retried request's copy as it is instead of copying it again", async () => {
+    const interceptor = safariInterceptor();
+    const sent = await interceptor({
+      data: pdfForm().form,
+    } as InternalAxiosRequestConfig);
+    const retried = await interceptor(sent);
+    expect(retried.data).toBe(sent.data);
+  });
+
+  it("rejects as cancelled without copying once the request's signal aborts", async () => {
+    const interceptor = safariInterceptor();
+    const controller = new AbortController();
+    controller.abort();
+    const { form, file } = pdfForm();
+    const read = vi.spyOn(file, "arrayBuffer");
+    const error = await interceptor({
+      data: form,
+      signal: controller.signal,
+    } as InternalAxiosRequestConfig).catch((e: unknown) => e);
+    expect(isCancel(error)).toBe(true);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("rejects as cancelled once the request's cancel token fires", async () => {
+    const interceptor = safariInterceptor();
+    const source = axios.CancelToken.source();
+    source.cancel();
+    const error = await interceptor({
+      data: pdfForm().form,
+      cancelToken: source.token,
+    } as InternalAxiosRequestConfig).catch((e: unknown) => e);
+    expect(isCancel(error)).toBe(true);
   });
 });
