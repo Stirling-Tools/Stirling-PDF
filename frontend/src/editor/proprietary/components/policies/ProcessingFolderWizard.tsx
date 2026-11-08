@@ -31,6 +31,7 @@ import {
 } from "@editor/components/policies/processingFolderSetup";
 import { policyCategoryIcon } from "@editor/components/policies/policyCategoryIcon";
 import "@editor/components/policies/FolderProcessingSetup.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface ProcessingFolderWizardProps extends Omit<
   ProcessingFolderPickerProps,
@@ -293,7 +294,7 @@ export function ProcessingFolderWizard({
           {stage !== "folder" && target && (
             <div className="folder-setup__destination">
               <Icon name={local ? "monitor" : "cloud"} size={16} />
-              <div>
+              <div className={privateContentClassName}>
                 <strong title={selectedName}>{selectedName}</strong>
                 <span className="folder-setup__path" title={path}>
                   {path}

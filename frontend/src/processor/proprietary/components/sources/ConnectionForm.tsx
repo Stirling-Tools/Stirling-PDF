@@ -6,6 +6,7 @@ import {
   type CreatableConnectionType,
 } from "@processor/components/sources/connectionTypes";
 import "@processor/components/sources/connections.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Renders whatever fields a connection type declares, rather than knowing any vendor's shape.
@@ -58,6 +59,7 @@ export function ConnectionForm({
       >
         <Input
           value={values.name ?? ""}
+          className={privateContentClassName}
           placeholder={t("portal.connections.fields.namePlaceholder")}
           onChange={(e) => set("name", e.target.value)}
         />
@@ -106,7 +108,7 @@ function ConnectionField({
         />
       ) : field.control === "textarea" || field.control === "hostList" ? (
         <textarea
-          className="portal-sources__connection-textarea"
+          className={`portal-sources__connection-textarea ${privateContentClassName}`}
           rows={field.control === "hostList" ? 2 : 5}
           value={value}
           placeholder={
@@ -118,6 +120,7 @@ function ConnectionField({
         <Input
           type={field.control === "password" ? "password" : undefined}
           value={value}
+          className={privateContentClassName}
           placeholder={
             field.placeholderKey ? t(field.placeholderKey) : undefined
           }
