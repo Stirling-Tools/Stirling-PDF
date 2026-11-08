@@ -2,9 +2,6 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +19,19 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.model.SaveOptions;
+import stirling.software.jpdfium.transform.PdfPageGeometry;
 
 @GeneralApi
 @RequiredArgsConstructor
 public class RotationController {
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -52,27 +51,31 @@ public class RotationController {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
 
-        // Validate the angle is a multiple of 90
-        if (angle % 90 != 0) {
+        if (angle == null || angle % 90 != 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.angleNotMultipleOf90", "Angle must be a multiple of 90");
         }
 
-        // Load the PDF document with proper resource management
-        try (PDDocument document = pdfDocumentFactory.load(request)) {
-
-            // Get the list of pages in the document
-            PDPageTree pages = document.getPages();
-
-            for (PDPage page : pages) {
-                page.setRotation(page.getRotation() + angle);
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            try (PdfDocument document = PdfDocument.open(pdfFile.getBytes())) {
+                for (int i = 0; i < document.pageCount(); i++) {
+                    int rotation =
+                            Math.floorMod(PdfPageGeometry.getRotation(document, i) + angle, 360);
+                    PdfPageGeometry.setRotation(document, i, rotation);
+                }
+                document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
 
-            // Return the rotated PDF as a response
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"),
-                    tempFileManager);
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOutputFile,
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
+        } catch (IOException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (RuntimeException | LinkageError e) {
+            tempOutputFile.close();
+            throw new IOException("JPDFium rotate failed", e);
         }
     }
 }
