@@ -100,7 +100,9 @@ public class ExternalAppDepConfig {
             // Python / OpenCV probes chain several processes, so overlap them with the rest.
             Future<?> python = pool.submit(this::checkPythonAndOpenCV);
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
-            awaitPythonCheck(python);
+            if (!awaitPythonCheck(python)) {
+                return;
+            }
 
             disableCalibreUnlessConfined();
 
@@ -297,14 +299,17 @@ public class ExternalAppDepConfig {
         }
     }
 
-    private void awaitPythonCheck(Future<?> python) {
+    private boolean awaitPythonCheck(Future<?> python) {
         try {
             python.get();
         } catch (InterruptedException e) {
+            python.cancel(true);
             Thread.currentThread().interrupt();
+            return false;
         } catch (ExecutionException e) {
             log.warn("Python/OpenCV dependency check failed", e.getCause());
         }
+        return true;
     }
 
     private void invokeAllWithTimeout(List<Callable<Void>> tasks, Duration timeout) {
@@ -324,8 +329,9 @@ public class ExternalAppDepConfig {
 
     private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
         ProcessBuilder pb = new ProcessBuilder(cmd);
+        Process p = null;
         try {
-            Process p = pb.start();
+            p = pb.start();
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
@@ -336,7 +342,10 @@ public class ExternalAppDepConfig {
             int ec = p.exitValue();
             return new ProbeResult(ec, out, err);
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException) {
+                p.destroyForcibly();
+                Thread.currentThread().interrupt();
+            }
             return new ProbeResult(127, "", String.valueOf(e.getMessage()));
         }
     }
