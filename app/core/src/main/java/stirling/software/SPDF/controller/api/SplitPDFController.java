@@ -33,6 +33,7 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.JpdfiumTempOutputs;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -125,7 +126,11 @@ public class SplitPDFController {
             int splitPoint = pageNumbers.get(splitIndex);
             try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
                 PdfSplit.extractPageRangeToFile(
-                        source.toPath(), previousPageNumber, splitPoint, splitTemp.getPath());
+                        source.toPath(),
+                        previousPageNumber,
+                        splitPoint,
+                        splitTemp.getPath(),
+                        JpdfiumTempOutputs.STORAGE);
                 writeEntry(zipOut, baseFilename, splitIndex + 1, splitTemp.getPath());
             }
             previousPageNumber = splitPoint + 1;

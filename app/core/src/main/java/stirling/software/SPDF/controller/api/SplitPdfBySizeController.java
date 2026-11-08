@@ -32,6 +32,7 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.JpdfiumTempOutputs;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
@@ -192,7 +193,8 @@ public class SplitPdfBySizeController {
     }
 
     private void extractRangeToFile(Path source, int[] range, Path outputPath) throws IOException {
-        PdfSplit.extractPageRangeToFile(source, range[0], range[range.length - 1], outputPath);
+        PdfSplit.extractPageRangeToFile(
+                source, range[0], range[range.length - 1], outputPath, JpdfiumTempOutputs.STORAGE);
     }
 
     private void writeEntry(

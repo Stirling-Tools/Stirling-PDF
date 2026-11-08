@@ -37,6 +37,7 @@ import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.pdf.JpdfiumTempOutputs;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
@@ -256,7 +257,8 @@ public class SplitPdfByChaptersController {
         int from = range[0];
         int to = range[1];
         try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            PdfSplit.extractPageRangeToFile(source, from, to, splitTemp.getPath());
+            PdfSplit.extractPageRangeToFile(
+                    source, from, to, splitTemp.getPath(), JpdfiumTempOutputs.STORAGE);
             Path finalPath = splitTemp.getPath();
             TempFile metaTemp = null;
             try {
