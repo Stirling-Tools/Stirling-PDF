@@ -737,22 +737,20 @@ export class AuthService {
   }
 
   private async handleRefreshFailure(error: unknown): Promise<void> {
-    const transient =
+    const token = await this.getAuthToken();
+    if (
       axios.isAxiosError(error) &&
       (!error.response ||
         error.response.status >= 500 ||
         error.response.status === 408 ||
-        error.response.status === 429);
-    if (!transient) {
-      await this.logout();
+        error.response.status === 429) &&
+      token &&
+      !this.isTokenExpiringSoon(token, 0)
+    ) {
+      this.setAuthStatus("authenticated", this.userInfo);
       return;
     }
-    const token = await this.getAuthToken();
-    if (token && !this.isTokenExpiringSoon(token, 0)) {
-      this.setAuthStatus("authenticated", this.userInfo);
-    } else {
-      this.setAuthStatus("unauthenticated", null);
-    }
+    await this.logout();
   }
 
   async getUserInfo(): Promise<UserInfo | null> {
