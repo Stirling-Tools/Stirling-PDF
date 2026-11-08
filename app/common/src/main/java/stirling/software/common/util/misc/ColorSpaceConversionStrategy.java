@@ -13,6 +13,7 @@ import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.doc.PdfColorConverter;
 import stirling.software.jpdfium.doc.PdfIccProfiles;
+import stirling.software.jpdfium.doc.PdfShadingConverter;
 import stirling.software.jpdfium.model.SaveOptions;
 
 @Slf4j
@@ -40,7 +41,11 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
 
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             document.saveTo(output, SaveOptions.validated());
-            return new InputStreamResource(new ByteArrayInputStream(output.toByteArray()));
+            byte[] convertedPdf = output.toByteArray();
+            byte[] withCmykShadings = PdfShadingConverter.toCmyk(convertedPdf);
+            return new InputStreamResource(
+                    new ByteArrayInputStream(
+                            withCmykShadings != null ? withCmykShadings : convertedPdf));
         } catch (RuntimeException e) {
             log.warn("CMYK color space conversion failed", e);
             throw new IOException("Failed to convert PDF to CMYK color space", e);

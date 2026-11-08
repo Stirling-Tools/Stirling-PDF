@@ -10,14 +10,21 @@ import java.util.stream.Collectors;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType2;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -67,6 +74,25 @@ class ColorSpaceConversionStrategyTest {
         }
     }
 
+    @Test
+    void convertsSimpleAxialShadingToCmyk() throws Exception {
+        byte[] source = pdfWithShading();
+        MockMultipartFile file =
+                new MockMultipartFile("fileInput", "shading.pdf", "application/pdf", source);
+
+        ColorSpaceConversionStrategy strategy =
+                new ColorSpaceConversionStrategy(file, ReplaceAndInvert.COLOR_SPACE_CONVERSION);
+        byte[] converted = strategy.replace().getInputStream().readAllBytes();
+
+        try (PDDocument output = Loader.loadPDF(converted)) {
+            PDResources resources = output.getPage(0).getResources();
+            PDShadingType2 shading =
+                    (PDShadingType2)
+                            resources.getShading(resources.getShadingNames().iterator().next());
+            assertThat(shading.getColorSpace().getName()).isEqualTo("DeviceCMYK");
+        }
+    }
+
     private static Set<String> operators(PDPage page) throws Exception {
         List<Object> tokens = new PDFStreamParser(page).parse();
         return tokens.stream()
@@ -89,6 +115,42 @@ class ColorSpaceConversionStrategyTest {
             PDImageXObject image = LosslessFactory.createFromImage(document, bitmap);
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
                 content.drawImage(image, 100, 100, 120, 120);
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.save(output);
+            return output.toByteArray();
+        }
+    }
+
+    private static byte[] pdfWithShading() throws Exception {
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage(new PDRectangle(200, 200));
+            document.addPage(page);
+            PDShadingType2 shading = new PDShadingType2(new COSDictionary());
+            shading.setShadingType(2);
+            shading.setColorSpace(PDDeviceRGB.INSTANCE);
+            COSArray coords = new COSArray();
+            coords.add(COSFloat.get("20"));
+            coords.add(COSFloat.get("0"));
+            coords.add(COSFloat.get("180"));
+            coords.add(COSFloat.get("0"));
+            shading.setCoords(coords);
+            COSDictionary function = new COSDictionary();
+            function.setInt(COSName.getPDFName("FunctionType"), 2);
+            function.setInt(COSName.getPDFName("N"), 1);
+            COSArray c0 = new COSArray();
+            c0.add(COSFloat.get("1"));
+            c0.add(COSFloat.get("0"));
+            c0.add(COSFloat.get("0"));
+            COSArray c1 = new COSArray();
+            c1.add(COSFloat.get("0"));
+            c1.add(COSFloat.get("0"));
+            c1.add(COSFloat.get("1"));
+            function.setItem(COSName.getPDFName("C0"), c0);
+            function.setItem(COSName.getPDFName("C1"), c1);
+            shading.setFunction(new PDFunctionType2(function));
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.shadingFill(shading);
             }
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             document.save(output);
