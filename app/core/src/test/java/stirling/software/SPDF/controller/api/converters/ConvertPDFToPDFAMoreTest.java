@@ -24,6 +24,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -161,6 +162,25 @@ class ConvertPDFToPDFAMoreTest {
 
     private MockMultipartFile pdfFile() throws IOException {
         return new MockMultipartFile("fileInput", "input.pdf", "application/pdf", simplePdfBytes());
+    }
+
+    private MockMultipartFile transparentPdfFile() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDExtendedGraphicsState transparent = new PDExtendedGraphicsState();
+            transparent.setNonStrokingAlphaConstant(0.5f);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.setGraphicsStateParameters(transparent);
+                content.setNonStrokingColor(1f, 0f, 0f);
+                content.addRect(100, 100, 200, 200);
+                content.fill();
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "transparent.pdf", "application/pdf", output.toByteArray());
+        }
     }
 
     /**
@@ -398,6 +418,35 @@ class ConvertPDFToPDFAMoreTest {
                                 .as(token)
                                 .isNotBlank();
                     }
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X-1a flattens transparent pages instead of rejecting them")
+        void pdfX1aFlattensTransparency() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(transparentPdfFile());
+            request.setOutputFormat("pdfx-1a");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
+
+                assertThat(response).isSameAs(expected);
+                assertThat(managed.getFile()).exists();
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    assertThat(output.getVersion()).isEqualTo(1.3f);
+                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
                 }
             }
         }
