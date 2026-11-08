@@ -25,7 +25,7 @@ ext {
     springBootVersion = "4.1.2"
     pdfboxVersion = "3.0.8"
     officeConvertVersion = "0.3.3"
-    imageioVersion = "3.15.2"
+    imageioVersion = "3.15.3"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.85"
     springSecuritySamlVersion = "7.1.1"
@@ -50,7 +50,7 @@ ext {
     awsSdkVersion = "2.55.14"
     jschVersion = "2.28.7"
     commonsNetVersion = "3.13.0"
-    smbjVersion = "0.14.0"
+    smbjVersion = "0.15.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
