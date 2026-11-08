@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +15,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,6 +24,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RequestCallback;
@@ -222,6 +230,13 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postRejectsUserEndpointsIncludingApiKeyEndpoint() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/user/get-api-key", body));
+    }
+
+    @Test
     void postRejectsAiEndpointsOutsideToolsSubnamespace() {
         // /api/v1/ai/orchestrate and other non-tool AI endpoints are not internally
         // dispatchable. Only /api/v1/ai/tools/* and the general/misc/security/convert/filter
@@ -229,6 +244,54 @@ class InternalApiClientTest {
         // introduce recursion risk.
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         assertThrows(SecurityException.class, () -> client.post("/api/v1/ai/orchestrate", body));
+    }
+
+    @Test
+    void postAllowsOnlyFillingAndListingFormFields() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        // The editor's field editing endpoints stay out of internal dispatch.
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/form/edit-fields", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/form/fill/x", body));
+        assertTrue(InternalApiClient.isDispatchable("/api/v1/form/fill"));
+        assertTrue(InternalApiClient.isDispatchable("/api/v1/form/fields"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {"/api/v1/convert/url/pdf", "/api/v1/ai/tools/create-pdf-from-html-agent"})
+    void generatorsWithoutFilesAreSentAsMultipart(String endpoint) throws Exception {
+        RestTemplate template = (RestTemplate) ReflectionTestUtils.getField(client, "restTemplate");
+        MockRestServiceServer server = MockRestServiceServer.createServer(template);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("urlInput", "https://example.com");
+        Path tempPath = Files.createTempFile("internal-api-generator-test", ".pdf");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFile.getFile()).thenReturn(tempPath.toFile());
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        server.expect(
+                        org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                                "http://localhost:8080" + endpoint))
+                .andExpect(
+                        request -> {
+                            MediaType contentType = request.getHeaders().getContentType();
+                            assertNotNull(contentType);
+                            assertTrue(MediaType.MULTIPART_FORM_DATA.isCompatibleWith(contentType));
+                            assertNotNull(contentType.getParameter("boundary"));
+                            String encoded = ((MockClientHttpRequest) request).getBodyAsString();
+                            assertTrue(encoded.contains("name=\"urlInput\""));
+                            assertTrue(encoded.contains("https://example.com"));
+                        })
+                .andRespond(
+                        org.springframework.test.web.client.response.MockRestResponseCreators
+                                .withSuccess("pdf", MediaType.APPLICATION_PDF));
+        try {
+            assertEquals(HttpStatus.OK, client.post(endpoint, body).getStatusCode());
+            server.verify();
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
     }
 
     @Test
@@ -261,6 +324,47 @@ class InternalApiClientTest {
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
+    void postReleasesTempFileWhenResponseCopyFails() throws Exception {
+        // E.g. "No space left on device": the partial copy is the file that filled the volume, and
+        // the caller has no handle to it.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        Path tempPath = Files.createTempFile("internal-api-copy-fails-test", ".tmp");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        InputStream failing = mock(InputStream.class);
+        when(failing.transferTo(any())).thenThrow(new IOException("No space left on device"));
+        ClientHttpResponse response = mock(ClientHttpResponse.class);
+        when(response.getBody()).thenReturn(failing);
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenReturn((RequestCallback) req -> {});
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenAnswer(
+                                            inv ->
+                                                    ((ResponseExtractor<?>) inv.getArgument(3))
+                                                            .extractData(response));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            assertThrows(
+                    UncheckedIOException.class,
+                    () -> mockedClient.post("/api/v1/convert/vector/pdf", body));
+
+            verify(tempFile).close();
         } finally {
             Files.deleteIfExists(tempPath);
         }

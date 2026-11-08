@@ -6,6 +6,7 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
@@ -36,12 +37,22 @@ abstract class AbstractCategoryTool implements McpTool {
 
     protected abstract OperationCategory category();
 
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.PRODUCES_FILE;
+    }
+
     protected List<OperationMeta> enabledOperations() {
         McpToolCatalog catalog = catalogProvider.getIfAvailable();
         if (catalog == null) {
             return List.of();
         }
         return catalog.enabledOps(category());
+    }
+
+    @Override
+    public String analyticsCategory() {
+        return "operations";
     }
 
     @Override

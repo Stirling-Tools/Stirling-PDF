@@ -1,6 +1,7 @@
 name: Build and Test Workflow
 
-# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# PR / merge-queue gate, including stacked PRs targeting feature branches.
+# Detects which paths changed and dispatches
 # to the dedicated reusable workflows under .github/workflows/. Each child
 # workflow keeps its own setup/teardown so this file stays a routing layer.
 #
@@ -10,7 +11,6 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main"]
   merge_group:
     branches: ["main"]
   workflow_dispatch:
@@ -49,11 +49,11 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check for file changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -216,6 +216,15 @@ jobs:
       sign: true
       use_shared_cache: true
 
+  rust-lint:
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/rust-lint.yml
+
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
@@ -303,6 +312,7 @@ jobs:
       - docker-compose-tests
       - test-build-docker-images
       - tauri-build
+      - rust-lint
       - ai-engine
       - generated-models
       - pre-commit
@@ -310,7 +320,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -331,6 +341,7 @@ jobs:
             docker-compose-tests=${{ needs.docker-compose-tests.result }}
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
+            rust-lint=${{ needs.rust-lint.result }}
             ai-engine=${{ needs.ai-engine.result }}
             generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}

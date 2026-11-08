@@ -1,6 +1,7 @@
 package stirling.software.saas.procurement.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,10 +33,13 @@ import stirling.software.saas.procurement.model.ProcurementAgreementSignature;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.model.QuoteDetails;
+import stirling.software.saas.procurement.pricing.PricingRates;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
+import stirling.software.saas.procurement.service.BelowMinimumDealException;
 import stirling.software.saas.procurement.service.ProcurementService;
+import stirling.software.saas.procurement.service.ProcurementService.ContractPeriod;
 import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
@@ -58,6 +62,9 @@ public class ProcurementController {
     // Local mapper to parse the stored line-items JSON; the saas context exposes no injectable
     // ObjectMapper bean.
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    /** Error code for a quote under the minimum deal size; the builder keys on it. */
+    static final String QUOTE_BELOW_MINIMUM = "quote_below_minimum";
 
     private final ProcurementService procurement;
     private final ProcurementPricingService pricing;
@@ -153,8 +160,7 @@ public class ProcurementController {
 
     /**
      * The inputs the quote was priced from, echoed back so the builder can seed itself when the
-     * buyer re-edits an existing quote. {@code users} is not persisted (only the resulting volume
-     * is), so it is always 0 here; the builder treats the seeded volume as manually set.
+     * buyer re-edits an existing quote. {@code users} is the licensed seat count, 0 when unset.
      */
     public record QuoteConfigEcho(
             long volume,
@@ -208,7 +214,42 @@ public class ProcurementController {
             String businessName,
             String contactName,
             String contactEmail,
-            QuoteResponse latestQuote) {}
+            QuoteResponse latestQuote,
+            // Smallest annual fee a quote may come to (minor units), so the builder can say so
+            // before the buyer prices one; 0 when there is no floor.
+            long minAnnualNetMinor,
+            // The deployment the licence is issued for: the current quote's once one exists, else
+            // the trial's. Setup steps and the offline licence follow this, not {@code deployment}.
+            String entitledDeployment,
+            // The rates quotes are priced from, so the builder's live estimate uses the same ones.
+            PricingRates rateCard,
+            // How many times the trial may be extended, so the page can say when it can't be.
+            int maxTrialExtensions) {
+
+        /** The snapshot of a team with no deal yet. */
+        static SnapshotResponse empty(
+                long minAnnualNetMinor, PricingRates rateCard, int maxTrialExtensions) {
+            return new SnapshotResponse(
+                    null,
+                    null,
+                    null,
+                    0,
+                    null,
+                    null,
+                    0,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    minAnnualNetMinor,
+                    null,
+                    rateCard,
+                    maxTrialExtensions);
+        }
+    }
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
     public record AgreementDocumentResponse(
@@ -247,12 +288,16 @@ public class ProcurementController {
         // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
         boolean leader = userTeamResolver.isLeader(caller.get());
         return ResponseEntity.ok(
-                procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
+                procurement
+                        .getDeal(teamId)
+                        .map(d -> toSnapshot(d, leader))
+                        .orElseGet(this::emptySnapshot));
     }
 
-    private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(
-                    null, null, null, 0, null, null, 0, false, null, null, null, null, null, null);
+    private SnapshotResponse emptySnapshot() {
+        return SnapshotResponse.empty(
+                config.getMinAnnualNetMinor(), pricing.rates(), config.getMaxTrialExtensions());
+    }
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -332,10 +377,33 @@ public class ProcurementController {
         }
     }
 
+    /** Staff grants use the same trial and licence as the customer-facing procurement journey. */
+    public record GrantTrialRequest(long teamId, java.time.LocalDateTime endsAt, String reason) {}
+
+    @PostMapping("/trial/grant")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SnapshotResponse> grantTrial(
+            @RequestBody GrantTrialRequest request, Authentication auth) {
+        if (request.teamId() <= 0) return ResponseEntity.badRequest().build();
+        try {
+            return ResponseEntity.ok(
+                    toSnapshot(
+                            procurement.grantTrial(
+                                    request.teamId(),
+                                    request.endsAt(),
+                                    request.reason(),
+                                    auth.getName()),
+                            true));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
     @PostMapping("/quote")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponse> buildQuote(
-            @RequestBody QuoteRequest request, Authentication auth) {
+    public ResponseEntity<?> buildQuote(@RequestBody QuoteRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
@@ -343,8 +411,14 @@ public class ProcurementController {
                     toQuote(
                             procurement.buildQuote(
                                     teamId, request.toConfig(), request.toDetails())));
+        } catch (BelowMinimumDealException e) {
+            // Named in the body so the builder can say the quote is too small, as opposed to the
+            // deal having moved on (below).
+            log.warn("[procurement] quote below minimum team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", QUOTE_BELOW_MINIMUM));
         } catch (IllegalStateException e) {
-            // Below the minimum deal size, or the deal is already live. A client error, not a
+            // The deal is already past quoting (e.g. accepted elsewhere). A client error, not a
             // fault.
             log.warn("[procurement] quote rejected team={}: {}", teamId, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -475,17 +549,13 @@ public class ProcurementController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Provision on accept: upgrade the team's licence to the committed annual term, valid
-     * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
-     * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
-     * stays in the payment step until the invoice settles. Idempotent.
-     */
+    /** Grants access through the verified invoice due date; the payment step remains visible. */
     @PostMapping("/provision")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
+    public ResponseEntity<Void> provision(
+            @RequestParam("teamId") long teamId, @RequestBody ContractPeriod period) {
         try {
-            procurement.provisionLicense(teamId);
+            procurement.provisionLicense(teamId, period);
             return ResponseEntity.ok().build();
         } catch (IllegalStateException e) {
             log.warn("[procurement] provision rejected team={}: {}", teamId, e.getMessage());
@@ -494,31 +564,30 @@ public class ProcurementController {
     }
 
     /**
-     * Go live once payment settles: advance the deal to active and re-affirm the annual licence.
-     * Called server-side by the {@code invoice.paid} webhook (ROLE_ADMIN via X-API-Key), alongside
-     * {@code /provision}, which runs earlier at accept and deliberately leaves the stage alone.
-     *
-     * <p>Answers 200 when the team has no deal at all, rather than erroring: a committed
-     * subscription can be closed directly in Stripe by sales with no portal deal behind it, and a
-     * non-2xx would have Stripe retry a webhook that can never succeed.
-     *
-     * <p>{@code invoiceId} is what makes this idempotent without swallowing renewals: the same
-     * invoice twice is a redelivery, a different one is next year's payment and has to re-issue the
-     * licence. Optional so an older caller still works, at the cost of that distinction.
+     * Applies a paid service period. A missing or mismatched agreement returns 409 for retry or
+     * operator reconciliation.
      */
     @PostMapping("/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> activate(
             @RequestParam("teamId") long teamId,
-            @RequestParam(value = "invoiceId", required = false) String invoiceId) {
+            @RequestParam(value = "invoiceId") String invoiceId,
+            @RequestBody ContractPeriod period) {
         try {
-            procurement.markLive(teamId, invoiceId);
+            procurement.markLive(teamId, invoiceId, period);
         } catch (IllegalStateException e) {
-            log.info(
-                    "[procurement] activate skipped, no deal for team={}: {}",
-                    teamId,
-                    e.getMessage());
+            log.info("[procurement] activation rejected team={}: {}", teamId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/end-access")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> endAccess(
+            @RequestParam("teamId") long teamId,
+            @RequestParam("subscriptionId") String subscriptionId) {
+        procurement.endAccess(teamId, subscriptionId);
         return ResponseEntity.ok().build();
     }
 
@@ -547,7 +616,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         procurement.resetDeal(teamId);
-        return ResponseEntity.ok(EMPTY_SNAPSHOT);
+        return ResponseEntity.ok(emptySnapshot());
     }
 
     // ---- helpers ------------------------------------------------------------
@@ -590,11 +659,8 @@ public class ProcurementController {
      * endpoints are leader-gated, so they always pass true.
      */
     private SnapshotResponse toSnapshot(ProcurementDeal deal, boolean includeLicenseKey) {
-        QuoteResponse latest =
-                procurement.quotesForDeal(deal.getDealId()).stream()
-                        .findFirst()
-                        .map(this::toQuote)
-                        .orElse(null);
+        List<ProcurementQuote> quotes = procurement.quotesForDeal(deal.getDealId());
+        QuoteResponse latest = quotes.stream().findFirst().map(this::toQuote).orElse(null);
         return new SnapshotResponse(
                 deal.getDealId(),
                 deal.getStage(),
@@ -609,7 +675,11 @@ public class ProcurementController {
                 deal.getBusinessName(),
                 deal.getContactName(),
                 deal.getContactEmail(),
-                latest);
+                latest,
+                config.getMinAnnualNetMinor(),
+                procurement.entitledDeployment(deal, quotes),
+                pricing.rates(),
+                config.getMaxTrialExtensions());
     }
 
     private QuoteResponse toQuote(ProcurementQuote q) {
@@ -634,7 +704,7 @@ public class ProcurementController {
                 q.getStripeInvoicePdf(),
                 new QuoteConfigEcho(
                         q.getVolume(),
-                        0,
+                        q.getSeats() == null ? 0 : q.getSeats(),
                         q.getIntensity(),
                         q.getSizeMult(),
                         q.getDeployment(),

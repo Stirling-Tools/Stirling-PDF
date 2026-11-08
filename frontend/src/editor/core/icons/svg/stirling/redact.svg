@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Blocks are more than twice the stroke height and every row gap is equal, so a hidden run reads as solid mass beside the text, not a heavier line. -->
+  <path d="M2.875 5.5H12.458" />
+  <rect x="15.333" y="3.5" width="6.667" height="4" rx="1" fill="currentColor" stroke="none" />
+  <rect x="2" y="10" width="20" height="4" rx="1" fill="currentColor" stroke="none" />
+  <rect x="2" y="16.5" width="9" height="4" rx="1" fill="currentColor" stroke="none" />
+  <path d="M13.875 18.5H21.125" />
+</svg>

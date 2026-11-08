@@ -2,7 +2,8 @@ version: '3'
 
 output: prefixed
 
-dotenv: ['.env.local', '.env']
+# Loaded for every task. Move any STIRLING_CHECK_JOBS override from root .env.local to .task/.env.local.
+dotenv: ['.task/.env.local', '.task/.env']
 
 vars:
   FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1
@@ -269,6 +270,7 @@ tasks:
     cmds:
       - task: frontend:lint
       - task: engine:lint
+      - task: desktop:lint
       - task: comment-lint
 
   comment-lint:
@@ -331,6 +333,7 @@ tasks:
       - task: backend:check
       - task: frontend:check
       - task: engine:check
+      - task: desktop:check
 
   check:all:
     desc: "Full CI quality gate"
@@ -338,6 +341,7 @@ tasks:
       - task: backend:check
       - task: frontend:check:all
       - task: engine:check
+      - task: desktop:check
 
   # ============================================================
   # Clean

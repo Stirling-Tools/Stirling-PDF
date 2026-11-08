@@ -933,6 +933,10 @@ public class AdminSettingsController {
         String lowerField = fieldName.toLowerCase();
         String lowerPath = fullPath.toLowerCase();
 
+        if ("honorownerpasswords".equals(lowerField)) {
+            return false;
+        }
+
         // Don't mask premium.key specifically
         if ("key".equals(lowerField) && "premium.key".equals(lowerPath)) {
             return false;

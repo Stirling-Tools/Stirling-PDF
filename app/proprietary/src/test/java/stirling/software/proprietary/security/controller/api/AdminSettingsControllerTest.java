@@ -367,6 +367,23 @@ class AdminSettingsControllerTest {
     class GetSettingsSection {
 
         @Test
+        void ownerPasswordPolicyRemainsBooleanIncludingPendingFalse() {
+            putPending("security.honorOwnerPasswords", false);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body =
+                    (Map<String, Object>) controller.getSettingsSection("security", true).getBody();
+            assertThat(body.get("honorOwnerPasswords")).isEqualTo(true);
+            assertThat(((Map<?, ?>) body.get("_pending")).get("honorOwnerPasswords"))
+                    .isEqualTo(false);
+            applicationProperties.getSecurity().setHonorOwnerPasswords(false);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> active =
+                    (Map<String, Object>)
+                            controller.getSettingsSection("security", false).getBody();
+            assertThat(active.get("honorOwnerPasswords")).isEqualTo(false);
+        }
+
+        @Test
         @DisplayName("returns 400 for invalid section name")
         void invalidSection() {
             ResponseEntity<?> response = controller.getSettingsSection("nonsense", true);

@@ -132,6 +132,10 @@ public class StoredFile implements Serializable {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private Folder folder;
 
+    /** When set, the file is temporary: hidden from listings and deleted after this time. */
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

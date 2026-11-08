@@ -4,7 +4,7 @@
 // has only lines). Neither engine ever scans the other's files, so the two can
 // differ in precision without producing contradictory findings on one file.
 //
-// The standard these rules enforce is devGuide/CODE_COMMENTS.md. Changing a rule
+// The standard these rules enforce is docs/developer/CODE_COMMENTS.md. Changing a rule
 // here without changing that document leaves the repo with two answers.
 //
 // Between them the engines read every comment form the repo writes: // and /* */,

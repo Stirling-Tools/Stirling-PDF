@@ -1,6 +1,6 @@
 # Stirling-PDF backend-only image — JAR built with -PbuildWithFrontend=false, UI ships separately.
 
-ARG BASE_VERSION=1.0.6@sha256:678d67fd8c80d625b54e39ced1e712cc0dcfee0601c507ac2a67d0cc8a52a696
+ARG BASE_VERSION=1.1.1@sha256:6b57e965506d61170851d6e85e4ff1a29fbc66db4fc4bf3d78c0e31fd1fb32ae
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application (backend only, no frontend)
@@ -38,7 +38,6 @@ RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 
@@ -50,13 +49,12 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
     gradle clean build \
       -PbuildWithFrontend=false \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
-      -PprototypesMode=${PROTOTYPES_BUILD} \
       -PbundleOnnxRuntime=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
+FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS jar-extract
 WORKDIR /tmp
 COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
@@ -113,6 +111,7 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 # Environment variables
 ENV VERSION_TAG=$VERSION_TAG \
     FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
+    ORT_DISABLE_TELEMETRY=1 \
     STIRLING_AOT_ENABLE="false" \
     _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \

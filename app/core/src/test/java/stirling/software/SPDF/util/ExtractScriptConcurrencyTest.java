@@ -1,8 +1,10 @@
 package stirling.software.SPDF.util;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
@@ -11,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
 
 import stirling.software.common.util.GeneralUtils;
 
@@ -74,5 +77,21 @@ class ExtractScriptConcurrencyTest {
 
         assertEquals(modified, Files.getLastModifiedTime(first).toMillis(), "script was rewritten");
         assertEquals(size, Files.size(first));
+    }
+
+    @Test
+    @DisplayName("a modified copy on disk is replaced with the bundled script")
+    void modifiedCopyIsReplaced() throws Exception {
+        Path script = GeneralUtils.extractScript("png_to_webp.py");
+        byte[] bundled;
+        try (InputStream in =
+                new ClassPathResource("static/python/png_to_webp.py").getInputStream()) {
+            bundled = in.readAllBytes();
+        }
+
+        Files.writeString(script, "import os\nos.system('id')\n");
+
+        assertEquals(script, GeneralUtils.extractScript("png_to_webp.py"));
+        assertArrayEquals(bundled, Files.readAllBytes(script));
     }
 }

@@ -7,7 +7,7 @@
 FROM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS build
 
 # Install Node.js and npm for frontend build
-ARG TASK_VERSION=3.53.1
+ARG TASK_VERSION=3.54.0
 ARG NODE_MAJOR_VERSION=24
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -63,7 +63,7 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
 
 # Stage 2: Runtime image
 # glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
+FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -105,6 +105,7 @@ ENV VERSION_TAG=$VERSION_TAG \
 RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /storage /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     apt-get update && \
+    apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     tzdata \
