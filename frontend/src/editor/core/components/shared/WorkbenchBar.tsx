@@ -190,16 +190,17 @@ export default function WorkbenchBar({
   const { activeFileId, setActiveFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
   // Block print/export while any file the export would touch is under active
-  // policy enforcement: the viewer exports its active file, every other view
-  // exports the selection (or all files when nothing is selected).
+  // policy enforcement: the viewer exports its active file, the page editor every
+  // track, and every other view the selection (or all files when nothing is selected).
+  const allFileIds = activeFiles.filter(isStirlingFile).map((f) => f.fileId);
   const exportTargetIds: string[] =
     currentView === "viewer"
       ? activeFileId
         ? [activeFileId]
         : []
-      : selectedFileIds.length > 0
-        ? selectedFileIds
-        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
+      : currentView === "pageEditor" || selectedFileIds.length === 0
+        ? allFileIds
+        : selectedFileIds;
   const enforcingFileId = exportTargetIds.find((id) =>
     (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
   );
