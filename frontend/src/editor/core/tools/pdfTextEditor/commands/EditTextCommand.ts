@@ -51,9 +51,20 @@ import {
   isScanRun,
   renderScanEdit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  editedTags,
+  readRunTags,
+} from "@editor/tools/pdfTextEditor/commands/runTags";
+import {
+  sliceTags,
+  splitLines,
+  uniformTags,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
 
 interface RevertLine {
   text: string;
+  tags: TextTags;
   x: number;
   y: number;
   fill: { r: number; g: number; b: number; a: number };
@@ -66,7 +77,13 @@ interface RevertLine {
 interface RebuildLine {
   baselineY: number;
   fontSize: number;
-  subRuns: Array<{ ptr: number; text: string; x: number; removed: boolean }>;
+  subRuns: Array<{
+    ptr: number;
+    text: string;
+    tags: TextTags;
+    x: number;
+    removed: boolean;
+  }>;
 }
 
 /** Snapshot of a run's paragraph model for the line-edit revert. */
@@ -122,6 +139,8 @@ export class EditTextCommand implements Command {
   private readonly runId: string;
   private readonly nextText: string;
   private prevText: string | null = null;
+  /** `prevText`'s tags, read from the run's objects on the first apply. */
+  private prevTags: TextTags | null = null;
 
   private overlaid = false;
   private prevObjPtr = 0;
@@ -164,7 +183,13 @@ export class EditTextCommand implements Command {
     /** Fresh objects emitted for new/changed lines (removed on revert). */
     createdPtrs: number[];
     /** Deleted lines, re-emitted as fallback on revert. */
-    removed: Array<{ text: string; x: number; y: number; fontSize: number }>;
+    removed: Array<{
+      text: string;
+      tags: TextTags;
+      x: number;
+      y: number;
+      fontSize: number;
+    }>;
     prev: RunModelSnapshot;
   } | null = null;
 
@@ -198,6 +223,16 @@ export class EditTextCommand implements Command {
       }
     }
 
+    this.prevTags ??= readRunTags(doc, page, run);
+    const nextTags = editedTags(
+      doc,
+      this.pageIndex,
+      this.prevTags,
+      this.prevText,
+      this.nextText,
+      run.tagMarks,
+    );
+
     const alreadyBase14 = /^base14:/.test(run.fontId);
     // Invisible OCR text over a scan: rewrite the whole run visibly so the
     // scanned ink can be covered, never patch its hidden objects in place.
@@ -224,7 +259,13 @@ export class EditTextCommand implements Command {
         this.paragraphPlan = paraPlan;
         this.prevParagraphSlots = paraPlan.prevSlots;
         this.editSnapshot = snapshotRunModel(run);
-        const result = applyParagraphEditPlan(doc, page, run, paraPlan);
+        const result = applyParagraphEditPlan(
+          doc,
+          page,
+          run,
+          paraPlan,
+          nextTags,
+        );
         this.paragraphInsertedPtrs = result.insertedPtrs;
         run.paragraphLineSlots = result.newSlots;
         run.bounds = {
@@ -272,7 +313,15 @@ export class EditTextCommand implements Command {
       if (prevLines.length !== nextLines.length) {
         if (run.paragraphLineSlots.length === prevLines.length) {
           // Slots map 1:1 to lines (a grow-mode paragraph) - diff per line.
-          this.applyParagraphLineEdit(doc, page, run, prevLines, nextLines);
+          this.applyParagraphLineEdit(
+            doc,
+            page,
+            run,
+            prevLines,
+            nextLines,
+            this.prevTags,
+            nextTags,
+          );
           run.text = this.nextText;
           run.dirty = true;
           page.markDirty();
@@ -284,7 +333,7 @@ export class EditTextCommand implements Command {
           /^\r?\n/.test(this.nextText.slice(this.prevText.length))
         ) {
           // Soft-wrapped paragraph: can't diff per line.
-          this.applyParagraphAppend(doc, page, run);
+          this.applyParagraphAppend(doc, page, run, nextTags);
           run.text = this.nextText;
           run.dirty = true;
           page.markDirty();
@@ -312,7 +361,7 @@ export class EditTextCommand implements Command {
         this.prevMergedFromTexts = [...run.mergedFromTexts];
         this.prevMergedFromBounds = run.mergedFromBounds.map((b) => ({ ...b }));
         this.editSnapshot = snapshotRunModel(run);
-        const result = applyPartialEditPlan(doc, page, run, partial);
+        const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
         run.mergedFromTexts = result.newMergedFromTexts;
@@ -423,7 +472,11 @@ export class EditTextCommand implements Command {
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
         : 0;
 
-    this.revertLines = snapshotRevertLines(run, this.prevText ?? "");
+    this.revertLines = snapshotRevertLines(
+      run,
+      this.prevText ?? "",
+      this.prevTags,
+    );
     this.revertRotation = rotationFromMatrix(run.matrix) ?? null;
 
     // Detach any cover rect that a PRIOR overlay edit left on the page.
@@ -501,7 +554,7 @@ export class EditTextCommand implements Command {
       doc,
       page,
       run,
-      lines: outputLines,
+      lines: splitLines(this.nextText, nextTags),
       origins: planLineOrigins(run, outputLines.length, lineHeight),
       originalFontPtr,
       originalFontSubset: run.fontSubset,
@@ -613,6 +666,12 @@ export class EditTextCommand implements Command {
     page.markNeedsGenerate();
   }
 
+  private prevTagsOf(run: TextRun, start: number, end: number): TextTags {
+    return this.prevTags
+      ? sliceTags(this.prevTags, start, end)
+      : uniformTags(run.tagMarks);
+  }
+
   // Exactly one revert strategy member may be set per apply. Enforced only by
   // guard ordering, so fail fast in dev if two paths ran or a member leaked.
   private assertSingleRevertPath(): void {
@@ -671,7 +730,7 @@ export class EditTextCommand implements Command {
             fontSize: rem.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
-            tagMarks: run.tagMarks,
+            tags: rem.tags,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -745,12 +804,18 @@ export class EditTextCommand implements Command {
         lines.push({
           baselineY: prevSlot.baselineY,
           fontSize: prevSlot.fontSize,
-          subRuns: prevSlot.mergedFromPtrs.map((ptr, i) => ({
-            ptr,
-            text: prevSlot.mergedFromTexts[i] ?? "",
-            x: prevSlot.mergedFromBounds[i]?.x ?? prevSlot.matrixE,
-            removed: removed.has(ptr),
-          })),
+          subRuns: prevSlot.mergedFromPtrs.map((ptr, i) => {
+            const text = prevSlot.mergedFromTexts[i] ?? "";
+            const start =
+              prevSlot.startChar + (prevSlot.mergedFromCharStarts[i] ?? 0);
+            return {
+              ptr,
+              text,
+              tags: this.prevTagsOf(run, start, start + text.length),
+              x: prevSlot.mergedFromBounds[i]?.x ?? prevSlot.matrixE,
+              removed: removed.has(ptr),
+            };
+          }),
         });
       }
       this.rebuildAsOverlayModel(doc, page, run, lines, revertFallback);
@@ -806,12 +871,17 @@ export class EditTextCommand implements Command {
           {
             baselineY: run.matrix.f,
             fontSize: run.fontSize,
-            subRuns: this.prevMergedFromPtrs.map((ptr, i) => ({
-              ptr,
-              text: this.prevMergedFromTexts[i] ?? "",
-              x: this.prevMergedFromBounds[i]?.x ?? run.matrix.e,
-              removed: removed.has(ptr),
-            })),
+            subRuns: this.prevMergedFromPtrs.map((ptr, i) => {
+              const text = this.prevMergedFromTexts[i] ?? "";
+              const start = this.editSnapshot?.mergedFromCharStarts[i] ?? 0;
+              return {
+                ptr,
+                text,
+                tags: this.prevTagsOf(run, start, start + text.length),
+                x: this.prevMergedFromBounds[i]?.x ?? run.matrix.e,
+                removed: removed.has(ptr),
+              };
+            }),
           },
         ],
         revertFallback,
@@ -894,7 +964,7 @@ export class EditTextCommand implements Command {
         // omitting this forced every restored object back to fill: undo on
         // invisible OCR text stamped visible glyphs over the scan.
         ...inkFromRun(run),
-        tagMarks: run.tagMarks,
+        tags: line.tags,
       });
       if (ptrs.length === 0) continue;
       lineAnchorPtrs.push(ptrs[0]);
@@ -931,6 +1001,8 @@ export class EditTextCommand implements Command {
     run: TextRun,
     prevLines: string[],
     nextLines: string[],
+    prevTags: TextTags,
+    nextTags: TextTags,
   ): void {
     const m = doc.module;
     const slots = run.paragraphLineSlots;
@@ -1039,7 +1111,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          tagMarks: run.tagMarks,
+          tags: sliceTags(nextTags, cursor, cursor + text.length),
           originalFontPtr: reuseFontPtr,
           originalFontSubset: run.fontSubset,
           charSpacingPt: run.charSpacingPt,
@@ -1076,6 +1148,7 @@ export class EditTextCommand implements Command {
       if (prevLines[j]) {
         this.lineEdit.removed.push({
           text: prevLines[j],
+          tags: sliceTags(prevTags, src.startChar, src.endChar),
           x: src.mergedFromBounds[0]?.x ?? src.matrixE,
           y: src.baselineY,
           fontSize: src.fontSize,
@@ -1127,6 +1200,7 @@ export class EditTextCommand implements Command {
     doc: EditorDocument,
     page: Page,
     run: TextRun,
+    nextTags: TextTags,
   ): void {
     const m = doc.module;
     const slots = run.paragraphLineSlots;
@@ -1180,7 +1254,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          tagMarks: run.tagMarks,
+          tags: sliceTags(nextTags, cursor, cursor + text.length),
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1278,7 +1352,7 @@ export class EditTextCommand implements Command {
             fontSize: line.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
-            tagMarks: run.tagMarks,
+            tags: sr.tags,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -1396,12 +1470,14 @@ function safeGetFont(
 function snapshotRevertLines(
   run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
   prevText: string,
+  prevTags: TextTags,
 ): RevertLine[] {
-  const lines = prevText.split(/\r?\n/);
+  const lines = splitLines(prevText, prevTags);
   const lineHeight =
     run.paragraphLineHeight > 0 ? run.paragraphLineHeight : run.fontSize * 1.2;
-  return lines.map((text, idx) => ({
+  return lines.map(({ text, tags }, idx) => ({
     text,
+    tags,
     x: run.matrix.e,
     y: run.matrix.f - idx * lineHeight,
     fill: { ...run.fill },

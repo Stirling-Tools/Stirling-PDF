@@ -2,6 +2,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { capturePatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitTextLine,
@@ -94,7 +95,7 @@ export function invisibleText(
     originalFontPtr: font.originalFontPtr,
     fallbackFamily: font.family,
     renderMode: INVISIBLE,
-    tagMarks: canvas.tagMarks,
+    tags: uniformTags(canvas.tagMarks),
   });
   opaqueStroke(m, ptrs);
   fitToSpan(m, ptrs, span);

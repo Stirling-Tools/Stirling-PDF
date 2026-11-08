@@ -14,7 +14,7 @@ import type {
   MatchOptions,
   TextMatch,
 } from "@editor/tools/pdfTextEditor/util/textMatching";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import {
   prefitInSlices,
   scanRunsToFit,
@@ -70,11 +70,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   }, []);
 
   // Opening Find is a document-wide request, so pull in every page that lazy
-  // loading has not read yet. Yield first: the read is synchronous, and on a
-  // long document it would otherwise block before the bar has painted.
+  // loading has not read yet.
   useEffect(() => {
-    const id = setTimeout(() => ensureAllPagesRead(store), 0);
-    return () => clearTimeout(id);
+    return readAllPagesInBackground(store);
   }, [store]);
 
   const options: MatchOptions = useMemo(

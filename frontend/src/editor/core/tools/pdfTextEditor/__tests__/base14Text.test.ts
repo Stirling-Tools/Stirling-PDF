@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
@@ -73,7 +74,7 @@ test("a base-14 emit writes WinAnsi punctuation in the base-14 font", async () =
       fill: { r: 0, g: 0, b: 0, a: 255 },
       originalFontPtr: 0,
       fallbackFamily: "Times-Roman",
-      tagMarks: [],
+      tags: uniformTags([]),
     });
     expect(getDroppedBase14Chars()).toEqual([]);
     page.markDirty();

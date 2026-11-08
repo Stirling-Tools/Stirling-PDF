@@ -73,6 +73,7 @@ export class EditorDocument {
   private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -95,6 +96,7 @@ export class EditorDocument {
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
     this.fileDocumentLang = readCatalogLang(module, docPtr);
+    this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -112,9 +114,7 @@ export class EditorDocument {
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
     const fileStructure =
-      keep.length > 0 && module.FPDFCatalog_IsTagged(docPtr)
-        ? await readFileStructure(keep).catch(() => null)
-        : null;
+      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
     return new EditorDocument(module, docPtr, keep, fileStructure);
   }
 
@@ -214,7 +214,7 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([]);
+    if (!page) return new PageStructure([], null, 0);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(page.elements, null, page.slotCount, (key) =>
       this.retaggedAs(key),
@@ -434,13 +434,54 @@ export class EditorDocument {
     }
   }
 
-  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
-  isTagged(): boolean {
+  /**
+   * True when the catalog marks the file as tagged (ISO 32000-1 14.7.1), or
+   * the save can write tags into it, creating its structure tree if need be.
+   * Not a promise that tags can be edited: an encrypted tagged file is true
+   * here and read-only in its PageStructure, which decides that.
+   */
+  treatAsTagged(): boolean {
+    if (this.fileStructure) return true;
     try {
       return this.module.FPDFCatalog_IsTagged(this.docPtr);
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Whether the saved file declares itself tagged (/MarkInfo /Marked). Kept
+   * apart from the tags themselves so unfinished tags do not claim the file is
+   * tagged, which readers that honour the flag would then read by.
+   */
+  markedTagged(): boolean {
+    return this.marked;
+  }
+
+  /** False when the file cannot be parsed or is encrypted: the flag is fixed. */
+  canSetMarkedTagged(): boolean {
+    return this.fileStructure !== null;
+  }
+
+  /** Throws when canSetMarkedTagged() is false. */
+  setMarkedTagged(marked: boolean): void {
+    if (!this.canSetMarkedTagged()) {
+      throw new Error("this file's tagged flag can't be changed");
+    }
+    this.marked = marked;
+  }
+
+  /** True when the save must write /MarkInfo /Marked. */
+  markedTaggedChanged(): boolean {
+    return (
+      this.fileStructure !== null && this.marked !== this.fileStructure.marked
+    );
+  }
+
+  /** True when the saved file will have a structure tree, the file's own or one the save creates. */
+  hasStructureTree(): boolean {
+    if (this.fileStructure?.hasTree) return true;
+    return this.structureEdits().some((edit) => edit.newElement);
   }
 
   private encrypted(): boolean {
@@ -494,9 +535,9 @@ export class EditorDocument {
   }
 
   /**
-   * The page's added elements in reading order, so one placed after another
-   * finds it already in the tree. An element whose content was deleted is
-   * left out: there is nothing left for it to tag.
+   * The page's added elements, each after the added element it reads after,
+   * so it finds that already in the tree. An element whose content was
+   * deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -507,22 +548,28 @@ export class EditorDocument {
       structure.addedElements().map((element) => [element.mcid, element]),
     );
     if (!page || added.size === 0) return [];
-    return taggedContentInReadingOrder(page).flatMap((content) => {
-      const element = added.get(content.mcid);
-      if (!element) return [];
-      added.delete(content.mcid);
-      const after = precedingTaggedMcid(page, content);
-      return [
-        {
-          pageIndex,
-          mcid: element.mcid,
-          alt: element.alt,
-          lang: element.lang,
-          decorative: false,
-          newElement: { type: element.type, after },
-        },
-      ];
-    });
+    const content = taggedContentInReadingOrder(page);
+    const carried = new Set(content.map(({ mcid }) => mcid));
+    const edits = new Map<number, StructureEdit>();
+    for (const item of content) {
+      const element = added.get(item.mcid);
+      if (!element) continue;
+      added.delete(item.mcid);
+      const { follows } = element;
+      const after =
+        follows === null || (follows !== undefined && carried.has(follows))
+          ? follows
+          : precedingTaggedMcid(page, item);
+      edits.set(element.mcid, {
+        pageIndex,
+        mcid: element.mcid,
+        alt: element.alt,
+        lang: element.lang,
+        decorative: false,
+        newElement: { type: element.type, after },
+      });
+    }
+    return anchorsFirst(edits);
   }
 
   /**
@@ -753,4 +800,25 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * `edits`, keyed by MCID, reordered so each comes after the edit adding the
+ * element it is placed after. A cycle is broken where it closes, that element
+ * placing as though its anchor were not added.
+ */
+function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
+  const ordered: StructureEdit[] = [];
+  for (const start of [...edits.keys()]) {
+    const chain: StructureEdit[] = [];
+    let mcid: number | null = start;
+    while (mcid !== null && edits.has(mcid)) {
+      const edit: StructureEdit = edits.get(mcid)!;
+      edits.delete(mcid);
+      chain.push(edit);
+      mcid = edit.newElement!.after;
+    }
+    ordered.push(...chain.reverse());
+  }
+  return ordered;
 }

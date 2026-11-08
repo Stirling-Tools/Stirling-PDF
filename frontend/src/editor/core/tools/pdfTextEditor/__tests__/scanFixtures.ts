@@ -34,6 +34,7 @@ import {
   buildClassicPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 
 const BLACK = { r: 0, g: 0, b: 0, a: 255 };
 export const PAGE_W = 560;
@@ -143,7 +144,7 @@ function typeset(
         fill: BLACK,
         originalFontPtr: 0,
         fallbackFamily: line.family,
-        tagMarks: [],
+        tags: uniformTags([]),
       });
       const span = measureObjSpanPt(doc.module, ptrs);
       if (!span) throw new Error(`could not set "${word}" in ${line.family}`);
@@ -286,7 +287,7 @@ export async function buildScan(
         originalFontPtr: 0,
         fallbackFamily: box.ocrFamily,
         renderMode: 3,
-        tagMarks: [],
+        tags: uniformTags([]),
       });
       opaqueStroke(m, ptrs);
       const span = measureObjSpanPt(m, ptrs);

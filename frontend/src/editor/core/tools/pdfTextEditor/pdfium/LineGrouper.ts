@@ -36,8 +36,22 @@ const MAX_SPACE_UNIT_RATIO = 1;
 const MULTI_SPACE_UNITS = 1.7;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
-  const fontSize = Math.max(prev.fontSize, 4);
-  return (cur.bounds.x - (prev.bounds.x + prev.bounds.width)) / fontSize;
+  return gapRatio(
+    cur.bounds.x - (prev.bounds.x + prev.bounds.width),
+    prev.fontSize,
+  );
+}
+
+function gapRatio(gapPt: number, fontSize: number): number {
+  return gapPt / Math.max(fontSize, 4);
+}
+
+/**
+ * Whether a line read puts a space between two objects on a line `gapPt`
+ * apart, the gap between their bounds, the first drawn at `fontSize` points.
+ */
+export function readsWordGap(gapPt: number, fontSize: number): boolean {
+  return gapRatio(gapPt, fontSize) > WORD_GAP_MIN_RATIO;
 }
 
 function lineSpaceUnitRatio(members: TextRun[]): number {

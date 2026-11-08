@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@editor/tools/pdfTextEditor/hooks/useDocumentLoader", () => ({
-  ensureAllPagesRead: vi.fn(),
+  readAllPagesInBackground: vi.fn(() => () => {}),
 }));
 vi.mock(
   "@editor/tools/pdfTextEditor/commands/scanTextEdit",

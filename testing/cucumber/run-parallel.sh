@@ -95,8 +95,9 @@ start_shard() {
 }
 
 # Global-state assertions cannot be isolated from other shards; the regular Docker suite still
-# exercises them serially.
-declare -a BEHAVE_EXTRA=(--tags="~@serial" "$@")
+# exercises them serially. The end-of-run async job sweep is global too: every shard shares one
+# API key, so a shard that finishes early would delete jobs another shard is still downloading.
+declare -a BEHAVE_EXTRA=(--tags="~@serial" -D sweep_async_jobs=false "$@")
 
 for ((shard = 0; shard < SHARDS; shard++)); do
     assigned=()

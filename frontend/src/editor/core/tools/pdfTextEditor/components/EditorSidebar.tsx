@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { useBulkTagging } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useHeadingOutline } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { useDocumentLanguage } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
@@ -10,7 +11,8 @@ import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspec
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   ScanHint,
@@ -93,7 +95,7 @@ export function EditorSidebar({
 
   const editorDocument = store.document;
   const reviewingAccessibility = useMemo(
-    () => ACCESSIBILITY_EDITING && !!editorDocument?.isTagged(),
+    () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
     [editorDocument],
   );
   const imageSelected = controller.imageAccessibility !== null;
@@ -103,10 +105,19 @@ export function EditorSidebar({
     if (!reviewingAccessibility || (tab !== "document" && !imageSelected)) {
       return;
     }
-    const id = window.setTimeout(() => ensureAllPagesRead(store), 0);
-    return () => window.clearTimeout(id);
+    return readAllPagesInBackground(store);
   }, [reviewingAccessibility, tab, imageSelected, store]);
+  const setMarkedTagged = useCallback(
+    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
+    [store],
+  );
   const headings = useHeadingOutline(
+    store,
+    state,
+    reviewingAccessibility && tab === "document",
+  );
+
+  const bulkTagging = useBulkTagging(
     store,
     state,
     reviewingAccessibility && tab === "document",
@@ -195,6 +206,15 @@ export function EditorSidebar({
                 reviewingAccessibility ? controller.imageReview : null
               }
               onSelectNextImageToReview={selectNextImageToReview}
+              untaggedPages={bulkTagging.untaggedPages}
+              onTagUntaggedContent={bulkTagging.tagAll}
+              markedTagged={
+                editorDocument?.canSetMarkedTagged()
+                  ? editorDocument.markedTagged()
+                  : null
+              }
+              onSetMarkedTagged={setMarkedTagged}
+              hasTags={!!editorDocument?.hasStructureTree()}
               headingOutline={headings.outline}
               onSelectHeading={headings.selectHeading}
               documentLanguage={documentLanguage}
