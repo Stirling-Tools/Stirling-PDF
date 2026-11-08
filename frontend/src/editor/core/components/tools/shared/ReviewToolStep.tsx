@@ -238,6 +238,10 @@ function ReviewStepContent<TParams = unknown>({
               <Button
                 data-testid="download-result-menu"
                 px="sm"
+                style={{
+                  borderInlineStart:
+                    "1px solid color-mix(in srgb, currentColor 35%, transparent)",
+                }}
                 aria-label={t("saveFile.menu.more", "More save options")}
               >
                 <Icon name="chevron-down" />
