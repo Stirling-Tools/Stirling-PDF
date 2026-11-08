@@ -109,6 +109,7 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
+import stirling.software.common.util.misc.CmykGhostscriptFallback;
 import stirling.software.common.util.misc.CmykProfileResolver;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
@@ -792,6 +793,18 @@ public class ConvertPDFToPDFA {
                 inputTemp = tempFileManager.createManagedTempFile(".pdf");
                 outputTemp = tempFileManager.createManagedTempFile(".pdf");
                 inputFile.transferTo(inputTemp.getFile());
+                byte[] inputBytes = Files.readAllBytes(inputTemp.getFile().toPath());
+                if (CmykGhostscriptFallback.needsGhostscript(inputBytes)) {
+                    try {
+                        Files.write(
+                                inputTemp.getFile().toPath(),
+                                CmykGhostscriptFallback.convert(inputBytes));
+                    } catch (IOException e) {
+                        log.warn(
+                                "Ghostscript CMYK shading fallback failed; continuing with JPDFium",
+                                e);
+                    }
+                }
                 embedPdfxFonts(inputTemp.getFile().toPath());
                 try (PDDocument pageCounter = Loader.loadPDF(inputTemp.getFile())) {
                     requireSanitizablePageCount(pageCounter, maxConversionPages);

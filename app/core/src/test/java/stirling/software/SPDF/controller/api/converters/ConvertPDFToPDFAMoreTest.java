@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -19,17 +20,23 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.function.PDFunctionType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -168,6 +175,54 @@ class ConvertPDFToPDFAMoreTest {
 
     private MockMultipartFile pdfFile() throws IOException {
         return new MockMultipartFile("fileInput", "input.pdf", "application/pdf", simplePdfBytes());
+    }
+
+    private MockMultipartFile type3ShadingPdf() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(new PDRectangle(200, 200));
+            document.addPage(page);
+            PDShadingType3 shading = new PDShadingType3(new COSDictionary());
+            shading.setShadingType(3);
+            shading.setColorSpace(PDDeviceRGB.INSTANCE);
+            COSArray coords = new COSArray();
+            coords.add(COSFloat.get("100"));
+            coords.add(COSFloat.get("100"));
+            coords.add(COSFloat.get("0"));
+            coords.add(COSFloat.get("100"));
+            coords.add(COSFloat.get("100"));
+            coords.add(COSFloat.get("100"));
+            shading.setCoords(coords);
+            COSDictionary function = new COSDictionary();
+            function.setInt(COSName.getPDFName("FunctionType"), 2);
+            function.setInt(COSName.getPDFName("N"), 1);
+            COSArray c0 = new COSArray();
+            c0.add(COSFloat.get("1"));
+            c0.add(COSFloat.get("0"));
+            c0.add(COSFloat.get("0"));
+            COSArray c1 = new COSArray();
+            c1.add(COSFloat.get("0"));
+            c1.add(COSFloat.get("0"));
+            c1.add(COSFloat.get("1"));
+            function.setItem(COSName.getPDFName("C0"), c0);
+            function.setItem(COSName.getPDFName("C1"), c1);
+            shading.setFunction(new PDFunctionType2(function));
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.shadingFill(shading);
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "shading.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
+    private static boolean ghostscriptAvailable() {
+        try {
+            return new ProcessBuilder("gs", "--version").start().waitFor() == 0;
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     private MockMultipartFile customFontPdfFile() throws IOException {
@@ -536,6 +591,32 @@ class ConvertPDFToPDFAMoreTest {
             try (PDDocument document = new PDDocument()) {
                 assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
                 verify(resources, never()).put(any(COSName.class), any(PDFont.class));
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X-1a uses the Ghostscript fallback for non-Type-2 shading")
+        void pdfX1aConvertsNonType2Shading() throws Exception {
+            assumeTrue(ghostscriptAvailable(), "Ghostscript is not installed");
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(type3ShadingPdf());
+            request.setOutputFormat("pdfx-1a");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
+                }
             }
         }
 
