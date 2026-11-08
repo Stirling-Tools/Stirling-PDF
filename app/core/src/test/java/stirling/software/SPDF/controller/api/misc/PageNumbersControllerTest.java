@@ -527,8 +527,6 @@ class PageNumbersControllerTest {
         }
     }
 
-    // ---- Roman numeral formats --------------------------------------------
-
     @Nested
     @DisplayName("Roman numerals")
     class RomanNumerals {
@@ -608,8 +606,6 @@ class PageNumbersControllerTest {
             assertThat(pageTexts(drainBody(response))).containsExactly("1", "2");
         }
     }
-
-    // ---- alphabetic formats ----------------------------------------------
 
     @Nested
     @DisplayName("Alphabetic")
