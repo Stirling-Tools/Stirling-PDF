@@ -45,7 +45,9 @@ vi.mock("@editor/services/backendReadinessGuard", () => ({
 vi.mock("@editor/hooks/useCreditCheck", () => ({
   useCreditCheck: () => ({ checkCredits: vi.fn().mockResolvedValue(null) }),
 }));
-vi.mock("@editor/hooks/useWillUseCloud", () => ({ useWillUseCloud: () => false }));
+vi.mock("@editor/hooks/useWillUseCloud", () => ({
+  useWillUseCloud: () => false,
+}));
 vi.mock("@editor/services/desktopNotificationService", () => ({
   notifyPdfProcessingComplete: vi.fn(),
 }));
