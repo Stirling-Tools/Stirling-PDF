@@ -578,6 +578,20 @@ class PageNumbersControllerTest {
         }
 
         @Test
+        @DisplayName("Oversized Roman labels are rejected through the request path")
+        void oversizedRomanLabelRejected() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-too-long.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-uppercase");
+            request.setStartingNumber(4_096_999);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            assertThatThrownBy(() -> controller.addPageNumbers(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("maximum length");
+        }
+
+        @Test
         @DisplayName("Zero-padding is ignored for Roman numerals")
         void zeroPadIgnoredForRoman() throws Exception {
             MockMultipartFile file = createPdf(2, "roman-pad.pdf");

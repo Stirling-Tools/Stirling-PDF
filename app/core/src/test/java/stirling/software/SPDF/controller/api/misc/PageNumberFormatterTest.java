@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,9 +44,23 @@ class PageNumberFormatterTest {
     }
 
     @Test
-    @DisplayName("toRoman has no upper bound")
-    void toRomanHasNoUpperBound() {
+    @DisplayName("toRoman supports large values within the label length limit")
+    void toRomanSupportsLargeValues() {
         assertThat(PageNumberFormatter.toRoman(1_000_000)).isEqualTo("M".repeat(1000));
+    }
+
+    @Test
+    @DisplayName("toRoman accepts a label exactly at the length limit")
+    void toRomanAcceptsLabelAtLimit() {
+        assertThat(PageNumberFormatter.toRoman(4_096_000)).hasSize(4096);
+    }
+
+    @Test
+    @DisplayName("toRoman rejects a label above the length limit")
+    void toRomanRejectsOversizedLabel() {
+        assertThatThrownBy(() -> PageNumberFormatter.toRoman(4_096_999))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("maximum length");
     }
 
     @ParameterizedTest

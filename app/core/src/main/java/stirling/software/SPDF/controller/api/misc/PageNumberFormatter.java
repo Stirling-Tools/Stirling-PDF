@@ -4,6 +4,8 @@ import java.util.Locale;
 
 final class PageNumberFormatter {
 
+    private static final int MAX_FORMATTED_LABEL_LENGTH = 4096;
+
     private PageNumberFormatter() {}
 
     static String format(int value, String numberFormat) {
@@ -37,8 +39,20 @@ final class PageNumberFormatter {
             return Integer.toString(value);
         }
 
-        int[] values = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
-        String[] symbols = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+        int thousands = value / 1000;
+        String remainder = toRomanBelowThousand(value % 1000);
+        if (thousands + remainder.length() > MAX_FORMATTED_LABEL_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Roman numeral label exceeds the maximum length of "
+                            + MAX_FORMATTED_LABEL_LENGTH
+                            + " characters");
+        }
+        return "M".repeat(thousands) + remainder;
+    }
+
+    private static String toRomanBelowThousand(int value) {
+        int[] values = {900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] symbols = {"CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
         StringBuilder roman = new StringBuilder();
         for (int i = 0; i < values.length; i++) {
             while (value >= values[i]) {
