@@ -284,7 +284,7 @@ public class OfficeDocumentSanitizer {
      * Drops external DOCTYPE IDs, preserving the subset; returns null if no rewrite is possible.
      */
     static byte[] stripExternalDoctypeIdentifier(byte[] xmlBytes) {
-        String s = new String(xmlBytes, StandardCharsets.UTF_8);
+        String s = new String(xmlBytes, StandardCharsets.ISO_8859_1);
         int start = s.indexOf("<!DOCTYPE");
         if (start < 0) {
             return null;
@@ -336,7 +336,7 @@ public class OfficeDocumentSanitizer {
                                 + subset
                                 + ">"
                                 + s.substring(i + 1))
-                        .getBytes(StandardCharsets.UTF_8);
+                        .getBytes(StandardCharsets.ISO_8859_1);
             }
         }
         return null;

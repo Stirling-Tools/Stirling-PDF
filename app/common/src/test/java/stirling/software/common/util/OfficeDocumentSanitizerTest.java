@@ -1016,6 +1016,23 @@ class OfficeDocumentSanitizerTest {
     }
 
     @Test
+    void sanitize_doctypeRewriteKeepsLatin1TextIntact() throws IOException {
+        String svg =
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+                        + "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\""
+                        + " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
+                        + "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>Caf\u00e9 \u00fcber</text></svg>";
+
+        String out =
+                new String(
+                        sanitizer.sanitize(svg.getBytes(StandardCharsets.ISO_8859_1)),
+                        StandardCharsets.ISO_8859_1);
+
+        assertTrue(out.contains("Caf\u00e9 \u00fcber"), "non-ASCII text must survive the rewrite");
+        assertFalse(out.contains("svg11.dtd"));
+    }
+
+    @Test
     void sanitize_doctypeTerminatorInsideALiteralDoesNotTruncateTheDeclaration()
             throws IOException {
         String svg =
