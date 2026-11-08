@@ -323,8 +323,16 @@ public class ExceptionUtils {
      * @return PdfEncryptionException with user-friendly message
      */
     public static PdfEncryptionException createPdfEncryptionException(Exception cause) {
+        return createPdfEncryptionException(null, cause);
+    }
+
+    public static PdfEncryptionException createPdfEncryptionException(
+            String context, Exception cause) {
         requireNonNull(cause, "cause");
         String message = getMessage(ErrorCode.PDF_ENCRYPTION);
+        if (context != null && !context.isEmpty()) {
+            message = message + " (" + context + ")";
+        }
         return new PdfEncryptionException(message, cause, ErrorCode.PDF_ENCRYPTION.getCode());
     }
 

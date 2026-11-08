@@ -93,6 +93,39 @@ class MergeControllerErrorTest {
         }
     }
 
+    @Test
+    void encryptionFailureNamesItsInputAfterThePasswordCheck() {
+        try (MockedStatic<PdfDocument> pdf = mockStatic(PdfDocument.class)) {
+            pdf.when(() -> PdfDocument.open(any(Path.class)))
+                    .thenReturn(mock(PdfDocument.class))
+                    .thenThrow(new JPDFiumException("Failed to decrypt"));
+            ExceptionUtils.PdfEncryptionException failure =
+                    assertThrows(
+                            ExceptionUtils.PdfEncryptionException.class,
+                            () ->
+                                    controller.mergePdfs(
+                                            request("private-ok.pdf", "private-odd.pdf"), null));
+            assertThat(failure.getMessage()).contains("file 2").doesNotContain("file 1", "private");
+        }
+    }
+
+    @Test
+    void passwordFailureWinsOverALaterEncryptionFailure() {
+        try (MockedStatic<PdfDocument> pdf = mockStatic(PdfDocument.class)) {
+            pdf.when(() -> PdfDocument.open(any(Path.class)))
+                    .thenThrow(new JPDFiumException("Failed to decrypt"))
+                    .thenThrow(new PdfPasswordException("password"));
+            ExceptionUtils.PdfPasswordException failure =
+                    assertThrows(
+                            ExceptionUtils.PdfPasswordException.class,
+                            () ->
+                                    controller.mergePdfs(
+                                            request("private-odd.pdf", "private-locked.pdf"),
+                                            null));
+            assertThat(failure.getMessage()).contains("file 2").doesNotContain("file 1");
+        }
+    }
+
     private MergePdfsRequest request(String... names) {
         MultipartFile[] files = new MultipartFile[names.length];
         for (int index = 0; index < names.length; index++) {

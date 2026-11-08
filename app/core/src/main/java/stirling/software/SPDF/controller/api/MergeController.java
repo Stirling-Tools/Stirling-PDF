@@ -278,8 +278,10 @@ public class MergeController {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
             List<String> lockedNames = new ArrayList<>();
+            List<String> encryptedNames = new ArrayList<>();
             List<String> unreadableNames = new ArrayList<>();
             Exception lockedCause = null;
+            Exception encryptedCause = null;
             Exception unreadableCause = null;
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
@@ -308,7 +310,10 @@ public class MergeController {
                             lockedCause = e;
                         }
                     } else if (ExceptionUtils.isEncryptionError(e)) {
-                        throw ExceptionUtils.createPdfEncryptionException(e);
+                        encryptedNames.add("file " + inputPositions.get(multipartFile));
+                        if (encryptedCause == null) {
+                            encryptedCause = e;
+                        }
                     } else if (PdfErrorUtils.isCorruptedPdfError(e)) {
                         unreadableNames.add("file " + inputPositions.get(multipartFile));
                         if (unreadableCause == null) {
@@ -324,6 +329,10 @@ public class MergeController {
             if (lockedCause != null) {
                 throw ExceptionUtils.createPdfPasswordException(
                         String.join(", ", lockedNames), lockedCause);
+            }
+            if (encryptedCause != null) {
+                throw ExceptionUtils.createPdfEncryptionException(
+                        String.join(", ", encryptedNames), encryptedCause);
             }
             if (unreadableCause != null) {
                 throw ExceptionUtils.createPdfCorruptedException(
