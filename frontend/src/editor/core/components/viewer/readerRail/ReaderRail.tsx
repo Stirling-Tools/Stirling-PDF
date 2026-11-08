@@ -16,6 +16,7 @@ import { useFilesModalContext } from "@editor/contexts/FilesModalContext";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { isStirlingFile } from "@editor/types/fileContext";
 import "@editor/components/viewer/readerRail/ReaderRail.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The quick-nav rail's icon size, so the two rails read as one family. */
 const SIZE = "1.125rem";
@@ -184,7 +185,10 @@ export function ReaderRail() {
                 data-current={doc.id === activeFileId || undefined}
                 onClick={() => setActiveFileId(doc.id)}
               >
-                <span className="reader-rail__doc-name" title={doc.name}>
+                <span
+                  className={`reader-rail__doc-name ${privateContentClassName}`}
+                  title={doc.name}
+                >
                   {truncateCenter(doc.name, 48)}
                 </span>
               </Menu.Item>

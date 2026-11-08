@@ -95,6 +95,12 @@
 .portal-qb__field[data-invalid] select {
   border-color: var(--c-danger);
 }
+.portal-qb__field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-red-dark);
+}
 .portal-qb__error {
   margin: 10px 0 0;
   font-size: 12px;
@@ -193,7 +199,7 @@
 }
 .portal-qb__addon {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 11px;
   padding: 11px 13px;
   border-radius: 9px;
@@ -211,7 +217,7 @@
   height: 18px;
   flex-shrink: 0;
   border-radius: 5px;
-  border: 1px solid var(--c-border);
+  border: 1.5px solid var(--c-border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,9 +268,41 @@
   border-top: 1px solid var(--c-border-subtle);
   flex-wrap: wrap;
 }
+.portal-qb__running-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
 .portal-qb__running {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+.portal-qb__running-total {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+}
+.portal-qb__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-qb__minimum {
   font-size: 11.5px;
   color: var(--c-text-subtle);
+}
+.portal-qb__minimum-callout {
+  margin-top: 1rem;
+}
+.portal-qb__minimum-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .portal-qb__foot-btns {
   display: flex;
@@ -277,6 +315,10 @@
   background: var(--c-surface-sunken);
   padding: 14px var(--flowmodal-inset);
   margin: 0 calc(-1 * var(--flowmodal-inset));
+}
+/* Runs straight into the footer: a strip of panel between the two read as a stray divider. */
+.portal-qb__body:has(> .portal-qb__papertray:last-child) + .portal-qb__foot {
+  margin-top: 0;
 }
 .portal-qb__paper {
   overflow: hidden;
@@ -336,6 +378,12 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--c-text);
+}
+.portal-qb__line-note {
+  margin-right: 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
 }
 .portal-qb__lines li[data-kind="DISCOUNT"] {
   color: var(--color-green-dark);
@@ -466,32 +514,6 @@
   gap: 0.75rem;
   flex-wrap: wrap;
 }
-.portal-hero__icons {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.portal-hero__iconbtn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  color: var(--c-text-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-.portal-hero__iconbtn:hover {
-  background: var(--c-hover);
-  border-color: var(--c-border-strong);
-  color: var(--c-text);
-}
 /* Terminal state: the deal is done, so the row reports rather than asks. */
 .portal-hero__live {
   display: flex;
@@ -576,22 +598,6 @@
   color: var(--c-text-subtle, var(--c-text-muted));
 }
 
-/* Hero next-step action row (primary CTA + optional extend-trial). */
-/* Hero quick-action chips (the trial countdown pill under the stage sentence). */
-.portal-hero__chip--action {
-  border: 1px solid var(--c-border);
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    border-color 0.12s,
-    transform 0.12s;
-}
-.portal-hero__chip--action:hover {
-  background: var(--c-surface);
-  border-color: var(--c-border-strong);
-  transform: translateY(-1px);
-}
-
 /* ── Side dialogs (Key documents / Schedule a call / Trial) ───────────────── */
 /* Chrome and width come from the shared Modal via FlowModal; only type and content live here. */
 .portal-sidemodal__title {
@@ -648,18 +654,6 @@
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
-/* The terminal steps (payment, live): a stacked eyebrow/title/description with the flow's own footer
-   bar beneath. No card of their own — the dialog is already the surface. */
-.portal-procstage {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-/* Nothing to report on the left of these, so the actions take the whole bar. */
-.portal-procstage__foot {
-  justify-content: flex-end;
-}
-
 /* The two document actions read as a pair, close together and set apart from the close beside them. */
 .portal-agreement__actions {
   display: flex;
@@ -685,21 +679,18 @@
    column taller than the fields and drag the button back up off the row. */
 .portal-agreement__signrow {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0.9rem;
 }
-/* Consent on the left, the gate's state on the right so it lands under the button it explains. */
+/* Level with the inputs rather than the bottom of the row, which field errors would push down: the
+   fields' top margin and label height, plus the difference between input and button heights. */
+.portal-agreement__signrow > .sui-btn {
+  margin-top: calc(0.75rem + 1.5375rem + 0.6406rem);
+}
 .portal-agreement__signfoot {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.portal-agreement__gate {
-  flex: 0 0 auto;
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-  white-space: nowrap;
 }
 .portal-agreement__signrow .portal-agreement__signfields {
   flex: 1;
@@ -718,6 +709,12 @@
   line-height: 1.45;
   color: var(--c-text-subtle);
   cursor: pointer;
+}
+.portal-qb__eula[data-invalid] {
+  border-color: var(--c-danger);
+}
+.portal-agreement__accept[data-invalid] {
+  color: var(--color-red-dark);
 }
 .portal-agreement__accept input {
   margin: 0.1rem 0 0;
@@ -741,40 +738,13 @@
    window: flush to the footer while there is more to read, and revealing the tray's bottom padding
    only at the end. Scrolling the paper instead left a permanent grey band under it, which read as a
    box with contents rather than a document. */
-/* `scroll`, not `auto`, and an explicitly styled bar: signing is gated on reaching the end of the
-   document, so the buyer has to be able to see there is more of it and how far through they are.
-   Overlay scrollbars fade out when idle, which hid both. Styling the bar also opts Chromium out of
-   overlay behaviour, so it stays put. Matches the treatment on the files page. */
 .portal-agreement__tray {
   background: var(--c-surface-sunken);
   padding: 14px var(--flowmodal-inset);
   margin: 0 calc(-1 * var(--flowmodal-inset));
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: var(--c-text-subtle) var(--c-border-subtle);
-}
-.portal-agreement__tray::-webkit-scrollbar {
-  width: 0.625rem;
-}
-.portal-agreement__tray::-webkit-scrollbar-track {
-  background: var(--c-border-subtle);
-  border-radius: 999px;
-}
-.portal-agreement__tray::-webkit-scrollbar-thumb {
-  background: var(--c-text-subtle);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-.portal-agreement__tray::-webkit-scrollbar-thumb:hover {
-  background: var(--c-text-muted);
-  background-clip: content-box;
 }
 .portal-agreement__doc {
-  /* A floor so a short document still reads as a page; no ceiling, so a long one runs on and the tray
-     does the scrolling. */
+  /* A floor so a short document still reads as a page; no ceiling, so a long one runs on. */
   min-height: 16rem;
   padding: 1.35rem 1.6rem;
   /* No serif token exists in the theme — the serif is specific to rendering legal terms as paper. */
@@ -939,6 +909,25 @@
   color: var(--c-text-subtle);
   white-space: nowrap;
 }
+/* Paperwork the deal has yet to produce: listed so buyers know it's coming, set back from what's ready. */
+.portal-docmodal__group {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--c-border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+.portal-docmodal--later .portal-docmodal__row {
+  padding: 0.5rem 0;
+  border-bottom: none;
+}
+.portal-docmodal--later .portal-docmodal__name {
+  font-weight: 500;
+  color: var(--c-text-muted);
+}
 
 /* Title row: the step badge rides beside the heading, not on a line of its own. */
 .portal-sidemodal__title-row {
@@ -952,4 +941,24 @@
 .portal-sidemodal__foot-hint {
   font-size: 0.75rem;
   color: var(--c-text-subtle);
+}
+
+.portal-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-setup__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-setup__foot .portal-sidemodal__foot-hint {
+  margin-right: auto;
 }

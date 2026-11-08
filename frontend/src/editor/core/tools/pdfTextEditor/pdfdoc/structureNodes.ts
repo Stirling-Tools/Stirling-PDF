@@ -8,11 +8,16 @@ import {
   type StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 
 export interface ElementNode extends StructureRole {
   block: StructureBlock;
   /** The parent element's object number; null at the top of the tree. */
   parent: number | null;
+  /** Its own /Lang; null when it has none, or an empty one, which means unknown. */
+  lang: string | null;
+  /** The nearest ancestor's /Lang: what its content is read in without its own. */
+  inheritedLang: string | null;
 }
 
 /**
@@ -67,6 +72,8 @@ export class StructureNodes {
       ...role,
       block: containingBlock({ key: String(num), ...role }, parent),
       parent: parent ? parentNum : null,
+      lang: this.ownLang(body),
+      inheritedLang: parent ? (parent.lang ?? parent.inheritedLang) : null,
     };
     this.nodes.set(num, node);
     return node;
@@ -91,6 +98,16 @@ export class StructureNodes {
       if (parent === null || !type || !PARTS_ONLY.has(type)) return sibling;
       sibling = parent;
     }
+  }
+
+  /** Every element read so far, by object number. */
+  *readNodes(): Generator<[number, ElementNode]> {
+    for (const [num, node] of this.nodes) if (node) yield [num, node];
+  }
+
+  private ownLang(body: string): string | null {
+    const value = this.pdf.resolve(body, "Lang");
+    return (value === null ? null : decodeTextString(value.trim())) || null;
   }
 
   /** Follow /RoleMap (ISO 32000-1 14.8.4) until a type it does not remap. */

@@ -1,0 +1,803 @@
+.ent {
+  /* Narrow pages stack; measured against the page, not the viewport, so it holds in previews too. */
+  container-type: inline-size;
+  /* The app shell clips overflow to the viewport, so the page scrolls itself. */
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+/* One content width for every row, gutters outside it, so header, hero, body and footer share edges. */
+.ent__wrap {
+  width: min(72rem, 100% - 4rem);
+  margin-inline: auto;
+}
+
+.ent__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+}
+
+.ent__header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4rem;
+}
+
+.ent__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ent__home {
+  display: inline-flex;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.ent__home:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 4px;
+}
+
+/* Text-aligned with the stage label below it, so the padding sits outside the column. */
+.ent__back {
+  margin: 0 0 1rem -12px;
+}
+
+.ent__brand-tag {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--c-border);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.ent__header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* A borderless button's padding would otherwise hold its label in from the content edge. */
+.ent__header-end > .sui-btn--tertiary:last-child {
+  margin-right: -0.75rem;
+}
+
+.ent__company {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-right: 1px solid var(--c-border);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+}
+
+button.ent__company {
+  border-radius: var(--radius-md);
+  border-right: 0;
+  cursor: pointer;
+}
+
+button.ent__company:hover,
+button.ent__company[aria-expanded="true"] {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.ent__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ent__notices:empty {
+  display: none;
+}
+
+.ent__notices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+}
+
+.ent__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-block: 3rem;
+}
+
+.ent__footer {
+  border-top: 1px solid var(--c-border-subtle);
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+.ent__footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding-block: 1.5rem;
+}
+
+.ent__eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-accent-text);
+}
+
+.ent__h1 {
+  margin: 0.5rem 0 0;
+  font-size: 2.5rem;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.ent__h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.ent__lede {
+  max-width: 36rem;
+  margin: 0.75rem 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--c-text-muted);
+}
+
+.ent__text {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+
+.ent__hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+}
+
+.ent__note {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
+}
+
+.ent__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ent__landing {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 3rem;
+  align-items: start;
+  padding-block: 3.5rem 4rem;
+}
+
+.ent__intro {
+  padding-top: 1rem;
+}
+
+.ent__ticks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.ent__ticks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.ent__ticks li > :first-child {
+  flex: none;
+  margin-top: 0.1875rem;
+  color: var(--c-success);
+}
+
+/* The steps were laid out for a dialog body; this card stands in for it, publishing the same inset
+   so their full-bleed trays and footer reach its edges. */
+.ent__flow .portal-procflow {
+  --flowmodal-inset: 1.75rem;
+  --flowmodal-body-end: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.5rem var(--flowmodal-inset) var(--flowmodal-body-end);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-bg-raised);
+}
+
+/* The header and this band read as one block; the deal's detail sits below on the page colour. */
+.ent__band {
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+}
+
+/* Columns stretch so the call box and the trial panel finish on one line. */
+.ent__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  column-gap: 4rem;
+  align-items: stretch;
+  padding-block: 3.5rem 0;
+}
+
+.ent__hero:has(.ent__back) {
+  padding-top: 1.25rem;
+}
+
+.ent__hero-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.ent__hero-head {
+  padding-bottom: 2rem;
+}
+
+.ent__actions:empty {
+  display: none;
+}
+
+.ent__live {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  /* The width of the call box below it, so the two stack flush. */
+  max-width: 44rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--c-success-subtle);
+}
+
+.ent__live > :first-child {
+  flex: none;
+  color: var(--c-success);
+}
+
+/* Under the stage's buttons, on a line of its own. */
+.ent__next-hint {
+  flex-basis: 100%;
+  max-width: 36rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.ent__h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ent__call,
+.ent__aside {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+}
+
+.ent__call {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+}
+
+.ent__hero:not(:has(.ent__aside)) .ent__call {
+  max-width: 44rem;
+}
+
+.ent__call-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-text);
+}
+
+.ent__call-text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.ent__call-text .ent__text {
+  margin-top: 0.125rem;
+  text-wrap: pretty;
+}
+
+.ent__aside {
+  display: flex;
+  flex-direction: column;
+  padding: 1.375rem 1.5rem 1.25rem;
+}
+
+.ent__aside-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.ent__aside-figure {
+  margin-top: 0.375rem;
+  font-size: 1.75rem;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.ent__aside-figure[data-expired] {
+  color: var(--c-danger);
+}
+
+.ent__aside:not(:has(.ent__actions)) {
+  align-self: start;
+}
+
+.ent__eyebrow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ent__chip {
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.ent__quote-number {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--c-text-subtle);
+}
+
+.ent__quote-caption {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.ent__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 1rem 0 0;
+  padding: 0.75rem 0;
+  border-block: 1px solid var(--c-border-subtle);
+  font-size: 0.8125rem;
+}
+
+.ent__facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ent__facts dt {
+  color: var(--c-text-muted);
+}
+
+.ent__facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ent__quote .ent__actions {
+  justify-content: space-between;
+}
+
+.ent__quote-valid {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.ent__trial-bar {
+  display: block;
+  height: 0.375rem;
+  margin-top: 0.875rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--c-border);
+}
+
+.ent__trial-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-primary);
+}
+
+.ent__aside .ent__text {
+  margin-top: 0.75rem;
+}
+
+/* Pinned to the panel's foot, level with the call box beside it. */
+.ent__aside .ent__actions {
+  gap: 0.25rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  /* Borderless buttons: pull the first label back onto the panel's text edge. */
+  margin-left: -1.125rem;
+}
+
+.ent__aside .ent__hint {
+  margin-top: 0.5rem;
+}
+
+.ent__stages {
+  grid-column: 1 / -1;
+  display: flex;
+  margin: 2.5rem 0 0;
+  padding: 1.75rem 0 2.25rem;
+  border-top: 1px solid var(--c-border-subtle);
+  list-style: none;
+}
+
+/* A step open below leaves only the title above the tracker, so it closes up under it. */
+.ent__hero:not(:has(.ent__call)) .ent__stages {
+  margin-top: 0;
+}
+
+.ent__stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--c-text-subtle);
+}
+
+/* The last stage takes only its own width, so the rails run the full row. */
+.ent__stage:last-child {
+  flex: none;
+}
+
+/* The rail between this stage's dot and the next, coloured once this stage is behind the buyer. */
+.ent__stage:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: calc(1rem - 1px);
+  left: 2.5rem;
+  right: 0.5rem;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--c-border);
+}
+
+.ent__stage[data-state="done"]:not(:last-child)::after {
+  background: var(--c-success);
+}
+
+.ent__stage-dot {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--c-border);
+  border-radius: 50%;
+  background: var(--c-bg-raised);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Carries the stage's own layout, so a clickable stage lines up with a plain one. */
+.ent__stage-btn {
+  display: flex;
+  flex-direction: inherit;
+  align-items: inherit;
+  gap: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ent__stage-btn:hover .ent__stage-label {
+  color: var(--c-text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.ent__stage-btn:hover .ent__stage-dot {
+  border-color: var(--c-primary);
+}
+
+.ent__stage-btn:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.ent__stage[data-state="done"] {
+  color: var(--c-text-muted);
+}
+
+.ent__stage[data-state="done"] .ent__stage-dot {
+  border-color: var(--c-success);
+  background: var(--c-success);
+  color: var(--c-text-on-primary);
+}
+
+.ent__stage[data-state="current"] {
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.ent__stage[data-state="current"] .ent__stage-dot {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  box-shadow: 0 0 0 4px var(--c-primary-subtle);
+}
+
+/* A finished stage open for review: marked without moving where the deal stands. */
+.ent__stage[data-viewing] {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.ent__stage[data-viewing] .ent__stage-dot {
+  box-shadow: 0 0 0 4px var(--c-success-subtle);
+}
+
+.ent__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-block: 2.5rem 4rem;
+}
+
+/* Cards sit on the page colour, so they take the raised surface to stand off it. */
+.ent .sui-card {
+  background: var(--c-bg-raised);
+}
+
+/* Tiles keep each document's name beside its action. */
+.ent__body .portal-docmodal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+/* Four would wrap three and one; two by two keeps the set even. */
+.ent__body .portal-docmodal:has(> :nth-child(4):last-child) {
+  grid-template-columns: repeat(auto-fill, minmax(max(17rem, 40%), 1fr));
+}
+
+.ent__body .portal-docmodal__row {
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+}
+
+.ent__body .portal-docmodal__row:last-child {
+  border-bottom: 1px solid var(--c-border);
+}
+
+.ent__body .portal-docmodal__sub {
+  text-wrap: pretty;
+}
+
+/* In a narrow tile the description wraps, never the button's label. */
+.ent__body .portal-docmodal__row > .sui-btn {
+  flex: none;
+}
+
+/* What's still to come is a short list, not tiles: nothing in it can be opened yet. */
+.ent__body .portal-docmodal--later {
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.ent__body .portal-docmodal--later .portal-docmodal__row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  padding: 0 1rem;
+  border: 0;
+  border-left: 2px solid var(--c-border);
+  border-radius: 0;
+}
+
+.ent__body .portal-docmodal--later .portal-docmodal__sub {
+  display: none;
+}
+
+.ent__body .portal-docmodal__group {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* The licence panel is a boxed inset elsewhere; here it is one row: what it is, the key, copy. */
+.ent__license .portal-proc__license {
+  display: grid;
+  grid-template-areas:
+    "label key copy"
+    "hint key copy";
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.ent__license .portal-proc__license-label {
+  grid-area: label;
+  align-self: end;
+  font-size: 1.0625rem;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--c-text);
+}
+
+.ent__license .portal-proc__license-key {
+  grid-area: key;
+  margin: 0;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ent__license .portal-proc__payment-actions {
+  grid-area: copy;
+  margin: 0;
+}
+
+.ent__license .portal-proc__license-hint {
+  grid-area: hint;
+  align-self: start;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+.ent__license > .portal-proc__license-hint {
+  margin-top: 1rem;
+}
+
+@container (max-width: 56rem) {
+  .ent__landing,
+  .ent__hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ent__landing {
+    gap: 2rem;
+  }
+
+  .ent__hero {
+    row-gap: 1rem;
+  }
+
+  .ent__call {
+    margin-top: 0;
+  }
+
+  .ent__stages {
+    margin-top: 1.5rem;
+  }
+}
+
+@container (max-width: 40rem) {
+  .ent__wrap {
+    width: calc(100% - 2rem);
+  }
+
+  .ent__landing {
+    padding-block: 2rem;
+  }
+
+  .ent__hero {
+    padding-top: 2rem;
+  }
+
+  .ent__body {
+    padding-block: 1.5rem 3rem;
+  }
+
+  .ent__h1 {
+    font-size: 2rem;
+  }
+
+  .ent__company,
+  .ent__brand-tag {
+    display: none;
+  }
+
+  .ent__stages {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ent__stage {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .ent__stage:not(:last-child)::after {
+    top: 2rem;
+    bottom: -0.75rem;
+    left: calc(1rem - 1px);
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+
+  .ent__license .portal-proc__license {
+    grid-template-areas:
+      "label"
+      "hint"
+      "key"
+      "copy";
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.75rem;
+  }
+
+  .ent__license .portal-proc__license-key {
+    white-space: normal;
+  }
+}

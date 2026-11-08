@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { CodeBlock, Modal } from "@editor/ui";
 import "@processor/components/pipelines/PipelineDefinitionModal.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface PipelineDefinitionModalProps {
   open: boolean;
@@ -35,7 +36,7 @@ export function PipelineDefinitionModal({
         code={json}
         lang="json"
         maxHeight={420}
-        className="portal-definition__code"
+        className={`portal-definition__code ${privateContentClassName}`}
       />
     </Modal>
   );
