@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -246,5 +247,30 @@ class SplitPdfBySizeControllerTest {
             total += count;
         }
         assertThat(total).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("Should keep every multi-page part within the size limit")
+    void shouldKeepPartsWithinSizeLimit() throws Exception {
+        byte[] pdfBytes = createPdf(120);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        SplitPdfBySizeOrCountRequest request = new SplitPdfBySizeOrCountRequest();
+        request.setFileInput(file);
+        request.setSplitType(0);
+        request.setSplitValue("6KB");
+
+        ResponseEntity<Resource> response = controller.autoSplitPdf(request);
+
+        List<byte[]> outputs = unzip(response.getBody());
+        int[] counts = pageCountsOf(outputs);
+        assertThat(outputs).hasSizeGreaterThan(1);
+        assertThat(Arrays.stream(counts).sum()).isEqualTo(120);
+        for (int i = 0; i < outputs.size(); i++) {
+            if (counts[i] > 1) {
+                assertThat(outputs.get(i).length).isLessThanOrEqualTo(6 * 1024);
+            }
+        }
     }
 }
