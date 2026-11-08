@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.NestedExceptionUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -208,13 +207,13 @@ public class GlobalExceptionHandler {
                     "AsyncRequestNotUsableException");
 
     // Broken pipe, reset or mid-write idle timeout: no point serialising a body to a closed socket.
-    private static boolean isClientDisconnectException(IOException ex) {
+    private static Throwable clientDisconnectCause(IOException ex) {
         // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
         // Bounded so a cyclic cause chain cannot spin forever
         for (int depth = 0; current != null && depth < 32; depth++) {
             if (CLIENT_DISCONNECT_TYPE_NAMES.contains(current.getClass().getSimpleName())) {
-                return true;
+                return current;
             }
             String msg = current.getMessage();
             if (msg != null) {
@@ -222,12 +221,12 @@ public class GlobalExceptionHandler {
                 if (lower.contains("broken pipe")
                         || lower.contains("connection reset")
                         || lower.contains("an established connection was aborted")) {
-                    return true;
+                    return current;
                 }
             }
             current = current.getCause();
         }
-        return false;
+        return null;
     }
 
     /**
@@ -1318,11 +1317,12 @@ public class GlobalExceptionHandler {
 
         // The client is gone and the Content-Type may already be committed (e.g. image/png),
         // so writing a ProblemDetail would fail; log at WARN and return an empty body.
-        if (isClientDisconnectException(ex)) {
+        Throwable disconnect = clientDisconnectCause(ex);
+        if (disconnect != null) {
             log.warn(
                     "Client disconnected at {}: {}",
                     request.getRequestURI(),
-                    NestedExceptionUtils.getMostSpecificCause(ex).getMessage());
+                    disconnect.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 

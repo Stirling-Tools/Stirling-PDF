@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.NoSuchFileException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
@@ -347,6 +348,19 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ProblemDetail> resp = handler.handleIOException(outer, request);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
         assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_cyclicCauseChainWithDisconnect_terminates_without_body() {
+        IOException outer = new IOException("outer");
+        IOException inner = new IOException("Broken pipe");
+        outer.initCause(inner);
+        inner.initCause(outer);
+        ResponseEntity<ProblemDetail> resp =
+                assertTimeoutPreemptively(
+                        Duration.ofSeconds(10), () -> handler.handleIOException(outer, request));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNull(resp.getBody());
     }
 
     @Test
