@@ -384,7 +384,9 @@ export const FileItem = React.memo(function FileItem({
             {name}
           </span>
           <span className="file-sidebar-file-meta-row">
-            <span className="file-sidebar-file-meta">
+            <span
+              className={`file-sidebar-file-meta${primaryLabel ? " labelled" : ""}`}
+            >
               {primaryLabel ? (
                 <>
                   {primaryLabel}
