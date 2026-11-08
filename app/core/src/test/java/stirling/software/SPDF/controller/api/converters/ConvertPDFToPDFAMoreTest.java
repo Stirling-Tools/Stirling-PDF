@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,7 +53,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
@@ -651,8 +649,8 @@ class ConvertPDFToPDFAMoreTest {
         }
 
         @Test
-        @DisplayName("PDF/X rejects Symbol fonts when Ghostscript is unavailable")
-        void pdfXRejectsSymbolFontWithoutGhostscript() throws Exception {
+        @DisplayName("PDF/X substitutes Symbol fonts without Ghostscript")
+        void pdfXSubstitutesSymbolFontWithoutGhostscript() throws Exception {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
@@ -661,16 +659,30 @@ class ConvertPDFToPDFAMoreTest {
             request.setOutputFormat("pdfx-1a");
             request.setStrict(false);
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                    MockedStatic<WebResponseUtils> wr =
+                            Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
                 pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
                         .thenReturn(executor);
                 when(executor.runCommandWithOutputHandling(any(List.class)))
                         .thenThrow(new IOException("gs missing"));
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
 
-                assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                        .isInstanceOf(ResponseStatusException.class)
-                        .hasMessageContaining("Symbol");
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    PDResources resources = output.getPage(0).getResources();
+                    assertThat(resources.getFontNames()).isNotEmpty();
+                    for (var name : resources.getFontNames()) {
+                        PDFont font = resources.getFont(name);
+                        assertThat(font.isEmbedded()).as("font %s", font.getName()).isTrue();
+                    }
+                }
             }
         }
 

@@ -47,6 +47,7 @@ import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1CFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.encoding.SymbolEncoding;
 import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -714,7 +715,25 @@ public class ConvertPDFToPDFA {
             // them with a Latin TrueType font would drop text. Only simple fonts
             // with a single-byte encoding are safe to substitute.
             if (!(font instanceof PDType1Font) && !(font instanceof PDTrueTypeFont)) continue;
-            String substitute = pdfxFontSubstitute(font.getName());
+            String fontName = font.getName();
+            if ("Symbol".equals(fontName)) {
+                try (InputStream fontStream =
+                        ConvertPDFToPDFA.class.getResourceAsStream(
+                                "/static/fonts/DejaVuSans.ttf")) {
+                    if (fontStream == null) {
+                        log.warn("Bundled Symbol substitute not found");
+                        continue;
+                    }
+                    resources.put(
+                            key,
+                            PDTrueTypeFont.load(document, fontStream, SymbolEncoding.INSTANCE));
+                    replaced++;
+                } catch (IOException | IllegalArgumentException e) {
+                    log.warn("Could not substitute PDF/X Symbol font", e);
+                }
+                continue;
+            }
+            String substitute = pdfxFontSubstitute(fontName);
             if (substitute == null) continue;
             try (InputStream fontStream =
                     ConvertPDFToPDFA.class.getResourceAsStream("/static/fonts/" + substitute)) {
