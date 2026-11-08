@@ -322,7 +322,6 @@ function WidgetInputInner({
           ) : (
             <input
               type="text"
-              id={`${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`}
               value={value}
               onChange={(e) => onChange(field.name, e.target.value)}
               onFocus={handleFocus}
@@ -403,8 +402,6 @@ function WidgetInputInner({
 
     case "combobox":
     case "listbox": {
-      const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
-
       // For multi-select, value should be an array
       // We store as comma-separated string, so parse it
       const selectValue = field.multiSelect
@@ -429,7 +426,6 @@ function WidgetInputInner({
       return (
         <div {...commonProps} title={error || field.tooltip || field.label}>
           <select
-            id={inputId}
             value={selectValue}
             onChange={handleSelectChange}
             onFocus={handleFocus}

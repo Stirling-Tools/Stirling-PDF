@@ -27,6 +27,7 @@ import { BASE_PATH, withBasePath } from "@editor/constants/app";
 import styles from "@editor/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
 import i18n from "@editor/i18n";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface MFASetupSlideProps {
   onMfaSetupComplete?: () => void;
@@ -135,7 +136,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   const isReady = Boolean(mfaSetupData);
   const mfaSetupContent = mfaSetupData ? (
     <div className={styles.mfaSetupGrid}>
-      <Box className={styles.mfaQrCard}>
+      <Box className={`${styles.mfaQrCard} ${privateContentClassName}`}>
         <QRCodeSVG
           value={mfaSetupData.otpauthUri ?? ""}
           size={168}
@@ -177,6 +178,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           {t("onboarding.mfa.setupKey", "Setup key (manual entry)")}
         </Text>
         <TextInput
+          className={privateContentClassName}
           value={mfaSetupData.secret ?? ""}
           readOnly
           variant="filled"
@@ -221,6 +223,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
           <form onSubmit={handleEnableMfa} className={styles.mfaForm}>
             <Stack gap="sm">
               <TextInput
+                className={privateContentClassName}
                 id="mfa-setup-code"
                 label={t(
                   "onboarding.mfa.authenticationCode",
