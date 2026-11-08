@@ -124,6 +124,50 @@ const AddPageNumbersAppearanceSettings = ({
       <Tooltip
         position="left"
         content={t(
+          "addPageNumbers.numberFormatTooltip",
+          "Choose Arabic numerals or lowercase/uppercase Roman numerals. The format applies to {n} and {total}.",
+        )}
+      >
+        <Select
+          label={t("addPageNumbers.numberFormat", "Number Format")}
+          value={parameters.numberFormat}
+          onChange={(v) =>
+            onParameterChange(
+              "numberFormat",
+              (v as AddPageNumbersParameters["numberFormat"]) || "numeric",
+            )
+          }
+          data={[
+            {
+              value: "numeric",
+              label: t("addPageNumbers.numberFormatNumeric", "1, 2, 3"),
+            },
+            {
+              value: "roman-lowercase",
+              label: t(
+                "addPageNumbers.numberFormatRomanLowercase",
+                "i, ii, iii",
+              ),
+            },
+            {
+              value: "roman-uppercase",
+              label: t(
+                "addPageNumbers.numberFormatRomanUppercase",
+                "I, II, III",
+              ),
+            },
+          ]}
+          disabled={disabled}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
+        />
+      </Tooltip>
+
+      <Tooltip
+        position="left"
+        content={t(
           "customTextTooltip",
           'Optional custom format for page numbers. Use {n} as placeholder for the number. Example: "Page {n}" will show "Page 1", "Page 2", etc.',
         )}

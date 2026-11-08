@@ -20,6 +20,15 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
+                    "Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii),"
+                            + " roman-uppercase (I, II, III). Applies to {n} and {total}.",
+            allowableValues = {"numeric", "roman-lowercase", "roman-uppercase"},
+            defaultValue = "numeric",
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private String numberFormat = "numeric";
+
+    @Schema(
+            description =
                     "Where to place the number on a 3x3 grid: 1=top-left, 2=top-center,"
                             + " 3=top-right, 4=middle-left, 5=center, 6=middle-right,"
                             + " 7=bottom-left, 8=bottom-center, 9=bottom-right",
