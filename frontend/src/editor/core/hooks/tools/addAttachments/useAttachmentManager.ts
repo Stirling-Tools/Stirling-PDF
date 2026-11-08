@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useContext,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   listAttachments,
@@ -14,7 +21,7 @@ import {
   prepareUnlockedFile,
   protectUnlockedResults,
 } from "@editor/services/pdfSessionUnlock";
-import { useFileActions } from "@editor/contexts/FileContext";
+import { FileActionsContext } from "@editor/contexts/file/contexts";
 import { isStirlingFile } from "@editor/types/fileContext";
 
 const LIST_ENDPOINT = "/api/v1/misc/list-attachments";
@@ -68,7 +75,7 @@ export function useAttachmentManager({
   onError,
 }: UseAttachmentManagerOptions) {
   const { t } = useTranslation();
-  const { actions: fileActions } = useFileActions();
+  const fileActions = useContext(FileActionsContext)?.actions;
   const [rows, setRows] = useState<DraftAttachmentRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -258,10 +265,12 @@ export function useAttachmentManager({
       if (
         isStirlingFile(file) &&
         !(await preflightPdfOperation([file], endpoint, false, (target) =>
-          fileActions.requestPdfOwnerAccess(
-            target.fileId,
-            t("home.addAttachments.title", "Manage Attachments"),
-          ),
+          fileActions
+            ? fileActions.requestPdfOwnerAccess(
+                target.fileId,
+                t("home.addAttachments.title", "Manage Attachments"),
+              )
+            : Promise.resolve(false),
         ))
       )
         return null;

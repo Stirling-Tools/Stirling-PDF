@@ -196,7 +196,7 @@ test("restricted compression prompts at execution, preserves settings on cancel,
 test("unsupported tools keep the explanation in a tooltip and offer Remove Password", async ({
   page,
 }) => {
-  await page.goto("/redact");
+  await page.goto("/annotate");
   await page.getByTestId("files-button").click();
   await page.getByTestId("file-input").setInputFiles(fixture);
   const notice = page.getByTestId("tool-file-list");

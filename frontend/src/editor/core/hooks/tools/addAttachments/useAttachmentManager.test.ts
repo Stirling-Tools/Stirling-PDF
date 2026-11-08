@@ -36,9 +36,15 @@ const session = vi.hoisted(() => ({
 vi.mock("@editor/services/pdfSessionUnlock", () => session);
 
 const requestPdfOwnerAccess = vi.hoisted(() => vi.fn(async () => true));
-vi.mock("@editor/contexts/FileContext", () => ({
-  useFileActions: () => ({ actions: { requestPdfOwnerAccess } }),
-}));
+vi.mock("@editor/contexts/file/contexts", async (importOriginal) => {
+  const { createContext } = await import("react");
+  return {
+    ...(await importOriginal<
+      typeof import("@editor/contexts/file/contexts")
+    >()),
+    FileActionsContext: createContext({ actions: { requestPdfOwnerAccess } }),
+  };
+});
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
