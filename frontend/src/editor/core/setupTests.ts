@@ -7,6 +7,8 @@ import { installFailOnConsole } from "@editor/tests/failOnConsole";
 // browser. Same module `src/index.tsx` installs.
 import "@editor/utils/engineShims";
 
+HTMLCanvasElement.prototype.getContext = vi.fn(() => null);
+
 // Modules outside React call i18n.t directly; no resources means the English defaults render.
 void i18n.init({
   lng: "en-US",

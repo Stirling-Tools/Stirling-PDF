@@ -21,6 +21,7 @@ vi.mock("@editor/services/apiClient");
 describe("AppConfigContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(apiClient.get).mockReset();
     // Mock window.location.pathname
     Object.defineProperty(window, "location", {
       value: { pathname: "/" },
