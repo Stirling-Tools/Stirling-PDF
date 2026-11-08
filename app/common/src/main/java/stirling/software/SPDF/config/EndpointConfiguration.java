@@ -583,7 +583,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "crop");
-        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");

@@ -2,13 +2,11 @@ package stirling.software.SPDF.Factories;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.misc.ColorSpaceConversionStrategy;
@@ -20,13 +18,10 @@ class ReplaceAndInvertColorFactoryTest {
 
     private ReplaceAndInvertColorFactory factory;
     private MultipartFile file;
-    private EndpointConfiguration endpointConfiguration;
 
     @BeforeEach
     void setup() {
-        endpointConfiguration = mock(EndpointConfiguration.class);
-        when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
-        factory = new ReplaceAndInvertColorFactory(null, endpointConfiguration);
+        factory = new ReplaceAndInvertColorFactory();
         file = mock(MultipartFile.class);
     }
 
