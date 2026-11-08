@@ -24,7 +24,7 @@ vi.mock("@editor/services/tauriHttpClient", () => ({
 }));
 
 import { AuthService } from "@editor/services/authService";
-import { expectConsole } from "@editor/tests/failOnConsole";
+import { allowConsole, expectConsole } from "@editor/tests/failOnConsole";
 
 /** A keyring read blocks on an OS prompt, so nothing waiting on one may hang forever. */
 describe("keyring timeouts", () => {
@@ -179,6 +179,30 @@ describe.each(["self-hosted", "Supabase"] as const)(
       expect(vi.getTimerCount()).toBe(0);
     });
 
+    it("keeps the refresh token after a timeout once the access token has expired", async () => {
+      const expiredAccessToken = `header.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 60 }))}.signature`;
+      localStorage.setItem("stirling_jwt", expiredAccessToken);
+      const base = invokeMock.getMockImplementation()!;
+      invokeMock.mockImplementation((command: string) =>
+        command === "get_auth_token" ? expiredAccessToken : base(command),
+      );
+      request.mockRejectedValue({ isAxiosError: true, code: "ECONNABORTED" });
+      expectConsole.error(/token refresh failed/i);
+      allowConsole.warn(/Cached token is expired/);
+      const listener = vi.fn();
+      authService.subscribeToAuth(listener);
+
+      await expect(refresh()).resolves.toBe(false);
+
+      expect(listener).toHaveBeenLastCalledWith("unauthenticated", null);
+      expect(localStorage.getItem("stirling_refresh_token")).toBe(
+        "stored-refresh-token",
+      );
+      expect(
+        invokeMock.mock.calls.some(([command]) => command.startsWith("clear_")),
+      ).toBe(false);
+    });
+
     it.each([
       { status: 401 },
       { status: 400, data: { error: "invalid_grant" } },
@@ -264,6 +288,34 @@ describe.each(["self-hosted", "Supabase"] as const)(
       await vi.advanceTimersByTimeAsync(0);
 
       expect(request).not.toHaveBeenCalled();
+    });
+
+    it("does not report a session that timed out while saving as signed in", async () => {
+      let finishSave!: () => void;
+      const save = new Promise<void>((resolve) => {
+        finishSave = resolve;
+      });
+      const base = invokeMock.getMockImplementation()!;
+      invokeMock.mockImplementation((command: string) =>
+        command === "save_auth_token" ? save : base(command),
+      );
+      request.mockResolvedValue(success);
+      expectConsole.warn(/Refresh timed out/);
+      const listener = vi.fn();
+      authService.subscribeToAuth(listener);
+      const pending = refresh();
+      await vi.advanceTimersByTimeAsync(20_000);
+      await expect(pending).resolves.toBe(false);
+      expect(listener).toHaveBeenLastCalledWith("unauthenticated", null);
+
+      listener.mockClear();
+      finishSave();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(listener).not.toHaveBeenCalledWith(
+        "authenticated",
+        expect.anything(),
+      );
     });
 
     it.each(["success", "failure"])(

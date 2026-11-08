@@ -60,9 +60,10 @@ async fn read_keyring_password_with_limit(
     label: &'static str,
     semaphore: &'static tokio::sync::Semaphore,
 ) -> Option<String> {
-    let Ok(permit) = semaphore.try_acquire() else {
-        log::debug!(
-            "Keyring read already in flight - trying Tauri Store for {}",
+    let deadline = tokio::time::Instant::now() + KEYRING_READ_TIMEOUT;
+    let Ok(Ok(permit)) = tokio::time::timeout_at(deadline, semaphore.acquire()).await else {
+        log::warn!(
+            "Keyring read still in flight - trying Tauri Store for {}",
             label
         );
         return None;
@@ -108,7 +109,7 @@ async fn read_keyring_password_with_limit(
         return None;
     }
 
-    match tokio::time::timeout(KEYRING_READ_TIMEOUT, rx).await {
+    match tokio::time::timeout_at(deadline, rx).await {
         Ok(Ok(Some(password))) => {
             log::info!("{} retrieved from keyring", label);
             Some(password)
@@ -1037,6 +1038,34 @@ mod keyring_timeout_tests {
         started_rx
             .recv_timeout(std::time::Duration::from_secs(1))
             .unwrap();
+    }
+
+    fn mock_entry_with(password: &'static str) -> Result<Entry, String> {
+        let entry = Entry::new_with_credential(
+            keyring::mock::default_credential_builder()
+                .build(None, "test", "token")
+                .unwrap(),
+        );
+        entry.set_password(password).unwrap();
+        Ok(entry)
+    }
+
+    #[tokio::test]
+    async fn waits_for_an_earlier_read_to_release_the_permit() {
+        static PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+        let held = PERMIT.acquire().await.unwrap();
+        let (password, ()) = tokio::join!(
+            read_keyring_password_with_limit(
+                || mock_entry_with("refresh-token"),
+                "test token",
+                &PERMIT,
+            ),
+            async move {
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                drop(held);
+            }
+        );
+        assert_eq!(password.as_deref(), Some("refresh-token"));
     }
 
     #[tokio::test]

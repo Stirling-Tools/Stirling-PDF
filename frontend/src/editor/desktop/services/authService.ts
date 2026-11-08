@@ -737,20 +737,22 @@ export class AuthService {
   }
 
   private async handleRefreshFailure(error: unknown): Promise<void> {
-    const token = await this.getAuthToken();
-    if (
+    const transient =
       axios.isAxiosError(error) &&
       (!error.response ||
         error.response.status >= 500 ||
         error.response.status === 408 ||
-        error.response.status === 429) &&
-      token &&
-      !this.isTokenExpiringSoon(token, 0)
-    ) {
-      this.setAuthStatus("authenticated", this.userInfo);
+        error.response.status === 429);
+    if (!transient) {
+      await this.logout();
       return;
     }
-    await this.logout();
+    const token = await this.getAuthToken();
+    if (token && !this.isTokenExpiringSoon(token, 0)) {
+      this.setAuthStatus("authenticated", this.userInfo);
+    } else {
+      this.setAuthStatus("unauthenticated", null);
+    }
   }
 
   async getUserInfo(): Promise<UserInfo | null> {
@@ -959,6 +961,7 @@ export class AuthService {
         currentToken,
         token,
       );
+      if (epoch !== this.refreshEpoch) return false;
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus("authenticated", userInfo);
@@ -1044,6 +1047,7 @@ export class AuthService {
         access_token,
         newRefreshToken,
       );
+      if (epoch !== this.refreshEpoch) return false;
 
       const userInfo = await this.getUserInfo();
       this.setAuthStatus("authenticated", userInfo);
