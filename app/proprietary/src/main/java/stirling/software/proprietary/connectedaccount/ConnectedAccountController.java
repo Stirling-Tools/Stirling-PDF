@@ -69,7 +69,7 @@ public class ConnectedAccountController {
         }
         String base = publicBaseUrl();
         ConnectedAccountService.ConnectStart start =
-                service.startConnect(user, cloud, base + CALLBACK_PATH + cloud.id());
+                service.startConnect(user, cloud, callbackUri(base, cloud));
         ResponseCookie cookie =
                 ResponseCookie.from(NONCE_COOKIE, start.nonce())
                         .httpOnly(true)
@@ -81,6 +81,14 @@ public class ConnectedAccountController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of("authorizationUrl", start.authorizationUrl()));
+    }
+
+    @GetMapping("/redirect-uris")
+    public Map<String, String> redirectUris(@AuthenticationPrincipal User user) {
+        requireUser(user);
+        String base = publicBaseUrl();
+        return Arrays.stream(CloudProvider.values())
+                .collect(Collectors.toMap(CloudProvider::id, cloud -> callbackUri(base, cloud)));
     }
 
     @GetMapping(value = "/callback/{provider}", produces = MediaType.TEXT_HTML_VALUE)
@@ -158,6 +166,10 @@ public class ConnectedAccountController {
                     : configured;
         }
         return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    }
+
+    private static String callbackUri(String base, CloudProvider cloud) {
+        return base + CALLBACK_PATH + cloud.id();
     }
 
     private static String forLog(String value) {

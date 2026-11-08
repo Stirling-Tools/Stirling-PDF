@@ -64,6 +64,17 @@ class ConnectedAccountCallbackTest {
     }
 
     @Test
+    void redirectUrisUseTheConfiguredFrontendUrl() {
+        assertThat(controller().redirectUris(new User()))
+                .containsEntry(
+                        "microsoft",
+                        "https://stirling.example/api/v1/connected-accounts/callback/microsoft")
+                .containsEntry(
+                        "google",
+                        "https://stirling.example/api/v1/connected-accounts/callback/google");
+    }
+
+    @Test
     void explainsWhichProviderIsNotSetUp() {
         ResponseStatusException failure =
                 assertThrows(

@@ -38,6 +38,16 @@ export async function fetchConnectedAccounts(): Promise<ConnectedAccountsState> 
   return response.data;
 }
 
+export async function fetchRedirectUris(): Promise<
+  Record<CloudProvider, string>
+> {
+  const response = await apiClient.get<Record<CloudProvider, string>>(
+    `${BASE}/redirect-uris`,
+    { suppressErrorToast: true },
+  );
+  return response.data;
+}
+
 export async function disconnectAccount(id: number): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
 }
