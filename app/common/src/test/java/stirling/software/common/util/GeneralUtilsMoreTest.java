@@ -8,19 +8,24 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -412,6 +417,24 @@ class GeneralUtilsMoreTest {
         }
 
         @Test
+        @DisplayName("comic-style pages are downsampled by the edge cap and re-encoded as JPEG")
+        void optimizesPixelSizedComicPage() throws Exception {
+            byte[] input = noisyJpegPdf(1600, 2400);
+
+            byte[] optimized = GeneralUtils.optimizePdfForEbook(input);
+
+            // The source page is 1 image pixel = 1 PDF point, so a DPI-only pass would leave it
+            // untouched; the edge cap and JPEG re-encode must still shrink it substantially.
+            assertThat(optimized.length).isLessThan(input.length / 3);
+            try (PDDocument document = Loader.loadPDF(optimized)) {
+                assertEquals(1, document.getNumberOfPages());
+                PDImageXObject image = firstImage(document);
+                assertThat(Math.max(image.getWidth(), image.getHeight())).isLessThanOrEqualTo(1800);
+                assertThat(image.getWidth()).isEqualTo(1200);
+            }
+        }
+
+        @Test
         @DisplayName("invalid PDF bytes surface as IOException")
         void invalidPdfBytes() {
             assertThatThrownBy(() -> GeneralUtils.optimizePdfForEbook(new byte[] {1, 2, 3}))
@@ -445,6 +468,37 @@ class GeneralUtilsMoreTest {
                 document.save(output);
                 return output.toByteArray();
             }
+        }
+
+        private static byte[] noisyJpegPdf(int width, int height) throws IOException {
+            try (PDDocument document = new PDDocument()) {
+                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                Random random = new Random(0xE800C);
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        image.setRGB(x, y, random.nextInt(0x1000000));
+                    }
+                }
+                PDImageXObject pdImage = JPEGFactory.createFromImage(document, image, 0.9f);
+                PDPage page = new PDPage(new PDRectangle(width, height));
+                document.addPage(page);
+                try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                    content.drawImage(pdImage, 0, 0);
+                }
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                document.save(output);
+                return output.toByteArray();
+            }
+        }
+
+        private static PDImageXObject firstImage(PDDocument document) throws IOException {
+            for (COSName name : document.getPage(0).getResources().getXObjectNames()) {
+                if (document.getPage(0).getResources().getXObject(name)
+                        instanceof PDImageXObject image) {
+                    return image;
+                }
+            }
+            throw new AssertionError("no image on the page");
         }
     }
 

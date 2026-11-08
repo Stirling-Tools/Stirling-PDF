@@ -34,6 +34,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.doc.CompressOptions;
 import stirling.software.jpdfium.doc.PdfCompressor;
+import stirling.software.jpdfium.doc.PreservationMode;
 
 @Slf4j
 @UtilityClass
@@ -1284,12 +1285,18 @@ public class GeneralUtils {
     }
 
     /**
-     * Optimizes a PDF for ebook readers in-process: downsamples embedded images to 150 DPI,
-     * recompresses them at moderate quality, and compacts streams. Text stays selectable because
-     * pages are never rasterized.
+     * Optimizes a PDF for ebook readers in-process. Embedded images are capped at their effective
+     * 150 DPI, at a 1800 px longest edge (comic pages are laid out as 1 image pixel = 1 PDF point
+     * and would otherwise report 72 DPI and escape every DPI threshold), and re-encoded as JPEG at
+     * quality 70; Flate/PNG images are converted to JPEG too. Text stays selectable because pages
+     * are never rasterized.
      *
-     * <p>Image downsampling is verified against page previews and rolled back when the visual drift
-     * exceeds the compressor's tolerance; the result is never larger than the input.
+     * <p>The fidelity check is skipped: on pixel-sized comic pages the preview comparison reports
+     * downsample softness at its capped 1200 px preview, which is invisible on any ebook screen, so
+     * keeping the check would silently disable image compression for exactly the CBZ/CBR inputs
+     * this path exists for. The image pass still rewrites only 8-bit gray/RGB images and only
+     * adopts a candidate stream when it is smaller than the original. Metadata is kept so converted
+     * ebooks retain their title and author.
      *
      * @param inputPdfBytes Original PDF as byte array
      * @return Optimized PDF as byte array
@@ -1300,14 +1307,14 @@ public class GeneralUtils {
             throw new IOException("Cannot optimize an empty PDF");
         }
 
-        // Matches Ghostscript's /ebook profile: 150 DPI images at moderate quality. Metadata is
-        // kept so converted ebooks retain their title and author.
         CompressOptions options =
                 CompressOptions.builder()
-                        .imageQuality(75)
+                        .imageQuality(70)
                         .maxImageDpi(150)
+                        .maxImageEdgePx(1800)
                         .convertPngToJpeg(true)
                         .removeMetadata(false)
+                        .preservationMode(PreservationMode.DESTRUCTIVE)
                         .build();
         try (PdfDocument document = PdfDocument.open(inputPdfBytes)) {
             return PdfCompressor.compress(document, options).bytes();

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -58,6 +59,19 @@ class CbzUtilsMoreTest {
         g.setColor(color);
         g.fillRect(0, 0, 20, 20);
         g.dispose();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(img, "PNG", baos);
+        return baos.toByteArray();
+    }
+
+    private static byte[] noisyPngBytes() throws IOException {
+        BufferedImage img = new BufferedImage(600, 900, BufferedImage.TYPE_INT_RGB);
+        Random random = new Random(0xCB2);
+        for (int y = 0; y < img.getHeight(); y++) {
+            for (int x = 0; x < img.getWidth(); x++) {
+                img.setRGB(x, y, random.nextInt(0x1000000));
+            }
+        }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(img, "PNG", baos);
         return baos.toByteArray();
@@ -119,6 +133,28 @@ class CbzUtilsMoreTest {
                     CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
                 try (PDDocument doc = Loader.loadPDF(resultPdf.getFile())) {
                     assertThat(doc.getNumberOfPages()).isEqualTo(1);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("optimizeForEbook converts PNG pages to smaller JPEGs")
+        void optimizeForEbookShrinksImagePages() throws Exception {
+            byte[] archive =
+                    buildCbz(
+                            new String[] {"page1.png", "page2.png"},
+                            new byte[][] {noisyPngBytes(), noisyPngBytes()});
+
+            long plainSize;
+            try (TempFile plain =
+                    CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
+                plainSize = Files.size(plain.getPath());
+            }
+            try (TempFile optimized =
+                    CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, true)) {
+                assertThat(Files.size(optimized.getPath())).isLessThan(plainSize / 2);
+                try (PDDocument doc = Loader.loadPDF(optimized.getFile())) {
+                    assertThat(doc.getNumberOfPages()).isEqualTo(2);
                 }
             }
         }
