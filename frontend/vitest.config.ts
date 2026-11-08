@@ -63,7 +63,7 @@ export default defineConfig({
     },
     projects: [
       {
-        extends: false,
+        extends: true,
         test: {
           name: "core",
           ...TEST_DEFAULTS,
@@ -87,7 +87,7 @@ export default defineConfig({
         },
       },
       {
-        extends: false,
+        extends: true,
         test: {
           name: "processor",
           ...TEST_DEFAULTS,
@@ -110,7 +110,7 @@ export default defineConfig({
         },
       },
       {
-        extends: false,
+        extends: true,
         test: {
           name: "proprietary",
           ...TEST_DEFAULTS,
@@ -131,7 +131,7 @@ export default defineConfig({
         },
       },
       {
-        extends: false,
+        extends: true,
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
@@ -152,7 +152,7 @@ export default defineConfig({
         },
       },
       {
-        extends: false,
+        extends: true,
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
