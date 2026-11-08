@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -24,7 +26,9 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.PDType3Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.junit.jupiter.api.DisplayName;
@@ -507,6 +511,31 @@ class ConvertPDFToPDFAMoreTest {
                         assertThat(font.getName()).contains("Liberation");
                     }
                 }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X font substitution leaves composite and Type3 fonts alone")
+        void pdfXFontSubstitutionSkipsUnsafeFontTypes() throws Exception {
+            PDResources resources = mock(PDResources.class);
+            PDType0Font composite = mock(PDType0Font.class);
+            PDType3Font type3 = mock(PDType3Font.class);
+            COSName compositeName = COSName.getPDFName("Composite");
+            COSName type3Name = COSName.getPDFName("Type3");
+            when(composite.isEmbedded()).thenReturn(false);
+            when(type3.isEmbedded()).thenReturn(false);
+            when(resources.getFontNames()).thenReturn(List.of(compositeName, type3Name));
+            when(resources.getFont(compositeName)).thenReturn(composite);
+            when(resources.getFont(type3Name)).thenReturn(type3);
+            when(resources.getXObjectNames()).thenReturn(List.of());
+
+            Method replace =
+                    ConvertPDFToPDFA.class.getDeclaredMethod(
+                            "replacePdfxFonts", PDDocument.class, PDResources.class, int.class);
+            replace.setAccessible(true);
+            try (PDDocument document = new PDDocument()) {
+                assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
+                verify(resources, never()).put(any(COSName.class), any(PDFont.class));
             }
         }
 
