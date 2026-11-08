@@ -449,6 +449,11 @@ describe("session PDF access", () => {
     ["/api/v1/general/multi-page-layout", PdfPermissionFlag.ModifyAnnotations],
     ["/api/v1/misc/remove-blanks", PdfPermissionFlag.CopyContents],
     ["/api/v1/misc/auto-rename", PdfPermissionFlag.CopyContents],
+    [
+      "/api/v1/misc/batch-process-attachments",
+      PdfPermissionFlag.ModifyContents,
+    ],
+    ["/api/v1/misc/extract-attachments", PdfPermissionFlag.CopyContents],
   ])(
     "asks for the permissions password when %s needs a forbidden permission",
     async (endpoint, forbidden) => {

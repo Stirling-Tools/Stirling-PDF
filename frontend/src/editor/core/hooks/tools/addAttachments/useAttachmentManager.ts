@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  useRef,
+  useMemo,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   listAttachments,
@@ -8,6 +15,19 @@ import {
   parseBlobError,
 } from "@editor/services/attachmentService";
 import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  preflightPdfOperation,
+  prepareUnlockedFile,
+  protectUnlockedResults,
+} from "@editor/services/pdfSessionUnlock";
+import { FileActionsContext } from "@editor/contexts/file/contexts";
+import { isStirlingFile } from "@editor/types/fileContext";
+
+const LIST_ENDPOINT = "/api/v1/misc/list-attachments";
+const EXTRACT_ALL_ENDPOINT = "/api/v1/misc/extract-attachments";
+const EXTRACT_ONE_ENDPOINT = "/api/v1/misc/extract-single-attachment";
+const SAVE_ENDPOINT = "/api/v1/misc/batch-process-attachments";
 
 export type DraftRowKind = "existing" | "staged" | "renamed" | "deleted";
 
@@ -55,6 +75,7 @@ export function useAttachmentManager({
   onError,
 }: UseAttachmentManagerOptions) {
   const { t } = useTranslation();
+  const fileContext = useContext(FileActionsContext);
   const [rows, setRows] = useState<DraftAttachmentRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -83,7 +104,9 @@ export function useAttachmentManager({
     const currentGen = ++genRef.current;
     setIsLoading(true);
     try {
-      const list = await listAttachments(file);
+      const list = await listAttachments(
+        await prepareUnlockedFile(file, LIST_ENDPOINT),
+      );
       if (currentGen !== genRef.current) return;
       const initialRows: DraftAttachmentRow[] = list.map((att, idx) => ({
         id: `existing-${att.filename}-${idx}`,
@@ -237,11 +260,32 @@ export function useAttachmentManager({
     [onError, t],
   );
 
+  const unlockedFor = useCallback(
+    async (file: File, endpoint: string): Promise<File | null> => {
+      if (
+        isStirlingFile(file) &&
+        !(await preflightPdfOperation([file], endpoint, false, (target) =>
+          fileContext
+            ? fileContext.actions.requestPdfOwnerAccess(
+                target.fileId,
+                t("home.addAttachments.title", "Manage Attachments"),
+              )
+            : Promise.resolve(false),
+        ))
+      )
+        return null;
+      return prepareUnlockedFile(file, endpoint);
+    },
+    [fileContext, t],
+  );
+
   const extractAllZip = useCallback(async () => {
     if (!activeFile) return;
     setActiveAction("extractAll");
     try {
-      const zipBlob = await apiExtractAttachments(activeFile);
+      const readable = await unlockedFor(activeFile, EXTRACT_ALL_ENDPOINT);
+      if (!readable) return;
+      const zipBlob = await apiExtractAttachments(readable);
       const baseName = activeFile.name.replace(/\.[^/.]+$/, "");
       const zipFilename = `${baseName}_attachments.zip`;
       await downloadFileWithPolicy({ data: zipBlob, filename: zipFilename });
@@ -251,14 +295,16 @@ export function useAttachmentManager({
     } finally {
       setActiveAction(null);
     }
-  }, [activeFile, onError]);
+  }, [activeFile, onError, unlockedFor]);
 
   const extractSingle = useCallback(
     async (filename: string) => {
       if (!activeFile || !filename) return;
       setActiveAction(`extract-${filename}`);
       try {
-        const fileBlob = await apiExtractSingleAttachment(activeFile, filename);
+        const readable = await unlockedFor(activeFile, EXTRACT_ONE_ENDPOINT);
+        if (!readable) return;
+        const fileBlob = await apiExtractSingleAttachment(readable, filename);
         await downloadFileWithPolicy({ data: fileBlob, filename });
       } catch (err) {
         const msg = await parseBlobError(err, "Failed to download attachment.");
@@ -267,7 +313,7 @@ export function useAttachmentManager({
         setActiveAction(null);
       }
     },
-    [activeFile, onError],
+    [activeFile, onError, unlockedFor],
   );
 
   const pendingChangesCount = useMemo(() => {
@@ -284,6 +330,15 @@ export function useAttachmentManager({
       setActiveAction("save");
 
       try {
+        if (convertToPdfA3b && getPdfAccess(activeFile)?.encrypted)
+          throw new Error(
+            t(
+              "attachments.pdfaNeedsPasswordRemoved",
+              "PDF/A-3b files can't be password-protected. Remove the password first, then convert.",
+            ),
+          );
+        const editable = await unlockedFor(activeFile, SAVE_ENDPOINT);
+        if (!editable) return false;
         const renames = rows
           .filter((r) => r.kind === "renamed")
           .map((r) => ({ oldName: r.originalName, newName: r.name }));
@@ -296,7 +351,7 @@ export function useAttachmentManager({
           .filter((r) => r.kind === "staged" && r.file)
           .map((r) => r.file as File);
 
-        const updatedBlob = await applyBatchAttachmentOps(activeFile, {
+        const updatedBlob = await applyBatchAttachmentOps(editable, {
           renames,
           deletions,
           additions,
@@ -305,9 +360,15 @@ export function useAttachmentManager({
 
         if (saveGen !== genRef.current) return false;
 
-        const updatedFile = createUpdatedFile(updatedBlob, activeFile);
+        const unlockedResult = createUpdatedFile(updatedBlob, activeFile);
+        const [updatedFile] = await protectUnlockedResults(
+          [unlockedResult],
+          [activeFile],
+          SAVE_ENDPOINT,
+        );
+        if (saveGen !== genRef.current) return false;
 
-        const newList = await listAttachments(updatedFile);
+        const newList = await listAttachments(unlockedResult);
         if (saveGen !== genRef.current) return false;
 
         const freshRows: DraftAttachmentRow[] = newList.map((att, idx) => ({
@@ -341,7 +402,7 @@ export function useAttachmentManager({
         }
       }
     },
-    [activeFile, rows, onFileUpdated, onError],
+    [activeFile, rows, onFileUpdated, onError, t, unlockedFor],
   );
 
   const discardDraft = useCallback(() => {

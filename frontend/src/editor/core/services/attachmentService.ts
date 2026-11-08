@@ -60,6 +60,7 @@ export async function listAttachments(
   const response = await apiClient.post<AttachmentInfo[]>(
     "/api/v1/misc/list-attachments",
     formData,
+    { suppressErrorToast: true },
   );
   return response.data || [];
 }
@@ -81,7 +82,7 @@ export async function renameAttachment(
   const response = await apiClient.post(
     "/api/v1/misc/rename-attachment",
     formData,
-    { responseType: "blob" },
+    { responseType: "blob", suppressErrorToast: true },
   );
   return response.data as Blob;
 }
@@ -101,7 +102,7 @@ export async function deleteAttachment(
   const response = await apiClient.post(
     "/api/v1/misc/delete-attachment",
     formData,
-    { responseType: "blob" },
+    { responseType: "blob", suppressErrorToast: true },
   );
   return response.data as Blob;
 }
@@ -117,7 +118,7 @@ export async function extractAttachments(fileInput: File): Promise<Blob> {
   const response = await apiClient.post(
     "/api/v1/misc/extract-attachments",
     formData,
-    { responseType: "blob" },
+    { responseType: "blob", suppressErrorToast: true },
   );
   return response.data as Blob;
 }
@@ -138,7 +139,7 @@ export async function extractSingleAttachment(
     const response = await apiClient.post(
       "/api/v1/misc/extract-single-attachment",
       formData,
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
     return response.data as Blob;
   } catch (err) {
@@ -205,7 +206,7 @@ export async function addAttachments(
   const response = await apiClient.post(
     "/api/v1/misc/add-attachments",
     formData,
-    { responseType: "blob" },
+    { responseType: "blob", suppressErrorToast: true },
   );
   return response.data as Blob;
 }
@@ -243,7 +244,7 @@ export async function applyBatchAttachmentOps(
     const response = await apiClient.post(
       "/api/v1/misc/batch-process-attachments",
       formData,
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
     return response.data as Blob;
   } catch (err) {

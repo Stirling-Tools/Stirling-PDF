@@ -48,6 +48,7 @@ describe("attachmentService CRUD", () => {
     expect(post).toHaveBeenCalledWith(
       "/api/v1/misc/list-attachments",
       expect.any(FormData),
+      { suppressErrorToast: true },
     );
   });
 
@@ -58,7 +59,7 @@ describe("attachmentService CRUD", () => {
     expect(post).toHaveBeenCalledWith(
       "/api/v1/misc/rename-attachment",
       expect.any(FormData),
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
   });
 
@@ -69,7 +70,7 @@ describe("attachmentService CRUD", () => {
     expect(post).toHaveBeenCalledWith(
       "/api/v1/misc/delete-attachment",
       expect.any(FormData),
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
   });
 
@@ -82,6 +83,7 @@ describe("attachmentService CRUD", () => {
       expect.any(FormData),
       {
         responseType: "blob",
+        suppressErrorToast: true,
       },
     );
   });
@@ -95,7 +97,7 @@ describe("attachmentService CRUD", () => {
     expect(post).toHaveBeenCalledWith(
       "/api/v1/misc/add-attachments",
       expect.any(FormData),
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
   });
 
@@ -117,6 +119,7 @@ describe("attachmentService CRUD", () => {
       expect.any(FormData),
       {
         responseType: "blob",
+        suppressErrorToast: true,
       },
     );
   });

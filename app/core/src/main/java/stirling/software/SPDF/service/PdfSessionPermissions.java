@@ -72,6 +72,12 @@ public final class PdfSessionPermissions {
                             "/api/v1/general/multi-page-layout" ->
                             permission.canModify() && assemble && permission.canModifyAnnotations();
                     case "/api/v1/misc/remove-blanks" -> assemble && permission.canExtractContent();
+                    case "/api/v1/misc/list-attachments" -> true;
+                    case "/api/v1/misc/extract-attachments",
+                            "/api/v1/misc/extract-single-attachment" ->
+                            permission.canExtractContent();
+                    case "/api/v1/misc/add-attachments", "/api/v1/misc/batch-process-attachments" ->
+                            permission.canModify();
                     default ->
                             throw new ResponseStatusException(
                                     HttpStatus.BAD_REQUEST,
