@@ -127,6 +127,10 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/account-link/connect/request",
                                                 "/api/v1/account-link/connect/claim")
                                         .permitAll()
+                                        // Static legal documents, read before agreeing to them,
+                                        // which can be before the reader has an account.
+                                        .requestMatchers(HttpMethod.GET, "/api/v1/legal/*")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
