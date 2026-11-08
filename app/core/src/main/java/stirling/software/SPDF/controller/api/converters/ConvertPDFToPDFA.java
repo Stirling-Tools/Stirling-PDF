@@ -621,9 +621,10 @@ public class ConvertPDFToPDFA {
     }
 
     /**
-     * Replaces non-embedded Standard 14 fonts with metric-compatible Liberation fonts before PDF/X
-     * conversion. JPDFium cannot invent a font program; this covers the common Helvetica, Times and
-     * Courier cases so the default PDF/X path does not emit non-embedded fonts.
+     * Replaces non-embedded simple Type1/TrueType fonts with metric-compatible Liberation fonts
+     * before PDF/X conversion. JPDFium cannot invent a font program; exact Standard 14 names and
+     * custom Latin family names are mapped by name, so the default PDF/X path does not emit
+     * non-embedded simple fonts. Composite, Type3 and symbol fonts are left for strict checking.
      */
     private void embedPdfxFonts(Path pdfPath) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
