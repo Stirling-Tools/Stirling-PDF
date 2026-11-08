@@ -736,7 +736,7 @@ permissionNotice = "The tessdata path is not writable. Downloads will be opened 
 
 [admin.settings.ai]
 customProvider = "Custom (OpenAI-compatible)"
-description = "Connect Stirling to the Python AI engine, choose its models and set its limits."
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
 managedByCloud = "Managed by Stirling Cloud in this mode."
 managedByCloudShort = "Managed by Stirling Cloud"
 
@@ -3001,15 +3001,15 @@ submit = "Sign PDF"
 
 [certSign.signMode.tooltip.auto]
 text = "Signs with a server <b>self-signed</b> certificate. Same <b>tamper-evident seal</b> and <b>audit trail</b>; typically shows <b>Unverified</b> in viewers."
-title = "Auto: server certificate, no setup"
-use = "Use when: you need a quick internal signature with no setup."
+title = "Auto - Zero-setup, instant system seal"
+use = "Use when: you need speed and consistent internal identity across reviews and records."
 
 [certSign.signMode.tooltip.header]
 title = "About PDF Signatures"
 
 [certSign.signMode.tooltip.manual]
-text = "Use your own certificate files. Can display <b>Trusted</b> when your CA/chain is recognised."
-title = "Manual: your own certificate"
+text = "Use your own certificate files for brand-aligned identity. Can display <b>Trusted</b> when your CA/chain is recognised."
+title = "Manual - Bring your certificate"
 use = "Use for: customer-facing, legal, compliance."
 
 [certSign.signMode.tooltip.overview]
@@ -5119,9 +5119,9 @@ title = "Flatten Results"
 [flatten.tooltip.description]
 bullet1 = "Text boxes become regular text (can't be edited)"
 bullet2 = "Checkboxes and buttons become pictures"
-bullet3 = "Use for final versions you don't want changed"
+bullet3 = "Great for final versions you don't want changed"
 bullet4 = "Ensures consistent appearance across all devices"
-text = "Flattening turns fillable forms and buttons into regular text and images. The PDF looks the same, but no one can change or fill in the forms."
+text = "Flattening makes your PDF non-editable by turning fillable forms and buttons into regular text and images. The PDF will look exactly the same, but no one can change or fill in the forms anymore. Perfect for sharing completed forms, creating final documents for records, or ensuring the PDF looks the same everywhere."
 title = "What does flattening do?"
 
 [flatten.tooltip.formsOnly]
@@ -7393,7 +7393,7 @@ unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
-text = "This alpha viewer is still in development. Some fonts, colours, transparency effects and layout details may shift slightly. Check the generated PDF before sharing."
+text = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."
 title = "Alpha Viewer"
 
 [pdfTextEditor.tooltip.header]
@@ -11066,7 +11066,7 @@ title = "Advanced Redaction Settings"
 
 [redact.tooltip.advanced.regex]
 bullet1 = "Example: \\d{4}-\\d{2}-\\d{2} to match any dates in YYYY-MM-DD format"
-bullet2 = "Test your pattern before relying on it"
+bullet2 = "Use with caution - test thoroughly"
 text = "Enable regular expressions for advanced pattern matching. Useful for finding phone numbers, emails, or complex patterns."
 title = "Use Regex"
 
@@ -12323,7 +12323,7 @@ title = "Signature Location"
 [signatureSettings.tooltip.logo]
 bullet1 = "Displayed alongside signature and text"
 bullet2 = "Supports PNG, JPG formats"
-bullet3 = "Useful for branded signatures"
+bullet3 = "Enhances professional appearance"
 description = "Add a company logo to visible signatures for branding and authenticity."
 title = "Company Logo"
 

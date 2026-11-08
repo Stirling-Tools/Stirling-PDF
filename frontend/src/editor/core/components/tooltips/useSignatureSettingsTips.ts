@@ -98,7 +98,7 @@ export const useSignatureSettingsTips = (): TooltipContent => {
           ),
           t(
             "signatureSettings.tooltip.logo.bullet3",
-            "Useful for branded signatures",
+            "Enhances professional appearance",
           ),
         ],
       },

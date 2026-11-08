@@ -160,7 +160,7 @@ export const useConfigNavSections = (
             label: t("settings.ai.general", "AI Engine"),
             description: t(
               "admin.settings.ai.description",
-              "Connect Stirling to the Python AI engine, choose its models and set its limits.",
+              "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
             ),
             icon: "bot",
             component: (

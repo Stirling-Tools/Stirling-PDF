@@ -92,7 +92,7 @@ export const useRedactAdvancedTips = (): TooltipContent => {
           ),
           t(
             "redact.tooltip.advanced.regex.bullet2",
-            "Test your pattern before relying on it",
+            "Use with caution - test thoroughly",
           ),
         ],
       },
