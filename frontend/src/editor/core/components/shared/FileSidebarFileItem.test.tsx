@@ -62,7 +62,7 @@ it("marks a file that came from OneDrive", () => {
   expect(screen.getByTestId("file-onedrive-badge")).toBeTruthy();
 });
 
-it("offers only a folder save for a local file", async () => {
+it("offers no OneDrive saves for a local file", async () => {
   renderItem({
     onSaveToOneDrive: vi.fn(),
     onSaveToOneDriveFolder: vi.fn(),
@@ -71,7 +71,8 @@ it("offers only a folder save for a local file", async () => {
   expect(screen.queryByTestId("file-onedrive-badge")).toBeNull();
   openMenu();
 
-  expect(await screen.findByTestId("file-save-onedrive-folder")).toBeTruthy();
+  expect(await screen.findByRole("menu")).toBeTruthy();
+  expect(screen.queryByTestId("file-save-onedrive-folder")).toBeNull();
   expect(screen.queryByTestId("file-save-onedrive")).toBeNull();
   expect(screen.queryByTestId("file-open-onedrive")).toBeNull();
 });

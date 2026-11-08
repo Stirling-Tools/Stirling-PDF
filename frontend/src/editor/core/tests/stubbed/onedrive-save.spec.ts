@@ -19,6 +19,7 @@ interface MicrosoftConfig {
   saveMode?: string;
   allowUserSaveMode?: boolean;
   allowEditorSaves?: boolean;
+  personal?: boolean;
 }
 
 const EDITED_COPY = { itemId: null, name: "Report (edited).pdf" };
@@ -55,7 +56,7 @@ async function stubMicrosoft(
             email: "pat@contoso.com",
             displayName: "Pat",
             status: "CONNECTED",
-            personal: false,
+            personal: config.personal ?? false,
             lastError: null,
             createdAt: null,
           },
@@ -283,6 +284,27 @@ test.describe("Saving files opened from OneDrive", () => {
       .click();
 
     expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
+  });
+
+  test("a personal account is not offered a folder save", async ({ page }) => {
+    await startWithOneDriveFile(page, { unsaved: false, personal: true });
+    await openInViewer(page);
+
+    await page.getByRole("button", { name: "More save options" }).click();
+    await expect(
+      page.getByRole("menuitem", { name: /Download a copy/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("menuitem", { name: /Save to a OneDrive folder/ }),
+    ).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("menu")).toHaveCount(0);
+
+    const item = page.locator(".file-sidebar-file-item").first();
+    await item.hover();
+    await item.getByRole("button", { name: "More actions" }).click();
+    await expect(page.getByTestId("file-save-onedrive")).toBeVisible();
+    await expect(page.getByTestId("file-save-onedrive-folder")).toHaveCount(0);
   });
 
   test("the result of a tool offers the same save menu", async ({ page }) => {

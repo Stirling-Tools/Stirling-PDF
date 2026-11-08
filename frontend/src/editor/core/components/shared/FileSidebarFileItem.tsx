@@ -652,7 +652,7 @@ export const FileItem = React.memo(function FileItem({
                   )}
                 </FileMenuItem>
               )}
-              {onSaveToOneDriveFolder && (
+              {hasOneDriveOrigin && onSaveToOneDriveFolder && (
                 <FileMenuItem
                   disabledReason={oneDriveBlockedReason(
                     saveToOneDriveFolderLabel,
