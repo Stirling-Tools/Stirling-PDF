@@ -11,6 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -250,6 +253,21 @@ class PdfUaServicesTest {
         @DisplayName("keeps AcroForm fields that no page shows, such as invisible signatures")
         void keepsFieldsWithoutPageWidgets() throws Exception {
             assertFormKept(unembeddedFontForm(true, false));
+        }
+
+        @Test
+        @DisplayName("keeps AcroForm fields PDFBox cannot type, rather than flattening them")
+        void keepsUntypedAcroFormFields() throws Exception {
+            try (PDDocument document = Loader.loadPDF(unembeddedFontPdf())) {
+                PDAcroForm acroForm = new PDAcroForm(document);
+                document.getDocumentCatalog().setAcroForm(acroForm);
+                COSArray fields = new COSArray();
+                fields.add(new COSDictionary());
+                acroForm.getCOSObject().setItem(COSName.FIELDS, fields);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                document.save(out);
+                assertFormKept(out.toByteArray());
+            }
         }
 
         private void assertFormKept(byte[] form) {

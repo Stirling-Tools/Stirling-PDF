@@ -96,7 +96,7 @@ def bm25_scores(query: str, corpus: list[list[str]]) -> list[float]:
 
     total = len(corpus)
     scores = [0.0] * total
-    for term in tokenize(query):
+    for term, repeats in Counter(tokenize(query)).items():
         frequency = document_frequency.get(term, 0)
         if not frequency:
             continue
@@ -105,8 +105,17 @@ def bm25_scores(query: str, corpus: list[list[str]]) -> list[float]:
             occurrences = document.count(term)
             if occurrences:
                 length_norm = 1 - _BM25_B + _BM25_B * lengths[index] / average_length
-                scores[index] += idf * (occurrences * (_BM25_K1 + 1)) / (occurrences + _BM25_K1 * length_norm)
+                scores[index] += repeats * idf * (occurrences * (_BM25_K1 + 1)) / (occurrences + _BM25_K1 * length_norm)
     return scores
+
+
+def _shortlist_with_reserve(fused: list[ToolEndpoint], reserved: list[ToolEndpoint], limit: int) -> list[ToolEndpoint]:
+    kept = set(reserved)
+    for operation in fused:
+        if len(kept) >= limit:
+            break
+        kept.add(operation)
+    return [operation for operation in fused if operation in kept]
 
 
 def rank_fusion(*rankings: list[ToolEndpoint]) -> list[ToolEndpoint]:
@@ -171,4 +180,4 @@ class OperationShortlist:
         by_score = dict(zip(operations, lexical_scores, strict=True))
         matched = [operation for operation in operations if by_score[operation] > 0.0]
         lexical = sorted(matched, key=lambda operation: -by_score[operation])
-        return rank_fusion(semantic, lexical)[:limit]
+        return _shortlist_with_reserve(rank_fusion(semantic, lexical), semantic[: limit // 2], limit)

@@ -208,3 +208,34 @@ async def test_a_follow_up_turn_still_ranks_the_operation_it_refers_to() -> None
     selected = await shortlist.select(retrieval_query("do the same to the other file", history), operations, 5)
 
     assert ToolEndpoint.ADD_WATERMARK in selected
+
+
+class SingleOperationEmbedder:
+    def __init__(self, operation: ToolEndpoint) -> None:
+        self.prefix = retrieval_text(operation).split(".")[0]
+
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [[1.0, 0.0] if text.startswith(self.prefix) else [0.0, 1.0] for text in texts]
+
+    async def embed_query(self, text: str) -> list[float]:
+        return [1.0, 0.0]
+
+
+@pytest.mark.anyio
+async def test_a_generic_lexical_term_cannot_push_out_the_best_semantic_match() -> None:
+    operations = list(OPERATIONS)
+    shortlist = OperationShortlist(lambda: SingleOperationEmbedder(ToolEndpoint.AUTO_ROTATE_PDF))
+
+    selected = await shortlist.select("выпрямите документ file file", operations, 20)
+
+    assert len(selected) == 20
+    assert ToolEndpoint.AUTO_ROTATE_PDF in selected
+
+
+def test_lexical_scoring_weights_a_repeated_term_by_its_count() -> None:
+    corpus = [tokenize(retrieval_text(operation)) for operation in OPERATIONS]
+
+    once = bm25_scores("watermark", corpus)
+    thrice = bm25_scores("watermark watermark watermark", corpus)
+
+    assert thrice == pytest.approx([3 * score for score in once])

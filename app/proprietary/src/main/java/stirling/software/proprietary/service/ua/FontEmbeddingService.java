@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -166,7 +167,9 @@ public class FontEmbeddingService {
     private static boolean hasFormFields(PDDocument document) throws IOException {
         // Invisible signature fields can be listed in the AcroForm without any page widget.
         PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm(null);
-        if (acroForm != null && !acroForm.getFields().isEmpty()) {
+        COSArray fields =
+                acroForm == null ? null : acroForm.getCOSObject().getCOSArray(COSName.FIELDS);
+        if (fields != null && fields.size() > 0) {
             return true;
         }
         for (PDPage page : document.getPages()) {
