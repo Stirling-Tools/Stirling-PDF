@@ -249,7 +249,7 @@ export function useOneDriveSave(): OneDriveSave {
         saveFailed(
           t(
             "oneDriveSave.personalUnsupported",
-            "Saving to a chosen folder needs a work or school Microsoft account.",
+            "Uploading to a chosen folder needs a work or school Microsoft account.",
           ),
         );
         return;
@@ -263,7 +263,7 @@ export function useOneDriveSave(): OneDriveSave {
               t,
               t(
                 "oneDriveSave.chooseFolder",
-                "Choose a OneDrive folder to save to",
+                "Choose a OneDrive folder to upload to",
               ),
             ),
           },
@@ -343,11 +343,11 @@ export function useOneDriveSave(): OneDriveSave {
                 key: "folder",
                 label: t(
                   "oneDriveSave.saveToFolder",
-                  "Save to a OneDrive folder…",
+                  "Upload copy to OneDrive…",
                 ),
                 description: t(
                   "oneDriveSave.menu.folderHint",
-                  "Work or school accounts",
+                  "Choose a folder",
                 ),
                 icon: "folder-up",
                 onClick: () => void file().then((f) => saveToFolder(stub, f)),

@@ -6572,7 +6572,7 @@ topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Pag
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
 [oneDriveSave]
-chooseFolder = "Choose a OneDrive folder to save to"
+chooseFolder = "Choose a OneDrive folder to upload to"
 conflict = "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead."
 failedTitle = "Couldn't save to OneDrive"
 fromOneDrive = "From OneDrive"
@@ -6580,18 +6580,19 @@ homeName = "OneDrive"
 linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
 missing = "This file was moved or deleted in OneDrive. Save your version as a copy instead."
 open = "Open in OneDrive"
-personalUnsupported = "Saving to a chosen folder needs a work or school Microsoft account."
+personalUnsupported = "Uploading to a chosen folder needs a work or school Microsoft account."
 reconnect = "Reconnect"
 replaces = "Replaces {{name}}"
 saveCopy = "Save a copy"
-saveCopyToOneDrive = "Save a copy to OneDrive"
+saveCopyToOneDrive = "Save a copy next to it"
 saved = "Saved to OneDrive"
-saveToFolder = "Save to a OneDrive folder…"
+saveToFolder = "Upload copy to OneDrive…"
 saving = "Saving to OneDrive…"
 updateOriginal = "Update original in OneDrive"
+uploadToOneDrive = "Upload to OneDrive…"
 
 [oneDriveSave.menu]
-folderHint = "Work or school accounts"
+folderHint = "Choose a folder"
 
 [oneDriveSave.status]
 saved = "Saved to OneDrive"
