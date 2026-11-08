@@ -100,6 +100,24 @@ describe("viewer permission readiness", () => {
     expect(read).not.toHaveBeenCalled();
   });
 
+  it("treats a PDF whose signatures cannot be read as signed", async () => {
+    const file = new File(["PDF"], "unreadable-signatures.pdf");
+    const { engine, opened, raw, buffer } = viewer(file);
+    raw.getSignatures.mockReturnValue(
+      PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: "signature read failed",
+      }),
+    );
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({
+      encrypted: false,
+      signed: true,
+    });
+  });
+
   it("does not publish unrestricted access while encrypted authentication is pending", async () => {
     const file = new File(["protected"], "large.pdf");
     Object.defineProperty(file, "size", { value: 125 * 1024 ** 2 });

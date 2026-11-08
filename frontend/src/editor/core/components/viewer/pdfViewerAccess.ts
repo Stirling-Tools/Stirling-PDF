@@ -81,7 +81,7 @@ export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
               task.resolve(document);
             },
             () => {
-              rememberUnencryptedPdf(source, document.pageCount);
+              rememberUnencryptedPdf(source, document.pageCount, true);
               task.resolve(document);
             },
           );

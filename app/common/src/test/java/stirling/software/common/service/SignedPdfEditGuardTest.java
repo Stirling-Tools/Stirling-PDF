@@ -26,6 +26,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerMapping;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolArity;
@@ -39,7 +40,7 @@ class SignedPdfEditGuardTest {
     private static final String CERT_SIGN = "/api/v1/security/cert-sign";
     private static final String TO_IMAGE = "/api/v1/convert/pdf/img";
     private static final ToolIOSource TOOL_IO =
-            ToolIOSource.of(
+            ToolIORegistry.forSpecs(
                     Map.of(
                             ROTATE, spec(ToolFormat.PDF),
                             CERT_SIGN, spec(ToolFormat.PDF),
@@ -76,6 +77,34 @@ class SignedPdfEditGuardTest {
             assertThatThrownBy(() -> guard.check(signed))
                     .isInstanceOf(ResponseStatusException.class)
                     .hasMessageContaining("digitally signed");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/api/v1/general/rotate-%70df",
+                "/api/v1/general/rotate-pdf;jsessionid=1",
+                "/api/v1/general/%72otate-pdf"
+            })
+    void refusesAnEncodedSpellingOfTheSameEndpoint(String uri) throws IOException {
+        properties.getSecurity().setBlockSignedPdfEdits(true);
+        requestTo(uri);
+        try (PDDocument signed = Loader.loadPDF(signedPdf())) {
+            assertThatThrownBy(() -> guard.check(signed))
+                    .isInstanceOf(ResponseStatusException.class);
+        }
+    }
+
+    @Test
+    void usesTheRoutePatternSpringMatched() throws IOException {
+        properties.getSecurity().setBlockSignedPdfEdits(true);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/anything/else");
+        request.setAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, ROTATE);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try (PDDocument signed = Loader.loadPDF(signedPdf())) {
+            assertThatThrownBy(() -> guard.check(signed))
+                    .isInstanceOf(ResponseStatusException.class);
         }
     }
 
