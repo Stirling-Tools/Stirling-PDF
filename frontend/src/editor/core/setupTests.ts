@@ -3,6 +3,15 @@ import { vi } from "vitest";
 import i18n from "i18next";
 import { installFailOnConsole } from "@editor/tests/failOnConsole";
 
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
+  isTauri: () => false,
+}));
+
 // jsdom is missing the same APIs WebKit is, so tests must agree with the
 // browser. Same module `src/index.tsx` installs.
 import "@editor/utils/engineShims";
