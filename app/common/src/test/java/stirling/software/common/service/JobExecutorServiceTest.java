@@ -165,6 +165,26 @@ class JobExecutorServiceTest {
     }
 
     @Test
+    void shouldRecordHttpRejectionsWithABodyAsJobErrors() {
+        ResponseEntity<?> rejection =
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "bad input"));
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<?> queuedWork = invocation.getArgument(2);
+                            queuedWork.get();
+                            return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+                        });
+
+        jobExecutorService.runJobGeneric(true, () -> rejection, 5000, true, 80);
+
+        verify(taskManager).setError(anyString(), eq("Job rejected with HTTP status 400"));
+        verify(taskManager, never()).setResult(anyString(), any());
+        verify(taskManager, never()).setComplete(anyString());
+    }
+
+    @Test
     void shouldKeepBodylessSuccessfulJobsSuccessful() {
         ResponseEntity<?> success = ResponseEntity.noContent().build();
 
