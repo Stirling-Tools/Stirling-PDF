@@ -957,6 +957,12 @@ public class ExceptionUtils {
         return new ToolFailedException(message, cause, ErrorCode.PDFA_CONVERSION_FAILED.getCode());
     }
 
+    public static ToolFailedException createConversionIncompleteException(String fileName) {
+        requireNonNull(fileName, "fileName");
+        String message = getMessage(ErrorCode.CONVERSION_INCOMPLETE, fileName);
+        return new ToolFailedException(message, null, ErrorCode.CONVERSION_INCOMPLETE.getCode());
+    }
+
     public static StepConfigurationException createInvalidArgumentException(
             String argumentName, String value) {
         requireNonNull(argumentName, "argumentName");
@@ -1346,7 +1352,9 @@ public class ExceptionUtils {
         DECODED_STREAM_TOO_LARGE(
                 "E087",
                 "error.decodedStreamTooLarge",
-                "Part of this document decompresses to more than this server''s limit of {0} MB.");
+                "Part of this document decompresses to more than this server''s limit of {0} MB."),
+        CONVERSION_INCOMPLETE(
+                "E088", "error.conversionIncomplete", "Only part of {0} could be converted");
 
         private final String code;
         private final String messageKey;
