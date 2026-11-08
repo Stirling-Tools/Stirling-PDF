@@ -644,7 +644,11 @@ public class ConvertPDFToPDFA {
         int replaced = 0;
         for (COSName key : resources.getFontNames()) {
             PDFont font = resources.getFont(key);
-            if (!(font instanceof PDType1Font) || font.isEmbedded()) continue;
+            if (font.isEmbedded()) continue;
+            // Type0/CID and Type3 fonts need their own glyph programs; replacing
+            // them with a Latin TrueType font would drop text. Only simple fonts
+            // with a single-byte encoding are safe to substitute.
+            if (!(font instanceof PDType1Font) && !(font instanceof PDTrueTypeFont)) continue;
             String substitute = pdfxFontSubstitute(font.getName());
             if (substitute == null) continue;
             try (InputStream fontStream =
@@ -677,6 +681,37 @@ public class ConvertPDFToPDFA {
         String name = baseFont == null ? "" : baseFont;
         int plus = name.indexOf('+');
         if (plus >= 0) name = name.substring(plus + 1);
+        String exact = pdfxFontSubstituteExact(name);
+        if (exact != null) return exact;
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (lower.contains("symbol")
+                || lower.contains("dingbat")
+                || lower.contains("wingding")
+                || lower.contains("webding")) {
+            return null;
+        }
+        boolean bold = lower.contains("bold") || lower.contains("black") || lower.contains("heavy");
+        boolean italic =
+                lower.contains("italic") || lower.contains("oblique") || lower.contains("slanted");
+        String family;
+        if (lower.contains("mono") || lower.contains("courier") || lower.contains("consol")) {
+            family = "LiberationMono";
+        } else if (lower.contains("serif")
+                || lower.contains("times")
+                || lower.contains("georgia")
+                || lower.contains("garamond")
+                || lower.contains("book")) {
+            family = "LiberationSerif";
+        } else {
+            family = "LiberationSans";
+        }
+        return family
+                + "-"
+                + (bold ? (italic ? "BoldItalic" : "Bold") : (italic ? "Italic" : "Regular"))
+                + ".ttf";
+    }
+
+    private static String pdfxFontSubstituteExact(String name) {
         return switch (name) {
             case "Helvetica", "Arial", "ArialMT" -> "LiberationSans-Regular.ttf";
             case "Helvetica-Bold", "Arial-BoldMT" -> "LiberationSans-Bold.ttf";

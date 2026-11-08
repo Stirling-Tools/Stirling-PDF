@@ -166,6 +166,29 @@ class ConvertPDFToPDFAMoreTest {
         return new MockMultipartFile("fileInput", "input.pdf", "application/pdf", simplePdfBytes());
     }
 
+    private MockMultipartFile customFontPdfFile() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            font.getCOSObject().setName(COSName.BASE_FONT, "CustomSans");
+            PDResources resources = new PDResources();
+            resources.put(COSName.getPDFName("F1"), font);
+            page.setResources(resources);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 12);
+                content.newLineAtOffset(100, 700);
+                content.showText("custom font");
+                content.endText();
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "custom-font.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
     private MockMultipartFile transparentPdfFile() throws IOException {
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -451,6 +474,37 @@ class ConvertPDFToPDFAMoreTest {
                     for (var name : resources.getFontNames()) {
                         PDFont font = resources.getFont(name);
                         assertThat(font.isEmbedded()).as("font %s", font.getName()).isTrue();
+                    }
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X-1a substitutes a custom non-embedded simple font")
+        void pdfX1aEmbedsCustomSimpleFont() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(customFontPdfFile());
+            request.setOutputFormat("pdfx-1a");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    PDResources resources = output.getPage(0).getResources();
+                    assertThat(resources.getFontNames()).isNotEmpty();
+                    for (var name : resources.getFontNames()) {
+                        PDFont font = resources.getFont(name);
+                        assertThat(font.isEmbedded()).as("font %s", font.getName()).isTrue();
+                        assertThat(font.getName()).contains("Liberation");
                     }
                 }
             }
