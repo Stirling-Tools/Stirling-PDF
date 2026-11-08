@@ -508,9 +508,13 @@ class PasswordProtectionControllerTest {
         assertThrows(
                 ResponseStatusException.class,
                 () -> controller.prepare(request(original, USER), "/api/v1/misc/compress-pdf"));
-        assertThrows(
-                ResponseStatusException.class,
-                () -> controller.prepare(request(original, OWNER), "/api/v1/security/cert-sign"));
+        var unsupported =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () ->
+                                controller.prepare(
+                                        request(original, OWNER), "/api/v1/security/cert-sign"));
+        assertEquals(400, unsupported.getStatusCode().value());
         try (var stream =
                         controller
                                 .prepare(request(original, USER), "/api/v1/general/rotate-pdf")
