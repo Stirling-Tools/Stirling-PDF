@@ -7,10 +7,16 @@ import java.io.DataOutputStream;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /** Worker main for pool tests: speaks the real protocol with no PDFium behind it. */
 public final class FakePdfWorkerMain {
+
+    private static final Duration BARRIER_TIMEOUT = Duration.ofSeconds(30);
 
     private FakePdfWorkerMain() {}
 
@@ -35,6 +41,11 @@ public final class FakePdfWorkerMain {
                 out.flush();
                 return;
             }
+            case "barrier" -> {
+                boolean met = awaitParties(Path.of(job.value()), job.sleepMillis());
+                writeOk(out, ProcessHandle.current().pid() + ":" + (met ? "met" : "missed"));
+                return;
+            }
             default -> {}
         }
         try {
@@ -42,9 +53,32 @@ public final class FakePdfWorkerMain {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        writeOk(out, ProcessHandle.current().pid() + ":" + job.value());
+    }
+
+    private static void writeOk(DataOutputStream out, String result) throws IOException {
         PdfWorkerProtocol.writeHeader(out);
         out.writeByte(PdfWorkerProtocol.STATUS_OK);
-        PdfWorkerProtocol.writeString(out, ProcessHandle.current().pid() + ":" + job.value());
+        PdfWorkerProtocol.writeString(out, result);
+    }
+
+    private static boolean awaitParties(Path directory, int parties) throws IOException {
+        Files.createFile(directory.resolve(String.valueOf(ProcessHandle.current().pid())));
+        long deadline = System.nanoTime() + BARRIER_TIMEOUT.toNanos();
+        while (System.nanoTime() - deadline < 0) {
+            try (Stream<Path> arrived = Files.list(directory)) {
+                if (arrived.count() >= parties) {
+                    return true;
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return false;
     }
 
     /** Echo job; the result is "pid:value", or "in-process:value" when run in this JVM. */
@@ -72,7 +106,11 @@ public final class FakePdfWorkerMain {
 
         @Override
         public String readResult(DataInputStream in) throws IOException {
-            return PdfWorkerProtocol.readString(in);
+            String result = PdfWorkerProtocol.readString(in);
+            if ("unreadable".equals(action)) {
+                throw new IllegalStateException("Result rejected: " + result);
+            }
+            return result;
         }
 
         @Override

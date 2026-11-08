@@ -126,6 +126,9 @@ public class PdfWorkerPool implements DisposableBean {
                 log.warn("PDF worker {} failed: {}", worker.id(), e.getMessage());
                 discard(worker);
                 throw e;
+            } catch (RuntimeException | Error e) {
+                discard(worker);
+                throw e;
             }
         } finally {
             permits.release();

@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import stirling.software.common.pdf.worker.FakePdfWorkerMain.TestJob;
 
@@ -48,35 +49,30 @@ class PdfWorkerPoolTest {
     }
 
     @Test
-    void runsJobsInParallelAcrossProcesses() throws Exception {
+    void runsJobsInParallelAcrossProcesses(@TempDir Path barrier) throws Exception {
         pool(3, 100, Duration.ofMinutes(1));
-        // Warm three workers so the timed run measures jobs, not JVM start-up.
-        runConcurrently(3, 1500);
-        long started = System.nanoTime();
-        Set<String> pids = runConcurrently(3, 1500);
-        long elapsedMillis = (System.nanoTime() - started) / 1_000_000;
-
-        assertThat(pids).hasSize(3).doesNotContain(String.valueOf(ProcessHandle.current().pid()));
-        assertThat(elapsedMillis).isLessThan(3000);
-    }
-
-    private Set<String> runConcurrently(int jobs, int sleepMillis) throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(jobs);
+        ExecutorService executor = Executors.newFixedThreadPool(3);
         try {
             List<Callable<String>> tasks =
-                    java.util.stream.IntStream.range(0, jobs)
+                    java.util.stream.IntStream.range(0, 3)
                             .<Callable<String>>mapToObj(
                                     i ->
                                             () ->
                                                     pool.execute(
                                                             new TestJob(
-                                                                    "echo", "j" + i, sleepMillis)))
+                                                                    "barrier",
+                                                                    barrier.toString(),
+                                                                    3)))
                             .toList();
             Set<String> pids = new HashSet<>();
             for (Future<String> f : executor.invokeAll(tasks)) {
-                pids.add(pid(f.get()));
+                String result = f.get();
+                assertThat(result).endsWith(":met");
+                pids.add(pid(result));
             }
-            return pids;
+            assertThat(pids)
+                    .hasSize(3)
+                    .doesNotContain(String.valueOf(ProcessHandle.current().pid()));
         } finally {
             executor.shutdownNow();
         }
@@ -107,6 +103,18 @@ class PdfWorkerPoolTest {
 
         String next = pool.execute(new TestJob("echo", "b", 0));
         assertThat(pid(next)).isNotEqualTo(pid(first));
+    }
+
+    @Test
+    void uncheckedFailureDiscardsTheWorker() throws Exception {
+        pool(1, 100, Duration.ofMinutes(1));
+        String first = pool.execute(new TestJob("echo", "a", 0));
+
+        assertThatThrownBy(() -> pool.execute(new TestJob("unreadable", "x", 0)))
+                .isInstanceOf(IllegalStateException.class);
+
+        assertThat(pool.liveWorkers()).isZero();
+        assertThat(pid(pool.execute(new TestJob("echo", "b", 0)))).isNotEqualTo(pid(first));
     }
 
     @Test
