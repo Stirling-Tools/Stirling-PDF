@@ -98,6 +98,28 @@ fn find_bundled_jre(resource_dir: &Path) -> Result<PathBuf, String> {
     Ok(java_executable)
 }
 
+#[cfg(not(windows))]
+fn jpdfium_native_dir(java_path: &Path) -> Option<PathBuf> {
+    let (os, bridge) = if cfg!(target_os = "macos") {
+        ("darwin", "libjpdfium.dylib")
+    } else {
+        ("linux", "libjpdfium.so")
+    };
+    let arch = match std::env::consts::ARCH {
+        "aarch64" => "arm64",
+        "x86_64" => "x64",
+        other => other,
+    };
+    let dir = java_path.parent()?.parent()?.join("natives").join(format!("{os}-{arch}"));
+    dir.join(bridge).is_file().then_some(dir)
+}
+
+#[cfg(windows)]
+fn jpdfium_native_dir(java_path: &Path) -> Option<PathBuf> {
+    let bin_dir = java_path.parent()?;
+    bin_dir.join("jpdfium.dll").is_file().then(|| bin_dir.to_path_buf())
+}
+
 // Find the Stirling-PDF JAR file
 fn find_stirling_jar(resource_dir: &Path) -> Result<PathBuf, String> {
     let libs_dir = resource_dir.join("libs");
@@ -333,6 +355,20 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Enable the login agreement on local desktop installs when it has been provisioned.
     if crate::commands::connection::login_agreement_enabled(app) {
         java_options.push("-Dlegal.loginAgreement.enabled=true");
+    }
+
+    let library_path_option = match jpdfium_native_dir(java_path) {
+        Some(dir) => {
+            add_log(format!("📚 JPDFium natives: {}", dir.display()));
+            (!cfg!(windows)).then(|| format!("-Djava.library.path={}", dir.display()))
+        }
+        None => {
+            add_log("⚠️ Bundled JPDFium natives not found; PDFium features will be unavailable".to_string());
+            None
+        }
+    };
+    if let Some(option) = &library_path_option {
+        java_options.push(option);
     }
 
     java_options.push("-jar");
@@ -617,7 +653,7 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_stirling_jar, version_key};
+    use super::{find_stirling_jar, jpdfium_native_dir, version_key};
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {
@@ -756,5 +792,26 @@ mod tests {
 
         assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn jpdfium_native_dir_resolves_the_host_platform_inside_the_jre() {
+        let jre = std::env::temp_dir().join(format!("stirling-jpdfium-natives-{}", std::process::id()));
+        let java = jre.join("bin").join("java");
+        assert_eq!(jpdfium_native_dir(&java), None);
+
+        let arch = if cfg!(target_arch = "aarch64") { "arm64" } else { "x64" };
+        let (os, bridge) = if cfg!(target_os = "macos") {
+            ("darwin", "libjpdfium.dylib")
+        } else {
+            ("linux", "libjpdfium.so")
+        };
+        let natives = jre.join("natives").join(format!("{os}-{arch}"));
+        std::fs::create_dir_all(&natives).unwrap();
+        std::fs::write(natives.join(bridge), b"").unwrap();
+
+        assert_eq!(jpdfium_native_dir(&java), Some(natives));
+        let _ = std::fs::remove_dir_all(&jre);
     }
 }
