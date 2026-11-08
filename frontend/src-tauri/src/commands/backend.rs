@@ -233,13 +233,10 @@ fn normalize_path(path: &Path) -> PathBuf {
     if cfg!(windows) {
         let path_str = path.to_string_lossy();
         if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
-            PathBuf::from(stripped)
-        } else {
-            path.to_path_buf()
+            return PathBuf::from(stripped);
         }
-    } else {
-        path.to_path_buf()
     }
+    path.to_path_buf()
 }
 
 fn migrate_legacy_workspace(legacy_dir: &Path, target_root: &Path) -> std::io::Result<()> {
@@ -560,14 +557,11 @@ pub async fn start_backend(
     add_log(format!("🔍 Resource directory: {:?}", resource_dir));
 
     // Find the bundled JRE
-    let java_executable = find_bundled_jre(&resource_dir).inspect_err(|_| {
-        reset_starting_flag();
-    })?;
+    let java_executable =
+        find_bundled_jre(&resource_dir).inspect_err(|_| reset_starting_flag())?;
 
     // Find the Stirling-PDF JAR
-    let jar_path = find_stirling_jar(&resource_dir).inspect_err(|_| {
-        reset_starting_flag();
-    })?;
+    let jar_path = find_stirling_jar(&resource_dir).inspect_err(|_| reset_starting_flag())?;
 
     // Normalize the paths to remove Windows UNC prefix
     let normalized_java_path = normalize_path(&java_executable);
@@ -578,9 +572,8 @@ pub async fn start_backend(
     add_log(format!("📦 Normalized Java path: {:?}", normalized_java_path));
 
     // Create and start the Java command
-    run_stirling_pdf_jar(&app, &normalized_java_path, &normalized_jar_path).inspect_err(|_| {
-        reset_starting_flag();
-    })?;
+    run_stirling_pdf_jar(&app, &normalized_java_path, &normalized_jar_path)
+        .inspect_err(|_| reset_starting_flag())?;
 
     // Reset the starting flag since startup is complete
     reset_starting_flag();

@@ -1,6 +1,7 @@
 name: Desktop Rust checks
 
-# Fast Rust gate for the Tauri desktop shell: clippy + cargo test, no bundling.
+# Fast Rust test gate for the Tauri desktop shell: cargo test, no bundling.
+# Clippy runs separately in rust-lint.yml.
 #
 # tauri-build.yml also runs the Rust tests, but only after `task desktop:prepare`
 # has built the backend JAR and jlink runtime - 20+ minutes before a broken Rust
@@ -9,7 +10,7 @@ name: Desktop Rust checks
 #
 # Runs on all three desktop OSes deliberately: large parts of src-tauri sit
 # behind #[cfg(target_os = ...)] (native printing, default-handler registration,
-# keyring backends) and are simply not compiled - let alone linted - anywhere
+# keyring backends) and are simply not compiled - let alone tested - anywhere
 # else.
 on:
   workflow_call:
@@ -60,7 +61,6 @@ jobs:
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          components: clippy
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
@@ -74,9 +74,6 @@ jobs:
 
       - name: Setup Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-
-      - name: Clippy
-        run: task desktop:lint
 
       - name: Cargo test
         run: task desktop:test:rust

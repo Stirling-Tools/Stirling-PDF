@@ -1,6 +1,7 @@
 name: Build and Test Workflow
 
-# Top-level PR / merge-queue gate. Detects which paths changed and dispatches
+# PR / merge-queue gate, including stacked PRs targeting feature branches.
+# Detects which paths changed and dispatches
 # to the dedicated reusable workflows under .github/workflows/. Each child
 # workflow keeps its own setup/teardown so this file stays a routing layer.
 #
@@ -10,7 +11,6 @@ name: Build and Test Workflow
 
 on:
   pull_request:
-    branches: ["main"]
   merge_group:
     branches: ["main"]
   workflow_dispatch:
@@ -49,7 +49,7 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
       - name: Checkout repository
@@ -195,7 +195,7 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
       dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
 
-  # Fast Rust gate: clippy + cargo test on all three desktop OSes in a couple
+  # Fast Rust gate: cargo test on all three desktop OSes in a couple
   # of minutes, because it skips the jlink/bootJar prep that tauri-build needs.
   desktop-rust:
     if: needs.files-changed.outputs.tauri == 'true'
@@ -239,6 +239,15 @@ jobs:
       platform: windows-macos
       sign: true
       use_shared_cache: true
+
+  rust-lint:
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.tauri == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/rust-lint.yml
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -329,6 +338,7 @@ jobs:
       - desktop-rust
       - desktop-e2e
       - tauri-build
+      - rust-lint
       - ai-engine
       - generated-models
       - pre-commit
@@ -336,7 +346,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -359,6 +369,7 @@ jobs:
             desktop-rust=${{ needs.desktop-rust.result }}
             desktop-e2e=${{ needs.desktop-e2e.result }}
             tauri-build=${{ needs.tauri-build.result }}
+            rust-lint=${{ needs.rust-lint.result }}
             ai-engine=${{ needs.ai-engine.result }}
             generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}

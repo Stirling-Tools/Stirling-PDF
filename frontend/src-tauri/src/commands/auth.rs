@@ -505,7 +505,7 @@ pub async fn login(
         let username = login_response.user.user_metadata
             .as_ref()
             .and_then(|m| m.full_name.clone())
-            .or(email.clone())
+            .or_else(|| email.clone())
             .unwrap_or(username);
 
         Ok(LoginResponse {

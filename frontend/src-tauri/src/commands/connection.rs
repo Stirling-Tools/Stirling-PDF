@@ -30,12 +30,12 @@ const PROVISIONING_FILE_NAME: &str = "stirling-provisioning.json";
 /// * `Prompt` – default. Show the update popup when a new version is available
 ///   and let the user decide whether to install.
 /// * `Auto` – silently download and install updates on startup, then restart.
-///   Intended for managed deployments (Intune/MDM) where the user cannot (or
-///   should not) be prompted.
+///   Intended for managed deployments (Intune/MDM) where the user cannot
+///   (or should not) be prompted.
 /// * `Disabled` – never check for updates, never show the update UI.
 ///   Administrators are expected to push updates through their normal
 ///   packaging flow.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum UpdateMode {
     #[default]

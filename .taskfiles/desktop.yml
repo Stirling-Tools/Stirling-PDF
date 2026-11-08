@@ -38,7 +38,7 @@ vars:
               linux-amd64)   echo "linux-x64";;
               linux-arm64)   echo "linux-arm64";;
               windows-amd64) echo "windows-x64";;
-              windows-arm64) echo "none";;  # no JPDFium windows-arm64 natives published yet
+              windows-arm64) echo "windows-arm64";;
               *)             echo "all";;
           esac
       fi
@@ -104,8 +104,39 @@ tasks:
       - cargo test
 
   # ============================================================
-  # Rust checks - no JRE/JAR needed, so they run in ~2min
+  # Lint, format, test
   # ============================================================
+
+  lint:
+    desc: "Run linting"
+    cmds:
+      - task: lint:app
+      - task: lint:provisioner
+      - task: lint:thumbnail-handler
+
+  lint:app:
+    desc: "Lint the Tauri app crate"
+    dir: src-tauri
+    env:
+      # Clippy only needs the crate graph. Blanking the bundle resources stops
+      # tauri-build failing on the libs/*.jar and runtime/jre globs that only
+      # `desktop:prepare` produces, so linting does not need a backend build.
+      TAURI_CONFIG: '{"bundle":{"resources":[]}}'
+    cmds:
+      - cargo clippy --all-targets --all-features -- -D warnings
+
+  lint:provisioner:
+    desc: "Lint the installer provisioner crate"
+    dir: src-tauri/provisioner
+    cmds:
+      - cargo clippy --all-targets -- -D warnings
+
+  lint:thumbnail-handler:
+    desc: "Lint the Windows thumbnail handler crate"
+    platforms: [windows]
+    dir: src-tauri/thumbnail-handler
+    cmds:
+      - cargo clippy --all-targets -- -D warnings
 
   test:rust:
     desc: "Run Tauri/Cargo tests without building the JRE/JAR (fast)"
@@ -115,19 +146,20 @@ tasks:
     cmds:
       - cargo test --locked {{.CLI_ARGS}}
 
-  lint:
-    desc: "Clippy the Tauri Rust sources"
-    dir: src-tauri
-    env:
-      TAURI_CONFIG: '{{.RUST_ONLY_CONFIG}}'
-    cmds:
-      - cargo clippy --locked --all-targets -- -D warnings
+  format:
+    desc: "Auto-fix Rust formatting (not implemented yet)"
+    cmds: []
+
+  format:check:
+    desc: "Check Rust formatting (not implemented yet)"
+    cmds: []
 
   check:
-    desc: "Fast desktop Rust gate (clippy + tests, no bundle)"
+    desc: "Full desktop quality gate"
     cmds:
       - task: lint
-      - task: test:rust
+      - task: format:check
+      - task: test
 
   # ============================================================
   # E2E - drives the real built app through tauri-driver

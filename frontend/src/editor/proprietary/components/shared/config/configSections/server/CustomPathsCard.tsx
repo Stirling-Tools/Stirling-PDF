@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { TextInput, Textarea, Stack, Paper, Text, Group } from "@mantine/core";
 import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import type { GeneralCardProps } from "@editor/components/shared/config/configSections/server/serverCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Pipeline directories and external tool paths, all under system.customPaths. */
 export function CustomPathsCard({
@@ -103,6 +104,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -142,6 +144,7 @@ export function CustomPathsCard({
 
         <div>
           <Textarea
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -201,6 +204,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -249,6 +253,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
@@ -288,6 +293,7 @@ export function CustomPathsCard({
 
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>
