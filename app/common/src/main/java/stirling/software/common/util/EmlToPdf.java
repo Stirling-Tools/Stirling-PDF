@@ -11,6 +11,12 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class EmlToPdf {
 
+    /** Renders sanitized email HTML while preserving interruption for request cancellation. */
+    @FunctionalInterface
+    public interface HtmlToPdfRenderer {
+        byte[] render(String html) throws IOException, InterruptedException;
+    }
+
     public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
             throws IOException {
         return convertEmlToHtml(emlBytes, request, null);
@@ -37,6 +43,29 @@ public class EmlToPdf {
             CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
+        return convertEmlToPdf(
+                request,
+                emlBytes,
+                pdfDocumentFactory,
+                customHtmlSanitizer,
+                html ->
+                        convertHtmlToPdf(
+                                weasyprintPath,
+                                request,
+                                html,
+                                tempFileManager,
+                                customHtmlSanitizer));
+    }
+
+    /** Keeps parsing, sanitization and attachment rules independent of the PDF renderer. */
+    public static byte[] convertEmlToPdf(
+            EmlToPdfRequest request,
+            byte[] emlBytes,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            CustomHtmlSanitizer customHtmlSanitizer,
+            HtmlToPdfRenderer renderer)
+            throws IOException, InterruptedException {
+
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
         try {
@@ -47,13 +76,7 @@ public class EmlToPdf {
                     EmlProcessingUtils.generateEnhancedEmailHtml(
                             emailContent, request, customHtmlSanitizer);
 
-            byte[] pdfBytes =
-                    convertHtmlToPdf(
-                            weasyprintPath,
-                            request,
-                            htmlContent,
-                            tempFileManager,
-                            customHtmlSanitizer);
+            byte[] pdfBytes = renderer.render(htmlContent);
 
             if (shouldAttachFiles(emailContent, request)) {
                 pdfBytes =
