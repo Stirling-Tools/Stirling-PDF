@@ -1289,9 +1289,9 @@ public class GeneralUtils {
      * 150 DPI, at a 1600 px longest edge (comic pages are laid out as 1 image pixel = 1 PDF point
      * and would otherwise report 72 DPI and escape every DPI threshold), and re-encoded as JPEG at
      * quality 65; Flate/PNG images are converted to JPEG too. JPDFium downsamples with a Lanczos
-     * kernel and writes JPEGs with optimized Huffman tables, which keeps the smaller edge and
-     * quality visually ahead of Ghostscript's /ebook output. Text stays selectable because pages
-     * are never rasterized.
+     * kernel and encodes JPEG through the pure-Rust mozjpeg port (trellis quantisation and
+     * deringing), which keeps the smaller edge and quality visually ahead of Ghostscript's /ebook
+     * output. Text stays selectable because pages are never rasterized.
      *
      * <p>The fidelity check is skipped: on pixel-sized comic pages the preview comparison reports
      * downsample softness at its capped 1200 px preview, which is invisible on any ebook screen, so
