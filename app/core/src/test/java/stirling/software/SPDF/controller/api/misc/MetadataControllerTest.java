@@ -217,6 +217,33 @@ class MetadataControllerTest {
     }
 
     @Test
+    void keepOmittedIgnoresCustomPairsNamedAfterStandardFields() throws Exception {
+        PDDocument source = new PDDocument();
+        source.addPage(new PDPage());
+        source.getDocumentInformation().getCOSObject().setName(COSName.TRAPPED, "Maybe");
+        source.getDocumentInformation().getCOSObject().setString(COSName.CREATION_DATE, "D:202501");
+        Map<String, String> params = new HashMap<>();
+        params.put("customKey1", "Trapped");
+        params.put("customValue1", "True");
+        params.put("customKey2", "creationdate");
+        params.put("customValue2", "not a date");
+        params.put("customKey3", "Department");
+        params.put("customValue3", "Legal");
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(mockFile);
+        request.setKeepOmitted(true);
+        request.setAllRequestParams(params);
+
+        try (PDDocument result = writeMetadata(source, request)) {
+            COSDictionary info = result.getDocumentInformation().getCOSObject();
+            assertEquals("Maybe", info.getNameAsString(COSName.TRAPPED));
+            assertEquals("D:202501", info.getString(COSName.CREATION_DATE));
+            assertEquals(
+                    "Legal", result.getDocumentInformation().getCustomMetadataValue("Department"));
+        }
+    }
+
+    @Test
     void deleteAllClearsDatesEvenWhenKeepOmittedIsEnabled() throws Exception {
         PDDocument source = new PDDocument();
         source.addPage(new PDPage());
