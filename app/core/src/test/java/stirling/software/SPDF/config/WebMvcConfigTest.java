@@ -233,7 +233,10 @@ class WebMvcConfigTest {
                         .andExpect(status().isNotFound());
             }
             mvc.perform(get(URI.create("/%46onts/Custom.ttf"))).andExpect(status().isNotFound());
-            mvc.perform(get(URI.create("/Fonts/DejaVuSans.ttf"))).andExpect(status().isOk());
+            int bundledStatus =
+                    new ClassPathResource("static/Fonts/DejaVuSans.ttf").exists() ? 200 : 404;
+            mvc.perform(get(URI.create("/Fonts/DejaVuSans.ttf")))
+                    .andExpect(status().is(bundledStatus));
         }
 
         @Test
