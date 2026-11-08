@@ -20,9 +20,13 @@ interface ServerFontFamily {
 }
 
 const FONT_ID = /^[0-9a-f]{64}$/;
+export const SERVER_FONTS_REFRESH_MS = 30_000;
 
 let resolved: LocalFont[] | null = null;
 let manifestPending: Promise<LocalFont[] | null> | null = null;
+let refreshPending: Promise<void> | null = null;
+let publishedManifest = "";
+let fetchedAt = 0;
 let generation = 0;
 let faceByFont = new Map<LocalFont, ServerFontFace>();
 const listeners = new Set<() => void>();
@@ -64,6 +68,7 @@ function readFamilies(data: unknown): ServerFontFamily[] {
 }
 
 function publish(families: ServerFontFamily[]): LocalFont[] {
+  publishedManifest = JSON.stringify(families);
   const fonts: LocalFont[] = [];
   const byFont = new Map<LocalFont, ServerFontFace>();
   for (const { family, faces } of families) {
@@ -99,10 +104,26 @@ async function fetchManifest(): Promise<ServerFontFamily[] | null> {
   }
 }
 
+function refreshManifest(): void {
+  if (refreshPending) return;
+  const started = generation;
+  fetchedAt = Date.now();
+  const job = fetchManifest().then((families) => {
+    if (refreshPending === job) refreshPending = null;
+    if (started !== generation || !families) return;
+    if (JSON.stringify(families) !== publishedManifest) publish(families);
+  });
+  refreshPending = job;
+}
+
 export function loadServerFonts(): Promise<LocalFont[] | null> {
-  if (resolved) return Promise.resolve(resolved);
+  if (resolved) {
+    if (Date.now() - fetchedAt >= SERVER_FONTS_REFRESH_MS) refreshManifest();
+    return Promise.resolve(resolved);
+  }
   if (!manifestPending) {
     const started = generation;
+    fetchedAt = Date.now();
     manifestPending = fetchManifest().then((families) => {
       if (started !== generation) return null;
       if (families) return publish(families);
@@ -122,6 +143,9 @@ function clearServerFontState(): void {
   generation++;
   resolved = null;
   manifestPending = null;
+  refreshPending = null;
+  publishedManifest = "";
+  fetchedAt = 0;
   faceByFont = new Map();
   bytesByFaceId.clear();
   faceIdByName.clear();
@@ -211,6 +235,7 @@ async function downloadFace(id: string): Promise<Uint8Array | null> {
       continue;
     }
   }
+  if (started === generation) fetchedAt = 0;
   return null;
 }
 

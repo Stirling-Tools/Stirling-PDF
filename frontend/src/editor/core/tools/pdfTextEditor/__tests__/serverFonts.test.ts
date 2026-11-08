@@ -4,6 +4,7 @@ const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
 import {
+  SERVER_FONTS_REFRESH_MS,
   SERVER_FONTS_URL,
   forgetServerFontList,
   getServerFontBytes,
@@ -84,6 +85,7 @@ function faceRequests(): string[] {
 
 describe("server fonts", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     delete (document as unknown as { fonts?: unknown }).fonts;
   });
@@ -130,7 +132,7 @@ describe("server fonts", () => {
     expect(await loadServerFonts()).toHaveLength(3);
   });
 
-  it("keeps an empty answer for the session instead of asking again", async () => {
+  it("keeps an empty answer instead of asking again straight away", async () => {
     get.mockResolvedValue({ data: { families: [] } });
 
     expect(await loadServerFonts()).toEqual([]);
@@ -358,6 +360,62 @@ describe("server fonts", () => {
     expect(await loadServerFontBytes("Acme Sans")).toBeNull();
     expect(faceCalls).toBe(2);
     expect(getServerFontBytes("Acme Sans")).toBeNull();
+  });
+
+  it("revalidates the list once it is stale and publishes only a change", async () => {
+    let now = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    serveManifestAndFaces();
+    const first = await loadServerFonts();
+    const listener = vi.fn();
+    const unsubscribe = subscribeServerFonts(listener);
+
+    now += SERVER_FONTS_REFRESH_MS - 1;
+    expect(await loadServerFonts()).toBe(first);
+    expect(get).toHaveBeenCalledTimes(1);
+
+    now += 1;
+    loadServerFonts();
+    loadServerFonts();
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    await Promise.resolve();
+    expect(listener).not.toHaveBeenCalled();
+    expect(loadedServerFonts()).toBe(first);
+
+    get.mockResolvedValue({
+      data: {
+        families: [
+          {
+            family: "Beta Serif",
+            faces: [face("5".repeat(64), "Regular", false, false)],
+          },
+        ],
+      },
+    });
+    now += SERVER_FONTS_REFRESH_MS;
+    loadServerFonts();
+    await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(1));
+    expect(loadedServerFonts()?.map((font) => font.family)).toEqual([
+      "Beta Serif",
+    ]);
+    unsubscribe();
+  });
+
+  it("asks for the list again after a face fails to download", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    get.mockImplementation(async (url: string) => {
+      if (url === SERVER_FONTS_URL) return { data: MANIFEST };
+      throw new Error("gone");
+    });
+
+    expect(await loadServerFontBytes("Acme Sans")).toBeNull();
+    loadServerFonts();
+
+    await vi.waitFor(() =>
+      expect(
+        get.mock.calls.filter(([url]) => url === SERVER_FONTS_URL),
+      ).toHaveLength(2),
+    );
   });
 
   it("returns null for a family the server does not have", async () => {
