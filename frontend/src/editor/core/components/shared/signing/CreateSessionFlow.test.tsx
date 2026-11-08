@@ -8,6 +8,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
 import UserSelector from "@editor/components/shared/UserSelector";
 import { qk } from "@editor/query/keys";
+import type { SignatureSettings } from "@editor/components/tools/certSign/SignatureSettingsInput";
 
 const viewport = vi.hoisted(() => ({ mobile: false }));
 vi.mock("@editor/hooks/useIsMobile", () => ({
@@ -76,7 +77,7 @@ function Harness({
   initialIds = [],
   initialFileSelected = true,
 }: {
-  onSubmit: ReturnType<typeof vi.fn>;
+  onSubmit: ReturnType<typeof vi.fn<(settings: SignatureSettings) => void>>;
   creating?: boolean;
   initialIds?: number[];
   initialFileSelected?: boolean;
@@ -124,7 +125,7 @@ function show({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   client.setQueryData(qk.users(), availableUsers);
-  const onSubmit = vi.fn();
+  const onSubmit = vi.fn<(settings: SignatureSettings) => void>();
   const content = () => (
     <QueryClientProvider client={client}>
       <MemoryRouter>

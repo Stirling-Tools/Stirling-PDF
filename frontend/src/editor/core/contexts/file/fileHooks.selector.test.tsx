@@ -121,7 +121,7 @@ describe("file hooks — selector subscriptions", () => {
 
 describe("useFileSelectors — render-phase misuse guard", () => {
   const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
-    spy.mock.calls.filter((args) =>
+    spy.mock.calls.filter((args: unknown[]) =>
       String(args[0]).includes("[useFileSelectors]"),
     );
 
@@ -171,7 +171,7 @@ describe("useFileContext — render-phase misuse guard", () => {
   // of the SELECTION slice through its exposed selectors would silently go
   // stale. The guard covers exactly those selectors and nothing else.
   const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
-    spy.mock.calls.filter((args) =>
+    spy.mock.calls.filter((args: unknown[]) =>
       String(args[0]).includes("[useFileContext]"),
     );
 
