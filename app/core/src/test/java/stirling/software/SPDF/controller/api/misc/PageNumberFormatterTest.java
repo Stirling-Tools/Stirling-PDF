@@ -42,6 +42,12 @@ class PageNumberFormatterTest {
         assertThat(PageNumberFormatter.toRoman(value)).isEqualTo(expected);
     }
 
+    @Test
+    @DisplayName("toRoman has no upper bound")
+    void toRomanHasNoUpperBound() {
+        assertThat(PageNumberFormatter.toRoman(1_000_000)).isEqualTo("M".repeat(1000));
+    }
+
     @ParameterizedTest
     @CsvSource({"1, A", "2, B", "26, Z", "27, AA", "52, AZ", "53, BA", "702, ZZ", "703, AAA"})
     @DisplayName("toAlphabetic uses spreadsheet-style letters")

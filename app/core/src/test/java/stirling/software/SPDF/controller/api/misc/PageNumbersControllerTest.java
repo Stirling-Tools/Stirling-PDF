@@ -565,6 +565,21 @@ class PageNumbersControllerTest {
         }
 
         @Test
+        @DisplayName("Starting numbers above 3999 keep producing Roman numerals")
+        void startingNumberAboveRomanLimit() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-high.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-uppercase");
+            request.setStartingNumber(4999);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("MMMMCMXCIX", "MMMMM");
+        }
+
+        @Test
         @DisplayName("Zero-padding is ignored for Roman numerals")
         void zeroPadIgnoredForRoman() throws Exception {
             MockMultipartFile file = createPdf(2, "roman-pad.pdf");
