@@ -418,6 +418,49 @@ describe("SourceModal", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("offers a destination only the settings that apply to writing", async () => {
+    render(<SourceModal open direction="output" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Signed contracts" },
+    });
+
+    expect(
+      screen.queryByText("portal.sources.networkFields.recursive.label"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.builder.advanced"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.builder.create"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByText("portal.sources.builder.createDestination"),
+    );
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    const saved = createSource.mock.calls[0][0] as {
+      type: string;
+      options: Record<string, string>;
+    };
+    expect(saved.type).toBe("sharepoint");
+    expect(saved.options).toMatchObject({
+      authMode: "account",
+      accountId: "12",
+    });
+  });
+
+  it("keeps the processing settings on a source", () => {
+    renderModal();
+    fireEvent.click(screen.getByText("portal.sources.types.sharepoint.label"));
+    expect(
+      screen.getByText("portal.sources.networkFields.recursive.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.advanced"),
+    ).toBeInTheDocument();
+  });
+
   it("keeps source wording for inputs", () => {
     renderModal();
     expect(
