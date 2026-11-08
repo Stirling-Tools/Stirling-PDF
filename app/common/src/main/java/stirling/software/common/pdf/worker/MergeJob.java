@@ -144,13 +144,7 @@ public record MergeJob(
                 PdfBookmarkEditor.setBookmarks(docs.getFirst(), combinedTree, output);
                 return pageCounts;
             }
-            try (PdfDocument merged = PdfMerge.merge(docs)) {
-                if (combinedTree.entries().isEmpty()) {
-                    merged.save(output);
-                } else {
-                    PdfBookmarkEditor.setBookmarks(merged, combinedTree, output);
-                }
-            }
+            return mergeWithQpdf(docs, combinedTree, pageCounts);
         } catch (RuntimeException e) {
             throw new IOException("JPDFium merge failed", e);
         } finally {
@@ -160,6 +154,29 @@ public record MergeJob(
                 } catch (Exception ignored) {
                 }
             }
+        }
+    }
+
+    // qpdf merges the original files outside the PDFium lock; PDFium only re-adds bookmarks.
+    private int[] mergeWithQpdf(List<PdfDocument> docs, BookmarkTree tree, int[] pageCounts)
+            throws IOException {
+        for (PdfDocument doc : docs) {
+            doc.close();
+        }
+        docs.clear();
+        if (tree.entries().isEmpty()) {
+            PdfMerge.mergeFilesToFile(inputs, output);
+            return pageCounts;
+        }
+        Path staged = Files.createTempFile(output.getParent(), "qpdf-merge", ".pdf");
+        try {
+            Files.delete(staged);
+            PdfMerge.mergeFilesToFile(inputs, staged);
+            try (PdfDocument merged = PdfDocument.open(staged)) {
+                PdfBookmarkEditor.setBookmarks(merged, tree, output);
+            }
+        } finally {
+            Files.deleteIfExists(staged);
         }
         return pageCounts;
     }
