@@ -77,7 +77,21 @@ export default function AutomationEntry({
     if (!description && operations.length === 0) return null;
 
     const toolChain = operations.map((op, index) => (
-      <React.Fragment key={`${op}-${index}`}>
+      <span
+        key={`${op}-${index}`}
+        data-testid="automation-chain-step"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {index > 0 && (
+          <Text component="span" size="sm" mx={4}>
+            →
+          </Text>
+        )}
         <Text
           component="span"
           size="sm"
@@ -93,12 +107,7 @@ export default function AutomationEntry({
         >
           {getToolDisplayName(op)}
         </Text>
-        {index < operations.length - 1 && (
-          <Text component="span" size="sm" mx={4}>
-            →
-          </Text>
-        )}
-      </React.Fragment>
+      </span>
     ));
 
     return (
