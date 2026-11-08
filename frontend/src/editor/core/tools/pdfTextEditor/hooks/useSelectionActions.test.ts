@@ -332,7 +332,7 @@ describe("useSelectionActions on unfitted scanned text", () => {
     expect(dispatch).not.toHaveBeenCalled();
     expect(result.current.fittingScan).toBe(true);
     await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
-    expect(result.current.fittingScan).toBe(false);
+    await waitFor(() => expect(result.current.fittingScan).toBe(false));
     expect(calls).toBe(3);
     for (const [, , , deadline] of vi.mocked(prefitScanRun).mock.calls)
       expect(Number.isFinite(deadline)).toBe(true);
