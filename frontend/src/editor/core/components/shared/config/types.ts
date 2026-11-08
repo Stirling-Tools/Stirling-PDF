@@ -42,6 +42,7 @@ export const VALID_NAV_KEYS = [
   // Holds all four AI rows above; they stay listed so their deep links alias.
   "adminAi",
   "help",
+  "feedback",
   "legal",
   "backendThirdPartyLicenses",
   "frontendThirdPartyLicenses",
