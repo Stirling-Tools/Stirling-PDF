@@ -13,6 +13,7 @@ import {
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
 type ElementInfo = Omit<StructureElement, "mcids">;
 
@@ -45,7 +46,8 @@ export interface FileStructure {
   /**
    * Every page with /StructParents, keyed by page index, its elements each
    * listing only the MCIDs the page's ParentTree slots give it: the lookup
-   * the save addresses edits by. PDFium lists an element's MCIDs from every
+   * the save addresses edits by. A page without one has no elements yet, and
+   * the save gives it a ParentTree array. PDFium lists an element's MCIDs from every
    * page with no page attached, so an element spanning a page break would
    * claim another element's MCID there.
    */
@@ -54,11 +56,16 @@ export interface FileStructure {
   blocks: FileBlock[];
   /** By element key, for every element a page or block names. */
   languages: Map<string, ElementLanguage>;
+  /** Whether the file has a /StructTreeRoot at all. */
+  hasTree: boolean;
+  /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
+  marked: boolean;
 }
 
 /**
- * The file's structure tree. Null when the file is untagged, cannot be
- * parsed, or is encrypted, whose strings would read as ciphertext.
+ * The file's structure tree, empty when it has none: the save creates one
+ * for the first element added. Null when the file cannot be parsed, or is
+ * encrypted, whose strings would read as ciphertext.
  */
 export async function readFileStructure(
   bytes: Uint8Array,
@@ -66,9 +73,21 @@ export async function readFileStructure(
   const pdf = await RawPdf.parse(bytes);
   if (!pdf || pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
-  const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
-  const rootBody = treeRoot === null ? null : pdf.objectBody(treeRoot);
-  if (treeRoot === null || !rootBody) return null;
+  if (!catalog) return null;
+  const treeRoot = pdf.dictRef(catalog, "StructTreeRoot");
+  if (treeRoot === null) {
+    return pdf.valueSpan(catalog, "StructTreeRoot")
+      ? null
+      : {
+          pages: new Map(),
+          blocks: [],
+          languages: new Map(),
+          hasTree: false,
+          marked: isMarked(pdf, catalog),
+        };
+  }
+  const rootBody = pdf.objectBody(treeRoot);
+  if (!rootBody) return null;
   const nodes = new StructureNodes(pdf, rootBody);
   const nodeFor = (num: number) => nodes.node(num);
 
@@ -84,8 +103,12 @@ export async function readFileStructure(
   const byPage = new Map<number, FilePageStructure>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
-    const key = page ? pdf.dictInt(page, "StructParents") : null;
-    if (key === null) return;
+    if (!page || !pdf.valueSpan(page, "StructParents")) return;
+    const key = pdf.dictInt(page, "StructParents");
+    if (key === null) {
+      byPage.set(pageIndex, { elements: [], slotCount: null });
+      return;
+    }
     const items = pdf.parentTreeArray(treeRoot, key)?.items;
     if (!items) {
       byPage.set(pageIndex, { elements: [], slotCount: null });
@@ -114,7 +137,13 @@ export async function readFileStructure(
       parent: parent === null ? null : String(parent),
     });
   }
-  return { pages: byPage, blocks, languages };
+  return {
+    pages: byPage,
+    blocks,
+    languages,
+    hasTree: true,
+    marked: isMarked(pdf, catalog),
+  };
 }
 
 /** Block elements in the depth-first /K order a reader follows. */

@@ -2,7 +2,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
-import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
@@ -100,23 +100,49 @@ export class PdfiumTextReader {
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
-      // LineGrouper always runs (merges per-glyph/per-word source objects into
-      // one line).
-      const blockKey = structureBlockKey(doc, page.index);
-      LineGrouper.apply(page, blockKey);
-      if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
-      // Grouping is done.
-      // One walk feeds both: each was reading the same characters with its
-      // own WASM round-trips, doubling the cost of every page read.
-      const geometry = collectCharGeometry(m, page, textPagePtr);
-      if (geometry) {
-        inferRunCharSpacing(page, geometry);
-        captureCharPositions(geometry);
-      }
+      groupAndMeasure(doc, page, mode, textPagePtr);
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
     page.loaded = true;
+  }
+
+  /**
+   * Read page-level text objects as `populate` reads a page's, grouping them
+   * only with each other. A run is named by the id given its first object
+   * in reading order. Each object's own marks become its tags, so none may
+   * be inside a form XObject.
+   */
+  static readRuns(
+    doc: EditorDocument,
+    page: Page,
+    objects: ReadonlyArray<{ ptr: number; id: string }>,
+    mode: GroupingMode,
+  ): TextRun[] {
+    const m = doc.module;
+    // Grouping replaces a page's runs, so it works on a scratch page.
+    const scratch = new Page({
+      index: page.index,
+      pagePtr: page.pagePtr,
+      width: page.width,
+      height: page.height,
+      display: page.display,
+    });
+    const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
+    try {
+      scratch.setRuns(
+        objects.flatMap(({ ptr, id }) => {
+          const run = readTextRun(m, doc, page, ptr, id, IDENTITY, textPagePtr);
+          if (!run) return [];
+          run.tagMarks = readTagMarks(m, ptr);
+          return [run];
+        }),
+      );
+      groupAndMeasure(doc, scratch, mode, textPagePtr);
+    } finally {
+      m.FPDFText_ClosePage(textPagePtr);
+    }
+    return scratch.runs;
   }
 
   // Returns the runs whose captured positions actually moved, so the caller
@@ -135,6 +161,30 @@ export class PdfiumTextReader {
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
+  }
+}
+
+/**
+ * Group the page's one-object runs into lines, and in auto mode paragraphs,
+ * then place their glyphs.
+ */
+function groupAndMeasure(
+  doc: EditorDocument,
+  page: Page,
+  mode: GroupingMode,
+  textPagePtr: number,
+): void {
+  // LineGrouper always runs (merges per-glyph/per-word source objects into
+  // one line).
+  const blockKey = structureBlockKey(doc, page.index);
+  LineGrouper.apply(page, blockKey);
+  if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
+  // One walk feeds both: each was reading the same characters with its
+  // own WASM round-trips, doubling the cost of every page read.
+  const geometry = collectCharGeometry(doc.module, page, textPagePtr);
+  if (geometry) {
+    inferRunCharSpacing(page, geometry);
+    captureCharPositions(geometry);
   }
 }
 
@@ -425,7 +475,7 @@ function walkObjects(
         doc,
         page,
         objPtr,
-        indexId,
+        `p${page.index}-t${indexId}`,
         transform,
         textPagePtr,
       );
@@ -876,7 +926,7 @@ function readTextRun(
   _doc: EditorDocument,
   page: Page,
   objPtr: number,
-  index: number | string,
+  id: string,
   transform: Affine,
   textPagePtr: number,
 ): TextRun | null {
@@ -916,7 +966,7 @@ function readTextRun(
     // Make the same face available to the overlay as a CSS FontFace.
     if (fontPtr) registerEmbeddedFace(m, fontPtr);
     // Treat the PDFium font handle pointer as a unique id within the doc.
-    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
+    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${id}`;
 
     // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants, 3
     // invisible (OCR text layers over scans), 4-7 clipping variants.
@@ -938,7 +988,7 @@ function readTextRun(
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
 
     return new TextRun({
-      id: `p${page.index}-t${index}`,
+      id,
       pageIndex: page.index,
       pdfiumObjPtr: objPtr,
       bounds,

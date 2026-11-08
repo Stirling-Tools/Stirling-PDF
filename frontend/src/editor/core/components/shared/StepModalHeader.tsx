@@ -53,7 +53,7 @@ export function StepModalHeader({
       <div className="portal-stepmodal__head-top">
         {typeof brand === "string" ? (
           <div className="portal-stepmodal__ident">
-            <h3 className="portal-stepmodal__flow-title">{brand}</h3>
+            <h2 className="portal-stepmodal__flow-title">{brand}</h2>
           </div>
         ) : brand ? (
           <div className="portal-stepmodal__brand">
@@ -71,7 +71,7 @@ export function StepModalHeader({
           </div>
         ) : title ? (
           <div className="portal-stepmodal__ident">
-            <h3 className="portal-stepmodal__flow-title">{title}</h3>
+            <h2 className="portal-stepmodal__flow-title">{title}</h2>
             {subtitle && (
               <p className="portal-stepmodal__flow-sub">{subtitle}</p>
             )}
