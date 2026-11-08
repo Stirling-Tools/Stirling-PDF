@@ -424,7 +424,7 @@ export const FileItem = React.memo(function FileItem({
               </Tooltip>
             )}
             {hasOneDriveOrigin && (
-              <Tooltip label={oneDriveBadgeLabel} withArrow position="top">
+              <Tooltip label={oneDriveBadgeLabel} withArrow position="bottom">
                 <span
                   className="file-sidebar-cloud-badge"
                   data-no-select
@@ -482,7 +482,7 @@ export const FileItem = React.memo(function FileItem({
             position="bottom-end"
             withinPortal
             shadow="md"
-            width={250}
+            width={220}
             onChange={setMenuOpened}
           >
             <Menu.Target>
