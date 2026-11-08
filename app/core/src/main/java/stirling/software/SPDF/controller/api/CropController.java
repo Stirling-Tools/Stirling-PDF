@@ -295,7 +295,8 @@ public class CropController {
         float boxHeight = cropBox.height();
 
         return switch (rotation) {
-            case 90 -> new Rect(cropBox.x() + dy, cropBox.y() + dx, height, width);
+            case 90 ->
+                    new Rect(cropBox.x() + boxWidth - dy - height, cropBox.y() + dx, height, width);
             case 180 ->
                     new Rect(
                             cropBox.x() + boxWidth - dx - width,
@@ -303,11 +304,7 @@ public class CropController {
                             width,
                             height);
             case 270 ->
-                    new Rect(
-                            cropBox.x() + boxWidth - dy - height,
-                            cropBox.y() + boxHeight - dx - width,
-                            height,
-                            width);
+                    new Rect(cropBox.x() + dy, cropBox.y() + boxHeight - dx - width, height, width);
             default -> new Rect(cropBox.x() + dx, cropBox.y() + dy, width, height);
         };
     }

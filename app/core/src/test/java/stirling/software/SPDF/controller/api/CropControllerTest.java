@@ -155,6 +155,26 @@ class CropControllerTest {
             return createPdf(filename, size, null);
         }
 
+        MockMultipartFile createRotatedRectPdf(String filename, int rotation) throws IOException {
+            Path testPdfPath = tempDir.resolve(filename);
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage(new PDRectangle(400, 600));
+                page.setRotation(rotation);
+                doc.addPage(page);
+                try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                    contentStream.setNonStrokingColor(0, 0, 0);
+                    contentStream.addRect(40, 300, 120, 260);
+                    contentStream.fill();
+                }
+                doc.save(testPdfPath.toFile());
+            }
+            return new MockMultipartFile(
+                    "fileInput",
+                    filename,
+                    MediaType.APPLICATION_PDF_VALUE,
+                    Files.readAllBytes(testPdfPath));
+        }
+
         MockMultipartFile createPdf(String filename, PDRectangle pageSize, String content)
                 throws IOException {
             Path testPdfPath = tempDir.resolve(filename);
@@ -320,6 +340,29 @@ class CropControllerTest {
                 PDRectangle box = result.getPage(0).getMediaBox();
                 assertThat(box.getWidth()).isLessThan(PDRectangle.A4.getWidth());
                 assertThat(box.getHeight()).isLessThan(PDRectangle.A4.getHeight());
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 90, 180, 270})
+        @DisplayName("Should auto-crop the same content rect on every rotation")
+        void shouldAutoCropRotatedPage(int rotation) throws IOException {
+            MockMultipartFile testFile =
+                    autoCropPdfFactory.createRotatedRectPdf(
+                            "rotated-" + rotation + ".pdf", rotation);
+            CropPdfForm request =
+                    new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDRectangle box = result.getPage(0).getMediaBox();
+                assertThat(box.getLowerLeftX()).isBetween(38f, 42f);
+                assertThat(box.getLowerLeftY()).isBetween(298f, 302f);
+                assertThat(box.getWidth()).isBetween(118f, 122f);
+                assertThat(box.getHeight()).isBetween(258f, 262f);
+                assertThat(result.getPage(0).getRotation()).isEqualTo(rotation);
             }
         }
 
