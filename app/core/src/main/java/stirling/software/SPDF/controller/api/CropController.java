@@ -2,18 +2,8 @@ package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 
-import org.apache.pdfbox.multipdf.LayerUtility;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,21 +15,21 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.LimitedPDFRenderer;
-import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.model.Rect;
+import stirling.software.jpdfium.model.SaveOptions;
+import stirling.software.jpdfium.transform.PdfPageGeometry;
 
 @GeneralApi
 @RequiredArgsConstructor
@@ -48,23 +38,18 @@ public class CropController {
 
     private static final int DEFAULT_RENDER_DPI = 150;
     private static final int WHITE_THRESHOLD = 250;
-    private static final String TEMP_INPUT_PREFIX = "crop_input";
-    private static final String TEMP_OUTPUT_PREFIX = "crop_output";
     private static final String PDF_EXTENSION = ".pdf";
 
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
     private static int[] detectContentBounds(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        // Early exit if image is too small
         if (width < 1 || height < 1) {
             return new int[] {0, 0, width - 1, height - 1};
         }
 
-        // Sample every nth pixel for large images to reduce processing time
         int step = (width > 2000 || height > 2000) ? 2 : 1;
 
         int top = 0;
@@ -115,8 +100,7 @@ public class CropController {
             }
         }
 
-        // Return bounds in format: [left, bottom, right, top]
-        // Note: Image coordinates are top-down, PDF coordinates are bottom-up
+        // Image coordinates are top-down; PDF coordinates are bottom-up.
         return new int[] {left, height - bottom - 1, right, height - top - 1};
     }
 
@@ -127,18 +111,12 @@ public class CropController {
         return r >= threshold && g >= threshold && b >= threshold;
     }
 
-    private final EndpointConfiguration endpointConfiguration;
-
-    private boolean isGhostscriptEnabled() {
-        return endpointConfiguration.isGroupEnabled("Ghostscript");
-    }
-
     /** A zero or negative crop box would blank every page while reporting success. */
     private static void requirePositiveSize(CropPdfForm request) {
         Float width = request.getWidth();
         Float height = request.getHeight();
         if (width == null || height == null) {
-            return; // Reported by the existing "coordinates are required" check.
+            return;
         }
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException(
@@ -150,14 +128,23 @@ public class CropController {
         }
     }
 
-    private static BitSet pageSelection(CropPdfForm request, PDDocument document) {
-        BitSet selected = new BitSet(document.getNumberOfPages());
-        request.getPageNumbersList(document, false).forEach(selected::set);
+    private static BitSet pageSelection(CropPdfForm request, int pageCount) {
+        BitSet selected = new BitSet(pageCount);
         String pageNumbers = request.getPageNumbers();
-        if (selected.isEmpty()
-                && pageNumbers != null
-                && !pageNumbers.isBlank()
-                && !"all".equalsIgnoreCase(pageNumbers.trim())) {
+        if (pageNumbers == null
+                || pageNumbers.isBlank()
+                || "all".equalsIgnoreCase(pageNumbers.trim())) {
+            selected.set(0, pageCount);
+            return selected;
+        }
+
+        GeneralUtils.requireValidPageSelection(pageNumbers, pageCount);
+        for (int index : GeneralUtils.parsePageList(pageNumbers, pageCount, false)) {
+            if (index >= 0 && index < pageCount) {
+                selected.set(index);
+            }
+        }
+        if (selected.isEmpty()) {
             throw new IllegalArgumentException(
                     "pageNumbers '" + pageNumbers + "' does not select any page");
         }
@@ -189,268 +176,136 @@ public class CropController {
                     "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
         }
 
-        if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
-            return cropWithGhostscript(request);
-        } else {
-            return cropWithPDFBox(request);
+        return cropWithJpdfium(request);
+    }
+
+    private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
+            throws IOException {
+        byte[] pdfBytes = request.getFileInput().getBytes();
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+
+        try {
+            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+                BitSet pagesToCrop = pageSelection(request, document.pageCount());
+                for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
+                    try (PdfPage page = document.page(i)) {
+                        BufferedImage image = page.renderImage(DEFAULT_RENDER_DPI);
+                        int[] bounds = detectContentBounds(image);
+                        Rect crop =
+                                cropRectFromBounds(
+                                        bounds,
+                                        image,
+                                        page,
+                                        PdfPageGeometry.getRotation(document, i));
+                        // Non-strict: a word or object crossing the crop edge survives whole.
+                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
+                    }
+                }
+                document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
+            }
+            return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
+        } catch (IOException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (IllegalArgumentException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (RuntimeException | LinkageError e) {
+            tempOutputFile.close();
+            throw new IOException("JPDFium crop failed", e);
         }
     }
 
-    private ResponseEntity<Resource> cropWithAutomaticDetection(@ModelAttribute CropPdfForm request)
-            throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
+    private ResponseEntity<Resource> cropWithJpdfium(CropPdfForm request) throws IOException {
+        byte[] pdfBytes = request.getFileInput().getBytes();
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+        Rect crop =
+                new Rect(request.getX(), request.getY(), request.getWidth(), request.getHeight());
 
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                PDFRenderer renderer = new LimitedPDFRenderer(sourceDocument);
-                renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-                BitSet pagesToCrop = pageSelection(request, sourceDocument);
-
-                for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
-                    if (!pagesToCrop.get(i)) {
-                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
-                        imported.setResources(sourceDocument.getPage(i).getResources());
-                        continue;
-                    }
-
-                    PDPage sourcePage = sourceDocument.getPage(i);
-                    PDRectangle mediaBox = sourcePage.getMediaBox();
-
-                    BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
-                    int[] bounds = detectContentBounds(image);
-
-                    float scaleX = mediaBox.getWidth() / image.getWidth();
-                    float scaleY = mediaBox.getHeight() / image.getHeight();
-
-                    CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
-
-                    PDPage newPage = new PDPage(mediaBox);
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-                        contentStream.saveGraphicsState();
-                        contentStream.addRect(
-                                cropBounds.x, cropBounds.y, cropBounds.width, cropBounds.height);
-                        contentStream.clip();
-                        contentStream.drawForm(formXObject);
-                        contentStream.restoreGraphicsState();
-                    }
-
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    cropBounds.x,
-                                    cropBounds.y,
-                                    cropBounds.width,
-                                    cropBounds.height));
-                }
-
-                return WebResponseUtils.pdfDocToWebResponse(
-                        newDocument,
-                        GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
-                        tempFileManager);
-            }
-        }
-    }
-
-    private ResponseEntity<Resource> cropWithPDFBox(@ModelAttribute CropPdfForm request)
-            throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                int totalPages = sourceDocument.getNumberOfPages();
-                LayerUtility layerUtility = new LayerUtility(newDocument);
-                BitSet pagesToCrop = pageSelection(request, sourceDocument);
-
-                for (int i = 0; i < totalPages; i++) {
-                    if (!pagesToCrop.get(i)) {
-                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
-                        imported.setResources(sourceDocument.getPage(i).getResources());
-                        continue;
-                    }
-
-                    PDPage sourcePage = sourceDocument.getPage(i);
-
-                    // Create a new page with the size of the source page
-                    PDPage newPage = new PDPage(sourcePage.getMediaBox());
-                    newDocument.addPage(newPage);
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument, newPage, AppendMode.OVERWRITE, true, true)) {
-                        // Import the source page as a form XObject
-                        PDFormXObject formXObject =
-                                layerUtility.importPageAsForm(sourceDocument, i);
-
-                        contentStream.saveGraphicsState();
-
-                        // Define the crop area
-                        contentStream.addRect(
-                                request.getX(),
-                                request.getY(),
-                                request.getWidth(),
-                                request.getHeight());
-                        contentStream.clip();
-
-                        // Draw the entire formXObject
-                        contentStream.drawForm(formXObject);
-
-                        contentStream.restoreGraphicsState();
-                    }
-
-                    // Now, set the new page's media box to the cropped size
-                    newPage.setMediaBox(
-                            new PDRectangle(
-                                    request.getX(),
-                                    request.getY(),
-                                    request.getWidth(),
-                                    request.getHeight()));
-                }
-
-                return WebResponseUtils.pdfDocToWebResponse(
-                        newDocument,
-                        GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_cropped.pdf"),
-                        tempFileManager);
-            }
-        }
-    }
-
-    private ResponseEntity<Resource> cropWithGhostscript(@ModelAttribute CropPdfForm request)
-            throws IOException {
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
-            BitSet pagesToCrop = pageSelection(request, sourceDocument);
-            int totalPages = sourceDocument.getNumberOfPages();
-            for (int i = 0; i < totalPages; i++) {
-                if (!pagesToCrop.get(i)) {
-                    continue;
-                }
-                PDPage page = sourceDocument.getPage(i);
-                PDRectangle cropBox =
-                        new PDRectangle(
-                                request.getX(),
-                                request.getY(),
-                                request.getWidth(),
-                                request.getHeight());
-                page.setCropBox(cropBox);
-            }
-
-            MultipartFile fileInput = request.getFileInput();
-            String sourceName =
-                    fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
-            String outputFilename = GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
-
-            List<Integer> selected = new ArrayList<>();
-            for (int i = 0; i < totalPages; i++) {
-                if (pagesToCrop.get(i)) {
-                    selected.add(i);
-                }
-            }
-
-            // Ghostscript only ever sees the selected pages: unselected pages
-            // merge back pristine, so a document-wide re-distill can never
-            // alter their geometry or content.
-            TempFile croppedFile = null;
-            PDDocument croppedDocument = null;
-            try {
-                if (!selected.isEmpty()) {
-                    try (PDDocument selectedDocument = new PDDocument()) {
-                        for (int pageIndex : selected) {
-                            selectedDocument.importPage(sourceDocument.getPage(pageIndex));
-                        }
-                        croppedFile = runGhostscriptDocument(selectedDocument);
-                    }
-                    croppedDocument = org.apache.pdfbox.Loader.loadPDF(croppedFile.getFile());
-                    if (croppedDocument.getNumberOfPages() != selected.size()) {
-                        throw new IOException(
-                                "Ghostscript returned "
-                                        + croppedDocument.getNumberOfPages()
-                                        + " pages for "
-                                        + selected.size()
-                                        + " selected pages");
-                    }
-                }
-
-                try (PDDocument mergedDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
-                    int ghostscriptIndex = 0;
-                    for (int i = 0; i < totalPages; i++) {
-                        if (pagesToCrop.get(i)) {
-                            mergedDocument.importPage(croppedDocument.getPage(ghostscriptIndex++));
-                        } else {
-                            PDPage imported = mergedDocument.importPage(sourceDocument.getPage(i));
-                            imported.setResources(sourceDocument.getPage(i).getResources());
+        try {
+            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+                BitSet pagesToCrop = pageSelection(request, document.pageCount());
+                for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
+                    if (request.isRemoveDataOutsideCrop()) {
+                        // Non-strict: content crossing the crop edge is preserved and clipped.
+                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
+                    } else {
+                        try (PdfPage page = document.page(i)) {
+                            page.setMediaBox(crop);
+                            page.setCropBox(crop);
+                            page.setTrimBox(crop);
+                            page.setBleedBox(crop);
+                            page.setArtBox(crop);
                         }
                     }
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            mergedDocument, outputFilename, tempFileManager);
-                } finally {
-                    if (croppedDocument != null) {
-                        croppedDocument.close();
-                    }
                 }
-            } finally {
-                if (croppedFile != null) {
-                    croppedFile.close();
-                }
+                document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
+            return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
+        } catch (IOException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (IllegalArgumentException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (RuntimeException | LinkageError e) {
+            tempOutputFile.close();
+            throw new IOException("JPDFium crop failed", e);
+        }
+    }
+
+    private static String outputFilename(CropPdfForm request) {
+        MultipartFile fileInput = request.getFileInput();
+        String sourceName =
+                fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
+        return GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
+    }
+
+    /** Display-space pixel bounds converted to PDF points at the render scale. */
+    private record CropBounds(float x, float y, float width, float height) {
+        static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
+            if (pixelBounds == null || pixelBounds.length != 4) {
+                throw new IllegalArgumentException(
+                        "pixelBounds array must contain exactly 4 elements");
+            }
+            return new CropBounds(
+                    pixelBounds[0] * scaleX,
+                    pixelBounds[1] * scaleY,
+                    (pixelBounds[2] - pixelBounds[0]) * scaleX,
+                    (pixelBounds[3] - pixelBounds[1]) * scaleY);
         }
     }
 
     /**
-     * Saves the given document and runs Ghostscript over it with the per-page crop boxes applied.
-     * The caller owns the returned file.
+     * Maps a bottom-up display-space pixel box to PDF user space. The crop box origin and page
+     * rotation are applied so auto-crop lands on the same content for every /Rotate value.
      */
-    private TempFile runGhostscriptDocument(PDDocument document) throws IOException {
-        TempFile tempInputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-        TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
-        try {
-            document.save(tempInputFile.getFile());
+    private static Rect cropRectFromBounds(
+            int[] bounds, BufferedImage image, PdfPage page, int rotation) {
+        var display = page.size();
+        Rect cropBox = page.getCropBox().orElse(page.getMediaBox());
+        float scaleX = display.width() / image.getWidth();
+        float scaleY = display.height() / image.getHeight();
+        CropBounds displayBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
+        float dx = displayBounds.x();
+        float dy = displayBounds.y();
+        float width = displayBounds.width();
+        float height = displayBounds.height();
+        float boxWidth = cropBox.width();
+        float boxHeight = cropBox.height();
 
-            ProcessExecutor processExecutor =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
-            List<String> command =
-                    List.of(
-                            "gs",
-                            "-sDEVICE=pdfwrite",
-                            "-dUseCropBox",
-                            "-o",
-                            tempOutputFile.getAbsolutePath(),
-                            tempInputFile.getAbsolutePath());
-            try {
-                processExecutor.runCommandWithOutputHandling(command);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw ExceptionUtils.createProcessingInterruptedException("Ghostscript", e);
-            }
-
-            TempFile out = tempOutputFile;
-            tempOutputFile = null; // ownership transferred to the caller
-            return out;
-        } finally {
-            tempInputFile.close();
-            if (tempOutputFile != null) {
-                tempOutputFile.close();
-            }
-        }
-    }
-
-    private record CropBounds(float x, float y, float width, float height) {
-
-        static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
-            if (pixelBounds.length != 4) {
-                throw new IllegalArgumentException(
-                        "pixelBounds array must contain exactly 4 elements: [x1, y1, x2, y2]");
-            }
-            float x = pixelBounds[0] * scaleX;
-            float y = pixelBounds[1] * scaleY;
-            float width = (pixelBounds[2] - pixelBounds[0]) * scaleX;
-            float height = (pixelBounds[3] - pixelBounds[1]) * scaleY;
-            return new CropBounds(x, y, width, height);
-        }
+        return switch (rotation) {
+            case 90 ->
+                    new Rect(cropBox.x() + boxWidth - dy - height, cropBox.y() + dx, height, width);
+            case 180 ->
+                    new Rect(
+                            cropBox.x() + boxWidth - dx - width,
+                            cropBox.y() + boxHeight - dy - height,
+                            width,
+                            height);
+            case 270 ->
+                    new Rect(cropBox.x() + dy, cropBox.y() + boxHeight - dx - width, height, width);
+            default -> new Rect(cropBox.x() + dx, cropBox.y() + dy, width, height);
+        };
     }
 }
