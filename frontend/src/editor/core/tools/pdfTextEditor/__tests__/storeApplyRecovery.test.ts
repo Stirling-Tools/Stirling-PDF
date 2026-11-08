@@ -175,3 +175,30 @@ describe("EditorStore recovery from a failed undo/redo", () => {
     expect(store.getState().dirty).toBe(true);
   });
 });
+
+describe("EditorStore recording an applied command", () => {
+  it("records without applying, as one undoable step that dirties the document", async () => {
+    const store = await makeStore();
+    const cmd = makeCmd();
+    store.recordApplied(cmd);
+    expect(cmd.apply).not.toHaveBeenCalled();
+    expect(store.history.peekUndo()).toBe(cmd);
+    expect(store.getState().dirty).toBe(true);
+    store.undo();
+    expect(cmd.revert).toHaveBeenCalledOnce();
+  });
+
+  it("ignores undo and redo while loading", async () => {
+    const store = await makeStore();
+    const cmd = makeCmd();
+    store.dispatch(cmd);
+    store.setLoading(true);
+    store.undo();
+    expect(cmd.revert).not.toHaveBeenCalled();
+    store.setLoading(false);
+    store.undo();
+    store.setLoading(true);
+    store.redo();
+    expect(cmd.apply).toHaveBeenCalledOnce();
+  });
+});

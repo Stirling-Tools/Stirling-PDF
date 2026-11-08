@@ -50,19 +50,12 @@ interface UIContextValue {
   ) => void;
   closeLinkModal: () => void;
   /**
-   * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
+   * A one-shot signal: the callback route and the
    * dialog mount separately, and there must only ever be one link dialog.
    */
   connectOutcome: ConnectOutcome | null;
   publishConnectOutcome: (outcome: ConnectOutcome) => void;
   clearConnectOutcome: () => void;
-  /**
-   * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
-   * upsell). Usage & Billing consumes it once the deal is loaded, then starts or resumes the flow.
-   */
-  trialSetupRequested: boolean;
-  requestTrialSetup: () => void;
-  clearTrialSetupRequest: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -94,7 +87,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkModalFailureContext, setLinkModalFailureContext] =
     useState<AccountLinkBlockContext>();
-  const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
     null,
@@ -142,12 +134,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setConnectOutcome(null);
         setLinkModalOpen(true);
       },
-      trialSetupRequested,
-      requestTrialSetup: () => {
-        setMobileNavOpen(false);
-        setTrialSetupRequested(true);
-      },
-      clearTrialSetupRequest: () => setTrialSetupRequested(false),
       connectOutcome,
       publishConnectOutcome: (outcome: ConnectOutcome) => {
         linkModalActive.current = true;
@@ -175,7 +161,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       linkModalFailureContext,
-      trialSetupRequested,
       connectOutcome,
     ],
   );
