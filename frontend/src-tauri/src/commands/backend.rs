@@ -653,7 +653,7 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_stirling_jar, jpdfium_native_dir, version_key};
+    use super::{find_stirling_jar, version_key};
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {
@@ -799,7 +799,7 @@ mod tests {
     fn jpdfium_native_dir_resolves_the_host_platform_inside_the_jre() {
         let jre = std::env::temp_dir().join(format!("stirling-jpdfium-natives-{}", std::process::id()));
         let java = jre.join("bin").join("java");
-        assert_eq!(jpdfium_native_dir(&java), None);
+        assert_eq!(super::jpdfium_native_dir(&java), None);
 
         let arch = if cfg!(target_arch = "aarch64") { "arm64" } else { "x64" };
         let (os, bridge) = if cfg!(target_os = "macos") {
@@ -811,7 +811,7 @@ mod tests {
         std::fs::create_dir_all(&natives).unwrap();
         std::fs::write(natives.join(bridge), b"").unwrap();
 
-        assert_eq!(jpdfium_native_dir(&java), Some(natives));
+        assert_eq!(super::jpdfium_native_dir(&java), Some(natives));
         let _ = std::fs::remove_dir_all(&jre);
     }
 }
