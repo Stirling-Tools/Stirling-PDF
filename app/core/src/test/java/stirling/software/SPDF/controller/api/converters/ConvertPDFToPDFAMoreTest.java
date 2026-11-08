@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,6 +54,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
@@ -222,6 +224,21 @@ class ConvertPDFToPDFAMoreTest {
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             return false;
+        }
+    }
+
+    private MockMultipartFile symbolFontPdfFile() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.SYMBOL);
+            PDResources resources = new PDResources();
+            resources.put(COSName.getPDFName("F1"), font);
+            page.setResources(resources);
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "symbol-font.pdf", "application/pdf", output.toByteArray());
         }
     }
 
@@ -592,6 +609,22 @@ class ConvertPDFToPDFAMoreTest {
                 assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
                 verify(resources, never()).put(any(COSName.class), any(PDFont.class));
             }
+        }
+
+        @Test
+        @DisplayName("PDF/X rejects Symbol fonts that cannot be substituted")
+        void pdfXRejectsSymbolFontByDefault() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(symbolFontPdfFile());
+            request.setOutputFormat("pdfx-1a");
+            request.setStrict(false);
+
+            assertThatThrownBy(() -> newController().pdfToPdfA(request))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Symbol");
         }
 
         @Test

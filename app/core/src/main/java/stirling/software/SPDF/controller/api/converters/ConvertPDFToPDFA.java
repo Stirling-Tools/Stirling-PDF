@@ -611,15 +611,25 @@ public class ConvertPDFToPDFA {
     private static Set<String> findUnembeddedFontNames(PDDocument doc) throws IOException {
         Set<String> missing = new HashSet<>(16);
         for (PDPage page : doc.getPages()) {
-            PDResources res = page.getResources();
-            for (COSName name : res.getFontNames()) {
-                PDFont font = res.getFont(name);
-                if (font != null && !font.isEmbedded()) {
-                    missing.add(font.getName());
-                }
-            }
+            collectUnembeddedFontNames(page.getResources(), missing, 0);
         }
         return missing;
+    }
+
+    private static void collectUnembeddedFontNames(
+            PDResources resources, Set<String> missing, int depth) throws IOException {
+        if (resources == null || depth > 8) return;
+        for (COSName name : resources.getFontNames()) {
+            PDFont font = resources.getFont(name);
+            if (font != null && !font.isEmbedded()) {
+                missing.add(font.getName());
+            }
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.getXObject(name) instanceof PDFormXObject form) {
+                collectUnembeddedFontNames(form.getResources(), missing, depth + 1);
+            }
+        }
     }
 
     /**
@@ -806,8 +816,16 @@ public class ConvertPDFToPDFA {
                     }
                 }
                 embedPdfxFonts(inputTemp.getFile().toPath());
-                try (PDDocument pageCounter = Loader.loadPDF(inputTemp.getFile())) {
-                    requireSanitizablePageCount(pageCounter, maxConversionPages);
+                try (PDDocument prepared = Loader.loadPDF(inputTemp.getFile())) {
+                    requireSanitizablePageCount(prepared, maxConversionPages);
+                    Set<String> unsupportedFonts = findUnembeddedFontNames(prepared);
+                    if (!unsupportedFonts.isEmpty()) {
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "PDF/X requires embedded fonts. These fonts could not be"
+                                        + " substituted automatically: "
+                                        + String.join(", ", unsupportedFonts));
+                    }
                 }
 
                 PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
@@ -826,6 +844,8 @@ public class ConvertPDFToPDFA {
                 }
             }
 
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (JPDFiumException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (RuntimeException e) {
