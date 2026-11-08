@@ -18,8 +18,8 @@ final class PdfWorkerProtocol {
     static final byte STATUS_ERROR = 1;
     static final byte STATUS_READY = 2;
 
-    private static final int MAX_STRING_BYTES = 1 << 20;
-    private static final int MAX_COUNT = 100_000;
+    static final int MAX_STRING_BYTES = 256 << 20;
+    static final int MAX_COUNT = 10_000_000;
 
     private PdfWorkerProtocol() {}
 
