@@ -865,9 +865,14 @@ public class ProcessExecutor {
                 return unavailable(path + " is not a usable path: " + e.getMessage());
             }
             if (!libraryExists.test(libraryPath)) {
-                return unavailable(path + " is missing from this install");
+                return unavailable(
+                        path + " is missing from this install or is not a readable file");
             }
             return new OfficeNetworkGuard(path, null);
+        }
+
+        static boolean isPreloadableFile(Path path) {
+            return path.isAbsolute() && Files.isRegularFile(path) && Files.isReadable(path);
         }
 
         private static OfficeNetworkGuard unavailable(String reason) {
@@ -876,7 +881,10 @@ public class ProcessExecutor {
 
         static OfficeNetworkGuard resolveAndReport() {
             OfficeNetworkGuard guard =
-                    resolve(System::getenv, System.getProperty("os.name"), Files::exists);
+                    resolve(
+                            System::getenv,
+                            System.getProperty("os.name"),
+                            OfficeNetworkGuard::isPreloadableFile);
             if (guard.isActive()) {
                 log.info("LibreOffice network guard active: {}", guard.libraryPath);
             } else {

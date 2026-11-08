@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -54,6 +56,41 @@ class ProcessExecutorOfficeNetworkGuardTest {
         OfficeNetworkGuard guard = OfficeNetworkGuard.resolve(env(), "Linux", NOTHING_PRESENT);
         assertThat(guard.isActive()).isFalse();
         return guard;
+    }
+
+    @Nested
+    @DisplayName("library validation")
+    class LibraryValidation {
+
+        @TempDir Path tempDir;
+
+        @Test
+        @DisplayName("accepts an absolute readable regular file")
+        void acceptsReadableFile() throws Exception {
+            Path library = Files.createFile(tempDir.resolve("guard.so"));
+            assertThat(OfficeNetworkGuard.isPreloadableFile(library)).isTrue();
+        }
+
+        @Test
+        @DisplayName("rejects a directory, a missing file and a relative path")
+        void rejectsWhatTheLoaderWouldIgnore() throws Exception {
+            Files.createFile(tempDir.resolve("guard.so"));
+            assertThat(OfficeNetworkGuard.isPreloadableFile(tempDir)).isFalse();
+            assertThat(OfficeNetworkGuard.isPreloadableFile(tempDir.resolve("missing.so")))
+                    .isFalse();
+            assertThat(OfficeNetworkGuard.isPreloadableFile(Path.of("guard.so"))).isFalse();
+        }
+
+        @Test
+        @DisplayName("stays inactive when the override names a directory")
+        void directoryOverrideLeavesGuardInactive() {
+            OfficeNetworkGuard guard =
+                    OfficeNetworkGuard.resolve(
+                            env("LIBREOFFICE_NETWORK_GUARD_LIB", tempDir.toString()),
+                            "Linux",
+                            OfficeNetworkGuard::isPreloadableFile);
+            assertThat(guard.isActive()).isFalse();
+        }
     }
 
     @Nested

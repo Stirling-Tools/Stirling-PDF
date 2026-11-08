@@ -66,11 +66,21 @@ RUN apt-get update \
     && sh /tmp/slim-onnxruntime.sh /layers/dependencies
 
 
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+COPY docker/base/security/guard_selftest.c /tmp/guard_selftest.c
+RUN gcc -O2 -Wall -Werror -o /tmp/guard_selftest /tmp/guard_selftest.c && \
+    ! /tmp/guard_selftest > /dev/null && \
+    LD_PRELOAD=/soffice_no_network.so /tmp/guard_selftest
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
-RUN test -s /usr/local/lib/stirling/soffice_no_network.so || \
-    { echo "Base image lacks the LibreOffice network guard; rebuild docker/base and set BASE_IMAGE." >&2; exit 1; }
+COPY --link --from=office-guard-build /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 ARG VERSION_TAG
 
