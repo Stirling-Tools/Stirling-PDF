@@ -35,6 +35,7 @@ const registry: Partial<ToolRegistry> = {
     description: "",
     categoryId: ToolCategoryId.STANDARD_TOOLS,
     subcategoryId: SubcategoryId.GENERAL,
+    automationSettings: null,
     operationConfig: {
       operationType: "adjustContrast",
       toolType: ToolType.custom,
@@ -48,6 +49,7 @@ const registry: Partial<ToolRegistry> = {
     description: "",
     categoryId: ToolCategoryId.STANDARD_TOOLS,
     subcategoryId: SubcategoryId.GENERAL,
+    automationSettings: null,
     operationConfig: {
       operationType: "flatten",
       toolType: ToolType.singleFile,
