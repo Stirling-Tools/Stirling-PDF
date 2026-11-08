@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.officeconvert.topdf.io.PoiXml;
@@ -26,6 +29,17 @@ public class OfficeToPdfService {
 
     private final OfficeConversionService officeConversionService;
     private final ApplicationProperties applicationProperties;
+    private final TempFileManager tempFileManager;
+
+    /** Packages may use their own assets; local files and network resources remain inaccessible. */
+    public byte[] convertHtml(byte[] html, boolean packaged) throws IOException {
+        try (TempFile in = new TempFile(tempFileManager, packaged ? ".zip" : ".html");
+                TempFile out = new TempFile(tempFileManager, ".pdf")) {
+            Files.write(in.getPath(), html);
+            convert(in.getPath(), out.getPath(), options().allowPackages(packaged));
+            return Files.readAllBytes(out.getPath());
+        }
+    }
 
     /** POI needs the XML limits Java 24 lowered for deep or large slides. */
     @PostConstruct
@@ -58,24 +72,30 @@ public class OfficeToPdfService {
                 && OfficeToPdf.Format.recognises(Path.of("file." + extension));
     }
 
+    /** Uses the server timeout and rejects incomplete output even without a fallback installed. */
     public void convert(Path in, Path out) throws IOException {
+        convert(in, out, options());
+    }
+
+    /** Uses the server timeout; callers may add format-specific options. */
+    public OfficeToPdf.Options options() {
         long minutes =
                 applicationProperties
                         .getProcessExecutor()
                         .getTimeoutMinutes()
                         .getLibreOfficeTimeoutMinutes();
-        OfficeToPdf.Result result =
-                OfficeToPdf.convert(
-                        in,
-                        out,
-                        OfficeToPdf.Options.defaults().timeout(Duration.ofMinutes(minutes)));
+        return OfficeToPdf.Options.defaults().timeout(Duration.ofMinutes(minutes));
+    }
+
+    /** Rejects incomplete or page-limited output; callers may retry with another converter. */
+    public void convert(Path in, Path out, OfficeToPdf.Options options) throws IOException {
+        OfficeToPdf.Result result = OfficeToPdf.convert(in, out, options);
         log.debug(
                 "Converted {} to PDF in process: {} pages, {} warnings",
                 in.getFileName(),
                 result.pages(),
                 result.warnings().size());
-        if (result.truncated() && officeConversionService.libreOfficeAvailable()) {
-            // Lost content is worth a LibreOffice retry; without it, partial output beats none.
+        if (result.truncated() || result.pageLimitReached()) {
             throw new IOException("Only part of " + in.getFileName() + " could be converted");
         }
     }

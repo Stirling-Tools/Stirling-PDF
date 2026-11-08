@@ -18,6 +18,9 @@ export interface SuperSearchResult {
   group: string;
   title: string;
   subtitle?: string;
+  /** Set when the title or subtitle is user content, such as a file name or an
+   * email, to keep it out of analytics and feedback captures. */
+  privateContent?: boolean;
   /** Registry icon name (files/settings); tools provide a node via `icon`. */
   iconName?: IconName;
   icon?: React.ReactNode;
