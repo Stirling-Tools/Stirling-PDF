@@ -28,7 +28,7 @@ const TEST_DEFAULTS = {
   // Mantine is hundreds of small ESM files that every component test re-imports;
   // pre-bundled it is one module (~250ms -> ~25ms of collect per file).
   deps: {
-    optimizer: { web: { enabled: true, include: MANTINE_PACKAGES } },
+    optimizer: { client: { enabled: true, include: MANTINE_PACKAGES } },
   },
   // All our tests are designed to run in the browser
   testTransformMode: { web: ["**/*"] },
@@ -63,6 +63,7 @@ export default defineConfig({
     },
     projects: [
       {
+        extends: false,
         test: {
           name: "core",
           ...TEST_DEFAULTS,
@@ -86,6 +87,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         test: {
           name: "processor",
           ...TEST_DEFAULTS,
@@ -108,6 +110,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         test: {
           name: "proprietary",
           ...TEST_DEFAULTS,
@@ -128,6 +131,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
@@ -148,6 +152,7 @@ export default defineConfig({
         },
       },
       {
+        extends: false,
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
