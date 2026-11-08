@@ -839,7 +839,7 @@ export default function PageTracks() {
           if (version) {
             files.push({
               file: version.file,
-              fileId: version.stub.id,
+              fileId: version.file.fileId,
               stub: version.stub,
             });
             continue;
@@ -941,7 +941,7 @@ export default function PageTracks() {
       return;
     }
     // Saving versions the file under a new id; one that emptied is already closed.
-    const savedId = versioned.get(request)?.stub.id;
+    const savedId = versioned.get(request)?.file.fileId;
     if (savedId) setCloseOnceSaved(savedId);
   }, [closeRequest, closeRequestEdits, fileActions, save]);
 
