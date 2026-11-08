@@ -52,13 +52,12 @@ test.describe("Tool freshness badges", () => {
     // Wait for the route so the acknowledgement effect has run before navigating.
     await expect(page).toHaveURL(/\/auto-rotate(?:$|[/?#])/);
     await page.goto("/editor", { waitUntil: "domcontentloaded" });
-    await expect(toolButton(page, "autoRotate")).toBeVisible();
-    await expect(badge(page, "autoRotate", "New")).toHaveCount(0);
     await expect(badge(page, "multiTool", "Updated")).toBeVisible();
+    await expect(badge(page, "autoRotate", "New")).toHaveCount(0);
 
     // The acknowledgement is persisted, so a reload doesn't resurrect it.
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(toolButton(page, "autoRotate")).toBeVisible();
+    await expect(badge(page, "multiTool", "Updated")).toBeVisible();
     await expect(badge(page, "autoRotate", "New")).toHaveCount(0);
   });
 

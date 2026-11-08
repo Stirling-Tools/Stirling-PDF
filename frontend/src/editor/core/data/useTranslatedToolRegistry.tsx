@@ -100,7 +100,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
-        // Gained accessibility tag, alt text and language editing.
         updatedInVersion: "3.3.0",
       },
       multiTool: {
@@ -119,7 +118,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "multiTool"),
         supportsAutomate: false,
         automationSettings: null,
-        // Multi-Tool was replaced by the redesigned Page Editor.
         updatedInVersion: "3.2.0",
       },
       merge: {
@@ -379,7 +377,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "modify",
           "builder",
         ],
-        // Fill Form became a full Form Editor (create/edit/delete fields).
         updatedInVersion: "3.0.0",
       },
       autoFormDetection: {

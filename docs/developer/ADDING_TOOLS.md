@@ -133,6 +133,7 @@ Update these files to register your new tool:
 ```typescript
 import [ToolName] from "../tools/[ToolName]";
 import { [toolName]OperationConfig } from "../hooks/tools/[toolName]/use[ToolName]Operation";
+import { asRegistryConfig } from "@editor/hooks/tools/shared/toolOperationTypes";
 import [ToolName]Settings from "../components/tools/[toolName]/[ToolName]Settings";
 import { Icon } from "@editor/ui/Icon";
 ```
