@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -39,12 +41,21 @@ public final class CmykGhostscriptFallback {
 
     /** True when the PDF contains a shading JPDFium's in-process rewrite does not cover. */
     public static boolean needsGhostscript(byte[] pdf) throws IOException {
+        return !unsupportedShadingPages(pdf).isEmpty();
+    }
+
+    /** Page indices containing a shading JPDFium's in-process rewrite does not cover. */
+    public static Set<Integer> unsupportedShadingPages(byte[] pdf) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdf)) {
-            for (PDPage page : document.getPages()) {
-                if (hasUnsupportedShading(page.getResources(), 0)) return true;
+            Set<Integer> pages = new HashSet<>();
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                PDPage page = document.getPage(i);
+                if (hasUnsupportedShading(page.getResources(), 0)) {
+                    pages.add(i);
+                }
             }
+            return pages;
         }
-        return false;
     }
 
     /**

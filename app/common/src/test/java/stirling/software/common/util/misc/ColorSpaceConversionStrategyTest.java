@@ -1,8 +1,8 @@
 package stirling.software.common.util.misc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
 
 import java.awt.Color;
@@ -143,21 +143,25 @@ class ColorSpaceConversionStrategyTest {
     }
 
     @Test
-    void unsupportedShadingWithoutGhostscriptFailsClearly() throws Exception {
+    void unsupportedShadingWithoutGhostscriptRasterizesThePage() throws Exception {
         byte[] source = pdfWithShading();
         MockMultipartFile file =
                 new MockMultipartFile("fileInput", "shading.pdf", "application/pdf", source);
         ColorSpaceConversionStrategy strategy =
                 new ColorSpaceConversionStrategy(file, ReplaceAndInvert.COLOR_SPACE_CONVERSION);
 
-        try (var fallback = mockStatic(CmykGhostscriptFallback.class)) {
-            fallback.when(() -> CmykGhostscriptFallback.needsGhostscript(any())).thenReturn(true);
+        try (var fallback = mockStatic(CmykGhostscriptFallback.class, CALLS_REAL_METHODS)) {
+            fallback.when(() -> CmykGhostscriptFallback.unsupportedShadingPages(any()))
+                    .thenReturn(Set.of(0));
             fallback.when(() -> CmykGhostscriptFallback.convert(any()))
                     .thenThrow(new IOException("Ghostscript is not installed"));
 
-            assertThatThrownBy(strategy::replace)
-                    .isInstanceOf(IOException.class)
-                    .hasMessageContaining("needs Ghostscript for a shading");
+            byte[] converted = strategy.replace().getInputStream().readAllBytes();
+            try (PDDocument output = Loader.loadPDF(converted)) {
+                PDResources resources = output.getPage(0).getResources();
+                assertThat(resources.getShadingNames()).isEmpty();
+                assertThat(resources.getXObjectNames()).isNotEmpty();
+            }
         }
     }
 

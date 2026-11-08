@@ -3,6 +3,7 @@ package stirling.software.common.util.misc;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Set;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,7 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.doc.PdfColorConverter;
 import stirling.software.jpdfium.doc.PdfIccProfiles;
 import stirling.software.jpdfium.doc.PdfShadingConverter;
+import stirling.software.jpdfium.model.FlattenMode;
 import stirling.software.jpdfium.model.SaveOptions;
 
 @Slf4j
@@ -26,16 +28,20 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
     @Override
     public InputStreamResource replace() throws IOException {
         byte[] input = getFileInput().getBytes();
-        try {
-            if (CmykGhostscriptFallback.needsGhostscript(input)) {
+        Set<Integer> unsupportedShadingPages =
+                CmykGhostscriptFallback.unsupportedShadingPages(input);
+        if (!unsupportedShadingPages.isEmpty()) {
+            try {
                 byte[] converted = CmykGhostscriptFallback.convert(input);
                 log.info("Used Ghostscript fallback for an unsupported CMYK shading");
                 return new InputStreamResource(new ByteArrayInputStream(converted));
+            } catch (IOException e) {
+                log.warn(
+                        "Ghostscript shading fallback failed; rasterizing {} page(s) at 300 dpi",
+                        unsupportedShadingPages.size(),
+                        e);
+                input = rasterizePages(input, unsupportedShadingPages);
             }
-        } catch (IOException e) {
-            throw new IOException(
-                    "CMYK conversion needs Ghostscript for a shading that JPDFium does not convert; install Ghostscript or use a document with only Type 2 shadings",
-                    e);
         }
 
         try (PdfDocument document = PdfDocument.open(input)) {
@@ -66,6 +72,30 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
         } catch (RuntimeException e) {
             log.warn("CMYK color space conversion failed", e);
             throw new IOException("Failed to convert PDF to CMYK color space", e);
+        }
+    }
+
+    /**
+     * Rasterizes pages with shadings JPDFium cannot rewrite and Ghostscript cannot process. The
+     * affected pages become 300 dpi images, so CMYK output stays valid but loses selectable text.
+     */
+    private static byte[] rasterizePages(byte[] input, Set<Integer> pages) throws IOException {
+        try (PdfDocument document = PdfDocument.open(input)) {
+            int flattened = 0;
+            for (int pageIndex : pages) {
+                if (pageIndex >= 0 && pageIndex < document.pageCount()) {
+                    document.flattenPage(pageIndex, FlattenMode.FULL, 300);
+                    flattened++;
+                }
+            }
+            if (flattened == 0) {
+                throw new IOException("No page could be rasterized for unsupported CMYK shadings");
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.saveTo(output, SaveOptions.validated());
+            return output.toByteArray();
+        } catch (RuntimeException e) {
+            throw new IOException("Could not rasterize pages with unsupported CMYK shadings", e);
         }
     }
 }
