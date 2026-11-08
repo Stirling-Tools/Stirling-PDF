@@ -25,7 +25,9 @@ for (const initial of [undefined, true, false]) {
         json: {
           enableLogin: true,
           ...(initial === undefined ? {} : { honorOwnerPasswords: initial }),
-          ...(pending === undefined ? {} : { _pending: { honorOwnerPasswords: pending } }),
+          ...(pending === undefined
+            ? {}
+            : { _pending: { honorOwnerPasswords: pending } }),
         },
       }),
     );
@@ -47,8 +49,12 @@ for (const initial of [undefined, true, false]) {
     });
     await row.locator(".mantine-Switch-track").click();
     await expect(row.getByRole("switch")).toBeChecked({ checked: target });
-    await page.getByRole("button", { name: "Save Changes", exact: true }).click();
-    await expect.poll(() => saved).toContainEqual({ settings: { "security.honorOwnerPasswords": target } });
+    await page
+      .getByRole("button", { name: "Save Changes", exact: true })
+      .click();
+    await expect
+      .poll(() => saved)
+      .toContainEqual({ settings: { "security.honorOwnerPasswords": target } });
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.reload();
     await expect(row.getByRole("switch")).toBeChecked({ checked: target });
@@ -56,7 +62,9 @@ for (const initial of [undefined, true, false]) {
 }
 
 test("an administrator can block changes to signed PDFs", async ({ page }) => {
-  await page.route("**/api/v1/admin/settings/section/security", (route) => route.fulfill({ json: { enableLogin: true } }));
+  await page.route("**/api/v1/admin/settings/section/security", (route) =>
+    route.fulfill({ json: { enableLogin: true } }),
+  );
   const saved: unknown[] = [];
   await page.route("**/api/v1/admin/settings", (route) => {
     if (route.request().method() === "PUT") {
@@ -70,5 +78,7 @@ test("an administrator can block changes to signed PDFs", async ({ page }) => {
   await row.locator(".mantine-Switch-track").click();
   await expect(row.getByRole("switch")).toBeChecked({ checked: true });
   await page.getByRole("button", { name: "Save Changes", exact: true }).click();
-  await expect.poll(() => saved).toContainEqual({ settings: { "security.blockSignedPdfEdits": true } });
+  await expect
+    .poll(() => saved)
+    .toContainEqual({ settings: { "security.blockSignedPdfEdits": true } });
 });
