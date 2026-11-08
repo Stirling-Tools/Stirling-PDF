@@ -22,6 +22,7 @@ export interface AppConfig {
   enableDesktopInstallSlide?: boolean;
   /** False strips the hidden novelty features - see useSecretClicks. */
   enableEasterEggs?: boolean;
+  enableFeedback?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   /** MCP endpoint state, so the connection guide shows the right URL and auth steps. */

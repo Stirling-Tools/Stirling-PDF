@@ -1,6 +1,7 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   emitFillRect,
@@ -58,7 +59,7 @@ export function spanOf(
     fill: BLACK,
     originalFontPtr: 0,
     fallbackFamily: family,
-    tagMarks: [],
+    tags: uniformTags([]),
   });
   const span = measureObjSpanPt(doc.module, ptrs);
   for (const p of ptrs) removeAndDestroyObject(doc.module, page.pagePtr, p);
@@ -163,7 +164,7 @@ export function placeText(
     fallbackFamily: p.family,
     // The invisible OCR layer carries the run's tags; tagging this visible
     // copy as well would have assistive technology read the words twice.
-    tagMarks: [],
+    tags: uniformTags([]),
     // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
     ...(p.weight
       ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }

@@ -352,6 +352,7 @@ public class ConfigController {
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
             configData.put(
                     "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
+            configData.put("enableFeedback", applicationProperties.getSystem().isEnableFeedback());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));

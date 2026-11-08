@@ -14,6 +14,9 @@ vi.mock("@editor/contexts/CheckoutContext", () => ({
 vi.mock("@editor/components/startup/StartupPrompts", () => ({
   StartupPrompts: () => null,
 }));
+vi.mock("@editor/components/feedback/UserbackWidget", () => ({
+  default: () => null,
+}));
 vi.mock("@editor/portal/components/PortalChrome", () => ({
   PortalChrome: () => <Trigger />,
 }));

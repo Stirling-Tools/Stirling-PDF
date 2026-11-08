@@ -1417,6 +1417,7 @@ public class ApplicationProperties {
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;

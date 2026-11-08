@@ -19,16 +19,20 @@ import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureT
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   buildClassicPdf,
+  singleContentPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 import {
   canTagText,
+  sharedTextTag,
   textTag,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { setTextTagCommand } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 
 const TAGGED_SAMPLE = path.join(
   import.meta.dirname,
@@ -307,5 +311,133 @@ describe("tagging untagged text", () => {
     for (const run of reopened.page(0).runs) {
       expect(textTag(reopened, run.snapshot()).kind).toBe("tagged");
     }
+  });
+});
+
+describe("tagging text in a file with no structure tree", () => {
+  async function openUntagged(): Promise<EditorDocument> {
+    const doc = await EditorDocument.open(
+      singleContentPdf(
+        "BT /F1 20 Tf 72 700 Td (Summary) Tj ET\n" +
+          "BT /F1 12 Tf 72 670 Td (Sales rose in every region.) Tj ET\n",
+      ),
+    );
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    return doc;
+  }
+
+  test("offers the untagged text for tagging", async () => {
+    const doc = await openUntagged();
+    const run = doc.page(0).runs.find((r) => r.text.includes("Summary"))!;
+    expect(textTag(doc, run.snapshot())).toEqual({
+      kind: "untagged",
+      documentTagged: true,
+      taggable: true,
+    });
+  });
+
+  test("saves a tree holding the tagged text, in the order it was read", async () => {
+    const doc = await openUntagged();
+    const history = new HistoryStack();
+    tagText(doc, history, "Summary", "H1", 0);
+    tagText(doc, history, "Sales rose", "P", 0);
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1"]);
+
+    const bytes = await savedBytes(doc);
+    const saved = await readFileStructure(bytes);
+    expect(saved!.blocks.map((block) => block.type)).toEqual([
+      "Document",
+      "H1",
+      "P",
+    ]);
+    const pdf = (await RawPdf.parse(bytes))!;
+    expect(pdf.objectBody(pdf.rootNum)).not.toContain("/MarkInfo");
+
+    const reopened = await EditorDocument.open(bytes);
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(0));
+    expect(
+      reopened.page(0).runs.map((run) => {
+        const tag = textTag(reopened, run.snapshot());
+        return tag.kind === "tagged" ? tag.block.type : tag.kind;
+      }),
+    ).toEqual(["H1", "P"]);
+  });
+
+  test("claims to be tagged only once marked so, and not after an undo", async () => {
+    const doc = await openUntagged();
+    const history = new HistoryStack();
+    tagText(doc, history, "Summary", "H1", 0);
+    expect(doc.markedTagged()).toBe(false);
+    history.execute(new SetMarkedTaggedCommand(true), doc);
+
+    const marked = await savedBytes(doc);
+    const pdf = (await RawPdf.parse(marked))!;
+    expect(pdf.objectBody(pdf.rootNum)).toContain(
+      "/MarkInfo << /Marked true >>",
+    );
+    const reopened = await EditorDocument.open(marked);
+    opened.push(reopened);
+    expect(reopened.markedTagged()).toBe(true);
+
+    history.undo(doc);
+    const unmarked = await savedBytes(doc);
+    const again = (await RawPdf.parse(unmarked))!;
+    expect(again.objectBody(again.rootNum)).not.toContain("/MarkInfo");
+  });
+});
+
+describe("setting one tag on several runs", () => {
+  function targets(doc: EditorDocument, ...fragments: string[]) {
+    return fragments.map((fragment) => {
+      const run = runWith(doc, fragment).snapshot();
+      return { run, tag: textTag(doc, run) };
+    });
+  }
+
+  test("reads runs tagged differently as mixed, and alike as their tag", async () => {
+    const doc = await openSample();
+    const mixed = targets(doc, "Priorities for next quarter", "Confidential");
+    expect(sharedTextTag(mixed.map(({ tag }) => tag))).toEqual({
+      kind: "mixed",
+      settable: true,
+    });
+    const history = new HistoryStack();
+    history.execute(setTextTagCommand(mixed, "H3")!, doc);
+    const alike = targets(doc, "Priorities for next quarter", "Confidential");
+    expect(sharedTextTag(alike.map(({ tag }) => tag))).toMatchObject({
+      kind: "tagged",
+      block: { type: "H3" },
+      cannotRetag: null,
+    });
+  });
+
+  test("retags tagged text and tags untagged text as one undo step", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    history.execute(
+      setTextTagCommand(
+        targets(doc, "Priorities for next quarter", "Confidential"),
+        "H3",
+      )!,
+      doc,
+    );
+    expect(shownTag(doc, "Priorities for next quarter")).toBe("H3");
+    expect(shownTag(doc, "Confidential")).toBe("H3");
+
+    history.undo(doc);
+    expect(shownTag(doc, "Priorities for next quarter")).not.toBe("H3");
+    expect(shownTag(doc, "Confidential")).toBe("untagged");
+  });
+
+  test("leaves text whose tag cannot be set out, and is not settable with it", async () => {
+    const doc = await openSample();
+    const withArtifact = targets(doc, "Confidential", "Acme Corp");
+    expect(sharedTextTag(withArtifact.map(({ tag }) => tag))).toEqual({
+      kind: "mixed",
+      settable: false,
+    });
+    expect(setTextTagCommand(targets(doc, "Acme Corp"), "P")).toBeNull();
   });
 });
