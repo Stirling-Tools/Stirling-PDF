@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import axios, { isCancel, type InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosHeaders,
+  isCancel,
+  type InternalAxiosRequestConfig,
+} from "axios";
 import {
   copyBudgetBytes,
   inMemoryFormData,
@@ -166,7 +170,8 @@ describe("installInMemoryUploads", () => {
     const error = await interceptor({
       data: form,
       signal: controller.signal,
-    } as InternalAxiosRequestConfig).catch((e: unknown) => e);
+      headers: new AxiosHeaders(),
+    }).catch((e: unknown) => e);
     expect(isCancel(error)).toBe(true);
     expect(read).not.toHaveBeenCalled();
   });
