@@ -75,7 +75,8 @@ class ConvertPDFToPDFAMoreTest {
                 veraPDFService,
                 pdfaLevelAService,
                 tempFileManager,
-                new ApplicationProperties());
+                new ApplicationProperties(),
+                mock(stirling.software.SPDF.service.OfficeConversionService.class));
     }
 
     private static ResponseEntity<Resource> streamingOk(byte[] bytes) {

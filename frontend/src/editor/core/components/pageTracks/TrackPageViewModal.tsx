@@ -147,7 +147,6 @@ export function TrackPageViewModal({
                 className={[
                   styles.pageViewImage,
                   quarterTurn ? styles.pageViewQuarter : "",
-                  "ph-no-capture",
                 ]
                   .filter(Boolean)
                   .join(" ")}
