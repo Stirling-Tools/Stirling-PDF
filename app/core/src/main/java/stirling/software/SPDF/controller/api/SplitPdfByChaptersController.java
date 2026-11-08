@@ -37,7 +37,6 @@ import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.pdf.JpdfiumTempOutputs;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
@@ -223,15 +222,17 @@ public class SplitPdfByChaptersController {
                             totalPages);
                 }
             } else {
-                for (int i = 0; i < bookmarks.size(); i++) {
-                    writeChapterViaJpdfium(
-                            sourceFile.toPath(),
-                            bookmarks.get(i),
-                            i,
-                            fileNumberFormatter,
-                            metadata,
-                            zipOut,
-                            totalPages);
+                try (PdfDocument sourceDocument = PdfDocument.open(sourceFile.toPath())) {
+                    for (int i = 0; i < bookmarks.size(); i++) {
+                        writeChapterViaJpdfium(
+                                sourceDocument,
+                                bookmarks.get(i),
+                                i,
+                                fileNumberFormatter,
+                                metadata,
+                                zipOut,
+                                totalPages);
+                    }
                 }
             }
             log.info(
@@ -245,7 +246,7 @@ public class SplitPdfByChaptersController {
     }
 
     private void writeChapterViaJpdfium(
-            Path source,
+            PdfDocument sourceDocument,
             Bookmark bookmark,
             int index,
             String fileNumberFormatter,
@@ -257,8 +258,9 @@ public class SplitPdfByChaptersController {
         int from = range[0];
         int to = range[1];
         try (TempFile splitTemp = new TempFile(tempFileManager, ".pdf")) {
-            PdfSplit.extractPageRangeToFile(
-                    source, from, to, splitTemp.getPath(), JpdfiumTempOutputs.STORAGE);
+            try (PdfDocument splitDoc = PdfSplit.extractPageRange(sourceDocument, from, to)) {
+                splitDoc.save(splitTemp.getPath());
+            }
             Path finalPath = splitTemp.getPath();
             TempFile metaTemp = null;
             try {
