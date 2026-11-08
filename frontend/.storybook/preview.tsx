@@ -16,8 +16,9 @@ void React;
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TierProvider, type Tier } from "@processor/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { ThemeProvider } from "@processor/contexts/ThemeContext";
 import { UIProvider } from "@processor/contexts/UIContext";
+import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
 import { SuiProvider } from "@processor/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
 import {
@@ -161,23 +162,6 @@ function TierKey({
 }
 
 /**
- * Makes the Storybook toolbar the SINGLE source of truth for the theme.
- */
-function ThemeBridge({
-  theme,
-  children,
-}: {
-  theme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-  return <>{children}</>;
-}
-
-/**
  * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
  * with the fixed default accent (data-accent="default"), matching the editor.
  */
@@ -261,10 +245,17 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+        {/* Forced, not saved: the toolbar owns the theme, and one tab saving it would flip the others. */}
+        <ThemeProvider forcedTheme={colorScheme}>
           <SchemeSetup scheme={colorScheme} />
-          <ThemeBridge theme={colorScheme}>
-            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+          <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+            {/* The app mounts this with the platform providers; without it the config never
+                loads and anything waiting on it (the portal's connect gate) never settles.
+                Seeded rather than fetched; a story can mount its own to vary it. */}
+            <AppConfigProvider
+              initialConfig={STORY_APP_CONFIG}
+              autoFetch={false}
+            >
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
@@ -282,13 +273,16 @@ const withProviders: Decorator = (Story, context) => {
                   </UIProvider>
                 </TierKey>
               </LinkProvider>
-            </StoryTheme>
-          </ThemeBridge>
+            </AppConfigProvider>
+          </StoryTheme>
         </ThemeProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
 };
+
+/** Matches the mocked /api/v1/config/app-config, which the portal's views were written against. */
+const STORY_APP_CONFIG = { aiEngineEnabled: true };
 
 const preview: Preview = {
   loaders: [mswLoader],
