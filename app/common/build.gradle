@@ -82,6 +82,20 @@ dependencies {
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
     }
+    def jpdfiumLicenseOnlyPlatforms = project.hasProperty('jpdfiumNativePlatforms')
+            ? resolveJpdfiumPlatforms('jpdfiumNativePlatforms') - jpdfiumPlatforms
+            : []
+    jpdfiumLicenseOnlyPlatforms.each { platform ->
+        def nativeJar = configurations.detachedConfiguration(
+                dependencies.create("com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"))
+        nativeJar.transitive = false
+        def licensesJar = tasks.register("jpdfiumLicensesJar-${platform}", Jar) {
+            from({ zipTree(nativeJar.singleFile) }) { include 'licenses/**' }
+            archiveFileName = "jpdfium-licenses-${platform}-${jpdfiumVersion}.jar"
+            destinationDirectory = layout.buildDirectory.dir('jpdfium-licenses')
+        }
+        runtimeOnly files(licensesJar)
+    }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
