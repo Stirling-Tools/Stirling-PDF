@@ -5,8 +5,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,9 +47,9 @@ class CropControllerTest {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (InputStream __in = response.getBody().getInputStream()) {
             __in.transferTo(baos);
         }
         return baos.toByteArray();
