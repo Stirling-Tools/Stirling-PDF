@@ -429,8 +429,8 @@ class GeneralUtilsMoreTest {
             try (PDDocument document = Loader.loadPDF(optimized)) {
                 assertEquals(1, document.getNumberOfPages());
                 PDImageXObject image = firstImage(document);
-                assertThat(Math.max(image.getWidth(), image.getHeight())).isLessThanOrEqualTo(1800);
-                assertThat(image.getWidth()).isEqualTo(1200);
+                assertThat(Math.max(image.getWidth(), image.getHeight())).isLessThanOrEqualTo(1600);
+                assertThat(image.getWidth()).isBetween(1060, 1070);
             }
         }
 

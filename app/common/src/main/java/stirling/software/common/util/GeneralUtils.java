@@ -1286,9 +1286,11 @@ public class GeneralUtils {
 
     /**
      * Optimizes a PDF for ebook readers in-process. Embedded images are capped at their effective
-     * 150 DPI, at a 1800 px longest edge (comic pages are laid out as 1 image pixel = 1 PDF point
+     * 150 DPI, at a 1600 px longest edge (comic pages are laid out as 1 image pixel = 1 PDF point
      * and would otherwise report 72 DPI and escape every DPI threshold), and re-encoded as JPEG at
-     * quality 70; Flate/PNG images are converted to JPEG too. Text stays selectable because pages
+     * quality 65; Flate/PNG images are converted to JPEG too. JPDFium downsamples with a Lanczos
+     * kernel and writes JPEGs with optimized Huffman tables, which keeps the smaller edge and
+     * quality visually ahead of Ghostscript's /ebook output. Text stays selectable because pages
      * are never rasterized.
      *
      * <p>The fidelity check is skipped: on pixel-sized comic pages the preview comparison reports
@@ -1309,9 +1311,9 @@ public class GeneralUtils {
 
         CompressOptions options =
                 CompressOptions.builder()
-                        .imageQuality(70)
+                        .imageQuality(65)
                         .maxImageDpi(150)
-                        .maxImageEdgePx(1800)
+                        .maxImageEdgePx(1600)
                         .convertPngToJpeg(true)
                         .removeMetadata(false)
                         .preservationMode(PreservationMode.DESTRUCTIVE)
