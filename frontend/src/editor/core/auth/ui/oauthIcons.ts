@@ -19,6 +19,17 @@ const ICON_BY_FILE: Record<string, IconName> = {
   "authentik.svg": "authentik",
 };
 
+/**
+ * Marks drawn in currentColor and pinned to pure black or white per theme.
+ * Only owners whose guidelines allow exactly that belong here: GitHub's
+ * Invertocat ships in black or white, and Sign in with Apple requires a black
+ * or white logo. Every other mark keeps its own colours in both themes.
+ */
+export const MONOCHROME_MARKS: ReadonlySet<IconName> = new Set([
+  "github",
+  "apple",
+]);
+
 /** The registry mark for a provider icon filename, or null when none is bundled. */
 export function oauthIconName(file: string): IconName | null {
   return Object.hasOwn(ICON_BY_FILE, file) ? ICON_BY_FILE[file] : null;

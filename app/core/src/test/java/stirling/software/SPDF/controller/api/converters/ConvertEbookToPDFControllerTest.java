@@ -72,6 +72,9 @@ class ConvertEbookToPDFControllerTest {
 
     private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
 
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+
     @InjectMocks private ConvertEbookToPDFController controller;
 
     @BeforeEach

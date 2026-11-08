@@ -13,7 +13,10 @@ import {
   type ParentTreeWriter,
   type PageSites,
 } from "@editor/tools/pdfTextEditor/pdfdoc/markedContent";
-import { noteId } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
+import {
+  noteId,
+  textEntry,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import {
   indirectRef,
   referencedObject,
@@ -35,6 +38,8 @@ export interface NewCut {
   /** Null for a cut the session removed. */
   type: StructureType | null;
   alt: string | null;
+  /** Its /Lang; null to read it in the language of the element it was cut from. */
+  lang: string | null;
   cut: ContentCut;
 }
 
@@ -217,8 +222,11 @@ function splitOwner(
     return "the element it was cut from has no parent to split it in";
   }
 
+  // A sibling no longer inherits the owner's language, so it takes the
+  // owner's own: a heading cut from a French paragraph is still French.
+  const ownerLang = pdf.resolve(ownerBody, "Lang");
   const num = unusedObjectNumber(pdf, bodies);
-  bodies.set(num, newElement(pdf, cut, num, parent, plan.pageNum));
+  bodies.set(num, newElement(pdf, cut, num, parent, plan.pageNum, ownerLang));
   setSlot(slots, cut.mcid, num);
   const added = [indirectRef(pdf, num)];
   let kept = after;
@@ -228,10 +236,11 @@ function splitOwner(
     if (reason) return reason;
     const page =
       plan.ownerPage === null ? "" : ` /Pg ${indirectRef(pdf, plan.ownerPage)}`;
+    const lang = ownerLang === null ? "" : ` /Lang ${ownerLang.trim()}`;
     bodies.set(
       rest,
       `<< /Type /StructElem /S /${pdf.dictName(ownerBody, "S")} ` +
-        `/P ${indirectRef(pdf, parent)}${page} /K [${after.join(" ")}] >>`,
+        `/P ${indirectRef(pdf, parent)}${page} /K [${after.join(" ")}]${lang} >>`,
     );
     added.push(indirectRef(pdf, rest));
     kept = before;
@@ -261,6 +270,9 @@ function retagOwner(
   const kid = mcidKid(pdf, cut.mcid, plan.ownerPage, plan.pageNum);
   let body = setDictEntry(plan.ownerBody, "S", `/${cut.type}`);
   body = body && setDictEntry(body, "K", `[${kid}]`);
+  if (body && cut.lang !== null) {
+    body = setDictEntry(body, "Lang", encodeTextString(cut.lang));
+  }
   if (body && cut.type === "Note" && !pdf.valueSpan(body, "ID")) {
     body = setDictEntry(body, "ID", noteId(plan.owner));
   }
@@ -316,18 +328,25 @@ function kidPage(
   return pdf.dictRef(body, "Pg") ?? ownerPage;
 }
 
+/** `ownerLang` is the serialised /Lang a split-off cut keeps when it has none of its own. */
 function newElement(
   pdf: RawPdf,
-  { type, mcid, alt }: TypedCut,
+  { type, mcid, alt, lang }: TypedCut,
   num: number,
   parent: number,
   pageNum: number,
+  ownerLang: string | null = null,
 ): string {
-  const altEntry = alt === null ? "" : ` /Alt ${encodeTextString(alt)}`;
   const id = type === "Note" ? ` /ID ${noteId(num)}` : "";
+  const langEntry =
+    lang === null
+      ? ownerLang === null
+        ? ""
+        : ` /Lang ${ownerLang.trim()}`
+      : textEntry("Lang", lang);
   return (
     `<< /Type /StructElem /S /${type} /P ${indirectRef(pdf, parent)} ` +
-    `/Pg ${indirectRef(pdf, pageNum)} /K ${mcid}${altEntry}${id} >>`
+    `/Pg ${indirectRef(pdf, pageNum)} /K ${mcid}${textEntry("Alt", alt)}${langEntry}${id} >>`
   );
 }
 

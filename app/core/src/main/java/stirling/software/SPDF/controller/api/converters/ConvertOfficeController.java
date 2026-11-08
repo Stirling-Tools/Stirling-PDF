@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
@@ -136,7 +137,16 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        if (officeToPdfService.handles(extensionLower, useStirlingOfficeConvert)) {
+        boolean legacyBinary = isLegacyBinaryOffice(inputFile);
+
+        boolean inProcess = officeToPdfService.handles(extensionLower, useStirlingOfficeConvert);
+        if (inProcess && legacyBinary && officeConversionService.libreOfficeAvailable()) {
+            // Legacy binary Office documents (OLE2) are converted by LibreOffice rather than the
+            // in-process converter, chosen by content signature so the engine follows what the
+            // file is rather than its extension.
+            inProcess = false;
+        }
+        if (inProcess) {
             if (convertInProcess(inputFile, extensionLower, inputPath, outputPath)) {
                 return outputPath.toFile();
             }
@@ -275,7 +285,9 @@ public class ConvertOfficeController {
 
     private String stageSanitized(MultipartFile inputFile, String extensionLower, Path inputPath)
             throws IOException {
-        Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream in = inputFile.getInputStream()) {
+            Files.copy(in, inputPath, StandardCopyOption.REPLACE_EXISTING);
+        }
         // The staged name and the forced filter come from the same lowercased extension, so the
         // type LibreOffice is told to read and the one it sees on disk cannot diverge.
         OfficeImportFilters.Candidate candidate =
@@ -365,16 +377,30 @@ public class ConvertOfficeController {
                 "File content does not match its type and cannot be converted");
     }
 
+    // OLE2 compound-file signature: the start of every legacy binary Office document (.doc, .xls,
+    // .ppt and their variants).
+    private static final byte[] OLE2_SIGNATURE = {
+        (byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1
+    };
+
+    private static boolean isLegacyBinaryOffice(MultipartFile file) throws IOException {
+        try (InputStream in = file.getInputStream()) {
+            return Arrays.equals(in.readNBytes(OLE2_SIGNATURE.length), OLE2_SIGNATURE);
+        }
+    }
+
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/file/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert a file to a PDF",
+            summary = "Convert office documents (Word, Excel, PowerPoint, OpenDocument) to PDF",
             description =
-                    "This endpoint converts a given file to a PDF using Stirling Office Convert or"
-                            + " LibreOffice")
+                    "Converts Word, Excel, PowerPoint, OpenDocument, RTF, CSV and text"
+                            + " files with LibreOffice, or Stirling Office Convert when"
+                            + " useStirlingOfficeConvert=true or the admin setting is on. For web"
+                            + " pages use html-to-pdf.")
     public ResponseEntity<Resource> processFileToPDF(
             @ModelAttribute GeneralFile generalFile,
             @RequestParam(value = "useStirlingOfficeConvert", required = false)

@@ -171,9 +171,16 @@ public class ConvertPDFToOffice {
     @Operation(
             summary = "Convert PDF to XML",
             description = "This endpoint converts a PDF file to an XML file.")
-    public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<Resource> processPdfToXML(
+            @ModelAttribute PDFFile file,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
+            throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
+            return convert(inputFile, "xml", Set.of("xml"), MediaType.APPLICATION_XML);
+        }
         return convertWithLibreOffice(inputFile, "xml", Set.of("xml"), "writer_pdf_import");
     }
 
