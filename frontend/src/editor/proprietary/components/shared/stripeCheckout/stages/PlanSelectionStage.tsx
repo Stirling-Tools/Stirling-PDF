@@ -12,6 +12,8 @@ import {
   calculateTotalWithSeats,
 } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
 import { getClickablePaperStyle } from "@editor/components/shared/stripeCheckout/utils/cardStyles";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
+import "@editor/components/shared/stripeCheckout/team-checkout.css";
 
 interface PlanSelectionStageProps {
   planGroup: PlanTierGroup;
@@ -42,7 +44,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
   if (compact) {
     return (
       <div
-        role="group"
+        role="radiogroup"
         aria-label={t("payment.billingPeriod", "Billing period")}
         style={{
           display: "grid",
@@ -58,36 +60,45 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
             <button
               key={period}
               type="button"
-              aria-pressed={selected}
+              role="radio"
+              aria-checked={selected}
               onClick={() => onSelectPlan(period)}
               style={{
                 textAlign: "left",
-                padding: "0.75rem",
+                padding: "0.875rem 1rem",
                 borderRadius: "0.75rem",
                 cursor: "pointer",
                 color: "var(--c-text)",
-                border: `1px solid ${selected ? "var(--c-primary)" : "var(--c-border)"}`,
+                border: `${selected ? 2 : 1}px solid ${selected ? "var(--c-primary)" : "var(--c-border)"}`,
                 background: selected
                   ? "var(--c-primary-subtle)"
                   : "transparent",
               }}
             >
-              <Text component="span" display="block" fw={600}>
+              <Text
+                component="span"
+                fw={600}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
                 {period === "monthly"
                   ? t("payment.monthly", "Monthly")
-                  : t("payment.yearly", "Yearly")}
+                  : t("payment.annually", "Annually")}
+                {period === "yearly" && savings && (
+                  <span className="team-period__saving">
+                    {t("payment.planStage.savePercent", "Save {{percent}}%", {
+                      percent: savings.percent,
+                    })}
+                  </span>
+                )}
               </Text>
               <Text component="span" display="block" size="sm" c="dimmed">
                 {formatPrice(plan.price, plan.currency, 0)}
                 {period === "monthly"
                   ? t("payment.capacityStage.perMonth", "/mo")
-                  : t("payment.capacityStage.perYear", "/yr")}
-                {" · "}
-                {period === "yearly" && savings
-                  ? t("payment.planStage.savePercent", "Save {{percent}}%", {
-                      percent: savings.percent,
-                    })
-                  : t("payment.perUserBlock", "per 100 users")}
+                  : t("payment.capacityStage.perYear", "/yr")}{" "}
+                {t("payment.perUserBlock", "per {{users}} users", {
+                  users: USERS_PER_BLOCK,
+                })}
               </Text>
             </button>
           );
