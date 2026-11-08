@@ -97,11 +97,12 @@ public class RedactController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactPdfManual",
-            summary = "Redacts areas and pages in a PDF document",
+            summary = "Remove content under selected areas or wipe whole pages",
             description =
-                    "This endpoint redacts content from a PDF file based on manually specified"
-                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
-                            + " image.")
+                    "Removes covered page content from selected areas and wipes selected whole"
+                            + " pages. An affected page may be rasterized if native region removal"
+                            + " cannot safely clear it. convertPDFToImage=true rasterizes every"
+                            + " output page.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -143,12 +144,13 @@ public class RedactController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Redact PDF automatically",
+            summary = "Redact text matching words or regex patterns",
             operationId = "redactPdfAuto",
             description =
-                    "This endpoint automatically redacts text from a PDF file based on specified"
-                            + " patterns. Users can provide text patterns to redact, with options for regex"
-                            + " and whole word matching.")
+                    "Removes matched page text and covers its location. Verification failures"
+                            + " in native word/regex removal reject the request. Other native failures"
+                            + " fall back to region content removal or rasterization."
+                            + " convertPDFToImage=true rasterizes every output page.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws ToolFailedException {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
@@ -182,8 +184,13 @@ public class RedactController {
                 try {
                     RegexPatternUtils.getInstance().getPattern(term);
                 } catch (PatternSyntaxException e) {
+                    // The error is logged, so it names the problem rather than the search term.
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.redaction.no.patterns", "Invalid regex pattern: " + term);
+                            "error.redaction.no.patterns",
+                            "Invalid regex pattern: "
+                                    + e.getDescription()
+                                    + " near index "
+                                    + e.getIndex());
                 }
             }
         }
@@ -257,7 +264,9 @@ public class RedactController {
                                 "JPDFium auto-redact: {} matches processed into {}",
                                 result.totalMatches(),
                                 filename);
-                        return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
+                        return withMatchCount(
+                                WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
+                                result.totalMatches());
                     } finally {
                         if (result.document() != null) {
                             result.document().close();
@@ -287,7 +296,9 @@ public class RedactController {
                                     request.getCustomPadding(),
                                     request.getConvertPDFToImage(),
                                     false);
-                    return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
+                    int matches = foundTexts.values().stream().mapToInt(List::size).sum();
+                    return withMatchCount(
+                            WebResponseUtils.pdfFileToWebResponse(finalized, filename), matches);
                 }
             }
         } catch (IllegalArgumentException | ToolFailedException e) {
@@ -308,8 +319,12 @@ public class RedactController {
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
-                            + " page numbers in a single request. Supports execution strategy hints.")
+                    "Redacts exact text, regex matches, anchored ranges, image regions and whole"
+                            + " pages. AUTO removes covered page content, with per-page rasterization"
+                            + " when needed. OVERLAY_ONLY skips removal for text/range/image boxes;"
+                            + " whole-page wipes still remove page content. style.convertToImage=true"
+                            + " or IMAGE_FINALIZE rasterizes every output page. Verification failures"
+                            + " in native word/regex removal reject the request.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 
@@ -324,7 +339,23 @@ public class RedactController {
                                                 request.getFileInput().getOriginalFilename())))
                         + "_redacted.pdf";
 
-        TempFile out = redactExecuteService.execute(request);
-        return WebResponseUtils.pdfFileToWebResponse(out, filename);
+        RedactExecuteService.Outcome outcome = redactExecuteService.executeWithOutcome(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(outcome.file(), filename);
+        // Only a text-only plan can be judged by its match count.
+        return outcome.textOnly() ? withMatchCount(response, outcome.textMatches()) : response;
+    }
+
+    /** How many matches were redacted; callers can tell "nothing matched" from success. */
+    static final String MATCHES_HEADER = "X-Stirling-Redaction-Matches";
+
+    private static <T> ResponseEntity<T> withMatchCount(ResponseEntity<T> response, long matches) {
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(
+                        h -> {
+                            h.addAll(response.getHeaders());
+                            h.set(MATCHES_HEADER, Long.toString(matches));
+                        })
+                .body(response.getBody());
     }
 }

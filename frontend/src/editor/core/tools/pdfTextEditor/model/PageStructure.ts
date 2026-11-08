@@ -9,6 +9,8 @@ export interface StructureElement extends StructureRole {
   key: string;
   alt: string | null;
   actualText: string | null;
+  /** Its own /Lang, as the file has it; null for none. */
+  lang: string | null;
   /**
    * The MCIDs the element owns on this page. The PDFium fallback cannot tell
    * pages apart, so there it can also list other pages' MCIDs.
@@ -219,6 +221,8 @@ export interface CutElement {
   /** Null once removed: the save gives the text back to the element it was cut from. */
   type: StructureType | null;
   alt: string | null;
+  /** Null to read it in the language of the element it was cut from. */
+  lang: string | null;
   cut: ContentCut;
 }
 
@@ -242,6 +246,20 @@ export interface AddedElement {
   type: StructureType;
   /** The /Alt to save; null for none. */
   alt: string | null;
+  /** The /Lang to save; null for none. */
+  lang: string | null;
+  /**
+   * The MCID of the content it reads after, null for first, fixed when it was
+   * added. Absent when its place follows from where it sits on the page.
+   */
+  follows?: number | null;
+}
+
+/** A change to the /Lang of one of the file's elements marking part of a block's text. */
+export interface ElementLanguageEdit {
+  mcid: number;
+  /** Null removes it. */
+  lang: string | null;
 }
 
 /**
@@ -255,6 +273,8 @@ export class PageStructure {
   private readonly byMcid = new Map<number, StructureElement>();
   private readonly edits = new Map<StructureElement, StructureElementEdit>();
   private readonly added = new Map<number, AddedStructureElement>();
+  /** AddedElement.follows, by the added element's MCID. */
+  private readonly follows = new Map<number, number | null>();
   /** By the new element's MCID, in the order made: a later cut can take text from an earlier one. */
   private readonly cuts = new Map<
     number,
@@ -271,6 +291,12 @@ export class PageStructure {
    * block owns no content of its own on the page to stand for it.
    */
   private readonly standIns = new Map<string, StructureElement>();
+  /**
+   * The session's /Lang for elements by key: the file's inner elements and
+   * the elements it adds. A file block's is held by the document, since a
+   * block can span pages.
+   */
+  private readonly langs = new Map<string, string | null>();
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
@@ -326,6 +352,16 @@ export class PageStructure {
       return "not-text";
     }
     return null;
+  }
+
+  /**
+   * Why the block the text `mcid` marks belongs to cannot take a language,
+   * or null when it can. Any block can: a list item or table cell in another
+   * language is as common as a paragraph.
+   */
+  cannotSetLanguage(mcid: number): RetagBlocker | null {
+    if (!this.element(mcid)) return "untagged";
+    return this.readOnly;
   }
 
   /** Why the content `mcid` marks cannot take a description, or null when it can. */
@@ -429,12 +465,17 @@ export class PageStructure {
     return this.added.has(mcid);
   }
 
-  /** Give the content `mcid` marks a new element. Throws when an element already owns it. */
-  addElement(mcid: number, type: StructureType): void {
+  /**
+   * Give the content `mcid` marks a new element, read after the content
+   * `follows` marks when given (see `AddedElement.follows`). Throws when an
+   * element already owns it.
+   */
+  addElement(mcid: number, type: StructureType, follows?: number | null): void {
     if (this.byMcid.has(mcid)) {
       throw new Error(`MCID ${mcid} already has an element`);
     }
     this.putAdded(mcid, type);
+    if (follows !== undefined) this.follows.set(mcid, follows);
   }
 
   /**
@@ -473,6 +514,7 @@ export class PageStructure {
       type,
       alt: null,
       actualText: null,
+      lang: null,
       mcids: [mcid],
       onlyMarkedContent: true,
       key,
@@ -483,12 +525,14 @@ export class PageStructure {
     return element;
   }
 
-  /** Drop an added element, its description, and the cut it was made by. */
+  /** Drop an added element, its description and language, and the cut it was made by. */
   removeElement(mcid: number): void {
     const element = this.added.get(mcid);
     if (!element && !this.cuts.has(mcid)) return;
     this.added.delete(mcid);
+    this.follows.delete(mcid);
     this.byMcid.delete(mcid);
+    this.langs.delete(addedKey(mcid));
     if (element) this.edits.delete(element);
     const cut = this.cuts.get(mcid)?.cut;
     this.cuts.delete(mcid);
@@ -508,6 +552,7 @@ export class PageStructure {
       mcid,
       type: this.added.get(mcid)?.type ?? null,
       alt: this.alt(mcid),
+      lang: this.langs.get(addedKey(mcid)) ?? null,
       cut,
     }));
   }
@@ -532,6 +577,18 @@ export class PageStructure {
     const change = this.innerChanges.get(el);
     if (change === undefined) return el;
     return change === null ? null : { role: change, type: change };
+  }
+
+  /**
+   * True when `el` marks part of block `blockKey`'s text: an inline element in
+   * it, or text the session cut from it. The element of a neighbouring block
+   * whose text was grouped in is not.
+   */
+  marksPartOf(el: StructureElement, blockKey: string): boolean {
+    if (el.key === blockKey) return false;
+    const cut = this.cutMcid(el.key);
+    if (cut !== null) return this.cuts.get(cut)!.owner.block.key === blockKey;
+    return this.fileElements.has(el) && el.block.key === blockKey;
   }
 
   /** What element `key` can be changed to. Throws as innerType does. */
@@ -626,6 +683,7 @@ export class PageStructure {
       ...el.block,
       alt: null,
       actualText: null,
+      lang: null,
       mcids: el.mcids,
       onlyMarkedContent: true,
       block: el.block,
@@ -635,7 +693,58 @@ export class PageStructure {
   }
 
   private addedElement(mcid: number): AddedElement {
-    return { mcid, type: this.added.get(mcid)!.type, alt: this.alt(mcid) };
+    const element: AddedElement = {
+      mcid,
+      type: this.added.get(mcid)!.type,
+      alt: this.alt(mcid),
+      lang: this.langs.get(addedKey(mcid)) ?? null,
+    };
+    if (this.follows.has(mcid)) element.follows = this.follows.get(mcid)!;
+    return element;
+  }
+
+  /**
+   * The /Lang element `key` has as the session has it: one marking part of a
+   * block's text, or one the session added. Throws when the page has no such
+   * element.
+   */
+  ownLang(key: string): string | null {
+    if (this.langs.has(key)) return this.langs.get(key)!;
+    if (this.addedMcid(key) !== null) return null;
+    return this.fileElement(key).lang;
+  }
+
+  /**
+   * Set or, with null, remove element `key`'s /Lang. Throws as ownLang does,
+   * and for a page whose save cannot write it.
+   */
+  setOwnLang(key: string, lang: string | null): void {
+    if (this.readOnly) throw new Error(`The page is ${this.readOnly}`);
+    const added = this.addedMcid(key) !== null;
+    if (!added && lang === this.fileElement(key).lang) this.langs.delete(key);
+    else this.langs.set(key, lang);
+  }
+
+  /** The /Lang the session set, by element key, over the file's. */
+  ownLangEdits(): ReadonlyMap<string, string | null> {
+    return this.langs;
+  }
+
+  /** Changes to the /Lang of the file's elements, but those the session removed, for the save. */
+  langEdits(): ElementLanguageEdit[] {
+    return this.elements.flatMap((el) =>
+      this.langs.has(el.key) && this.innerChanges.get(el) !== null
+        ? [{ mcid: el.mcids[0], lang: this.langs.get(el.key)! }]
+        : [],
+    );
+  }
+
+  /** The MCID of the element the session added as `key`, cut or not; null for the file's. */
+  private addedMcid(key: string): number | null {
+    for (const mcid of [...this.added.keys(), ...this.cuts.keys()]) {
+      if (addedKey(mcid) === key) return mcid;
+    }
+    return null;
   }
 
   /** The MCID of the element the session added that is block `key`; null for a block the file has. */
