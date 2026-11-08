@@ -121,7 +121,7 @@ class ColorSpaceConversionStrategyTest {
                 .as(
                         "mean RGB delta after CMYK conversion with profile %s",
                         CmykProfileResolver.source())
-                .isLessThan(20.0);
+                .isLessThan(13.0);
     }
 
     @Test
