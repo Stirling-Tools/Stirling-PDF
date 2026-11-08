@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { inspectLocalPdfAccess } from "@editor/services/pdfAccessService";
 import {
+  getOpenedRightsManagedPdf,
   isKnownRightsManagedPdf,
   type OpenedRightsManagedPdf,
 } from "@editor/services/rightsManagedPdf";
@@ -97,14 +98,45 @@ export function rightsManagedToolRule(
   return { supported: true, needsCopy: NEEDS_COPY.has(endpoint) };
 }
 
+const editNotAllowed = () =>
+  i18n.t(
+    "rightsManagedPdf.editNotAllowed",
+    "Your permissions on this protected PDF do not allow changes.",
+  );
+
+const copyNotAllowed = () =>
+  i18n.t(
+    "rightsManagedPdf.copyNotAllowed",
+    "Your permissions on this protected PDF do not allow copying its content, which this tool needs.",
+  );
+
+function missingRight(
+  rule: RightsManagedToolRule,
+  opened: OpenedRightsManagedPdf,
+): string | undefined {
+  if (!rule.supported) return rule.reason;
+  const { edit, copy } = opened.protection.permissions;
+  if (!edit) return editNotAllowed();
+  if (rule.needsCopy && !copy) return copyNotAllowed();
+  return undefined;
+}
+
+export function rightsManagedToolBlockReason(
+  endpoint: string | undefined,
+  fileId: string,
+): string | undefined {
+  if (!isKnownRightsManagedPdf(fileId)) return undefined;
+  const rule = rightsManagedToolRule(endpoint);
+  if (!rule.supported) return rule.reason;
+  const opened = getOpenedRightsManagedPdf(fileId);
+  return opened ? missingRight(rule, opened) : undefined;
+}
+
 export function rightsManagedToolAccepts(
   endpoint: string | undefined,
   fileId: string,
 ): boolean {
-  return (
-    !isKnownRightsManagedPdf(fileId) ||
-    rightsManagedToolRule(endpoint).supported
-  );
+  return rightsManagedToolBlockReason(endpoint, fileId) === undefined;
 }
 
 const signedContent = new WeakMap<OpenedRightsManagedPdf, Promise<boolean>>();
@@ -128,23 +160,8 @@ export async function assertRightsManagedRun(
   opened: OpenedRightsManagedPdf,
   endpoint: string | undefined,
 ): Promise<void> {
-  const rule = rightsManagedToolRule(endpoint);
-  if (!rule.supported) throw new Error(rule.reason);
-  const { edit, copy } = opened.protection.permissions;
-  if (!edit)
-    throw new Error(
-      i18n.t(
-        "rightsManagedPdf.editNotAllowed",
-        "Your permissions on this protected PDF do not allow changes.",
-      ),
-    );
-  if (rule.needsCopy && !copy)
-    throw new Error(
-      i18n.t(
-        "rightsManagedPdf.copyNotAllowed",
-        "Your permissions on this protected PDF do not allow copying its content, which this tool needs.",
-      ),
-    );
+  const missing = missingRight(rightsManagedToolRule(endpoint), opened);
+  if (missing) throw new Error(missing);
   if (await hasSignatures(opened))
     throw new Error(
       i18n.t(

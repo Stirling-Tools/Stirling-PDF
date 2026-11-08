@@ -1,6 +1,43 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TOOL_IO } from "@editor/types/toolIO";
-import { rightsManagedToolRule } from "@editor/services/rightsManagedTools";
+import {
+  rightsManagedToolBlockReason,
+  rightsManagedToolRule,
+} from "@editor/services/rightsManagedTools";
+import type {
+  OpenedRightsManagedPdf,
+  RightsManagedPermissions,
+} from "@editor/services/rightsManagedPdf";
+
+const purview = vi.hoisted(() => ({
+  known: new Set<string>(),
+  opened: new Map<string, OpenedRightsManagedPdf>(),
+}));
+
+vi.mock("@editor/services/rightsManagedPdf", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/rightsManagedPdf")
+  >()),
+  isKnownRightsManagedPdf: (fileId: string) => purview.known.has(fileId),
+  getOpenedRightsManagedPdf: (fileId: string) => purview.opened.get(fileId),
+}));
+
+const FULL: RightsManagedPermissions = {
+  view: true,
+  print: true,
+  copy: true,
+  edit: true,
+  comment: true,
+  export: true,
+  owner: false,
+};
+
+function openWith(fileId: string, permissions: RightsManagedPermissions) {
+  purview.known.add(fileId);
+  purview.opened.set(fileId, {
+    protection: { permissions },
+  } as OpenedRightsManagedPdf);
+}
 
 const REVIEWED = [
   "/api/v1/filter/filter-contains-image",
@@ -70,4 +107,38 @@ describe("rightsManagedToolRule", () => {
       });
     },
   );
+});
+
+describe("rightsManagedToolBlockReason", () => {
+  it("leaves files that are not Purview protected alone", () => {
+    expect(
+      rightsManagedToolBlockReason("/api/v1/security/add-password", "plain"),
+    ).toBeUndefined();
+  });
+
+  it("refuses a view-only file for a tool that changes it", () => {
+    openWith("view-only", { ...FULL, edit: false, copy: false });
+    expect(
+      rightsManagedToolBlockReason("/api/v1/general/rotate-pdf", "view-only"),
+    ).toBe("Your permissions on this protected PDF do not allow changes.");
+  });
+
+  it("refuses a file without the copy right for a tool that reads its content", () => {
+    openWith("no-copy", { ...FULL, copy: false });
+    expect(
+      rightsManagedToolBlockReason("/api/v1/general/rotate-pdf", "no-copy"),
+    ).toBeUndefined();
+    expect(
+      rightsManagedToolBlockReason("/api/v1/misc/auto-rename", "no-copy"),
+    ).toBe(
+      "Your permissions on this protected PDF do not allow copying its content, which this tool needs.",
+    );
+  });
+
+  it("accepts an opened file whose rights cover the tool", () => {
+    openWith("full", FULL);
+    expect(
+      rightsManagedToolBlockReason("/api/v1/general/rotate-pdf", "full"),
+    ).toBeUndefined();
+  });
 });

@@ -6,8 +6,8 @@ import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScoped
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
-import { isKnownRightsManagedPdf } from "@editor/services/rightsManagedPdf";
-import { rightsManagedToolRule } from "@editor/services/rightsManagedTools";
+import { rightsManagedToolBlockReason } from "@editor/services/rightsManagedTools";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
 import type { UnavailableProtectedFile } from "@editor/components/tools/shared/ProtectedPdfToolNotice";
 
 export interface FilesToolStepProps {
@@ -27,24 +27,19 @@ function FilesStepContent({
   const files = useViewScopedFileStubs();
   const { selectedTool } = useToolWorkflow();
   const endpoint = selectedTool?.operationConfig?.endpoint;
-  const rightsManagedRule =
-    typeof endpoint === "string" ? rightsManagedToolRule(endpoint) : undefined;
+  useRightsManagedPdfRevision();
   const notSelected = files.filter(
     (file) => !selectedFiles.some((selected) => selected.fileId === file.id),
   );
   const unavailableFiles: UnavailableProtectedFile[] = showUnavailableFiles
     ? notSelected.flatMap((file): UnavailableProtectedFile[] => {
-        if (
-          rightsManagedRule &&
-          !rightsManagedRule.supported &&
-          isKnownRightsManagedPdf(file.id)
-        )
+        const rightsManagedReason =
+          typeof endpoint === "string"
+            ? rightsManagedToolBlockReason(endpoint, file.id)
+            : undefined;
+        if (rightsManagedReason)
           return [
-            {
-              file,
-              reason: rightsManagedRule.reason,
-              passwordProtected: false,
-            },
+            { file, reason: rightsManagedReason, passwordProtected: false },
           ];
         if (file.processedFile?.isEncrypted && getPdfAccess(file.id))
           return [
