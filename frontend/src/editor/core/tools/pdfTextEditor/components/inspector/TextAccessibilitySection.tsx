@@ -15,9 +15,10 @@ import type {
   StructureRole,
   StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import type {
-  InnerTag,
-  TextTag,
+import {
+  canSetTextTag,
+  type InnerTag,
+  type TextTag,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import type {
   InnerTagsControl,
@@ -31,8 +32,8 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
  * What the selected text is tagged as and the language it is read in, with
  * pickers to change them: retagging its block, or giving untagged text an
  * element of its own. Beneath them, the tags marking parts of the text, and
- * pickers for characters selected in it. With several runs selected, only
- * their language: `tag` is null.
+ * pickers for characters selected in it. With several runs selected, the tag
+ * they share and their language.
  */
 export function TextAccessibilitySection({
   tag,
@@ -75,7 +76,7 @@ function TagField({
 }) {
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
-  return pickable(tag) ? (
+  return canSetTextTag(tag) ? (
     <Field label={label}>
       <TagPicker
         types={TEXT_BLOCK_TYPES}
@@ -320,11 +321,6 @@ function NewLanguagePicker({ inner }: { inner: InnerTagsControl }) {
   );
 }
 
-function pickable(tag: TextTag): boolean {
-  if (tag.kind === "tagged") return tag.cannotRetag === null;
-  return tag.kind === "untagged" && tag.taggable;
-}
-
 function TagPicker({
   types,
   current,
@@ -400,6 +396,8 @@ function statusText(
         "pdfTextEditor.inspector.accessibility.unknownTag",
         "Can't be read here",
       );
+    case "mixed":
+      return t("pdfTextEditor.inspector.accessibility.mixedTags", "Mixed");
   }
 }
 
