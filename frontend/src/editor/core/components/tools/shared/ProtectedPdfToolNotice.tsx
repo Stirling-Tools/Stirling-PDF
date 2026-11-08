@@ -52,7 +52,7 @@ export function ProtectedPdfToolNotice({
     <Stack gap="xs" role="list">
       {files.map(({ file, reason, passwordProtected }) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
-          <Tooltip content={reason} position="top" maxWidth={260} arrow>
+          <Tooltip content={reason} position="bottom" maxWidth={260} arrow>
             <ActionIcon
               variant="quiet"
               accent="warning"
