@@ -22,10 +22,11 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.pdf.MarkdownBlock;
 import stirling.software.common.pdf.MarkdownBlocks;
 import stirling.software.common.pdf.PdfMarkdownExtractor;
+import stirling.software.common.pdf.worker.MarkdownJob;
+import stirling.software.common.pdf.worker.PdfWorkerPool;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.jpdfium.PdfDocument;
 import stirling.software.proprietary.model.api.docparse.IngestApiRequest;
 import stirling.software.proprietary.model.docparse.DocChunk;
 import stirling.software.proprietary.model.docparse.IngestOutcome;
@@ -56,6 +57,7 @@ public class DocParseService {
     private final ObjectMapper objectMapper;
     private final FileIdStrategy fileIdStrategy;
     private final UserServiceInterface userService;
+    private final PdfWorkerPool pdfWorkerPool;
 
     public DocParseService(
             AiEngineClient aiEngineClient,
@@ -64,7 +66,8 @@ public class DocParseService {
             ApplicationProperties applicationProperties,
             ObjectMapper objectMapper,
             FileIdStrategy fileIdStrategy,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Autowired(required = false) UserServiceInterface userService,
+            PdfWorkerPool pdfWorkerPool) {
         this.aiEngineClient = aiEngineClient;
         this.markdownExtractor = markdownExtractor;
         this.tempFileManager = tempFileManager;
@@ -72,6 +75,7 @@ public class DocParseService {
         this.objectMapper = objectMapper;
         this.fileIdStrategy = fileIdStrategy;
         this.userService = userService;
+        this.pdfWorkerPool = pdfWorkerPool;
     }
 
     /** Throws 503 when the docparse.enabled master switch is off. */
@@ -147,10 +151,10 @@ public class DocParseService {
                     file.getInputStream(),
                     tempInput.getPath(),
                     StandardCopyOption.REPLACE_EXISTING);
-            try (PdfDocument doc = PdfDocument.open(tempInput.getPath())) {
-                sourcePages = doc.pageCount();
-                all = markdownExtractor.extractBlocks(doc);
-            }
+            MarkdownJob.Result converted =
+                    pdfWorkerPool.execute(new MarkdownJob(tempInput.getPath(), markdownExtractor));
+            sourcePages = converted.pageCount();
+            all = converted.blocks();
         }
 
         Capped capped = applyLimits(all, sourcePages);
