@@ -264,7 +264,7 @@ public class JobExecutorService {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
                 Object body = response.getBody();
 
-                if (body == null && !response.getStatusCode().is2xxSuccessful()) {
+                if (!response.getStatusCode().is2xxSuccessful()) {
                     String error =
                             "Job rejected with HTTP status " + response.getStatusCode().value();
                     if (response.getHeaders().getLocation() != null) {

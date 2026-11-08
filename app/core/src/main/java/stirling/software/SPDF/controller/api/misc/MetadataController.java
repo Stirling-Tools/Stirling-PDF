@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -56,6 +58,23 @@ public class MetadataController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
+    }
+
+    private static final Set<String> STANDARD_METADATA_KEYS =
+            Set.of(
+                    "author",
+                    "creationdate",
+                    "creator",
+                    "keywords",
+                    "moddate",
+                    "modificationdate",
+                    "producer",
+                    "subject",
+                    "title",
+                    "trapped");
+
+    private static boolean isStandardMetadataKey(String key) {
+        return key != null && STANDARD_METADATA_KEYS.contains(key.toLowerCase(Locale.ROOT));
     }
 
     @AutoJobPostMapping(
@@ -147,15 +166,7 @@ public class MetadataController {
                 for (Entry<String, String> entry : allRequestParams.entrySet()) {
                     String key = entry.getKey();
                     // Check if the key is a standard metadata key
-                    if (!"Author".equalsIgnoreCase(key)
-                            && !"CreationDate".equalsIgnoreCase(key)
-                            && !"Creator".equalsIgnoreCase(key)
-                            && !"Keywords".equalsIgnoreCase(key)
-                            && !"modificationDate".equalsIgnoreCase(key)
-                            && !"Producer".equalsIgnoreCase(key)
-                            && !"Subject".equalsIgnoreCase(key)
-                            && !"Title".equalsIgnoreCase(key)
-                            && !"Trapped".equalsIgnoreCase(key)
+                    if (!isStandardMetadataKey(key)
                             && !key.contains("customKey")
                             && !key.contains("customValue")) {
                         info.setCustomMetadataValue(key, entry.getValue());
@@ -168,6 +179,10 @@ public class MetadataController {
                                                     .matcher(key)
                                                     .replaceAll(""));
                             String customKey = entry.getValue();
+                            if (isStandardMetadataKey(customKey)) {
+                                log.warn("Skipping custom key '{}': reserved name", customKey);
+                                continue;
+                            }
                             String customValue = allRequestParams.get("customValue" + number);
                             info.setCustomMetadataValue(customKey, customValue);
                         } catch (NumberFormatException e) {
