@@ -4,6 +4,10 @@ import {
   StructureEditError,
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import {
+  MarkInfoError,
+  applyMarked,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
@@ -32,7 +36,11 @@ export async function exportToBlob(
     // starting from what we opened keeps the file byte-identical. Rewriting it
     // changed the bytes of 8 of this suite's 10 fixtures and inflated the small
     // ones by up to 35% - for no edit at all.
-    if (structureEdits.length === 0 && documentLanguage === undefined) {
+    if (
+      structureEdits.length === 0 &&
+      documentLanguage === undefined &&
+      !doc.markedTaggedChanged()
+    ) {
       return {
         blob: pdfBlob(doc.openedBytes),
         filename: exportName(sourceName),
@@ -55,6 +63,14 @@ export async function exportToBlob(
     try {
       bytes = await setDocumentLanguage(bytes, documentLanguage);
     } catch (err) {
+      throw accessibilitySaveFailed(err);
+    }
+  }
+  if (doc.markedTaggedChanged()) {
+    try {
+      bytes = await applyMarked(bytes, doc.markedTagged());
+    } catch (err) {
+      if (!(err instanceof MarkInfoError)) throw err;
       throw accessibilitySaveFailed(err);
     }
   }
