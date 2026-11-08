@@ -46,6 +46,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.doc.PdfSecurity;
 import stirling.software.jpdfium.exception.JPDFiumException;
+import stirling.software.jpdfium.model.SaveOptions;
 
 /**
  * Owns password and permission changes, plus preparation and restoration for protected tool inputs.
@@ -421,7 +422,11 @@ public class PasswordController {
             sourceFile.transferTo(source.getFile());
             try {
                 PdfSecurity.copyEncryption(
-                        input.getPath(), output.getPath(), source.getPath(), password);
+                        input.getPath(),
+                        output.getPath(),
+                        source.getPath(),
+                        password,
+                        SaveOptions.ephemeral());
             } catch (JPDFiumException e) {
                 throw new IOException("Unable to restore PDF protection", e);
             }
