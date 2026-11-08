@@ -1,7 +1,8 @@
-import { Text } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { Icon } from "@editor/ui/Icon";
 
 /** Reports protection changes only for outputs whose security was verified. */
 export function PdfProtectionResult({
@@ -23,9 +24,12 @@ export function PdfProtectionResult({
   )
     return null;
   return (
-    <Text size="xs" role="status">
-      {summary ??
-        t("encryptedPdfUnlock.protectionRetained", "Protection retained")}
-    </Text>
+    <Group gap={6} wrap="nowrap" role="status">
+      <Icon name="shield-check" size={14} style={{ flexShrink: 0 }} />
+      <Text size="xs">
+        {summary ??
+          t("encryptedPdfUnlock.protectionRetained", "Protection retained")}
+      </Text>
+    </Group>
   );
 }

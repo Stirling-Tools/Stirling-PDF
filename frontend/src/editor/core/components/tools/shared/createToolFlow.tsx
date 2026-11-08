@@ -205,19 +205,21 @@ export function createToolFlow<TParams = unknown>(
         )}
 
         {/* Review Step */}
-        {config.review.isVisible && (
-          <PdfProtectionResult
-            files={config.review.operation.files}
-            summary={config.review.protectionSummary}
-          />
-        )}
         {steps.createReviewStep({
           isVisible: config.review.isVisible,
           operation: config.review.operation,
           title: config.review.title,
           onFileClick: config.review.onFileClick,
           onUndo: config.review.onUndo,
-          notice: config.review.notice,
+          notice: (
+            <>
+              <PdfProtectionResult
+                files={config.review.operation.files}
+                summary={config.review.protectionSummary}
+              />
+              {config.review.notice}
+            </>
+          ),
         })}
       </ToolStepProvider>
     </Stack>
