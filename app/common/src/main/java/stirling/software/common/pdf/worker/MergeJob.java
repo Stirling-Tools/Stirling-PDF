@@ -16,6 +16,7 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.pdf.JpdfiumTempOutputs;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfMerge;
 import stirling.software.jpdfium.doc.Bookmark;
@@ -165,13 +166,13 @@ public record MergeJob(
         }
         docs.clear();
         if (tree.entries().isEmpty()) {
-            PdfMerge.mergeFilesToFile(inputs, output);
+            PdfMerge.mergeFilesToFile(inputs, output, JpdfiumTempOutputs.STORAGE);
             return pageCounts;
         }
         Path staged = Files.createTempFile(output.getParent(), "qpdf-merge", ".pdf");
         try {
             Files.delete(staged);
-            PdfMerge.mergeFilesToFile(inputs, staged);
+            PdfMerge.mergeFilesToFile(inputs, staged, JpdfiumTempOutputs.STORAGE);
             try (PdfDocument merged = PdfDocument.open(staged)) {
                 PdfBookmarkEditor.setBookmarks(merged, tree, output);
             }
