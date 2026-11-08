@@ -16,15 +16,15 @@ class ExtractImageScansRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("primitive int fields default to 0 and fileInput to null")
+        @DisplayName("int fields default to the documented values and fileInput to null")
         void primitiveDefaults() {
             ExtractImageScansRequest req = new ExtractImageScansRequest();
             assertThat(req.getFileInput()).isNull();
-            assertThat(req.getAngleThreshold()).isZero();
-            assertThat(req.getTolerance()).isZero();
-            assertThat(req.getMinArea()).isZero();
-            assertThat(req.getMinContourArea()).isZero();
-            assertThat(req.getBorderSize()).isZero();
+            assertThat(req.getAngleThreshold()).isEqualTo(10);
+            assertThat(req.getTolerance()).isEqualTo(30);
+            assertThat(req.getMinArea()).isEqualTo(10000);
+            assertThat(req.getMinContourArea()).isEqualTo(500);
+            assertThat(req.getBorderSize()).isEqualTo(1);
         }
     }
 

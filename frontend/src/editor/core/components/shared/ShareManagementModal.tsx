@@ -31,6 +31,7 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { fileStorage } from "@editor/services/fileStorage";
 import { useFileActions } from "@editor/contexts/FileContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ShareLinkResponse {
   token: string;
@@ -186,7 +187,7 @@ function ShareModalIntro({ fileName }: { fileName: string }) {
       </Text>
       <Text size="sm">
         {t("storageShare.fileLabel", "File")}:{" "}
-        <Text span fw={600}>
+        <Text span fw={600} className={privateContentClassName}>
           {fileName}
         </Text>
       </Text>
@@ -301,6 +302,7 @@ function AddUserForm({
     <Group align="flex-end" gap="sm" wrap="nowrap">
       <TextInput
         style={{ flex: 1 }}
+        className={privateContentClassName}
         label={t("storageShare.usernameLabel", "Username or email")}
         placeholder={t(
           "storageShare.usernamePlaceholder",
@@ -388,7 +390,9 @@ function SharedUserRow({
   return (
     <Group justify="space-between" align="flex-start">
       <Stack gap={2}>
-        <Text size="sm">{user.username}</Text>
+        <Text size="sm" className={privateContentClassName}>
+          {user.username}
+        </Text>
         <CommenterHint role={user.accessRole} />
       </Stack>
       <Group gap="xs" align="center">
@@ -556,6 +560,7 @@ function ShareLinkItem({
         <TextInput
           readOnly
           value={url}
+          className={privateContentClassName}
           label={t("storageShare.linkLabel", "Share link")}
           rightSection={
             <Button
@@ -674,7 +679,10 @@ function ShareActivityEntry({ entry }: { entry: ShareLinkAccessResponse }) {
               ? new Date(entry.accessedAt).toLocaleString()
               : t("unknown", "Unknown")}
           </Text>
-          <Text size="sm">
+          <Text
+            size="sm"
+            className={entry.username ? privateContentClassName : undefined}
+          >
             {entry.username || t("storageShare.unknownUser", "Unknown user")}
           </Text>
         </Stack>
