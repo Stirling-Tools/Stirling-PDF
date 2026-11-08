@@ -1,6 +1,8 @@
 package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.abort;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -9,6 +11,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,10 +32,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.core.io.FileSystemResource;
 
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFamily;
+import stirling.software.SPDF.service.EditorFontRegistry.FontFile;
 import stirling.software.SPDF.service.EditorFontRegistry.Snapshot;
 
 class EditorFontRegistryTest {
@@ -136,8 +139,8 @@ class EditorFontRegistryTest {
     void ignoresLinksThatLeadOutOfTheFolder(@TempDir Path outside) throws IOException {
         Path elsewhere = outside.resolve("DejaVuSans.ttf");
         copyFixture("DejaVuSans.ttf", elsewhere);
-        Files.createSymbolicLink(root.resolve("linked.ttf"), elsewhere);
-        Files.createSymbolicLink(root.resolve("linked-folder"), outside);
+        symlink(root.resolve("linked.ttf"), elsewhere);
+        symlink(root.resolve("linked-folder"), outside);
         copyFixture("LiberationSans-Regular.ttf", root.resolve("LiberationSans-Regular.ttf"));
 
         List<EditorFontFamily> families = registry.snapshot().manifest().families();
@@ -150,7 +153,7 @@ class EditorFontRegistryTest {
     @Test
     void followsAFontsFolderThatIsItselfALink(@TempDir Path outside) throws IOException {
         copyFixture("DejaVuSans.ttf", outside.resolve("DejaVuSans.ttf"));
-        Path link = Files.createSymbolicLink(root.resolve("fonts"), outside);
+        Path link = symlink(root.resolve("fonts"), outside);
 
         EditorFontRegistry linked = new EditorFontRegistry(link, null, clock);
 
@@ -199,11 +202,18 @@ class EditorFontRegistryTest {
         firstRequest.start();
         assertThat(scanning.await(30, TimeUnit.SECONDS)).isTrue();
         laterRequest.start();
-        while (laterRequest.getState() != Thread.State.BLOCKED
-                && laterRequest.getState() != Thread.State.TERMINATED) {
-            Thread.onSpinWait();
+        try {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+            while (laterRequest.getState() != Thread.State.BLOCKED
+                    && laterRequest.getState() != Thread.State.TERMINATED) {
+                if (System.nanoTime() > deadline) {
+                    fail("later request never waited, state " + laterRequest.getState());
+                }
+                Thread.onSpinWait();
+            }
+        } finally {
+            release.countDown();
         }
-        release.countDown();
         firstRequest.join();
         laterRequest.join();
 
@@ -267,11 +277,9 @@ class EditorFontRegistryTest {
                 family(withBundled.snapshot().manifest().families(), "DejaVu Sans");
 
         assertThat(dejaVu.faces()).hasSize(1);
+        byte[] expected = Files.readAllBytes(custom);
         assertThat(withBundled.resolve(dejaVu.faces().get(0).id()))
-                .hasValueSatisfying(
-                        file ->
-                                assertThat(file.resource())
-                                        .isEqualTo(new FileSystemResource(custom)));
+                .hasValueSatisfying(file -> assertThat(bytesOf(file)).isEqualTo(expected));
     }
 
     @Test
@@ -304,10 +312,12 @@ class EditorFontRegistryTest {
         copyFixture("DejaVuSans.ttf", font);
         String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
 
+        byte[] expected = Files.readAllBytes(font);
         assertThat(registry.resolve(id))
                 .hasValueSatisfying(
                         file -> {
-                            assertThat(file.resource()).isEqualTo(new FileSystemResource(font));
+                            assertThat(bytesOf(file)).isEqualTo(expected);
+                            assertThat(file.size()).isEqualTo(expected.length);
                             assertThat(file.format()).isEqualTo("ttf");
                         });
         assertThat(registry.resolve("0".repeat(64))).isEmpty();
@@ -344,6 +354,70 @@ class EditorFontRegistryTest {
         String newId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
         assertThat(newId).isNotEqualTo(oldId);
         assertThat(registry.resolve(newId)).isPresent();
+    }
+
+    @Test
+    void doesNotServeALinkSwappedInWithTheSameSizeAndTime(@TempDir Path outside)
+            throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FileTime modified = Files.getLastModifiedTime(font);
+        Path secret = outside.resolve("secret.ttf");
+        copyFixture("DejaVuSans.ttf", secret);
+        setFsType(secret, 0x0008);
+        Files.setLastModifiedTime(secret, modified);
+        Files.delete(font);
+        symlink(font, secret);
+
+        assertThat(registry.resolve(id)).isEmpty();
+    }
+
+    @Test
+    void servesTheVerifiedBytesWhenTheFileIsSwappedAfterResolving(@TempDir Path outside)
+            throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        byte[] indexed = Files.readAllBytes(font);
+        String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FontFile file = registry.resolve(id).orElseThrow();
+        Path secret = outside.resolve("secret.ttf");
+        copyFixture("LiberationSans-Regular.ttf", secret);
+        Files.delete(font);
+        symlink(font, secret);
+
+        assertThat(bytesOf(file)).isEqualTo(indexed);
+    }
+
+    @Test
+    void doesNotServeAFileWhoseBytesNoLongerMatchItsId() throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FileTime modified = Files.getLastModifiedTime(font);
+        setFsType(font, 0x0008);
+        Files.setLastModifiedTime(font, modified);
+
+        assertThat(registry.resolve(id)).isEmpty();
+    }
+
+    private static byte[] bytesOf(FontFile file) {
+        try (InputStream in = file.resource().getInputStream()) {
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private static Path symlink(Path link, Path target) throws IOException {
+        try {
+            return Files.createSymbolicLink(link, target);
+        } catch (UnsupportedOperationException e) {
+            return abort("symbolic links are not supported here");
+        } catch (FileSystemException e) {
+            if (e.getClass() != FileSystemException.class) throw e;
+            return abort("no permission to create symbolic links: " + e.getMessage());
+        }
     }
 
     private static EditorFontFamily family(List<EditorFontFamily> families, String name) {
