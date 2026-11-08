@@ -8,9 +8,10 @@ import time
 import uuid
 
 import requests
+from api_base import BASE_URL
 from behave import given, then, when
 
-LB_URL = "http://localhost:8080"
+LB_URL = BASE_URL
 NODES = ["multinode-stirling-1", "multinode-stirling-2"]
 # Must match CLUSTER_NODE_ID in testing/compose/docker-compose-multinode.yml.
 NODE_IDS = ["multinode-1", "multinode-2"]
