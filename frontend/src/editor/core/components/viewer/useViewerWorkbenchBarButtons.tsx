@@ -8,6 +8,11 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { pdfAllows } from "@editor/services/pdfPermissions";
 import { PdfPermissionFlag } from "@editor/contexts/viewer/viewerBridges";
 import {
+  getOpenedRightsManagedPdf,
+  isKnownRightsManagedPdf,
+} from "@editor/services/rightsManagedPdf";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
+import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@editor/hooks/useWorkbenchBarButtons";
@@ -119,6 +124,11 @@ export function useViewerWorkbenchBarButtons(
 
   const isFormFillActive = (selectedTool as string) === "formFill";
   const access = usePdfAccess(viewer.activeFileId);
+  useRightsManagedPdfRevision();
+  const documentLocked =
+    !!viewer.activeFileId &&
+    isKnownRightsManagedPdf(viewer.activeFileId) &&
+    !getOpenedRightsManagedPdf(viewer.activeFileId);
   const restricted = access?.rightsManaged === true;
   const annotationsRestricted =
     restricted && !pdfAllows(access, PdfPermissionFlag.ModifyAnnotations);
@@ -575,8 +585,11 @@ export function useViewerWorkbenchBarButtons(
       },
     ];
 
-    return buttons;
+    return documentLocked
+      ? buttons.map((button) => ({ ...button, disabled: true }))
+      : buttons;
   }, [
+    documentLocked,
     t,
     i18n.language,
     viewer,

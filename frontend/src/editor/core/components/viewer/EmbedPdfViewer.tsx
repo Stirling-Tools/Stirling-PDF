@@ -2075,7 +2075,7 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Bottom Toolbar Overlay */}
-      {effectiveFile && (
+      {effectiveFile && rightsManaged.status !== "locked" && (
         <div
           className="pdf-viewer-toolbar-dock"
           style={{
