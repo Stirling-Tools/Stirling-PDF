@@ -61,6 +61,38 @@ async function openDirtyReport(page: Page, saveMode?: string) {
   await openCard(page, "quarterly-report.pdf");
 }
 
+async function compressOpenFile(page: Page) {
+  await page.route("**/api/v1/config/app-config", (route) =>
+    route.fulfill({ json: { enableLogin: false, dependenciesReady: true } }),
+  );
+  await page.route("**/api/v1/config/endpoints-availability?*", (route) => {
+    const keys =
+      new URL(route.request().url()).searchParams
+        .get("endpoints")
+        ?.split(",") ?? [];
+    return route.fulfill({
+      json: Object.fromEntries(keys.map((key) => [key, { enabled: true }])),
+    });
+  });
+  await page.route("**/api/v1/misc/compress-pdf", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/pdf",
+      body: Buffer.from(PDF),
+    }),
+  );
+  await page
+    .getByRole("link", { name: "Compress", exact: true })
+    .first()
+    .click();
+  const run = page.locator('[data-tour="run-button"]');
+  await expect(run).toBeEnabled({ timeout: 20_000 });
+  await run.click();
+  const save = page.getByTestId("download-result-button");
+  await expect(save).toBeVisible({ timeout: 30_000 });
+  return save;
+}
+
 test.describe("Saving files that live on disk", () => {
   test("the toolbar marks unsaved disk edits and Ctrl+S saves in place", async ({
     page,
@@ -127,5 +159,27 @@ test.describe("Saving files that live on disk", () => {
     await expect
       .poll(() => written(page))
       .toContain("C:/Docs/quarterly-report (edited).pdf");
+  });
+
+  test("a tool result's Save follows the save mode", async ({ page }) => {
+    await openDirtyReport(page, "copy");
+
+    const save = await compressOpenFile(page);
+    await expect(save).toHaveText("Save a copy next to it");
+    await save.click();
+    await expect
+      .poll(() => written(page))
+      .toContain("C:/Docs/quarterly-report (edited).pdf");
+    expect(await written(page)).not.toContain(REPORT);
+  });
+
+  test("a tool result's Save asks first in Ask me mode", async ({ page }) => {
+    await openDirtyReport(page, "ask");
+
+    await (await compressOpenFile(page)).click();
+    await expect(
+      page.getByRole("dialog", { name: 'Save "quarterly-report.pdf"' }),
+    ).toBeVisible();
+    expect(await written(page)).toEqual([]);
   });
 });

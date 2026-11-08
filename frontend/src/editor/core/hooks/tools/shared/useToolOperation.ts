@@ -693,6 +693,7 @@ export const useToolOperation = <TParams>(
               if (inputStub?.localFilePath) {
                 fileActions.updateStirlingFileStub(outputFileIds[0], {
                   localFilePath: inputStub.localFilePath,
+                  localFileIsCopy: inputStub.localFileIsCopy,
                 });
               }
             }

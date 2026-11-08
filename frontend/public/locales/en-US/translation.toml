@@ -12073,6 +12073,9 @@ ask = "Ask me"
 copy = "Save a copy next to it"
 replace = "Update it"
 
+[saveFile.result]
+ask = "Save…"
+
 [saveFile.toolbar]
 ask = "Save {{name}}…"
 copy = "Save a copy of {{name}} next to it"
