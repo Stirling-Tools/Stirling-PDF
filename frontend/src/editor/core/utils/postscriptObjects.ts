@@ -439,7 +439,7 @@ export const psDict = (value: PsValue): PsDict | undefined =>
   !Array.isArray(value) &&
   !(value instanceof PsName) &&
   !(value instanceof PsRef)
-    ? (value as PsDict)
+    ? value
     : undefined;
 
 export const psArray = (value: PsValue): PsValue[] | undefined =>
