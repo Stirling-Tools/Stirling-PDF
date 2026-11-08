@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -89,6 +90,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
@@ -106,6 +108,10 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.XmpUtils;
+import stirling.software.jpdfium.doc.PdfXConverter;
+import stirling.software.jpdfium.doc.PdfXOptions;
+import stirling.software.jpdfium.doc.PdfXStandard;
+import stirling.software.jpdfium.exception.JPDFiumException;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
 
@@ -499,49 +505,6 @@ public class ConvertPDFToPDFA {
         return pdfaDefFile;
     }
 
-    private static List<String> buildGhostscriptCommandX(
-            Path inputPdf,
-            Path outputPdf,
-            ColorProfiles colorProfiles,
-            Path workingDir,
-            PdfXProfile profile) {
-
-        List<String> command = new ArrayList<>(25);
-        command.add("gs");
-        command.add("--permit-file-read=" + workingDir.toAbsolutePath());
-        command.add("--permit-file-read=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("--permit-file-read=" + colorProfiles.gray().toAbsolutePath());
-        command.add("--permit-file-read=" + inputPdf.toAbsolutePath());
-        command.add("--permit-file-write=" + workingDir.toAbsolutePath());
-        command.add("-dPDFX=" + profile.getPdfxVersion());
-        command.add("-dCompatibilityLevel=" + profile.getCompatibilityLevel());
-        command.add("-sDEVICE=pdfwrite");
-        command.add("-sColorConversionStrategy=RGB");
-        command.add("-sOutputICCProfile=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("-sDefaultRGBProfile=" + colorProfiles.rgb().toAbsolutePath());
-        command.add("-sDefaultGrayProfile=" + colorProfiles.gray().toAbsolutePath());
-        command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=true");
-        command.add("-dCompressFonts=true");
-        command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
-
-        // Explicitly tune downsampling/compression for high-quality print
-        command.add("-dColorImageDownsampleType=/Bicubic");
-        command.add("-dColorImageResolution=300");
-        command.add("-dGrayImageDownsampleType=/Bicubic");
-        command.add("-dGrayImageResolution=300");
-        command.add("-dMonoImageDownsampleType=/Bicubic");
-        command.add("-dMonoImageResolution=1200");
-
-        command.add("-dNOPAUSE");
-        command.add("-dBATCH");
-        command.add("-dNOOUTERSAVE");
-        command.add("-sOutputFile=" + outputPdf.toAbsolutePath());
-        command.add(inputPdf.toAbsolutePath().toString());
-
-        return command;
-    }
-
     private static void embedMissingFonts(
             PDDocument loDoc, PDDocument baseDoc, Set<String> missingFonts) throws IOException {
         List<PDPage> loPages = new ArrayList<>(loDoc.getNumberOfPages());
@@ -611,9 +574,10 @@ public class ConvertPDFToPDFA {
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
-                    "This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to a PDF/A or PDF/X file using Ghostscript"
-                            + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
-                            + " long-term archiving, while PDF/X is optimized for print production.")
+                    "This endpoint converts a PDF file to PDF/A using Stirling Office Convert,"
+                            + " Ghostscript or PDFBox/LibreOffice, and to PDF/X in process with"
+                            + " JPDFium. PDF/A is a format designed for long-term archiving, while"
+                            + " PDF/X is optimized for print production.")
     public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -629,7 +593,8 @@ public class ConvertPDFToPDFA {
         boolean isPdfX = outputFormat != null && outputFormat.toLowerCase().startsWith("pdfx");
 
         if (isPdfX) {
-            return handlePdfXConversion(inputFile, outputFormat);
+            return handlePdfXConversion(
+                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         } else {
             return handlePdfAConversion(
                     inputFile,
@@ -655,7 +620,7 @@ public class ConvertPDFToPDFA {
     }
 
     private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
@@ -667,42 +632,62 @@ public class ConvertPDFToPDFA {
                         ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
                         : originalFileName;
 
-        Path workingDir = Files.createTempDirectory("pdfx_conversion_");
-        Path inputPath = workingDir.resolve("input.pdf");
-        inputFile.transferTo(inputPath);
-
         try {
-            // PDF/X conversion uses Ghostscript (no fallback currently)
-            if (!isGhostscriptAvailable()) {
-                throw ExceptionUtils.createGhostscriptRequiredException("PDF/X conversion");
+            if (!PdfXConverter.supports(profile.getStandard())) {
+                throw new IOException(
+                        "PDF/X conversion is not supported by this JPDFium build for "
+                                + profile.getDisplayName());
             }
 
-            log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
-            byte[] converted = convertWithGhostscriptX(inputPath, workingDir, profile);
-            String outputFilename = baseFileName + profile.outputSuffix();
+            PdfXOptions options =
+                    PdfXOptions.builder()
+                            .standard(profile.getStandard())
+                            .useCompactCmyk()
+                            .convertForms(true)
+                            .convertSpecialColors(true)
+                            .convertLosslessImages(true)
+                            .strictImages(true)
+                            .requireEmbeddedFonts(strict)
+                            .title(baseFileName)
+                            .build();
 
-            log.info("PDF/X conversion completed successfully to {}", profile.getDisplayName());
-
-            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            TempFile inputTemp = null;
+            TempFile outputTemp = null;
             try {
-                Files.write(tempOut.getPath(), converted);
-            } catch (Exception ex) {
-                tempOut.close();
-                throw ex;
-            }
-            return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+                inputTemp = tempFileManager.createManagedTempFile(".pdf");
+                outputTemp = tempFileManager.createManagedTempFile(".pdf");
+                inputFile.transferTo(inputTemp.getFile());
+                try (PDDocument pageCounter = Loader.loadPDF(inputTemp.getFile())) {
+                    requireSanitizablePageCount(pageCounter, maxConversionPages);
+                }
 
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw ExceptionUtils.createProcessingInterruptedException("PDF/X conversion", e);
-        } catch (ExceptionUtils.BaseAppException e) {
-            // Already says what went wrong, such as the missing binary above.
-            throw e;
+                PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
+                PdfXConverter.checkMetadata(outputTemp.getPath(), options);
+
+                String outputFilename = baseFileName + profile.outputSuffix();
+                TempFile out = outputTemp;
+                outputTemp = null; // ownership transferred to the response
+                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
+            } finally {
+                if (inputTemp != null) {
+                    inputTemp.close();
+                }
+                if (outputTemp != null) {
+                    outputTemp.close();
+                }
+            }
+
+        } catch (JPDFiumException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("JPDFium PDF/X conversion failed", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
+        } catch (LinkageError e) {
+            log.error("JPDFium native library is unavailable for PDF/X conversion", e);
+            throw ExceptionUtils.createPdfaConversionFailedException(e);
         } catch (IOException e) {
             log.error("PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
-        } finally {
-            deleteQuietly(workingDir);
         }
     }
 
@@ -1751,36 +1736,6 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private byte[] convertWithGhostscriptX(Path inputPdf, Path workingDir, PdfXProfile profile)
-            throws IOException, InterruptedException {
-        Path outputPdf = workingDir.resolve("gs_output_pdfx.pdf");
-        ColorProfiles colorProfiles = prepareColorProfiles(workingDir);
-
-        // Sanitize the PDF before PDF/X conversion for better Ghostscript compatibility
-        Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf, true);
-        Path inputForGs = sanitizedInputPdf != null ? sanitizedInputPdf : inputPdf;
-
-        List<String> command =
-                buildGhostscriptCommandX(inputForGs, outputPdf, colorProfiles, workingDir, profile);
-
-        log.info("Running Ghostscript PDF/X command: {}", String.join(" ", command));
-
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
-
-        if (result.getRc() != 0) {
-            log.error("Ghostscript PDF/X failed with output: {}", result.getMessages());
-            throw new IOException("Ghostscript exited with code " + result.getRc());
-        }
-
-        if (!Files.exists(outputPdf)) {
-            throw new IOException("Ghostscript did not produce an output file");
-        }
-
-        return Files.readAllBytes(outputPdf);
-    }
-
     /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
     private PdfaLevelAServiceInterface.Result applyLevelA(
             byte[] converted,
@@ -1959,8 +1914,7 @@ public class ConvertPDFToPDFA {
     }
 
     /** True for a PDF/UA or WCAG result, which says nothing about archival conformance. */
-    private static boolean isAccessibilityProfile(
-            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+    private static boolean isAccessibilityProfile(PDFVerificationResult result) {
         String profile = result.getValidationProfile();
         if (profile == null) {
             return false;
@@ -1973,9 +1927,7 @@ public class ConvertPDFToPDFA {
      * True when a result speaks for the requested profile. Only archival results count, and a level
      * B pass must never satisfy a level A request.
      */
-    private static boolean answersRequest(
-            PdfaProfile profile,
-            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+    private static boolean answersRequest(PdfaProfile profile, PDFVerificationResult result) {
         if (isAccessibilityProfile(result)) {
             return false;
         }
@@ -2000,14 +1952,11 @@ public class ConvertPDFToPDFA {
                             + " was not reached. It is valid at level B.");
         }
         try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
-            List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
-                    veraPDFService.validatePDF(is);
+            List<PDFVerificationResult> results = veraPDFService.validatePDF(is);
             boolean isCompliant =
                     results.stream()
                             .filter(result -> answersRequest(profile, result))
-                            .anyMatch(
-                                    stirling.software.SPDF.model.api.security.PDFVerificationResult
-                                            ::isCompliant);
+                            .anyMatch(PDFVerificationResult::isCompliant);
             if (!isCompliant) {
                 String details =
                         results.stream()
@@ -2799,24 +2748,22 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", "1.6", "2008", "pdfx");
+        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, "pdfx"),
+        PDF_X_1A("PDF/X-1a", "_PDFX-1a.pdf", PdfXStandard.PDF_X_1A, "pdfx-1a", "pdfx-1"),
+        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", PdfXStandard.PDF_X_3, "pdfx-3"),
+        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", PdfXStandard.PDF_X_4, "pdfx-4"),
+        PDF_X_6("PDF/X-6", "_PDFX-6.pdf", PdfXStandard.PDF_X_6, "pdfx-6");
 
         private final String displayName;
         private final String suffix;
-        private final String compatibilityLevel;
-        private final String pdfxVersion;
+        private final PdfXStandard standard;
         private final List<String> requestTokens;
 
         PdfXProfile(
-                String displayName,
-                String suffix,
-                String compatibilityLevel,
-                String pdfxVersion,
-                String... requestTokens) {
+                String displayName, String suffix, PdfXStandard standard, String... requestTokens) {
             this.displayName = displayName;
             this.suffix = suffix;
-            this.compatibilityLevel = compatibilityLevel;
-            this.pdfxVersion = pdfxVersion;
+            this.standard = standard;
             this.requestTokens =
                     Arrays.stream(requestTokens)
                             .map(token -> token.toLowerCase(Locale.ROOT))

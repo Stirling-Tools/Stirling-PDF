@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -17,12 +16,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,11 +42,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -53,9 +55,8 @@ import stirling.software.common.util.WebResponseUtils;
 
 /**
  * Additional coverage for {@link ConvertPDFToPDFA} focusing on the end-to-end conversion flows
- * (handlePdfAConversion / handlePdfXConversion / convertPDDocumentToPDFA) and the Ghostscript
- * command builders. The external ghostscript/qpdf boundary is mocked with mockStatic, so no real
- * binary is ever executed.
+ * (handlePdfAConversion / handlePdfXConversion / convertPDDocumentToPDFA). PDF/X runs through
+ * JPDFium in-process; PDF/A external boundaries are mocked with mockStatic so no real binary runs.
  */
 @DisplayName("ConvertPDFToPDFA additional flow tests")
 @ExtendWith(MockitoExtension.class)
@@ -161,6 +162,25 @@ class ConvertPDFToPDFAMoreTest {
 
     private MockMultipartFile pdfFile() throws IOException {
         return new MockMultipartFile("fileInput", "input.pdf", "application/pdf", simplePdfBytes());
+    }
+
+    private MockMultipartFile transparentPdfFile() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDExtendedGraphicsState transparent = new PDExtendedGraphicsState();
+            transparent.setNonStrokingAlphaConstant(0.5f);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.setGraphicsStateParameters(transparent);
+                content.setNonStrokingColor(1f, 0f, 0f);
+                content.addRect(100, 100, 200, 200);
+                content.fill();
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "transparent.pdf", "application/pdf", output.toByteArray());
+        }
     }
 
     /**
@@ -323,8 +343,7 @@ class ConvertPDFToPDFAMoreTest {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
-            stirling.software.SPDF.model.api.security.PDFVerificationResult ok =
-                    new stirling.software.SPDF.model.api.security.PDFVerificationResult();
+            PDFVerificationResult ok = new PDFVerificationResult();
             ok.setCompliant(true);
             ok.setStandard("2b");
             ok.setComplianceSummary("PDF/A-2b compliant");
@@ -360,7 +379,80 @@ class ConvertPDFToPDFAMoreTest {
     class PdfXConversion {
 
         @Test
-        @DisplayName("Ghostscript success path returns the produced PDF/X file")
+        @DisplayName("all PDF/X profiles convert and return a PDF")
+        void pdfXAllProfiles() throws Exception {
+            for (String token : List.of("pdfx-1a", "pdfx-3", "pdfx-4", "pdfx-6")) {
+                float version =
+                        switch (token) {
+                            case "pdfx-1a", "pdfx-3" -> 1.3f;
+                            case "pdfx-4" -> 1.6f;
+                            case "pdfx-6" -> 2.0f;
+                            default -> throw new IllegalStateException(token);
+                        };
+                TempFile managed = managedTempFile();
+                when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+                PdfToPdfARequest request = new PdfToPdfARequest();
+                request.setFileInput(pdfFile());
+                request.setOutputFormat(token);
+
+                ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+                try (MockedStatic<WebResponseUtils> wr =
+                        Mockito.mockStatic(WebResponseUtils.class)) {
+                    wr.when(
+                                    () ->
+                                            WebResponseUtils.pdfFileToWebResponse(
+                                                    any(TempFile.class), anyString()))
+                            .thenReturn(expected);
+                    ResponseEntity<Resource> response = newController().pdfToPdfA(request);
+                    assertThat(response).as(token).isSameAs(expected);
+                    try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                        assertThat(output.getVersion()).as(token).isEqualTo(version);
+                        assertThat(
+                                        output.getPage(0)
+                                                .getCOSObject()
+                                                .getDictionaryObject(COSName.TRIM_BOX))
+                                .as(token)
+                                .isNotNull();
+                        assertThat(output.getDocumentInformation().getTitle())
+                                .as(token)
+                                .isNotBlank();
+                    }
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X-1a flattens transparent pages instead of rejecting them")
+        void pdfX1aFlattensTransparency() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(transparentPdfFile());
+            request.setOutputFormat("pdfx-1a");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
+
+                assertThat(response).isSameAs(expected);
+                assertThat(managed.getFile()).exists();
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    assertThat(output.getVersion()).isEqualTo(1.3f);
+                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("JPDFium success path returns the produced PDF/X file")
         void pdfXSuccess() throws Exception {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
@@ -371,10 +463,7 @@ class ConvertPDFToPDFAMoreTest {
 
             ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
 
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-                wireProcessExecutor(pe, 0);
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 wr.when(
                                 () ->
                                         WebResponseUtils.pdfFileToWebResponse(
@@ -384,33 +473,17 @@ class ConvertPDFToPDFAMoreTest {
                 ResponseEntity<Resource> response = newController().pdfToPdfA(request);
 
                 assertThat(response).isSameAs(expected);
+                assertThat(managed.getFile()).exists();
+                assertThat(managed.getFile().length()).isGreaterThan(0);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
+                    assertThat(output.getVersion()).isEqualTo(1.6f);
+                }
                 wr.verify(
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
                                         any(TempFile.class),
                                         org.mockito.ArgumentMatchers.contains("_PDFX.pdf")));
-            }
-        }
-
-        @Test
-        @DisplayName(
-                "PDF/X with Ghostscript unavailable says the tool is missing, not that conversion failed")
-        void pdfXNoGhostscript() throws Exception {
-            PdfToPdfARequest request = new PdfToPdfARequest();
-            request.setFileInput(pdfFile());
-            request.setOutputFormat("pdfx");
-
-            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
-                // gs --version returns non-zero -> not available
-                wireProcessExecutor(pe, 0);
-                ProcessExecutor executor =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
-                ProcessExecutorResult notAvail = mock(ProcessExecutorResult.class);
-                when(notAvail.getRc()).thenReturn(127);
-                when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(notAvail);
-
-                assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                        .isInstanceOf(ExceptionUtils.ToolRequiredException.class);
             }
         }
     }
@@ -477,36 +550,6 @@ class ConvertPDFToPDFAMoreTest {
             assertThat(command.get(0)).isEqualTo("gs");
             assertThat(command).contains("-dPDFA=1", "-sDEVICE=pdfwrite", "-dEmbedAllFonts=true");
             assertThat(command).anyMatch(a -> a.startsWith("-sOutputFile="));
-        }
-
-        @Test
-        @DisplayName("buildGhostscriptCommandX wires PDF/X version and image tuning")
-        void buildsPdfXCommand() throws Exception {
-            Path workingDir = Files.createDirectories(tempDir.resolve("gsx"));
-            Path input = Files.write(workingDir.resolve("in.pdf"), simplePdfBytes());
-            Path output = workingDir.resolve("out.pdf");
-            Path rgb = Files.write(workingDir.resolve("rgb.icc"), new byte[] {1});
-            Path gray = Files.write(workingDir.resolve("gray.icc"), new byte[] {1});
-
-            Object colorProfiles = newColorProfiles(rgb, gray);
-            Object profile = resolvePdfXProfile("pdfx");
-
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "buildGhostscriptCommandX",
-                            Path.class,
-                            Path.class,
-                            colorProfiles.getClass(),
-                            Path.class,
-                            profile.getClass());
-            m.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            List<String> command =
-                    (List<String>)
-                            m.invoke(null, input, output, colorProfiles, workingDir, profile);
-
-            assertThat(command).contains("-dPDFX=2008", "-sDEVICE=pdfwrite");
-            assertThat(command).anyMatch(a -> a.startsWith("-dColorImageResolution="));
         }
 
         @Test
