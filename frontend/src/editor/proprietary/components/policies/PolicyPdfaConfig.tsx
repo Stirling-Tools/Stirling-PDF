@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { FormField, Select } from "@editor/ui";
+import ConvertOfficeEngineSettings from "@editor/components/tools/convert/ConvertOfficeEngineSettings";
 import {
   PDFA_OUTPUT_FORMATS,
   type PdfaOutputFormat,
@@ -41,6 +42,12 @@ export function PolicyPdfaConfig({
           }
         />
       </FormField>
+      <ConvertOfficeEngineSettings
+        parameters={parameters}
+        onParameterChange={(key, value) =>
+          onChange({ ...parameters, [key]: value })
+        }
+      />
     </div>
   );
 }

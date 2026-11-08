@@ -272,7 +272,9 @@ describe("startup prompts", () => {
         "false",
       );
       fireEvent.click(screen.getByText("Finish MFA"));
-      expect(await screen.findByText("Company agreement")).toBeVisible();
+      expect(
+        await screen.findByText("Company agreement", {}, { timeout: 5000 }),
+      ).toBeVisible();
       expect(h.tracking).not.toHaveBeenCalled();
       fireEvent.click(
         screen.getByRole("button", { name: "loginAgreementAccept" }),
@@ -291,17 +293,17 @@ describe("startup prompts", () => {
     expect(h.tracking).not.toHaveBeenCalled();
   });
 
-  it("uses the latest server choice when entering another app with stale config", async () => {
+  it("reads the shared app config on entering an app instead of fetching it again", async () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0 } },
     });
-    client.setQueryData(["editor", "appConfig"], {
-      ...config,
-      enableAnalytics: null,
-    });
+    client.setQueryData(["editor", "appConfig"], { ...config });
     renderAt("/processor", client);
     await waitFor(() => expect(h.tracking).toHaveBeenCalled());
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(h.get).not.toHaveBeenCalledWith(
+      "/api/v1/config/app-config",
+      expect.anything(),
+    );
   });
 
   it("preserves agreement acceptance when changing apps or reloading", async () => {

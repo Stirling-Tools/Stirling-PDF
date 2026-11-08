@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@editor-core/constants/routes";
 import { useCheckout } from "@editor/contexts/CheckoutContext";
@@ -333,7 +334,8 @@ const UpgradeBanner: React.FC = () => {
           title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Up to 100 users, PDF text editing and more",
+            "Up to {{users}} users, PDF text editing and more",
+            { users: USERS_PER_BLOCK },
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
           buttonIcon="circle-arrow-up"

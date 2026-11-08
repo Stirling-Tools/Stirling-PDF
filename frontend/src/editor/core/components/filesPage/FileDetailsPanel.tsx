@@ -26,6 +26,8 @@ import {
 import { FileDetailsActions } from "@editor/components/filesPage/FileDetailsActions";
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import "@editor/components/filesPage/FilesPage.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FileDetailsPanelProps {
   /** Picker hosts choose a version without exposing workspace or library mutations. */
@@ -186,7 +188,7 @@ export function FileDetailsPanel({
         {single ? (
           <>
             <div
-              className={`files-page-details-thumb${compactVersions ? " is-compact" : ""}`}
+              className={`files-page-details-thumb${compactVersions ? " is-compact" : ""} ${privateContentClassName}`}
             >
               {thumbnail ? (
                 <img src={thumbnail} alt="" />
@@ -206,9 +208,11 @@ export function FileDetailsPanel({
                 flexWrap: "wrap",
               }}
             >
-              <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
-                {single.name}
-              </h3>
+              <PrivateContent>
+                <h3 style={{ margin: 0, wordBreak: "break-word", flex: 1 }}>
+                  {single.name}
+                </h3>
+              </PrivateContent>
               {ext && <span className="files-page-details-ext-tag">{ext}</span>}
               {(single.versionNumber ?? 1) > 1 && (
                 <Badge size="sm" color="blue">
@@ -256,11 +260,14 @@ export function FileDetailsPanel({
                 <DetailField
                   label={t("filesPage.field.folder", "Folder")}
                   value={
-                    selectedFolder
-                      ? selectedFolder.name
-                      : !single.folderId && getFileOrigin(single) === "local"
-                        ? t("filesPage.recentFiles", "Recents")
-                        : t("filesPage.allFiles", "Stirling library")
+                    selectedFolder ? (
+                      <PrivateContent>{selectedFolder.name}</PrivateContent>
+                    ) : !single.folderId &&
+                      getFileOrigin(single) === "local" ? (
+                      t("filesPage.recentFiles", "Recents")
+                    ) : (
+                      t("filesPage.allFiles", "Stirling library")
+                    )
                   }
                 />
               </div>

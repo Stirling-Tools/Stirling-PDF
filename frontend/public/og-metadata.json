@@ -608,6 +608,12 @@
       "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
+    "/settings/feedback": {
+      "image": "/og_images/home.png",
+      "title": "Feedback Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
     "/settings/legal": {
       "image": "/og_images/home.png",
       "title": "Legal Settings - Stirling PDF",
@@ -927,6 +933,7 @@
     "/settings/adminAiLimits": "/settings/adminAiLimits",
     "/settings/adminAi": "/settings/adminAi",
     "/settings/help": "/settings/help",
+    "/settings/feedback": "/settings/feedback",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",

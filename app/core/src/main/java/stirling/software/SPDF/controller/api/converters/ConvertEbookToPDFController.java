@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -54,6 +56,8 @@ public class ConvertEbookToPDFController {
     private final EndpointConfiguration endpointConfiguration;
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
     private final RuntimePathConfig runtimePathConfig;
+    private final OfficeConversionService officeConversionService;
+    private final OfficeToPdfService officeToPdfService;
 
     private boolean isCalibreEnabled() {
         return endpointConfiguration.isGroupEnabled("Calibre");
@@ -72,10 +76,12 @@ public class ConvertEbookToPDFController {
             summary = "Convert an eBook file to PDF",
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
-                            + " to PDF using Calibre.")
+                            + " to PDF using Calibre or Stirling Office Convert.")
     public ResponseEntity<Resource> convertEbookToPdf(
             @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
-        if (!isCalibreEnabled()) {
+        boolean officeConvert =
+                officeConversionService.replacesLibreOffice(request.getUseStirlingOfficeConvert());
+        if (!officeConvert && !isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
         }
 
@@ -130,27 +136,37 @@ public class ConvertEbookToPDFController {
                 }
             }
 
-            List<String> command =
-                    buildCalibreCommand(
-                            inputPath,
-                            outputPath,
-                            embedAllFonts,
-                            includeTableOfContents,
-                            includePageNumbers);
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                            .runCommandWithOutputHandling(command, workingDirectory.toFile());
+            if (officeConvert) {
+                officeToPdfService.convert(
+                        inputPath,
+                        outputPath,
+                        officeToPdfService
+                                .options()
+                                .tableOfContents(includeTableOfContents)
+                                .pageNumbers(includePageNumbers));
+            } else {
+                List<String> command =
+                        buildCalibreCommand(
+                                inputPath,
+                                outputPath,
+                                embedAllFonts,
+                                includeTableOfContents,
+                                includePageNumbers);
+                ProcessExecutorResult result =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                                .runCommandWithOutputHandling(command, workingDirectory.toFile());
 
-            if (result == null) {
-                throw new IllegalStateException("Calibre conversion returned no result");
-            }
+                if (result == null) {
+                    throw new IllegalStateException("Calibre conversion returned no result");
+                }
 
-            if (result.getRc() != 0) {
-                throw new IllegalStateException("Calibre conversion failed");
+                if (result.getRc() != 0) {
+                    throw new IllegalStateException("Calibre conversion failed");
+                }
             }
 
             if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-                throw new IllegalStateException("Calibre did not produce a PDF output");
+                throw new IllegalStateException("The ebook converter did not produce a PDF output");
             }
 
             String outputFilename =
