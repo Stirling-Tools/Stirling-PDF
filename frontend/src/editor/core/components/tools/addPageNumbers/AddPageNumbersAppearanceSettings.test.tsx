@@ -30,39 +30,37 @@ describe("AddPageNumbersAppearanceSettings", () => {
     ).toBeEnabled();
   });
 
-  test("zero-padding is disabled for Roman page numbers", () => {
+  test.each(["roman-lowercase", "alpha-uppercase"] as const)(
+    "zero-padding is disabled for %s page numbers",
+    (numberFormat) => {
+      render(
+        <TestWrapper>
+          <AddPageNumbersAppearanceSettings
+            parameters={{ ...defaultParameters, numberFormat }}
+            onParameterChange={vi.fn()}
+          />
+        </TestWrapper>,
+      );
+
+      expect(
+        screen.getByLabelText("Zero-pad Width (Bates Stamping)"),
+      ).toBeDisabled();
+    },
+  );
+
+  test.each([
+    ["roman-uppercase", "Roman uppercase (I, II, III)"],
+    ["alpha-lowercase", "Alphabetic lowercase (a, b, c)"],
+  ] as const)("shows the selected %s format", (numberFormat, label) => {
     render(
       <TestWrapper>
         <AddPageNumbersAppearanceSettings
-          parameters={{
-            ...defaultParameters,
-            numberFormat: "roman-lowercase",
-          }}
+          parameters={{ ...defaultParameters, numberFormat }}
           onParameterChange={vi.fn()}
         />
       </TestWrapper>,
     );
 
-    expect(
-      screen.getByLabelText("Zero-pad Width (Bates Stamping)"),
-    ).toBeDisabled();
-  });
-
-  test("shows the selected Roman format", () => {
-    render(
-      <TestWrapper>
-        <AddPageNumbersAppearanceSettings
-          parameters={{
-            ...defaultParameters,
-            numberFormat: "roman-uppercase",
-          }}
-          onParameterChange={vi.fn()}
-        />
-      </TestWrapper>,
-    );
-
-    expect(
-      screen.getByDisplayValue("Roman uppercase (I, II, III)"),
-    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue(label)).toBeInTheDocument();
   });
 });

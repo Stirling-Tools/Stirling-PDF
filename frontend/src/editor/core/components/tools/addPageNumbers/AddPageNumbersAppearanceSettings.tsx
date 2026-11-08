@@ -127,7 +127,7 @@ const AddPageNumbersAppearanceSettings = ({
         position="left"
         content={t(
           "addPageNumbers.numberFormatTooltip",
-          "Choose Arabic numerals or lowercase/uppercase Roman numerals. The format applies to {n} and {total}.",
+          "Choose Arabic numerals, Roman numerals, or alphabetic letters. The format applies to {n} and {total}.",
         )}
       >
         <Select
@@ -159,6 +159,20 @@ const AddPageNumbersAppearanceSettings = ({
               label: t(
                 "addPageNumbers.numberFormatRomanUppercase",
                 "Roman uppercase (I, II, III)",
+              ),
+            },
+            {
+              value: "alpha-lowercase",
+              label: t(
+                "addPageNumbers.numberFormatAlphabeticLowercase",
+                "Alphabetic lowercase (a, b, c)",
+              ),
+            },
+            {
+              value: "alpha-uppercase",
+              label: t(
+                "addPageNumbers.numberFormatAlphabeticUppercase",
+                "Alphabetic uppercase (A, B, C)",
               ),
             },
           ]}

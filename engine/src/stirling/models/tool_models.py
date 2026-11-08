@@ -65,12 +65,14 @@ class FontType(StrEnum):
 
 class NumberFormat(StrEnum):
     """
-    Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III). Applies to {n} and {total}.
+    Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III), alpha-lowercase (a, b, c), alpha-uppercase (A, B, C). Applies to {n} and {total}.
     """
 
     numeric = "numeric"
     roman_lowercase = "roman-lowercase"
     roman_uppercase = "roman-uppercase"
+    alpha_lowercase = "alpha-lowercase"
+    alpha_uppercase = "alpha-uppercase"
 
 
 class Position(IntEnum):
@@ -105,7 +107,7 @@ class AddPageNumbersParams(ApiModel):
     font_type: FontType = Field(..., description="Font type for page numbers")
     number_format: NumberFormat = Field(
         NumberFormat.numeric,
-        description="Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III). Applies to {n} and {total}.",
+        description="Format for page numbers: numeric (1, 2, 3), roman-lowercase (i, ii, iii), roman-uppercase (I, II, III), alpha-lowercase (a, b, c), alpha-uppercase (A, B, C). Applies to {n} and {total}.",
     )
     page_numbers: str = Field(
         "all",

@@ -594,6 +594,59 @@ class PageNumbersControllerTest {
         }
     }
 
+    // ---- alphabetic formats ----------------------------------------------
+
+    @Nested
+    @DisplayName("Alphabetic")
+    class Alphabetic {
+
+        @Test
+        @DisplayName("Lowercase format applies to {n} and {total}")
+        void lowercaseFormat() throws Exception {
+            MockMultipartFile file = createPdf(3, "alpha-lower.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-lowercase");
+            request.setCustomText("{n} of {total}");
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response)))
+                    .containsExactly("a of c", "b of c", "c of c");
+        }
+
+        @Test
+        @DisplayName("Uppercase format rolls over after Z")
+        void uppercaseFormatRollsOver() throws Exception {
+            MockMultipartFile file = createPdf(2, "alpha-upper.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-uppercase");
+            request.setStartingNumber(26);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("Z", "AA");
+        }
+
+        @Test
+        @DisplayName("Zero-padding is ignored for alphabetic numerals")
+        void zeroPadIgnoredForAlphabetic() throws Exception {
+            MockMultipartFile file = createPdf(2, "alpha-pad.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-lowercase");
+            request.setZeroPad(3);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("a", "b");
+        }
+    }
+
     // ---- filename handling for {filename} ---------------------------------
 
     @Nested

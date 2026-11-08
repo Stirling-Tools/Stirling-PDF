@@ -198,9 +198,8 @@ public class PageNumbersController {
     private static String formatPageNumber(int pageNumber, String numberFormat, int zeroPad) {
         String normalized =
                 numberFormat == null ? "" : numberFormat.trim().toLowerCase(Locale.ROOT);
-        boolean roman =
-                normalized.equals("roman-lowercase") || normalized.equals("roman-uppercase");
-        if (zeroPad > 0 && !roman) {
+        boolean formatted = normalized.startsWith("roman-") || normalized.startsWith("alpha-");
+        if (zeroPad > 0 && !formatted) {
             return String.format("%0" + zeroPad + "d", pageNumber);
         }
         return PageNumberFormatter.format(pageNumber, numberFormat);

@@ -6,13 +6,18 @@ import {
 } from "@editor/components/tools/addPageNumbers/useAddPageNumbersOperation";
 
 describe("page number format mapping", () => {
-  it("sends the selected Roman numeral format", () => {
+  it.each([
+    "roman-lowercase",
+    "roman-uppercase",
+    "alpha-lowercase",
+    "alpha-uppercase",
+  ] as const)("sends the selected %s format", (numberFormat) => {
     const apiParams = addPageNumbersToApiParams({
       ...defaultParameters,
-      numberFormat: "roman-lowercase",
+      numberFormat,
     });
 
-    expect(apiParams.numberFormat).toBe("roman-lowercase");
+    expect(apiParams.numberFormat).toBe(numberFormat);
   });
 
   it("restores the selected Roman numeral format", () => {

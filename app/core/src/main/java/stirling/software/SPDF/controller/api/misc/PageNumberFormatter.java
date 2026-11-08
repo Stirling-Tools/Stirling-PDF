@@ -4,8 +4,6 @@ import java.util.Locale;
 
 final class PageNumberFormatter {
 
-    private static final int MAX_ROMAN_VALUE = 3999;
-
     private PageNumberFormatter() {}
 
     static String format(int value, String numberFormat) {
@@ -14,12 +12,28 @@ final class PageNumberFormatter {
         return switch (normalized) {
             case "roman-uppercase" -> toRoman(value);
             case "roman-lowercase" -> toRoman(value).toLowerCase(Locale.ROOT);
+            case "alpha-uppercase" -> toAlphabetic(value);
+            case "alpha-lowercase" -> toAlphabetic(value).toLowerCase(Locale.ROOT);
             default -> Integer.toString(value);
         };
     }
 
+    static String toAlphabetic(int value) {
+        if (value <= 0) {
+            return Integer.toString(value);
+        }
+
+        StringBuilder letters = new StringBuilder();
+        while (value > 0) {
+            value--;
+            letters.append((char) ('A' + value % 26));
+            value /= 26;
+        }
+        return letters.reverse().toString();
+    }
+
     static String toRoman(int value) {
-        if (value <= 0 || value > MAX_ROMAN_VALUE) {
+        if (value <= 0) {
             return Integer.toString(value);
         }
 

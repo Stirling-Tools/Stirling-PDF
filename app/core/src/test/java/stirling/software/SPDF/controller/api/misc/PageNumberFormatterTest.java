@@ -29,10 +29,31 @@ class PageNumberFormatterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1, 4000})
-    @DisplayName("values outside the Roman range fall back to decimal")
-    void toRomanFallsBackOutsideRange(int value) {
+    @ValueSource(ints = {0, -1})
+    @DisplayName("non-positive values fall back to decimal")
+    void toRomanFallsBackForNonPositive(int value) {
         assertThat(PageNumberFormatter.toRoman(value)).isEqualTo(Integer.toString(value));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"4000, MMMM", "5000, MMMMM", "10000, MMMMMMMMMM"})
+    @DisplayName("values above 3999 extend by repeating M")
+    void toRomanExtendsAboveThreeThousandNineHundredNinetyNine(int value, String expected) {
+        assertThat(PageNumberFormatter.toRoman(value)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1, A", "2, B", "26, Z", "27, AA", "52, AZ", "53, BA", "702, ZZ", "703, AAA"})
+    @DisplayName("toAlphabetic uses spreadsheet-style letters")
+    void toAlphabetic(int value, String expected) {
+        assertThat(PageNumberFormatter.toAlphabetic(value)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    @DisplayName("non-positive alphabetic values fall back to decimal")
+    void toAlphabeticFallsBackForNonPositive(int value) {
+        assertThat(PageNumberFormatter.toAlphabetic(value)).isEqualTo(Integer.toString(value));
     }
 
     @ParameterizedTest
@@ -42,9 +63,14 @@ class PageNumberFormatterTest {
         "4, roman-lowercase, iv",
         "4, roman-uppercase, IV",
         "1994, roman-lowercase, mcmxciv",
-        "1994, roman-uppercase, MCMXCIV"
+        "1994, roman-uppercase, MCMXCIV",
+        "4000, roman-uppercase, MMMM",
+        "1, alpha-lowercase, a",
+        "26, alpha-uppercase, Z",
+        "27, alpha-lowercase, aa",
+        "53, alpha-uppercase, BA"
     })
-    @DisplayName("format selects decimal or Roman output")
+    @DisplayName("format selects decimal, Roman or alphabetic output")
     void format(int value, String numberFormat, String expected) {
         assertThat(PageNumberFormatter.format(value, numberFormat)).isEqualTo(expected);
     }
