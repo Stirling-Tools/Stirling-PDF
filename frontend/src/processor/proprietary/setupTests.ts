@@ -2,6 +2,15 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import i18n from "i18next";
 
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
+  isTauri: () => false,
+}));
+
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
 import "@editor/utils/engineShims";
 
