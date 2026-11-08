@@ -996,6 +996,7 @@ function FileContextInner({
                 "encryptedPdfUnlock.sessionSuccessBody",
                 "Protection retained.",
               ),
+          privateBody: Boolean(fileName),
           expandable: false,
           isPersistentPopup: false,
         });

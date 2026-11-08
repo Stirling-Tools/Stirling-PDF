@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -11,7 +12,10 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-import { BillingScreen } from "@editor/billing/BillingScreen";
+import {
+  BillingScreen,
+  COMPARE_PLANS_ANCHOR,
+} from "@editor/billing/BillingScreen";
 import { freeWallet, subscribedWallet } from "@editor/billing/walletFixtures";
 
 it.each(["free", "team", "processor", "SERVER", "ENTERPRISE"] as const)(
@@ -336,4 +340,18 @@ it("retains Plan and Usage while data is unavailable without inventing figures o
   expect(screen.getByText("Local license")).toBeInTheDocument();
   expect(screen.queryByText("The full PDF Editor.")).toBeNull();
   expect(screen.queryByRole("button", { name: "Add capacity" })).toBeNull();
+});
+
+it("opens the plan comparison when linked straight to it", () => {
+  window.location.hash = `#${COMPARE_PLANS_ANCHOR}`;
+  try {
+    render(
+      <MantineProvider>
+        <BillingScreen wallet={freeWallet} />
+      </MantineProvider>,
+    );
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  } finally {
+    window.location.hash = "";
+  }
 });
