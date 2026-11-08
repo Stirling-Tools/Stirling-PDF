@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
@@ -6,6 +7,8 @@ import { iconSvgr } from "../scripts/icons/svgrOptions.mts";
 // By path, not @editor/*: this file runs in node, before the aliases exist.
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
 import { usedIconsPlugin } from "../scripts/icons/usedIcons.vite.mts";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
