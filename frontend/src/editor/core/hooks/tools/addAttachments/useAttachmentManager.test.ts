@@ -35,11 +35,6 @@ const session = vi.hoisted(() => ({
 }));
 vi.mock("@editor/services/pdfSessionUnlock", () => session);
 
-const requestPdfOwnerAccess = vi.hoisted(() => vi.fn(async () => true));
-vi.mock("@editor/contexts/FileContext", () => ({
-  useFileActions: () => ({ actions: { requestPdfOwnerAccess } }),
-}));
-
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((res) => {
