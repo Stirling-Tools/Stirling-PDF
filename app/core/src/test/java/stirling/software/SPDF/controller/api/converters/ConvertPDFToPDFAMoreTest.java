@@ -21,7 +21,9 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -417,6 +419,38 @@ class ConvertPDFToPDFAMoreTest {
                         assertThat(output.getDocumentInformation().getTitle())
                                 .as(token)
                                 .isNotBlank();
+                    }
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X-1a embeds a non-embedded Standard 14 font")
+        void pdfX1aEmbedsStandardFont() throws Exception {
+            TempFile managed = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(pdfFile());
+            request.setOutputFormat("pdfx-1a");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
+
+                assertThat(response).isSameAs(expected);
+                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
+                    PDResources resources = output.getPage(0).getResources();
+                    assertThat(resources.getFontNames()).isNotEmpty();
+                    for (var name : resources.getFontNames()) {
+                        PDFont font = resources.getFont(name);
+                        assertThat(font.isEmbedded()).as("font %s", font.getName()).isTrue();
                     }
                 }
             }

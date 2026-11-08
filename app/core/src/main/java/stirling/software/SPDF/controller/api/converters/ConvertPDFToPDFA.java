@@ -47,6 +47,7 @@ import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1CFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent;
@@ -619,6 +620,95 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
+    /**
+     * Replaces non-embedded Standard 14 fonts with metric-compatible Liberation fonts before PDF/X
+     * conversion. JPDFium cannot invent a font program; this covers the common Helvetica, Times and
+     * Courier cases so the default PDF/X path does not emit non-embedded fonts.
+     */
+    private void embedPdfxFonts(Path pdfPath) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            int replaced = 0;
+            for (PDPage page : document.getPages()) {
+                replaced += replacePdfxFonts(document, page.getResources(), 0);
+            }
+            if (replaced > 0) {
+                document.save(pdfPath.toFile());
+                log.info("Embedded {} PDF/X standard font resource(s)", replaced);
+            }
+        }
+    }
+
+    private int replacePdfxFonts(PDDocument document, PDResources resources, int depth)
+            throws IOException {
+        if (resources == null || depth > 8) return 0;
+        int replaced = 0;
+        for (COSName key : resources.getFontNames()) {
+            PDFont font = resources.getFont(key);
+            if (!(font instanceof PDType1Font) || font.isEmbedded()) continue;
+            String substitute = pdfxFontSubstitute(font.getName());
+            if (substitute == null) continue;
+            try (InputStream fontStream =
+                    ConvertPDFToPDFA.class.getResourceAsStream("/static/fonts/" + substitute)) {
+                if (fontStream == null) {
+                    log.warn("Bundled PDF/X font substitute not found: {}", substitute);
+                    continue;
+                }
+                resources.put(
+                        key, PDTrueTypeFont.load(document, fontStream, WinAnsiEncoding.INSTANCE));
+                replaced++;
+            } catch (IOException | IllegalArgumentException e) {
+                log.warn(
+                        "Could not substitute PDF/X font {} with {}",
+                        font.getName(),
+                        substitute,
+                        e);
+            }
+        }
+        for (COSName key : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(key);
+            if (object instanceof PDFormXObject form) {
+                replaced += replacePdfxFonts(document, form.getResources(), depth + 1);
+            }
+        }
+        return replaced;
+    }
+
+    private static String pdfxFontSubstitute(String baseFont) {
+        String name = baseFont == null ? "" : baseFont;
+        int plus = name.indexOf('+');
+        if (plus >= 0) name = name.substring(plus + 1);
+        return switch (name) {
+            case "Helvetica", "Arial", "ArialMT" -> "LiberationSans-Regular.ttf";
+            case "Helvetica-Bold", "Arial-BoldMT" -> "LiberationSans-Bold.ttf";
+            case "Helvetica-Oblique", "Helvetica-Italic", "Arial-ItalicMT" ->
+                    "LiberationSans-Italic.ttf";
+            case "Helvetica-BoldOblique", "Helvetica-BoldItalic", "Arial-BoldItalicMT" ->
+                    "LiberationSans-BoldItalic.ttf";
+            case "Times-Roman", "TimesNewRoman", "TimesNewRomanPSMT" ->
+                    "LiberationSerif-Regular.ttf";
+            case "Times-Bold", "TimesNewRoman-Bold", "TimesNewRomanPS-BoldMT" ->
+                    "LiberationSerif-Bold.ttf";
+            case "Times-Italic", "TimesNewRoman-Italic", "TimesNewRomanPS-ItalicMT" ->
+                    "LiberationSerif-Italic.ttf";
+            case "Times-BoldItalic", "TimesNewRoman-BoldItalic", "TimesNewRomanPS-BoldItalicMT" ->
+                    "LiberationSerif-BoldItalic.ttf";
+            case "Courier", "CourierNew", "CourierNewPSMT" -> "LiberationMono-Regular.ttf";
+            case "Courier-Bold", "CourierNew-Bold", "CourierNewPS-BoldMT" ->
+                    "LiberationMono-Bold.ttf";
+            case "Courier-Oblique",
+                    "Courier-Italic",
+                    "CourierNew-Italic",
+                    "CourierNewPS-ItalicMT" ->
+                    "LiberationMono-Italic.ttf";
+            case "Courier-BoldOblique",
+                    "Courier-BoldItalic",
+                    "CourierNew-BoldItalic",
+                    "CourierNewPS-BoldItalicMT" ->
+                    "LiberationMono-BoldItalic.ttf";
+            default -> null;
+        };
+    }
+
     private ResponseEntity<Resource> handlePdfXConversion(
             MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
@@ -657,6 +747,7 @@ public class ConvertPDFToPDFA {
                 inputTemp = tempFileManager.createManagedTempFile(".pdf");
                 outputTemp = tempFileManager.createManagedTempFile(".pdf");
                 inputFile.transferTo(inputTemp.getFile());
+                embedPdfxFonts(inputTemp.getFile().toPath());
                 try (PDDocument pageCounter = Loader.loadPDF(inputTemp.getFile())) {
                     requireSanitizablePageCount(pageCounter, maxConversionPages);
                 }
