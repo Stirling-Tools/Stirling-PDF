@@ -625,6 +625,8 @@ export interface TriageInputs {
   writeIntervalMs?: number;
   /** Pause between mergeability checks. Defaults to MERGEABILITY_RETRY_MS. */
   mergeabilityRetryMs?: number;
+  /** Epoch ms that every age is measured against. Defaults to the current time. */
+  now?: number;
 }
 
 /**
@@ -641,8 +643,8 @@ export default async function triageStalePullRequests({
   sizeLive,
   writeIntervalMs = WRITE_INTERVAL_MS,
   mergeabilityRetryMs = MERGEABILITY_RETRY_MS,
+  now = Date.now(),
 }: TriageInputs) {
-  const now = Date.now();
   const { repo } = context;
   const results: Result[] = [];
   const canPush = pushAccessChecker(github, repo);
