@@ -195,6 +195,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (AuthenticationException | SQLException | UnsupportedProviderException e) {
             log.debug("Optional JWT on a public endpoint ignored: {}", e.getMessage());
             SecurityContextHolder.clearContext();
+        } catch (RuntimeException e) {
+            log.warn("Optional JWT on a public endpoint failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
     }
 

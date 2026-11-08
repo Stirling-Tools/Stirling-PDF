@@ -89,4 +89,17 @@ class JwtAuthenticationFilterUserLookupTest {
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(chain.getRequest()).isNull();
     }
+
+    @Test
+    void unexpectedFailureOnShareLinkDownloadLeavesTheRequestAnonymous() throws Exception {
+        request.setRequestURI("/api/v1/storage/share-links/123e4567-e89b-12d3-a456-426614174000");
+        when(userDetailsService.loadUserByUsername("gone"))
+                .thenThrow(new IllegalStateException("lookup failed"));
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isSameAs(request);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
 }
