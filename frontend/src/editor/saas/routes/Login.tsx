@@ -21,8 +21,7 @@ import {
   takePendingDestination,
 } from "@editor/services/pendingDestination";
 import { Icon } from "@editor/ui/Icon";
-import { nextPathOf } from "@editor/routes/authShared/nextPath";
-import { TEAM_PATH } from "@editor/routes/teamPath";
+import { leadsToTeam } from "@editor/routes/authShared/nextPath";
 
 // Import login components
 import ErrorMessage from "@editor/auth/ui/ErrorMessage";
@@ -74,7 +73,7 @@ export default function Login() {
     }
   }, []);
 
-  const buyingTeam = nextPathOf(nextPath) === TEAM_PATH;
+  const buyingTeam = leadsToTeam(nextPath);
 
   /** On to where the visitor was heading, which is then no longer remembered. */
   const continueToNext = () => {

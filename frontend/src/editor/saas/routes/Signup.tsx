@@ -6,8 +6,7 @@ import { useTranslation } from "@editor/hooks/useTranslation";
 import { useDocumentMeta } from "@editor/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@editor/constants/app";
 import { rememberPendingDestination } from "@editor/services/pendingDestination";
-import { nextPathOf } from "@editor/routes/authShared/nextPath";
-import { TEAM_PATH } from "@editor/routes/teamPath";
+import { leadsToTeam } from "@editor/routes/authShared/nextPath";
 import AuthLayout from "@editor/routes/authShared/AuthLayout";
 import "@editor/auth/ui/auth.css";
 import "@editor/routes/authShared/saas-auth.css";
@@ -40,7 +39,7 @@ export default function Signup() {
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
   const next = new URLSearchParams(location.search).get("next");
   // Skipping makes a guest, and a guest cannot buy Team.
-  const buyingTeam = nextPathOf(next) === TEAM_PATH;
+  const buyingTeam = leadsToTeam(next);
 
   // Stashed rather than threaded onward: Supabase builds the confirmation link and
   // it cannot carry a `next`.

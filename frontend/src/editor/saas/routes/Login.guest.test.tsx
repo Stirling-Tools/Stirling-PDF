@@ -87,6 +87,13 @@ describe("SaaS login with a guest session", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("offers no skip when `next` reaches /team with a trailing slash", () => {
+    mount("/login?next=%2Fteam%2F");
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("offers a signed-out visitor heading to /team no way to skip either", () => {
     auth.session = null;
     auth.isAnonymous = false;
