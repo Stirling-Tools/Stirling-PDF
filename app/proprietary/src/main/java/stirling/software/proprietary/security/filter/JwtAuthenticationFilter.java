@@ -119,6 +119,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 authenticate(request, claims);
+            } catch (AuthenticationException e) {
+                log.debug("JWT user rejected for {}: {}", tokenUsername, e.getMessage());
+                SecurityContextHolder.clearContext();
+                handleAuthenticationFailure(
+                        request, response, new AuthenticationFailureException("Invalid token", e));
+                return;
             } catch (SQLException | UnsupportedProviderException e) {
                 log.error("Error processing user authentication for user: {}", tokenUsername, e);
                 handleAuthenticationFailure(
