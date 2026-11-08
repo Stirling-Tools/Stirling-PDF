@@ -2,7 +2,7 @@ import { DOWNLOAD_URLS } from "@editor/constants/downloads";
 
 export type DockerImageTag = "latest" | "latest-fat" | "latest-ultra-lite";
 
-const DOCKER_IMAGE = "docker.stirlingpdf.com/stirlingtools/stirling-pdf";
+export const DOCKER_IMAGE = "docker.stirlingpdf.com/stirlingtools/stirling-pdf";
 
 export const dockerRunCommand = (tag: DockerImageTag = "latest") =>
   `docker run -d --name stirling-pdf -p 8080:8080 \\\n  -v ./stirling-data:/configs \\\n  ${DOCKER_IMAGE}:${tag}`;
