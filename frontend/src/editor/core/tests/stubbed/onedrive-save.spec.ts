@@ -273,7 +273,8 @@ test.describe("Saving files opened from OneDrive", () => {
     const calls = await startWithOneDriveFile(page, { unsaved: true });
     await openInViewer(page);
 
-    await page.getByRole("button", { name: "More save options" }).click();
+    const more = page.getByRole("button", { name: "More save options" });
+    await more.click();
     await expectOtherDestinations(page);
     await expect(
       page.getByRole("menuitem", { name: /Update Report\.pdf/ }),
@@ -284,6 +285,9 @@ test.describe("Saving files opened from OneDrive", () => {
       .click();
 
     expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
+    await expect(page.getByText("Saved to OneDrive").first()).toBeVisible();
+    await expect(more).toBeFocused();
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
   });
 
   test("a personal account is not offered a folder save", async ({ page }) => {

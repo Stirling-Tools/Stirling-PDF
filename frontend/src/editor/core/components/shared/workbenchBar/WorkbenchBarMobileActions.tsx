@@ -73,6 +73,11 @@ export default function WorkbenchBarMobileActions({
               onClick={item.onClick}
             >
               {item.label}
+              {item.description && (
+                <div className="workbench-bar-menu-hint">
+                  {item.description}
+                </div>
+              )}
             </Menu.Item>
           ))}
         {showFileActions && !saveMenu && saveAsIconName && (
