@@ -13703,6 +13703,8 @@ tags = "web-capture,save-page,web-to-doc,archive"
 title = "URL To PDF"
 
 [urlToPdf]
+invalidUrl = "Enter a valid HTTP or HTTPS URL."
+notPdf = "The URL could not be converted to a PDF."
 results = "Converted PDF"
 submit = "Convert to PDF"
 urlLabel = "Web page URL"

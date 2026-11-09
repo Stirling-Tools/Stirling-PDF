@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, TextInput } from "@mantine/core";
+import { TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@editor/hooks/useEndpointConfig";
 import { createToolFlow } from "@editor/components/tools/shared/createToolFlow";
@@ -12,6 +12,7 @@ import type { BaseToolProps } from "@editor/types/tool";
 export default function UrlToPdf({ onPreviewFile }: BaseToolProps) {
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState("");
+  const [urlTouched, setUrlTouched] = useState(false);
   const operation = useUrlToPdfOperation();
   const { enabled, loading, error } = useEndpointEnabled("url-to-pdf");
 
@@ -19,6 +20,11 @@ export default function UrlToPdf({ onPreviewFile }: BaseToolProps) {
   if (loading || error || enabled !== true) return null;
 
   const hasResults = operation.files.length > 0;
+  const urlValid = isValidWebUrl(urlInput);
+  const urlError =
+    urlTouched && urlInput.trim() && !urlValid
+      ? t("urlToPdf.invalidUrl", "Enter a valid HTTP or HTTPS URL.")
+      : null;
   return createToolFlow({
     files: { selectedFiles: [], isVisible: false },
     steps: [
@@ -31,6 +37,8 @@ export default function UrlToPdf({ onPreviewFile }: BaseToolProps) {
             type="url"
             value={urlInput}
             disabled={operation.isLoading}
+            error={urlError}
+            onBlur={() => setUrlTouched(true)}
             onChange={(event) => {
               setUrlInput(event.currentTarget.value);
               operation.resetResults();
@@ -45,12 +53,9 @@ export default function UrlToPdf({ onPreviewFile }: BaseToolProps) {
       loadingText: t("loading", "Loading..."),
       isVisible: !hasResults,
       disableScopeHints: true,
-      disabledReason: isValidWebUrl(urlInput) ? null : "invalidParams",
+      disabledReason: urlValid ? null : "invalidParams",
       onClick: () => operation.executeOperation({ urlInput }, []),
     },
-    belowExecuteButton: operation.errorMessage ? (
-      <Alert color="red">{operation.errorMessage}</Alert>
-    ) : undefined,
     review: {
       isVisible: hasResults,
       operation,

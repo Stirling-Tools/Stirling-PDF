@@ -85,4 +85,24 @@ describe("URL to PDF screen", () => {
       [],
     );
   });
+  it("explains an invalid URL once the field is left", () => {
+    render(
+      <MantineProvider>
+        <UrlToPdf />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "example.com" } });
+    expect(
+      screen.queryByText("Enter a valid HTTP or HTTPS URL."),
+    ).not.toBeInTheDocument();
+    fireEvent.blur(input);
+    expect(
+      screen.getByText("Enter a valid HTTP or HTTPS URL."),
+    ).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "https://example.com" } });
+    expect(
+      screen.queryByText("Enter a valid HTTP or HTTPS URL."),
+    ).not.toBeInTheDocument();
+  });
 });

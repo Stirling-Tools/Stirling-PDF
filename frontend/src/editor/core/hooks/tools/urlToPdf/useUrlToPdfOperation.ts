@@ -1,5 +1,6 @@
 import apiClient from "@editor/services/apiClient";
 import { isAxiosError } from "axios";
+import i18n from "i18next";
 import { normalizeAxiosErrorData } from "@editor/services/errorUtils";
 import {
   useToolOperation,
@@ -29,7 +30,9 @@ export const urlToPdfOperationConfig: CustomToolOperationConfig<UrlToPdfParamete
     endpoint: "/api/v1/convert/url/pdf",
     customProcessor: async ({ urlInput }) => {
       if (!isValidWebUrl(urlInput))
-        throw new Error("Enter a valid HTTP or HTTPS URL.");
+        throw new Error(
+          i18n.t("urlToPdf.invalidUrl", "Enter a valid HTTP or HTTPS URL."),
+        );
       const formData = new FormData();
       formData.append("urlInput", urlInput.trim());
       const response = await apiClient
@@ -55,7 +58,9 @@ export const urlToPdfOperationConfig: CustomToolOperationConfig<UrlToPdfParamete
           throw error;
         });
       if (response.data.type.split(";")[0] !== "application/pdf") {
-        throw new Error("The URL could not be converted to a PDF.");
+        throw new Error(
+          i18n.t("urlToPdf.notPdf", "The URL could not be converted to a PDF."),
+        );
       }
       return {
         files: await processResponse(
