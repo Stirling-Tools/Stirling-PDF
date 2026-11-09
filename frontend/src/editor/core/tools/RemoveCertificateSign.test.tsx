@@ -53,6 +53,19 @@ describe("Remove Certificate Sign", () => {
     endpoint.loading = false;
   });
 
+  it("shows only the visible signature option in settings", () => {
+    render(
+      <MantineProvider>
+        <RemoveCertificateSign />
+      </MantineProvider>,
+    );
+    expect(
+      screen.queryByText(
+        "This tool will remove digital certificate signatures from your PDF document.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it.each([false, true])(
     "submits removeVisibleSignature=%s from the checkbox",
     async (removeVisibleSignature) => {
