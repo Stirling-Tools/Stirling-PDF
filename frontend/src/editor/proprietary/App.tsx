@@ -12,6 +12,8 @@ const Login = lazy(() => import("@editor/routes/Login"));
 const AuthCallback = lazy(() => import("@editor/routes/AuthCallback"));
 const InviteAccept = lazy(() => import("@editor/routes/InviteAccept"));
 const ShareLinkPage = lazy(() => import("@editor/routes/ShareLinkPage"));
+const OAuthAuthorize = lazy(() => import("@editor/routes/OAuthAuthorize"));
+const OAuthConsent = lazy(() => import("@editor/routes/OAuthConsent"));
 const ParticipantView = lazy(
   () => import("@editor/components/workflow/ParticipantView"),
 );
@@ -25,6 +27,8 @@ import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
 import { AppFrame } from "@editor/components/layout/AppFrame";
 import { NoAppChrome } from "@editor/components/layout/NoAppChrome";
 import { RootGate } from "@editor/routes/RootGate";
+import { useAuth } from "@editor/auth/UseSession";
+import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
 
 // Import global styles
 import "@editor/styles/tailwind.css";
@@ -52,6 +56,18 @@ function ParticipantViewPage() {
   return <ParticipantView token={token} />;
 }
 
+function OAuthRoutes() {
+  const { session, loading } = useAuth();
+  if (loading) return <LoadingFallback />;
+  return session ? (
+    <StartupPrompts>
+      <NoAppChrome />
+    </StartupPrompts>
+  ) : (
+    <NoAppChrome />
+  );
+}
+
 function MainRoutes() {
   return (
     <Routes>
@@ -63,6 +79,10 @@ function MainRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/share/:token" element={<ShareLinkPage />} />
+      </Route>
+      <Route element={<OAuthRoutes />}>
+        <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
       </Route>
       {/* The editor and its tool routes - Landing handles auth logic */}
       <Route path="/*" element={<Landing />} />

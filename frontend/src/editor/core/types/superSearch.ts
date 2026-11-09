@@ -77,6 +77,7 @@ export interface SuperSearchGates {
    * (SaaS). Hosts whose users are always signed in may omit it.
    */
   isAnonymous?: boolean;
+  mcpEnabled?: boolean;
 }
 
 /**

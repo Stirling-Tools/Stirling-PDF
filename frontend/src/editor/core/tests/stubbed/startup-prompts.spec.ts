@@ -31,6 +31,7 @@ for (const path of [
   "/forgot-password",
   "/reset-password",
   "/oauth/consent",
+  "/oauth/authorize",
   "/workflow/sign",
   "/workflow/sign/token/extra",
   "/mobile-scanner/extra",
@@ -56,6 +57,11 @@ for (const path of [
         json: { showDefaultCredentials: true, enableLogin: true },
       }),
     );
+    const authorizationRequests: string[] = [];
+    await page.route("**/api/v1/mcp/oauth/authorizations**", (route) => {
+      authorizationRequests.push(route.request().url());
+      return route.fulfill({ json: { authorization_id: "auth-123" } });
+    });
     await page.goto(path, { waitUntil: "domcontentloaded" });
     const dialog = page.getByRole("dialog", {
       name: "Onboarding",
@@ -66,6 +72,7 @@ for (const path of [
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toBeVisible();
+    expect(authorizationRequests).toEqual([]);
   });
 }
 
