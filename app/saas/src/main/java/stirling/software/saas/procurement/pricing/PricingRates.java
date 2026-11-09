@@ -14,7 +14,9 @@ package stirling.software.saas.procurement.pricing;
 public record PricingRates(
         double listRatePerRun, // $0.01 list per run
         double floorRatePerRun, // $0.005 asymptotic floor (cost + margin)
-        double discountPerDoubling, // 0.06 = 6% off the per-run rate per doubling past 1M runs/yr
+        long runCurveKnee, // committed runs/yr past which the per-run rate starts to fall
+        double discountPerDoubling, // 0.06 = 6% off the per-run rate per doubling past the knee
+        double maxVolumeDiscount, // the most the curve takes off the list rate
         double[] termDiscountByYear, // meter-only discount; index 0 = 1yr … index 4 = 5yr
         double indemnificationRate, // fraction of the net meter (legal exposure scales with usage)
         long dedicatedSupportMinor, // flat: dedicated SE/CSM (standard + priority are included)
@@ -28,7 +30,9 @@ public record PricingRates(
         return new PricingRates(
                 0.01, // $0.01 / run list
                 0.005, // $0.005 / run floor
-                0.06, // 6% off per doubling of committed runs past 1M/yr
+                1_000_000L, // the curve starts past 1M committed runs/yr
+                0.06, // 6% off per doubling of committed runs past the knee
+                0.5, // never more than half off the list rate
                 new double[] {0.0, 0.03, 0.05, 0.06, 0.07}, // 1–5 year term, meter only
                 0.05, // IP indemnification = 5% of the net meter
                 3_000_000, // dedicated SE/CSM $30,000 / yr

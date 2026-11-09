@@ -281,6 +281,7 @@ const FileEditor = ({
                 defaultValue_one: "Extracted {{count}} file from {{name}}",
                 defaultValue_other: "Extracted {{count}} files from {{name}}",
               }),
+              privateTitle: true,
               expandable: false,
               durationMs: 3500,
             });
@@ -292,7 +293,9 @@ const FileEditor = ({
                 "Failed to extract files from {{name}}",
                 { name: file.name },
               ),
+              privateTitle: true,
               body: result.errors.join("\n"),
+              privateBody: true,
               expandable: true,
               durationMs: 3500,
             });
@@ -304,6 +307,7 @@ const FileEditor = ({
             title: t("fileEditor.unzip.error", "Error unzipping {{name}}", {
               name: file.name,
             }),
+            privateTitle: true,
             expandable: false,
             durationMs: 3500,
           });

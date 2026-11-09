@@ -20,6 +20,7 @@ import {
   EDITOR_SOURCE_TYPE,
   isReadableSource,
 } from "@processor/components/sources/sourceTypes";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props extends PolicySetupConfigProps {
   folderName?: string;
@@ -105,7 +106,9 @@ export function PolicySetupInput({
           {t("portal.policies.wizard.locations.input", "Documents to process")}
         </h3>
         {folderName ? (
-          <p className="portal-policies__wizard-desc">
+          <p
+            className={`portal-policies__wizard-desc ${privateContentClassName}`}
+          >
             {t(
               "portal.policies.wizard.locations.folder",
               "Input: {{name}}. Originals are retained when delivering to a vector database.",

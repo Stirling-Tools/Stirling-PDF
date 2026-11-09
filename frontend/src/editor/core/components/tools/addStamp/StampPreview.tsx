@@ -16,6 +16,7 @@ import {
 } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
@@ -397,7 +398,7 @@ export default function StampPreview({
         )}
         {parameters.stampType === "text" && (
           <div
-            className={`${styles.stampItem} ${styles.stampItemGridMode}`}
+            className={`${styles.stampItem} ${styles.stampItemGridMode} ${privateContentClassName}`}
             style={style.item}
             data-user-content-preview=""
           >
@@ -419,7 +420,7 @@ export default function StampPreview({
         )}
         {parameters.stampType === "image" && imageMeta && (
           <div
-            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable} ${privateContentClassName}`}
             style={style.item}
             onPointerDown={(e) => handlePointerDown(e, "move")}
           >
@@ -435,7 +436,7 @@ export default function StampPreview({
         {parameters.stampType === "qr" &&
           isQrContentWithinLimit(parameters.stampText) && (
             <div
-              className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+              className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable} ${privateContentClassName}`}
               style={style.item}
               onPointerDown={(e) => handlePointerDown(e, "move")}
               data-user-content-preview=""
