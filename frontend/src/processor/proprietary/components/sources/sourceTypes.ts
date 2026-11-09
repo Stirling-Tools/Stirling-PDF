@@ -94,6 +94,7 @@ export interface SourceFieldDef {
     | "account";
   required?: boolean;
   placeholderKey?: string;
+  placeholderWhen?: { key: string; oneOf: string[]; placeholderKey: string };
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
@@ -195,6 +196,12 @@ const CLOUD_FOLDER_COPY = {
   },
   sharepoint: {
     placeholderKey: "portal.sources.cloudFields.sharepoint.placeholder",
+    placeholderWhen: {
+      key: "authMode",
+      oneOf: ["organisation"],
+      placeholderKey:
+        "portal.sources.cloudFields.sharepoint.organisationPlaceholder",
+    },
     helperTextKey: "portal.sources.cloudFields.sharepoint.helperText",
   },
   googledrive: {
