@@ -241,7 +241,7 @@ test.describe("Form Fill - XFDF / FDF exchange", () => {
     page,
   }) => {
     await openFormFill(page);
-    const fullName = page.getByRole("textbox").first();
+    const fullName = page.getByRole("textbox", { name: "Enter Full name" });
     await fullName.fill("Typed by me");
 
     const importXfdf = () =>
