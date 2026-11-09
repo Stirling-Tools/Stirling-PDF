@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 import { alert } from "@editor/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@editor/services/licenseService";
 import {
@@ -99,7 +100,9 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       popular: false,
       highlights: planHighlights.SERVER_MONTHLY,
       features: planFeatures.SERVER,
-      maxUsers: t("plan.team.maxUsers", "100 users"),
+      maxUsers: t("plan.team.maxUsers", "{{users}} users", {
+        users: USERS_PER_BLOCK,
+      }),
     },
     {
       id: "enterprise",

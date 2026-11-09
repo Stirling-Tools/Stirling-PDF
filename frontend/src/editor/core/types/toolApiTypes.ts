@@ -11,7 +11,7 @@ export interface AccessibilityReportRequest {
 }
 export interface AddAttachmentRequest {
   /**
-   * The image file to be overlaid onto the PDF.
+   * Files to attach to the PDF (up to 50 MB each, 200 MB in total)
    */
   attachments: File[];
   /**
@@ -31,7 +31,7 @@ export interface AddPageNumbersRequest {
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename
+   * Text for each number, e.g. 'Page {n} of {total}'. Placeholders: {n} (counts numbered pages only, from startingNumber), {total} (all pages in the file), {filename}.
    */
   customText?: string;
   /**
@@ -55,9 +55,9 @@ export interface AddPageNumbersRequest {
    */
   pagesToNumber?: string;
   /**
-   * Position: 1-9 representing positions on the page (1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right)
+   * Where to place the number on a 3x3 grid: 1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right
    */
-  position: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  position?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   /**
    * Starting number for page numbering
    */
@@ -73,15 +73,15 @@ export interface AddPasswordRequest {
    */
   keyLength?: 40 | 128 | 256;
   /**
-   * The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)
+   * Password needed to change the prevent* restrictions. Must differ from password for them to hold.
    */
   ownerPassword?: string;
   /**
-   * The password to be added to the PDF file (Restricts the opening of the document itself.)
+   * Password needed to open the PDF. Leave empty to only add restrictions.
    */
   password?: string;
   /**
-   * Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.
+   * Change permissions on an encrypted source. Omitting or leaving ownerPassword empty retains its passwords and encryption; supplying ownerPassword replaces the permissions password while keeping the opening password and encryption key length.
    */
   preserveExisting?: boolean;
   /**
@@ -123,19 +123,19 @@ export interface AddPasswordRequest {
 }
 export interface AddStampRequest {
   /**
-   * The selected alphabet of the stamp text
+   * Font script matching stampText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * The color of the stamp text
+   * Hex colour of the stamp text, e.g. #FF0000
    */
   customColor?: string;
   /**
-   * Specifies the margin size for the stamp.
+   * Margin between the stamp and the page edge when placed by position
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * The font size of the stamp text and image in points.
+   * Text size in points; for an image stamp, the image height (width keeps its aspect ratio)
    */
   fontSize?: number;
   /**
@@ -143,11 +143,11 @@ export interface AddStampRequest {
    */
   opacity?: number;
   /**
-   * Override X coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
+   * X in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideX?: number;
   /**
-   * Override Y coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
+   * Y in PDF user-space points. When both overrides are nonnegative, replaces position. Image and QR positions are clamped to the media box using the unrotated stamp size; text positions are not clamped. -1 = not set.
    */
   overrideY?: number;
   /**
@@ -155,7 +155,7 @@ export interface AddStampRequest {
    */
   pageNumbers?: string;
   /**
-   * Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)
+   * Where to place the stamp on a 3x3 grid: 1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right
    */
   position?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   /**
@@ -164,29 +164,29 @@ export interface AddStampRequest {
   rotation?: number;
   stampImage?: File;
   /**
-   * The stamp text, or the QR code content when the stamp type is qr
+   * The stamp text, or the QR code content when stampType is qr; required when stampType is text or qr. For text stamps only, \n starts a new line; QR content keeps the literal sequence. Both support @page, @total_pages, @date, @date{dd/MM/yyyy}, @time, @filename, @title, @author and @uuid (@@ for a literal @).
    */
   stampText?: string;
   /**
-   * The stamp type (text, image or qr)
+   * The stamp type (text, image or qr). When omitted, image is used if stampImage is supplied, otherwise text.
    */
-  stampType: "text" | "image" | "qr";
+  stampType?: "text" | "image" | "qr";
 }
 export interface AddWatermarkRequest {
   /**
-   * The selected alphabet
+   * Font script matching watermarkText; roman for Latin text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * Convert the redacted PDF to an image
+   * Turn pages into images so the watermark is hard to remove; text becomes unselectable
    */
   convertPDFToImage?: boolean;
   /**
-   * The color for watermark
+   * Hex colour of the watermark text, e.g. #FF0000
    */
   customColor?: string;
   /**
-   * The font size of the watermark text
+   * Text size in points; for an image watermark, the image height
    */
   fontSize?: number;
   /**
@@ -203,13 +203,13 @@ export interface AddWatermarkRequest {
   rotation?: number;
   watermarkImage?: File;
   /**
-   * The watermark text
+   * The watermark text, required when watermarkType is text
    */
   watermarkText?: string;
   /**
-   * The watermark type (text or image)
+   * The watermark type (text or image). When omitted, image is used if watermarkImage is supplied, otherwise text.
    */
-  watermarkType: "text" | "image";
+  watermarkType?: "text" | "image";
   /**
    * The width spacer between watermark elements
    */
@@ -306,7 +306,7 @@ export interface ContainsTextRequest {
   /**
    * The text to check for
    */
-  text?: string;
+  text: string;
 }
 export interface ConvertCbrToPdfRequest {
   /**
@@ -337,9 +337,17 @@ export interface ConvertEbookToPdfRequest {
    * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
    */
   optimizeForEbook?: true | false;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfHtmlRequest = Record<string, never>;
-export type ConvertPdfMarkdownRequest = Record<string, never>;
+export interface ConvertPdfHtmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
+export interface ConvertPdfMarkdownRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertPdfToCbrRequest {
   /**
    * The DPI (Dots Per Inch) for rendering PDF pages as images
@@ -365,8 +373,14 @@ export interface ConvertPdfToEpubRequest {
    * Choose an output profile optimized for the reader device.
    */
   targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
-export type ConvertPdfXmlRequest = Record<string, never>;
+export interface ConvertPdfXmlRequest {
+  useStirlingOfficeConvert?: boolean;
+}
 export interface ConvertToImageRequest {
   /**
    * The color type of the output image(s)
@@ -459,11 +473,11 @@ export interface DeleteAttachmentRequest {
 }
 export interface EditTableOfContentsRequest {
   /**
-   * Bookmark structure in JSON format
+   * The full new outline as a JSON array of {title, pageNumber, children[]}
    */
   bookmarkData?: string;
   /**
-   * Whether to replace existing bookmarks or append to them
+   * Ignored: existing bookmarks are always replaced. To add to them, read them with extract-bookmarks and send the full list.
    */
   replaceExisting?: boolean;
 }
@@ -484,6 +498,10 @@ export interface EmlToPdfRequest {
    * Maximum attachment size in MB to include (default 10MB, range: 1-100)
    */
   maxAttachmentSizeMB?: number;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
@@ -533,11 +551,11 @@ export interface FileSizeRequest {
 export type FlattenPortfolioRequest = Record<string, never>;
 export interface FlattenRequest {
   /**
-   * True to flatten only the forms, false to flatten full PDF (Convert page to image)
+   * True flattens only form fields; false turns every page into an image
    */
   flattenOnlyForms?: boolean;
   /**
-   * Optional DPI for page rendering when flattening the full document.
+   * DPI for the page images when flattening full pages (default 300)
    */
   renderDpi?: number;
 }
@@ -552,6 +570,10 @@ export interface GeneralFile {
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
   /**
    * Zoom level for displaying the website. Default is '1'.
    */
@@ -617,11 +639,11 @@ export interface IntegrationPurviewReadLabelRequest {
 export type ListAttachmentsRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
-   * Convert the redacted PDF to an image
+   * Rasterize every output page, making page text unselectable. Redaction areas already remove covered page content by default.
    */
   convertPDFToImage?: boolean;
   /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   * Pages to wipe completely, e.g. '1,3-5'. Omit to redact only the listed areas.
    */
   pageNumbers?: string;
   /**
@@ -629,12 +651,12 @@ export interface ManualRedactPdfRequest {
    */
   pageRedactionColor?: string;
   /**
-   * A list of areas that should be redacted
+   * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
    */
   redactions: RedactionArea[];
 }
 /**
- * A list of areas that should be redacted
+ * Areas whose covered page content is removed: page (from 1), x and y of the top-left corner from the page's top-left, width and height, in points
  */
 export interface RedactionArea {
   /**
@@ -750,52 +772,52 @@ export interface MergePdfsRequest {
 }
 export interface MetadataRequest {
   /**
-   * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
+   * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
    */
   allRequestParams?: {
     /**
-     * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
+     * Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.
      */
     [k: string]: string | undefined;
   };
   /**
-   * The author of the document
+   * The author of the document. Omit to remove it.
    */
   author?: string;
   /**
-   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss)
+   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
    */
   creationDate?: string;
   /**
-   * The creator of the document
+   * The creator of the document. Omit to remove it.
    */
   creator?: string;
   /**
-   * Delete all metadata if set to true
+   * True removes all metadata, including XMP, and ignores the other fields
    */
   deleteAll?: boolean;
   /**
-   * The keywords for the document
+   * The keywords for the document. Omit to remove it.
    */
   keywords?: string;
   /**
-   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss)
+   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
    */
   modificationDate?: string;
   /**
-   * The producer of the document
+   * The producer of the document. Omit to remove it.
    */
   producer?: string;
   /**
-   * The subject of the document
+   * The subject of the document. Omit to remove it.
    */
   subject?: string;
   /**
-   * The title of the document
+   * The title of the document. Omit to remove it.
    */
   title?: string;
   /**
-   * The trapped status of the document
+   * The trapped status of the document. Omit to remove it, which readers treat as Unknown.
    */
   trapped?: "True" | "False" | "Unknown";
 }
@@ -805,7 +827,7 @@ export type MiscShowJavascriptRequest = Record<string, never>;
 export type MiscUnlockPdfFormsRequest = Record<string, never>;
 export interface OptimizePdfRequest {
   /**
-   * The expected output size, e.g. '100MB', '25KB', etc.
+   * Target output size, e.g. '100MB' or '25KB'. When set, the optimization level is chosen automatically to reach it; omit to compress at optimizeLevel.
    */
   expectedOutputSize?: string;
   /**
@@ -833,43 +855,43 @@ export interface OptimizePdfRequest {
    */
   normalize?: boolean;
   /**
-   * The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.
+   * Compression level from 1 (lightest) to 9 (strongest). Or set expectedOutputSize to pick one automatically.
    */
-  optimizeLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  optimizeLevel?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 }
 export interface OverlayImageRequest {
   /**
-   * Whether to overlay the image onto every page of the PDF.
+   * Draw the image on every page; when false, only on page 1.
    */
   everyPage?: boolean;
   imageFile: File;
   /**
-   * The x-coordinate at which to place the top-left corner of the image.
+   * X of the image's lower-left corner in PDF user-space points
    */
   x?: number;
   /**
-   * The y-coordinate at which to place the top-left corner of the image.
+   * Y of the image's lower-left corner in PDF user-space points
    */
   y?: number;
 }
 export interface OverlayPdfsRequest {
   /**
-   * An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.
+   * FixedRepeatOverlay only: one repeat count per overlay file
    */
   counts?: number[];
   /**
-   * An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.
+   * PDFs drawn onto the base PDF's pages, in the order set by overlayMode
    */
   overlayFiles: File[];
   /**
-   * The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
+   * SequentialOverlay uses each overlay file's pages in order and repeats as needed. With multiple files it starts with the second file, proceeds through the remaining files, then wraps to the first (e.g. B, A for files [A, B]). A single file repeats from its first page. InterleavedOverlay takes each overlay file in turn. FixedRepeatOverlay uses counts.
    */
   overlayMode:
     | "SequentialOverlay"
     | "InterleavedOverlay"
     | "FixedRepeatOverlay";
   /**
-   * Overlay position 0 is Foregound, 1 is Background
+   * 0 = foreground (over the content), 1 = background (behind it)
    */
   overlayPosition: 0 | 1;
 }
@@ -927,7 +949,7 @@ export interface PageSizeRequest {
 }
 export interface PdfToPdfARequest {
   /**
-   * The output format type (PDF/A or PDF/X)
+   * pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.
    */
   outputFormat:
     | "pdfa"
@@ -948,10 +970,14 @@ export interface PdfToPdfARequest {
    * If true, the conversion will fail if the output is not perfectly compliant
    */
   strict?: boolean;
+  /**
+   * Use Stirling Office Convert; when omitted, follow the server setting
+   */
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToPdfUaRequest {
   /**
-   * Alternative descriptions for figures, as key=text pairs separated by newlines. Keys come from the accessibility-report endpoint's figuresNeedingDescription list, for example "0:12=Bar chart of quarterly revenue". Descriptions are never invented, so without these an illustrated document cannot claim conformance.
+   * Alt text for figures, one key=description per line, e.g. "0:12=Bar chart of revenue". Keys come from accessibility-report's figuresNeedingDescription.
    */
   altText?: string;
   /**
@@ -967,7 +993,7 @@ export interface PdfToPdfUaRequest {
    */
   figurePolicy?: "require-alt" | "mark-decorative";
   /**
-   * Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.
+   * Document language as a BCP-47 tag, for example en-US. Applied only when the document does not already declare one, unless overrideLanguage is set.
    */
   language?: string;
   /**
@@ -1059,9 +1085,9 @@ export interface ProcessPdfWithOcrRequest {
    */
   ocrRenderType?: "hocr" | "sandwich";
   /**
-   * Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
+   * How to treat pages that already contain text: 'skip-text' OCRs only pages without text, 'force-ocr' rasterises and OCRs every page.
    */
-  ocrType: "skip-text" | "force-ocr" | "Normal";
+  ocrType?: "skip-text" | "force-ocr" | "Normal";
   /**
    * Remove images from the output PDF if set to true
    */
@@ -1077,14 +1103,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * The custom mode for page rearrangement. Valid values are:
-   * CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
-   * DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
-   * ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
-   * REMOVE_FIRST: Removes the first page.
-   * REMOVE_LAST: Removes the last page.
-   * REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
-   *
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1104,15 +1123,15 @@ export interface RearrangePagesRequest {
 }
 export interface RedactExecuteRequest {
   /**
-   * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+   * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   imageBoxes?: ImageBox[];
   /**
-   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+   * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
    */
   ranges?: TextRange[];
   /**
-   * 1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.
+   * 1-indexed pages whose detected image regions are redacted; an empty list means every page, null skips it. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes.
    */
   redactImagePages?: number[];
   /**
@@ -1130,7 +1149,7 @@ export interface RedactExecuteRequest {
   wipePages?: number[];
 }
 /**
- * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+ * Rectangular areas identified by page and bounding box. AUTO removes covered page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface ImageBox {
   /**
@@ -1155,7 +1174,7 @@ export interface ImageBox {
   y2: number;
 }
 /**
- * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+ * Text located using start and end anchor phrases (inclusive). AUTO removes selected page content or rasterizes affected pages; OVERLAY_ONLY paints boxes without a content-removal step.
  */
 export interface TextRange {
   /**
@@ -1176,7 +1195,7 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Rasterize output to prevent text extraction
+   * Rasterize every output page, making page text unselectable
    */
   convertToImage?: boolean;
   /**
@@ -1184,7 +1203,7 @@ export interface RedactStyle {
    */
   padding?: number;
   /**
-   * Execution strategy hint for the redaction pipeline
+   * AUTO removes covered page content and may rasterize affected pages. OVERLAY_ONLY draws text/range/image boxes without removal. IMAGE_FINALIZE rasterizes every output page. Whole-page wipes remove page content in every strategy; convertToImage also controls final rasterization independently.
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
@@ -1194,17 +1213,17 @@ export interface RedactPdfRequest {
    */
   caseSensitive?: boolean;
   /**
-   * Convert the redacted PDF to an image
+   * Rasterize every output page, making page text unselectable
    */
   convertPDFToImage?: boolean;
   /**
-   * Custom padding for redaction
+   * Extra space around each redaction box, in points
    */
-  customPadding: number;
+  customPadding?: number;
   /**
-   * List of text to redact from the PDF
+   * Text to redact, one term per line (not comma-separated); each line is a regex when useRegex=true
    */
-  listOfText?: string;
+  listOfText: string;
   /**
    * The color for redaction
    */
@@ -1324,9 +1343,9 @@ export interface ScalePagesRequest {
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
    */
-  pageSize:
+  pageSize?:
     | "A0"
     | "A1"
     | "A2"
@@ -1344,11 +1363,11 @@ export interface ScalePagesRequest {
 }
 export interface ScannerEffectRequest {
   /**
-   * Whether advanced settings are enabled
+   * Use brightness, contrast, blur, noise and resolution instead of the quality preset. Border, rotation, colorspace and yellowish always apply.
    */
   advancedEnabled?: boolean;
   /**
-   * Blur amount (0 = none, higher = more blur)
+   * Blur amount (0 = none, higher = more blur). Needs advancedEnabled=true.
    */
   blur?: number;
   /**
@@ -1356,7 +1375,7 @@ export interface ScannerEffectRequest {
    */
   border?: number;
   /**
-   * Brightness multiplier (1.0 = no change)
+   * Brightness multiplier (1.0 = no change). Needs advancedEnabled=true.
    */
   brightness?: number;
   /**
@@ -1364,19 +1383,19 @@ export interface ScannerEffectRequest {
    */
   colorspace?: "grayscale" | "color";
   /**
-   * Contrast multiplier (1.0 = no change)
+   * Contrast multiplier (1.0 = no change). Needs advancedEnabled=true.
    */
   contrast?: number;
   /**
-   * Noise amount (0 = none, higher = more noise)
+   * Noise amount (0 = none, higher = more noise). Needs advancedEnabled=true.
    */
   noise?: number;
   /**
-   * Scan quality preset
+   * Scan quality preset, used unless advancedEnabled is true
    */
   quality: "low" | "medium" | "high";
   /**
-   * Rendering resolution in DPI
+   * Rendering resolution in DPI. Needs advancedEnabled=true.
    */
   resolution?: number;
   /**
@@ -1428,32 +1447,32 @@ export interface SignPDFWithCertRequest {
   alias?: string;
   certFile?: File;
   /**
-   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
+   * SERVER: this server's own certificate, no file or password. Signer shown is the server's organisation, not the user; self-signed by default, so other PDF readers may show it unverified. PEM needs certFile+privateKeyFile, PKCS12/PFX p12File, JKS jksFile. WINDOWS_STORE/PKCS11: desktop app only.
    */
   certType:
+    | "SERVER"
     | "PEM"
     | "PKCS12"
     | "PFX"
     | "JKS"
-    | "SERVER"
     | "WINDOWS_STORE"
     | "PKCS11";
   jksFile?: File;
   /**
-   * The location where the PDF is signed
+   * The location where the PDF is signed. Omitted from the signature when not set
    */
   location?: string;
   /**
-   * The name of the signer
+   * Signer name stored in the signature properties; the visible box shows the certificate's name instead. Omitted when not set.
    */
   name?: string;
   p12File?: File;
   /**
-   * The page number where the signature should be visible. This is required if showSignature is set to true
+   * Page (1-based) for the visible signature. Only used when showSignature is true.
    */
   pageNumber?: number;
   /**
-   * The password for the keystore / private key, or the token PIN for PKCS11
+   * Password for the PKCS12/PFX or JKS keystore or an encrypted PEM key, or the PKCS11 token PIN. Leave empty if the key has none. Not needed for SERVER or WINDOWS_STORE.
    */
   password?: string;
   /**
@@ -1466,7 +1485,7 @@ export interface SignPDFWithCertRequest {
   pkcs11Slot?: number;
   privateKeyFile?: File;
   /**
-   * The reason for signing the PDF
+   * The reason for signing the PDF. Omitted from the signature when not set
    */
   reason?: string;
   /**
@@ -1474,7 +1493,7 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
   /**
-   * Whether to visually show the signature in the PDF file
+   * Add a visible signature box on pageNumber showing the certificate's name, the date and the reason (if set).
    */
   showSignature?: boolean;
 }
@@ -1493,7 +1512,7 @@ export interface SplitPdfByChaptersRequest {
    */
   allowDuplicates?: boolean;
   /**
-   * Maximum bookmark level required
+   * Maximum bookmark nesting level to split on: 0 splits on top-level bookmarks only, 1 also on their children, and so on
    */
   bookmarkLevel?: number;
   /**
@@ -1511,17 +1530,11 @@ export interface SplitPdfBySectionsRequest {
    */
   merge?: boolean;
   /**
-   * Pages to be split by section
+   * Pages to split when splitMode is CUSTOM (required in that mode, ignored otherwise). Supports ranges (e.g. '1,3,5-9'), 'all', or functions like '2n+1'.
    */
   pageNumbers?: string;
   /**
-   * Modes for page split. Valid values are:
-   * SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.
-   * SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.
-   * SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.
-   * SPLIT_ALL: Splits all pages.
-   * CUSTOM: Custom split.
-   *
+   * Which pages to split (default SPLIT_ALL). SPLIT_ALL splits every page; SPLIT_ALL_EXCEPT_FIRST, SPLIT_ALL_EXCEPT_LAST and SPLIT_ALL_EXCEPT_FIRST_AND_LAST keep those pages whole; CUSTOM splits only pageNumbers.
    */
   splitMode?:
     | "CUSTOM"
@@ -1536,11 +1549,11 @@ export interface SplitPdfBySectionsRequest {
 }
 export interface SplitPdfBySizeOrCountRequest {
   /**
-   * Determines the type of split: 0 for size, 1 for page count, 2 for document count
+   * 0 = by file size, 1 = by pages per file, 2 = by number of files
    */
-  splitType?: number;
+  splitType?: 0 | 1 | 2;
   /**
-   * Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')
+   * For splitType 0 a size like '500KB' or '10MB' (a bare number means MB); for 1 and 2 a whole number
    */
   splitValue?: string;
 }
@@ -1552,7 +1565,7 @@ export interface SvgToPdfRequest {
 }
 export interface TimestampPdfRequest {
   /**
-   * URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.
+   * URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used (security.timestamp.defaultTsaUrl, DigiCert unless changed).
    */
   tsaUrl?: string;
 }

@@ -55,17 +55,17 @@ export type RetaggableTag =
 
 /**
  * The image's tag when TagImageCommand can change it: an image the page
- * itself draws in a tagged document, that is untagged, an artifact, or a
- * figure the session added. Null otherwise, for content the file's elements
+ * itself draws, whose save can add an element, that is untagged, an
+ * artifact, or a figure the session added. Null otherwise, for content the file's elements
  * own among the rest.
  */
 export function retaggableTag(
   doc: EditorDocument,
   image: ImageObjectSnapshot,
 ): RetaggableTag | null {
-  if (!doc.isTagged() || image.inForm) return null;
+  if (image.inForm) return null;
   const structure = doc.structure(image.pageIndex);
-  if (structure.cannotAddFigure()) return null;
+  if (structure.cannotAddElement()) return null;
   if (image.mcid === undefined) {
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
@@ -81,7 +81,7 @@ function blocked(
   doc: EditorDocument,
   blocker: DescriptionBlocker,
 ): ImageAccessibility {
-  return { kind: "blocked", blocker, documentTagged: doc.isTagged() };
+  return { kind: "blocked", blocker, documentTagged: doc.treatAsTagged() };
 }
 
 /**

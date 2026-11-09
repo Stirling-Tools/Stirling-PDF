@@ -5,6 +5,7 @@ import ObscuredOverlay from "@editor/components/shared/ObscuredOverlay";
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { applyAdjustmentsToCanvas } from "@editor/components/tools/adjustContrast/utils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   file: File | null;
@@ -104,6 +105,7 @@ export default function AdjustContrastPreview({ file, parameters }: Props) {
       >
         <div
           ref={containerRef}
+          className={privateContentClassName}
           style={{
             aspectRatio: "8.5/11",
             width: "100%",
