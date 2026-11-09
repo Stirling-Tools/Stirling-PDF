@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Avatar } from "@editor/ui/Avatar";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/components/shared/signing/signingDetail.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SigningSessionHeaderProps {
   documentName: string;
@@ -31,11 +32,18 @@ export function SigningSessionHeader({
         {status}
         {actions}
       </div>
-      <h2>{documentName}</h2>
+      <h2 className={privateContentClassName}>{documentName}</h2>
       <div className="signing-detail__sender">
-        {owner && <Avatar name={owner} size="sm" tone="neutral" />}
+        {owner && (
+          <Avatar
+            name={owner}
+            size="sm"
+            tone="neutral"
+            className={privateContentClassName}
+          />
+        )}
         <div>
-          <span>
+          <span className={owner ? privateContentClassName : undefined}>
             {owner
               ? `${t("certSign.collab.signRequest.from", "From")}: ${owner}`
               : t("signWorkspace.createdByMe", "Created by me")}

@@ -12,14 +12,16 @@ import stirling.software.common.model.api.PDFFile;
 public class EditTableOfContentsRequest extends PDFFile {
 
     @Schema(
-            description = "Bookmark structure in JSON format",
+            description = "The full new outline as a JSON array of {title, pageNumber, children[]}",
             type = "string",
             example =
                     "[{\\\"title\\\":\\\"Chapter 1\\\",\\\"pageNumber\\\":1,\\\"children\\\":[{\\\"title\\\":\\\"Section 1.1\\\",\\\"pageNumber\\\":2}]}]")
     private String bookmarkData;
 
     @Schema(
-            description = "Whether to replace existing bookmarks or append to them",
+            description =
+                    "Ignored: existing bookmarks are always replaced. To add to them, read"
+                            + " them with extract-bookmarks and send the full list.",
             example = "true")
     private Boolean replaceExisting;
 }
