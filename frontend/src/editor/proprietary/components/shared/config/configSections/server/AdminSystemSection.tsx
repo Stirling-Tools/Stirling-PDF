@@ -24,6 +24,7 @@ import type {
 } from "@editor/components/shared/config/configSections/server/serverSettings";
 import { SystemCard } from "@editor/components/shared/config/configSections/server/SystemCard";
 import { UserDefaultsCard } from "@editor/components/shared/config/configSections/server/UserDefaultsCard";
+import { SaveModeDefaults } from "@editor/components/shared/config/configSections/server/SaveModeDefaults";
 import { EndpointManagementCard } from "@editor/components/shared/config/configSections/server/EndpointManagementCard";
 import { StorageSharingCard } from "@editor/components/shared/config/configSections/server/StorageSharingCard";
 import { FolderAccessCard } from "@editor/components/shared/config/configSections/server/FolderAccessCard";
@@ -442,7 +443,9 @@ export default function AdminSystemSection() {
             setSettings={setUiDefaults}
             isFieldPending={isUiFieldPending}
             loginEnabled={loginEnabled}
-          />
+          >
+            <SaveModeDefaults {...generalCard} />
+          </UserDefaultsCard>
         </SettingsCard>
 
         <SettingsCard

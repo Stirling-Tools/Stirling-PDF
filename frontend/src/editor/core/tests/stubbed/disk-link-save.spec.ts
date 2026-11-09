@@ -177,7 +177,7 @@ test.describe("Saving files that live on disk", () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 
-  test("Ask me offers update, copy or elsewhere before saving", async ({
+  test("Ask each time offers update, copy or elsewhere before saving", async ({
     page,
   }) => {
     await openDirtyReport(page, "ask");
@@ -207,7 +207,9 @@ test.describe("Saving files that live on disk", () => {
     expect(await written(page)).not.toContain(REPORT);
   });
 
-  test("a tool result's Save asks first in Ask me mode", async ({ page }) => {
+  test("a tool result's Save asks first in Ask each time mode", async ({
+    page,
+  }) => {
     await openDirtyReport(page, "ask");
 
     await (await compressOpenFile(page)).click();

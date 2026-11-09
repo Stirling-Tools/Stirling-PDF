@@ -14,7 +14,7 @@ import {
 
 const dismiss = () => answerSaveChoice(null);
 
-/** The "Ask me" dialog: where this Save goes. */
+/** The "Ask each time" dialog: where this Save goes. */
 export function SaveChoiceModal() {
   const request = useSyncExternalStore(subscribeSaveChoice, getSaveChoice);
   return request ? (
@@ -86,7 +86,7 @@ function SaveChoiceDialog({ request }: { request: OpenSaveChoice }) {
           label={t("saveFile.ask.remember", "Remember my choice")}
           description={t(
             "saveFile.ask.rememberHint",
-            "Change it later in Settings > Preferences.",
+            "Change it later in Settings > Preferences > When you save a file.",
           )}
           checked={remember}
           onChange={(event) => setRemember(event.currentTarget.checked)}

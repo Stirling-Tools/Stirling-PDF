@@ -1259,8 +1259,8 @@ title = "System Settings"
 ui = "User Interface"
 
 [admin.settings.general.allowUserSaveMode]
-description = "Turn off to apply the setting above to everyone."
-label = "Let people choose what Save does"
+description = "Turn off to apply \"When you save a file\" to everyone."
+label = "Let people choose this for themselves"
 
 [admin.settings.general.appName]
 description = "The name displayed in the browser tab and home page"
@@ -1367,7 +1367,7 @@ placeholder = "Select languages"
 
 [admin.settings.general.saveMode]
 description = "For a file that came from someone's computer or a connected drive. People start with this and can change it in their preferences."
-label = "What Save does"
+label = "When you save a file"
 
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
@@ -12052,7 +12052,7 @@ copyHint = "Saves {{name}} in {{home}}. Later saves update that copy."
 download = "Download instead"
 otherHint = "Leaves {{home}} untouched."
 remember = "Remember my choice"
-rememberHint = "Change it later in Settings > Preferences."
+rememberHint = "Change it later in Settings > Preferences > When you save a file."
 replace = "Update the original"
 replaceHint = "Replaces it in {{home}}."
 thisFolder = "the same folder"
@@ -12069,9 +12069,9 @@ saveToComputer = "Save to this computer…"
 update = "Update {{name}}"
 
 [saveFile.mode]
-ask = "Ask me"
+ask = "Ask each time"
 copy = "Save a copy next to it"
-replace = "Update it"
+replace = "Update the original"
 
 [saveFile.result]
 ask = "Save…"
@@ -12294,7 +12294,7 @@ hideUnavailableToolsDescription = "Remove tools that have been disabled by your 
 language = "Language"
 languageDescription = "Choose the display language"
 logout = "Log out"
-saveMode = "When I save a file"
+saveMode = "When you save a file"
 saveModeDescription = "What Save does for a file that came from your computer or a connected drive. Other options are always in the menu next to Save."
 saveModeLocked = "Set by your administrator"
 setAsDefault = "Set as Default"

@@ -32,7 +32,7 @@ export function SaveModeSetting() {
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <Text id={labelId} fw={500} size="sm">
-          {t("settings.general.saveMode", "When I save a file")}{" "}
+          {t("settings.general.saveMode", "When you save a file")}{" "}
           <InfoTooltip
             label={t(
               "settings.general.saveModeDescription",

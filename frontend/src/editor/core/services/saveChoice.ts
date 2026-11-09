@@ -33,7 +33,7 @@ function emit(): void {
   listeners.forEach((listener) => listener());
 }
 
-/** Opens the "Ask me" dialog; resolves null when it is dismissed. */
+/** Opens the "Ask each time" dialog; resolves null when it is dismissed. */
 export function requestSaveChoice(
   request: SaveChoiceRequest,
 ): Promise<SaveChoiceResult | null> {
