@@ -41,4 +41,12 @@ describe("automatable tools", () => {
       result.current.regularTools.reorganizePages?.automationSettings,
     ).toBeTruthy();
   });
+
+  test("Remove Certificate Sign exposes automation settings for the visible signature option", () => {
+    const { result } = renderHook(() => useTranslatedToolCatalog());
+
+    expect(
+      result.current.regularTools.removeCertSign?.automationSettings,
+    ).toBeTruthy();
+  });
 });
