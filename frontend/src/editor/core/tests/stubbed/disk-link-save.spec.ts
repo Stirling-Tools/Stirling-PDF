@@ -65,7 +65,7 @@ const savedLeaves = (page: Page) =>
       }));
   }, REPORT);
 
-async function openDirtyReport(page: Page) {
+async function openReport(page: Page, { isDirty }: { isDirty: boolean }) {
   await installTauri(page);
   await gotoFiles(page);
   await stage(page, { [REPORT]: { bytes: PDF, modifiedMs: MTIME } }, [
@@ -74,7 +74,7 @@ async function openDirtyReport(page: Page) {
       name: "quarterly-report.pdf",
       path: REPORT,
       bytes: PDF,
-      isDirty: true,
+      isDirty,
     },
   ]);
   await dismissModals(page);
@@ -86,7 +86,7 @@ test.describe("Saving files that live on disk", () => {
   test("the toolbar marks unsaved disk edits and Ctrl+S saves in place", async ({
     page,
   }) => {
-    await openDirtyReport(page);
+    await openReport(page, { isDirty: true });
 
     const save = page.getByRole("button", { name: "Save", exact: true });
     await expect(save).toBeVisible({ timeout: 20_000 });
@@ -103,8 +103,36 @@ test.describe("Saving files that live on disk", () => {
     await expect(save.locator(".workbench-bar-unsaved-dot")).toHaveCount(0);
   });
 
+  test("Ctrl+S with nothing unsaved leaves the file alone", async ({
+    page,
+  }) => {
+    const applies: string[] = [];
+    page.on("console", (message) => {
+      if (message.text().includes("[Viewer] Applying changes"))
+        applies.push(message.text());
+    });
+    await openReport(page, { isDirty: false });
+
+    const firstPage = page.locator('[data-page-index="0"]').first();
+    await expect(firstPage).toBeVisible({ timeout: 30_000 });
+    await firstPage.hover();
+    await page.keyboard.press("Control+s");
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+
+    expect(applies).toEqual([]);
+    expect(await written(page)).toEqual([]);
+    expect(await savedLeaves(page)).toEqual([
+      { dirty: false, matchesDisk: true },
+    ]);
+  });
+
   test("Save As moves into More save options", async ({ page }) => {
-    await openDirtyReport(page);
+    await openReport(page, { isDirty: true });
 
     await expect(page.getByRole("button", { name: "Save As" })).toHaveCount(0);
     await page.getByRole("button", { name: "More save options" }).click();
@@ -117,7 +145,7 @@ test.describe("Saving files that live on disk", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 740, height: 900 });
-    await openDirtyReport(page);
+    await openReport(page, { isDirty: true });
 
     const more = page.getByRole("button", { name: "More actions" });
     await expect(more.locator(".workbench-bar-unsaved-dot")).toBeVisible({

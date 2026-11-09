@@ -19,7 +19,8 @@ export interface SaveStoredFile {
   targetFor: (stub: StirlingFileStub) => SaveTarget | undefined;
   /** Unsaved against where Save sends this file. */
   isUnsaved: (stub: StirlingFileStub) => boolean;
-  /** Save where the toolbar's Save would. */
+  /** Save where the toolbar's Save would; nothing to do when that home already
+   *  holds this version. */
   saveStoredFile: (
     stub: StirlingFileStub,
     file?: File,
@@ -71,6 +72,13 @@ export function useSaveStoredFile(): SaveStoredFile {
         });
         return "failed";
       };
+      // Its home already holds this version, and a rewrite would only wake the
+      // disk watcher.
+      const homeCurrent =
+        local === "save" &&
+        Boolean(targetFor(stub) || stub.localFilePath) &&
+        !isUnsaved(stub);
+      if (homeCurrent) return "saved";
       try {
         const source = file ?? (await fileStorage.getStirlingFile(stub.id));
         if (!source)
@@ -108,7 +116,7 @@ export function useSaveStoredFile(): SaveStoredFile {
         return fail(error instanceof Error ? error.message : String(error));
       }
     },
-    [actions, targetFor, t],
+    [actions, targetFor, isUnsaved, t],
   );
 
   const saveStoredFile = useCallback(

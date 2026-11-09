@@ -143,7 +143,7 @@ it("does not run export policies again on a file that already had them", async (
   const { result } = renderHook(() => useSaveStoredFile());
   const file = pdf();
   const outcome = await result.current.saveStoredFile(
-    stub({ localFilePath: "C:/docs/Report.pdf" }),
+    stub({ localFilePath: "C:/docs/Report.pdf", isDirty: true }),
     file,
     { policiesEnforced: true },
   );
@@ -152,4 +152,24 @@ it("does not run export policies again on a file that already had them", async (
   expect(mocks.download).toHaveBeenCalledWith(
     expect.objectContaining({ data: file }),
   );
+});
+
+it("does nothing when the file's disk copy already holds this version", async () => {
+  const { result } = renderHook(() => useSaveStoredFile());
+  const outcome = await result.current.saveStoredFile(
+    stub({ localFilePath: "C:/docs/Report.pdf", isDirty: false }),
+    pdf(),
+  );
+  expect(outcome).toBe("saved");
+  expect(mocks.download).not.toHaveBeenCalled();
+  expect(mocks.updateStub).not.toHaveBeenCalled();
+});
+
+it("does nothing when the save target already holds this version", async () => {
+  const save = vi.fn(async () => "saved" as const);
+  mocks.targets = [{ ...target(save), isUnsaved: () => false }];
+  const { result } = renderHook(() => useSaveStoredFile());
+  expect(await result.current.saveStoredFile(stub(), pdf())).toBe("saved");
+  expect(save).not.toHaveBeenCalled();
+  expect(mocks.download).not.toHaveBeenCalled();
 });
