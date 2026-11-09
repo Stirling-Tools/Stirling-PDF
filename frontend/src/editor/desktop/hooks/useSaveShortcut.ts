@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useFileSelectors } from "@editor/contexts/FileContext";
-import { useNavigationState } from "@editor/contexts/NavigationContext";
-import { useViewer } from "@editor/contexts/viewer/viewerContext";
+import { useApplyEditsBeforeSave } from "@editor/hooks/useApplyEditsBeforeSave";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 
 /**
@@ -10,11 +9,7 @@ import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
  */
 export function useSaveShortcut() {
   const selectors = useFileSelectors();
-  const { workbench } = useNavigationState();
-  const { applyChanges } = useViewer();
   const { saveStoredFile } = useSaveStoredFile();
-  const [saveRequest, setSaveRequest] = useState(0);
-  const handledRequest = useRef(0);
 
   const saveFiles = useCallback(async () => {
     const selected = selectors.getSelectedStirlingFileStubs();
@@ -25,29 +20,16 @@ export function useSaveShortcut() {
       if (outcome === "cancelled") break;
     }
   }, [selectors, saveStoredFile]);
+  const save = useApplyEditsBeforeSave(saveFiles);
 
   useEffect(() => {
-    if (saveRequest === handledRequest.current) return;
-    handledRequest.current = saveRequest;
-    void saveFiles();
-  }, [saveRequest, saveFiles]);
-
-  useEffect(() => {
-    const handleKeyDown = async (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.key !== "s") return;
       event.preventDefault();
-
-      if (workbench === "viewer") {
-        try {
-          await applyChanges?.();
-        } catch {
-          return;
-        }
-      }
-      setSaveRequest((request) => request + 1);
+      void save();
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [workbench, applyChanges]);
+  }, [save]);
 }
