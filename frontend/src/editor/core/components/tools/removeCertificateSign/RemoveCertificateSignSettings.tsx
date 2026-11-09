@@ -1,5 +1,5 @@
 import React from "react";
-import { Checkbox } from "@mantine/core";
+import { Checkbox, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RemoveCertificateSignParameters } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
@@ -18,13 +18,13 @@ const RemoveCertificateSignSettings: React.FC<
   const { t } = useTranslation();
 
   return (
-    <div className="remove-certificate-sign-settings">
-      <p className="text-muted">
+    <Stack gap="md">
+      <Text size="sm" c="dimmed">
         {t(
           "removeCertSign.description",
           "This tool will remove digital certificate signatures from your PDF document.",
         )}
-      </p>
+      </Text>
       <Checkbox
         label={t(
           "removeCertSign.removeVisibleSignature",
@@ -43,7 +43,7 @@ const RemoveCertificateSignSettings: React.FC<
         }
         disabled={disabled}
       />
-    </div>
+    </Stack>
   );
 };
 
