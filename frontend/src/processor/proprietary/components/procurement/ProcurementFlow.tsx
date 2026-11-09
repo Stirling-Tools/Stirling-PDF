@@ -1,28 +1,30 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, EmptyState, Skeleton } from "@editor/ui";
-import { useUI } from "@editor/portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@editor/portal/hooks/useLinkedAccountEmail";
-import { ProcurementAgreement } from "@editor/portal/components/procurement/ProcurementAgreement";
-import {
-  DocumentsModal,
-  LicenseModal,
-  ScheduleCallModal,
-  TrialManageModal,
-  TrialSetupModal,
-} from "@editor/portal/components/procurement/ProcurementExtras";
-import { ProcurementModal } from "@editor/portal/components/procurement/ProcurementModal";
-import {
-  LiveStageCard,
-  PaymentStageCard,
-} from "@editor/portal/components/procurement/ProcurementStages";
-import { QuoteBuilder } from "@editor/portal/components/procurement/QuoteBuilder";
-import type { ProcurementController } from "@editor/portal/components/procurement/useProcurement";
+import { Banner } from "@editor/ui";
+import { COMPARE_PLANS_ANCHOR } from "@editor/billing/compareAnchor";
+import { useUI } from "@processor/contexts/UIContext";
+import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
+import { ProcurementAgreement } from "@processor/components/procurement/ProcurementAgreement";
+import { ScheduleCallModal } from "@processor/components/procurement/ProcurementExtras";
+import { QuoteBuilder } from "@processor/components/procurement/QuoteBuilder";
+import type { ProcurementController } from "@processor/components/procurement/useProcurement";
+
+/** Which long step, if any, the deal is on: building its quote or signing its agreement. */
+export function procurementFlowStep(
+  controller: ProcurementController,
+): "builder" | "agreement" | null {
+  const { started, stage, editing, latest } = controller;
+  // The builder spans the whole quote stage, not just the draft part of it: issuing turns its last
+  // step into the review of the issued paper rather than handing off to a separate card.
+  if (started && (editing || stage === "trial" || stage === "quote"))
+    return "builder";
+  if (started && !editing && stage === "security" && latest != null)
+    return "agreement";
+  return null;
+}
 
 /**
- * The procurement takeover flow: the full-screen journey modal (quote builder →
- * quote & agreement → payment → live) plus the licence-key, schedule-call, trial-setup,
- * and trial-management modals. Driven entirely by a shared ProcurementController
- * so it can sit alongside the deal-status section in Usage & Billing.
+ * The journey's two long steps, building a quote and signing the agreement, shown within the deal
+ * at their stage. Booking a call opens here too: the agreement's "request changes" leads to it.
  */
 export function ProcurementFlow({
   controller,
@@ -30,205 +32,94 @@ export function ProcurementFlow({
   controller: ProcurementController;
 }) {
   const { t } = useTranslation();
-  const { openLinkModal, linkModalOpen } = useUI();
   const scheduleEmail = useLinkedAccountEmail();
+  const { openSettings } = useUI();
   const {
-    isLinked,
-    loading,
     data,
-    started,
-    stage,
     latest,
     isIssued,
     busy,
     downloading,
-    downloadingLicense,
     error,
     setError,
     open,
     setOpen,
     editing,
-    setEditing,
     extra,
     setExtra,
-    invoicePdf,
-    onConfirmSetup,
-    onExtendTrial,
-    onReset,
     onGenerate,
     onAgree,
     onDownloadPdf,
-    onDownloadOfflineLicense,
-    downloadingAgreement,
-    onDownloadSignedAgreement,
   } = controller;
 
-  // The builder owns the dialog's chrome while it is the visible step. It spans the whole quote
-  // stage now, not just the draft part of it: issuing turns its last step into the review of the
-  // issued paper rather than handing off to a separate card.
-  const builderShowing =
-    isLinked && started && (editing || stage === "trial" || stage === "quote");
-  const agreementShowing =
-    isLinked && started && !editing && stage === "security" && latest != null;
-  // Both of these name their own document in the header and carry its download there, so the shell
-  // must not stack a second header (nor a second close) above them.
-  const ownsHeader = builderShowing || agreementShowing;
+  const step = procurementFlowStep(controller);
+  const builderShowing = step === "builder";
+  const agreementShowing = step === "agreement";
 
   return (
     <>
-      <ProcurementModal
-        open={open && !linkModalOpen}
-        onClose={() => setOpen(false)}
-        title={t("portal.procurement.title")}
-        subtitle={t("portal.procurement.subtitle")}
-        // The builder and the agreement render their own heading and close; the payment and live
-        // steps have none, so they keep the shell's header.
-        headerless={ownsHeader}
-      >
-        {error && (
-          <Banner
-            tone="danger"
-            title={t("portal.procurement.error.title")}
-            onDismiss={() => setError(null)}
-          >
-            {error}
-          </Banner>
-        )}
+      {open && step && (
+        <section
+          className="portal-procflow"
+          aria-label={t("portal.procurement.title")}
+        >
+          {error && (
+            <Banner
+              tone="danger"
+              title={t("portal.procurement.error.title")}
+              onDismiss={() => setError(null)}
+            >
+              {error}
+            </Banner>
+          )}
 
-        {!isLinked && (
-          <EmptyState
-            eyebrow={t("portal.procurement.link.eyebrow")}
-            title={t("portal.procurement.link.title")}
-            description={t("portal.procurement.link.description")}
-            actions={
-              <Button variant="primary" onClick={() => openLinkModal()}>
-                {t("portal.procurement.link.cta")}
-              </Button>
-            }
-          />
-        )}
+          {builderShowing && data && (
+            <QuoteBuilder
+              deployment={data.deployment ?? "cloud"}
+              seats={data.seats}
+              email={scheduleEmail}
+              dealDetails={{
+                businessName: data.businessName,
+                contactName: data.contactName,
+                contactEmail: data.contactEmail,
+              }}
+              initial={latest?.config}
+              eulaAlreadyAgreed={data.trialStartedAt != null}
+              minAnnualMinor={data.minAnnualNetMinor}
+              rates={data.rateCard}
+              onScheduleCall={() => setExtra("schedule")}
+              onComparePlans={() =>
+                openSettings("billing", COMPARE_PLANS_ANCHOR)
+              }
+              onClose={() => setOpen(false)}
+              onGenerate={onGenerate}
+              // Null while re-editing: the buyer asked for the form, not the paper they just left.
+              issued={!editing && isIssued ? latest : null}
+              downloading={downloading}
+              onDownload={onDownloadPdf}
+            />
+          )}
 
-        {isLinked && (loading || !started) && <Skeleton height="10rem" />}
-
-        {isLinked && started && (
-          <>
-            {builderShowing && (
-              <QuoteBuilder
-                deployment={data?.deployment ?? "cloud"}
-                seats={data?.seats ?? 0}
-                email={scheduleEmail}
-                dealDetails={
-                  data
-                    ? {
-                        businessName: data.businessName,
-                        contactName: data.contactName,
-                        contactEmail: data.contactEmail,
-                      }
-                    : undefined
-                }
-                initial={latest?.config}
-                eulaAlreadyAgreed={data?.trialStartedAt != null}
-                onClose={() => setOpen(false)}
-                onGenerate={onGenerate}
-                // Null while re-editing: the buyer asked for the form, not the paper they just left.
-                issued={!editing && isIssued ? latest : null}
-                downloading={downloading}
-                onDownload={onDownloadPdf}
-              />
-            )}
-
-            {/* Agreement step: review and sign the enterprise agreement. Signing accepts the quote
-                into a committed subscription (Stripe). */}
-            {agreementShowing && latest && (
-              <ProcurementAgreement
-                quote={latest}
-                busy={busy}
-                onAgree={onAgree}
-                onRequestChanges={() => {
-                  setOpen(false);
-                  setExtra("schedule");
-                }}
-                onClose={() => setOpen(false)}
-              />
-            )}
-
-            {!editing && stage === "procurement" && latest && (
-              <PaymentStageCard
-                invoiceUrl={latest.invoiceUrl}
-                invoicePdf={latest.invoicePdf ?? invoicePdf}
-                signedAgreementVersion={data?.agreementSignedVersion}
-                downloadingAgreement={downloadingAgreement}
-                onDownloadSignedAgreement={onDownloadSignedAgreement}
-              />
-            )}
-
-            {!editing && stage === "active" && (
-              <LiveStageCard
-                signedAgreementVersion={data?.agreementSignedVersion}
-                downloadingAgreement={downloadingAgreement}
-                onDownloadSignedAgreement={onDownloadSignedAgreement}
-              />
-            )}
-          </>
-        )}
-      </ProcurementModal>
-
-      <TrialSetupModal
-        open={extra === "setup" && !linkModalOpen}
-        onClose={() => setExtra(null)}
-        busy={busy}
-        email={scheduleEmail ?? undefined}
-        onScheduleCall={() => setExtra("schedule")}
-        onConfirm={onConfirmSetup}
-      />
-      {data?.licenseKey && (
-        <LicenseModal
-          open={extra === "license" && !linkModalOpen}
-          onClose={() => setExtra(null)}
-          licenseKey={data.licenseKey}
-          offlineAvailable={data.deployment === "airgap"}
-          downloadingLicense={downloadingLicense}
-          onDownloadOffline={onDownloadOfflineLicense}
-          trial={data.stage !== "procurement" && data.stage !== "active"}
-        />
+          {/* Signing accepts the quote into a committed subscription (Stripe). */}
+          {agreementShowing && latest && (
+            <ProcurementAgreement
+              quote={latest}
+              busy={busy}
+              onAgree={onAgree}
+              onRequestChanges={() => {
+                setOpen(false);
+                setExtra("schedule");
+              }}
+              onClose={() => setOpen(false)}
+            />
+          )}
+        </section>
       )}
+
       <ScheduleCallModal
-        open={extra === "schedule" && !linkModalOpen}
+        open={extra === "schedule"}
         onClose={() => setExtra(null)}
         email={scheduleEmail}
-      />
-      {data && (
-        <TrialManageModal
-          open={extra === "trial" && !linkModalOpen}
-          onClose={() => setExtra(null)}
-          snapshot={data}
-          busy={busy}
-          onExtend={async () => {
-            await onExtendTrial();
-            setExtra(null);
-          }}
-          onCancel={async () => {
-            await onReset();
-            setExtra(null);
-          }}
-        />
-      )}
-      <DocumentsModal
-        open={extra === "documents" && !linkModalOpen}
-        onClose={() => setExtra(null)}
-        agreementVersion={data?.agreementSignedVersion}
-        downloadingAgreement={downloadingAgreement}
-        onDownloadAgreement={onDownloadSignedAgreement}
-        onViewAgreement={() => {
-          setExtra(null);
-          setEditing(false);
-          setOpen(true);
-        }}
-        quoteAvailable={!!latest?.stripeQuoteId}
-        downloadingQuote={downloading}
-        onDownloadQuote={onDownloadPdf}
-        invoiceUrl={latest?.invoiceUrl}
-        invoicePdf={latest?.invoicePdf ?? invoicePdf}
       />
     </>
   );

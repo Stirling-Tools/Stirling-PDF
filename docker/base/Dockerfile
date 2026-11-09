@@ -440,7 +440,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get upgrade -y --no-install-recommends; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    ppa_attempt=1; \
+    until add-apt-repository -y --no-update ppa:libreoffice/ppa; do \
+      if [ "${ppa_attempt}" -ge 4 ]; then \
+        echo "LibreOffice PPA setup failed after ${ppa_attempt} attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed; retrying in $((ppa_attempt * 5)) seconds" >&2; \
+      sleep "$((ppa_attempt * 5))"; \
+      ppa_attempt=$((ppa_attempt + 1)); \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
