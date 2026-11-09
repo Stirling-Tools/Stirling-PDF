@@ -237,6 +237,7 @@ export function useTrackSave(
               "Signed PDF can't be changed",
             ),
             body: error.message,
+            expandable: false,
           });
         } else {
           console.error("[PageTracks] save failed", error);
