@@ -11523,8 +11523,8 @@ signInToUse = "Sign in to use this"
 localMode = "Local mode"
 server = "Server settings"
 settings = "Settings"
-signIn = "Sign in"
 signedOut = "Not signed in"
+signIn = "Sign in"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
