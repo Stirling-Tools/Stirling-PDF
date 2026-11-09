@@ -105,6 +105,27 @@ export default function ShareLinkPage() {
     });
   }, [location.search, navigate, normalizedToken]);
 
+  const clearActionParam = useCallback(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("action")) return;
+    params.delete("action");
+    const search = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : "",
+        hash: location.hash,
+      },
+      { replace: true, state: location.state },
+    );
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+  ]);
+
   const handleDownload = useCallback(async () => {
     if (!normalizedToken || !canDownload) return;
     setIsWorking(true);
@@ -118,10 +139,12 @@ export default function ShareLinkPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      clearActionParam();
     } catch (error: unknown) {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -142,7 +165,7 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [canDownload, normalizedToken, t]);
+  }, [canDownload, clearActionParam, normalizedToken, t]);
 
   const handleOpen = useCallback(async () => {
     if (!normalizedToken || !canOpen) return;
@@ -162,6 +185,7 @@ export default function ShareLinkPage() {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -179,7 +203,16 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [actions, canOpen, metadata, navActions, navigate, normalizedToken, t]);
+  }, [
+    actions,
+    canOpen,
+    clearActionParam,
+    metadata,
+    navActions,
+    navigate,
+    normalizedToken,
+    t,
+  ]);
 
   // Signed out: go straight to the normal sign-in page; it returns here afterwards.
   useEffect(() => {
