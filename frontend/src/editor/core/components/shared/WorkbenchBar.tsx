@@ -325,13 +325,17 @@ export default function WorkbenchBar({
           filesToExport,
           stubs.map((s) => s?.id),
         );
-      } catch {
-        enforced = filesToExport;
+      } catch (error) {
+        // A required policy failed. Saving without it would skip what it exists
+        // to enforce, so the save stops, as a single-file save does.
         showAlert({
-          alertType: "warning",
-          title: t("policies.enforcement.exportFailureTitle"),
-          body: t("policies.enforcement.exportFailureBody"),
+          alertType: "error",
+          title: t("fileEditor.saveFailed", "Save failed"),
+          body: error instanceof Error ? error.message : String(error),
+          privateBody: true,
+          expandable: false,
         });
+        return;
       }
 
       for (let idx = 0; idx < filesToExport.length; idx++) {

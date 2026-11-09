@@ -7990,8 +7990,6 @@ triggerImport = "Runs on import"
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
-exportFailureBody = "Security policies couldn't be applied. Files were exported as-is."
-exportFailureTitle = "Exported without enforcement"
 failureBody = "Some policies couldn't be applied to {{failures}} of {{total}} file(s)."
 failureTitle = "Exported without full enforcement"
 printPolicyAppliedBody = "This PDF was updated to meet a policy. Review the changes, then print again."
