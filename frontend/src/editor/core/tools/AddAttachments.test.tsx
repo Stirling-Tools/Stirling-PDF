@@ -10,6 +10,7 @@ import {
 } from "@editor/services/pdfAccessService";
 import {
   clearRightsManagedPdfs,
+  getOpenedRightsManagedPdf,
   openRightsManagedPdf,
 } from "@editor/services/rightsManagedPdf";
 import {
@@ -40,6 +41,12 @@ vi.mock("@editor/services/attachmentService", () => ({
   extractAttachments: vi.fn(),
   extractSingleAttachment: vi.fn(),
   parseBlobError: vi.fn(async () => "failed"),
+}));
+vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/pdfAccessService")
+  >()),
+  inspectLocalPdfAccess: vi.fn(async () => ({ signed: false })),
 }));
 vi.mock("@editor/services/exportWithPolicy", () => ({
   downloadFileWithPolicy: vi.fn(),
@@ -133,14 +140,17 @@ function purviewWrapper(name: string): StirlingFile {
   return createStirlingFile(file);
 }
 
-async function openedPurviewPdf(name: string): Promise<StirlingFile> {
+async function openedPurviewPdf(
+  name: string,
+  edit = true,
+): Promise<StirlingFile> {
   const original = pdf(name, "%PDF-1.7 wrapper");
   const protection = JSON.stringify({
     permissions: {
       view: true,
       print: true,
       copy: true,
-      edit: true,
+      edit,
       comment: true,
       export: true,
       owner: false,
@@ -214,14 +224,26 @@ describe("Manage Attachments file eligibility", () => {
     expect(screen.queryByText("purview.pdf")).not.toBeInTheDocument();
   });
 
-  test("never offers a Purview protected PDF that has been opened", async () => {
+  test("offers an opened Purview protected PDF and lists its decrypted document", async () => {
     const opened = await openedPurviewPdf("opened.pdf");
+    openWorkspace([opened]);
+
+    renderTool();
+
+    await waitFor(() => expect(listedFileNames()).toEqual(["opened.pdf"]));
+    expect(listAttachments.mock.calls[0][0]).toBe(
+      getOpenedRightsManagedPdf(opened)?.plaintext,
+    );
+  });
+
+  test("never offers an opened Purview protected PDF the account can only view", async () => {
+    const viewOnly = await openedPurviewPdf("view-only.pdf", false);
     const plain = createTestStirlingFile("plain.pdf");
-    openWorkspace([opened, plain]);
+    openWorkspace([viewOnly, plain]);
 
     renderTool();
 
     await waitFor(() => expect(listedFileNames()).toEqual(["plain.pdf"]));
-    expect(screen.queryByText("opened.pdf")).not.toBeInTheDocument();
+    expect(screen.queryByText("view-only.pdf")).not.toBeInTheDocument();
   });
 });

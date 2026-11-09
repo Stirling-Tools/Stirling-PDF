@@ -4,9 +4,14 @@ import {
   getOpenedRightsManagedPdf,
   isMicrosoftProtectedPdf,
 } from "@editor/services/rightsManagedPdf";
+import { rightsManagedToolAccepts } from "@editor/services/rightsManagedTools";
 import type { StirlingFile } from "@editor/types/fileContext";
 
-export function useFilesWithoutPurview(files: StirlingFile[]): StirlingFile[] {
+const SAVE_ENDPOINT = "/api/v1/misc/batch-process-attachments";
+
+export function useAttachmentEditableFiles(
+  files: StirlingFile[],
+): StirlingFile[] {
   const rightsRevision = useRightsManagedPdfRevision();
   const [withoutPurview, setWithoutPurview] = useState<
     ReadonlySet<StirlingFile>
@@ -29,8 +34,10 @@ export function useFilesWithoutPurview(files: StirlingFile[]): StirlingFile[] {
 
   return useMemo(
     () =>
-      files.filter(
-        (file) => withoutPurview.has(file) && !getOpenedRightsManagedPdf(file),
+      files.filter((file) =>
+        getOpenedRightsManagedPdf(file)
+          ? rightsManagedToolAccepts(SAVE_ENDPOINT, file.fileId)
+          : withoutPurview.has(file),
       ),
     [files, withoutPurview, rightsRevision],
   );

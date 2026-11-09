@@ -401,6 +401,8 @@ describe("tools on protected PDFs", () => {
     ["/api/v1/misc/ocr-pdf"],
     ["/api/v1/security/sanitize-pdf"],
     ["/api/v1/misc/update-metadata"],
+    ["/api/v1/misc/batch-process-attachments"],
+    ["/api/v1/misc/list-attachments"],
   ])("runs %s, which takes and returns PDFs", async (endpoint) => {
     const original = await openedFile({ edit: true });
     await expect(preflight([original], endpoint)).resolves.toBe(true);
@@ -413,7 +415,6 @@ describe("tools on protected PDFs", () => {
     ["/api/v1/security/add-password", "would conflict with the protection"],
     ["/api/v1/security/cert-sign", "digitally signed PDF"],
     ["/api/v1/ai/tools/classify-and-label", "AI engine"],
-    ["/api/v1/misc/add-attachments", "attachments"],
     [undefined, "cannot keep Microsoft Purview protection"],
   ])("refuses %s and says why", async (endpoint, reason) => {
     const original = await openedFile({ edit: true });

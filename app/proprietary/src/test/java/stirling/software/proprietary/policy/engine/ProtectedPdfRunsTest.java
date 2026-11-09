@@ -55,6 +55,7 @@ class ProtectedPdfRunsTest {
     private static final String ANY_FILE_STEP = "/api/v1/misc/any-file-step";
     private static final String CERT_SIGN = "/api/v1/security/cert-sign";
     private static final String AUTO_RENAME = "/api/v1/misc/auto-rename";
+    private static final String MANAGE_ATTACHMENTS = "/api/v1/misc/batch-process-attachments";
     private static final List<PipelineStep> ROTATE =
             List.of(new PipelineStep(ROTATE_PDF, Map.of()));
     private static final ToolIOSource TOOL_IO =
@@ -85,6 +86,12 @@ class ProtectedPdfRunsTest {
                                     ToolArity.SISO,
                                     List.of()),
                             AUTO_RENAME,
+                            new ToolIOSpec(
+                                    Set.of(ToolFormat.PDF),
+                                    ToolFormat.PDF,
+                                    ToolArity.SISO,
+                                    List.of()),
+                            MANAGE_ATTACHMENTS,
                             new ToolIOSpec(
                                     Set.of(ToolFormat.PDF),
                                     ToolFormat.PDF,
@@ -438,6 +445,24 @@ class ProtectedPdfRunsTest {
                 .hasMessageContaining("secret.pdf")
                 .hasMessageContaining(operation);
         verify(rightsManagement, never()).open(any(), any());
+    }
+
+    @Test
+    void attachmentStepsEditTheDecryptedDocumentAndKeepItsProtection() throws IOException {
+        List<PipelineStep> attachments = List.of(new PipelineStep(MANAGE_ATTACHMENTS, Map.of()));
+
+        try (ProtectedPdfRuns.Unlocked unlocked =
+                runs.unlock(protectedInput(), sourceAccount(), attachments)) {
+            assertThat(unlocked.inputs().primary().getFirst().getContentAsByteArray())
+                    .isEqualTo(PLAINTEXT);
+            Resource edited =
+                    named(
+                            "%PDF-1.7 with attachment".getBytes(StandardCharsets.UTF_8),
+                            "secret.pdf");
+            List<Resource> delivered = unlocked.protect(result(List.of(edited), 0));
+            assertThat(delivered.getFirst().getContentAsByteArray()).isEqualTo(PROTECTED_OUTPUT);
+            assertThat(protectedOriginals).containsExactly(wrapper);
+        }
     }
 
     @Test
