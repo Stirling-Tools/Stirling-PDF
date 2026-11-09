@@ -38,6 +38,31 @@ describe("AuthCallback", () => {
     vi.clearAllMocks();
     // Reset window.location.hash
     window.location.hash = "";
+    window.history.replaceState(null, "", "/auth/callback");
+  });
+
+  it("should send a backend OAuth error to the login page instead of looking for a token", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/auth/callback?errorOAuth=userAlreadyExistsWeb",
+    );
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/login?errorOAuth=userAlreadyExistsWeb",
+        { replace: true },
+      );
+    });
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(springAuth.getSession).not.toHaveBeenCalled();
+    expect(localStorage.getItem("stirling_jwt")).toBeNull();
   });
 
   it("should extract JWT from URL hash and validate it", async () => {
