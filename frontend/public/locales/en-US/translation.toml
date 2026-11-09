@@ -11088,7 +11088,8 @@ placeholder = "Scans/Inbox, or a folder link"
 
 [portal.sources.cloudFields.sharepoint]
 helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library; leave empty for the library root. The folder must already exist."
-placeholder = "Folder link, or Scans/Inbox"
+organisationPlaceholder = "Folder link, or Scans/Inbox"
+placeholder = "Folder link"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."

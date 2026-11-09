@@ -537,13 +537,21 @@ export function SourceModal({
     );
   }
 
+  function placeholderFor(field: SourceFieldDef): string | undefined {
+    const when = field.placeholderWhen;
+    if (when && when.oneOf.includes(options[when.key] ?? "")) {
+      return t(when.placeholderKey);
+    }
+    return field.placeholderKey ? t(field.placeholderKey) : undefined;
+  }
+
   function renderInputControl(field: SourceFieldDef) {
     return (
       <Input
         type={field.control === "password" ? "password" : undefined}
         value={options[field.key] ?? ""}
         className={privateContentClassName}
-        placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+        placeholder={placeholderFor(field)}
         onChange={(e) => setOption(field.key, e.target.value)}
       />
     );
