@@ -252,3 +252,15 @@ test("connected apps that cannot load say so instead of looking empty", async ({
   await expect(page.getByText(/No apps connected yet/)).toHaveCount(0);
   await expectNoRequestErrorToast(page);
 });
+
+test("the MCP Server settings entry is hidden while MCP is off", async ({
+  page,
+}) => {
+  await appConfig(page, { mcpEnabled: false });
+  await page.goto("/settings/account");
+  const nav = page.locator(".modal-nav-item");
+  await expect(nav.filter({ hasText: "API Keys" }).first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(nav.filter({ hasText: "MCP Server" })).toHaveCount(0);
+});

@@ -48,6 +48,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
       "model context protocol",
     ],
     requiresLogin: true,
+    requiresMcp: true,
     groupLabelKey: "settings.preferences.title",
     groupLabelFallback: "Preferences",
   },

@@ -63,3 +63,21 @@ describe("self-hosted Users settings search", () => {
     );
   });
 });
+
+describe("self-hosted MCP Server settings search", () => {
+  it.each([
+    [false, false],
+    [true, true],
+  ])("with MCP enabled = %s, offers MCP Server = %s", (mcpEnabled, offered) => {
+    const results = rankSettingsResults(
+      "chatgpt",
+      i18n.t,
+      { isAdmin: false, loginEnabled: true, mcpEnabled },
+      vi.fn(),
+    );
+
+    expect(
+      results.map((result) => result.key).includes("setting-section:mcp"),
+    ).toBe(offered);
+  });
+});

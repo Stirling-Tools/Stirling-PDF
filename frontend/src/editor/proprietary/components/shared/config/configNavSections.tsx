@@ -7,6 +7,7 @@ import {
   ConfigNavSection,
 } from "@editor-core/components/shared/config/configNavSections";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 // Lazy, and rendered inside one Suspense below: these five pages are the bulk of
 // the settings tree, and pulling them all eagerly starved the i18n fetch on a
@@ -60,6 +61,7 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
 
   // Core ships Preferences and About; About is the small print and stays last.
   const coreSections = useCoreConfigNavSections(
@@ -91,6 +93,8 @@ export const useConfigNavSections = (
         icon: "key",
         component: <ApiKeys />,
       });
+    }
+    if (loginEnabled && config?.mcpEnabled) {
       preferences.items.push({
         key: "mcp",
         label: t("config.mcp.navLabel", "MCP Server"),
