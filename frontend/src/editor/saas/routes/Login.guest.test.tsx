@@ -46,6 +46,7 @@ function mount(entry: string) {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/enterprise" element={<div>Enterprise page</div>} />
+            <Route path="/" element={<div>Editor</div>} />
           </Routes>
         </MemoryRouter>
       </TestQueryProvider>
@@ -119,9 +120,28 @@ describe("SaaS login with a guest session", () => {
     ).toBeInTheDocument();
   });
 
-  it("gives a plain sign-in no Team heading", () => {
+  it("gives a plain sign-in no Team heading and no way back", () => {
     mount("/login");
     expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /login.backToStirling/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("lets a guest on the Team sign-in go back to the editor as the same guest", () => {
+    mount("/login?next=%2Fteam");
+    fireEvent.click(
+      screen.getByRole("button", { name: /login.backToStirling/ }),
+    );
+    expect(screen.getByText("Editor")).toBeInTheDocument();
+    expect(destination.clearPendingDestination).toHaveBeenCalled();
+    expect(signInAnonymously).not.toHaveBeenCalled();
+  });
+
+  it("offers a signed-out visitor on the Team sign-in no way back, since there is no guest to return to", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam");
     expect(
       screen.queryByRole("button", { name: /login.backToStirling/ }),
     ).not.toBeInTheDocument();

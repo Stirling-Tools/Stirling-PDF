@@ -6046,6 +6046,7 @@ signIn = "Sign In"
 [login]
 accountCreatedSuccess = "Account created successfully! You can now sign in."
 backToSignIn = "Back to sign in"
+backToStirling = "Back to Stirling"
 buyTeamTitle = "Sign in to buy Stirling Team"
 changePasswordWarning = "Please change your password after logging in for the first time"
 createAccount = "Create an account"

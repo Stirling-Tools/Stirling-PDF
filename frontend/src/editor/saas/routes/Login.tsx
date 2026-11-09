@@ -81,6 +81,11 @@ export default function Login() {
     navigate(nextPath ?? "/", { replace: true });
   };
 
+  const leaveTeamCheckout = () => {
+    clearPendingDestination();
+    navigate("/", { replace: true });
+  };
+
   useEffect(() => {
     if (signedIn && !loading && nextPath) continueToNext();
   }, [signedIn, loading, nextPath, navigate]);
@@ -477,6 +482,24 @@ export default function Login() {
             {isSigningIn
               ? t("login.signingIn", "Signing in...")
               : `${t("signup.skip", "Skip")} →`}
+          </Button>
+        </div>
+      )}
+      {buyingTeam && session && isAnonymous && (
+        <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+          <Button
+            variant="tertiary"
+            onClick={leaveTeamCheckout}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "var(--c-text-subtle)",
+            }}
+          >
+            {`← ${t("login.backToStirling", "Back to Stirling")}`}
           </Button>
         </div>
       )}
