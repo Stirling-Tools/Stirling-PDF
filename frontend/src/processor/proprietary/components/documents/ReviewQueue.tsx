@@ -15,6 +15,7 @@ import { VIEW_PATHS, toPortalPath } from "@processor/contexts/ViewContext";
 import { ReviewQueueTable } from "@processor/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@processor/components/documents/DocumentDrawer";
 import { SourceModal } from "@processor/components/sources/SourceModal";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 type QueueFilter = "all" | "flagged" | "processed" | "in-review";
 
@@ -105,7 +106,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
             ariaLabel={t("portal.documents.filters.ariaLabel")}
           />
           <Input
-            className="portal-documents__search"
+            className={`portal-documents__search ${privateContentClassName}`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("portal.documents.search")}

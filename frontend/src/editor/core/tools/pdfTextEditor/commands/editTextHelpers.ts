@@ -15,10 +15,13 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { applyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
-  applyTagMarks,
-  type TagMark,
-} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+  taggedSpans,
+  uniformTags,
+  type TaggedSpan,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
 import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
@@ -265,9 +268,10 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
-  // Required so every emit decides: a re-emit of existing text passes the
-  // run's tags, new content passes none.
-  tagMarks: readonly TagMark[];
+  // Required so every emit decides: a re-emit of existing text passes that
+  // text's tags, new content passes none. Each stretch with tags of its own
+  // is drawn as objects of its own.
+  tags: TextTags;
   // Extra advance per glyph in PDF points - the source run's rendered
   // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
@@ -664,6 +668,9 @@ export function rotateObjectAbout(
 }
 
 export function emitTextLine(opts: CreatedTextOptions): number[] {
+  const spans = taggedSpans(opts.tags, opts.text.length);
+  if (spans.length > 1) return emitTaggedSpans(opts, spans);
+  const tagMarks = spans[0]?.tags ?? [];
   const m = opts.doc.module;
   const size = Math.max(4, opts.fontSize);
   const family = opts.fallbackFamily ?? "Helvetica";
@@ -681,7 +688,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
-    applyTagMarks(m, opts.doc.docPtr, ptrs, opts.tagMarks);
+    applyTagMarks(m, opts.doc.docPtr, ptrs, tagMarks);
     return ptrs;
   };
 
@@ -1005,6 +1012,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         text: chunk.text,
         x: cursor,
         rotation: undefined,
+        tags: uniformTags(tagMarks),
         outTexts: opts.outTexts ? chunkTexts : undefined,
       });
       if (wordPtrs.length === 0) continue;
@@ -1027,6 +1035,56 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
+}
+
+/**
+ * Draw each span of `opts.text` with its own tags, one after another along
+ * the line.
+ */
+function emitTaggedSpans(
+  opts: CreatedTextOptions,
+  spans: readonly TaggedSpan[],
+): number[] {
+  const m = opts.doc.module;
+  const size = Math.max(4, opts.fontSize);
+  const family = opts.fallbackFamily ?? "Helvetica";
+  const spacing = opts.charSpacingPt ?? 0;
+  const ptrs: number[] = [];
+  let cursor = opts.x;
+  for (const { start, end, tags } of spans) {
+    const text = opts.text.slice(start, end);
+    const texts: string[] = [];
+    const own = emitTextLine({
+      ...opts,
+      text,
+      x: cursor,
+      rotation: undefined,
+      tags: uniformTags(tags),
+      outTexts: opts.outTexts ? texts : undefined,
+    });
+    opts.outTexts?.push(...texts);
+    ptrs.push(...own);
+    // Advanced as the per-word loop in emitTextLine advances, so splitting a
+    // line by tags does not move its words.
+    const ink = text.trimEnd();
+    const gap = text.slice(ink.length);
+    const right = Math.max(
+      cursor,
+      ...own.map((ptr) => measureObjRightEdgePt(m, ptr)),
+    );
+    const metric = measureAdvancePt(ink, family, size);
+    cursor += right - cursor >= metric * 0.35 ? right - cursor : metric;
+    cursor += gap
+      ? measureAdvancePt(gap, family, size) + spacing * (gap.length + 1)
+      : spacing;
+  }
+  const rot = opts.rotation;
+  if (rot) {
+    for (const ptr of ptrs) {
+      rotateObjectAbout(m, ptr, opts.x, opts.y, rot.cos, rot.sin);
+    }
+  }
+  return ptrs;
 }
 
 interface TextObjReadModule {
@@ -1299,7 +1357,7 @@ export function emitRunLines(opts: {
   doc: EditorDocument;
   page: Page;
   run: TextRun;
-  lines: string[];
+  lines: ReadonlyArray<{ text: string; tags: TextTags }>;
   origins: LineOrigin[];
   originalFontPtr: number;
   fallbackFamily: string;
@@ -1308,7 +1366,7 @@ export function emitRunLines(opts: {
   const rot = rotationFromMatrix(opts.run.matrix);
   const out: EmittedLine[] = [];
   for (let i = 0; i < opts.lines.length; i++) {
-    const text = opts.lines[i];
+    const { text, tags } = opts.lines[i];
     const origin = opts.origins[i];
     if (!origin) continue;
     if (text.length === 0) {
@@ -1332,7 +1390,7 @@ export function emitRunLines(opts: {
       fallbackFamily: opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
-      tagMarks: opts.run.tagMarks,
+      tags,
     });
     out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }
