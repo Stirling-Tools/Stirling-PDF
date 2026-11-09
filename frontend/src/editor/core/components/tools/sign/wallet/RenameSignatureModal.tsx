@@ -5,6 +5,7 @@ import { FormField } from "@editor/ui/FormField";
 import { Input } from "@editor/ui/Input";
 import { Modal } from "@editor/ui/Modal";
 import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface RenameSignatureModalProps {
   currentName: string;
@@ -61,6 +62,7 @@ export function RenameSignatureModal({
         <Input
           value={name}
           maxLength={60}
+          className={privateContentClassName}
           disabled={saving}
           onChange={(event) => setName(event.currentTarget.value)}
           onKeyDown={(event) => {

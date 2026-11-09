@@ -19,6 +19,7 @@ import {
 } from "@editor/components/shared/ownership/OwnershipTransferModal";
 import apiClient from "@editor/services/apiClient";
 import { useTeamAvatarUrls } from "@editor/hooks/useTeamAvatarUrls";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -68,6 +69,7 @@ function TeamNameEditor({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={t("team.namePlaceholder", "Team name")}
+        className={privateContentClassName}
         style={{ flex: 1, maxWidth: 300 }}
         autoFocus
         onKeyDown={(e) => {
@@ -114,7 +116,7 @@ function TeamNameDisplay({
   return (
     <>
       <Group gap="xs" align="center">
-        <Text fw={600} size="lg">
+        <Text fw={600} size="lg" className={privateContentClassName}>
           {name}
         </Text>
         {isLeader && !isPersonal && (
@@ -230,12 +232,23 @@ interface DismissibleAlertProps {
   message: string | null;
   color: string;
   onClose: () => void;
+  className?: string;
 }
 
-function DismissibleAlert({ message, color, onClose }: DismissibleAlertProps) {
+function DismissibleAlert({
+  message,
+  color,
+  onClose,
+  className,
+}: DismissibleAlertProps) {
   if (!message) return null;
   return (
-    <Alert color={color} onClose={onClose} withCloseButton>
+    <Alert
+      color={color}
+      onClose={onClose}
+      withCloseButton
+      className={className}
+    >
       {message}
     </Alert>
   );
@@ -271,6 +284,7 @@ function InviteMemberForm({
             placeholder={t("team.invite.placeholder", "email@example.com")}
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
+            className={privateContentClassName}
             style={{ flex: 1 }}
             required
             error={
@@ -320,6 +334,7 @@ function TeamMembersTable(props: TeamMembersTableProps) {
     column.entity<TeamTableRow>({
       key: "name",
       header: t("team.members.nameColumn", "Name"),
+      privateContent: true,
       icon: (row) =>
         row.kind === "member" ? (
           <Avatar
@@ -340,6 +355,7 @@ function TeamMembersTable(props: TeamMembersTableProps) {
     column.muted<TeamTableRow>({
       key: "email",
       header: t("team.members.emailColumn", "Email"),
+      privateContent: true,
       get: (row) =>
         row.kind === "member" ? row.member.email : row.invitation.inviteeEmail,
     }),
@@ -736,11 +752,13 @@ const TeamSection: React.FC = () => {
         message={error}
         color="red"
         onClose={() => setError(null)}
+        className={privateContentClassName}
       />
       <DismissibleAlert
         message={success}
         color="green"
         onClose={() => setSuccess(null)}
+        className={privateContentClassName}
       />
 
       <InviteMemberForm

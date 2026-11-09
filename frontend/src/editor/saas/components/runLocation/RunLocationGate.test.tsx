@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunLocationGate } from "@editor/components/runLocation/RunLocationGate";
 import { startDownload } from "@editor/components/runLocation/startDownload";
@@ -72,6 +72,61 @@ describe("RunLocationGate", () => {
     window.localStorage.setItem(SEEN_KEY, "true");
     renderAt("/");
     expect(screen.getByText("The app")).toBeInTheDocument();
+  });
+
+  it("lets the Team link through without recording a choice", () => {
+    renderAt("/team");
+    expect(screen.getByText("The app")).toBeInTheDocument();
+    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
+  });
+
+  it.each(["/login?next=%2Fteam%3Futm_campaign%3Dnov", "/signup?next=%2Fteam"])(
+    "lets sign-in through on the way back to the Team link: %s",
+    (path) => {
+      renderAt(path);
+      expect(screen.getByText("The app")).toBeInTheDocument();
+    },
+  );
+
+  it.each(["/enterprise", "/procurement"])(
+    "lets the Enterprise landing link %s through without recording a choice",
+    (path) => {
+      renderAt(path);
+      expect(screen.getByText("The app")).toBeInTheDocument();
+      expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
+    },
+  );
+
+  it("lets sign-in through on the way back to the Enterprise page", () => {
+    renderAt("/login?next=%2Fenterprise%3Fsource%3Dsales");
+    expect(screen.getByText("The app")).toBeInTheDocument();
+  });
+
+  it.each(["/team", "/login?next=%2Fteam"])(
+    "stays out of the way once %s hands the visitor on into the app",
+    (path) => {
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route element={<RunLocationGate />}>
+              {/* Each step of the Team link moves on, as TeamRedirect and sign-in do. */}
+              <Route path="/login" element={<Navigate to="/team" replace />} />
+              <Route
+                path="/team"
+                element={<Navigate to="/settings/billing" replace />}
+              />
+              <Route path="*" element={<div>The app</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      );
+      expect(screen.getByText("The app")).toBeInTheDocument();
+    },
+  );
+
+  it("still asks on sign-in headed anywhere else", () => {
+    renderAt("/login");
+    expect(screen.queryByText("The app")).not.toBeInTheDocument();
   });
 
   it("lets flow links through without recording a choice", () => {

@@ -19,6 +19,7 @@ import auditService, {
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import { useAuditFilters } from "@editor/hooks/useAuditFilters";
 import AuditFiltersForm from "@editor/components/shared/config/configSections/audit/AuditFiltersForm";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
@@ -134,12 +135,14 @@ function AuditEventsResults({
         key: "username",
         header: t("audit.events.user", "User"),
         sortable: true,
+        privateContent: true,
         get: (e) => e.username || "-",
       }),
       column.text({
         key: "documentName",
         header: t("audit.events.documentName", "Document Name"),
         sortable: true,
+        privateContent: true,
         get: (e) => getEventFileInfo(e, false).documentName || "—",
       }),
     ];
@@ -150,6 +153,7 @@ function AuditEventsResults({
           key: "author",
           header: t("audit.events.author", "Author"),
           sortable: true,
+          privateContent: true,
           get: (e) => getEventFileInfo(e, true).author || "-",
         }),
       );
@@ -161,6 +165,7 @@ function AuditEventsResults({
           key: "fileHash",
           header: t("audit.events.fileHash", "File Hash"),
           sortable: true,
+          privateContent: true,
           get: (e) => getEventFileInfo(e, true).fileHash || "-",
         }),
       );
@@ -241,13 +246,22 @@ function EventDetails({ event }: { event: AuditEvent | null }) {
         <Text size="sm">{event.eventType}</Text>
       </DetailField>
       <DetailField label={t("audit.events.user", "User")}>
-        <Text size="sm">{event.username}</Text>
+        <Text size="sm" className={privateContentClassName}>
+          {event.username}
+        </Text>
       </DetailField>
       <DetailField label={t("audit.events.ipAddress", "IP Address")}>
-        <Text size="sm">{event.ipAddress}</Text>
+        <Text size="sm" className={privateContentClassName}>
+          {event.ipAddress}
+        </Text>
       </DetailField>
       <DetailField label={t("audit.events.details", "Details")}>
-        <Code block mah={300} style={{ overflow: "auto" }}>
+        <Code
+          block
+          mah={300}
+          className={privateContentClassName}
+          style={{ overflow: "auto" }}
+        >
           {JSON.stringify(event.details, null, 2)}
         </Code>
       </DetailField>
