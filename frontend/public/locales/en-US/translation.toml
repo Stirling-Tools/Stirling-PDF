@@ -2379,6 +2379,8 @@ title = "Create New Automation"
 title = "Saved"
 
 [automate.selection.suggested]
+addedByAdmin = "Added by your administrator"
+serverLoadFailed = "Couldn't load your server's automations."
 title = "Suggested"
 
 [automate.sequence]
@@ -2388,6 +2390,9 @@ running = "Running Automation..."
 signInToRun = "Sign in to run automations."
 steps_one = "{{count}} step"
 steps_other = "{{count}} steps"
+unmappedStep = "step {{index}} ({{operation}})"
+unmappedSteps_one = "Can't run: {{count}} unmapped operation: {{steps}}"
+unmappedSteps_other = "Can't run: {{count}} unmapped operations: {{steps}}"
 unnamed = "Unnamed Automation"
 
 [automation.suggested]

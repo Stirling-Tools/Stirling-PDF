@@ -13,11 +13,17 @@ interface PipelineDataResponse {
   pipelineConfigsWithNames?: ServerPipelineConfig[];
 }
 
+export interface ServerAutomations {
+  automations: SuggestedAutomation[];
+  loadFailed: boolean;
+}
+
 /** Automations an admin placed in the server's pipeline/defaultWebUIConfigs folder. */
 export function useServerAutomations(
   toolRegistry: Partial<ToolRegistry>,
-): SuggestedAutomation[] {
+): ServerAutomations {
   const [configs, setConfigs] = useState<ServerPipelineConfig[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,13 +35,16 @@ export function useServerAutomations(
         if (!cancelled)
           setConfigs(response.data?.pipelineConfigsWithNames ?? []);
       })
-      .catch((err) => console.warn("Failed to load server automations:", err));
+      .catch((err) => {
+        console.warn("Failed to load server automations:", err);
+        if (!cancelled) setLoadFailed(true);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return useMemo(() => {
+  const automations = useMemo(() => {
     const now = new Date().toISOString();
     return configs.flatMap((config, index): SuggestedAutomation[] => {
       // The endpoint returns an empty-json placeholder when the folder is empty
@@ -58,4 +67,6 @@ export function useServerAutomations(
       }
     });
   }, [configs, toolRegistry]);
+
+  return { automations, loadFailed };
 }

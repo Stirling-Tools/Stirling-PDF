@@ -37,12 +37,13 @@ describe("useServerAutomations", () => {
 
     const { result } = renderHook(() => useServerAutomations(registry));
 
-    await waitFor(() => expect(result.current).toHaveLength(1));
+    await waitFor(() => expect(result.current.automations).toHaveLength(1));
     expect(mockGet).toHaveBeenCalledWith(
       "/api/v1/ui-data/pipeline",
       expect.anything(),
     );
-    expect(result.current[0]).toMatchObject({
+    expect(result.current.loadFailed).toBe(false);
+    expect(result.current.automations[0]).toMatchObject({
       id: "server-0",
       name: "Shrink",
       icon: "server",
@@ -66,6 +67,16 @@ describe("useServerAutomations", () => {
     const { result } = renderHook(() => useServerAutomations(registry));
 
     await waitFor(() => expect(mockGet).toHaveBeenCalled());
-    await waitFor(() => expect(result.current).toEqual([]));
+    await waitFor(() => expect(result.current.automations).toEqual([]));
+  });
+
+  test("reports a failed load", async () => {
+    expectConsole.warn(/Failed to load server automations/);
+    mockGet.mockRejectedValue(new Error("500"));
+
+    const { result } = renderHook(() => useServerAutomations(registry));
+
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(result.current.automations).toEqual([]);
   });
 });
