@@ -31,6 +31,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
@@ -61,6 +62,9 @@ class SupabaseAuthenticationFilterMoreTest {
     @Mock
     private stirling.software.proprietary.security.service.ApiKeyAuthenticationService
             apiKeyAuthenticationService;
+
+    private static final String SHARE_LINK =
+            "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
 
     private SupabaseAuthenticationFilter filter;
     private MockHttpServletRequest request;
@@ -157,6 +161,42 @@ class SupabaseAuthenticationFilterMoreTest {
         }
 
         @Test
+        @DisplayName("share-link metadata signs in a valid bearer and still passes through")
+        void shareLinkReadAuthenticatesValidBearer() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("token"))
+                    .thenReturn(fullJwt(supabaseId, "bob@example.com", false, "email"));
+            User existing = newUser("bob@example.com");
+            existing.setSupabaseId(supabaseId);
+            existing.setAuthenticationType(AuthenticationType.WEB);
+            when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.of(existing));
+            request.setRequestURI(SHARE_LINK + "/metadata");
+            request.setMethod("GET");
+            request.addHeader("Authorization", "Bearer token");
+
+            filter.doFilter(request, response, chain);
+
+            assertThat(chain.getRequest()).isSameAs(request);
+            assertThat(SecurityContextHolder.getContext().getAuthentication())
+                    .isInstanceOf(EnhancedJwtAuthenticationToken.class);
+        }
+
+        @Test
+        @DisplayName("share-link read with a bad bearer stays anonymous instead of failing")
+        void shareLinkReadIgnoresInvalidBearer() throws Exception {
+            when(jwtDecoder.decode("bad")).thenThrow(new BadJwtException("bad"));
+            request.setRequestURI(SHARE_LINK);
+            request.setMethod("GET");
+            request.addHeader("Authorization", "Bearer bad");
+
+            filter.doFilter(request, response, chain);
+
+            assertThat(chain.getRequest()).isSameAs(request);
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+
+        @Test
         @DisplayName("already-authenticated context passes through without decoding")
         void alreadyAuthenticatedPassesThrough() throws Exception {
             SecurityContextHolder.getContext()
@@ -224,6 +264,16 @@ class SupabaseAuthenticationFilterMoreTest {
             request.setMethod("POST");
             request.setRequestURI("/api/v1/auth/login");
             assertThat(filter.shouldNotFilter(request)).isTrue();
+        }
+
+        @Test
+        @DisplayName("share-link download and metadata are filtered so a bearer can sign in")
+        void shareLinkReadsFiltered() {
+            request.setMethod("GET");
+            request.setRequestURI(SHARE_LINK + "/metadata");
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+            request.setRequestURI(SHARE_LINK);
+            assertThat(filter.shouldNotFilter(request)).isFalse();
         }
 
         @Test

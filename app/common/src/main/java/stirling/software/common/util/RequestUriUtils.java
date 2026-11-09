@@ -11,10 +11,10 @@ public class RequestUriUtils {
     private static final Pattern SHARE_LINK_PATTERN =
             Pattern.compile(
                     "^/share/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
-    // Share-link download (not /metadata or /accessed); token format as above
+    // Share-link download and its /metadata (not /accessed); token format as above
     private static final Pattern SHARE_LINK_API_PATTERN =
             Pattern.compile(
-                    "^/api/v1/storage/share-links/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
+                    "^/api/v1/storage/share-links/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/metadata)?$");
     // The phone's two mobile-scanner calls, matched exactly so only a bare session id passes
     private static final Pattern MOBILE_SCANNER_PHONE_PATTERN =
             Pattern.compile("^/api/v1/mobile-scanner/(validate-session|upload)/[A-Za-z0-9-]+$");
@@ -220,10 +220,20 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
                 || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
-                // Share-link download; the service still demands login unless the link is public
+                // Share-link download and metadata; the controller still demands login unless the
+                // link is public
                 || SHARE_LINK_API_PATTERN.matcher(trimmedUri).matches()
                 // Invite-accept SPA bootstrap; data APIs remain protected
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
+    }
+
+    /**
+     * Share-link download or metadata, which serve public links anonymously and private ones signed
+     * in.
+     */
+    public static boolean isShareLinkRead(String requestURI, String contextPath) {
+        String normalizedUri = normalizeUriOrNull(contextPath, requestURI);
+        return normalizedUri != null && SHARE_LINK_API_PATTERN.matcher(normalizedUri).matches();
     }
 
     public static String normalizeUri(String contextPath, String requestURI) {
