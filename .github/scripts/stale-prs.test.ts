@@ -511,12 +511,12 @@ async function triage(github: GitHubClient, { live = true, sizeLive = true, writ
     sizeLive,
     writeIntervalMs,
     mergeabilityRetryMs: 0,
+    now: NOW,
   });
   return recorded;
 }
 
 describe("triage run", () => {
-  // Dated well before the real clock, which the run reads, so the close is always due.
   const overdue = () => label(conflicted(40), LABELS.stale, 30);
 
   it("warns: comments, then labels", async () => {

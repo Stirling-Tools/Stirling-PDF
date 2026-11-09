@@ -266,6 +266,57 @@ class PdfAttachmentHandlerGapTest {
         }
     }
 
+    @Nested
+    @DisplayName("attachment names")
+    class FilenameLengthTests {
+
+        @Test
+        @DisplayName("a long attachment name is embedded under a bounded name")
+        void longNameEmbeddedUnderBoundedName() throws Exception {
+            byte[] pdfBytes = pdfWithLines("Attachments (1)", "@n.txt (1 KB)");
+            when(pdfDocumentFactory.load(pdfBytes)).thenReturn(Loader.loadPDF(pdfBytes));
+
+            List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
+            attachments.add(
+                    attachment(
+                            "x" + "\u0301".repeat(600) + ".txt",
+                            "data".getBytes(StandardCharsets.UTF_8)));
+
+            byte[] result =
+                    PdfAttachmentHandler.attachFilesToPdf(
+                            pdfBytes, attachments, pdfDocumentFactory);
+
+            List<String> names = embeddedFileNames(result);
+            assertEquals(1, names.size());
+            assertTrue(names.get(0).length() <= 255);
+            assertTrue(names.get(0).endsWith(".txt"));
+        }
+
+        @Test
+        @DisplayName("two attachments with the same long name get distinct bounded names")
+        void duplicateLongNamesStayBounded() throws Exception {
+            byte[] pdfBytes = pdfWithLines("Attachments (2)", "@a.txt (1 KB)", "@a.txt (1 KB)");
+            when(pdfDocumentFactory.load(pdfBytes)).thenReturn(Loader.loadPDF(pdfBytes));
+
+            String longName = "n".repeat(251) + ".txt";
+            List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
+            attachments.add(attachment(longName, "one".getBytes(StandardCharsets.UTF_8)));
+            attachments.add(attachment(longName, "two".getBytes(StandardCharsets.UTF_8)));
+
+            byte[] result =
+                    PdfAttachmentHandler.attachFilesToPdf(
+                            pdfBytes, attachments, pdfDocumentFactory);
+
+            List<String> names = embeddedFileNames(result);
+            assertEquals(2, names.size());
+            assertNotEquals(names.get(0), names.get(1));
+            for (String name : names) {
+                assertTrue(name.length() <= 255);
+                assertTrue(name.endsWith(".txt"));
+            }
+        }
+    }
+
     // ----- AttachmentMarkerPositionFinder --------------------------------
 
     @Nested
@@ -305,6 +356,25 @@ class PdfAttachmentHandlerGapTest {
                     assertEquals("@", p.getCharacter());
                     assertEquals(0, p.getPageIndex());
                 }
+            }
+        }
+
+        @Test
+        @DisplayName("treats an @ inside a filename as part of the name, not as another marker")
+        void markerCharacterInFilename_singlePosition() throws Exception {
+            byte[] pdfBytes =
+                    pdfWithLines(
+                            "Attachments (2)", "@me@example.com.vcf (1 KB)", "@" + "@".repeat(500));
+
+            try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+                PdfAttachmentHandler.AttachmentMarkerPositionFinder finder =
+                        new PdfAttachmentHandler.AttachmentMarkerPositionFinder();
+                finder.getText(doc);
+
+                List<PdfAttachmentHandler.MarkerPosition> positions = finder.getPositions();
+                assertEquals(2, positions.size());
+                assertEquals("me@example.com.vcf", positions.get(0).getFilename());
+                assertEquals("@".repeat(500), positions.get(1).getFilename());
             }
         }
 

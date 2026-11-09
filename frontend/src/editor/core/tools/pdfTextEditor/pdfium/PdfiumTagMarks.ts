@@ -103,23 +103,34 @@ export function removeTagMark(
  * content included; -1 when none is.
  */
 export function highestMcid(m: WrappedPdfiumModule, pagePtr: number): number {
+  let highest = -1;
+  for (const mcid of carriedMcids(m, pagePtr))
+    highest = Math.max(highest, mcid);
+  return highest;
+}
+
+/** Every MCID any object on the page is marked with, form XObject content included. */
+export function carriedMcids(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+): Set<number> {
   const count = m.FPDFPage_CountObjects(pagePtr);
   const objects = Array.from({ length: count }, (_, i) =>
     m.FPDFPage_GetObject(pagePtr, i),
   );
-  let highest = -1;
+  const carried = new Set<number>();
   while (objects.length > 0) {
     const objPtr = objects.pop()!;
     if (!objPtr) continue;
     for (const tag of readTagMarks(m, objPtr)) {
-      highest = Math.max(highest, tag.mcid ?? -1);
+      if (tag.mcid !== null) carried.add(tag.mcid);
     }
     if (m.FPDFPageObj_GetType(objPtr) !== FPDF_PAGEOBJ_FORM) continue;
     for (let i = 0; i < m.FPDFFormObj_CountObjects(objPtr); i++) {
       objects.push(m.FPDFFormObj_GetObject(objPtr, i));
     }
   }
-  return highest;
+  return carried;
 }
 
 /** Carry `from`'s tags onto its replacement `to`. */

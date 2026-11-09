@@ -84,6 +84,7 @@ public class ApplicationProperties {
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
+    private SecondLevelCache secondLevelCache = new SecondLevelCache();
     private Policies policies = new Policies();
 
     @PostConstruct
@@ -281,6 +282,19 @@ public class ApplicationProperties {
          * and paused runs are kept regardless of age.
          */
         private int runExpiryMinutes = 30;
+
+        /**
+         * Most steps one pipeline or policy run may have, covering {@code
+         * /api/v1/pipeline/handleData} as well as policies; 0 = unlimited.
+         */
+        private int maxSteps = 50;
+
+        /**
+         * Most files one step of a pipeline or policy run may produce before the run is aborted; 0
+         * = unlimited. A step answering with a ZIP multiplies the files the next step is called on,
+         * so without a cap a few split steps fan out into millions of tool calls.
+         */
+        private int maxFilesPerStep = 10000;
 
         /**
          * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
@@ -588,6 +602,22 @@ public class ApplicationProperties {
              */
             private boolean requireExistingAccount = true;
         }
+    }
+
+    /**
+     * Hibernate second-level cache scope, bound under the top-level {@code secondLevelCache.*}
+     * prefix.
+     */
+    @Data
+    public static class SecondLevelCache {
+
+        /**
+         * The JCache regions are process-local: a write on one instance cannot evict another
+         * instance's entries, so a revocation or role change reaches the other instances only when
+         * the region TTL lapses. Multi-instance deployments either set {@code cluster.enabled=true}
+         * (which disables the cache) or turn it off here.
+         */
+        private boolean enabled = true;
     }
 
     /** Cluster backplane config, bound under the top-level {@code cluster.*} prefix. */
@@ -1303,10 +1333,13 @@ public class ApplicationProperties {
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
         private boolean enableEasterEggs = true;
+        private boolean enableFeedback = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
+        private int maxPdfaConversionPages = 20_000;
+        private int maxImageMegapixels;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
