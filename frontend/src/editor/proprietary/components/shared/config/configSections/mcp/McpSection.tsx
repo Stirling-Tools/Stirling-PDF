@@ -103,7 +103,13 @@ function McpClientSetupCard({
         <Text size="xs" c="dimmed">
           {hint}
         </Text>
-        <Tabs defaultValue={clients[0].value} variant="pills" radius="md">
+        <Tabs
+          defaultValue={clients[0].value}
+          variant="pills"
+          radius="md"
+          color="var(--c-primary)"
+          style={{ "--tabs-text-color": "var(--c-text-on-primary)" }}
+        >
           <Tabs.List>
             {clients.map((c) => (
               <Tabs.Tab key={c.value} value={c.value}>
