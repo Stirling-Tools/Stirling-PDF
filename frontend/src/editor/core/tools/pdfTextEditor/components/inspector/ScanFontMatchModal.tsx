@@ -245,57 +245,63 @@ function DeviceFontsNote({
             )}
       </Text>
     );
-  const denied = permission === "denied";
+  const allow = (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      loading={loading}
+      disabled={loading}
+      leftSection={<Icon name="case-sensitive" size={18} />}
+      onClick={load}
+      data-testid="pdf-editor-scan-font-device-allow"
+    >
+      {permission === "denied"
+        ? t("pdfTextEditor.scanFont.deviceRetry", "Try again")
+        : t(
+            "pdfTextEditor.scanFont.deviceAllow",
+            "Allow font access for better matching",
+          )}
+    </Button>
+  );
+  if (permission === "denied")
+    return (
+      <Stack
+        gap={6}
+        p="sm"
+        style={{ border: "1px solid var(--c-border)", borderRadius: 6 }}
+        data-testid="pdf-editor-scan-font-device"
+      >
+        <Text size="sm" fw={600}>
+          {t(
+            "pdfTextEditor.scanFont.deviceBlockedTitle",
+            "Font access is blocked",
+          )}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "pdfTextEditor.scanFont.deviceBlocked",
+            "Your browser won't ask again. To allow it, click the icon left of the address bar, turn on Fonts, then try again.",
+          )}
+        </Text>
+        <Group>{allow}</Group>
+      </Stack>
+    );
   return (
     <Stack
       gap={6}
       p="sm"
+      align="center"
       style={{ border: "1px solid var(--c-border)", borderRadius: 6 }}
       data-testid="pdf-editor-scan-font-device"
     >
-      <Text size="sm" fw={600}>
-        {denied
-          ? t(
-              "pdfTextEditor.scanFont.deviceBlockedTitle",
-              "Font access is blocked",
-            )
-          : t(
-              "pdfTextEditor.scanFont.deviceTitle",
-              "Compare with fonts on this computer?",
-            )}
+      {allow}
+      <Text size="xs" c="dimmed" ta="center">
+        {t(
+          "pdfTextEditor.scanFont.deviceNote",
+          "Your browser asks first. Fonts stay on this device.",
+        )}
       </Text>
-      <Text size="xs" c="dimmed">
-        {denied
-          ? t(
-              "pdfTextEditor.scanFont.deviceBlocked",
-              "Your browser won't ask again. To allow it, click the icon left of the address bar, turn on Fonts, then try again.",
-            )
-          : status === "noFont"
-            ? t(
-                "pdfTextEditor.scanFont.deviceHintNoFont",
-                "A font on this computer may be able to draw this text. Your browser asks first. Fonts stay on this device, and only a font you use is embedded in the PDF.",
-              )
-            : t(
-                "pdfTextEditor.scanFont.deviceHint",
-                "Fonts like Arial or Georgia may match better than the ones above. Your browser asks first. Fonts stay on this device, and only a font you use is embedded in the PDF.",
-              )}
-      </Text>
-      <Group>
-        <Button
-          size="sm"
-          variant="secondary"
-          accent="neutral"
-          loading={loading}
-          disabled={loading}
-          leftSection={<Icon name="case-sensitive" size={18} />}
-          onClick={load}
-          data-testid="pdf-editor-scan-font-device-allow"
-        >
-          {denied
-            ? t("pdfTextEditor.scanFont.deviceRetry", "Try again")
-            : t("pdfTextEditor.scanFont.useDevice", "Allow font access")}
-        </Button>
-      </Group>
     </Stack>
   );
 }

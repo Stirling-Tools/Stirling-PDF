@@ -85,10 +85,22 @@ describe("scan font picker device fonts prompt", () => {
     expect(screen.queryByTestId("pdf-editor-scan-font-device")).toBeNull();
   });
 
-  it("does not point at a list above when no font can draw the text", () => {
-    renderModal({ ...prompting(true), status: "noFont", choices: [] });
-    const card = screen.getByTestId("pdf-editor-scan-font-device");
-    expect(card).toHaveTextContent("pdfTextEditor.scanFont.deviceHintNoFont");
-    expect(screen.queryByText("pdfTextEditor.scanFont.deviceHint")).toBeNull();
+  it("asks with one generic button whether or not a font can draw the text", () => {
+    for (const status of ["ready", "noFont"] as const) {
+      const { unmount } = render(
+        <MantineProvider env="test">
+          <ScanFontMatchModal match={{ ...prompting(true), status }} />
+        </MantineProvider>,
+      );
+      expect(
+        screen.getByTestId("pdf-editor-scan-font-device-allow"),
+      ).toHaveTextContent("pdfTextEditor.scanFont.deviceAllow");
+      expect(
+        screen.getByTestId("pdf-editor-scan-font-device").textContent,
+      ).toBe(
+        "pdfTextEditor.scanFont.deviceAllowpdfTextEditor.scanFont.deviceNote",
+      );
+      unmount();
+    }
   });
 });
