@@ -27,6 +27,15 @@ public class SignedPdfEditGuard {
     private static final Set<String> ADDS_SIGNATURE =
             Set.of("/api/v1/security/cert-sign", "/api/v1/security/timestamp-pdf");
 
+    private static final Set<String> EDITS_WITHOUT_TOOL_IO =
+            Set.of(
+                    "/api/v1/form/fill",
+                    "/api/v1/form/add-fields",
+                    "/api/v1/form/edit-fields",
+                    "/api/v1/form/modify-fields",
+                    "/api/v1/form/delete-fields",
+                    "/api/v1/ai/tools/pdf-comment-agent");
+
     private final ApplicationProperties applicationProperties;
     private final ToolIOSource toolIO;
 
@@ -44,6 +53,9 @@ public class SignedPdfEditGuard {
     }
 
     private boolean writesPdf(String endpoint) {
+        if (EDITS_WITHOUT_TOOL_IO.contains(endpoint)) {
+            return true;
+        }
         return toolIO.find(endpoint)
                 .map(spec -> spec.resolveOutput().format())
                 .map(format -> format == ToolFormat.PDF || format == ToolFormat.PDF_ENCRYPTED)

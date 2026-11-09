@@ -109,6 +109,26 @@ class SignedPdfEditGuardTest {
     }
 
     @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/api/v1/form/fill",
+                "/api/v1/form/add-fields",
+                "/api/v1/form/edit-fields",
+                "/api/v1/form/modify-fields",
+                "/api/v1/form/delete-fields",
+                "/api/v1/ai/tools/pdf-comment-agent"
+            })
+    void refusesEditsFromEndpointsThatDeclareNoToolIo(String endpoint) throws IOException {
+        properties.getSecurity().setBlockSignedPdfEdits(true);
+        requestTo(endpoint);
+        try (PDDocument signed = Loader.loadPDF(signedPdf())) {
+            assertThatThrownBy(() -> guard.check(signed))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("digitally signed");
+        }
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {CERT_SIGN, TO_IMAGE, "/api/v1/info/unknown"})
     void stillAllowsSigningAgainAndReadOnlyOutputs(String endpoint) throws IOException {
         properties.getSecurity().setBlockSignedPdfEdits(true);
