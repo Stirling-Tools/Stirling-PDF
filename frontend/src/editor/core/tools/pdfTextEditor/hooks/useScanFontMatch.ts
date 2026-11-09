@@ -265,8 +265,12 @@ export function useScanFontMatch(
 
   if (!target) return null;
   const selectedRun = runOf(store, selected);
-  const undrawable =
+  const unfitted =
     !!selectedRun && scanBlockUndrawable(selectedRun.doc, selectedRun.run);
+  const undrawable =
+    unfitted &&
+    !!selectedRun &&
+    !scanFaces().some((f) => faceCovers(f, selectedRun.run.text));
   const scanEdit = selectedRun?.run.scanEdit;
   const redrawn = !!scanEdit?.created.length || !!scanEdit?.override.style;
   const current = ranked && ranked.runId === target.runId ? ranked : null;
@@ -287,7 +291,7 @@ export function useScanFontMatch(
     })),
     choose,
     open: !!picking,
-    canShow: redrawn || undrawable,
+    canShow: redrawn || unfitted,
     undrawable,
     typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
     show: () => {
