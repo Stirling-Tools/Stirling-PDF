@@ -15,6 +15,13 @@ export interface ArtifactKind {
 export const FURNITURE = ["Header", "Footer", "PageNum", "Watermark"] as const;
 export type Furniture = (typeof FURNITURE)[number];
 
+export function sameArtifactKind(
+  a: ArtifactKind | undefined,
+  b: ArtifactKind | undefined,
+): boolean {
+  return a?.type === b?.type && a?.subtype === b?.subtype;
+}
+
 export function furnitureKind(furniture: Furniture): ArtifactKind {
   return { type: "Pagination", subtype: furniture };
 }

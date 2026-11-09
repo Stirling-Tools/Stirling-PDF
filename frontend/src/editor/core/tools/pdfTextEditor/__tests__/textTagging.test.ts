@@ -465,27 +465,54 @@ describe("setting one tag on several runs", () => {
   });
 });
 
-describe("making text an artifact", () => {
-  function markArtifact(
-    doc: EditorDocument,
-    history: HistoryStack,
-    fragment: string,
-    choice: TextTagChoice = { artifact: null },
-  ) {
-    const run = runWith(doc, fragment).snapshot();
-    const command = setTextTagCommand(
-      doc,
-      [{ run, tag: textTag(doc, run) }],
-      choice,
-    );
-    if (!command) {
-      throw new Error(
-        `"${fragment}" cannot be tagged ${JSON.stringify(choice)}`,
-      );
-    }
-    history.execute(command, doc);
-  }
+describe("reading what the file's artifacts are", () => {
+  test("reads the kind the file names for each artifact", async () => {
+    const doc = await openSample();
+    const heard: number[] = [];
+    doc.onArtifactKinds((pageIndex) => heard.push(pageIndex));
+    expect(await doc.loadArtifactKinds(PAGE)).toBe(true);
+    expect(heard).toEqual([PAGE]);
+    expect(furnitureShown(doc, "Acme Corp")).toBe("Header");
+    expect(furnitureShown(doc, "Page 2")).toBeNull();
+    expect(runWith(doc, "Page 2").tagMarks).toEqual([
+      {
+        name: "Artifact",
+        mcid: null,
+        artifact: { type: "Pagination", subtype: null },
+      },
+    ]);
+  });
 
+  test("reads back the kind the session saved", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    tagAs(doc, history, "Confidential", { artifact: "Footer" });
+    const reopened = await EditorDocument.open(await savedBytes(doc));
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(PAGE));
+    await reopened.loadArtifactKinds(PAGE);
+    expect(furnitureShown(reopened, "Confidential")).toBe("Footer");
+  });
+
+  test("gives an artifact back its kind on undo", async () => {
+    const doc = await openSample();
+    await doc.loadArtifactKinds(PAGE);
+    const history = new HistoryStack();
+    tagAs(doc, history, "Page 2", { artifact: "PageNum" });
+    tagText(doc, history, "Acme Corp", "P");
+    history.undo(doc);
+    history.undo(doc);
+    expect(furnitureShown(doc, "Acme Corp")).toBe("Header");
+    expect(await artifactOperators(await savedBytes(doc))).toEqual(
+      expect.arrayContaining([
+        "/Artifact <</Subtype/Header/Type/Pagination>> BDC",
+        "/Artifact <</Type/Pagination>> BDC",
+      ]),
+    );
+  });
+});
+
+describe("making text an artifact", () => {
   async function reopen(doc: EditorDocument): Promise<EditorDocument> {
     const reopened = await EditorDocument.open(await savedBytes(doc));
     opened.push(reopened);
@@ -496,7 +523,7 @@ describe("making text an artifact", () => {
   test("marks untagged text as an artifact, saves it, and undoes", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Confidential");
+    tagAs(doc, history, "Confidential", { artifact: null });
     expect(shownTag(doc, "Confidential")).toBe("artifact");
     expect(shownTag(await reopen(doc), "Confidential")).toBe("artifact");
 
@@ -509,7 +536,7 @@ describe("making text an artifact", () => {
     const history = new HistoryStack();
     const before = doc.headings()!.length;
     tagText(doc, history, "Confidential", "H2");
-    markArtifact(doc, history, "Confidential");
+    tagAs(doc, history, "Confidential", { artifact: null });
     expect(shownTag(doc, "Confidential")).toBe("artifact");
     expect(doc.headings()).toHaveLength(before);
     expect(doc.structureEdits().some((edit) => edit.newElement)).toBe(false);
@@ -524,7 +551,7 @@ describe("making text an artifact", () => {
     const key = doc
       .structure(PAGE)
       .block(runWith(doc, "All amounts").snapshot().mcid!)!.key;
-    markArtifact(doc, new HistoryStack(), "All amounts");
+    tagAs(doc, new HistoryStack(), "All amounts", { artifact: null });
     expect(shownTag(doc, "All amounts")).toBe("artifact");
 
     const saved = await readFileStructure(await savedBytes(doc));
@@ -536,7 +563,7 @@ describe("making text an artifact", () => {
     const doc = await openSample();
     const history = new HistoryStack();
     const before = doc.headings()!.map((h) => h.type);
-    markArtifact(doc, history, "Outlook");
+    tagAs(doc, history, "Outlook", { artifact: null });
     expect(doc.headings()!.map((h) => h.type)).not.toContain("H5");
 
     history.undo(doc);
@@ -546,8 +573,8 @@ describe("making text an artifact", () => {
   test("gives decorative text a type again, keeping its element", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Outlook");
-    markArtifact(doc, history, "Outlook", "H3");
+    tagAs(doc, history, "Outlook", { artifact: null });
+    tagAs(doc, history, "Outlook", "H3");
     expect(shownTag(doc, "Outlook")).toBe("H3");
     expect(doc.structureEdits()).toEqual([
       expect.objectContaining({ type: "H3", decorative: false }),
@@ -557,7 +584,7 @@ describe("making text an artifact", () => {
   test("marks untagged text as page furniture, saved as a pagination artifact", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Confidential", { artifact: "Footer" });
+    tagAs(doc, history, "Confidential", { artifact: "Footer" });
     expect(furnitureShown(doc, "Confidential")).toBe("Footer");
     expect(await artifactOperators(await savedBytes(doc))).toContain(
       "/Artifact <</Subtype/Footer/Type/Pagination>> BDC",
@@ -570,7 +597,7 @@ describe("making text an artifact", () => {
   test("keeps page furniture's kind through an edit to its text", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Confidential", { artifact: "Footer" });
+    tagAs(doc, history, "Confidential", { artifact: "Footer" });
     const run = runWith(doc, "Confidential");
     history.execute(
       new EditTextCommand({
@@ -589,8 +616,8 @@ describe("making text an artifact", () => {
   test("changes what an artifact is, and back on undo", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Confidential");
-    markArtifact(doc, history, "Confidential", { artifact: "Watermark" });
+    tagAs(doc, history, "Confidential", { artifact: null });
+    tagAs(doc, history, "Confidential", { artifact: "Watermark" });
     expect(furnitureShown(doc, "Confidential")).toBe("Watermark");
 
     history.undo(doc);
@@ -605,8 +632,8 @@ describe("making text an artifact", () => {
   test("marks the file's paragraph as page furniture through its element", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "All amounts", { artifact: "Footer" });
-    markArtifact(doc, history, "All amounts", { artifact: "PageNum" });
+    tagAs(doc, history, "All amounts", { artifact: "Footer" });
+    tagAs(doc, history, "All amounts", { artifact: "PageNum" });
     expect(furnitureShown(doc, "All amounts")).toBe("PageNum");
     expect(doc.structureEdits()).toEqual([
       expect.objectContaining({ decorative: true, furniture: "PageNum" }),
@@ -622,7 +649,7 @@ describe("making text an artifact", () => {
   test("reads artifacts of different kinds as mixed", async () => {
     const doc = await openSample();
     const history = new HistoryStack();
-    markArtifact(doc, history, "Confidential", { artifact: "Header" });
+    tagAs(doc, history, "Confidential", { artifact: "Header" });
     const both = targets(doc, "Confidential", "Page 2");
     expect(sharedTextTag(both.map(({ tag }) => tag))).toMatchObject({
       kind: "mixed",
@@ -660,4 +687,17 @@ async function artifactOperators(bytes: Uint8Array): Promise<string[]> {
   const pdf = (await RawPdf.parse(bytes))!;
   const content = await pdf.pageContent(pdf.pageNumberAt(PAGE)!);
   return toLatin1(content!).match(/\/Artifact\b[^\n]*?(?:BDC|BMC)/g) ?? [];
+}
+
+function tagAs(
+  doc: EditorDocument,
+  history: HistoryStack,
+  fragment: string,
+  choice: TextTagChoice,
+) {
+  const command = setTextTagCommand(doc, targets(doc, fragment), choice);
+  if (!command) {
+    throw new Error(`"${fragment}" cannot be tagged ${JSON.stringify(choice)}`);
+  }
+  history.execute(command, doc);
 }

@@ -9,7 +9,20 @@ const MCID = "MCID";
 const TYPE = "Type";
 const SUBTYPE = "Subtype";
 const FPDF_PAGEOBJ_FORM = 5;
+const FPDF_OBJECT_STRING = 3;
+const FPDF_OBJECT_NAME = 4;
 export const ARTIFACT_TAG = "Artifact";
+
+/**
+ * The kinds a document read from its file for artifact marks whose /Type
+ * PDFium holds as a name, which it cannot return: by mark pointer, per
+ * module, since every document's marks come from the one heap. Each names
+ * the document that read it, which drops its own when disposed.
+ */
+const fileKinds = new WeakMap<
+  WrappedPdfiumModule,
+  Map<number, { kind: ArtifactKind; owner: object }>
+>();
 
 /**
  * A marked-content tag that links a page object to the structure tree, or
@@ -20,9 +33,9 @@ export interface TagMark {
   /** The ID the structure tree refers to the content by; null for an artifact. */
   mcid: number | null;
   /**
-   * What an artifact is, where PDFium can read it: from the strings the
-   * editor writes, which the save turns into names (nameArtifactKinds).
-   * PDFium cannot read a name, so a file's own is absent.
+   * What an artifact is: from the strings the editor writes, which the save
+   * turns into names (nameArtifactKinds), or from the file's names once its
+   * document has read them (registerArtifactKinds). Absent until then.
    */
   artifact?: ArtifactKind;
 }
@@ -168,13 +181,96 @@ export function writesArtifactKinds(
   while (objects.length > 0) {
     const objPtr = objects.pop()!;
     if (!objPtr) continue;
-    if (readTagMarks(m, objPtr).some((tag) => tag.artifact)) return true;
+    for (let i = 0; i < m.FPDFPageObj_CountMarks(objPtr); i++) {
+      const mark = m.FPDFPageObj_GetMark(objPtr, i);
+      if (mark && artifactType(m, mark) === FPDF_OBJECT_STRING) return true;
+    }
     if (m.FPDFPageObj_GetType(objPtr) !== FPDF_PAGEOBJ_FORM) continue;
     for (let i = 0; i < m.FPDFFormObj_CountObjects(objPtr); i++) {
       objects.push(m.FPDFFormObj_GetObject(objPtr, i));
     }
   }
   return false;
+}
+
+/** An artifact mark whose /Type PDFium holds as a name. */
+export interface ArtifactMarkRef {
+  ptr: number;
+  /** Its parameter count, and whether /Subtype is a name among them: to check the file's sequence it pairs with. */
+  entries: number;
+  subtyped: boolean;
+}
+
+/**
+ * The artifact marks on the page's own objects whose /Type is a name, each
+ * once, in the order the content opens them. Form XObject content is left
+ * out. Never throws.
+ */
+export function artifactMarkRefs(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+): ArtifactMarkRef[] {
+  const refs: ArtifactMarkRef[] = [];
+  const seen = new Set<number>();
+  try {
+    for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
+      const objPtr = m.FPDFPage_GetObject(pagePtr, i);
+      if (!objPtr) continue;
+      for (let j = 0; j < m.FPDFPageObj_CountMarks(objPtr); j++) {
+        const mark = m.FPDFPageObj_GetMark(objPtr, j);
+        if (!mark || seen.has(mark)) continue;
+        seen.add(mark);
+        if (artifactType(m, mark) !== FPDF_OBJECT_NAME) continue;
+        refs.push({
+          ptr: mark,
+          entries: m.FPDFPageObjMark_CountParams(mark),
+          subtyped:
+            m.FPDFPageObjMark_GetParamValueType(mark, SUBTYPE) ===
+            FPDF_OBJECT_NAME,
+        });
+      }
+    }
+  } catch {
+    return [];
+  }
+  return refs;
+}
+
+/** Record kinds `owner` read from its file, by mark pointer, for readTagMarks to return. */
+export function registerArtifactKinds(
+  m: WrappedPdfiumModule,
+  owner: object,
+  kinds: ReadonlyMap<number, ArtifactKind>,
+): void {
+  let registered = fileKinds.get(m);
+  if (!registered) {
+    registered = new Map();
+    fileKinds.set(m, registered);
+  }
+  for (const [ptr, kind] of kinds) registered.set(ptr, { kind, owner });
+}
+
+/**
+ * Drop the kinds recorded for marks `ptrs`, as a page is first read: a mark
+ * an edit freed can come back at the same address when another page is.
+ */
+export function forgetArtifactMarks(
+  m: WrappedPdfiumModule,
+  ptrs: Iterable<number>,
+): void {
+  const registered = fileKinds.get(m);
+  for (const ptr of ptrs) registered?.delete(ptr);
+}
+
+/** Drop every kind `owner` recorded. */
+export function forgetArtifactKinds(
+  m: WrappedPdfiumModule,
+  owner: object,
+): void {
+  const registered = fileKinds.get(m);
+  for (const [ptr, entry] of registered ?? []) {
+    if (entry.owner === owner) registered!.delete(ptr);
+  }
 }
 
 /** Carry `from`'s tags onto its replacement `to`. */
@@ -197,15 +293,25 @@ function markName(m: WrappedPdfiumModule, mark: number): string {
   return m.pdfium.UTF16ToString(buf);
 }
 
-/** The kind a string /Type gives the artifact mark; undefined without one. */
+/** The artifact mark's kind, from its strings or the kinds read from the file; undefined when neither gives one. */
 function artifactKind(
   m: WrappedPdfiumModule,
   mark: number,
 ): ArtifactKind | undefined {
   const type = stringParam(m, mark, TYPE);
-  return type === null
-    ? undefined
-    : { type, subtype: stringParam(m, mark, SUBTYPE) };
+  if (type !== null) return { type, subtype: stringParam(m, mark, SUBTYPE) };
+  // Only a mark read from the file has a name: one the editor adds at a
+  // freed mark's address must not take that mark's kind.
+  if (m.FPDFPageObjMark_GetParamValueType(mark, TYPE) !== FPDF_OBJECT_NAME) {
+    return undefined;
+  }
+  return fileKinds.get(m)?.get(mark)?.kind;
+}
+
+/** The object type of an artifact mark's /Type; 0 for any other mark, or one without. */
+function artifactType(m: WrappedPdfiumModule, mark: number): number {
+  if (markName(m, mark) !== ARTIFACT_TAG) return 0;
+  return m.FPDFPageObjMark_GetParamValueType(mark, TYPE);
 }
 
 /** The mark's string parameter `key`; null when it has none, or a value of another type. */
