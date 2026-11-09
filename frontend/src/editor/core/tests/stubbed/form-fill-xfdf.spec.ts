@@ -236,4 +236,52 @@ test.describe("Form Fill - XFDF / FDF exchange", () => {
 
     await expect(page.getByTestId("form-import-summary")).toHaveCount(0);
   });
+
+  test("importing over a typed value asks before replacing it", async ({
+    page,
+  }) => {
+    await openFormFill(page);
+    const fullName = page.getByRole("textbox").first();
+    await fullName.fill("Typed by me");
+
+    const importXfdf = () =>
+      page.locator('input[type="file"][accept*="xfdf"]').setInputFiles({
+        name: "export.xfdf",
+        mimeType: "application/vnd.adobe.xfdf",
+        buffer: Buffer.from(XFDF),
+      });
+
+    await importXfdf();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Replace 1 value you entered?");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(fullName).toHaveValue("Typed by me");
+    await expect(page.getByTestId("form-import-summary")).toHaveCount(0);
+
+    await importXfdf();
+    await dialog.getByRole("button", { name: "Replace" }).click();
+    await expect(fullName).toHaveValue("Ada Lovelace");
+    await expect(page.getByTestId("form-import-summary")).toBeVisible();
+
+    await importXfdf();
+    await expect(page.getByTestId("form-import-summary")).toBeVisible();
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("the import summary can be closed", async ({ page }) => {
+    await openFormFill(page);
+
+    await page.locator('input[type="file"][accept*="xfdf"]').setInputFiles({
+      name: "export.xfdf",
+      mimeType: "application/vnd.adobe.xfdf",
+      buffer: Buffer.from(XFDF),
+    });
+    const summary = page.getByTestId("form-import-summary");
+    await expect(summary).toBeVisible({ timeout: 10_000 });
+
+    await summary.getByRole("button", { name: "Close" }).click();
+    await expect(summary).toHaveCount(0);
+    await expect(page.getByText("3 / 3 filled")).toBeVisible();
+  });
 });

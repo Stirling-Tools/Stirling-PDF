@@ -22,6 +22,7 @@ import { createToolSteps } from "@editor/components/tools/shared/ToolStep";
 import { UnsavedChangesDialog } from "@editor/components/shared/UnsavedChangesDialog";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { Button } from "@editor/ui/Button";
+import { Modal } from "@editor/ui/Modal";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
@@ -186,7 +187,17 @@ const FormFill = (_props: BaseToolProps) => {
     message: string;
     anyApplied: boolean;
   } | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    applied: Record<string, string>;
+    summary: { message: string; anyApplied: boolean };
+    replaced: string[];
+  } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const importedValuesRef = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    importedValuesRef.current = {};
+  }, [formState.fields]);
 
   const flattenChanged = flatten;
 
@@ -305,6 +316,33 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [allValues, currentFile, formState.fields]);
 
+  const formatNameList = useCallback(
+    (names: string[]) => {
+      const NAME_LIMIT = 5;
+      return names.length > NAME_LIMIT
+        ? t("formFill.importSkippedNames", "{{names}} and {{rest}} more", {
+            names: names.slice(0, NAME_LIMIT).join(", "),
+            rest: names.length - NAME_LIMIT,
+          })
+        : names.join(", ");
+    },
+    [t],
+  );
+
+  const applyImport = useCallback(
+    (
+      applied: Record<string, string>,
+      summary: { message: string; anyApplied: boolean },
+    ) => {
+      for (const [name, value] of Object.entries(applied)) {
+        setValue(name, value);
+      }
+      Object.assign(importedValuesRef.current, applied);
+      setImportSummary(summary);
+    },
+    [setValue],
+  );
+
   /**
    * Import an Acrobat XFDF/FDF export into the open form. Values for fields
    * this document doesn't have are reported rather than silently dropped.
@@ -319,9 +357,6 @@ const FormFill = (_props: BaseToolProps) => {
           values,
           formState.fields.map((field) => field.name),
         );
-        for (const [name, value] of Object.entries(applied)) {
-          setValue(name, value);
-        }
         // Two sentences, not one: each count needs its own plural form, so
         // "Imported 1 field" can sit next to "3 fields are not in this PDF".
         const imported = t(
@@ -329,32 +364,34 @@ const FormFill = (_props: BaseToolProps) => {
           "Imported {{count}} field(s) from {{format}}",
           { count: Object.keys(applied).length, format: format.toUpperCase() },
         );
-        const NAME_LIMIT = 5;
         const skipped =
           unmatched.length > 0
             ? t(
                 "formFill.importSkipped",
                 "{{count}} field(s) are not in this PDF: {{names}}",
-                {
-                  count: unmatched.length,
-                  names:
-                    unmatched.length > NAME_LIMIT
-                      ? t(
-                          "formFill.importSkippedNames",
-                          "{{names}} and {{rest}} more",
-                          {
-                            names: unmatched.slice(0, NAME_LIMIT).join(", "),
-                            rest: unmatched.length - NAME_LIMIT,
-                          },
-                        )
-                      : unmatched.join(", "),
-                },
+                { count: unmatched.length, names: formatNameList(unmatched) },
               )
             : "";
-        setImportSummary({
+        const summary = {
           message: [imported, skipped].filter(Boolean).join(". "),
           anyApplied: Object.keys(applied).length > 0,
-        });
+        };
+        const replaced = formState.fields
+          .filter((field) => {
+            if (!(field.name in applied)) return false;
+            const current = allValues[field.name] ?? "";
+            return (
+              current !== (field.value ?? "") &&
+              current !== importedValuesRef.current[field.name] &&
+              current !== applied[field.name]
+            );
+          })
+          .map((field) => field.label || field.name);
+        if (replaced.length > 0) {
+          setPendingImport({ applied, summary, replaced });
+          return;
+        }
+        applyImport(applied, summary);
       } catch (err) {
         console.error("[FormFill] Form data import failed:", err);
         if (err instanceof FormDataTooLargeError) {
@@ -379,8 +416,14 @@ const FormFill = (_props: BaseToolProps) => {
         );
       }
     },
-    [formState.fields, setValue, t],
+    [formState.fields, allValues, applyImport, formatNameList, t],
   );
+
+  const confirmPendingImport = useCallback(() => {
+    if (!pendingImport) return;
+    applyImport(pendingImport.applied, pendingImport.summary);
+    setPendingImport(null);
+  }, [pendingImport, applyImport]);
 
   const handleExtractXlsx = useCallback(async () => {
     if (!currentFile) return;
@@ -676,6 +719,35 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root} inert={saving}>
+      <Modal
+        open={pendingImport !== null}
+        onClose={() => setPendingImport(null)}
+        title={t(
+          "formFill.importReplaceTitle",
+          "Replace {{count}} value(s) you entered?",
+          { count: pendingImport?.replaced.length ?? 0 },
+        )}
+        width="sm"
+        footer={
+          <>
+            <Button variant="tertiary" onClick={() => setPendingImport(null)}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button onClick={confirmPendingImport}>
+              {t("formFill.importReplace", "Replace")}
+            </Button>
+          </>
+        }
+      >
+        <Text size="sm" c="var(--c-text-muted)">
+          {t(
+            "formFill.importReplaceBody",
+            "The imported file has different values for: {{names}}",
+            { names: formatNameList(pendingImport?.replaced ?? []) },
+          )}
+        </Text>
+      </Modal>
+
       <UnsavedChangesDialog
         opened={pendingMode !== null}
         saving={saving}
@@ -723,6 +795,9 @@ const FormFill = (_props: BaseToolProps) => {
           variant="light"
           p="xs"
           radius="sm"
+          withCloseButton
+          closeButtonLabel={t("common.close", "Close")}
+          onClose={() => setImportSummary(null)}
           data-testid="form-import-summary"
         >
           <Text size="xs">{importSummary.message}</Text>
@@ -875,7 +950,7 @@ const FormFill = (_props: BaseToolProps) => {
                         "Import values from an Acrobat XFDF or FDF export",
                       )}
                       withArrow
-                      position="bottom"
+                      position="left"
                     >
                       <Button
                         variant="secondary"
@@ -901,10 +976,7 @@ const FormFill = (_props: BaseToolProps) => {
                     />
                   </div>
 
-                  {/* Four formats don't fit this panel with an icon each, so
-                      the row is labelled once instead. */}
                   <Text size="xs" c="dimmed" className={styles.exportLabel}>
-                    <Icon name="download" size={12} />
                     {t("formFill.exportAs", "Export data as")}
                   </Text>
                   <div className={styles.secondaryActions}>
@@ -919,6 +991,7 @@ const FormFill = (_props: BaseToolProps) => {
                       <Button
                         key={label}
                         variant="secondary"
+                        leftSection={<Icon name="download" size={14} />}
                         loading={extracting}
                         onClick={() => void onClick()}
                         size="sm"
