@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface EditableSecretFieldProps {
   label?: string;
   description?: string;
@@ -108,6 +109,7 @@ export default function EditableSecretField({
       ) : isEditing ? (
         // Edit mode: normal password input
         <PasswordInput
+          className={privateContentClassName}
           id={fieldId}
           ref={inputRef}
           value={tempValue}
@@ -124,6 +126,7 @@ export default function EditableSecretField({
       ) : (
         // Normal password input: empty or user typing
         <PasswordInput
+          className={privateContentClassName}
           id={fieldId}
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}

@@ -148,7 +148,7 @@ it("closes the purchase dialog on expired authorization without replaying the mu
   await waitFor(() => expect(ctl.started).toBe(true));
   act(() => {
     ctl.setOpen(true);
-    ctl.setExtra("setup");
+    ctl.setExtra("schedule");
   });
   startAgreement.mockRejectedValue(new SaasSessionRequiredError());
   await act(async () => {

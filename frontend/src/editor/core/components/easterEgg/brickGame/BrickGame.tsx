@@ -17,6 +17,7 @@ import {
 } from "@editor/components/easterEgg/brickGame/brickGameEngine";
 import type { Box } from "@editor/components/easterEgg/brickGame/brickGameGeometry";
 import "@editor/components/easterEgg/brickGame/BrickGame.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface BrickGameProps {
   /** Where the mark flies in from, in client coordinates. */
@@ -376,7 +377,7 @@ export default function BrickGame({
             ref={canvasRef}
             className={`brick-game-canvas${
               locked ? "" : " brick-game-canvas--aiming"
-            }`}
+            } ${privateContentClassName}`}
             onPointerMove={handlePointerMove}
             onPointerDown={handlePointerDown}
           />

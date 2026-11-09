@@ -126,7 +126,7 @@ class ReplaceAndInvertColorControllerTest {
         when(replaceAndInvertColorService.replaceAndInvertColor(
                         eq(pdfFile),
                         eq(ReplaceAndInvert.CUSTOM_COLOR),
-                        isNull(),
+                        eq(HighContrastColorCombination.WHITE_TEXT_ON_BLACK),
                         eq("0"),
                         eq("16777215")))
                 .thenReturn(resource);
@@ -159,7 +159,7 @@ class ReplaceAndInvertColorControllerTest {
         when(replaceAndInvertColorService.replaceAndInvertColor(
                         eq(pdfFile),
                         eq(ReplaceAndInvert.FULL_INVERSION),
-                        isNull(),
+                        eq(HighContrastColorCombination.WHITE_TEXT_ON_BLACK),
                         isNull(),
                         isNull()))
                 .thenReturn(resource);

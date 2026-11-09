@@ -9,6 +9,8 @@ import type { LinkedInstanceRow } from "@editor/types/linkedInstance";
 import { Banner, Button, EmptyState, Input, Modal, Skeleton } from "@editor/ui";
 import { ConnectedInstanceRow } from "@editor/components/settings/ConnectedInstanceRow";
 import { AccountConnectionLayout } from "@editor/components/settings/AccountConnectionLayout";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const BASE = "/api/v1/account-link/instances";
 
@@ -106,11 +108,13 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
     <>
       {removedName && (
         <Banner tone="success">
-          {t(
-            "settings.connectedInstances.removedSuccess",
-            "{{name}} has been disconnected from your team.",
-            { name: removedName },
-          )}
+          <PrivateContent>
+            {t(
+              "settings.connectedInstances.removedSuccess",
+              "{{name}} has been disconnected from your team.",
+              { name: removedName },
+            )}
+          </PrivateContent>
         </Banner>
       )}
       {instances.isPending ? (
@@ -191,15 +195,15 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
         open={selected !== null}
         onClose={close}
         width="sm"
-        title={t(
-          "settings.connectedInstances.confirmTitle",
-          "Remove {{name}}?",
-          {
-            name:
-              selected?.name ??
-              t("portal.accountLink.instances.unnamed", "Unnamed instance"),
-          },
-        )}
+        title={
+          <PrivateContent>
+            {t("settings.connectedInstances.confirmTitle", "Remove {{name}}?", {
+              name:
+                selected?.name ??
+                t("portal.accountLink.instances.unnamed", "Unnamed instance"),
+            })}
+          </PrivateContent>
+        }
         disableBackdropClose={removal.isPending}
         disableEscapeClose={removal.isPending}
         footer={
@@ -290,6 +294,7 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
             id={`${nameFormId}-input`}
             value={name}
             maxLength={255}
+            className={privateContentClassName}
             onChange={(event) => setName(event.target.value)}
             disabled={rename.isPending}
             data-autofocus
@@ -343,7 +348,7 @@ export default function ConnectedInstancesSection() {
             <span className="account-connection__eyebrow">
               {t("settings.connectedInstances.yourTeam", "Your team")}
             </span>
-            <h2>{currentTeam.name}</h2>
+            <h2 className={privateContentClassName}>{currentTeam.name}</h2>
             <p>
               {t(
                 "settings.connectedInstances.teamNote",
