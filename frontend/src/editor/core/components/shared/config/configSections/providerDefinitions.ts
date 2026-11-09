@@ -841,13 +841,10 @@ const useGoogleDriveProvider = (): Provider => {
       {
         key: "enabled",
         type: "switch",
-        label: t(
-          "provider.googledrive.enabled.label",
-          "Enable Google Drive File Picker",
-        ),
+        label: t("provider.googledrive.enabled.label", "Enable Google Drive"),
         description: t(
           "provider.googledrive.enabled.description",
-          "Allow users to import files directly from Google Drive",
+          "Covers opening files from Google Drive in the editor and connecting a Google account for pipelines. Organisation connections under Integrations work without it.",
         ),
         defaultValue: false,
       },
@@ -979,7 +976,7 @@ const useMicrosoftProvider = (): Provider => {
       {
         key: "tenant",
         type: "text",
-        label: t("provider.microsoft.tenant.label", "Accounts"),
+        label: t("provider.microsoft.tenant.label", "Directory (tenant) ID"),
         description: t(
           "provider.microsoft.tenant.description",
           "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation",

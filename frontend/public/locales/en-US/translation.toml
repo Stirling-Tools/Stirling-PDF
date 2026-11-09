@@ -11435,8 +11435,8 @@ description = "Lets people connect their Google account for their pipelines. Add
 label = "Client secret"
 
 [provider.googledrive.enabled]
-description = "Allow users to import files directly from Google Drive"
-label = "Enable Google Drive File Picker"
+description = "Covers opening files from Google Drive in the editor and connecting a Google account for pipelines. Organisation connections under Integrations work without it."
+label = "Enable Google Drive"
 
 [provider.googledrive.errors]
 notConfigured = "Google Drive is not configured"
@@ -11472,7 +11472,7 @@ label = "Redirect URI"
 
 [provider.microsoft.tenant]
 description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
-label = "Accounts"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
