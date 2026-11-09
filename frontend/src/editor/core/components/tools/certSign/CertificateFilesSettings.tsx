@@ -2,6 +2,7 @@ import { Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import FileUploadButton from "@editor/components/shared/FileUploadButton";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface CertificateFilesSettingsProps {
   parameters: CertSignParameters;
@@ -95,6 +96,7 @@ const CertificateFilesSettings = ({
           (parameters.certType === "PFX" && parameters.p12File) ||
           (parameters.certType === "JKS" && parameters.jksFile)) && (
           <TextInput
+            className={privateContentClassName}
             label={t("certSign.password", "Certificate Password")}
             placeholder={t(
               "certSign.passwordOptional",

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import Cropper from "react-easy-crop";
 import { getCroppedImage, type Area } from "@editor/utils/cropImage";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface ProfilePictureCropperProps {
   file: File | null;
@@ -150,7 +151,10 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         )}
 
         {/* Cropper area */}
-        <Box style={{ position: "relative", width: "100%", height: 400 }}>
+        <Box
+          className={privateContentClassName}
+          style={{ position: "relative", width: "100%", height: 400 }}
+        >
           {imageSrc && (
             <Cropper
               image={imageSrc}

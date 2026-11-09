@@ -245,6 +245,7 @@ export async function enforceExportPolicies(
       alertType: "neutral",
       title: progressTitle(0),
       body: progressBody(0),
+      privateBody: true,
       isPersistentPopup: true,
       expandable: false,
       glowColor: active[0].accent,

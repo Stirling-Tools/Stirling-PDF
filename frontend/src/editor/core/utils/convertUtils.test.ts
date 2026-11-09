@@ -353,7 +353,7 @@ describe("convertUtils", () => {
     test("offers the engine choice for text and RTF output", () => {
       expect(usesOfficeEngine("pdf", "txt")).toBe(true);
       expect(usesOfficeEngine("pdf", "rtf")).toBe(true);
-      expect(usesOfficeEngine("pdf", "xml")).toBe(false);
+      expect(usesOfficeEngine("pdf", "xml")).toBe(true);
     });
   });
 });

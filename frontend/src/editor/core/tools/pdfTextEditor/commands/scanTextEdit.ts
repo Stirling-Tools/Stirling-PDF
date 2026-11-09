@@ -21,6 +21,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
 import { createBitmapImageObject } from "@editor/utils/pdfiumBitmapUtils";
 import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import {
   emitFillRect,
   emitTextLine,
@@ -610,7 +611,7 @@ function emitInvisible(
     originalFontPtr: state.fontPtr,
     fallbackFamily: "Helvetica",
     renderMode: INVISIBLE,
-    tagMarks,
+    tags: uniformTags(tagMarks),
   });
   opaqueStroke(doc.module, ptrs);
   return ptrs;
@@ -799,7 +800,7 @@ export function renderScanEdit(
         originalFontPtr: 0,
         fallbackFamily: st.family,
         renderMode: INVISIBLE,
-        tagMarks: run.tagMarks,
+        tags: uniformTags(run.tagMarks),
       });
       opaqueStroke(m, hidden);
       state.created.push(soft, ...hidden);

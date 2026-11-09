@@ -8,9 +8,17 @@ import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
   isInlineType,
+  type ReadOnlyReason,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  effectiveLanguage,
+  type TextLanguage,
+} from "@editor/tools/pdfTextEditor/model/languageTag";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
-import { readPageStructure } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
+import {
+  readPageStructure,
+  readString,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
 import { carriedMcids } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   readFileStructure,
@@ -55,8 +63,18 @@ export class EditorDocument {
     string,
     { pageIndex: number; mcid: number; type: StructureType }
   >();
+  /** Unsaved /Lang changes to the file's blocks, by block key, held here as retags are. */
+  private readonly blockLangs = new Map<
+    string,
+    { pageIndex: number; mcid: number; lang: string | null }
+  >();
+  /** The catalog /Lang as the file has it; null when it has none. */
+  private readonly fileDocumentLang: string | null;
+  /** The session's catalog /Lang; undefined when unchanged. */
+  private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -77,6 +95,8 @@ export class EditorDocument {
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
+    this.fileDocumentLang = readCatalogLang(module, docPtr);
+    this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -94,9 +114,7 @@ export class EditorDocument {
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
     const fileStructure =
-      keep.length > 0 && module.FPDFCatalog_IsTagged(docPtr)
-        ? await readFileStructure(keep).catch(() => null)
-        : null;
+      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
     return new EditorDocument(module, docPtr, keep, fileStructure);
   }
 
@@ -196,7 +214,7 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([]);
+    if (!page) return new PageStructure([], null, 0);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(page.elements, null, page.slotCount, (key) =>
       this.retaggedAs(key),
@@ -271,13 +289,199 @@ export class EditorDocument {
     }
   }
 
-  /** True when the catalog marks the file as tagged (ISO 32000-1 14.7.1). */
-  isTagged(): boolean {
+  /** The language the document is read in, as the session has it; null when unknown. */
+  documentLanguage(): string | null {
+    return this.documentLangEdit === undefined
+      ? this.fileDocumentLang
+      : this.documentLangEdit;
+  }
+
+  /** Why the save cannot write the document's language, or null when it can. */
+  cannotSetDocumentLanguage(): ReadOnlyReason | null {
+    return this.encrypted() ? "encrypted" : null;
+  }
+
+  /** Set or, with null, remove the document's language. Throws when cannotSetDocumentLanguage refuses it. */
+  setDocumentLanguage(lang: string | null): void {
+    const blocker = this.cannotSetDocumentLanguage();
+    if (blocker) throw new Error(`The document language is ${blocker}`);
+    this.documentLangEdit = lang === this.fileDocumentLang ? undefined : lang;
+  }
+
+  /** The unsaved document language, for the save; undefined when unchanged. */
+  documentLanguageEdit(): string | null | undefined {
+    return this.documentLangEdit;
+  }
+
+  /**
+   * Every language the document is read in as the session has it: its own
+   * and each element's. An element's from the file is left out once the
+   * session changes it; one PDFium alone reads is left out unless set here.
+   */
+  languagesInUse(): string[] {
+    const edited = new Map<string, string | null>();
+    for (const structure of this.structureCache.values()) {
+      for (const [key, lang] of structure.ownLangEdits()) edited.set(key, lang);
+    }
+    for (const [key, { lang }] of this.blockLangs) edited.set(key, lang);
+    const fromFile = [...(this.fileStructure?.languages ?? [])].map(
+      ([key, { lang }]) => (edited.has(key) ? null : lang),
+    );
+    return [
+      ...new Set(
+        [this.documentLanguage(), ...fromFile, ...edited.values()].filter(
+          (lang): lang is string => lang !== null,
+        ),
+      ),
+    ];
+  }
+
+  /**
+   * The language of the block the text `mcid` marks belongs to; null when no
+   * element owns it.
+   */
+  textLanguage(pageIndex: number, mcid: number): TextLanguage | null {
+    const block = this.structure(pageIndex).block(mcid);
+    if (!block) return null;
+    const structure = this.structure(pageIndex);
+    // An added block's parent is chosen by the save, so it is read as the
+    // document's.
+    if (structure.addedBlockMcid(block.key) !== null) {
+      return {
+        own: structure.ownLang(block.key),
+        inherited: this.documentLanguage(),
+      };
+    }
+    const file = this.fileStructure?.languages.get(block.key);
+    const edit = this.blockLangs.get(block.key);
+    return {
+      own: edit ? edit.lang : (file?.lang ?? null),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        block.key,
+        this.documentLanguage(),
+      ),
+    };
+  }
+
+  /**
+   * The language of element `key`, one marking part of the text `mcid`
+   * marks, read inside that text's block. Throws when the page has no such
+   * element.
+   */
+  innerLanguage(pageIndex: number, mcid: number, key: string): TextLanguage {
+    const block = this.textLanguage(pageIndex, mcid);
+    return {
+      own: this.structure(pageIndex).ownLang(key),
+      inherited: this.inheritedLanguage(
+        pageIndex,
+        key,
+        block ? effectiveLanguage(block) : this.documentLanguage(),
+      ),
+    };
+  }
+
+  private inheritedLanguage(
+    pageIndex: number,
+    key: string,
+    fallback: string | null,
+  ): string | null {
+    const languages = this.fileStructure?.languages;
+    const element = languages?.get(key);
+    if (!languages || !element) return fallback;
+    const edits = this.structure(pageIndex).ownLangEdits();
+    const seen = new Set([key]);
+    let parent = element.parent;
+    while (parent !== null && !seen.has(parent)) {
+      seen.add(parent);
+      const ancestor = languages.get(parent);
+      if (!ancestor) break;
+      const blockEdit = this.blockLangs.get(parent);
+      const lang = blockEdit
+        ? blockEdit.lang
+        : edits.has(parent)
+          ? edits.get(parent)!
+          : ancestor.lang;
+      if (lang !== null) return lang;
+      parent = ancestor.parent;
+    }
+    return this.documentLanguage();
+  }
+
+  /**
+   * Set or, with null, remove the /Lang of the block the text `mcid` marks
+   * belongs to. Throws when cannotRetag refuses the block, or the page's
+   * save cannot write it.
+   */
+  setTextLanguage(pageIndex: number, mcid: number, lang: string | null): void {
+    const structure = this.structure(pageIndex);
+    const blocker = structure.cannotSetLanguage(mcid);
+    if (blocker) {
+      throw new Error(`MCID ${mcid} cannot take a language: ${blocker}`);
+    }
+    const block = structure.block(mcid)!;
+    if (structure.addedBlockMcid(block.key) !== null) {
+      structure.setOwnLang(block.key, lang);
+      return;
+    }
+    const fileLang = this.fileStructure?.languages.get(block.key)?.lang ?? null;
+    if (lang === fileLang) {
+      this.blockLangs.delete(block.key);
+    } else {
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.blockLangs.set(block.key, { pageIndex, mcid: address, lang });
+    }
+  }
+
+  /**
+   * True when the catalog marks the file as tagged (ISO 32000-1 14.7.1), or
+   * the save can write tags into it, creating its structure tree if need be.
+   * Not a promise that tags can be edited: an encrypted tagged file is true
+   * here and read-only in its PageStructure, which decides that.
+   */
+  treatAsTagged(): boolean {
+    if (this.fileStructure) return true;
     try {
       return this.module.FPDFCatalog_IsTagged(this.docPtr);
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Whether the saved file declares itself tagged (/MarkInfo /Marked). Kept
+   * apart from the tags themselves so unfinished tags do not claim the file is
+   * tagged, which readers that honour the flag would then read by.
+   */
+  markedTagged(): boolean {
+    return this.marked;
+  }
+
+  /** False when the file cannot be parsed or is encrypted: the flag is fixed. */
+  canSetMarkedTagged(): boolean {
+    return this.fileStructure !== null;
+  }
+
+  /** Throws when canSetMarkedTagged() is false. */
+  setMarkedTagged(marked: boolean): void {
+    if (!this.canSetMarkedTagged()) {
+      throw new Error("this file's tagged flag can't be changed");
+    }
+    this.marked = marked;
+  }
+
+  /** True when the save must write /MarkInfo /Marked. */
+  markedTaggedChanged(): boolean {
+    return (
+      this.fileStructure !== null && this.marked !== this.fileStructure.marked
+    );
+  }
+
+  /** True when the saved file will have a structure tree, the file's own or one the save creates. */
+  hasStructureTree(): boolean {
+    if (this.fileStructure?.hasTree) return true;
+    return this.structureEdits().some((edit) => edit.newElement);
   }
 
   private encrypted(): boolean {
@@ -299,6 +503,14 @@ export class EditorDocument {
         decorative: false,
       }),
     );
+    const blockLangs = [...this.blockLangs.values()].map(
+      ({ pageIndex, mcid, lang }) => ({
+        pageIndex,
+        mcid,
+        blockLang: lang,
+        decorative: false,
+      }),
+    );
     return [
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
@@ -308,17 +520,24 @@ export class EditorDocument {
           ownType: type,
           decorative: false,
         })),
+        ...structure.langEdits().map(({ mcid, lang }) => ({
+          pageIndex,
+          mcid,
+          lang,
+          decorative: false,
+        })),
         ...this.addedElementEdits(pageIndex, structure),
         ...this.cutEdits(pageIndex, structure),
       ]),
       ...retags,
+      ...blockLangs,
     ];
   }
 
   /**
-   * The page's added elements in reading order, so one placed after another
-   * finds it already in the tree. An element whose content was deleted is
-   * left out: there is nothing left for it to tag.
+   * The page's added elements, each after the added element it reads after,
+   * so it finds that already in the tree. An element whose content was
+   * deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -329,21 +548,28 @@ export class EditorDocument {
       structure.addedElements().map((element) => [element.mcid, element]),
     );
     if (!page || added.size === 0) return [];
-    return taggedContentInReadingOrder(page).flatMap((content) => {
-      const element = added.get(content.mcid);
-      if (!element) return [];
-      added.delete(content.mcid);
-      const after = precedingTaggedMcid(page, content);
-      return [
-        {
-          pageIndex,
-          mcid: element.mcid,
-          alt: element.alt,
-          decorative: false,
-          newElement: { type: element.type, after },
-        },
-      ];
-    });
+    const content = taggedContentInReadingOrder(page);
+    const carried = new Set(content.map(({ mcid }) => mcid));
+    const edits = new Map<number, StructureEdit>();
+    for (const item of content) {
+      const element = added.get(item.mcid);
+      if (!element) continue;
+      added.delete(item.mcid);
+      const { follows } = element;
+      const after =
+        follows === null || (follows !== undefined && carried.has(follows))
+          ? follows
+          : precedingTaggedMcid(page, item);
+      edits.set(element.mcid, {
+        pageIndex,
+        mcid: element.mcid,
+        alt: element.alt,
+        lang: element.lang,
+        decorative: false,
+        newElement: { type: element.type, after },
+      });
+    }
+    return anchorsFirst(edits);
   }
 
   /**
@@ -358,7 +584,7 @@ export class EditorDocument {
     const cuts = structure.cutElements();
     if (!page || cuts.length === 0) return [];
     const carried = carriedMcids(this.module, page.pagePtr);
-    return cuts.flatMap(({ mcid, type, alt, cut }) => {
+    return cuts.flatMap(({ mcid, type, alt, lang, cut }) => {
       if (!carried.has(mcid)) return [];
       const kept = (part: number | null) =>
         part !== null && carried.has(part) ? part : null;
@@ -369,6 +595,7 @@ export class EditorDocument {
           pageIndex,
           mcid,
           alt,
+          lang,
           decorative: false,
           cut: { type, from: cut.from, before, after },
         },
@@ -428,6 +655,18 @@ export class EditorDocument {
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
     releaseRasterPool(this.module);
+  }
+}
+
+/** The catalog /Lang; null when absent, empty, or unreadable. */
+function readCatalogLang(
+  module: WrappedPdfiumModule,
+  docPtr: number,
+): string | null {
+  try {
+    return readString(module, docPtr, module.FPDFCatalog_GetLanguage) || null;
+  } catch {
+    return null;
   }
 }
 
@@ -522,4 +761,25 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * `edits`, keyed by MCID, reordered so each comes after the edit adding the
+ * element it is placed after. A cycle is broken where it closes, that element
+ * placing as though its anchor were not added.
+ */
+function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
+  const ordered: StructureEdit[] = [];
+  for (const start of [...edits.keys()]) {
+    const chain: StructureEdit[] = [];
+    let mcid: number | null = start;
+    while (mcid !== null && edits.has(mcid)) {
+      const edit: StructureEdit = edits.get(mcid)!;
+      edits.delete(mcid);
+      chain.push(edit);
+      mcid = edit.newElement!.after;
+    }
+    ordered.push(...chain.reverse());
+  }
+  return ordered;
 }
