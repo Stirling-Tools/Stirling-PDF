@@ -16,8 +16,6 @@ export function Home() {
       {/* Paid tiers open with a greeting; free opens with local deployment status. */}
       {tier !== "free" && <HomeGreeting />}
 
-      {/* Per-tier hero. Its footer is the deal-status hero while a procurement
-          deal is underway (a bolt-on to any tier), otherwise the setup checklist. */}
       <HomeHero />
       <ProcessorFlow />
     </div>

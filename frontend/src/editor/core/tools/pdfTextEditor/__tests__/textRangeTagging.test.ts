@@ -15,6 +15,8 @@ import {
   rangeTagTypes,
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { readObjTexts } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   charOrigins,
@@ -45,7 +47,10 @@ import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { headingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
-import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import {
+  innerTags,
+  locateHeading,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -111,6 +116,49 @@ function cutPdf(): Uint8Array {
   );
 }
 
+/** A page whose one paragraph (MCID 0) draws `line`, a text-showing operation with its spacing set before it. */
+function linePdf(line: string): Uint8Array {
+  return paragraphPdf(`BT /F1 12 Tf 72 700 Td ${line} ET`);
+}
+
+/** A page whose one paragraph (MCID 0) is drawn by `content`, with font F1 Helvetica. */
+function paragraphPdf(content: string): Uint8Array {
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody("", `/P <</MCID 0>> BDC ${content} EMC\n`),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 9 0 R /ParentTreeNextKey 1 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [8 0 R] >>",
+      },
+      { num: 8, body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 0 >>" },
+      { num: 9, body: "<< /Nums [0 [8 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
 const opened: EditorDocument[] = [];
 
 async function open(bytes: Uint8Array): Promise<EditorDocument> {
@@ -120,8 +168,32 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
   return doc;
 }
 
-function runWith(doc: EditorDocument, fragment: string) {
-  const run = doc.page(0).runs.find((r) => r.text.includes(fragment));
+async function openSample(): Promise<EditorDocument> {
+  const sample = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/tagged-sample.pdf",
+  );
+  const doc = await EditorDocument.open(new Uint8Array(await readFile(sample)));
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(1));
+  return doc;
+}
+
+/**
+ * Chrome's "Save as PDF" output: each glyph an object of its own and each
+ * word space another, in fonts subset to the glyphs each draws, with some
+ * text inside a form XObject.
+ */
+async function openChromePdf(): Promise<EditorDocument> {
+  const file = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/stirling-marketing.pdf",
+  );
+  return open(new Uint8Array(await readFile(file)));
+}
+
+function runWith(doc: EditorDocument, fragment: string, pageIndex = 0) {
+  const run = doc.page(pageIndex).runs.find((r) => r.text.includes(fragment));
   if (!run) throw new Error(`no run contains "${fragment}"`);
   return run;
 }
@@ -131,19 +203,42 @@ function tagRange(
   history: HistoryStack,
   fragment: string,
   as: StructureType,
-) {
-  const run = runWith(doc, fragment);
+  pageIndex = 0,
+): TagTextRangeCommand {
+  const run = runWith(doc, fragment, pageIndex);
   const start = run.text.indexOf(fragment);
+  const command = new TagTextRangeCommand({
+    pageIndex,
+    runId: run.id,
+    start,
+    end: start + fragment.length,
+    as,
+  });
+  history.execute(command, doc);
+  return command;
+}
+
+/** Replace `from` with `to` in the run holding `from`, as typing would. */
+function editText(
+  doc: EditorDocument,
+  history: HistoryStack,
+  from: string,
+  to: string,
+  pageIndex = 0,
+) {
+  const run = runWith(doc, from, pageIndex);
   history.execute(
-    new TagTextRangeCommand({
-      pageIndex: 0,
+    new EditTextCommand({
+      pageIndex,
       runId: run.id,
-      start,
-      end: start + fragment.length,
-      as,
+      nextText: run.text.replace(from, to),
     }),
     doc,
   );
+}
+
+function runTexts(doc: EditorDocument, pageIndex = 0): string[] {
+  return doc.page(pageIndex).runs.map((run) => run.text.trim());
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
@@ -173,6 +268,54 @@ function textByMcid(doc: EditorDocument): Map<number, string> {
     if (mcid !== null) out.set(mcid, (out.get(mcid) ?? "") + (texts[i] ?? ""));
   });
   return out;
+}
+
+interface Glyph {
+  char: string;
+  x: number;
+  y: number;
+}
+
+/** Every glyph page 0 draws with ink, line by line from the top, left to right. */
+function inkGlyphs(doc: EditorDocument): Glyph[] {
+  const m = doc.module;
+  const textPage = m.FPDFText_LoadPage(doc.page(0).pagePtr);
+  const x = m.pdfium.wasmExports.malloc(8);
+  const y = m.pdfium.wasmExports.malloc(8);
+  const glyphs: Glyph[] = [];
+  try {
+    for (let i = 0; i < m.FPDFText_CountChars(textPage); i++) {
+      const char = String.fromCodePoint(m.FPDFText_GetUnicode(textPage, i));
+      if (m.FPDFText_IsGenerated(textPage, i) === 1 || !/\S/.test(char)) {
+        continue;
+      }
+      m.FPDFText_GetCharOrigin(textPage, i, x, y);
+      glyphs.push({
+        char,
+        x: m.pdfium.getValue(x, "double"),
+        y: m.pdfium.getValue(y, "double"),
+      });
+    }
+  } finally {
+    m.pdfium.wasmExports.free(x);
+    m.pdfium.wasmExports.free(y);
+    m.FPDFText_ClosePage(textPage);
+  }
+  const line = (glyph: Glyph) => Math.round(glyph.y * 10);
+  return glyphs.sort((a, b) => line(b) - line(a) || a.x - b.x);
+}
+
+function words(text: string): string[] {
+  return text.split(/\s+/).filter(Boolean);
+}
+
+/** Every glyph of `glyphs` within 0.01 pt of where `at` draws it. */
+function expectDrawnAt(glyphs: Glyph[], at: Glyph[]): void {
+  expect(glyphs.map((g) => g.char).join("")).toBe(
+    at.map((g) => g.char).join(""),
+  );
+  const moved = glyphs.map((g, i) => Math.hypot(g.x - at[i].x, g.y - at[i].y));
+  expect(Math.max(...moved)).toBeLessThanOrEqual(0.01);
 }
 
 /** An element's kids: an MCID as its number, a child element as its /S. */
@@ -244,8 +387,7 @@ describe("tagging part of an element's text", () => {
     const origin = charOrigins(
       m,
       pagePtr,
-      new Map([[line, new Set([14])]]),
-      new Map([[line, 27]]),
+      new Map([[line, "Sales rose in every region."]]),
     )
       .get(line)!
       .get(14)!;
@@ -340,15 +482,7 @@ describe("tagging part of an element's text", () => {
   });
 
   test("tags a word of a real file's paragraph as a Span inside it", async () => {
-    const sample = path.join(
-      import.meta.dirname,
-      "../../../tests/test-fixtures/tagged-sample.pdf",
-    );
-    const doc = await EditorDocument.open(
-      new Uint8Array(await readFile(sample)),
-    );
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(1));
+    const doc = await openSample();
     const run = doc.page(1).runs.find((r) => r.text.includes("All amounts"))!;
     const paragraph = doc.structure(1).block(run.snapshot().mcid!)!.key;
     const spansIn = (elements: readonly StructureElement[]) =>
@@ -382,6 +516,202 @@ describe("tagging part of an element's text", () => {
   });
 });
 
+describe("tagging part of a spaced or kerned line", () => {
+  test.each([
+    [
+      "character and word spacing",
+      "0.4 Tc 3 Tw (Costs fell in most markets last year.) Tj",
+    ],
+    [
+      "kerning",
+      "[(Co) -40 (sts) 60 ( fe) 25 (ll) -120 ( in) 80 ( most) -50 ( mar) 15 (kets) 30 ( last year.)] TJ",
+    ],
+    [
+      "word spaces drawn as gaps",
+      "[(Costs) -333 (fell) -333 (in) -333 (most) -333 (markets) -333 (last) -333 (year.)] TJ",
+    ],
+  ])(
+    "draws every glyph of a line with %s where it was drawn, and saves it there",
+    async (_, line) => {
+      const doc = await open(linePdf(line));
+      const text = runWith(doc, "Costs").text;
+      const before = inkGlyphs(doc);
+      tagRange(doc, new HistoryStack(), "fell in most", "Span");
+      expectDrawnAt(inkGlyphs(doc), before);
+
+      const saved = await open(await savedBytes(doc));
+      expectDrawnAt(inkGlyphs(saved), before);
+      const run = runWith(saved, "Costs");
+      expect(words(run.text)).toEqual(words(text));
+      expect(
+        innerTags(saved, run.snapshot()).map(({ text, role }) => [
+          text.trim(),
+          role.type,
+        ]),
+      ).toEqual([["fell in most", "Span"]]);
+    },
+  );
+
+  test("refuses a cut that would read spaces into widely letter-spaced words, and changes nothing", async () => {
+    const doc = await open(
+      linePdf("1.5 Tc 4 Tw (Costs fell in most markets last year.) Tj"),
+    );
+    const before = inkGlyphs(doc);
+    const objects = doc.module.FPDFPage_CountObjects(doc.page(0).pagePtr);
+    expect(() =>
+      tagRange(doc, new HistoryStack(), "fell in most", "Span"),
+    ).toThrow();
+    expectDrawnAt(inkGlyphs(doc), before);
+    expect(doc.module.FPDFPage_CountObjects(doc.page(0).pagePtr)).toBe(objects);
+    expect(doc.structureEdits()).toEqual([]);
+  });
+});
+
+describe("tagging part of a line of a Chrome-produced file", () => {
+  test("draws every glyph where it was, and saves the text it tagged", async () => {
+    const doc = await openChromePdf();
+    const text = runWith(doc, "Free Adobe").text;
+    const before = inkGlyphs(doc);
+    tagRange(doc, new HistoryStack(), "Free Adobe", "Span");
+    expectDrawnAt(inkGlyphs(doc), before);
+
+    const saved = await open(await savedBytes(doc));
+    expectDrawnAt(inkGlyphs(saved), before);
+    const run = runWith(saved, "Free Adobe");
+    expect(words(run.text)).toEqual(words(text));
+    // Chrome wraps the heading's text in a NonStruct, which keeps the text
+    // either side.
+    expect(
+      innerTags(saved, run.snapshot()).map(({ text, role }) => [
+        text.trim(),
+        role.type,
+      ]),
+    ).toEqual([
+      ["The", "NonStruct"],
+      ["Free Adobe", "Span"],
+      ["Acrobat Alternative", "NonStruct"],
+    ]);
+  });
+
+  test("offers no tag for part of text inside a form XObject, which apply refuses", async () => {
+    const doc = await openChromePdf();
+    const run = runWith(doc, "Open Source");
+    const start = run.text.indexOf("Source");
+    const end = start + "Source".length;
+    expect(rangeTagTypes(doc, 0, run.id, start, end)).toEqual([]);
+    const cut = new TagTextRangeCommand({
+      pageIndex: 0,
+      runId: run.id,
+      start,
+      end,
+      as: "Span",
+    });
+    expect(() => new HistoryStack().execute(cut, doc)).toThrow();
+  });
+});
+
+describe("a block cut from part of a run", () => {
+  test("gets a run of its own, as a read of the page groups it", async () => {
+    const doc = await open(cutPdf());
+    const run = runWith(doc, "We sampled");
+    const cut = tagRange(doc, new HistoryStack(), "sampled", "H3");
+
+    expect(doc.page(0).findRun(run.id)).toBeUndefined();
+    expect(doc.page(0).findRun(cut.movedToRunId!)!.text.trim()).toBe("sampled");
+    expect(runTexts(doc).slice(5, 9)).toEqual([
+      "Methods",
+      "We",
+      "sampled",
+      "every store.",
+    ]);
+  });
+
+  test("leaves a run cut whole as it was", async () => {
+    const doc = await open(cutPdf());
+    const run = runWith(doc, "Outlook");
+    const cut = tagRange(doc, new HistoryStack(), "Outlook", "H2");
+    expect(cut.movedToRunId).toBeNull();
+    expect(doc.page(0).findRun(run.id)!.snapshot().mcid).toBe(4);
+  });
+
+  test.each([
+    ["the text before it", "We", "They"],
+    ["the text after it", "store", "shop"],
+  ])("survives an edit of %s", async (_part, from, to) => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    tagRange(doc, history, "sampled", "H3");
+    editText(doc, history, from, to);
+
+    expect(doc.headings()!.map((h) => h.type)).toEqual(["H1", "H3"]);
+    const bytes = await savedBytes(doc);
+    expect(await savedHeadings(doc)).toEqual(["H1", "H3"]);
+    expect(
+      textByMcid(await open(bytes))
+        .get(4)
+        ?.trim(),
+    ).toBe("sampled");
+  });
+
+  test("survives an edit of the paragraph it was cut from", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const headings = () =>
+      doc.headings()!.filter((h) => h.type === "H4").length;
+    tagRange(doc, history, "Atlas product line", "H4", 1);
+    expect(headings()).toBe(1);
+    expect(runWith(doc, "Revenue rose", 1).text).toContain(
+      "and the launch of the",
+    );
+
+    editText(doc, history, "Canada", "Mexico", 1);
+    expect(headings()).toBe(1);
+    const saved = await savedHeadings(doc);
+    expect(saved.filter((type) => type === "H4")).toHaveLength(1);
+  });
+
+  test("puts the run back on undo, and splits it the same way on redo", async () => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    const before = doc.page(0).runs.map((r) => [r.id, r.text]);
+    tagRange(doc, history, "sampled", "H3");
+    const split = doc.page(0).runs.map((r) => r.id);
+    editText(doc, history, "store", "shop");
+
+    history.undo(doc);
+    history.undo(doc);
+    expect(doc.page(0).runs.map((r) => [r.id, r.text])).toEqual(before);
+
+    history.redo(doc);
+    history.redo(doc);
+    expect(doc.page(0).runs.map((r) => r.id)).toEqual(split);
+    expect(runWith(doc, "shop").text.trim()).toBe("every shop.");
+  });
+
+  test("is made when an inline cut is retagged as a block", async () => {
+    const doc = await open(cutPdf());
+    const history = new HistoryStack();
+    tagRange(doc, history, "every", "Span");
+    const [span] = innerTags(doc, runWith(doc, "Sales rose").snapshot());
+    const retag = new RetagInnerCommand({
+      pageIndex: 0,
+      key: span.key,
+      type: "H2",
+    });
+    history.execute(retag, doc);
+    expect(doc.page(0).findRun(retag.movedToRunId!)!.text.trim()).toBe("every");
+
+    editText(doc, history, "region", "area");
+    expect(await savedHeadings(doc)).toEqual(["H1", "H2"]);
+
+    history.undo(doc);
+    history.undo(doc);
+    expect(innerTags(doc, runWith(doc, "Sales rose").snapshot())).toMatchObject(
+      [{ text: "every", role: { type: "Span" } }],
+    );
+  });
+});
+
 describe("which tags part of a run's text can take", () => {
   const typesFor = (
     doc: EditorDocument,
@@ -406,22 +736,27 @@ describe("which tags part of a run's text can take", () => {
   });
 
   test("offers only inline types for text in an inline element", async () => {
-    const doc = await EditorDocument.open(
-      new Uint8Array(
-        await readFile(
-          path.join(
-            import.meta.dirname,
-            "../../../tests/test-fixtures/tagged-sample.pdf",
-          ),
-        ),
-      ),
-    );
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(1));
+    const doc = await openSample();
     expect(typesFor(doc, 1, "appendix")).toEqual(
       TEXT_RANGE_TYPES.filter(isInlineType),
     );
     expect(typesFor(doc, 1, "in the appendix")).toEqual([]);
+  });
+
+  test("offers none for text its element draws out of reading order, which apply refuses", async () => {
+    const doc = await open(
+      paragraphPdf(
+        "BT /F1 12 Tf 72 700 Td (Sales ) Tj ET " +
+          "BT /F1 12 Tf 176.06 700 Td (region.) Tj ET " +
+          "BT /F1 12 Tf 105.35 700 Td (rose in every ) Tj ET",
+      ),
+    );
+    const run = runWith(doc, "Sales rose in every region.");
+    const end = "Sales rose".length;
+    expect(rangeTagTypes(doc, 0, run.id, 0, end)).toEqual([]);
+    expect(() =>
+      tagRange(doc, new HistoryStack(), "Sales rose", "Span"),
+    ).toThrow();
   });
 
   test("offers none for untagged text or only spaces", async () => {
