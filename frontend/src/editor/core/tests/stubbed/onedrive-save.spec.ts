@@ -311,6 +311,40 @@ test.describe("Saving files opened from OneDrive", () => {
     await expect(page.getByTestId("file-save-onedrive-folder")).toHaveCount(0);
   });
 
+  test("the file menu's OneDrive rows fit on one line", async ({ page }) => {
+    await startWithOneDriveFile(page, { unsaved: true });
+    const item = page.locator(".file-sidebar-file-item").first();
+    await item.hover();
+    await item.getByRole("button", { name: "More actions" }).click();
+    const rows = [
+      page
+        .getByTestId("file-save-onedrive")
+        .locator(".file-sidebar-kebab-item-stack > span")
+        .first(),
+      page.getByTestId("file-save-onedrive-target"),
+      page.getByTestId("file-save-onedrive-copy"),
+      page.getByTestId("file-save-onedrive-folder"),
+      page.getByTestId("file-open-onedrive"),
+    ];
+    for (const row of rows) {
+      await expect(row).toBeVisible();
+      const lines = await row.evaluate((el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let most = 0;
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const tops = [...range.getClientRects()]
+            .filter((r) => r.width > 0)
+            .map((r) => Math.round(r.top));
+          most = Math.max(most, new Set(tops).size);
+        }
+        return most;
+      });
+      expect(lines, await row.innerText()).toBe(1);
+    }
+  });
+
   test("the result of a tool offers the same save menu", async ({ page }) => {
     await page.route("**/api/v1/general/rotate-pdf", (route: Route) =>
       route.fulfill({
@@ -365,7 +399,7 @@ test.describe("Saving files opened from OneDrive", () => {
     await stubMicrosoft(page, { saveMode: "copy", allowUserSaveMode: false });
     await page.goto("/settings/general");
     const row = page.locator("#setting-save-mode");
-    await expect(row).toContainText("When I save a file");
+    await expect(row).toContainText("When you save a file");
     await expect(row).toContainText("Set by your administrator");
     await expect(row.getByRole("textbox")).toHaveValue(
       "Save a copy next to it",

@@ -98,7 +98,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     section: "general",
     anchor: "setting-save-mode",
     labelKey: "settings.general.saveMode",
-    labelFallback: "When I save a file",
+    labelFallback: "When you save a file",
     keywords: ["save", "copy", "overwrite", "replace", "ask"],
   },
   // --- Keyboard Shortcuts ---

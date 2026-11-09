@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { FileOrigin } from "@editor/components/filesPage/fileOrigin";
+import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
 
 interface FileOriginBadgeProps {
   origin: FileOrigin;
@@ -76,7 +77,11 @@ export function FileOriginBadge({
             label: t("filesPage.origin.oneDrive", "OneDrive"),
             icon: <Icon name="onedrive" size={"0.85rem"} />,
             style: styles.local,
-            tooltip: t("oneDriveSave.fromOneDrive", "From OneDrive"),
+            tooltip: (
+              <OneDriveOriginTooltip
+                label={t("oneDriveSave.fromOneDrive", "From OneDrive")}
+              />
+            ),
           };
         }
         return {

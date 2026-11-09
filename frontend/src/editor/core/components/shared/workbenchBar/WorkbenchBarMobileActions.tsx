@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
+import "@editor/components/shared/SaveMenu.css";
 
 /**
  * Mobile version of the workbench bar's global actions: the icon row won't fit
@@ -36,7 +37,7 @@ export default function WorkbenchBarMobileActions({
   if (!showPrint && !showFileActions) return null;
 
   return (
-    <Menu shadow="md" width={270} position="bottom-end">
+    <Menu shadow="md" position="bottom-end">
       <Menu.Target>
         <ActionIcon
           variant="tertiary"
@@ -52,7 +53,7 @@ export default function WorkbenchBarMobileActions({
           </span>
         </ActionIcon>
       </Menu.Target>
-      <Menu.Dropdown>
+      <Menu.Dropdown className="save-menu">
         {showPrint && (
           <Menu.Item
             leftSection={<Icon name="printer" size={"1.1rem"} />}
@@ -75,7 +76,7 @@ export default function WorkbenchBarMobileActions({
             onClick={() => void onExport()}
             title={downloadDisabledReason}
           >
-            {downloadLabel}
+            <span className="save-menu__text">{downloadLabel}</span>
           </Menu.Item>
         )}
         {showFileActions &&
@@ -86,11 +87,11 @@ export default function WorkbenchBarMobileActions({
               disabled={saveDisabled}
               onClick={item.onClick}
             >
-              {item.label}
+              <span className="save-menu__text">{item.label}</span>
               {item.description && (
-                <div className="workbench-bar-menu-hint">
+                <span className="save-menu__text workbench-bar-menu-hint">
                   {item.description}
-                </div>
+                </span>
               )}
             </Menu.Item>
           ))}

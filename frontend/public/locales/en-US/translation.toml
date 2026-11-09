@@ -1259,8 +1259,8 @@ title = "System Settings"
 ui = "User Interface"
 
 [admin.settings.general.allowUserSaveMode]
-description = "Turn off to apply the setting above to everyone."
-label = "Let people choose what Save does"
+description = "Turn off to apply \"When you save a file\" to everyone."
+label = "Let people choose this for themselves"
 
 [admin.settings.general.appName]
 description = "The name displayed in the browser tab and home page"
@@ -1367,7 +1367,7 @@ placeholder = "Select languages"
 
 [admin.settings.general.saveMode]
 description = "For a file that came from someone's computer or a connected drive. People start with this and can change it in their preferences."
-label = "What Save does"
+label = "When you save a file"
 
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
@@ -6590,8 +6590,9 @@ saveCopyToOneDrive = "Save a copy next to it"
 saved = "Saved to OneDrive"
 saveToFolder = "Upload copy to OneDrive…"
 saving = "Saving to OneDrive…"
+signInToSave = "Sign in to your server to save to OneDrive."
 unprotected = "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive."
-updateOriginal = "Update original in OneDrive"
+updateOriginal = "Update in OneDrive"
 uploadToOneDrive = "Upload to OneDrive…"
 
 [oneDriveSave.menu]
@@ -11116,6 +11117,7 @@ reconnect = "sign in again"
 unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
 
 [portal.sources.cloudFields.authMode]
+accountsOff = "Personal accounts are turned off on this server."
 helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
 label = "Sign in as"
 
@@ -11128,15 +11130,16 @@ helperText = "Set up by an administrator under Integrations. Shared by every loc
 label = "Organisation connection"
 
 [portal.sources.cloudFields.googledrive]
-helperText = "Paste the folder's link, or type a path from the top of My Drive."
+helperText = "Paste the folder's link, or type a path from the top of My Drive. Leave empty for the top of My Drive. The folder must already exist."
 placeholder = "Folder link, or Scans/Inbox"
 
 [portal.sources.cloudFields.onedrive]
-helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Blank means the top."
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Leave empty for the top of the OneDrive. The folder must already exist."
 placeholder = "Scans/Inbox, or a folder link"
 
 [portal.sources.cloudFields.sharepoint]
-helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library."
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library; leave empty for the library root. The folder must already exist."
+organisationPlaceholder = "Folder link, or Scans/Inbox"
 placeholder = "Folder link"
 
 [portal.sources.delete]
@@ -11501,8 +11504,8 @@ description = "Lets people connect their Google account for their pipelines. Add
 label = "Client secret"
 
 [provider.googledrive.enabled]
-description = "Allow users to import files directly from Google Drive"
-label = "Enable Google Drive File Picker"
+description = "Covers opening files from Google Drive in the editor and connecting a Google account for pipelines. Organisation connections under Integrations work without it."
+label = "Enable Google Drive"
 
 [provider.googledrive.errors]
 connectFailed = "Couldn't connect your Google account. Try again from Settings > Connected accounts."
@@ -11547,7 +11550,7 @@ label = "Redirect URI"
 
 [provider.microsoft.tenant]
 description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
-label = "Accounts"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -12321,11 +12324,11 @@ noFreeCopyName = "Couldn't find a free name for the copy next to {{name}}."
 
 [saveFile.ask]
 copy = "Save a copy next to it"
-copyHint = "Saves {{name}} in {{home}}. Later saves update that copy."
+copyHint = "Saves it as {{name}}. Later saves update that copy."
 download = "Download instead"
 otherHint = "Leaves {{home}} untouched."
 remember = "Remember my choice"
-rememberHint = "Change it later in Settings > Preferences."
+rememberHint = "Change it later in Settings > Preferences > When you save a file."
 replace = "Update the original"
 replaceHint = "Replaces it in {{home}}."
 thisFolder = "the same folder"
@@ -12342,9 +12345,9 @@ saveToComputer = "Save to this computer…"
 update = "Update {{name}}"
 
 [saveFile.mode]
-ask = "Ask me"
+ask = "Ask each time"
 copy = "Save a copy next to it"
-replace = "Update it"
+replace = "Update the original"
 
 [saveFile.result]
 ask = "Save…"
@@ -12571,7 +12574,7 @@ hideUnavailableToolsDescription = "Remove tools that have been disabled by your 
 language = "Language"
 languageDescription = "Choose the display language"
 logout = "Log out"
-saveMode = "When I save a file"
+saveMode = "When you save a file"
 saveModeDescription = "What Save does for a file that came from your computer or a connected drive. Other options are always in the menu next to Save."
 saveModeLocked = "Set by your administrator"
 setAsDefault = "Set as Default"

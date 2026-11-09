@@ -26,7 +26,7 @@ export interface SaveTarget {
   saveLabel: (stub: StirlingFileStub, mode: SaveMode) => string;
   /** The file's name where it lives, when that differs from Stirling's. */
   fileName?: (stub: StirlingFileStub) => string;
-  /** Where the file lives, for the "Ask me" dialog, e.g. "OneDrive". */
+  /** Where the file lives, for the "Ask each time" dialog, e.g. "OneDrive". */
   homeName: (stub: StirlingFileStub) => string;
   /** Overrides the save setting, e.g. a copy Stirling made is always updated. */
   plan?: (stub: StirlingFileStub, mode: SaveMode) => SaveMode;

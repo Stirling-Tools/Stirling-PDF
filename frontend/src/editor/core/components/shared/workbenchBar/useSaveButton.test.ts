@@ -159,7 +159,7 @@ it("names the save mode for the only file in a list view", () => {
   ]);
 });
 
-it("uses the single-file label for the only file in Update it mode", () => {
+it("uses the single-file label for the only file in Update the original mode", () => {
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,

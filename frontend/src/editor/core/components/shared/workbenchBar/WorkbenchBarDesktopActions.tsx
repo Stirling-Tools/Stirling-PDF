@@ -9,6 +9,7 @@ import {
   renderWithTooltip,
 } from "@editor/components/shared/workbenchBar/workbenchBarTooltip";
 import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
+import "@editor/components/shared/SaveMenu.css";
 
 interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
   /** Percentage through the enforcing policy run, when it reports steps. */
@@ -114,7 +115,6 @@ export default function WorkbenchBarDesktopActions({
               <div className="workbench-bar-tooltip-wrapper workbench-bar-save-group-caret">
                 <Menu
                   shadow="md"
-                  width={270}
                   position="bottom-end"
                   opened={saveMenuOpen}
                   onChange={setSaveMenuOpen}
@@ -130,18 +130,18 @@ export default function WorkbenchBarDesktopActions({
                       <Icon name="chevron-down" size="1rem" />
                     </ActionIcon>
                   </Menu.Target>
-                  <Menu.Dropdown>
+                  <Menu.Dropdown className="save-menu">
                     {saveMenu.map((item) => (
                       <Menu.Item
                         key={item.key}
                         leftSection={<Icon name={item.icon} size="1rem" />}
                         onClick={item.onClick}
                       >
-                        {item.label}
+                        <span className="save-menu__text">{item.label}</span>
                         {item.description && (
-                          <div className="workbench-bar-menu-hint">
+                          <span className="save-menu__text workbench-bar-menu-hint">
                             {item.description}
-                          </div>
+                          </span>
                         )}
                       </Menu.Item>
                     ))}
