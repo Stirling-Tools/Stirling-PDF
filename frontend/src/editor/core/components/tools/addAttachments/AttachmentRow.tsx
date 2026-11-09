@@ -97,7 +97,6 @@ export const AttachmentRow = memo(function AttachmentRow({
     <Group
       data-testid="attachment-row"
       data-kind={kind}
-      data-attachment-name={originalName}
       gap="sm"
       wrap="nowrap"
       px="sm"
