@@ -487,7 +487,7 @@ test.describe("PDF text editor - tables", () => {
     );
     await expect(rowHandle).toHaveAttribute(
       "aria-label",
-      "Select row 1 for deletion",
+      "Select row 2 for deletion",
     );
     // Assistive technology can activate the handle with a click that has no
     // preceding pointer or keyboard event; it must still change the target.
@@ -660,7 +660,7 @@ test.describe("PDF text editor - tables", () => {
       `(t => ({ selected: t.cells.find(c => c.row === 1 && c.col === 1)?.runIds, remaining: t.cells.find(c => c.row === 1 && c.col === 2)?.runIds }))(${STORE}.state.pages[0].tables[0])`,
     )) as { selected: string[]; remaining: string[] };
     const colHandle = page.getByTestId(`pdf-editor-table-col-handle-${tableId}-2`);
-    await expect(colHandle).toHaveAttribute("aria-label", "Select column 1 for deletion");
+    await expect(colHandle).toHaveAttribute("aria-label", "Select column 2 for deletion");
     await colHandle.focus();
     await page.keyboard.press("Enter");
     await expect(colHandle).toHaveAttribute("data-selected", "true");
