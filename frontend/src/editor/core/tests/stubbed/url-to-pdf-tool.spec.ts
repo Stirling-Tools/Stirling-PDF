@@ -29,3 +29,17 @@ test("a direct link to a disabled URL to PDF falls back to the tool picker", asy
     0,
   );
 });
+
+test("a failed URL to PDF check hides the tool without an error toast", async ({
+  page,
+}) => {
+  await stubUrlToPdfEnabled(page, { status: 500 });
+  let failedChecks = 0;
+  page.on("response", (response) => {
+    if (response.url().includes("endpoint=url-to-pdf")) failedChecks += 1;
+  });
+  await page.goto("/editor");
+  await expect.poll(() => failedChecks).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('[data-tour="tool-button-merge"]')).toBeVisible();
+  expect(await page.getByText("Server error").count()).toBe(0);
+});
