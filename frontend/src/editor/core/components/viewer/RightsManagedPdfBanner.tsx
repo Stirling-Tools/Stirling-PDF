@@ -22,8 +22,30 @@ export function RightsManagedPdfBanner({
     : protection.custom || !protection.templateName
       ? t("rightsManagedPdf.customPermissions", "Custom permissions")
       : protection.templateName;
-  const restricted =
-    !permissions.edit || !permissions.print || !permissions.copy;
+  const rights = [
+    { name: t("protection.right.view", "View"), allowed: permissions.view },
+    {
+      name: t("encryptedPdfUnlock.printing", "Printing"),
+      allowed: permissions.print,
+    },
+    {
+      name: t("encryptedPdfUnlock.copying", "Copying content"),
+      allowed: permissions.copy,
+    },
+    {
+      name: t("encryptedPdfUnlock.editing", "Editing"),
+      allowed: permissions.edit,
+    },
+    {
+      name: t("encryptedPdfUnlock.annotations", "Annotations"),
+      allowed: permissions.comment || permissions.edit,
+    },
+    {
+      name: t("protection.right.export", "Save a copy"),
+      allowed: permissions.export,
+    },
+  ];
+  const restricted = rights.some((right) => !right.allowed);
   const summary = !restricted
     ? t("protection.fullAccess", "Full access")
     : !permissions.edit && !permissions.print && !permissions.copy
@@ -49,29 +71,7 @@ export function RightsManagedPdfBanner({
     summary,
     owner: protection.owner,
     source: t("protection.sourcePurview", "Microsoft Purview"),
-    rights: [
-      { name: t("protection.right.view", "View"), allowed: permissions.view },
-      {
-        name: t("encryptedPdfUnlock.printing", "Printing"),
-        allowed: permissions.print,
-      },
-      {
-        name: t("encryptedPdfUnlock.copying", "Copying content"),
-        allowed: permissions.copy,
-      },
-      {
-        name: t("encryptedPdfUnlock.editing", "Editing"),
-        allowed: permissions.edit,
-      },
-      {
-        name: t("encryptedPdfUnlock.annotations", "Annotations"),
-        allowed: permissions.comment || permissions.edit,
-      },
-      {
-        name: t("protection.right.export", "Save a copy"),
-        allowed: permissions.export,
-      },
-    ],
+    rights,
     facts,
     actions:
       restricted && protection.owner && !permissions.owner
