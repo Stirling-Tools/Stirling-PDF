@@ -89,10 +89,12 @@ export default function WorkbenchBarDesktopActions({
               disabled={exportDisabled}
               aria-label={downloadLabel}
             >
-              <Icon name={downloadIconName} size="1rem" />
-              {downloadUnsaved && (
-                <span className="workbench-bar-unsaved-dot" />
-              )}
+              <span className="workbench-bar-unsaved-anchor">
+                <Icon name={downloadIconName} size="1rem" />
+                {downloadUnsaved && (
+                  <span className="workbench-bar-unsaved-dot" />
+                )}
+              </span>
             </ActionIcon>,
             tooltipFor(downloadLabel),
           )}
