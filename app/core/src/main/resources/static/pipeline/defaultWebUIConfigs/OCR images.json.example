@@ -4,16 +4,16 @@
     {
       "operation": "/api/v1/convert/img/pdf",
       "parameters": {
-        "fitOption": "fillPage",
-        "colorType": "color",
-        "autoRotate": true,
-        "fileInput": "automated"
-      }
-    },
-    {
-      "operation": "/api/v1/general/merge-pdfs",
-      "parameters": {
-        "sortType": "orderProvided",
+        "fromExtension": "image",
+        "toExtension": "pdf",
+        "imageOptions": {
+          "colorType": "color",
+          "dpi": 300,
+          "singleOrMultiple": "multiple",
+          "fitOption": "fillPage",
+          "autoRotate": true,
+          "combineImages": true
+        },
         "fileInput": "automated"
       }
     },
@@ -23,13 +23,9 @@
         "languages": [
           "eng"
         ],
-        "sidecar": false,
-        "deskew": false,
-        "clean": false,
-        "cleanFinal": false,
         "ocrType": "skip-text",
         "ocrRenderType": "hocr",
-        "removeImagesAfter": false,
+        "additionalOptions": [],
         "fileInput": "automated"
       }
     }

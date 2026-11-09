@@ -1,0 +1,43 @@
+{
+  "name": "OCR images",
+  "pipeline": [
+    {
+      "operation": "/api/v1/convert/img/pdf",
+      "parameters": {
+        "fitOption": "fillPage",
+        "colorType": "color",
+        "autoRotate": true,
+        "fileInput": "automated"
+      }
+    },
+    {
+      "operation": "/api/v1/general/merge-pdfs",
+      "parameters": {
+        "sortType": "orderProvided",
+        "fileInput": "automated"
+      }
+    },
+    {
+      "operation": "/api/v1/misc/ocr-pdf",
+      "parameters": {
+        "languages": [
+          "eng"
+        ],
+        "sidecar": false,
+        "deskew": false,
+        "clean": false,
+        "cleanFinal": false,
+        "ocrType": "skip-text",
+        "ocrRenderType": "hocr",
+        "removeImagesAfter": false,
+        "fileInput": "automated"
+      }
+    }
+  ],
+  "_examples": {
+    "outputDir": "{outputFolder}/{folderName}",
+    "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+  },
+  "outputDir": "{outputFolder}",
+  "outputFileName": "{filename}"
+}

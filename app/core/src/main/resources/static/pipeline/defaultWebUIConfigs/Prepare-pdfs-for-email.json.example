@@ -1,32 +1,42 @@
 {
-  "name": "Prepare-pdfs-for-email",
+  "name": "Shrink and split for email",
   "pipeline": [
     {
       "operation": "/api/v1/misc/repair",
-      "parameters": {}
+      "parameters": {
+        "fileInput": "automated"
+      }
     },
     {
       "operation": "/api/v1/security/sanitize-pdf",
       "parameters": {
         "removeJavaScript": true,
         "removeEmbeddedFiles": false,
+        "removeXMPMetadata": false,
         "removeMetadata": false,
         "removeLinks": false,
-        "removeFonts": false
+        "removeFonts": false,
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/misc/compress-pdf",
       "parameters": {
-        "optimizeLevel": 2,
-        "expectedOutputSize": ""
+        "compressionLevel": 2,
+        "grayscale": false,
+        "expectedSize": "",
+        "compressionMethod": "quality",
+        "fileSizeValue": "",
+        "fileSizeUnit": "MB",
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/general/split-by-size-or-count",
       "parameters": {
-        "splitType": 0,
-        "splitValue": "15MB"
+        "method": "bySize",
+        "splitValue": "15MB",
+        "fileInput": "automated"
       }
     }
   ],

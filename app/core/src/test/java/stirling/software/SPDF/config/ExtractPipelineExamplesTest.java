@@ -23,8 +23,7 @@ class ExtractPipelineExamplesTest {
         Path dir = base.resolve("defaultWebUIConfigs");
         Files.createDirectories(dir);
         try (InputStream in =
-                new ClassPathResource("static/pipeline/defaultWebUIConfigs/OCR images.json.example")
-                        .getInputStream()) {
+                new ClassPathResource("legacy-pipeline/OCR images.json").getInputStream()) {
             Files.write(dir.resolve("OCR images.json"), in.readAllBytes());
         }
         Files.writeString(dir.resolve("split-rotate-auto-rename.json"), "{\"name\":\"edited\"}");
