@@ -178,7 +178,10 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
             </Stack>
           </Stack>
         )}
-        <DeviceFontsNote deviceFonts={match.deviceFonts} />
+        <DeviceFontsNote
+          deviceFonts={match.deviceFonts}
+          status={match.status}
+        />
         <Group justify="flex-end">
           <Button
             variant="primary"
@@ -195,12 +198,15 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
 
 function DeviceFontsNote({
   deviceFonts,
+  status,
 }: {
   deviceFonts: ScanFontMatch["deviceFonts"];
+  status: ScanFontMatch["status"];
 }) {
   const { t } = useTranslation();
   const { available, permission, count, loading, load } = deviceFonts;
-  if (!available || permission === "unsupported") return null;
+  if (!available || permission === "unsupported" || status === "unmeasurable")
+    return null;
   if (count !== null && count > 0)
     return (
       <Group
@@ -264,10 +270,15 @@ function DeviceFontsNote({
               "pdfTextEditor.scanFont.deviceBlocked",
               "Your browser won't ask again. To allow it, click the icon left of the address bar, turn on Fonts, then try again.",
             )
-          : t(
-              "pdfTextEditor.scanFont.deviceHint",
-              "Fonts like Arial or Georgia may match better than the ones above. Your browser asks first. Fonts stay on this device, and only a font you use is embedded in the PDF.",
-            )}
+          : status === "noFont"
+            ? t(
+                "pdfTextEditor.scanFont.deviceHintNoFont",
+                "A font on this computer may be able to draw this text. Your browser asks first. Fonts stay on this device, and only a font you use is embedded in the PDF.",
+              )
+            : t(
+                "pdfTextEditor.scanFont.deviceHint",
+                "Fonts like Arial or Georgia may match better than the ones above. Your browser asks first. Fonts stay on this device, and only a font you use is embedded in the PDF.",
+              )}
       </Text>
       <Group>
         <Button

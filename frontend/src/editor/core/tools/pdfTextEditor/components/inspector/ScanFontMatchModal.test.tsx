@@ -79,4 +79,16 @@ describe("scan font picker device fonts prompt", () => {
     renderModal(prompting(false));
     expect(screen.queryByTestId("pdf-editor-scan-font-device")).toBeNull();
   });
+
+  it("does not offer device fonts when the scan is too faint to match", () => {
+    renderModal({ ...prompting(true), status: "unmeasurable", choices: [] });
+    expect(screen.queryByTestId("pdf-editor-scan-font-device")).toBeNull();
+  });
+
+  it("does not point at a list above when no font can draw the text", () => {
+    renderModal({ ...prompting(true), status: "noFont", choices: [] });
+    const card = screen.getByTestId("pdf-editor-scan-font-device");
+    expect(card).toHaveTextContent("pdfTextEditor.scanFont.deviceHintNoFont");
+    expect(screen.queryByText("pdfTextEditor.scanFont.deviceHint")).toBeNull();
+  });
 });
