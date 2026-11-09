@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static stirling.software.common.model.enumeration.Role.LIMITED_API_USER;
 import static stirling.software.common.model.enumeration.Role.USER;
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+import static stirling.software.common.util.RequestUriUtils.isShareLinkRead;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.ANONYMOUS;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
@@ -101,6 +102,9 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (isPublicAuthEndpoint(request.getRequestURI(), request.getContextPath())) {
+            if (isShareLinkRead(request.getRequestURI(), request.getContextPath())) {
+                tryJwtAuthentication(request);
+            }
             filterChain.doFilter(request, response);
             return;
         }
@@ -138,7 +142,16 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return isPublicAuthEndpoint(uri, contextPath);
+        return isPublicAuthEndpoint(uri, contextPath) && !isShareLinkRead(uri, contextPath);
+    }
+
+    private void tryJwtAuthentication(HttpServletRequest request) {
+        try {
+            processJwtAuthentication(request);
+        } catch (AuthenticationException e) {
+            log.debug("Optional JWT on a share link ignored: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        }
     }
 
     private void processJwtAuthentication(HttpServletRequest request)

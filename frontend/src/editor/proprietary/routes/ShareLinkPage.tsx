@@ -240,8 +240,6 @@ export default function ShareLinkPage() {
 
   const title =
     metadata?.fileName || t("storageShare.titleDefault", "Shared file");
-  const ownerLabel =
-    metadata?.owner || t("storageShare.ownerUnknown", "Unknown");
 
   return (
     <div style={{ minHeight: "100%", padding: "2.5rem 1.5rem" }}>
@@ -284,10 +282,12 @@ export default function ShareLinkPage() {
               <Text size="lg" fw={600} className={privateContentClassName}>
                 {title}
               </Text>
-              <Text size="sm" c="dimmed">
-                {t("storageShare.ownerLabel", "Owner")}:{" "}
-                <PrivateContent>{ownerLabel}</PrivateContent>
-              </Text>
+              {metadata?.owner && (
+                <Text size="sm" c="dimmed">
+                  {t("storageShare.ownerLabel", "Owner")}:{" "}
+                  <PrivateContent>{metadata.owner}</PrivateContent>
+                </Text>
+              )}
               {metadata?.createdAt && (
                 <Text size="sm" c="dimmed">
                   {t("storageShare.createdAt", "Created")}{" "}
