@@ -5,6 +5,7 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import {
+  collectContainersByPtr,
   collectMemberPtrs,
   measureObjBoxPt,
   readObjTexts,
@@ -13,13 +14,29 @@ import {
 import {
   addTextPiece,
   charOrigins,
+  glyphText,
+  inkStarts,
+  pieceOrigin,
+  placeGlyphs,
   readMatrix,
   readTextSource,
   restoreText,
   setPieceText,
+  type Placed,
+  type Placing,
   type Point,
   type TextSource,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
+import { splitByBlock } from "@editor/tools/pdfTextEditor/commands/splitByBlock";
+import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
+import { readsWordGap } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { taggedSpans } from "@editor/tools/pdfTextEditor/model/TextTags";
+import {
+  leaves,
+  lineList,
+  type Leaf,
+  type LeafList,
+} from "@editor/tools/pdfTextEditor/commands/runLeaves";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
@@ -44,7 +61,9 @@ import {
  * Tag part of a run's tagged text, code units `start` to `end`, as its own
  * element of `as`, read in language `lang` when given. The save pass gives
  * the element its place: inside the element the text was cut from for an
- * inline type, else splitting that element around it.
+ * inline type, else splitting that element around it. Splitting also
+ * replaces the run with one for each block, so `runId` may name no run once
+ * applied.
  */
 export class TagTextRangeCommand implements Command {
   readonly type = "tag-text-range";
@@ -57,6 +76,7 @@ export class TagTextRangeCommand implements Command {
   /** Chosen on first apply, so a redo reuses them. */
   private mcids: { cut: number; part: number } | null = null;
   private undo: Array<() => void> = [];
+  private movedTo: string | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -72,6 +92,14 @@ export class TagTextRangeCommand implements Command {
     this.end = opts.end;
     this.as = opts.as;
     this.lang = opts.lang ?? null;
+  }
+
+  /**
+   * The run a block cut moved the cut text into, once applied; null while
+   * the text is in the run it was cut from.
+   */
+  get movedToRunId(): string | null {
+    return this.movedTo;
   }
 
   apply(doc: EditorDocument): void {
@@ -131,7 +159,8 @@ export class TagTextRangeCommand implements Command {
         ? { name: this.as, mcid: cut }
         : { name: piece.tag.name, mcid: part };
     const drawn = redraw(doc, page, plan, tagFor, undo);
-    for (const affected of new Set(plan.objects.map((o) => o.leaf.run))) {
+    const runs = plan.objects.flatMap(({ leaf }) => (leaf ? [leaf.run] : []));
+    for (const affected of new Set(runs)) {
       undo.push(snapshotRun(affected));
       relist(doc, affected, plan, drawn);
       keepRunTag(doc, affected);
@@ -150,6 +179,11 @@ export class TagTextRangeCommand implements Command {
     if (this.lang !== null) {
       structure.setOwnLang(structure.element(cut)!.key, this.lang);
     }
+    if (isInlineType(this.as)) return;
+    const holder = splitByBlock(doc, page, run, undo).find(
+      (part) => innermostMcid(part.tagMarks) === cut,
+    );
+    this.movedTo = holder && holder !== run ? holder.id : null;
   }
 }
 
@@ -169,9 +203,12 @@ interface Piece {
   tag: TagMark;
 }
 
-/** An object the cut redraws some or all of, as its run lists it. */
+/** An object the cut redraws some or all of. */
 interface CutObject {
-  leaf: Leaf;
+  ptr: number;
+  text: string;
+  /** Where a run lists it; null for text no run shows, as a lone space. */
+  leaf: Leaf | null;
   source: TextSource;
   pieces: Piece[];
 }
@@ -190,8 +227,8 @@ interface CutPlan {
 /**
  * Lay the content of every MCID the range draws out in the order the file
  * holds it, the range's ends cutting objects into pieces. The range must be
- * one stretch of that content, with only the first MCID keeping a part
- * before it and only the last a part after.
+ * one stretch of that content's ink, with only the first MCID keeping a part
+ * before it and only the last a part after. Changes nothing.
  */
 function planCut(
   doc: EditorDocument,
@@ -210,25 +247,40 @@ function planCut(
   ];
   const objects = pageObjects(m, page);
   const ranged = new Map(inRange.map((leaf) => [leaf.ptr, leaf]));
+  const marks = new Map(objects.map((ptr) => [ptr, ownMark(doc, ptr)]));
+  const textOf = objectTexts(
+    m,
+    page,
+    leafOf,
+    objects.filter((ptr) => from.includes(marks.get(ptr)?.mcid ?? -1)),
+  );
 
   const pieces: Piece[] = [];
   for (const [n, mcid] of from.entries()) {
     const own = objects.flatMap((ptr) => {
-      const tag = ownMark(doc, ptr);
-      if (tag?.mcid !== mcid) return [];
+      const tag = marks.get(ptr);
+      if (!tag || tag.mcid !== mcid) return [];
+      const text = textOf.get(ptr)!;
       const leaf = ranged.get(ptr);
-      if (!leaf) {
-        const to = leafOf.get(ptr)?.text.length ?? 0;
-        return [{ ptr, tag, from: 0, to, cut: false }];
-      }
-      return cutLeaf(leaf, start, end).map((part) => ({ ptr, tag, ...part }));
+      const parts = leaf
+        ? cutLeaf(leaf, start, end)
+        : [{ from: 0, to: text.length, cut: false }];
+      return parts.map((part) => ({
+        ptr,
+        tag,
+        ...part,
+        ink: /\S/.test(text.slice(part.from, part.to)),
+      }));
     });
     const cut = own.map((part) => part.cut);
     const first = cut.indexOf(true);
     const last = cut.lastIndexOf(true);
-    const stretch = first >= 0 && cut.slice(first, last + 1).every(Boolean);
-    const before = first > 0 && n > 0;
-    const after = last < own.length - 1 && n < from.length - 1;
+    const inked = (parts: typeof own) => parts.some((part) => part.ink);
+    const stretch =
+      first >= 0 &&
+      own.slice(first, last + 1).every((part) => part.cut || !part.ink);
+    const before = n > 0 && inked(own.slice(0, first));
+    const after = n < from.length - 1 && inked(own.slice(last + 1));
     if (!stretch || before || after) {
       throw new Error("The range is not one stretch of its element's text");
     }
@@ -237,34 +289,73 @@ function planCut(
     });
   }
 
+  const sources = new Map(
+    [...new Set(pieces.map((piece) => piece.ptr))].map((ptr) => [
+      ptr,
+      readTextSource(m, ptr),
+    ]),
+  );
   const redrawn = new Set<Group>(["cut"]);
+  const inGroup = (group: Group) =>
+    pieces.filter((piece) => piece.group === group);
   const length = (group: Group) =>
-    pieces
-      .filter((piece) => piece.group === group)
-      .reduce((sum, piece) => sum + piece.to - piece.from, 0);
+    inGroup(group).reduce((sum, piece) => sum + piece.to - piece.from, 0);
+  const drawable = (group: Group) =>
+    inGroup(group).every((piece) => sources.get(piece.ptr));
   if (from.length === 1 && length("before") > 0 && length("after") > 0) {
-    redrawn.add(length("before") <= length("after") ? "before" : "after");
+    // A part that is not all text, as an underline drawn with it, cannot be
+    // redrawn, so the other is.
+    const [shorter, longer]: Group[] =
+      length("before") <= length("after")
+        ? ["before", "after"]
+        : ["after", "before"];
+    redrawn.add(drawable(shorter) ? shorter : longer);
   }
 
-  const cutObjects: CutObject[] = [];
-  for (const ptr of new Set(pieces.map((piece) => piece.ptr))) {
+  const cutObjects = [...sources].flatMap(([ptr, source]): CutObject[] => {
     const own = pieces.filter((piece) => piece.ptr === ptr);
-    if (!own.some((piece) => redrawn.has(piece.group))) continue;
-    const leaf = leafOf.get(ptr);
-    const source = readTextSource(m, ptr);
-    if (!leaf || !source) {
-      throw new Error("Only text the editor reads can be redrawn");
-    }
-    cutObjects.push({ leaf, source, pieces: own });
-  }
+    if (!own.some((piece) => redrawn.has(piece.group))) return [];
+    if (!source) throw new Error("Only text can be redrawn");
+    const leaf = leafOf.get(ptr) ?? null;
+    return [{ ptr, text: textOf.get(ptr)!, leaf, source, pieces: own }];
+  });
   verifyTexts(m, page, cutObjects);
+  const origins = originsFor(m, page, cutObjects);
+  // A piece of only spaces the text page inferred is drawn by no glyph, so
+  // once redrawn it is no content of any MCID.
+  const empty = new Set(
+    cutObjects.flatMap(({ ptr, text, pieces: own }) =>
+      own.filter(
+        (piece) => !glyphText(text, origins.get(ptr)!, piece.from, piece.to),
+      ),
+    ),
+  );
+  const drawn = (piece: Piece) => !empty.has(piece);
   return {
     from,
-    pieces,
+    pieces: pieces.filter(drawn),
     redrawn,
-    objects: cutObjects,
-    origins: originsFor(m, page, cutObjects),
+    objects: cutObjects.map((o) => ({ ...o, pieces: o.pieces.filter(drawn) })),
+    origins,
   };
+}
+
+/**
+ * Each object's text: as its run lists it, or as the text page reads it for
+ * one no run lists, as a lone space. Empty for an object drawing no text.
+ */
+function objectTexts(
+  m: WrappedPdfiumModule,
+  page: Page,
+  leafOf: ReadonlyMap<number, Leaf>,
+  objects: readonly number[],
+): Map<number, string> {
+  const unlisted = objects.filter((ptr) => !leafOf.has(ptr));
+  const read = readObjTexts(m, page.pagePtr, unlisted);
+  const readOf = new Map(unlisted.map((ptr, i) => [ptr, read[i]]));
+  return new Map(
+    objects.map((ptr) => [ptr, leafOf.get(ptr)?.text ?? readOf.get(ptr) ?? ""]),
+  );
 }
 
 function groupAt(i: number, first: number, last: number): Group {
@@ -296,43 +387,42 @@ function verifyTexts(
   const held = readObjTexts(
     m,
     page.pagePtr,
-    objects.map((o) => o.leaf.ptr),
+    objects.map((o) => o.ptr),
   );
-  if (held.some((text, i) => text !== objects[i].leaf.text)) {
+  if (held.some((text, i) => text !== objects[i].text)) {
     throw new Error("The text the editor shows is not the text drawn");
   }
 }
 
-/** Where each piece starts, for every piece that does not start its object. */
+/** Where each object draws each character of its text a glyph draws. */
 function originsFor(
   m: WrappedPdfiumModule,
   page: Page,
   objects: readonly CutObject[],
 ): Map<number, Map<number, Point>> {
-  const wanted = new Map<number, Set<number>>();
-  const lengths = new Map<number, number>();
-  for (const { leaf, pieces } of objects) {
-    const offsets = pieces.map((piece) => piece.from).filter((at) => at > 0);
-    if (offsets.length === 0) continue;
-    wanted.set(leaf.ptr, new Set(offsets));
-    lengths.set(leaf.ptr, leaf.text.length);
-  }
-  const origins = charOrigins(m, page.pagePtr, wanted, lengths);
-  for (const [ptr, offsets] of wanted) {
-    if ([...offsets].some((at) => !origins.get(ptr)?.has(at))) {
+  const origins = charOrigins(
+    m,
+    page.pagePtr,
+    new Map(objects.map(({ ptr, text }) => [ptr, text])),
+  );
+  for (const { ptr, text } of objects) {
+    const drawn = origins.get(ptr);
+    const ink = inkStarts(text, 0, text.length);
+    if (!drawn || ink.some((at) => !drawn.has(at))) {
       throw new Error("PDFium cannot place a piece of the text");
     }
   }
   return origins;
 }
 
-/** The objects drawing each cut object's pieces, in reading order, by the object it was. */
-type Drawn = Map<number, Array<{ ptr: number; piece: Piece }>>;
+/** The objects drawing each cut object's text, in reading order, by the object it was. */
+type Drawn = Map<number, Placed[]>;
 
 /**
  * Redraw the pieces in the redrawn groups as new objects, in reading order so
  * PDFium writes each MCID's content in that order. An object keeping a piece
- * is cut down to it; one keeping none is taken off the page.
+ * is cut down to it; one keeping none is taken off the page. Every glyph is
+ * then drawn where it was.
  */
 function redraw(
   doc: EditorDocument,
@@ -342,25 +432,52 @@ function redraw(
   undo: Array<() => void>,
 ): Drawn {
   const m = doc.module;
-  const drawn: Drawn = new Map();
-  const expected = new Map<number, string>();
-  const objectFor = new Map(plan.objects.map((o) => [o.leaf.ptr, o]));
+  const heads: Array<{ piece: Piece; placing: Placing }> = [];
+  const placing = (
+    object: CutObject,
+    piece: Piece,
+    ptr: number,
+    tags: readonly TagMark[],
+    fresh: boolean,
+  ): Placing => ({
+    ptr,
+    from: piece.from,
+    to: piece.to,
+    text: object.text,
+    source: object.source,
+    origins: plan.origins.get(object.ptr)!,
+    tags,
+    fresh,
+  });
+  const glyphsOf = (object: CutObject, piece: Piece) =>
+    glyphText(object.text, plan.origins.get(object.ptr)!, piece.from, piece.to);
+  const objectFor = new Map(plan.objects.map((o) => [o.ptr, o]));
   for (const piece of plan.pieces) {
     const object = objectFor.get(piece.ptr);
     if (!object || !plan.redrawn.has(piece.group)) continue;
-    const text = object.leaf.text.slice(piece.from, piece.to);
-    const origin = startOf(object, piece, plan.origins);
-    const ptr = addTextPiece(m, doc.docPtr, page, object.source, text, origin, [
-      tagFor(piece),
-    ]);
+    const tags = [tagFor(piece)];
+    const { matrix } = object.source;
+    const origin = pieceOrigin(
+      plan.origins.get(object.ptr)!,
+      object.text,
+      piece.from,
+    ) ?? { x: matrix[4], y: matrix[5] };
+    const ptr = addTextPiece(
+      m,
+      doc.docPtr,
+      page,
+      object.source,
+      glyphsOf(object, piece),
+      origin,
+      tags,
+    );
     if (!ptr) throw new Error("PDFium could not draw the text");
     undo.push(() => removeAndDestroyObject(m, page.pagePtr, ptr));
-    expected.set(ptr, text);
-    drawn.set(piece.ptr, [...(drawn.get(piece.ptr) ?? []), { ptr, piece }]);
+    heads.push({ piece, placing: placing(object, piece, ptr, tags, true) });
   }
 
   for (const object of plan.objects) {
-    const { ptr, text } = object.leaf;
+    const { ptr, text } = object;
     const kept = object.pieces.find((piece) => !plan.redrawn.has(piece.group));
     if (!kept) {
       const index = pageObjects(m, page).indexOf(ptr);
@@ -369,40 +486,84 @@ function redraw(
       continue;
     }
     const matrix = readMatrix(m, ptr);
-    const keptText = text.slice(kept.from, kept.to);
-    const origin = kept.from > 0 ? startOf(object, kept, plan.origins) : null;
-    if (!matrix || !setPieceText(m, ptr, keptText, origin)) {
+    const origin =
+      kept.from > 0
+        ? pieceOrigin(plan.origins.get(ptr)!, text, kept.from)
+        : null;
+    if (!matrix || !setPieceText(m, ptr, glyphsOf(object, kept), origin)) {
       throw new Error("PDFium could not redraw the text");
     }
     undo.push(() => restoreText(m, ptr, text, matrix));
-    expected.set(ptr, keptText);
-    const pieces = [...(drawn.get(ptr) ?? []), { ptr, piece: kept }];
-    drawn.set(
-      ptr,
-      pieces.sort((a, b) => a.piece.from - b.piece.from),
-    );
+    const tags = readTagMarks(m, ptr);
+    heads.push({
+      piece: kept,
+      placing: placing(object, kept, ptr, tags, false),
+    });
   }
 
-  // The text page ends an object's text with a space it infers from the gap
-  // to the next, which is no glyph of the object's.
-  const read = readObjTexts(m, page.pagePtr, [...expected.keys()]);
-  if (
-    [...expected.values()].some(
-      (text, i) => read[i]?.trimEnd() !== text.trimEnd(),
-    )
-  ) {
-    throw new Error("PDFium redrew the text differently");
-  }
+  const placed = placeGlyphs(
+    m,
+    doc.docPtr,
+    page,
+    heads.map((head) => head.placing),
+    undo,
+  );
+  const drawn: Drawn = new Map();
+  heads.forEach(({ piece }, i) => {
+    drawn.set(piece.ptr, [...(drawn.get(piece.ptr) ?? []), ...placed[i]]);
+  });
+  for (const parts of drawn.values()) parts.sort((a, b) => a.from - b.from);
+  verifyRedrawn(m, page, plan, drawn);
   return drawn;
 }
 
-function startOf(
-  object: CutObject,
-  piece: Piece,
-  origins: ReadonlyMap<number, ReadonlyMap<number, Point>>,
-): Point {
-  if (piece.from > 0) return origins.get(object.leaf.ptr)!.get(piece.from)!;
-  return { x: object.source.matrix[4], y: object.source.matrix[5] };
+function verifyRedrawn(
+  m: WrappedPdfiumModule,
+  page: Page,
+  plan: CutPlan,
+  drawn: Drawn,
+): void {
+  const parts = plan.objects.flatMap((object) =>
+    (drawn.get(object.ptr) ?? []).map((part, i, all) => ({
+      object,
+      part,
+      next: all[i + 1],
+    })),
+  );
+  const read = readObjTexts(
+    m,
+    page.pagePtr,
+    parts.map(({ part }) => part.ptr),
+  );
+  const wrong = parts.some(({ object, part, next }, i) => {
+    const { text } = object;
+    // A part starting with a space the text page inferred draws no glyph for
+    // it, and the text page reads that space as the part before's.
+    const own = text.slice(part.from, part.to).trimStart();
+    const got = read[i]?.trimStart();
+    // The text page ends an object's text with a space it infers from the gap
+    // to the next, which is no glyph of the object's.
+    if (got?.trimEnd() !== own.trimEnd()) return true;
+    // Between two parts of one word, as letter-spaced text drawn glyph by
+    // glyph, that space would split the word, as would the one a line read
+    // puts in a wide gap.
+    const inWord = next && /\S$/.test(own) && /\S/.test(text[part.to] ?? "");
+    return inWord && (got !== own || readApart(m, object.source, part, next));
+  });
+  if (wrong) throw new Error("PDFium redrew the text differently");
+}
+
+function readApart(
+  m: WrappedPdfiumModule,
+  source: TextSource,
+  part: Placed,
+  next: Placed,
+): boolean {
+  const before = measureObjBoxPt(m, part.ptr);
+  const after = measureObjBoxPt(m, next.ptr);
+  if (!before || !after) return true;
+  const fontSize = source.size * Math.hypot(source.matrix[0], source.matrix[1]);
+  return readsWordGap(after.x - (before.x + before.width), fontSize);
 }
 
 /** List the objects now drawing a run's text in place of the ones they replace. */
@@ -414,8 +575,7 @@ function relist(
 ): void {
   const m = doc.module;
   const replaced = plan.objects
-    .map((o) => o.leaf)
-    .filter((leaf) => leaf.run === run)
+    .flatMap(({ leaf }) => (leaf?.run === run ? [leaf] : []))
     .sort((a, b) => b.index - a.index);
   for (const leaf of replaced) {
     const now = drawn.get(leaf.ptr)!;
@@ -426,9 +586,9 @@ function relist(
     };
     const entries = {
       ptrs: now.map((d) => d.ptr),
-      texts: now.map((d) => leaf.text.slice(d.piece.from, d.piece.to)),
+      texts: now.map((d) => leaf.text.slice(d.from, d.to)),
       bounds: now.map((d) => box(d.ptr)),
-      starts: now.map((d) => d.piece.from),
+      starts: now.map((d) => d.from),
     };
     replaceEntries(leaf.list, leaf.index, entries);
     // A paragraph keeps its first line's arrays on the run as well.
@@ -465,67 +625,6 @@ function replaceEntries(
   list.charStarts.splice(index, 1, ...entries.starts.map((at) => start + at));
 }
 
-/** One object's text in a run, where it starts in the run's text, and the arrays listing it. */
-interface Leaf {
-  run: TextRun;
-  ptr: number;
-  text: string;
-  start: number;
-  list: LeafList;
-  index: number;
-}
-
-/** A run's parallel arrays for one line's objects. */
-interface LeafList {
-  ptrs: number[];
-  texts: string[];
-  bounds: Array<{ x: number; right: number }>;
-  charStarts: number[];
-  /** Where the line starts in the run's text. */
-  base: number;
-}
-
-function lineList(run: TextRun): LeafList {
-  return {
-    ptrs: run.mergedFromPtrs,
-    texts: run.mergedFromTexts,
-    bounds: run.mergedFromBounds,
-    charStarts: run.mergedFromCharStarts,
-    base: 0,
-  };
-}
-
-/** The run's objects in reading order; null when their texts do not tile the run's. */
-function leaves(run: TextRun): Leaf[] | null {
-  const lists: LeafList[] =
-    run.paragraphLineSlots.length > 0
-      ? run.paragraphLineSlots.map((slot) => ({
-          ptrs: slot.mergedFromPtrs,
-          texts: slot.mergedFromTexts,
-          bounds: slot.mergedFromBounds,
-          charStarts: slot.mergedFromCharStarts,
-          base: slot.startChar,
-        }))
-      : [lineList(run)];
-  const out = lists.flatMap((list) =>
-    list.ptrs.map((ptr, index) => ({
-      run,
-      ptr,
-      text: list.texts[index] ?? "",
-      start: list.base + (list.charStarts[index] ?? Number.NaN),
-      list,
-      index,
-    })),
-  );
-  const tiles = out.every(
-    (leaf, i) =>
-      leaf.ptr !== 0 &&
-      run.text.slice(leaf.start, leaf.start + leaf.text.length) === leaf.text &&
-      (i === 0 || leaf.start >= out[i - 1].start + out[i - 1].text.length),
-  );
-  return out.length > 0 && tiles ? out : null;
-}
-
 /** Every page-level object a run lists, and where. */
 function pageLeaves(page: Page): Map<number, Leaf> {
   const out = new Map<number, Leaf>();
@@ -544,8 +643,9 @@ function pageObjects(m: WrappedPdfiumModule, page: Page): number[] {
 
 /**
  * The element owning every object the range draws. Throws when the run's
- * objects cannot be mapped to its text, or the range holds untagged or
- * artifact text, or text of more than one element.
+ * text is inside a form XObject, or its objects cannot be mapped to its text,
+ * or the range holds untagged or artifact text, or text of more than one
+ * element.
  */
 function rangeOwner(
   doc: EditorDocument,
@@ -553,6 +653,12 @@ function rangeOwner(
   start: number,
   end: number,
 ): StructureElement {
+  // A form's marks resolve against the form's own /StructParents, and its
+  // content is no page content a cut can redraw.
+  const containers = [...collectContainersByPtr(run).values()];
+  if (run.containerPtr !== 0 || containers.some(Boolean)) {
+    throw new Error("Only text drawn on the page itself can be cut");
+  }
   const all = leaves(run);
   if (!all) throw new Error("The run's objects do not match its text");
   const inRange = all.filter(
@@ -575,8 +681,9 @@ function rangeOwner(
 /**
  * The types code units `start` to `end` of run `runId` can be tagged as:
  * every TEXT_RANGE_TYPES entry, only the inline ones when the text's element
- * is not a block it can split, or none. Checks what apply refuses, without
- * changing anything.
+ * is not a block it can split, or none. Runs apply's checks without changing
+ * anything, all but those on where the redrawn text lands, which only drawing
+ * it shows.
  */
 export function rangeTagTypes(
   doc: EditorDocument,
@@ -592,6 +699,7 @@ export function rangeTagTypes(
   let owner: StructureElement;
   try {
     owner = rangeOwner(doc, run, start, end);
+    planCut(doc, doc.page(pageIndex), run, start, end);
   } catch {
     return [];
   }
@@ -607,29 +715,32 @@ export interface ElementStretch {
 }
 
 /**
- * The stretches of run `runId`'s text each element marks, in reading order:
- * one for each series of the run's objects one element marks. Untagged and
- * artifact text is left out, and every stretch when the run's objects cannot
- * be mapped to its text.
+ * The stretches of run `runId`'s text each element marks, in reading order,
+ * as `readRunTags` places its objects' tags. Untagged and artifact text is
+ * left out.
  */
 export function elementStretches(
   doc: EditorDocument,
   pageIndex: number,
   runId: string,
 ): ElementStretch[] {
-  const run = doc.page(pageIndex).findRun(runId);
-  const all = run ? leaves(run) : null;
-  if (!all) return [];
+  const page = doc.page(pageIndex);
+  const run = page.findRun(runId);
+  if (!run) return [];
   const structure = doc.structure(pageIndex);
   const out: ElementStretch[] = [];
-  let previous: StructureElement | null = null;
-  for (const leaf of all) {
-    const mcid = ownMark(doc, leaf.ptr)?.mcid ?? null;
+  const spans = taggedSpans(readRunTags(doc, page, run), run.text.length);
+  for (const { start, end, tags } of spans) {
+    const mcid = tags.some((tag) => tag.name === ARTIFACT_TAG)
+      ? null
+      : innermostMcid(tags);
     const element = mcid === null ? null : structure.element(mcid);
-    const end = leaf.start + leaf.text.length;
-    if (element && element === previous) out.at(-1)!.end = end;
-    else if (element) out.push({ start: leaf.start, end, element });
-    previous = element;
+    const last = out.at(-1);
+    if (element && last?.element === element && last.end === start) {
+      last.end = end;
+    } else if (element) {
+      out.push({ start, end, element });
+    }
   }
   return out;
 }
