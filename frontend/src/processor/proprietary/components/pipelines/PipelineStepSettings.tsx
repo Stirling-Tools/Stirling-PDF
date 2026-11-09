@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { Banner, Chip } from "@editor/ui";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { SidebarProvider } from "@editor/contexts/SidebarContext";
 import { type ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { type ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -19,6 +18,7 @@ import { isIngestStep } from "@processor/components/pipelines/docparseStep";
 import { IngestStepConfig } from "@processor/components/pipelines/IngestStepConfig";
 import type { ExternalApiStepParams } from "@processor/components/policies/stepOperations";
 import "@processor/components/pipelines/PipelineStepSettings.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /**
  * A params update: the next params outright, or a merge from the latest params. Settings UIs fire
@@ -142,19 +142,17 @@ export function PipelineStepSettings({
       );
     }
     return (
-      <PreferencesProvider>
-        <SidebarProvider>
-          <Suspense fallback={null}>
-            <Settings
-              parameters={step.params}
-              onParameterChange={(key, value) =>
-                onChange((prev) => ({ ...prev, [key]: value }))
-              }
-              disabled={false}
-            />
-          </Suspense>
-        </SidebarProvider>
-      </PreferencesProvider>
+      <SidebarProvider>
+        <Suspense fallback={null}>
+          <Settings
+            parameters={step.params}
+            onParameterChange={(key, value) =>
+              onChange((prev) => ({ ...prev, [key]: value }))
+            }
+            disabled={false}
+          />
+        </Suspense>
+      </SidebarProvider>
     );
   }
 
@@ -172,7 +170,7 @@ export function PipelineStepSettings({
                 leadingIcon={<Icon name="file" size={"0.875rem"} />}
                 onRemove={() => onClearBinding(chip.field)}
               >
-                {chip.label}
+                <PrivateContent>{chip.label}</PrivateContent>
               </Chip>
             ))}
           </div>

@@ -13,6 +13,7 @@ import {
   AutoRotateReport as ReportData,
   AutoRotatePageResult,
 } from "@editor/hooks/tools/autoRotate/useAutoRotateOperation";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AutoRotateReportProps {
   reports: { fileName: string; report: ReportData }[];
@@ -102,7 +103,12 @@ const AutoRotateReport = ({ reports }: AutoRotateReportProps) => {
       {reports.map(({ fileName, report }) => (
         <Stack gap="xs" key={fileName}>
           {reports.length > 1 && (
-            <Text size="sm" fw={500} truncate>
+            <Text
+              size="sm"
+              fw={500}
+              truncate
+              className={privateContentClassName}
+            >
               {fileName}
             </Text>
           )}

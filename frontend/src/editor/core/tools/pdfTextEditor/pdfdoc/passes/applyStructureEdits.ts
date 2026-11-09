@@ -17,6 +17,7 @@ import {
   noteId,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import { cutElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/cutElements";
+import { ensureStructureTree } from "@editor/tools/pdfTextEditor/pdfdoc/passes/ensureStructureTree";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { unwrapElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/unwrapElements";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
@@ -37,6 +38,10 @@ export interface StructureEdit {
   type?: StructureType;
   /** The new /S of the element itself; null removes it, its content joining its parent. */
   ownType?: StructureType | null;
+  /** The new /Lang of the element itself; null removes it, absent leaves it. */
+  lang?: string | null;
+  /** As `lang`, for the block the element belongs to, as `type` is. */
+  blockLang?: string | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
   /**
@@ -74,6 +79,8 @@ export class StructureEditError extends Error {
 
 /**
  * Apply `edits` to `bytes`, all or none. Later edits to the same element win.
+ * An element added to a file or page with no structure yet first gets it one
+ * (ensureStructureTree), in a revision of its own.
  * Throws StructureEditError when any edit cannot be written, including when
  * the file cannot be extended at all.
  */
@@ -85,10 +92,19 @@ export async function applyStructureEdits(
   const fail = (reason: string) =>
     new StructureEditError(edits.map((edit) => ({ edit, reason })));
 
-  const pdf = await RawPdf.parse(bytes);
-  if (!pdf) throw fail("the file could not be read");
+  const opened = await RawPdf.parse(bytes);
+  if (!opened) throw fail("the file could not be read");
   // Strings in an encrypted file must be encrypted too, which this cannot do.
-  if (pdf.encrypted) throw fail("the file is encrypted");
+  if (opened.encrypted) throw fail("the file is encrypted");
+  // Only an added element can be the first on a page or in the file: every
+  // other edit addresses one the file already has.
+  const skeleton = ensureStructureTree(
+    opened,
+    edits.filter((edit) => edit.newElement).map((edit) => edit.pageIndex),
+  );
+  if (typeof skeleton === "string") throw fail(skeleton);
+  const pdf = skeleton ? await RawPdf.parse(skeleton) : opened;
+  if (!pdf) throw fail("the file could not be read");
   const catalog = pdf.objectBody(pdf.rootNum);
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) throw fail("the file has no structure tree");
@@ -119,7 +135,8 @@ export async function applyStructureEdits(
       unwraps.push({ edit, owner });
       continue;
     }
-    const target = edit.type ? nodes.blockOf(owner) : owner;
+    const ofBlock = edit.type !== undefined || edit.blockLang !== undefined;
+    const target = ofBlock ? nodes.blockOf(owner) : owner;
     const body = bodies.get(target) ?? pdf.objectBody(target);
     const updated = body === null ? null : edited(pdf, body, edit, target);
     if (updated === null) {
@@ -152,6 +169,7 @@ export async function applyStructureEdits(
       ...edit,
       type: edit.cut!.type,
       alt: edit.alt ?? null,
+      lang: edit.lang ?? null,
       cut: edit.cut!,
     })),
     bodies,
@@ -170,6 +188,7 @@ export async function applyStructureEdits(
       ...edit,
       ...edit.newElement!,
       alt: edit.alt ?? null,
+      lang: edit.lang ?? null,
     })),
     bodies,
     parentTree,
@@ -201,7 +220,7 @@ export async function applyStructureEdits(
   return out;
 }
 
-/** The element's body with `edit`'s /Alt and /S applied; null when it is not a dictionary. */
+/** The element's body with `edit`'s /Alt, /Lang and /S applied; null when it is not a dictionary. */
 function edited(
   pdf: RawPdf,
   body: string,
@@ -211,10 +230,11 @@ function edited(
   let out: string | null = body;
   const type = edit.type ?? edit.ownType;
   if (edit.alt !== undefined) {
-    out =
-      edit.alt === null
-        ? removeDictEntry(out, "Alt")
-        : setDictEntry(out, "Alt", encodeTextString(edit.alt));
+    out = withTextEntry(out, "Alt", edit.alt);
+  }
+  const lang = edit.blockLang !== undefined ? edit.blockLang : edit.lang;
+  if (out !== null && lang !== undefined) {
+    out = withTextEntry(out, "Lang", lang);
   }
   if (out !== null && type) {
     out = setDictEntry(out, "S", `/${type}`);
@@ -223,6 +243,17 @@ function edited(
     }
   }
   return out;
+}
+
+/** The body with text-string entry `key` set to `value`, or removed for null. */
+function withTextEntry(
+  body: string,
+  key: string,
+  value: string | null,
+): string | null {
+  return value === null
+    ? removeDictEntry(body, key)
+    : setDictEntry(body, key, encodeTextString(value));
 }
 
 /** The structure element's object number, or why it cannot be found. */
