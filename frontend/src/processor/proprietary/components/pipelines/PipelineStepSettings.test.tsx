@@ -10,7 +10,6 @@ import {
 import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import { PortalTestProviders } from "@processor/test/TestQueryProvider";
 import { useTranslatedToolCatalog } from "@editor/data/useTranslatedToolRegistry";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { SidebarProvider } from "@editor/contexts/SidebarContext";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import type { ToolRegistry } from "@editor/data/toolsTaxonomy";
@@ -43,9 +42,8 @@ vi.mock("react-i18next", async (importOriginal) => ({
 }));
 
 // A stand-in tool-settings UI that uses the shared editor Tooltip. The Tooltip
-// pulls in the Preferences + Sidebar contexts, which the portal does not mount
-// app-wide — so this reproduces the "usePreferences must be used within a
-// PreferencesProvider" crash unless PipelineStepSettings supplies them.
+// pulls in the Sidebar context, which the portal does not mount app-wide, so
+// this crashes unless PipelineStepSettings supplies it.
 function TooltipSettings() {
   return (
     <Tooltip content="help">
@@ -108,7 +106,7 @@ const overlayRegistry = {
 } as unknown as Partial<ToolRegistry>;
 
 describe("PipelineStepSettings", () => {
-  it("renders reused editor tool settings (which use the shared Tooltip) without app-wide Preferences/Sidebar providers", () => {
+  it("renders reused editor tool settings (which use the shared Tooltip) without an app-wide Sidebar provider", () => {
     expect(() =>
       render(
         <PortalTestProviders>
@@ -252,7 +250,7 @@ class CaptureBoundary extends Component<
 }
 
 // Automated version of the manual "add every tool" sweep: render each tool's real automation
-// settings in a portal-only context (the same Preferences + Sidebar + Suspense wrappers
+// settings in a portal-only context (the platform's preferences plus the Sidebar + Suspense wrappers
 // PipelineStepSettings uses, and NO editor providers) and fail listing any that throw. This is the
 // guard that would have caught Change Metadata (useViewer) and Overlay PDFs (useFilesModalContext).
 describe("PipelineStepSettings: every tool's settings render in the portal", () => {
@@ -274,33 +272,31 @@ describe("PipelineStepSettings: every tool's settings render in the portal", () 
     const failures: { toolId: string; message: string }[] = [];
     render(
       <PortalTestProviders>
-        <PreferencesProvider>
-          <SidebarProvider>
-            {editableTools.map(([toolId, entry]) => {
-              const Settings = entry.automationSettings as ComponentType<
-                ToolAutomationSettingsProps<ErasedToolParams>
-              >;
-              const params = entry.operationConfig?.defaultParameters ?? {};
-              return (
-                <CaptureBoundary
-                  key={toolId}
-                  onError={(error) => {
-                    failures.push({ toolId, message: error.message });
-                  }}
-                >
-                  <Suspense fallback={null}>
-                    <Settings
-                      parameters={params}
-                      onParameterChange={() => {}}
-                      disabled={false}
-                    />
-                    <span data-testid={`rendered-${toolId}`} />
-                  </Suspense>
-                </CaptureBoundary>
-              );
-            })}
-          </SidebarProvider>
-        </PreferencesProvider>
+        <SidebarProvider>
+          {editableTools.map(([toolId, entry]) => {
+            const Settings = entry.automationSettings as ComponentType<
+              ToolAutomationSettingsProps<ErasedToolParams>
+            >;
+            const params = entry.operationConfig?.defaultParameters ?? {};
+            return (
+              <CaptureBoundary
+                key={toolId}
+                onError={(error) => {
+                  failures.push({ toolId, message: error.message });
+                }}
+              >
+                <Suspense fallback={null}>
+                  <Settings
+                    parameters={params}
+                    onParameterChange={() => {}}
+                    disabled={false}
+                  />
+                  <span data-testid={`rendered-${toolId}`} />
+                </Suspense>
+              </CaptureBoundary>
+            );
+          })}
+        </SidebarProvider>
       </PortalTestProviders>,
     );
 
