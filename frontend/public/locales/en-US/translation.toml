@@ -6589,7 +6589,7 @@ saved = "Saved to OneDrive"
 saveToFolder = "Upload copy to OneDrive…"
 saving = "Saving to OneDrive…"
 signInToSave = "Sign in to your server to save to OneDrive."
-updateOriginal = "Update original in OneDrive"
+updateOriginal = "Update in OneDrive"
 uploadToOneDrive = "Upload to OneDrive…"
 
 [oneDriveSave.menu]

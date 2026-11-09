@@ -303,7 +303,7 @@ export const FileItem = React.memo(function FileItem({
       : blockedReason(action);
   const updateInOneDriveLabel = t(
     "oneDriveSave.updateOriginal",
-    "Update original in OneDrive",
+    "Update in OneDrive",
   );
   const saveToOneDriveFolderLabel = hasOneDriveOrigin
     ? t("oneDriveSave.saveToFolder", "Upload copy to OneDrive…")
