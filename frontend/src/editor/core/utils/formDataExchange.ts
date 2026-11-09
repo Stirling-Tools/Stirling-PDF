@@ -99,7 +99,9 @@ export function parseXfdf(xmlText: string): FormDataImport {
   const parserError = doc.getElementsByTagName("parsererror")[0];
   if (parserError) {
     const detail =
-      parserError.textContent?.trim().split("\n")[0] ?? "unknown error";
+      (parserError.querySelector("div") ?? parserError).textContent
+        ?.trim()
+        .split("\n")[0] || "unknown error";
     throw new FormDataParseError(
       "invalidXml",
       `File is not valid XML: ${detail}`,

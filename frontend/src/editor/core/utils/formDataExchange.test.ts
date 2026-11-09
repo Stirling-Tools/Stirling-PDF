@@ -200,6 +200,28 @@ describe("formDataExchange", () => {
       expect(() => parseXfdf("<xfdf><fields></xfdf>")).toThrow(/not valid XML/);
     });
 
+    test("reports only the parser message, not Chromium's page wrapper", () => {
+      const chromiumError = new DOMParser().parseFromString(
+        `<html><body><parsererror xmlns="http://www.w3.org/1999/xhtml"><h3>This page contains the following errors:</h3><div>error on line 1 at column 22: Opening and ending tag mismatch: fields line 1 and xfdf
+</div><h3>Below is a rendering of the page up to the first error.</h3></parsererror></body></html>`,
+        "text/html",
+      );
+      const parse = vi
+        .spyOn(DOMParser.prototype, "parseFromString")
+        .mockReturnValue(chromiumError);
+      try {
+        expect(() => parseXfdf("<xfdf><fields></xfdf>")).toThrow(
+          expect.objectContaining({
+            code: "invalidXml",
+            detail:
+              "error on line 1 at column 22: Opening and ending tag mismatch: fields line 1 and xfdf",
+          }),
+        );
+      } finally {
+        parse.mockRestore();
+      }
+    });
+
     test("rejects XML that is not XFDF", () => {
       expect(() => parseXfdf('<?xml version="1.0"?><foo/>')).toThrow(
         /expected an <xfdf> root/,
