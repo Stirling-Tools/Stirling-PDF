@@ -274,5 +274,6 @@ def _cleanup_async_job_files():
 
 
 def after_all(context):
-    _cleanup_async_job_files()
+    if context.config.userdata.getbool("sweep_async_jobs", True):
+        _cleanup_async_job_files()
     parallel_support.print_summary()

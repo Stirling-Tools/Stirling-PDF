@@ -22,14 +22,16 @@ export type TextTag =
   /** `taggable` when TagTextCommand can give the text an element. */
   | { kind: "untagged"; documentTagged: boolean; taggable: boolean }
   /** Drawn by a form XObject, whose marks the editor does not read. */
-  | { kind: "unknown" };
+  | { kind: "unknown" }
+  /** Several runs' text, not all tagged alike; `settable` when every run's tag can be set. */
+  | { kind: "mixed"; settable: boolean };
 
 export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   if (run.inForm) return { kind: "unknown" };
   if (run.artifact) return { kind: "artifact" };
   const untagged = {
     kind: "untagged",
-    documentTagged: doc.isTagged(),
+    documentTagged: doc.treatAsTagged(),
     taggable: canTagText(doc, run),
   } as const;
   if (run.mcid === undefined) return untagged;
@@ -43,14 +45,60 @@ export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   };
 }
 
+/** True when the tag picker can set the text's tag: retag it, or tag it. */
+export function canSetTextTag(tag: TextTag): boolean {
+  switch (tag.kind) {
+    case "tagged":
+      return tag.cannotRetag === null;
+    case "untagged":
+      return tag.taggable;
+    case "mixed":
+      return tag.settable;
+    default:
+      return false;
+  }
+}
+
+/**
+ * How several runs' text is tagged together: the tag they share, or mixed.
+ * Shared, it is settable only when every run's is.
+ */
+export function sharedTextTag(tags: readonly TextTag[]): TextTag {
+  const [first, ...rest] = tags;
+  const settable = tags.every(canSetTextTag);
+  if (!rest.every((tag) => sameTagShown(first, tag))) {
+    return { kind: "mixed", settable };
+  }
+  switch (first.kind) {
+    case "tagged":
+      return settable
+        ? { ...first, cannotRetag: null }
+        : (tags.find((tag) => tag.kind === "tagged" && tag.cannotRetag) ??
+            first);
+    case "untagged":
+      return { ...first, taggable: settable };
+    default:
+      return first;
+  }
+}
+
+function sameTagShown(a: TextTag, b: TextTag): boolean {
+  if (a.kind === "tagged" && b.kind === "tagged") {
+    return a.block.role === b.block.role;
+  }
+  if (a.kind === "untagged" && b.kind === "untagged") {
+    return a.documentTagged === b.documentTagged;
+  }
+  return a.kind === b.kind;
+}
+
 /**
  * True when the run's text can be given an element of its own: it is drawn
- * by the page itself in a tagged document whose save can add one, and has no
- * tag or artifact mark.
+ * by the page itself, whose save can add one, and has no tag or artifact
+ * mark.
  */
 export function canTagText(doc: EditorDocument, run: TextRunSnapshot): boolean {
   return (
-    doc.isTagged() &&
     !run.inForm &&
     !run.artifact &&
     run.mcid === undefined &&
@@ -83,8 +131,8 @@ export function innerTags(
   if (!block) return [];
   return elementStretches(doc, run.pageIndex, run.id).flatMap(
     ({ start, end, element }) => {
-      const role =
-        element.key === block.key ? null : structure.innerType(element.key);
+      if (!structure.marksPartOf(element, block.key)) return [];
+      const role = structure.innerType(element.key);
       if (!role) return [];
       const options = structure.innerOptions(element.key);
       const text = run.text.slice(start, end);

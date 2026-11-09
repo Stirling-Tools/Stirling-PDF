@@ -68,6 +68,7 @@ describe("TextAccessibilitySection", () => {
       "untaggedDocument",
     ],
     [{ kind: "unknown" } as const, "unknownTag"],
+    [{ kind: "mixed", settable: false } as const, "mixedTags"],
   ])("explains text with no element (%o)", (tag, message) => {
     expect(tagShown(tag)).toHaveTextContent(`${KEY}.${message}`);
   });
@@ -89,6 +90,25 @@ describe("TextAccessibilitySection", () => {
     fireEvent.click(input);
     fireEvent.click(screen.getByText(`${KEY}.tagName.code`));
     expect(onRetag).toHaveBeenCalledWith("Code");
+  });
+
+  it("offers a picker for runs tagged differently, set on all of them", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "mixed", settable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveAttribute("placeholder", `${KEY}.mixedTags`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
+    expect(onSetTag).toHaveBeenCalledWith("P");
   });
 
   it("shows a tag the picker does not offer in its place", () => {
