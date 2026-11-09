@@ -80,6 +80,36 @@ export default function Login() {
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
 
+  // Shared login state + sign-in handlers + provider fetch. Editor-specific
+  // behaviour (auto-login, redirects, first-time setup) is layered on here.
+  const login = useSpringLogin({
+    ready: backendProbe.status === "up" || backendProbe.loginDisabled,
+    redirectTo: `${BASE_PATH}/auth/callback`,
+    onSignInStart: clearSignedOutFlag,
+    onBeforeOAuth: () => {
+      // Don't overwrite a path already stashed by httpErrorHandler on a 401.
+      const returnPath = resolveReturnPath();
+      if (returnPath) {
+        setPostLoginRedirectPath(returnPath);
+      }
+    },
+    onConfigLoaded: (data) => {
+      // If login is disabled, redirect to home (anonymous mode)
+      if (data.enableLogin === false) {
+        navigate(EDITOR_BASENAME);
+        return;
+      }
+      setEnableLogin(data.enableLogin ?? true);
+      setSsoAutoLogin(Boolean(data.ssoAutoLogin));
+      setIsFirstTimeSetup(data.firstTimeSetup ?? false);
+      setShowDefaultCredentials(data.showDefaultCredentials ?? false);
+      // Apply language configuration from server
+      if (data.languages || data.defaultLocale) {
+        updateSupportedLanguages(data.languages, data.defaultLocale);
+      }
+    },
+  });
+
   const errorFromState = (location.state as { error?: string } | null)?.error;
   const errorFromQuery = useMemo(() => {
     if (!searchParams) {
@@ -94,10 +124,15 @@ export default function Login() {
         "login.ssoError.registrationBlocked",
         "Registration of new users is blocked. Contact your administrator.",
       ),
-      userAlreadyExistsWeb: t(
-        "login.ssoError.userAlreadyExists",
-        "An account with this username already exists and uses password sign-in.",
-      ),
+      userAlreadyExistsWeb: login.isUserPassAllowed
+        ? t(
+            "login.ssoError.userAlreadyExists",
+            "An account with this username already uses password sign-in. Sign in with your password instead.",
+          )
+        : t(
+            "login.ssoError.userAlreadyExistsSsoOnly",
+            "An account with this username already uses password sign-in, so it can't be used with single sign-on. Contact your administrator.",
+          ),
       maxUsersReached: t(
         "login.ssoError.maxUsersReached",
         "The maximum number of users for this license has been reached.",
@@ -150,42 +185,12 @@ export default function Login() {
       }
     }
     return null;
-  }, [searchParams, t]);
+  }, [searchParams, t, login.isUserPassAllowed]);
 
   const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
   // /login?all is how a local admin reaches the password form when SSO
   // auto-login would otherwise redirect straight to the provider.
   const skipSsoAutoLogin = searchParams.has("all");
-
-  // Shared login state + sign-in handlers + provider fetch. Editor-specific
-  // behaviour (auto-login, redirects, first-time setup) is layered on here.
-  const login = useSpringLogin({
-    ready: backendProbe.status === "up" || backendProbe.loginDisabled,
-    redirectTo: `${BASE_PATH}/auth/callback`,
-    onSignInStart: clearSignedOutFlag,
-    onBeforeOAuth: () => {
-      // Don't overwrite a path already stashed by httpErrorHandler on a 401.
-      const returnPath = resolveReturnPath();
-      if (returnPath) {
-        setPostLoginRedirectPath(returnPath);
-      }
-    },
-    onConfigLoaded: (data) => {
-      // If login is disabled, redirect to home (anonymous mode)
-      if (data.enableLogin === false) {
-        navigate(EDITOR_BASENAME);
-        return;
-      }
-      setEnableLogin(data.enableLogin ?? true);
-      setSsoAutoLogin(Boolean(data.ssoAutoLogin));
-      setIsFirstTimeSetup(data.firstTimeSetup ?? false);
-      setShowDefaultCredentials(data.showDefaultCredentials ?? false);
-      // Apply language configuration from server
-      if (data.languages || data.defaultLocale) {
-        updateSupportedLanguages(data.languages, data.defaultLocale);
-      }
-    },
-  });
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;

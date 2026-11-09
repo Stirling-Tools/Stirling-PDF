@@ -642,7 +642,6 @@ describe("Login", () => {
   it.each([
     ["oAuth2AutoCreateDisabled", /automatic account creation is disabled/i],
     ["oAuth2AdminBlockedUser", /registration of new users is blocked/i],
-    ["userAlreadyExistsWeb", /already exists and uses password sign-in/i],
     ["maxUsersReached", /maximum number of users/i],
     ["userIsDisabled", /this account has been disabled/i],
     ["saml2RequiresLicense", /saml sign-in requires an enterprise license/i],
@@ -686,6 +685,48 @@ describe("Login", () => {
 
     expect(screen.getByText(message)).toBeInTheDocument();
   });
+
+  it.each([
+    [
+      "all",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "normal",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "oauth2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+    [
+      "saml2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+  ])(
+    "should explain userAlreadyExistsWeb for login method %s",
+    async (loginMethod, message) => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { enableLogin: true, loginMethod, providerList: {} },
+      });
+
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <MemoryRouter
+              initialEntries={["/login?errorOAuth=userAlreadyExistsWeb"]}
+            >
+              <Login />
+            </MemoryRouter>
+          </TestWrapper>,
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(message)).toBeInTheDocument();
+      });
+    },
+  );
 
   it("should display account created success message", async () => {
     await act(async () => {
