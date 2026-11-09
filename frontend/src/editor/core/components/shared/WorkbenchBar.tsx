@@ -26,7 +26,6 @@ import {
 import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
 import {
   useAllFiles,
-  useFileSelectors,
   useFileSelection,
   useFileActions,
 } from "@editor/contexts/FileContext";
@@ -47,13 +46,6 @@ import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
 } from "@editor/components/policies/policyRunStore";
-import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
-import { enforceExportPolicies } from "@editor/services/policyExport";
-import {
-  downloadFile as downloadRaw,
-  SAVES_TO_DISK,
-} from "@editor/services/downloadService";
-import { alert as showAlert } from "@editor/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -67,22 +59,10 @@ import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar
 import { useIsMobile, useIsPhone } from "@editor/hooks/useIsMobile";
 import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
-import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
-import { useCommitEditsBeforeSave } from "@editor/hooks/useCommitEditsBeforeSave";
+import { useWorkbenchSave } from "@editor/hooks/useWorkbenchSave";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
-import type { StirlingFileStub } from "@editor/types/fileContext";
-import type { FileId } from "@editor/types/file";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
-
-async function enforcedViewerFile(
-  buffer: ArrayBuffer,
-  stub: StirlingFileStub,
-): Promise<File> {
-  const file = new File([buffer], stub.name, { type: "application/pdf" });
-  const [enforced] = await enforceExportPolicies([file], [stub.id]);
-  return enforced ?? file;
-}
 
 interface ViewOption {
   value: WorkbenchType;
@@ -186,25 +166,15 @@ export default function WorkbenchBar({
   const isPhone = useIsPhone();
   const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
-  const selectors = useFileSelectors();
-  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const { files: activeFiles } = useAllFiles();
   const { activeFileId, setActiveFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
+  const workbenchSave = useWorkbenchSave();
   // Block print/export while any file the export would touch is under active
-  // policy enforcement: the viewer exports its active file, the page editor every
-  // track, and every other view the selection (or all files when nothing is selected).
-  const allFileIds = activeFiles.filter(isStirlingFile).map((f) => f.fileId);
-  const exportTargetIds: string[] =
-    currentView === "viewer"
-      ? activeFileId
-        ? [activeFileId]
-        : []
-      : currentView === "pageEditor" || selectedFileIds.length === 0
-        ? allFileIds
-        : selectedFileIds;
-  const enforcingFileId = exportTargetIds.find((id) =>
+  // policy enforcement.
+  const enforcingFileId = workbenchSave.targetIds.find((id) =>
     (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
   );
   const policyEnforcing = enforcingFileId != null;
@@ -222,16 +192,6 @@ export default function WorkbenchBar({
       : undefined;
   const totalItems = activeFiles.length;
   const selectedCount = selectedFileIds.length;
-  const saver = useSaveStoredFile();
-  const exportTargetStubs = selectors.getStirlingFileStubs(
-    exportTargetIds as FileId[],
-  );
-  // A save to disk links the file to wherever it lands, so every one goes home.
-  const savesHome =
-    SAVES_TO_DISK ||
-    exportTargetStubs.some(
-      (stub) => saver.targetFor(stub) || stub.localFilePath,
-    );
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.
@@ -260,152 +220,12 @@ export default function WorkbenchBar({
     }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
 
-  const handleExportAll = useCallback(
-    async (forceNewFile = false) => {
-      if (currentView === "viewer") {
-        const fileToExport =
-          activeFiles.find(
-            (file) => isStirlingFile(file) && file.fileId === activeFileId,
-          ) ?? activeFiles[0];
-        if (!fileToExport) return;
-        const stub = isStirlingFile(fileToExport)
-          ? selectors.getStirlingFileStub(fileToExport.fileId)
-          : undefined;
-        // A save home has already committed the viewer's edits as a version, so
-        // the stored file is what the viewer shows and needs no second export.
-        if (stub && savesHome && !forceNewFile) {
-          await saver.saveStoredFile(stub, selectors.getFile(stub.id));
-          return;
-        }
-        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-        if (!buffer) return;
-        if (stub) {
-          const file = new File([buffer], stub.name, {
-            type: "application/pdf",
-          });
-          const save = forceNewFile
-            ? saver.saveLocalCopy
-            : saver.saveStoredFile;
-          await save(stub, file);
-          return;
-        }
-        try {
-          await downloadFile({
-            data: new Blob([buffer], { type: "application/pdf" }),
-            filename: fileToExport.name,
-          });
-        } catch (error) {
-          console.error("[WorkbenchBar] Failed to export viewer file:", error);
-        }
-        return;
-      }
-
-      const viewExport = await viewFileActions?.getExportFiles?.({
-        commitEdits: !forceNewFile && savesHome,
-      });
-      if (viewExport === null) return;
-      const filesToExport = viewExport
-        ? viewExport.map((entry) => entry.file)
-        : selectedFiles.length > 0
-          ? selectedFiles
-          : activeFiles;
-      const stubs = viewExport
-        ? viewExport.map(
-            (entry) =>
-              entry.stub ??
-              (entry.fileId
-                ? selectors.getStirlingFileStub(entry.fileId)
-                : undefined),
-          )
-        : filesToExport.map((file) =>
-            isStirlingFile(file)
-              ? selectors.getStirlingFileStub(file.fileId)
-              : undefined,
-          );
-
-      // Enforce all files in one batch so the toast shows progress across the
-      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
-      let enforced: File[];
-      try {
-        enforced = await enforceExportPolicies(
-          filesToExport,
-          stubs.map((s) => s?.id),
-        );
-      } catch (error) {
-        // A required policy failed. Saving without it would skip what it exists
-        // to enforce, so the save stops, as a single-file save does.
-        showAlert({
-          alertType: "error",
-          title: t("fileEditor.saveFailed", "Save failed"),
-          body: error instanceof Error ? error.message : String(error),
-          privateBody: true,
-          expandable: false,
-        });
-        return;
-      }
-
-      for (let idx = 0; idx < filesToExport.length; idx++) {
-        const file = filesToExport[idx];
-        const stub = stubs[idx];
-        if (stub) {
-          const save = forceNewFile
-            ? saver.saveLocalCopy
-            : saver.saveStoredFile;
-          const outcome = await save(stub, enforced[idx], {
-            policiesEnforced: true,
-          });
-          if (outcome === "cancelled") break;
-          continue;
-        }
-        try {
-          const result = await downloadRaw({
-            data: enforced[idx],
-            filename: file.name,
-          });
-          if (result.cancelled) break;
-        } catch (error) {
-          console.error(
-            "[WorkbenchBar] Failed to export file:",
-            file.name,
-            error,
-          );
-        }
-      }
-    },
-    [
-      currentView,
-      selectedFiles,
-      activeFiles,
-      activeFileId,
-      viewerContext,
-      viewFileActions,
-      selectors,
-      saver,
-      savesHome,
-    ],
-  );
-
-  // The viewer's copy carries unapplied annotations; export policies run on it too.
-  const viewerFileFor = useCallback(
-    async (stub: StirlingFileStub): Promise<File | undefined> => {
-      if (currentView !== "viewer") return undefined;
-      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-      return buffer ? enforcedViewerFile(buffer, stub) : undefined;
-    },
-    [currentView, viewerContext],
-  );
-
-  // A view with its own export commits its edits inside it.
-  const saveWithEdits = useCommitEditsBeforeSave(() => handleExportAll(), {
-    commitEdits: savesHome && !viewFileActions?.getExportFiles,
-  });
-
   const saveButton = useSaveButton({
-    saver,
-    targets: exportTargetStubs,
+    saver: workbenchSave.saver,
+    targets: workbenchSave.targetStubs,
     singleFile: currentView === "viewer",
-    onSaveLocalCopy: () => void handleExportAll(true),
-    fileFor: viewerFileFor,
+    onSaveLocalCopy: () => void workbenchSave.saveCopy(),
+    fileFor: workbenchSave.viewerFileFor,
   });
 
   const printAccess = usePdfAccess(activeFileId);
@@ -491,7 +311,7 @@ export default function WorkbenchBar({
     saveMenu: saveButton.menu,
     onPrint: canPrint ? handlePrint : undefined,
     printDisabledReason,
-    onExport: () => void saveWithEdits(),
+    onExport: () => void workbenchSave.save(),
     onClose: handleClose,
   };
 

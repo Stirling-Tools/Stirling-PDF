@@ -1,26 +1,9 @@
-import { useCallback, useEffect } from "react";
-import { useFileSelectors } from "@editor/contexts/FileContext";
-import { useCommitEditsBeforeSave } from "@editor/hooks/useCommitEditsBeforeSave";
-import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import { useEffect } from "react";
+import { useWorkbenchSave } from "@editor/hooks/useWorkbenchSave";
 
-/**
- * Desktop-only keyboard shortcut: Ctrl/Cmd+S saves the selected files, or all
- * files, where the toolbar's Save would (disk, or a save target).
- */
+/** Desktop-only keyboard shortcut: Ctrl/Cmd+S runs the toolbar's Save. */
 export function useSaveShortcut() {
-  const selectors = useFileSelectors();
-  const { saveStoredFile } = useSaveStoredFile();
-
-  const saveFiles = useCallback(async () => {
-    const selected = selectors.getSelectedStirlingFileStubs();
-    const stubs =
-      selected.length > 0 ? selected : selectors.getStirlingFileStubs();
-    for (const stub of stubs) {
-      const outcome = await saveStoredFile(stub, selectors.getFile(stub.id));
-      if (outcome === "cancelled") break;
-    }
-  }, [selectors, saveStoredFile]);
-  const save = useCommitEditsBeforeSave(saveFiles);
+  const { save } = useWorkbenchSave();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
