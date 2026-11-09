@@ -48,6 +48,10 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
         if (requestURI.contains("/api/")) {
             return true;
         }
+        // The MCP OAuth pages need the protocol parameters (client_id, state, PKCE) intact.
+        if (requestURI.startsWith(request.getContextPath() + "/oauth/")) {
+            return true;
+        }
 
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {

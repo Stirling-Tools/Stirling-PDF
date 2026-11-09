@@ -43,7 +43,7 @@ class CategoryToolDispatchTest {
 
     private McpOperationExecutor executorReturning(ObjectNode sentinel) {
         McpOperationExecutor executor = mock(McpOperationExecutor.class);
-        when(executor.execute(any(), any())).thenReturn(sentinel);
+        when(executor.execute(any(), any(), any())).thenReturn(sentinel);
         return executor;
     }
 

@@ -216,6 +216,21 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_mcpAuthorizationServer() {
+        // Clients reach discovery, registration and token with no credentials at all.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/.well-known/oauth-authorization-server", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/.well-known/jwks.json", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/register", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/uploads", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/mcp/oauth/token", "/app"));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/authorizations", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mcp/oauth/grants", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_mobileScannerPhoneCallsOnly() {
         // The phone has no credentials; everything the desktop calls stays behind login.
         assertTrue(

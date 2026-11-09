@@ -64,6 +64,25 @@ class CleanUrlInterceptorTest {
     }
 
     @Test
+    void mcpOAuthPagesKeepEveryProtocolParameter() throws Exception {
+        when(request.getContextPath()).thenReturn("");
+        when(request.getRequestURI()).thenReturn("/oauth/authorize");
+        when(request.getQueryString())
+                .thenReturn(
+                        "client_id=c&redirect_uri=https%3A%2F%2Fchatgpt.com%2Fcb&state=s"
+                                + "&code_challenge=x&code_challenge_method=S256");
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        when(request.getRequestURI()).thenReturn("/oauth/consent");
+        when(request.getQueryString()).thenReturn("authorization_id=abc");
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        // Spring's own /oauth2 login paths are not exempt.
+        when(request.getRequestURI()).thenReturn("/oauth2/authorization/google");
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+    }
+
+    @Test
     void preHandleRedirectsWhenDisallowedParamsPresent() throws Exception {
         when(request.getRequestURI()).thenReturn("/some-page");
         when(request.getContextPath()).thenReturn("");
