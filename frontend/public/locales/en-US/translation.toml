@@ -1474,6 +1474,7 @@ label = "SMTP Username"
 apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
 connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+endpointUrl = "MCP endpoint URL"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
@@ -4035,6 +4036,7 @@ lastUsed = "Last used {{when}}"
 loading = "Loading connected apps..."
 neverUsed = "Not used yet"
 revoke = "Revoke"
+revokeFailed = "Could not revoke this app. Try again."
 revoking = "Revoking..."
 title = "Connected apps"
 

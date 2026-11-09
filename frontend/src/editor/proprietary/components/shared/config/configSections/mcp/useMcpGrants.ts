@@ -16,6 +16,7 @@ const GRANTS_URL = "/api/v1/mcp/oauth/grants";
 export function useMcpGrants() {
   const [grants, setGrants] = useState<McpGrant[] | null>(null);
   const [revoking, setRevoking] = useState<number | null>(null);
+  const [revokeFailed, setRevokeFailed] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -34,9 +35,14 @@ export function useMcpGrants() {
   const revoke = useCallback(
     async (id: number) => {
       setRevoking(id);
+      setRevokeFailed(null);
       try {
-        await apiClient.delete(`${GRANTS_URL}/${id}`);
+        await apiClient.delete(`${GRANTS_URL}/${id}`, {
+          suppressErrorToast: true,
+        });
         await load();
+      } catch {
+        setRevokeFailed(id);
       } finally {
         setRevoking(null);
       }
@@ -44,5 +50,5 @@ export function useMcpGrants() {
     [load],
   );
 
-  return { grants, revoking, revoke };
+  return { grants, revoking, revokeFailed, revoke };
 }

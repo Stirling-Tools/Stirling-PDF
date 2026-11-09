@@ -87,6 +87,7 @@ function useMcpPreflight() {
     try {
       const response = await apiClient.get<PreflightResult>(
         "/api/v1/admin/settings/mcp/preflight",
+        { suppressErrorToast: true },
       );
       setResult(response.data);
     } catch {
@@ -148,10 +149,14 @@ export function McpConnectionPanel({
         </Group>
         <CodeBlock
           code={connectorUrl}
-          caption={t(
-            "admin.settings.mcp.connectorUrl",
-            "Connector URL for ChatGPT and Claude",
-          )}
+          caption={
+            mode === "apikey"
+              ? t("admin.settings.mcp.endpointUrl", "MCP endpoint URL")
+              : t(
+                  "admin.settings.mcp.connectorUrl",
+                  "Connector URL for ChatGPT and Claude",
+                )
+          }
         />
         {failed && (
           <Text size="xs" c="red">

@@ -9,10 +9,12 @@ import {
 function GrantRow({
   grant,
   revoking,
+  failed,
   onRevoke,
 }: {
   grant: McpGrant;
   revoking: boolean;
+  failed: boolean;
   onRevoke: () => void;
 }) {
   const { t } = useTranslation();
@@ -28,6 +30,14 @@ function GrantRow({
         <Text size="xs" c="dimmed">
           {lastUsed}
         </Text>
+        {failed && (
+          <Text size="xs" c="var(--c-danger)" role="alert">
+            {t(
+              "config.mcp.grants.revokeFailed",
+              "Could not revoke this app. Try again.",
+            )}
+          </Text>
+        )}
       </Stack>
       <Button
         size="sm"
@@ -48,10 +58,12 @@ function GrantRow({
 function GrantList({
   grants,
   revoking,
+  revokeFailed,
   onRevoke,
 }: {
   grants: McpGrant[] | null;
   revoking: number | null;
+  revokeFailed: number | null;
   onRevoke: (id: number) => void;
 }) {
   const { t } = useTranslation();
@@ -79,6 +91,7 @@ function GrantList({
           key={grant.id}
           grant={grant}
           revoking={revoking === grant.id}
+          failed={revokeFailed === grant.id}
           onRevoke={() => onRevoke(grant.id)}
         />
       ))}
@@ -89,7 +102,7 @@ function GrantList({
 /** Apps the user approved on the consent screen, each revocable. */
 export function McpConnectedApps() {
   const { t } = useTranslation();
-  const { grants, revoking, revoke } = useMcpGrants();
+  const { grants, revoking, revokeFailed, revoke } = useMcpGrants();
   return (
     <Paper withBorder p="sm" radius="md">
       <Stack gap="xs">
@@ -99,6 +112,7 @@ export function McpConnectedApps() {
         <GrantList
           grants={grants}
           revoking={revoking}
+          revokeFailed={revokeFailed}
           onRevoke={(id) => void revoke(id)}
         />
       </Stack>
