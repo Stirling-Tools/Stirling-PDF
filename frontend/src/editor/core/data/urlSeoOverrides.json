@@ -121,11 +121,11 @@
   },
   "/rotate": {
     "title": "Rotate PDF",
-    "description": "Easily rotate your PDFs."
+    "description": "Rotate your PDFs."
   },
   "/rotate-pdf": {
     "title": "Rotate PDF",
-    "description": "Easily rotate your PDFs."
+    "description": "Rotate your PDFs."
   },
   "/convert": {
     "title": "PDF Converter",

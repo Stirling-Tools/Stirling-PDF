@@ -65,7 +65,7 @@ export function RailButton({
 }) {
   return (
     <Tooltip
-      content={disabled && reason ? `${label} — ${reason}` : label}
+      content={disabled && reason ? `${label}: ${reason}` : label}
       position="right"
       arrow
       containerStyle={{ pointerEvents: "none" }}

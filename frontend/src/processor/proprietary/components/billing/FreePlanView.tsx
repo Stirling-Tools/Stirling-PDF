@@ -65,7 +65,7 @@ export function FreePlanView({
         >
           {t(
             "portal.billing.freePlan.noTeamResolved",
-            "No team is resolved on your wallet yet — refresh and try again.",
+            "No team is linked to your wallet yet. Refresh and try again.",
           )}
         </Banner>
       )}
