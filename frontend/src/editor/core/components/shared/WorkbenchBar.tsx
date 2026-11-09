@@ -263,8 +263,6 @@ export default function WorkbenchBar({
   const handleExportAll = useCallback(
     async (forceNewFile = false) => {
       if (currentView === "viewer") {
-        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-        if (!buffer) return;
         const fileToExport =
           activeFiles.find(
             (file) => isStirlingFile(file) && file.fileId === activeFileId,
@@ -273,6 +271,14 @@ export default function WorkbenchBar({
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
           : undefined;
+        // A save home has already committed the viewer's edits as a version, so
+        // the stored file is what the viewer shows and needs no second export.
+        if (stub && savesHome && !forceNewFile) {
+          await saver.saveStoredFile(stub, selectors.getFile(stub.id));
+          return;
+        }
+        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+        if (!buffer) return;
         if (stub) {
           const file = new File([buffer], stub.name, {
             type: "application/pdf",

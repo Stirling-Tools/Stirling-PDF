@@ -103,6 +103,21 @@ test.describe("Saving files that live on disk", () => {
     await expect(save.locator(".workbench-bar-unsaved-dot")).toHaveCount(0);
   });
 
+  test("the viewer's Save writes the stored version in place", async ({
+    page,
+  }) => {
+    await openReport(page, { isDirty: true });
+
+    const firstPage = page.locator('[data-page-index="0"]').first();
+    await expect(firstPage).toBeVisible({ timeout: 30_000 });
+    const save = page.getByRole("button", { name: "Save", exact: true });
+    await save.click();
+    await expect.poll(() => written(page)).toContain(REPORT);
+    await expect
+      .poll(() => savedLeaves(page))
+      .toEqual([{ dirty: false, matchesDisk: true }]);
+  });
+
   test("Ctrl+S with nothing unsaved leaves the file alone", async ({
     page,
   }) => {
