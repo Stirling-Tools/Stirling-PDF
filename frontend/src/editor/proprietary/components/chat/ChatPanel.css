@@ -25,11 +25,12 @@
   container-type: size;
 }
 
-/* Extra room beneath the last message so that, scrolled to the bottom, the most
+/* Extra room beneath the last turn so that, scrolled to the bottom, the most
    recent turn rests near the vertical centre of the conversation rather than
-   jammed against the composer. cqh is a fraction of the scroll viewport height. */
-.chat-panel-messages__content {
-  padding-bottom: 15cqh;
+   jammed against the composer. It trails the loading display so the progress log
+   follows the conversation directly. cqh is a fraction of the scroll viewport height. */
+.chat-panel-messages__tail {
+  height: 15cqh;
 }
 
 /* Quick action cards above the input. */

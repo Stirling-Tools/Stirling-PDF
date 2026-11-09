@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Anchor,
-  Group,
-  Loader,
-  Paper,
-  Stack,
-  Table,
-  Text,
-} from "@mantine/core";
+import { Alert, Group, Loader, Paper, Stack, Text } from "@mantine/core";
+import { column, DataTable, type DataTableColumn } from "@editor/ui";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import frontendLicenses from "../../../../../../assets/3rdPartyLicenses.json"; // oxlint-disable-line no-restricted-imports -- asset lives outside @editor alias root
@@ -30,9 +22,6 @@ interface LicensesSectionBodyProps {
   dependencies: Dependency[];
 }
 
-const getModuleUrl = (dependency: Dependency) =>
-  dependency.moduleUrl || dependency.moduleLicenseUrl;
-
 function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
   const { t } = useTranslation();
   const sortedDependencies = useMemo(
@@ -49,6 +38,50 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
       dependency.moduleVersion ?? "version",
       dependency.moduleUrl ?? "url",
     ].join(":");
+
+  const columns = useMemo<DataTableColumn<Dependency>[]>(
+    () => [
+      column.text({
+        key: "module",
+        header: t("settings.licenses.module", "Module"),
+        get: (d) => d.moduleName || "-",
+        sortable: true,
+      }),
+      column.muted({
+        key: "version",
+        header: t("settings.licenses.version", "Version"),
+        get: (d) => d.moduleVersion,
+        placeholder: "-",
+        sortable: true,
+      }),
+      column.text({
+        key: "license",
+        header: t("settings.licenses.license", "License"),
+        get: (d) => d.moduleLicense || "-",
+        sortable: true,
+      }),
+      column.links({
+        key: "links",
+        get: (d) => {
+          const linksList: { label: string; href: string }[] = [];
+          if (d.moduleUrl) {
+            linksList.push({
+              label: t("settings.licenses.project", "Project"),
+              href: d.moduleUrl,
+            });
+          }
+          if (d.moduleLicenseUrl && d.moduleLicenseUrl !== d.moduleUrl) {
+            linksList.push({
+              label: t("settings.licenses.license", "License"),
+              href: d.moduleLicenseUrl,
+            });
+          }
+          return linksList;
+        },
+      }),
+    ],
+    [t],
+  );
 
   return (
     <Stack gap="lg">
@@ -68,67 +101,13 @@ function LicensesSectionBody({ dependencies }: LicensesSectionBodyProps) {
             </div>
           </Group>
 
-          <Table
-            highlightOnHover
-            withRowBorders
-            verticalSpacing="sm"
-            horizontalSpacing="md"
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("settings.licenses.module", "Module")}</Table.Th>
-                <Table.Th>{t("settings.licenses.version", "Version")}</Table.Th>
-                <Table.Th>{t("settings.licenses.license", "License")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {sortedDependencies.length === 0 ? (
-                <Table.Tr>
-                  <Table.Td colSpan={3}>
-                    <Text ta="center" c="dimmed" py="xl">
-                      {t("settings.licenses.empty", "No dependencies found.")}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ) : (
-                sortedDependencies.map((dependency) => (
-                  <Table.Tr key={getDependencyKey(dependency)}>
-                    <Table.Td>
-                      {getModuleUrl(dependency) ? (
-                        <Anchor
-                          href={getModuleUrl(dependency)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {dependency.moduleName || "-"}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm">{dependency.moduleName || "-"}</Text>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">
-                        {dependency.moduleVersion || "-"}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      {dependency.moduleLicenseUrl ? (
-                        <Anchor
-                          href={dependency.moduleLicenseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {dependency.moduleLicense || "-"}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm">{dependency.moduleLicense || "-"}</Text>
-                      )}
-                    </Table.Td>
-                  </Table.Tr>
-                ))
-              )}
-            </Table.Tbody>
-          </Table>
+          <DataTable
+            columns={columns}
+            rows={sortedDependencies}
+            rowKey={getDependencyKey}
+            empty={t("settings.licenses.empty", "No dependencies found.")}
+            defaultSort={{ key: "module", direction: "asc" }}
+          />
         </Stack>
       </Paper>
     </Stack>
