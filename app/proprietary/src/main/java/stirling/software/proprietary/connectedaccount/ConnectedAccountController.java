@@ -193,7 +193,13 @@ public class ConnectedAccountController {
             if (!"drive".equals(resource)) {
                 throw unsupportedResource();
             }
-            return List.of();
+            return List.of(
+                    GoogleOAuthClient.browserScope(
+                            applicationProperties
+                                    .getPremium()
+                                    .getProFeatures()
+                                    .getGoogleDrive()
+                                    .getAccountScope()));
         }
         if ("graph".equals(resource)) {
             return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);

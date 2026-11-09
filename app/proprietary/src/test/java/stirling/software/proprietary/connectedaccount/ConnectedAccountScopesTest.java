@@ -4,12 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.google.GoogleEndpoints;
 import stirling.software.proprietary.policy.microsoft.GraphEndpoints;
 
 class ConnectedAccountScopesTest {
@@ -40,6 +45,54 @@ class ConnectedAccountScopesTest {
     @ValueSource(strings = {"https://evil.example", "https://contoso.sharepoint.com.evil.test"})
     void otherHostsAreRefused(String resource) {
         assertThatThrownBy(() -> controller.scopesFor(CloudProvider.MICROSOFT, resource))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void googleTokensForTheBrowserAreReadOnly() {
+        assertThat(controller.scopesFor(CloudProvider.GOOGLE, "drive"))
+                .containsExactly("https://www.googleapis.com/auth/drive.readonly");
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "NULL, drive.readonly",
+                "drive, drive.readonly",
+                "drive.readonly, drive.readonly",
+                "drive.file, drive.file",
+                "bogus, drive.readonly"
+            },
+            nullValues = "NULL")
+    void googleBrowserScopeNeverAllowsWrites(String configured, String expected) {
+        assertThat(GoogleOAuthClient.browserScope(configured))
+                .isEqualTo("https://www.googleapis.com/auth/" + expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                "NULL, drive drive.readonly",
+                "drive, drive drive.readonly",
+                "drive.readonly, drive.readonly",
+                "drive.file, drive.file"
+            },
+            nullValues = "NULL")
+    void googleConsentIncludesTheBrowserScope(String configured, String expected) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPremium().getProFeatures().getGoogleDrive().setAccountScope(configured);
+        GoogleOAuthClient client = new GoogleOAuthClient(properties, mock(GoogleEndpoints.class));
+
+        String driveScopes =
+                Arrays.stream(expected.split(" "))
+                        .map(scope -> "https://www.googleapis.com/auth/" + scope)
+                        .collect(Collectors.joining(" "));
+        assertThat(client.consentScopes()).isEqualTo("openid email profile " + driveScopes);
+    }
+
+    @Test
+    void googleRefusesOtherResources() {
+        assertThatThrownBy(() -> controller.scopesFor(CloudProvider.GOOGLE, "gmail"))
                 .isInstanceOf(ResponseStatusException.class);
     }
 }
