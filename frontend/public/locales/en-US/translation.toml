@@ -4033,10 +4033,13 @@ label = "Your MCP endpoint"
 [config.mcp.grants]
 empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
 lastUsed = "Last used {{when}}"
+loadFailed = "Could not load connected apps."
 loading = "Loading connected apps..."
 neverUsed = "Not used yet"
 revoke = "Revoke"
+revokeConfirm = "{{app}} loses access to your Stirling PDF account and has to ask for your approval again to reconnect."
 revokeFailed = "Could not revoke this app. Try again."
+revokeTitle = "Revoke this app?"
 revoking = "Revoking..."
 title = "Connected apps"
 

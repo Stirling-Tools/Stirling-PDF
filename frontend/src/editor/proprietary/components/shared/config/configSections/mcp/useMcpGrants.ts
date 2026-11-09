@@ -17,14 +17,17 @@ export function useMcpGrants() {
   const [grants, setGrants] = useState<McpGrant[] | null>(null);
   const [revoking, setRevoking] = useState<number | null>(null);
   const [revokeFailed, setRevokeFailed] = useState<number | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const response = await apiClient.get<McpGrant[]>(GRANTS_URL);
+      const response = await apiClient.get<McpGrant[]>(GRANTS_URL, {
+        suppressErrorToast: true,
+      });
       setGrants(response.data ?? []);
+      setLoadFailed(false);
     } catch {
-      // A convenience list; failing to load it must not blank the guide.
-      setGrants([]);
+      setLoadFailed(true);
     }
   }, []);
 
@@ -50,5 +53,5 @@ export function useMcpGrants() {
     [load],
   );
 
-  return { grants, revoking, revokeFailed, revoke };
+  return { grants, loadFailed, revoking, revokeFailed, revoke };
 }

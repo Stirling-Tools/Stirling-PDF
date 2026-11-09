@@ -161,6 +161,11 @@ test("a revoke that fails says so beside the app", async ({ page }) => {
   );
   await page.goto("/settings/mcp");
   await page.getByRole("button", { name: "Revoke" }).click({ timeout: 30_000 });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Revoke" })
+    .click();
+  await expect(page.getByRole("dialog")).toBeHidden();
   await expect(
     page.getByRole("alert").filter({ hasText: "Could not revoke this app" }),
   ).toBeVisible();
@@ -200,4 +205,50 @@ test("the selected client tab fills with the primary token in dark mode", async 
   });
   expect(colors.background).toBe(colors.expectedBackground);
   expect(colors.color).toBe(colors.expectedColor);
+});
+
+test("revoking an app asks first, and cancelling sends nothing", async ({
+  page,
+}) => {
+  await appConfig(page, { mcpEnabled: true, mcpAuthMode: "builtin" });
+  const deletes: string[] = [];
+  await page.route("**/api/v1/mcp/oauth/grants**", (route) => {
+    if (route.request().method() === "DELETE") {
+      deletes.push(route.request().url());
+      return route.fulfill({ json: { revoked: true } });
+    }
+    return route.fulfill({
+      json: deletes.length
+        ? []
+        : [{ id: 1, clientId: "c1", clientName: "ChatGPT", lastUsedAt: null }],
+    });
+  });
+  await page.goto("/settings/mcp");
+  await page.getByRole("button", { name: "Revoke" }).click({ timeout: 30_000 });
+  const dialog = page.getByRole("dialog").filter({ hasText: "ChatGPT" });
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  expect(deletes).toEqual([]);
+
+  await page.getByRole("button", { name: "Revoke" }).click();
+  await dialog.getByRole("button", { name: "Revoke" }).click();
+  await expect(page.getByText(/No apps connected yet/)).toBeVisible();
+  expect(deletes).toHaveLength(1);
+});
+
+test("connected apps that cannot load say so instead of looking empty", async ({
+  page,
+}) => {
+  await appConfig(page, { mcpEnabled: true, mcpAuthMode: "builtin" });
+  await page.route("**/api/v1/mcp/oauth/grants**", (route) =>
+    route.fulfill({ status: 500, json: { error: "boom" } }),
+  );
+  await page.goto("/settings/mcp");
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "Could not load connected apps" }),
+  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/No apps connected yet/)).toHaveCount(0);
+  await expectNoRequestErrorToast(page);
 });
