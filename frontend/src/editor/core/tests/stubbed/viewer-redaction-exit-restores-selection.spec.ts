@@ -181,7 +181,7 @@ test("applying redactions saves them and keeps the live document mounted", async
 
   await page.evaluate(() => {
     const span = document.querySelector<HTMLElement>(
-      ".ph-no-capture:has([data-page-index])",
+      ".ph-sensitive:has([data-page-index])",
     );
     span?.setAttribute("data-reload-probe", "1");
     for (const el of document.querySelectorAll("[data-page-index]")) {
