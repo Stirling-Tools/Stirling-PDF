@@ -73,11 +73,13 @@ export function useSaveStoredFile(): SaveStoredFile {
         return "failed";
       };
       // Its home already holds this version, and a rewrite would only wake the
-      // disk watcher.
+      // disk watcher. A file flagged as changed on disk is not current: saving
+      // is how the user keeps their version over the disk one.
       const homeCurrent =
         local === "save" &&
         Boolean(targetFor(stub) || stub.localFilePath) &&
-        !isUnsaved(stub);
+        !isUnsaved(stub) &&
+        !stub.diskConflictAt;
       if (homeCurrent) return "saved";
       try {
         const source = file ?? (await fileStorage.getStirlingFile(stub.id));

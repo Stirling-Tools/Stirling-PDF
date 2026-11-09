@@ -173,3 +173,19 @@ it("does nothing when the save target already holds this version", async () => {
   expect(save).not.toHaveBeenCalled();
   expect(mocks.download).not.toHaveBeenCalled();
 });
+
+it("writes over a disk copy that changed under the file, even with nothing unsaved", async () => {
+  const { result } = renderHook(() => useSaveStoredFile());
+  const outcome = await result.current.saveStoredFile(
+    stub({
+      localFilePath: "C:/docs/Report.pdf",
+      isDirty: false,
+      diskConflictAt: 1_700_000_000_000,
+    }),
+    pdf(),
+  );
+  expect(outcome).toBe("saved");
+  expect(mocks.download).toHaveBeenCalledWith(
+    expect.objectContaining({ localPath: "C:/docs/Report.pdf" }),
+  );
+});
