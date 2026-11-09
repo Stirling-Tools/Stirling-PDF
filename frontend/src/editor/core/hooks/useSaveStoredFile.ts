@@ -9,15 +9,28 @@ import { enforceExportPolicies } from "@editor/services/policyExport";
 import type { SaveOutcome, SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
+export interface SaveOptions {
+  /** Export policies already ran on the file passed in, so they do not run again. */
+  policiesEnforced?: boolean;
+}
+
 export interface SaveStoredFile {
   /** The target Save sends this file to, or undefined for disk and downloads. */
   targetFor: (stub: StirlingFileStub) => SaveTarget | undefined;
   /** Unsaved against where Save sends this file. */
   isUnsaved: (stub: StirlingFileStub) => boolean;
   /** Save where the toolbar's Save would. */
-  saveStoredFile: (stub: StirlingFileStub, file?: File) => Promise<SaveOutcome>;
+  saveStoredFile: (
+    stub: StirlingFileStub,
+    file?: File,
+    options?: SaveOptions,
+  ) => Promise<SaveOutcome>;
   /** A one-off copy (download, or Save As on desktop) that keeps the file's home. */
-  saveLocalCopy: (stub: StirlingFileStub, file?: File) => Promise<SaveOutcome>;
+  saveLocalCopy: (
+    stub: StirlingFileStub,
+    file?: File,
+    options?: SaveOptions,
+  ) => Promise<SaveOutcome>;
 }
 
 /** The toolbar's Save for one stored file, for every place that saves. */
@@ -46,6 +59,7 @@ export function useSaveStoredFile(): SaveStoredFile {
       stub: StirlingFileStub,
       file: File | undefined,
       local: "save" | "copy",
+      { policiesEnforced = false }: SaveOptions = {},
     ): Promise<SaveOutcome> => {
       const fail = (body: string): SaveOutcome => {
         alert({
@@ -66,7 +80,9 @@ export function useSaveStoredFile(): SaveStoredFile {
               "This browser lost this file's contents. Upload it again to keep working with it.",
             ),
           );
-        const [enforced] = await enforceExportPolicies([source], [stub.id]);
+        const [enforced] = policiesEnforced
+          ? [source]
+          : await enforceExportPolicies([source], [stub.id]);
         const data = enforced ?? source;
         const target = local === "save" ? targetFor(stub) : undefined;
         if (target) {
@@ -96,11 +112,13 @@ export function useSaveStoredFile(): SaveStoredFile {
   );
 
   const saveStoredFile = useCallback(
-    (stub: StirlingFileStub, file?: File) => write(stub, file, "save"),
+    (stub: StirlingFileStub, file?: File, options?: SaveOptions) =>
+      write(stub, file, "save", options),
     [write],
   );
   const saveLocalCopy = useCallback(
-    (stub: StirlingFileStub, file?: File) => write(stub, file, "copy"),
+    (stub: StirlingFileStub, file?: File, options?: SaveOptions) =>
+      write(stub, file, "copy", options),
     [write],
   );
 

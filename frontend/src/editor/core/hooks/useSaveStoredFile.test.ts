@@ -138,3 +138,18 @@ it("counts unsaved disk edits and asks the target for its own files", () => {
   rerender();
   expect(result.current.isUnsaved(stub())).toBe(true);
 });
+
+it("does not run export policies again on a file that already had them", async () => {
+  const { result } = renderHook(() => useSaveStoredFile());
+  const file = pdf();
+  const outcome = await result.current.saveStoredFile(
+    stub({ localFilePath: "C:/docs/Report.pdf" }),
+    file,
+    { policiesEnforced: true },
+  );
+  expect(outcome).toBe("saved");
+  expect(mocks.enforce).not.toHaveBeenCalled();
+  expect(mocks.download).toHaveBeenCalledWith(
+    expect.objectContaining({ data: file }),
+  );
+});

@@ -15,10 +15,6 @@ import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
-import {
-  saveTargetLabel,
-  sharedSaveTarget,
-} from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
 
 const SAVE_MENU_BUTTON_WIDTH = "3rem";
@@ -75,13 +71,7 @@ function ReviewStepContent<TParams = unknown>({
     (operation.outputFileIds ?? []) as FileId[],
   );
   // Results inherit their source's home, so Save sends them back there too.
-  const savesToTarget =
-    outputStubs.length > 0 &&
-    outputStubs.every((stub) => saver.targetFor(stub));
-  const oneTarget = sharedSaveTarget(outputStubs, saver.targetFor);
-  const saveLabel = oneTarget
-    ? saveTargetLabel(oneTarget, outputStubs)
-    : terminology.download;
+  const savesToTarget = outputStubs.some((stub) => saver.targetFor(stub));
   const saveButton = useSaveButton({
     saver,
     targets: outputStubs,
@@ -99,6 +89,7 @@ function ReviewStepContent<TParams = unknown>({
       })(),
     fileFor: async (stub) => selectors.getFile(stub.id),
   });
+  const saveLabel = saveButton.label ?? terminology.download;
 
   const handleUndo = async () => {
     try {
@@ -123,7 +114,7 @@ function ReviewStepContent<TParams = unknown>({
           stub,
           selectors.getFile(stub.id),
         );
-        if (outcome !== "saved") break;
+        if (outcome === "cancelled") break;
       }
       return;
     }
@@ -222,7 +213,7 @@ function ReviewStepContent<TParams = unknown>({
       {operation.downloadUrl && !saveButton.menu && (
         <Button
           data-testid="download-result-button"
-          leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
+          leftSection={<Icon name={saveButton.icon ?? icons.download} />}
           fullWidth
           style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
@@ -234,7 +225,7 @@ function ReviewStepContent<TParams = unknown>({
         <Button.Group style={{ marginBottom: "1rem", width: "100%" }}>
           <Button
             data-testid="download-result-button"
-            leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
+            leftSection={<Icon name={saveButton.icon ?? icons.download} />}
             style={{
               flex: 1,
               minWidth: 0,

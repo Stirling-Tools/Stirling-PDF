@@ -270,26 +270,21 @@ export default function WorkbenchBar({
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
           : undefined;
-        const target =
-          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
-        try {
-          if (target && stub) {
-            const viewerFile = await enforcedViewerFile(buffer, stub);
-            if ((await target.save(stub, viewerFile)) !== "fallback") return;
-          }
-          const result = await downloadFile({
-            data: new Blob([buffer], { type: "application/pdf" }),
-            // Stub name, not File.name: a rename only writes the stub.
-            filename: stub?.name ?? fileToExport.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
+        if (stub) {
+          const file = new File([buffer], stub.name, {
+            type: "application/pdf",
           });
-          if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
+          const save = forceNewFile
+            ? saver.saveLocalCopy
+            : saver.saveStoredFile;
+          await save(stub, file);
+          return;
+        }
+        try {
+          await downloadFile({
+            data: new Blob([buffer], { type: "application/pdf" }),
+            filename: fileToExport.name,
+          });
         } catch (error) {
           console.error("[WorkbenchBar] Failed to export viewer file:", error);
         }
@@ -339,28 +334,22 @@ export default function WorkbenchBar({
       for (let idx = 0; idx < filesToExport.length; idx++) {
         const file = filesToExport[idx];
         const stub = stubs[idx];
-        const target =
-          !forceNewFile && stub ? saver.targetFor(stub) : undefined;
+        if (stub) {
+          const save = forceNewFile
+            ? saver.saveLocalCopy
+            : saver.saveStoredFile;
+          const outcome = await save(stub, enforced[idx], {
+            policiesEnforced: true,
+          });
+          if (outcome === "cancelled") break;
+          continue;
+        }
         try {
-          if (target && stub) {
-            const outcome = await target.save(stub, enforced[idx]);
-            if (outcome === "cancelled") break;
-            if (outcome !== "fallback") continue;
-          }
           const result = await downloadRaw({
             data: enforced[idx],
-            // Stub name, not File.name: a rename only writes the stub.
-            filename: stub?.name ?? file.name,
-            localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
+            filename: file.name,
           });
           if (result.cancelled) break;
-          if (!forceNewFile && stub && result.savedPath) {
-            fileActions.updateStirlingFileStub(stub.id, {
-              localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false,
-            });
-          }
         } catch (error) {
           console.error(
             "[WorkbenchBar] Failed to export file:",
@@ -378,7 +367,6 @@ export default function WorkbenchBar({
       viewerContext,
       viewFileActions,
       selectors,
-      fileActions,
       saver,
       savesHome,
     ],
