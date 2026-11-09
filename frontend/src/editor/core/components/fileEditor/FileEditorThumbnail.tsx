@@ -290,12 +290,11 @@ const FileEditorThumbnail = ({
 
   const hoverActions = useMemo<HoverAction[]>(() => {
     const targetLabel = saveTarget?.saveLabel(file);
-    // Beside a save to another home, the plain one needs to say it stays local.
-    const downloadLabel = !saveTarget
-      ? terminology.download
-      : icons.saveAs
-        ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-        : t("saveFile.menu.download", "Download a copy");
+    // A plain "Save" beside the save to another home would read as that save.
+    const downloadLabel =
+      saveTarget && icons.saveAs
+        ? t("saveFile.menu.saveCopy", "Save a copy...")
+        : terminology.download;
     const uploadLabel = isUploaded
       ? t("fileManager.updateOnServer", "Update on Server")
       : t("fileManager.uploadToServer", "Upload to Server");

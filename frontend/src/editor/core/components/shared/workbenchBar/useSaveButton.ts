@@ -44,7 +44,7 @@ export function useSaveButton({
   const label = shared
     ? saveTargetLabel(shared, targets)
     : targets.some((stub) => saver.targetFor(stub))
-      ? t("saveFile.toolbar.mixed", "Save all, each back to where it came from")
+      ? t("saveFile.toolbar.mixed", "Save all")
       : undefined;
   const icon = shared?.icon;
 
@@ -56,15 +56,13 @@ export function useSaveButton({
     savesToDisk
       ? {
           key: "local",
-          label: target
-            ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-            : t("saveFile.menu.saveCopy", "Save a copy..."),
+          label: t("saveFile.menu.saveCopy", "Save a copy..."),
           icon: "laptop",
           onClick: onSaveLocalCopy,
         }
       : {
           key: "local",
-          label: t("saveFile.menu.download", "Download a copy"),
+          label: t("download", "Download"),
           icon: "download",
           onClick: onSaveLocalCopy,
         },

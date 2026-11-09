@@ -12036,13 +12036,11 @@ title = "Sanitize PDF"
 tags = "clean,secure,safe,remove-threats"
 
 [saveFile.menu]
-download = "Download a copy"
 more = "More save options"
 saveCopy = "Save a copy..."
-saveToComputer = "Save to this computer…"
 
 [saveFile.toolbar]
-mixed = "Save all, each back to where it came from"
+mixed = "Save all"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"

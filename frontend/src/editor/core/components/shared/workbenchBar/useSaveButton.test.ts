@@ -94,7 +94,7 @@ it("names the target and lists its destinations for one file", () => {
   expect(result.current.label).toBe("Update c1.pdf in cloud");
   expect(result.current.icon).toBe("cloud-upload");
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Download a copy",
+    "Download",
     "Save a copy to cloud",
   ]);
 });
@@ -109,9 +109,7 @@ it("says each file goes home when targets are mixed", () => {
       savesToDisk: false,
     }),
   );
-  expect(result.current.label).toBe(
-    "Save all, each back to where it came from",
-  );
+  expect(result.current.label).toBe("Save all");
   expect(result.current.icon).toBeUndefined();
   expect(result.current.menu).toBeUndefined();
 });
