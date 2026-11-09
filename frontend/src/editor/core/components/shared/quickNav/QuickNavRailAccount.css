@@ -47,6 +47,7 @@
 /* Clears the rail's outer edge rather than sitting on its border. */
 .quick-nav-account-menu {
   margin-left: var(--space-2);
+  max-width: 18rem;
 }
 
 .quick-nav-account-menu__header {
