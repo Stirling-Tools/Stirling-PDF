@@ -185,7 +185,7 @@ export default function AutomationSelection({
               mb="md"
               style={{ color: "var(--mantine-color-dimmed)" }}
             >
-              {t("automate.selection.activity.title", "From your activity")}
+              {t("automate.selection.activity.title", "From how people work")}
             </Title>
             <Stack gap="xs">
               {activityChains.map((chain) => (

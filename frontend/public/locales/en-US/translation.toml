@@ -2374,7 +2374,7 @@ title = "Automation Selection"
 
 [automate.selection.activity]
 description = "Save it as an automation and run it with one click."
-title = "From your activity"
+title = "From how people work"
 
 [automate.selection.createNew]
 title = "Create New Automation"
