@@ -9,6 +9,7 @@ import {
   useConnectedAccounts,
 } from "@editor/hooks/useConnectedAccounts";
 import { useOneDrivePicker } from "@editor/hooks/useOneDrivePicker";
+import { useOneDriveSavesAvailable } from "@editor/hooks/useOneDriveSavesAvailable";
 import { fileStorage } from "@editor/services/fileStorage";
 import { enforceExportPolicies } from "@editor/services/policyExport";
 import {
@@ -30,7 +31,6 @@ import {
   oneDrivePickerLabels,
 } from "@editor/services/oneDriveMessages";
 import { openExternal } from "@editor/platform/openExternal";
-import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import type { SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
@@ -53,14 +53,10 @@ export function useOneDriveSave(): OneDriveSave {
   const { t, i18n } = useTranslation();
   const { actions } = useFileActions();
   const connected = useConnectedAccounts();
-  const picker = useOneDrivePicker();
+  useOneDrivePicker();
   const navigate = useNavigate();
   const [saving, setSaving] = useState<FileId | null>(null);
-  const { config } = useAppConfig();
-  const available =
-    picker.isEnabled &&
-    connected.available("microsoft") &&
-    config?.microsoftAllowEditorSaves !== false;
+  const available = useOneDriveSavesAvailable();
   const folderAccount = connected.accountFor("microsoft");
   const canSaveToFolder =
     available && Boolean(folderAccount) && !folderAccount?.personal;

@@ -18,6 +18,7 @@ import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology
 import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -423,7 +424,13 @@ export const FileItem = React.memo(function FileItem({
               </Tooltip>
             )}
             {hasOneDriveOrigin && (
-              <Tooltip label={oneDriveBadgeLabel} withArrow position="bottom">
+              <Tooltip
+                label={<OneDriveOriginTooltip label={oneDriveBadgeLabel} />}
+                multiline
+                maw={220}
+                withArrow
+                position="bottom"
+              >
                 <span
                   className="file-sidebar-cloud-badge"
                   data-no-select

@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   account: { id: 9, personal: false } as
     | { id: number; personal: boolean }
     | undefined,
-  config: {} as { microsoftAllowEditorSaves?: boolean },
+  config: {} as Record<string, unknown>,
 }));
 
 vi.mock("@editor/components/toast", () => ({
@@ -92,7 +92,7 @@ beforeEach(() => {
   mocks.openExternal.mockReset();
   mocks.pickFolder.mockReset();
   mocks.account = { id: 9, personal: false };
-  mocks.config = {};
+  mocks.config = { microsoftEnabled: true, microsoftClientId: "client" };
 });
 
 it("offers a Reconnect button that opens the connected accounts settings", async () => {
@@ -204,7 +204,7 @@ it("saves a copy next to the original when asked to", async () => {
 });
 
 it("is not a save target when the admin turns off editor saves", () => {
-  mocks.config = { microsoftAllowEditorSaves: false };
+  mocks.config = { ...mocks.config, microsoftAllowEditorSaves: false };
   const { result } = renderHook(useOneDriveSave);
   expect(result.current.target).toBeNull();
   expect(result.current.available).toBe(false);
