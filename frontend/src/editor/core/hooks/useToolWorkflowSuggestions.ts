@@ -148,5 +148,32 @@ export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
     [t],
   );
 
-  return { name, ranBy };
+  const ranByShort = useCallback(
+    (chain: ActivityChain) => {
+      const count = chain.fileCount;
+      switch (chain.scope) {
+        case "team":
+          return t(
+            "toolWorkflows.ranByShort.team",
+            "Your team ran this {{count, number}} times",
+            { count },
+          );
+        case "install":
+          return t(
+            "toolWorkflows.ranByShort.install",
+            "Colleagues ran this {{count, number}} times",
+            { count },
+          );
+        default:
+          return t(
+            "toolWorkflows.ranByShort.user",
+            "You ran this {{count, number}} times",
+            { count },
+          );
+      }
+    },
+    [t],
+  );
+
+  return { name, ranBy, ranByShort };
 }

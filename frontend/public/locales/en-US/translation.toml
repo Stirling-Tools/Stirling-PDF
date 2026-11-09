@@ -13650,6 +13650,11 @@ install = "Your colleagues have done this {{count, number}} times."
 team = "Your team has done this {{count, number}} times."
 user = "You've done this {{count, number}} times."
 
+[toolWorkflows.ranByShort]
+install = "Colleagues ran this {{count, number}} times"
+team = "Your team ran this {{count, number}} times"
+user = "You ran this {{count, number}} times"
+
 [unlockPDFForms]
 description = "This tool will remove read-only restrictions from PDF form fields, making them editable and fillable."
 submit = "Unlock Forms"

@@ -28,7 +28,7 @@ export function ActivityPipelineSuggestions({
 }: ActivityPipelineSuggestionsProps) {
   const { t } = useTranslation();
   const { allTools } = useToolRegistry();
-  const { name, ranBy } = useActivityChainText(allTools);
+  const { name, ranByShort } = useActivityChainText(allTools);
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
     [allTools],
@@ -89,8 +89,20 @@ export function ActivityPipelineSuggestions({
           <OptionCard
             key={chain.operations.join("-")}
             icon={<Icon name="activity" size={"1.25rem"} />}
-            title={name(chain)}
-            description={ranBy(chain)}
+            title={
+              <span
+                title={name(chain)}
+                style={{
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  overflow: "hidden",
+                }}
+              >
+                {name(chain)}
+              </span>
+            }
+            description={ranByShort(chain)}
             onSelect={() => onOpen(draft)}
             cta={
               <>

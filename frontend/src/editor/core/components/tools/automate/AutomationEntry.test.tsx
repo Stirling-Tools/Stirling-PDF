@@ -36,3 +36,27 @@ describe("AutomationEntry tooltip chain", () => {
     }
   });
 });
+
+describe("AutomationEntry subtitle", () => {
+  test("shows the subtitle under a title capped at two lines", () => {
+    render(
+      <MantineProvider>
+        <AutomationEntry
+          title="OCR → Compress → Add Password"
+          subtitle="You ran this 38 times"
+          operations={["ocr", "compress", "addPassword"]}
+          onClick={() => {}}
+        />
+      </MantineProvider>,
+    );
+
+    const title = screen.getByText("OCR → Compress → Add Password");
+    const subtitle = screen.getByText("You ran this 38 times");
+    expect(title.getAttribute("data-line-clamp")).toBe("true");
+    expect(title.style.getPropertyValue("--text-line-clamp")).toBe("2");
+    expect(
+      title.compareDocumentPosition(subtitle) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});

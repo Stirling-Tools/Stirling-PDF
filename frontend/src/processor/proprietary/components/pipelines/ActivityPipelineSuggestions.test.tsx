@@ -114,7 +114,9 @@ describe("ActivityPipelineSuggestions", () => {
     const onOpen = vi.fn();
     renderSuggestions([], onOpen);
 
-    expect(await screen.findByText("toolWorkflows.ranBy.team:4")).toBeTruthy();
+    expect(
+      await screen.findByText("toolWorkflows.ranByShort.team:4"),
+    ).toBeTruthy();
     fireEvent.click(screen.getByText("Compress → Flatten"));
 
     expect(onOpen).toHaveBeenCalledWith(

@@ -65,7 +65,11 @@ export default function AutomationSelection({
     existingOperationLists,
   );
 
-  const { name: activityChainName, ranBy } = useActivityChainText(toolRegistry);
+  const {
+    name: activityChainName,
+    ranBy,
+    ranByShort,
+  } = useActivityChainText(toolRegistry);
 
   const activityChainConfig = (chain: ActivityChain): AutomationConfig => {
     const now = new Date().toISOString();
@@ -187,6 +191,7 @@ export default function AutomationSelection({
                 <AutomationEntry
                   key={chain.operations.join("-")}
                   title={activityChainName(chain)}
+                  subtitle={ranByShort(chain)}
                   description={`${ranBy(chain)} ${t(
                     "automate.selection.activity.description",
                     "Save it as an automation and run it with one click.",

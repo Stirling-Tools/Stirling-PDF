@@ -13,6 +13,7 @@ interface AutomationEntryProps {
   title?: string;
   /** Optional description for tooltip */
   description?: string;
+  subtitle?: string;
   /** MUI Icon component for the badge */
   badgeIcon?: IconName;
   /** Array of tool operation names in the workflow */
@@ -42,6 +43,7 @@ interface AutomationEntryProps {
 export default function AutomationEntry({
   title,
   description,
+  subtitle,
   badgeIcon,
   operations,
   onClick,
@@ -154,10 +156,31 @@ export default function AutomationEntry({
           flexDirection: "column",
           alignItems: "flex-start",
           flex: 1,
-          overflow: "visible",
+          minWidth: 0,
+          overflow: subtitle ? "hidden" : "visible",
         }}
       >
-        {title ? (
+        {title && subtitle ? (
+          <>
+            <Text
+              size="sm"
+              lineClamp={2}
+              w="100%"
+              style={{ textAlign: "left" }}
+            >
+              {title}
+            </Text>
+            <Text
+              size="xs"
+              c="dimmed"
+              truncate="end"
+              w="100%"
+              style={{ textAlign: "left" }}
+            >
+              {subtitle}
+            </Text>
+          </>
+        ) : title ? (
           // Custom automation with title
           <Text size="sm" style={{ textAlign: "left" }}>
             {title}
