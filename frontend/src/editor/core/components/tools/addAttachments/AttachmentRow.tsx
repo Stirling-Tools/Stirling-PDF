@@ -25,6 +25,7 @@ export interface AttachmentRowProps {
   disabled?: boolean;
   isSaving?: boolean;
   isDownloading?: boolean;
+  downloadBlockedReason?: string;
   onExtractSingle?: (filename: string) => void;
   onToggleDelete: (id: string) => void;
   onRestore: (id: string) => void;
@@ -40,6 +41,7 @@ export const AttachmentRow = memo(function AttachmentRow({
   disabled = false,
   isSaving = false,
   isDownloading = false,
+  downloadBlockedReason,
   onExtractSingle,
   onToggleDelete,
   onRestore,
@@ -254,21 +256,31 @@ export const AttachmentRow = memo(function AttachmentRow({
             <>
               {!isStaged && onExtractSingle && (
                 <Tooltip
-                  label={t("attachments.downloadSingle", "Download attachment")}
+                  label={
+                    downloadBlockedReason ??
+                    t("attachments.downloadSingle", "Download attachment")
+                  }
+                  multiline={Boolean(downloadBlockedReason)}
+                  w={downloadBlockedReason ? 240 : undefined}
                 >
-                  <ActionIcon
-                    variant="tertiary"
-                    size="sm"
-                    aria-label={t(
-                      "attachments.downloadSingle",
-                      "Download attachment",
-                    )}
-                    onClick={() => onExtractSingle(originalName)}
-                    disabled={disabled || isSaving}
-                    loading={isDownloading}
-                  >
-                    <Icon name="download" size={15} />
-                  </ActionIcon>
+                  <Box component="span" style={{ display: "inline-flex" }}>
+                    <ActionIcon
+                      variant="tertiary"
+                      size="sm"
+                      aria-label={t(
+                        "attachments.downloadSingle",
+                        "Download attachment",
+                      )}
+                      aria-description={downloadBlockedReason}
+                      onClick={() => onExtractSingle(originalName)}
+                      disabled={
+                        disabled || isSaving || Boolean(downloadBlockedReason)
+                      }
+                      loading={isDownloading}
+                    >
+                      <Icon name="download" size={15} />
+                    </ActionIcon>
+                  </Box>
                 </Tooltip>
               )}
 

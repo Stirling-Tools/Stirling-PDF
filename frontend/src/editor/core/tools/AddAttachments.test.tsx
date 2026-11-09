@@ -1,6 +1,12 @@
 import { createContext } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import AddAttachments from "@editor/tools/AddAttachments";
 import apiClient from "@editor/services/apiClient";
@@ -31,6 +37,8 @@ const selectors = {
     workspace.fileStubs.find((stub) => stub.id === id),
 };
 const listAttachments = vi.hoisted(() => vi.fn());
+const extractAttachments = vi.hoisted(() => vi.fn());
+const downloadFileWithPolicy = vi.hoisted(() => vi.fn());
 
 vi.mock("@editor/services/apiClient", () => ({
   default: { post: vi.fn(), get: vi.fn() },
@@ -38,7 +46,7 @@ vi.mock("@editor/services/apiClient", () => ({
 vi.mock("@editor/services/attachmentService", () => ({
   listAttachments,
   applyBatchAttachmentOps: vi.fn(),
-  extractAttachments: vi.fn(),
+  extractAttachments,
   extractSingleAttachment: vi.fn(),
   parseBlobError: vi.fn(async () => "failed"),
 }));
@@ -49,7 +57,7 @@ vi.mock("@editor/services/pdfAccessService", async (importOriginal) => ({
   inspectLocalPdfAccess: vi.fn(async () => ({ signed: false })),
 }));
 vi.mock("@editor/services/exportWithPolicy", () => ({
-  downloadFileWithPolicy: vi.fn(),
+  downloadFileWithPolicy,
 }));
 vi.mock("@editor/utils/thumbnailUtils", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@editor/utils/thumbnailUtils")>()),
@@ -143,6 +151,7 @@ function purviewWrapper(name: string): StirlingFile {
 async function openedPurviewPdf(
   name: string,
   edit = true,
+  exportRight = true,
 ): Promise<StirlingFile> {
   const original = pdf(name, "%PDF-1.7 wrapper");
   const protection = JSON.stringify({
@@ -152,7 +161,7 @@ async function openedPurviewPdf(
       copy: true,
       edit,
       comment: true,
-      export: true,
+      export: exportRight,
       owner: false,
     },
   });
@@ -194,6 +203,8 @@ function renderTool() {
 beforeEach(() => {
   listAttachments.mockReset();
   listAttachments.mockResolvedValue([]);
+  extractAttachments.mockReset();
+  downloadFileWithPolicy.mockReset();
 });
 
 afterEach(() => {
@@ -245,5 +256,57 @@ describe("Manage Attachments file eligibility", () => {
 
     await waitFor(() => expect(listedFileNames()).toEqual(["plain.pdf"]));
     expect(screen.queryByText("view-only.pdf")).not.toBeInTheDocument();
+  });
+});
+
+describe("Manage Attachments downloads on Purview protected PDFs", () => {
+  test("extracts the attachments of the decrypted document when the export right is granted", async () => {
+    const opened = await openedPurviewPdf("exportable.pdf");
+    listAttachments.mockResolvedValue([{ filename: "minutes.txt", size: 3 }]);
+    extractAttachments.mockResolvedValue(new Blob(["zip"]));
+    openWorkspace([opened]);
+
+    renderTool();
+
+    const extractAll = await screen.findByRole("button", {
+      name: "Extract all",
+    });
+    expect(extractAll).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Download attachment" }),
+    ).toBeEnabled();
+    fireEvent.click(extractAll);
+
+    await waitFor(() =>
+      expect(downloadFileWithPolicy).toHaveBeenCalledWith(
+        expect.objectContaining({ filename: "exportable_attachments.zip" }),
+      ),
+    );
+    expect(extractAttachments.mock.calls[0][0]).toBe(
+      getOpenedRightsManagedPdf(opened)?.plaintext,
+    );
+  });
+
+  test("disables downloads and says why without the export right", async () => {
+    const opened = await openedPurviewPdf("no-export.pdf", true, false);
+    listAttachments.mockResolvedValue([{ filename: "minutes.txt", size: 3 }]);
+    openWorkspace([opened]);
+
+    renderTool();
+
+    const extractAll = await screen.findByRole("button", {
+      name: "Extract all",
+    });
+    const download = screen.getByRole("button", {
+      name: "Download attachment",
+    });
+    expect(extractAll).toBeDisabled();
+    expect(download).toBeDisabled();
+    expect(download).toHaveAccessibleDescription(
+      "Your Microsoft Purview permissions do not allow saving copies of this PDF's attachments.",
+    );
+    fireEvent.click(extractAll);
+    expect(extractAttachments).not.toHaveBeenCalled();
+    expect(screen.queryByText(/doesn't make PDFs/)).not.toBeInTheDocument();
   });
 });

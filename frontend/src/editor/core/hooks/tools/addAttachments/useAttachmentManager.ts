@@ -22,6 +22,9 @@ import {
   protectUnlockedResults,
 } from "@editor/services/pdfSessionUnlock";
 import { FileActionsContext } from "@editor/contexts/file/contexts";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
+import { getOpenedRightsManagedPdf } from "@editor/services/rightsManagedPdf";
+import { rightsManagedRunBlockReason } from "@editor/services/rightsManagedTools";
 import { isStirlingFile } from "@editor/types/fileContext";
 
 const LIST_ENDPOINT = "/api/v1/misc/list-attachments";
@@ -316,6 +319,14 @@ export function useAttachmentManager({
     [activeFile, onError, unlockedFor],
   );
 
+  const rightsRevision = useRightsManagedPdfRevision();
+  const extractBlockedReason = useMemo(() => {
+    const opened = getOpenedRightsManagedPdf(activeFile);
+    return opened
+      ? rightsManagedRunBlockReason(opened, EXTRACT_ALL_ENDPOINT)
+      : undefined;
+  }, [activeFile, rightsRevision]);
+
   const pendingChangesCount = useMemo(() => {
     return rows.filter((r) => r.kind !== "existing").length;
   }, [rows]);
@@ -422,6 +433,7 @@ export function useAttachmentManager({
     renameRow,
     extractAllZip,
     extractSingle,
+    extractBlockedReason,
     saveDraft,
     discardDraft,
   };

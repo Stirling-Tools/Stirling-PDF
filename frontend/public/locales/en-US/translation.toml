@@ -12142,6 +12142,7 @@ copyNotAllowed = "Your permissions on this protected PDF do not allow copying it
 customPermissions = "Custom permissions"
 description = "This PDF is encrypted by a sensitivity label. Open it with the Microsoft account it was shared with."
 editNotAllowed = "Your permissions on this protected PDF do not allow changes."
+exportNotAllowed = "Your Microsoft Purview permissions do not allow saving copies of this PDF's attachments."
 forbidsEncryption = "PDF/A and PDF/X don't allow encryption, so the result couldn't keep Microsoft Purview protection."
 managedByLabel = "This tool isn't allowed on files protected by Microsoft Purview, because it would conflict with the protection set by the file's sensitivity label."
 mixedProtection = "Process Microsoft Purview protected PDFs one at a time. Protected files: {{files}}."

@@ -78,6 +78,7 @@ const AddAttachmentsSettings = ({
         onRenameRow={manager.renameRow}
         onExtractSingle={manager.extractSingle}
         onExtractAllZip={manager.extractAllZip}
+        extractBlockedReason={manager.extractBlockedReason}
         onSaveDraft={handleSaveDraft}
         onDiscardDraft={manager.discardDraft}
         onConvertToPdfA3bChange={(val) =>

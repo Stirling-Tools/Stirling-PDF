@@ -73,6 +73,8 @@ const REVIEWED = [
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
+  "/api/v1/misc/extract-attachments",
+  "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
   "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
@@ -137,6 +139,18 @@ describe("rightsManagedToolBlockReason", () => {
       rightsManagedToolBlockReason("/api/v1/misc/auto-rename", "no-copy"),
     ).toBe(
       "Your permissions on this protected PDF do not allow copying its content, which this tool needs.",
+    );
+  });
+
+  it.each([
+    "/api/v1/misc/extract-attachments",
+    "/api/v1/misc/extract-single-attachment",
+  ])("lets %s save attachments only with the export right", (endpoint) => {
+    openWith("exports", { ...FULL, edit: false, copy: false });
+    openWith("no-export", { ...FULL, export: false });
+    expect(rightsManagedToolBlockReason(endpoint, "exports")).toBeUndefined();
+    expect(rightsManagedToolBlockReason(endpoint, "no-export")).toBe(
+      "Your Microsoft Purview permissions do not allow saving copies of this PDF's attachments.",
     );
   });
 

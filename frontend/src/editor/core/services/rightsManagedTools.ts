@@ -8,7 +8,7 @@ import {
 import { toolIOFor } from "@editor/types/toolIO";
 
 export type RightsManagedToolRule =
-  | { supported: true; needsCopy: boolean }
+  | { supported: true; needsCopy: boolean; exportsContent?: true }
   | { supported: false; reason: string };
 
 const cannotKeepProtection = () =>
@@ -66,6 +66,11 @@ const EXCLUDED = new Map<string, () => string>([
 
 const READS_ONLY = new Set(["/api/v1/misc/list-attachments"]);
 
+const EXPORTS_CONTENT = new Set([
+  "/api/v1/misc/extract-attachments",
+  "/api/v1/misc/extract-single-attachment",
+]);
+
 const NEEDS_COPY = new Set([
   "/api/v1/misc/auto-rename",
   "/api/v1/general/split-pdf-by-chapters",
@@ -78,6 +83,8 @@ export function rightsManagedToolRule(
   if (excluded) return { supported: false, reason: excluded() };
   if (endpoint && READS_ONLY.has(endpoint))
     return { supported: true, needsCopy: false };
+  if (endpoint && EXPORTS_CONTENT.has(endpoint))
+    return { supported: true, needsCopy: false, exportsContent: true };
   const spec = endpoint ? toolIOFor(endpoint) : undefined;
   if (!endpoint || !spec?.accepts.includes("PDF"))
     return { supported: false, reason: cannotKeepProtection() };
@@ -104,11 +111,21 @@ const copyNotAllowed = () =>
     "Your permissions on this protected PDF do not allow copying its content, which this tool needs.",
   );
 
+const exportNotAllowed = () =>
+  i18n.t(
+    "rightsManagedPdf.exportNotAllowed",
+    "Your Microsoft Purview permissions do not allow saving copies of this PDF's attachments.",
+  );
+
 function missingRight(
   rule: RightsManagedToolRule,
   opened: OpenedRightsManagedPdf,
 ): string | undefined {
   if (!rule.supported) return rule.reason;
+  if (rule.exportsContent)
+    return opened.protection.permissions.export
+      ? undefined
+      : exportNotAllowed();
   const { edit, copy } = opened.protection.permissions;
   if (!edit) return editNotAllowed();
   if (rule.needsCopy && !copy) return copyNotAllowed();
@@ -124,6 +141,13 @@ export function rightsManagedToolBlockReason(
   if (!rule.supported) return rule.reason;
   const opened = getOpenedRightsManagedPdf(fileId);
   return opened ? missingRight(rule, opened) : undefined;
+}
+
+export function rightsManagedRunBlockReason(
+  opened: OpenedRightsManagedPdf,
+  endpoint: string | undefined,
+): string | undefined {
+  return missingRight(rightsManagedToolRule(endpoint), opened);
 }
 
 export function rightsManagedToolAccepts(
@@ -154,8 +178,10 @@ export async function assertRightsManagedRun(
   opened: OpenedRightsManagedPdf,
   endpoint: string | undefined,
 ): Promise<void> {
-  const missing = missingRight(rightsManagedToolRule(endpoint), opened);
+  const rule = rightsManagedToolRule(endpoint);
+  const missing = missingRight(rule, opened);
   if (missing) throw new Error(missing);
+  if (rule.supported && rule.exportsContent) return;
   if (await hasSignatures(opened))
     throw new Error(
       i18n.t(
