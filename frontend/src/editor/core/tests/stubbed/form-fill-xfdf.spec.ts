@@ -1,6 +1,7 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 import type { Page } from "@playwright/test";
+import { readFileSync } from "fs";
 import path from "path";
 
 /**
@@ -169,5 +170,70 @@ test.describe("Form Fill - XFDF / FDF exchange", () => {
     await expect(page.getByText(/Unrecognised form data file/)).toBeVisible({
       timeout: 10_000,
     });
+  });
+
+  test("malformed XML reports the parser message without the browser's page wrapper", async ({
+    page,
+  }) => {
+    await openFormFill(page);
+
+    await page.locator('input[type="file"][accept*="xfdf"]').setInputFiles({
+      name: "broken.xfdf",
+      mimeType: "application/vnd.adobe.xfdf",
+      buffer: Buffer.from(
+        '<?xml version="1.0"?>\n<xfdf xmlns="http://ns.adobe.com/xfdf/"><fields>',
+      ),
+    });
+
+    const error = page.getByText(/File is not valid XML/);
+    await expect(error).toBeVisible({ timeout: 10_000 });
+    await expect(error).not.toContainText("This page contains");
+  });
+
+  test("a file that matches no field in this PDF is shown as a warning", async ({
+    page,
+  }) => {
+    await openFormFill(page);
+
+    await page.locator('input[type="file"][accept*="xfdf"]').setInputFiles({
+      name: "other-form.xfdf",
+      mimeType: "application/vnd.adobe.xfdf",
+      buffer: Buffer.from(
+        '<xfdf xmlns="http://ns.adobe.com/xfdf/"><fields><field name="Surname"><value>x</value></field></fields></xfdf>',
+      ),
+    });
+
+    const summary = page.getByTestId("form-import-summary");
+    await expect(summary).toContainText(
+      "Imported 0 fields from XFDF. 1 field is not in this PDF: Surname",
+      { timeout: 10_000 },
+    );
+    await expect(summary.locator(".mantine-Alert-icon")).toBeVisible();
+  });
+
+  test("the import summary clears once the form is saved", async ({ page }) => {
+    await page.route("**/api/v1/form/fill", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/pdf",
+        body: readFileSync(SAMPLE_PDF),
+      }),
+    );
+    await openFormFill(page);
+
+    await page.locator('input[type="file"][accept*="xfdf"]').setInputFiles({
+      name: "export.xfdf",
+      mimeType: "application/vnd.adobe.xfdf",
+      buffer: Buffer.from(XFDF),
+    });
+    await expect(page.getByTestId("form-import-summary")).toBeVisible({
+      timeout: 10_000,
+    });
+
+    const fill = page.waitForRequest("**/api/v1/form/fill");
+    await page.getByRole("button", { name: /^Save$/ }).click();
+    await fill;
+
+    await expect(page.getByTestId("form-import-summary")).toHaveCount(0);
   });
 });

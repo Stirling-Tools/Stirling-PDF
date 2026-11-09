@@ -182,7 +182,10 @@ const FormFill = (_props: BaseToolProps) => {
   const [flatten, setFlatten] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [importSummary, setImportSummary] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<{
+    message: string;
+    anyApplied: boolean;
+  } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const flattenChanged = flatten;
@@ -348,7 +351,10 @@ const FormFill = (_props: BaseToolProps) => {
                 },
               )
             : "";
-        setImportSummary([imported, skipped].filter(Boolean).join(". "));
+        setImportSummary({
+          message: [imported, skipped].filter(Boolean).join(". "),
+          anyApplied: Object.keys(applied).length > 0,
+        });
       } catch (err) {
         console.error("[FormFill] Form data import failed:", err);
         if (err instanceof FormDataTooLargeError) {
@@ -433,6 +439,7 @@ const FormFill = (_props: BaseToolProps) => {
     savingRef.current = true;
     setSaving(true);
     setSaveError(null);
+    setImportSummary(null);
     try {
       assertFilesNotBlocked();
       if (mode === "fill") {
@@ -477,6 +484,7 @@ const FormFill = (_props: BaseToolProps) => {
       discardDesign();
     }
     setSaveError(null);
+    setImportSummary(null);
   }, [mode, discardValues, discardDesign]);
 
   useEffect(() => {
@@ -512,6 +520,7 @@ const FormFill = (_props: BaseToolProps) => {
         return;
       }
       setSaveError(null);
+      setImportSummary(null);
       setMode(next);
     },
     [
@@ -704,8 +713,19 @@ const FormFill = (_props: BaseToolProps) => {
         </Alert>
       )}
       {importSummary && (
-        <Alert color="blue" variant="light" p="xs" radius="sm">
-          <Text size="xs">{importSummary}</Text>
+        <Alert
+          icon={
+            importSummary.anyApplied ? undefined : (
+              <Icon name="triangle-alert" size={16} />
+            )
+          }
+          color={importSummary.anyApplied ? "blue" : "yellow"}
+          variant="light"
+          p="xs"
+          radius="sm"
+          data-testid="form-import-summary"
+        >
+          <Text size="xs">{importSummary.message}</Text>
         </Alert>
       )}
       {mode !== "fill" && formState.loading && (
