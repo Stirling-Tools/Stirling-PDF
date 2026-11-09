@@ -16,8 +16,8 @@ interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
 }
 
 /**
- * Desktop version of the workbench bar's global actions: print / export /
- * save-as sit as icons, with close split off behind a separator.
+ * Desktop version of the workbench bar's global actions: print and save sit
+ * as icons, with close split off behind a separator.
  */
 export default function WorkbenchBarDesktopActions({
   currentView,
@@ -26,7 +26,6 @@ export default function WorkbenchBarDesktopActions({
   policyEnforcing,
   downloadLabel,
   downloadIconName,
-  saveAsIconName,
   downloadUnsaved,
   saveMenu,
   onPrint,
@@ -149,23 +148,6 @@ export default function WorkbenchBarDesktopActions({
           )}
         </div>
       )}
-
-      {showsFileActions &&
-        !saveMenu &&
-        saveAsIconName &&
-        renderWithTooltip(
-          <ActionIcon
-            variant="tertiary"
-            hover={false}
-            className="workbench-bar-action-icon"
-            onClick={() => onExport(true)}
-            disabled={exportDisabled}
-            aria-label={t("workbenchBar.saveAs", "Save As")}
-          >
-            <Icon name={saveAsIconName} size="1rem" />
-          </ActionIcon>,
-          tooltipFor(t("workbenchBar.saveAs", "Save As")),
-        )}
 
       {/* Separator: export group | close */}
       {showsFileActions && (

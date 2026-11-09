@@ -7,13 +7,14 @@ import {
   type SaveMenuItem,
 } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 
 export interface SaveButton {
   /** Replaces the plain Download/Save label when a target handles the files. */
   label?: string;
   icon?: IconName;
   unsaved: boolean;
-  /** "More save options"; replaces the Save As button when set. */
+  /** The other destinations, for the "More save options" menu. */
   menu?: SaveMenuItem[];
 }
 
@@ -22,8 +23,6 @@ interface Options {
   targets: StirlingFileStub[];
   /** The viewer acts on one file, so it also offers that file's destinations. */
   singleFile: boolean;
-  /** Desktop saves to disk; web downloads. */
-  savesToDisk: boolean;
   onSaveLocalCopy: () => void;
   /** The file as the viewer shows it, annotations included. */
   fileFor: (stub: StirlingFileStub) => Promise<File | undefined>;
@@ -34,7 +33,6 @@ export function useSaveButton({
   saver,
   targets,
   singleFile,
-  savesToDisk,
   onSaveLocalCopy,
   fileFor,
 }: Options): SaveButton {
@@ -50,10 +48,10 @@ export function useSaveButton({
 
   const stub = singleFile ? targets[0] : undefined;
   const target = stub ? saver.targetFor(stub) : undefined;
-  if (!savesToDisk && !target) return { label, icon, unsaved };
+  if (!SAVES_TO_DISK && !target) return { label, icon, unsaved };
 
   const menu: SaveMenuItem[] = [
-    savesToDisk
+    SAVES_TO_DISK
       ? {
           key: "local",
           label: t("saveFile.menu.saveCopy", "Save a copy..."),

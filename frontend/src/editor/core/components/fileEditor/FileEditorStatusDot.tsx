@@ -11,6 +11,6 @@ interface FileEditorStatusDotProps {
 }
 
 export function FileEditorStatusDot({ target }: FileEditorStatusDotProps) {
-  // Web files have no disk copy, so only a save target's state shows.
+  // With no disk copy to fall behind, only a save target's state shows.
   return target?.unsaved ? <TargetStatusDot {...target} /> : null;
 }

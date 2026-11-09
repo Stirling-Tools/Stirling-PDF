@@ -6,7 +6,7 @@ import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar
 
 /**
  * Mobile version of the workbench bar's global actions: the icon row won't fit
- * on a phone, so print / export / save-as / close collapse into one overflow menu.
+ * on a phone, so print / save / close collapse into one overflow menu.
  */
 export default function WorkbenchBarMobileActions({
   currentView,
@@ -15,7 +15,6 @@ export default function WorkbenchBarMobileActions({
   policyEnforcing,
   downloadLabel,
   downloadIconName,
-  saveAsIconName,
   downloadUnsaved,
   saveMenu,
   onPrint,
@@ -86,15 +85,6 @@ export default function WorkbenchBarMobileActions({
               {item.label}
             </Menu.Item>
           ))}
-        {showFileActions && !saveMenu && saveAsIconName && (
-          <Menu.Item
-            leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
-            disabled={exportDisabled}
-            onClick={() => void onExport(true)}
-          >
-            {t("workbenchBar.saveAs", "Save As")}
-          </Menu.Item>
-        )}
         {showFileActions && (
           <>
             <Menu.Divider />

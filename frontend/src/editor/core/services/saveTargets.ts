@@ -14,7 +14,8 @@ export interface SaveMenuItem {
 
 /**
  * A place Save can write a file back to, such as a cloud drive. Files no target
- * handles save the built-in way: to their disk path on desktop, else a download.
+ * handles save the built-in way: to their disk path if they have one, else a
+ * download.
  */
 export interface SaveTarget {
   id: string;

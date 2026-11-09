@@ -25,7 +25,7 @@ export interface SaveStoredFile {
     file?: File,
     options?: SaveOptions,
   ) => Promise<SaveOutcome>;
-  /** A one-off copy (download, or Save As on desktop) that keeps the file's home. */
+  /** A one-off copy (a download or a Save As) that keeps the file's home. */
   saveLocalCopy: (
     stub: StirlingFileStub,
     file?: File,

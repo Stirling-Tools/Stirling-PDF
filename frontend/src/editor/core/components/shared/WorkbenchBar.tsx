@@ -49,7 +49,10 @@ import {
 } from "@editor/components/policies/policyRunStore";
 import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
 import { enforceExportPolicies } from "@editor/services/policyExport";
-import { downloadFile as downloadRaw } from "@editor/services/downloadService";
+import {
+  downloadFile as downloadRaw,
+  SAVES_TO_DISK,
+} from "@editor/services/downloadService";
 import { alert as showAlert } from "@editor/components/toast";
 import {
   WorkbenchBarButtonConfig,
@@ -225,7 +228,7 @@ export default function WorkbenchBar({
   );
   // A save to disk links the file to wherever it lands, so every one goes home.
   const savesHome =
-    Boolean(icons.saveAs) ||
+    SAVES_TO_DISK ||
     exportTargetStubs.some(
       (stub) => saver.targetFor(stub) || stub.localFilePath,
     );
@@ -391,7 +394,6 @@ export default function WorkbenchBar({
     saver,
     targets: exportTargetStubs,
     singleFile: currentView === "viewer",
-    savesToDisk: Boolean(icons.saveAs),
     onSaveLocalCopy: () => void handleExportAll(true),
     fileFor: viewerFileFor,
   });
@@ -475,13 +477,11 @@ export default function WorkbenchBar({
     policyEnforcing,
     downloadLabel: saveButton.label ?? downloadTooltip,
     downloadIconName: saveButton.icon ?? icons.download,
-    saveAsIconName: icons.saveAs,
     downloadUnsaved: saveButton.unsaved,
     saveMenu: saveButton.menu,
     onPrint: canPrint ? handlePrint : undefined,
     printDisabledReason,
-    onExport: (forceNewFile?: boolean) =>
-      void (forceNewFile ? handleExportAll(true) : saveWithEdits()),
+    onExport: () => void saveWithEdits(),
     onClose: handleClose,
   };
 

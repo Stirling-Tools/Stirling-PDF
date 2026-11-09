@@ -44,6 +44,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
 import type { SaveTarget } from "@editor/services/saveTargets";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
@@ -292,7 +293,7 @@ const FileEditorThumbnail = ({
     const targetLabel = saveTarget?.saveLabel(file);
     // A plain "Save" beside the save to another home would read as that save.
     const downloadLabel =
-      saveTarget && icons.saveAs
+      saveTarget && SAVES_TO_DISK
         ? t("saveFile.menu.saveCopy", "Save a copy...")
         : terminology.download;
     const uploadLabel = isUploaded
@@ -494,7 +495,6 @@ const FileEditorThumbnail = ({
     onSaveFile,
     saveTarget,
     file,
-    icons.saveAs,
     onUnzipFile,
     handleCloseWithConfirmation,
     policyEnforcing,

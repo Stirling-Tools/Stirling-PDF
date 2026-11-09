@@ -76,7 +76,6 @@ function ReviewStepContent<TParams = unknown>({
     saver,
     targets: outputStubs,
     singleFile: outputStubs.length === 1,
-    savesToDisk: Boolean(icons.saveAs),
     onSaveLocalCopy: () =>
       void (async () => {
         for (const stub of outputStubs) {
