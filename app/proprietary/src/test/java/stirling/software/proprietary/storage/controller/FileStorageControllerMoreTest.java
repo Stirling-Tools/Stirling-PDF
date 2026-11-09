@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,8 +26,10 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -365,13 +368,60 @@ class FileStorageControllerMoreTest {
         Authentication authentication = auth(owner);
         when(fileStorageService.getShareByToken("tok")).thenReturn(share);
         when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
-        when(fileStorageService.requireAuthenticatedUser()).thenReturn(owner);
 
         ShareLinkMetadataResponse response = controller.getShareLinkMetadata("tok", authentication);
 
         assertThat(response.getShareToken()).isEqualTo("tok");
         assertThat(response.getFileId()).isEqualTo(77L);
+        assertThat(response.getOwner()).isEqualTo("alice");
         assertThat(response.isOwnedByCurrentUser()).isTrue();
+    }
+
+    @Test
+    @DisplayName("getShareLinkMetadata names the owner to a signed-in recipient")
+    void getShareLinkMetadata_signedInRecipient_seesOwner() {
+        User recipient = new User();
+        recipient.setId(12L);
+        recipient.setUsername("bob");
+        FileShare share = new FileShare();
+        share.setFile(storedFile());
+        share.setShareToken("tok");
+        Authentication authentication = auth(recipient);
+        when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+        when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
+
+        ShareLinkMetadataResponse response = controller.getShareLinkMetadata("tok", authentication);
+
+        assertThat(response.getOwner()).isEqualTo("alice");
+        assertThat(response.getFileId()).isEqualTo(77L);
+        assertThat(response.isOwnedByCurrentUser()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getShareLinkMetadata answers a public link anonymously without owner details")
+    void getShareLinkMetadata_anonymousPublicLink_omitsOwnerDetails() {
+        FileShare share = new FileShare();
+        share.setFile(storedFile());
+        share.setShareToken("tok");
+        share.setPublicAccess(true);
+        share.setAccessRole(ShareAccessRole.EDITOR);
+        Authentication anonymous =
+                new AnonymousAuthenticationToken(
+                        "key",
+                        "anonymousUser",
+                        AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+        when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+        when(fileStorageService.canAccessShareLink(share, anonymous)).thenReturn(true);
+
+        ShareLinkMetadataResponse response = controller.getShareLinkMetadata("tok", anonymous);
+
+        assertThat(response.getShareToken()).isEqualTo("tok");
+        assertThat(response.getFileName()).isEqualTo("doc.pdf");
+        assertThat(response.getAccessRole()).isEqualTo("editor");
+        assertThat(response.getOwner()).isNull();
+        assertThat(response.getFileId()).isNull();
+        assertThat(response.isOwnedByCurrentUser()).isFalse();
+        verify(fileStorageService, never()).requireAuthenticatedUser();
     }
 
     @Test
