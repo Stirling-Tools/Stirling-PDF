@@ -1568,6 +1568,7 @@ notReady = "Not ready - fix the items marked below"
 ready = "Clients can connect"
 run = "Test connection"
 running = "Testing..."
+turnedOff = "Turn on the MCP server and save before testing the connection."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."

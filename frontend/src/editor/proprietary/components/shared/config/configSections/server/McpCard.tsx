@@ -35,6 +35,7 @@ function parseOpList(raw: string): string[] {
 /** The MCP endpoint, how it authenticates, and which tools it exposes. */
 export function McpCard({
   settings,
+  savedSettings,
   setSettings,
   isFieldPending,
 }: McpCardProps) {
@@ -53,13 +54,15 @@ export function McpCard({
   const metadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
   const authMode = settings.auth?.mode || "oauth";
   const connectorUrl = settings.auth?.resourceId || mcpUrl;
+  const savedMode = savedSettings.auth?.mode || "oauth";
+  const savedConnectorUrl = savedSettings.auth?.resourceId || mcpUrl;
 
   return (
     <>
       <McpConnectionPanel
-        enabled={settings.enabled || false}
-        mode={authMode}
-        connectorUrl={connectorUrl}
+        enabled={savedSettings.enabled || false}
+        mode={savedMode}
+        connectorUrl={savedConnectorUrl}
       />
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">

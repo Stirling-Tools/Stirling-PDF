@@ -53,11 +53,11 @@ async function expectNoRequestErrorToast(page: Page) {
   await expect(page.locator(".toast-item")).toHaveCount(0);
 }
 
-async function openAdminMcp(page: Page, mode: string) {
+async function openAdminMcp(page: Page, mode: string, enabled = true) {
   await page.route("**/api/v1/admin/settings/section/mcp", (route) =>
     route.fulfill({
       json: {
-        enabled: true,
+        enabled,
         auth: { mode, resourceId: "https://pdf.example.com/mcp" },
       },
     }),
@@ -263,4 +263,27 @@ test("the MCP Server settings entry is hidden while MCP is off", async ({
     timeout: 30_000,
   });
   await expect(nav.filter({ hasText: "MCP Server" })).toHaveCount(0);
+});
+
+test("the admin status and connection test follow saved settings only", async ({
+  page,
+}) => {
+  const preflights: string[] = [];
+  await page.route("**/api/v1/admin/settings/mcp/preflight", (route) => {
+    preflights.push(route.request().url());
+    return route.fulfill({ status: 404, json: {} });
+  });
+  const card = await openAdminMcp(page, "builtin", false);
+  await card.getByRole("switch").first().check({ force: true });
+  await expect(
+    card.getByRole("textbox", { name: /Authentication mode/ }),
+  ).toBeEnabled();
+  await expect(card.getByText("Disabled", { exact: true })).toBeVisible();
+  const test = card.getByRole("button", { name: "Test connection" });
+  await expect(test).toBeDisabled();
+  await test.hover({ force: true });
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Turn on the MCP server and save before testing the connection.",
+  );
+  expect(preflights).toEqual([]);
 });

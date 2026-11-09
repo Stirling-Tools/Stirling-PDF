@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Group, Paper, Stack, Text } from "@mantine/core";
+import { Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { CodeBlock } from "@editor/ui/CodeBlock";
 import { StatusBadge, type StatusTone } from "@editor/ui/StatusBadge";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import apiClient from "@editor/services/apiClient";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 
 type CheckStatus = "pass" | "warn" | "fail";
 
@@ -134,18 +135,29 @@ export function McpConnectionPanel({
               {t(modeKey, modeFallback)}
             </StatusBadge>
           </Group>
-          <Button
-            size="sm"
-            variant="secondary"
-            leftSection={<Icon name="plug" size={14} />}
-            onClick={() => void run()}
-            disabled={running}
-            style={{ flexShrink: 0 }}
+          <Tooltip
+            label={t(
+              "admin.settings.mcp.test.turnedOff",
+              "Turn on the MCP server and save before testing the connection.",
+            )}
+            disabled={enabled}
+            zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+            withArrow
           >
-            {running
-              ? t("admin.settings.mcp.test.running", "Testing...")
-              : t("admin.settings.mcp.test.run", "Test connection")}
-          </Button>
+            <span style={{ flexShrink: 0 }}>
+              <Button
+                size="sm"
+                variant="secondary"
+                leftSection={<Icon name="plug" size={14} />}
+                onClick={() => void run()}
+                disabled={running || !enabled}
+              >
+                {running
+                  ? t("admin.settings.mcp.test.running", "Testing...")
+                  : t("admin.settings.mcp.test.run", "Test connection")}
+              </Button>
+            </span>
+          </Tooltip>
         </Group>
         <CodeBlock
           code={connectorUrl}

@@ -8,6 +8,7 @@ import { useRestartServer } from "@editor/components/shared/config/useRestartSer
 import { useAdminSettings } from "@editor/hooks/useAdminSettings";
 import apiClient from "@editor/services/apiClient";
 import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { mergePendingSettings } from "@editor/utils/settingsPendingHelper";
 import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type { ConnectionsSettingsData } from "@editor/components/shared/config/configSections/security/securitySettingsTypes";
@@ -52,6 +53,7 @@ export default function AdminIntegrationsPage() {
 
   const {
     settings: mcp,
+    rawSettings: rawMcp,
     setSettings: setMcp,
     loading: mcpLoading,
     saving: mcpSaving,
@@ -98,6 +100,11 @@ export default function AdminIntegrationsPage() {
       },
     }),
   });
+
+  const savedMcp = useMemo<McpSettingsData>(
+    () => (rawMcp ? mergePendingSettings(rawMcp) : {}),
+    [rawMcp],
+  );
 
   // A disabled fetch reports loading forever, so the ternary decides it.
   const loading = loginEnabled ? connections.loading || mcpLoading : false;
@@ -201,6 +208,7 @@ export default function AdminIntegrationsPage() {
         >
           <McpCard
             settings={mcp}
+            savedSettings={savedMcp}
             setSettings={setMcp}
             isFieldPending={isMcpFieldPending}
             loginEnabled={loginEnabled}
