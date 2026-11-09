@@ -194,7 +194,7 @@ export default function AdminSecurityPage() {
               "admin.settings.security.blockSignedPdfEdits.label",
               "Block changes to signed PDFs",
             )}
-            info={t(
+            description={t(
               "admin.settings.security.blockSignedPdfEdits.description",
               "Digitally signed PDFs can still be viewed, printed, converted or signed again, but no tool can change them.",
             )}
