@@ -59,10 +59,6 @@ public class CustomOAuth2AuthenticationFailureHandler
 
                 String errorCode = error.getErrorCode();
 
-                if ("Password must not be null".equals(error.getErrorCode())) {
-                    errorCode = "userAlreadyExistsWeb";
-                }
-
                 log.error(
                         "OAuth2 Authentication error: {}",
                         errorCode != null ? errorCode : exception.getMessage(),
