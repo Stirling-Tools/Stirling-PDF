@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +25,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
@@ -207,6 +210,53 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
         assertEquals(
                 "/stirling/logout?oAuth2AuthenticationErrorWeb=true", response.getRedirectedUrl());
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void oidcLoginMatchingLocalPasswordAccountIsRefusedByClaimValue() throws Exception {
+        LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(true);
+        oauth2.setBlockRegistration(false);
+
+        when(userService.usernameExistsIgnoreCase("jane@example.com")).thenReturn(true);
+        when(userService.isUserDisabled("jane@example.com")).thenReturn(false);
+        when(userService.hasPassword("jane@example.com")).thenReturn(true);
+        when(userService.isSsoAuthenticationTypeByUsername("jane@example.com")).thenReturn(false);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        loginAttemptService,
+                        oauth2,
+                        userService,
+                        jwtService,
+                        licenseSettingsService,
+                        properties);
+        OidcIdToken idToken =
+                new OidcIdToken(
+                        "raw-token",
+                        Instant.now(),
+                        Instant.now().plusSeconds(300),
+                        Map.of("sub", "provider-sub", "email", "jane@example.com"));
+        DefaultOidcUser principal =
+                new DefaultOidcUser(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")), idToken, "email");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "keycloak");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals("/logout?oAuth2AuthenticationErrorWeb=true", response.getRedirectedUrl());
+        verify(userService, never()).hasPassword("email");
         verify(userService, never())
                 .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
         verifyNoInteractions(jwtService);

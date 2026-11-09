@@ -49,6 +49,23 @@ class CustomLogoutSuccessHandlerTest {
     }
 
     @Test
+    void sessionlessErrorRedirectLandsOnLoginPage() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        String loginPath = "/login?errorOAuth=userAlreadyExistsWeb";
+
+        when(response.isCommitted()).thenReturn(false);
+        when(jwtService.extractToken(request)).thenReturn(null);
+        when(request.getParameter("oAuth2AuthenticationErrorWeb")).thenReturn("true");
+        when(request.getContextPath()).thenReturn("");
+        when(response.encodeRedirectURL(loginPath)).thenReturn(loginPath);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        verify(response).sendRedirect(loginPath);
+    }
+
+    @Test
     void testSuccessfulLogoutViaJWT() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
