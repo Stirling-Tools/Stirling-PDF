@@ -3,6 +3,7 @@ import { Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "@editor/hooks/tools/addWatermark/useAddWatermarkParameters";
 import { removeEmojis } from "@editor/utils/textUtils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface WatermarkWordingProps {
   parameters: AddWatermarkParameters;
@@ -34,6 +35,7 @@ const WatermarkWording = ({
           "Enter watermark text",
         )}
         value={parameters.watermarkText}
+        className={privateContentClassName}
         onChange={handleTextChange}
         disabled={disabled}
       />

@@ -6,6 +6,7 @@ import {
   KEY_LABEL,
   KEY_TONE,
 } from "@processor/components/infrastructure/infraFormat";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Collapsible row for a single API key: header summary + expandable detail grid. */
 export function ApiKeyCard({
@@ -44,7 +45,11 @@ export function ApiKeyCard({
       >
         <span className="portal-infra__key-id">
           <span className="portal-infra__cell-strong">{apiKey.name}</span>
-          <code className="portal-infra__cell-code">{apiKey.prefix}</code>
+          <code
+            className={`portal-infra__cell-code ${privateContentClassName}`}
+          >
+            {apiKey.prefix}
+          </code>
         </span>
       </Button>
 
