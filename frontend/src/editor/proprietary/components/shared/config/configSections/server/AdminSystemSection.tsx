@@ -177,6 +177,7 @@ export default function AdminSystemSection() {
         "system.defaultLocale": settings.system?.defaultLocale,
         "system.showUpdate": settings.system?.showUpdate,
         "system.showUpdateOnlyAdmin": settings.system?.showUpdateOnlyAdmin,
+        "system.enableFeedback": settings.system?.enableFeedback,
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,

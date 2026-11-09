@@ -17,7 +17,15 @@ import {
   copyTagMarks,
   readTagMarks,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { emitTextLine } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  emitTextLine,
+  measureObjBoxPt,
+  readObjTexts,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  uniformTags,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
 import { allowConsole } from "@editor/tests/failOnConsole";
 import {
   buildClassicPdf,
@@ -248,7 +256,7 @@ describe("PdfiumTagMarks", () => {
       fill: { r: 0, g: 0, b: 0, a: 255 },
       originalFontPtr: 0,
       fallbackFamily: "Helvetica",
-      tagMarks: [{ name: "P", mcid: 0 }],
+      tags: uniformTags([{ name: "P", mcid: 0 }]),
     });
 
     expect(ptrs.length).toBeGreaterThan(1);
@@ -274,9 +282,55 @@ describe("PdfiumTagMarks", () => {
       fill: { r: 0, g: 0, b: 0, a: 255 },
       originalFontPtr: 0,
       fallbackFamily: "Helvetica",
-      tagMarks: [],
+      tags: uniformTags([]),
     });
 
     for (const ptr of ptrs) expect(m.FPDFPageObj_CountMarks(ptr)).toBe(0);
+  });
+
+  test("emitTextLine draws each stretch of text with its own tags, in order", async () => {
+    allowConsole.error(NO_CANVAS);
+    const doc = await open(taggedPdf());
+    const m = doc.module;
+    const page = doc.page(0);
+    const paragraph = { name: "P", mcid: 0 };
+    const span = { name: "Span", mcid: 2 };
+    const emit = (tags: TextTags, y: number) =>
+      emitTextLine({
+        doc,
+        page,
+        text: "reported as Umsatz.",
+        x: 72,
+        y,
+        fontSize: 12,
+        fill: { r: 0, g: 0, b: 0, a: 255 },
+        originalFontPtr: 0,
+        fallbackFamily: "Helvetica",
+        tags,
+      });
+
+    const ptrs = emit(
+      [
+        { end: 12, tags: [paragraph] },
+        { end: 18, tags: [span] },
+        { end: Infinity, tags: [paragraph] },
+      ],
+      400,
+    );
+
+    const texts = readObjTexts(m, page.pagePtr, ptrs).map((t) => t?.trim());
+    expect(texts).toEqual(["reported", "as", "Umsatz", "."]);
+    expect(ptrs.map((ptr) => readTagMarks(m, ptr))).toEqual([
+      [paragraph],
+      [paragraph],
+      [span],
+      [paragraph],
+    ]);
+    // Split by its tags, the line's words sit where they sit drawn whole.
+    const lefts = (of: number[]) => of.map((ptr) => measureObjBoxPt(m, ptr)!.x);
+    const whole = lefts(emit(uniformTags([paragraph]), 300));
+    lefts(ptrs)
+      .slice(0, 3)
+      .forEach((x, i) => expect(x).toBeCloseTo(whole[i], 1));
   });
 });
