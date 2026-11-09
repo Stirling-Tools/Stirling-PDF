@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { USERS_PER_BLOCK } from "@editor/components/shared/stripeCheckout/utils/capacity";
 import { MeterRow } from "@editor/billing/MeterRow";
 import type { ServerPlan } from "@editor/billing/serverPlan";
 import type { Wallet } from "@editor/billing/types";
@@ -157,10 +158,18 @@ export function TeamPlanRow({
               "portal.billing.team.midFreeSelfHosted",
               "The free tier covers your first users",
             )
-          : t("portal.billing.team.midFree", "The Team plan covers 100 users")
+          : t(
+              "portal.billing.team.midFree",
+              "The Team plan covers {{users}} users",
+              {
+                users: USERS_PER_BLOCK,
+              },
+            )
         : processorActive
           ? t("portal.billing.team.midIncluded", "Included with your Team base")
-          : t("portal.billing.team.midPrice", "$99/mo per 100 users");
+          : t("portal.billing.team.midPrice", "$99/mo per {{users}} users", {
+              users: USERS_PER_BLOCK,
+            });
 
   const door = onAddCapacity
     ? t("portal.billing.team.addCapacity", "Add capacity")

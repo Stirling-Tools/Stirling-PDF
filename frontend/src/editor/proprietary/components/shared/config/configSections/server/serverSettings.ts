@@ -23,6 +23,7 @@ export interface GeneralSettingsData {
     defaultLocale?: string;
     showUpdate?: boolean;
     showUpdateOnlyAdmin?: boolean;
+    enableFeedback?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
     frontendUrl?: string;
