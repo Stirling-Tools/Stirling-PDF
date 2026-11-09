@@ -1,6 +1,8 @@
-import { List, Paper, Text } from "@mantine/core";
+import type { ReactNode } from "react";
+import { Alert, List, Paper, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
 import ErrorMessage from "@editor/auth/ui/ErrorMessage";
 import type {
   ConsentDecision,
@@ -40,6 +42,21 @@ function useScopeLabel() {
   };
 }
 
+function ConsentWarning({ children }: { children: ReactNode }) {
+  return (
+    <Alert
+      variant="light"
+      color="var(--c-warning)"
+      icon={<Icon name="triangle-alert" size="1rem" />}
+      mb="lg"
+    >
+      <Text size="sm" c="var(--c-text)">
+        {children}
+      </Text>
+    </Alert>
+  );
+}
+
 /** What the app is asking for, and the allow and deny buttons. */
 export function ConsentCard({
   details,
@@ -66,11 +83,7 @@ export function ConsentCard({
       <Text component="h2" ta="center" fw={700} fz="xl" mb="xs">
         {t("oauthConsent.title", "Authorize access")}
       </Text>
-      <Text
-        ta="center"
-        c="dimmed"
-        mb={details.client?.domain || details.client?.redirectHost ? 4 : "lg"}
-      >
+      <Text ta="center" c="dimmed" mb={details.client?.domain ? 4 : "lg"}>
         {t("oauthConsent.requesting", {
           app,
           defaultValue: `${app} wants to access your Stirling PDF account`,
@@ -85,21 +98,21 @@ export function ConsentCard({
         </Text>
       )}
       {!details.client?.verified && details.client?.redirectHost && (
-        <Text ta="center" size="sm" fw={600} mb="lg">
+        <ConsentWarning>
           {t("oauthConsent.unverifiedApp", {
             host: details.client.redirectHost,
             defaultValue: `Unverified app name. Access goes to ${details.client.redirectHost}, so only continue if you trust that site.`,
           })}
-        </Text>
+        </ConsentWarning>
       )}
       {details.client?.verified && redirectsElsewhere && (
-        <Text ta="center" size="sm" fw={600} mb="lg">
+        <ConsentWarning>
           {t("oauthConsent.redirectsElsewhere", {
             host: redirectHost,
             domain,
             defaultValue: `Access goes to ${redirectHost}, not ${domain}, so only continue if you trust that site.`,
           })}
-        </Text>
+        </ConsentWarning>
       )}
       <Paper withBorder p="md" mb="lg">
         <Text fw={600} fz="sm" mb="xs">

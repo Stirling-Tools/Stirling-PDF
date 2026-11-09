@@ -54,6 +54,8 @@ vi.mock("@editor/ui/Button", () => ({
   ),
 }));
 
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+
 vi.mock("react-router-dom", async () => {
   const actual =
     await vi.importActual<typeof import("react-router-dom")>(
@@ -120,6 +122,52 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
       "/api/v1/mcp/oauth/authorizations/auth-123",
       { suppressErrorToast: true },
     );
+  });
+
+  it.each([
+    [
+      "an unverified app",
+      { name: "Claude", verified: false, redirectHost: "claude.ai" },
+      /Unverified app name\. Access goes to claude\.ai/,
+    ],
+    [
+      "a verified app that redirects elsewhere",
+      {
+        name: "Example Tools",
+        domain: "example.org",
+        verified: true,
+        redirectHost: "collector.attacker.net",
+      },
+      /Access goes to collector\.attacker\.net, not example\.org/,
+    ],
+  ])("warns about %s in an alert", async (_case, client, warning) => {
+    getMock.mockResolvedValueOnce({
+      data: { authorization_id: "auth-123", scope: "mcp.tools.read", client },
+    });
+
+    renderPage();
+
+    expect((await screen.findByRole("alert")).textContent).toMatch(warning);
+  });
+
+  it("shows no warning for a verified app that redirects to its own domain", async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        authorization_id: "auth-123",
+        scope: "mcp.tools.read",
+        client: {
+          name: "ChatGPT",
+          domain: "chatgpt.com",
+          verified: true,
+          redirectHost: "chatgpt.com",
+        },
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/ChatGPT wants to access/)).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("posts the decision and follows the returned redirect", async () => {
