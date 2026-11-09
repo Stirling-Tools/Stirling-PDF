@@ -70,7 +70,7 @@ it("leaves the browser toolbar alone when nothing has a save target", () => {
     }),
   );
   expect(result.current).toEqual({
-    label: undefined,
+    label: "Download",
     icon: undefined,
     unsaved: false,
   });
@@ -157,4 +157,33 @@ it("names the save mode for the only file in a list view", () => {
   expect(result.current.menu?.map((item) => item.label)).toEqual([
     "Save a copy somewhere else…",
   ]);
+});
+
+it("uses the single-file label for the only file in Update it mode", () => {
+  const { result } = renderHook(() =>
+    useSaveButton({
+      ...base,
+      singleFile: false,
+      saver: saver([], "replace"),
+      targets: [stub("a", { isDirty: true, localFilePath: "C:/a.pdf" })],
+      savesToDisk: true,
+    }),
+  );
+  expect(result.current.label).toBe("Download");
+});
+
+it("keeps the view's plural label for several files", () => {
+  const { result } = renderHook(() =>
+    useSaveButton({
+      ...base,
+      singleFile: false,
+      saver: saver([], "replace"),
+      targets: [
+        stub("a", { localFilePath: "C:/a.pdf" }),
+        stub("b", { localFilePath: "C:/b.pdf" }),
+      ],
+      savesToDisk: true,
+    }),
+  );
+  expect(result.current.label).toBeUndefined();
 });
