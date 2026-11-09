@@ -17,6 +17,7 @@ import {
   noteId,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/addElements";
 import { cutElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/cutElements";
+import { ensureStructureTree } from "@editor/tools/pdfTextEditor/pdfdoc/passes/ensureStructureTree";
 import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDecorative";
 import { unwrapElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/unwrapElements";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
@@ -78,6 +79,8 @@ export class StructureEditError extends Error {
 
 /**
  * Apply `edits` to `bytes`, all or none. Later edits to the same element win.
+ * An element added to a file or page with no structure yet first gets it one
+ * (ensureStructureTree), in a revision of its own.
  * Throws StructureEditError when any edit cannot be written, including when
  * the file cannot be extended at all.
  */
@@ -89,10 +92,19 @@ export async function applyStructureEdits(
   const fail = (reason: string) =>
     new StructureEditError(edits.map((edit) => ({ edit, reason })));
 
-  const pdf = await RawPdf.parse(bytes);
-  if (!pdf) throw fail("the file could not be read");
+  const opened = await RawPdf.parse(bytes);
+  if (!opened) throw fail("the file could not be read");
   // Strings in an encrypted file must be encrypted too, which this cannot do.
-  if (pdf.encrypted) throw fail("the file is encrypted");
+  if (opened.encrypted) throw fail("the file is encrypted");
+  // Only an added element can be the first on a page or in the file: every
+  // other edit addresses one the file already has.
+  const skeleton = ensureStructureTree(
+    opened,
+    edits.filter((edit) => edit.newElement).map((edit) => edit.pageIndex),
+  );
+  if (typeof skeleton === "string") throw fail(skeleton);
+  const pdf = skeleton ? await RawPdf.parse(skeleton) : opened;
+  if (!pdf) throw fail("the file could not be read");
   const catalog = pdf.objectBody(pdf.rootNum);
   const treeRoot = catalog ? pdf.dictRef(catalog, "StructTreeRoot") : null;
   if (treeRoot === null) throw fail("the file has no structure tree");
