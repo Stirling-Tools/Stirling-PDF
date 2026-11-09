@@ -142,3 +142,19 @@ it("names the copy and offers the update when the setting is Save a copy", () =>
     "Update a.pdf",
   ]);
 });
+
+it("names the save mode for the only file in a list view", () => {
+  const { result } = renderHook(() =>
+    useSaveButton({
+      ...base,
+      singleFile: false,
+      saver: saver([], "ask"),
+      targets: [stub("a", { localFilePath: "C:/a.pdf" })],
+      savesToDisk: true,
+    }),
+  );
+  expect(result.current.label).toBe("Save a.pdf…");
+  expect(result.current.menu?.map((item) => item.label)).toEqual([
+    "Save a copy somewhere else…",
+  ]);
+});

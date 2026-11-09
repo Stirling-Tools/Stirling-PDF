@@ -41,6 +41,8 @@ export function useSaveButton({
   const { t } = useTranslation();
   const unsaved = targets.some(saver.isUnsaved);
   const shared = sharedSaveTarget(targets, saver.targetFor);
+  const onlyStub = targets.length === 1 ? targets[0] : undefined;
+  const onlyPlan = onlyStub ? saver.planFor(onlyStub) : null;
   const stub = singleFile ? targets[0] : undefined;
   const target = stub ? saver.targetFor(stub) : undefined;
   const plan = stub ? saver.planFor(stub) : null;
@@ -56,12 +58,14 @@ export function useSaveButton({
       "saveFile.toolbar.mixed",
       "Save all, each back to where it came from",
     );
-  } else if (stub && plan === "copy") {
+  } else if (onlyStub && onlyPlan === "copy") {
     label = t("saveFile.toolbar.copy", "Save a copy of {{name}} next to it", {
-      name: stub.name,
+      name: onlyStub.name,
     });
-  } else if (stub && plan === "ask") {
-    label = t("saveFile.toolbar.ask", "Save {{name}}…", { name: stub.name });
+  } else if (onlyStub && onlyPlan === "ask") {
+    label = t("saveFile.toolbar.ask", "Save {{name}}…", {
+      name: onlyStub.name,
+    });
   }
   const icon = shared?.icon;
 

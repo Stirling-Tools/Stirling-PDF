@@ -16,6 +16,7 @@ export default function WorkbenchBarMobileActions({
   downloadLabel,
   downloadIconName,
   saveAsIconName,
+  downloadUnsaved,
   saveMenu,
   onPrint,
   printDisabledReason,
@@ -33,7 +34,7 @@ export default function WorkbenchBarMobileActions({
   if (!showPrint && !showFileActions) return null;
 
   return (
-    <Menu shadow="md" width={230} position="bottom-end">
+    <Menu shadow="md" width={270} position="bottom-end">
       <Menu.Target>
         <ActionIcon
           variant="tertiary"
@@ -42,6 +43,9 @@ export default function WorkbenchBarMobileActions({
           aria-label={t("workbenchBar.moreActions", "More actions")}
         >
           <Icon name="ellipsis-vertical" size={"1.25rem"} />
+          {showFileActions && downloadUnsaved && (
+            <span className="workbench-bar-unsaved-dot" />
+          )}
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
@@ -58,6 +62,11 @@ export default function WorkbenchBarMobileActions({
         {showFileActions && (
           <Menu.Item
             leftSection={<Icon name={downloadIconName} size="1.1rem" />}
+            rightSection={
+              downloadUnsaved && (
+                <span className="workbench-bar-menu-unsaved-dot" />
+              )
+            }
             disabled={exportDisabled}
             onClick={() => void onExport()}
           >
