@@ -1,7 +1,7 @@
 # Standalone unoserver image for Stirling-PDF remote UNO mode.
 # Pinned to unoserver 3.7 to match Stirling-PDF's client (avoids wire mismatch).
 
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS lo-sandbox-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS lo-sandbox-build
 RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
     rm -rf /var/lib/apt/lists/*
 COPY docker/base/lo-sandbox.c /src/lo-sandbox.c
@@ -9,7 +9,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
     strip --strip-unneeded /usr/local/bin/lo-sandbox
 
 
-FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 
 ARG UNOSERVER_VERSION=3.7
 # ~120 MB of CJK fonts — opt-in.
@@ -38,9 +38,19 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN set -eux; \
     apt-get update; \
+    apt-get upgrade -y --no-install-recommends; \
     apt-get install -y --no-install-recommends \
       software-properties-common ca-certificates curl gnupg tini; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    ppa_attempt=1; \
+    until add-apt-repository -y --no-update ppa:libreoffice/ppa; do \
+      if [ "${ppa_attempt}" -ge 4 ]; then \
+        echo "LibreOffice PPA setup failed after ${ppa_attempt} attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed; retrying in $((ppa_attempt * 5)) seconds" >&2; \
+      sleep "$((ppa_attempt * 5))"; \
+      ppa_attempt=$((ppa_attempt + 1)); \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       python3 python3-venv python3-uno python3-packaging \
