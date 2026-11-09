@@ -36,6 +36,7 @@ import { BrandMark } from "@processor/components/BrandMarks";
 import { S3ConnectionPicker } from "@processor/components/sources/S3ConnectionPicker";
 import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
 import { ConnectedAccountPicker } from "@processor/components/sources/ConnectedAccountPicker";
+import { useConnectedAccounts } from "@editor/hooks/useConnectedAccounts";
 import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
@@ -151,6 +152,7 @@ export function SourceModal({
 }: SourceModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { available: accountsAvailable } = useConnectedAccounts();
   const isEdit = Boolean(sourceId);
   const offeredTypes = useMemo(
     () =>
@@ -573,12 +575,27 @@ export function SourceModal({
     }
   }
 
+  function personalAccountsOff(field: SourceFieldDef): boolean {
+    if (field.key !== "authMode" || options.authMode !== "organisation") {
+      return false;
+    }
+    const accountField = type.fields.find((f) => f.control === "account");
+    return Boolean(
+      accountField?.provider && !accountsAvailable(accountField.provider),
+    );
+  }
+
   function renderField(field: SourceFieldDef) {
     return (
       <FormField
         key={field.key}
         label={t(field.labelKey)}
         info={field.helperTextKey ? t(field.helperTextKey) : undefined}
+        helperText={
+          personalAccountsOff(field)
+            ? t("portal.sources.cloudFields.authMode.accountsOff")
+            : undefined
+        }
         required={field.required}
       >
         {renderControl(field)}

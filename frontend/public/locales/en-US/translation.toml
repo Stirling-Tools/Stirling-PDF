@@ -11066,6 +11066,7 @@ reconnect = "sign in again"
 unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
 
 [portal.sources.cloudFields.authMode]
+accountsOff = "Personal accounts are turned off on this server."
 helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
 label = "Sign in as"
 

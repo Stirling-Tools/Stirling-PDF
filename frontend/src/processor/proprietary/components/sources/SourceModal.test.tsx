@@ -374,6 +374,9 @@ describe("SourceModal", () => {
     expect(
       screen.queryByText("portal.sources.cloudFields.account.label"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.cloudFields.authMode.accountsOff"),
+    ).not.toBeInTheDocument();
   });
 
   it("starts on an organisation connection when your own account is turned off", async () => {
@@ -389,6 +392,9 @@ describe("SourceModal", () => {
       expect(
         screen.queryByText("portal.sources.cloudFields.account.label"),
       ).not.toBeInTheDocument();
+      expect(
+        screen.getByText("portal.sources.cloudFields.authMode.accountsOff"),
+      ).toBeInTheDocument();
     } finally {
       connectedAccounts.available = true;
     }
