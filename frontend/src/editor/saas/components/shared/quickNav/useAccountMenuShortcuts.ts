@@ -4,7 +4,7 @@ import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
-/** SaaS: account, users and billing, which a guest has none of. */
+/** SaaS: users and billing, which a guest has none of; Settings opens on the account. */
 export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
   const { user, isAnonymous } = useAuth();
@@ -12,23 +12,10 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { granted: portalAccess } = usePortalAccessState();
 
   if (!user || isAnonymous) {
-    return [
-      {
-        id: "preferences",
-        label: t("settings.preferences.title", "Preferences"),
-        icon: "sliders-horizontal",
-        to: "/settings/general",
-      },
-    ];
+    return [];
   }
 
   return [
-    {
-      id: "account",
-      label: t("quickNav.account", "Account"),
-      icon: "circle-user",
-      to: "/settings/overview",
-    },
     {
       id: "users",
       label: t("portal.nav.users", "Users"),

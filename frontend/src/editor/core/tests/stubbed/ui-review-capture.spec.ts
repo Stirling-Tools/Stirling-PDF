@@ -305,7 +305,7 @@ async function openFormDetectionSettings(page: Page) {
   const configBtn = page.locator('[data-testid="config-button"]').first();
   await expect(configBtn).toBeVisible({ timeout: 15_000 });
   await configBtn.click();
-  await page.getByRole("menuitem", { name: /all settings/i }).click();
+  await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
   const dialog = page.locator(".settings-page");
   await expect(dialog).toBeVisible({ timeout: 5_000 });
   await expect(page).toHaveURL(/\/settings\/general(?:[?#].*)?$/);

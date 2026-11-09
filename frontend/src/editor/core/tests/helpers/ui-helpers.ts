@@ -136,7 +136,7 @@ export async function openSettings(
   section?: string | RegExp,
 ): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
-  await page.getByRole("menuitem", { name: /all settings/i }).click();
+  await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
   const surface = page.locator(SETTINGS_SURFACE);
   await expect(surface).toBeVisible({ timeout: 5_000 });
   if (section) {

@@ -83,15 +83,34 @@ export function QuickNavRailAccount({
           placement="side"
           autoFocus
         >
-          <div
-            className={`quick-nav-account-menu__header ${privateContentClassName}`}
-          >
-            <span aria-hidden>
-              <Avatar src={profilePictureUrl} name={displayName} size="md" />
-            </span>
-            <span className="quick-nav-account-menu__name">{displayName}</span>
-          </div>
+          {menu?.localMode ? (
+            <div className="quick-nav-account-menu__header">
+              <span aria-hidden className="quick-nav-account-menu__local-icon">
+                <Icon name="monitor" size={ICON_SIZE} />
+              </span>
+              <span className="quick-nav-account-menu__name">
+                {t("quickNav.accountMenu.localMode", "Local mode")}
+              </span>
+            </div>
+          ) : (
+            <div
+              className={`quick-nav-account-menu__header ${privateContentClassName}`}
+            >
+              <span aria-hidden>
+                <Avatar src={profilePictureUrl} name={displayName} size="md" />
+              </span>
+              <span className="quick-nav-account-menu__name">
+                {displayName}
+              </span>
+            </div>
+          )}
           <Dropdown.Divider />
+          <Dropdown.Item
+            leading={<Icon name="settings" size={ICON_SIZE} />}
+            onSelect={onOpenSettings}
+          >
+            {t("quickNav.accountMenu.settings", "Settings")}
+          </Dropdown.Item>
           {menu?.shortcuts.map((shortcut) => (
             <Dropdown.Item
               key={shortcut.id}
@@ -101,12 +120,6 @@ export function QuickNavRailAccount({
               {shortcut.label}
             </Dropdown.Item>
           ))}
-          <Dropdown.Item
-            leading={<Icon name="settings" size={ICON_SIZE} />}
-            onSelect={onOpenSettings}
-          >
-            {t("quickNav.accountMenu.allSettings", "All settings")}
-          </Dropdown.Item>
           {menu?.signOut && (
             <>
               <Dropdown.Divider />

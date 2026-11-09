@@ -22,7 +22,7 @@ test("a long account name truncates instead of widening the avatar menu", async 
   await page.locator('[data-testid="config-button"]').first().click();
   const menu = page.getByRole("menu");
   await expect(
-    menu.getByRole("menuitem", { name: "All settings", exact: true }),
+    menu.getByRole("menuitem", { name: "Settings", exact: true }),
   ).toBeVisible();
 
   const name = menu.getByText(LONG_NAME, { exact: true });

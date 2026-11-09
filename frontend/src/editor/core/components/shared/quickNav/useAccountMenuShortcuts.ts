@@ -11,12 +11,6 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
   return [
     {
-      id: "preferences",
-      label: t("settings.preferences.title", "Preferences"),
-      icon: "sliders-horizontal",
-      to: "/settings/general",
-    },
-    {
       id: "about",
       label: t("settings.about.title", "About"),
       icon: "circle-question-mark",

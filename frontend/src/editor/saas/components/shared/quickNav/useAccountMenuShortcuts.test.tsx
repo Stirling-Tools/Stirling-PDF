@@ -33,18 +33,18 @@ describe("SaaS account menu shortcuts", () => {
     access.granted = false;
   });
 
-  it("offers account, team, billing and keys to a signed-in user", () => {
-    expect(shortcutIds()).toEqual(["account", "users", "plan", "api-keys"]);
+  it("offers team, billing and keys to a signed-in user", () => {
+    expect(shortcutIds()).toEqual(["users", "plan", "api-keys"]);
   });
 
   it("links Usage & Billing instead of Plan for processor members, as settings does", () => {
     access.granted = true;
-    expect(shortcutIds()).toEqual(["account", "users", "billing", "api-keys"]);
+    expect(shortcutIds()).toEqual(["users", "billing", "api-keys"]);
   });
 
-  it("offers a guest only preferences", () => {
+  it("offers a guest no shortcuts beyond Settings", () => {
     auth.isAnonymous = true;
-    expect(shortcutIds()).toEqual(["preferences"]);
+    expect(shortcutIds()).toEqual([]);
   });
 
   it("points every shortcut at a section the SaaS settings page really has", () => {

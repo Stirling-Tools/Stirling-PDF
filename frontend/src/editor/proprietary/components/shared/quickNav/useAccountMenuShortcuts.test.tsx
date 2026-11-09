@@ -59,7 +59,7 @@ describe("self-hosted account menu shortcuts", () => {
 
   it("gives a signed-in admin the server pages", () => {
     state.isAdmin = true;
-    expect(shortcutIds()).toEqual(["account", "users", "server"]);
+    expect(shortcutIds()).toEqual(["users", "server"]);
   });
 
   it("offers billing only to the owner with processor access", () => {
@@ -74,19 +74,19 @@ describe("self-hosted account menu shortcuts", () => {
     expect(ids).not.toContain("plan");
   });
 
-  it("gives a regular user their account and keys", () => {
-    expect(shortcutIds()).toEqual(["account", "api-keys"]);
+  it("gives a regular user their keys", () => {
+    expect(shortcutIds()).toEqual(["api-keys"]);
   });
 
   it("does not offer the admin roster to a regular processor member", () => {
     state.portalAccess = true;
-    expect(shortcutIds()).toEqual(["account", "api-keys"]);
+    expect(shortcutIds()).toEqual(["api-keys"]);
   });
 
   it("hides the roster without a server connection", () => {
     state.isAdmin = true;
     state.rosterAvailable = false;
-    expect(shortcutIds()).toEqual(["account", "server"]);
+    expect(shortcutIds()).toEqual(["server"]);
   });
 
   it("waits for settled permissions before offering owner billing", () => {
@@ -94,7 +94,7 @@ describe("self-hosted account menu shortcuts", () => {
     state.orgOwner = true;
     state.portalAccess = true;
     state.loading = true;
-    expect(shortcutIds()).toEqual(["account", "server"]);
+    expect(shortcutIds()).toEqual(["server"]);
 
     state.loading = false;
     state.accessSettled = false;
@@ -105,6 +105,6 @@ describe("self-hosted account menu shortcuts", () => {
     state.enableLogin = false;
     state.isAdmin = true;
     state.isAnonymous = true;
-    expect(shortcutIds()).toEqual(["preferences", "about"]);
+    expect(shortcutIds()).toEqual(["about"]);
   });
 });

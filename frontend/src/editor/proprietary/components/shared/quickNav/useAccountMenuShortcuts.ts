@@ -6,11 +6,8 @@ import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
-/** Interpolated, not inlined: a literal "#acc…" reads as a hex colour to theme-lint. */
-const ACCOUNT_ANCHOR = "account";
-
 /**
- * Self-hosted: your own account first, then the server pages admins live in.
+ * Self-hosted: the server pages admins live in; Settings opens on your account.
  * With login off there is no account and every admin page is disabled, so the
  * menu offers only what that visitor can actually use.
  */
@@ -26,12 +23,6 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   if (!signedIn) {
     return [
       {
-        id: "preferences",
-        label: t("settings.preferences.title", "Preferences"),
-        icon: "sliders-horizontal",
-        to: "/settings/general",
-      },
-      {
         id: "about",
         label: t("settings.about.title", "About"),
         icon: "circle-question-mark",
@@ -42,14 +33,7 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
 
   // The settings nav gates admin pages on this flag, not the session's.
   const isAdmin = config?.isAdmin ?? false;
-  const shortcuts: QuickNavAccountShortcut[] = [
-    {
-      id: "account",
-      label: t("quickNav.account", "Account"),
-      icon: "circle-user",
-      to: `/settings/general#${ACCOUNT_ANCHOR}`,
-    },
-  ];
+  const shortcuts: QuickNavAccountShortcut[] = [];
 
   if (
     rosterAvailable &&

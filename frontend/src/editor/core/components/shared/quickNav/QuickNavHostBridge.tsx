@@ -53,7 +53,7 @@ export function QuickNavHostBridge({
 }: QuickNavHostBridgeProps) {
   useSyncQuickNavAccount();
   const accountShortcuts = useAccountMenuShortcuts();
-  const { user, isAnonymous, signOut } = useAuth();
+  const { user, isAnonymous, signOut, loading } = useAuth();
   const accountLogout = useAccountLogout();
   const canSignOut = Boolean(user) && !isAnonymous;
   const notificationsAvailable = useNotificationsAvailable();
@@ -94,6 +94,7 @@ export function QuickNavHostBridge({
       onBrandFlourish: brandFlourish.trigger,
       accountMenu: {
         shortcuts: accountShortcuts,
+        localMode: !loading && !user,
         signOut: canSignOut
           ? () =>
               void accountLogout({

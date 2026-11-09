@@ -19,6 +19,7 @@ export interface QuickNavAccountMenu {
   shortcuts: QuickNavAccountShortcut[];
   /** Absent when there is no session to end (no login, or a guest). */
   signOut?: () => void;
+  localMode?: boolean;
 }
 
 /** The last resolved account data, retained across view changes. */

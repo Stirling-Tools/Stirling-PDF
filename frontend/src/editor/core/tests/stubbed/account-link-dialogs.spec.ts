@@ -217,7 +217,7 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
       // The avatar menu must not offer billing to non-owners either.
       await avatar.click();
       await expect(
-        page.getByRole("menuitem", { name: "All settings", exact: true }),
+        page.getByRole("menuitem", { name: "Settings", exact: true }),
       ).toBeVisible();
       await expect(
         page.getByRole("menuitem", { name: "Usage & Billing", exact: true }),

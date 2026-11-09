@@ -71,3 +71,15 @@
 .quick-nav-account-menu .quick-nav-account-menu__sign-out:hover {
   color: var(--c-danger);
 }
+
+.quick-nav-account-menu__local-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+}

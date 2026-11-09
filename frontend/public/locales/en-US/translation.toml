@@ -11520,8 +11520,9 @@ reader = "Reader"
 signInToUse = "Sign in to use this"
 
 [quickNav.accountMenu]
-allSettings = "All settings"
+localMode = "Local mode"
 server = "Server settings"
+settings = "Settings"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"

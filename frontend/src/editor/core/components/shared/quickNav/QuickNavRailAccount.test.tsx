@@ -77,7 +77,7 @@ describe("QuickNavRailAccount menu", () => {
     );
   });
 
-  it("always offers all settings, and sign out only with a session", () => {
+  it("always offers Settings first, and sign out only with a session", () => {
     const signOut = vi.fn();
     const { onOpenSettings, open } = setup({ shortcuts: [], signOut });
     open();
@@ -90,6 +90,19 @@ describe("QuickNavRailAccount menu", () => {
     open();
     fireEvent.click(screen.getAllByRole("menuitem")[0]);
     expect(onOpenSettings).toHaveBeenCalledOnce();
+  });
+
+  it("names local mode instead of a placeholder account when login is off", () => {
+    const { open } = setup({ shortcuts: [], localMode: true });
+    open();
+    const header = screen
+      .getByRole("menu")
+      .querySelector(".quick-nav-account-menu__header");
+    expect(header).toHaveTextContent("quickNav.accountMenu.localMode");
+    expect(header).not.toHaveTextContent("Ada");
+    expect(screen.getAllByRole("menuitem")[0]).toHaveTextContent(
+      "quickNav.accountMenu.settings",
+    );
   });
 
   it("hides sign out when there is no session to end", () => {
