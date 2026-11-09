@@ -362,6 +362,7 @@ export const FileItem = React.memo(function FileItem({
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         role="button"
+        aria-label={name}
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
         onMouseEnter={handleMouseEnter}
@@ -383,14 +384,9 @@ export const FileItem = React.memo(function FileItem({
           <span
             className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
           >
-            <span className="sr-only">{name}</span>
-            <span className="file-sidebar-file-name-head" aria-hidden="true">
-              {nameHead}
-            </span>
+            <span className="file-sidebar-file-name-head">{nameHead}</span>
             {nameTail && (
-              <span className="file-sidebar-file-name-tail" aria-hidden="true">
-                {nameTail}
-              </span>
+              <span className="file-sidebar-file-name-tail">{nameTail}</span>
             )}
           </span>
           <span className="file-sidebar-file-meta-row">

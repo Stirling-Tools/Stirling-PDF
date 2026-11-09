@@ -180,6 +180,12 @@ test.describe("Saving files that live on disk", () => {
     await expect(
       page.getByText("quarterly-report (edited).pdf").first(),
     ).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.getByRole("button", {
+        name: "quarterly-report (edited).pdf",
+        exact: true,
+      }),
+    ).toBeVisible();
   });
 
   test("Ask each time offers update, copy or elsewhere before saving", async ({
