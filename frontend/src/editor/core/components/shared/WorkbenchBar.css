@@ -487,9 +487,16 @@
   width: 0.4375rem;
   height: 0.4375rem;
   border-radius: 999px;
-  background: var(--c-danger);
+  background: var(--mantine-color-yellow-6);
   box-shadow: 0 0 0 1.5px var(--c-bg-raised);
   pointer-events: none;
+}
+
+.workbench-bar-menu-unsaved-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  background: var(--mantine-color-yellow-6);
 }
 
 .workbench-bar-menu-hint {

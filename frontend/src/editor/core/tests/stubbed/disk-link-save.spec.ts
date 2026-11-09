@@ -37,6 +37,34 @@ const written = (page: Page) =>
       (window as unknown as { __writtenPaths?: string[] }).__writtenPaths ?? [],
   );
 
+const savedLeaves = (page: Page) =>
+  page.evaluate(async (reportPath) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open("stirling-pdf-files");
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const records = await new Promise<
+      { isLeaf?: boolean; isDirty?: boolean; size: number }[]
+    >((resolve, reject) => {
+      const req = db.transaction(["files"]).objectStore("files").getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    db.close();
+    const onDisk = (
+      window as unknown as {
+        __disk: Record<string, { bytes: number[] } | undefined>;
+      }
+    ).__disk[reportPath]?.bytes.length;
+    return records
+      .filter((record) => record.isLeaf !== false)
+      .map((record) => ({
+        dirty: Boolean(record.isDirty),
+        matchesDisk: record.size === onDisk,
+      }));
+  }, REPORT);
+
 async function openDirtyReport(page: Page, saveMode?: string) {
   await installTauri(page);
   if (saveMode)
@@ -103,8 +131,14 @@ test.describe("Saving files that live on disk", () => {
     await expect(save).toBeVisible({ timeout: 20_000 });
     await expect(save.locator(".workbench-bar-unsaved-dot")).toBeVisible();
 
+    const firstPage = page.locator('[data-page-index="0"]').first();
+    await expect(firstPage).toBeVisible({ timeout: 30_000 });
+    await firstPage.hover();
     await page.keyboard.press("Control+s");
     await expect.poll(() => written(page)).toContain(REPORT);
+    await expect
+      .poll(() => savedLeaves(page))
+      .toEqual([{ dirty: false, matchesDisk: true }]);
     await expect(save.locator(".workbench-bar-unsaved-dot")).toHaveCount(0);
   });
 
@@ -181,5 +215,23 @@ test.describe("Saving files that live on disk", () => {
       page.getByRole("dialog", { name: 'Save "quarterly-report.pdf"' }),
     ).toBeVisible();
     expect(await written(page)).toEqual([]);
+  });
+
+  test("a narrow window marks unsaved disk edits in More actions", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 740, height: 900 });
+    await openDirtyReport(page);
+
+    const more = page.getByRole("button", { name: "More actions" });
+    await expect(more.locator(".workbench-bar-unsaved-dot")).toBeVisible({
+      timeout: 20_000,
+    });
+    await more.click();
+    await expect(
+      page
+        .getByRole("menuitem", { name: "Save", exact: true })
+        .locator(".workbench-bar-menu-unsaved-dot"),
+    ).toBeVisible();
   });
 });
