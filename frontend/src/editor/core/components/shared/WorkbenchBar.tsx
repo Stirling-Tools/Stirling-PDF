@@ -341,8 +341,9 @@ export default function WorkbenchBar({
           !forceNewFile && stub ? saver.targetFor(stub) : undefined;
         try {
           if (target && stub) {
-            if ((await target.save(stub, enforced[idx])) !== "fallback")
-              continue;
+            const outcome = await target.save(stub, enforced[idx]);
+            if (outcome === "cancelled") break;
+            if (outcome !== "fallback") continue;
           }
           const result = await downloadRaw({
             data: enforced[idx],
@@ -351,7 +352,7 @@ export default function WorkbenchBar({
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
           });
-          if (result.cancelled) continue;
+          if (result.cancelled) break;
           if (!forceNewFile && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
               localFilePath: stub.localFilePath ?? result.savedPath,

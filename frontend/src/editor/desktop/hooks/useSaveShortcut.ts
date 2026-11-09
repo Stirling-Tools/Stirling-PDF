@@ -21,9 +21,8 @@ export function useSaveShortcut() {
     const stubs =
       selected.length > 0 ? selected : selectors.getStirlingFileStubs();
     for (const stub of stubs) {
-      const file = selectors.getFile(stub.id);
-      if (!file) continue;
-      if ((await saveStoredFile(stub, file)) === "cancelled") break;
+      const outcome = await saveStoredFile(stub, selectors.getFile(stub.id));
+      if (outcome === "cancelled") break;
     }
   }, [selectors, saveStoredFile]);
 

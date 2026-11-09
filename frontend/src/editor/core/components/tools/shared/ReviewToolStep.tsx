@@ -89,8 +89,13 @@ function ReviewStepContent<TParams = unknown>({
     savesToDisk: Boolean(icons.saveAs),
     onSaveLocalCopy: () =>
       void (async () => {
-        for (const stub of outputStubs)
-          await saver.saveLocalCopy(stub, selectors.getFile(stub.id));
+        for (const stub of outputStubs) {
+          const outcome = await saver.saveLocalCopy(
+            stub,
+            selectors.getFile(stub.id),
+          );
+          if (outcome === "cancelled") break;
+        }
       })(),
     fileFor: async (stub) => selectors.getFile(stub.id),
   });
