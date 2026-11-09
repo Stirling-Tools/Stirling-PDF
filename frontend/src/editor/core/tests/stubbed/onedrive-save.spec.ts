@@ -399,7 +399,7 @@ test.describe("Saving files opened from OneDrive", () => {
     await stubMicrosoft(page, { saveMode: "copy", allowUserSaveMode: false });
     await page.goto("/settings/general");
     const row = page.locator("#setting-save-mode");
-    await expect(row).toContainText("When I save a file");
+    await expect(row).toContainText("When you save a file");
     await expect(row).toContainText("Set by your administrator");
     await expect(row.getByRole("textbox")).toHaveValue(
       "Save a copy next to it",
