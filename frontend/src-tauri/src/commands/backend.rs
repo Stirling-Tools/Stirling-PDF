@@ -254,7 +254,7 @@ fn extract_port_from_running_log(log_line: &str) -> Option<u16> {
 }
 
 // Find the bundled JRE and return the java executable path
-fn find_bundled_jre(resource_dir: &PathBuf) -> Result<PathBuf, String> {
+fn find_bundled_jre(resource_dir: &Path) -> Result<PathBuf, String> {
     let jre_dir = resource_dir.join("runtime").join("jre");
     let java_executable = if cfg!(windows) {
         jre_dir.join("bin").join("java.exe")
@@ -273,7 +273,7 @@ fn find_bundled_jre(resource_dir: &PathBuf) -> Result<PathBuf, String> {
 }
 
 // Find the Stirling-PDF JAR file
-fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
+fn find_stirling_jar(resource_dir: &Path) -> Result<PathBuf, String> {
     let libs_dir = resource_dir.join("libs");
     let mut jar_files: Vec<_> = std::fs::read_dir(&libs_dir)
         .map_err(|e| {
@@ -403,20 +403,17 @@ fn version_key(name: &str) -> (Vec<u64>, u8, Vec<PrereleaseToken>) {
 }
 
 // Normalize path to remove Windows UNC prefix
-fn normalize_path(path: &PathBuf) -> PathBuf {
+fn normalize_path(path: &Path) -> PathBuf {
     if cfg!(windows) {
         let path_str = path.to_string_lossy();
-        if path_str.starts_with(r"\\?\") {
-            PathBuf::from(&path_str[4..]) // Remove \\?\ prefix
-        } else {
-            path.clone()
+        if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
+            return PathBuf::from(stripped);
         }
-    } else {
-        path.clone()
     }
+    path.to_path_buf()
 }
 
-fn migrate_legacy_workspace(legacy_dir: &PathBuf, target_root: &PathBuf) -> std::io::Result<()> {
+fn migrate_legacy_workspace(legacy_dir: &Path, target_root: &Path) -> std::io::Result<()> {
     for entry in std::fs::read_dir(legacy_dir)? {
         let entry = entry?;
         let file_type = entry.file_type()?;
@@ -655,7 +652,7 @@ fn monitor_backend_output(
                     // Format: "Stirling-PDF running on port: PORT"
                     if output_str.contains("running on port:") {
                         _startup_detected = true;
-                        if let Some(port) = extract_port_from_running_log(&output_str) {
+                        if let Some(port) = extract_port_from_running_log(output_str) {
                             let mut port_guard = BACKEND_PORT.lock().unwrap();
                             *port_guard = Some(port);
                             add_log(format!("🎉 Backend started on port: {}", port));
