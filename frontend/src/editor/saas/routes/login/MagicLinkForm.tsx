@@ -2,6 +2,7 @@ import { Button } from "@editor/ui/Button";
 import { useTranslation } from "@editor/hooks/useTranslation";
 import "@editor/auth/ui/auth.css";
 import "@editor/routes/authShared/saas-auth.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface MagicLinkFormProps {
   showMagicLink: boolean;
@@ -47,7 +48,7 @@ export default function MagicLinkForm({
         value={magicLinkEmail}
         onChange={(e) => setMagicLinkEmail(e.target.value)}
         onKeyPress={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
-        className="auth-input"
+        className={`auth-input ${privateContentClassName}`}
       />
       <Button
         onClick={onSubmit}

@@ -8,6 +8,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface TypeSignatureTextProps {
   text: string;
@@ -106,6 +107,7 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
           "Enter your name...",
         )}
         value={text}
+        className={privateContentClassName}
         onChange={(e) => onTextChange(e.target.value)}
         disabled={disabled}
       />
@@ -183,6 +185,7 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
               fontSize: `${fontSize}px`,
               color: color,
             }}
+            className={privateContentClassName}
           >
             {text}
           </Text>

@@ -23,6 +23,7 @@ import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { openExternalTab } from "@editor/platform/openExternalTab";
 import { getExternalHref } from "@editor/utils/externalUrl";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -172,7 +173,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         {/* Navigate / Open */}
         <Button
           variant="tertiary"
-          className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
+          className={`pdf-link-toolbar-btn pdf-link-toolbar-btn--go ${privateContentClassName}`}
           onClick={(e) => {
             e.stopPropagation();
             onNavigate(annotationLink);

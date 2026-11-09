@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -22,6 +22,7 @@ import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/Annota
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@editor/tools/pdfTextEditor/components/PageRulers";
 import { useDevicePixelRatio } from "@editor/tools/pdfTextEditor/hooks/useDevicePixelRatio";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -91,9 +92,13 @@ function nearestScrollRoot(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-// One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
-// positioned, editable element per text run.
-export function PageView({
+/**
+ * One PDF page: a PDFium-rendered bitmap plus an overlay with one positioned,
+ * editable element per text run. Memoised: with every page read, re-rendering them
+ * all on each store change takes seconds, so a caller must pass handlers that
+ * keep their identity across renders.
+ */
+export const PageView = memo(function PageView({
   document,
   store,
   page,
@@ -261,6 +266,7 @@ export function PageView({
       mx="auto"
       mb="lg"
       ref={containerRef}
+      className={privateContentClassName}
       style={{
         width: raster.width,
         height: raster.height,
@@ -460,4 +466,4 @@ export function PageView({
       </Box>
     </Box>
   );
-}
+});
