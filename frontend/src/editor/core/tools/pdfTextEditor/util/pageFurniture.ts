@@ -1,9 +1,9 @@
 /**
  * Recognising page furniture: text a document repeats at the same height on
  * its pages, such as running headers and page numbers. Text is compared with
- * each run of digits read as one, so "Page 3" matches "Page 12", and height
- * as the distance from the page's nearer edge, as displayed, so pages of
- * different sizes still line up.
+ * each run of digits, in any script, read as one, so "Page 3" matches
+ * "Page 12", and height as the distance from the page's nearer edge, as
+ * displayed, so pages of different sizes still line up.
  */
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
@@ -13,9 +13,8 @@ import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 const SAME_HEIGHT_PT = 4;
 /** How near an edge, as a share of the page's height, auto-tag looks for furniture. */
 const EDGE_BAND = 0.12;
-/** "3", "Page 3", "3 of 10", "3/10", "- 3 -", with digits already read as "#". */
-const PAGE_NUMBER =
-  /^(?:(?:page\s*)?#(?:\s*(?:of|\/)\s*#)?|[-\u2013\u2014]\s*#\s*[-\u2013\u2014])$/i;
+const DIGITS = /\p{Nd}+/gu;
+const DIGIT = /^\p{Nd}$/u;
 
 export interface FurnitureRun {
   id: string;
@@ -39,7 +38,7 @@ interface Placement {
 
 /** The text as furniture compares it: whitespace collapsed, each run of digits one "#". */
 export function furnitureText(text: string): string {
-  return text.replace(/\s+/g, " ").trim().replace(/\d+/g, "#");
+  return text.replace(/\s+/g, " ").trim().replace(DIGITS, "#");
 }
 
 /**
@@ -73,17 +72,14 @@ export function matchingRuns<R extends FurnitureRun>(
  * by page index and then run id: text near the top or bottom of a page that
  * at least half the document's pages, and at least two, show at the same
  * height. Near the top it is a header, near the bottom a footer, and either
- * is a page number when it reads like one. `pageCount` counts the pages
- * not in `pages` too.
+ * is a page number when one of its numbers counts up with the pages, whatever
+ * words surround it. `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
   pageCount: number,
 ): Map<number, Map<string, Furniture>> {
-  const groups = new Map<
-    string,
-    { at: Placement; runs: { pageIndex: number; id: string }[] }[]
-  >();
+  const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
   for (const page of pages) {
     for (const run of page.runs) {
       const at = placement(page.display, run.bounds);
@@ -92,23 +88,23 @@ export function recogniseFurniture(
       const key = `${at.edge}:${text}`;
       const sameText = groups.get(key) ?? [];
       groups.set(key, sameText);
+      const grouped = {
+        pageIndex: page.pageIndex,
+        id: run.id,
+        numbers: numbers(run.text),
+      };
       const group = sameText.find((g) => sameHeight(g.at, at));
-      if (group) group.runs.push({ pageIndex: page.pageIndex, id: run.id });
-      else
-        sameText.push({
-          at,
-          runs: [{ pageIndex: page.pageIndex, id: run.id }],
-        });
+      if (group) group.runs.push(grouped);
+      else sameText.push({ at, runs: [grouped] });
     }
   }
 
   const needed = Math.max(2, Math.ceil(pageCount / 2));
   const furniture = new Map<number, Map<string, Furniture>>();
-  for (const [key, sameText] of groups) {
-    const text = key.slice(key.indexOf(":") + 1);
+  for (const sameText of groups.values()) {
     for (const { at, runs } of sameText) {
       if (new Set(runs.map((r) => r.pageIndex)).size < needed) continue;
-      const kind = furnitureKind(text, at.edge);
+      const kind = furnitureKind(runs, at.edge);
       for (const { pageIndex, id } of runs) {
         const onPage = furniture.get(pageIndex) ?? new Map<string, Furniture>();
         furniture.set(pageIndex, onPage.set(id, kind));
@@ -118,9 +114,51 @@ export function recogniseFurniture(
   return furniture;
 }
 
-function furnitureKind(text: string, edge: Placement["edge"]): Furniture {
-  if (PAGE_NUMBER.test(text)) return "PageNum";
+interface GroupedRun {
+  pageIndex: number;
+  id: string;
+  numbers: number[];
+}
+
+function furnitureKind(
+  runs: readonly GroupedRun[],
+  edge: Placement["edge"],
+): Furniture {
+  if (numbersPages(runs)) return "PageNum";
   return edge === "top" ? "Header" : "Footer";
+}
+
+/**
+ * True when one of the runs' numbers, at the same place in each, is its
+ * page's index plus the same offset on every page: a page number, counting
+ * from wherever the document starts. The runs share their text digits
+ * aside, so each has as many numbers.
+ */
+function numbersPages(runs: readonly GroupedRun[]): boolean {
+  return runs[0].numbers.some(
+    (_, i) =>
+      new Set(runs.map((run) => run.numbers[i] - run.pageIndex)).size === 1,
+  );
+}
+
+/** The text's numbers, written in the digits of any script. */
+function numbers(text: string): number[] {
+  return [...text.matchAll(DIGITS)].map(([digits]) =>
+    [...digits].reduce((value, digit) => value * 10 + digitValue(digit), 0),
+  );
+}
+
+/**
+ * A decimal digit's value. Unicode encodes every script's decimal digits as
+ * a contiguous run of ten, zero to nine, so the value is how far into its
+ * run the digit sits; runs that abut, such as the mathematical digits, each
+ * begin ten after the last.
+ */
+function digitValue(digit: string): number {
+  const code = digit.codePointAt(0)!;
+  let below = 0;
+  while (DIGIT.test(String.fromCodePoint(code - below - 1))) below++;
+  return below % 10;
 }
 
 function sameHeight(a: Placement, b: Placement): boolean {
