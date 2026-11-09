@@ -410,7 +410,7 @@ describe("tools on protected PDFs", () => {
 
   it.each([
     ["/api/v1/convert/pdf/img", "doesn't make PDFs"],
-    ["/api/v1/security/add-password", "sensitivity label"],
+    ["/api/v1/security/add-password", "would conflict with the protection"],
     ["/api/v1/security/cert-sign", "digitally signed PDF"],
     ["/api/v1/ai/tools/classify-and-label", "AI engine"],
     ["/api/v1/misc/add-attachments", "attachments"],

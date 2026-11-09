@@ -20,7 +20,7 @@ const cannotKeepProtection = () =>
 const managedByLabel = () =>
   i18n.t(
     "rightsManagedPdf.managedByLabel",
-    "Microsoft Purview protection comes from the file's sensitivity label, so this tool can't change it.",
+    "This tool isn't allowed on files protected by Microsoft Purview, because it would conflict with the protection set by the file's sensitivity label.",
   );
 
 const signingUnsupported = () =>
