@@ -61,6 +61,9 @@ class ConvertMarkdownToPdfTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+
     @InjectMocks private ConvertMarkdownToPdf controller;
 
     @BeforeEach
@@ -84,7 +87,7 @@ class ConvertMarkdownToPdfTest {
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(null);
 
-        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile));
+        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile, null));
     }
 
     @Test
@@ -94,7 +97,7 @@ class ConvertMarkdownToPdfTest {
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(file);
 
-        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile));
+        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile, null));
     }
 
     @Test
@@ -139,7 +142,7 @@ class ConvertMarkdownToPdfTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.markdownToPdf(generalFile);
+            ResponseEntity<Resource> response = controller.markdownToPdf(generalFile, null);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -152,7 +155,7 @@ class ConvertMarkdownToPdfTest {
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(file);
 
-        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile));
+        assertThrows(Exception.class, () -> controller.markdownToPdf(generalFile, null));
     }
 
     @Test

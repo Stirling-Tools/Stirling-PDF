@@ -204,10 +204,10 @@ describe("textTag", () => {
     );
   });
 
-  test("reads text in a file without a structure tree as untagged", async () => {
+  test("reads text marked with an MCID the file has no tree for as untagged", async () => {
     expect(
       await tagOf(paragraphsPdf({ tagged: false }), "Introduction"),
-    ).toEqual({ kind: "untagged", documentTagged: false, taggable: false });
+    ).toEqual({ kind: "untagged", documentTagged: true, taggable: false });
   });
 });
 

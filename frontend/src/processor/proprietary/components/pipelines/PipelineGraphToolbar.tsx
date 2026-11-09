@@ -5,6 +5,8 @@ import { Icon } from "@editor/ui/Icon";
 import { ActionIcon, Button, FilePicker, Spinner } from "@editor/ui";
 import { type RunOutputFile } from "@processor/api/pipelines";
 import "@processor/components/pipelines/PipelineGraphToolbar.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * A test run's outcome. Whole-pipeline, not per-node: the backend reports one flat list of files
@@ -131,7 +133,9 @@ function RunResultStrip({ result, onDownload }: RunResultStripProps) {
       {/* The reason it failed, where the failure is announced - not only on the node, which the user
           has to know to click. */}
       {result.status === "failed" && result.error && (
-        <span className="portal-pipeline-toolbar__result-error">
+        <span
+          className={`portal-pipeline-toolbar__result-error ${privateContentClassName}`}
+        >
           {result.error}
         </span>
       )}
@@ -144,7 +148,7 @@ function RunResultStrip({ result, onDownload }: RunResultStripProps) {
           onClick={() => onDownload(output)}
           leftSection={<Icon name="download" size={"1.125rem"} />}
         >
-          {output.fileName ?? output.fileId}
+          <PrivateContent>{output.fileName ?? output.fileId}</PrivateContent>
         </Button>
       ))}
     </div>
