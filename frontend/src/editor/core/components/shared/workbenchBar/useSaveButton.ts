@@ -7,9 +7,10 @@ import {
 } from "@editor/services/saveTargets";
 import type { SaveHomeMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 
 export interface SaveButton {
-  /** Replaces the plain Download/Save label when a target handles the files. */
+  /** Replaces the view's plural Download/Save label; set whenever one file is in play. */
   label?: string;
   icon?: IconName;
   unsaved: boolean;
@@ -39,6 +40,7 @@ export function useSaveButton({
   fileFor,
 }: Options): SaveButton {
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
   const unsaved = targets.some(saver.isUnsaved);
   const shared = sharedSaveTarget(targets, saver.targetFor);
   const onlyStub = targets.length === 1 ? targets[0] : undefined;
@@ -66,6 +68,8 @@ export function useSaveButton({
     label = t("saveFile.toolbar.ask", "Save {{name}}…", {
       name: onlyStub.name,
     });
+  } else if (onlyStub) {
+    label = terminology.download;
   }
   const icon = shared?.icon;
 
