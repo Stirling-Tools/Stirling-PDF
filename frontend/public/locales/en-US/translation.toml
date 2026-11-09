@@ -11079,16 +11079,16 @@ helperText = "Set up by an administrator under Integrations. Shared by every loc
 label = "Organisation connection"
 
 [portal.sources.cloudFields.googledrive]
-helperText = "Paste the folder's link, or type a path from the top of My Drive."
+helperText = "Paste the folder's link, or type a path from the top of My Drive. Leave empty for the top of My Drive. The folder must already exist."
 placeholder = "Folder link, or Scans/Inbox"
 
 [portal.sources.cloudFields.onedrive]
-helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Blank means the top."
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Leave empty for the top of the OneDrive. The folder must already exist."
 placeholder = "Scans/Inbox, or a folder link"
 
 [portal.sources.cloudFields.sharepoint]
-helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library."
-placeholder = "Folder link"
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library; leave empty for the library root. The folder must already exist."
+placeholder = "Folder link, or Scans/Inbox"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
