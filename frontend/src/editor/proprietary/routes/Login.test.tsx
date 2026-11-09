@@ -645,6 +645,10 @@ describe("Login", () => {
     ["userAlreadyExistsWeb", /already exists and uses password sign-in/i],
     ["maxUsersReached", /maximum number of users/i],
     ["userIsDisabled", /this account has been disabled/i],
+    ["saml2RequiresLicense", /saml sign-in requires an enterprise license/i],
+    ["oAuth2RequiresLicense", /oauth sign-in requires a license/i],
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
     ["__proto__", "__proto__"],
     ["constructor", "constructor"],
     ["toString", "toString"],
@@ -655,6 +659,25 @@ describe("Login", () => {
       render(
         <TestWrapper>
           <MemoryRouter initialEntries={[`/login?errorOAuth=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
+    ["access_denied", "access_denied"],
+    ["__proto__", "__proto__"],
+  ])("should display the login error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?error=${code}`]}>
             <Login />
           </MemoryRouter>
         </TestWrapper>,

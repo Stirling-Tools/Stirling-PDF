@@ -85,33 +85,49 @@ export default function Login() {
     if (!searchParams) {
       return null;
     }
+    const ssoErrorMessages: Record<string, string> = {
+      oAuth2AutoCreateDisabled: t(
+        "login.ssoError.autoCreateDisabled",
+        "No account exists for this user and automatic account creation is disabled. Contact your administrator.",
+      ),
+      oAuth2AdminBlockedUser: t(
+        "login.ssoError.registrationBlocked",
+        "Registration of new users is blocked. Contact your administrator.",
+      ),
+      userAlreadyExistsWeb: t(
+        "login.ssoError.userAlreadyExists",
+        "An account with this username already exists and uses password sign-in.",
+      ),
+      maxUsersReached: t(
+        "login.ssoError.maxUsersReached",
+        "The maximum number of users for this license has been reached.",
+      ),
+      userIsDisabled: t(
+        "login.ssoError.userDisabled",
+        "This account has been disabled. Contact your administrator.",
+      ),
+      saml2RequiresLicense: t(
+        "login.ssoError.samlRequiresLicense",
+        "SAML sign-in requires an Enterprise license. Contact your administrator.",
+      ),
+      oAuth2RequiresLicense: t(
+        "login.ssoError.oauthRequiresLicense",
+        "OAuth sign-in requires a license. Contact your administrator.",
+      ),
+      locked: t(
+        "login.ssoError.locked",
+        "This account is locked after too many failed sign-in attempts. Contact your administrator.",
+      ),
+      badCredentials: t(
+        "login.ssoError.badCredentials",
+        "Your sign-in details were not accepted. Try again.",
+      ),
+    };
+    const describeError = (code: string) =>
+      Object.hasOwn(ssoErrorMessages, code) ? ssoErrorMessages[code] : code;
     const ssoErrorCode = searchParams.get("errorOAuth");
     if (ssoErrorCode) {
-      const ssoErrorMessages: Record<string, string> = {
-        oAuth2AutoCreateDisabled: t(
-          "login.ssoError.autoCreateDisabled",
-          "No account exists for this user and automatic account creation is disabled. Contact your administrator.",
-        ),
-        oAuth2AdminBlockedUser: t(
-          "login.ssoError.registrationBlocked",
-          "Registration of new users is blocked. Contact your administrator.",
-        ),
-        userAlreadyExistsWeb: t(
-          "login.ssoError.userAlreadyExists",
-          "An account with this username already exists and uses password sign-in.",
-        ),
-        maxUsersReached: t(
-          "login.ssoError.maxUsersReached",
-          "The maximum number of users for this license has been reached.",
-        ),
-        userIsDisabled: t(
-          "login.ssoError.userDisabled",
-          "This account has been disabled. Contact your administrator.",
-        ),
-      };
-      return Object.hasOwn(ssoErrorMessages, ssoErrorCode)
-        ? ssoErrorMessages[ssoErrorCode]
-        : ssoErrorCode;
+      return describeError(ssoErrorCode);
     }
     const errorParamKeys = [
       "error",
@@ -125,7 +141,7 @@ export default function Login() {
     for (const key of errorParamKeys) {
       const value = searchParams.get(key);
       if (value) {
-        return value;
+        return describeError(value);
       }
     }
     for (const [key, value] of searchParams.entries()) {
