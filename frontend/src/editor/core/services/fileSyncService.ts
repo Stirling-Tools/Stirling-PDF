@@ -554,6 +554,7 @@ export async function materializeServerStubs(
         "Some files couldn't be opened",
       ),
       body: bodyText,
+      privateBody: true,
       expandable: false,
       durationMs: 5000,
     });

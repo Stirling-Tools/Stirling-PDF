@@ -56,12 +56,12 @@ public class ConvertPdfToPdfUa {
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert a PDF to PDF/UA-1 or PDF/UA-2",
+            summary = "Make a PDF accessible for screen readers (tagged PDF/UA-1 or PDF/UA-2)",
             description =
-                    "Tags the document, marks decorative content as artifacts, embeds fonts and"
-                            + " applies the document-level requirements of PDF/UA, then validates"
-                            + " the result. A conformance declaration is written only if validation"
-                            + " passes, so the returned file never claims more than it delivers.")
+                    "Tags the document, marks decorative content as artifacts and embeds"
+                            + " fonts, then validates. PDF/UA is declared only if validation passes"
+                            + " (see the X-Stirling-UA-Declared header). Figures without alt text"
+                            + " block it unless altText is given or figurePolicy=mark-decorative.")
     public ResponseEntity<Resource> pdfToPdfUa(@ModelAttribute PdfToPdfUaRequest request)
             throws IOException {
 

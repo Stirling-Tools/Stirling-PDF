@@ -16,4 +16,7 @@ public class HTMLToPdfRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "1")
     private float zoom = 1;
+
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
 }

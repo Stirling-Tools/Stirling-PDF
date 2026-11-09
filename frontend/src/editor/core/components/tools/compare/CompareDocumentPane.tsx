@@ -14,6 +14,7 @@ import {
 import CompareNavigationDropdown from "@editor/components/tools/compare/CompareNavigationDropdown";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { truncateCenter } from "@editor/utils/textUtils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const COMPARE_PANE_TITLE_MAX_LEN = 48;
 
@@ -116,6 +117,7 @@ const CompareDocumentPane = ({
             size="lg"
             style={{ minWidth: 0, flex: 1 }}
             title={title || undefined}
+            className={privateContentClassName}
           >
             {title ? truncateCenter(title, COMPARE_PANE_TITLE_MAX_LEN) : title}
           </Text>
@@ -348,7 +350,7 @@ const CompareDocumentPane = ({
                     }}
                   >
                     <div
-                      className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
+                      className={`compare-diff-page__inner compare-diff-page__inner--${pane} ${privateContentClassName}`}
                       style={{
                         transform: `scale(${innerScale}) translate3d(${-(clampedPanX / innerScale)}px, ${-(clampedPanY / innerScale)}px, 0)`,
                         transformOrigin: "top left",
