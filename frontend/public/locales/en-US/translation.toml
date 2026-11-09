@@ -11730,6 +11730,7 @@ failed = "An error occurred while removing certificate signatures."
 
 [removeCertSign.results]
 title = "Certificate Removal Results"
+visibleSignatureKept = "The visible signature stamp was kept. Turn on 'Remove visible signature' to remove it too."
 
 [removeImage]
 submit = "Remove image"

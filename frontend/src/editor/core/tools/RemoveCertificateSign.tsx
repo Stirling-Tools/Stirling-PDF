@@ -5,6 +5,9 @@ import { useRemoveCertificateSignParameters } from "@editor/hooks/tools/removeCe
 import { useRemoveCertificateSignOperation } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { useBaseTool } from "@editor/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@editor/types/tool";
+import { useKeptSignatureStamp } from "@editor/hooks/tools/removeCertificateSign/useKeptSignatureStamp";
+import { Banner } from "@editor/ui/Banner";
+import { Icon } from "@editor/ui/Icon";
 
 const RemoveCertificateSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -14,6 +17,27 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
     useRemoveCertificateSignParameters,
     useRemoveCertificateSignOperation,
     props,
+  );
+
+  const { stampKept, recordRun } = useKeptSignatureStamp();
+
+  const handleExecute = () => {
+    recordRun(
+      base.selectedFiles,
+      base.params.parameters.removeVisibleSignature,
+    );
+    return base.handleExecute();
+  };
+
+  const stampKeptNotice = stampKept && (
+    <Banner
+      tone="info"
+      icon={<Icon name="info" />}
+      description={t(
+        "removeCertSign.results.visibleSignatureKept",
+        "The visible signature stamp was kept. Turn on 'Remove visible signature' to remove it too.",
+      )}
+    />
   );
 
   return createToolFlow({
@@ -41,7 +65,7 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
       text: t("removeCertSign.submit", "Remove Signature"),
       isVisible: !base.hasResults,
       loadingText: t("loading"),
-      onClick: base.handleExecute,
+      onClick: handleExecute,
       endpointEnabled: base.endpointEnabled,
       paramsValid: base.params.validateParameters(),
     },
@@ -51,6 +75,7 @@ const RemoveCertificateSign = (props: BaseToolProps) => {
       title: t("removeCertSign.results.title", "Certificate Removal Results"),
       onFileClick: base.handleThumbnailClick,
       onUndo: base.handleUndo,
+      notice: stampKeptNotice,
     },
   });
 };

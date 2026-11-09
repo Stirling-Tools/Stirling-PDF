@@ -9,7 +9,7 @@ import {
 } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import type { RemoveCertificateSignParameters } from "@editor/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
-const { operation, selectedFiles, endpoint } = vi.hoisted(() => ({
+const { operation, selectedFiles, endpoint, keptStamp } = vi.hoisted(() => ({
   operation: {
     files: [],
     downloadUrl: null,
@@ -18,6 +18,7 @@ const { operation, selectedFiles, endpoint } = vi.hoisted(() => ({
   },
   selectedFiles: [new File(["pdf"], "signed.pdf", { type: "application/pdf" })],
   endpoint: { enabled: true, loading: false },
+  keptStamp: { stampKept: false, recordRun: vi.fn() },
 }));
 
 vi.mock("react-i18next", () => ({
@@ -34,6 +35,10 @@ vi.mock("@editor/hooks/tools/shared/useToolOperation", () => ({
   defineSingleFileTool: (config: object) => config,
   useToolOperation: () => operation,
 }));
+vi.mock(
+  "@editor/hooks/tools/removeCertificateSign/useKeptSignatureStamp",
+  () => ({ useKeptSignatureStamp: () => keptStamp }),
+);
 vi.mock("@editor/components/tools/shared/createToolFlow", () => ({
   createToolFlow: (config: ToolFlowConfig<RemoveCertificateSignParameters>) => (
     <>
@@ -43,6 +48,7 @@ vi.mock("@editor/components/tools/shared/createToolFlow", () => ({
       <button onClick={config.executeButton?.onClick}>
         {config.executeButton?.text}
       </button>
+      {config.review.notice}
     </>
   ),
 }));
@@ -51,6 +57,7 @@ describe("Remove Certificate Sign", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     endpoint.loading = false;
+    keptStamp.stampKept = false;
   });
 
   it("shows only the visible signature option in settings", () => {
@@ -65,6 +72,46 @@ describe("Remove Certificate Sign", () => {
       ),
     ).not.toBeInTheDocument();
   });
+
+  it.each([false, true])(
+    "records the run inputs with removeVisibleSignature=%s",
+    async (removeVisibleSignature) => {
+      render(
+        <MantineProvider>
+          <RemoveCertificateSign />
+        </MantineProvider>,
+      );
+      if (removeVisibleSignature) {
+        fireEvent.click(
+          screen.getByRole("checkbox", { name: "Remove visible signature" }),
+        );
+      }
+      fireEvent.click(screen.getByRole("button", { name: "Remove Signature" }));
+      await waitFor(() =>
+        expect(keptStamp.recordRun).toHaveBeenCalledWith(
+          selectedFiles,
+          removeVisibleSignature,
+        ),
+      );
+    },
+  );
+
+  it.each([false, true])(
+    "shows the kept stamp note only when a stamp was kept (%s)",
+    (stampKept) => {
+      keptStamp.stampKept = stampKept;
+      render(
+        <MantineProvider>
+          <RemoveCertificateSign />
+        </MantineProvider>,
+      );
+      const note = screen.queryByText(
+        "The visible signature stamp was kept. Turn on 'Remove visible signature' to remove it too.",
+      );
+      if (stampKept) expect(note).toBeInTheDocument();
+      else expect(note).not.toBeInTheDocument();
+    },
+  );
 
   it.each([false, true])(
     "submits removeVisibleSignature=%s from the checkbox",
