@@ -84,12 +84,18 @@ function signedEditsBlockedError(): Error {
   );
 }
 
+export function signedPdfEditRefused(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+): boolean {
+  return signedPdfEditsBlocked(access) && rewritesPdf(endpoint);
+}
+
 function assertSignedPdfEditable(
   access: PdfAccess | undefined,
   endpoint: string | undefined,
 ): void {
-  if (signedPdfEditsBlocked(access) && rewritesPdf(endpoint))
-    throw signedEditsBlockedError();
+  if (signedPdfEditRefused(access, endpoint)) throw signedEditsBlockedError();
 }
 
 /** These interactive operations restore protection before exposing or persisting any result. */

@@ -13,6 +13,31 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
+import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
+
+function SignedPdfLockedStatus() {
+  const { t } = useTranslation();
+  return (
+    <Group gap="xs" px="sm" py={4}>
+      <Tooltip
+        content={t(
+          "signedPdf.editsBlocked",
+          "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
+        )}
+        position="bottom"
+        maxWidth={280}
+        arrow
+      >
+        <Group gap={6} role="status" tabIndex={0}>
+          <Icon name="signature" size={14} />
+          <Text size="xs">
+            {t("signedPdf.editsBlockedStatus", "Signed: edits blocked")}
+          </Text>
+        </Group>
+      </Tooltip>
+    </Group>
+  );
+}
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
@@ -24,7 +49,8 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
   const [confirmCopy, setConfirmCopy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  if (!access?.encrypted) return null;
+  if (!access?.encrypted)
+    return signedPdfEditsBlocked(access) ? <SignedPdfLockedStatus /> : null;
   const close = () => {
     setOpened(false);
     setConfirmCopy(false);

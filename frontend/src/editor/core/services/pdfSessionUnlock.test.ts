@@ -23,6 +23,7 @@ import {
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
+  signedPdfEditRefused,
 } from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
 
@@ -628,6 +629,7 @@ describe("signed PDF edit policy", () => {
     );
     await expect(prepareUnlockedFile(file, rotate)).resolves.toBe(file);
     expect(pdfEditingLocked(signedAccess)).toBe(false);
+    expect(signedPdfEditRefused(signedAccess, rotate)).toBe(false);
   });
 
   it("refuses every way of rewriting a signed PDF while it is on", async () => {
@@ -643,6 +645,7 @@ describe("signed PDF edit policy", () => {
       "digitally signed",
     );
     expect(pdfEditingLocked(signedAccess)).toBe(true);
+    expect(signedPdfEditRefused(signedAccess, rotate)).toBe(true);
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -655,6 +658,7 @@ describe("signed PDF edit policy", () => {
         await preflightPdfOperation([file], endpoint, false, vi.fn()),
       ).toBe(true);
       await expect(prepareUnlockedFile(file, endpoint)).resolves.toBe(file);
+      expect(signedPdfEditRefused(signedAccess, endpoint)).toBe(false);
     },
   );
 

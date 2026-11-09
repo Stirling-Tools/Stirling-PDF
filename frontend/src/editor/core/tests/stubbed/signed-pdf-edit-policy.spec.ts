@@ -84,3 +84,32 @@ test("the form editor edits a signed PDF while changes are allowed", async ({
   ).toBeVisible({ timeout: 30_000 });
   await expect(unavailable(page)).toHaveCount(0);
 });
+
+for (const block of [true, false]) {
+  test(`the viewer ${block ? "shows" : "hides"} the signed lock chip while changes are ${block ? "blocked" : "allowed"}`, async ({
+    page,
+  }) => {
+    await openSigned(page, "/editor", block);
+    await expect(page.getByTestId("annotations-toggle")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText("Signed: edits blocked")).toHaveCount(
+      block ? 1 : 0,
+    );
+  });
+
+  test(`Compress ${block ? "disables" : "enables"} Run on a signed PDF while changes are ${block ? "blocked" : "allowed"}`, async ({
+    page,
+  }) => {
+    await openSigned(page, "/compress", block);
+    const run = page.locator('[data-tour="run-button"]');
+    await expect(run).toBeVisible({ timeout: 30_000 });
+    if (!block) {
+      await expect(run).toBeEnabled();
+      return;
+    }
+    await expect(run).toBeDisabled();
+    await run.locator("xpath=..").hover();
+    await expect(page.getByRole("tooltip")).toContainText("digitally signed");
+  });
+}

@@ -15,9 +15,13 @@ import { useAllFiles } from "@editor/contexts/FileContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import { signedPdfEditRefused } from "@editor/services/pdfSessionUnlock";
 
 export interface ScopedOperationButtonProps extends OperationButtonProps {
   selectedFiles: StirlingFile[];
+  endpoint?: string;
   disableScopeHints?: boolean;
 }
 
@@ -31,6 +35,7 @@ export interface ScopedOperationButtonProps extends OperationButtonProps {
  */
 export function ScopedOperationButton({
   selectedFiles,
+  endpoint,
   disableScopeHints,
   ...props
 }: ScopedOperationButtonProps) {
@@ -38,13 +43,18 @@ export function ScopedOperationButton({
   const { workbench } = useNavigationState();
   const { activeFileIndex } = useViewer();
   const { files: allFiles, fileIds } = useAllFiles();
+  usePdfAccess(undefined);
+  const signedEditRefused = selectedFiles.some((file) =>
+    signedPdfEditRefused(getPdfAccess(file), endpoint),
+  );
 
   // Disable until all files are hydrated — running early would silently skip unloaded files.
   const isFilesHydrating = fileIds.length > allFiles.length;
   const effectiveDisabledReason =
     isFilesHydrating && props.disabledReason !== "endpointUnavailable"
       ? "filesLoading"
-      : props.disabledReason;
+      : (props.disabledReason ??
+        (signedEditRefused ? "signedPdfEditsBlocked" : null));
 
   const isViewerMode = workbench === "viewer";
   const isFileEditorMode = workbench === "fileEditor";

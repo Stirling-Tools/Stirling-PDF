@@ -972,6 +972,8 @@ export const useToolOperation = <TParams>(
     errorMessage: state.errorMessage,
     progress: state.progress,
     willUseCloud,
+    staticEndpoint:
+      typeof config.endpoint === "string" ? config.endpoint : undefined,
 
     // Actions
     getEligibleFiles,
