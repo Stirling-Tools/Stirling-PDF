@@ -72,7 +72,7 @@
   color: var(--c-danger);
 }
 
-.quick-nav-account-menu__local-icon {
+.quick-nav-account-menu__status-icon {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;

@@ -93,7 +93,7 @@ describe("QuickNavRailAccount menu", () => {
   });
 
   it("names local mode instead of a placeholder account when login is off", () => {
-    const { open } = setup({ shortcuts: [], localMode: true });
+    const { open } = setup({ shortcuts: [], header: "local" });
     open();
     const header = screen
       .getByRole("menu")
@@ -103,6 +103,30 @@ describe("QuickNavRailAccount menu", () => {
     expect(screen.getAllByRole("menuitem")[0]).toHaveTextContent(
       "quickNav.accountMenu.settings",
     );
+  });
+
+  it("offers a sign-in action in place of sign out for a signed-out server", () => {
+    const signIn = vi.fn();
+    const { open } = setup({
+      shortcuts: [],
+      header: "signedOut",
+      actions: [
+        { id: "sign-in", label: "Sign in", icon: "log-in", onSelect: signIn },
+      ],
+    });
+    open();
+    const header = screen
+      .getByRole("menu")
+      .querySelector(".quick-nav-account-menu__header");
+    expect(header).toHaveTextContent("quickNav.accountMenu.signedOut");
+    expect(header).not.toHaveTextContent("Ada");
+    const items = screen.getAllByRole("menuitem");
+    expect(items.map((i) => i.textContent)).toEqual([
+      "quickNav.accountMenu.settings",
+      "Sign in",
+    ]);
+    fireEvent.click(items[1]);
+    expect(signIn).toHaveBeenCalledOnce();
   });
 
   it("hides sign out when there is no session to end", () => {

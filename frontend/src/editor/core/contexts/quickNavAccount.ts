@@ -15,11 +15,21 @@ export interface QuickNavAccountShortcut {
   to: string;
 }
 
+export interface QuickNavAccountAction {
+  id: string;
+  label: string;
+  icon: IconName;
+  onSelect: () => void;
+}
+
+export type QuickNavAccountHeader = "local" | "signedOut";
+
 export interface QuickNavAccountMenu {
   shortcuts: QuickNavAccountShortcut[];
   /** Absent when there is no session to end (no login, or a guest). */
   signOut?: () => void;
-  localMode?: boolean;
+  header?: QuickNavAccountHeader;
+  actions?: QuickNavAccountAction[];
 }
 
 /** The last resolved account data, retained across view changes. */

@@ -5,6 +5,7 @@ import { Avatar } from "@editor/ui/Avatar";
 import { Dropdown } from "@editor/ui/Dropdown";
 import { Icon } from "@editor/ui/Icon";
 import type {
+  QuickNavAccountHeader,
   QuickNavAccountMenu,
   QuickNavIdentity,
 } from "@editor/contexts/QuickNavHostContext";
@@ -25,6 +26,43 @@ export interface QuickNavRailAccountProps {
   identity: QuickNavIdentity | null;
   /** Drawn as the current destination while the settings page is open. */
   active?: boolean;
+}
+
+function AccountMenuHeader({
+  header,
+  displayName,
+  profilePictureUrl,
+}: {
+  header?: QuickNavAccountHeader;
+  displayName: string;
+  profilePictureUrl?: string;
+}) {
+  const { t } = useTranslation();
+  if (header) {
+    const local = header === "local";
+    return (
+      <div className="quick-nav-account-menu__header">
+        <span aria-hidden className="quick-nav-account-menu__status-icon">
+          <Icon name={local ? "monitor" : "user-x"} size={ICON_SIZE} />
+        </span>
+        <span className="quick-nav-account-menu__name">
+          {local
+            ? t("quickNav.accountMenu.localMode", "Local mode")
+            : t("quickNav.accountMenu.signedOut", "Not signed in")}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`quick-nav-account-menu__header ${privateContentClassName}`}
+    >
+      <span aria-hidden>
+        <Avatar src={profilePictureUrl} name={displayName} size="md" />
+      </span>
+      <span className="quick-nav-account-menu__name">{displayName}</span>
+    </div>
+  );
 }
 
 /** The avatar opens a short menu of the settings people reach for most, plus sign out. */
@@ -83,27 +121,11 @@ export function QuickNavRailAccount({
           placement="side"
           autoFocus
         >
-          {menu?.localMode ? (
-            <div className="quick-nav-account-menu__header">
-              <span aria-hidden className="quick-nav-account-menu__local-icon">
-                <Icon name="monitor" size={ICON_SIZE} />
-              </span>
-              <span className="quick-nav-account-menu__name">
-                {t("quickNav.accountMenu.localMode", "Local mode")}
-              </span>
-            </div>
-          ) : (
-            <div
-              className={`quick-nav-account-menu__header ${privateContentClassName}`}
-            >
-              <span aria-hidden>
-                <Avatar src={profilePictureUrl} name={displayName} size="md" />
-              </span>
-              <span className="quick-nav-account-menu__name">
-                {displayName}
-              </span>
-            </div>
-          )}
+          <AccountMenuHeader
+            header={menu?.header}
+            displayName={displayName}
+            profilePictureUrl={profilePictureUrl}
+          />
           <Dropdown.Divider />
           <Dropdown.Item
             leading={<Icon name="settings" size={ICON_SIZE} />}
@@ -120,17 +142,26 @@ export function QuickNavRailAccount({
               {shortcut.label}
             </Dropdown.Item>
           ))}
+          {(Boolean(menu?.actions?.length) || menu?.signOut) && (
+            <Dropdown.Divider />
+          )}
+          {menu?.actions?.map((action) => (
+            <Dropdown.Item
+              key={action.id}
+              leading={<Icon name={action.icon} size={ICON_SIZE} />}
+              onSelect={action.onSelect}
+            >
+              {action.label}
+            </Dropdown.Item>
+          ))}
           {menu?.signOut && (
-            <>
-              <Dropdown.Divider />
-              <Dropdown.Item
-                className="quick-nav-account-menu__sign-out"
-                leading={<Icon name="log-out" size={ICON_SIZE} />}
-                onSelect={menu.signOut}
-              >
-                {t("settings.general.logout", "Log out")}
-              </Dropdown.Item>
-            </>
+            <Dropdown.Item
+              className="quick-nav-account-menu__sign-out"
+              leading={<Icon name="log-out" size={ICON_SIZE} />}
+              onSelect={menu.signOut}
+            >
+              {t("settings.general.logout", "Log out")}
+            </Dropdown.Item>
           )}
         </Dropdown.Menu>
       </Dropdown.Root>

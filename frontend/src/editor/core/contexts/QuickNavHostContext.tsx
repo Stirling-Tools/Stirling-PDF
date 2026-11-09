@@ -23,6 +23,8 @@ export type QuickNavToolReasons = Partial<Record<QuickNavEntryId, string>>;
 
 export type {
   QuickNavIdentity,
+  QuickNavAccountAction,
+  QuickNavAccountHeader,
   QuickNavAccountMenu,
   QuickNavAccountShortcut,
 } from "@editor/contexts/quickNavAccount";

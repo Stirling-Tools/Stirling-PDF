@@ -8,6 +8,7 @@ import { useNotificationPasswordPrompt } from "@editor/components/notifications/
 import { useQuickNavToolReasons } from "@editor/components/shared/quickNav/useQuickNavToolReasons";
 import { useSyncQuickNavAccount } from "@editor/components/shared/quickNav/useSyncQuickNavAccount";
 import { useAccountMenuShortcuts } from "@editor/components/shared/quickNav/useAccountMenuShortcuts";
+import { useAccountMenuState } from "@editor/components/shared/quickNav/useAccountMenuState";
 import { useAuth } from "@editor/auth/UseSession";
 import { useAccountLogout } from "@editor/extensions/accountLogout";
 import { withBasePath } from "@editor/constants/app";
@@ -53,7 +54,8 @@ export function QuickNavHostBridge({
 }: QuickNavHostBridgeProps) {
   useSyncQuickNavAccount();
   const accountShortcuts = useAccountMenuShortcuts();
-  const { user, isAnonymous, signOut, loading } = useAuth();
+  const accountMenuState = useAccountMenuState();
+  const { user, isAnonymous, signOut } = useAuth();
   const accountLogout = useAccountLogout();
   const canSignOut = Boolean(user) && !isAnonymous;
   const notificationsAvailable = useNotificationsAvailable();
@@ -94,7 +96,8 @@ export function QuickNavHostBridge({
       onBrandFlourish: brandFlourish.trigger,
       accountMenu: {
         shortcuts: accountShortcuts,
-        localMode: !loading && !user,
+        header: accountMenuState.header,
+        actions: accountMenuState.actions,
         signOut: canSignOut
           ? () =>
               void accountLogout({
