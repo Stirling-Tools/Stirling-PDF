@@ -65,7 +65,7 @@ import { useIsMobile, useIsPhone } from "@editor/hooks/useIsMobile";
 import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
-import { useApplyEditsBeforeSave } from "@editor/hooks/useApplyEditsBeforeSave";
+import { useCommitEditsBeforeSave } from "@editor/hooks/useCommitEditsBeforeSave";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
@@ -223,6 +223,12 @@ export default function WorkbenchBar({
   const exportTargetStubs = selectors.getStirlingFileStubs(
     exportTargetIds as FileId[],
   );
+  // A save to disk links the file to wherever it lands, so every one goes home.
+  const savesHome =
+    Boolean(icons.saveAs) ||
+    exportTargetStubs.some(
+      (stub) => saver.targetFor(stub) || stub.localFilePath,
+    );
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.
@@ -290,13 +296,8 @@ export default function WorkbenchBar({
         return;
       }
 
-      const savesHome =
-        !forceNewFile &&
-        selectors
-          .getStirlingFileStubs(exportTargetIds as FileId[])
-          .some((stub) => saver.targetFor(stub) || stub.localFilePath);
       const viewExport = await viewFileActions?.getExportFiles?.({
-        commitEdits: savesHome,
+        commitEdits: !forceNewFile && savesHome,
       });
       if (viewExport === null) return;
       const filesToExport = viewExport
@@ -379,7 +380,7 @@ export default function WorkbenchBar({
       selectors,
       fileActions,
       saver,
-      exportTargetIds,
+      savesHome,
     ],
   );
 
@@ -393,7 +394,10 @@ export default function WorkbenchBar({
     [currentView, viewerContext],
   );
 
-  const saveWithEdits = useApplyEditsBeforeSave(() => handleExportAll());
+  // A view with its own export commits its edits inside it.
+  const saveWithEdits = useCommitEditsBeforeSave(() => handleExportAll(), {
+    commitEdits: savesHome && !viewFileActions?.getExportFiles,
+  });
 
   const saveButton = useSaveButton({
     saver,

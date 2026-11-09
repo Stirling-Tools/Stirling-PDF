@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useFileSelectors } from "@editor/contexts/FileContext";
-import { useApplyEditsBeforeSave } from "@editor/hooks/useApplyEditsBeforeSave";
+import { useCommitEditsBeforeSave } from "@editor/hooks/useCommitEditsBeforeSave";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 
 /**
@@ -20,7 +20,7 @@ export function useSaveShortcut() {
       if (outcome === "cancelled") break;
     }
   }, [selectors, saveStoredFile]);
-  const save = useApplyEditsBeforeSave(saveFiles);
+  const save = useCommitEditsBeforeSave(saveFiles);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
