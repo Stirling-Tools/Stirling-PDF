@@ -164,6 +164,7 @@ describe("reading the structure tree", () => {
       type,
       alt,
       actualText: null,
+      lang: null,
       mcids,
       onlyMarkedContent: false,
       key,
@@ -272,6 +273,7 @@ describe("reading tags from the file's ParentTree", () => {
       type,
       alt,
       actualText: null,
+      lang: null,
       mcids,
       onlyMarkedContent: true,
       key: String(num),
@@ -342,12 +344,12 @@ describe("imageAccessibility", () => {
     });
   });
 
-  test("cannot undo an artifact in an untagged document", async () => {
+  test("can undo an artifact in a document with no structure tree", async () => {
     const doc = await open(imagesPdf({ tagged: false }));
     const [, rule] = await images(doc);
     expect(imageAccessibility(doc, rule)).toEqual({
       kind: "decorative",
-      canUndecorate: false,
+      canUndecorate: true,
     });
   });
 
@@ -361,13 +363,13 @@ describe("imageAccessibility", () => {
     });
   });
 
-  test("blocks every image in an untagged document", async () => {
+  test("blocks an image marked with an MCID the file has no tree for", async () => {
     const doc = await open(imagesPdf({ tagged: false }));
     const [image] = await images(doc);
     expect(imageAccessibility(doc, image)).toEqual({
       kind: "blocked",
       blocker: "untagged",
-      documentTagged: false,
+      documentTagged: true,
     });
   });
 });
@@ -505,7 +507,7 @@ describe("reviewing images that need attention", () => {
     expect(nextImageNeedingAttention(doc, read, null)?.id).toBe(inserted.id);
   });
 
-  test("leaves an untagged document's images out of the review", async () => {
+  test("counts an image marked for a missing tree as untaggable", async () => {
     const doc = await open(imagesPdf({ tagged: false }));
     const page = doc.page(0);
     PdfiumTextReader.populate(doc, page);
@@ -515,7 +517,7 @@ describe("reviewing images that need attention", () => {
     expect(reviewImages(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 0,
-      untaggable: 0,
+      untaggable: 1,
     });
   });
 });
@@ -660,6 +662,7 @@ describe("PageStructure", () => {
     type: "Figure" as const,
     alt: "old",
     actualText: null,
+    lang: null,
     mcids: [3, 4],
     onlyMarkedContent: true,
     key: "figure",
@@ -877,7 +880,11 @@ describe("SetDecorativeCommand", () => {
       reviewImages(reopened, [
         { pageIndex: 0, images: [image] },
       ] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
+    ).toEqual({
+      needsDescription: 0,
+      untagged: 0,
+      untaggable: 0,
+    });
   });
 });
 
@@ -938,6 +945,7 @@ describe("PageStructure: added figures", () => {
     type: "P" as const,
     alt: null,
     actualText: null,
+    lang: null,
     mcids: [3],
     onlyMarkedContent: true,
     key: "paragraph",
@@ -965,7 +973,7 @@ describe("PageStructure: added figures", () => {
       { mcid: 3, alt: "Chart", decorative: false },
     ]);
     expect(s.addedElements()).toEqual([
-      { mcid: 5, type: "Figure", alt: "Logo" },
+      { mcid: 5, type: "Figure", alt: "Logo", lang: null },
     ]);
     expect(() => s.setDecorative(5, true)).toThrow();
     s.removeElement(5);
@@ -1091,7 +1099,7 @@ describe("TagImageCommand", () => {
 
     history.undo(doc);
     expect(doc.structure(0).addedElements()).toEqual([
-      { mcid: 1, type: "Figure", alt: "A logo" },
+      { mcid: 1, type: "Figure", alt: "A logo", lang: null },
     ]);
   });
 
@@ -1104,15 +1112,17 @@ describe("TagImageCommand", () => {
     expect(marks(doc, figure)).toEqual([{ name: "Figure", mcid: 0 }]);
   });
 
-  test("refuses an image in an untagged document", async () => {
+  test("tags an image in a document with no structure tree, and saves one for it", async () => {
     const doc = await open(imagesPdf({ tagged: false }));
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    expect(() =>
-      history.execute(tagImage(image, "figure", "A logo"), doc),
-    ).toThrow(HistoryStepError);
-    expect(marks(doc, image)).toEqual([]);
+    history.execute(tagImage(image, "figure", "A logo"), doc);
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    expect(saved!.pages.get(0)!.elements).toMatchObject([
+      { type: "Figure", alt: "A logo" },
+    ]);
   });
 });
 
@@ -1183,7 +1193,11 @@ describe("saving an added figure", () => {
     expect(images.filter((img) => img.artifact)).toHaveLength(2);
     expect(
       reviewImages(reopened, [{ pageIndex: 0, images }] as PageSnapshot[]),
-    ).toEqual({ needsDescription: 0, untagged: 0, untaggable: 0 });
+    ).toEqual({
+      needsDescription: 0,
+      untagged: 0,
+      untaggable: 0,
+    });
     expect(tree(reopened)).toEqual(["Document", "A grey square"]);
   });
 

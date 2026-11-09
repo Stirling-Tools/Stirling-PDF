@@ -19,6 +19,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import stirling.software.gradle.ModuleLicenseOverrideFilter
+import stirling.software.gradle.PreferredLicenseFilter
 
 ext {
     // Versions live in gradle/libs.versions.toml; keep this block for build-level switches only.
@@ -90,7 +91,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.2.2'
+    version = '3.3.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -237,11 +238,13 @@ subprojects {
         resolutionStrategy.force rootProject.libs.bouncycastle.bcutil.get()
         resolutionStrategy.force rootProject.libs.xmlsec.get()
         resolutionStrategy.force rootProject.libs.guava.get()
+        resolutionStrategy.force rootProject.libs.jsoup.get()
     }
 
     dependencyManagement {
         imports {
             mavenBom rootProject.libs.spring.boot.dependencies.get().toString()
+            mavenBom rootProject.libs.jackson2.bom.get().toString()
         }
         dependencies {
             // These are BOM-managed, and the imported Spring Boot platform wins over
@@ -574,18 +577,23 @@ gradle.taskGraph.whenReady { graph ->
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
 def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
+def allowedLicensesJsonFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
 
 licenseReport {
     projects = allProjects
     renderers = [new JsonReportRenderer()]
-    allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
+    allowedLicensesFile = allowedLicensesJsonFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
-    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+    filters = [
+        new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile),
+        new PreferredLicenseFilter(allowedLicensesJsonFile)
+    ]
 }
 
 tasks.named('generateLicenseReport') {
     inputs.file(moduleLicenseOverridesFile)
+    inputs.file(allowedLicensesJsonFile)
 }
 
 tasks.named('checkLicensePreparation') {

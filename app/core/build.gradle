@@ -51,6 +51,7 @@ dependencies {
     implementation libs.stirling.office.convert
     implementation libs.stirling.office.convert.legacy
     implementation libs.stirling.office.convert.topdf
+    implementation libs.stirling.office.convert.pdfa
 
     // General PDF dependencies
     implementation libs.pdfbox.preflight
