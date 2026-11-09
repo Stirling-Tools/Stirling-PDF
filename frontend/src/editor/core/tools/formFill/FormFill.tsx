@@ -34,6 +34,7 @@ import { useFieldShortcuts } from "@editor/tools/formFill/useFieldShortcuts";
 import { serverMessage } from "@editor/tools/formFill/useFormCommit";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { useAllFiles, useFileState } from "@editor/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@editor/types/fileContext";
@@ -216,7 +217,8 @@ const FormFill = (_props: BaseToolProps) => {
     return activeFiles[0];
   }, [activeFiles, selectedFileIds, activeFileId]);
   const pdfAccess = usePdfAccess(viewedFile);
-  const currentFile = pdfAccess?.encrypted === false ? viewedFile : null;
+  const editingLocked = pdfEditingLocked(pdfAccess);
+  const currentFile = editingLocked ? null : viewedFile;
 
   const handleExtractCsv = useCallback(async () => {
     if (!currentFile) return;
@@ -501,7 +503,7 @@ const FormFill = (_props: BaseToolProps) => {
   }, [requiredFields, allValues]);
 
   if (!isActive) return null;
-  if (viewedFile && pdfAccess?.encrypted) {
+  if (viewedFile && pdfAccess && editingLocked) {
     return (
       <Stack gap="sm" p="sm">
         {createToolSteps().createFilesStep({ selectedFiles: [] })}
