@@ -89,6 +89,12 @@ async function openDirtyReport(page: Page, saveMode?: string) {
   await openCard(page, "quarterly-report.pdf");
 }
 
+async function viewerReady(page: Page) {
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage).toBeVisible({ timeout: 30_000 });
+  await firstPage.hover();
+}
+
 async function compressOpenFile(page: Page) {
   await page.route("**/api/v1/config/app-config", (route) =>
     route.fulfill({ json: { enableLogin: false, dependenciesReady: true } }),
@@ -131,9 +137,7 @@ test.describe("Saving files that live on disk", () => {
     await expect(save).toBeVisible({ timeout: 20_000 });
     await expect(save.locator(".workbench-bar-unsaved-dot")).toBeVisible();
 
-    const firstPage = page.locator('[data-page-index="0"]').first();
-    await expect(firstPage).toBeVisible({ timeout: 30_000 });
-    await firstPage.hover();
+    await viewerReady(page);
     await page.keyboard.press("Control+s");
     await expect.poll(() => written(page)).toContain(REPORT);
     await expect
@@ -156,6 +160,7 @@ test.describe("Saving files that live on disk", () => {
     page,
   }) => {
     await openDirtyReport(page, "copy");
+    await viewerReady(page);
     const copy = "C:/Docs/quarterly-report (edited).pdf";
 
     await page.keyboard.press("Control+s");
@@ -181,6 +186,7 @@ test.describe("Saving files that live on disk", () => {
     page,
   }) => {
     await openDirtyReport(page, "ask");
+    await viewerReady(page);
 
     await page.keyboard.press("Control+s");
     const dialog = page.getByRole("dialog", {
