@@ -69,13 +69,14 @@ export default function AutomationSelection({
     name: activityChainName,
     ranBy,
     ranByShort,
+    draftName,
   } = useActivityChainText(toolRegistry);
 
   const activityChainConfig = (chain: ActivityChain): AutomationConfig => {
     const now = new Date().toISOString();
     return {
       id: `activity-${chain.operations.join("-")}`,
-      name: activityChainName(chain),
+      name: draftName(chain),
       icon: "SettingsIcon",
       operations: chain.operations.map((operation) => ({
         operation,

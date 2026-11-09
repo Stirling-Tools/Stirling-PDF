@@ -23,6 +23,7 @@ const WORKFLOW_STALE_TIME = 2 * 60 * 1000;
 const WORKFLOW_FETCH_LIMIT = 20;
 export const MAX_WORKFLOW_SUGGESTIONS = 3;
 const MAX_NAMED_STEPS = 3;
+const MAX_DRAFT_NAMED_STEPS = 2;
 
 const SCOPES: Record<ToolWorkflowScope, ActivityScope> = {
   USER: "user",
@@ -102,13 +103,19 @@ export function useToolWorkflowSuggestions(
 export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
   const { t } = useTranslation();
 
-  const name = useCallback(
-    (chain: ActivityChain) => {
-      const names = chain.operations.map(
+  const stepNames = useCallback(
+    (chain: ActivityChain) =>
+      chain.operations.map(
         (operation) =>
           toolRegistry[operation as ToolId]?.name ??
           t(`tools.${operation}.name`, operation),
-      );
+      ),
+    [toolRegistry, t],
+  );
+
+  const name = useCallback(
+    (chain: ActivityChain) => {
+      const names = stepNames(chain);
       if (names.length <= MAX_NAMED_STEPS) return names.join(" → ");
       return t(
         "toolWorkflows.longName",
@@ -116,7 +123,7 @@ export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
         { first: names[0], last: names[names.length - 1], count: names.length },
       );
     },
-    [toolRegistry, t],
+    [stepNames, t],
   );
 
   const ranBy = useCallback(
@@ -173,5 +180,17 @@ export function useActivityChainText(toolRegistry: Partial<ToolRegistry>) {
     [t],
   );
 
-  return { name, ranBy, ranByShort };
+  const draftName = useCallback(
+    (chain: ActivityChain) => {
+      const names = stepNames(chain);
+      if (names.length <= MAX_DRAFT_NAMED_STEPS) return names.join(" → ");
+      return t("toolWorkflows.draftName", "{{first}} + {{count}} more steps", {
+        first: names[0],
+        count: names.length - 1,
+      });
+    },
+    [stepNames, t],
+  );
+
+  return { name, ranBy, ranByShort, draftName };
 }

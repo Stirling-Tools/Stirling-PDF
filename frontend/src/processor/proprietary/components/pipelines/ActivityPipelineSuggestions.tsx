@@ -28,7 +28,7 @@ export function ActivityPipelineSuggestions({
 }: ActivityPipelineSuggestionsProps) {
   const { t } = useTranslation();
   const { allTools } = useToolRegistry();
-  const { name, ranByShort } = useActivityChainText(allTools);
+  const { name, ranByShort, draftName } = useActivityChainText(allTools);
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
     [allTools],
@@ -64,7 +64,7 @@ export function ActivityPipelineSuggestions({
     );
     if (!tools.every((tool) => tool !== undefined)) return [];
     const draft: Policy = {
-      name: name(chain),
+      name: draftName(chain),
       enabled: true,
       inputs: [],
       steps: tools.map((tool) =>

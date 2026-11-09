@@ -13643,6 +13643,7 @@ noTools = "No tools available"
 close = "Close tooltip"
 
 [toolWorkflows]
+draftName = "{{first}} + {{count}} more steps"
 longName = "{{first}} → … → {{last}} ({{count}} steps)"
 
 [toolWorkflows.ranBy]

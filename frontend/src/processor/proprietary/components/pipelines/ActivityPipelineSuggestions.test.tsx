@@ -131,6 +131,20 @@ describe("ActivityPipelineSuggestions", () => {
     );
   });
 
+  it("names a draft from a longer chain after its first step and the rest's count", async () => {
+    vi.mocked(fetchToolWorkflows).mockResolvedValue([
+      { tools: ["compress", "flatten", "compress"], count: 4, scope: "USER" },
+    ]);
+    const onOpen = vi.fn();
+    renderSuggestions([], onOpen);
+
+    fireEvent.click(await screen.findByText("Compress → Flatten → Compress"));
+
+    expect(onOpen).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "toolWorkflows.draftName:2" }),
+    );
+  });
+
   it("excludes workflows needing frontend processing before applying the card limit", async () => {
     vi.mocked(fetchToolWorkflows).mockResolvedValue([
       {
