@@ -66,7 +66,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-const OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
+let OAuthConsent: typeof import("@editor/routes/OAuthConsent").default;
 
 const assign = vi.fn();
 
@@ -82,7 +82,9 @@ function renderPage(strict = false) {
 }
 
 describe("OAuthConsent (built-in MCP authorization server)", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules();
+    OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
     session = { access_token: "token-abc" };
     getMock.mockReset();
     postMock.mockReset();
@@ -116,6 +118,7 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     expect(screen.getByText(/Stay connected without asking/)).toBeTruthy();
     expect(getMock).toHaveBeenCalledWith(
       "/api/v1/mcp/oauth/authorizations/auth-123",
+      { suppressErrorToast: true },
     );
   });
 
@@ -144,6 +147,7 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     expect(postMock).toHaveBeenCalledWith(
       "/api/v1/mcp/oauth/authorizations/auth-123/consent",
       { action: "approve" },
+      { suppressErrorToast: true },
     );
   });
 
@@ -159,6 +163,22 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     );
     expect(getMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/wants to access/)).toBeNull();
+  });
+
+  it("loads the authorization once when the page remounts", async () => {
+    getMock.mockResolvedValue({
+      data: {
+        authorization_id: "auth-123",
+        scope: "mcp.tools.read",
+        client: { name: "ChatGPT" },
+      },
+    });
+
+    renderPage().unmount();
+    renderPage();
+
+    expect(await screen.findByText(/ChatGPT wants to access/)).toBeTruthy();
+    expect(getMock).toHaveBeenCalledTimes(1);
   });
 
   it("shows an error instead of a nameless consent screen", async () => {

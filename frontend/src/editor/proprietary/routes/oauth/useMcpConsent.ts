@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
 
@@ -31,6 +31,22 @@ const isDetails = (body: unknown): body is ConsentDetails =>
 
 export type ConsentDecision = "approve" | "deny";
 
+// The load can consume the authorization, so it runs once per id and is never discarded.
+const authorizationLoads = new Map<string, Promise<unknown>>();
+
+function loadAuthorization(authorizationId: string): Promise<unknown> {
+  let load = authorizationLoads.get(authorizationId);
+  if (!load) {
+    load = apiClient
+      .get<unknown>(`${BASE}/${encodeURIComponent(authorizationId)}`, {
+        suppressErrorToast: true,
+      })
+      .then(({ data }) => data);
+    authorizationLoads.set(authorizationId, load);
+  }
+  return load;
+}
+
 /**
  * Loads a pending authorization and submits the decision. An already-granted client gets its
  * code on load, so the browser is sent straight back without asking again.
@@ -41,8 +57,6 @@ export function useMcpConsent(authorizationId: string | null, ready: boolean) {
   const [error, setError] = useState<string | null>(null);
   const [deciding, setDeciding] = useState<ConsentDecision | null>(null);
   const [redirecting, setRedirecting] = useState(false);
-  // The load can consume the authorization, so it runs once per id and is never discarded.
-  const loadedFor = useRef<string | null>(null);
 
   const follow = useCallback((url: string) => {
     setRedirecting(true);
@@ -50,17 +64,15 @@ export function useMcpConsent(authorizationId: string | null, ready: boolean) {
   }, []);
 
   useEffect(() => {
-    if (!ready || !authorizationId || loadedFor.current === authorizationId) {
-      return;
-    }
-    loadedFor.current = authorizationId;
+    if (!ready || !authorizationId) return;
+    let active = true;
     const loadFailed = t(
       "oauthConsent.loadFailed",
       "This authorization request is invalid or has expired. Close this tab and try connecting again from the app.",
     );
-    apiClient
-      .get<unknown>(`${BASE}/${encodeURIComponent(authorizationId)}`)
-      .then(({ data }) => {
+    loadAuthorization(authorizationId)
+      .then((data) => {
+        if (!active) return;
         if (isRedirect(data)) {
           follow(data.redirect_url);
           return;
@@ -72,9 +84,13 @@ export function useMcpConsent(authorizationId: string | null, ready: boolean) {
         setError(loadFailed);
       })
       .catch((err: unknown) => {
+        if (!active) return;
         console.error("[OAuthConsent] Failed to load authorization:", err);
         setError(loadFailed);
       });
+    return () => {
+      active = false;
+    };
   }, [ready, authorizationId, follow, t]);
 
   const decide = useCallback(
@@ -86,6 +102,7 @@ export function useMcpConsent(authorizationId: string | null, ready: boolean) {
         const { data } = await apiClient.post<unknown>(
           `${BASE}/${encodeURIComponent(authorizationId)}/consent`,
           { action },
+          { suppressErrorToast: true },
         );
         if (isRedirect(data)) {
           follow(data.redirect_url);
