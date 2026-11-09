@@ -273,13 +273,26 @@ class RequestUriUtilsTest {
     }
 
     @Test
-    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
-        assertFalse(
+    void testIsPublicAuthEndpoint_shareLinkMetadataApi() {
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f/metadata",
                         ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
+        String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/accessed", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/metadata/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/accesses", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint(link + "/", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/files/1/shares/links/"
+                                + "00dcac3a-fc7a-4989-9c4f-97745484d62f/accesses",
+                        ""));
     }
 
     // --- share-link SPA bootstrap ---
@@ -328,14 +341,16 @@ class RequestUriUtilsTest {
     }
 
     @Test
-    void testIsShareLinkDownload_onlyTheTokenDownloadPath() {
+    void testIsShareLinkRead_onlyTheTokenDownloadAndMetadataPaths() {
         String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
-        assertTrue(RequestUriUtils.isShareLinkDownload(link, ""));
-        assertTrue(RequestUriUtils.isShareLinkDownload("/app" + link, "/app"));
-        assertFalse(RequestUriUtils.isShareLinkDownload(link + "/metadata", ""));
+        assertTrue(RequestUriUtils.isShareLinkRead(link, ""));
+        assertTrue(RequestUriUtils.isShareLinkRead("/app" + link, "/app"));
+        assertTrue(RequestUriUtils.isShareLinkRead(link + "/metadata", ""));
+        assertTrue(RequestUriUtils.isShareLinkRead("/app" + link + "/metadata", "/app"));
+        assertFalse(RequestUriUtils.isShareLinkRead(link + "/accesses", ""));
+        assertFalse(RequestUriUtils.isShareLinkRead("/api/v1/storage/share-links/accessed", ""));
         assertFalse(
-                RequestUriUtils.isShareLinkDownload(
-                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+                RequestUriUtils.isShareLinkRead("/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
     }
 
     @Test
