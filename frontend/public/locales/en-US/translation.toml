@@ -12038,7 +12038,7 @@ tags = "clean,secure,safe,remove-threats"
 [saveFile.menu]
 download = "Download a copy"
 more = "More save options"
-saveCopyElsewhere = "Save a copy somewhere else…"
+saveCopy = "Save a copy..."
 saveToComputer = "Save to this computer…"
 
 [saveFile.toolbar]

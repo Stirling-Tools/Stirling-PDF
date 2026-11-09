@@ -21,6 +21,8 @@ import {
 } from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
 
+const SAVE_MENU_BUTTON_WIDTH = "3rem";
+
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
  * ScrollArea viewport, whose overflow is `scroll`, not `auto`.
@@ -228,7 +230,13 @@ function ReviewStepContent<TParams = unknown>({
           <Button
             data-testid="download-result-button"
             leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
-            style={{ flex: 1, minWidth: 0 }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              // Mantine's left-section padding plus the menu button's width, so the
+              // label centres on the whole group rather than this half.
+              paddingInlineStart: `calc(var(--button-padding-x) / 1.5 + ${SAVE_MENU_BUTTON_WIDTH})`,
+            }}
             onClick={handleDownload}
           >
             {saveLabel}
@@ -237,8 +245,9 @@ function ReviewStepContent<TParams = unknown>({
             <Menu.Target>
               <Button
                 data-testid="download-result-menu"
-                px="sm"
+                px="none"
                 style={{
+                  width: SAVE_MENU_BUTTON_WIDTH,
                   borderInlineStart:
                     "1px solid color-mix(in srgb, currentColor 35%, transparent)",
                 }}

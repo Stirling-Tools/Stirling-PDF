@@ -109,7 +109,7 @@ test.describe("Saving files that live on disk", () => {
     await expect(page.getByRole("button", { name: "Save As" })).toHaveCount(0);
     await page.getByRole("button", { name: "More save options" }).click();
     await expect(
-      page.getByRole("menuitem", { name: /Save a copy somewhere else/ }),
+      page.getByRole("menuitem", { name: "Save a copy...", exact: true }),
     ).toBeVisible();
   });
 

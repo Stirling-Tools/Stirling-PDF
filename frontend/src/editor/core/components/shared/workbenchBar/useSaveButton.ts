@@ -58,10 +58,7 @@ export function useSaveButton({
           key: "local",
           label: target
             ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-            : t(
-                "saveFile.menu.saveCopyElsewhere",
-                "Save a copy somewhere else…",
-              ),
+            : t("saveFile.menu.saveCopy", "Save a copy..."),
           icon: "laptop",
           onClick: onSaveLocalCopy,
         }

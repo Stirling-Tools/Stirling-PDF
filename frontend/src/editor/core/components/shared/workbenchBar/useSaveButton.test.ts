@@ -78,7 +78,7 @@ it("moves desktop Save As into the menu and dots unsaved disk edits", () => {
   );
   expect(result.current.unsaved).toBe(true);
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Save a copy somewhere else…",
+    "Save a copy...",
   ]);
 });
 
