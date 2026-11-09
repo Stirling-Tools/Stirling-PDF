@@ -633,6 +633,18 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     actions.setSelectedTool(null);
   }, [setLeftPanelView, actions.setSelectedTool]);
 
+  useEffect(() => {
+    const toolId = navigationState.selectedTool;
+    if (!toolId || toolId === "read" || toolId === "multiTool") return;
+    if (toolAvailability[toolId]?.available === false && !toolRegistry[toolId])
+      clearToolFromAddress();
+  }, [
+    navigationState.selectedTool,
+    toolAvailability,
+    toolRegistry,
+    clearToolFromAddress,
+  ]);
+
   useNavigationUrlSync(
     navigationState.selectedTool,
     handleToolSelect,
