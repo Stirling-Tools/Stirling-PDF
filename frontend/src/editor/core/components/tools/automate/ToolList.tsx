@@ -6,6 +6,7 @@ import { Icon } from "@editor/ui/Icon";
 import { AutomationTool } from "@editor/types/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
+import { isToolReadyWithParameters } from "@editor/hooks/tools/automate/useAutomationForm";
 import ToolSelector from "@editor/components/tools/automate/ToolSelector";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 
@@ -34,14 +35,13 @@ export default function ToolList({
 
   const handleToolSelect = (index: number, newOperation: string) => {
     const defaultParams = getToolDefaultParameters(newOperation);
-    const toolEntry = toolRegistry[newOperation as ToolId];
-    // If tool has no settingsComponent, it's automatically configured
-    const isConfigured = !toolEntry?.automationSettings;
-
     onToolUpdate(index, {
       operation: newOperation,
       name: getToolName(newOperation),
-      configured: isConfigured,
+      configured: isToolReadyWithParameters(
+        toolRegistry[newOperation as ToolId],
+        defaultParams,
+      ),
       parameters: defaultParams,
     });
   };

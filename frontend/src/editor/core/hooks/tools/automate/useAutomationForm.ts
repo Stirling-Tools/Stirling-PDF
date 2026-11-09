@@ -9,6 +9,15 @@ import { AUTOMATION_CONSTANTS } from "@editor/constants/automation";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
 
+export function isToolReadyWithParameters(
+  toolEntry: ToolRegistry[ToolId] | undefined,
+  parameters: Record<string, unknown>,
+): boolean {
+  if (!toolEntry?.automationSettings) return true;
+  const validate = toolEntry.operationConfig?.validateParams;
+  return validate ? validate(parameters) : true;
+}
+
 interface UseAutomationFormProps {
   mode: AutomationMode;
   existingAutomation?: AutomationConfig;
@@ -63,23 +72,26 @@ export function useAutomationForm({
       const operations = existingAutomation.operations || [];
       const tools = operations.map((op, index) => {
         const operation = typeof op === "string" ? op : op.operation;
-        const toolEntry = toolRegistry[operation as ToolId];
-        // If tool has no settingsComponent, it's automatically configured
+        const parameters =
+          typeof op === "object"
+            ? {
+                ...getToolDefaultParameters(operation),
+                ...(op.parameters || {}),
+              }
+            : getToolDefaultParameters(operation);
         const isConfigured =
-          mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
+          mode === AutomationMode.EDIT ||
+          isToolReadyWithParameters(
+            toolRegistry[operation as ToolId],
+            parameters,
+          );
 
         return {
           id: `${operation}-${Date.now()}-${index}`,
           operation: operation,
           name: getToolName(operation),
           configured: isConfigured,
-          parameters:
-            typeof op === "object"
-              ? {
-                  ...getToolDefaultParameters(operation),
-                  ...(op.parameters || {}),
-                }
-              : getToolDefaultParameters(operation),
+          parameters,
         };
       });
 
@@ -101,16 +113,16 @@ export function useAutomationForm({
   }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
 
   const addTool = (operation: string) => {
-    const toolEntry = toolRegistry[operation as ToolId];
-    // If tool has no settingsComponent, it's automatically configured
-    const isConfigured = !toolEntry?.automationSettings;
-
+    const parameters = getToolDefaultParameters(operation);
     const newTool: AutomationTool = {
       id: `${operation}-${Date.now()}`,
       operation,
       name: getToolName(operation),
-      configured: isConfigured,
-      parameters: getToolDefaultParameters(operation),
+      configured: isToolReadyWithParameters(
+        toolRegistry[operation as ToolId],
+        parameters,
+      ),
+      parameters,
     };
 
     setSelectedTools([...selectedTools, newTool]);
