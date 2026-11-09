@@ -1,19 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import type { QuoteConfigInput } from "@processor/api/procurement";
-import { previewAnnualMinor } from "@processor/components/procurement/QuoteBuilder";
-import { priceQuote } from "@processor/mocks/handlers/procurementSaas";
+import { previewAnnualMinor } from "@processor/components/procurement/quotePricing";
+import {
+  priceQuote,
+  RATE_CARD,
+} from "@processor/mocks/handlers/procurementSaas";
 
 /**
- * The D71 run-based curve is written three times: the authoritative Java engine
- * (ProcurementPricingService), the client footer estimate (QuoteBuilder.previewAnnualMinor), and
- * the MSW mock (procurementSaas.priceQuote). The client + mock are deliberately non-authoritative,
- * but nothing stopped them silently drifting from the server.
+ * The pricing formula runs in three places: the authoritative Java engine
+ * (ProcurementPricingService), the client's live estimate (quotePricing.previewAnnualMinor) and the
+ * MSW mock (procurementSaas.priceQuote). The rates come from the server's rate card, but the
+ * formula itself is written in each, so nothing else stops them drifting apart.
  *
- * This pins both TypeScript copies to each other AND to the exact fixtures locked in the Java
- * ProcurementPricingServiceTest. If the rate card changes on the server, that Java test breaks
- * first; updating these fixtures to match is the reminder to keep the client/mock in step. If the
- * client and mock diverge from one another, this breaks on its own.
+ * This pins both TypeScript copies, run over the default rate card, to the exact fixtures locked in
+ * the Java ProcurementPricingServiceTest. A formula change on the server breaks that Java test
+ * first; updating these fixtures to match is the reminder to change the client and mock too.
  *
  * Keep these numbers identical to ProcurementPricingServiceTest.
  */
@@ -79,7 +81,7 @@ const FIXTURES: {
 describe("procurement pricing parity (client ↔ mock ↔ server fixtures)", () => {
   for (const f of FIXTURES) {
     it(`agrees on ${f.name}`, () => {
-      expect(previewAnnualMinor(f.cfg)).toBe(f.annualNetMinor);
+      expect(previewAnnualMinor(f.cfg, RATE_CARD)).toBe(f.annualNetMinor);
       expect(priceQuote(f.cfg).annualNetMinor).toBe(f.annualNetMinor);
     });
   }

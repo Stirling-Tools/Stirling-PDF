@@ -31,12 +31,14 @@ public class AddWatermarkRequest extends PDFFile {
     private MultipartFile watermarkImage;
 
     @Schema(
-            description = "The selected alphabet",
+            description = "Font script matching watermarkText; roman for Latin text",
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese", "thai"},
             defaultValue = "roman")
     private String alphabet = "roman";
 
-    @Schema(description = "The font size of the watermark text", defaultValue = "12")
+    @Schema(
+            description = "Text size in points; for an image watermark, the image height",
+            defaultValue = "12")
     @DecimalMin(value = "1.0", message = "Font size must be at least 1.0")
     private float fontSize = 12f;
 
@@ -46,6 +48,18 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The opacity of the watermark (0.0 - 1.0)", defaultValue = "0.5")
     private float opacity = 0.5f;
 
+    @Schema(
+            description = "Hex colour of the watermark text, e.g. #FF0000",
+            defaultValue = "#d3d3d3")
+    private String customColor = "#d3d3d3";
+
+    @Schema(
+            description =
+                    "Turn pages into images so the watermark is hard to remove; text"
+                            + " becomes unselectable",
+            defaultValue = "false")
+    private Boolean convertPDFToImage = false;
+
     @Schema(description = "The width spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Width spacer must be non-negative")
     private int widthSpacer = 50;
@@ -53,10 +67,4 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The height spacer between watermark elements", defaultValue = "50")
     @Min(value = 0, message = "Height spacer must be non-negative")
     private int heightSpacer = 50;
-
-    @Schema(description = "The color for watermark", defaultValue = "#d3d3d3")
-    private String customColor = "#d3d3d3";
-
-    @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
-    private Boolean convertPDFToImage = false;
 }
