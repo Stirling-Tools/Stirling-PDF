@@ -64,6 +64,7 @@ function initializePosthog(posthog: Posthog, key: string, host: string): void {
         "value",
         "data-testid",
         "data-slot-filename",
+        "data-attachment-name",
       ],
     },
   });
