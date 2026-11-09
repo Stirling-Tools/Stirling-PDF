@@ -341,9 +341,14 @@ export const FileItem = React.memo(function FileItem({
           <span
             className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
           >
-            <span className="file-sidebar-file-name-head">{nameHead}</span>
+            <span className="sr-only">{name}</span>
+            <span className="file-sidebar-file-name-head" aria-hidden="true">
+              {nameHead}
+            </span>
             {nameTail && (
-              <span className="file-sidebar-file-name-tail">{nameTail}</span>
+              <span className="file-sidebar-file-name-tail" aria-hidden="true">
+                {nameTail}
+              </span>
             )}
           </span>
           <span className="file-sidebar-file-meta-row">
