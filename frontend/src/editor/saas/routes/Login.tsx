@@ -312,6 +312,12 @@ export default function Login() {
         />
       </div>
 
+      {buyingTeam && (
+        <h1 className="auth-team-heading">
+          {t("login.buyTeamTitle", "Sign in to buy Stirling Team")}
+        </h1>
+      )}
+
       <ErrorMessage error={error} />
 
       {/* OAuth + magic link group — single flex column so gap is uniform */}

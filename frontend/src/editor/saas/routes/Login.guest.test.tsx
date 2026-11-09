@@ -110,6 +110,23 @@ describe("SaaS login with a guest session", () => {
     expect(screen.getByRole("button", { name: /skip/i })).toBeInTheDocument();
   });
 
+  it("tells a visitor heading to /team that this sign-in is for buying Team", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam");
+    expect(
+      screen.getByRole("heading", { name: "login.buyTeamTitle" }),
+    ).toBeInTheDocument();
+  });
+
+  it("gives a plain sign-in no Team heading", () => {
+    mount("/login");
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /login.backToStirling/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("leaves no remembered destination behind once it has sent them on", () => {
     auth.isAnonymous = false;
     mount("/login?next=%2Fenterprise");

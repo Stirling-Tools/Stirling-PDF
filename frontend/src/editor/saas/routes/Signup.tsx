@@ -219,6 +219,12 @@ export default function Signup() {
         />
       </div>
 
+      {buyingTeam && (
+        <h1 className="auth-team-heading">
+          {t("signup.buyTeamTitle", "Sign up to buy Stirling Team")}
+        </h1>
+      )}
+
       <ErrorMessage error={error} />
 
       {/* OAuth providers */}
