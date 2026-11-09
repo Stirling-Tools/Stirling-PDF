@@ -7,12 +7,9 @@ export interface ActivityChain {
   scope: ActivityScope;
 }
 
-export type ChainOrder = "mostRun" | "nearestFirst";
-
 export interface RankChainsOptions {
   minFileCount?: number;
   limit?: number;
-  order?: ChainOrder;
 }
 
 export interface FindRepeatedChainsOptions extends RankChainsOptions {
@@ -26,11 +23,6 @@ const DEFAULT_MIN_LENGTH = 2;
 const DEFAULT_MAX_LENGTH = 5;
 const DEFAULT_LIMIT = 3;
 const SUBSUMED_SHARE = 0.8;
-const SCOPE_RANK: Record<ActivityScope, number> = {
-  user: 0,
-  team: 1,
-  install: 2,
-};
 
 function automatableRuns(
   history: string[],
@@ -63,15 +55,14 @@ export function sameOperations(a: string[], b: string[]): boolean {
 
 /**
  * Removes infrequent chains and subsumes a shorter chain when a longer contiguous chain in the
- * same scope has at least 80% of its count. Applies the limit after sorting; nearestFirst orders
- * scopes before frequency and length. Counts are compared as supplied by the caller.
+ * same scope has at least 80% of its count. Sorts by count, then length, across scopes, and applies
+ * the limit after sorting. Counts are compared as supplied by the caller.
  */
 export function rankChains(
   chains: ActivityChain[],
   {
     minFileCount = DEFAULT_MIN_FILE_COUNT,
     limit = DEFAULT_LIMIT,
-    order = "mostRun",
   }: RankChainsOptions = {},
 ): ActivityChain[] {
   const frequent = chains.filter((chain) => chain.fileCount >= minFileCount);
@@ -90,11 +81,7 @@ export function rankChains(
   return maximal
     .sort(
       (a, b) =>
-        (order === "nearestFirst"
-          ? SCOPE_RANK[a.scope] - SCOPE_RANK[b.scope]
-          : 0) ||
-        b.fileCount - a.fileCount ||
-        b.operations.length - a.operations.length,
+        b.fileCount - a.fileCount || b.operations.length - a.operations.length,
     )
     .slice(0, limit);
 }

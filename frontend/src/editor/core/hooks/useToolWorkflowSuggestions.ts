@@ -15,7 +15,6 @@ import { ToolId } from "@editor/types/toolId";
 import {
   ActivityChain,
   ActivityScope,
-  ChainOrder,
   rankChains,
   sameOperations,
 } from "@editor/utils/activityChains";
@@ -72,7 +71,6 @@ export function useToolWorkflowSuggestions(
   toolRegistry: Partial<ToolRegistry>,
   existingOperationLists: string[][],
   limit = MAX_WORKFLOW_SUGGESTIONS,
-  order: ChainOrder = "nearestFirst",
 ): ActivityChain[] | null {
   const { user } = useAuth();
   const isAutomatable = useIsAutomatableTool(toolRegistry);
@@ -93,11 +91,11 @@ export function useToolWorkflowSuggestions(
         scope: SCOPES[workflow.scope],
       }));
     return excludeExisting(
-      rankChains(chains, { limit: Infinity, order }),
+      rankChains(chains, { limit: Infinity }),
       existingOperationLists,
       limit,
     );
-  }, [data, isAutomatable, existingOperationLists, limit, order]);
+  }, [data, isAutomatable, existingOperationLists, limit]);
 }
 
 /** Localized workflow names and scope-specific run counts; names over three steps are abbreviated. */

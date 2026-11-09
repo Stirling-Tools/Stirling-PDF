@@ -56,7 +56,6 @@ export function ActivityPipelineSuggestions({
     executableRegistry,
     existingOperationLists,
     MAX_PIPELINE_SUGGESTIONS,
-    "mostRun",
   );
 
   const suggestions = (chains ?? []).flatMap((chain) => {

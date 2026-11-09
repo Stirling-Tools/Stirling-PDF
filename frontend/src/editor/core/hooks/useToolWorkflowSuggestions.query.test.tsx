@@ -127,6 +127,24 @@ describe("workflow suggestions", () => {
     expect(fetchToolWorkflows).toHaveBeenCalledTimes(2);
   });
 
+  test("ranks by run count across scopes rather than nearest scope first", async () => {
+    vi.mocked(fetchToolWorkflows).mockResolvedValue([
+      { tools: ["adjustContrast", "flatten"], count: 12, scope: "USER" },
+      { tools: ["flatten", "adjustContrast"], count: 300, scope: "GLOBAL" },
+    ]);
+    const { result } = renderHook(
+      () => useToolWorkflowSuggestions(registry, []),
+      { wrapper },
+    );
+
+    await waitFor(() =>
+      expect(result.current?.map((chain) => chain.scope)).toEqual([
+        "install",
+        "user",
+      ]),
+    );
+  });
+
   test("returns an empty list when every workflow already exists", async () => {
     vi.mocked(fetchToolWorkflows).mockResolvedValue(workflows);
     const { result } = renderHook(

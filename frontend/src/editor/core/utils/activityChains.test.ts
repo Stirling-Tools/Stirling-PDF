@@ -155,24 +155,4 @@ describe("rankChains", () => {
       "user",
     ]);
   });
-
-  test("puts the viewer's own habits ahead of busier team and server ones", () => {
-    const chains = [
-      {
-        operations: ["sanitize", "watermark"],
-        fileCount: 300,
-        scope: "install" as const,
-      },
-      {
-        operations: ["rotate", "compress"],
-        fileCount: 149,
-        scope: "team" as const,
-      },
-      { operations: ["ocr", "flatten"], fileCount: 12, scope: "user" as const },
-    ];
-
-    expect(
-      rankChains(chains, { order: "nearestFirst" }).map((chain) => chain.scope),
-    ).toEqual(["user", "team", "install"]);
-  });
 });
