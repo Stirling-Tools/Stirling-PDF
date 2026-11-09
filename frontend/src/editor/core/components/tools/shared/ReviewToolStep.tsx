@@ -17,6 +17,7 @@ import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import { sharedSaveTarget } from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
+import "@editor/components/shared/SaveMenu.css";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -248,7 +249,7 @@ function ReviewStepContent<TParams = unknown>({
               {saveLabel}
             </Button>
           </Tooltip>
-          <Menu shadow="md" width={270} position="bottom-end">
+          <Menu shadow="md" position="bottom-end">
             <Menu.Target>
               <Button
                 data-testid="download-result-menu"
@@ -262,16 +263,16 @@ function ReviewStepContent<TParams = unknown>({
                 <Icon name="chevron-down" />
               </Button>
             </Menu.Target>
-            <Menu.Dropdown>
+            <Menu.Dropdown className="save-menu">
               {saveButton.menu.map((item) => (
                 <Menu.Item
                   key={item.key}
                   leftSection={<Icon name={item.icon} size="1rem" />}
                   onClick={item.onClick}
                 >
-                  {item.label}
+                  <span className="save-menu__text">{item.label}</span>
                   {item.description && (
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="dimmed" className="save-menu__text">
                       {item.description}
                     </Text>
                   )}

@@ -19,6 +19,7 @@ import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
+import { splitFileNameTail } from "@editor/utils/fileNameTail";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -259,6 +260,7 @@ export const FileItem = React.memo(function FileItem({
   const terminology = useFileActionTerminology();
   const downloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
+  const { head: nameHead, tail: nameTail } = splitFileNameTail(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
   const metaLine = [typeLabel, size ? formatFileSize(size) : null, dateLabel]
@@ -375,7 +377,10 @@ export const FileItem = React.memo(function FileItem({
           <span
             className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
           >
-            {name}
+            <span className="file-sidebar-file-name-head">{nameHead}</span>
+            {nameTail && (
+              <span className="file-sidebar-file-name-tail">{nameTail}</span>
+            )}
           </span>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
