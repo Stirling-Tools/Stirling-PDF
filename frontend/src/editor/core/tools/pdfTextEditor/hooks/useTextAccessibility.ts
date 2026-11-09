@@ -28,6 +28,8 @@ import type {
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { matchingRuns } from "@editor/tools/pdfTextEditor/util/pageFurniture";
 import {
   canBeArtifact,
   innerTags,
@@ -53,6 +55,13 @@ export interface InnerTagsControl {
   onSetLanguage: (index: number, lang: string | null) => void;
   /** Tags the characters selected inside the run as a Span in `lang`; null when they cannot take one. */
   onLanguageSelection: ((lang: string) => void) | null;
+}
+
+/** Matching text on other pages that the selected artifact's kind can be given, and a way to give it. */
+export interface OtherPagesControl {
+  /** How many other pages show such text. */
+  pages: number;
+  onApply: () => void;
 }
 
 /** The language the selected text's blocks are read in, and a way to change it. */
@@ -119,6 +128,26 @@ export function useTextAccessibility(
       newTagTypes: offersNew ? tagTypesFor(doc, only, range) : null,
     };
   }, [store, state.pages, selection]);
+
+  const otherPages = useMemo((): OtherPagesControl | null => {
+    const doc = store.document;
+    if (!doc || !run || tag?.kind !== "artifact") return null;
+    const pending = pendingMatches(doc, state.pages, run, tag.furniture);
+    if (pending.length === 0) return null;
+    return {
+      pages: new Set(pending.map((target) => target.run.pageIndex)).size,
+      onApply: () => {
+        // A page not yet scrolled to would otherwise keep its furniture untagged.
+        ensureAllPagesRead(store);
+        const command = setTextTagCommand(
+          doc,
+          pendingMatches(doc, store.getState().pages, run, tag.furniture),
+          { artifact: tag.furniture },
+        );
+        if (command) store.dispatch(command);
+      },
+    };
+  }, [store, state.pages, run, tag]);
 
   const activeInner = useMemo(
     () => inner.findIndex((t) => sameRange(t, selection.textRange)),
@@ -267,7 +296,7 @@ export function useTextAccessibility(
     // state.pages: a language change republishes the pages, not the targets.
   }, [store, languageTargets, state.pages]);
 
-  return { tag, setTag, inner: innerControl, language };
+  return { tag, setTag, inner: innerControl, language, otherPages };
 }
 
 /**
@@ -378,6 +407,24 @@ function typeCommand(
     ]);
   }
   return null;
+}
+
+/**
+ * The text on pages other than `run`'s that matches it as page furniture
+ * does, and that marking as `furniture` would change.
+ */
+function pendingMatches(
+  doc: EditorDocument,
+  pages: EditorViewState["pages"],
+  run: TextRunSnapshot,
+  furniture: Furniture | null,
+): { run: TextRunSnapshot; tag: TextTag }[] {
+  return matchingRuns(pages, run.pageIndex, run).flatMap(({ run: match }) => {
+    const tag = textTag(doc, match);
+    return artifactCommand(doc, match, tag, furniture)
+      ? [{ run: match, tag }]
+      : [];
+  });
 }
 
 function sameRange(a: TextRange, b: TextRange | null): boolean {

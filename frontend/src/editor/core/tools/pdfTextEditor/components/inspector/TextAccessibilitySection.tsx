@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Box, Group, Stack } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { Select } from "@editor/ui/Select";
 import {
@@ -29,6 +30,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import type {
   InnerTagsControl,
+  OtherPagesControl,
   TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
@@ -47,11 +49,13 @@ export function TextAccessibilitySection({
   onSetTag,
   inner,
   language,
+  otherPages,
 }: {
   tag: TextTag | null;
   onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
+  otherPages: OtherPagesControl | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -61,6 +65,7 @@ export function TextAccessibilitySection({
       </SectionLabel>
       <Stack gap="xs">
         {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {otherPages && <OtherPagesButton control={otherPages} />}
         {language && <TextLanguageField control={language} />}
         {tag && (
           <>
@@ -170,6 +175,29 @@ function BlockTagPicker({
 
 function artifactValue(furniture: Furniture | null): string {
   return `${ARTIFACT_VALUE}${furniture ?? ""}`;
+}
+
+/** Gives matching text on other pages the selected artifact's kind. */
+function OtherPagesButton({ control }: { control: OtherPagesControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="copy" size={20} />}
+      onClick={control.onApply}
+      data-testid="pdf-editor-text-tag-other-pages"
+    >
+      {t(
+        "pdfTextEditor.inspector.accessibility.applyToOtherPages",
+        "Apply to {{count}} other pages",
+        { count: control.pages },
+      )}
+    </Button>
+  );
 }
 
 /** The language the selected text's blocks are read in; "Mixed" when they differ. */

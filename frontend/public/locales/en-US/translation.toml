@@ -7439,6 +7439,8 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Add tag"
+applyToOtherPages_one = "Apply to {{count}} other page"
+applyToOtherPages_other = "Apply to {{count}} other pages"
 artifactGroup = "Skipped by screen readers"
 artifactText = "Decorative"
 cannotChange = "This image's accessibility can't be changed."

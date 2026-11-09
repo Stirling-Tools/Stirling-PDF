@@ -30,6 +30,7 @@ function tagShown(tag: TextTag): HTMLElement {
         onSetTag={vi.fn()}
         inner={NO_INNER}
         language={null}
+        otherPages={null}
       />
     </MantineProvider>,
   );
@@ -98,6 +99,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onRetag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -121,6 +123,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -138,6 +141,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -155,6 +159,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -174,6 +179,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -197,6 +203,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={vi.fn()}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -204,6 +211,23 @@ describe("TextAccessibilitySection", () => {
     expect(
       screen.getByRole("option", { name: `${KEY}.artifactText` }),
     ).toHaveAttribute("data-combobox-disabled", "true");
+  });
+
+  it("offers giving matching text on other pages the artifact's kind", () => {
+    const onApply = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Footer", taggable: true }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={{ pages: 3, onApply }}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByTestId("pdf-editor-text-tag-other-pages"));
+    expect(onApply).toHaveBeenCalled();
   });
 
   it("offers a picker for runs tagged differently, set on all of them", () => {
@@ -215,6 +239,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -238,6 +263,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={vi.fn()}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -339,6 +365,7 @@ describe("TextAccessibilitySection", () => {
           onSetTag={vi.fn()}
           inner={innerControl()}
           language={{ language: undefined, onSet: vi.fn() }}
+          otherPages={null}
         />
       </MantineProvider>,
     );
@@ -440,6 +467,7 @@ function renderSection(
         onSetTag={vi.fn()}
         inner={inner}
         language={language}
+        otherPages={null}
       />
     </MantineProvider>,
   );
