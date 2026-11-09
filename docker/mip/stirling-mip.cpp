@@ -1,4 +1,6 @@
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -133,9 +135,35 @@ class StdioAuthDelegate final : public mip::AuthDelegate {
   std::mutex requestMutex;
 };
 
-class AcceptingConsentDelegate final : public mip::ConsentDelegate {
+bool IsHostOrSubdomain(const std::string& host, const std::string& domain) {
+  return host == domain ||
+         (host.size() > domain.size() && host[host.size() - domain.size() - 1] == '.' &&
+          host.compare(host.size() - domain.size(), domain.size(), domain) == 0);
+}
+
+bool IsMicrosoftProtectionService(const std::string& url) {
+  const std::string scheme = "https://";
+  if (url.compare(0, scheme.size(), scheme) != 0) {
+    return false;
+  }
+  std::string host = url.substr(scheme.size());
+  host = host.substr(0, host.find_first_of("/:?#"));
+  if (host.find('@') != std::string::npos) {
+    return false;
+  }
+  std::transform(host.begin(), host.end(), host.begin(),
+                 [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return IsHostOrSubdomain(host, "aadrm.com") || IsHostOrSubdomain(host, "o365syncservice.com");
+}
+
+// The SDK asks before sending the signed-in user's credentials to a service. Only the Azure Rights
+// Management and policy sync services the connected account consented to may receive them, the
+// same services MipHelper.scopeFor will mint tokens for.
+class ProtectionServiceConsentDelegate final : public mip::ConsentDelegate {
  public:
-  mip::Consent GetUserConsent(const std::string&) override { return mip::Consent::AcceptAlways; }
+  mip::Consent GetUserConsent(const std::string& url) override {
+    return IsMicrosoftProtectionService(url) ? mip::Consent::AcceptAlways : mip::Consent::Reject;
+  }
 };
 
 class ProfileObserver final : public mip::FileProfile::Observer {
@@ -204,7 +232,7 @@ Session openSession(const Options& options) {
   auto profileObserver = std::make_shared<ProfileObserver>();
   mip::FileProfile::Settings profileSettings(
       session.context, mip::CacheStorageType::InMemory,
-      std::make_shared<AcceptingConsentDelegate>(), profileObserver);
+      std::make_shared<ProtectionServiceConsentDelegate>(), profileObserver);
   auto profilePromise = std::make_shared<std::promise<std::shared_ptr<mip::FileProfile>>>();
   auto profileFuture = profilePromise->get_future();
   mip::FileProfile::LoadAsync(profileSettings, profilePromise);

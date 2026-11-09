@@ -133,4 +133,46 @@ class MipHelperTest {
 
         assertThat(MipHelper.scopeFor(request)).isEqualTo(expected);
     }
+
+    @ParameterizedTest
+    @CsvSource({
+        "https://graph.microsoft.com, ''",
+        "https://contoso.sharepoint.com, ''",
+        "http://aadrm.com, ''",
+        "https://aadrm.com.example.test, ''",
+        "https://aadrm.com:8443, ''",
+        "'', https://graph.microsoft.com/Files.ReadWrite.All",
+        "'', https://user@aadrm.com/.default"
+    })
+    void refusesTokensForOtherServices(String resource, String scope) {
+        JsonNode request =
+                new ObjectMapper().createObjectNode().put("resource", resource).put("scope", scope);
+
+        assertThatThrownBy(() -> MipHelper.scopeFor(request))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void tellsTheHelperWhenATokenForAnotherServiceIsRefused() throws IOException {
+        MipHelper helper =
+                helperRunning(
+                        """
+                        echo '{"type":"token_request","resource":"https://graph.microsoft.com","scope":""}'
+                        read reply
+                        printf '{"type":"result","reply":"%s"}\\n' "$reply"
+                        """);
+        List<String> scopes = new ArrayList<>();
+
+        JsonNode result =
+                helper.run(
+                        "inspect",
+                        Map.of(),
+                        scope -> {
+                            scopes.add(scope);
+                            return "token-123";
+                        });
+
+        assertThat(scopes).isEmpty();
+        assertThat(result.get("reply").asString()).startsWith("ERR ");
+    }
 }

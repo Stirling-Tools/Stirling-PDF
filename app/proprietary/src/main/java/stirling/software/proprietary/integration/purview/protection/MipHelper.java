@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +13,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +42,10 @@ public class MipHelper {
     static final Duration TIMEOUT = Duration.ofMinutes(2);
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int MAX_STDERR_CHARS = 4000;
+
+    /** Must match the hosts in MicrosoftOAuthClient.RIGHTS_MANAGEMENT_CONSENT_SCOPES. */
+    private static final Set<String> PROTECTION_SERVICE_HOSTS =
+            Set.of("aadrm.com", "syncservice.o365syncservice.com");
 
     private final ApplicationProperties applicationProperties;
 
@@ -123,19 +130,45 @@ public class MipHelper {
         }
     }
 
+    /**
+     * Scope to request for a helper token request. Only the services the connected account consents
+     * to for rights management are accepted; anything else throws, and the helper is told the token
+     * was refused.
+     */
     static String scopeFor(JsonNode request) {
         String resource = text(request, "resource");
         while (resource.endsWith("/")) {
             resource = resource.substring(0, resource.length() - 1);
         }
+        String scope;
         if (!resource.isBlank()) {
-            return resource + "/.default";
+            scope = resource + "/.default";
+        } else {
+            scope = text(request, "scope");
+            if (!scope.contains("://")) {
+                throw new IllegalArgumentException(
+                        "The protection SDK asked for a token with no resource");
+            }
         }
-        String scope = text(request, "scope");
-        if (scope.contains("://")) {
-            return scope;
+        if (!isProtectionService(scope)) {
+            throw new IllegalArgumentException(
+                    "The protection SDK asked for a token for an unsupported service");
         }
-        throw new IllegalArgumentException("The protection SDK asked for a token with no resource");
+        return scope;
+    }
+
+    private static boolean isProtectionService(String scope) {
+        URI uri;
+        try {
+            uri = URI.create(scope);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+        return "https".equals(uri.getScheme())
+                && uri.getRawUserInfo() == null
+                && uri.getPort() == -1
+                && PROTECTION_SERVICE_HOSTS.contains(host);
     }
 
     private static void answer(BufferedWriter in, JsonNode request, TokenSource tokens)
