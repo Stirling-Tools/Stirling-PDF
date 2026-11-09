@@ -12048,7 +12048,7 @@ noFreeCopyName = "Couldn't find a free name for the copy next to {{name}}."
 
 [saveFile.ask]
 copy = "Save a copy next to it"
-copyHint = "Saves {{name}} in {{home}}. Later saves update that copy."
+copyHint = "Saves it as {{name}}. Later saves update that copy."
 download = "Download instead"
 otherHint = "Leaves {{home}} untouched."
 remember = "Remember my choice"

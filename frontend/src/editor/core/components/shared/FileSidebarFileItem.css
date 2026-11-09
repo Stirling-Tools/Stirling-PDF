@@ -165,13 +165,24 @@
 }
 
 .file-sidebar-file-name {
-  display: block;
+  display: flex;
+  min-width: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
+}
+
+.file-sidebar-file-name-head {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.file-sidebar-file-name-tail {
+  flex-shrink: 0;
+  white-space: pre;
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {

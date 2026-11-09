@@ -32,7 +32,7 @@ function SaveChoiceDialog({ request }: { request: OpenSaveChoice }) {
     <Modal
       open
       onClose={dismiss}
-      width="sm"
+      width="md"
       title={t("saveFile.ask.title", 'Save "{{name}}"', {
         name: request.fileName,
       })}
@@ -66,8 +66,8 @@ function SaveChoiceDialog({ request }: { request: OpenSaveChoice }) {
             label: t("saveFile.ask.copy", "Save a copy next to it"),
             description: t(
               "saveFile.ask.copyHint",
-              "Saves {{name}} in {{home}}. Later saves update that copy.",
-              { name: request.copyName, home },
+              "Saves it as {{name}}. Later saves update that copy.",
+              { name: request.copyName },
             ),
           },
           {
