@@ -14,6 +14,7 @@ import {
   drawnBlockStyle,
   previewScanStyle,
   rerankScanStyles,
+  scanBlockOffInk,
   scanBlockUndrawable,
   scanEditOf,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -273,6 +274,8 @@ export function useScanFontMatch(
     !scanFaces().some((f) => faceCovers(f, selectedRun.run.text));
   const scanEdit = selectedRun?.run.scanEdit;
   const redrawn = !!scanEdit?.created.length || !!scanEdit?.override.style;
+  const offInk =
+    !!selectedRun && scanBlockOffInk(selectedRun.doc, selectedRun.run);
   const current = ranked && ranked.runId === target.runId ? ranked : null;
   return {
     status: !current
@@ -291,7 +294,7 @@ export function useScanFontMatch(
     })),
     choose,
     open: !!picking,
-    canShow: redrawn || unfitted,
+    canShow: (redrawn || unfitted) && !offInk,
     undrawable,
     typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
     show: () => {

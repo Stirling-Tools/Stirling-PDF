@@ -21,6 +21,7 @@ vi.mock("@editor/tools/pdfTextEditor/commands/editTextHelpers", () => ({
 }));
 vi.mock("@editor/tools/pdfTextEditor/pdfium/BackgroundSampler", () => ({
   INK_SCALE: 1,
+  measureScanInk: () => null,
   sampleBackground: () => ({ fill: { r: 255, g: 255, b: 255, a: 255 } }),
 }));
 

@@ -9,6 +9,8 @@ import {
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
+import { alert } from "@editor/components/toast";
 import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
@@ -24,6 +26,7 @@ import { ZoomPill } from "@editor/tools/pdfTextEditor/components/ZoomPill";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { scanBlockOffInk } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { MoveShapeCommand } from "@editor/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -426,6 +429,17 @@ function pageViewHandlers(store: EditorStore) {
       const current = store.document?.page(pageIndex).findRun(runId);
       if (current && current.text === nextText) return;
       store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
+      const doc = store.document;
+      const run = doc?.page(pageIndex).findRun(runId);
+      if (doc && run && scanBlockOffInk(doc, run))
+        alert({
+          alertType: "warning",
+          title: i18n.t(
+            "pdfTextEditor.error.scanOffInk",
+            "Can't edit this text: its recognised words don't line up with the scan. Run OCR again.",
+          ),
+          expandable: false,
+        });
     },
     onMoveRun: (pageIndex: number, runId: string, dx: number, dy: number) => {
       store.dispatch(new MoveTextRunCommand({ pageIndex, runId, dx, dy }));

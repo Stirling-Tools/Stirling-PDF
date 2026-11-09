@@ -22,6 +22,7 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 import {
   scanBlockMisaligned,
+  scanBlockOffInk,
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
@@ -253,7 +254,7 @@ function NothingSelected(props: ScanHintProps) {
   );
 }
 
-type ScanNote = "misaligned" | "dropsTyping" | null;
+type ScanNote = "misaligned" | "offInk" | "dropsTyping" | null;
 
 function selectedScanNote(
   store: EditorStore,
@@ -271,6 +272,7 @@ function selectedScanNote(
     }),
   );
   if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
   if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
   return null;
 }
@@ -290,6 +292,11 @@ function useSelectedFontNote(
           return t(
             "pdfTextEditor.inspector.scannedTextMisaligned",
             "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted.",
+          );
+        if (scanNote === "offInk")
+          return t(
+            "pdfTextEditor.inspector.scannedTextOffInk",
+            "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again.",
           );
         return scanNote === "dropsTyping"
           ? t(

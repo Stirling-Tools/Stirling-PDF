@@ -54,6 +54,7 @@ export interface ScanOptions {
   rotate?: number;
   reversed?: boolean;
   skew?: number;
+  ocrShift?: number;
 }
 
 export const FONT_DIR = path.join(
@@ -281,7 +282,7 @@ export async function buildScan(
         page,
         text: box.text,
         x: box.left,
-        y: box.baseline,
+        y: box.baseline + (opts.ocrShift ?? 0),
         fontSize: box.size,
         fill: BLACK,
         originalFontPtr: 0,

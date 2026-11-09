@@ -7312,6 +7312,7 @@ title = "Drop a PDF to open"
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 insertImage = "Could not insert the selected image."
+scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7443,6 +7444,7 @@ scanHint_other = "{{count}} pages are scanned images with no text to edit. Run O
 scannedText = "Scanned text · changed words are covered and redrawn in a matching font."
 scannedTextMisaligned = "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted."
 scannedTextNoFont = "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works."
+scannedTextOffInk = "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again."
 tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"

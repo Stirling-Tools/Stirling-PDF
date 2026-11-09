@@ -152,6 +152,7 @@ export interface ScanEditState {
   frame?: ScanFrame;
   upright?: boolean;
   offScan?: boolean;
+  offInk?: boolean;
   edited?: boolean;
   typedFromScan?: boolean;
 }
@@ -474,6 +475,71 @@ function inkedLines(doc: EditorDocument, page: Page, state: ScanEditState) {
       (l): l is { li: number; ink: SpanInk } =>
         l.ink !== null && l.ink.original.length > 0,
     );
+}
+
+const OFF_INK_SHIFTS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].flatMap((k) => [
+  k,
+  -k,
+]);
+
+function lineInkAt(
+  doc: EditorDocument,
+  page: Page,
+  line: ScanLine,
+  dy: number,
+): boolean {
+  const x0 = line.words[0].x;
+  const x1 = line.words[line.words.length - 1].right;
+  const ink = measureScanInk(doc.module, page, {
+    x0,
+    x1,
+    bottom: line.baseline + dy - line.height * 0.1,
+    top: line.baseline + dy + line.height * 0.9,
+  });
+  return !!ink && ink.rect.width >= (x1 - x0) * 0.5;
+}
+
+function claimedByOtherLine(
+  page: Page,
+  state: ScanEditState,
+  line: ScanLine,
+  dy: number,
+): boolean {
+  const x0 = line.words[0].x;
+  const x1 = line.words[line.words.length - 1].right;
+  const baseline = line.baseline + dy;
+  const placed = [
+    ...state.lines.filter((l) => l !== line).flatMap((l) => l.words),
+    ...otherWords(page, state),
+  ];
+  return placed.some(
+    (w) =>
+      w.right > x0 && w.x < x1 && Math.abs(w.baseline - baseline) < line.height,
+  );
+}
+
+function inkBesideOcr(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): boolean {
+  const lines = state.lines.filter((l) => l.words.length > 0);
+  if (lines.length === 0 || inkedLines(doc, page, state).length > 0)
+    return false;
+  return OFF_INK_SHIFTS.some((k) =>
+    lines.every(
+      (l) =>
+        !claimedByOtherLine(page, state, l, k * l.height) &&
+        lineInkAt(doc, page, l, k * l.height),
+    ),
+  );
+}
+
+function offInk(doc: EditorDocument, page: Page, state: ScanEditState) {
+  state.offInk ??= onOriginalScan(doc, page, state, () =>
+    inkBesideOcr(doc, page, state),
+  );
+  return state.offInk;
 }
 
 const fitInput = (
@@ -841,7 +907,7 @@ function renderUprightScanEdit(
   text: string,
 ): boolean {
   const m = doc.module;
-  if (state.lines.some(implausibleLine)) {
+  if (state.lines.some(implausibleLine) || offInk(doc, page, state)) {
     const original = state.lines.map((l) => l.text).join(" ");
     recordUndrawableChars(
       [...text].filter((ch) => !original.includes(ch)).join(""),
@@ -1330,6 +1396,13 @@ export function scanBlockMisaligned(
   run: TextRun,
 ): boolean {
   return scanEditOf(doc, run)?.lines.some(implausibleLine) ?? false;
+}
+
+export function scanBlockOffInk(doc: EditorDocument, run: TextRun): boolean {
+  const state = scanEditOf(doc, run);
+  if (!state) return false;
+  const page = doc.page(run.pageIndex);
+  return upright(doc, page, state, () => offInk(doc, page, state));
 }
 
 export function scanBlockUndrawable(

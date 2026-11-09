@@ -31,6 +31,7 @@ import {
   drawnBlockStyle,
   isScanRun,
   scanBlockMisaligned,
+  scanBlockOffInk,
   prefitScanRun,
   renderScanEdit,
   scanDrawnSize,
@@ -1401,6 +1402,73 @@ describe("scanned text whose OCR words do not line up with the scan", () => {
     } finally {
       plausible.doc.dispose();
       squeezed.doc.dispose();
+    }
+  });
+});
+
+describe("scanned text whose OCR layer sits off the scanned words", () => {
+  const scan = (ocrShift: number) =>
+    buildScan(
+      SENTENCES.map((text) => ({ family: "Helvetica", text, size: 12 })),
+      { dpi: 150, blur: 0.5, noise: 4, ocrShift },
+    );
+
+  test("refuses the edit when no ink sits under the OCR words but sits beside them", async () => {
+    const { doc, page } = await scan(-14);
+    try {
+      const run = page.runs.find(isScanRun)!;
+      expect(scanBlockOffInk(doc, run)).toBe(true);
+      const state = scanEditOf(doc, run)!;
+      const before = state.created.length;
+      expect(renderScanEdit(doc, page, run, state, `${run.text} extra`)).toBe(
+        false,
+      );
+      expect(state.created.length).toBe(before);
+    } finally {
+      doc.dispose();
+    }
+  });
+
+  test("leaves a scan whose OCR words sit on the ink editable", async () => {
+    const { doc, page } = await scan(0);
+    try {
+      const run = page.runs.find(isScanRun)!;
+      expect(scanBlockOffInk(doc, run)).toBe(false);
+    } finally {
+      doc.dispose();
+    }
+  });
+
+  test("does not blame the OCR layer when the page has no ink at all", async () => {
+    const bytes = buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+        },
+        {
+          num: 4,
+          body: streamBody(
+            "",
+            "BT /F1 12 Tf 3 Tr 1 0 0 1 50 700 Tm (Invoice for Jane Example) Tj ET",
+          ),
+        },
+        {
+          num: 5,
+          body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        },
+      ],
+      1,
+    );
+    const doc = await EditorDocument.open(bytes);
+    try {
+      const page = doc.page(0);
+      PdfiumTextReader.populate(doc, page);
+      expect(scanBlockOffInk(doc, page.runs.find(isScanRun)!)).toBe(false);
+    } finally {
+      doc.dispose();
     }
   });
 });
