@@ -16,6 +16,12 @@ import {
   fallbackFontIdFor,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { writeUtf16 } from "@editor/services/pdfiumService";
+import {
+  sliceTags,
+  uniformTags,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
+import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import {
   SCRATCH,
@@ -614,6 +620,8 @@ export function applyPartialEditPlan(
   page: Page,
   run: TextRun,
   plan: PartialEditPlan,
+  /** The edited text's tags: what each insert is drawn with. */
+  tags: TextTags,
   /** Override the baseline used for emitted inserts. */
   baselineY?: number,
   // Override the left edge used for the FIRST unanchored insert (before any
@@ -734,6 +742,7 @@ export function applyPartialEditPlan(
       // Read the object's own font BEFORE we touch it, so a fallback re-emit
       // can reuse the same embedded font via the charcode path.
       const modFontPtr = objFontPtr(m, ptr);
+      const modTags = readTagMarks(m, ptr);
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
@@ -762,7 +771,7 @@ export function applyPartialEditPlan(
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          tagMarks: run.tagMarks,
+          tags: uniformTags(modTags),
           originalFontPtr: modFontPtr,
           originalFontSubset: run.fontSubset,
           charSpacingPt: run.charSpacingPt,
@@ -818,6 +827,11 @@ export function applyPartialEditPlan(
       }
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
+      const insertTags = sliceTags(
+        tags,
+        op.startBIdx,
+        op.startBIdx + insertText.length,
+      );
       const anchorIdx = op.anchorSubRunIdx;
       const beforeIdx = op.anchorBeforeSubRunIdx;
       if (anchorIdx !== undefined) absorbDeletesBefore(anchorIdx);
@@ -854,7 +868,7 @@ export function applyPartialEditPlan(
         fontSize: run.fontSize,
         fill: run.fill,
         ...inkFromRun(run),
-        tagMarks: run.tagMarks,
+        tags: insertTags,
         originalFontPtr: borrowedFontPtr,
         originalFontSubset: run.fontSubset,
         charSpacingPt: run.charSpacingPt,
@@ -897,7 +911,7 @@ export function applyPartialEditPlan(
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          tagMarks: run.tagMarks,
+          tags: insertTags,
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1118,9 +1132,12 @@ export function bestFontPtrForText(
   return 0;
 }
 
-// Locate the single contiguous edit between `prev` and `next` via a
-// prefix/suffix scan.
-function diffSpan(
+/**
+ * The one stretch that differs between `prev` and `next`, by their common
+ * prefix and suffix: `start` to `prevEnd` in `prev`, `start` to `nextEnd` in
+ * `next`.
+ */
+export function diffSpan(
   prev: string,
   next: string,
 ): { start: number; prevEnd: number; nextEnd: number } {
@@ -1245,6 +1262,8 @@ export function applyParagraphEditPlan(
   page: Page,
   run: TextRun,
   paraPlan: ParagraphEditPlan,
+  /** The edited text's tags. */
+  tags: TextTags,
 ): ParagraphEditApplyResult {
   const m = doc.module;
   // Per-VISUAL-line next text from the plan (slot-range derived).
@@ -1267,9 +1286,12 @@ export function applyParagraphEditPlan(
   let minX = Infinity;
   let maxRight = -Infinity;
 
+  let lineStart = 0;
   for (let i = 0; i < newSlots.length; i++) {
     const slot = newSlots[i];
     const lineText = lines[i] ?? "";
+    const lineTags = sliceTags(tags, lineStart, lineStart + lineText.length);
+    lineStart += lineText.length + 1;
     const planEntry = planBySlot.get(i);
     if (!planEntry) {
       // Unchanged line - keep slot data, just update bounds tracking.
@@ -1319,7 +1341,7 @@ export function applyParagraphEditPlan(
           fontSize: slot.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          tagMarks: run.tagMarks,
+          tags: lineTags,
           originalFontPtr: reuseFontPtr,
           originalFontSubset: slot.fontSubset,
           charSpacingPt: run.charSpacingPt,
@@ -1360,6 +1382,7 @@ export function applyParagraphEditPlan(
       page,
       slotView,
       planEntry.plan,
+      lineTags,
       slot.baselineY,
       slot.mergedFromBounds[0]?.x ?? slot.matrixE,
     );
