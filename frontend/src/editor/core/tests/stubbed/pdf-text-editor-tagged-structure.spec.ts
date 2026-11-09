@@ -224,7 +224,7 @@ test.describe("PDF text editor - tagged documents", () => {
       "pdf-editor-image-",
       "",
     );
-    const badge = page.getByTestId(`pdf-editor-image-attention-${imageId}`);
+    const badge = page.getByTestId(`pdf-editor-attention-image-${imageId}`);
     const summary = page.getByTestId(
       "pdf-editor-document-accessibility-summary",
     );
@@ -276,7 +276,7 @@ test.describe("PDF text editor - tagged documents", () => {
       .setInputFiles(PNG);
     await expect(images).toHaveCount(2);
     const untagged = page.locator(
-      '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
+      '[data-testid^="pdf-editor-attention-image-"][data-attention="untagged"]',
     );
     await expect(untagged).toHaveCount(1);
 

@@ -2,6 +2,7 @@ import { Stack, PasswordInput, Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddPasswordParameters } from "@editor/hooks/tools/addPassword/useAddPasswordParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface AddPasswordSettingsProps {
   parameters: AddPasswordParameters;
@@ -25,6 +26,7 @@ const AddPasswordSettings = ({
     <Stack gap="md">
       <Stack gap="sm">
         <PasswordInput
+          className={privateContentClassName}
           size="xs"
           label={
             showOwnerPassword
@@ -42,6 +44,7 @@ const AddPasswordSettings = ({
         />
         {showOwnerPassword && (
           <PasswordInput
+            className={privateContentClassName}
             size="xs"
             label={t(
               "encryptedPdfUnlock.newOwnerPassword",

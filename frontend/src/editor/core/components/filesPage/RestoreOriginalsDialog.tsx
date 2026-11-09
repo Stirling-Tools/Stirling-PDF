@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface RestoreOriginalsDialogProps {
   opened: boolean;
@@ -36,7 +37,10 @@ export function RestoreOriginalsDialog({
       size="md"
     >
       <Stack gap="md">
-        <Text size="sm">
+        <Text
+          size="sm"
+          className={fileName ? privateContentClassName : undefined}
+        >
           {fileName
             ? t("filesPage.processing.revertConfirmFile", {
                 name: fileName,
