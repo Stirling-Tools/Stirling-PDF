@@ -34,6 +34,7 @@ vi.mock("@editor/hooks/useConnectedAccounts", () => ({
     available: () => true,
     connect: vi.fn(),
     accounts: [{ id: 9, provider: "microsoft", status: "CONNECTED" }],
+    accountFor: () => mocks.account,
   }),
   ensureConnectedAccount: async () => ({ account: mocks.account }),
 }));
@@ -208,4 +209,19 @@ it("is not a save target when the admin turns off editor saves", () => {
   const { result } = renderHook(useOneDriveSave);
   expect(result.current.target).toBeNull();
   expect(result.current.available).toBe(false);
+});
+
+it.each([
+  ["a work or school account", { id: 9, personal: false }, true],
+  ["a personal account", { id: 9, personal: true }, false],
+  ["no connected account", undefined, false],
+])("offers a folder save only with %s", (_name, account, offered) => {
+  mocks.account = account;
+  const { result } = renderHook(useOneDriveSave);
+  const keys = result.current.target!.menuItems!(
+    stub,
+    async () => undefined,
+  ).map((item) => item.key);
+  expect(result.current.canSaveToFolder).toBe(offered);
+  expect(keys).toEqual(offered ? ["folder"] : []);
 });

@@ -42,6 +42,7 @@ export interface OneDriveSave {
   target: SaveTarget | null;
   save: (stub: StirlingFileStub, file?: File) => Promise<boolean>;
   saveCopy: (stub: StirlingFileStub, file?: File) => Promise<boolean>;
+  canSaveToFolder: boolean;
   saveToFolder: (stub: StirlingFileStub, file?: File) => Promise<void>;
   openInOneDrive: (stub: StirlingFileStub) => void;
 }
@@ -60,6 +61,9 @@ export function useOneDriveSave(): OneDriveSave {
     picker.isEnabled &&
     connected.available("microsoft") &&
     config?.microsoftAllowEditorSaves !== false;
+  const folderAccount = connected.accountFor("microsoft");
+  const canSaveToFolder =
+    available && Boolean(folderAccount) && !folderAccount?.personal;
 
   const reconnectAction = useCallback(
     () => ({
@@ -250,7 +254,7 @@ export function useOneDriveSave(): OneDriveSave {
         saveFailed(
           t(
             "oneDriveSave.personalUnsupported",
-            "Saving to a chosen folder needs a work or school Microsoft account.",
+            "Uploading to a chosen folder needs a work or school Microsoft account.",
           ),
         );
         return;
@@ -264,7 +268,7 @@ export function useOneDriveSave(): OneDriveSave {
               t,
               t(
                 "oneDriveSave.chooseFolder",
-                "Choose a OneDrive folder to save to",
+                "Choose a OneDrive folder to upload to",
               ),
             ),
           },
@@ -337,21 +341,27 @@ export function useOneDriveSave(): OneDriveSave {
         (await (how === "copy" ? saveCopy(stub, file) : save(stub, file)))
           ? "saved"
           : "failed",
-      menuItems: (stub, file) => [
-        {
-          key: "folder",
-          label: t("oneDriveSave.saveToFolder", "Save to a OneDrive folder…"),
-          description: t(
-            "oneDriveSave.menu.folderHint",
-            "Work or school accounts",
-          ),
-          icon: "folder-up",
-          onClick: () => void file().then((f) => saveToFolder(stub, f)),
-        },
-      ],
+      menuItems: (stub, file) =>
+        canSaveToFolder
+          ? [
+              {
+                key: "folder",
+                label: t(
+                  "oneDriveSave.saveToFolder",
+                  "Upload copy to OneDrive…",
+                ),
+                description: t(
+                  "oneDriveSave.menu.folderHint",
+                  "Choose a folder",
+                ),
+                icon: "folder-up",
+                onClick: () => void file().then((f) => saveToFolder(stub, f)),
+              },
+            ]
+          : [],
       saving,
     };
-  }, [available, save, saveCopy, saveToFolder, saving, t]);
+  }, [available, canSaveToFolder, save, saveCopy, saveToFolder, saving, t]);
 
   return useMemo(
     () => ({
@@ -360,9 +370,19 @@ export function useOneDriveSave(): OneDriveSave {
       target,
       save,
       saveCopy,
+      canSaveToFolder,
       saveToFolder,
       openInOneDrive,
     }),
-    [available, saving, target, save, saveCopy, saveToFolder, openInOneDrive],
+    [
+      available,
+      saving,
+      target,
+      save,
+      saveCopy,
+      canSaveToFolder,
+      saveToFolder,
+      openInOneDrive,
+    ],
   );
 }

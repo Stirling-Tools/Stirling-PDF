@@ -1,6 +1,7 @@
 package stirling.software.proprietary.connectedaccount;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -9,9 +10,12 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.microsoft.GraphEndpoints;
+import stirling.software.proprietary.security.model.User;
 
 class ConnectedAccountCallbackTest {
 
@@ -62,5 +66,28 @@ class ConnectedAccountCallbackTest {
 
         assertThat(page).doesNotContain("secret-detail");
         assertThat(page).contains("The account could not be connected.");
+    }
+
+    @Test
+    void redirectUrisUseTheConfiguredFrontendUrl() {
+        assertThat(controller().redirectUris(new User()))
+                .containsEntry(
+                        "microsoft",
+                        "https://stirling.example/api/v1/connected-accounts/callback/microsoft")
+                .containsEntry(
+                        "google",
+                        "https://stirling.example/api/v1/connected-accounts/callback/google");
+    }
+
+    @Test
+    void explainsWhichProviderIsNotSetUp() {
+        ResponseStatusException failure =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> controller().connect("google", new User()));
+
+        assertThat(failure.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(failure.getReason())
+                .isEqualTo("Google account connections are not set up on this server.");
     }
 }

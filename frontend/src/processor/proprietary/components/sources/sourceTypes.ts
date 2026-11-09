@@ -107,6 +107,7 @@ export interface SourceFieldDef {
    */
   connectionTypeId?: string;
   provider?: CloudAccountProvider;
+  inputOnly?: boolean;
 }
 
 export type CloudAccountProvider = CloudProvider;
@@ -145,6 +146,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
     },
     {
       key: "mode",
+      inputOnly: true,
       labelKey: "portal.sources.networkFields.mode.label",
       control: "select",
       defaultValue: "consume",
@@ -167,6 +169,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
     },
     {
       key: "recursive",
+      inputOnly: true,
       labelKey: "portal.sources.networkFields.recursive.label",
       control: "select",
       defaultValue: "false",
@@ -275,6 +278,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "mode",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
@@ -298,6 +302,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "recursive",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.recursive.label",
         control: "select",
         defaultValue: "false",
@@ -318,6 +323,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "identity",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.identity.label",
         control: "select",
         defaultValue: "stat",
@@ -363,6 +369,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "mode",
+        inputOnly: true,
         labelKey: "portal.sources.types.s3.fields.mode.label",
         control: "select",
         defaultValue: "consume",

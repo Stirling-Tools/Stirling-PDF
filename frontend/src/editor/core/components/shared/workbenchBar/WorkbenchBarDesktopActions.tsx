@@ -106,6 +106,7 @@ export default function WorkbenchBarDesktopActions({
               arrow
               // Over the open menu it would cover the first items.
               disabled={saveMenuOpen}
+              openOnFocus={false}
               portalTarget={document.body}
             >
               <div className="workbench-bar-tooltip-wrapper workbench-bar-save-group-caret">

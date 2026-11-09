@@ -310,10 +310,9 @@ export const FileItem = React.memo(function FileItem({
     "oneDriveSave.updateOriginal",
     "Update original in OneDrive",
   );
-  const saveToOneDriveFolderLabel = t(
-    "oneDriveSave.saveToFolder",
-    "Save to a OneDrive folder…",
-  );
+  const saveToOneDriveFolderLabel = hasOneDriveOrigin
+    ? t("oneDriveSave.saveToFolder", "Upload copy to OneDrive…")
+    : t("oneDriveSave.uploadToOneDrive", "Upload to OneDrive…");
 
   const viewerLabel = isViewedInViewer
     ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
@@ -432,7 +431,7 @@ export const FileItem = React.memo(function FileItem({
               </Tooltip>
             )}
             {hasOneDriveOrigin && (
-              <Tooltip label={oneDriveBadgeLabel} withArrow position="top">
+              <Tooltip label={oneDriveBadgeLabel} withArrow position="bottom">
                 <span
                   className="file-sidebar-cloud-badge"
                   data-no-select
@@ -502,7 +501,7 @@ export const FileItem = React.memo(function FileItem({
             position="bottom-end"
             withinPortal
             shadow="md"
-            width={250}
+            width={220}
             onChange={setMenuOpened}
           >
             <Menu.Target>
@@ -668,7 +667,7 @@ export const FileItem = React.memo(function FileItem({
                 >
                   {t(
                     "oneDriveSave.saveCopyToOneDrive",
-                    "Save a copy to OneDrive",
+                    "Save a copy next to it",
                   )}
                 </FileMenuItem>
               )}

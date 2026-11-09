@@ -1195,7 +1195,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             oneDriveSave.available ? oneDriveHandlers.saveCopy : undefined
           }
           onSaveToOneDriveFolder={
-            oneDriveSave.available ? oneDriveHandlers.saveToFolder : undefined
+            oneDriveSave.canSaveToFolder
+              ? oneDriveHandlers.saveToFolder
+              : undefined
           }
           onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}

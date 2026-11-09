@@ -103,7 +103,7 @@ export const useConfigNavSections = (
           "settings.connectedAccounts.description",
           "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines.",
         ),
-        icon: "link",
+        icon: "cloud",
         component: <ConnectedAccountsSection />,
       });
     }
