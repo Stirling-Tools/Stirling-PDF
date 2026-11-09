@@ -1,3 +1,4 @@
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type {
   StructureRole,
   StructureType,
@@ -113,6 +114,8 @@ export interface StructureElementEdit {
   alt: string | null;
   /** Turn the element's content into an artifact and drop the element. */
   decorative: boolean;
+  /** The page furniture the artifact is, when `decorative`; absent for a plain one. */
+  furniture?: Furniture;
 }
 
 /**
@@ -417,6 +420,12 @@ export class PageStructure {
     return this.editFor(mcid)?.decorative ?? false;
   }
 
+  /** The page furniture the session marked the element owning `mcid` as; null when none. */
+  furniture(mcid: number): Furniture | null {
+    const edit = this.editFor(mcid);
+    return (edit?.decorative && edit.furniture) || null;
+  }
+
   /** The description as it will be saved: the session's edit, else the file's. */
   alt(mcid: number): string | null {
     const el = this.element(mcid);
@@ -433,20 +442,40 @@ export class PageStructure {
 
   /** Set the description, keeping any decorative mark. Throws as setEdit does. */
   setAlt(mcid: number, alt: string | null): void {
-    this.setEdit(mcid, { mcid, alt, decorative: this.decorative(mcid) });
+    const edit = this.editFor(mcid);
+    this.setEdit(mcid, {
+      mcid,
+      alt,
+      decorative: edit?.decorative ?? false,
+      ...(edit?.furniture && { furniture: edit.furniture }),
+    });
   }
 
   /**
-   * Mark or unmark decorative, keeping the description. Throws as setEdit
-   * does, and for an added element, whose content is retagged instead.
+   * Mark or unmark decorative, as `furniture` or a plain artifact, keeping
+   * the description. Throws as setEdit does, and for an added element, whose
+   * content is retagged instead.
    */
-  setDecorative(mcid: number, decorative: boolean): void {
+  setDecorative(
+    mcid: number,
+    decorative: boolean,
+    furniture: Furniture | null = null,
+  ): void {
     if (this.added.has(mcid)) {
       throw new Error(`MCID ${mcid} is an added element`);
     }
     const alt = this.alt(mcid);
-    const unchanged = !decorative && alt === this.element(mcid)?.alt;
-    this.setEdit(mcid, unchanged ? null : { mcid, alt, decorative });
+    if (!decorative) {
+      const unchanged = alt === this.element(mcid)?.alt;
+      this.setEdit(mcid, unchanged ? null : { mcid, alt, decorative });
+      return;
+    }
+    this.setEdit(mcid, {
+      mcid,
+      alt,
+      decorative,
+      ...(furniture && { furniture }),
+    });
   }
 
   /** Throws when no element owns `mcid`: a command must not record an edit the save cannot address. */

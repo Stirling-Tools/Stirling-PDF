@@ -15,6 +15,7 @@ import {
   rangeTagTypes,
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
@@ -28,7 +29,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
-  ARTIFACT_CHOICE,
+  canBeArtifact,
   innerTags,
   sharedTextTag,
   textTag,
@@ -313,9 +314,9 @@ export function setTextTagCommand(
 ): Command | null {
   const commands = targets.flatMap(({ run, tag }) => {
     const command =
-      choice === ARTIFACT_CHOICE
-        ? artifactCommand(doc, run, tag)
-        : typeCommand(run, tag, choice);
+      typeof choice === "string"
+        ? typeCommand(run, tag, choice)
+        : artifactCommand(doc, run, tag, choice.artifact);
     return command ? [command] : [];
   });
   if (commands.length <= 1) return commands[0] ?? null;
@@ -323,36 +324,34 @@ export function setTextTagCommand(
 }
 
 /**
- * Text in the file's own element becomes an artifact through that element;
- * any other is retagged.
+ * Text in the file's own element, or made an artifact through it, becomes an
+ * artifact of `furniture` through that element; any other is retagged.
  */
 function artifactCommand(
   doc: EditorDocument,
   run: TextRunSnapshot,
   tag: TextTag,
+  furniture: Furniture | null,
 ): Command | null {
-  const { pageIndex } = run;
-  if (tag.kind === "untagged" && tag.taggable) {
-    return new TagTextCommand({
-      pageIndex,
-      runId: run.id,
-      as: ARTIFACT_CHOICE,
-    });
-  }
-  if (tag.kind !== "tagged" || !tag.canBeArtifact || run.mcid === undefined) {
-    return null;
-  }
-  if (doc.structure(pageIndex).isAdded(run.mcid)) {
-    return new TagTextCommand({
-      pageIndex,
-      runId: run.id,
-      as: ARTIFACT_CHOICE,
-    });
-  }
+  const { pageIndex, mcid } = run;
+  if (!canBeArtifact(tag)) return null;
+  if (tag.kind === "artifact" && tag.furniture === furniture) return null;
+  const retag = new TagTextCommand({
+    pageIndex,
+    runId: run.id,
+    as: { artifact: furniture },
+  });
+  const throughElement =
+    mcid !== undefined &&
+    !run.artifact &&
+    (tag.kind === "artifact" ||
+      (tag.kind === "tagged" && !doc.structure(pageIndex).isAdded(mcid)));
+  if (!throughElement) return retag;
   return new SetDecorativeCommand({
     pageIndex,
-    mcid: run.mcid,
+    mcid,
     decorative: true,
+    furniture,
   });
 }
 

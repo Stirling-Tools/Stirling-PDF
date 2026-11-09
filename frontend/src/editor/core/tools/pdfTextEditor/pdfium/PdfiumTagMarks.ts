@@ -1,10 +1,13 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import type { ArtifactKind } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 const MCID = "MCID";
+const TYPE = "Type";
+const SUBTYPE = "Subtype";
 const FPDF_PAGEOBJ_FORM = 5;
 export const ARTIFACT_TAG = "Artifact";
 
@@ -16,6 +19,12 @@ export interface TagMark {
   name: string;
   /** The ID the structure tree refers to the content by; null for an artifact. */
   mcid: number | null;
+  /**
+   * What an artifact is, where PDFium can read it: from the strings the
+   * editor writes, which the save turns into names (nameArtifactKinds).
+   * PDFium cannot read a name, so a file's own is absent.
+   */
+  artifact?: ArtifactKind;
 }
 
 /**
@@ -36,7 +45,12 @@ export function readTagMarks(
       if (!mark) continue;
       const name = markName(m, mark);
       const mcid = markMcid(m, mark);
-      if (mcid !== null || name === ARTIFACT_TAG) tags.push({ name, mcid });
+      if (name === ARTIFACT_TAG) {
+        const artifact = artifactKind(m, mark);
+        tags.push(artifact ? { name, mcid, artifact } : { name, mcid });
+      } else if (mcid !== null) {
+        tags.push({ name, mcid });
+      }
     }
   } catch {
     return [];
@@ -77,9 +91,14 @@ export function addTagMark(
 ): boolean {
   const mark = m.FPDFPageObj_AddMark(objPtr, tag.name);
   if (!mark) return false;
+  const param = (key: string, value: string | null) =>
+    value === null ||
+    m.FPDFPageObjMark_SetStringParam(docPtr, objPtr, mark, key, value);
   return (
-    tag.mcid === null ||
-    m.FPDFPageObjMark_SetIntParam(docPtr, objPtr, mark, MCID, tag.mcid)
+    (tag.mcid === null ||
+      m.FPDFPageObjMark_SetIntParam(docPtr, objPtr, mark, MCID, tag.mcid)) &&
+    (!tag.artifact ||
+      (param(TYPE, tag.artifact.type) && param(SUBTYPE, tag.artifact.subtype)))
   );
 }
 
@@ -133,6 +152,31 @@ export function carriedMcids(
   return carried;
 }
 
+/**
+ * True when an object on the page, form XObject content included, is marked
+ * an artifact of a kind PDFium writes as strings, which the save must turn
+ * into names (nameArtifactKinds).
+ */
+export function writesArtifactKinds(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+): boolean {
+  const count = m.FPDFPage_CountObjects(pagePtr);
+  const objects = Array.from({ length: count }, (_, i) =>
+    m.FPDFPage_GetObject(pagePtr, i),
+  );
+  while (objects.length > 0) {
+    const objPtr = objects.pop()!;
+    if (!objPtr) continue;
+    if (readTagMarks(m, objPtr).some((tag) => tag.artifact)) return true;
+    if (m.FPDFPageObj_GetType(objPtr) !== FPDF_PAGEOBJ_FORM) continue;
+    for (let i = 0; i < m.FPDFFormObj_CountObjects(objPtr); i++) {
+      objects.push(m.FPDFFormObj_GetObject(objPtr, i));
+    }
+  }
+  return false;
+}
+
 /** Carry `from`'s tags onto its replacement `to`. */
 export function copyTagMarks(
   m: WrappedPdfiumModule,
@@ -150,6 +194,36 @@ function markName(m: WrappedPdfiumModule, mark: number): string {
   if (byteLen <= 2) return "";
   const buf = scratchPtr(m, SCRATCH.tagName, byteLen);
   if (!m.FPDFPageObjMark_GetName(mark, buf, byteLen, lenPtr)) return "";
+  return m.pdfium.UTF16ToString(buf);
+}
+
+/** The kind a string /Type gives the artifact mark; undefined without one. */
+function artifactKind(
+  m: WrappedPdfiumModule,
+  mark: number,
+): ArtifactKind | undefined {
+  const type = stringParam(m, mark, TYPE);
+  return type === null
+    ? undefined
+    : { type, subtype: stringParam(m, mark, SUBTYPE) };
+}
+
+/** The mark's string parameter `key`; null when it has none, or a value of another type. */
+function stringParam(
+  m: WrappedPdfiumModule,
+  mark: number,
+  key: string,
+): string | null {
+  const lenPtr = scratchPtr(m, SCRATCH.tagParamLen, 4);
+  if (!m.FPDFPageObjMark_GetParamStringValue(mark, key, 0, 0, lenPtr)) {
+    return null;
+  }
+  const byteLen = m.pdfium.getValue(lenPtr, "i32");
+  if (byteLen <= 2) return "";
+  const buf = scratchPtr(m, SCRATCH.tagParam, byteLen);
+  if (!m.FPDFPageObjMark_GetParamStringValue(mark, key, buf, byteLen, lenPtr)) {
+    return null;
+  }
   return m.pdfium.UTF16ToString(buf);
 }
 

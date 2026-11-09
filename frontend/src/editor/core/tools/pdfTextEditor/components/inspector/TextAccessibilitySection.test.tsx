@@ -59,7 +59,14 @@ describe("TextAccessibilitySection", () => {
   });
 
   it.each([
-    [{ kind: "artifact", taggable: false } as const, "artifactText"],
+    [
+      { kind: "artifact", furniture: null, taggable: false } as const,
+      "artifactText",
+    ],
+    [
+      { kind: "artifact", furniture: "PageNum", taggable: false } as const,
+      "furniture.pageNumber",
+    ],
     [
       { kind: "untagged", documentTagged: true, taggable: false } as const,
       "untaggedBadge",
@@ -119,7 +126,24 @@ describe("TextAccessibilitySection", () => {
     );
     fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
     fireEvent.click(screen.getByText(`${KEY}.artifactText`));
-    expect(onSetTag).toHaveBeenCalledWith("artifact");
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: null });
+  });
+
+  it("offers marking the text as page furniture", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "untagged", documentTagged: true, taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.furniture.footer`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Footer" });
   });
 
   it("shows decorative text as decorative, and offers it a type again", () => {
@@ -127,7 +151,7 @@ describe("TextAccessibilitySection", () => {
     render(
       <MantineProvider env="test">
         <TextAccessibilitySection
-          tag={{ kind: "artifact", taggable: true }}
+          tag={{ kind: "artifact", furniture: null, taggable: true }}
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
@@ -139,6 +163,25 @@ describe("TextAccessibilitySection", () => {
     fireEvent.click(input);
     fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
     expect(onSetTag).toHaveBeenCalledWith("P");
+  });
+
+  it("shows page furniture by its kind, and offers it another", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Header", taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.furniture.header`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.furniture.watermark`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Watermark" });
   });
 
   it("does not offer decorative where the text cannot become an artifact", () => {

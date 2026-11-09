@@ -9,6 +9,10 @@ import {
   retagObject,
   type ObjectRetag,
 } from "@editor/tools/pdfTextEditor/commands/retagObjects";
+import {
+  furnitureKind,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
@@ -19,7 +23,6 @@ import {
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
-  ARTIFACT_CHOICE,
   retaggableText,
   type RetaggableText,
   type TextTagChoice,
@@ -35,11 +38,11 @@ interface Plan {
 }
 
 /**
- * Tag text as a new element of `as`, or as an artifact, where retaggableText
- * allows. Unlike a retag this changes the text's marks, so the save
- * regenerates the page's content; the save pass then gives a new element its
- * place in the tree. Every object backing the run carries the one MCID, and
- * the save's repair gives each sequence PDFium writes for them its own.
+ * Tag text as a new element of `as`, or as an artifact of its kind, where
+ * retaggableText allows. Unlike a retag this changes the text's marks, so the
+ * save regenerates the page's content; the save pass then gives a new element
+ * its place in the tree. Every object backing the run carries the one MCID,
+ * and the save's repair gives each sequence PDFium writes for them its own.
  * Text in an element the session added can only become an artifact here:
  * RetagTextCommand changes its type.
  */
@@ -113,12 +116,16 @@ function planTagging(
   run: TextRun,
   as: TextTagChoice,
 ): Plan | null {
-  const from = retaggableText(doc, run.snapshot());
+  const snapshot = run.snapshot();
+  const from = retaggableText(doc, snapshot);
   const members = collectMemberPtrs(run);
   if (!from || members.includes(0)) return null;
   // Already so, or a type change RetagTextCommand makes.
   const unchanged =
-    as === ARTIFACT_CHOICE ? from.kind === "artifact" : from.kind === "added";
+    typeof as === "string"
+      ? from.kind === "added"
+      : from.kind === "artifact" &&
+        as.artifact === (snapshot.furniture ?? null);
   if (unchanged) return null;
   const objects = members.flatMap((ptr) => {
     const dropped = readTagMarks(doc.module, ptr);
@@ -126,8 +133,8 @@ function planTagging(
   });
   if (objects.length === 0) return null;
   const runMarks = run.tagMarks;
-  if (as === ARTIFACT_CHOICE) {
-    const tag = { name: ARTIFACT_TAG, mcid: null };
+  if (typeof as !== "string") {
+    const tag = artifactTag(as.artifact);
     return { from, element: null, tag, objects, runMarks };
   }
   const mcid = doc
@@ -135,6 +142,11 @@ function planTagging(
     .freeMcid(highestMcid(doc.module, doc.page(run.pageIndex).pagePtr));
   const element = { mcid, type: as };
   return { from, element, tag: { name: as, mcid }, objects, runMarks };
+}
+
+function artifactTag(furniture: Furniture | null): TagMark {
+  const tag = { name: ARTIFACT_TAG, mcid: null };
+  return furniture ? { ...tag, artifact: furnitureKind(furniture) } : tag;
 }
 
 /**

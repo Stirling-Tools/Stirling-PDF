@@ -12,10 +12,12 @@ import {
   test,
   vi,
 } from "vitest";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import { toLatin1 } from "@editor/tools/pdfTextEditor/pdfdoc/bytes";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
@@ -28,7 +30,6 @@ import {
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 import {
-  ARTIFACT_CHOICE,
   sharedTextTag,
   textTag,
   type TextTagChoice,
@@ -399,13 +400,6 @@ describe("tagging text in a file with no structure tree", () => {
 });
 
 describe("setting one tag on several runs", () => {
-  function targets(doc: EditorDocument, ...fragments: string[]) {
-    return fragments.map((fragment) => {
-      const run = runWith(doc, fragment).snapshot();
-      return { run, tag: textTag(doc, run) };
-    });
-  }
-
   test("reads runs tagged differently as mixed, and alike as their tag", async () => {
     const doc = await openSample();
     const mixed = targets(doc, "Priorities for next quarter", "Confidential");
@@ -460,7 +454,7 @@ describe("setting one tag on several runs", () => {
     const doc = await openSample();
     const history = new HistoryStack();
     const both = targets(doc, "All amounts", "Confidential");
-    history.execute(setTextTagCommand(doc, both, ARTIFACT_CHOICE)!, doc);
+    history.execute(setTextTagCommand(doc, both, { artifact: null })!, doc);
     expect(shownTag(doc, "All amounts")).toBe("artifact");
     expect(shownTag(doc, "Confidential")).toBe("artifact");
 
@@ -476,7 +470,7 @@ describe("making text an artifact", () => {
     doc: EditorDocument,
     history: HistoryStack,
     fragment: string,
-    choice: TextTagChoice = ARTIFACT_CHOICE,
+    choice: TextTagChoice = { artifact: null },
   ) {
     const run = runWith(doc, fragment).snapshot();
     const command = setTextTagCommand(
@@ -484,7 +478,11 @@ describe("making text an artifact", () => {
       [{ run, tag: textTag(doc, run) }],
       choice,
     );
-    if (!command) throw new Error(`"${fragment}" cannot be tagged ${choice}`);
+    if (!command) {
+      throw new Error(
+        `"${fragment}" cannot be tagged ${JSON.stringify(choice)}`,
+      );
+    }
     history.execute(command, doc);
   }
 
@@ -556,6 +554,81 @@ describe("making text an artifact", () => {
     ]);
   });
 
+  test("marks untagged text as page furniture, saved as a pagination artifact", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    markArtifact(doc, history, "Confidential", { artifact: "Footer" });
+    expect(furnitureShown(doc, "Confidential")).toBe("Footer");
+    expect(await artifactOperators(await savedBytes(doc))).toContain(
+      "/Artifact <</Subtype/Footer/Type/Pagination>> BDC",
+    );
+
+    history.undo(doc);
+    expect(shownTag(doc, "Confidential")).toBe("untagged");
+  });
+
+  test("keeps page furniture's kind through an edit to its text", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    markArtifact(doc, history, "Confidential", { artifact: "Footer" });
+    const run = runWith(doc, "Confidential");
+    history.execute(
+      new EditTextCommand({
+        pageIndex: PAGE,
+        runId: run.id,
+        nextText: "Confidential - internal use only, do not share",
+      }),
+      doc,
+    );
+    expect(furnitureShown(doc, "do not share")).toBe("Footer");
+    expect(await artifactOperators(await savedBytes(doc))).toContain(
+      "/Artifact <</Subtype/Footer/Type/Pagination>> BDC",
+    );
+  });
+
+  test("changes what an artifact is, and back on undo", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    markArtifact(doc, history, "Confidential");
+    markArtifact(doc, history, "Confidential", { artifact: "Watermark" });
+    expect(furnitureShown(doc, "Confidential")).toBe("Watermark");
+
+    history.undo(doc);
+    expect(furnitureShown(doc, "Confidential")).toBeNull();
+    expect(
+      setTextTagCommand(doc, targets(doc, "Confidential"), {
+        artifact: null,
+      }),
+    ).toBeNull();
+  });
+
+  test("marks the file's paragraph as page furniture through its element", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    markArtifact(doc, history, "All amounts", { artifact: "Footer" });
+    markArtifact(doc, history, "All amounts", { artifact: "PageNum" });
+    expect(furnitureShown(doc, "All amounts")).toBe("PageNum");
+    expect(doc.structureEdits()).toEqual([
+      expect.objectContaining({ decorative: true, furniture: "PageNum" }),
+    ]);
+    expect(await artifactOperators(await savedBytes(doc))).toContain(
+      "/Artifact <</Type /Pagination /Subtype /PageNum>> BDC",
+    );
+
+    history.undo(doc);
+    expect(furnitureShown(doc, "All amounts")).toBe("Footer");
+  });
+
+  test("reads artifacts of different kinds as mixed", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    markArtifact(doc, history, "Confidential", { artifact: "Header" });
+    const both = targets(doc, "Confidential", "Page 2");
+    expect(sharedTextTag(both.map(({ tag }) => tag))).toMatchObject({
+      kind: "mixed",
+    });
+  });
+
   test("refuses a paragraph holding a link, whose element holds more than text", async () => {
     const doc = await openSample();
     const tag = textTag(doc, runWith(doc, "appendix").snapshot());
@@ -568,3 +641,23 @@ describe("making text an artifact", () => {
     expect(tag).toMatchObject({ kind: "tagged", canBeArtifact: false });
   });
 });
+
+function furnitureShown(doc: EditorDocument, fragment: string) {
+  const tag = textTag(doc, runWith(doc, fragment).snapshot());
+  if (tag.kind !== "artifact") throw new Error(`"${fragment}" is ${tag.kind}`);
+  return tag.furniture;
+}
+
+function targets(doc: EditorDocument, ...fragments: string[]) {
+  return fragments.map((fragment) => {
+    const run = runWith(doc, fragment).snapshot();
+    return { run, tag: textTag(doc, run) };
+  });
+}
+
+/** The operators opening artifacts in the saved file's sample page. */
+async function artifactOperators(bytes: Uint8Array): Promise<string[]> {
+  const pdf = (await RawPdf.parse(bytes))!;
+  const content = await pdf.pageContent(pdf.pageNumberAt(PAGE)!);
+  return toLatin1(content!).match(/\/Artifact\b[^\n]*?(?:BDC|BMC)/g) ?? [];
+}

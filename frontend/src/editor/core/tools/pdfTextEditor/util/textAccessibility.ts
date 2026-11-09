@@ -1,4 +1,5 @@
 import { elementStretches } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
   AddedElement,
@@ -18,10 +19,13 @@ import type {
   HeadingText,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 
-export const ARTIFACT_CHOICE = "artifact";
+/** An artifact, which screen readers skip: page furniture, or plain decoration with null. */
+export interface ArtifactChoice {
+  artifact: Furniture | null;
+}
 
-/** What text can be tagged as: a type, or an artifact that screen readers skip. */
-export type TextTagChoice = StructureType | typeof ARTIFACT_CHOICE;
+/** What text can be tagged as: a type, or an artifact. */
+export type TextTagChoice = StructureType | ArtifactChoice;
 
 /** How a run's text is tagged. */
 export type TextTag =
@@ -32,8 +36,11 @@ export type TextTag =
       cannotRetag: RetagBlocker | null;
       canBeArtifact: boolean;
     }
-  /** `taggable` when the text can be given a type again. */
-  | { kind: "artifact"; taggable: boolean }
+  /**
+   * `furniture` null for plain decoration, or an artifact whose kind is not
+   * read. `taggable` when the text can be given a type again, or another kind.
+   */
+  | { kind: "artifact"; furniture: Furniture | null; taggable: boolean }
   /** `taggable` when TagTextCommand can give the text an element, or make it an artifact. */
   | { kind: "untagged"; documentTagged: boolean; taggable: boolean }
   /** Drawn by a form XObject, whose marks the editor does not read. */
@@ -44,7 +51,13 @@ export type TextTag =
 export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   if (run.inForm) return { kind: "unknown" };
   const retaggable = retaggableText(doc, run) !== null;
-  if (run.artifact) return { kind: "artifact", taggable: retaggable };
+  if (run.artifact) {
+    return {
+      kind: "artifact",
+      furniture: run.furniture ?? null,
+      taggable: retaggable,
+    };
+  }
   const untagged = {
     kind: "untagged",
     documentTagged: doc.treatAsTagged(),
@@ -55,7 +68,11 @@ export function textTag(doc: EditorDocument, run: TextRunSnapshot): TextTag {
   const block = structure.block(run.mcid);
   if (!block) return untagged;
   if (structure.decorative(run.mcid)) {
-    return { kind: "artifact", taggable: true };
+    return {
+      kind: "artifact",
+      furniture: structure.furniture(run.mcid),
+      taggable: true,
+    };
   }
   return {
     kind: "tagged",
@@ -81,11 +98,11 @@ export function canTypeText(tag: TextTag): boolean {
   }
 }
 
-/** True when the text is an artifact, or the tag picker can make it one. */
+/** True when the tag picker can make the text an artifact, or another kind of one. */
 export function canBeArtifact(tag: TextTag): boolean {
   switch (tag.kind) {
     case "artifact":
-      return true;
+      return tag.taggable;
     case "tagged":
     case "mixed":
       return tag.canBeArtifact;
@@ -98,7 +115,7 @@ export function canBeArtifact(tag: TextTag): boolean {
 
 /** True when the tag picker can change the text's tag at all. */
 export function canSetTextTag(tag: TextTag): boolean {
-  return canTypeText(tag) || (tag.kind !== "artifact" && canBeArtifact(tag));
+  return canTypeText(tag) || canBeArtifact(tag);
 }
 
 /**
@@ -138,6 +155,9 @@ function sameTagShown(a: TextTag, b: TextTag): boolean {
   }
   if (a.kind === "untagged" && b.kind === "untagged") {
     return a.documentTagged === b.documentTagged;
+  }
+  if (a.kind === "artifact" && b.kind === "artifact") {
+    return a.furniture === b.furniture;
   }
   return a.kind === b.kind;
 }

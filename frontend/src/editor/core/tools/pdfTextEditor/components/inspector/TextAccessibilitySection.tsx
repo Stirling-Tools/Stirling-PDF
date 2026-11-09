@@ -10,13 +10,16 @@ import {
   SectionLabel,
   StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import {
+  FURNITURE,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
 import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   StructureRole,
   StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
-  ARTIFACT_CHOICE,
   canBeArtifact,
   canSetTextTag,
   canTypeText,
@@ -97,6 +100,9 @@ function TagField({
   );
 }
 
+/** Select values for artifact choices: a structure type never starts with a lower-case letter. */
+const ARTIFACT_VALUE = "artifact:";
+
 function BlockTagPicker({
   tag,
   placeholder,
@@ -110,25 +116,38 @@ function BlockTagPicker({
 }) {
   const { t } = useTranslation();
   const typed = canTypeText(tag);
-  const choices: { value: TextTagChoice; label: string; disabled: boolean }[] =
-    [
-      ...TEXT_BLOCK_TYPES.map((type) => ({
+  const artifactable = canBeArtifact(tag);
+  const artifacts = [null, ...FURNITURE];
+  const choices = new Map<string, TextTagChoice>([
+    ...TEXT_BLOCK_TYPES.map((type) => [type, type] as const),
+    ...artifacts.map(
+      (artifact) => [artifactValue(artifact), { artifact }] as const,
+    ),
+  ]);
+  const options = [
+    {
+      group: t("pdfTextEditor.inspector.accessibility.contentGroup", "Content"),
+      options: TEXT_BLOCK_TYPES.map((type) => ({
         value: type,
         label: typeName(t, type),
         disabled: !typed,
       })),
-      {
-        value: ARTIFACT_CHOICE,
-        label: t(
-          "pdfTextEditor.inspector.accessibility.artifactText",
-          "Decorative",
-        ),
-        disabled: !canBeArtifact(tag),
-      },
-    ];
+    },
+    {
+      group: t(
+        "pdfTextEditor.inspector.accessibility.artifactGroup",
+        "Skipped by screen readers",
+      ),
+      options: artifacts.map((artifact) => ({
+        value: artifactValue(artifact),
+        label: artifactName(t, artifact),
+        disabled: !artifactable,
+      })),
+    },
+  ];
   const current =
     tag.kind === "artifact"
-      ? ARTIFACT_CHOICE
+      ? artifactValue(tag.furniture)
       : (TEXT_BLOCK_TYPES.find(
           (type) => tag.kind === "tagged" && type === tag.block.type,
         ) ?? null);
@@ -136,17 +155,21 @@ function BlockTagPicker({
     <div data-testid="pdf-editor-text-tag-picker">
       <Select
         inputSize="sm"
-        options={choices}
+        options={options}
         value={current}
         placeholder={placeholder}
         onChange={(value) => {
-          const picked = choices.find((choice) => choice.value === value);
-          if (picked) onSetTag(picked.value);
+          const picked = value === null ? undefined : choices.get(value);
+          if (picked) onSetTag(picked);
         }}
         aria-label={label}
       />
     </div>
   );
+}
+
+function artifactValue(furniture: Furniture | null): string {
+  return `${ARTIFACT_VALUE}${furniture ?? ""}`;
 }
 
 /** The language the selected text's blocks are read in; "Mixed" when they differ. */
@@ -434,10 +457,7 @@ function statusText(
 ): string {
   switch (tag.kind) {
     case "artifact":
-      return t(
-        "pdfTextEditor.inspector.accessibility.artifactText",
-        "Decorative",
-      );
+      return artifactName(t, tag.furniture);
     case "untagged":
       return tag.documentTagged
         ? t("pdfTextEditor.inspector.accessibility.untaggedBadge", "Not tagged")
@@ -452,6 +472,36 @@ function statusText(
       );
     case "mixed":
       return t("pdfTextEditor.inspector.accessibility.mixedTags", "Mixed");
+  }
+}
+
+function artifactName(t: TFunction, furniture: Furniture | null): string {
+  switch (furniture) {
+    case null:
+      return t(
+        "pdfTextEditor.inspector.accessibility.artifactText",
+        "Decorative",
+      );
+    case "Header":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.header",
+        "Header",
+      );
+    case "Footer":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.footer",
+        "Footer",
+      );
+    case "PageNum":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.pageNumber",
+        "Page number",
+      );
+    case "Watermark":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.watermark",
+        "Watermark",
+      );
   }
 }
 

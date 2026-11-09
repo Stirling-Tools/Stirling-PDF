@@ -22,6 +22,11 @@ import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDe
 import { unwrapElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/unwrapElements";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
+import {
+  furnitureKind,
+  type ArtifactKind,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { ContentCut } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
@@ -44,6 +49,8 @@ export interface StructureEdit {
   blockLang?: string | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
+  /** The page furniture that artifact is; absent for a plain one. */
+  furniture?: Furniture;
   /**
    * Set when no element owns the content yet: add one of `type` for it, after
    * the element owning MCID `after` on the page (see NewElement).
@@ -198,7 +205,9 @@ export async function applyStructureEdits(
   }
   const { streams, failed } = await markDecorative(
     pdf,
-    new Set(decorative.keys()),
+    new Map(
+      [...decorative].map(([num, owned]) => [num, artifactKindOf(owned)]),
+    ),
     bodies,
     parentTree,
   );
@@ -218,6 +227,12 @@ export async function applyStructureEdits(
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
   return out;
+}
+
+/** The kind of artifact the last of an element's edits makes it; null for a plain one. */
+function artifactKindOf(edits: readonly StructureEdit[]): ArtifactKind | null {
+  const furniture = edits.at(-1)?.furniture;
+  return furniture ? furnitureKind(furniture) : null;
 }
 
 /** The element's body with `edit`'s /Alt, /Lang and /S applied; null when it is not a dictionary. */
