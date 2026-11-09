@@ -1,17 +1,23 @@
 package stirling.software.proprietary.connectedaccount;
 
 public enum CloudProvider {
-    MICROSOFT("microsoft"),
-    GOOGLE("google");
+    MICROSOFT("microsoft", "Microsoft"),
+    GOOGLE("google", "Google");
 
     private final String id;
+    private final String displayName;
 
-    CloudProvider(String id) {
+    CloudProvider(String id, String displayName) {
         this.id = id;
+        this.displayName = displayName;
     }
 
     public String id() {
         return id;
+    }
+
+    public String displayName() {
+        return displayName;
     }
 
     public static CloudProvider fromId(String id) {

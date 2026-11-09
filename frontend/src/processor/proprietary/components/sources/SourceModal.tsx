@@ -261,7 +261,7 @@ export function SourceModal({
   const requiredComplete = type.fields.every(
     (field) =>
       !field.required ||
-      !fieldVisible(field) ||
+      !fieldShown(field) ||
       (options[field.key] ?? "").trim() !== "",
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
@@ -445,7 +445,9 @@ export function SourceModal({
             >
               {isEdit
                 ? t("portal.sources.builder.save")
-                : t("portal.sources.builder.create")}
+                : direction === "output"
+                  ? t("portal.sources.builder.createDestination")
+                  : t("portal.sources.builder.create")}
             </Button>
           </div>
         );
@@ -591,7 +593,14 @@ export function SourceModal({
     return !cond || cond.oneOf.includes(options[cond.key] ?? "");
   }
 
-  const visibleFields = type.fields.filter(fieldVisible);
+  function fieldShown(field: SourceFieldDef): boolean {
+    return (
+      fieldVisible(field) &&
+      !(field.inputOnly && direction === "output" && !isEdit)
+    );
+  }
+
+  const visibleFields = type.fields.filter(fieldShown);
   const primaryFields = visibleFields.filter((field) => !field.advanced);
   const advancedFields = visibleFields.filter((field) => field.advanced);
   const back = stageBack();

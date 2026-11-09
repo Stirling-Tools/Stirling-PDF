@@ -11073,6 +11073,7 @@ subtitle = "Reusable input connections that feed documents into Stirling. Config
 title = "Sources"
 
 [portal.sources.actions]
+connectDestination = "Connect destination"
 connectSource = "Connect source"
 
 [portal.sources.builder]
@@ -11086,6 +11087,7 @@ chooseOutputHint = "Choose where processed documents go. Greyed-out connectors a
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
+createDestination = "Create destination"
 createDestinationTitle = "Add a destination"
 createTitle = "Connect a source"
 delete = "Delete"
