@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { Section } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
-import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import type {
+  ScanFontChoice,
+  ScanFontMatch,
+} from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
 const lineImage = {
   display: "block",
@@ -124,56 +127,11 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
                 {t("pdfTextEditor.scanFont.choose", "Choose a font")}
               </Text>
               {match.choices.map((choice, i) => (
-                <button
-                  type="button"
+                <ScanFontChoiceButton
                   key={choice.label}
-                  onClick={() => match.choose(i)}
-                  aria-pressed={choice.active}
-                  data-testid="pdf-editor-scan-font-choice"
-                  data-active={choice.active || undefined}
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    alignItems: "flex-start",
-                    width: "100%",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    color: "inherit",
-                    font: "inherit",
-                    padding: 10,
-                    borderRadius: 6,
-                    border: `1px solid ${choice.active ? "var(--c-primary)" : "var(--c-border)"}`,
-                    background: choice.active
-                      ? "var(--c-primary-subtle)"
-                      : "var(--c-surface)",
-                  }}
-                >
-                  <Icon
-                    name={choice.active ? "circle-check" : "circle"}
-                    size={18}
-                    style={{
-                      flexShrink: 0,
-                      color: choice.active
-                        ? "var(--c-accent-fg, var(--c-primary))"
-                        : "var(--c-text-subtle)",
-                    }}
-                  />
-                  <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-                    <Group justify="space-between" gap="xs" wrap="nowrap">
-                      <Text size="sm" fw={600} truncate>
-                        {choice.label}
-                      </Text>
-                      <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                        {t("pdfTextEditor.scanFont.score", "{{match}}% alike", {
-                          match: choice.match,
-                        })}
-                      </Text>
-                    </Group>
-                    {choice.preview && (
-                      <img src={choice.preview} alt="" style={lineImage} />
-                    )}
-                  </Stack>
-                </button>
+                  choice={choice}
+                  onChoose={() => match.choose(i)}
+                />
               ))}
             </Stack>
           </Stack>
@@ -193,6 +151,95 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
         </Group>
       </Stack>
     </Modal>
+  );
+}
+
+function choiceTone(choice: ScanFontChoice) {
+  if (!choice.active)
+    return {
+      icon: "circle",
+      iconColor: "var(--c-text-subtle)",
+      border: "var(--c-border)",
+      background: "var(--c-surface)",
+    } as const;
+  if (choice.approximate)
+    return {
+      icon: "circle-alert",
+      iconColor: "var(--c-warning)",
+      border: "var(--c-warning)",
+      background: "var(--c-warning-subtle)",
+    } as const;
+  return {
+    icon: "circle-check",
+    iconColor: "var(--c-accent-fg, var(--c-primary))",
+    border: "var(--c-primary)",
+    background: "var(--c-primary-subtle)",
+  } as const;
+}
+
+function ScanFontChoiceButton({
+  choice,
+  onChoose,
+}: {
+  choice: ScanFontChoice;
+  onChoose: () => void;
+}) {
+  const { t } = useTranslation();
+  const tone = choiceTone(choice);
+  const flagged = choice.active && choice.approximate;
+  return (
+    <button
+      type="button"
+      onClick={onChoose}
+      aria-pressed={choice.active}
+      data-testid="pdf-editor-scan-font-choice"
+      data-active={choice.active || undefined}
+      data-approximate={flagged || undefined}
+      style={{
+        display: "flex",
+        gap: 10,
+        alignItems: "flex-start",
+        width: "100%",
+        textAlign: "left",
+        cursor: "pointer",
+        color: "inherit",
+        font: "inherit",
+        padding: 10,
+        borderRadius: 6,
+        border: `1px solid ${tone.border}`,
+        background: tone.background,
+      }}
+    >
+      <Icon
+        name={tone.icon}
+        size={18}
+        style={{ flexShrink: 0, color: tone.iconColor }}
+      />
+      <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+        <Group justify="space-between" gap="xs" wrap="nowrap">
+          <Text size="sm" fw={600} truncate>
+            {choice.label}
+          </Text>
+          <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+            {t("pdfTextEditor.scanFont.score", "{{match}}% alike", {
+              match: choice.match,
+            })}
+          </Text>
+        </Group>
+        {flagged && (
+          <Text
+            size="xs"
+            fw={600}
+            data-testid="pdf-editor-scan-font-choice-approximate"
+          >
+            {t("pdfTextEditor.scanFont.approximate", "Approximate match")}
+          </Text>
+        )}
+        {choice.preview && (
+          <img src={choice.preview} alt="" style={lineImage} />
+        )}
+      </Stack>
+    </button>
   );
 }
 
@@ -308,6 +355,41 @@ function DeviceFontsNote({
 
 export function ScanFontMatchRow({ match }: { match: ScanFontMatch }) {
   const { t } = useTranslation();
+  if (match.approximate)
+    return (
+      <Section testId="pdf-editor-scan-font-row">
+        <Stack gap={6} data-testid="pdf-editor-scan-font-approximate">
+          <Group gap={6} wrap="nowrap">
+            <Icon
+              name="circle-alert"
+              size={16}
+              style={{ flexShrink: 0, color: "var(--c-warning)" }}
+            />
+            <Text size="sm" fw={600}>
+              {t("pdfTextEditor.scanFont.approximate", "Approximate match")}
+            </Text>
+          </Group>
+          <Text size="xs" c="dimmed">
+            {t(
+              "pdfTextEditor.scanFont.approximateHint",
+              "The closest font found may not match the scan.",
+            )}
+          </Text>
+          <Group>
+            <Button
+              size="sm"
+              variant="secondary"
+              accent="neutral"
+              leftSection={<Icon name="case-sensitive" size={18} />}
+              onClick={match.show}
+              data-testid="pdf-editor-scan-font-open"
+            >
+              {t("pdfTextEditor.scanFont.compare", "Compare fonts…")}
+            </Button>
+          </Group>
+        </Stack>
+      </Section>
+    );
   return (
     <Section testId="pdf-editor-scan-font-row">
       <Button

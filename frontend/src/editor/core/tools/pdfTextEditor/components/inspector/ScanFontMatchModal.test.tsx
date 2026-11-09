@@ -1,17 +1,32 @@
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
-import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import {
+  ScanFontMatchModal,
+  ScanFontMatchRow,
+} from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
+import type {
+  ScanFontChoice,
+  ScanFontMatch,
+} from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
 function match(overrides: Partial<ScanFontMatch> = {}): ScanFontMatch {
   return {
     status: "ready",
     scan: null,
-    choices: [{ label: "Carlito", match: 90, preview: null, active: false }],
+    choices: [
+      {
+        label: "Carlito",
+        match: 90,
+        preview: null,
+        active: false,
+        approximate: false,
+      },
+    ],
     choose: vi.fn(),
     open: true,
     canShow: true,
+    approximate: false,
     undrawable: false,
     typedFromScan: false,
     show: vi.fn(),
@@ -102,5 +117,75 @@ describe("scan font picker device fonts prompt", () => {
       );
       unmount();
     }
+  });
+});
+
+describe("approximate scan font matches", () => {
+  const choice = (overrides: Partial<ScanFontChoice>): ScanFontChoice => ({
+    label: "Carlito",
+    match: 70,
+    preview: null,
+    active: true,
+    approximate: false,
+    ...overrides,
+  });
+
+  it("marks an applied weak match instead of ticking it", () => {
+    renderModal(
+      match({
+        approximate: true,
+        choices: [
+          choice({ label: "Carlito", approximate: true }),
+          choice({ label: "Caladea", active: false, approximate: true }),
+        ],
+      }),
+    );
+    const [applied, other] = screen.getAllByTestId(
+      "pdf-editor-scan-font-choice",
+    );
+    expect(applied).toHaveAttribute("aria-pressed", "true");
+    expect(applied).toHaveAttribute("data-approximate", "true");
+    expect(applied).toHaveTextContent("pdfTextEditor.scanFont.approximate");
+    expect(other).not.toHaveAttribute("data-approximate");
+    expect(
+      screen.getAllByTestId("pdf-editor-scan-font-choice-approximate"),
+    ).toHaveLength(1);
+  });
+
+  it("ticks a strong match without the approximate label", () => {
+    renderModal(
+      match({ choices: [choice({ match: 95, approximate: false })] }),
+    );
+    const [applied] = screen.getAllByTestId("pdf-editor-scan-font-choice");
+    expect(applied).not.toHaveAttribute("data-approximate");
+    expect(
+      screen.queryByTestId("pdf-editor-scan-font-choice-approximate"),
+    ).toBeNull();
+  });
+
+  it("points the inspector at the picker when the match is approximate", () => {
+    const m = match({ open: false, approximate: true });
+    render(
+      <MantineProvider env="test">
+        <ScanFontMatchRow match={m} />
+      </MantineProvider>,
+    );
+    expect(
+      screen.getByTestId("pdf-editor-scan-font-approximate"),
+    ).toHaveTextContent("pdfTextEditor.scanFont.approximate");
+    fireEvent.click(screen.getByTestId("pdf-editor-scan-font-open"));
+    expect(m.show).toHaveBeenCalled();
+  });
+
+  it("keeps the quiet row for a strong match", () => {
+    render(
+      <MantineProvider env="test">
+        <ScanFontMatchRow match={match({ open: false })} />
+      </MantineProvider>,
+    );
+    expect(screen.queryByTestId("pdf-editor-scan-font-approximate")).toBeNull();
+    expect(screen.getByTestId("pdf-editor-scan-font-open")).toHaveTextContent(
+      "pdfTextEditor.scanFont.change",
+    );
   });
 });

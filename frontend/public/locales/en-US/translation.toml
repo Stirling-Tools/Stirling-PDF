@@ -7614,9 +7614,12 @@ saveAnyway = "Save anyway"
 title = "Saving will change this PDF"
 
 [pdfTextEditor.scanFont]
+approximate = "Approximate match"
+approximateHint = "The closest font found may not match the scan."
 change = "Font not looking right?"
 choose = "Choose a font"
 chooseMissing = "Choose a font for this text…"
+compare = "Compare fonts…"
 deviceAllow = "Allow font access for better matching"
 deviceBlocked = "Your browser won't ask again. To allow it, click the icon left of the address bar, turn on Fonts, then try again."
 deviceBlockedTitle = "Font access is blocked"

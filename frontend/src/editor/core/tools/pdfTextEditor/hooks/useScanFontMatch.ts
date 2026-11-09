@@ -53,11 +53,14 @@ import {
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
+export const APPROXIMATE_MATCH_SCORE = 0.8;
+
 export interface ScanFontChoice {
   label: string;
   match: number;
   preview: string | null;
   active: boolean;
+  approximate: boolean;
 }
 
 export interface ScanFontMatch {
@@ -67,6 +70,7 @@ export interface ScanFontMatch {
   choose: (index: number) => void;
   open: boolean;
   canShow: boolean;
+  approximate: boolean;
   undrawable: boolean;
   typedFromScan: boolean;
   show: () => void;
@@ -115,6 +119,13 @@ function currentRanking(
     block.preferred === preferred ||
     block.ranked.some((r) => r.face.label === preferred);
   return fresh ? block.ranked : null;
+}
+
+export function isApproximateMatch(
+  ranked: RankedStyle[],
+  choice: RankedStyle,
+): boolean {
+  return ranked.length > 1 && choice.score < APPROXIMATE_MATCH_SCORE;
 }
 
 function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
@@ -277,6 +288,10 @@ export function useScanFontMatch(
   const offInk =
     !!selectedRun && scanBlockOffInk(selectedRun.doc, selectedRun.run);
   const current = ranked && ranked.runId === target.runId ? ranked : null;
+  const applied = targetRun
+    ? (scanEditOf(targetRun.doc, targetRun.run)?.block?.ranked ?? [])
+    : [];
+  const appliedChoice = applied.find(isActive);
   return {
     status: !current
       ? "matching"
@@ -291,10 +306,12 @@ export function useScanFontMatch(
       match: Math.round(Math.max(0, choice.score) * 100),
       preview: current?.previews[i] ?? null,
       active: isActive(choice),
+      approximate: isApproximateMatch(current?.ranked ?? [], choice),
     })),
     choose,
     open: !!picking,
     canShow: (redrawn || unfitted) && !offInk,
+    approximate: !!appliedChoice && isApproximateMatch(applied, appliedChoice),
     undrawable,
     typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
     show: () => {
