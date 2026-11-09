@@ -748,6 +748,21 @@ describe("ServerSetupGate", () => {
   it("opens a setting that starts on when its card shows", async () => {
     vi.mocked(api.fetchServerSettings).mockResolvedValue({
       ...NEW_SERVER_SETTINGS,
+      mail: { enabled: true, host: "smtp.example.org", port: 587 },
+    });
+    renderGate();
+    await openQuickStart();
+    expect(isShown(/^SMTP host/)).toBe(true);
+  });
+
+  it("leaves out settings the server already has", async () => {
+    vi.mocked(api.fetchServerSettings).mockResolvedValue({
+      ...NEW_SERVER_SETTINGS,
+      system: {
+        frontendUrl: "https://pdf.example.com",
+        backendUrl: "https://pdf.example.com",
+        enableAnalytics: false,
+      },
       mail: {
         enabled: true,
         host: "smtp.example.org",
@@ -757,6 +772,12 @@ describe("ServerSetupGate", () => {
     });
     renderGate();
     await openQuickStart();
-    expect(isShown(/^SMTP host/)).toBe(true);
+
+    expect(screen.getByText("1 of 1")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /^SMTP host/ })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: /^Web address/ })).toBeNull();
+    expect(
+      screen.getByRole("group", { name: "Sign in with" }),
+    ).toBeInTheDocument();
   });
 });

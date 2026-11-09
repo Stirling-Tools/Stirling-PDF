@@ -51,13 +51,26 @@ function isSectionOn(
   };
 }
 
-/** The sections on `step` that are switched on, and so have fields to fill in. */
+/** The step whose card holds each section. */
+const STEP_OF_SECTION: Record<ExpandableSection, SetupStepId> = {
+  signIn: "signIn",
+  email: "email",
+  ai: "ai",
+  documents: "ai",
+};
+
+/** The sections on `step` that are shown and switched on, and so have fields
+ *  to fill in; a configured step's sections are not on the card at all. */
 function sectionsOn(
   step: SetupStepId,
   draft: ServerSetupDraft,
+  configuredSteps: ReadonlySet<SetupStepId>,
 ): ExpandableSection[] {
   const isOn = isSectionOn(draft);
-  return (SECTIONS_BY_STEP[step] ?? []).filter((section) => isOn[section]);
+  return (SECTIONS_BY_STEP[step] ?? []).filter(
+    (section) =>
+      isOn[section] && !configuredSteps.has(STEP_OF_SECTION[section]),
+  );
 }
 
 /** Sections the server already has switched on, so already configured. */
@@ -76,8 +89,9 @@ export function sectionsConfiguredOnServer(
 export function initialOpenSection(
   step: SetupStepId,
   draft: ServerSetupDraft,
+  configuredSteps: ReadonlySet<SetupStepId> = new Set(),
 ): ExpandableSection | null {
-  return sectionsOn(step, draft)[0] ?? null;
+  return sectionsOn(step, draft, configuredSteps)[0] ?? null;
 }
 
 /** The section Save moves on to: the next one switched on below `current`, if any. */
@@ -85,10 +99,11 @@ export function nextOpenSection(
   step: SetupStepId,
   draft: ServerSetupDraft,
   current: ExpandableSection,
+  configuredSteps: ReadonlySet<SetupStepId> = new Set(),
 ): ExpandableSection | null {
   const order = SECTIONS_BY_STEP[step] ?? [];
   return (
-    sectionsOn(step, draft).find(
+    sectionsOn(step, draft, configuredSteps).find(
       (section) => order.indexOf(section) > order.indexOf(current),
     ) ?? null
   );
@@ -118,6 +133,8 @@ export interface SetupStepProps {
   setOpenSection: (section: ExpandableSection | null) => void;
   /** Sections the server had on, or that were shut while on; they read Configured. */
   configured: ReadonlySet<ExpandableSection>;
+  /** Steps the server already has settings for; their fields are not shown. */
+  configuredSteps: ReadonlySet<SetupStepId>;
   /** Checks `section`'s fields; when they pass, opens the next section switched on. */
   saveSection: (section: ExpandableSection) => void;
 }

@@ -45,6 +45,7 @@ import {
   draftToSave,
   issuersToCheck,
   prefillAddresses,
+  stepsConfiguredOnServer,
   stepsFor,
   validateStep,
   type ServerSetupDraft,
@@ -125,6 +126,8 @@ function ServerSetupFlow({
   const { t } = useTranslation();
   const stepCopy = useStepCopy();
   const [initial] = useState(() => draftFromSettings(settings));
+  // Fixed when the wizard opens, so a step switched on here stays on screen.
+  const [configuredSteps] = useState(() => stepsConfiguredOnServer(initial));
   const usingDefaultCredentials =
     passwordChange?.usingDefaultCredentials === true;
   const [draft, setDraft] = useState<ServerSetupDraft>(() => ({
@@ -155,7 +158,7 @@ function ServerSetupFlow({
     }
     setOpenSectionState(next);
   };
-  const steps = stepsFor(mode);
+  const steps = stepsFor(mode, configuredSteps);
   const {
     state: finishState,
     finish,
@@ -184,7 +187,7 @@ function ServerSetupFlow({
         aiAutoSet.current = true;
       }
     }
-    setOpenSection(initialOpenSection(step, target));
+    setOpenSection(initialOpenSection(step, target, configuredSteps));
   };
 
   /** Errors `step` has in `section`'s fields. */
@@ -208,7 +211,7 @@ function ServerSetupFlow({
       return;
     }
     setErrors({});
-    setOpenSection(nextOpenSection(step, draft, section));
+    setOpenSection(nextOpenSection(step, draft, section, configuredSteps));
   };
 
   const stepProps: SetupStepProps = {
@@ -221,6 +224,7 @@ function ServerSetupFlow({
     openSection,
     setOpenSection,
     configured,
+    configuredSteps,
     saveSection,
   };
 
@@ -373,8 +377,9 @@ function ServerSetupFlow({
         "serverSetup.start.subtitle",
         "Set it up for your team in a few steps.",
       ),
-      primaryLabel: t("serverSetup.continue", "Continue"),
-      onPrimary: () => goTo({ kind: "step", index: 0 }),
+      primaryLabel: finishOrContinue(steps.length === 0),
+      onPrimary: () =>
+        steps.length === 0 ? startFinish() : goTo({ kind: "step", index: 0 }),
       children: (
         <SettingRow label={setupLabel}>
           {() => (

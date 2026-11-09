@@ -38,10 +38,51 @@ export const QUICK_SUMMARY_STEPS: SetupStepId[] = [
   "ai",
 ];
 
-/** The numbered cards after the mode choice; Quick start's settings share one
- *  summary card. An owed password has its own card before these. */
-export function stepsFor(mode: SetupMode): SetupStepId[] {
-  return mode === "quick" ? ["summary", "analytics"] : SETUP_STEPS.custom;
+/** Whether the server has each step's settings set at all. Only steps with
+ *  an unmistakable set state are here: a locale or a file switch reads the
+ *  same whether an admin chose it or never touched it. */
+const SET_ON_SERVER: Partial<
+  Record<SetupStepId, (draft: ServerSetupDraft) => boolean>
+> = {
+  addresses: (draft) =>
+    Boolean(draft.frontendUrl.trim() || draft.backendUrl.trim()),
+  signIn: (draft) => draft.login !== "password",
+  email: (draft) => draft.emailEnabled,
+  ai: (draft) => draft.ai !== "off",
+  analytics: (draft) => draft.analytics !== null,
+};
+
+/** Steps the server already has set and complete, so setup leaves them out.
+ *  One set but incomplete stays in, so the admin can finish it. */
+export function stepsConfiguredOnServer(
+  initial: ServerSetupDraft,
+): Set<SetupStepId> {
+  return new Set(
+    (Object.keys(SET_ON_SERVER) as SetupStepId[]).filter(
+      (step) =>
+        SET_ON_SERVER[step]?.(initial) === true &&
+        Object.keys(validateStep(step, initial, "custom")).length === 0,
+    ),
+  );
+}
+
+/** The Quick start summary's settings the server doesn't already have. */
+function summaryStepsFor(configured: ReadonlySet<SetupStepId>): SetupStepId[] {
+  return QUICK_SUMMARY_STEPS.filter((step) => !configured.has(step));
+}
+
+/** The numbered cards after the mode choice, leaving out `configured` steps;
+ *  Quick start's settings share one summary card. An owed password has its
+ *  own card before these. */
+export function stepsFor(
+  mode: SetupMode,
+  configured: ReadonlySet<SetupStepId> = new Set(),
+): SetupStepId[] {
+  const shown = (step: SetupStepId) => !configured.has(step);
+  if (mode === "custom") return SETUP_STEPS.custom.filter(shown);
+  const summary: SetupStepId[] =
+    summaryStepsFor(configured).length > 0 ? ["summary"] : [];
+  return [...summary, ...(["analytics"] as SetupStepId[]).filter(shown)];
 }
 
 /** Issuer fields `step` would save with a new value; each must answer OIDC

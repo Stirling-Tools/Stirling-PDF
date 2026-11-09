@@ -12,6 +12,8 @@ import {
   prefillAddresses,
   revertStep,
   settingsDelta,
+  stepsConfiguredOnServer,
+  stepsFor,
   validateStep,
 } from "@editor/components/serverSetup/serverSetupDraft";
 
@@ -385,5 +387,56 @@ describe("isValidUsername", () => {
     expect(isValidUsername("ad..min")).toBe(false);
     expect(isValidUsername("has space")).toBe(false);
     expect(isValidUsername("anonymousUser")).toBe(false);
+  });
+});
+
+describe("settings the server already has", () => {
+  const fresh = draftFromSettings(SETTINGS);
+  const preconfigured = {
+    ...fresh,
+    frontendUrl: ORIGIN,
+    backendUrl: ORIGIN,
+    login: "keycloak" as const,
+    oauthIssuer: "https://sso.example.com/realms/pdf",
+    oauthClientId: "pdf",
+    oauthClientSecret: "********",
+    emailEnabled: true,
+    smtpHost: "mail.example.com",
+    smtpFrom: "pdf@example.com",
+    analytics: false,
+  };
+
+  it("asks about everything on a fresh server", () => {
+    expect(stepsConfiguredOnServer(fresh)).toEqual(new Set());
+    expect(stepsFor("quick", stepsConfiguredOnServer(fresh))).toEqual([
+      "summary",
+      "analytics",
+    ]);
+  });
+
+  it("leaves out each step the server already has", () => {
+    const configured = stepsConfiguredOnServer(preconfigured);
+    expect(configured).toEqual(
+      new Set(["addresses", "signIn", "email", "analytics"]),
+    );
+    expect(stepsFor("custom", configured)).toEqual(["language", "files", "ai"]);
+    expect(stepsFor("quick", configured)).toEqual(["summary"]);
+  });
+
+  it("keeps a step the server has switched on but not finished", () => {
+    const halfSet = { ...fresh, frontendUrl: ORIGIN };
+    expect(stepsConfiguredOnServer(halfSet).has("addresses")).toBe(false);
+    const noSender = { ...preconfigured, smtpFrom: "" };
+    expect(stepsConfiguredOnServer(noSender).has("email")).toBe(false);
+  });
+
+  it("drops the summary once it has nothing left to ask", () => {
+    const allSet = {
+      ...preconfigured,
+      ai: "custom" as const,
+      aiEngineUrl: "http://localhost:5001",
+      documentQuestions: false,
+    };
+    expect(stepsFor("quick", stepsConfiguredOnServer(allSet))).toEqual([]);
   });
 });
