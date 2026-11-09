@@ -42,10 +42,12 @@ export default function WorkbenchBarMobileActions({
           className="workbench-bar-action-icon"
           aria-label={t("workbenchBar.moreActions", "More actions")}
         >
-          <Icon name="ellipsis-vertical" size={"1.25rem"} />
-          {showFileActions && downloadUnsaved && (
-            <span className="workbench-bar-unsaved-dot" />
-          )}
+          <span className="workbench-bar-unsaved-anchor">
+            <Icon name="ellipsis-vertical" size={"1.25rem"} />
+            {showFileActions && downloadUnsaved && (
+              <span className="workbench-bar-unsaved-dot" />
+            )}
+          </span>
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>

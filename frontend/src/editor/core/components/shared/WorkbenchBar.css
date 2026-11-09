@@ -476,14 +476,15 @@
 }
 
 /* Changes not yet saved to where Save goes. */
-.workbench-bar-action-icon:has(.workbench-bar-unsaved-dot) {
+.workbench-bar-unsaved-anchor {
   position: relative;
+  display: inline-flex;
 }
 
 .workbench-bar-unsaved-dot {
   position: absolute;
-  top: -1px;
-  right: -1px;
+  top: -4px;
+  right: -4px;
   width: 0.4375rem;
   height: 0.4375rem;
   border-radius: 999px;

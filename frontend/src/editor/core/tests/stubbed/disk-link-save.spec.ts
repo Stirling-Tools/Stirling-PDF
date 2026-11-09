@@ -227,6 +227,12 @@ test.describe("Saving files that live on disk", () => {
     await expect(more.locator(".workbench-bar-unsaved-dot")).toBeVisible({
       timeout: 20_000,
     });
+    const dot = (await more
+      .locator(".workbench-bar-unsaved-dot")
+      .boundingBox())!;
+    const glyph = (await more.locator("svg").boundingBox())!;
+    expect(dot.x).toBeLessThan(glyph.x + glyph.width);
+    expect(dot.y + dot.height).toBeGreaterThan(glyph.y);
     await more.click();
     await expect(
       page
