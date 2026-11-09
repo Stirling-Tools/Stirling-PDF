@@ -2,8 +2,9 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, alert } = vi.hoisted(() => ({ get: vi.fn(), alert: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock("@editor/components/toast", () => ({ alert }));
 
 import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFamilySelect";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
@@ -57,6 +58,7 @@ describe("font picker server fonts", () => {
   beforeEach(() => {
     Element.prototype.scrollIntoView = vi.fn();
     get.mockReset();
+    alert.mockReset();
     resetServerFontsCache();
     get.mockImplementation(async (url: string) => {
       if (url === SERVER_FONTS_URL) return { data: MANIFEST };
@@ -97,8 +99,42 @@ describe("font picker server fonts", () => {
     fireEvent.click(await screen.findByText("Acme Sans"));
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("Acme Sans"));
+    await waitFor(() =>
+      expect(alert).toHaveBeenCalledWith({
+        alertType: "warning",
+        expandable: false,
+        title: "pdfTextEditor.fontPicker.serverFontFailed",
+      }),
+    );
     expect(
-      await screen.findByText("pdfTextEditor.fontPicker.serverFontFailed"),
-    ).toBeInTheDocument();
+      screen.queryByTestId("pdf-editor-device-fonts-notice"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reports a font with no characters for the selected text", async () => {
+    const onChange = vi.fn(async (): Promise<FontPickFailure> => "noGlyphs");
+    const input = renderPicker(onChange);
+
+    fireEvent.click(input);
+    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+
+    await waitFor(() =>
+      expect(alert).toHaveBeenCalledWith({
+        alertType: "warning",
+        expandable: false,
+        title: "pdfTextEditor.fontPicker.noGlyphs",
+      }),
+    );
+  });
+
+  it("raises nothing when the font applies", async () => {
+    const onChange = vi.fn(async () => null);
+    const input = renderPicker(onChange);
+
+    fireEvent.click(input);
+    fireEvent.click(await screen.findByText("Acme Sans"));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith("Acme Sans"));
+    expect(alert).not.toHaveBeenCalled();
   });
 });

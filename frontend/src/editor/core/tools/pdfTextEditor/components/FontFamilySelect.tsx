@@ -4,6 +4,7 @@ import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { alert } from "@editor/components/toast";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   faceStyleFlags,
@@ -61,7 +62,7 @@ function familyOptions(
   });
 }
 
-type DeviceFontNotice = "unavailable" | "none" | FontPickFailure;
+type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
@@ -177,44 +178,39 @@ export function FontFamilySelect({
     return groups;
   }, [serverOptions, deviceOptions, documentFamily, t]);
 
+  const pickFailureText = useCallback(
+    (failure: FontPickFailure): string =>
+      failure === "serverFontFailed"
+        ? t(
+            "pdfTextEditor.fontPicker.serverFontFailed",
+            "That server font could not be downloaded. The text was left unchanged.",
+          )
+        : t(
+            "pdfTextEditor.fontPicker.noGlyphs",
+            "This font has no characters for the selected text. The text was left unchanged.",
+          ),
+    [t],
+  );
+
   const applyFamily = useCallback(
     async (family: string) => {
       setNotice(null);
       setApplying(true);
       try {
         const failure = await onChange(family);
-        if (failure) setNotice(failure);
+        if (failure) {
+          alert({
+            alertType: "warning",
+            title: pickFailureText(failure),
+            expandable: false,
+          });
+        }
       } finally {
         setApplying(false);
       }
     },
-    [onChange],
+    [onChange, pickFailureText],
   );
-
-  const noticeText = (kind: DeviceFontNotice): string => {
-    switch (kind) {
-      case "unavailable":
-        return t(
-          "pdfTextEditor.fontPicker.deviceFontsUnavailable",
-          "Device fonts are unavailable. The built-in fonts still work.",
-        );
-      case "none":
-        return t(
-          "pdfTextEditor.fontPicker.deviceFontsNone",
-          "No extra device fonts were found.",
-        );
-      case "serverFontFailed":
-        return t(
-          "pdfTextEditor.fontPicker.serverFontFailed",
-          "That server font could not be downloaded. The text was left unchanged.",
-        );
-      case "noGlyphs":
-        return t(
-          "pdfTextEditor.fontPicker.noGlyphs",
-          "This font has no characters for the selected text. The text was left unchanged.",
-        );
-    }
-  };
 
   // Mantine shows nothing for a value with no matching option; the document
   // font is in `data` precisely so a recognised face still gets named.
@@ -285,7 +281,15 @@ export function FontFamilySelect({
       )}
       {notice && (
         <Text size="xs" c="dimmed" data-testid="pdf-editor-device-fonts-notice">
-          {noticeText(notice)}
+          {notice === "unavailable"
+            ? t(
+                "pdfTextEditor.fontPicker.deviceFontsUnavailable",
+                "Device fonts are unavailable. The built-in fonts still work.",
+              )
+            : t(
+                "pdfTextEditor.fontPicker.deviceFontsNone",
+                "No extra device fonts were found.",
+              )}
         </Text>
       )}
     </Group>
