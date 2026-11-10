@@ -183,6 +183,20 @@ describe("absolutizeManifestUrls", () => {
     expect(resolved.id).toBe("https://pdf.example.com/");
   });
 
+  test("resolves id against the start_url origin, not the manifest path", () => {
+    const subpathManifest: StaticManifest = {
+      ...MODERN_MANIFEST,
+      start_url: ".",
+      id: "foo",
+    };
+    const resolved = absolutizeManifestUrls(
+      subpathManifest,
+      "https://pdf.example.com/pdf/manifest.json",
+    );
+    expect(resolved.start_url).toBe("https://pdf.example.com/pdf/");
+    expect(resolved.id).toBe("https://pdf.example.com/foo");
+  });
+
   test("leaves already-absolute members untouched", () => {
     const withAbsoluteIcons: StaticManifest = {
       ...MODERN_MANIFEST,

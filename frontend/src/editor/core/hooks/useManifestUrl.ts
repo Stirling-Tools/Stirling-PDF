@@ -16,7 +16,8 @@ import { useLogoAssets } from "@editor/hooks/useLogoAssets";
  * opaque path, so relative references against it fail WHATWG URL parsing and the
  * icons are dropped — which fails Chrome's installability check. Before creating
  * the blob, rewrite `start_url`, every `icons[].src`, and (when present)
- * `scope`/`id` to absolute URLs resolved against the manifest's own URL, not the page URL.
+ * `scope` to an absolute URL resolved against the manifest's own URL, and
+ * `id` against the origin of `start_url`, as the spec requires.
  */
 
 /** PWA short names must stay within 12 code points (ellipsis included) */
@@ -102,11 +103,16 @@ export function absolutizeManifestUrls(
   base: string,
 ): StaticManifest {
   const next: StaticManifest = { ...manifest };
-  for (const key of ["start_url", "scope", "id"] as const) {
+  for (const key of ["start_url", "scope"] as const) {
     const resolved = resolveManifestUrl(next[key], base);
     if (resolved !== undefined) {
       next[key] = resolved;
     }
+  }
+  // The spec resolves `id` against the origin of `start_url`, not the manifest URL.
+  if (typeof next.start_url === "string" && typeof next.id === "string") {
+    next.id =
+      resolveManifestUrl(next.id, new URL(next.start_url).origin) ?? next.id;
   }
   if (Array.isArray(next.icons)) {
     next.icons = next.icons.map((icon) => {
