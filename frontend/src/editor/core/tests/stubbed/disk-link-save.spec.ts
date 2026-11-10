@@ -202,7 +202,7 @@ test.describe("Saving files that live on disk", () => {
     ).toBeVisible();
   });
 
-  test("Save a copy writes one copy beside the file, then keeps updating it", async ({
+  test("Save a copy writes one copy beside the file and keeps it as the home", async ({
     page,
   }) => {
     await openReport(page, { isDirty: true, saveMode: "copy" });
@@ -212,14 +212,18 @@ test.describe("Saving files that live on disk", () => {
     await page.keyboard.press("Control+s");
     await expect.poll(() => written(page)).toContain(copy);
     expect(await written(page)).not.toContain(REPORT);
+    await expect
+      .poll(async () => (await savedLeaves(page)).map((leaf) => leaf.dirty))
+      .toEqual([false]);
 
     await page.keyboard.press("Control+s");
-    await expect
-      .poll(async () => (await written(page)).filter((p) => p === copy).length)
-      .toBe(2);
-    expect(await written(page)).not.toContain(
-      "C:/Docs/quarterly-report (edited 2).pdf",
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
     );
+    expect(await written(page)).toEqual([copy]);
 
     // The copy's name is stored, so it is still there after a restart.
     await page.reload();
