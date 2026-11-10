@@ -29,9 +29,11 @@ import lombok.extern.slf4j.Slf4j;
  * because un-subscribed teams get the same grant and have no Stripe Price at all.
  *
  * <p>Defensive by construction: the {@code stripe} schema only exists where the sync engine has run
- * (dev + prod Supabase, not unit-test H2). Any {@link DataAccessException} - missing schema,
- * missing row, connectivity blip - degrades to {@link Optional#empty()} with a WARN so callers fall
- * back to calendar-month windows rather than 500ing the wallet endpoint.
+ * (dev + prod Supabase, not unit-test H2 or a migrations-only preview branch). Any {@link
+ * DataAccessException} - missing schema, missing row, connectivity blip - degrades to {@link
+ * Optional#empty()} with a WARN so callers fall back to calendar-month windows rather than 500ing
+ * the wallet endpoint. A missing schema is checked for rather than caught: on Postgres a failed
+ * statement aborts the caller's transaction, so catching it would still fail every query after it.
  */
 @Slf4j
 @Repository
@@ -84,6 +86,13 @@ public class StripeSubscriptionDao {
                     + " LEFT JOIN stripe.prices p ON p.id = item.price"
                     + " WHERE s.id = ?";
 
+    static final String BILLING_TABLES_PRESENT =
+            "SELECT to_regclass('stripe.subscriptions') IS NOT NULL"
+                    + " AND to_regclass('stripe.subscription_items') IS NOT NULL"
+                    + " AND to_regclass('stripe.prices') IS NOT NULL";
+
+    static final String PRICES_TABLE_PRESENT = "SELECT to_regclass('stripe.prices') IS NOT NULL";
+
     private final JdbcTemplate jdbcTemplate;
 
     public StripeSubscriptionDao(JdbcTemplate jdbcTemplate) {
@@ -93,6 +102,9 @@ public class StripeSubscriptionDao {
     /** Billing window + rate for {@code subscriptionId}; empty if unsynced or schema absent. */
     public Optional<SubscriptionBilling> findBilling(String subscriptionId) {
         if (subscriptionId == null || subscriptionId.isBlank()) {
+            return Optional.empty();
+        }
+        if (!present(BILLING_TABLES_PRESENT)) {
             return Optional.empty();
         }
         try {
@@ -155,6 +167,9 @@ public class StripeSubscriptionDao {
                         + " WHERE p.lookup_key = ? AND p.currency = ?"
                         + " AND COALESCE(p.active, true) = true"
                         + " ORDER BY p.created DESC NULLS LAST LIMIT 1";
+        if (!present(PRICES_TABLE_PRESENT)) {
+            return Optional.empty();
+        }
         try {
             List<PriceRate> rows =
                     jdbcTemplate.query(
@@ -207,6 +222,16 @@ public class StripeSubscriptionDao {
             rate = null;
         }
         return rate;
+    }
+
+    /** {@code to_regclass} answers null for a missing table instead of failing the statement. */
+    private boolean present(String check) {
+        try {
+            return Boolean.TRUE.equals(jdbcTemplate.queryForObject(check, Boolean.class));
+        } catch (DataAccessException e) {
+            // Databases without to_regclass (H2 in tests) have no stripe schema either.
+            return false;
+        }
     }
 
     private static LocalDateTime toLocal(long epochSeconds) {

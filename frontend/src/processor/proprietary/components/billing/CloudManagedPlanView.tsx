@@ -9,13 +9,14 @@ import { fetchCloudPlan } from "@processor/api/link";
 import { useApplyLinkFacts } from "@processor/contexts/LinkContext";
 import { qk } from "@processor/queries/keys";
 import { cloudUrl } from "@processor/components/account-link/cloudLinks";
+import { useAccountLinkOptional } from "@processor/contexts/AccountLinkContext";
 import { AccountConnectionNotice } from "@processor/components/account-link/AccountConnectionNotice";
 import "@editor/billing/billing-screen.css";
 
 /**
  * Usage & Billing for a server linked with a key. Whoever runs the server may never have signed in
  * to Stirling Cloud, so this page reads only what the server already caches with its own
- * credential and sends every change to stirling.com.
+ * credential and sends every change to the cloud it is linked to.
  */
 export function CloudManagedPlanView({
   licenseSection,
@@ -30,7 +31,10 @@ export function CloudManagedPlanView({
     refetchInterval: 60_000,
     retry: false,
   });
-  const billingUrl = cloudUrl("/settings/billing");
+  const billingUrl = cloudUrl(
+    "/settings/billing",
+    useAccountLinkOptional()?.status?.cloudAppUrl,
+  );
   const data = plan.data;
 
   // The tier everywhere else reads from the wallet, which a key-linked server cannot load.
@@ -68,7 +72,7 @@ export function CloudManagedPlanView({
           >
             {t(
               "portal.billing.cloudManaged.manage",
-              "Manage billing on stirling.com",
+              "Manage billing in Stirling Cloud",
             )}
           </Button>
         )}
@@ -86,7 +90,7 @@ export function CloudManagedPlanView({
           >
             {t(
               "portal.billing.cloudManaged.noticeBody",
-              "This server was connected with a link key. Your Stirling Cloud team changes the plan, payment details and spend limit on stirling.com.",
+              "This server was connected with a link key. Your Stirling Cloud team changes the plan, payment details and spend limit there.",
             )}
           </Banner>
           {data?.state === "OVER_LIMIT" && (
@@ -99,7 +103,7 @@ export function CloudManagedPlanView({
             >
               {t(
                 "portal.billing.cloudManaged.limitBody",
-                "Metered processing is paused until your Stirling Cloud team raises the limit on stirling.com.",
+                "Metered processing is paused until your Stirling Cloud team raises the limit.",
               )}
             </Banner>
           )}

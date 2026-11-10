@@ -114,8 +114,18 @@ public class AccountLinkClient {
         UNAVAILABLE
     }
 
+    /** {@code appUrl} is the cloud's web app, when it says; only a key redeem carries it today. */
     public record ConnectClaimResult(
-            ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+            ConnectClaimOutcome outcome,
+            String deviceId,
+            String deviceSecret,
+            Long teamId,
+            String appUrl) {
+        public ConnectClaimResult(
+                ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+            this(outcome, deviceId, deviceSecret, teamId, null);
+        }
+
         static ConnectClaimResult of(ConnectClaimOutcome outcome) {
             return new ConnectClaimResult(outcome, null, null, null);
         }
@@ -277,8 +287,13 @@ public class AccountLinkClient {
                 return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
             }
             Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
+            String appUrl = text(body, "appUrl");
             return new ConnectClaimResult(
-                    ConnectClaimOutcome.GRANTED, deviceId, deviceSecret, teamId);
+                    ConnectClaimOutcome.GRANTED,
+                    deviceId,
+                    deviceSecret,
+                    teamId,
+                    appUrl != null && isAbsoluteHttpUrl(appUrl) ? appUrl : null);
         } catch (RuntimeException e) {
             log.debug("Link key redeem parse failed: {}", e.getMessage());
             return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);

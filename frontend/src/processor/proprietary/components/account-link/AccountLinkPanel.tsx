@@ -54,7 +54,10 @@ function OwnerAccountLinkPanel() {
   const otherInstances = (instancesState.data ?? []).filter(
     (instance) => !deviceId || instance.deviceId !== deviceId,
   );
-  const cloudSettingsUrl = cloudUrl("/settings/account-link");
+  const cloudSettingsUrl = cloudUrl(
+    "/settings/account-link",
+    link.status?.cloudAppUrl,
+  );
 
   const revoke = useCallback(async (instance: LinkedInstanceRow) => {
     setRevokingId(instance.instanceId);

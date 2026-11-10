@@ -51,6 +51,16 @@ public class DeviceCredentialStore {
 
     @Transactional
     public void save(String deviceId, String deviceSecret, Long teamId, LinkMethod method) {
+        save(deviceId, deviceSecret, teamId, method, null);
+    }
+
+    @Transactional
+    public void save(
+            String deviceId,
+            String deviceSecret,
+            Long teamId,
+            LinkMethod method,
+            String cloudAppUrl) {
         assertNoHandover();
         DeviceCredential cred = repo.findCredential().orElseGet(DeviceCredential::new);
         cred.setId(DeviceCredential.SINGLETON_ID);
@@ -62,6 +72,7 @@ public class DeviceCredentialStore {
         cred.setEntitlementRevoked(false);
         cred.setFleetUserLimit(null);
         cred.setLinkMethod(method);
+        cred.setCloudAppUrl(cloudAppUrl);
         repo.save(cred);
     }
 

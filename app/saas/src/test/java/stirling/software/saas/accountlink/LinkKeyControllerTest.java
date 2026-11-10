@@ -27,6 +27,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import stirling.software.common.cluster.RateLimitStore;
 import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
@@ -48,6 +49,7 @@ class LinkKeyControllerTest {
     @Mock private RateLimitStore rateLimits;
 
     private final MockHttpServletRequest http = new MockHttpServletRequest();
+    private final ApplicationProperties applicationProperties = new ApplicationProperties();
     private LinkKeyController controller;
     private Authentication auth;
 
@@ -57,7 +59,8 @@ class LinkKeyControllerTest {
                 new LinkKeyController(
                         service,
                         new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository),
-                        rateLimits);
+                        rateLimits,
+                        applicationProperties);
         http.setRemoteAddr("203.0.113.9");
         auth =
                 new AnonymousAuthenticationToken(
@@ -160,6 +163,7 @@ class LinkKeyControllerTest {
     @Test
     void redeem_returnsTheCredential() {
         allowRedeem();
+        applicationProperties.getSystem().setFrontendUrl("https://cloud.example/app/");
         when(service.redeem("stlk_k.s", "host"))
                 .thenReturn(Optional.of(new LinkKeyService.Redeemed("dev", "sec", 7L)));
 
@@ -168,7 +172,9 @@ class LinkKeyControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody())
-                .isEqualTo(new LinkKeyController.RedeemResponse("dev", "sec", 7L));
+                .isEqualTo(
+                        new LinkKeyController.RedeemResponse(
+                                "dev", "sec", 7L, "https://cloud.example/app"));
     }
 
     @Test

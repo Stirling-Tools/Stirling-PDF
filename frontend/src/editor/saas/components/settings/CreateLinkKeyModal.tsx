@@ -1,8 +1,8 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
-import { Banner, Button, CodeBlock, FormField, Input, Modal } from "@editor/ui";
+import { Banner, Button, FormField, Input, Modal } from "@editor/ui";
 
 export const LINK_KEYS_PATH = "/api/v1/account-link/keys";
 
@@ -29,6 +29,8 @@ export function CreateLinkKeyModal({
   const { t, i18n } = useTranslation();
   const formId = useId();
   const [name, setName] = useState("");
+  const [copied, setCopied] = useState(false);
+  const keyField = useRef<HTMLInputElement>(null);
   const create = useMutation({
     mutationFn: async () => {
       const response = await apiClient.post<CreatedLinkKey>(
@@ -48,8 +50,21 @@ export function CreateLinkKeyModal({
     // After the close transition, so the key does not flash away while the modal fades.
     window.setTimeout(() => {
       setName("");
+      setCopied(false);
       create.reset();
     }, 200);
+  };
+
+  const copy = async () => {
+    if (!created) return;
+    try {
+      await navigator.clipboard.writeText(created.key);
+      setCopied(true);
+    } catch {
+      // Without clipboard access, leave the key selected for Ctrl+C.
+      keyField.current?.focus();
+      keyField.current?.select();
+    }
   };
 
   const expires = created
@@ -78,9 +93,16 @@ export function CreateLinkKeyModal({
       disableEscapeClose={create.isPending}
       footer={
         created ? (
-          <Button onClick={close}>
-            {t("settings.connectedInstances.linkKey.done", "Done")}
-          </Button>
+          <div className="account-connection__actions">
+            <Button variant="secondary" onClick={close}>
+              {t("settings.connectedInstances.linkKey.done", "Done")}
+            </Button>
+            <Button onClick={() => void copy()}>
+              {copied
+                ? t("settings.connectedInstances.linkKey.copied", "Copied")
+                : t("settings.connectedInstances.linkKey.copy", "Copy key")}
+            </Button>
+          </div>
         ) : (
           <div className="account-connection__actions">
             <Button
@@ -98,29 +120,26 @@ export function CreateLinkKeyModal({
       }
     >
       {created ? (
-        <div className="account-connection__key">
-          <CodeBlock
-            code={created.key}
-            caption={t(
-              "settings.connectedInstances.linkKey.caption",
-              "Link key",
-            )}
+        <FormField
+          label={t("settings.connectedInstances.linkKey.caption", "Link key")}
+          info={t(
+            "settings.connectedInstances.linkKey.envHint",
+            "A server can also read it from the STIRLING_BILLING_ACCOUNT_LINK_KEY setting.",
+          )}
+          helperText={t(
+            "settings.connectedInstances.linkKey.useIt",
+            "Add it as the License key under Usage & Billing on the server. Shown once, works once, expires {{date}}.",
+            { date: expires },
+          )}
+        >
+          <Input
+            ref={keyField}
+            readOnly
+            value={created.key}
+            className="account-connection__key"
+            onFocus={(event) => event.currentTarget.select()}
           />
-          <p>
-            {t(
-              "settings.connectedInstances.linkKey.instructions",
-              "On the server, open Usage & Billing and add it as the license key, or set it as STIRLING_BILLING_ACCOUNT_LINK_KEY.",
-            )}
-          </p>
-          <Banner
-            tone="warning"
-            description={t(
-              "settings.connectedInstances.linkKey.once",
-              "Copy it now. It is shown only once, works once, and expires on {{date}}.",
-              { date: expires },
-            )}
-          />
-        </div>
+        </FormField>
       ) : (
         <form
           id={formId}

@@ -148,7 +148,8 @@ public class LinkKeyRedeemService {
                                                 claim.deviceId(),
                                                 claim.deviceSecret(),
                                                 claim.teamId(),
-                                                LinkMethod.KEY);
+                                                LinkMethod.KEY,
+                                                claim.appUrl());
                                         return true;
                                     }));
         } catch (RuntimeException e) {

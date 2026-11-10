@@ -139,7 +139,16 @@ describe("Connected instances", () => {
       target: { value: " Prod " },
     });
     fireEvent.click(within(dialog).getByRole("button", { name: "Create key" }));
-    expect(await screen.findByText("stlk_k1.secret")).toBeInTheDocument();
+    expect(
+      await screen.findByDisplayValue("stlk_k1.secret"),
+    ).toBeInTheDocument();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    fireEvent.click(screen.getByRole("button", { name: "Copy key" }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith("stlk_k1.secret"),
+    );
+    expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
     expect(state.post).toHaveBeenCalledWith(
       "/api/v1/account-link/keys",
       { name: "Prod" },

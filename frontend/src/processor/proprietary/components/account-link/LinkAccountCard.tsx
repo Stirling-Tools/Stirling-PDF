@@ -101,7 +101,7 @@ export function LinkAccountCard({ link, instanceName }: Props) {
             <p className="portal-link__account">
               {t(
                 "portal.accountLink.card.linkedWithKey",
-                "Connected with a link key. Billing is managed on stirling.com.",
+                "Connected with a link key. Billing is managed in Stirling Cloud.",
               )}
             </p>
           )}

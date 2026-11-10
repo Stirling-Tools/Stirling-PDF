@@ -16,6 +16,8 @@ export interface LinkStatus {
   name?: string | null;
   /** KEY: linked with a key from Stirling Cloud, so no one here holds a cloud sign-in. */
   linkMethod?: "BROWSER" | "KEY" | null;
+  /** The linked cloud's web app, as it reported when the server linked. */
+  cloudAppUrl?: string | null;
 }
 
 /** What Stirling Cloud last told this server about its plan (GET /api/v1/account-link/plan). */

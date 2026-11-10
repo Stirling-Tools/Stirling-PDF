@@ -25,6 +25,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
 import stirling.software.common.cluster.RateLimitStore;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.saas.accountlink.LeaderTeamResolver.LeaderTeam;
 
 /**
@@ -44,12 +45,17 @@ public class LinkKeyController {
     private final LinkKeyService service;
     private final LeaderTeamResolver leaderTeams;
     private final RateLimitStore rateLimits;
+    private final ApplicationProperties applicationProperties;
 
     public LinkKeyController(
-            LinkKeyService service, LeaderTeamResolver leaderTeams, RateLimitStore rateLimits) {
+            LinkKeyService service,
+            LeaderTeamResolver leaderTeams,
+            RateLimitStore rateLimits,
+            ApplicationProperties applicationProperties) {
         this.service = service;
         this.leaderTeams = leaderTeams;
         this.rateLimits = rateLimits;
+        this.applicationProperties = applicationProperties;
     }
 
     public record CreateRequest(@Size(max = 255) String name) {}
@@ -58,7 +64,12 @@ public class LinkKeyController {
 
     public record RedeemRequest(String key, String name) {}
 
-    public record RedeemResponse(String deviceId, String deviceSecret, Long teamId) {}
+    /**
+     * {@code appUrl} is this cloud's web app, so the server links people to the account it joined
+     * rather than to whichever cloud its build defaults to.
+     */
+    public record RedeemResponse(
+            String deviceId, String deviceSecret, Long teamId, String appUrl) {}
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -125,8 +136,16 @@ public class LinkKeyController {
                         r ->
                                 ResponseEntity.ok(
                                         new RedeemResponse(
-                                                r.deviceId(), r.deviceSecret(), r.teamId())))
+                                                r.deviceId(),
+                                                r.deviceSecret(),
+                                                r.teamId(),
+                                                appUrl())))
                 .orElseGet(() -> ResponseEntity.badRequest().body(Map.of("error", "KEY_REJECTED")));
+    }
+
+    private String appUrl() {
+        String url = applicationProperties.getSystem().getFrontendUrl();
+        return url == null || url.isBlank() ? null : url.strip().replaceAll("/+$", "");
     }
 
     /** Not X-Forwarded-For: the caller sets it. The container resolves trusted proxies itself. */

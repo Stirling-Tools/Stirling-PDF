@@ -238,7 +238,9 @@ class AccountLinkClientTest {
     void redeemKeySendsOnlyTheKeyAndNameAndGrantsTheCredential() throws Exception {
         var requests = ArgumentCaptor.forClass(HttpRequest.class);
         HttpResponse<String> resp =
-                response(200, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7}");
+                response(
+                        200,
+                        "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":7,\"appUrl\":\"https://cloud.example/app\"}");
         when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(resp);
 
@@ -248,6 +250,7 @@ class AccountLinkClientTest {
         assertEquals("dev-1", result.deviceId());
         assertEquals("sec-1", result.deviceSecret());
         assertEquals(7L, result.teamId());
+        assertEquals("https://cloud.example/app", result.appUrl());
         HttpRequest request = requests.getValue();
         assertEquals("/api/v1/account-link/keys/redeem", request.uri().getPath());
         assertEquals(java.util.Optional.empty(), request.headers().firstValue("X-Device-Secret"));

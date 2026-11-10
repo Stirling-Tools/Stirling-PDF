@@ -22,8 +22,14 @@ vi.mock("@processor/contexts/LinkContext", () => ({
 vi.mock("@processor/components/account-link/AccountConnectionNotice", () => ({
   AccountConnectionNotice: () => null,
 }));
-vi.mock("@processor/components/account-link/cloudLinks", () => ({
-  cloudUrl: (path: string) => `https://cloud.example${path}`,
+const linkStatus = vi.hoisted(() => ({
+  current: { cloudAppUrl: "https://linked.example/app" } as {
+    cloudAppUrl: string | null;
+  } | null,
+}));
+vi.mock("@processor/contexts/AccountLinkContext", () => ({
+  useAccountLinkOptional: () =>
+    linkStatus.current ? { status: linkStatus.current } : null,
 }));
 
 import { CloudManagedPlanView } from "@editor/portal/components/billing/CloudManagedPlanView";
@@ -61,15 +67,15 @@ describe("CloudManagedPlanView", () => {
     applyLinkFacts.mockReset();
   });
 
-  it("shows the plan read-only and sends changes to stirling.com", async () => {
+  it("shows the plan read-only and sends changes to the linked cloud", async () => {
     mount();
     expect(await screen.findByText("Processor")).toBeInTheDocument();
     // Synced spend plus what this server has not reported yet.
     expect(screen.getByText("1,234")).toBeInTheDocument();
     expect(screen.getByText(/34 not yet synced/)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Manage billing on stirling.com/ }),
-    ).toHaveAttribute("href", "https://cloud.example/settings/billing");
+      screen.getByRole("link", { name: /Manage billing in Stirling Cloud/ }),
+    ).toHaveAttribute("href", "https://linked.example/app/settings/billing");
     expect(screen.getByText("license row")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /limit/i })).toBeNull();
   });

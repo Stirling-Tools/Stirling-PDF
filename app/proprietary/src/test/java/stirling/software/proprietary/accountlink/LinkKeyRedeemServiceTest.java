@@ -61,13 +61,19 @@ class LinkKeyRedeemServiceTest {
     @Test
     void aGrantedKeyIsStoredAsAKeyLinkAndClearsTheCachedEntitlement() {
         when(client.redeemKey(key, "pdf.acme"))
-                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+                .thenReturn(
+                        new ConnectClaimResult(
+                                ConnectClaimOutcome.GRANTED,
+                                "dev",
+                                "sec",
+                                7L,
+                                "https://cloud.example/app"));
 
         LinkKeyRedeemService.Result result = service.redeemFromConfiguration(key, "pdf.acme");
 
         assertThat(result.outcome()).isEqualTo(Outcome.LINKED);
         assertThat(result.teamId()).isEqualTo(7L);
-        verify(store).save("dev", "sec", 7L, LinkMethod.KEY);
+        verify(store).save("dev", "sec", 7L, LinkMethod.KEY, "https://cloud.example/app");
         verify(cache).invalidate();
         verify(handle).close();
     }
@@ -75,10 +81,16 @@ class LinkKeyRedeemServiceTest {
     @Test
     void aCredentialThatCannotBeStoredIsRevokedSoNoInstanceIsStranded() {
         when(client.redeemKey(key, null))
-                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+                .thenReturn(
+                        new ConnectClaimResult(
+                                ConnectClaimOutcome.GRANTED,
+                                "dev",
+                                "sec",
+                                7L,
+                                "https://cloud.example/app"));
         org.mockito.Mockito.doThrow(new IllegalStateException("database down"))
                 .when(store)
-                .save("dev", "sec", 7L, LinkMethod.KEY);
+                .save("dev", "sec", 7L, LinkMethod.KEY, "https://cloud.example/app");
 
         assertThatThrownBy(() -> service.redeemFromConfiguration(key, null))
                 .isInstanceOf(IllegalStateException.class);
@@ -91,11 +103,17 @@ class LinkKeyRedeemServiceTest {
     void aLinkMadeWhileSaasAnsweredWinsAndTheNewCredentialIsRevoked() {
         when(store.isLinked()).thenReturn(false, true);
         when(client.redeemKey(key, null))
-                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.GRANTED, "dev", "sec", 7L));
+                .thenReturn(
+                        new ConnectClaimResult(
+                                ConnectClaimOutcome.GRANTED,
+                                "dev",
+                                "sec",
+                                7L,
+                                "https://cloud.example/app"));
 
         assertThat(service.redeemFromConfiguration(key, null).outcome())
                 .isEqualTo(Outcome.ALREADY_LINKED);
-        verify(store, never()).save(any(), any(), any(), any());
+        verify(store, never()).save(any(), any(), any(), any(), any());
         verify(client).revokeSelf("dev", "sec");
     }
 
@@ -134,7 +152,7 @@ class LinkKeyRedeemServiceTest {
 
         assertThat(service.redeemFromConfiguration(key, null).outcome())
                 .isEqualTo(Outcome.REJECTED);
-        verify(store, never()).save(any(), any(), any(), any());
+        verify(store, never()).save(any(), any(), any(), any(), any());
         verify(cache, never()).invalidate();
     }
 
@@ -146,7 +164,7 @@ class LinkKeyRedeemServiceTest {
 
         assertThat(service.redeemFromConfiguration(key, null).outcome())
                 .isEqualTo(Outcome.UNAVAILABLE);
-        verify(store, never()).save(any(), any(), any(), any());
+        verify(store, never()).save(any(), any(), any(), any(), any());
     }
 
     @Test

@@ -73,4 +73,8 @@ public class DeviceCredential implements Serializable {
             nullable = false,
             columnDefinition = "varchar(16) not null default 'BROWSER'")
     private LinkMethod linkMethod = LinkMethod.BROWSER;
+
+    /** The linked cloud's web app, as it reported at link time; null when it did not say. */
+    @Column(name = "cloud_app_url", length = 2048)
+    private String cloudAppUrl;
 }

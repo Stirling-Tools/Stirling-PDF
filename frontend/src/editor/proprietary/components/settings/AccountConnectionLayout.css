@@ -142,14 +142,12 @@
 }
 
 .account-connection__key {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  width: 100%;
 }
 
-.account-connection__key p {
-  margin: 0;
-  font-size: 0.875rem;
+.account-connection__key .sui-input__el {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
 }
 
 .account-connection__actions {
