@@ -5761,7 +5761,7 @@ tags = "combineren,samenvoegen,verenigen,merge,PDFs samenvoegen,PDFs combineren,
 title = "Samenvoegen"
 
 [home.mobile]
-brandAlt = "Stirling PDF-logo"
+brandAlt = "M13A-logo"
 openFiles = "Bestanden openen"
 swipeHint = "Veeg naar links of rechts om van weergave te wisselen"
 tools = "Tools"

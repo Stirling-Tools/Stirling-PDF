@@ -15,6 +15,7 @@ import {
 import { stripBasePath, withBasePath } from "@editor/constants/app";
 import { isSafePostLoginRedirect } from "@editor/services/postLoginRedirect";
 import { reportAccountLinkBlock } from "@editor/services/accountLinkBlock";
+import { isGuestActive } from "@editor/auth/guestAccess";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -115,6 +116,17 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
 
     const isPublicMobilePage =
       pathname.includes("/mobile-scanner") || pathname.includes("/mobile-sign");
+
+    // A guest has no session to expire: the call that failed belongs to an
+    // account they do not have, so the request fails where it was made and the
+    // sign-in stays an offer rather than a wall.
+    if (isGuestActive()) {
+      console.debug(
+        "[httpErrorHandler] 401 in guest mode, not redirecting:",
+        axiosError?.config?.url,
+      );
+      return false;
+    }
 
     // If not on auth page, redirect to login with expired session message
     if (!isAuthPage && !isPublicMobilePage && !skipAuthRedirect) {

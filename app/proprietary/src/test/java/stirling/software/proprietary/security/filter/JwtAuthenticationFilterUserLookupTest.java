@@ -50,7 +50,8 @@ class JwtAuthenticationFilterUserLookupTest {
                         userDetailsService,
                         new JwtAuthenticationEntryPoint(),
                         new ApplicationProperties.Security(),
-                        apiKeyAuthenticationService);
+                        apiKeyAuthenticationService,
+                        false);
         request = new MockHttpServletRequest("GET", "/api/v1/proprietary/ui-data/account");
         response = new MockHttpServletResponse();
         chain = new MockFilterChain();

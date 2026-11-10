@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -52,6 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final ApplicationProperties.Security securityProperties;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
+    /** Guests reach the file tools without a token; account-scoped calls still need one. */
+    private final boolean anonymousAccessAllowed;
 
     @Override
     protected void doFilterInternal(
@@ -80,6 +83,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // This allows public endpoints to work even with expired tokens in the request
             if (isPublicAuthEndpoint(requestURI, contextPath)) {
                 // For public auth endpoints, skip JWT validation and continue
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // A guest may reach the file tools with no token at all. The request continues
+            // unauthenticated, so anything account-scoped behind it still answers 401.
+            if (anonymousAccessAllowed
+                    && RequestUriUtils.isGuestAccessibleApi(requestURI, contextPath)) {
                 filterChain.doFilter(request, response);
                 return;
             }

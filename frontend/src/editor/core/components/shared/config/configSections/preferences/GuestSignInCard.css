@@ -1,0 +1,59 @@
+/* The guest's stand-in for the account cards: one sentence of explanation and
+   the sign-in that unlocks the account-only half of the app. Every colour comes
+   from a --c-* token so it tracks the theme like the cards around it. */
+
+.guest-signin-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.75rem;
+  background: var(--c-surface);
+}
+
+.guest-signin-card__text {
+  min-width: 15rem;
+  flex: 1 1 20rem;
+}
+
+.guest-signin-card__title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.guest-signin-card__body {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--c-text-subtle);
+}
+
+.guest-signin-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.5rem;
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.guest-signin-card__cta:hover {
+  filter: brightness(1.06);
+}
+
+.guest-signin-card__cta:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}

@@ -16,7 +16,7 @@ import stirling.software.SPDF.controller.web.ReactRoutingController;
 class CleanUrlInterceptorMvcTest {
 
     private static final String BROWSER_STATE = "a".repeat(64);
-    private static final String SPA_HTML = "<html><body>Stirling PDF</body></html>";
+    private static final String SPA_HTML = "<html><body>M13A</body></html>";
 
     private MockMvc mvc;
 

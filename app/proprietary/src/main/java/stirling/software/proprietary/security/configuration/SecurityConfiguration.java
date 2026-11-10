@@ -75,6 +75,7 @@ public class SecurityConfiguration {
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
     private final boolean loginEnabledValue;
+    private final boolean anonymousAccessAllowed;
     private final boolean runningProOrHigher;
 
     private final ApplicationProperties applicationProperties;
@@ -99,6 +100,7 @@ public class SecurityConfiguration {
             CustomUserDetailsService userDetailsService,
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("anonymousAccessAllowed") boolean anonymousAccessAllowed,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
@@ -119,6 +121,7 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
+        this.anonymousAccessAllowed = anonymousAccessAllowed;
         this.runningProOrHigher = runningProOrHigher;
         this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
@@ -358,7 +361,15 @@ public class SecurityConfiguration {
                                                         || RequestUriUtils.isPublicAuthEndpoint(
                                                                 uri, contextPath)
                                                         || RequestUriUtils.isFrontendRoute(
-                                                                contextPath, uri);
+                                                                contextPath, uri)
+                                                        // Guests get the file tools while the
+                                                        // admin surface and stored data stay
+                                                        // behind a sign-in.
+                                                        || (anonymousAccessAllowed
+                                                                && RequestUriUtils
+                                                                        .isGuestAccessibleApi(
+                                                                                uri,
+                                                                                contextPath));
                                             })
                                     .permitAll()
                                     .anyRequest()
@@ -491,6 +502,7 @@ public class SecurityConfiguration {
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
                 securityProperties,
-                apiKeyAuthenticationService);
+                apiKeyAuthenticationService,
+                anonymousAccessAllowed);
     }
 }

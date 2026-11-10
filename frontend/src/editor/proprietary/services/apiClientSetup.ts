@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 import { stripBasePath, withBasePath } from "@editor/constants/app";
 import { getBrowserId } from "@editor/utils/browserIdentifier";
 import { setPostLoginRedirectPath } from "@editor/auth/spring/springAuthClient";
+import { isGuestActive } from "@editor/auth/guestAccess";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -79,6 +80,9 @@ function isSessionRejected(error: unknown): boolean {
 }
 
 function redirectToLogin(): void {
+  // Guests are already where they may be: a redirect here would turn one
+  // account-scoped failure into a login wall over the whole editor.
+  if (isGuestActive()) return;
   const loginPath = withBasePath("/login");
   // Already there: another assignment would just reload the login page.
   if (window.location.pathname === loginPath) return;

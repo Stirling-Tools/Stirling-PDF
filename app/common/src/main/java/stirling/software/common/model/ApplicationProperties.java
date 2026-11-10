@@ -965,6 +965,14 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        /**
+         * Keep the PDF tools open to everyone while login is on: visitors who are not signed in
+         * work as guests, and only what belongs to an account (the admin surface, stored files,
+         * teams, API keys) asks them to sign in. Ignored when {@code enableLogin} is false, where
+         * every request is anonymous anyway.
+         */
+        private boolean allowAnonymousAccess = false;
+
         private boolean honorOwnerPasswords = true;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();

@@ -22,6 +22,12 @@ export interface NavFooterAppLink {
 export interface NavFooterProps {
   /** Name shown next to the avatar, and the source of its initials fallback. */
   displayName: string;
+  /**
+   * Draw the account row as a sign-in offer instead of an identity. Set for a
+   * guest, who has no account to show and whose only useful action is getting
+   * one; the row still opens settings, which is where the full offer lives.
+   */
+  guest?: boolean;
   /** Profile picture; initials are drawn when absent or the URL fails to load. */
   profilePictureUrl?: string | null;
   /** Omit to render the account row as static text (no settings affordance). */
@@ -66,6 +72,7 @@ let hasPlayedEnter = false;
  */
 export function NavFooter({
   displayName,
+  guest = false,
   profilePictureUrl,
   onOpenSettings,
   credits,
@@ -84,9 +91,14 @@ export function NavFooter({
   });
 
   const settingsLabel = t("fileSidebar.openSettings", "Open settings");
-  const accountLabel = onOpenSettings
-    ? `${displayName} - ${settingsLabel}`
-    : displayName;
+  // A guest's row reads "Sign in", not a made-up name: it is an invitation, and
+  // the tooltip names where it goes rather than repeating the label.
+  const signInLabel = t("guestAccess.signIn", "Sign in as administrator");
+  const accountLabel = guest
+    ? `${signInLabel} - ${settingsLabel}`
+    : onOpenSettings
+      ? `${displayName} - ${settingsLabel}`
+      : displayName;
 
   // One surface, hairline-separated rows. Each row gets a slot; the separators
   // are drawn by CSS between adjacent NON-EMPTY slots (see NavFooter.css), so a
@@ -170,15 +182,21 @@ export function NavFooter({
           >
             {/* Decorative: the button's own label already names the account. */}
             <span aria-hidden>
-              <Avatar
-                size="sm"
-                name={displayName}
-                src={profilePictureUrl ?? undefined}
-              />
+              {guest ? (
+                <span className="nav-footer__guest-icon">
+                  <Icon name="log-in" size={"1rem"} />
+                </span>
+              ) : (
+                <Avatar
+                  size="sm"
+                  name={displayName}
+                  src={profilePictureUrl ?? undefined}
+                />
+              )}
             </span>
             {!collapsed && (
               <span className="nav-footer__row-label sidebar-content-fade">
-                {displayName}
+                {guest ? signInLabel : displayName}
               </span>
             )}
             {onOpenSettings && !collapsed && (

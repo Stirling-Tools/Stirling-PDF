@@ -3,6 +3,11 @@ import type { SigningMenuItem } from "@editor/utils/signingItems";
 export interface QuickNavIdentity {
   displayName: string;
   profilePictureUrl: string | null;
+  /**
+   * Nobody is signed in, but the server lets visitors use the tools. The rail
+   * then draws a way in rather than an avatar for an account that isn't there.
+   */
+  isGuest?: boolean;
 }
 
 /** The last resolved account data, retained across view changes. */
@@ -53,6 +58,7 @@ export function updateQuickNavAccount(
     next.signingItems === previous.signingItems &&
     next.portalAccess === previous.portalAccess &&
     next.identity?.displayName === previous.identity?.displayName &&
-    next.identity?.profilePictureUrl === previous.identity?.profilePictureUrl;
+    next.identity?.profilePictureUrl === previous.identity?.profilePictureUrl &&
+    next.identity?.isGuest === previous.identity?.isGuest;
   return unchanged ? previous : next;
 }

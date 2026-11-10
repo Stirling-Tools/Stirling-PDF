@@ -7,6 +7,11 @@ export interface AppConfig {
   languages?: string[];
   defaultLocale?: string;
   enableLogin?: boolean;
+  /**
+   * Guests may use the tools without signing in. Only ever true when `enableLogin` is also true;
+   * when it is, the shell renders anonymously and offers sign-in instead of showing a login wall.
+   */
+  allowAnonymousAccess?: boolean;
   honorOwnerPasswords?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;

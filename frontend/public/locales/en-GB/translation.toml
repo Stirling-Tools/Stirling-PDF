@@ -5618,7 +5618,7 @@ tags = "combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,a
 title = "Merge"
 
 [home.mobile]
-brandAlt = "Stirling PDF logo"
+brandAlt = "M13A logo"
 openFiles = "Open files"
 swipeHint = "Swipe left or right to switch views"
 tools = "Tools"

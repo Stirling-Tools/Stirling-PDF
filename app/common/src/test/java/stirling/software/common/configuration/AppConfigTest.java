@@ -52,7 +52,7 @@ class AppConfigTest {
         @Test
         @DisplayName("constant beans return fixed values")
         void constants() {
-            assertThat(appConfig.appName()).isEqualTo("Stirling PDF");
+            assertThat(appConfig.appName()).isEqualTo("M13A");
             assertThat(appConfig.homeText()).isEqualTo("null");
             assertThat(appConfig.contextPath("/ctx")).isEqualTo("/ctx");
         }
@@ -66,7 +66,7 @@ class AppConfigTest {
         @Test
         @DisplayName("StirlingPDFLabel embeds version")
         void stirlingLabel() {
-            assertThat(appConfig.stirlingPDFLabel()).startsWith("Stirling-PDF v");
+            assertThat(appConfig.stirlingPDFLabel()).startsWith("M13A v");
         }
     }
 
@@ -102,9 +102,9 @@ class AppConfigTest {
         }
 
         @Test
-        @DisplayName("navBarText falls back to Stirling PDF when unset")
+        @DisplayName("navBarText falls back to M13A when unset")
         void navBarTextFallback() {
-            assertThat(appConfig.navBarText()).isEqualTo("Stirling PDF");
+            assertThat(appConfig.navBarText()).isEqualTo("M13A");
         }
 
         @Test

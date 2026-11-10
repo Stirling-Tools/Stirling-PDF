@@ -36,13 +36,16 @@ interface ShareLinkMetadata {
 export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAnonymous } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const handledTokenRef = useRef<string | null>(null);
 
   const normalizedToken = useMemo(() => token.trim(), [token]);
-  const isAuthenticated = Boolean(user);
+  // A share link is token-gated: a guest's stand-in session cannot open it, and
+  // treating it as one would report "no access" instead of offering the sign-in
+  // that would actually help.
+  const isAuthenticated = Boolean(user) && !isAnonymous;
 
   useEffect(() => {
     if (!normalizedToken) {

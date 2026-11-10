@@ -477,4 +477,39 @@ class RequestUriUtilsTest {
                     RequestUriUtils.isPublicAuthEndpoint(ctx + "/api/v1/info/load/all", ctx), ctx);
         }
     }
+
+    // --- guest access (security.allowAnonymousAccess) ---
+
+    @Test
+    void testIsGuestAccessibleApi_toleratesContextPath() {
+        assertTrue(
+                RequestUriUtils.isGuestAccessibleApi(
+                        "/api/v1/general/merge-pdfs", ""),
+                "no context path");
+        assertTrue(
+                RequestUriUtils.isGuestAccessibleApi(
+                        "/app/api/v1/general/merge-pdfs", "/app"),
+                "context path stripped");
+        assertFalse(
+                RequestUriUtils.isGuestAccessibleApi("/app/api/v1/admin/settings", "/app"),
+                "admin stays closed even under a context path");
+        assertFalse(RequestUriUtils.isGuestAccessibleApi(null, ""), "null uri");
+        assertFalse(
+                RequestUriUtils.isGuestAccessibleApi("/actuator/prometheus", ""),
+                "non-api path");
+    }
+
+    @Test
+    void testIsGuestAccessible_coversToolsShellAndAssets() {
+        // Tool API, the config the shell reads before sign-in, and the static assets.
+        assertTrue(RequestUriUtils.isGuestAccessible("/api/v1/general/merge-pdfs", ""));
+        assertTrue(RequestUriUtils.isGuestAccessible("/api/v1/config/app-config", ""));
+        assertTrue(RequestUriUtils.isGuestAccessible("/api/v1/proprietary/ui-data/login", ""));
+        // The login endpoints keep working, so an administrator can still sign in.
+        assertTrue(RequestUriUtils.isGuestAccessible("/api/v1/auth/login", ""));
+        // Account territory does not.
+        assertFalse(RequestUriUtils.isGuestAccessible("/api/v1/admin/settings", ""));
+        assertFalse(RequestUriUtils.isGuestAccessible("/api/v1/storage/files", ""));
+        assertFalse(RequestUriUtils.isGuestAccessible("/api/v1/auth/me", ""));
+    }
 }

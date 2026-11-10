@@ -68,9 +68,19 @@ public class AppConfig {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
+    /**
+     * Whether the file tools stay open to visitors who are not signed in. Only meaningful while
+     * login is on: with it off every request is anonymous anyway.
+     */
+    @Bean(name = "anonymousAccessAllowed")
+    public boolean anonymousAccessAllowed() {
+        return applicationProperties.getSecurity().isEnableLogin()
+                && applicationProperties.getSecurity().isAllowAnonymousAccess();
+    }
+
     @Bean(name = "appName")
     public String appName() {
-        return "Stirling PDF";
+        return "M13A";
     }
 
     @Bean(name = "appVersion")
@@ -104,7 +114,7 @@ public class AppConfig {
     @Bean(name = "navBarText")
     public String navBarText() {
         String navBar = applicationProperties.getUi().getAppNameNavbar();
-        return (navBar != null) ? navBar : "Stirling PDF";
+        return (navBar != null && !navBar.isBlank()) ? navBar : "M13A";
     }
 
     @Bean(name = "enableAlphaFunctionality")
@@ -201,7 +211,7 @@ public class AppConfig {
 
     @Bean(name = "StirlingPDFLabel")
     public String stirlingPDFLabel() {
-        return "Stirling-PDF" + " v" + appVersion();
+        return "M13A" + " v" + appVersion();
     }
 
     @Bean(name = "UUID")

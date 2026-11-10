@@ -13,7 +13,11 @@ import { QuickNavRailAccount } from "@editor/components/shared/quickNav/QuickNav
 
 const auth = vi.hoisted<
   Pick<ReturnType<typeof useAuth>, "displayName" | "loading" | "isAnonymous">
->(() => ({ displayName: "Ada", loading: false, isAnonymous: false }));
+>(() => ({
+  displayName: "Ada",
+  loading: false,
+  isAnonymous: false,
+}));
 const picture = vi.hoisted<{ url: string | null; loading: boolean }>(() => ({
   url: "/ada.png",
   loading: false,
@@ -136,6 +140,20 @@ describe("quick-nav identity during view switches", () => {
     await act(async () => resolveAccount({ username: "Grace" }));
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("draws a way in, not an avatar, for a guest", () => {
+    // The rail is the only account control in the app frame, and a guest has no
+    // name or face for it; the control becomes the offer instead.
+    auth.displayName = null;
+    auth.isAnonymous = true;
+    picture.url = null;
+    setup();
+    expect(
+      screen.getByRole("button", { name: /guestAccess\.signIn/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    auth.isAnonymous = false;
   });
 
   it("replaces the cached identity when the account lookup rejects after sign-out", async () => {

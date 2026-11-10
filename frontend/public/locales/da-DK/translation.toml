@@ -5761,7 +5761,7 @@ tags = "kombiner,saml,foren,flet,flet PDF'er,kombiner PDF'er,saml PDF'er,konkate
 title = "Flet"
 
 [home.mobile]
-brandAlt = "Stirling PDF-logo"
+brandAlt = "M13A-logo"
 openFiles = "Åbn filer"
 swipeHint = "Stryg til venstre eller højre for at skifte visning"
 tools = "Værktøjer"

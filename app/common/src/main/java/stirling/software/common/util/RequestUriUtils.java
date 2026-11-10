@@ -176,6 +176,35 @@ public class RequestUriUtils {
     }
 
     /**
+     * Whether a guest may call this endpoint while login is on ({@code
+     * security.allowAnonymousAccess}). The policy itself lives in {@link GuestApiPolicy}, so the
+     * guest-open surface is one auditable list rather than a set of conditions spread over the
+     * security configuration.
+     *
+     * @param requestURI The full request URI
+     * @param contextPath The servlet context path
+     * @return true if guests may reach the endpoint
+     */
+    public static boolean isGuestAccessibleApi(String requestURI, String contextPath) {
+        String trimmedUri = normalizeUriOrNull(contextPath, requestURI);
+        if (trimmedUri == null) {
+            return false;
+        }
+        return GuestApiPolicy.allowsGuest(trimmedUri);
+    }
+
+    /**
+     * Everything a guest may call under {@code security.allowAnonymousAccess}: the public auth
+     * endpoints, the guest-safe API surface, and the static/front-end assets behind it.
+     */
+    public static boolean isGuestAccessible(String requestURI, String contextPath) {
+        return isPublicAuthEndpoint(requestURI, contextPath)
+                || isGuestAccessibleApi(requestURI, contextPath)
+                || isStaticResource(contextPath, requestURI)
+                || isFrontendRoute(contextPath, requestURI);
+    }
+
+    /**
      * Checks if the request URI is a public authentication endpoint that doesn't require
      * authentication. This includes login, signup, OAuth callbacks, and public config endpoints.
      *

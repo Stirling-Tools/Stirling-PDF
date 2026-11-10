@@ -155,6 +155,52 @@ describe("Login", () => {
     });
   });
 
+  // Guest mode hands a visitor an anonymous session so the tools run, but
+  // /login is still the signed-out page: treating that stand-in as an account
+  // would bounce them back to the editor and leave no way in.
+  it("shows the form to a guest, despite their anonymous session", async () => {
+    const guestSession = {
+      user: {
+        id: "anonymous",
+        email: "anonymous@local",
+        username: "Anonymous User",
+        role: "USER",
+        is_anonymous: true,
+      },
+      access_token: "",
+      expires_in: 3600,
+    };
+
+    vi.mocked(useAuth).mockReturnValue({
+      session: guestSession,
+      user: guestSession.user,
+      displayName: "User",
+      isAnonymous: true,
+      isAdmin: false,
+      portalAccess: false,
+      role: "USER",
+      loading: false,
+      error: null,
+      signOut: vi.fn(),
+      refreshSession: vi.fn(),
+    });
+
+    render(
+      <TestWrapper>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </TestWrapper>,
+    );
+
+    await waitFor(() => {
+      expect(document.getElementById("email")).toBeTruthy();
+    });
+    expect(mockNavigate).not.toHaveBeenCalledWith("/editor", {
+      replace: true,
+    });
+  });
+
   it("should land an authenticated user on the editor", async () => {
     const mockSession = {
       user: {

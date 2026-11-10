@@ -5419,6 +5419,12 @@ loading = "Loading form fields..."
 pageNumber = "Page {{page}}"
 title = "Form Fields"
 
+[guestAccess]
+body = "Every PDF tool works without an account. Sign in as an administrator to open the server settings, stored files, teams and API keys."
+guestHint = "Opens the sign-in page"
+signIn = "Sign in as administrator"
+title = "You are using M13A as a guest"
+
 [getPdfInfo]
 downloadJson = "Download JSON"
 downloads = "Downloads"
@@ -5777,7 +5783,7 @@ tags = "combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,a
 title = "Merge"
 
 [home.mobile]
-brandAlt = "Stirling PDF logo"
+brandAlt = "M13A logo"
 openFiles = "Open files"
 swipeHint = "Swipe left or right to switch views"
 tools = "Tools"

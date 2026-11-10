@@ -90,6 +90,43 @@ class ConfigControllerTest {
         assertEquals("tools", body.get("defaultStartupView"));
     }
 
+    @Test
+    void getAppConfig_reportsGuestAccessOnlyWithLogin() {
+        // Login off: everyone is anonymous already, so there is nothing to advertise.
+        ApplicationProperties loginOff = new ApplicationProperties();
+        loginOff.getSecurity().setEnableLogin(false);
+        loginOff.getSecurity().setAllowAnonymousAccess(true);
+        Map<String, Object> offBody =
+                createConfigController(loginOff)
+                        .getAppConfig(mock(HttpServletRequest.class))
+                        .getBody();
+        assertNotNull(offBody);
+        assertEquals(false, offBody.get("enableLogin"));
+        assertEquals(false, offBody.get("allowAnonymousAccess"));
+
+        // Login on, guests allowed: the tools stay open and the UI offers sign-in.
+        ApplicationProperties guestMode = new ApplicationProperties();
+        guestMode.getSecurity().setEnableLogin(true);
+        guestMode.getSecurity().setAllowAnonymousAccess(true);
+        Map<String, Object> guestBody =
+                createConfigController(guestMode)
+                        .getAppConfig(mock(HttpServletRequest.class))
+                        .getBody();
+        assertNotNull(guestBody);
+        assertEquals(true, guestBody.get("enableLogin"));
+        assertEquals(true, guestBody.get("allowAnonymousAccess"));
+
+        // Login on, guests not allowed: today's behaviour, a login wall.
+        ApplicationProperties loginOnly = new ApplicationProperties();
+        loginOnly.getSecurity().setEnableLogin(true);
+        Map<String, Object> loginBody =
+                createConfigController(loginOnly)
+                        .getAppConfig(mock(HttpServletRequest.class))
+                        .getBody();
+        assertNotNull(loginBody);
+        assertEquals(false, loginBody.get("allowAnonymousAccess"));
+    }
+
     private ConfigController createConfigController(ApplicationProperties properties) {
         ApplicationContext context = mock(ApplicationContext.class);
         ExternalAppDepConfig externalAppDepConfig = mock(ExternalAppDepConfig.class);

@@ -1,5 +1,20 @@
-import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { springAuth } from "@editor/auth/spring/springAuthClient";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import {
+  springAuth,
+  createAnonymousSession,
+} from "@editor/auth/spring/springAuthClient";
+import {
+  getGuestAccessServerSnapshot,
+  getGuestAccessSnapshot,
+  setGuestSignedIn,
+  subscribeGuestAccess,
+} from "@editor/auth/guestAccess";
 import { getSpringAuthConfig } from "@editor/auth/config";
 import { isAdminRole } from "@editor/auth/roles";
 import { AuthContext } from "@editor/auth/context";
@@ -39,6 +54,13 @@ export function deriveDisplayName(
   if (user.is_anonymous) return translate("auth.displayName.user", "User");
   return user.username || user.email || null;
 }
+
+/**
+ * The stand-in session a guest works under while login is on but nobody has
+ * signed in. Built once: identity is what the editor's memos compare, so a
+ * fresh object per render would re-run every consumer.
+ */
+const GUEST_SESSION: AuthSession = createAnonymousSession();
 
 export interface SpringAuthProviderProps {
   children: ReactNode;
@@ -194,9 +216,25 @@ export function SpringAuthProvider({
     // Run once on mount: the provider owns its own subscription lifecycle.
   }, []);
 
-  const user = session?.user ?? null;
+  // Tell the store whether a real session exists, so guest mode steps aside the
+  // moment someone signs in and comes back when they sign out.
+  useEffect(() => {
+    setGuestSignedIn(session !== null);
+  }, [session]);
+
+  // Guests get a session of their own once the server says the tools are open
+  // (security.allowAnonymousAccess). A real sign-in always wins: the store keeps
+  // quiet while a session exists, and any landing session replaces this one.
+  const guestAccess = useSyncExternalStore(
+    subscribeGuestAccess,
+    getGuestAccessSnapshot,
+    getGuestAccessServerSnapshot,
+  );
+  const effectiveSession = session ?? (guestAccess ? GUEST_SESSION : null);
+
+  const user = effectiveSession?.user ?? null;
   const value: AuthContextValue = {
-    session,
+    session: effectiveSession,
     user,
     displayName: deriveDisplayName(user, translate),
     isAnonymous: user?.is_anonymous === true,
