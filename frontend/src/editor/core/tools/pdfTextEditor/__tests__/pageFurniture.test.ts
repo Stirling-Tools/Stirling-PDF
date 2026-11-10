@@ -30,16 +30,61 @@ function arabicIndic(n: number): string {
   );
 }
 
-/** A run of `text` whose box starts `y` points up the page. */
-function run(id: string, text: string, y: number, x = 72) {
-  return { id, text, bounds: { x, y, width: 200, height: 10 } };
+/** Turned `angle` degrees about (x, y). */
+function turned(angle: number, x: number, y: number) {
+  const r = (angle * Math.PI) / 180;
+  return {
+    a: Math.cos(r),
+    b: Math.sin(r),
+    c: -Math.sin(r),
+    d: Math.cos(r),
+    e: x,
+    f: y,
+  };
+}
+
+/**
+ * A run of `text` whose box starts `y` points up the page, black and square
+ * to it unless `look` says otherwise.
+ */
+function run(
+  id: string,
+  text: string,
+  y: number,
+  x = 72,
+  look: { alpha?: number; angle?: number } = {},
+) {
+  return {
+    id,
+    text,
+    bounds: { x, y, width: 200, height: 10 },
+    matrix: turned(look.angle ?? 0, x, y),
+    fill: { r: 0, g: 0, b: 0, a: look.alpha ?? 255 },
+  };
+}
+
+function image(id: string, x: number, y: number) {
+  return {
+    id,
+    bounds: { x, y, width: 30, height: 30 },
+    matrix: turned(0, x, y),
+  };
 }
 
 function page(
   pageIndex: number,
   runs: ReturnType<typeof run>[],
+  images: ReturnType<typeof image>[] = [],
 ): FurniturePage {
-  return { pageIndex, display: LETTER, runs };
+  return { pageIndex, display: LETTER, runs, images };
+}
+
+/** The kinds found on page `pageIndex`, by id. */
+function kindsOn(
+  found: ReturnType<typeof recogniseFurniture>,
+  pageIndex: number,
+) {
+  return Object.fromEntries(found.get(pageIndex) ?? []);
 }
 
 describe("furnitureText", () => {
@@ -132,5 +177,93 @@ describe("recogniseFurniture", () => {
   ])("reads text whose number %s as a footer", (_, text) => {
     const pages = [0, 1, 2].map((i) => page(i, [run(`p${i}`, text(i), 30)]));
     expect(recogniseFurniture(pages, 3).get(0)?.get("p0")).toBe("Footer");
+  });
+});
+
+describe("recogniseFurniture watermarks", () => {
+  /** A see-through "DRAFT" tiled across the page, as the watermark tool draws one. */
+  const tiles = (i: number) =>
+    [0, 372, 744].flatMap((y) =>
+      [0, 200, 400].map((x) =>
+        run(`w${i}-${x}-${y}`, "DRAFT", y, x, { alpha: 128 }),
+      ),
+    );
+
+  it("reads tiled see-through text as a watermark, even at the page's edges", () => {
+    const pages = [0, 1].map((i) =>
+      page(i, [run(`h${i}`, "Acme Corp", 760), ...tiles(i)]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 2), 0)).toEqual({
+      h0: "Header",
+      ...Object.fromEntries(tiles(0).map((tile) => [tile.id, "Watermark"])),
+    });
+  });
+
+  it("reads text set at an angle in the same place on most pages as a watermark", () => {
+    const pages = [0, 1].map((i) =>
+      page(i, [run(`c${i}`, "CONFIDENTIAL", 400, 200, { angle: 45 })]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 2), 1)).toEqual({
+      c1: "Watermark",
+    });
+  });
+
+  it("reads a tiled page of a one-page document as watermarked", () => {
+    const tiled = [
+      run("t1", "COPY", 100, 50),
+      run("t2", "COPY", 400, 400),
+      run("t3", "COPY", 700, 50),
+    ];
+    expect(kindsOn(recogniseFurniture([page(0, tiled)], 1), 0)).toEqual({
+      t1: "Watermark",
+      t2: "Watermark",
+      t3: "Watermark",
+    });
+  });
+
+  it("leaves copies of a label that do not spread across the page", () => {
+    const labels = (i: number) =>
+      [300, 400, 500].map((y) => run(`n${i}-${y}`, "N/A", y, 300));
+    const pages = [0, 1].map((i) => page(i, labels(i)));
+    expect(recogniseFurniture(pages, 2).size).toBe(0);
+  });
+
+  it("leaves see-through text one page shows once", () => {
+    const pages = [
+      page(0, [run("s0", "Note", 400, 72, { alpha: 128 })]),
+      page(1, []),
+    ];
+    expect(recogniseFurniture(pages, 2).size).toBe(0);
+  });
+
+  it("leaves text that repeats in place but looks like any other", () => {
+    const pages = [0, 1].map((i) => page(i, [run(`s${i}`, "Signature:", 400)]));
+    expect(recogniseFurniture(pages, 2).size).toBe(0);
+  });
+
+  it("reads tiled images as a watermark, and leaves an image each page shows once", () => {
+    const spread = [
+      [100, 100],
+      [450, 400],
+      [100, 700],
+    ];
+    const pages = [0, 1].map((i) =>
+      page(
+        i,
+        [],
+        [
+          {
+            ...image(`logo${i}`, 500, 700),
+            bounds: { x: 500, y: 700, width: 60, height: 20 },
+          },
+          ...spread.map(([x, y]) => image(`i${i}-${y}`, x, y)),
+        ],
+      ),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 2), 0)).toEqual({
+      "i0-100": "Watermark",
+      "i0-400": "Watermark",
+      "i0-700": "Watermark",
+    });
   });
 });

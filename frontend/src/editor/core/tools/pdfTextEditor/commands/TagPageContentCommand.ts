@@ -50,6 +50,12 @@ type Step =
       runMarks: readonly TagMark[];
     }
   | { kind: "image"; imageId: string; mcid: number; object: ObjectRetag }
+  | {
+      kind: "furnitureImage";
+      imageId: string;
+      tag: TagMark;
+      object: ObjectRetag;
+    }
   | { kind: "artifact"; object: ObjectRetag };
 
 interface Plan {
@@ -60,9 +66,9 @@ interface Plan {
 
 /**
  * Tag the untagged content drawn directly by a page, as a starting point the
- * user then corrects: each text block a P, or an artifact when `furniture`
- * names it (by run id) as page furniture, each image a Figure, every other
- * object an artifact, the new elements read in content order. Content already
+ * user then corrects: each text block a P and each image a Figure, or an
+ * artifact of the kind `furniture` names it as (by run or image id), every
+ * other object an artifact, the new elements read in content order. Content already
  * tagged or marked an artifact is left alone. Content marked with an MCID no
  * element owns counts as untagged, losing that mark. Content in a form
  * XObject is left alone: the editor cannot tag inside one. The page must
@@ -194,11 +200,7 @@ function planTagging(
         ? {
             kind: "furniture",
             runId: run.id,
-            tag: {
-              name: ARTIFACT_TAG,
-              mcid: null,
-              artifact: furnitureKind(kind),
-            },
+            tag: furnitureTag(kind),
             objects,
             runMarks,
           }
@@ -210,14 +212,18 @@ function planTagging(
     const dropped =
       image.containerPtr === 0 ? untagged(image.pdfiumObjPtr) : null;
     if (!dropped) continue;
+    const object = { ptr: image.pdfiumObjPtr, dropped };
+    const kind = furniture.get(image.id);
     located.push({
       at: order.get(image.pdfiumObjPtr) ?? Infinity,
-      step: {
-        kind: "image",
-        imageId: image.id,
-        mcid: nextMcid++,
-        object: { ptr: image.pdfiumObjPtr, dropped },
-      },
+      step: kind
+        ? {
+            kind: "furnitureImage",
+            imageId: image.id,
+            tag: furnitureTag(kind),
+            object,
+          }
+        : { kind: "image", imageId: image.id, mcid: nextMcid++, object },
     });
   }
 
@@ -292,6 +298,10 @@ function contentOrder(
   return order;
 }
 
+function furnitureTag(kind: Furniture): TagMark {
+  return { name: ARTIFACT_TAG, mcid: null, artifact: furnitureKind(kind) };
+}
+
 function isArtifact(tags: readonly TagMark[]): boolean {
   return tags.some((tag) => tag.name === ARTIFACT_TAG);
 }
@@ -318,6 +328,13 @@ function applyStep(
       if (!run) throw new Error(`no run ${step.runId}`);
       for (const object of step.objects) retagObject(doc, object, step.tag);
       run.tagMarks = [step.tag];
+      return;
+    }
+    case "furnitureImage": {
+      const image = page.findImage(step.imageId);
+      if (!image) throw new Error(`no image ${step.imageId}`);
+      retagObject(doc, step.object, step.tag);
+      image.artifact = true;
       return;
     }
     case "image": {
@@ -354,6 +371,12 @@ function revertStep(
       }
       const run = page.runs.find((r) => r.id === step.runId);
       if (run) run.tagMarks = step.runMarks;
+      return;
+    }
+    case "furnitureImage": {
+      restoreObject(doc, step.object, ARTIFACT_TAG);
+      const image = page.findImage(step.imageId);
+      if (image) image.artifact = false;
       return;
     }
     case "image": {

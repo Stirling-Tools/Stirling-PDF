@@ -98,8 +98,8 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
     }
     const furniture = recogniseFurniture(
       pageIndices.map((pageIndex) => {
-        const { display, runs } = doc.page(pageIndex);
-        return { pageIndex, display, runs };
+        const { display, runs, images } = doc.page(pageIndex);
+        return { pageIndex, display, runs, images };
       }),
       doc.pageCount,
     );

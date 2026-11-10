@@ -340,17 +340,43 @@ describe("tagAllPages", () => {
   });
 });
 
-/** `count` untagged pages, each with a running header, footer and page number around its own text. */
-function furnishedPdf(count: number): Uint8Array {
+/**
+ * What the watermark tool appends to a page on its default settings: a
+ * half-opaque light grey grid of the text, or of the image 30 points high,
+ * spaced 50 points apart.
+ */
+function toolWatermark(kind: "text" | "image"): string {
+  const grid =
+    kind === "text"
+      ? Array.from({ length: 14 * 9 }, (_, n) => {
+          const [x, y] = [(n % 9) * 86, Math.floor(n / 9) * 62];
+          return `BT /F1 12 Tf 1 0 0 1 ${x} ${y} Tm (DRAFT) Tj 0 -12 Td ET`;
+        })
+      : Array.from({ length: 10 * 8 }, (_, n) => {
+          const [x, y] = [(n % 8) * 80, Math.floor(n / 8) * 80];
+          return `q 30 0 0 30 ${x} ${y} cm /Im1 Do Q`;
+        });
+  return ["/GS0 gs 0.827 0.827 0.827 rg", ...grid].join("\n");
+}
+
+/**
+ * `count` untagged pages, each with a running header, footer and page number
+ * around its own text, and the watermark tool's output over it all when
+ * `watermark` says which.
+ */
+function furnishedPdf(count: number, watermark?: "text" | "image"): Uint8Array {
   const show = (x: number, y: number, text: string) =>
     `BT /F1 10 Tf ${x} ${y} Td (${text}) Tj ET`;
   const pages = Array.from({ length: count }, (_, i) => ({
     page: 10 + 2 * i,
     content: [
+      "q",
       show(72, 760, "Acme Corp | Q3 report"),
       show(72, 400, `Results for region ${String.fromCharCode(65 + i)}`),
       show(72, 70, "Confidential"),
       show(300, 30, `Page ${i + 1}`),
+      "Q",
+      ...(watermark ? [toolWatermark(watermark)] : []),
     ].join("\n"),
   }));
   return buildClassicPdf(
@@ -364,12 +390,20 @@ function furnishedPdf(count: number): Uint8Array {
         num: 3,
         body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
       },
+      {
+        num: 4,
+        body: streamBody(
+          "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8",
+          "\x80",
+        ),
+      },
       ...pages.flatMap(({ page, content }) => [
         {
           num: page,
           body:
             `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${page + 1} 0 R ` +
-            "/Resources << /Font << /F1 3 0 R >> >> >>",
+            "/Resources << /Font << /F1 3 0 R >> /XObject << /Im1 4 0 R >> " +
+            "/ExtGState << /GS0 << /ca 0.5 >> >> >> >>",
         },
         { num: page + 1, body: streamBody("", content) },
       ]),
@@ -417,6 +451,54 @@ describe("page furniture", () => {
 
     store.undo();
     expect(tagsShown(doc, 2).get("Page 3")).toBe("untagged");
+    store.dispose();
+  });
+
+  test("auto-tag makes the watermark tool's text an artifact, leaving the furniture under it", async () => {
+    const store = await storeFor(furnishedPdf(2, "text"));
+    await tagAllPages(store);
+    const doc = store.document!;
+    const drafts = doc
+      .page(1)
+      .runs.filter((run) => run.text.trim() === "DRAFT")
+      .map((run) => textTag(doc, run.snapshot()));
+    expect(drafts).toHaveLength(14 * 9);
+    expect(
+      drafts.every(
+        (tag) => tag.kind === "artifact" && tag.furniture === "Watermark",
+      ),
+    ).toBe(true);
+    const others = tagsShown(doc, 1);
+    others.delete("DRAFT");
+    expect(others).toEqual(
+      new Map([
+        ["Acme Corp | Q3 report", "Header"],
+        ["Results for region B", "P"],
+        ["Confidential", "Footer"],
+        ["Page 2", "PageNum"],
+      ]),
+    );
+    const saved = (await RawPdf.parse(await savedBytes(doc)))!;
+    const content = toLatin1(
+      (await saved.pageContent(saved.pageNumberAt(1)!))!,
+    );
+    expect(content).toContain(
+      "/Artifact <</Subtype/Watermark/Type/Pagination>> BDC",
+    );
+    store.dispose();
+  });
+
+  test("auto-tag makes the watermark tool's images artifacts, not figures", async () => {
+    const store = await storeFor(furnishedPdf(2, "image"));
+    await tagAllPages(store);
+    const images = store.document!.page(0).images;
+    expect(images).toHaveLength(10 * 8);
+    expect(images.every((image) => image.artifact && image.mcid === null)).toBe(
+      true,
+    );
+
+    store.undo();
+    expect(images.every((image) => !image.artifact)).toBe(true);
     store.dispose();
   });
 
