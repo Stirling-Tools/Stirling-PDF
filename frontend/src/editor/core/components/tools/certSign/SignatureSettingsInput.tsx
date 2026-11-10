@@ -7,9 +7,7 @@ import {
   Group,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { ActionIcon } from "@editor/ui/ActionIcon";
-import { Icon } from "@editor/ui/Icon";
-import { Tooltip } from "@editor/ui/Tooltip";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 
 export interface SignatureSettings {
@@ -47,22 +45,16 @@ const SignatureSettingsInput = ({
         <Text size="sm" fw={600}>
           {t("certSign.collab.signatureSettings.title", "Signature Appearance")}
         </Text>
-        <Tooltip
-          content={t(
+        <InfoTooltip
+          label={t(
             "certSign.collab.signatureSettings.description",
             "Configure how signatures will appear for all participants",
           )}
-        >
-          <ActionIcon
-            variant="quiet"
-            aria-label={t(
-              "certSign.collab.signatureSettings.title",
-              "Signature Appearance",
-            )}
-          >
-            <Icon name="info" size={16} />
-          </ActionIcon>
-        </Tooltip>
+          ariaLabel={t(
+            "certSign.collab.signatureSettings.title",
+            "Signature Appearance",
+          )}
+        />
       </Group>
 
       <div style={{ display: "flex", gap: "4px" }}>
@@ -159,22 +151,16 @@ const SignatureSettingsInput = ({
           disabled={disabled}
           size="sm"
         />
-        <Tooltip
-          content={t(
+        <InfoTooltip
+          label={t(
             "certSign.collab.sessionCreation.includeSummaryPageHelp",
             "A summary page will be added at the end with all signature metadata. The digital certificate signature boxes on individual pages will be suppressed (wet signatures are unaffected).",
           )}
-        >
-          <ActionIcon
-            variant="quiet"
-            aria-label={t(
-              "certSign.collab.sessionCreation.includeSummaryPage",
-              "Include Signature Summary Page",
-            )}
-          >
-            <Icon name="info" size={16} />
-          </ActionIcon>
-        </Tooltip>
+          ariaLabel={t(
+            "certSign.collab.sessionCreation.includeSummaryPage",
+            "Include Signature Summary Page",
+          )}
+        />
       </Group>
     </Stack>
   );

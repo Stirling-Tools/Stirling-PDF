@@ -29,7 +29,7 @@ export const useAutoRotateTips = (): TooltipContent => {
         ),
         description: t(
           "autoRotate.tooltip.confidenceThreshold.text",
-          "How certain the check has to be before a page is turned. Lower it to rotate more pages, raise it to leave more pages untouched.",
+          "How confident Tesseract must be before an image-only page is rotated. Pages with a readable text layer are decided without this threshold.",
         ),
       },
       {

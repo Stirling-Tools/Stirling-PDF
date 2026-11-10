@@ -10,6 +10,7 @@ import RestartConfirmationModal from "@editor/components/shared/config/RestartCo
 import { useRestartServer } from "@editor/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@editor/hooks/useAdminSettings";
 import { useSettingsDirty } from "@editor/hooks/useSettingsDirty";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { SettingsStickyFooter } from "@editor/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@editor/hooks/useLoginRequired";
 import type {
@@ -41,6 +42,8 @@ import "@editor/components/shared/config/configSections/security/AdminSecurityPa
 export default function AdminSecurityPage() {
   const { t } = useTranslation();
   const location = useLocation();
+  const { config } = useAppConfig();
+  const isEnterprise = config?.license === "ENTERPRISE";
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
     useLoginRequired();
   const {
@@ -54,7 +57,8 @@ export default function AdminSecurityPage() {
     sectionName: "security",
     enabled: loginEnabled,
     fetchTransformer: fetchSecuritySettings,
-    saveTransformer: saveSecuritySettings,
+    saveTransformer: (settings) =>
+      saveSecuritySettings(settings, { enterprise: isEnterprise }),
   });
 
   const connections = useAdminSettings<ConnectionsSettingsData>({
@@ -266,7 +270,7 @@ export default function AdminSecurityPage() {
           title={t("admin.settings.security.audit.label", "Audit Logging")}
           badge={<TierBadge tier="ENTERPRISE" />}
         >
-          <AuditLoggingCard {...securityCard} />
+          <AuditLoggingCard {...securityCard} enterprise={isEnterprise} />
         </SettingsCard>
       </Stack>
 

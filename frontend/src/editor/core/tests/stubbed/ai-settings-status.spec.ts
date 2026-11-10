@@ -77,7 +77,7 @@ function cardNamed(page: Page, heading: string) {
  */
 function smartModelInput(page: Page) {
   return cardNamed(page, "Models & Providers").getByRole("textbox", {
-    name: /^Smart model High-capability/,
+    name: /^Smart model.*High-capability/,
   });
 }
 
