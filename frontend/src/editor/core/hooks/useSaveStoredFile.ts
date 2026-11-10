@@ -87,7 +87,7 @@ export function useSaveStoredFile(): SaveStoredFile {
           return fail(
             t(
               "fileSidebar.dataLostBody",
-              "This browser lost this file's contents. Upload it again to keep working with it.",
+              "Couldn't find this file's contents. Add it again to keep working with it.",
             ),
           );
         const [enforced] = policiesEnforced
