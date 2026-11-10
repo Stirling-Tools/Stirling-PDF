@@ -59,10 +59,13 @@ describe("describeIssue", () => {
       t,
       issue({ occurrences: 1200, pages: [1, 2, 3, 4], pagesComplete: false }),
     );
-    expect(content.summary).toBe("Pages 1–4 and more · 1200 times");
+    expect(content.summary).toBe(
+      "Pages 1–4 (list may be incomplete) · 1200 times",
+    );
     expect(content.details).toContainEqual({
       label: "Pages",
-      value: "1–4 and more (pages are recorded for the first occurrences only)",
+      value:
+        "1–4 (only the first occurrences record a page, so this list may be incomplete)",
     });
   });
 

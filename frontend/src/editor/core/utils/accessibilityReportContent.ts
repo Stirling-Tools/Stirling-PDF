@@ -176,10 +176,8 @@ export function describeIssue(
       : pagesPartial
         ? t(
             "checkAccessibility.issue.onPagesPartial",
-            "Pages {{pages}} and more",
-            {
-              pages: pageList,
-            },
+            "Pages {{pages}} (list may be incomplete)",
+            { pages: pageList, count: pages.length },
           )
         : t("checkAccessibility.issue.onPages", "Pages {{pages}}", {
             pages: pageList,
@@ -226,7 +224,7 @@ export function describeIssue(
           : pagesPartial
             ? t(
                 "checkAccessibility.issue.pagesPartialValue",
-                "{{pages}} and more (pages are recorded for the first occurrences only)",
+                "{{pages}} (only the first occurrences record a page, so this list may be incomplete)",
                 { pages: pageList },
               )
             : pageList,
