@@ -7,6 +7,9 @@ const state = vi.hoisted(() => ({
   getConfig: vi.fn(),
   monitor: vi.fn(),
   preload: vi.fn(),
+  switchToLocal: vi.fn(),
+  startBackend: vi.fn(),
+  launch: { isFirstLaunch: false, setupComplete: true },
 }));
 vi.mock("@editor-proprietary/components/AppProviders", () => ({
   AppProviders: ({ children }: { children: ReactNode }) => (
@@ -17,6 +20,7 @@ vi.mock("@editor/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentConfig: state.getConfig,
     subscribeToModeChanges: () => () => {},
+    switchToLocal: state.switchToLocal,
   },
   JWT_EXPIRED_PROMPTED_KEY: "expiry",
 }));
@@ -33,6 +37,7 @@ vi.mock("@editor/services/tauriBackendService", () => ({
     getBackendUrl: () => "http://localhost:8080",
     isOnline: true,
     subscribeToStatus: () => () => {},
+    startBackend: state.startBackend,
   },
 }));
 vi.mock("@editor/services/selfHostedServerMonitor", () => ({
@@ -42,7 +47,7 @@ vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: { preloadEndpoints: state.preload },
 }));
 vi.mock("@editor/hooks/useFirstLaunchCheck", () => ({
-  useFirstLaunchCheck: () => ({ isFirstLaunch: false, setupComplete: true }),
+  useFirstLaunchCheck: () => state.launch,
 }));
 vi.mock("@editor/hooks/useDesktopUpdatePopup", () => ({
   useDesktopUpdatePopup: () => ({ state: {}, actions: {} }),
@@ -94,6 +99,9 @@ vi.mock("@editor/components/DesktopBannerInitializer", () => ({
 vi.mock("@editor/components/SaveShortcutListener", () => ({
   SaveShortcutListener: () => null,
 }));
+vi.mock("@editor/components/ProcessorStartupView", () => ({
+  ProcessorStartupView: () => null,
+}));
 vi.mock("@editor/components/LocalProcessingFolders", () => ({
   LocalProcessingFolders: () => null,
 }));
@@ -133,4 +141,14 @@ it("initializes backend monitoring and endpoint preload after a gate retry recov
     "http://localhost:8080",
   );
   expect(screen.queryByText("Workbench")).toBeNull();
+});
+
+it("shows the app on first launch without waiting for the backend to start", async () => {
+  state.launch = { isFirstLaunch: true, setupComplete: false };
+  state.getConfig.mockResolvedValue({ mode: "saas" });
+  state.switchToLocal.mockResolvedValue(undefined);
+  state.startBackend.mockReturnValue(new Promise(() => {}));
+  render(<AppProviders>Workbench</AppProviders>);
+  await screen.findByText("Workbench");
+  expect(state.startBackend).toHaveBeenCalled();
 });
