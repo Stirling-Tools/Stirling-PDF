@@ -13,6 +13,7 @@ import {
 } from "@editor/services/pdfAccessService";
 import {
   assertSignedPdfsEditable,
+  changePdfSecurity,
   preflightPdfOperation,
   signedPdfEditRefused,
 } from "@editor/services/pdfSessionUnlock";
@@ -97,6 +98,17 @@ describe("signed PDFs nobody has opened yet", () => {
       ),
     ).resolves.toBe(true);
     expect(inspect).not.toHaveBeenCalled();
+  });
+
+  it("reads a file that needs its opening password before removing protection", async () => {
+    const file = unread();
+    const form = new FormData();
+    form.set("password", "opening");
+    await expect(
+      changePdfSecurity(file, form, "/api/v1/security/remove-password"),
+    ).rejects.toThrow("digitally signed");
+    expect(inspect).toHaveBeenCalledWith(file, "opening");
+    expect(apiClient.post).not.toHaveBeenCalled();
   });
 
   it("treats an endpoint without declared output as a rewrite", () => {

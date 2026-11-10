@@ -48,6 +48,7 @@ import type {
 } from "@editor/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
+import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
 import {
   isStirlingFile,
   getFormFillFileId,
@@ -1305,6 +1306,7 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
+        await assertSignedPdfsEditable([currentFile], undefined, true);
         const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
@@ -2088,6 +2090,7 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
+        readOnly={pdfEditingLocked(pdfAccess)}
       />
     </Box>
   );
