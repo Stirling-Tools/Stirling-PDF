@@ -3271,6 +3271,214 @@ processing = "Processing ({{outcome}})..."
 unsupported_capability = "Unsupported capability: {{capability}}"
 usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
+[checkAccessibility]
+checking = "Checking..."
+download = "Download accessibility report"
+fileFailed = "failed"
+pickFile = "Show results for"
+submit = "Check accessibility"
+
+[checkAccessibility.breakdown]
+failingCount = "{{count}} failing"
+ok = "No issues"
+passing = "{{passed}} of {{total}} rules pass"
+
+[checkAccessibility.category]
+altText = "Alternative text"
+fonts = "Fonts"
+language = "Language"
+links = "Links & annotations"
+metadata = "Metadata & settings"
+structure = "Tags & structure"
+
+[checkAccessibility.categoryTip]
+altText = "Whether images and other non-text content have descriptions a screen reader can read out."
+fonts = "Whether fonts are included in the file and every character maps to real text, so it can be read aloud, searched and copied."
+language = "Whether the document says what language its text is in, so screen readers pronounce it correctly."
+links = "Whether links, comments and form fields are tagged and described, and reached in a sensible tab order."
+metadata = "Whether the file has a title, shows it when opened, declares PDF/UA, and has the settings assistive technology relies on."
+structure = "Whether the content is tagged so screen readers can follow it: headings, paragraphs, lists, tables and reading order, with decoration marked so it is skipped."
+
+[checkAccessibility.chip]
+untagged = "Untagged"
+
+[checkAccessibility.error]
+fileTitle = "This file could not be checked"
+partial = "Some files could not be checked."
+
+[checkAccessibility.facts]
+declares = "Declares PDF/UA"
+displaysTitle = "Shows its title"
+fonts = "Fonts embedded"
+language = "Declares a language"
+notEncrypted = "Not encrypted"
+tagged = "Tagged"
+title = "Has a title"
+
+[checkAccessibility.figures]
+summary_one = "{{count}} image needs a description (page {{pages}})"
+summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.grade]
+minor = "Minor issues"
+needsWork = "Needs work"
+pass = "Passes automated checks"
+poor = "Not accessible"
+
+[checkAccessibility.issue]
+appliesTo = "Applies to"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Details"
+documentLevel = "Whole document"
+onPages_one = "Page {{pages}}"
+onPages_other = "Pages {{pages}}"
+pages = "Pages"
+reportedAs = "Reported as"
+requirement = "Requirement"
+rule = "Rule"
+standard = "Standard"
+times_one = "{{count}} time"
+times_other = "{{count}} times"
+where = "Where"
+
+[checkAccessibility.manual]
+tip = "Automated checks cover only part of PDF/UA. These need a person."
+
+[checkAccessibility.objects]
+annotation = "An annotation"
+bookmark = "A bookmark"
+character = "A character in a font"
+contentPiece = "A piece of page content"
+document = "The document"
+drawing = "A drawing"
+figure = "A figure"
+file = "The file itself"
+font = "A font"
+form = "The form"
+formField = "A form field"
+link = "A link"
+markedContent = "Marked page content"
+metadata = "The document metadata"
+page = "A page"
+properties = "The document properties"
+tag = "A {{name}} tag"
+tagTree = "The tag tree"
+textPiece = "A piece of text"
+translatedMetadata = "A metadata entry with translations"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continued)"
+fail = "Fail"
+footer = "Checked with Stirling PDF"
+page = "Page {{n}}"
+pass = "Pass"
+title = "Accessibility report"
+
+[checkAccessibility.rules]
+annotationLanguage = "The language of comment or link text can't be worked out. Setting a language for the document fixes this."
+annotationNoDescription = "A comment, link or drawing has no text description, so screen readers have nothing to announce."
+annotationNotTagged = "A comment or drawing isn't tagged as an annotation, so screen readers can't reach it in reading order."
+artifactInsideTagged = "Something marked as decoration sits inside tagged content, so it is both read and skipped."
+bookmarkLanguage = "The language of the bookmarks can't be worked out. Setting a language for the document fixes this."
+contentLanguage = "The language of the page text can't be worked out, so screen readers may pronounce it wrongly. Setting a language for the document fixes this."
+figureNoAlt = "An image is tagged as a figure but has no description, so screen reader users won't know what it shows."
+fontMissingGlyphs = "An included font is missing some of the characters the document uses."
+fontNotEmbedded = "A font isn't included in the file, so the text may look different, or be read differently, on another computer."
+formFieldNotTagged = "A form field isn't tagged as part of a form, so screen readers may not find it."
+glyphWidths = "A font's character widths in the file don't match the font itself, so text may be spaced wrongly."
+headingSkipped = "Heading levels skip a step, for example from Heading 1 straight to Heading 3, which makes navigating by headings confusing."
+linkNoDescription = "A link has no description, so screen readers can only read out its address, or nothing."
+linkNotTagged = "A link isn't tagged as a link, so screen readers won't announce it as one."
+metadataLanguage = "The language of the document's metadata, such as its title, can't be worked out. Setting a language for the document fixes this."
+noConformanceClaim = "The file doesn't say it follows PDF/UA. Its metadata needs a PDF/UA identification entry."
+noMetadataStream = "The file has no XMP metadata, where PDF/UA keeps the document's title and conformance details."
+noTags = "The file has no tags at all, so screen readers can't tell headings, paragraphs, lists or tables apart, or read them in the right order."
+notdefGlyph = "The text uses a \"missing character\" placeholder, which shows as a blank or a box and can't be read aloud."
+noTitle = "The document has no title in its metadata."
+notMarkedTagged = "The file isn't flagged as tagged, so assistive technology may ignore the tags it has."
+noUnicode = "Some characters can't be converted to readable text, so screen readers and copy and paste may get them wrong."
+replacementTextLanguage = "The language of some replacement text can't be worked out. Setting a language for the document fixes this."
+symbolicEncoding = "A symbol font carries an encoding it shouldn't, so its characters may come out as the wrong letters."
+tabOrder = "A page with links or comments doesn't set its tab order to follow the document, so keyboard users may jump around the page."
+taggedInsideArtifact = "Tagged content sits inside something marked as decoration, so screen readers may skip it."
+titleNotDisplayed = "PDF viewers will show the file name instead of the document's title. The file needs its \"display document title\" setting turned on."
+untaggedContent = "Something on the page is neither tagged as content nor marked as decoration, so screen readers can't tell whether to read it. This is often a background image, header, footer or page number."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Comment and link language unknown"
+annotationNoDescription = "Comment, link or drawing without a description"
+annotationNotTagged = "Comment or drawing not tagged"
+artifactInsideTagged = "Decoration inside tagged content"
+bookmarkLanguage = "Bookmark language unknown"
+contentLanguage = "Text language unknown"
+figureNoAlt = "Image without a description"
+fontMissingGlyphs = "Font missing characters"
+fontNotEmbedded = "Font not embedded"
+formFieldNotTagged = "Form field not tagged"
+glyphWidths = "Font character widths don't match"
+headingSkipped = "Heading level skipped"
+linkNoDescription = "Link without a description"
+linkNotTagged = "Link not tagged"
+metadataLanguage = "Metadata language unknown"
+noConformanceClaim = "Doesn't declare PDF/UA"
+noMetadataStream = "No XMP metadata"
+noTags = "No tags"
+notdefGlyph = "Missing-character placeholder used"
+noTitle = "No document title"
+notMarkedTagged = "Not flagged as tagged"
+noUnicode = "Characters that can't be read as text"
+replacementTextLanguage = "Replacement text language unknown"
+symbolicEncoding = "Symbol font has the wrong encoding"
+tabOrder = "Tab order doesn't follow the document"
+taggedInsideArtifact = "Tagged content hidden as decoration"
+titleNotDisplayed = "Title isn't shown when opened"
+untaggedContent = "Content that isn't tagged"
+
+[checkAccessibility.score]
+aria = "Accessibility score {{score}} out of 100"
+checksTip = "{{failed}} of {{total}} checks failed, across {{rules}} of {{ruleTotal}} PDF/UA rules."
+how = "Each bar is how much of that area's share of the 100 points this file keeps. The numbers beside it are how many of that area's rules pass, out of how many it has. An area's first failing rule halves its share, and each further rule takes more. Untagged PDFs have their score halved."
+issues_one = "{{count}} issue"
+issues_other = "{{count}} issues"
+noIssues = "No issues found"
+subtitle_one = "{{profile}} · {{count}} page"
+subtitle_other = "{{profile}} · {{count}} pages"
+untaggedTip = "Screen readers can't follow an untagged PDF, so its score is halved."
+
+[checkAccessibility.sections]
+basics = "Document basics"
+breakdown = "Breakdown"
+manual = "Manual checks"
+
+[checkAccessibility.status]
+checking = "Checking {{current}} of {{total}}..."
+complete = "Check complete"
+
+[checkAccessibility.steps]
+results = "Results"
+standard = "Standard"
+
+[checkAccessibility.where]
+annotation = "Annotation {{n}}"
+bookmarks = "Bookmarks"
+character = "A character in {{font}}"
+contentItem = "Content item {{n}}"
+drawingStep = "Drawing step {{n}}"
+embeddedGraphic = "Embedded graphic"
+font = "Font {{name}}"
+metadata = "Document metadata"
+page = "Page {{n}}"
+piece = "Piece {{n}}"
+tag = "{{tag}} tag"
+tagTree = "Tag tree"
+wholeDocument = "Whole document"
+
+[checkAccessibility.where.properties]
+author = "Author"
+description = "Description"
+pdfUaPart = "PDF/UA part"
+title = "Title"
+
 [classification.families]
 correspondence = "Correspondence"
 education = "Education"
@@ -5687,6 +5895,11 @@ title = "Change Metadata"
 desc = "Change document restrictions and permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Change Permissions"
+
+[home.checkAccessibility]
+desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Check PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."

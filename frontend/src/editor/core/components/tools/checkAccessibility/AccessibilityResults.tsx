@@ -1,0 +1,123 @@
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Banner } from "@editor/ui/Banner";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Select } from "@editor/ui/Select";
+import { Spinner } from "@editor/ui/Spinner";
+import { downloadFile } from "@editor/services/downloadService";
+import { AccessibilityReportView } from "@editor/components/tools/checkAccessibility/AccessibilityReportView";
+import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
+import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
+import { scoreAccessibilityReport } from "@editor/utils/accessibilityScore";
+import type { FileId } from "@editor/types/file";
+import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
+
+interface AccessibilityResultsProps {
+  operation: CheckAccessibilityOperationHook;
+  /** Falls back to the first report when this file is not in the run. */
+  selectedFileId: FileId | null;
+  onSelectFile: (fileId: FileId) => void;
+}
+
+export function AccessibilityResults({
+  operation,
+  selectedFileId,
+  onSelectFile,
+}: AccessibilityResultsProps) {
+  const { t } = useTranslation();
+  const { results, isLoading, status, files } = operation;
+
+  const options = useMemo(
+    () =>
+      results.map((entry) => ({
+        value: entry.fileId,
+        label: entry.report
+          ? `${entry.fileName} · ${scoreAccessibilityReport(entry.report).score}`
+          : `${entry.fileName} · ${t("checkAccessibility.fileFailed", "failed")}`,
+      })),
+    [results, t],
+  );
+
+  const [buildingPdf, setBuildingPdf] = useState(false);
+
+  const downloadReportPdf = async () => {
+    setBuildingPdf(true);
+    try {
+      const pdf = await createAccessibilityReportPdf(results, t);
+      await downloadFile({ data: pdf, filename: pdf.name });
+    } catch (error) {
+      console.warn("[checkAccessibility] PDF report failed", error);
+    } finally {
+      setBuildingPdf(false);
+    }
+  };
+
+  const selected =
+    results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
+  const reportFile = files[0];
+
+  if (!selected) {
+    return isLoading ? (
+      <div className="a11y-loading">
+        <Spinner size="sm" />
+        <span>{status}</span>
+      </div>
+    ) : null;
+  }
+
+  return (
+    <div className="a11y-results" data-testid="a11y-results">
+      {(results.length > 1 || isLoading) && (
+        <div className="a11y-picker">
+          <Select
+            aria-label={t("checkAccessibility.pickFile", "Show results for")}
+            options={options}
+            value={selected.fileId}
+            onChange={(value) => {
+              const entry = results.find((item) => item.fileId === value);
+              if (entry) onSelectFile(entry.fileId);
+            }}
+            allowDeselect={false}
+            searchable={results.length > 6}
+          />
+          {isLoading && (
+            <div className="a11y-loading">
+              <Spinner size="sm" />
+              <span>{status}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selected.report ? (
+        <AccessibilityReportView
+          report={selected.report}
+          reportKey={selected.fileId}
+        />
+      ) : (
+        <Banner
+          tone="danger"
+          title={t(
+            "checkAccessibility.error.fileTitle",
+            "This file could not be checked",
+          )}
+          description={selected.error}
+        />
+      )}
+
+      {reportFile && (
+        <div className="a11y-download">
+          <Button
+            fullWidth
+            loading={buildingPdf}
+            leftSection={<Icon name="download" size={16} />}
+            onClick={() => void downloadReportPdf()}
+          >
+            {t("checkAccessibility.download", "Download accessibility report")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
