@@ -106,7 +106,7 @@ class PipelineDirectoryProcessorFailureTest {
 
         Path finished = tempDir.resolve("finishedFolders");
         assertEquals("one", Files.readString(finished.resolve("r.pdf")));
-        assertEquals("two", Files.readString(finished.resolve("r(1).pdf")));
+        assertEquals("two", Files.readString(finished.resolve("r (1).pdf")));
     }
 
     private static FileSystemResource named(Path path, String name) {

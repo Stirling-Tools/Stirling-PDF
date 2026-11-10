@@ -350,7 +350,7 @@ public class PipelineDirectoryProcessor {
         Path filePath = directory.resolve(originalFileName);
         int counter = 1;
         while (Files.exists(filePath)) {
-            String newName = appendSuffixToFileName(originalFileName, "(" + counter + ")");
+            String newName = appendSuffixToFileName(originalFileName, " (" + counter + ")");
             filePath = directory.resolve(newName);
             counter++;
         }
@@ -435,14 +435,14 @@ public class PipelineDirectoryProcessor {
     }
 
     /**
-     * A second output of one run with the same name gets "name(n).ext" rather than overwriting the
+     * A second output of one run with the same name gets "name (n).ext" rather than overwriting the
      * first, since the inputs are deleted afterwards. Files left by earlier runs are still
      * replaced.
      */
     private Path unwrittenThisRun(Path directory, String fileName, Set<Path> written) {
         Path candidate = directory.resolve(fileName);
         for (int n = 1; !written.add(candidate); n++) {
-            candidate = directory.resolve(appendSuffixToFileName(fileName, "(" + n + ")"));
+            candidate = directory.resolve(appendSuffixToFileName(fileName, " (" + n + ")"));
         }
         return candidate;
     }
