@@ -122,7 +122,6 @@ export async function readPdfiumSignatures(
   module: WrappedPdfiumModule,
   document: number,
   file: { pointer: number; length: number },
-  verify: boolean,
 ): Promise<PdfSignatureInfo[]> {
   const read: {
     info: PdfSignatureInfo;
@@ -165,13 +164,12 @@ export async function readPdfiumSignatures(
       },
     });
   }
-  if (verify)
-    for (const entry of read)
-      entry.info.digestMatches = await digestMatches(
-        module,
-        file,
-        entry.range,
-        entry.digest,
-      ).catch(() => null);
+  for (const entry of read)
+    entry.info.digestMatches = await digestMatches(
+      module,
+      file,
+      entry.range,
+      entry.digest,
+    ).catch(() => null);
   return read.map((entry) => entry.info);
 }

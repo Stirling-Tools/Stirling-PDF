@@ -31,7 +31,6 @@ const ready = {
 const request: PdfAccessRequest = {
   file: new Blob(["PDF"]),
   password: "",
-  verifySignatures: false,
   wasmUrl: "/pdfium.wasm",
   wasmModule: new WebAssembly.Module(
     new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]),
@@ -104,12 +103,10 @@ it("sends signature details after the blocking answer for a signed file", async 
   expect(
     scope.postMessage.mock.calls.map(([message]) => Object.keys(message)),
   ).toEqual([["access"], ["signatures"]]);
-  expect(readSignatures).toHaveBeenCalledWith(
-    ready,
-    1,
-    { pointer: 1, length: 3 },
-    false,
-  );
+  expect(readSignatures).toHaveBeenCalledWith(ready, 1, {
+    pointer: 1,
+    length: 3,
+  });
 });
 
 it("initialises PDFium once for consecutive files and wipes each file before freeing it", async () => {

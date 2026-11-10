@@ -28,7 +28,7 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-async function probe(name: string, verify = true) {
+async function probe(name: string) {
   const bytes = fs.readFileSync(path.join(FIXTURES, name));
   const pointer = pdfium.pdfium.wasmExports.malloc(bytes.length);
   (pdfium.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8.set(
@@ -37,12 +37,10 @@ async function probe(name: string, verify = true) {
   );
   const document = pdfium.FPDF_LoadMemDocument(pointer, bytes.length, "");
   try {
-    const signatures = await readPdfiumSignatures(
-      pdfium,
-      document,
-      { pointer, length: bytes.length },
-      verify,
-    );
+    const signatures = await readPdfiumSignatures(pdfium, document, {
+      pointer,
+      length: bytes.length,
+    });
     const heap = (pdfium.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
     expect(
       Buffer.from(heap.subarray(pointer, pointer + bytes.length)).equals(bytes),
@@ -108,16 +106,6 @@ describe("local signature probe", () => {
       digestMatches: true,
     });
     expect(signature.signerName).toMatch(/Timestamp/);
-  });
-
-  it("reads signers and later changes without hashing until asked", async () => {
-    const { signatures } = await probe("signature-two.pdf", false);
-    expect(
-      signatures.map((s) => [s.signerName, s.coversWholeFile, s.digestMatches]),
-    ).toEqual([
-      ["Test Signer", false, null],
-      ["Test Signer", true, null],
-    ]);
   });
 
   it("treats an empty signature field as unsigned", async () => {

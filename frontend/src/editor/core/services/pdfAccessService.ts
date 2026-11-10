@@ -308,13 +308,12 @@ function runInspection(
   file: Blob,
   password: string,
   signal: AbortSignal,
-  verifySignatures = false,
-  onSignatures?: (signatures: PdfSignatureInfo[] | null) => void,
 ): Promise<PdfAccess> {
   return new Promise((resolve, reject) => {
     let worker: Worker | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let started = false;
+    let holdsSlot = false;
     let finished = false;
     let delivered: PdfAccess | undefined;
     const lifetime = pdfAccessLifetime(file);
@@ -326,7 +325,7 @@ function runInspection(
       signal.removeEventListener("abort", abort);
       lifetime.removeEventListener("abort", abort);
       if (started) {
-        activeInspections--;
+        if (holdsSlot) activeInspections--;
         inspectingBytes -= file.size;
       } else {
         const index = inspectionQueue.indexOf(queued);
@@ -336,9 +335,7 @@ function runInspection(
       return true;
     };
     const fail = (error: unknown) => {
-      if (!finish()) return;
-      if (delivered) onSignatures?.(null);
-      else reject(error);
+      if (finish() && !delivered) reject(error);
     };
     const abort = () =>
       fail(new DOMException("Operation cancelled", "AbortError"));
@@ -354,13 +351,17 @@ function runInspection(
         signal.removeEventListener("abort", abort);
         resolve(data.access);
         if (!data.access.signed) finish(reusable());
+        else if (file.size > WORKER_REUSE_MAX_BYTES) {
+          holdsSlot = false;
+          activeInspections--;
+          drainInspections();
+        }
       } else if ("signatures" in data) {
         if (!lifetime.aborted) {
           signaturesByFile.set(file, data.signatures);
           publish();
         }
         finish(reusable());
-        onSignatures?.(data.signatures);
       } else fail(Object.assign(new Error(data.error), { code: data.code }));
     };
     const queued = {
@@ -371,6 +372,7 @@ function runInspection(
           return;
         }
         started = true;
+        holdsSlot = true;
         activeInspections++;
         inspectingBytes += file.size;
         timer = setTimeout(
@@ -395,7 +397,6 @@ function runInspection(
               const request: PdfAccessRequest = {
                 file,
                 password,
-                verifySignatures,
                 wasmUrl: pdfiumWasmUrl,
                 wasmModule,
               };
@@ -425,30 +426,6 @@ function runInspection(
       drainInspections();
     }
   });
-}
-
-export function verifyPdfSignatures(
-  file: Blob,
-  signal?: AbortSignal,
-): Promise<PdfSignatureInfo[]> {
-  const { signal: cancellation, dispose } = combineAbortSignals([
-    pdfAccessLifetime(file),
-    ...(signal ? [signal] : []),
-  ]);
-  return new Promise<PdfSignatureInfo[]>((resolve, reject) => {
-    runInspection(
-      file,
-      getPdfAccess(file)?.password ?? "",
-      cancellation,
-      true,
-      (signatures) =>
-        signatures
-          ? resolve(signatures)
-          : reject(new Error("Unable to check signatures locally")),
-    ).then((access) => {
-      if (!access.signed) resolve([]);
-    }, reject);
-  }).finally(dispose);
 }
 
 /** Authenticate without publishing credentials; concurrent readers share one worker per file and password. */
