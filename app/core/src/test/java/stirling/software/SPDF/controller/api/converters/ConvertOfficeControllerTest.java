@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -589,12 +590,12 @@ class ConvertOfficeControllerTest {
                                     return result;
                                 });
 
-                gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
+                gu.when(() -> GeneralUtils.generateFilename("report.docx", ".pdf"))
                         .thenReturn("report.pdf");
                 wr.when(
                                 () ->
                                         WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                                                any(TempFile.class), eq("report.pdf")))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.processFileToPDF(generalFile, null);
@@ -603,7 +604,7 @@ class ConvertOfficeControllerTest {
                 wr.verify(
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class), anyString()));
+                                        any(TempFile.class), eq("report.pdf")));
             }
 
             doc.close();

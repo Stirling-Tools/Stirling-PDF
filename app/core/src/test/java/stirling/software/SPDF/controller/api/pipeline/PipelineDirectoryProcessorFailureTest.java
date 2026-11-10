@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,6 +91,31 @@ class PipelineDirectoryProcessorFailureTest {
 
         verify(output).close();
         assertTrue(Files.exists(jobDir.resolve("error").resolve("a.pdf")));
+    }
+
+    @Test
+    void twoOutputsWithOneNameAreBothKept() throws Exception {
+        Path first = Files.writeString(tempDir.resolve("first"), "one");
+        Path second = Files.writeString(tempDir.resolve("second"), "two");
+        PipelineResult result = new PipelineResult();
+        result.setOutputFiles(List.of(named(first, "r.pdf"), named(second, "r.pdf")));
+        when(pipelineProcessor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+        processor.runPipelineAgainstFiles(
+                List.of(queued.toFile()), config(), jobDir, processingDir);
+
+        Path finished = tempDir.resolve("finishedFolders");
+        assertEquals("one", Files.readString(finished.resolve("r.pdf")));
+        assertEquals("two", Files.readString(finished.resolve("r(1).pdf")));
+    }
+
+    private static FileSystemResource named(Path path, String name) {
+        return new FileSystemResource(path) {
+            @Override
+            public String getFilename() {
+                return name;
+            }
+        };
     }
 
     private static PipelineConfig config() {
