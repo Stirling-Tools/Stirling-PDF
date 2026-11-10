@@ -53,7 +53,9 @@ function viewer(file: File, signatureCount = 0) {
     openDocumentBuffer: vi.fn(() => opened),
     closeDocument: close,
     getSignatures: vi.fn(() =>
-      PdfTaskHelper.resolve(new Array(signatureCount).fill({})),
+      PdfTaskHelper.resolve(
+        new Array(signatureCount).fill({ contents: new ArrayBuffer(8) }),
+      ),
     ),
   };
   const engine = withPdfViewerAccess(raw as unknown as PdfEngine<Blob>);
@@ -98,6 +100,18 @@ describe("viewer permission readiness", () => {
     });
     expect(raw.getSignatures).toHaveBeenCalledExactlyOnceWith(document);
     expect(read).not.toHaveBeenCalled();
+  });
+
+  it("does not treat an empty signature field as a signature", async () => {
+    const file = new File(["PDF"], "blank-signature-field.pdf");
+    const { engine, opened, raw, buffer } = viewer(file);
+    raw.getSignatures.mockReturnValue(
+      PdfTaskHelper.resolve([{ contents: new ArrayBuffer(0) }]),
+    );
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({ signed: false });
   });
 
   it("treats a PDF whose signatures cannot be read as signed", async () => {

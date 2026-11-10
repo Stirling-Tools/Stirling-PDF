@@ -66,6 +66,7 @@ export class FileAnalyzer {
     return looksEncryptedFromTrailer(file);
   }
 
+  // Separate PDF.js parse; page count and encryption belong to the probe in workers/pdfAccessWorker.ts.
   static async quickPDFAnalysis(file: File): Promise<{
     pageCount: number;
     isEncrypted: boolean;

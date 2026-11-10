@@ -4,8 +4,13 @@ import type { PdfAccessRequest } from "@editor/workers/pdfAccessWorker";
 
 const init = vi.hoisted(() => vi.fn());
 vi.mock("@embedpdf/pdfium", () => ({ init }));
-vi.mock("@editor/utils/pdfiumAccess", () => ({
-  readPdfiumAccess: () => ({ encrypted: false }),
+const readAccess = vi.hoisted(() => vi.fn(() => ({ encrypted: false })));
+const readSignatures = vi.hoisted(() =>
+  vi.fn(async () => [{ signerName: "Test Signer" }]),
+);
+vi.mock("@editor/utils/pdfiumAccess", () => ({ readPdfiumAccess: readAccess }));
+vi.mock("@editor/utils/pdfiumSignatures", () => ({
+  readPdfiumSignatures: readSignatures,
 }));
 
 const scope = {
@@ -89,4 +94,26 @@ it("falls back to the WASM asset when compilation is unavailable", async () => {
   expect(scope.postMessage).toHaveBeenCalledWith({
     access: { encrypted: false },
   });
+});
+
+it("sends signature details after the blocking answer for a signed file", async () => {
+  init.mockResolvedValue(ready);
+  readAccess.mockReturnValueOnce({ encrypted: false, signed: true } as never);
+  await scope.onmessage!({ data: request });
+  expect(
+    scope.postMessage.mock.calls.map(([message]) => Object.keys(message)),
+  ).toEqual([["access"], ["signatures"]]);
+  expect(readSignatures).toHaveBeenCalledWith(ready, 1, {
+    pointer: 1,
+    length: 3,
+  });
+});
+
+it("initialises PDFium once for consecutive files and wipes each file before freeing it", async () => {
+  init.mockResolvedValue(ready);
+  await scope.onmessage!({ data: request });
+  await scope.onmessage!({ data: { ...request, file: new Blob(["XYZ"]) } });
+  expect(init).toHaveBeenCalledOnce();
+  expect(Array.from(ready.pdfium.HEAPU8.subarray(1, 4))).toEqual([0, 0, 0]);
+  expect(ready.pdfium.wasmExports.free).toHaveBeenCalledTimes(2);
 });

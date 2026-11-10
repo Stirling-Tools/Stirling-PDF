@@ -5,7 +5,9 @@ import PdfAccessWorker from "@editor/workers/pdfAccessWorker?worker";
 import type {
   PdfAccessRequest,
   PdfAccessResponse,
+  PdfAccessWarmup,
 } from "@editor/workers/pdfAccessWorker";
+import type { PdfSignatureInfo } from "@editor/utils/pdfiumSignatures";
 import {
   pdfiumWasmUrl,
   pdfiumWasmModulePromise,
@@ -199,6 +201,8 @@ export function forgetPreviewPdfAccess(file: Blob, access: PdfAccess): void {
 
 /** Clear all credentials on logout or FileContext teardown. */
 export function clearPdfAccess(): void {
+  terminateIdleWorkers();
+  signaturesByFile = new WeakMap();
   sessionLifetime.abort();
   sessionLifetime = new AbortController();
   accessLifetimes = new WeakMap();
@@ -231,9 +235,14 @@ const INSPECTION_TIMEOUT_MS = 30_000;
 const MAX_INSPECTION_WORKERS = 2;
 // Each worker holds the input buffer and a WASM copy. Larger files run alone.
 const INSPECTION_BYTE_BUDGET = 100 * 1024 * 1024;
+const WORKER_REUSE_MAX_BYTES = 32 * 1024 * 1024;
+const IDLE_WORKER_TTL_MS = 30_000;
 const inspectionQueue: { size: number; start: () => void }[] = [];
+const idleWorkers: Worker[] = [];
+let idleWorkerTimer: ReturnType<typeof setTimeout> | undefined;
 let activeInspections = 0;
 let inspectingBytes = 0;
+let signaturesByFile = new WeakMap<Blob, PdfSignatureInfo[]>();
 
 function drainInspections(): void {
   while (inspectionQueue.length && activeInspections < MAX_INSPECTION_WORKERS) {
@@ -248,6 +257,53 @@ function drainInspections(): void {
   }
 }
 
+function terminateIdleWorkers(): void {
+  clearTimeout(idleWorkerTimer);
+  for (const worker of idleWorkers.splice(0)) worker.terminate();
+}
+
+function parkWorker(worker: Worker): void {
+  idleWorkers.push(worker);
+  clearTimeout(idleWorkerTimer);
+  idleWorkerTimer = setTimeout(terminateIdleWorkers, IDLE_WORKER_TTL_MS);
+}
+
+function startSpareWorker(): void {
+  const worker = new PdfAccessWorker();
+  parkWorker(worker);
+  void pdfiumWasmModulePromise.then((wasmModule) => {
+    if (!idleWorkers.includes(worker)) return;
+    const warmup: PdfAccessWarmup = {
+      warmup: true,
+      wasmUrl: pdfiumWasmUrl,
+      wasmModule,
+    };
+    try {
+      worker.postMessage(warmup);
+    } catch {
+      worker.postMessage({ ...warmup, wasmModule: null });
+    }
+  });
+}
+
+function releaseWorker(worker: Worker, reusable: boolean): void {
+  worker.onmessage = null;
+  worker.onerror = null;
+  if (reusable && idleWorkers.length < MAX_INSPECTION_WORKERS) {
+    parkWorker(worker);
+    return;
+  }
+  worker.terminate();
+  if (idleWorkers.length === 0) startSpareWorker();
+}
+
+export function getPdfSignatures(
+  file: Blob | string | null | undefined,
+): PdfSignatureInfo[] | undefined {
+  const blob = typeof file === "string" ? filesById.get(file)?.deref() : file;
+  return blob ? signaturesByFile.get(blob) : undefined;
+}
+
 function runInspection(
   file: Blob,
   password: string,
@@ -258,12 +314,15 @@ function runInspection(
     let timer: ReturnType<typeof setTimeout> | undefined;
     let started = false;
     let finished = false;
-    const finish = () => {
+    let delivered: PdfAccess | undefined;
+    const lifetime = pdfAccessLifetime(file);
+    const finish = (reusable = false) => {
       if (finished) return false;
       finished = true;
-      worker?.terminate();
+      if (worker) releaseWorker(worker, reusable);
       clearTimeout(timer);
       signal.removeEventListener("abort", abort);
+      lifetime.removeEventListener("abort", abort);
       if (started) {
         activeInspections--;
         inspectingBytes -= file.size;
@@ -274,9 +333,30 @@ function runInspection(
       drainInspections();
       return true;
     };
-    const abort = () => {
-      if (finish())
-        reject(new DOMException("Operation cancelled", "AbortError"));
+    const fail = (error: unknown) => {
+      if (finish() && !delivered) reject(error);
+    };
+    const abort = () =>
+      fail(new DOMException("Operation cancelled", "AbortError"));
+    const reusable = () =>
+      !!delivered &&
+      !delivered.encrypted &&
+      password === "" &&
+      file.size <= WORKER_REUSE_MAX_BYTES;
+    const onMessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
+      if (finished) return;
+      if ("access" in data) {
+        delivered = data.access;
+        signal.removeEventListener("abort", abort);
+        resolve(data.access);
+        if (!data.access.signed) finish(reusable());
+      } else if ("signatures" in data) {
+        if (!lifetime.aborted) {
+          signaturesByFile.set(file, data.signatures);
+          publish();
+        }
+        finish(reusable());
+      } else fail(Object.assign(new Error(data.error), { code: data.code }));
     };
     const queued = {
       size: file.size,
@@ -288,27 +368,21 @@ function runInspection(
         started = true;
         activeInspections++;
         inspectingBytes += file.size;
-        timer = setTimeout(() => {
-          if (finish())
-            reject(
+        timer = setTimeout(
+          () =>
+            fail(
               new DOMException(
                 "PDF permission inspection timed out. Try opening the file again.",
                 "TimeoutError",
               ),
-            );
-        }, INSPECTION_TIMEOUT_MS);
+            ),
+          INSPECTION_TIMEOUT_MS,
+        );
         try {
-          worker = new PdfAccessWorker();
-          worker.onmessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
-            if (!finish()) return;
-            if ("access" in data) resolve(data.access);
-            else
-              reject(Object.assign(new Error(data.error), { code: data.code }));
-          };
-          worker.onerror = () => {
-            if (finish())
-              reject(new Error("Unable to inspect PDF security locally"));
-          };
+          worker = idleWorkers.pop() ?? new PdfAccessWorker();
+          worker.onmessage = onMessage;
+          worker.onerror = () =>
+            fail(new Error("Unable to inspect PDF security locally"));
           startEagerWasmCompilation();
           void pdfiumWasmModulePromise
             .then((wasmModule) => {
@@ -331,16 +405,15 @@ function runInspection(
                 worker!.postMessage({ ...request, wasmModule: null });
               }
             })
-            .catch((error: unknown) => {
-              if (finish()) reject(error);
-            });
+            .catch(fail);
         } catch (error) {
-          if (finish()) reject(error);
+          fail(error);
         }
       },
     };
     signal.addEventListener("abort", abort, { once: true });
-    if (signal.aborted) abort();
+    lifetime.addEventListener("abort", abort, { once: true });
+    if (signal.aborted || lifetime.aborted) abort();
     else {
       inspectionQueue.push(queued);
       drainInspections();

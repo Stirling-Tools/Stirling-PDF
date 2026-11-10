@@ -7,6 +7,7 @@ import {
   rememberPdfAccess,
   type PdfAccess,
   ensureLocalPdfAccess,
+  getPdfSignatures,
   inspectLocalPdfAccess,
   setPdfAccessPolicy,
   subscribePdfAccess,
@@ -22,7 +23,10 @@ const workers = vi.hoisted(
   () =>
     [] as {
       onmessage?: (event: {
-        data: { access: PdfAccess } | { error: string; code: number };
+        data:
+          | { access: PdfAccess }
+          | { signatures: unknown[] }
+          | { error: string; code: number };
       }) => void;
       onerror?: () => void;
       postMessage: ReturnType<typeof vi.fn>;
@@ -277,8 +281,9 @@ describe("local inspection lifetime", () => {
       data: { access: { ...access, permissions: -4 } },
     });
     await expect(pending).resolves.toBe(true);
+    const created = workers.length;
     await expect(preflight()).resolves.toBe(true);
-    expect(workers).toHaveLength(1);
+    expect(workers).toHaveLength(created);
     expect(ownerPrompt).not.toHaveBeenCalled();
     expect(apiClient.post).not.toHaveBeenCalled();
   });
@@ -294,5 +299,91 @@ describe("local inspection lifetime", () => {
     workers[1].onmessage?.({ data: { access } });
     await expect(retry).resolves.toEqual(access);
     expect(getPdfAccess(file)).toBeUndefined();
+  });
+});
+
+describe("warm workers and background signature details", () => {
+  const plain: PdfAccess = {
+    ...access,
+    password: "",
+    encrypted: false,
+    permissions: -4,
+  };
+  const details = [{ signerName: "Test Signer", digestMatches: true }];
+
+  it("keeps a worker warm after a small unencrypted file and reuses it", async () => {
+    const first = inspectLocalPdfAccess(new File(["PDF"], "a.pdf"));
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledOnce(),
+    );
+    workers[0].onmessage?.({ data: { access: plain } });
+    await first;
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    const second = inspectLocalPdfAccess(new File(["PDF"], "b.pdf"));
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledTimes(2),
+    );
+    expect(workers).toHaveLength(1);
+    workers[0].onmessage?.({ data: { access: plain } });
+    await second;
+  });
+
+  it("does not keep a worker that held a large file", async () => {
+    const file = new File(["PDF"], "large.pdf");
+    Object.defineProperty(file, "size", { value: 64 * 1024 * 1024 });
+    const result = inspectLocalPdfAccess(file);
+    workers[0].onmessage?.({ data: { access: plain } });
+    await result;
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+  });
+
+  it("answers before signature details and publishes them when they arrive", async () => {
+    const file = new File(["PDF"], "signed.pdf");
+    const result = ensureLocalPdfAccess(file);
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledOnce(),
+    );
+    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    await expect(result).resolves.toMatchObject({ signed: true });
+    expect(getPdfSignatures(file)).toBeUndefined();
+    workers[0].onmessage?.({ data: { signatures: details } });
+    expect(getPdfSignatures(file)).toEqual(details);
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    const next = inspectLocalPdfAccess(new File(["PDF"], "next.pdf"));
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledTimes(2),
+    );
+    expect(workers).toHaveLength(1);
+    workers[0].onmessage?.({ data: { access: plain } });
+    await next;
+  });
+
+  it("discards signature details for a file closed before they arrive", async () => {
+    const file = createStirlingFile(new File(["PDF"], "signed.pdf"));
+    bindPdfAccess(file, file.fileId);
+    const result = ensureLocalPdfAccess(file);
+    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    await result;
+    forgetPdfAccess([file.fileId]);
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+    workers[0].onmessage?.({ data: { signatures: details } });
+    expect(getPdfSignatures(file)).toBeUndefined();
+  });
+
+  it("retires idle workers and clears details on logout", async () => {
+    vi.useFakeTimers();
+    const file = new File(["PDF"], "signed.pdf");
+    const result = ensureLocalPdfAccess(file);
+    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    await result;
+    workers[0].onmessage?.({ data: { signatures: details } });
+    clearPdfAccess();
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+    expect(getPdfSignatures(file)).toBeUndefined();
+    const again = inspectLocalPdfAccess(new File(["PDF"], "c.pdf"));
+    workers[1].onmessage?.({ data: { access: plain } });
+    await again;
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(workers[1].terminate).toHaveBeenCalledOnce();
   });
 });

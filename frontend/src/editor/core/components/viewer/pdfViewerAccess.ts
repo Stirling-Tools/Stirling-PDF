@@ -71,12 +71,15 @@ export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
           return;
         }
         if (!document.isEncrypted) {
+          // Second read of `signed`; belongs to the probe in workers/pdfAccessWorker.ts.
           engine.getSignatures(document).wait(
             (signatures) => {
               rememberUnencryptedPdf(
                 source,
                 document.pageCount,
-                signatures.length > 0,
+                signatures.some(
+                  (signature) => signature.contents.byteLength > 0,
+                ),
               );
               task.resolve(document);
             },
