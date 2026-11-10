@@ -6,7 +6,7 @@ import { useDiskWatcher } from "@editor/hooks/useDiskWatcher";
 
 /**
  * Desktop-only component that sets up keyboard shortcuts and exit warnings
- * - Ctrl/Cmd+S to save selected files
+ * - Ctrl/Cmd+S to run the toolbar's Save
  * - Ctrl/Cmd+N to open an empty new window
  * - Loads files queued for this window ("Open in new window" from My Files)
  * - Warning on app exit if unsaved files

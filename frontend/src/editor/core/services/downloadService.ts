@@ -8,6 +8,10 @@ export interface DownloadRequest {
   fileId?: string;
 }
 
+/** Whether {@link downloadFile} writes to a path the app learns (`savedPath`), so
+ *  a saved file can stay linked to it. False where a download leaves the app. */
+export const SAVES_TO_DISK = false;
+
 export interface DownloadResult {
   savedPath?: string;
   cancelled?: boolean;
