@@ -7,7 +7,7 @@
  * localBackend seam: self-hosted -> local Spring bearer, SaaS -> SaaS-backend
  * Supabase bearer). Resolved at build time via the `@editor/*` alias - see
  * `src/editor/proprietary/portal/usersCapabilities.ts`
- * (self-hosted, org-admin: everything) and `src/editor/saas/portal/usersCapabilities.ts`
+ * (self-hosted, org-admin: everything) and `src/processor/cloud/usersCapabilities.ts`
  * (SaaS, team-leader scoped: invite / rename / remove / seats only).
  */
 export interface UsersCapabilities {
