@@ -425,11 +425,14 @@ export const SignatureAPIBridge = forwardRef<
       activateSignaturePlacementMode: () => {
         if (!annotationApi || !signatureConfig) return;
 
-        annotationApi.setActiveTool(null);
-        annotationApi.setActiveTool("stamp");
-        configureStampDefaults().catch((error) => {
-          console.error("Error activating signature tool:", error);
-        });
+        configureStampDefaults()
+          .then(() => {
+            annotationApi.setActiveTool(null);
+            annotationApi.setActiveTool("stamp");
+          })
+          .catch((error) => {
+            console.error("Error activating signature tool:", error);
+          });
       },
 
       updateDrawSettings: (color: string, size: number) => {
@@ -578,6 +581,7 @@ export const SignatureAPIBridge = forwardRef<
       // Mark signatures as not applied when a new signature is placed
       const isSignatureStamp =
         annotation?.type === PdfAnnotationSubtype.STAMP &&
+        isSignMode &&
         isPlacementMode &&
         signatureConfig !== null;
 
@@ -615,6 +619,7 @@ export const SignatureAPIBridge = forwardRef<
     storeImageData,
     setSignaturesApplied,
     setPlacementSize,
+    isSignMode,
     isPlacementMode,
     signatureConfig,
     documentReady,
@@ -623,22 +628,31 @@ export const SignatureAPIBridge = forwardRef<
   usePlacedSignatureTracking();
 
   useEffect(() => {
-    if (!isPlacementMode || !documentReady) {
+    if (!isSignMode || !isPlacementMode || !documentReady) {
       return;
     }
 
     let cancelled = false;
-    configureStampDefaults().catch((error) => {
-      if (!cancelled) {
-        console.error("Error updating signature defaults:", error);
-      }
-    });
+    configureStampDefaults()
+      .then(() => {
+        if (!cancelled && annotationApi?.getActiveTool()?.id === "stamp") {
+          annotationApi.setActiveTool(null);
+          annotationApi.setActiveTool("stamp");
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("Error updating signature defaults:", error);
+        }
+      });
 
     return () => {
       cancelled = true;
     };
   }, [
+    isSignMode,
     isPlacementMode,
+    annotationApi,
     configureStampDefaults,
     placementSize,
     signatureConfig,

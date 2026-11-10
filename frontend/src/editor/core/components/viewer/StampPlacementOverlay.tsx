@@ -14,6 +14,8 @@ import {
   MAX_PREVIEW_HEIGHT_REM,
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
+  SIGNATURE_RESIZE_STEP,
+  SIGNATURE_RESIZE_WHEEL_THRESHOLD,
 } from "@editor/constants/signConstants";
 
 // Convert rem to pixels using browser's base font size (typically 16px)
@@ -35,7 +37,8 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
 }) => {
   const [preview, setPreview] = useState<SignaturePreview | null>(null);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
-  const { setPlacementPreviewSize } = useSignature();
+  const { placementSize, setPlacementSize, setPlacementPreviewSize } =
+    useSignature();
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +96,8 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
     }
 
     if (signatureLineZoom) {
-      const pdfSize = fitPlacedSignatureSize(preview.width, preview.height);
+      const pdfSize =
+        placementSize ?? fitPlacedSignatureSize(preview.width, preview.height);
       return {
         width: pdfSize.width * signatureLineZoom,
         height: pdfSize.height * signatureLineZoom,
@@ -129,7 +133,65 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
         preview.height * scale,
       ),
     };
-  }, [preview, containerRef, signatureLineZoom]);
+  }, [preview, containerRef, signatureLineZoom, placementSize]);
+
+  useEffect(() => {
+    if (isActive && signatureLineZoom && preview && !placementSize) {
+      setPlacementSize(fitPlacedSignatureSize(preview.width, preview.height));
+    }
+  }, [isActive, signatureLineZoom, preview, placementSize, setPlacementSize]);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!isActive || !signatureLineZoom || !element || !placementSize) {
+      return;
+    }
+
+    let accumulatedDelta = 0;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.shiftKey) {
+        return;
+      }
+
+      const delta = event.deltaY || event.deltaX;
+      if (!delta) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      accumulatedDelta += delta;
+
+      if (Math.abs(accumulatedDelta) < SIGNATURE_RESIZE_WHEEL_THRESHOLD) {
+        return;
+      }
+
+      const requestedScale =
+        accumulatedDelta < 0
+          ? 1 + SIGNATURE_RESIZE_STEP
+          : 1 - SIGNATURE_RESIZE_STEP;
+      const minimumDimension = remToPx(MIN_SIGNATURE_DIMENSION_REM);
+      const minimumScale =
+        minimumDimension / Math.min(placementSize.width, placementSize.height);
+      const scale = Math.max(requestedScale, minimumScale);
+
+      setPlacementSize({
+        width: placementSize.width * scale,
+        height: placementSize.height * scale,
+      });
+      accumulatedDelta = 0;
+    };
+
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => element.removeEventListener("wheel", handleWheel);
+  }, [
+    containerRef,
+    isActive,
+    signatureLineZoom,
+    placementSize,
+    setPlacementSize,
+  ]);
 
   useEffect(() => {
     if (!isActive || !scaledSize) {

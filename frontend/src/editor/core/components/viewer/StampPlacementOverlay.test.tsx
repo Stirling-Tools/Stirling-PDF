@@ -1,23 +1,19 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MantineProvider } from "@mantine/core";
-import { SignaturePlacementOverlay } from "@editor/components/viewer/SignaturePlacementOverlay";
+import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementOverlay";
 
 const mocks = vi.hoisted(() => ({
+  placementSize: null as { width: number; height: number } | null,
   setPlacementSize: vi.fn(),
+  setPlacementPreviewSize: vi.fn(),
 }));
 
 vi.mock("@editor/contexts/SignatureContext", () => ({
   useSignature: () => ({
-    placementSize: null,
+    placementSize: mocks.placementSize,
     setPlacementSize: mocks.setPlacementSize,
-  }),
-}));
-
-vi.mock("@editor/contexts/ViewerContext", () => ({
-  useViewer: () => ({
-    getZoomState: () => ({ currentZoom: 2 }),
-    registerImmediateZoomUpdate: () => () => undefined,
+    setPlacementPreviewSize: mocks.setPlacementPreviewSize,
   }),
 }));
 
@@ -30,13 +26,15 @@ vi.mock("@editor/utils/signaturePreview", () => ({
     }),
 }));
 
-describe("SignaturePlacementOverlay", () => {
+describe("StampPlacementOverlay", () => {
   beforeEach(() => {
+    mocks.placementSize = null;
     mocks.setPlacementSize.mockReset();
+    mocks.setPlacementPreviewSize.mockReset();
     document.documentElement.style.fontSize = "16px";
   });
 
-  it("keeps PDF size independent of zoom and resizes only on Shift+wheel", async () => {
+  it("uses the retained PDF size and accepts horizontal Shift+wheel input", async () => {
     const viewer = document.createElement("div");
     Object.defineProperties(viewer, {
       clientWidth: { value: 1000 },
@@ -44,42 +42,45 @@ describe("SignaturePlacementOverlay", () => {
     });
     document.body.appendChild(viewer);
 
-    const { container, unmount } = render(
+    const props = {
+      containerRef: { current: viewer },
+      isActive: true,
+      signatureConfig: { signatureType: "image" as const },
+      signatureLineZoom: 2,
+    };
+    const rendered = render(
       <MantineProvider>
-        <SignaturePlacementOverlay
-          containerRef={{ current: viewer }}
-          isActive
-          signatureConfig={{ signatureType: "image" }}
-        />
+        <StampPlacementOverlay {...props} />
       </MantineProvider>,
     );
 
     await waitFor(() => {
       expect(mocks.setPlacementSize).toHaveBeenCalledWith({
-        width: 100,
-        height: 50,
+        width: 120,
+        height: 60,
       });
     });
+
+    mocks.placementSize = { width: 120, height: 60 };
+    rendered.rerender(
+      <MantineProvider>
+        <StampPlacementOverlay {...props} />
+      </MantineProvider>,
+    );
 
     fireEvent.mouseMove(viewer, { clientX: 300, clientY: 300 });
     await waitFor(() => {
       expect(
-        container.querySelector('[style*="background-image"]'),
-      ).toHaveStyle({
-        width: "200px",
-        height: "100px",
-      });
+        rendered.container.querySelector('[style*="background-image"]'),
+      ).toHaveStyle({ width: "240px", height: "120px" });
     });
 
-    fireEvent.wheel(viewer, { deltaY: -10 });
-    expect(mocks.setPlacementSize).toHaveBeenCalledTimes(1);
-
-    fireEvent.wheel(viewer, { deltaY: -10, shiftKey: true });
+    fireEvent.wheel(viewer, { deltaX: -10, shiftKey: true });
     const resized = mocks.setPlacementSize.mock.lastCall?.[0];
-    expect(resized?.width).toBeCloseTo(110);
-    expect(resized?.height).toBeCloseTo(55);
+    expect(resized?.width).toBeCloseTo(132);
+    expect(resized?.height).toBeCloseTo(66);
 
-    unmount();
+    rendered.unmount();
     viewer.remove();
   });
 });
