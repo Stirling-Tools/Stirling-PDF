@@ -24,7 +24,7 @@ import {
 } from "@editor/contexts/NavigationContext";
 import { useRedaction } from "@editor/contexts/RedactionContext";
 import { useFileState } from "@editor/contexts/file/fileHooks";
-import { usePdfAccess } from "@editor/hooks/usePdfAccess";
+import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import {
   getPdfAccess,
   signedPdfEditsBlocked,
@@ -67,8 +67,7 @@ const Redact = (props: BaseToolProps) => {
   // Get total file count from context (any files in workbench, not just selected)
   const { state: fileState } = useFileState();
   const hasAnyFiles = fileState.files.ids.length > 0;
-  usePdfAccess(undefined);
-  const signedEditsBlocked = base.selectedFiles.some((file) =>
+  const signedEditsBlocked = useViewScopedFiles().some((file) =>
     signedPdfEditsBlocked(getPdfAccess(file)),
   );
 
@@ -244,7 +243,6 @@ const Redact = (props: BaseToolProps) => {
         content: (
           <ManualRedactionControls
             disabled={!hasAnyFiles || signedEditsBlocked}
-            signedEditsBlocked={signedEditsBlocked}
           />
         ),
       });

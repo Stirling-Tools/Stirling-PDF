@@ -33,7 +33,6 @@ export type ExecuteDisabledReason =
   | "noFiles"
   | "invalidParams"
   | "viewerMode"
-  | "signedPdfEditsBlocked"
   | null;
 
 /**
@@ -383,7 +382,6 @@ export interface ToolOperationHook<TParams = void> {
   errorMessage: string | null;
   progress: ProcessingProgress | null;
   willUseCloud?: boolean;
-  staticEndpoint?: string;
 
   // Actions
   /** Non-empty inputs accepted for the current params, using FileContext's protection metadata.

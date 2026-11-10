@@ -98,18 +98,33 @@ for (const block of [true, false]) {
     );
   });
 
-  test(`Compress ${block ? "disables" : "enables"} Run on a signed PDF while changes are ${block ? "blocked" : "allowed"}`, async ({
+  test(`Compress ${block ? "leaves out" : "accepts"} a signed PDF while changes are ${block ? "blocked" : "allowed"}`, async ({
     page,
   }) => {
     await openSigned(page, "/compress", block);
-    const run = page.locator('[data-tour="run-button"]');
-    await expect(run).toBeVisible({ timeout: 30_000 });
-    if (!block) {
-      await expect(run).toBeEnabled();
+    if (block) {
+      await expect(unavailable(page)).toBeVisible({ timeout: 30_000 });
+      await unavailable(page).hover();
+      await expect(page.getByRole("tooltip")).toContainText("digitally signed");
       return;
     }
-    await expect(run).toBeDisabled();
-    await run.locator("xpath=..").hover();
-    await expect(page.getByRole("tooltip")).toContainText("digitally signed");
+    await expect(page.locator('[data-tour="run-button"]')).toBeEnabled({
+      timeout: 30_000,
+    });
+    await expect(unavailable(page)).toHaveCount(0);
+  });
+
+  test(`Add Text ${block ? "leaves out" : "accepts"} a signed PDF while changes are ${block ? "blocked" : "allowed"}`, async ({
+    page,
+  }) => {
+    await openSigned(page, "/add-text", block);
+    const textInput = page.getByPlaceholder("Enter the text you want to add");
+    if (block) {
+      await expect(unavailable(page)).toBeVisible({ timeout: 30_000 });
+      await expect(textInput).toHaveCount(0);
+      return;
+    }
+    await expect(textInput).toBeVisible({ timeout: 30_000 });
+    await expect(unavailable(page)).toHaveCount(0);
   });
 }

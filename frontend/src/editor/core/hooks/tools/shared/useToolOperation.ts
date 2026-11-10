@@ -10,6 +10,10 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
+import {
   prepareUnlockedFile,
   protectUnlockedResults,
   preflightPdfOperation,
@@ -207,14 +211,19 @@ export const useToolOperation = <TParams>(
         typeof config.endpoint === "function"
           ? config.endpoint(params)
           : config.endpoint;
-      return selectedFiles.filter((file) =>
-        toolAcceptsFile(
-          endpoint ?? undefined,
-          selectors.getStirlingFileStub(file.fileId) ?? file,
-        ),
+      const editsInBrowser =
+        !endpoint &&
+        !!config.customProcessor &&
+        config.operationType !== "automate";
+      return selectedFiles.filter(
+        (file) =>
+          toolAcceptsFile(
+            endpoint ?? undefined,
+            selectors.getStirlingFileStub(file.fileId) ?? file,
+          ) && !(editsInBrowser && signedPdfEditsBlocked(getPdfAccess(file))),
       );
     },
-    [config.endpoint, selectors],
+    [config.endpoint, config.customProcessor, config.operationType, selectors],
   );
 
   const eligibleFilesRef = useRef<StirlingFile[]>([]);
@@ -972,8 +981,6 @@ export const useToolOperation = <TParams>(
     errorMessage: state.errorMessage,
     progress: state.progress,
     willUseCloud,
-    staticEndpoint:
-      typeof config.endpoint === "string" ? config.endpoint : undefined,
 
     // Actions
     getEligibleFiles,

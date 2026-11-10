@@ -93,10 +93,6 @@ const OperationButton = ({
       "tool.viewerMode",
       "Switch to the file editor to select multiple files.",
     ),
-    signedPdfEditsBlocked: t(
-      "signedPdf.editsBlocked",
-      "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-    ),
   };
 
   const tooltipLabel = blockedByBackend

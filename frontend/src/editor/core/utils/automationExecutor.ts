@@ -13,6 +13,14 @@ import { zipFileService } from "@editor/services/zipFileService";
 import { processResponse } from "@editor/utils/toolResponseProcessor";
 import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
 import { type AutomationConfig } from "@editor/types/automation";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
+import {
+  SignedPdfEditsBlockedError,
+  signedPdfEditRefused,
+} from "@editor/services/pdfSessionUnlock";
 
 export const processMultiFileResponse = async (
   responseData: Blob,
@@ -180,6 +188,18 @@ export const executeToolOperationWithPrefix = async (
 
   // Merge with default parameters to ensure all required fields are present
   const mergedParameters = { ...config.defaultParameters, ...parameters };
+  const stepEndpoint =
+    (typeof config.endpoint === "function"
+      ? config.endpoint(mergedParameters)
+      : config.endpoint) ?? undefined;
+  if (
+    files.some((file) =>
+      stepEndpoint
+        ? signedPdfEditRefused(getPdfAccess(file), stepEndpoint)
+        : !!config.customProcessor && signedPdfEditsBlocked(getPdfAccess(file)),
+    )
+  )
+    throw new SignedPdfEditsBlockedError();
 
   try {
     // Check if tool uses custom processor (like Convert tool)

@@ -30,7 +30,6 @@
   flex-shrink: 0;
 }
 
-.settings-toggle__description,
 .settings-toggle__note {
   margin: 0;
   font-size: 0.75rem;

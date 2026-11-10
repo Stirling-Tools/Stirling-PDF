@@ -1662,7 +1662,7 @@ description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
 
 [admin.settings.security.blockSignedPdfEdits]
-description = "Digitally signed PDFs can still be viewed, printed, converted or signed again, but no tool can change them."
+description = "Signed PDFs can still be viewed, printed, converted or signed again, but not changed in the app. API calls and server pipelines are not affected."
 label = "Block changes to signed PDFs"
 
 [admin.settings.security.csrfDisabled]

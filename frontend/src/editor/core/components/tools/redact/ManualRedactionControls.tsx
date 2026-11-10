@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { Group, Stack, Text, Divider, ColorInput } from "@mantine/core";
+import { Stack, Text, Divider, ColorInput } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
 import {
   useRedaction,
   useRedactionMode,
@@ -13,7 +12,6 @@ import { useNavigationGuard } from "@editor/contexts/NavigationContext";
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
-  signedEditsBlocked?: boolean;
 }
 
 /**
@@ -22,7 +20,6 @@ interface ManualRedactionControlsProps {
  */
 export default function ManualRedactionControls({
   disabled = false,
-  signedEditsBlocked = false,
 }: ManualRedactionControlsProps) {
   const { t } = useTranslation();
 
@@ -155,28 +152,12 @@ export default function ManualRedactionControls({
           {t("redact.manual.title", "Redaction Tools")}
         </Text>
 
-        {signedEditsBlocked ? (
-          <Group gap={6} wrap="nowrap" align="flex-start" role="note">
-            <Icon
-              name="triangle-alert"
-              size={16}
-              style={{ color: "var(--c-warning)", flexShrink: 0 }}
-            />
-            <Text size="xs" c="dimmed">
-              {t(
-                "signedPdf.editsBlocked",
-                "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-              )}
-            </Text>
-          </Group>
-        ) : (
-          <Text size="xs" c="dimmed">
-            {t(
-              "redact.manual.instructions",
-              "Select text or draw areas on the PDF to mark content for redaction.",
-            )}
-          </Text>
-        )}
+        <Text size="xs" c="dimmed">
+          {t(
+            "redact.manual.instructions",
+            "Select text or draw areas on the PDF to mark content for redaction.",
+          )}
+        </Text>
 
         <ColorInput
           label={t("redact.manual.colorLabel", "Redaction Colour")}

@@ -62,26 +62,27 @@ async function requestWorkingPdf(
   }
 }
 
-const ADDS_SIGNATURE = new Set([
+const SIGNATURE_ENDPOINTS = new Set([
   "/api/v1/security/cert-sign",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/remove-cert-sign",
 ]);
 
 function rewritesPdf(endpoint: string | undefined): boolean {
-  if (!endpoint || ADDS_SIGNATURE.has(endpoint)) return false;
+  if (!endpoint || SIGNATURE_ENDPOINTS.has(endpoint)) return false;
   const produces = toolIOFor(endpoint)?.produces;
   return produces === "PDF" || produces === "PDF_ENCRYPTED";
 }
 
-export class SignedPdfEditsBlockedError extends Error {}
-
-function signedEditsBlockedError(): Error {
-  return new SignedPdfEditsBlockedError(
-    i18n.t(
-      "signedPdf.editsBlocked",
-      "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-    ),
-  );
+export class SignedPdfEditsBlockedError extends Error {
+  constructor() {
+    super(
+      i18n.t(
+        "signedPdf.editsBlocked",
+        "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
+      ),
+    );
+  }
 }
 
 export function signedPdfEditRefused(
@@ -95,7 +96,8 @@ function assertSignedPdfEditable(
   access: PdfAccess | undefined,
   endpoint: string | undefined,
 ): void {
-  if (signedPdfEditRefused(access, endpoint)) throw signedEditsBlockedError();
+  if (signedPdfEditRefused(access, endpoint))
+    throw new SignedPdfEditsBlockedError();
 }
 
 /** These interactive operations restore protection before exposing or persisting any result. */
@@ -192,7 +194,7 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
 export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
-  if (signedPdfEditsBlocked(access)) throw signedEditsBlockedError();
+  if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
   if (access?.encrypted && access.signed)
     throw new Error(
       i18n.t(

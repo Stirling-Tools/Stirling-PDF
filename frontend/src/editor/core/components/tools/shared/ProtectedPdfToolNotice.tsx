@@ -45,55 +45,52 @@ export function ProtectedPdfToolNotice({
   if (!files.length) return null;
   return (
     <Stack gap="xs" role="list">
-      {files.map((file) => {
-        const encrypted = getPdfAccess(file.id)?.encrypted === true;
-        return (
-          <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
-            <Tooltip
-              content={
-                encrypted
-                  ? t(
-                      "encryptedPdfUnlock.toolUnavailable",
-                      "This tool doesn't support encrypted PDFs. Remove the password first.",
-                    )
-                  : t(
-                      "signedPdf.editsBlocked",
-                      "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-                    )
-              }
-              position="top"
-              maxWidth={260}
-              arrow
-            >
-              <ActionIcon
-                variant="quiet"
-                accent="warning"
-                size="sm"
-                aria-label={t(
-                  "encryptedPdfUnlock.toolUnavailableDetails",
-                  "Why {{name}} is unavailable",
-                  { name: file.name },
-                )}
-                style={{ flexShrink: 0 }}
-              >
-                <Icon
-                  name="triangle-alert"
-                  size={16}
-                  style={{ color: "var(--c-warning)" }}
-                />
-              </ActionIcon>
-            </Tooltip>
-            <Text
+      {files.map((file) => (
+        <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
+          <Tooltip
+            content={
+              getPdfAccess(file.id)?.encrypted
+                ? t(
+                    "encryptedPdfUnlock.toolUnavailable",
+                    "This tool doesn't support encrypted PDFs. Remove the password first.",
+                  )
+                : t(
+                    "signedPdf.editsBlocked",
+                    "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
+                  )
+            }
+            position="top"
+            maxWidth={260}
+            arrow
+          >
+            <ActionIcon
+              variant="quiet"
+              accent="warning"
               size="sm"
-              c="dimmed"
-              style={{ overflowWrap: "anywhere", minWidth: 0, flex: 1 }}
+              aria-label={t(
+                "encryptedPdfUnlock.toolUnavailableDetails",
+                "Why {{name}} is unavailable",
+                { name: file.name },
+              )}
+              style={{ flexShrink: 0 }}
             >
-              <PrivateContent>{file.name}</PrivateContent>
-            </Text>
-            {encrypted && <RemovePasswordAction />}
-          </Group>
-        );
-      })}
+              <Icon
+                name="triangle-alert"
+                size={16}
+                style={{ color: "var(--c-warning)" }}
+              />
+            </ActionIcon>
+          </Tooltip>
+          <Text
+            size="sm"
+            c="dimmed"
+            style={{ overflowWrap: "anywhere", minWidth: 0, flex: 1 }}
+          >
+            <PrivateContent>{file.name}</PrivateContent>
+          </Text>
+          {getPdfAccess(file.id)?.encrypted && <RemovePasswordAction />}
+        </Group>
+      ))}
     </Stack>
   );
 }

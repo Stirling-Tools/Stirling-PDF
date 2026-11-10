@@ -6,6 +6,10 @@ import {
   executeToolOperation,
   processMultiFileResponse,
 } from "@editor/utils/automationExecutor";
+import {
+  rememberPdfAccess,
+  setSignedPdfEditPolicy,
+} from "@editor/services/pdfAccessService";
 
 vi.mock("@editor/services/apiClient", () => ({
   default: {
@@ -104,5 +108,72 @@ describe("executeToolOperation (automation execution)", () => {
       expect.any(FormData),
       { responseType: "blob" },
     );
+  });
+});
+
+describe("automation steps on a signed PDF while edits are blocked", () => {
+  const registry = (endpoint: string) =>
+    ({
+      step: {
+        operationConfig: {
+          operationType: "step",
+          toolType: ToolType.singleFile,
+          endpoint,
+          defaultParameters: {},
+          buildFormData: (_parameters: unknown, file: File) => {
+            const formData = new FormData();
+            formData.append("fileInput", file);
+            return formData;
+          },
+        },
+      },
+    }) as unknown as ToolRegistry;
+
+  function signedFile() {
+    const file = new File(["%PDF-1.7"], "signed.pdf", {
+      type: "application/pdf",
+    });
+    rememberPdfAccess(file, {
+      password: "",
+      encrypted: false,
+      signed: true,
+      ownerAuthenticated: false,
+      permissions: -4,
+      pageCount: 1,
+    });
+    return file;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setSignedPdfEditPolicy(true);
+    (mockedApiClient.post as Mock).mockResolvedValue({
+      data: new Blob([PDF_BYTES], { type: "application/pdf" }),
+      headers: { "content-type": "application/pdf" },
+    });
+  });
+
+  test("refuses a step that rewrites the PDF", async () => {
+    await expect(
+      executeToolOperation(
+        "step",
+        {},
+        [signedFile()],
+        registry("/api/v1/general/rotate-pdf"),
+      ),
+    ).rejects.toThrow("digitally signed");
+    expect(mockedApiClient.post).not.toHaveBeenCalled();
+    setSignedPdfEditPolicy(false);
+  });
+
+  test("runs a step that only converts it", async () => {
+    await executeToolOperation(
+      "step",
+      {},
+      [signedFile()],
+      registry("/api/v1/convert/pdf/img"),
+    );
+    expect(mockedApiClient.post).toHaveBeenCalled();
+    setSignedPdfEditPolicy(false);
   });
 });

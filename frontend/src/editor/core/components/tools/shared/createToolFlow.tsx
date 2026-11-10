@@ -178,7 +178,6 @@ export function createToolFlow<TParams = unknown>(
               >
                 <ScopedOperationButton
                   selectedFiles={config.files.selectedFiles ?? []}
-                  endpoint={config.review.operation.staticEndpoint}
                   disableScopeHints={eb.disableScopeHints}
                   onClick={eb.onClick}
                   isLoading={config.review.operation.isLoading}

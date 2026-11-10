@@ -26,6 +26,7 @@ import {
   signedPdfEditRefused,
 } from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
+import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 
 vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
 const post = vi.mocked(apiClient.post);
@@ -620,6 +621,12 @@ describe("signed PDF edit policy", () => {
     return file;
   }
 
+  const stub = (file: File & { fileId: string }) => ({
+    id: file.fileId,
+    name: file.name,
+    type: "application/pdf",
+  });
+
   afterEach(() => setSignedPdfEditPolicy(false));
 
   it("leaves signed PDFs editable while the setting is off", async () => {
@@ -649,18 +656,26 @@ describe("signed PDF edit policy", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it.each(["/api/v1/security/cert-sign", "/api/v1/convert/pdf/img"])(
-    "still allows %s on a signed PDF",
-    async (endpoint) => {
-      setSignedPdfEditPolicy(true);
-      const file = signedPdf();
-      expect(
-        await preflightPdfOperation([file], endpoint, false, vi.fn()),
-      ).toBe(true);
-      await expect(prepareUnlockedFile(file, endpoint)).resolves.toBe(file);
-      expect(signedPdfEditRefused(signedAccess, endpoint)).toBe(false);
-    },
-  );
+  it.each([
+    "/api/v1/security/cert-sign",
+    "/api/v1/security/remove-cert-sign",
+    "/api/v1/convert/pdf/img",
+  ])("still allows %s on a signed PDF", async (endpoint) => {
+    setSignedPdfEditPolicy(true);
+    const file = signedPdf();
+    expect(await preflightPdfOperation([file], endpoint, false, vi.fn())).toBe(
+      true,
+    );
+    await expect(prepareUnlockedFile(file, endpoint)).resolves.toBe(file);
+    expect(signedPdfEditRefused(signedAccess, endpoint)).toBe(false);
+    expect(toolAcceptsFile(endpoint, stub(file))).toBe(true);
+  });
+
+  it("leaves signed PDFs out of tools that rewrite them", () => {
+    setSignedPdfEditPolicy(true);
+    const file = signedPdf();
+    expect(toolAcceptsFile(rotate, stub(file))).toBe(false);
+  });
 
   it("does not block unsigned PDFs", async () => {
     setSignedPdfEditPolicy(true);

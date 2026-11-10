@@ -194,9 +194,9 @@ export default function AdminSecurityPage() {
               "admin.settings.security.blockSignedPdfEdits.label",
               "Block changes to signed PDFs",
             )}
-            description={t(
+            info={t(
               "admin.settings.security.blockSignedPdfEdits.description",
-              "Digitally signed PDFs can still be viewed, printed, converted or signed again, but no tool can change them.",
+              "Signed PDFs can still be viewed, printed, converted or signed again, but not changed in the app. API calls and server pipelines are not affected.",
             )}
             pending={security.isFieldPending("blockSignedPdfEdits")}
             checked={security.settings?.blockSignedPdfEdits ?? false}

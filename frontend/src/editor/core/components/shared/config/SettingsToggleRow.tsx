@@ -8,7 +8,6 @@ export interface SettingsToggleRowProps {
   label: ReactNode;
   /** Help text, shown behind the (i) that follows the label. */
   info?: ReactNode;
-  description?: ReactNode;
   /** Saved, but the server applies it on restart. */
   pending?: boolean;
   checked: boolean;
@@ -33,7 +32,6 @@ export interface SettingsToggleRowProps {
 export function SettingsToggleRow({
   label,
   info,
-  description,
   pending = false,
   checked,
   onChange,
@@ -59,9 +57,6 @@ export function SettingsToggleRow({
           styles={styles}
         />
       </div>
-      {description && (
-        <p className="settings-toggle__description">{description}</p>
-      )}
       {note && <p className="settings-toggle__note">{note}</p>}
       {warnWhenOn && checked && (
         <p className="settings-toggle__warning">{warnWhenOn}</p>
