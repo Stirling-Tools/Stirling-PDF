@@ -71,8 +71,23 @@ export function withPdfViewerAccess(engine: PdfEngine<Blob>): PdfEngine<Blob> {
           return;
         }
         if (!document.isEncrypted) {
-          rememberUnencryptedPdf(source, document.pageCount);
-          task.resolve(document);
+          // Second read of `signed`; belongs to the probe in workers/pdfAccessWorker.ts.
+          engine.getSignatures(document).wait(
+            (signatures) => {
+              rememberUnencryptedPdf(
+                source,
+                document.pageCount,
+                signatures.some(
+                  (signature) => signature.contents.byteLength > 0,
+                ),
+              );
+              task.resolve(document);
+            },
+            () => {
+              rememberUnencryptedPdf(source, document.pageCount, true);
+              task.resolve(document);
+            },
+          );
           return;
         }
         void ensureLocalPdfAccess(

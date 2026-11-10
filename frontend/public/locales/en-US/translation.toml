@@ -1661,6 +1661,10 @@ verbose = "STANDARD events plus: continuous polling calls, all GET requests, det
 description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
 
+[admin.settings.security.blockSignedPdfEdits]
+description = "Signed PDFs can still be viewed, printed, converted or signed again, but not changed in the app. API calls and server pipelines are not affected."
+label = "Block changes to signed PDFs"
+
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
 label = "Disable CSRF Protection"
@@ -12934,6 +12938,11 @@ bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
 bullet3 = "Invisible signatures still provide cryptographic validation"
 description = "Controls whether the signature is visible on the document or embedded invisibly."
 title = "Signature Visibility"
+
+[signedPdf]
+editsBlocked = "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view or print it, convert it to another format, or sign it again."
+editsBlockedStatus = "Signed: edits blocked"
+editsBlockedTitle = "Signed PDF can't be changed"
 
 [signingDetail]
 allSigned = "Everyone has signed. Review the document, then finalize."

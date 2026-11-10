@@ -110,7 +110,11 @@ import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge
 import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
-import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
+import {
+  pdfAllows,
+  canPrintPdf,
+  pdfEditingLocked,
+} from "@editor/services/pdfPermissions";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
@@ -940,8 +944,7 @@ export function LocalEmbedPDF({
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
     (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
-  const annotationsReadOnly =
-    !pdfAccess || pdfAccess.encrypted || !enableAnnotations;
+  const annotationsReadOnly = pdfEditingLocked(pdfAccess) || !enableAnnotations;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>

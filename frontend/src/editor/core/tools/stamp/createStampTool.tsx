@@ -23,6 +23,11 @@ import SharedSigningLauncher from "@editor/components/shared/signing/SharedSigni
 import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
 import { useGroupSigningEnabled } from "@editor/hooks/useGroupSigningEnabled";
 import { alert } from "@editor/components/toast";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
+import { SignedPdfEditsBlockedError } from "@editor/services/pdfSessionUnlock";
 
 export type StampToolConfig = {
   toolId: ToolId;
@@ -93,6 +98,10 @@ export const createStampTool = (config: StampToolConfig) => {
       props,
     );
 
+    const selectedFiles = base.selectedFiles.filter(
+      (file) => !signedPdfEditsBlocked(getPdfAccess(file)),
+    );
+
     const allowedSignatureTypes = allowedSignatureSources.filter(
       (source): source is SignParameters["signatureType"] => source !== "saved",
     );
@@ -143,11 +152,11 @@ export const createStampTool = (config: StampToolConfig) => {
     useEffect(() => handleDeactivateSignature, [handleDeactivateSignature]);
 
     useEffect(() => {
-      if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
+      if (selectedFiles.length > 0 && !hasOpenedViewer.current) {
         setWorkbench("viewer");
         hasOpenedViewer.current = true;
       }
-    }, [base.selectedFiles.length, setWorkbench]);
+    }, [selectedFiles.length, setWorkbench]);
 
     useEffect(() => {
       setSignatureConfig(base.params.parameters);
@@ -174,6 +183,9 @@ export const createStampTool = (config: StampToolConfig) => {
 
         if (!originalFile) {
           throw new Error("No file available to replace");
+        }
+        if (signedPdfEditsBlocked(getPdfAccess(originalFile))) {
+          throw new SignedPdfEditsBlockedError();
         }
 
         const flattenResult = await flattenSignatures({
@@ -292,7 +304,7 @@ export const createStampTool = (config: StampToolConfig) => {
     const getSteps = () => {
       const steps = [];
 
-      if (base.selectedFiles.length > 0) {
+      if (selectedFiles.length > 0) {
         steps.push({
           title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
@@ -316,7 +328,7 @@ export const createStampTool = (config: StampToolConfig) => {
 
     return createToolFlow({
       files: {
-        selectedFiles: base.selectedFiles,
+        selectedFiles,
         isCollapsed: base.operation.files.length > 0,
       },
       steps: getSteps(),

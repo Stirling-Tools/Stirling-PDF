@@ -44,7 +44,7 @@ const protectedAccess = {
   pageCount: 1,
 };
 
-function viewer(file: File) {
+function viewer(file: File, signatureCount = 0) {
   const buffer = new ArrayBuffer(8);
   bindPdfViewerSource(buffer, file);
   const opened = PdfTaskHelper.create<PdfDocumentObject>();
@@ -52,6 +52,11 @@ function viewer(file: File) {
   const raw = {
     openDocumentBuffer: vi.fn(() => opened),
     closeDocument: close,
+    getSignatures: vi.fn(() =>
+      PdfTaskHelper.resolve(
+        new Array(signatureCount).fill({ contents: new ArrayBuffer(8) }),
+      ),
+    ),
   };
   const engine = withPdfViewerAccess(raw as unknown as PdfEngine<Blob>);
   return { engine, opened, close, raw, buffer };
@@ -79,6 +84,52 @@ describe("viewer permission readiness", () => {
     expect(ready).toHaveBeenCalledOnce();
     expect(raw.openDocumentBuffer).toHaveBeenCalledOnce();
     expect(read).not.toHaveBeenCalled();
+  });
+
+  it("records whether an unencrypted PDF is signed from the document it opened", async () => {
+    const file = new File(["PDF"], "signed.pdf");
+    const read = vi.fn();
+    Object.defineProperty(file, "arrayBuffer", { value: read });
+    const { engine, opened, raw, buffer } = viewer(file, 1);
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({
+      encrypted: false,
+      signed: true,
+    });
+    expect(raw.getSignatures).toHaveBeenCalledExactlyOnceWith(document);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("does not treat an empty signature field as a signature", async () => {
+    const file = new File(["PDF"], "blank-signature-field.pdf");
+    const { engine, opened, raw, buffer } = viewer(file);
+    raw.getSignatures.mockReturnValue(
+      PdfTaskHelper.resolve([{ contents: new ArrayBuffer(0) }]),
+    );
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({ signed: false });
+  });
+
+  it("treats a PDF whose signatures cannot be read as signed", async () => {
+    const file = new File(["PDF"], "unreadable-signatures.pdf");
+    const { engine, opened, raw, buffer } = viewer(file);
+    raw.getSignatures.mockReturnValue(
+      PdfTaskHelper.reject({
+        code: PdfErrorCode.Unknown,
+        message: "signature read failed",
+      }),
+    );
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    opened.resolve(document);
+    await task.toPromise();
+    expect(getPdfAccess(file)).toMatchObject({
+      encrypted: false,
+      signed: true,
+    });
   });
 
   it("does not publish unrestricted access while encrypted authentication is pending", async () => {

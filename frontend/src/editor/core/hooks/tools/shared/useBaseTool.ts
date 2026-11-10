@@ -5,6 +5,7 @@ import { BaseToolProps } from "@editor/types/tool";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import { BaseParametersHook } from "@editor/hooks/tools/shared/useBaseParameters";
 import { StirlingFile } from "@editor/types/fileContext";
+import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 
 interface BaseToolReturn<
   TParams,
@@ -84,6 +85,7 @@ export function useBaseTool<
   const { enabled: endpointEnabled, loading: endpointLoading } =
     useEndpointEnabled(params.getEndpointName());
 
+  usePdfAccess(undefined);
   // Standard computed state - defined early so it's available in useEffects
   const selectedFiles =
     operation.getEligibleFiles?.(params.parameters, effectiveFiles) ??

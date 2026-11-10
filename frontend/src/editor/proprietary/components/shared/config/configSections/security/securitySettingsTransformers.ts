@@ -76,6 +76,7 @@ export function saveSecuritySettings(
   const deltaSettings: Record<string, unknown> = {
     "security.enableLogin": securitySettings.enableLogin,
     "security.honorOwnerPasswords": securitySettings.honorOwnerPasswords,
+    "security.blockSignedPdfEdits": securitySettings.blockSignedPdfEdits,
     "security.loginMethod": securitySettings.loginMethod,
     "security.loginAttemptCount": securitySettings.loginAttemptCount,
     "security.loginResetTimeMinutes": securitySettings.loginResetTimeMinutes,

@@ -8,6 +8,7 @@ export interface AppConfig {
   defaultLocale?: string;
   enableLogin?: boolean;
   honorOwnerPasswords?: boolean;
+  blockSignedPdfEdits?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;

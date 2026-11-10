@@ -9,6 +9,7 @@ function moduleFor(
   owner = false,
   revision = 6,
   signatures = 0,
+  signatureBytes = 64,
 ) {
   return {
     EPDF_IsEncrypted: () => true,
@@ -16,6 +17,8 @@ function moduleFor(
     FPDF_GetDocUserPermissions: () => permissions,
     FPDF_GetSecurityHandlerRevision: () => revision,
     FPDF_GetSignatureCount: () => signatures,
+    FPDF_GetSignatureObject: (_document: number, index: number) => index,
+    FPDFSignatureObj_GetContents: () => signatureBytes,
     FPDF_GetPageCount: () => 3,
   } as unknown as WrappedPdfiumModule;
 }
@@ -62,5 +65,11 @@ describe("PDFium access decisions", () => {
     expect(() =>
       readPdfiumAccess(moduleFor(-4, false, 6, -1), 1, "reader"),
     ).toThrow("verify PDF security");
+  });
+
+  it("does not count an empty signature field as a signature", () => {
+    expect(
+      readPdfiumAccess(moduleFor(-4, false, 6, 1, 0), 1, "reader").signed,
+    ).toBe(false);
   });
 });

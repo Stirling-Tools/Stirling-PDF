@@ -335,6 +335,10 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         java_options.push("-Dlegal.loginAgreement.enabled=true");
     }
 
+    if crate::commands::connection::block_signed_pdf_edits(app) {
+        java_options.push("-Dsecurity.blockSignedPdfEdits=true");
+    }
+
     java_options.push("-jar");
     java_options.push(jar_path.to_str().unwrap());
 

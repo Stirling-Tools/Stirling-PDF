@@ -9,6 +9,7 @@ export function containsEncryptMarker(bytes: Uint8Array): boolean {
  * Reads at most 64 KiB from each end for trailer hints, including linearized PDFs.
  * A missing marker does not prove a PDF unencrypted; opening must verify access with a parser.
  */
+// Upload-time hint only; the probe in workers/pdfAccessWorker.ts is the authority on encryption.
 export async function looksEncryptedFromTrailer(file: Blob): Promise<boolean> {
   const tailStart = Math.max(0, file.size - ENCRYPT_PROBE_BYTES);
   const tail = await file.slice(tailStart).arrayBuffer();

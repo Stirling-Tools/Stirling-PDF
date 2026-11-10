@@ -17,7 +17,10 @@ import {
 import { detectFileExtension, getFileFormats } from "@editor/utils/fileUtils";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { getPdfAccess } from "@editor/services/pdfAccessService";
-import { supportsSessionUnlock } from "@editor/services/pdfSessionUnlock";
+import {
+  signedPdfEditRefused,
+  supportsSessionUnlock,
+} from "@editor/services/pdfSessionUnlock";
 
 export type ToolDiagnosticSeverity = "ERROR" | "WARN" | "INFO";
 
@@ -264,8 +267,8 @@ export function toolAcceptsFormat(
 }
 
 /**
- * Uses detected encryption and endpoint input restrictions. Encrypted PDFs require declared support;
- * undeclared endpoints keep their own validation for other inputs.
+ * Uses detected encryption, the signed-PDF edit policy and endpoint input restrictions. Encrypted PDFs
+ * require declared support; undeclared endpoints keep their own validation for other inputs.
  */
 export function toolAcceptsFile(
   operation: string | undefined,
@@ -273,6 +276,7 @@ export function toolAcceptsFile(
     id?: string;
   },
 ): boolean {
+  if (signedPdfEditRefused(getPdfAccess(file.id), operation)) return false;
   const spec = operation ? toolIOFor(operation) : undefined;
   const formats =
     getPdfAccess(file.id) && supportsSessionUnlock(operation)
