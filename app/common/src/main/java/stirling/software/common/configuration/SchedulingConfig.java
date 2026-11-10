@@ -6,9 +6,9 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 
 /**
- * Configures the scheduler used by all {@code @Scheduled} methods. Uses virtual threads so that
- * long-running scheduled tasks (e.g. cleanup, license checks, file monitoring) never block each
- * other — each runs on its own lightweight virtual thread.
+ * Configures the scheduler that runs {@code @Scheduled} methods and first-use task registrations.
+ * Uses virtual threads so long-running scheduled tasks (e.g. cleanup, license checks, file
+ * monitoring) never block each other — each runs on its own lightweight virtual thread.
  */
 @Configuration
 public class SchedulingConfig {

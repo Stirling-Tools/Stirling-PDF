@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.service.AuditCleanupService;
 import stirling.software.proprietary.util.SecretMasker;
 
 import tools.jackson.databind.ObjectMapper;
@@ -33,6 +34,7 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 
     private final PersistentAuditEventRepository repo;
     private final ObjectMapper mapper;
+    private final AuditCleanupService auditCleanup;
 
     /* ── READ side intentionally inert (endpoint disabled) ── */
     @Override
@@ -75,6 +77,9 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 
             String auditEventData = mapper.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
+
+            // First stored event arms the audit retention sweep.
+            auditCleanup.ensureScheduled();
 
             PersistentAuditEvent ent =
                     PersistentAuditEvent.builder()

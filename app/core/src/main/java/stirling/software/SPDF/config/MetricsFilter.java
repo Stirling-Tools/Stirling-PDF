@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.service.MetricsAggregatorService;
 import stirling.software.common.util.RequestUriUtils;
 
 @Component
@@ -24,6 +25,7 @@ import stirling.software.common.util.RequestUriUtils;
 public class MetricsFilter extends OncePerRequestFilter {
 
     private final MeterRegistry meterRegistry;
+    private final MetricsAggregatorService metricsAggregatorService;
 
     @Override
     protected void doFilterInternal(
@@ -51,6 +53,7 @@ public class MetricsFilter extends OncePerRequestFilter {
                                 .register(meterRegistry);
 
                 counter.increment();
+                metricsAggregatorService.onRequestTracked();
             }
         }
     }

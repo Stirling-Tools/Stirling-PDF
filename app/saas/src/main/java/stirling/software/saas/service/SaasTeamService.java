@@ -51,6 +51,7 @@ public class SaasTeamService {
     private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final TeamInvitationCleanupService invitationCleanup;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -280,6 +281,10 @@ public class SaasTeamService {
                             remaining));
         }
 
+        // Arm the cleanup schedule before the guards: an invite blocked by an expired-but-still-
+        // PENDING row is exactly the case that needs the sweep which expires it.
+        invitationCleanup.ensureScheduled();
+
         // Check if there's already a pending invitation
         if (invitationRepository.existsPendingInvitationByTeamIdAndEmail(teamId, inviteeEmail)) {
             throw new IllegalArgumentException("Pending invitation already exists for this email");
@@ -392,6 +397,7 @@ public class SaasTeamService {
 
         if (invitation.isExpired()) {
             invitation.setStatus(InvitationStatus.EXPIRED);
+            invitationCleanup.ensureScheduled();
             invitationRepository.save(invitation);
             throw new IllegalStateException("Invitation expired");
         }
@@ -468,6 +474,7 @@ public class SaasTeamService {
 
         // Don't set inviteeUser; acceptance is recorded via status + TeamMembership row.
         invitation.setStatus(InvitationStatus.ACCEPTED);
+        invitationCleanup.ensureScheduled();
         invitationRepository.save(invitation);
 
         log.info(

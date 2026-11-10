@@ -1,18 +1,23 @@
 package stirling.software.SPDF.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.scheduling.TaskScheduler;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
@@ -21,6 +26,7 @@ class PdfMetricsServiceTest {
 
     private PostHogService postHogService;
     private ApplicationProperties applicationProperties;
+    private TaskScheduler scheduler;
     private PdfMetricsService service;
 
     @BeforeEach
@@ -28,7 +34,18 @@ class PdfMetricsServiceTest {
         postHogService = mock(PostHogService.class);
         applicationProperties = new ApplicationProperties();
         applicationProperties.getSystem().setEnableAnalytics(true);
-        service = new PdfMetricsService(postHogService, applicationProperties);
+        scheduler = mock(TaskScheduler.class);
+        service = new PdfMetricsService(postHogService, applicationProperties, scheduler);
+    }
+
+    @Test
+    void recordOperation_registersFlushOnce() {
+        service.recordOperation(1);
+        service.recordOperation(1);
+
+        verify(scheduler, times(1))
+                .scheduleAtFixedRate(
+                        any(Runnable.class), any(Instant.class), eq(Duration.ofHours(2)));
     }
 
     @Test

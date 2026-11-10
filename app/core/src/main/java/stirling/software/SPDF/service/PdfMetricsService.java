@@ -1,13 +1,15 @@
 package stirling.software.SPDF.service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.scheduling.LazyScheduledTask;
 import stirling.software.common.service.PostHogService;
 
 @Service
@@ -15,6 +17,7 @@ public class PdfMetricsService {
 
     private final PostHogService postHogService;
     private final ApplicationProperties applicationProperties;
+    private final LazyScheduledTask flushTask;
 
     private final AtomicLong operations = new AtomicLong();
     private final AtomicLong pdfs = new AtomicLong();
@@ -22,9 +25,12 @@ public class PdfMetricsService {
     private long lastPdfs;
 
     public PdfMetricsService(
-            PostHogService postHogService, ApplicationProperties applicationProperties) {
+            PostHogService postHogService,
+            ApplicationProperties applicationProperties,
+            TaskScheduler scheduler) {
         this.postHogService = postHogService;
         this.applicationProperties = applicationProperties;
+        this.flushTask = new LazyScheduledTask(scheduler, this::flushMetrics);
     }
 
     public boolean isEnabled() {
@@ -35,13 +41,14 @@ public class PdfMetricsService {
         if (!isEnabled()) {
             return;
         }
+        flushTask.ensureFixedRate(Duration.ofHours(2));
         operations.incrementAndGet();
         if (pdfCount > 0) {
             pdfs.addAndGet(pdfCount);
         }
     }
 
-    @Scheduled(fixedRate = 7200000)
+    /** Flushes the deltas to PostHog; armed by the first recorded operation. */
     public void flushMetrics() {
         if (!isEnabled()) {
             return;
