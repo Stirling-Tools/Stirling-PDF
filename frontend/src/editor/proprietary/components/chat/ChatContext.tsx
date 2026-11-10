@@ -28,6 +28,13 @@ import {
   type StirlingFileStub,
 } from "@editor/types/fileContext";
 import type { ToolOperation } from "@editor/types/file";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  assertSignedPdfsEditable,
+  SignedPdfEditsBlockedError,
+  signedPdfEditRefused,
+  signedPdfEditsBlockedMessage,
+} from "@editor/services/pdfSessionUnlock";
 
 export enum ChatRole {
   USER = "user",
@@ -325,6 +332,21 @@ interface ProgressEvent {
   stepIndex?: number;
   stepCount?: number;
   engineDetail?: AnyEngineProgressDetail;
+}
+
+/** Reads any source not read yet; true when a tool the run used would rewrite a signed source. */
+async function rewroteSignedSource(
+  sources: readonly File[],
+  tools: readonly string[],
+): Promise<boolean> {
+  try {
+    for (const tool of tools)
+      await assertSignedPdfsEditable(sources, tool, false);
+    return false;
+  } catch (error) {
+    if (error instanceof SignedPdfEditsBlockedError) return true;
+    throw error;
+  }
 }
 
 async function consumeSSEStream(
@@ -646,15 +668,88 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
 
         let receivedResult = false;
+        let handledResult: Promise<void> = Promise.resolve();
         const toolsUsed: string[] = [];
+        let refused = false;
+        const refuseSignedEdit = () => {
+          refused = true;
+          dispatch({
+            type: "ADD_MESSAGE",
+            message: {
+              id: generateId(),
+              role: ChatRole.ASSISTANT,
+              content: signedPdfEditsBlockedMessage(),
+              timestamp: Date.now(),
+            },
+          });
+        };
+
+        const showResult = (data: AiWorkflowResponse) => {
+          // The agent's tool calls run server-side, so a usage-limit 402 surfaces here on the
+          // result (not via the apiClient interceptor that pops the modal for direct calls).
+          // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
+          // brief, non-alarming line.
+          const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+          const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+          if (localLimit) {
+            reportFreeTierExhausted();
+          } else if (isLimit) {
+            dispatchPaygLimitReached(data.errorSubscribed ?? null);
+          }
+          const replyContent = isLimit
+            ? t(
+                "chat.responses.usage_limit_reached",
+                "You've reached your usage limit. Check your plan options to keep going.",
+              )
+            : formatWorkflowResponse(data, t);
+          dispatch({
+            type: "ADD_MESSAGE",
+            message: {
+              id: generateId(),
+              role: ChatRole.ASSISTANT,
+              content: replyContent,
+              timestamp: Date.now(),
+              toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+              progressLog:
+                progressLogLocal.length > 0 ? [...progressLogLocal] : undefined,
+              durationMs: Date.now() - startTime,
+            },
+          });
+          if (data.fileId || data.resultFiles?.length) {
+            importResultFile(data, sourceStubs).catch((err) => {
+              console.error("Failed to import AI result file", err);
+              dispatch({
+                type: "ADD_MESSAGE",
+                message: {
+                  id: generateId(),
+                  role: ChatRole.ASSISTANT,
+                  content: "The file was processed but I couldn't download it.",
+                  timestamp: Date.now(),
+                },
+              });
+            });
+          }
+        };
 
         await consumeSSEStream(response, {
           onProgress: (data) => {
+            if (refused) return;
             if (
               data.phase === AiWorkflowPhase.EXECUTING_TOOL &&
               typeof data.tool === "string"
             ) {
-              toolsUsed.push(data.tool);
+              const tool = data.tool;
+              toolsUsed.push(tool);
+              if (
+                sourceFiles.some((file) =>
+                  signedPdfEditRefused(getPdfAccess(file), tool),
+                )
+              ) {
+                dispatch({ type: "SET_PROGRESS", progress: null });
+                refuseSignedEdit();
+                controller.abort();
+                return;
+              }
             }
             const progressItem: AiWorkflowProgress = {
               phase: data.phase as AiWorkflowPhase,
@@ -668,54 +763,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           },
           onResult: (data) => {
             receivedResult = true;
+            if (refused) return;
             dispatch({ type: "SET_PROGRESS", progress: null });
-            // The agent's tool calls run server-side, so a usage-limit 402 surfaces here on the
-            // result (not via the apiClient interceptor that pops the modal for direct calls).
-            // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
-            // brief, non-alarming line.
-            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
-            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
-            if (localLimit) {
-              reportFreeTierExhausted();
-            } else if (isLimit) {
-              dispatchPaygLimitReached(data.errorSubscribed ?? null);
-            }
-            const replyContent = isLimit
-              ? t(
-                  "chat.responses.usage_limit_reached",
-                  "You've reached your usage limit. Check your plan options to keep going.",
-                )
-              : formatWorkflowResponse(data, t);
-            dispatch({
-              type: "ADD_MESSAGE",
-              message: {
-                id: generateId(),
-                role: ChatRole.ASSISTANT,
-                content: replyContent,
-                timestamp: Date.now(),
-                toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
-                progressLog:
-                  progressLogLocal.length > 0
-                    ? [...progressLogLocal]
-                    : undefined,
-                durationMs: Date.now() - startTime,
+            handledResult = rewroteSignedSource(sourceFiles, toolsUsed).then(
+              (refused) => {
+                if (refused) refuseSignedEdit();
+                else showResult(data);
               },
-            });
-            if (data.fileId || data.resultFiles?.length) {
-              importResultFile(data, sourceStubs).catch((err) => {
-                console.error("Failed to import AI result file", err);
-                dispatch({
-                  type: "ADD_MESSAGE",
-                  message: {
-                    id: generateId(),
-                    role: ChatRole.ASSISTANT,
-                    content:
-                      "The file was processed but I couldn't download it.",
-                    timestamp: Date.now(),
-                  },
-                });
-              });
-            }
+            );
           },
           onError: (data) => {
             receivedResult = true;
@@ -732,6 +787,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           },
         });
 
+        await handledResult;
         if (!receivedResult) {
           throw new Error("Stream ended without a result");
         }
