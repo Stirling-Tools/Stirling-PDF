@@ -116,6 +116,16 @@ class PdfUaServicesTest {
         }
 
         @Test
+        @DisplayName("every rule in the profile is counted once under its tags")
+        void rulesByTagsCoversTheProfile() throws Exception {
+            UaValidationResult result = validation.validate(unembeddedFontPdf(), PdfUaProfile.UA1);
+            assertTrue(result.rulesInProfile() > 0);
+            assertEquals(
+                    result.rulesInProfile(),
+                    result.rulesByTags().values().stream().mapToInt(Integer::intValue).sum());
+        }
+
+        @Test
         @DisplayName("malformed input reports a failure instead of throwing")
         void malformedInputIsReported() {
             UaValidationResult result =

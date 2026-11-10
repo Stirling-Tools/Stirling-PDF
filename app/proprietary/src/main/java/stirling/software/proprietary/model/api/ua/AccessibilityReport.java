@@ -1,6 +1,7 @@
 package stirling.software.proprietary.model.api.ua;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -47,6 +48,28 @@ public class AccessibilityReport {
 
     @Schema(description = "Document-level facts that drive most failures")
     private Summary summary = new Summary();
+
+    @Schema(description = "How many automated checks ran and how many failed")
+    private Checks checks = new Checks();
+
+    @Data
+    @Schema(
+            description =
+                    "Check counts from the validator. A check is one rule applied to one object, so"
+                            + " the counts scale with document size; rules count each rule once.")
+    public static class Checks {
+        private int total;
+        private int failed;
+        private int passed;
+        private int rulesInProfile;
+        private int rulesFailed;
+
+        @Schema(
+                description =
+                        "Rules in the profile counted by their comma-joined veraPDF tags, for"
+                                + " totalling rules per area")
+        private Map<String, Integer> rulesByTags = Map.of();
+    }
 
     @Data
     @Schema(description = "Quick document-level facts")
