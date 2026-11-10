@@ -21,6 +21,7 @@ import {
   useRef,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   FileContextProviderProps,
@@ -70,6 +71,7 @@ import EncryptedPdfUnlockModal from "@editor/components/shared/EncryptedPdfUnloc
 import { useTranslation } from "react-i18next";
 import {
   inspectLocalPdfAccess,
+  ensureLocalPdfAccess,
   bindPdfAccess,
   clearPdfAccess,
   forgetPdfAccess,
@@ -77,6 +79,8 @@ import {
   getPdfAccess,
   pdfAccessLifetime,
   rememberPdfAccess,
+  signedPdfEditPolicyOn,
+  subscribePdfAccess,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
 import { alert } from "@editor/components/toast";
@@ -470,6 +474,54 @@ function FileContextInner({
     [], // Empty deps - selectors are stable
   );
 
+  // While signed PDFs are locked, selected files are read before a tool needs them, so a signed
+  // file shows as locked rather than being refused at Run. Known-encrypted files wait for the
+  // unlock prompt instead.
+  const selectionProbes = useRef(new Map<FileId, AbortController>());
+  const readSelectedFiles = useSyncExternalStore(
+    subscribePdfAccess,
+    signedPdfEditPolicyOn,
+  );
+  useEffect(() => {
+    const probes = selectionProbes.current;
+    const selected = new Set(readSelectedFiles ? state.ui.selectedFileIds : []);
+    for (const [fileId, probe] of probes)
+      if (!selected.has(fileId)) {
+        probe.abort();
+        probes.delete(fileId);
+      }
+    for (const fileId of selected) {
+      const file = selectors.getFile(fileId);
+      if (
+        probes.has(fileId) ||
+        !file ||
+        getPdfAccess(file) ||
+        state.files.byId[fileId]?.processedFile?.isEncrypted ||
+        (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
+      )
+        continue;
+      const probe = new AbortController();
+      probes.set(fileId, probe);
+      void ensureLocalPdfAccess(file, probe.signal)
+        .catch(() => {})
+        .finally(() => {
+          if (probes.get(fileId) === probe) probes.delete(fileId);
+        });
+    }
+  }, [
+    readSelectedFiles,
+    state.ui.selectedFileIds,
+    state.files.byId,
+    selectors,
+  ]);
+  useEffect(() => {
+    const probes = selectionProbes.current;
+    return () => {
+      for (const probe of probes.values()) probe.abort();
+      probes.clear();
+    };
+  }, []);
+
   // Navigation management removed - moved to NavigationContext
 
   // Navigation guard system functions
@@ -860,13 +912,18 @@ function FileContextInner({
       const response = await apiClient.post<Blob>(
         "/api/v1/security/remove-password",
         form,
-        { responseType: "blob", suppressErrorToast: true },
+        {
+          responseType: "blob",
+          suppressErrorToast: true,
+        },
       );
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
         `${file.name.replace(/\.pdf$/i, "")}_unprotected.pdf`,
-        { type: "application/pdf" },
+        {
+          type: "application/pdf",
+        },
       );
       const copyAccess = await inspectLocalPdfAccess(
         copy,
@@ -927,13 +984,19 @@ function FileContextInner({
       const response = await apiClient.post<Blob>(
         "/api/v1/security/remove-password",
         form,
-        { responseType: "blob", suppressErrorToast: true, signal },
+        {
+          responseType: "blob",
+          suppressErrorToast: true,
+          signal,
+        },
       );
       if (filesRef.current.get(fileId) !== file) return;
       const copy = new File(
         [response.data],
         `${file.name.replace(/\.pdf$/i, "")}_password_removed.pdf`,
-        { type: "application/pdf" },
+        {
+          type: "application/pdf",
+        },
       );
       const copyAccess = await inspectLocalPdfAccess(copy, "", signal);
       await admitProtectionCopy(fileId, file, copy, copyAccess);

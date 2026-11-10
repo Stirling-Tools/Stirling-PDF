@@ -9,6 +9,10 @@ import type {
 } from "@editor/workers/pdfAccessWorker";
 import type { PdfProbeDetails } from "@editor/utils/pdfProbeChecks";
 import {
+  cachePdfAccess,
+  readCachedPdfAccess,
+} from "@editor/services/pdfProbeCache";
+import {
   pdfiumWasmUrl,
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
@@ -56,6 +60,10 @@ export function setSignedPdfEditPolicy(block: boolean): void {
   publish();
 }
 
+export function signedPdfEditPolicyOn(): boolean {
+  return blockSignedPdfEdits;
+}
+
 export function signedPdfEditsBlocked(
   access: Pick<PdfAccess, "signed"> | undefined,
 ): boolean {
@@ -101,7 +109,7 @@ export function rememberUnencryptedPdf(
 export function rememberPlainPdfExport(source: Blob, output: Blob): void {
   const access = getPdfAccess(source);
   if (access?.encrypted === false)
-    rememberUnencryptedPdf(output, access.pageCount);
+    rememberUnencryptedPdf(output, access.pageCount, access.signed);
 }
 
 function publish(): void {
@@ -340,6 +348,19 @@ function runInspection(
     };
     const abort = () =>
       fail(new DOMException("Operation cancelled", "AbortError"));
+    const startTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(
+        () =>
+          fail(
+            new DOMException(
+              "PDF permission inspection timed out. Try opening the file again.",
+              "TimeoutError",
+            ),
+          ),
+        INSPECTION_TIMEOUT_MS,
+      );
+    };
     const reusable = () =>
       !!delivered &&
       !delivered.encrypted &&
@@ -352,7 +373,8 @@ function runInspection(
         signal.removeEventListener("abort", abort);
         resolve(data.access);
         if (!data.background) finish(reusable());
-        else if (file.size > WORKER_REUSE_MAX_BYTES) {
+        else startTimer();
+        if (data.background && file.size > WORKER_REUSE_MAX_BYTES) {
           holdsSlot = false;
           activeInspections--;
           drainInspections();
@@ -380,16 +402,7 @@ function runInspection(
         holdsSlot = true;
         activeInspections++;
         inspectingBytes += file.size;
-        timer = setTimeout(
-          () =>
-            fail(
-              new DOMException(
-                "PDF permission inspection timed out. Try opening the file again.",
-                "TimeoutError",
-              ),
-            ),
-          INSPECTION_TIMEOUT_MS,
-        );
+        startTimer();
         try {
           worker = idleWorkers.pop() ?? new PdfAccessWorker();
           worker.onmessage = onMessage;
@@ -510,9 +523,13 @@ export async function ensureLocalPdfAccess(
   if (existing && (password === undefined || password === existing.password))
     return existing;
   const lifetime = pdfAccessLifetime(file);
-  const access = await inspectLocalPdfAccess(file, password ?? "", signal);
+  const lookup = password ? undefined : readCachedPdfAccess(file);
+  const cached = lookup && (await lookup);
+  const access =
+    cached ?? (await inspectLocalPdfAccess(file, password ?? "", signal));
   if (signal?.aborted || lifetime.aborted)
     throw new DOMException("Session closed", "AbortError");
+  if (!cached) cachePdfAccess(file, access);
   const current = getPdfAccess(file);
   return current && current !== existing
     ? current

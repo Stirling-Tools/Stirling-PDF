@@ -1,3 +1,4 @@
+import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
 import { Group, Stack, Text } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -54,10 +55,7 @@ export function ProtectedPdfToolNotice({
                     "encryptedPdfUnlock.toolUnavailable",
                     "This tool doesn't support encrypted PDFs. Remove the password first.",
                   )
-                : t(
-                    "signedPdf.editsBlocked",
-                    "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-                  )
+                : signedPdfEditsBlockedMessage()
             }
             position="top"
             maxWidth={260}

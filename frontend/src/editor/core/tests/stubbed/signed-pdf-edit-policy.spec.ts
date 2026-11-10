@@ -127,4 +127,26 @@ for (const block of [true, false]) {
     await expect(textInput).toBeVisible({ timeout: 30_000 });
     await expect(unavailable(page)).toHaveCount(0);
   });
+
+  test(`Adjust Contrast ${block ? "leaves out" : "accepts"} a signed PDF nobody opened in the viewer while changes are ${block ? "blocked" : "allowed"}`, async ({
+    page,
+  }) => {
+    await openSigned(page, "/adjust-contrast", block);
+    if (block) {
+      await expect(unavailable(page)).toBeVisible({ timeout: 30_000 });
+      return;
+    }
+    await expect(unavailable(page)).toHaveCount(0);
+  });
+
+  test(`Add Password ${block ? "leaves out" : "accepts"} a signed PDF while changes are ${block ? "blocked" : "allowed"}`, async ({
+    page,
+  }) => {
+    await openSigned(page, "/add-password", block);
+    if (block) {
+      await expect(unavailable(page)).toBeVisible({ timeout: 30_000 });
+      return;
+    }
+    await expect(unavailable(page)).toHaveCount(0);
+  });
 }

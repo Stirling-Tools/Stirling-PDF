@@ -398,6 +398,23 @@ describe("warm workers and background signature details", () => {
     expect(workers[1].terminate).toHaveBeenCalledOnce();
   });
 
+  it("gives the background checks their own timeout after the blocking answer", async () => {
+    vi.useFakeTimers();
+    const result = inspectLocalPdfAccess(new File(["PDF"], "signed.pdf"));
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledOnce(),
+    );
+    await vi.advanceTimersByTimeAsync(20_000);
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
+    await result;
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+  });
+
   it("frees the queue slot once a large signed file's blocking answer arrives", async () => {
     const large = new File(["PDF"], "signed.pdf");
     Object.defineProperty(large, "size", { value: 40 * 1024 * 1024 });

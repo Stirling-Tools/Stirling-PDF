@@ -1,3 +1,4 @@
+import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
 import { useState } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
@@ -20,10 +21,7 @@ function SignedPdfLockedStatus() {
   return (
     <Group gap="xs" px="sm" py={4}>
       <Tooltip
-        content={t(
-          "signedPdf.editsBlocked",
-          "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view, print, convert or sign it again.",
-        )}
+        content={signedPdfEditsBlockedMessage()}
         position="bottom"
         maxWidth={280}
         arrow
@@ -223,7 +221,9 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                                   : t(
                                       "encryptedPdfUnlock.actionUnlocked",
                                       "{{action}} unlocked for this session",
-                                      { action: label },
+                                      {
+                                        action: label,
+                                      },
                                     )
                               }
                             >
