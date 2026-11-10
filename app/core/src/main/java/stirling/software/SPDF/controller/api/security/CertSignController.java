@@ -11,7 +11,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -551,8 +550,7 @@ public class CertSignController {
                     String name = IETFUtils.valueToString(cn.getFirst().getValue());
 
                     String date = signature.getSignDate().getTime().toString();
-                    // reason is optional in the API, and showText rejects null.
-                    String reason = Objects.toString(signature.getReason(), "");
+                    String reason = signature.getReason();
 
                     cs.showText("Signed by " + name);
                     cs.newLine();
