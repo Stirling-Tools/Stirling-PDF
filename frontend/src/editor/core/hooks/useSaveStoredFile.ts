@@ -20,6 +20,11 @@ import {
 import type { SaveOutcome, SaveTarget } from "@editor/services/saveTargets";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
+export interface SaveOptions {
+  /** Export policies already ran on the file passed in, so they do not run again. */
+  policiesEnforced?: boolean;
+}
+
 export interface SaveStoredFile {
   /** The target Save sends this file to, or undefined for disk and downloads. */
   targetFor: (stub: StirlingFileStub) => SaveTarget | undefined;
@@ -29,7 +34,8 @@ export interface SaveStoredFile {
   targetSaveLabel: (stub: StirlingFileStub) => string | undefined;
   /** Unsaved against where Save sends this file. */
   isUnsaved: (stub: StirlingFileStub) => boolean;
-  /** Save where the toolbar's Save would. */
+  /** Save where the toolbar's Save would; nothing to do when that home already
+   *  holds this version. */
   saveStoredFile: (
     stub: StirlingFileStub,
     file?: File,
@@ -42,13 +48,12 @@ export interface SaveStoredFile {
     file?: File,
     options?: SaveOptions,
   ) => Promise<SaveOutcome>;
-  /** A one-off copy (download, or Save As on desktop) that keeps the file's home. */
-  saveLocalCopy: (stub: StirlingFileStub, file?: File) => Promise<SaveOutcome>;
-}
-
-export interface SaveOptions {
-  /** The caller already ran export policies on the file. */
-  policiesApplied?: boolean;
+  /** A one-off copy (a download or a Save As) that keeps the file's home. */
+  saveLocalCopy: (
+    stub: StirlingFileStub,
+    file?: File,
+    options?: SaveOptions,
+  ) => Promise<SaveOutcome>;
 }
 
 /** A free "name (edited).pdf" beside the file, or null if none is free. */
@@ -133,13 +138,13 @@ export function useSaveStoredFile(): SaveStoredFile {
       file?: File,
       options?: SaveOptions,
     ): Promise<File | null> => {
-      if (file && options?.policiesApplied) return file;
+      if (file && options?.policiesEnforced) return file;
       const source = file ?? (await fileStorage.getStirlingFile(stub.id));
       if (!source) {
         fail(
           t(
             "fileSidebar.dataLostBody",
-            "This browser lost this file's contents. Upload it again to keep working with it.",
+            "Couldn't find this file's contents. Add it again to keep working with it.",
           ),
         );
         return null;
@@ -256,6 +261,14 @@ export function useSaveStoredFile(): SaveStoredFile {
       file?: File,
       options?: SaveOptions,
     ): Promise<SaveOutcome> => {
+      // Its home already holds this version, and a rewrite would only wake the
+      // disk watcher. A file flagged as changed on disk is not current: saving
+      // is how the user keeps their version over the disk one.
+      const homeCurrent =
+        Boolean(targetFor(stub) || stub.localFilePath) &&
+        !isUnsaved(stub) &&
+        !stub.diskConflictAt;
+      if (homeCurrent) return "saved";
       const plan = planFor(stub);
       if (plan !== "ask")
         return saveToHome(stub, plan ?? "replace", file, options);
@@ -279,6 +292,7 @@ export function useSaveStoredFile(): SaveStoredFile {
     },
     [
       planFor,
+      isUnsaved,
       saveToHome,
       saveLocalCopy,
       targetFor,

@@ -8,13 +8,14 @@ import {
 import type { SaveHomeMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 
 export interface SaveButton {
   /** Replaces the view's plural Download/Save label; set whenever one file is in play. */
   label?: string;
   icon?: IconName;
   unsaved: boolean;
-  /** "More save options"; replaces the Save As button when set. */
+  /** The other destinations, for the "More save options" menu. */
   menu?: SaveMenuItem[];
 }
 
@@ -23,8 +24,6 @@ interface Options {
   targets: StirlingFileStub[];
   /** The viewer acts on one file, so it also offers that file's destinations. */
   singleFile: boolean;
-  /** Desktop saves to disk; web downloads. */
-  savesToDisk: boolean;
   onSaveLocalCopy: () => void;
   /** The file as the viewer shows it, annotations included. */
   fileFor: (stub: StirlingFileStub) => Promise<File | undefined>;
@@ -35,7 +34,6 @@ export function useSaveButton({
   saver,
   targets,
   singleFile,
-  savesToDisk,
   onSaveLocalCopy,
   fileFor,
 }: Options): SaveButton {
@@ -56,10 +54,7 @@ export function useSaveButton({
         ? shared.saveAllLabel()
         : saver.targetSaveLabel(targets[0]);
   } else if (targets.some((entry) => saver.targetFor(entry))) {
-    label = t(
-      "saveFile.toolbar.mixed",
-      "Save all, each back to where it came from",
-    );
+    label = t("saveFile.toolbar.mixed", "Save all");
   } else if (onlyStub && onlyPlan === "copy") {
     label = t("saveFile.toolbar.copy", "Save a copy of {{name}} next to it", {
       name: onlyStub.name,
@@ -73,24 +68,19 @@ export function useSaveButton({
   }
   const icon = shared?.icon;
 
-  if (!savesToDisk && !target) return { label, icon, unsaved };
+  if (!SAVES_TO_DISK && !target) return { label, icon, unsaved };
 
   const menu: SaveMenuItem[] = [
-    savesToDisk
+    SAVES_TO_DISK
       ? {
           key: "local",
-          label: target
-            ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-            : t(
-                "saveFile.menu.saveCopyElsewhere",
-                "Save a copy somewhere else…",
-              ),
+          label: t("saveFile.menu.saveCopy", "Save a copy..."),
           icon: "laptop",
           onClick: onSaveLocalCopy,
         }
       : {
           key: "local",
-          label: t("saveFile.menu.download", "Download a copy"),
+          label: t("download", "Download"),
           icon: "download",
           onClick: onSaveLocalCopy,
         },

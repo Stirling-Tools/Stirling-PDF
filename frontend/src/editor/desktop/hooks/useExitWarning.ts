@@ -6,6 +6,18 @@ import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Files to offer saving before the window closes. A file whose disk original
+ * was deleted has lost its link, so it no longer counts as unsaved against a
+ * home, but its edits exist nowhere else.
+ */
+export function filesToSaveOnQuit(
+  stubs: StirlingFileStub[],
+  isUnsaved: (stub: StirlingFileStub) => boolean,
+): StirlingFileStub[] {
+  return stubs.filter((stub) => stub.isDirty || isUnsaved(stub));
+}
+
 export function useExitWarning() {
   const { t } = useTranslation();
   const selectors = useFileSelectors();
@@ -27,9 +39,10 @@ export function useExitWarning() {
         return;
       }
 
-      const allStubs = selectorsRef.current.getStirlingFileStubs();
-      // Disk edits and edits not yet sent to a save target both count.
-      const dirtyStubs = allStubs.filter(saverRef.current.isUnsaved);
+      const dirtyStubs = filesToSaveOnQuit(
+        selectorsRef.current.getStirlingFileStubs(),
+        saverRef.current.isUnsaved,
+      );
 
       // Nothing unsaved: don't preventDefault, so the window closes natively
       // without depending on the JS dialog/destroy round-trip below.

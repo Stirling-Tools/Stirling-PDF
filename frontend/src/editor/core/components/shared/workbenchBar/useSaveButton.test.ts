@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
 import type { SaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import type { SaveTarget } from "@editor/services/saveTargets";
@@ -7,6 +7,13 @@ import type { SaveMode } from "@editor/services/saveMode";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
+const disk = vi.hoisted(() => ({ saves: false }));
+
+vi.mock("@editor/services/downloadService", () => ({
+  get SAVES_TO_DISK() {
+    return disk.saves;
+  },
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string, vars?: Record<string, string>) =>
@@ -54,6 +61,10 @@ function saver(
   };
 }
 
+beforeEach(() => {
+  disk.saves = false;
+});
+
 const base = {
   singleFile: true,
   onSaveLocalCopy: vi.fn(),
@@ -66,7 +77,6 @@ it("leaves the browser toolbar alone when nothing has a save target", () => {
       ...base,
       saver: saver([]),
       targets: [stub("a")],
-      savesToDisk: false,
     }),
   );
   expect(result.current).toEqual({
@@ -77,17 +87,17 @@ it("leaves the browser toolbar alone when nothing has a save target", () => {
 });
 
 it("moves desktop Save As into the menu and dots unsaved disk edits", () => {
+  disk.saves = true;
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,
       saver: saver([]),
       targets: [stub("a", { isDirty: true, localFilePath: "C:/a.pdf" })],
-      savesToDisk: true,
     }),
   );
   expect(result.current.unsaved).toBe(true);
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Save a copy somewhere else…",
+    "Save a copy...",
     "Save a copy next to it",
   ]);
 });
@@ -98,13 +108,12 @@ it("names the target and lists its destinations for one file", () => {
       ...base,
       saver: saver([cloud]),
       targets: [stub("c1")],
-      savesToDisk: false,
     }),
   );
   expect(result.current.label).toBe("Update c1.pdf in cloud");
   expect(result.current.icon).toBe("cloud-upload");
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Download a copy",
+    "Download",
     "Save a copy next to it",
     "Save a copy to cloud",
   ]);
@@ -117,62 +126,60 @@ it("says each file goes home when targets are mixed", () => {
       singleFile: false,
       saver: saver([cloud]),
       targets: [stub("c1"), stub("a")],
-      savesToDisk: false,
     }),
   );
-  expect(result.current.label).toBe(
-    "Save all, each back to where it came from",
-  );
+  expect(result.current.label).toBe("Save all");
   expect(result.current.icon).toBeUndefined();
   expect(result.current.menu).toBeUndefined();
 });
 
 it("names the copy and offers the update when the setting is Save a copy", () => {
+  disk.saves = true;
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,
       saver: saver([], "copy"),
       targets: [stub("a", { localFilePath: "C:/a.pdf" })],
-      savesToDisk: true,
     }),
   );
   expect(result.current.label).toBe("Save a copy of a.pdf next to it");
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Save a copy somewhere else…",
+    "Save a copy...",
     "Update a.pdf",
   ]);
 });
 
 it("names the save mode for the only file in a list view", () => {
+  disk.saves = true;
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,
       singleFile: false,
       saver: saver([], "ask"),
       targets: [stub("a", { localFilePath: "C:/a.pdf" })],
-      savesToDisk: true,
     }),
   );
   expect(result.current.label).toBe("Save a.pdf…");
   expect(result.current.menu?.map((item) => item.label)).toEqual([
-    "Save a copy somewhere else…",
+    "Save a copy...",
   ]);
 });
 
 it("uses the single-file label for the only file in Update the original mode", () => {
+  disk.saves = true;
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,
       singleFile: false,
       saver: saver([], "replace"),
       targets: [stub("a", { isDirty: true, localFilePath: "C:/a.pdf" })],
-      savesToDisk: true,
     }),
   );
   expect(result.current.label).toBe("Download");
 });
 
 it("keeps the view's plural label for several files", () => {
+  disk.saves = true;
   const { result } = renderHook(() =>
     useSaveButton({
       ...base,
@@ -182,7 +189,6 @@ it("keeps the view's plural label for several files", () => {
         stub("a", { localFilePath: "C:/a.pdf" }),
         stub("b", { localFilePath: "C:/b.pdf" }),
       ],
-      savesToDisk: true,
     }),
   );
   expect(result.current.label).toBeUndefined();

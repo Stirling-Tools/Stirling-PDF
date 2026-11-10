@@ -270,7 +270,7 @@ export const FileItem = React.memo(function FileItem({
     if (needsBytes && dataUnavailable)
       return t(
         "fileSidebar.fileItem.dataLostTooltip",
-        "This browser lost this file's contents. Upload it again to keep working with it.",
+        "Couldn't find this file's contents. Add it again to keep working with it.",
       );
     return null;
   };
@@ -367,7 +367,7 @@ export const FileItem = React.memo(function FileItem({
               <Tooltip
                 label={t(
                   "fileSidebar.fileItem.dataLostTooltip",
-                  "This browser lost this file's contents. Upload it again to keep working with it.",
+                  "Couldn't find this file's contents. Add it again to keep working with it.",
                 )}
                 withArrow
                 position="top"

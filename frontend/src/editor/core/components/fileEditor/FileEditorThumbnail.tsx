@@ -44,6 +44,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
 import type { SaveTarget } from "@editor/services/saveTargets";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
@@ -292,12 +293,11 @@ const FileEditorThumbnail = ({
   const backgroundPolicy = policies.find((p) => p.background && !p.enforcing);
 
   const hoverActions = useMemo<HoverAction[]>(() => {
-    // Beside a save to another home, the plain one needs to say it stays local.
-    const downloadLabel = !saveTarget
-      ? terminology.download
-      : icons.saveAs
-        ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-        : t("saveFile.menu.download", "Download a copy");
+    // A plain "Save" beside the save to another home would read as that save.
+    const downloadLabel =
+      saveTarget && SAVES_TO_DISK
+        ? t("saveFile.menu.saveCopy", "Save a copy...")
+        : terminology.download;
     const uploadLabel = isUploaded
       ? t("fileManager.updateOnServer", "Update on Server")
       : t("fileManager.uploadToServer", "Upload to Server");
@@ -498,7 +498,6 @@ const FileEditorThumbnail = ({
     saveTarget,
     targetLabel,
     file,
-    icons.saveAs,
     onUnzipFile,
     handleCloseWithConfirmation,
     policyEnforcing,
