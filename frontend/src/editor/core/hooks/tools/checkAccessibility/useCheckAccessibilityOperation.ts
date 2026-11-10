@@ -33,6 +33,8 @@ export const useCheckAccessibilityOperation =
 
     const resetResults = useCallback(() => {
       currentRun.current += 1;
+      // The run this just invalidated may no longer touch state, so it cannot clear loading itself.
+      setIsLoading(false);
       setResults([]);
       setFiles([]);
       setStatus("");

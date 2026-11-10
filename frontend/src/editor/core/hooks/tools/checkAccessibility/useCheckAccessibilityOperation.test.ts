@@ -114,4 +114,24 @@ describe("useCheckAccessibilityOperation", () => {
     expect(apiClient.post).toHaveBeenCalledTimes(2);
     expect(result.current.isLoading).toBe(false);
   });
+  it("stops loading when results are reset mid-run", async () => {
+    const stalled = deferred<{ data: AccessibilityReport }>();
+    (apiClient.post as Mock).mockReturnValueOnce(stalled.promise);
+    const { result } = renderHook(() => useCheckAccessibilityOperation());
+
+    let run!: Promise<void>;
+    act(() => {
+      run = result.current.executeOperation(defaultParameters, [pdf("a.pdf")]);
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(true));
+    act(() => result.current.resetResults());
+    expect(result.current.isLoading).toBe(false);
+
+    await act(async () => {
+      stalled.resolve({ data: report() });
+      await run;
+    });
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.results).toEqual([]);
+  });
 });
