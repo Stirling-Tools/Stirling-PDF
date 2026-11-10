@@ -12,7 +12,9 @@
   padding: 4px 8px;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .languagePicker:hover {
