@@ -41,14 +41,17 @@ export function AccessibilityResults({
   );
 
   const [buildingPdf, setBuildingPdf] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
 
   const downloadReportPdf = async (entry: AccessibilityReportEntry) => {
     setBuildingPdf(true);
+    setDownloadFailed(false);
     try {
       const pdf = await createAccessibilityReportPdf(entry, t);
       await downloadFile({ data: pdf, filename: pdf.name });
     } catch (error) {
       console.warn("[checkAccessibility] PDF report failed", error);
+      setDownloadFailed(true);
     } finally {
       setBuildingPdf(false);
     }
@@ -109,6 +112,16 @@ export function AccessibilityResults({
 
       {reportFile && (
         <div className="a11y-download">
+          {downloadFailed && (
+            <Banner
+              tone="danger"
+              title={t(
+                "checkAccessibility.error.download",
+                "The accessibility report could not be created. Try again.",
+              )}
+              onDismiss={() => setDownloadFailed(false)}
+            />
+          )}
           <Button
             fullWidth
             loading={buildingPdf}

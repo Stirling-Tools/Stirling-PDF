@@ -59,6 +59,8 @@ export interface AccessibilityReport {
   tagged: boolean;
   declaresConformance: boolean;
   passesAutomatedChecks: boolean;
+  /** Set when the validator could not run; the rest of the report then describes that failure. */
+  validationError?: string | null;
   issues: AccessibilityIssue[];
   humanChecks: string[];
   automaticallyFixable: number;

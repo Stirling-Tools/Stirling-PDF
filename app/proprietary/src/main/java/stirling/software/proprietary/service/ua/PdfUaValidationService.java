@@ -44,10 +44,11 @@ public class PdfUaValidationService {
     private static final Map<String, ClauseInfo> CLAUSES = buildClauseTable();
 
     /**
-     * Validates to the end rather than stopping at the first failures, so every failing rule is
-     * reported. veraPDF still keeps only the first 100 assertions per rule, which bounds memory.
+     * Failed assertions veraPDF keeps per rule, which is where pages and locations come from. It
+     * still counts every failure, so occurrence totals are exact; only the page list is a sample.
+     * -1 would keep up to 10,000 in total, letting the first rules checked crowd out the rest.
      */
-    private static final int NO_FAILURE_LIMIT = -1;
+    private static final int MAX_FAILURES_KEPT_PER_RULE = 100;
 
     /** veraPDF locations name a page as {@code pages[n]}, zero-based, in the object context. */
     private static final Pattern PAGE_IN_CONTEXT = Pattern.compile("pages\\[(\\d+)\\]");
@@ -71,7 +72,8 @@ public class PdfUaValidationService {
 
             PDFAValidator validator =
                     Foundries.defaultInstance()
-                            .createValidator(flavour, NO_FAILURE_LIMIT, false, true, false);
+                            .createValidator(
+                                    flavour, MAX_FAILURES_KEPT_PER_RULE, false, true, false);
             ValidationResult result = validator.validate(parser);
             return toResult(profile, result);
 
@@ -82,7 +84,14 @@ public class PdfUaValidationService {
             issue.setSeverity("error");
             issue.setClause("n/a");
             return new UaValidationResult(
-                    profile.displayName(), false, List.of(issue), 0, 0, 0, Map.of());
+                    profile.displayName(),
+                    false,
+                    List.of(issue),
+                    0,
+                    0,
+                    0,
+                    Map.of(),
+                    issue.getMessage());
         }
     }
 
@@ -179,7 +188,8 @@ public class PdfUaValidationService {
                 total,
                 result.getTotalAssertions(),
                 rulesInProfile,
-                rulesByTags(validationProfile));
+                rulesByTags(validationProfile),
+                null);
     }
 
     private static Map<String, Integer> rulesByTags(ValidationProfile validationProfile) {
@@ -201,7 +211,7 @@ public class PdfUaValidationService {
      * Replaces the logged occurrence counts with veraPDF's own per-rule totals, since it logs at
      * most 100 assertions per rule. Returns the corrected total.
      */
-    private static int applyFullFailureCounts(
+    static int applyFullFailureCounts(
             Map<String, AccessibilityIssue> grouped,
             Map<String, RuleId> ruleIdByKey,
             Map<RuleId, Integer> failedChecks,
@@ -212,7 +222,8 @@ public class PdfUaValidationService {
         int total = 0;
         for (Map.Entry<String, AccessibilityIssue> entry : grouped.entrySet()) {
             AccessibilityIssue issue = entry.getValue();
-            Integer count = failedChecks.get(ruleIdByKey.get(entry.getKey()));
+            RuleId ruleId = ruleIdByKey.get(entry.getKey());
+            Integer count = ruleId == null ? null : failedChecks.get(ruleId);
             if (count != null && count > issue.getOccurrences()) {
                 issue.setOccurrences(count);
             }

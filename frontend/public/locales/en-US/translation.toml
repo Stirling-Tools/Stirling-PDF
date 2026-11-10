@@ -3303,6 +3303,7 @@ structure = "Whether the content is tagged so screen readers can follow it: head
 untagged = "Untagged"
 
 [checkAccessibility.error]
+download = "The accessibility report could not be created. Try again."
 fileTitle = "This file could not be checked"
 partial = "Some files could not be checked."
 

@@ -67,6 +67,7 @@ function BreakdownValue({ failed, total }: BreakdownValueProps) {
     return (
       <span
         className="a11y-breakdown__value"
+        role="img"
         aria-label={t(
           "checkAccessibility.breakdown.passing",
           "{{passed}} of {{total}} rules pass",

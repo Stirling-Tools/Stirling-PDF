@@ -61,6 +61,7 @@ public class AccessibilityAuditService {
         UaValidationResult validation = validationService.validate(pdfBytes, profile);
         report.setIssues(validation.issues());
         report.setPassesAutomatedChecks(validation.compliant());
+        report.setValidationError(validation.validationError());
         report.setHumanChecks(HUMAN_CHECKS);
         report.setChecks(checksOf(validation));
 

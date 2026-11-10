@@ -27,6 +27,13 @@ public class AccessibilityReport {
     @Schema(description = "Whether every automated check passed")
     private boolean passesAutomatedChecks;
 
+    @Schema(
+            description =
+                    "Why the validator could not run, or null when it did. When set, issues and"
+                            + " checks describe that failure rather than the document, so no"
+                            + " score or pass/fail can be drawn from them.")
+    private String validationError;
+
     @Schema(description = "Automated checks that failed, grouped by rule")
     private List<AccessibilityIssue> issues = List.of();
 

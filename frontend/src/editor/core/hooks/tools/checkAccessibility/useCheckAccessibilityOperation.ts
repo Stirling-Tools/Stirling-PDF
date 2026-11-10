@@ -27,10 +27,12 @@ export const useCheckAccessibilityOperation =
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [files, setFiles] = useState<File[]>([]);
     const [results, setResults] = useState<AccessibilityReportEntry[]>([]);
-    const cancelRequested = useRef(false);
+    // Each run takes the next id; a run whose id is no longer current was cancelled or replaced
+    // and must not touch state, or a cancelled run could resume beside the run that replaced it.
+    const currentRun = useRef(0);
 
     const resetResults = useCallback(() => {
-      cancelRequested.current = false;
+      currentRun.current += 1;
       setResults([]);
       setFiles([]);
       setStatus("");
@@ -49,7 +51,8 @@ export const useCheckAccessibilityOperation =
           return;
         }
 
-        cancelRequested.current = false;
+        const run = ++currentRun.current;
+        const isCurrent = () => run === currentRun.current;
         setIsLoading(true);
         setErrorMessage(null);
         setResults([]);
@@ -58,7 +61,7 @@ export const useCheckAccessibilityOperation =
         const collected: AccessibilityReportEntry[] = [];
         try {
           for (const [index, file] of selectedFiles.entries()) {
-            if (cancelRequested.current) break;
+            if (!isCurrent()) return;
             setStatus(
               t(
                 "checkAccessibility.status.checking",
@@ -78,11 +81,13 @@ export const useCheckAccessibilityOperation =
                 "/api/v1/security/accessibility-report",
                 formData,
               );
+              // A report the validator could not produce describes the failure, not the file,
+              // so scoring it would grade a document nothing has checked.
               collected.push({
                 fileId: file.fileId,
                 fileName: file.name,
-                report: data,
-                error: null,
+                report: data.validationError ? null : data,
+                error: data.validationError ?? null,
               });
             } catch (error) {
               collected.push({
@@ -92,11 +97,10 @@ export const useCheckAccessibilityOperation =
                 error: extractErrorMessage(error),
               });
             }
+            if (!isCurrent()) return;
             // Publishing as each file lands lets the first report render while the rest run.
             setResults([...collected]);
           }
-
-          if (cancelRequested.current) return;
 
           const payload = collected.map(({ fileName, report, error }) => ({
             fileName,
@@ -122,7 +126,7 @@ export const useCheckAccessibilityOperation =
           }
           setStatus(t("checkAccessibility.status.complete", "Check complete"));
         } finally {
-          setIsLoading(false);
+          if (isCurrent()) setIsLoading(false);
         }
       },
       [t],
@@ -130,7 +134,7 @@ export const useCheckAccessibilityOperation =
 
     const cancelOperation = useCallback(() => {
       if (!isLoading) return;
-      cancelRequested.current = true;
+      currentRun.current += 1;
       setIsLoading(false);
       setStatus(t("operationCancelled", "Operation cancelled"));
     }, [isLoading, t]);

@@ -294,6 +294,9 @@
   position: sticky;
   bottom: 0;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   padding-block: 0.75rem;
   background: var(--c-surface);
 }
