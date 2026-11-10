@@ -250,6 +250,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
         }
     }
 
+    /**
+     * Restricts one top-level folder on the catch-all handler to classpath locations, so files an
+     * operator drops into the custom static directory under that name are never served publicly.
+     *
+     * <p>The folder is matched however the filesystem might resolve it: case-insensitively, after
+     * up to {@link #MAX_DECODE_PASSES} rounds of percent-decoding, with either separator, and with
+     * Windows stream suffixes and trailing dots or spaces stripped. A path that cannot be fully
+     * decoded is treated as targeting the folder.
+     *
+     * <p>Hazard: this is the only guard for spellings the {@code /fonts/**} handler does not match,
+     * so the two must name the same folder.
+     */
     static final class BundledOnlyFolderResolver implements ResourceResolver {
 
         private final String folder;
