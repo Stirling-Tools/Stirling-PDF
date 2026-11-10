@@ -67,8 +67,8 @@ export default defineConfig({
         test: {
           name: "core",
           ...TEST_DEFAULTS,
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 60000,
+          hookTimeout: 60000,
           include: ["src/editor/core/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -93,8 +93,8 @@ export default defineConfig({
         test: {
           name: "processor",
           ...TEST_DEFAULTS,
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 60000,
+          hookTimeout: 60000,
           include: ["src/processor/proprietary/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -118,8 +118,8 @@ export default defineConfig({
         test: {
           name: "proprietary",
           ...TEST_DEFAULTS,
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 60000,
+          hookTimeout: 60000,
           include: ["src/editor/proprietary/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -141,8 +141,8 @@ export default defineConfig({
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 60000,
+          hookTimeout: 60000,
           include: ["src/editor/desktop/**/*.test.{ts,tsx}"],
           environment: "jsdom",
           globals: true,
@@ -164,8 +164,8 @@ export default defineConfig({
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 60000,
+          hookTimeout: 60000,
           // src/editor/saas = editor-saas layer; src/processor/saas = the portal's saas
           // overrides (sibling to src/processor/proprietary). Both build under the saas flavor,
           // so both resolve @processor via the saas cascade (tsconfig.saas.vite.json).

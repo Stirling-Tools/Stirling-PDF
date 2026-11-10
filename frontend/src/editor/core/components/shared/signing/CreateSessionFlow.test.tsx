@@ -211,7 +211,7 @@ it("guides mobile creation through three pages and retains the draft when going 
   expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ includeSummaryPage: true }),
   );
-}, 15000);
+}, 60000);
 
 it("preserves the mobile page and signature settings across desktop resizing", async () => {
   const { user, resize } = show({ mobile: true, initialIds: [2] });

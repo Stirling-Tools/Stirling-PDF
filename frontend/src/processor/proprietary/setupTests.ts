@@ -2,6 +2,15 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import i18n from "i18next";
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string) => defaultValue ?? key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
+  I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn().mockResolvedValue({
     mode: "saas",
