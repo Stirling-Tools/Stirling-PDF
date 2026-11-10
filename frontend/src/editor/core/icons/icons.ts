@@ -204,6 +204,7 @@ import MonitorCloud from "lucide-static/icons/monitor-cloud.svg?react";
 import MonitorSmartphone from "lucide-static/icons/monitor-smartphone.svg?react";
 import Moon from "lucide-static/icons/moon.svg?react";
 import Move from "lucide-static/icons/move.svg?react";
+import MoveUpRight from "lucide-static/icons/move-up-right.svg?react";
 import Music from "lucide-static/icons/music.svg?react";
 import Network from "lucide-static/icons/network.svg?react";
 import Newspaper from "lucide-static/icons/newspaper.svg?react";
@@ -277,6 +278,7 @@ import Shrink from "lucide-static/icons/shrink.svg?react";
 import Sigma from "lucide-static/icons/sigma.svg?react";
 import Signature from "lucide-static/icons/signature.svg?react";
 import Siren from "lucide-static/icons/siren.svg?react";
+import Slash from "lucide-static/icons/slash.svg?react";
 import SlidersHorizontal from "lucide-static/icons/sliders-horizontal.svg?react";
 import Sparkle from "lucide-static/icons/sparkle.svg?react";
 import Sparkles from "lucide-static/icons/sparkles.svg?react";
@@ -635,6 +637,7 @@ export const ICONS = {
   "monitor-smartphone": { Component: MonitorSmartphone, kind: "lucide" },
   moon: { Component: Moon, kind: "lucide" },
   move: { Component: Move, kind: "lucide" },
+  "move-up-right": { Component: MoveUpRight, kind: "lucide" },
   music: { Component: Music, kind: "lucide" },
   network: { Component: Network, kind: "lucide" },
   newspaper: { Component: Newspaper, kind: "lucide" },
@@ -708,6 +711,7 @@ export const ICONS = {
   sigma: { Component: Sigma, kind: "lucide" },
   signature: { Component: Signature, kind: "lucide" },
   siren: { Component: Siren, kind: "lucide" },
+  slash: { Component: Slash, kind: "lucide" },
   "sliders-horizontal": { Component: SlidersHorizontal, kind: "lucide" },
   sparkle: { Component: Sparkle, kind: "lucide" },
   sparkles: { Component: Sparkles, kind: "lucide" },

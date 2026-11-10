@@ -335,7 +335,7 @@ def main() -> None:
 
     # Project layout assumptions
     cwd = os.getcwd()
-    locales_dir = os.path.join(cwd, "frontend", "editor", "public", "locales")
+    locales_dir = os.path.join(cwd, "frontend", "public", "locales")
     reference_file = os.path.join(locales_dir, "en-US", "translation.toml")
     scripts_directory = os.path.join(cwd, "scripts")
     translation_state_file = os.path.join(scripts_directory, "ignore_translation.toml")

@@ -10,6 +10,24 @@ import {
 // lets a one-finger drag scroll the document. Pinned by viewerPanConfig.test.ts.
 export const POINTER_MODE = "pointerMode";
 
+/** Class on every page's pointer layer; the touch-action rule in core/styles/theme.css selects on it too. */
+export const PAGE_POINTER_LAYER_CLASS = "pdf-page-pointer-layer";
+
+/**
+ * Commits an in-progress polyline or polygon. EmbedPDF finishes those shapes
+ * only on a double-click, which it reads off the page pointer layer; pages with
+ * no shape in progress ignore the event.
+ */
+export function finishPendingPageShape(): void {
+  document
+    .querySelectorAll(`.${PAGE_POINTER_LAYER_CLASS}`)
+    .forEach((layer) =>
+      layer.dispatchEvent(
+        new MouseEvent("dblclick", { bubbles: true, cancelable: true }),
+      ),
+    );
+}
+
 function useActiveInteractionMode(documentId: string): string | null {
   const { provides: interactionManager } = useInteractionManagerCapability();
   const [mode, setMode] = useState<string | null>(null);
@@ -58,7 +76,7 @@ export function ViewerPagePointerProvider({
       documentId={documentId}
       pageIndex={pageIndex}
       // Consumed by the touch-action rule in core/styles/theme.css.
-      className="pdf-page-pointer-layer"
+      className={PAGE_POINTER_LAYER_CLASS}
     >
       {children}
     </PagePointerProvider>

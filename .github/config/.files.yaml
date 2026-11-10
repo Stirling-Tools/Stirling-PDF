@@ -13,6 +13,8 @@ build: &build
   - build.gradle
   - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
+  - app/allowed-licenses.json
+  - app/license-overrides.json
   - Taskfile.yml
   - .taskfiles/backend.yml
   - .github/workflows/check-licence.yml
@@ -89,13 +91,7 @@ frontend: &frontend
   - docker/**
   - scripts/translations/*.py
   - .taskfiles/desktop.yml
-  - scripts/convert_cff_to_ttf.py
-  - scripts/harvest_type3_fonts.py
   - scripts/ignore_translation.toml
-  - scripts/index_type3_catalogue.py
-  - scripts/summarize_type3_signatures.py
-  - scripts/type3_to_cff.py
-  - scripts/update_type3_library.py
   - Taskfile.yml
   - .taskfiles/frontend.yml
   - .taskfiles/e2e.yml
@@ -115,6 +111,7 @@ tauri: &tauri
   - frontend/package-lock.json
   - frontend/vite.config.ts
   - .github/workflows/tauri-build.yml
+  - .github/workflows/rust-lint.yml
   - Taskfile.yml
   - .taskfiles/desktop.yml
 

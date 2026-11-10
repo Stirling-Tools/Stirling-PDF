@@ -23,11 +23,7 @@ export function encodeTextString(text: string): string {
  * PDFDocEncoding. Null when the token is not a string.
  */
 export function decodeTextString(token: string): string | null {
-  const bytes = token.startsWith("(")
-    ? literalBytes(token)
-    : token.startsWith("<") && !token.startsWith("<<")
-      ? hexBytes(token)
-      : null;
+  const bytes = stringBytes(token);
   if (!bytes) return null;
   if (bytes[0] === 0xfe && bytes[1] === 0xff) {
     let text = "";
@@ -40,6 +36,12 @@ export function decodeTextString(token: string): string | null {
     return new TextDecoder("utf-8").decode(Uint8Array.from(bytes.slice(3)));
   }
   return String.fromCharCode(...bytes.map(fromPdfDocEncoding));
+}
+
+function stringBytes(token: string): number[] | null {
+  if (token.startsWith("(")) return literalBytes(token);
+  if (token.startsWith("<") && !token.startsWith("<<")) return hexBytes(token);
+  return null;
 }
 
 const LITERAL_ESCAPES: Record<string, number> = {

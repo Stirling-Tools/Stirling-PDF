@@ -426,14 +426,11 @@ pub async fn login(
     // Detect if this is Supabase (SaaS) or Spring Boot (self-hosted)
     let is_supabase = server_url.trim_end_matches('/') == saas_server_url.trim_end_matches('/');
 
-    // Create HTTP client with certificate bypass
-    // This handles:
-    // - Self-signed certificates
-    // - Missing intermediate certificates
-    // - Certificate hostname mismatches
+    // Only self-hosted servers skip certificate validation, since they often have
+    // self-signed certificates, missing intermediates or hostname mismatches.
     // Note: Rustls only supports TLS 1.2 and TLS 1.3
     let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
+        .danger_accept_invalid_certs(!is_supabase)
         .timeout(std::time::Duration::from_secs(30))
         .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()
@@ -509,7 +506,7 @@ pub async fn login(
             .as_ref()
             .and_then(|m| m.full_name.clone())
             .or_else(|| email.clone())
-            .unwrap_or_else(|| username);
+            .unwrap_or(username);
 
         Ok(LoginResponse {
             token: login_response.access_token,
@@ -568,7 +565,7 @@ pub async fn login(
                 } else if error_lower.contains("timeout") {
                     format!("Connection timeout: Server at {} is not responding. Check your network connection.", login_url)
                 } else if error_lower.contains("dns") || error_lower.contains("resolve") {
-                    format!("DNS resolution failed: Cannot resolve hostname. Check if the server URL is correct.")
+                    "DNS resolution failed: Cannot resolve hostname. Check if the server URL is correct.".to_string()
                 } else {
                     format!("Network error: {}", e)
                 }
@@ -612,7 +609,7 @@ pub async fn login(
             .await
             .map_err(|e| format!("Failed to parse Spring Boot response: {}", e))?;
 
-        log::info!("Spring Boot login successful for user: {}", login_response.user.username);
+        log::info!("Spring Boot login successful");
 
         Ok(LoginResponse {
             token: login_response.session.access_token,
@@ -782,14 +779,8 @@ async fn exchange_code_for_token(
 ) -> Result<OAuthCallbackResult, String> {
     log::info!("Exchanging authorization code for access token with PKCE");
 
-    // Create HTTP client with certificate bypass
-    // This handles:
-    // - Self-signed certificates
-    // - Missing intermediate certificates
-    // - Certificate hostname mismatches
     // Note: Rustls only supports TLS 1.2 and TLS 1.3
     let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(30))
         .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()

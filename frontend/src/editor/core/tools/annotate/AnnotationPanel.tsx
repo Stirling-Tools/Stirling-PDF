@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,6 +22,8 @@ import {
 import { ImageUploader } from "@editor/components/annotation/shared/ImageUploader";
 import { SuggestedToolsSection } from "@editor/components/tools/shared/SuggestedToolsSection";
 import { DrawingControls } from "@editor/components/annotation/shared/DrawingControls";
+import { finishPendingPageShape } from "@editor/components/viewer/ViewerPointerProviders";
+import { MultiClickShapeHint } from "@editor/components/annotation/shared/MultiClickShapeHint";
 import type {
   AnnotationToolId,
   AnnotationAPI,
@@ -33,6 +35,7 @@ import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters"
 import type { BuildToolOptionsExtras } from "@editor/tools/annotate/useAnnotationStyleState";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface StyleState {
   inkColor: string;
   inkWidth: number;
@@ -279,7 +282,17 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         label: t("annotation.circle", "Circle"),
         icon: "circle",
       },
-      { id: "line", label: t("annotation.line", "Line"), icon: "polyline" },
+      { id: "line", label: t("annotation.line", "Line"), icon: "slash" },
+      {
+        id: "lineArrow",
+        label: t("annotation.lineArrow", "Arrow"),
+        icon: "move-up-right",
+      },
+      {
+        id: "polyline",
+        label: t("annotation.polyline", "Polyline"),
+        icon: "polyline",
+      },
       {
         id: "polygon",
         label: t("annotation.polygon", "Polygon"),
@@ -333,6 +346,27 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   );
 
   const annotationsVisible = viewerContext?.isAnnotationsVisible ?? true;
+
+  const isMultiClickShape =
+    annotationsVisible &&
+    (activeTool === "polyline" || activeTool === "polygon");
+
+  useEffect(() => {
+    if (!isMultiClickShape) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest("input, textarea, select, [contenteditable='true']")
+      ) {
+        return;
+      }
+      event.preventDefault();
+      finishPendingPageShape();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isMultiClickShape]);
 
   const handleConfirmClearDocumentAnnotations = async () => {
     if (isClearingDocumentAnnotations || isApplyingChanges) {
@@ -475,7 +509,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               disabled={false}
             />
             {stampImageData && (
-              <Stack gap="xs">
+              <Stack gap="xs" className={privateContentClassName}>
                 <Text size="xs" c="dimmed">
                   {t("annotation.imagePreview", "Preview")}
                 </Text>
@@ -1253,6 +1287,10 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           {t("annotation.shapes", "Shapes")}
         </Text>
         {renderToolButtons(shapeTools)}
+        <MultiClickShapeHint
+          active={isMultiClickShape}
+          annotationApiRef={annotationApiRef}
+        />
       </Box>
 
       <Box>
