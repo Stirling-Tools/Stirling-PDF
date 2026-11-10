@@ -26,7 +26,7 @@ from pathlib import Path
 
 import tomli_w  # For writing TOML files
 
-LOCALES_DIR = Path("frontend", "editor", "public", "locales")
+LOCALES_DIR = Path("frontend", "public", "locales")
 REFERENCE_LOCALE = "en-US"
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_KEYS_LISTED = 20

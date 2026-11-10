@@ -5,6 +5,8 @@ import {
   ParentTreeWriter,
   contentStreamObject,
   elementKids,
+  kidMcid,
+  mcidKid,
   pageSites,
   streamsUsedByMoreThanOnePage,
   type McidSite,
@@ -19,8 +21,6 @@ import {
   plainObject,
   type RevisionObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
-
-const REF = /^(\d+)\s+\d+\s+R$/;
 
 /** Changes to one element's /K for one page. */
 interface KidChanges {
@@ -183,24 +183,10 @@ function rewriteKids(
   const kids = elementKids(pdf, body);
   if (!kids) return null;
   const elementPage = pdf.dictRef(body, "Pg");
-
-  const mcidOnPage = (kid: string): number | null => {
-    if (/^\d+$/.test(kid)) {
-      return elementPage === changes.pageNum ? parseInt(kid, 10) : null;
-    }
-    const ref = kid.match(REF);
-    const dict = ref ? pdf.objectBody(parseInt(ref[1], 10)) : kid;
-    if (!dict?.trimStart().startsWith("<<")) return null;
-    if (pdf.dictName(dict, "Type") !== "MCR" || pdf.valueSpan(dict, "Stm")) {
-      return null;
-    }
-    const page = pdf.dictRef(dict, "Pg") ?? elementPage;
-    return page === changes.pageNum ? pdf.dictInt(dict, "MCID") : null;
-  };
-  const newKid = (mcid: number): string =>
-    elementPage === changes.pageNum
-      ? String(mcid)
-      : `<< /Type /MCR /Pg ${changes.pageNum} 0 R /MCID ${mcid} >>`;
+  const mcidOnPage = (kid: string) =>
+    kidMcid(pdf, kid, elementPage, changes.pageNum);
+  const newKid = (mcid: number) =>
+    mcidKid(pdf, mcid, elementPage, changes.pageNum);
 
   const out: string[] = [];
   const placed = new Set<number>();

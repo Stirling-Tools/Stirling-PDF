@@ -310,6 +310,7 @@ public class SplitPdfBySectionsController {
                             "page numbers",
                             "custom");
                 }
+                GeneralUtils.requireValidPageSelection(pageNumbers, totalPages);
                 String[] pageOrderArr = pageNumbers.split(",");
                 List<Integer> pageListToSplit =
                         GeneralUtils.parsePageList(pageOrderArr, totalPages, false);

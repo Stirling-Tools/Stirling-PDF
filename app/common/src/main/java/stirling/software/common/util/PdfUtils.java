@@ -95,9 +95,37 @@ public class PdfUtils {
         for (COSName name : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(name);
             if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
                 images.add(image.getImage());
             } else if (object instanceof PDFormXObject form) {
                 collectImages(form.getResources(), images, visited);
+            }
+        }
+    }
+
+    /**
+     * Rejects, before rendering, any embedded image whose decoded raster exceeds the limit. The
+     * page render bounds the output canvas, not the intermediate raster PDFBox decodes each image
+     * into, so each image is sized here (soft masks and self-sizing codecs included) up front.
+     */
+    private void requireEmbeddedImagesFit(PDDocument document) throws IOException {
+        Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (PDPage page : document.getPages()) {
+            requireImagesFit(page.getResources(), visited);
+        }
+    }
+
+    private void requireImagesFit(PDResources resources, Set<COSDictionary> visited)
+            throws IOException {
+        if (resources == null || !visited.add(resources.getCOSObject())) {
+            return;
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
+            if (object instanceof PDImageXObject image) {
+                ImageMemoryLimit.requireEmbeddedImageFits(image);
+            } else if (object instanceof PDFormXObject form) {
+                requireImagesFit(form.getResources(), visited);
             }
         }
     }
@@ -120,6 +148,8 @@ public class PdfUtils {
     }
 
     public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+        pagesToCheck = pagesToCheck == null || pagesToCheck.isBlank() ? "all" : pagesToCheck;
+        GeneralUtils.requireWellFormedPageSelection(pagesToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pagesToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -136,6 +166,12 @@ public class PdfUtils {
 
     public boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
             throws IOException {
+        pageNumbersToCheck =
+                pageNumbersToCheck == null || pageNumbersToCheck.isBlank()
+                        ? "all"
+                        : pageNumbersToCheck;
+        GeneralUtils.requireWellFormedPageSelection(
+                pageNumbersToCheck, document.getNumberOfPages());
         String[] pageOrderArr = pageNumbersToCheck.split(",");
         List<Integer> pageList =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
@@ -150,6 +186,7 @@ public class PdfUtils {
         return false;
     }
 
+    /** Whether the page draws an image XObject, directly or through forms; decodes no image. */
     public boolean hasImagesOnPage(PDPage page) throws IOException {
         return containsImage(
                 page.getResources(), Collections.newSetFromMap(new IdentityHashMap<>()));
@@ -193,7 +230,8 @@ public class PdfUtils {
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            requireEmbeddedImagesFit(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             if (!includeAnnotations) {
                 pdfRenderer.setAnnotationsFilter(annotation -> false);
@@ -218,10 +256,6 @@ public class PdfUtils {
                             final int pageIndex = i;
                             BufferedImage image;
                             try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        document.getPage(pageIndex), pageIndex + 1, DPI);
-
                                 image =
                                         ExceptionUtils.handleOomRendering(
                                                 pageIndex + 1,
@@ -255,7 +289,7 @@ public class PdfUtils {
 
                     // Calculate the combined image dimensions
                     int maxWidth = 0;
-                    int totalHeight = 0;
+                    long totalHeight = 0;
 
                     // Using a map to store the calculated dimensions of each page size
                     HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
@@ -287,9 +321,9 @@ public class PdfUtils {
                         totalHeight += dimension.height();
                     }
 
-                    // Create a new BufferedImage to store the combined images
+                    ImageMemoryLimit.requireCombinedImageFits(maxWidth, totalHeight);
                     BufferedImage combined =
-                            prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
+                            prepareImageForPdfToImage(maxWidth, (int) totalHeight, imageType);
                     Graphics g = combined.getGraphics();
 
                     int currentHeight = 0;
@@ -298,10 +332,6 @@ public class PdfUtils {
                     for (int i = 0; i < pageCount; ++i) {
                         final int pageIndex = i;
                         try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
-
                             pageImage =
                                     ExceptionUtils.handleOomRendering(
                                             pageIndex + 1,
@@ -343,10 +373,6 @@ public class PdfUtils {
                         final int pageIndex = i;
                         BufferedImage image;
                         try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
-
                             image =
                                     ExceptionUtils.handleOomRendering(
                                             pageIndex + 1,
@@ -402,7 +428,7 @@ public class PdfUtils {
     public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
         PDDocument imageDocument = new PDDocument();
         try {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 final int pageIndex = page;

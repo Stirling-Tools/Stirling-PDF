@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import "@editor/auth/ui/auth.css";
 import { TextInput, PasswordInput } from "@mantine/core";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 // Theme-aware auth input colours (the --auth-* vars flip in dark mode via
 // auth-theme.css). Exported so other auth screens (e.g. invite accept) render
@@ -76,7 +77,7 @@ export default function EmailPasswordForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={fieldErrors.email}
-            classNames={{ label: "auth-label" }}
+            classNames={{ label: "auth-label", input: privateContentClassName }}
             styles={authInputStyles}
             autoFocus
           />
@@ -93,7 +94,10 @@ export default function EmailPasswordForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
               styles={authInputStyles}
             />
           </div>
@@ -116,7 +120,10 @@ export default function EmailPasswordForm({
               maxLength={6}
               minLength={6}
               error={fieldErrors.mfaCode}
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
               styles={authInputStyles}
             />
           </div>

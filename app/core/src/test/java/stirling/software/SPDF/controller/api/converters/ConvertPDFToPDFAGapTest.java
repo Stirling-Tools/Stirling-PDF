@@ -92,7 +92,8 @@ class ConvertPDFToPDFAGapTest {
                 veraPDFService,
                 pdfaLevelAService,
                 tempFileManager,
-                new ApplicationProperties());
+                new ApplicationProperties(),
+                mock(stirling.software.SPDF.service.OfficeConversionService.class));
     }
 
     // ---- reflection helpers ----------------------------------------------------------------
@@ -1123,7 +1124,8 @@ class ConvertPDFToPDFAGapTest {
                             veraPDFService,
                             pdfaLevelAService,
                             tempFileManager,
-                            properties);
+                            properties,
+                            mock(stirling.software.SPDF.service.OfficeConversionService.class));
 
             assertThatThrownBy(
                             () ->
