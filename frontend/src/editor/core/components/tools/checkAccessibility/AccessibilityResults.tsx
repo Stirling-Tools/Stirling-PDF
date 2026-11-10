@@ -11,6 +11,7 @@ import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkA
 import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
 import { scoreAccessibilityReport } from "@editor/utils/accessibilityScore";
 import type { FileId } from "@editor/types/file";
+import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
 
 interface AccessibilityResultsProps {
@@ -41,10 +42,10 @@ export function AccessibilityResults({
 
   const [buildingPdf, setBuildingPdf] = useState(false);
 
-  const downloadReportPdf = async () => {
+  const downloadReportPdf = async (entry: AccessibilityReportEntry) => {
     setBuildingPdf(true);
     try {
-      const pdf = await createAccessibilityReportPdf(results, t);
+      const pdf = await createAccessibilityReportPdf(entry, t);
       await downloadFile({ data: pdf, filename: pdf.name });
     } catch (error) {
       console.warn("[checkAccessibility] PDF report failed", error);
@@ -112,7 +113,7 @@ export function AccessibilityResults({
             fullWidth
             loading={buildingPdf}
             leftSection={<Icon name="download" size={16} />}
-            onClick={() => void downloadReportPdf()}
+            onClick={() => void downloadReportPdf(selected)}
           >
             {t("checkAccessibility.download", "Download accessibility report")}
           </Button>

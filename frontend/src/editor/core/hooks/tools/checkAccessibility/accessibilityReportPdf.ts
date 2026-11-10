@@ -10,7 +10,6 @@ import {
 import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
 import { wrapText } from "@editor/hooks/tools/validateSignature/utils/pdfText";
 import {
-  ACCESSIBILITY_REPORT_PDF_FILENAME,
   type AccessibilityReport,
   type AccessibilityReportEntry,
 } from "@editor/types/checkAccessibility";
@@ -596,12 +595,17 @@ function drawFailedEntry(
   }
 }
 
+/** "Report.pdf" -> "Report-accessibility-report.pdf". */
+export function accessibilityReportPdfName(fileName: string): string {
+  return `${fileName.replace(/\.pdf$/i, "")}-accessibility-report.pdf`;
+}
+
 /**
- * The on-screen report for every checked file, one file per run of pages, as a PDF. Text is
- * set in the standard Helvetica fonts, so characters outside WinAnsi do not render.
+ * One file's on-screen report as a PDF. Text is set in the standard Helvetica fonts, so
+ * characters outside WinAnsi do not render.
  */
 export async function createAccessibilityReportPdf(
-  entries: AccessibilityReportEntry[],
+  entry: AccessibilityReportEntry,
   t: TFunction,
 ): Promise<File> {
   const doc = await PdfiumDocument.create();
@@ -612,37 +616,39 @@ export async function createAccessibilityReportPdf(
     t,
   );
 
-  for (const entry of entries) {
-    writer.startFile(entry.fileName);
-    const report = entry.report;
-    drawHeader(
-      writer,
-      t,
-      entry.fileName,
-      report
-        ? t(
-            "checkAccessibility.score.subtitle",
-            "{{profile}} · {{count}} pages",
-            {
-              profile: report.profile,
-              count: report.summary.pages,
-            },
-          )
-        : null,
-    );
-    if (!report) {
-      drawFailedEntry(writer, t, entry);
-      continue;
-    }
+  writer.startFile(entry.fileName);
+  const report = entry.report;
+  drawHeader(
+    writer,
+    t,
+    entry.fileName,
+    report
+      ? t(
+          "checkAccessibility.score.subtitle",
+          "{{profile}} · {{count}} pages",
+          {
+            profile: report.profile,
+            count: report.summary.pages,
+          },
+        )
+      : null,
+  );
+  if (report) {
     drawScore(writer, t, report);
     drawBreakdown(writer, t, report);
     drawIssues(writer, t, report);
     drawBasics(writer, t, report);
     drawManualChecks(writer, t, report);
+  } else {
+    drawFailedEntry(writer, t, entry);
   }
 
   const bytes = await doc.save();
-  return new File([bytes.slice().buffer], ACCESSIBILITY_REPORT_PDF_FILENAME, {
-    type: "application/pdf",
-  });
+  return new File(
+    [bytes.slice().buffer],
+    accessibilityReportPdfName(entry.fileName),
+    {
+      type: "application/pdf",
+    },
+  );
 }

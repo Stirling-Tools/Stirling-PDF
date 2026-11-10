@@ -77,4 +77,3 @@ export interface AccessibilityReportEntry {
 }
 
 export const ACCESSIBILITY_REPORT_FILENAME = "accessibility-report.json";
-export const ACCESSIBILITY_REPORT_PDF_FILENAME = "accessibility-report.pdf";
