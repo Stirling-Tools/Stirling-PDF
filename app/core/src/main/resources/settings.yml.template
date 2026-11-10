@@ -13,7 +13,7 @@
 security:
   honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
   enableLogin: true # set to 'true' to enable login
-  allowAnonymousAccess: true # set to 'true' to let visitors use the PDF tools without signing in; the admin surface, stored files, teams and API keys still need a login. Only used when enableLogin is 'true'
+  allowAnonymousAccess: false # set to 'true' to let visitors use the PDF tools without signing in; the admin surface, stored files, teams and API keys still need a login. Off by default so an install is closed unless asked otherwise. Only used when enableLogin is 'true'
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
