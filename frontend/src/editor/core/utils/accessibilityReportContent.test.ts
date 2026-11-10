@@ -54,6 +54,18 @@ describe("describeIssue", () => {
     ]);
   });
 
+  it("says when the page list covers only some occurrences", () => {
+    const content = describeIssue(
+      t,
+      issue({ occurrences: 1200, pages: [1, 2, 3, 4], pagesComplete: false }),
+    );
+    expect(content.summary).toBe("Pages 1–4 and more · 1200 times");
+    expect(content.details).toContainEqual({
+      label: "Pages",
+      value: "1–4 and more (pages are recorded for the first occurrences only)",
+    });
+  });
+
   it("shows where a one-off issue is rather than a page range", () => {
     const content = describeIssue(
       t,

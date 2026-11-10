@@ -209,7 +209,8 @@ public class PdfUaValidationService {
 
     /**
      * Replaces the logged occurrence counts with veraPDF's own per-rule totals, since it logs at
-     * most 100 assertions per rule. Returns the corrected total.
+     * most 100 assertions per rule, and marks those issues' page lists incomplete. Returns the
+     * corrected total.
      */
     static int applyFullFailureCounts(
             Map<String, AccessibilityIssue> grouped,
@@ -226,6 +227,7 @@ public class PdfUaValidationService {
             Integer count = ruleId == null ? null : failedChecks.get(ruleId);
             if (count != null && count > issue.getOccurrences()) {
                 issue.setOccurrences(count);
+                issue.setPagesComplete(false);
             }
             total += issue.getOccurrences();
         }

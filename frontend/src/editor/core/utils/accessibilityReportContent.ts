@@ -167,13 +167,24 @@ export function describeIssue(
     issue.errorMessage?.trim() || issue.technicalMessage || issue.message;
   const plainTitle = ruleTitle(t, issue);
   const pages = issue.pages ?? [];
+  const pageList = formatPageRanges(pages);
+  // The validator records pages for only some occurrences of a frequent failure.
+  const pagesPartial = issue.pagesComplete === false;
   const where =
-    pages.length > 0
-      ? t("checkAccessibility.issue.onPages", "Pages {{pages}}", {
-          pages: formatPageRanges(pages),
-          count: pages.length,
-        })
-      : t("checkAccessibility.issue.documentLevel", "Whole document");
+    pages.length === 0
+      ? t("checkAccessibility.issue.documentLevel", "Whole document")
+      : pagesPartial
+        ? t(
+            "checkAccessibility.issue.onPagesPartial",
+            "Pages {{pages}} and more",
+            {
+              pages: pageList,
+            },
+          )
+        : t("checkAccessibility.issue.onPages", "Pages {{pages}}", {
+            pages: pageList,
+            count: pages.length,
+          });
   const summary =
     issue.occurrences > 1
       ? `${where} · ${t("checkAccessibility.issue.times", "{{count}} times", {
@@ -210,9 +221,15 @@ export function describeIssue(
     details.push({
       label: t("checkAccessibility.issue.pages", "Pages"),
       value:
-        pages.length > 0
-          ? formatPageRanges(pages)
-          : t("checkAccessibility.issue.documentLevel", "Whole document"),
+        pages.length === 0
+          ? t("checkAccessibility.issue.documentLevel", "Whole document")
+          : pagesPartial
+            ? t(
+                "checkAccessibility.issue.pagesPartialValue",
+                "{{pages}} and more (pages are recorded for the first occurrences only)",
+                { pages: pageList },
+              )
+            : pageList,
     });
   } else {
     details.push({

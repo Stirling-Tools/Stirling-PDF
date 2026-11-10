@@ -194,6 +194,7 @@ class PdfUaServicesTest {
                             .findFirst()
                             .orElseThrow(() -> new AssertionError("no rule failed on every page"));
             assertTrue(perPage.getPages().size() <= 100, "pages come from the kept failures");
+            assertFalse(perPage.isPagesComplete(), "a sampled page list must say so");
             assertEquals(
                     result.totalFailures(),
                     result.issues().stream().mapToInt(AccessibilityIssue::getOccurrences).sum());
@@ -231,8 +232,10 @@ class PdfUaServicesTest {
                             grouped, Map.of("7.1-3", capped), Map.of(capped, 250), 104);
 
             assertEquals(250, cappedIssue.getOccurrences());
+            assertFalse(cappedIssue.isPagesComplete());
             assertEquals(
                     4, unlisted.getOccurrences(), "a rule veraPDF did not total keeps its count");
+            assertTrue(unlisted.isPagesComplete());
             assertEquals(254, total);
         }
 

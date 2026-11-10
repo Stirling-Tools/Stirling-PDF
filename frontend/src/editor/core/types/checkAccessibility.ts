@@ -20,6 +20,8 @@ export interface AccessibilityIssue {
   test?: string | null;
   references?: string[];
   pages?: number[];
+  /** False when `pages` lists only some of the pages the issue occurs on. */
+  pagesComplete?: boolean;
 }
 
 export interface AccessibilityFigure {

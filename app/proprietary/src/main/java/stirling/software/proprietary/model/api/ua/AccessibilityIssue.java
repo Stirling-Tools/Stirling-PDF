@@ -56,7 +56,13 @@ public class AccessibilityIssue {
     @Schema(
             description =
                     "One-based pages the issue occurs on, from the first 100 occurrences the"
-                            + " validator keeps, so a sample when occurrences exceeds 100; empty"
-                            + " when it is document-level")
+                            + " validator keeps; empty when it is document-level. See"
+                            + " pagesComplete.")
     private List<Integer> pages = List.of();
+
+    @Schema(
+            description =
+                    "False when the issue occurs more often than the validator kept, so pages"
+                            + " lists only some of the pages it occurs on")
+    private boolean pagesComplete = true;
 }
