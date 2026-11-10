@@ -4,8 +4,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -122,26 +124,12 @@ public class PipelineController {
             // Multiple files: stream into a zip TempFile
             TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
             try {
-                Map<String, Integer> filenameCount = new HashMap<>();
+                Set<String> usedNames = new HashSet<>();
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                     for (Resource file : outputFiles) {
-                        String originalFilename = file.getFilename();
-                        String filename = originalFilename;
-                        if (filenameCount.containsKey(originalFilename)) {
-                            int count = filenameCount.get(originalFilename);
-                            String extension = FilenameUtils.getExtension(originalFilename);
-                            filename =
-                                    FilenameUtils.getBaseName(originalFilename)
-                                            + " ("
-                                            + count
-                                            + ")"
-                                            + (extension.isEmpty() ? "" : "." + extension);
-                            filenameCount.put(originalFilename, count + 1);
-                        } else {
-                            filenameCount.put(originalFilename, 1);
-                        }
-                        zipOut.putNextEntry(new ZipEntry(filename));
+                        zipOut.putNextEntry(
+                                new ZipEntry(uniqueEntryName(file.getFilename(), usedNames)));
                         try (InputStream is = file.getInputStream()) {
                             is.transferTo(zipOut);
                         }
@@ -166,5 +154,20 @@ public class PipelineController {
             }
             processor.deleteInputFiles(inputFiles);
         }
+    }
+
+    /**
+     * The entry's own name, or "name (n).ext" in the same folder once an earlier entry has it.
+     * Checked against every emitted name, since an output can already be called "name (1).ext".
+     */
+    private static String uniqueEntryName(String filename, Set<String> usedNames) {
+        String stem = FilenameUtils.removeExtension(filename);
+        String extension = FilenameUtils.getExtension(filename);
+        String dotExtension = extension.isEmpty() ? "" : "." + extension;
+        String candidate = filename;
+        for (int n = 1; !usedNames.add(candidate); n++) {
+            candidate = stem + " (" + n + ")" + dotExtension;
+        }
+        return candidate;
     }
 }

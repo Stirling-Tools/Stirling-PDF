@@ -413,7 +413,7 @@ public class ConvertImgPDFController {
 
     private String createConvertedFilename(String originalFilename, String suffix) {
         if (originalFilename == null) {
-            return GeneralUtils.generateFilename(DEFAULT_COMIC_NAME, suffix);
+            return GeneralUtils.appendSuffix(DEFAULT_COMIC_NAME, suffix);
         }
 
         String baseName = EXTENSION_PATTERN.matcher(originalFilename).replaceFirst("");
@@ -421,7 +421,7 @@ public class ConvertImgPDFController {
             baseName = DEFAULT_COMIC_NAME;
         }
 
-        return GeneralUtils.generateFilename(baseName, suffix);
+        return GeneralUtils.appendSuffix(baseName, suffix);
     }
 
     private String getMediaType(String imageFormat) {

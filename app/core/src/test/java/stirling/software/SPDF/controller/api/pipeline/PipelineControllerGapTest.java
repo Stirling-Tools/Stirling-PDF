@@ -328,6 +328,53 @@ class PipelineControllerGapTest {
             assertEquals("second", entries.get("dup (1).pdf"));
         }
 
+        @Test
+        @DisplayName("a renamed duplicate skips a name another output already has")
+        void multipleOutputs_renamedDuplicateSkipsTakenName() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            when(processor.generateInputFiles(files))
+                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(
+                    List.of(
+                            namedResource("a.pdf", "one".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("a.pdf", "two".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("a (1).pdf", "three".getBytes(StandardCharsets.UTF_8))));
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
+
+            assertNotNull(response);
+            Map<String, String> entries = readZip(response.getBody());
+            assertEquals("one", entries.get("a.pdf"));
+            assertEquals("two", entries.get("a (1).pdf"));
+            assertEquals("three", entries.get("a (1) (1).pdf"));
+        }
+
+        @Test
+        @DisplayName("a renamed duplicate stays in its folder")
+        void multipleOutputs_duplicateInFolderKeepsFolder() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            when(processor.generateInputFiles(files))
+                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(
+                    List.of(
+                            namedResource("images/p.png", "one".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("images/p.png", "two".getBytes(StandardCharsets.UTF_8))));
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
+
+            assertNotNull(response);
+            Map<String, String> entries = readZip(response.getBody());
+            assertEquals("two", entries.get("images/p (1).png"));
+        }
+
         private Map<String, String> readZip(Resource zipResource) throws IOException {
             Map<String, String> out = new java.util.LinkedHashMap<>();
             byte[] all;
