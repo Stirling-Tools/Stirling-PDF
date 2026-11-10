@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-// Resolves to the SaaS override (src/portal-saas) via the @processor cascade.
+// Resolves to the hosted edition (src/processor/cloud) via the saas @processor cascade.
 import { creatableSourceTypes } from "@processor/components/sources/creatableSourceTypes";
 
 describe("creatableSourceTypes (SaaS)", () => {

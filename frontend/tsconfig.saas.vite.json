@@ -14,13 +14,16 @@
         "./src/editor/proprietary/portal/*",
         "./src/editor/core/portal/*",
         "./src/processor/saas/*",
+        "./src/processor/cloud/*",
         "./src/processor/proprietary/*"
       ],
       "@processor/*": [
         "./src/processor/saas/*",
+        "./src/processor/cloud/*",
         "./src/processor/proprietary/*"
       ],
       "@processor-proprietary/*": ["./src/processor/proprietary/*"],
+      "@processor-cloud/*": ["./src/processor/cloud/*"],
       "@editor-cloud/*": ["./src/editor/cloud/*"],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
       "@editor-core/*": ["./src/editor/core/*"]

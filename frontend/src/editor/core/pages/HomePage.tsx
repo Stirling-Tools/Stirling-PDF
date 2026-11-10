@@ -43,6 +43,7 @@ import {
 } from "@editor/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { READER_PATH } from "@editor/routes/readerRoute";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
 import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
@@ -215,6 +216,8 @@ export default function HomePage() {
         setReaderMode(true);
       } else if (preferences.defaultStartupView === "automate")
         handleToolSelect("automate");
+      else if (preferences.defaultStartupView === "processor")
+        navigate(PORTAL_BASENAME);
     });
   }, [
     goToDefaultState,
