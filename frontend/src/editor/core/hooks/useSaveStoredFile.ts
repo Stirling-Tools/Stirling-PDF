@@ -2,11 +2,10 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { alert } from "@editor/components/toast";
 import { useFileActions } from "@editor/contexts/FileContext";
-import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { useSaveMode } from "@editor/hooks/useSaveMode";
 import { useSaveTargets } from "@editor/hooks/useSaveTargets";
 import { getDiskFileState } from "@editor/services/desktopFileLink";
-import { downloadFile } from "@editor/services/downloadService";
+import { downloadFile, SAVES_TO_DISK } from "@editor/services/downloadService";
 import { fileStorage } from "@editor/services/fileStorage";
 import { enforceExportPolicies } from "@editor/services/policyExport";
 import { requestSaveChoice } from "@editor/services/saveChoice";
@@ -81,7 +80,6 @@ export function useSaveStoredFile(): SaveStoredFile {
   const { actions } = useFileActions();
   const targets = useSaveTargets();
   const { mode, locked, setMode } = useSaveMode();
-  const savesToDisk = Boolean(useFileActionIcons().saveAs);
 
   const targetFor = useCallback(
     (stub: StirlingFileStub) => targets.find((target) => target.handles(stub)),
@@ -280,7 +278,7 @@ export function useSaveStoredFile(): SaveStoredFile {
         homeName: target
           ? target.homeName(stub)
           : t("saveFile.ask.thisFolder", "the same folder"),
-        otherLabel: savesToDisk
+        otherLabel: SAVES_TO_DISK
           ? t("saveFile.menu.saveCopyElsewhere", "Save a copy somewhere else…")
           : t("saveFile.ask.download", "Download instead"),
         canRemember: !locked,
@@ -296,7 +294,6 @@ export function useSaveStoredFile(): SaveStoredFile {
       saveToHome,
       saveLocalCopy,
       targetFor,
-      savesToDisk,
       locked,
       setMode,
       t,

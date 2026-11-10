@@ -34,6 +34,7 @@ vi.mock("@editor/hooks/useSaveTargets", () => ({
 }));
 vi.mock("@editor/services/downloadService", () => ({
   downloadFile: mocks.download,
+  SAVES_TO_DISK: true,
 }));
 vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: { getStirlingFile: mocks.getStirlingFile },
@@ -43,9 +44,6 @@ vi.mock("@editor/services/policyExport", () => ({
 }));
 vi.mock("@editor/hooks/useSaveMode", () => ({
   useSaveMode: () => mocks.saveMode,
-}));
-vi.mock("@editor/hooks/useFileActionIcons", () => ({
-  useFileActionIcons: () => ({ download: "save", saveAs: "save-all" }),
 }));
 vi.mock("@editor/services/desktopFileLink", () => ({
   getDiskFileState: async (path: string) =>

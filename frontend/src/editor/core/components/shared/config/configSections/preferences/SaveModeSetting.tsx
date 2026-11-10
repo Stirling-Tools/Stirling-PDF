@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useSaveMode } from "@editor/hooks/useSaveMode";
 import { useSaveTargets } from "@editor/hooks/useSaveTargets";
-import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useSaveModeOptions } from "@editor/hooks/useSaveModeOptions";
 import { parseSaveMode } from "@editor/services/saveMode";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
@@ -17,8 +17,7 @@ export function SaveModeSetting() {
   const targets = useSaveTargets();
   const options = useSaveModeOptions();
   // Desktop files live on disk; on the web only a save target gives a file a home.
-  const savesToDisk = Boolean(useFileActionIcons().saveAs);
-  if (!savesToDisk && targets.length === 0) return null;
+  if (!SAVES_TO_DISK && targets.length === 0) return null;
 
   return (
     <div
