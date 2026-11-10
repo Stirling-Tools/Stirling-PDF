@@ -2,6 +2,7 @@ import axios from "axios";
 import { handleHttpError } from "@editor/services/httpErrorHandler";
 import { setupApiInterceptors } from "@editor/services/apiClientSetup";
 import { getApiBaseUrl } from "@editor/services/apiClientConfig";
+import { installInMemoryUploads } from "@editor/utils/inMemoryUpload";
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -12,6 +13,7 @@ const apiClient = axios.create({
 
 // Setup interceptors (core does nothing, proprietary adds JWT auth)
 setupApiInterceptors(apiClient);
+installInMemoryUploads(apiClient);
 
 // ---------- Install error interceptor ----------
 apiClient.interceptors.response.use(

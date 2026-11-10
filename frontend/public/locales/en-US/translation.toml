@@ -4697,7 +4697,6 @@ closeFile = "Close file"
 
 [fileEditor]
 closedFile = "Closed {{name}}"
-couldNotSave = "Could not save {{name}}"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
@@ -4825,7 +4824,7 @@ addFiles = "Add files"
 addingFiles = "Adding files…"
 collapse = "Collapse sidebar"
 customizeGroups = "Customize groups"
-dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostBody = "Couldn't find this file's contents. Add it again to keep working with it."
 dataLostTitle = "File data is unavailable"
 downloadFailed = "Download failed"
 dropHint = "Open files to get started"
@@ -4848,7 +4847,7 @@ viewAll = "View all {{count}} files"
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
 dataLost = "Data lost"
-dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTooltip = "Couldn't find this file's contents. Add it again to keep working with it."
 delete = "Delete"
 duplicate = "Duplicate"
 moreActions = "More actions"
@@ -7286,8 +7285,8 @@ BOOKLET_SORT = "Arrange pages for booklet printing (last, first, second, second 
 CUSTOM = "Use a custom sequence of page numbers or expressions to define a new order."
 DUPLEX_SORT = "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …)."
 DUPLICATE = "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×)."
-ODD_EVEN_MERGE = "Merge two PDFs by alternating pages: odd from the first, even from the second."
-ODD_EVEN_SPLIT = "Split the document into two outputs: all odd pages and all even pages."
+ODD_EVEN_MERGE = "Interleave the pages of the first and second half of the document"
+ODD_EVEN_SPLIT = "Reorder the pages of the document with all odd pages first, then all even pages."
 REMOVE_FIRST = "Remove the first page from the document."
 REMOVE_FIRST_AND_LAST = "Remove both the first and last pages from the document."
 REMOVE_LAST = "Remove the last page from the document."
@@ -8015,8 +8014,6 @@ triggerImport = "Runs on import"
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
-exportFailureBody = "Security policies couldn't be applied. Files were exported as-is."
-exportFailureTitle = "Exported without enforcement"
 failureBody = "Some policies couldn't be applied to {{failures}} of {{total}} file(s)."
 failureTitle = "Exported without full enforcement"
 printPolicyAppliedBody = "This PDF was updated to meet a policy. Review the changes, then print again."
@@ -9305,19 +9302,12 @@ tickCompliance = "SCIM, data residency and uptime SLAs"
 tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
 title = "Stirling Enterprise"
 
-[portal.enterprise.options]
-label = "Ways to run it"
-next = "Next"
-previous = "Previous"
-slideOf = "{{n}} of {{total}}"
-
 [portal.enterprise.options.airgap]
 more = "Offline licence docs"
 point1 = "Activated with a licence file that works offline, not a key checked online"
 point2 = "Installs like self-hosted, from an image you bring across"
 point3 = "Sign-in stays inside your network"
 tagline = "Self-hosted on a network with no internet access."
-title = "Air-gapped"
 
 [portal.enterprise.options.cloud]
 more = "Stirling Cloud docs"
@@ -9325,7 +9315,6 @@ point1 = "Your team signs in at stirling.com/app"
 point2 = "Runs on AWS, with stored files encrypted at rest"
 point3 = "Single sign-on through your own identity provider needs self-hosting"
 tagline = "Hosted for you, with nothing to install."
-title = "Stirling Cloud"
 
 [portal.enterprise.options.selfhost]
 more = "Self-hosting docs"
@@ -9333,7 +9322,6 @@ point1 = "Install with Docker, or the Helm chart on Kubernetes"
 point2 = "Documents are processed on your own infrastructure"
 point3 = "OAuth2, OIDC or SAML single sign-on"
 tagline = "On your own servers, on-premises or in your own cloud."
-title = "Self-hosted"
 
 [portal.enterprise.review]
 back = "Return to {{stage}}"
@@ -9375,7 +9363,7 @@ body = "Bring in the people who'll use it, so the trial reflects real work."
 title = "Invite your team"
 
 [portal.enterprise.setup.licence]
-body = "Open http://your-server:8080/settings/adminPlan, where your Enterprise licence should show as active. Installed another way? Add the key under premium.key in settings.yml and restart."
+body = "Open <code>http://your-server:8080/settings/adminPlan</code>, where your Enterprise licence should show as active. Installed another way? Add the key under <code>premium.key</code> in <code>settings.yml</code> and restart."
 title = "Check your licence is active"
 
 [portal.enterprise.setup.links]
@@ -9402,13 +9390,13 @@ body = "An air-gapped server can't reach our licence service, so it checks this 
 title = "Download your offline licence"
 
 [portal.enterprise.setup.people]
-bodyAirgap = "Create accounts at /settings/people, or point Stirling at your internal identity provider so sign-in never leaves your network."
-bodySelfHosted = "Create accounts at /settings/people, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
+bodyAirgap = "Create accounts at <code>/settings/people</code>, or point Stirling at your internal identity provider so sign-in never leaves your network."
+bodySelfHosted = "Create accounts at <code>/settings/people</code>, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
 title = "Add your people"
 
 [portal.enterprise.setup.signIn]
-body = "Open http://your-server:8080 and sign in with admin / stirling. You'll be asked to choose a new password straight away."
-bodyAirgap = "Open http://your-server:8080 and sign in with admin / stirling, choose a new password, then check /settings/adminPlan shows your licence as active."
+body = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>. You'll be asked to choose a new password straight away."
+bodyAirgap = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>, choose a new password, then check <code>/settings/adminPlan</code> shows your licence as active."
 title = "Sign in as the admin"
 
 [portal.errorBoundary]
@@ -10774,14 +10762,14 @@ poNumber = "PO number"
 poNumberPlaceholder = "e.g. PO-10042"
 postalCode = "Postal code"
 postalCodePlaceholder = "94105"
-posture = "Governance"
-posture_count = "~{{count}} policies"
+posture = "Automation"
+posture_count = "{{count}} pipelines per PDF"
 posture_essentials = "Essentials"
-posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_essentialsSub = "Classification and sharing"
 posture_governed = "Governed"
-posture_governedSub = "Adds Security and Routing"
+posture_governedSub = "Adds security and routing"
 posture_regulated = "Regulated"
-posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
+posture_regulatedSub = "Adds compliance, retention and ingestion"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 raiseUsage = "Raise estimated usage"
@@ -10821,7 +10809,7 @@ trainingSub = "Live sessions to get your team running"
 users = "Total users"
 usersPlaceholder = "e.g. 250"
 viewEula = "Read it"
-volEstimated = "Estimated from {{count}} users (~2,000 PDFs each, including automation). Edit if you know better."
+volEstimated = "Based on {{count}} users at about 2,000 PDFs each a year. If you know your own figure, enter it instead."
 volManual = "Using your figure. Re-estimate from your team size any time."
 volNoUsers = "Not sure? Enter your team size and we'll estimate it."
 volume = "Annual PDF volume"
@@ -10840,7 +10828,7 @@ seats_other = "{{users}} agreed users + SSO / RBAC / audit"
 seatsUnset = "Users + SSO / RBAC / audit"
 support = "Dedicated SE / CSM"
 training = "Onboarding & training"
-usage = "PDF processing — {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} posture)"
+usage = "PDF processing — {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} automation)"
 
 [portal.procurement.documents]
 agreement = "Enterprise Agreement"
@@ -12193,6 +12181,13 @@ title = "Sanitize PDF"
 [sanitizePdf]
 tags = "clean,secure,safe,remove-threats"
 
+[saveFile.menu]
+more = "More save options"
+saveCopy = "Save a copy..."
+
+[saveFile.toolbar]
+mixed = "Save all"
+
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Adjust page-scale"
@@ -12528,15 +12523,24 @@ title = "Legal Documents"
 backendDescription = "Licenses for backend dependencies bundled with this server."
 backendLabel = "Backend Licenses"
 backendTitle = "Backend 3rd Party Licenses"
+clearSearch = "Clear search"
 empty = "No dependencies found."
 frontendDescription = "Licenses for frontend dependencies bundled into the release build."
 frontendLabel = "Frontend Licenses"
 frontendTitle = "Frontend 3rd Party Licenses"
 license = "License"
+licenseAbout = "About"
+licenseAboutCompound = "About {{short}}"
+licenseAboutTitle = "About {{short}}"
 listDescription = "The list is shown directly in the UI from the release bundle or backend endpoint."
 listTitle = "Bundled dependencies"
 loadError = "Failed to load third-party licenses"
 module = "Module"
+noMatch = "No matching dependencies."
+searchPlaceholder = "Search dependencies"
+showingCount = "{{count}} dependencies"
+showingCount_one = "{{count}} dependency"
+showingCount_other = "{{count}} dependencies"
 version = "Version"
 
 [settings.licensingAnalytics]
