@@ -338,6 +338,55 @@ describe("startup prompts", () => {
     ).toBe(false);
   });
 
+  // A guest is signed out but inside the app, so the account endpoints would
+  // 401 on every mount; the startup still has to run its tracking and any
+  // agreement the administrator asked for in anonymous mode.
+  it("runs for a guest without calling account endpoints", async () => {
+    config.allowAnonymousAccess = true;
+    h.auth.user = {
+      id: "anonymous",
+      email: "anonymous@local",
+      username: "Anonymous User",
+      role: "USER",
+      is_anonymous: true,
+    };
+    h.auth.isAnonymous = true;
+    disclaimer = {
+      enabled: true,
+      showInAnonymousMode: true,
+      content: "Guest agreement",
+      format: "markdown",
+    };
+    renderAt("/editor");
+    expect(await screen.findByText("Guest agreement")).toBeInTheDocument();
+    expect(
+      h.get.mock.calls.some(
+        ([url]) => url === "/api/v1/proprietary/ui-data/account",
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps the agreement away from a guest when the admin opted out of anonymous mode", async () => {
+    config.allowAnonymousAccess = true;
+    h.auth.user = {
+      id: "anonymous",
+      email: "anonymous@local",
+      username: "Anonymous User",
+      role: "USER",
+      is_anonymous: true,
+    };
+    h.auth.isAnonymous = true;
+    disclaimer = {
+      enabled: true,
+      showInAnonymousMode: false,
+      content: "Guest agreement",
+      format: "markdown",
+    };
+    renderAt("/editor");
+    await waitFor(() => expect(h.tracking).toHaveBeenCalled());
+    expect(screen.queryByText("Guest agreement")).not.toBeInTheDocument();
+  });
+
   it("does not request MFA setup from an account that has already enabled it", async () => {
     account.mfaRequired = true;
     account.mfaEnabled = true;

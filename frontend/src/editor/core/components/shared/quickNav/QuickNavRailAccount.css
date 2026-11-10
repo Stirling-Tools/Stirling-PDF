@@ -32,3 +32,33 @@
 .quick-nav-rail-account[data-active] .quick-nav-rail-avatar {
   box-shadow: 0 0 0 0.125rem var(--c-accent-fg, var(--c-primary));
 }
+
+/* The guest's way in, in the avatar's place: same disc, same focus ring, so the
+   footer does not shift when nobody is signed in. */
+.quick-nav-rail-guest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px dashed var(--c-border-subtle);
+  border-radius: 9999px;
+  background: none;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+}
+
+.quick-nav-rail-guest:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.quick-nav-rail-guest:focus-visible {
+  outline: 0.125rem solid var(--c-primary);
+  outline-offset: 0.125rem;
+}
+
+.quick-nav-rail-account[data-active] .quick-nav-rail-guest {
+  border-style: solid;
+  box-shadow: 0 0 0 0.125rem var(--c-accent-fg, var(--c-primary));
+}

@@ -63,12 +63,17 @@ class UserAuthenticationFilterTest {
     }
 
     private UserAuthenticationFilter filter(boolean loginEnabled) {
+        return filter(loginEnabled, false);
+    }
+
+    private UserAuthenticationFilter filter(boolean loginEnabled, boolean anonymousAccess) {
         return new UserAuthenticationFilter(
                 securityProp,
                 userService,
                 apiKeyAuthenticationService,
                 sessionPersistentRegistry,
-                loginEnabled);
+                loginEnabled,
+                anonymousAccess);
     }
 
     private static User enabledUser(String username) {

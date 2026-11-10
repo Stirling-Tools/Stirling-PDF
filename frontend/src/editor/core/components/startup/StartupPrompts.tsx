@@ -16,10 +16,21 @@ function StartupTracking() {
 /** Mount once in each app's main routes, below its auth, config and theme providers. */
 export function StartupPrompts() {
   const { config } = useAppConfig();
-  const { user, loading } = useAuth();
+  const { user, loading, isAnonymous } = useAuth();
 
-  if (!config || loading || (config.enableLogin !== false && !user)) {
+  if (!config || loading) {
     return null;
+  }
+
+  // A guest runs the tools but owns nothing, so there is no account setup, no
+  // forced MFA and no password change to walk them through. The login agreement
+  // still applies: an administrator may have asked for it in anonymous mode too.
+  if (isAnonymous || (config.enableLogin !== false && !user)) {
+    return (
+      <LoginAgreementModal>
+        <StartupTracking />
+      </LoginAgreementModal>
+    );
   }
 
   return (

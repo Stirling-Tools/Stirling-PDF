@@ -25,7 +25,7 @@ export function useSyncQuickNavAccount(): void {
       isAnonymous: Boolean(isAnonymous),
       identity: identityLoading
         ? undefined
-        : { displayName, profilePictureUrl },
+        : { displayName, profilePictureUrl, isGuest: isAnonymous },
       signingBadge: signingSettled ? count : undefined,
       signingItems: signingSettled ? items : undefined,
       portalAccess: accessSettled ? granted : undefined,

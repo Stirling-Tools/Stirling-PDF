@@ -39,7 +39,11 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { session, loading } = useAuth();
+  // A guest carries a stand-in session so the tools can run; for this page that
+  // is still "signed out", and reading it as an account would bounce them
+  // straight back to the editor they came here to leave.
+  const { session: authSession, loading, isAnonymous } = useAuth();
+  const session = isAnonymous ? null : authSession;
   // Reuses the shared guard rather than re-deriving one: same-origin relative
   // paths only, rejecting "//host", "/\host" (browsers normalise the backslash)
   // and auth routes (a ?from=/login would cost a pointless hop back here).
@@ -354,12 +358,12 @@ export default function Login() {
 
   // Set document meta
   useDocumentMeta({
-    title: `${t("login.title", "Sign in")} - Stirling PDF`,
+    title: `${t("login.title", "Sign in")} - M13A`,
     description: t(
       "app.description",
       "A free, private PDF editor you can run on any infrastructure.",
     ),
-    ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
+    ogTitle: `${t("login.title", "Sign in")} - M13A`,
     ogDescription: t(
       "app.description",
       "A free, private PDF editor you can run on any infrastructure.",
@@ -400,12 +404,12 @@ export default function Login() {
         <div className="auth-logo-block">
           <img
             src={loginHeader}
-            alt="Stirling PDF"
+            alt="M13A"
             className="auth-logo-header auth-logo-header--light"
           />
           <img
             src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
-            alt="Stirling PDF"
+            alt="M13A"
             className="auth-logo-header auth-logo-header--dark"
           />
         </div>

@@ -52,18 +52,22 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
+    /** Guests may use the file tools; everything account-scoped still needs a sign-in. */
+    private final boolean anonymousAccessAllowed;
 
     public UserAuthenticationFilter(
             @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             ApiKeyAuthenticationService apiKeyAuthenticationService,
             SessionPersistentRegistry sessionPersistentRegistry,
-            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("anonymousAccessAllowed") boolean anonymousAccessAllowed) {
         this.securityProp = securityProp;
         this.userService = userService;
         this.apiKeyAuthenticationService = apiKeyAuthenticationService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
+        this.anonymousAccessAllowed = anonymousAccessAllowed;
     }
 
     @Override
@@ -137,8 +141,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         if (authentication == null || !authentication.isAuthenticated()) {
             String contextPath = request.getContextPath();
 
-            // Allow public auth endpoints to pass through without authentication
-            if (isPublicAuthEndpoint(requestURI, contextPath)) {
+            // Allow public auth endpoints to pass through without authentication, and - when
+            // guests are allowed - the file tools with them.
+            if (isPublicAuthEndpoint(requestURI, contextPath)
+                    || (anonymousAccessAllowed
+                            && RequestUriUtils.isGuestAccessibleApi(requestURI, contextPath))) {
                 filterChain.doFilter(request, response);
                 return;
             }

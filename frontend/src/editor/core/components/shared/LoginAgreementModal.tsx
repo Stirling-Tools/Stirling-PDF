@@ -106,7 +106,7 @@ export default function LoginAgreementModal({
 }) {
   const { t, i18n } = useTranslation();
   const { config } = useAppConfig();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAnonymous } = useAuth();
 
   const [opened, setOpened] = useState(false);
   const [resolved, setResolved] = useState(false);
@@ -135,10 +135,13 @@ export default function LoginAgreementModal({
         );
         const data = resp.data;
         if (cancelled || !data?.enabled) return;
-        if (!loginEnabled && !data.showInAnonymousMode) return;
+        // Login off, or guests admitted: only show the disclaimer to a visitor
+        // when the administrator asked for it in anonymous mode.
+        const anonymousMode = !loginEnabled || isAnonymous;
+        if (anonymousMode && !data.showInAnonymousMode) return;
         if (!data.content || !data.content.trim()) return;
 
-        const nonce = getLoginNonce(loginEnabled, user?.id);
+        const nonce = getLoginNonce(loginEnabled && !isAnonymous, user?.id);
         nonceRef.current = nonce;
 
         let accepted: string | null = null;
@@ -162,7 +165,7 @@ export default function LoginAgreementModal({
     return () => {
       cancelled = true;
     };
-  }, [config, i18n.language, user?.id]);
+  }, [config, i18n.language, user?.id, isAnonymous]);
 
   const handleAccept = () => {
     try {

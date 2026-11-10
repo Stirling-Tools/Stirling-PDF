@@ -34,7 +34,7 @@ export function usePolicies() {
   const { refetch: refetchAppConfig } = useAppConfig();
   // Reconciling only on mount leaves the cache in its unconfigured default when the fetch ran
   // before there was a session, and every consumer reads that default as "no policy".
-  const { user } = useAuth();
+  const { user, isAnonymous } = useAuth();
   const sessionKey = user?.id ?? null;
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
@@ -46,6 +46,10 @@ export function usePolicies() {
   // Retry with backoff since the backend may not be up yet.
   // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
+    // Policy routes are account-scoped, so a guest's read is refused: the retry
+    // budget below would spend a minute on 401s to end up with the cache it
+    // already has.
+    if (isAnonymous) return;
     let cancelled = false;
     let attempt = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -99,7 +103,7 @@ export function usePolicies() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [sessionKey]);
+  }, [sessionKey, isAnonymous]);
 
   return { policies };
 }

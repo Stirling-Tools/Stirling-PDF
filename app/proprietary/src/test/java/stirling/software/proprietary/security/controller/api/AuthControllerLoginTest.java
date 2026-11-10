@@ -295,7 +295,22 @@ class AuthControllerLoginTest {
 
         mockMvc.perform(get("/api/v1/auth/me"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Not authenticated"));
+                .andExpect(jsonPath("$.error").value("Not authenticated"))
+                .andExpect(jsonPath("$.authenticated").value(false))
+                // Login is on but guests are not, so the shell has to show the login screen.
+                .andExpect(jsonPath("$.guestAccess").value(false));
+    }
+
+    @Test
+    void getCurrentUserTellsTheShellWhenGuestsMayUseTheTools() throws Exception {
+        securityProperties.setEnableLogin(true);
+        securityProperties.setAllowAnonymousAccess(true);
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/v1/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.authenticated").value(false))
+                .andExpect(jsonPath("$.guestAccess").value(true));
     }
 
     @Test

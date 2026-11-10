@@ -66,6 +66,7 @@ class SecurityConfigurationTest {
                 userDetailsService,
                 userService,
                 loginEnabled,
+                false,
                 true,
                 applicationProperties,
                 securityProperties,

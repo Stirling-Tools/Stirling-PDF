@@ -137,6 +137,16 @@ export default function Landing() {
     return <AppRoot />;
   }
 
+  // A guest is signed out but not unwelcome: the tools work without an account,
+  // and the account-only surfaces (settings, the file library) offer the
+  // sign-in themselves. Read from the config rather than the guest session the
+  // auth provider hands out, because that store is published from a layout
+  // effect inside the provider tree and this render can run before it lands -
+  // a redirect decided here would already be committed by then.
+  if (config?.allowAnonymousAccess === true) {
+    return <AppRoot />;
+  }
+
   // No session - redirect to login page. The URL always shows /login when not
   // authenticated, and carries where we came from so signing in returns there
   // (going to /editor and logging in lands back on /editor, not the role

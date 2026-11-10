@@ -254,6 +254,10 @@ public class AuthController {
     /**
      * Get current user
      *
+     * <p>Answers {@code {"authenticated": false, "guestAccess": true}} rather than 401 when nobody
+     * is signed in and guests are allowed: the shell calls this to paint the signed-out state,
+     * and a 401 there reads as an expired session.
+     *
      * @return Current authenticated user information
      */
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -266,13 +270,13 @@ public class AuthController {
                     || !auth.isAuthenticated()
                     || "anonymousUser".equals(auth.getPrincipal())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
+                        .body(signedOutBody());
             }
 
             // Anonymous SaaS sessions carry a raw Jwt principal; treat them as unauthenticated
             if (!(auth.getPrincipal() instanceof User user)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
+                        .body(signedOutBody());
             }
 
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
@@ -282,6 +286,21 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Internal server error"));
         }
+    }
+
+    /**
+     * The signed-out answer, spelling out whether guests may still use the tools. A client that
+     * sees {@code guestAccess} true renders the editor anonymously instead of bouncing to the
+     * login screen.
+     */
+    private java.util.Map<String, Object> signedOutBody() {
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("error", "Not authenticated");
+        body.put("authenticated", false);
+        boolean guestAccess =
+                securityProperties.isEnableLogin() && securityProperties.isAllowAnonymousAccess();
+        body.put("guestAccess", guestAccess);
+        return body;
     }
 
     /**

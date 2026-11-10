@@ -23,6 +23,8 @@ import { useAccountLogout } from "@editor/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@editor/constants/app";
 import { MfaSetupResponse } from "@editor/responses/Mfa/MfaResponse";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { GuestSignInCard } from "@editor/components/shared/config/configSections/preferences/GuestSignInCard";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 /** The signed-in user's shape is layer-specific, so read fields defensively. */
 function userField(source: unknown, key: string): string | undefined {
@@ -38,6 +40,19 @@ function userField(source: unknown, key: string): string | undefined {
  * id its retired nav row had, so old deep links still resolve.
  */
 export function AccountCards() {
+  const { session, isAnonymous } = useAuth();
+  const { config } = useAppConfig();
+  // Nobody is signed in but the tools are open: the cards would only offer
+  // changes that need an account, so the slot carries the way in instead.
+  const guest =
+    config?.enableLogin === true &&
+    config?.allowAnonymousAccess === true &&
+    (session === null || isAnonymous);
+  if (guest) return <GuestSignInCard />;
+  return <AccountCardsContent />;
+}
+
+function AccountCardsContent() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const accountLogout = useAccountLogout();

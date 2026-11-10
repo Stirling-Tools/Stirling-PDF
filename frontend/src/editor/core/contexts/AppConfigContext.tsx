@@ -19,6 +19,7 @@ import type {
 } from "@editor/types/appConfig";
 import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
 import { setPdfAccessPolicy } from "@editor/services/pdfAccessService";
+import { setGuestAccessAllowed } from "@editor/auth/guestAccess";
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;
@@ -171,6 +172,16 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   useLayoutEffect(() => {
     setPdfAccessPolicy(value.config?.honorOwnerPasswords !== false);
   }, [value.config?.honorOwnerPasswords]);
+
+  // Published before paint: the auth provider reads it to decide whether a
+  // signed-out visitor gets the tools or the login wall, and a gate that learns
+  // the answer a frame late would flash the wrong one.
+  useLayoutEffect(() => {
+    setGuestAccessAllowed(
+      value.config?.enableLogin === true &&
+        value.config?.allowAnonymousAccess === true,
+    );
+  }, [value.config?.enableLogin, value.config?.allowAnonymousAccess]);
 
   useLayoutEffect(() => () => setPdfAccessPolicy(true), []);
 

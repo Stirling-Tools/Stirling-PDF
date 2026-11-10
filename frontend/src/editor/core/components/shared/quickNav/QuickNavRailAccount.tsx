@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Avatar } from "@editor/ui/Avatar";
 import type { QuickNavIdentity } from "@editor/contexts/QuickNavHostContext";
@@ -21,10 +22,14 @@ export function QuickNavRailAccount({
   active = false,
 }: QuickNavRailAccountProps) {
   const { t } = useTranslation();
-  const displayName =
-    identity?.displayName ?? t("auth.displayName.user", "User");
+  const guest = identity?.isGuest === true;
+  const displayName = guest
+    ? t("guestAccess.signIn", "Sign in as administrator")
+    : (identity?.displayName ?? t("auth.displayName.user", "User"));
   const profilePictureUrl = identity?.profilePictureUrl ?? null;
-  const label = `${displayName} — ${t("quickNav.account", "Account")}`;
+  const label = guest
+    ? `${displayName} — ${t("guestAccess.guestHint", "Opens the sign-in page")}`
+    : `${displayName} — ${t("quickNav.account", "Account")}`;
 
   return (
     <div className="quick-nav-rail-account" data-active={active || undefined}>
@@ -39,15 +44,28 @@ export function QuickNavRailAccount({
           data-testid="config-button"
           data-tour="config-button"
         >
-          <Avatar
-            src={profilePictureUrl ?? undefined}
-            name={displayName}
-            size="sm"
-            onClick={onOpen}
-            ariaLabel={label}
-            ariaCurrent={active ? "page" : undefined}
-            className={`quick-nav-rail-avatar ${privateContentClassName}`}
-          />
+          {guest ? (
+            // No face to draw and no name to initial: a plain button, with the
+            // same box and focus ring as the avatar it replaces.
+            <button
+              type="button"
+              className="quick-nav-rail-guest"
+              onClick={onOpen}
+              aria-label={label}
+            >
+              <Icon name="log-in" size="1rem" />
+            </button>
+          ) : (
+            <Avatar
+              src={profilePictureUrl ?? undefined}
+              name={displayName}
+              size="sm"
+              onClick={onOpen}
+              ariaLabel={label}
+              ariaCurrent={active ? "page" : undefined}
+              className={`quick-nav-rail-avatar ${privateContentClassName}`}
+            />
+          )}
         </span>
       </Tooltip>
     </div>

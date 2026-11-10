@@ -256,6 +256,11 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            // Guests may use the tools without an account; the UI reads this to show the
+            // sign-in affordance instead of a login wall.
+            configData.put(
+                    "allowAnonymousAccess",
+                    enableLogin && applicationProperties.getSecurity().isAllowAnonymousAccess());
             configData.put(
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());

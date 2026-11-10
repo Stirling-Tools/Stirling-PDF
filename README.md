@@ -42,6 +42,8 @@ docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf
 
 Then open: http://localhost:8080
 
+For a Russian step-by-step Docker guide — volumes, first admin login, guest access, reverse proxy and upgrades — see [DEPLOY.ru.md](DEPLOY.ru.md).
+
 For full installation options (including desktop and Kubernetes), see our [Documentation Guide](https://docs.stirlingpdf.com/#documentation-guide).
 
 ## Resources

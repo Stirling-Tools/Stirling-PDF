@@ -97,6 +97,19 @@
   width: 1.625rem;
 }
 
+/* The guest's stand-in for the avatar: same box, so the row keeps its metrics
+   when nobody is signed in and there is no face to draw. */
+.nav-footer__guest-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: var(--c-hover);
+  color: var(--c-text-subtle);
+}
+
 /* Hovering the switch row plays the mark's "thinking" drift once — the same
    motion the chat FAB loops, for a single beat, as a hint that the row hands
    off to the other app. One iteration only: it starts and ends at rest, so

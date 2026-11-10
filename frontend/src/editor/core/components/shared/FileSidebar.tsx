@@ -1229,6 +1229,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <NavFooter
           className="file-sidebar-footer-box"
           displayName={displayName}
+          // A guest has no identity to draw; the row becomes the way in.
+          guest={isAnonymous}
           profilePictureUrl={profilePictureUrl}
           onOpenSettings={onOpenSettings}
           showAccount={!accountHoisted}

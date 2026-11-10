@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,7 +27,8 @@ class JwtAuthenticationEntryPointTest {
 
     @Mock private AuthenticationFailureException authException;
 
-    @InjectMocks private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint =
+            new JwtAuthenticationEntryPoint(false);
 
     @Test
     void testCommence() throws IOException {
@@ -54,5 +54,23 @@ class JwtAuthenticationEntryPointTest {
 
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, result.getStatus());
         assertTrue(result.getContentType().startsWith("application/json"));
+    }
+
+    @Test
+    void apiResponseTellsTheClientWhetherGuestsMayContinue() throws IOException {
+        when(authException.getMessage()).thenReturn("Authentication required");
+        MockHttpServletRequest apiRequest = new MockHttpServletRequest("GET", "/api/v1/admin/settings");
+        MockHttpServletResponse guestMode = new MockHttpServletResponse();
+
+        new JwtAuthenticationEntryPoint(true).commence(apiRequest, guestMode, authException);
+
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, guestMode.getStatus());
+        assertTrue(guestMode.getContentAsString().contains("\"guestAccess\":true"));
+        assertTrue(guestMode.getContentAsString().contains("\"authenticated\":false"));
+
+        MockHttpServletResponse loginMode = new MockHttpServletResponse();
+        jwtAuthenticationEntryPoint.commence(apiRequest, loginMode, authException);
+
+        assertTrue(loginMode.getContentAsString().contains("\"guestAccess\":false"));
     }
 }

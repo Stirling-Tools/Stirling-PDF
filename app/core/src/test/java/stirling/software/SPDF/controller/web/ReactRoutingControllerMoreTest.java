@@ -69,7 +69,7 @@ class ReactRoutingControllerMoreTest {
                     controller.serveRootPage(mock(HttpServletRequest.class));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).contains("Stirling PDF");
+            assertThat(response.getBody()).contains("M13A");
         }
     }
 
@@ -154,7 +154,7 @@ class ReactRoutingControllerMoreTest {
                     controller.serveIndexHtml(mock(HttpServletRequest.class));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).contains("Stirling PDF");
+            assertThat(response.getBody()).contains("M13A");
         }
     }
 }

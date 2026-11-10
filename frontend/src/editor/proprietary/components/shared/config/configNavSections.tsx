@@ -70,6 +70,8 @@ export const useConfigNavSections = (
   );
   const about = coreSections.filter((s) => s.id === "about");
   // Core owns the page; the flavor supplies what core has no concept of.
+  // AccountCards itself swaps in the guest sign-in offer when nobody is signed
+  // in, so this slot serves both visitors and account holders.
   const sections = extendPreferences(
     coreSections.filter((s) => s.id !== "about"),
     loginEnabled ? { accountSlot: <AccountCards /> } : {},
