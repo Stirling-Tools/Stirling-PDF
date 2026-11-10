@@ -18,6 +18,9 @@ public record ToolDiagnostic(int stepIndex, Severity severity, String code, Stri
     /** The step declares no {@link ToolIO}, so nothing past it can be checked. */
     public static final String UNDECLARED = "undeclared-operation";
 
+    /** The step names no operation, or one the pipeline runner cannot dispatch to. */
+    public static final String UNKNOWN_OPERATION = "unknown-operation";
+
     /** The previous step's output is not a format this step accepts. */
     public static final String FORMAT_MISMATCH = "format-mismatch";
 
@@ -32,6 +35,9 @@ public record ToolDiagnostic(int stepIndex, Severity severity, String code, Stri
 
     /** The previous step emits several files and this one consumes them in a single call. */
     public static final String FAN_IN = "fan-in";
+
+    /** This step is past {@code policies.maxSteps}, so the chain will be refused. */
+    public static final String TOO_MANY_STEPS = "too-many-steps";
 
     public static ToolDiagnostic error(int stepIndex, String code, String message) {
         return new ToolDiagnostic(stepIndex, Severity.ERROR, code, message);

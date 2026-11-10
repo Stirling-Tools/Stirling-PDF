@@ -111,11 +111,16 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
         const { data } = await apiClient.get<{ languages: string[] }>(
           languagesEndpoint,
         );
+        if (cancelled) {
+          return;
+        }
         setInstalledLanguages([...new Set(data.languages)]);
         // Only the app's own OCR backend can add languages; older servers lack the endpoint.
         if (languagesEndpoint === DEFAULT_LANGUAGES_ENDPOINT) {
@@ -123,19 +128,31 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             const catalog = await apiClient.get<LanguageCatalog>(
               LANGUAGE_CATALOG_ENDPOINT,
             );
-            applyCatalog(catalog.data);
+            if (!cancelled) {
+              applyCatalog(catalog.data);
+            }
           } catch {
-            setInstallable([]);
+            if (!cancelled) {
+              setInstallable([]);
+            }
           }
         }
       } catch (error) {
+        if (cancelled) {
+          return;
+        }
         console.error("[LanguagePicker] Fetch failed with error:", error);
       } finally {
-        setIsLoadingLanguages(false);
+        if (!cancelled) {
+          setIsLoadingLanguages(false);
+        }
       }
     };
 
     fetchLanguages();
+    return () => {
+      cancelled = true;
+    };
   }, [languagesEndpoint, applyCatalog]);
 
   const install = useCallback(
