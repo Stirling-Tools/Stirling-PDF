@@ -1,14 +1,21 @@
 import type { TFunction } from "i18next";
 import {
   PdfiumDocument,
-  PdfiumFont,
-  PdfiumPage,
   StandardFonts,
   rgb,
   type PdfiumColor,
 } from "@editor/services/pdfiumDocBuilder";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
-import { wrapText } from "@editor/hooks/tools/validateSignature/utils/pdfText";
+import {
+  colorPalette,
+  statusTextColor as statusText,
+} from "@editor/services/reportPdf/reportPalette";
+import { wrapText } from "@editor/services/reportPdf/reportText";
+import {
+  LETTER_PAGE,
+  ReportWriter,
+  type ReportLayout,
+  type TextStyle,
+} from "@editor/services/reportPdf/ReportWriter";
 import {
   type AccessibilityReport,
   type AccessibilityReportEntry,
@@ -25,22 +32,20 @@ import {
   gradeLabel,
 } from "@editor/utils/accessibilityReportContent";
 
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
-const MARGIN_X = 48;
-const MARGIN_TOP = 48;
-const MARGIN_BOTTOM = 56;
+const LAYOUT: ReportLayout = {
+  pageWidth: LETTER_PAGE.width,
+  pageHeight: LETTER_PAGE.height,
+  marginX: 48,
+  marginTop: 48,
+  marginBottom: 56,
+};
+const PAGE_WIDTH = LAYOUT.pageWidth;
+const PAGE_HEIGHT = LAYOUT.pageHeight;
+const MARGIN_X = LAYOUT.marginX;
+const MARGIN_TOP = LAYOUT.marginTop;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
 const DETAIL_LABEL_WIDTH = 84;
-type RgbTuple = [number, number, number];
-const toColor = ([r, g, b]: RgbTuple) => rgb(r / 255, g / 255, b / 255);
-const WHITE = toColor([255, 255, 255]);
-// The shared palette's status colours are badge fills; text needs darker shades to stay readable.
-const statusText = {
-  success: toColor([21, 128, 61]),
-  warning: toColor([161, 98, 7]),
-  danger: toColor([185, 28, 28]),
-};
+const WHITE = rgb(1, 1, 1);
 
 const gradeColor = (grade: AccessibilityGrade): PdfiumColor =>
   grade === "poor"
@@ -55,161 +60,6 @@ const barColor = (fraction: number): PdfiumColor =>
     : fraction >= 0.5
       ? colorPalette.warning
       : colorPalette.danger;
-
-interface TextStyle {
-  font: PdfiumFont;
-  size: number;
-  color: PdfiumColor;
-}
-
-/**
- * Lays content down a sequence of pages, starting a new page whenever the next block would run
- * into the footer. y is the top of the next block, in PDF points from the page bottom.
- */
-class ReportWriter {
-  private page!: PdfiumPage;
-  y = 0;
-  private continuationTitle = "";
-  private readonly doc: PdfiumDocument;
-  private readonly regular: PdfiumFont;
-  private readonly bold: PdfiumFont;
-  private readonly t: TFunction;
-
-  constructor(
-    doc: PdfiumDocument,
-    regular: PdfiumFont,
-    bold: PdfiumFont,
-    t: TFunction,
-  ) {
-    this.doc = doc;
-    this.regular = regular;
-    this.bold = bold;
-    this.t = t;
-  }
-
-  get font() {
-    return this.regular;
-  }
-
-  get boldFont() {
-    return this.bold;
-  }
-
-  get currentPage() {
-    return this.page;
-  }
-
-  startFile(fileName: string) {
-    this.continuationTitle = this.t(
-      "checkAccessibility.pdf.continued",
-      "{{name}} (continued)",
-      { name: fileName },
-    );
-    this.addPage();
-  }
-
-  /** Moves to a new page when fewer than `height` points remain above the footer. */
-  ensure(height: number) {
-    if (this.y - height < MARGIN_BOTTOM) {
-      this.addPage();
-      this.text(this.continuationTitle, MARGIN_X, {
-        font: this.bold,
-        size: 9,
-        color: colorPalette.textMuted,
-      });
-      this.y -= 10;
-    }
-  }
-
-  /** Draws one line with its top at the current y and moves below it. */
-  text(value: string, x: number, style: TextStyle) {
-    this.page.drawText(value, {
-      x,
-      y: this.y - style.size,
-      size: style.size,
-      font: style.font,
-      color: style.color,
-    });
-    this.y -= style.size * 1.35;
-  }
-
-  /** Wraps `value` to `width`, breaking pages between lines. */
-  paragraph(value: string, x: number, width: number, style: TextStyle) {
-    for (const line of wrapText(value, style.font, style.size, width)) {
-      this.ensure(style.size * 1.35);
-      this.text(line, x, style);
-    }
-  }
-
-  textRight(value: string, right: number, style: TextStyle) {
-    const width = style.font.widthOfTextAtSize(value, style.size);
-    this.page.drawText(value, {
-      x: right - width,
-      y: this.y - style.size,
-      size: style.size,
-      font: style.font,
-      color: style.color,
-    });
-  }
-
-  rect(
-    x: number,
-    top: number,
-    width: number,
-    height: number,
-    color: PdfiumColor,
-    borderColor?: PdfiumColor,
-  ) {
-    this.page.drawRectangle({
-      x,
-      y: top - height,
-      width,
-      height,
-      color,
-      borderColor,
-      borderWidth: borderColor ? 0.75 : undefined,
-    });
-  }
-
-  rule(y: number) {
-    this.page.drawLine({
-      start: { x: MARGIN_X, y },
-      end: { x: MARGIN_X + CONTENT_WIDTH, y },
-      thickness: 0.75,
-      color: colorPalette.boxBorder,
-    });
-  }
-
-  private addPage() {
-    this.page = this.doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-    this.y = PAGE_HEIGHT - MARGIN_TOP;
-    const footer: TextStyle = {
-      font: this.regular,
-      size: 8,
-      color: colorPalette.textMuted,
-    };
-    const footerY = MARGIN_BOTTOM / 2;
-    this.page.drawText(
-      this.t("checkAccessibility.pdf.footer", "Checked with Stirling PDF"),
-      {
-        x: MARGIN_X,
-        y: footerY,
-        ...footer,
-      },
-    );
-    const pageLabel = this.t("checkAccessibility.pdf.page", "Page {{n}}", {
-      n: this.doc.getPageCount(),
-    });
-    this.page.drawText(pageLabel, {
-      x:
-        MARGIN_X +
-        CONTENT_WIDTH -
-        this.regular.widthOfTextAtSize(pageLabel, footer.size),
-      y: footerY,
-      ...footer,
-    });
-  }
-}
 
 function sectionHeading(writer: ReportWriter, title: string, count?: string) {
   writer.ensure(40);
@@ -609,14 +459,19 @@ export async function createAccessibilityReportPdf(
   t: TFunction,
 ): Promise<File> {
   const doc = await PdfiumDocument.create();
-  const writer = new ReportWriter(
-    doc,
-    await doc.embedFont(StandardFonts.Helvetica),
-    await doc.embedFont(StandardFonts.HelveticaBold),
-    t,
-  );
+  const writer = new ReportWriter(doc, {
+    layout: LAYOUT,
+    regular: await doc.embedFont(StandardFonts.Helvetica),
+    bold: await doc.embedFont(StandardFonts.HelveticaBold),
+    footerText: t("checkAccessibility.pdf.footer", "Checked with Stirling PDF"),
+    pageLabel: (n) => t("checkAccessibility.pdf.page", "Page {{n}}", { n }),
+  });
 
-  writer.startFile(entry.fileName);
+  writer.startSection(
+    t("checkAccessibility.pdf.continued", "{{name}} (continued)", {
+      name: entry.fileName,
+    }),
+  );
   const report = entry.report;
   drawHeader(
     writer,

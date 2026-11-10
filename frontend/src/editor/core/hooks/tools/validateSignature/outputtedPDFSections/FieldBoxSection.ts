@@ -1,6 +1,6 @@
 import { PdfiumFont, PdfiumPage } from "@editor/services/pdfiumDocBuilder";
-import { wrapText } from "@editor/hooks/tools/validateSignature/utils/pdfText";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { wrapText } from "@editor/services/reportPdf/reportText";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
 
 interface FieldBoxOptions {
   page: PdfiumPage;
