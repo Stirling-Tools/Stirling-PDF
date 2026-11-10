@@ -252,7 +252,7 @@ it("waits for the connection before resolving an old billing bookmark", async ()
 });
 
 it.each([false, true])(
-  "routes old Plan links to web billing with roster=%s",
+  "routes old Plan links to Usage & Billing with roster=%s",
   async (roster) => {
     state.roster = roster;
     const { result } = renderHook(() => useSettingsNav(vi.fn()));

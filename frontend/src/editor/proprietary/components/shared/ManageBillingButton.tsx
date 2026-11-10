@@ -8,13 +8,17 @@ import {
   supabase,
 } from "@editor/services/supabaseClient";
 import { alert } from "@editor/components/toast";
+import {
+  openStripePage,
+  stripeReturnUrl,
+} from "@editor/platform/stripeNavigation";
 
 interface ManageBillingButtonProps {
   returnUrl?: string;
 }
 
 export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
-  returnUrl = window.location.href,
+  returnUrl = stripeReturnUrl(),
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -39,8 +43,7 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
         licenseKey,
       );
 
-      // Open billing portal in new tab
-      window.open(response.url, "_blank");
+      openStripePage(response.url, "tab");
       setLoading(false);
     } catch (error: unknown) {
       console.error("Failed to open billing portal:", error);
