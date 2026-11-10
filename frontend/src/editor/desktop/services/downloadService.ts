@@ -10,6 +10,8 @@ import {
 
 export type { DownloadRequest, DownloadResult };
 
+export const SAVES_TO_DISK = true;
+
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
