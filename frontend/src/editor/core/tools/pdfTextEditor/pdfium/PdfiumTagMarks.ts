@@ -5,6 +5,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 const MCID = "MCID";
+const FPDF_PAGEOBJ_FORM = 5;
 export const ARTIFACT_TAG = "Artifact";
 
 /**
@@ -43,6 +44,11 @@ export function readTagMarks(
   return tags;
 }
 
+/** The MCID of the innermost tag that has one: the content's own. */
+export function innermostMcid(tags: readonly TagMark[]): number | null {
+  return [...tags].reverse().find((t) => t.mcid !== null)?.mcid ?? null;
+}
+
 /**
  * Give newly created objects the tags of the content they replace. Objects
  * that already carry a mark are left alone: PDFium appends a mark on every
@@ -58,13 +64,73 @@ export function applyTagMarks(
   if (tags.length === 0) return;
   for (const ptr of ptrs) {
     if (!ptr || m.FPDFPageObj_CountMarks(ptr) > 0) continue;
-    for (const tag of tags) {
-      const mark = m.FPDFPageObj_AddMark(ptr, tag.name);
-      if (mark && tag.mcid !== null) {
-        m.FPDFPageObjMark_SetIntParam(docPtr, ptr, mark, MCID, tag.mcid);
-      }
+    for (const tag of tags) addTagMark(m, docPtr, ptr, tag);
+  }
+}
+
+/** Add `tag` to the object, innermost. False when PDFium refuses it. */
+export function addTagMark(
+  m: WrappedPdfiumModule,
+  docPtr: number,
+  objPtr: number,
+  tag: TagMark,
+): boolean {
+  const mark = m.FPDFPageObj_AddMark(objPtr, tag.name);
+  if (!mark) return false;
+  return (
+    tag.mcid === null ||
+    m.FPDFPageObjMark_SetIntParam(docPtr, objPtr, mark, MCID, tag.mcid)
+  );
+}
+
+/** Remove the object's innermost tag named `name`. False when it has none. */
+export function removeTagMark(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+  name: string,
+): boolean {
+  for (let i = m.FPDFPageObj_CountMarks(objPtr) - 1; i >= 0; i--) {
+    const mark = m.FPDFPageObj_GetMark(objPtr, i);
+    if (mark && markName(m, mark) === name) {
+      return m.FPDFPageObj_RemoveMark(objPtr, mark);
     }
   }
+  return false;
+}
+
+/**
+ * The highest MCID any object on the page is marked with, form XObject
+ * content included; -1 when none is.
+ */
+export function highestMcid(m: WrappedPdfiumModule, pagePtr: number): number {
+  let highest = -1;
+  for (const mcid of carriedMcids(m, pagePtr))
+    highest = Math.max(highest, mcid);
+  return highest;
+}
+
+/** Every MCID any object on the page is marked with, form XObject content included. */
+export function carriedMcids(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+): Set<number> {
+  const count = m.FPDFPage_CountObjects(pagePtr);
+  const objects = Array.from({ length: count }, (_, i) =>
+    m.FPDFPage_GetObject(pagePtr, i),
+  );
+  const carried = new Set<number>();
+  while (objects.length > 0) {
+    const objPtr = objects.pop()!;
+    if (!objPtr) continue;
+    for (const tag of readTagMarks(m, objPtr)) {
+      if (tag.mcid !== null) carried.add(tag.mcid);
+    }
+    if (m.FPDFPageObj_GetType(objPtr) !== FPDF_PAGEOBJ_FORM) continue;
+    for (let i = 0; i < m.FPDFFormObj_CountObjects(objPtr); i++) {
+      objects.push(m.FPDFFormObj_GetObject(objPtr, i));
+    }
+  }
+  return carried;
 }
 
 /** Carry `from`'s tags onto its replacement `to`. */

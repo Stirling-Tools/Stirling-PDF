@@ -36,6 +36,8 @@ export interface TauriHttpRequestConfig {
   automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
+  /** Backend endpoint key for routing, when the URL serves more than one. */
+  endpointName?: string;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
   accountLinkBlockContext?: import("@editor/services/accountLinkBlock").AccountLinkBlockContext;

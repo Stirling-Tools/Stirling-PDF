@@ -17,7 +17,6 @@ import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
 import { useFirstLaunchCheck } from "@editor/hooks/useFirstLaunchCheck";
 import { useBackendInitializer } from "@editor/hooks/useBackendInitializer";
-import { DESKTOP_DEFAULT_APP_CONFIG } from "@editor/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
@@ -52,7 +51,6 @@ const COMMON_TOOL_ENDPOINTS = [
 /**
  * Desktop application providers
  * Wraps proprietary providers and adds desktop-specific configuration
- * - Enables retry logic for app config (needed for Tauri mode when backend is starting)
  * - Shows setup wizard on first launch
  */
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -344,17 +342,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   if (!authChecked) {
     return (
-      <ProprietaryAppProviders
-        appConfigRetryOptions={{
-          maxRetries: 5,
-          initialDelay: 1000,
-        }}
-        appConfigProviderProps={{
-          initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: "non-blocking",
-          autoFetch: false,
-        }}
-      >
+      <ProprietaryAppProviders>
         {/* Also here: the auth check below switches mode pre-authChecked. */}
         <DesktopQueryCacheReset />
         {/* The title-bar strip (window controls) comes from AppFrame, which wraps
@@ -367,17 +355,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Normal app flow
   return (
-    <ProprietaryAppProviders
-      appConfigRetryOptions={{
-        maxRetries: 5,
-        initialDelay: 1000,
-      }}
-      appConfigProviderProps={{
-        initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-        bootstrapMode: "non-blocking",
-        autoFetch: false,
-      }}
-    >
+    <ProprietaryAppProviders>
       <ToolActionsContext.Provider
         value={{
           onEndpointUnavailableClick: () =>

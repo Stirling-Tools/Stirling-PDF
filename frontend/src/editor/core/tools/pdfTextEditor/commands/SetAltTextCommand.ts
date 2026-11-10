@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import {
   RolledBackError,
   type Command,
@@ -30,13 +31,18 @@ export class SetAltTextCommand implements Command {
     const refusal = structure.cannotDescribe(this.mcid);
     if (refusal) {
       throw new RolledBackError(
-        new Error(`MCID ${this.mcid} cannot take a description: ${refusal}`),
+        new Error(
+          i18n.t(
+            "pdfTextEditor.inspector.accessibility.cannotChange",
+            "This image's accessibility can't be changed.",
+          ),
+        ),
       );
     }
     if (this.previous === undefined) {
       this.previous = structure.editFor(this.mcid);
     }
-    structure.setEdit(this.mcid, { mcid: this.mcid, alt: this.alt });
+    structure.setAlt(this.mcid, this.alt);
     doc.page(this.pageIndex).bumpRevision();
   }
 
@@ -46,8 +52,12 @@ export class SetAltTextCommand implements Command {
     doc.page(this.pageIndex).bumpRevision();
   }
 
-  /** Keystrokes in one description field collapse into one undo step. */
   coalesceKey(): string {
-    return `${this.type}:${this.pageIndex}:${this.mcid}`;
+    return descriptionCoalesceKey(this.pageIndex, this.mcid);
   }
+}
+
+/** Keystrokes in one description field collapse into one undo step. */
+export function descriptionCoalesceKey(pageIndex: number, mcid: number) {
+  return `set-alt-text:${pageIndex}:${mcid}`;
 }

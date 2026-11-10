@@ -47,6 +47,7 @@ import {
 import { openStripePage } from "@editor/platform/stripeNavigation";
 import "@editor/portal/theme/surface.css";
 import { downloadFile } from "@editor/services/downloadService";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const DEFAULT_POOL_CREDITS = 1_200_000;
 const DEFAULT_USERS = 25;
@@ -1214,6 +1215,7 @@ function PaymentStep({
             <Input
               inputSize="sm"
               value={accountName}
+              className={privateContentClassName}
               onChange={(e) => setAccountName(e.target.value)}
               placeholder={t(
                 "portal.billing.prepaid.pay.accountNamePlaceholder",
@@ -1231,6 +1233,7 @@ function PaymentStep({
               <Input
                 inputSize="sm"
                 value={companyName}
+                className={privateContentClassName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder={t(
                   "portal.billing.prepaid.pay.companyNamePlaceholder",
@@ -1247,6 +1250,7 @@ function PaymentStep({
               <Input
                 inputSize="sm"
                 value={poNumber}
+                className={privateContentClassName}
                 onChange={(e) => setPoNumber(e.target.value)}
                 placeholder={t(
                   "portal.billing.prepaid.pay.poNumberPlaceholder",

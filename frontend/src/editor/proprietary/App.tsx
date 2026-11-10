@@ -1,10 +1,10 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProviders } from "@editor/components/AppProviders";
+import { PlatformProviders } from "@editor/components/PlatformProviders";
+import { PublicRouteProviders } from "@editor/components/PublicRouteProviders";
 import { AppLayout } from "@editor/components/AppLayout";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
-import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 
 const Landing = lazy(() => import("@editor/routes/Landing"));
 const Login = lazy(() => import("@editor/routes/Login"));
@@ -34,16 +34,6 @@ import "@editor/auth/ui/auth-theme.css";
 // Import file ID debugging helpers (development only)
 import "@editor/utils/fileIdSafety";
 
-// Minimal providers for public, no-auth pages (mobile scanner, participant
-// signing) - no API calls, no authentication
-function PublicRouteProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <PreferencesProvider>
-      <ThemeProvider>{children}</ThemeProvider>
-    </PreferencesProvider>
-  );
-}
-
 // Participant signing page — token-gated, no login required
 function ParticipantViewPage() {
   const { token } = useParams<{ token: string }>();
@@ -69,8 +59,8 @@ function MainRoutes() {
   );
 }
 
-// All other routes need AppProviders for backend integration. RootGate routes
-// "/" by role before any of it mounts.
+// All other routes need the editor's providers. RootGate routes "/" by role
+// before any of them mount.
 function MainApp() {
   return (
     <RootGate>
@@ -119,7 +109,13 @@ export default function App() {
         />
 
         {/* Both apps, under a shared frame so the rail renders once outside them. */}
-        <Route element={<AppFrame />}>
+        <Route
+          element={
+            <PlatformProviders>
+              <AppFrame />
+            </PlatformProviders>
+          }
+        >
           {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
           <Route path="*" element={<MainApp />} />

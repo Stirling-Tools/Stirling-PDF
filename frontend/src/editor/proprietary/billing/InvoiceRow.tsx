@@ -1,5 +1,6 @@
 import { StatusBadge, type StatusTone } from "@editor/ui";
 import { handleExternalLinkClick } from "@editor/platform/externalLinkClick";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export type InvoiceRowState = "paid" | "current" | "failed" | "other";
 
@@ -47,7 +48,7 @@ export function InvoiceRow({
       </StatusBadge>
       {href ? (
         <a
-          className="billing-inv__door"
+          className={`billing-inv__door ${privateContentClassName}`}
           href={href}
           target="_blank"
           rel="noreferrer noopener"

@@ -14,7 +14,7 @@ import {
   fetchSnapshot,
   issueQuote,
   recordInterest,
-  resetProcurement,
+  recordLegalConsent,
   startAgreement,
   startTrial,
   type ProcurementSnapshot,
@@ -23,16 +23,11 @@ import {
 } from "@editor/portal/api/procurement";
 import { downloadFile } from "@editor/services/downloadService";
 
-export type ProcurementExtra =
-  | null
-  | "license"
-  | "schedule"
-  | "trial"
-  | "setup"
-  | "documents";
+/** A dialog opened over the Enterprise page. */
+export type ProcurementExtra = null | "schedule";
 
 /**
- * Shares a linked account's deal state between the billing summary and procurement dialogs.
+ * A linked account's deal state and actions, shared by the Enterprise page and its dialogs.
  */
 export interface ProcurementController {
   isLinked: boolean;
@@ -57,28 +52,26 @@ export interface ProcurementController {
   setEditing: (b: boolean) => void;
   extra: ProcurementExtra;
   setExtra: (e: ProcurementExtra) => void;
+  /** The latest quote's invoice PDF, or the one accepting it just returned. */
   invoicePdf: string | null;
-  /** Open the trial-setup dialog (deployment + seats) — the trial only starts once it's confirmed. */
-  onStartTrial: () => void;
   /**
-   * Record enterprise interest and open trial setup. Persisting the intent is what keeps the
-   * enterprise surface off accounts that never asked for it, and makes drop-off at this step
-   * visible; the dialog opens either way, so a failed write never blocks the buyer.
+   * Record enterprise interest. Persisting the intent is what keeps the enterprise surface off
+   * accounts that never asked for it, and makes drop-off before the trial visible; it is
+   * best-effort, so a failed write never blocks the buyer.
    */
   onExploreEnterprise: () => void;
-  /** Confirm the setup dialog: start the trial with the chosen deployment/seats, then open the flow. */
+  /** Start the trial with the deployment, seats and buyer details from the setup form. */
   onConfirmSetup: (
     deployment: string,
     seats: number,
     details: TrialSetupDetails,
   ) => void;
   onExtendTrial: () => void;
-  onReset: () => void;
   /** Issue the priced draft. Leaves the modal open: the issued quote becomes the review step. */
   onGenerate: (draft: QuoteResult) => Promise<void>;
   /**
    * Accept the reviewed quote and advance to the agreement step — does NOT charge Stripe. Taken from
-   * the deal card, and opens the agreement on success.
+   * the Enterprise page, and opens the agreement on success.
    */
   onAcceptQuote: () => Promise<void>;
   onAgree: () => void;
@@ -88,21 +81,26 @@ export interface ProcurementController {
   onDownloadSignedAgreement: () => Promise<void>;
 }
 
-export function useProcurement(): ProcurementController {
-  const { t } = useTranslation();
+/**
+ * The deal snapshot, null when this account has no link to price against. One shared cache entry
+ * for billing and the Enterprise page, so moving between them does not flash the loading state.
+ * No retry: the page gates all its content on `loading`, which backoff would hold true.
+ */
+export function useProcurementSnapshot() {
   const isLinked = usePortalLinked();
-
-  // Through the shared query cache, not a per-mount fetch: the snapshot survives navigation, so
-  // returning to billing renders the deal from cache instead of flashing the loading state again.
-  // No retry — a failing snapshot must not hold `loading` true through backoff, since the hero
-  // gates its whole card on it.
-  const queryClient = useQueryClient();
-  const snapshotKey = qk.procurement(isLinked);
-  const query = useQuery<ProcurementSnapshot | null>({
-    queryKey: snapshotKey,
+  return useQuery<ProcurementSnapshot | null>({
+    queryKey: qk.procurement(isLinked),
     queryFn: () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
     retry: false,
   });
+}
+
+export function useProcurement(): ProcurementController {
+  const { t } = useTranslation();
+  const isLinked = usePortalLinked();
+  const queryClient = useQueryClient();
+  const snapshotKey = qk.procurement(isLinked);
+  const query = useProcurementSnapshot();
   const state = toAsyncState(query);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -126,7 +124,7 @@ export function useProcurement(): ProcurementController {
 
   function reportError(cause: unknown, message: string) {
     if (cause instanceof SaasSessionRequiredError) {
-      // Recovery is in the billing shell; keep unfinished purchases for an explicit retry.
+      // Recovery is the session banner above; keep unfinished purchases for an explicit retry.
       setOpen(false);
       setExtra(null);
       setError(null);
@@ -139,7 +137,7 @@ export function useProcurement(): ProcurementController {
    * Run a deal action, then refresh the snapshot so every reader sees the new stage.
    *
    * `closeOnSuccess` ends the step. Each stage is its own visit — a buyer can sit in one for days —
-   * so finishing one returns them to the deal card instead of gliding into the next. Deliberately
+   * so finishing one returns them to the page instead of gliding into the next. Deliberately
    * not in a `finally`: a failure has to leave the modal open, or the error banner this sets would
    * be torn down with it and the buyer would be left with no idea what went wrong.
    *
@@ -155,8 +153,8 @@ export function useProcurement(): ProcurementController {
     try {
       await fn();
       queryClient.setQueryData(snapshotKey, await fetchSnapshot());
+      // The wallet is left to the page, which refreshes its server-side cache first.
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: qk.wallet(true) }),
         queryClient.invalidateQueries({ queryKey: qk.teamMy() }),
         queryClient.invalidateQueries({ queryKey: ["portal", "users"] }),
       ]);
@@ -171,11 +169,7 @@ export function useProcurement(): ProcurementController {
     }
   }
 
-  // The setup dialog collects deployment + seats first; the trial starts on confirm. Starting the
-  // trial is a step in its own right, so it ends on the card — the buyer builds a quote when ready.
-  const onStartTrial = () => setExtra("setup");
   const onExploreEnterprise = () => {
-    setExtra("setup");
     void recordInterest()
       .then((snap) => queryClient.setQueryData(snapshotKey, snap))
       .catch((e) => {
@@ -188,20 +182,14 @@ export function useProcurement(): ProcurementController {
     seats: number,
     details: TrialSetupDetails,
   ) =>
-    run(async () => {
-      await startTrial(deployment, seats, details);
-      setExtra(null);
+    run(() => {
+      void recordLegalConsent("eula", "trial"); // clickwrap consent, best-effort
+      return startTrial(deployment, seats, details);
     });
   const onExtendTrial = () => run(extendTrial);
-  const onReset = () =>
-    run(async () => {
-      await resetProcurement();
-      setEditing(false);
-      setInvoicePdf(null);
-    });
   // Deliberately does not close: the issued quote returns through the snapshot and becomes the
   // builder's review step, so the buyer reads the paper they just generated instead of being dropped
-  // back on the card to find it again.
+  // back on the page to find it again.
   const onGenerate = async (draft: QuoteResult) => {
     await run(async () => {
       await issueQuote(draft.quoteId);
@@ -214,7 +202,7 @@ export function useProcurement(): ProcurementController {
    * download the plain quote before taking on the legal documents.
    *
    * This is the one transition that carries straight on into the next stage rather than ending on the
-   * card. Accepting is an explicit decision the buyer has just taken from the card itself, so putting
+   * page. Accepting is an explicit decision the buyer has just taken from the page itself, so putting
    * them back there to press a second button to see what they accepted reads as a dead end.
    */
   const onAcceptQuote = async () => {
@@ -312,12 +300,10 @@ export function useProcurement(): ProcurementController {
     setEditing,
     extra,
     setExtra,
-    invoicePdf,
-    onStartTrial,
+    invoicePdf: latest?.invoicePdf ?? invoicePdf,
     onExploreEnterprise,
     onConfirmSetup,
     onExtendTrial,
-    onReset,
     onGenerate,
     onAcceptQuote,
     onAgree,

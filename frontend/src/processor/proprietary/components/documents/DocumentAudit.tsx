@@ -5,6 +5,7 @@ import {
   DOC_AUDIT_TONE,
   type ReviewDocument,
 } from "@processor/api/documents";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 /** Lifecycle timeline for a single document, oldest first. */
 export function DocumentAudit({ doc }: { doc: ReviewDocument }) {
@@ -30,9 +31,11 @@ export function DocumentAudit({ doc }: { doc: ReviewDocument }) {
                 {event.time}
               </span>
             </div>
-            <p className="portal-documents__timeline-detail">{event.detail}</p>
+            <p className="portal-documents__timeline-detail">
+              <PrivateContent>{event.detail}</PrivateContent>
+            </p>
             <span className="portal-documents__timeline-actor">
-              {event.actor}
+              <PrivateContent>{event.actor}</PrivateContent>
             </span>
           </div>
         </li>

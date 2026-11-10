@@ -13,6 +13,7 @@ import "@processor/components/AppShell.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { ConnectAccountRail } from "@processor/components/ConnectAccountRail";
+import { FeedbackTag } from "@editor/components/feedback/FeedbackTag";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -109,6 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ConnectAccountRail />
           {children}
         </main>
+        <FeedbackTag />
       </div>
     </div>
   );

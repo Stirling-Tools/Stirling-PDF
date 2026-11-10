@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
   /** "true" includes the admin portal's lazy route/chunk in the editor build. */
   readonly VITE_INCLUDE_PORTAL: string;
+  /** "true" shows the PDF text editor's accessibility editing. */
+  readonly VITE_ACCESSIBILITY_EDITING: string;
   readonly VITE_GOOGLE_DRIVE_CLIENT_ID: string;
   readonly VITE_GOOGLE_DRIVE_API_KEY: string;
   readonly VITE_GOOGLE_DRIVE_APP_ID: string;
@@ -13,6 +15,7 @@ interface ImportMetaEnv {
   readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
   readonly VITE_PUBLIC_POSTHOG_KEY: string;
   readonly VITE_PUBLIC_POSTHOG_HOST: string;
+  readonly VITE_FEEDBACK_URL: string;
 
   // SaaS only (.env.saas)
   readonly VITE_USERBACK_TOKEN: string;

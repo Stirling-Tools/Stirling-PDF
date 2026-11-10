@@ -72,6 +72,8 @@ export interface HttpRequestOptions {
   /** Extra headers; Content-Type and Accept are set automatically. */
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Sent without the session (SaaS only): the endpoint is public and the caller may have none. */
+  anonymous?: boolean;
 }
 
 /** Thrown by any apiClient call on non-2xx response, with the parsed body. */
@@ -253,25 +255,28 @@ async function saasJson<T>(
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
-  const res = await withPortalSaasSession(
-    (token) =>
-      saasFetch(`${base}${path}`, {
-        method: options.method ?? "GET",
-        headers: {
-          Accept: "application/json",
-          ...(options.body !== undefined
-            ? { "Content-Type": "application/json" }
-            : {}),
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-        body:
-          options.body !== undefined ? JSON.stringify(options.body) : undefined,
-        signal: options.signal,
-      }),
-    (response) => response.status === 401,
-    !options.method || options.method === "GET",
-  );
+  const send = (token: string | null) =>
+    saasFetch(`${base}${path}`, {
+      method: options.method ?? "GET",
+      headers: {
+        Accept: "application/json",
+        ...(options.body !== undefined
+          ? { "Content-Type": "application/json" }
+          : {}),
+        ...options.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body:
+        options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: options.signal,
+    });
+  const res = options.anonymous
+    ? await send(null)
+    : await withPortalSaasSession(
+        send,
+        (response) => response.status === 401,
+        !options.method || options.method === "GET",
+      );
   return unwrap<T>(res);
 }
 

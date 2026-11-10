@@ -20,6 +20,7 @@ import { Icon } from "@editor/ui/Icon";
 import { FilesModalContext } from "@editor/contexts/FilesModalContext";
 import styles from "@editor/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface OverlayPdfsSettingsProps {
   parameters: OverlayPdfsParameters;
@@ -240,7 +241,10 @@ export default function OverlayPdfsSettings({
                     >
                       <Group gap="xs" className={styles.fileGroup}>
                         <div className={styles.fileNameContainer}>
-                          <div className={styles.fileName} title={file.name}>
+                          <div
+                            className={`${styles.fileName} ${privateContentClassName}`}
+                            title={file.name}
+                          >
                             {file.name}
                           </div>
                         </div>

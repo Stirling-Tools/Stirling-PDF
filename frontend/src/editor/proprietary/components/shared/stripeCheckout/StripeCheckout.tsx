@@ -46,6 +46,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   combinedChoose: requestedCombinedChoose = false,
   currentLimit = null,
   capacityNotice,
+  onContactSales,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -240,6 +241,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
               />
             }
             onContinue={() => navigation.goToStage("payment")}
+            onContactSales={onContactSales}
           />
         );
 
@@ -263,6 +265,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             currentLimit={currentLimit}
             capacityNotice={capacityNotice}
             onContinue={() => navigation.goToStage("payment")}
+            onContactSales={onContactSales}
           />
         );
 
@@ -326,7 +329,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             {combinedChoose
               ? currentLimit != null
                 ? t("payment.adjustTeam.title", "Adjust Team plan")
-                : t("payment.upgradeTeam.title", "Upgrade to Team")
+                : t("payment.upgradeTeam.title", "Get Stirling Team")
               : getModalTitle(
                   checkoutState.state.currentStage,
                   planGroup.name,
@@ -335,7 +338,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           </Text>
         </Group>
       }
-      size={isMobile ? "100%" : combinedChoose ? 500 : 980}
+      size={isMobile ? "100%" : combinedChoose ? 860 : 980}
       centered
       radius="lg"
       withCloseButton

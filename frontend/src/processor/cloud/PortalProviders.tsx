@@ -1,34 +1,29 @@
+import type { ReactNode } from "react";
 import { TierProvider } from "@processor/contexts/TierContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { PortalChrome } from "@processor/components/PortalChrome";
-import { LicenseProvider } from "@editor/contexts/LicenseContext";
 import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
-import { PortalAppConfigProvider } from "@processor/contexts/PortalAppConfigProvider";
 import { CheckoutProvider } from "@editor/contexts/CheckoutContext";
 
 /**
- * SaaS provider stack. There is no account-link layer: the signed-in account IS
- * the SaaS account (auth is handled upstream by PortalAuthBoundary) and the tier
- * comes from the wallet (see portal-saas/contexts/usePlanTier). Dropping
- * LinkProvider / AccountLinkProvider / the login modal here keeps the link
- * machinery out of the SaaS bundle entirely.
+ * Stirling Cloud provider stack, shared by web SaaS and the desktop app. There is
+ * no account-link layer: the signed-in account IS the SaaS account (auth is
+ * handled upstream by PortalAuthBoundary) and the tier comes from the wallet (see
+ * processor/cloud/contexts/usePlanTier). Dropping LinkProvider / AccountLinkProvider
+ * / the login modal here keeps the link machinery out of the SaaS bundle entirely.
  *
  * <p>Checkout is mounted so the buy doors on Usage & Billing are the same on both editions.
- * LicenseProvider comes with it rather than on its own account: CheckoutProvider calls
- * {@code useLicense}, which throws without one.
+ * `children` are overlays a host adds beside the chrome.
  */
-export function PortalProviders() {
+export function PortalProviders({ children }: { children?: ReactNode }) {
   return (
     <TierProvider>
       <UIProvider>
-        <PortalAppConfigProvider>
-          <LicenseProvider>
-            <CheckoutProvider>
-              <StartupPrompts />
-              <PortalChrome />
-            </CheckoutProvider>
-          </LicenseProvider>
-        </PortalAppConfigProvider>
+        <CheckoutProvider>
+          <StartupPrompts />
+          {children}
+          <PortalChrome />
+        </CheckoutProvider>
       </UIProvider>
     </TierProvider>
   );

@@ -28,7 +28,7 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -46,7 +46,7 @@ jobs:
 
             const { owner, repo } = context.repo;
             const pr = context.payload.pull_request;
-            const LOCALE_FILE = /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/;
+            const LOCALE_FILE = /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/;
             const REFERENCE_FILE = "frontend/public/locales/en-US/translation.toml";
 
             const files = await github.paginate(github.rest.pulls.listFiles, {
@@ -99,7 +99,7 @@ jobs:
 
       - name: Install uv
         if: steps.fetch-files.outputs.has_files == 'true'
-        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: |

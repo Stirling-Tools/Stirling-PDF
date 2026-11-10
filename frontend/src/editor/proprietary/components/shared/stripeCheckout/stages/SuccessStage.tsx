@@ -3,6 +3,7 @@ import { Alert, Stack, Text, Paper, Code, Group, Loader } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PollingStatus } from "@editor/components/shared/stripeCheckout/types/checkout";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SuccessStageProps {
   isTeam?: boolean;
@@ -67,7 +68,9 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
                 <Text size="sm" fw={600}>
                   {t("payment.licenseKey", "Your License Key")}
                 </Text>
-                <Code block>{licenseKey}</Code>
+                <Code block className={privateContentClassName}>
+                  {licenseKey}
+                </Code>
                 <Button
                   variant="secondary"
                   size="sm"

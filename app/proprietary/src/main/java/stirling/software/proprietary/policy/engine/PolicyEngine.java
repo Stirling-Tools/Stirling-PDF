@@ -392,13 +392,13 @@ public class PolicyEngine {
         // hop already happened) so every tool sub-step dispatched via InternalApiClient groups into
         // a single charge, and two separate policy runs on the same document stay distinct charges.
         try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
+            PolicyExecutionResult result = null;
             try {
                 if (!run.markRunning()) {
                     // Cancelled before it started: nothing runs, nothing delivers.
                     return;
                 }
-                PolicyExecutionResult result =
-                        stepExecutor.execute(run.getDefinition(), inputs, listener);
+                result = stepExecutor.execute(run.getDefinition(), inputs, listener);
                 if (!run.beginDelivery()) {
                     // Cancelled while the steps ran: discard the produced files —
                     // delivering would stamp results over files being restored right now.
@@ -466,6 +466,10 @@ public class PolicyEngine {
                 taskManager.setError(runId, message);
                 recordFailure(run, message, e);
             } finally {
+                // Delivery stored its own copies, so the step outputs are not needed any longer.
+                if (result != null) {
+                    result.close();
+                }
                 // Always resolve so stream/await callers unblock.
                 completion.complete(run);
             }

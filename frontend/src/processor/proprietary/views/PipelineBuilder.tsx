@@ -127,6 +127,7 @@ import {
 } from "@processor/components/pipelines/PipelineInputTrigger";
 import "@processor/views/PipelineBuilder.css";
 import { downloadFile } from "@editor/services/downloadService";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;
@@ -1457,7 +1458,10 @@ export function PipelineBuilder() {
 
       {error && <Banner tone="danger" description={error} />}
       {runResult && (
-        <Banner tone={runResult.tone} description={runResult.text} />
+        <Banner
+          tone={runResult.tone}
+          description={<PrivateContent>{runResult.text}</PrivateContent>}
+        />
       )}
       {hasUnconfiguredSteps && (
         <Banner
