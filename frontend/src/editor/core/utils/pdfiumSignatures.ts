@@ -11,8 +11,6 @@ export interface PdfSignatureInfo {
   digestMatches: boolean | null;
 }
 
-export const LOCAL_DIGEST_MAX_BYTES = 64 * 1024 * 1024;
-
 const DIGEST_BY_LENGTH: Record<number, AlgorithmIdentifier> = {
   20: "SHA-1",
   32: "SHA-256",
@@ -124,6 +122,7 @@ export async function readPdfiumSignatures(
   module: WrappedPdfiumModule,
   document: number,
   file: { pointer: number; length: number },
+  verify: boolean,
 ): Promise<PdfSignatureInfo[]> {
   const read: {
     info: PdfSignatureInfo;
@@ -166,13 +165,13 @@ export async function readPdfiumSignatures(
       },
     });
   }
-  if (file.length <= LOCAL_DIGEST_MAX_BYTES)
+  if (verify)
     for (const entry of read)
       entry.info.digestMatches = await digestMatches(
         module,
         file,
         entry.range,
         entry.digest,
-      );
+      ).catch(() => null);
   return read.map((entry) => entry.info);
 }

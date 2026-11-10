@@ -8,7 +8,8 @@
  *   blocking check to facts PDFium has once the document is open, so the answer stays in milliseconds.
  * - Background: information only, never awaited by an action (signer, reason, whether each signature
  *   still matches the bytes). Sent after `access` from the same open document, and only when relevant.
- *   A check whose cost grows with file size takes a size cap, as `LOCAL_DIGEST_MAX_BYTES` does for hashing.
+ *   A check whose cost grows with file size (hashing every signed byte) runs only on request,
+ *   through `verifyPdfSignatures`, never when a file is opened.
  *
  * Local signature results are integrity evidence, not identity: the signature value and certificate
  * chain are never verified here, so whether the signer is trusted needs the backend.
@@ -43,6 +44,7 @@ import type { PdfAccess } from "@editor/services/pdfAccessService";
 export interface PdfAccessRequest {
   file: Blob;
   password: string;
+  verifySignatures: boolean;
   wasmUrl: string;
   wasmModule: WebAssembly.Module | null;
 }
@@ -161,10 +163,12 @@ self.onmessage = async ({
         self.postMessage({ access } satisfies PdfAccessResponse);
         if (access.signed)
           self.postMessage({
-            signatures: await readPdfiumSignatures(module, document, {
-              pointer,
-              length,
-            }),
+            signatures: await readPdfiumSignatures(
+              module,
+              document,
+              { pointer, length },
+              data.verifySignatures,
+            ),
           } satisfies PdfAccessResponse);
       } finally {
         module.FPDF_CloseDocument(document);

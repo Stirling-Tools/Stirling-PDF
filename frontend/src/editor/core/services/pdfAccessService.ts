@@ -308,6 +308,8 @@ function runInspection(
   file: Blob,
   password: string,
   signal: AbortSignal,
+  verifySignatures = false,
+  onSignatures?: (signatures: PdfSignatureInfo[] | null) => void,
 ): Promise<PdfAccess> {
   return new Promise((resolve, reject) => {
     let worker: Worker | undefined;
@@ -334,7 +336,9 @@ function runInspection(
       return true;
     };
     const fail = (error: unknown) => {
-      if (finish() && !delivered) reject(error);
+      if (!finish()) return;
+      if (delivered) onSignatures?.(null);
+      else reject(error);
     };
     const abort = () =>
       fail(new DOMException("Operation cancelled", "AbortError"));
@@ -356,6 +360,7 @@ function runInspection(
           publish();
         }
         finish(reusable());
+        onSignatures?.(data.signatures);
       } else fail(Object.assign(new Error(data.error), { code: data.code }));
     };
     const queued = {
@@ -390,6 +395,7 @@ function runInspection(
               const request: PdfAccessRequest = {
                 file,
                 password,
+                verifySignatures,
                 wasmUrl: pdfiumWasmUrl,
                 wasmModule,
               };
@@ -419,6 +425,30 @@ function runInspection(
       drainInspections();
     }
   });
+}
+
+export function verifyPdfSignatures(
+  file: Blob,
+  signal?: AbortSignal,
+): Promise<PdfSignatureInfo[]> {
+  const { signal: cancellation, dispose } = combineAbortSignals([
+    pdfAccessLifetime(file),
+    ...(signal ? [signal] : []),
+  ]);
+  return new Promise<PdfSignatureInfo[]>((resolve, reject) => {
+    runInspection(
+      file,
+      getPdfAccess(file)?.password ?? "",
+      cancellation,
+      true,
+      (signatures) =>
+        signatures
+          ? resolve(signatures)
+          : reject(new Error("Unable to check signatures locally")),
+    ).then((access) => {
+      if (!access.signed) resolve([]);
+    }, reject);
+  }).finally(dispose);
 }
 
 /** Authenticate without publishing credentials; concurrent readers share one worker per file and password. */

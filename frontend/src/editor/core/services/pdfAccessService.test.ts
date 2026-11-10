@@ -10,6 +10,7 @@ import {
   getPdfSignatures,
   inspectLocalPdfAccess,
   setPdfAccessPolicy,
+  verifyPdfSignatures,
   subscribePdfAccess,
 } from "@editor/services/pdfAccessService";
 
@@ -106,6 +107,7 @@ describe("local inspection lifetime", () => {
       expect(workers[0].postMessage).toHaveBeenCalledWith({
         file,
         password: "",
+        verifySignatures: false,
         wasmUrl: "/pdfium.wasm",
         wasmModule: "precompiled-module",
       }),
@@ -385,5 +387,33 @@ describe("warm workers and background signature details", () => {
     await again;
     await vi.advanceTimersByTimeAsync(30_000);
     expect(workers[1].terminate).toHaveBeenCalledOnce();
+  });
+
+  it("hashes signatures only when asked and resolves with the checked result", async () => {
+    const file = new File(["PDF"], "signed.pdf");
+    const checked = verifyPdfSignatures(file);
+    await vi.waitFor(() =>
+      expect(workers[0].postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ verifySignatures: true }),
+      ),
+    );
+    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    workers[0].onmessage?.({ data: { signatures: details } });
+    await expect(checked).resolves.toEqual(details);
+    expect(getPdfSignatures(file)).toEqual(details);
+  });
+
+  it("resolves an unsigned file with no signatures and rejects a failed check", async () => {
+    const unsigned = verifyPdfSignatures(new File(["PDF"], "plain.pdf"));
+    workers[0].onmessage?.({ data: { access: plain } });
+    await expect(unsigned).resolves.toEqual([]);
+    const failing = verifyPdfSignatures(new File(["PDF"], "signed.pdf"));
+    await vi.waitFor(() => expect(workers.length).toBeGreaterThan(0));
+    const worker = workers.at(-1)!;
+    worker.onmessage?.({ data: { access: { ...plain, signed: true } } });
+    worker.onmessage?.({
+      data: { error: "Unable to inspect PDF security locally", code: 0 },
+    });
+    await expect(failing).rejects.toThrow("Unable to check signatures locally");
   });
 });
