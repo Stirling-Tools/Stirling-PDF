@@ -4,8 +4,17 @@ export type DockerImageTag = "latest" | "latest-fat" | "latest-ultra-lite";
 
 export const DOCKER_IMAGE = "docker.stirlingpdf.com/stirlingtools/stirling-pdf";
 
-export const dockerRunCommand = (tag: DockerImageTag = "latest") =>
-  `docker run -d --name stirling-pdf -p 8080:8080 \\\n  -v ./stirling-data:/configs \\\n  ${DOCKER_IMAGE}:${tag}`;
+/** `env` adds settings the server starts with, such as a licence key. */
+export const dockerRunCommand = (
+  tag: DockerImageTag = "latest",
+  env: Record<string, string> = {},
+) =>
+  [
+    "docker run -d --name stirling-pdf -p 8080:8080 \\",
+    "  -v ./stirling-data:/configs \\",
+    ...Object.entries(env).map(([name, value]) => `  -e ${name}=${value} \\`),
+    `  ${DOCKER_IMAGE}:${tag}`,
+  ].join("\n");
 
 export const DOCKER_COMPOSE_FILE = `# Save as docker-compose.yml, then run: docker compose up -d
 services:

@@ -1,5 +1,4 @@
 import { ReactNode, useEffect } from "react";
-import { ThemeProvider } from "@editor/components/shared/ThemeProvider";
 import { FileContextProvider } from "@editor/contexts/FileContext";
 import { NavigationProvider } from "@editor/contexts/NavigationContext";
 import { FilesModalProvider } from "@editor/contexts/FilesModalContext";
@@ -7,10 +6,7 @@ import { ToolWorkflowProvider } from "@editor/contexts/ToolWorkflowContext";
 import { DamagedFileRepairProvider } from "@editor/contexts/DamagedFileRepairContext";
 import { HotkeyProvider } from "@editor/contexts/HotkeyContext";
 import { SidebarProvider } from "@editor/contexts/SidebarContext";
-import {
-  PreferencesProvider,
-  usePreferences,
-} from "@editor/contexts/PreferencesContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { WorkbenchBarProvider } from "@editor/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@editor/contexts/ViewerContext";
@@ -23,6 +19,7 @@ import { BannerProvider } from "@editor/contexts/BannerContext";
 import ErrorBoundary from "@editor/components/shared/ErrorBoundary";
 import { useAppInitialization } from "@editor/hooks/useAppInitialization";
 import { useLogoAssets } from "@editor/hooks/useLogoAssets";
+import { useManifestUrl } from "@editor/hooks/useManifestUrl";
 import AppConfigLoader from "@editor/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@editor/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@editor/contexts/RedactionContext";
@@ -43,7 +40,8 @@ function AppInitializer() {
 }
 
 function BrandingAssetManager() {
-  const { favicon, logo192, manifestHref } = useLogoAssets();
+  const { favicon, logo192 } = useLogoAssets();
+  const { manifestHref } = useManifestUrl();
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -112,56 +110,52 @@ function ServerDefaultsSync() {
 /** The editor's own providers. Expects PlatformProviders above it. */
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <PreferencesProvider>
-      <ThemeProvider>
-        <ErrorBoundary>
-          <BannerProvider>
-            <AppConfigLoader />
-            <ServerDefaultsSync />
-            {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+    <ErrorBoundary>
+      <BannerProvider>
+        <AppConfigLoader />
+        <ServerDefaultsSync />
+        {/* Auto-popup on startup when a newer Stirling-PDF release is available.
               No-ops inside Tauri — the desktop popup handles that flow. */}
-            <UpdateStartupPopup />
-            <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-              <FolderProvider>
-                <AppInitializer />
-                <BrandingAssetManager />
-                <NavigationProvider>
-                  <FilesModalProvider>
-                    <ToolWorkflowProvider>
-                      <HotkeyProvider>
-                        <SidebarProvider>
-                          <ViewerProvider>
-                            <SignatureProvider>
-                              <SigningOverlayProvider>
-                                <RedactionProvider>
-                                  <FormFillProvider>
-                                    <AnnotationProvider>
-                                      <WorkbenchBarProvider>
-                                        <TourOrchestrationProvider>
-                                          <AdminTourOrchestrationProvider>
-                                            <WorkbenchSessionPersistence />
-                                            <DamagedFileRepairProvider>
-                                              {children}
-                                            </DamagedFileRepairProvider>
-                                          </AdminTourOrchestrationProvider>
-                                        </TourOrchestrationProvider>
-                                      </WorkbenchBarProvider>
-                                    </AnnotationProvider>
-                                  </FormFillProvider>
-                                </RedactionProvider>
-                              </SigningOverlayProvider>
-                            </SignatureProvider>
-                          </ViewerProvider>
-                        </SidebarProvider>
-                      </HotkeyProvider>
-                    </ToolWorkflowProvider>
-                  </FilesModalProvider>
-                </NavigationProvider>
-              </FolderProvider>
-            </FileContextProvider>
-          </BannerProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
-    </PreferencesProvider>
+        <UpdateStartupPopup />
+        <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+          <FolderProvider>
+            <AppInitializer />
+            <BrandingAssetManager />
+            <NavigationProvider>
+              <FilesModalProvider>
+                <ToolWorkflowProvider>
+                  <HotkeyProvider>
+                    <SidebarProvider>
+                      <ViewerProvider>
+                        <SignatureProvider>
+                          <SigningOverlayProvider>
+                            <RedactionProvider>
+                              <FormFillProvider>
+                                <AnnotationProvider>
+                                  <WorkbenchBarProvider>
+                                    <TourOrchestrationProvider>
+                                      <AdminTourOrchestrationProvider>
+                                        <WorkbenchSessionPersistence />
+                                        <DamagedFileRepairProvider>
+                                          {children}
+                                        </DamagedFileRepairProvider>
+                                      </AdminTourOrchestrationProvider>
+                                    </TourOrchestrationProvider>
+                                  </WorkbenchBarProvider>
+                                </AnnotationProvider>
+                              </FormFillProvider>
+                            </RedactionProvider>
+                          </SigningOverlayProvider>
+                        </SignatureProvider>
+                      </ViewerProvider>
+                    </SidebarProvider>
+                  </HotkeyProvider>
+                </ToolWorkflowProvider>
+              </FilesModalProvider>
+            </NavigationProvider>
+          </FolderProvider>
+        </FileContextProvider>
+      </BannerProvider>
+    </ErrorBoundary>
   );
 }
