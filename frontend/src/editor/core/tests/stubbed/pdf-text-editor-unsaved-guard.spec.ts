@@ -160,4 +160,44 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
       "a dropped file must not discard edits without asking",
     ).toBeVisible({ timeout: 10_000 });
   });
+
+  test("closing the tool asks before the tool view slides away", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await openEditorWithTwoFiles(page);
+    await makeAnEdit(page);
+    await page.evaluate(() => {
+      const w = window as unknown as { __toolLayerLeft: boolean };
+      w.__toolLayerLeft = false;
+      new MutationObserver(() => {
+        if (!document.querySelector(".tool-panel__tool-layer")) {
+          w.__toolLayerLeft = true;
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+
+    const close = page.getByRole("button", { name: "Back to all tools" });
+    await close.click();
+    await expect(page.getByTestId("unsaved-discard")).toBeVisible();
+    await page.getByRole("button", { name: "Keep Working" }).click();
+
+    await expect(page.getByTestId("unsaved-discard")).toBeHidden();
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () =>
+          (window as unknown as { __toolLayerLeft: boolean }).__toolLayerLeft,
+      ),
+      "the tool view must not leave before the user answers",
+    ).toBe(false);
+
+    await close.click();
+    await page.getByTestId("unsaved-discard").click();
+    await expect(
+      page.locator('[data-tour="tool-button-compress"]'),
+    ).toBeVisible();
+    await expect(page.locator(".tool-panel__tool-layer")).toHaveCount(0);
+    await expect(page.getByTestId("unsaved-discard")).toBeHidden();
+  });
 });

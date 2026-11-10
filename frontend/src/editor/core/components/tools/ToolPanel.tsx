@@ -16,12 +16,13 @@ interface ToolPanelProps {
   allToolsView: boolean;
   /** Trigger to enter the all-tools view (from the "View all tools" button). */
   onShowAllTools: () => void;
-  /**
-   * Tool-selection handler injected by {@code RightSidebar} so the click can
-   * be wrapped in a View Transition (the tool card morphs into the header
-   * pill). Falls back to the workflow context's handler when not provided.
-   */
+  /** Tool-selection handler; falls back to the workflow context's handler. */
   onToolSelect?: (id: ToolId) => void;
+  /**
+   * Which view to render, overriding the workflow context. RightSidebar renders
+   * both while the tool view slides over the picker or off it.
+   */
+  view?: "toolPicker" | "toolContent";
   /** Whether to render the compact (favourites + recommended only) view. */
   compact?: boolean;
   /**
@@ -39,6 +40,7 @@ export default function ToolPanel({
   onToolSelect,
   compact: compactProp,
   showSearch = false,
+  view,
 }: ToolPanelProps) {
   const { t } = useTranslation();
   const {
@@ -56,7 +58,7 @@ export default function ToolPanel({
   // Only offer the filter over the list itself; once a tool is open the panel
   // belongs to that tool. Deriving the results branch from the same flag keeps
   // the input and what it filters from drifting apart.
-  const onPicker = leftPanelView === "toolPicker";
+  const onPicker = (view ?? leftPanelView) === "toolPicker";
   const panelSearch = showSearch && onPicker;
   const searching = searchQuery.trim().length > 0;
 
@@ -84,7 +86,7 @@ export default function ToolPanel({
             searchQuery={searchQuery}
           />
         </div>
-      ) : leftPanelView === "toolPicker" ? (
+      ) : onPicker ? (
         <div className="flex-1 flex flex-col overflow-auto">
           <ToolPicker
             selectedToolKey={selectedToolKey}
