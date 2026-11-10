@@ -590,7 +590,7 @@ class ConvertOfficeControllerTest {
                                 });
 
                 gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
-                        .thenReturn("report_convertedToPDF.pdf");
+                        .thenReturn("report.pdf");
                 wr.when(
                                 () ->
                                         WebResponseUtils.pdfFileToWebResponse(

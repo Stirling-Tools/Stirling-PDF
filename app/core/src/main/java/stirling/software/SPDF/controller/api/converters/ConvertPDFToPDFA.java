@@ -1896,8 +1896,7 @@ public class ConvertPDFToPDFA {
                     tempOut.close();
                     throw e;
                 }
-                return WebResponseUtils.pdfFileToWebResponse(
-                        tempOut, baseFileName + profile.outputSuffix(levelA.levelA()));
+                return WebResponseUtils.pdfFileToWebResponse(tempOut, baseFileName + ".pdf");
             }
 
             // Try Ghostscript first (preferred method)
