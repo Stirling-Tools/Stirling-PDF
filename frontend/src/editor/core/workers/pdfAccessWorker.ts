@@ -1,20 +1,15 @@
 /**
  * The local PDF probe: one PDFium read of a file's bytes that answers every local check, so callers
- * never parse the same file twice. Scheduled, cached and cancelled by `services/pdfAccessService.ts`.
+ * never parse the same file twice. Scheduled, cached and cancelled by `services/pdfAccessService.ts`;
+ * the checks themselves, and which phase each belongs to, are defined in `utils/pdfProbeChecks.ts`.
  *
- * A check is either blocking or background, and must say which:
- * - Blocking: decides what an action may do (encryption, permissions, opening password, `signed`
- *   for the signed-PDF edit block). Answered first as `access`; callers await only this. Keep each
- *   blocking check to facts PDFium has once the document is open, so the answer stays in milliseconds.
- * - Background: information only, never awaited by an action (signer, reason, whether each signature
- *   still matches the bytes). Sent after `access` from the same open document, and only when relevant.
- *   Hashing every signed byte grows with file size, so it must stay here: for a file too large to reuse
- *   its worker, the queue slot is freed as soon as `access` is sent and only the memory stays held.
+ * Replies, in order: `access` (the blocking answer, saying whether background checks follow), one
+ * `details` per background check that succeeds, then `done`.
  *
  * Local signature results are integrity evidence, not identity: the signature value and certificate
  * chain are never verified here, so whether the signer is trusted needs the backend.
- * `readPdfiumSignatures` rearranges the file bytes in WASM memory while hashing and restores them;
- * nothing else may touch them until it resolves.
+ * Hashing every signed byte grows with file size: for a file too large to reuse its worker, the
+ * queue slot is freed as soon as `access` is sent and only the memory stays held.
  *
  * Workers are reused only after small unencrypted files, because WASM memory never shrinks and freed
  * pages keep their contents; every other file gets a fresh worker, and a clean spare is started for the next.
@@ -26,8 +21,8 @@
  * Files are probed on first use (viewer open, tool preflight), so a tool can accept a signed file
  * that has not been opened yet and refuse it only at Run. Probing each PDF when it is added closes
  * that gap; it needs a size cap, since the whole file is copied into WASM memory.
- * Planned background checks (metadata, images, JavaScript, attachments, form fields) go here too,
- * with the same checks mirrored on the backend through JPDFium so both sides agree.
+ * Planned checks (metadata, images, JavaScript, attachments, form fields) go in `pdfProbeChecks.ts`
+ * too, mirrored on the backend through JPDFium so both sides agree.
  */
 import {
   init,
@@ -36,9 +31,10 @@ import {
 } from "@embedpdf/pdfium";
 import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
 import {
-  readPdfiumSignatures,
-  type PdfSignatureInfo,
-} from "@editor/utils/pdfiumSignatures";
+  backgroundChecksAfter,
+  runBackgroundCheck,
+  type PdfProbeDetails,
+} from "@editor/utils/pdfProbeChecks";
 import type { PdfAccess } from "@editor/services/pdfAccessService";
 
 export interface PdfAccessRequest {
@@ -55,8 +51,9 @@ export interface PdfAccessWarmup {
 }
 
 export type PdfAccessResponse =
-  | { access: PdfAccess }
-  | { signatures: PdfSignatureInfo[] }
+  | { access: PdfAccess; background: boolean }
+  | { details: Partial<PdfProbeDetails> }
+  | { done: true }
   | { error: string; code?: number };
 
 let pdfium: Promise<WrappedPdfiumModule> | undefined;
@@ -159,14 +156,19 @@ self.onmessage = async ({
             throw new Error("Unable to verify the PDF opening password");
           access.requiresOpeningPassword = !empty;
         }
-        self.postMessage({ access } satisfies PdfAccessResponse);
-        if (access.signed)
-          self.postMessage({
-            signatures: await readPdfiumSignatures(module, document, {
-              pointer,
-              length,
-            }),
-          } satisfies PdfAccessResponse);
+        const background = backgroundChecksAfter(access);
+        self.postMessage({
+          access,
+          background: background.length > 0,
+        } satisfies PdfAccessResponse);
+        if (background.length === 0) return;
+        const pdf = { module, document, file: { pointer, length } };
+        for (const key of background) {
+          const details = await runBackgroundCheck(key, pdf).catch(() => null);
+          if (details)
+            self.postMessage({ details } satisfies PdfAccessResponse);
+        }
+        self.postMessage({ done: true } satisfies PdfAccessResponse);
       } finally {
         module.FPDF_CloseDocument(document);
       }

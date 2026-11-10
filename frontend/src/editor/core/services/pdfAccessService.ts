@@ -7,7 +7,7 @@ import type {
   PdfAccessResponse,
   PdfAccessWarmup,
 } from "@editor/workers/pdfAccessWorker";
-import type { PdfSignatureInfo } from "@editor/utils/pdfiumSignatures";
+import type { PdfProbeDetails } from "@editor/utils/pdfProbeChecks";
 import {
   pdfiumWasmUrl,
   pdfiumWasmModulePromise,
@@ -202,7 +202,7 @@ export function forgetPreviewPdfAccess(file: Blob, access: PdfAccess): void {
 /** Clear all credentials on logout or FileContext teardown. */
 export function clearPdfAccess(): void {
   terminateIdleWorkers();
-  signaturesByFile = new WeakMap();
+  detailsByFile = new WeakMap();
   sessionLifetime.abort();
   sessionLifetime = new AbortController();
   accessLifetimes = new WeakMap();
@@ -242,7 +242,7 @@ const idleWorkers: Worker[] = [];
 let idleWorkerTimer: ReturnType<typeof setTimeout> | undefined;
 let activeInspections = 0;
 let inspectingBytes = 0;
-let signaturesByFile = new WeakMap<Blob, PdfSignatureInfo[]>();
+let detailsByFile = new WeakMap<Blob, Partial<PdfProbeDetails>>();
 
 function drainInspections(): void {
   while (inspectionQueue.length && activeInspections < MAX_INSPECTION_WORKERS) {
@@ -297,11 +297,12 @@ function releaseWorker(worker: Worker, reusable: boolean): void {
   if (idleWorkers.length === 0) startSpareWorker();
 }
 
-export function getPdfSignatures(
+/** Background probe results for these exact bytes; each key appears once its check has finished. */
+export function getPdfDetails(
   file: Blob | string | null | undefined,
-): PdfSignatureInfo[] | undefined {
+): Partial<PdfProbeDetails> | undefined {
   const blob = typeof file === "string" ? filesById.get(file)?.deref() : file;
-  return blob ? signaturesByFile.get(blob) : undefined;
+  return blob ? detailsByFile.get(blob) : undefined;
 }
 
 function runInspection(
@@ -350,17 +351,21 @@ function runInspection(
         delivered = data.access;
         signal.removeEventListener("abort", abort);
         resolve(data.access);
-        if (!data.access.signed) finish(reusable());
+        if (!data.background) finish(reusable());
         else if (file.size > WORKER_REUSE_MAX_BYTES) {
           holdsSlot = false;
           activeInspections--;
           drainInspections();
         }
-      } else if ("signatures" in data) {
+      } else if ("details" in data) {
         if (!lifetime.aborted) {
-          signaturesByFile.set(file, data.signatures);
+          detailsByFile.set(file, {
+            ...detailsByFile.get(file),
+            ...data.details,
+          });
           publish();
         }
+      } else if ("done" in data) {
         finish(reusable());
       } else fail(Object.assign(new Error(data.error), { code: data.code }));
     };

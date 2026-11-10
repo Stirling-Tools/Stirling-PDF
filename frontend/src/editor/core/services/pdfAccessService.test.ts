@@ -7,7 +7,7 @@ import {
   rememberPdfAccess,
   type PdfAccess,
   ensureLocalPdfAccess,
-  getPdfSignatures,
+  getPdfDetails,
   inspectLocalPdfAccess,
   setPdfAccessPolicy,
   subscribePdfAccess,
@@ -24,8 +24,9 @@ const workers = vi.hoisted(
     [] as {
       onmessage?: (event: {
         data:
-          | { access: PdfAccess }
-          | { signatures: unknown[] }
+          | { access: PdfAccess; background?: boolean }
+          | { details: { signatures?: unknown[] } }
+          | { done: true }
           | { error: string; code: number };
       }) => void;
       onerror?: () => void;
@@ -343,11 +344,15 @@ describe("warm workers and background signature details", () => {
     await vi.waitFor(() =>
       expect(workers[0].postMessage).toHaveBeenCalledOnce(),
     );
-    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
     await expect(result).resolves.toMatchObject({ signed: true });
-    expect(getPdfSignatures(file)).toBeUndefined();
-    workers[0].onmessage?.({ data: { signatures: details } });
-    expect(getPdfSignatures(file)).toEqual(details);
+    expect(getPdfDetails(file)?.signatures).toBeUndefined();
+    workers[0].onmessage?.({ data: { details: { signatures: details } } });
+    expect(getPdfDetails(file)?.signatures).toEqual(details);
+    expect(workers[0].postMessage).toHaveBeenCalledOnce();
+    workers[0].onmessage?.({ data: { done: true } });
     expect(workers[0].terminate).not.toHaveBeenCalled();
     const next = inspectLocalPdfAccess(new File(["PDF"], "next.pdf"));
     await vi.waitFor(() =>
@@ -362,24 +367,30 @@ describe("warm workers and background signature details", () => {
     const file = createStirlingFile(new File(["PDF"], "signed.pdf"));
     bindPdfAccess(file, file.fileId);
     const result = ensureLocalPdfAccess(file);
-    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
     await result;
     forgetPdfAccess([file.fileId]);
     expect(workers[0].terminate).toHaveBeenCalledOnce();
-    workers[0].onmessage?.({ data: { signatures: details } });
-    expect(getPdfSignatures(file)).toBeUndefined();
+    workers[0].onmessage?.({ data: { details: { signatures: details } } });
+    workers[0].onmessage?.({ data: { done: true } });
+    expect(getPdfDetails(file)?.signatures).toBeUndefined();
   });
 
   it("retires idle workers and clears details on logout", async () => {
     vi.useFakeTimers();
     const file = new File(["PDF"], "signed.pdf");
     const result = ensureLocalPdfAccess(file);
-    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
     await result;
-    workers[0].onmessage?.({ data: { signatures: details } });
+    workers[0].onmessage?.({ data: { details: { signatures: details } } });
+    workers[0].onmessage?.({ data: { done: true } });
     clearPdfAccess();
     expect(workers[0].terminate).toHaveBeenCalledOnce();
-    expect(getPdfSignatures(file)).toBeUndefined();
+    expect(getPdfDetails(file)?.signatures).toBeUndefined();
     const again = inspectLocalPdfAccess(new File(["PDF"], "c.pdf"));
     workers[1].onmessage?.({ data: { access: plain } });
     await again;
@@ -394,14 +405,17 @@ describe("warm workers and background signature details", () => {
     const second = inspectLocalPdfAccess(new File(["PDF"], "b.pdf"));
     const third = inspectLocalPdfAccess(new File(["PDF"], "c.pdf"));
     expect(workers).toHaveLength(2);
-    workers[0].onmessage?.({ data: { access: { ...plain, signed: true } } });
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
     await signed;
     expect(workers).toHaveLength(3);
     expect(workers[0].terminate).not.toHaveBeenCalled();
     workers[1].onmessage?.({ data: { access: plain } });
     workers[2].onmessage?.({ data: { access: plain } });
     await Promise.all([second, third]);
-    workers[0].onmessage?.({ data: { signatures: details } });
-    expect(getPdfSignatures(new File(["PDF"], "x.pdf"))).toBeUndefined();
+    workers[0].onmessage?.({ data: { details: { signatures: details } } });
+    workers[0].onmessage?.({ data: { done: true } });
+    expect(getPdfDetails(new File(["PDF"], "x.pdf"))).toBeUndefined();
   });
 });

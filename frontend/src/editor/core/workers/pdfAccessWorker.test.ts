@@ -60,6 +60,7 @@ it("instantiates the shared module without fetching WASM again", async () => {
   expect(fetch).not.toHaveBeenCalled();
   expect(scope.postMessage).toHaveBeenCalledWith({
     access: { encrypted: false },
+    background: false,
   });
   expect(ready.pdfium.wasmExports.free).toHaveBeenCalledWith(1);
 });
@@ -93,20 +94,36 @@ it("falls back to the WASM asset when compilation is unavailable", async () => {
   expect(init).toHaveBeenCalledExactlyOnceWith({ wasmBinary: bytes });
   expect(scope.postMessage).toHaveBeenCalledWith({
     access: { encrypted: false },
+    background: false,
   });
 });
 
-it("sends signature details after the blocking answer for a signed file", async () => {
+it("runs the signature check in the background after the blocking answer for a signed file", async () => {
   init.mockResolvedValue(ready);
   readAccess.mockReturnValueOnce({ encrypted: false, signed: true } as never);
   await scope.onmessage!({ data: request });
   expect(
     scope.postMessage.mock.calls.map(([message]) => Object.keys(message)),
-  ).toEqual([["access"], ["signatures"]]);
+  ).toEqual([["access", "background"], ["details"], ["done"]]);
+  expect(scope.postMessage.mock.calls[1][0]).toEqual({
+    details: { signatures: [{ signerName: "Test Signer" }] },
+  });
   expect(readSignatures).toHaveBeenCalledWith(ready, 1, {
     pointer: 1,
     length: 3,
   });
+});
+
+it("still finishes when a background check fails", async () => {
+  init.mockResolvedValue(ready);
+  readAccess.mockReturnValueOnce({ encrypted: false, signed: true } as never);
+  readSignatures.mockRejectedValueOnce(new Error("Malformed signature"));
+  await scope.onmessage!({ data: request });
+  expect(scope.postMessage.mock.calls.map(([message]) => message)).toEqual([
+    { access: { encrypted: false, signed: true }, background: true },
+    { done: true },
+  ]);
+  expect(ready.pdfium.wasmExports.free).toHaveBeenCalledWith(1);
 });
 
 it("initialises PDFium once for consecutive files and wipes each file before freeing it", async () => {
