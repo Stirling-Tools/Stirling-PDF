@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
 import { Banner, Button, FormField, Input, Modal } from "@editor/ui";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export const LINK_KEYS_PATH = "/api/v1/account-link/keys";
 
@@ -136,7 +137,7 @@ export function CreateLinkKeyModal({
             ref={keyField}
             readOnly
             value={created.key}
-            className="account-connection__key"
+            className={`account-connection__key ${privateContentClassName}`}
             onFocus={(event) => event.currentTarget.select()}
           />
         </FormField>

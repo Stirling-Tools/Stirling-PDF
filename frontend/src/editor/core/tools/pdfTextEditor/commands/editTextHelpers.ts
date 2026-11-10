@@ -9,19 +9,19 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
   emitCharcodeEvent,
-  findFontForChar,
-  fontIsReusable,
   setCharcodesOn,
-  styleClassFromName,
   tryResolveCharcodes,
 } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { applyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
-  applyTagMarks,
-  type TagMark,
-} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+  taggedSpans,
+  uniformTags,
+  type TaggedSpan,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
 import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
@@ -48,14 +48,14 @@ export function removeAndDestroyObject(
   }
 }
 
-// Pointers freshly created by the per-char BACKEND emit branch in
-// `emitTextLine`.
+// Pointers the emit path produced from an already-validated charcode→glyph
+// mapping; `isVerifiedPerCharPtr` lets callers skip re-measuring them.
 const perCharBranchPtrs = new Set<number>();
 
 // (fontPtr:char) pairs a read-back has PROVEN render faithfully via SetText.
 const readBackValidated = new Set<string>();
 
-/** Caller check: was this ptr produced by the per-char emit branch? */
+/** Caller check: is this a pointer the emit path already validated? */
 export function isVerifiedPerCharPtr(ptr: number): boolean {
   return perCharBranchPtrs.has(ptr);
 }
@@ -149,9 +149,8 @@ export function charcodesResolveFully(
       ok = false;
     }
     // Only memoise a POSITIVE result. A miss here can simply mean the
-    // charcode cache was cold or the backend was briefly unreachable, and
-    // caching that as "this font cannot encode this character" made the
-    // failure permanent for the session.
+    // charcode cache was cold, and caching that as "this font cannot encode
+    // this character" made the failure permanent for the session.
     if (ok) perFont.set(ch, true);
     else return false;
   }
@@ -269,9 +268,10 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
-  // Required so every emit decides: a re-emit of existing text passes the
-  // run's tags, new content passes none.
-  tagMarks: readonly TagMark[];
+  // Required so every emit decides: a re-emit of existing text passes that
+  // text's tags, new content passes none. Each stretch with tags of its own
+  // is drawn as objects of its own.
+  tags: TextTags;
   // Extra advance per glyph in PDF points - the source run's rendered
   // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
@@ -668,6 +668,9 @@ export function rotateObjectAbout(
 }
 
 export function emitTextLine(opts: CreatedTextOptions): number[] {
+  const spans = taggedSpans(opts.tags, opts.text.length);
+  if (spans.length > 1) return emitTaggedSpans(opts, spans);
+  const tagMarks = spans[0]?.tags ?? [];
   const m = opts.doc.module;
   const size = Math.max(4, opts.fontSize);
   const family = opts.fallbackFamily ?? "Helvetica";
@@ -685,7 +688,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
-    applyTagMarks(m, opts.doc.docPtr, ptrs, opts.tagMarks);
+    applyTagMarks(m, opts.doc.docPtr, ptrs, tagMarks);
     return ptrs;
   };
 
@@ -772,9 +775,6 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // renders the chars; falls back to SetText internally.
     const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
-    // A whole-word SetCharcodes write via the BACKEND resolver used known-good
-    // (font, charcode) pairs PDFBox validated, so the glyph is real.
-    if (strategyUsed === "backend") return ptr;
     const right = measureObjRightEdgePt(m, ptr);
     const visible = text.replace(/\s+/g, "").length;
     // Narrowest base-14 glyph ("i") is ~0.22em; anything well under ~0.15em
@@ -957,157 +957,6 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return null;
   }
 
-  // Per-char emit branch for the BACKEND strategy.
-  const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
-  const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
-  if (
-    isBackendStrategy &&
-    !hasAnyWhitespaceForBranch &&
-    opts.text.length > 0 &&
-    m2.FPDFPageObj_CreateTextObj
-  ) {
-    const ctx = {
-      module: m,
-      pagePtr: opts.page.pagePtr,
-      docPtr: opts.doc.docPtr,
-    };
-    // Probe per char first.
-    const perChar: Array<{ ch: string; font: number; charcodes: number[] }> =
-      [];
-    let allOk = true;
-    for (const ch of opts.text) {
-      // Prefer the run's OWN font when it renders this char: it is the
-      // authoritative font for the run's text.
-      let charFont = 0;
-      let resolved = null;
-      if (opts.originalFontPtr) {
-        const own = tryResolveCharcodes(opts.originalFontPtr, ch, ctx);
-        if (
-          own?.result &&
-          own.result.charcodes.length === 1 &&
-          own.result.missing.length === 0
-        ) {
-          charFont = opts.originalFontPtr;
-          resolved = own;
-        }
-      }
-      if (!charFont) {
-        // Constrained to the run's own weight/slant: an unconstrained borrow
-        // takes the first matching glyph in content order, which is usually a
-        // bold heading, and the edited body text comes back bold.
-        charFont =
-          findFontForChar(
-            ch,
-            ctx,
-            opts.originalFontPtr,
-            styleClassFromName(family),
-          ) || 0;
-        if (!charFont) {
-          allOk = false;
-          break;
-        }
-        resolved = tryResolveCharcodes(charFont, ch, ctx);
-      }
-      if (
-        !resolved?.result ||
-        resolved.result.charcodes.length !== 1 ||
-        resolved.result.missing.length > 0
-      ) {
-        allOk = false;
-        break;
-      }
-      // A Type 3 face has no font program, so PDFium can report neither a
-      // glyph advance nor a usable ink box for it: the only trustworthy
-      // advance is one measured from the glyph as the page already draws it.
-      // Without that, each following glyph lands on top of this one - the
-      // reported scramble. Substitute a real face instead.
-      if (
-        !fontIsReusable(m, charFont) &&
-        onPageAdvanceEm(m, opts.page.pagePtr, charFont, ch) == null
-      ) {
-        allOk = false;
-        break;
-      }
-      perChar.push({
-        ch,
-        font: charFont,
-        charcodes: resolved.result.charcodes,
-      });
-    }
-    if (allOk && perChar.length === [...opts.text].length) {
-      // Per-char emit: one text object per char, each with its OWN font.
-      const ptrs: number[] = [];
-      let cursor = opts.x;
-      for (const pc of perChar) {
-        const ptr = m2.FPDFPageObj_CreateTextObj(
-          opts.doc.docPtr,
-          pc.font,
-          size,
-        );
-        if (!ptr) {
-          // CreateTextObj failed mid-word.
-          for (const p of ptrs) {
-            perCharBranchPtrs.delete(p);
-            removeAndDestroyObject(m, opts.page.pagePtr, p);
-          }
-          ptrs.length = 0;
-          break;
-        }
-        const ok = setCharcodesOn(m, ptr, pc.charcodes);
-        if (!ok) {
-          // Couldn't set charcodes - rare but possible.
-          removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-          for (const p of ptrs) {
-            perCharBranchPtrs.delete(p);
-            removeAndDestroyObject(m, opts.page.pagePtr, p);
-          }
-          ptrs.length = 0;
-          break;
-        }
-        applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
-        // Advance by the char's REAL on-page advance width, read from the same
-        // font+char already on the page.
-        const advEm = onPageAdvanceEm(m, opts.page.pagePtr, pc.font, pc.ch);
-        if (advEm != null) {
-          cursor += advEm * size;
-        } else {
-          // Unmeasurable: step by the font metric rather than the object's ink
-          // box. The ink box collapses on faces PDFium can't measure (stacking
-          // the glyphs) and overshoots on wide ones (visible gaps mid-word);
-          // a metric advance is even and always moves forward.
-          cursor += measureAdvancePt(pc.ch, family, size);
-        }
-        // Reproduce the source run's letter-spacing: the glyph advance above is
-        // the font's natural width.
-        cursor += opts.charSpacingPt ?? 0;
-        emitCharcodeEvent({
-          timestamp: 0,
-          strategy: "backend",
-          text: pc.ch,
-          fontPtr: pc.font,
-          resolved: [...pc.charcodes],
-          missing: [],
-          note: `per-char backend emit: font=${pc.font} charcode=${pc.charcodes[0]}`,
-          outcome: "charcodes-ok",
-        });
-        ptrs.push(ptr);
-        opts.outTexts?.push(pc.ch);
-        // Mark this ptr as verified - it was created via the per-char branch
-        // with a known-good pair from the backend resolver cache.
-        perCharBranchPtrs.add(ptr);
-      }
-      if (ptrs.length === [...opts.text].length) return withRotation(ptrs);
-      // Any other incomplete outcome: destroy the partial emit before the
-      // fall-through path re-renders the word.
-      for (const p of ptrs) {
-        perCharBranchPtrs.delete(p);
-        removeAndDestroyObject(m, opts.page.pagePtr, p);
-      }
-      if (opts.outTexts) opts.outTexts.length = 0;
-    }
-    // fall through to the normal path if per-char attempt didn't work
-  }
-
   // Letter-spaced runs: a single text object cannot carry Tc.
   const hasAnyWhitespace = /\s/.test(opts.text);
   const spacingPt = opts.charSpacingPt ?? 0;
@@ -1163,6 +1012,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         text: chunk.text,
         x: cursor,
         rotation: undefined,
+        tags: uniformTags(tagMarks),
         outTexts: opts.outTexts ? chunkTexts : undefined,
       });
       if (wordPtrs.length === 0) continue;
@@ -1185,6 +1035,56 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
+}
+
+/**
+ * Draw each span of `opts.text` with its own tags, one after another along
+ * the line.
+ */
+function emitTaggedSpans(
+  opts: CreatedTextOptions,
+  spans: readonly TaggedSpan[],
+): number[] {
+  const m = opts.doc.module;
+  const size = Math.max(4, opts.fontSize);
+  const family = opts.fallbackFamily ?? "Helvetica";
+  const spacing = opts.charSpacingPt ?? 0;
+  const ptrs: number[] = [];
+  let cursor = opts.x;
+  for (const { start, end, tags } of spans) {
+    const text = opts.text.slice(start, end);
+    const texts: string[] = [];
+    const own = emitTextLine({
+      ...opts,
+      text,
+      x: cursor,
+      rotation: undefined,
+      tags: uniformTags(tags),
+      outTexts: opts.outTexts ? texts : undefined,
+    });
+    opts.outTexts?.push(...texts);
+    ptrs.push(...own);
+    // Advanced as the per-word loop in emitTextLine advances, so splitting a
+    // line by tags does not move its words.
+    const ink = text.trimEnd();
+    const gap = text.slice(ink.length);
+    const right = Math.max(
+      cursor,
+      ...own.map((ptr) => measureObjRightEdgePt(m, ptr)),
+    );
+    const metric = measureAdvancePt(ink, family, size);
+    cursor += right - cursor >= metric * 0.35 ? right - cursor : metric;
+    cursor += gap
+      ? measureAdvancePt(gap, family, size) + spacing * (gap.length + 1)
+      : spacing;
+  }
+  const rot = opts.rotation;
+  if (rot) {
+    for (const ptr of ptrs) {
+      rotateObjectAbout(m, ptr, opts.x, opts.y, rot.cos, rot.sin);
+    }
+  }
+  return ptrs;
 }
 
 interface TextObjReadModule {
@@ -1457,7 +1357,7 @@ export function emitRunLines(opts: {
   doc: EditorDocument;
   page: Page;
   run: TextRun;
-  lines: string[];
+  lines: ReadonlyArray<{ text: string; tags: TextTags }>;
   origins: LineOrigin[];
   originalFontPtr: number;
   fallbackFamily: string;
@@ -1466,7 +1366,7 @@ export function emitRunLines(opts: {
   const rot = rotationFromMatrix(opts.run.matrix);
   const out: EmittedLine[] = [];
   for (let i = 0; i < opts.lines.length; i++) {
-    const text = opts.lines[i];
+    const { text, tags } = opts.lines[i];
     const origin = opts.origins[i];
     if (!origin) continue;
     if (text.length === 0) {
@@ -1490,7 +1390,7 @@ export function emitRunLines(opts: {
       fallbackFamily: opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
-      tagMarks: opts.run.tagMarks,
+      tags,
     });
     out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }

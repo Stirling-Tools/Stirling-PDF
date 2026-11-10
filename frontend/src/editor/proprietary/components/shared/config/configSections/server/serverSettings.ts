@@ -23,6 +23,7 @@ export interface GeneralSettingsData {
     defaultLocale?: string;
     showUpdate?: boolean;
     showUpdateOnlyAdmin?: boolean;
+    enableFeedback?: boolean;
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
     frontendUrl?: string;
@@ -87,11 +88,6 @@ export interface StorageSharingSettingsData {
 /** Folder roots live in the `policies` section, not a folderAccess one. */
 export interface FolderAccessSettingsData {
   allowedFolderRoots?: string[];
-}
-
-export interface ImpliedFolderRoot {
-  path: string;
-  reason: string;
 }
 
 export interface McpAuthData {

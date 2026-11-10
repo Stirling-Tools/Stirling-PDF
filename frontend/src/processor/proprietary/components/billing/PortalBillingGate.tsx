@@ -1,13 +1,12 @@
 import { useServerPlan } from "@editor/portal/hooks/useServerPlan";
 import { ManageBillingButton } from "@editor/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { ServerLicenseSection } from "@editor/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
 } from "@editor/portal/contexts/LinkContext";
-import { useUI } from "@editor/portal/contexts/UIContext";
 import { useConnectGate } from "@editor/portal/hooks/useConnectGate";
 import { useAccountLinkOwner } from "@editor/portal/hooks/useAccountLinkOwner";
 import { AccountConnectionNotice } from "@editor/portal/components/account-link/AccountConnectionNotice";
@@ -17,6 +16,8 @@ import { CloudManagedPlanView } from "@editor/portal/components/billing/CloudMan
 import { useKeyLinked } from "@editor/portal/hooks/useKeyLinked";
 import { Usage } from "@editor/portal/views/Usage";
 import type { Wallet } from "@editor/portal/api/billing";
+import { requestsTeamCheckout } from "@editor/routes/teamCheckoutLink";
+import { legacyProcurementTarget } from "@processor/components/procurement/enterprisePath";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
@@ -27,7 +28,6 @@ import type { Wallet } from "@editor/portal/api/billing";
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();
   const isOwner = useAccountLinkOwner();
   const {
@@ -41,10 +41,7 @@ export function PortalBillingGate() {
   const keyLinked = useKeyLinked();
   const [searchParams] = useSearchParams();
   const prompted = useRef(false);
-  const accountLinkRequested =
-    trialSetupRequested ||
-    searchParams.get("procurement") === "start" ||
-    searchParams.get("upgrade") === "team";
+  const accountLinkRequested = requestsTeamCheckout(searchParams);
 
   useEffect(() => {
     if (!accountLinkRequested || link?.isLinked) prompted.current = false;
@@ -59,6 +56,8 @@ export function PortalBillingGate() {
     [applyLinkFacts],
   );
 
+  const procurementTarget = legacyProcurementTarget(searchParams.toString());
+  if (procurementTarget) return <Navigate to={procurementTarget} replace />;
   // Only the organization owner manages the server's account and billing.
   // The nav hides these sections too; this guards a directly entered URL.
   if (!isOwner) return null;

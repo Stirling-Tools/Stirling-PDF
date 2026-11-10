@@ -412,20 +412,17 @@ describe("PortalBillingGate — self-hosted", () => {
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
-  it.each(["procurement=start", "upgrade=team"])(
-    "prompts once for %s and preserves it when linking completes",
-    (intent) => {
-      gate.gated = true;
-      const entry = `/settings/billing?${intent}`;
-      const view = render(<GateTree entry={entry} />);
-      expect(connect).toHaveBeenCalledTimes(1);
-      view.rerender(<GateTree entry={entry} />);
-      expect(connect).toHaveBeenCalledTimes(1);
-      link.is = true;
-      gate.gated = false;
-      view.rerender(<GateTree entry={entry} />);
-      expect(screen.getByTestId("usage")).toBeInTheDocument();
-      expect(screen.getByTestId("location")).toHaveTextContent(entry);
-    },
-  );
+  it("prompts once for upgrade=team and preserves it when linking completes", () => {
+    gate.gated = true;
+    const entry = "/settings/billing?upgrade=team";
+    const view = render(<GateTree entry={entry} />);
+    expect(connect).toHaveBeenCalledTimes(1);
+    view.rerender(<GateTree entry={entry} />);
+    expect(connect).toHaveBeenCalledTimes(1);
+    link.is = true;
+    gate.gated = false;
+    view.rerender(<GateTree entry={entry} />);
+    expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.getByTestId("location")).toHaveTextContent(entry);
+  });
 });

@@ -7,6 +7,7 @@ import { KvRow } from "@editor/billing/KvRow";
 import { Banner, Button, Spinner } from "@editor/ui";
 import { Modal } from "@editor/ui/Modal";
 import { useAccountLinkOptional } from "@editor/portal/contexts/AccountLinkContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The caller must restrict this server-local license surface to administrators. */
 export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
@@ -58,7 +59,9 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
         value={
           licenseKey ? (
             certificate ? (
-              <span className="billing-license__value">
+              <span
+                className={`billing-license__value ${privateContentClassName}`}
+              >
                 {certificate.split(/[\\/]/).pop()}
               </span>
             ) : (
@@ -108,7 +111,9 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
                   )
                 : label}
             </p>
-            <code className="billing-license__value">
+            <code
+              className={`billing-license__value ${privateContentClassName}`}
+            >
               {certificate ?? licenseKey}
             </code>
           </div>

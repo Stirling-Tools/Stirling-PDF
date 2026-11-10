@@ -163,6 +163,9 @@ export default defineConfig({
           command: process.env.CI
             ? `npx vite preview --port ${DEV_PORT} --strictPort`
             : `npx vite --mode proprietary --port ${DEV_PORT} --strictPort`,
+          env: {
+            VITE_ACCESSIBILITY_EDITING: "true",
+          },
           url:
             process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
           reuseExistingServer: !process.env.CI,

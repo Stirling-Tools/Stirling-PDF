@@ -32,7 +32,7 @@ public class ConfigInitializer {
 
         long lineCount = settingsFileExists ? Files.readAllLines(destPath).size() : 0;
 
-        log.info("Current settings file line count: {}", lineCount);
+        log.debug("Current settings file line count: {}", lineCount);
 
         if (!settingsFileExists || lineCount < MIN_SETTINGS_FILE_LINES) {
             if (settingsFileExists) {

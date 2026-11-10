@@ -15,13 +15,18 @@ import {
   Paper,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import {
+  AddStampParameters,
+  DEFAULT_QR_SIZE,
+  isQrContentWithinLimit,
+} from "@editor/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
 import { alphabetOptions } from "@editor/constants/addWatermarkConstants";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const STAMP_TEMPLATES = [
   {
@@ -182,6 +187,7 @@ const StampTextPreview = ({
       </Text>
       <Text
         size="sm"
+        className={privateContentClassName}
         style={{
           whiteSpace: "pre-wrap",
           fontFamily: "monospace",
@@ -235,10 +241,16 @@ const StampSetupSettings = ({
         </Text>
         <ButtonSelector
           value={parameters.stampType}
-          onChange={(v: "text" | "image") => onParameterChange("stampType", v)}
+          onChange={(v: "text" | "image" | "qr") => {
+            onParameterChange("stampType", v);
+            if (v === "qr" && parameters.fontSize < DEFAULT_QR_SIZE) {
+              onParameterChange("fontSize", DEFAULT_QR_SIZE);
+            }
+          }}
           options={[
             { value: "text", label: t("watermark.type.1", "Text") },
             { value: "image", label: t("watermark.type.2", "Image") },
+            { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
           ]}
           disabled={disabled}
           textClassName={styles.modeToggleButtonText}
@@ -287,6 +299,7 @@ const StampSetupSettings = ({
               "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
             )}
             value={parameters.stampText}
+            className={privateContentClassName}
             onChange={(e) =>
               onParameterChange("stampText", e.currentTarget.value)
             }
@@ -663,6 +676,32 @@ const StampSetupSettings = ({
         </>
       )}
 
+      {parameters.stampType === "qr" && (
+        <Textarea
+          label={t("AddStampRequest.qrContent", "QR Code Content")}
+          description={t(
+            "AddStampRequest.qrContentDescription",
+            "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+          )}
+          value={parameters.stampText}
+          className={privateContentClassName}
+          onChange={(e) =>
+            onParameterChange("stampText", e.currentTarget.value)
+          }
+          error={
+            isQrContentWithinLimit(parameters.stampText)
+              ? undefined
+              : t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )
+          }
+          autosize
+          minRows={2}
+          disabled={disabled}
+        />
+      )}
+
       {parameters.stampType === "image" && (
         <Stack gap="xs">
           <input
@@ -685,7 +724,7 @@ const StampSetupSettings = ({
             {t("chooseFile", "Choose File")}
           </Button>
           {parameters.stampImage && stampImageWithUrl && (
-            <Stack gap="xs">
+            <Stack gap="xs" className={privateContentClassName}>
               <img
                 src={stampImageWithUrl.url}
                 alt={t(

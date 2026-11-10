@@ -5,7 +5,7 @@ import {
 } from "@editor/hooks/tools/shared/useBaseParameters";
 
 export interface AddStampParameters extends BaseParameters {
-  stampType?: "text" | "image";
+  stampType?: "text" | "image" | "qr";
   stampText: string;
   stampImage?: File;
   alphabet: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
@@ -20,6 +20,20 @@ export interface AddStampParameters extends BaseParameters {
   pageNumbers: string;
   _activePill: "fontSize" | "rotation" | "opacity";
 }
+
+/**
+ * Must stay in sync with StampController.MAX_QR_CONTENT_BYTES, and below the 2331 bytes a
+ * level-M QR code holds: the preview's QRCodeSVG throws during render past that.
+ */
+export const MAX_QR_CONTENT_BYTES = 1000;
+
+/** Size in points to switch to for QR stamps: text-sized codes are too dense to scan. */
+export const DEFAULT_QR_SIZE = 120;
+
+const utf8Encoder = new TextEncoder();
+
+export const isQrContentWithinLimit = (content: string): boolean =>
+  utf8Encoder.encode(content).length <= MAX_QR_CONTENT_BYTES;
 
 export const defaultParameters: AddStampParameters = {
   stampType: "text",
@@ -45,6 +59,12 @@ export function validateAddStampParameters(
   if (!params.stampType) return false;
   if (params.stampType === "text") {
     return params.stampText.trim().length > 0;
+  }
+  if (params.stampType === "qr") {
+    return (
+      params.stampText.trim().length > 0 &&
+      isQrContentWithinLimit(params.stampText)
+    );
   }
   return params.stampImage !== undefined;
 }

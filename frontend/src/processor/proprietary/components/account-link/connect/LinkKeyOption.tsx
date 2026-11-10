@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, FormField, Input } from "@editor/ui";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import {
   isLinkKey,
   linkKeyErrorMessage,
@@ -66,6 +67,7 @@ export function LinkKeyOption({ onLinked }: { onLinked: () => void }) {
       >
         <Input
           type="password"
+          className={privateContentClassName}
           autoComplete="off"
           value={key}
           onChange={(event) => {
