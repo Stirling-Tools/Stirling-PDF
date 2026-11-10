@@ -54,7 +54,7 @@ export const getReorganizePagesModeData = (t: TFunction) => [
     label: t("pdfOrganiser.mode.10", "Odd-Even Merge"),
     description: t(
       "pdfOrganiser.mode.desc.ODD_EVEN_MERGE",
-      "Interleave the two halves of the document back together (undoes Odd-Even Split).",
+      "Interleave the pages of the first and second half of the document",
     ),
   },
   {
