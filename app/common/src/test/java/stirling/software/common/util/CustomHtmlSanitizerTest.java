@@ -207,6 +207,31 @@ class CustomHtmlSanitizerTest {
     }
 
     @Test
+    void testSanitizeKeepsRasterDataUrlImages() {
+        String html = "<img src=\"data:image/png;base64,iVBORw0KGgo=\" alt=\"logo\">";
+
+        String sanitizedHtml = customHtmlSanitizer.sanitize(html);
+
+        assertTrue(sanitizedHtml.contains("src=\"data:image/png;base64,iVBORw0KGgo&#61;\""));
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonRasterDataUrls")
+    void testSanitizeDropsNonRasterDataUrlImages(String src) {
+        String sanitizedHtml = customHtmlSanitizer.sanitize("<img src=\"" + src + "\" alt=\"x\">");
+
+        assertFalse(sanitizedHtml.contains("src="), sanitizedHtml);
+    }
+
+    private static Stream<String> nonRasterDataUrls() {
+        return Stream.of(
+                "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+                "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+                "data:text/html;base64,PGI+eDwvYj4=",
+                "data:,plain");
+    }
+
+    @Test
     void testSanitizeRemovesJavaScriptInAttributes() {
         // Arrange
         String htmlWithJsEvent =

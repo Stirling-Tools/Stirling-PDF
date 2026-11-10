@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AddStampParameters } from "@editor/components/tools/addStamp/useAddStampParameters";
+import { QRCodeSVG } from "qrcode.react";
+import { Text } from "@mantine/core";
+import {
+  AddStampParameters,
+  isQrContentWithinLimit,
+} from "@editor/components/tools/addStamp/useAddStampParameters";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import {
@@ -11,6 +16,7 @@ import {
 } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 
@@ -392,7 +398,7 @@ export default function StampPreview({
         )}
         {parameters.stampType === "text" && (
           <div
-            className={`${styles.stampItem} ${styles.stampItemGridMode}`}
+            className={`${styles.stampItem} ${styles.stampItemGridMode} ${privateContentClassName}`}
             style={style.item}
             data-user-content-preview=""
           >
@@ -414,7 +420,7 @@ export default function StampPreview({
         )}
         {parameters.stampType === "image" && imageMeta && (
           <div
-            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
+            className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable} ${privateContentClassName}`}
             style={style.item}
             onPointerDown={(e) => handlePointerDown(e, "move")}
           >
@@ -426,6 +432,43 @@ export default function StampPreview({
             {itemHandles}
           </div>
         )}
+
+        {parameters.stampType === "qr" &&
+          isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable} ${privateContentClassName}`}
+              style={style.item}
+              onPointerDown={(e) => handlePointerDown(e, "move")}
+              data-user-content-preview=""
+            >
+              <QRCodeSVG
+                value={parameters.stampText}
+                level="M"
+                marginSize={4}
+                className={styles.stampImage}
+                title={t("AddStampRequest.qrCode", "QR Code")}
+              />
+              {itemHandles}
+            </div>
+          )}
+
+        {/* Over-limit QR content renders no code, so say why instead of
+            leaving an empty preview; the setup-step error is collapsed away */}
+        {parameters.stampType === "qr" &&
+          parameters.stampText.trim().length > 0 &&
+          !isQrContentWithinLimit(parameters.stampText) && (
+            <div
+              className={styles.qrOverLimitNotice}
+              data-qr-over-limit-notice=""
+            >
+              <Text c="var(--c-danger)" size="sm" ta="center">
+                {t(
+                  "AddStampRequest.qrContentTooLong",
+                  "Too long to fit in a QR code. Shorten the content.",
+                )}
+              </Text>
+            </div>
+          )}
 
         {/* Quick position overlay grid */}
         {showQuickGrid && (

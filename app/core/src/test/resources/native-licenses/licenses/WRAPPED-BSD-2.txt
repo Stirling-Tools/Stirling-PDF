@@ -1,0 +1,1 @@
+BSD 2-Clause fixture license text for Wrapped Copyright Library.

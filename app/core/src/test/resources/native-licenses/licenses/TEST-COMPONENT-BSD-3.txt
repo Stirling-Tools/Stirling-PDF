@@ -1,0 +1,4 @@
+BSD 3-Clause fixture license text for Test Component.
+
+Redistribution and use in source and binary forms are permitted
+provided that the above copyright notice is retained.

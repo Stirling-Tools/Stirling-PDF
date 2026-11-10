@@ -3,25 +3,30 @@ import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
-/** Uppercase section heading, optionally with a trailing control. */
+/** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
 export function SectionLabel({
   children,
+  info,
   right,
 }: {
   children: ReactNode;
+  info?: ReactNode;
   right?: ReactNode;
 }) {
   return (
     <Group justify="space-between" wrap="nowrap" gap={4} mb={8}>
-      <Text
-        size="xs"
-        fw={600}
-        c="dimmed"
-        tt="uppercase"
-        style={{ letterSpacing: "0.5px" }}
-      >
-        {children}
-      </Text>
+      <Group gap={6} wrap="nowrap">
+        <Text
+          size="xs"
+          fw={600}
+          c="dimmed"
+          tt="uppercase"
+          style={{ letterSpacing: "0.5px" }}
+        >
+          {children}
+        </Text>
+        {info}
+      </Group>
       {right}
     </Group>
   );
@@ -80,19 +85,34 @@ export function Field({
   );
 }
 
-/** The `?` that replaced the panel's permanent explanatory paragraphs. */
+/**
+ * The `?` that replaced the panel's permanent explanatory paragraphs, its
+ * hint shown on hover or keyboard focus and read out as its name.
+ */
 export function HintIcon({ label }: { label: string }) {
   return (
-    <Tooltip label={label} multiline w={220} withArrow position="left">
-      <Icon
-        name="circle-question-mark"
-        size="1em"
+    <Tooltip
+      label={label}
+      multiline
+      w={220}
+      withArrow
+      position="left"
+      events={{ hover: true, focus: true, touch: true }}
+    >
+      {/* Tooltip anchors to its child's ref and handlers, which Icon drops. */}
+      <span
+        role="img"
+        aria-label={label}
+        tabIndex={0}
         style={{
+          display: "inline-flex",
           cursor: "help",
           color: "var(--mantine-color-dimmed)",
           flexShrink: 0,
         }}
-      />
+      >
+        <Icon name="circle-question-mark" size="1em" />
+      </span>
     </Tooltip>
   );
 }

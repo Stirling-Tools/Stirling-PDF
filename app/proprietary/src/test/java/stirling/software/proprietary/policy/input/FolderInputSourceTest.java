@@ -313,6 +313,35 @@ class FolderInputSourceTest {
     }
 
     @Test
+    void storageDirectoryIsRejectedAndPrunedFromAnAncestorsRecursiveWalk() throws IOException {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
+        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
+        Path storage = Files.createDirectories(tempDir.resolve("storage"));
+        properties.getStorage().getLocal().setBasePath(storage.toString());
+        FolderInputSource guarded =
+                new FolderInputSource(
+                        readinessChecker,
+                        new FolderAccessGuard(
+                                properties,
+                                new RuntimePathConfig(properties),
+                                new StandardEnvironment(),
+                                new InProcessSourceStore()));
+        Path victimDir = Files.createDirectories(storage.resolve("4"));
+        Files.writeString(victimDir.resolve("secret.pdf"), "victim");
+        Files.writeString(tempDir.resolve("mine.pdf"), "mine");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> guarded.resolve(InputSpec.folder(victimDir.toString()), ctx));
+        InputSpec ancestor =
+                new InputSpec(
+                        "folder", Map.of("directory", tempDir.toString(), "recursive", "true"));
+        assertEquals(1, guarded.resolve(ancestor, ctx).size());
+        assertTrue(ctx.present.stream().noneMatch(identity -> identity.endsWith("secret.pdf")));
+    }
+
+    @Test
     void unreadyFilesAreReportedPresentButNotClaimed() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("mid-write.pdf");

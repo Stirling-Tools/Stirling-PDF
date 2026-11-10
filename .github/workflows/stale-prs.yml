@@ -18,7 +18,6 @@ on:
       - ".github/workflows/stale-prs.yml"
       - ".github/scripts/*.ts"
       - ".github/workflows/pr-turn-labels.yml"
-      - ".github/workflows/pr-review-events.yml"
       - ".github/scripts/package.json"
       - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"
@@ -43,7 +42,7 @@ jobs:
       pull-requests: read
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -91,7 +90,7 @@ jobs:
       pull-requests: write # close PRs
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 

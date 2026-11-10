@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,6 +28,8 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -109,6 +112,7 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private volatile Boolean h2Database;
     private final org.springframework.context.ApplicationEventPublisher events;
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
@@ -132,7 +136,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                 Path.of(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
 
         if (!Files.exists(sourceDir)) {
-            log.info("Source directory does not exist: {}", sourceDir);
+            log.debug("Source directory does not exist: {}", sourceDir);
             return;
         }
 
@@ -276,19 +280,6 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     @Override
     public void exportDatabase() {
-        List<FileInfo> filteredBackupList =
-                new ArrayList<>(
-                        this.getBackupList().stream()
-                                .filter(
-                                        backup ->
-                                                !backup.getFileName()
-                                                        .startsWith(BACKUP_PREFIX + "user_"))
-                                .toList());
-
-        if (filteredBackupList.size() > 5) {
-            deleteOldestBackup(filteredBackupList);
-        }
-
         LocalDateTime dateNow = LocalDateTime.now();
         DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         Path insertOutputFilePath =
@@ -296,43 +287,110 @@ public class DatabaseService implements DatabaseServiceInterface {
 
         if (isH2Database()) {
             String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
+            Path pendingBackup;
+            try {
+                pendingBackup = Files.createTempFile(BACKUP_DIR, ".backup-", SQL_SUFFIX);
+            } catch (IOException e) {
+                log.error("Could not create database export file", e);
+                backupNotificationService.notifyBackupsFailure(
+                        "Database backup export failed", "Could not create a backup file");
+                return;
+            }
 
-            try (Connection conn = dataSource.getConnection();
-                    PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, insertOutputFilePath.toString());
-                stmt.execute();
+            try {
+                Connection conn = null;
+                try {
+                    conn = DataSourceUtils.getConnection(dataSource);
+                    try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                        stmt.setString(1, pendingBackup.toString());
+                        stmt.execute();
+                    }
+                } catch (SQLException | CannotGetJdbcConnectionException e) {
+                    log.error("Error during database export: {}", e.getMessage(), e);
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup export failed",
+                            "Backup file: "
+                                    + insertOutputFilePath.getFileName()
+                                    + " Message: "
+                                    + e.getMessage());
+                    return;
+                } catch (CannotReadScriptException e) {
+                    log.error("Error during database export: File {} not found", pendingBackup);
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup export failed",
+                            "Error during database export: File "
+                                    + insertOutputFilePath.getFileName()
+                                    + " not found. Message: "
+                                    + e.getMessage());
+                    return;
+                } finally {
+                    DataSourceUtils.releaseConnection(conn, dataSource);
+                }
+
+                if (!verifyBackup(pendingBackup)) {
+                    backupNotificationService.notifyBackupsFailure(
+                            "Database backup verification failed",
+                            "Backup file: " + insertOutputFilePath.getFileName());
+                    return;
+                }
+
+                try {
+                    Files.move(
+                            pendingBackup,
+                            insertOutputFilePath,
+                            StandardCopyOption.ATOMIC_MOVE,
+                            StandardCopyOption.REPLACE_EXISTING);
+                } catch (AtomicMoveNotSupportedException e) {
+                    Files.move(
+                            pendingBackup,
+                            insertOutputFilePath,
+                            StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                List<FileInfo> filteredBackupList =
+                        new ArrayList<>(
+                                this.getBackupList().stream()
+                                        .filter(
+                                                backup ->
+                                                        !backup.getFileName()
+                                                                        .startsWith(
+                                                                                BACKUP_PREFIX
+                                                                                        + "user_")
+                                                                && !backup.getFilePathAsPath()
+                                                                        .equals(
+                                                                                insertOutputFilePath))
+                                        .toList());
+                if (filteredBackupList.size() > 5) {
+                    deleteOldestBackup(filteredBackupList);
+                }
+
                 backupNotificationService.notifyBackupsSuccess(
                         "Database backup export completed",
                         "Backup file: " + insertOutputFilePath.getFileName());
-            } catch (SQLException e) {
-                log.error("Error during database export: {}", e.getMessage(), e);
+                log.debug("Database export completed: {}", insertOutputFilePath);
+            } catch (IOException e) {
+                log.error("Could not publish database backup {}", insertOutputFilePath, e);
                 backupNotificationService.notifyBackupsFailure(
                         "Database backup export failed",
-                        "Backup file: "
-                                + insertOutputFilePath.getFileName()
-                                + " Message: "
-                                + e.getMessage());
-            } catch (CannotReadScriptException e) {
-                log.error("Error during database export: File {} not found", insertOutputFilePath);
-                backupNotificationService.notifyBackupsFailure(
-                        "Database backup export failed",
-                        "Error during database export: File "
-                                + insertOutputFilePath.getFileName()
-                                + " not found. Message: "
-                                + e.getMessage());
+                        "Could not publish backup file: " + insertOutputFilePath.getFileName());
+            } finally {
+                try {
+                    Files.deleteIfExists(pendingBackup);
+                } catch (IOException e) {
+                    log.warn("Could not remove incomplete database backup {}", pendingBackup, e);
+                }
             }
-
-            log.info("Database export completed: {}", insertOutputFilePath);
-            verifyBackup(insertOutputFilePath);
         }
     }
 
     private boolean verifyBackup(Path backupPath) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] content = Files.readAllBytes(backupPath);
-            String checksum = bytesToHex(digest.digest(content));
-            log.info("Checksum for {}: {}", backupPath.getFileName(), checksum);
+            if (log.isDebugEnabled()) {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] content = Files.readAllBytes(backupPath);
+                String checksum = bytesToHex(digest.digest(content));
+                log.debug("Checksum for {}: {}", backupPath.getFileName(), checksum);
+            }
 
             String verifyDbUrl = "jdbc:h2:mem:backupVerify_" + UUID.randomUUID();
             // Use a fresh in-memory database per verification to avoid leftover objects between
@@ -439,15 +497,25 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     /** Returns {@code true} when the active runtime DataSource is genuinely H2. */
     private boolean isH2Database() {
-        try (Connection conn = dataSource.getConnection()) {
+        Boolean known = h2Database;
+        if (known != null) {
+            return known;
+        }
+        Connection conn = null;
+        try {
+            conn = DataSourceUtils.getConnection(dataSource);
             String product = conn.getMetaData().getDatabaseProductName();
-            return product != null && product.toLowerCase().contains("h2");
-        } catch (SQLException e) {
+            boolean h2 = product != null && product.toLowerCase().contains("h2");
+            h2Database = h2;
+            return h2;
+        } catch (SQLException | CannotGetJdbcConnectionException e) {
             log.warn(
                     "Could not read DatabaseMetaData to determine driver; assuming non-H2 to avoid"
                             + " issuing H2-only SQL against another database: {}",
                     e.getMessage());
             return false;
+        } finally {
+            DataSourceUtils.releaseConnection(conn, dataSource);
         }
     }
 

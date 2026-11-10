@@ -71,6 +71,8 @@ export interface AnnotationStyleStateReturn {
   getActiveColor: (target: string | null) => string;
 }
 
+const ARROW_LINE_WIDTH = 3;
+
 export const useAnnotationStyleState = (
   cssToPdfSize?: (size: Size) => Size,
 ): AnnotationStyleStateReturn => {
@@ -189,7 +191,10 @@ export const useAnnotationStyleState = (
             color: shapeStrokeColor,
             strokeColor: shapeStrokeColor,
             opacity: shapeStrokeOpacity / 100,
-            borderWidth: shapeThickness,
+            // The arrowhead is drawn at 9x the line width, so the shape
+            // thickness makes it oversized.
+            borderWidth:
+              toolId === "lineArrow" ? ARROW_LINE_WIDTH : shapeThickness,
             ...metadata,
           };
         case "stamp": {

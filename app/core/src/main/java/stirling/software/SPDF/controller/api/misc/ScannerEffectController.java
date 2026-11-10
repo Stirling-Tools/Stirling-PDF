@@ -54,6 +54,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -741,7 +742,7 @@ public class ScannerEffectController {
 
         private RenderingResources(PDDocument document) {
             this.document = document;
-            this.renderer = new PDFRenderer(document);
+            this.renderer = new LimitedPDFRenderer(document);
             this.renderer.setSubsamplingAllowed(true);
             this.renderer.setImageDownscalingOptimizationThreshold(0.5f);
         }
