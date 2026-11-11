@@ -9,9 +9,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,6 +37,7 @@ class ProcessExecutorOutputLogTest {
 
     private final Logger logger = (Logger) LoggerFactory.getLogger(ProcessExecutor.class);
     private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    private final Map<ProcessExecutor.Processes, ProcessExecutor> replaced = new HashMap<>();
     private Level previousLevel;
 
     @BeforeEach
@@ -86,6 +89,76 @@ class ProcessExecutorOutputLogTest {
                 .filter(message -> !message.startsWith("Running command"))
                 .mapToInt(message -> message.split("\n", -1).length)
                 .sum();
+    }
+
+    /** How many of the tool's own lines reached the log, wherever they were logged. */
+    private long loggedToolLines() {
+        return appender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .flatMap(message -> Stream.of(message.split("\n", -1)))
+                .filter(line -> line.matches("(qpdf succeeded with warnings: )?line \\d+"))
+                .count();
+    }
+
+    private long messagesStartingWith(String prefix) {
+        return appender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .filter(message -> message.startsWith(prefix))
+                .count();
+    }
+
+    /** A new executor, because getInstance keeps the first one made for each type. */
+    private ProcessExecutor executor(ProcessExecutor.Processes type, boolean liveUpdates)
+            throws ReflectiveOperationException {
+        ProcessExecutor previous = instances().remove(type);
+        if (!replaced.containsKey(type)) {
+            replaced.put(type, previous);
+        }
+        return ProcessExecutor.getInstance(type, liveUpdates);
+    }
+
+    @AfterEach
+    void restoreExecutors() throws ReflectiveOperationException {
+        Map<ProcessExecutor.Processes, ProcessExecutor> instances = instances();
+        replaced.forEach(
+                (type, previous) -> {
+                    instances.remove(type);
+                    if (previous != null) {
+                        instances.put(type, previous);
+                    }
+                });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<ProcessExecutor.Processes, ProcessExecutor> instances()
+            throws ReflectiveOperationException {
+        Field field = ProcessExecutor.class.getDeclaredField("instances");
+        field.setAccessible(true);
+        return (Map<ProcessExecutor.Processes, ProcessExecutor>) field.get(null);
+    }
+
+    @Test
+    void bothStreamsShareTheRunsAllowance() throws Exception {
+        try (MockedConstruction<ProcessBuilder> ignored = tool(0, lines(300), lines(300))) {
+            executor(ProcessExecutor.Processes.GHOSTSCRIPT, false)
+                    .runCommandWithOutputHandling(List.of("gs", "-v"));
+        }
+
+        assertThat(loggedToolLines()).isEqualTo(ProcessExecutor.MAX_LOGGED_LINES);
+    }
+
+    @Test
+    void qpdfWarningsAreLoggedOnceWithinTheAllowance() throws Exception {
+        ProcessExecutor.ProcessExecutorResult result;
+        try (MockedConstruction<ProcessBuilder> ignored = tool(3, lines(150), lines(150))) {
+            result =
+                    executor(ProcessExecutor.Processes.QPDF, false)
+                            .runCommandWithOutputHandling(List.of("qpdf", "--check"));
+        }
+
+        assertThat(result.rc).isEqualTo(3);
+        assertThat(messagesStartingWith("qpdf succeeded with warnings")).isEqualTo(1);
+        assertThat(loggedToolLines()).isEqualTo(ProcessExecutor.MAX_LOGGED_LINES);
     }
 
     @Test

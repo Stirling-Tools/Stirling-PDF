@@ -380,7 +380,7 @@ public class ProcessExecutor {
             // Read the error stream and standard output stream concurrently
             List<String> errorLines = new ArrayList<>();
             List<String> outputLines = new ArrayList<>();
-            AtomicInteger liveLinesSeen = new AtomicInteger();
+            AtomicInteger offeredLines = new AtomicInteger();
 
             Thread errorReaderThread =
                     Thread.ofVirtual()
@@ -397,7 +397,7 @@ public class ProcessExecutor {
                                                                     errorReader, 5_000_000))
                                                     != null) {
                                                 errorLines.add(line);
-                                                if (liveUpdates) logLiveLine(line, liveLinesSeen);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -422,7 +422,7 @@ public class ProcessExecutor {
                                                                     outputReader, 5_000_000))
                                                     != null) {
                                                 outputLines.add(line);
-                                                if (liveUpdates) logLiveLine(line, liveLinesSeen);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -485,22 +485,23 @@ public class ProcessExecutor {
             // Wait for the reader threads to finish
             errorReaderThread.join();
             outputReaderThread.join();
-            logUnloggedLiveLines(liveLinesSeen.get());
+            logUnloggedLiveLines(offeredLines.get());
 
             if (processType == Processes.CALIBRE) {
-                return finishCalibreRun(exitCode, outputLines, errorLines);
+                return finishCalibreRun(exitCode, outputLines, errorLines, offeredLines);
             }
 
             boolean isQpdf =
                     commandToRun != null
                             && !commandToRun.isEmpty()
                             && commandToRun.getFirst().contains("qpdf");
+            boolean qpdfWarnings = isQpdf && exitCode == 3;
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    log.info("Command output:\n{}", forLog(outputLines));
+                    log.info("Command output:\n{}", forLog(outputLines, offeredLines));
                 }
             }
 
@@ -508,33 +509,27 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    log.warn("Command error output:\n{}", forLog(errorLines));
+                    log.warn("Command error output:\n{}", forLog(errorLines, offeredLines));
                 }
-                if (exitCode != 0) {
-                    if (isQpdf && exitCode == 3) {
-                        log.warn(
-                                "qpdf succeeded with warnings: {}",
-                                forLog(outputLines, errorLines));
-                    } else {
-                        throw new IOException(
-                                "Command process failed with exit code "
-                                        + exitCode
-                                        + ". Error message: "
-                                        + forLog(errorLines));
-                    }
-                }
-            }
-
-            if (exitCode != 0) {
-                if (isQpdf && exitCode == 3) {
-                    log.warn("qpdf succeeded with warnings: {}", forLog(outputLines, errorLines));
-                } else {
+                if (exitCode != 0 && !qpdfWarnings) {
                     throw new IOException(
                             "Command process failed with exit code "
                                     + exitCode
-                                    + "\nLogs: "
-                                    + forLog(outputLines, errorLines));
+                                    + ". Error message: "
+                                    + forLog(errorLines));
                 }
+            }
+
+            if (qpdfWarnings) {
+                log.warn(
+                        "qpdf succeeded with warnings: {}",
+                        forLog(allLines(outputLines, errorLines), offeredLines));
+            } else if (exitCode != 0) {
+                throw new IOException(
+                        "Command process failed with exit code "
+                                + exitCode
+                                + "\nLogs: "
+                                + forLog(allLines(outputLines, errorLines)));
             }
         } finally {
             if (ipcPipesBefore != null) {
@@ -574,16 +569,26 @@ public class ProcessExecutor {
         }
     }
 
-    private static String forLog(List<String> outputLines, List<String> errorLines) {
+    private static List<String> allLines(List<String> outputLines, List<String> errorLines) {
         List<String> lines = new ArrayList<>(outputLines);
         lines.addAll(errorLines);
-        return forLog(lines);
+        return lines;
+    }
+
+    /** Uses what is left of the run's {@link #MAX_LOGGED_LINES}, counted in {@code offered}. */
+    private static String forLog(List<String> lines, AtomicInteger offered) {
+        int left = MAX_LOGGED_LINES - offered.getAndAdd(lines.size());
+        return forLog(lines, Math.max(left, 0));
     }
 
     /** The first {@link #MAX_LOGGED_LINES} lines, each cut short and made printable. */
     static String forLog(List<String> lines) {
+        return forLog(lines, MAX_LOGGED_LINES);
+    }
+
+    private static String forLog(List<String> lines, int allowance) {
         StringBuilder text = new StringBuilder();
-        int shown = Math.min(lines.size(), MAX_LOGGED_LINES);
+        int shown = Math.min(lines.size(), allowance);
         for (int i = 0; i < shown; i++) {
             if (i > 0) {
                 text.append('\n');
@@ -591,7 +596,10 @@ public class ProcessExecutor {
             text.append(forLog(lines.get(i)));
         }
         if (lines.size() > shown) {
-            text.append("\n... ").append(lines.size() - shown).append(" more lines");
+            if (shown > 0) {
+                text.append('\n');
+            }
+            text.append("... ").append(lines.size() - shown).append(" more lines");
         }
         return text.toString();
     }
@@ -604,12 +612,16 @@ public class ProcessExecutor {
     }
 
     private ProcessExecutorResult finishCalibreRun(
-            int exitCode, List<String> outputLines, List<String> errorLines) throws IOException {
+            int exitCode,
+            List<String> outputLines,
+            List<String> errorLines,
+            AtomicInteger offeredLines)
+            throws IOException {
         String output = String.join("\n", outputLines);
         String errors = String.join("\n", errorLines);
         if (!liveUpdates) {
-            log.debug("Calibre output:\n{}", forLog(outputLines));
-            log.debug("Calibre error output:\n{}", forLog(errorLines));
+            log.debug("Calibre output:\n{}", forLog(outputLines, offeredLines));
+            log.debug("Calibre error output:\n{}", forLog(errorLines, offeredLines));
         }
         CalibreSandboxPolicy.checkLauncherOutcome(errorLines);
         if (exitCode != 0) {
