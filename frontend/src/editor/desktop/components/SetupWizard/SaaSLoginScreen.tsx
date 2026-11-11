@@ -8,6 +8,8 @@ import { DesktopOAuthButtons } from "@editor/components/SetupWizard/DesktopOAuth
 import { SelfHostedLink } from "@editor/components/SetupWizard/SelfHostedLink";
 import { UserInfo } from "@editor/services/authService";
 import { Button } from "@editor/ui/Button";
+import { openExternal } from "@editor/platform/openExternal";
+import { webPageUrl } from "@editor/utils/webPageUrl";
 import "@editor/auth/ui/auth.css";
 
 interface SaaSLoginScreenProps {
@@ -62,6 +64,24 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
     setValidationError(errorMessage);
   };
 
+  // Reset runs on the web app's reset page, which also receives the emailed
+  // link; opening it keeps one copy of the flow instead of a desktop fork.
+  const openPasswordReset = async () => {
+    setValidationError(null);
+    try {
+      await openExternal(
+        webPageUrl(import.meta.env.VITE_SAAS_FRONTEND_URL, "auth/reset"),
+      );
+    } catch {
+      setValidationError(
+        t(
+          "setup.login.error.openResetFailed",
+          "Could not open your browser to reset your password.",
+        ),
+      );
+    }
+  };
+
   const displayError = error || validationError;
 
   return (
@@ -106,8 +126,20 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
       <div
         className="navigation-link-container"
-        style={{ marginTop: "0.5rem", textAlign: "right" }}
+        style={{
+          marginTop: "0.5rem",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
       >
+        <Button
+          variant="tertiary"
+          onClick={() => void openPasswordReset()}
+          className="navigation-link-button"
+          disabled={loading}
+        >
+          {t("login.forgotPassword", "Forgot your password?")}
+        </Button>
         <Button
           variant="tertiary"
           onClick={() => {
