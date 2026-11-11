@@ -8,6 +8,8 @@ import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
   isInlineType,
+  type AddedElement,
+  type CutElement,
   type ReadOnlyReason,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
@@ -657,8 +659,9 @@ export class EditorDocument {
 
   /**
    * The page's added elements, each after the added element it reads after,
-   * so it finds that already in the tree. An element whose content was
-   * deleted is left out: there is nothing left for it to tag.
+   * so it finds that already in the tree. Text cut from an element stands
+   * for it, which keeps one whose text was all cut out. An element whose
+   * content was deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -670,17 +673,25 @@ export class EditorDocument {
     );
     if (!page || added.size === 0) return [];
     const content = taggedContentInReadingOrder(page);
-    const carried = new Set(content.map(({ mcid }) => mcid));
+    // The save writes a cut from an added element after every added element,
+    // so content is placed beside the element its text was cut from.
+    const owners = addedOwners(added, structure.cutElements());
+    const ownerOf = (mcid: number) => owners.get(mcid) ?? mcid;
+    const present = new Set(content.map(({ mcid }) => ownerOf(mcid)));
     const edits = new Map<number, StructureEdit>();
     for (const item of content) {
-      const element = added.get(item.mcid);
+      const element = added.get(ownerOf(item.mcid));
       if (!element) continue;
-      added.delete(item.mcid);
+      added.delete(element.mcid);
       const { follows } = element;
+      const preceding = () => {
+        const mcid = precedingTaggedMcid(page, item);
+        return mcid === null ? null : ownerOf(mcid);
+      };
       const after =
-        follows === null || (follows !== undefined && carried.has(follows))
+        follows === null || (follows !== undefined && present.has(follows))
           ? follows
-          : precedingTaggedMcid(page, item);
+          : preceding();
       edits.set(element.mcid, {
         pageIndex,
         mcid: element.mcid,
@@ -885,6 +896,23 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * The added element each cut's text was taken from, through cuts from cuts,
+ * by the cut's MCID. Cuts from the file's elements are left out.
+ */
+function addedOwners(
+  added: ReadonlyMap<number, AddedElement>,
+  cuts: readonly CutElement[],
+): Map<number, number> {
+  const owners = new Map<number, number>();
+  for (const { mcid, cut } of cuts) {
+    const from = cut.from[0];
+    const owner = added.has(from) ? from : owners.get(from);
+    if (owner !== undefined) owners.set(mcid, owner);
+  }
+  return owners;
 }
 
 /**

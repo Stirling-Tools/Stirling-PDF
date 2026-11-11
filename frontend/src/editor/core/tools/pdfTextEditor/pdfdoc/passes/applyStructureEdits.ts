@@ -127,6 +127,7 @@ export async function applyStructureEdits(
   const unwraps: { edit: StructureEdit; owner: number }[] = [];
   const added = edits.filter((edit) => edit.newElement);
   const cuts = edits.filter((edit) => edit.cut);
+  const cutsFromAdded = cutsFromAddedElements(added, cuts);
   for (const edit of edits) {
     if (edit.newElement || edit.cut) continue;
     const owner = elementFor(pdf, treeRoot, edit);
@@ -168,23 +169,27 @@ export async function applyStructureEdits(
   for (const [index, reason] of kept) {
     failures.push({ edit: unwraps[index].edit, reason });
   }
-  // After the retags, which address elements by the MCIDs a cut can take
-  // from them, and before the added elements, which may be placed beside a cut.
-  const uncut = await cutElements(
-    pdf,
-    cuts.map((edit) => ({
-      ...edit,
-      type: edit.cut!.type,
-      alt: edit.alt ?? null,
-      lang: edit.lang ?? null,
-      cut: edit.cut!,
-    })),
-    bodies,
-    parentTree,
-  );
-  for (const [index, reason] of uncut) {
-    failures.push({ edit: cuts[index], reason });
-  }
+  const writeCuts = async (written: readonly StructureEdit[]) => {
+    const uncut = await cutElements(
+      pdf,
+      written.map((edit) => ({
+        ...edit,
+        type: edit.cut!.type,
+        alt: edit.alt ?? null,
+        lang: edit.lang ?? null,
+        cut: edit.cut!,
+      })),
+      bodies,
+      parentTree,
+    );
+    for (const [index, reason] of uncut) {
+      failures.push({ edit: written[index], reason });
+    }
+  };
+  // Cuts from the file's elements: after the retags, which address elements
+  // by the MCIDs a cut can take from them, and before the added elements,
+  // which may be placed beside a cut.
+  await writeCuts(cuts.filter((edit) => !cutsFromAdded.has(edit)));
   // Before the decorative marks, so an element placed beside one they drop
   // keeps its place among the kids that remain.
   const unplaced = await addElements(
@@ -196,6 +201,10 @@ export async function applyStructureEdits(
       ...edit.newElement!,
       alt: edit.alt ?? null,
       lang: edit.lang ?? null,
+      cutFrom: [...cutsFromAdded].some(
+        (cut) =>
+          cut.pageIndex === edit.pageIndex && cut.cut!.from[0] === edit.mcid,
+      ),
     })),
     bodies,
     parentTree,
@@ -203,6 +212,7 @@ export async function applyStructureEdits(
   for (const [index, reason] of unplaced) {
     failures.push({ edit: added[index], reason });
   }
+  await writeCuts([...cutsFromAdded]);
   const { streams, failed } = await markDecorative(
     pdf,
     new Map(
@@ -227,6 +237,26 @@ export async function applyStructureEdits(
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
   return out;
+}
+
+/**
+ * The cuts taking text from an element the save adds, directly or through
+ * an earlier such cut, in the order made: none can be written until that
+ * element is in the tree.
+ */
+function cutsFromAddedElements(
+  added: readonly StructureEdit[],
+  cuts: readonly StructureEdit[],
+): Set<StructureEdit> {
+  const key = (pageIndex: number, mcid: number) => `${pageIndex}:${mcid}`;
+  const owners = new Set(added.map((edit) => key(edit.pageIndex, edit.mcid)));
+  const late = new Set<StructureEdit>();
+  for (const edit of cuts) {
+    if (!owners.has(key(edit.pageIndex, edit.cut!.from[0]))) continue;
+    late.add(edit);
+    owners.add(key(edit.pageIndex, edit.mcid));
+  }
+  return late;
 }
 
 /** The kind of artifact the last of an element's edits makes it; null for a plain one. */
