@@ -38,6 +38,9 @@ const TEST_DEFAULTS = {
 };
 
 export default defineConfig({
+  resolve: {
+    dedupe: MANTINE_PACKAGES,
+  },
   test: {
     globals: true,
     environment: "jsdom",
