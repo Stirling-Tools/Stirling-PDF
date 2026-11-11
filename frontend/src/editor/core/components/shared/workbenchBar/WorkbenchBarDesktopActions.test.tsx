@@ -13,7 +13,6 @@ const renderActions = (downloadDisabledReason?: string) =>
         policyEnforcing={false}
         downloadLabel="Download"
         downloadIconName="download"
-        saveAsIconName="save"
         saveMenu={[
           {
             key: "local",
