@@ -16,13 +16,9 @@ interface SaveCall {
 }
 
 interface MicrosoftConfig {
-  saveMode?: string;
-  allowUserSaveMode?: boolean;
   allowEditorSaves?: boolean;
   personal?: boolean;
 }
-
-const EDITED_COPY = { itemId: null, name: "Report (edited).pdf" };
 
 async function stubMicrosoft(
   page: Page,
@@ -40,8 +36,6 @@ async function stubMicrosoft(
         microsoftTenant: "organizations",
         microsoftAccountConnections: true,
         microsoftAllowEditorSaves: config.allowEditorSaves ?? true,
-        saveMode: config.saveMode ?? "replace",
-        allowUserSaveMode: config.allowUserSaveMode ?? true,
       },
     }),
   );
@@ -182,7 +176,7 @@ async function nthSave(calls: SaveCall[], n: number): Promise<SaveCall> {
 
 async function expectOtherDestinations(page: Page): Promise<void> {
   await expect(
-    page.getByRole("menuitem", { name: /Download a copy/ }),
+    page.getByRole("menuitem", { name: "Download", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("menuitem", { name: /Upload copy to OneDrive/ }),
@@ -223,54 +217,8 @@ test.describe("Saving files opened from OneDrive", () => {
     await expect(toolbarUnsavedDot(page)).toHaveCount(0);
   });
 
-  test("Save a copy makes one copy, then keeps updating it", async ({
-    page,
-  }) => {
-    const calls = await startWithOneDriveFile(page, {
-      unsaved: true,
-      saveMode: "copy",
-    });
-    await openInViewer(page);
-
-    await page
-      .getByRole("button", { name: "Save a copy of Report.pdf to OneDrive" })
-      .click();
-    expect(await nthSave(calls, 1)).toMatchObject({
-      ...EDITED_COPY,
-      parentId: "folder-1",
-    });
-
-    await page
-      .getByRole("button", { name: "Update Report (edited).pdf in OneDrive" })
-      .click();
-    expect(await nthSave(calls, 2)).toMatchObject({ itemId: "copy-1" });
-  });
-
-  test("Ask me offers a copy and remembers the choice", async ({ page }) => {
-    const calls = await startWithOneDriveFile(page, {
-      unsaved: false,
-      saveMode: "ask",
-    });
-    await openInViewer(page);
-
-    await page.getByRole("button", { name: "Save Report.pdf…" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText('Save "Report.pdf"');
-    await expect(dialog).toContainText("Download instead");
-    await shot(page, "2-ask-dialog");
-    await dialog.getByText("Save a copy next to it").click();
-    await dialog.getByText("Remember my choice").click();
-    await dialog.getByRole("button", { name: "Save", exact: true }).click();
-
-    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
-    const stored = await page.evaluate(() =>
-      localStorage.getItem("stirlingpdf_preferences"),
-    );
-    expect(JSON.parse(stored ?? "{}").saveMode).toBe("copy");
-  });
-
   test("the menu offers the other destinations", async ({ page }) => {
-    const calls = await startWithOneDriveFile(page, { unsaved: true });
+    await startWithOneDriveFile(page, { unsaved: true });
     await openInViewer(page);
 
     const more = page.getByRole("button", { name: "More save options" });
@@ -280,12 +228,9 @@ test.describe("Saving files opened from OneDrive", () => {
       page.getByRole("menuitem", { name: /Update Report\.pdf/ }),
     ).toHaveCount(0);
     await shot(page, "3-save-menu");
-    await page
-      .getByRole("menuitem", { name: /Save a copy next to it/ })
-      .click();
+    await page.keyboard.press("Escape");
 
-    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
-    await expect(page.getByText("Saved to OneDrive").first()).toBeVisible();
+    await expect(page.getByRole("menu")).toHaveCount(0);
     await expect(more).toBeFocused();
     await expect(page.getByRole("tooltip")).toHaveCount(0);
   });
@@ -296,7 +241,7 @@ test.describe("Saving files opened from OneDrive", () => {
 
     await page.getByRole("button", { name: "More save options" }).click();
     await expect(
-      page.getByRole("menuitem", { name: /Download a copy/ }),
+      page.getByRole("menuitem", { name: "Download", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("menuitem", { name: /Upload copy to OneDrive/ }),
@@ -369,11 +314,10 @@ test.describe("Saving files opened from OneDrive", () => {
     await page.getByTestId("download-result-menu").click();
     await expectOtherDestinations(page);
     await shot(page, "7-result-save-menu");
-    await page
-      .getByRole("menuitem", { name: /Save a copy next to it/ })
-      .click();
+    await page.keyboard.press("Escape");
+    await page.getByTestId("download-result-button").click();
 
-    expect(await nthSave(calls, 1)).toMatchObject(EDITED_COPY);
+    expect(await nthSave(calls, 1)).toMatchObject({ itemId: "item-1" });
   });
 
   test("turning off editor saves hides OneDrive saving", async ({ page }) => {
@@ -393,29 +337,13 @@ test.describe("Saving files opened from OneDrive", () => {
     expect(calls).toHaveLength(0);
   });
 
-  test("the preference shows the server default and its lock", async ({
-    page,
-  }) => {
-    await stubMicrosoft(page, { saveMode: "copy", allowUserSaveMode: false });
-    await page.goto("/settings/general");
-    const row = page.locator("#setting-save-mode");
-    await expect(row).toContainText("When you save a file");
-    await expect(row).toContainText("Set by your administrator");
-    await expect(row.getByRole("textbox")).toHaveValue(
-      "Save a copy next to it",
-    );
-    await expect(row.getByRole("textbox")).toBeDisabled();
-    await row.scrollIntoViewIfNeeded();
-    await shot(page, "4-preference-locked");
-  });
-
   test("a file card saves to OneDrive like the toolbar", async ({ page }) => {
     const calls = await startWithOneDriveFile(page, { unsaved: true });
     const card = await openFileCards(page);
 
     await expect(card.getByTestId("file-card-save-status")).toBeVisible();
     await expect(
-      card.getByRole("button", { name: "Download a copy" }),
+      card.getByRole("button", { name: "Download", exact: true }),
     ).toBeVisible();
     await expect(sidebarUnsavedDot(page)).toBeVisible();
     await shot(page, "5-file-card");

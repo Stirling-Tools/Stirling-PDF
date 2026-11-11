@@ -736,7 +736,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
         body: t(
           "fileSidebar.dataLostBody",
-          "This browser lost this file's contents. Upload it again to keep working with it.",
+          "Couldn't find this file's contents. Add it again to keep working with it.",
         ),
         expandable: false,
         durationMs: 6000,
@@ -936,7 +936,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
             body: t(
               "fileSidebar.dataLostBody",
-              "This browser lost this file's contents. Upload it again to keep working with it.",
+              "Couldn't find this file's contents. Add it again to keep working with it.",
             ),
             expandable: false,
             durationMs: 6000,

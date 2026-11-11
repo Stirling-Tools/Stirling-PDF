@@ -196,7 +196,7 @@ export interface ProcurementSnapshot {
 export interface QuoteConfigInput {
   volume: number;
   users: number;
-  /** Policy posture (governance) as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
+  /** Automation posture as pipeline runs per PDF: Essentials 2, Governed 4, Regulated 7. */
   intensity: number;
   /** PDF-size tier multiplier on the rate: Compact 1.0, Standard 1.4, Heavy 2.4. */
   sizeMult: number;

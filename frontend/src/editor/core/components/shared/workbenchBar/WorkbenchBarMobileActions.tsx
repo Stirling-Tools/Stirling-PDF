@@ -3,11 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
-import "@editor/components/shared/SaveMenu.css";
 
 /**
  * Mobile version of the workbench bar's global actions: the icon row won't fit
- * on a phone, so print / export / save-as / close collapse into one overflow menu.
+ * on a phone, so print / save / close collapse into one overflow menu.
  */
 export default function WorkbenchBarMobileActions({
   currentView,
@@ -16,7 +15,6 @@ export default function WorkbenchBarMobileActions({
   policyEnforcing,
   downloadLabel,
   downloadIconName,
-  saveAsIconName,
   downloadUnsaved,
   saveMenu,
   onPrint,
@@ -37,7 +35,7 @@ export default function WorkbenchBarMobileActions({
   if (!showPrint && !showFileActions) return null;
 
   return (
-    <Menu shadow="md" position="bottom-end">
+    <Menu shadow="md" width={270} position="bottom-end">
       <Menu.Target>
         <ActionIcon
           variant="tertiary"
@@ -53,7 +51,7 @@ export default function WorkbenchBarMobileActions({
           </span>
         </ActionIcon>
       </Menu.Target>
-      <Menu.Dropdown className="save-menu">
+      <Menu.Dropdown>
         {showPrint && (
           <Menu.Item
             leftSection={<Icon name="printer" size={"1.1rem"} />}
@@ -76,7 +74,7 @@ export default function WorkbenchBarMobileActions({
             onClick={() => void onExport()}
             title={downloadDisabledReason}
           >
-            <span className="save-menu__text">{downloadLabel}</span>
+            {downloadLabel}
           </Menu.Item>
         )}
         {showFileActions &&
@@ -87,24 +85,14 @@ export default function WorkbenchBarMobileActions({
               disabled={saveDisabled}
               onClick={item.onClick}
             >
-              <span className="save-menu__text">{item.label}</span>
+              {item.label}
               {item.description && (
-                <span className="save-menu__text workbench-bar-menu-hint">
+                <span className="workbench-bar-menu-hint">
                   {item.description}
                 </span>
               )}
             </Menu.Item>
           ))}
-        {showFileActions && !saveMenu && saveAsIconName && (
-          <Menu.Item
-            leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
-            disabled={saveDisabled}
-            onClick={() => void onExport(true)}
-            title={downloadDisabledReason}
-          >
-            {t("workbenchBar.saveAs", "Save As")}
-          </Menu.Item>
-        )}
         {showFileActions && (
           <>
             <Menu.Divider />

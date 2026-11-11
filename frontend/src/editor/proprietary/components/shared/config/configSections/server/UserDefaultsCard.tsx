@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Paper } from "@mantine/core";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
@@ -19,8 +18,7 @@ export function UserDefaultsCard({
   setSettings,
   isFieldPending,
   loginEnabled,
-  children,
-}: UiDefaultsCardProps & { children?: ReactNode }) {
+}: UiDefaultsCardProps) {
   const { t } = useTranslation();
 
   const toolPanelModeValue: ToolPanelMode =
@@ -158,8 +156,6 @@ export function UserDefaultsCard({
             />
           </div>
         </div>
-
-        {children}
       </Stack>
     </Paper>
   );

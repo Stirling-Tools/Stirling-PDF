@@ -94,13 +94,6 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
     labelFallback: "Auto-unzip file limit",
     keywords: ["zip", "limit", "files", "extract"],
   },
-  {
-    section: "general",
-    anchor: "setting-save-mode",
-    labelKey: "settings.general.saveMode",
-    labelFallback: "When you save a file",
-    keywords: ["save", "copy", "overwrite", "replace", "ask"],
-  },
   // --- Keyboard Shortcuts ---
   {
     section: "general",

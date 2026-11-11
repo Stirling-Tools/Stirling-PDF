@@ -6,10 +6,12 @@ import { Button } from "@editor/ui";
 import {
   DEPLOYMENTS,
   fetchLegalDocument,
+  type Deployment,
   type TrialSetupDetails,
 } from "@processor/api/procurement";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { CalendlyInline } from "@processor/components/procurement/CalendlyInline";
+import { DeploymentDetails } from "@processor/components/procurement/DeploymentDetails";
 import { FlowModal } from "@processor/components/shared/FlowModal";
 import { useAsync } from "@processor/hooks/useAsync";
 import type { TrialDraft } from "@processor/components/procurement/trialDraft";
@@ -339,8 +341,8 @@ export function TrialSetupForm({
   const { t } = useTranslation();
   const prefill = useProcurementPrefill();
   const [step, setStep] = useState(initial ? 1 : 0);
-  const [deployment, setDeployment] = useState<string>(
-    initial?.deployment ?? "cloud",
+  const [deployment, setDeployment] = useState<Deployment>(
+    () => DEPLOYMENTS.find((d) => d === initial?.deployment) ?? "cloud",
   );
   const [seats, setSeats] = useState(
     initial ? String(initial.seats) : String(prefill?.seats ?? ""),
@@ -446,16 +448,21 @@ export function TrialSetupForm({
             />
           </Field>
           <FieldGroup label={t("portal.procurement.setup.deployment")}>
-            <div className="portal-qb__opts portal-qb__opts--across">
-              {DEPLOYMENTS.map((d) => (
-                <OptionCard
-                  key={d}
-                  on={deployment === d}
-                  title={t(`portal.procurement.setup.${d}`)}
-                  sub={t(`portal.procurement.setup.${d}Sub`)}
-                  onClick={() => setDeployment(d)}
-                />
-              ))}
+            <div className="ent-deploy-wrap">
+              <div className="ent-deploy-choice">
+                <div className="portal-qb__opts">
+                  {DEPLOYMENTS.map((d) => (
+                    <OptionCard
+                      key={d}
+                      on={deployment === d}
+                      title={t(`portal.procurement.setup.${d}`)}
+                      sub={t(`portal.procurement.setup.${d}Sub`)}
+                      onClick={() => setDeployment(d)}
+                    />
+                  ))}
+                </div>
+                <DeploymentDetails deployment={deployment} />
+              </div>
             </div>
           </FieldGroup>
         </>

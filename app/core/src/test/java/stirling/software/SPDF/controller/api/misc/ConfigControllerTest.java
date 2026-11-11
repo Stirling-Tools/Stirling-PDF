@@ -90,34 +90,6 @@ class ConfigControllerTest {
         assertEquals("tools", body.get("defaultStartupView"));
     }
 
-    @Test
-    void getAppConfig_includesTheSaveModeAndItsLock() {
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getSystem().setSaveMode("copy");
-        properties.getSystem().setAllowUserSaveMode(false);
-
-        Map<String, Object> body =
-                createConfigController(properties)
-                        .getAppConfig(mock(HttpServletRequest.class))
-                        .getBody();
-
-        assertNotNull(body);
-        assertEquals("copy", body.get("saveMode"));
-        assertEquals(false, body.get("allowUserSaveMode"));
-    }
-
-    @Test
-    void getAppConfig_defaultsToUpdatingTheOriginal() {
-        Map<String, Object> body =
-                createConfigController(new ApplicationProperties())
-                        .getAppConfig(mock(HttpServletRequest.class))
-                        .getBody();
-
-        assertNotNull(body);
-        assertEquals("replace", body.get("saveMode"));
-        assertEquals(true, body.get("allowUserSaveMode"));
-    }
-
     private ConfigController createConfigController(ApplicationProperties properties) {
         ApplicationContext context = mock(ApplicationContext.class);
         ExternalAppDepConfig externalAppDepConfig = mock(ExternalAppDepConfig.class);

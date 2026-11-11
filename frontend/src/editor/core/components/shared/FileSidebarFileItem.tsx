@@ -19,7 +19,6 @@ import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { OneDriveOriginTooltip } from "@editor/components/shared/OneDriveOriginTooltip";
-import { splitFileNameTail } from "@editor/utils/fileNameTail";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -266,7 +265,6 @@ export const FileItem = React.memo(function FileItem({
   const terminology = useFileActionTerminology();
   const downloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
-  const { head: nameHead, tail: nameTail } = splitFileNameTail(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
   const metaLine = [typeLabel, size ? formatFileSize(size) : null, dateLabel]
@@ -300,7 +298,7 @@ export const FileItem = React.memo(function FileItem({
     if (needsBytes && dataUnavailable)
       return t(
         "fileSidebar.fileItem.dataLostTooltip",
-        "This browser lost this file's contents. Upload it again to keep working with it.",
+        "Couldn't find this file's contents. Add it again to keep working with it.",
       );
     return null;
   };
@@ -362,7 +360,6 @@ export const FileItem = React.memo(function FileItem({
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         role="button"
-        aria-label={name}
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
         onMouseEnter={handleMouseEnter}
@@ -384,10 +381,7 @@ export const FileItem = React.memo(function FileItem({
           <span
             className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
           >
-            <span className="file-sidebar-file-name-head">{nameHead}</span>
-            {nameTail && (
-              <span className="file-sidebar-file-name-tail">{nameTail}</span>
-            )}
+            {name}
           </span>
           <span className="file-sidebar-file-meta-row">
             <span
@@ -411,7 +405,7 @@ export const FileItem = React.memo(function FileItem({
               <Tooltip
                 label={t(
                   "fileSidebar.fileItem.dataLostTooltip",
-                  "This browser lost this file's contents. Upload it again to keep working with it.",
+                  "Couldn't find this file's contents. Add it again to keep working with it.",
                 )}
                 withArrow
                 position="top"

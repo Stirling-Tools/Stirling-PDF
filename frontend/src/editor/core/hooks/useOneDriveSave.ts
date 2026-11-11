@@ -301,30 +301,12 @@ export function useOneDriveSave(): OneDriveSave {
       id: "onedrive",
       handles: (stub) => Boolean(stub.cloudOrigin),
       isUnsaved: hasUnsavedCloudChanges,
-      saveLabel: (stub, mode) => {
-        const name = stub.cloudOrigin?.name ?? stub.name;
-        if (mode === "copy")
-          return t(
-            "oneDriveSave.toolbar.copy",
-            "Save a copy of {{name}} to OneDrive",
-            { name },
-          );
-        if (mode === "ask")
-          return t("oneDriveSave.toolbar.ask", "Save {{name}}…", { name });
-        return t(
-          "oneDriveSave.toolbar.replace",
-          "Update {{name}} in OneDrive",
-          {
-            name,
-          },
-        );
-      },
+      saveLabel: (stub) =>
+        t("oneDriveSave.toolbar.replace", "Update {{name}} in OneDrive", {
+          name: stub.cloudOrigin?.name ?? stub.name,
+        }),
       saveAllLabel: () =>
         t("oneDriveSave.toolbar.saveAll", "Save all to OneDrive"),
-      fileName: (stub) => stub.cloudOrigin?.name ?? stub.name,
-      homeName: () => t("oneDriveSave.homeName", "OneDrive"),
-      // A copy Stirling made is ours to keep updating, whatever the setting.
-      plan: (stub, mode) => (stub.cloudOrigin?.stirlingCopy ? "replace" : mode),
       statusLabel: (unsaved) =>
         unsaved
           ? t(
@@ -333,10 +315,8 @@ export function useOneDriveSave(): OneDriveSave {
             )
           : t("oneDriveSave.status.saved", "Saved to OneDrive"),
       icon: "cloud-upload",
-      save: async (stub, file, how) =>
-        (await (how === "copy" ? saveCopy(stub, file) : save(stub, file)))
-          ? "saved"
-          : "failed",
+      save: async (stub, file) =>
+        (await save(stub, file)) ? "saved" : "failed",
       menuItems: (stub, file) =>
         canSaveToFolder
           ? [
@@ -357,7 +337,7 @@ export function useOneDriveSave(): OneDriveSave {
           : [],
       saving,
     };
-  }, [available, canSaveToFolder, save, saveCopy, saveToFolder, saving, t]);
+  }, [available, canSaveToFolder, save, saveToFolder, saving, t]);
 
   return useMemo(
     () => ({
