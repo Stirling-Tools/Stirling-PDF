@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom/vitest";
+import "../../editor/test/setupCommon";
 import { vi } from "vitest";
 import i18n from "i18next";
 
@@ -10,89 +10,19 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
   I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
-
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn().mockResolvedValue({
-    mode: "saas",
-    server_config: null,
-    lock_connection_mode: false,
-  }),
+  invoke: vi
+    .fn()
+    .mockResolvedValue({
+      mode: "saas",
+      server_config: null,
+      lock_connection_mode: false,
+    }),
   isTauri: () => false,
 }));
-
-// The shims `src/index.tsx` installs - see core/setupTests.ts.
-import "@editor/utils/engineShims";
-
-// Modules outside React call i18n.t directly; no resources means the English defaults render.
 void i18n.init({
   lng: "en-US",
   resources: {},
   initAsync: false,
   interpolation: { escapeValue: false },
-});
-
-// Mirrors the editor's setup: jsdom lacks a handful of browser APIs that shared
-// components (Mantine FocusTrap, responsive helpers) touch on render.
-
-class LocalStorageMock implements Storage {
-  private store: Record<string, string> = {};
-
-  get length(): number {
-    return Object.keys(this.store).length;
-  }
-
-  clear(): void {
-    this.store = {};
-  }
-
-  getItem(key: string): string | null {
-    return this.store[key] ?? null;
-  }
-
-  key(index: number): string | null {
-    return Object.keys(this.store)[index] ?? null;
-  }
-
-  removeItem(key: string): void {
-    delete this.store[key];
-  }
-
-  setItem(key: string, value: string): void {
-    this.store[key] = value;
-  }
-}
-
-Object.defineProperty(globalThis, "localStorage", {
-  value: new LocalStorageMock(),
-  writable: true,
-});
-
-global.ResizeObserver = vi.fn().mockImplementation(function () {
-  return {
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  };
-});
-
-global.IntersectionObserver = vi.fn().mockImplementation(function () {
-  return {
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  };
-});
-
-Object.defineProperty(globalThis, "matchMedia", {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
 });
