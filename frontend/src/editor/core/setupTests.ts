@@ -16,7 +16,13 @@ vi.mock("@tauri-apps/api/core", () => ({
 // browser. Same module `src/index.tsx` installs.
 import "@editor/utils/engineShims";
 
-HTMLCanvasElement.prototype.getContext = vi.fn(() => null);
+if (typeof HTMLCanvasElement !== "undefined") {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
+    value: vi.fn(() => null),
+    writable: true,
+    configurable: true,
+  });
+}
 
 // Modules outside React call i18n.t directly; no resources means the English defaults render.
 void i18n.init({
