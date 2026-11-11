@@ -9,7 +9,6 @@ import {
   renderWithTooltip,
 } from "@editor/components/shared/workbenchBar/workbenchBarTooltip";
 import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar/types";
-import "@editor/components/shared/SaveMenu.css";
 
 interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
   /** Percentage through the enforcing policy run, when it reports steps. */
@@ -17,8 +16,8 @@ interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
 }
 
 /**
- * Desktop version of the workbench bar's global actions: print / export /
- * save-as sit as icons, with close split off behind a separator.
+ * Desktop version of the workbench bar's global actions: print and save sit
+ * as icons, with close split off behind a separator.
  */
 export default function WorkbenchBarDesktopActions({
   currentView,
@@ -27,7 +26,6 @@ export default function WorkbenchBarDesktopActions({
   policyEnforcing,
   downloadLabel,
   downloadIconName,
-  saveAsIconName,
   downloadUnsaved,
   saveMenu,
   onPrint,
@@ -113,6 +111,7 @@ export default function WorkbenchBarDesktopActions({
               <div className="workbench-bar-tooltip-wrapper workbench-bar-save-group-caret">
                 <Menu
                   shadow="md"
+                  width={270}
                   position="bottom-end"
                   opened={saveMenuOpen}
                   onChange={setSaveMenuOpen}
@@ -128,18 +127,18 @@ export default function WorkbenchBarDesktopActions({
                       <Icon name="chevron-down" size="1rem" />
                     </ActionIcon>
                   </Menu.Target>
-                  <Menu.Dropdown className="save-menu">
+                  <Menu.Dropdown>
                     {saveMenu.map((item) => (
                       <Menu.Item
                         key={item.key}
                         leftSection={<Icon name={item.icon} size="1rem" />}
                         onClick={item.onClick}
                       >
-                        <span className="save-menu__text">{item.label}</span>
+                        {item.label}
                         {item.description && (
-                          <span className="save-menu__text workbench-bar-menu-hint">
+                          <div className="workbench-bar-menu-hint">
                             {item.description}
-                          </span>
+                          </div>
                         )}
                       </Menu.Item>
                     ))}
@@ -150,23 +149,6 @@ export default function WorkbenchBarDesktopActions({
           )}
         </div>
       )}
-
-      {showsFileActions &&
-        !saveMenu &&
-        saveAsIconName &&
-        renderWithTooltip(
-          <ActionIcon
-            variant="tertiary"
-            hover={false}
-            className="workbench-bar-action-icon"
-            onClick={() => onExport(true)}
-            disabled={exportDisabled}
-            aria-label={t("workbenchBar.saveAs", "Save As")}
-          >
-            <Icon name={saveAsIconName} size="1rem" />
-          </ActionIcon>,
-          tooltipFor(t("workbenchBar.saveAs", "Save As")),
-        )}
 
       {/* Separator: export group | close */}
       {showsFileActions && (

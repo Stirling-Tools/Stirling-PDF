@@ -15,9 +15,9 @@ import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
 import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
-import { sharedSaveTarget } from "@editor/services/saveTargets";
 import type { FileId } from "@editor/types/file";
-import "@editor/components/shared/SaveMenu.css";
+
+const SAVE_MENU_BUTTON_WIDTH = "3rem";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -71,35 +71,24 @@ function ReviewStepContent<TParams = unknown>({
     (operation.outputFileIds ?? []) as FileId[],
   );
   // Results inherit their source's home, so Save sends them back there too.
-  const savesHome =
-    outputStubs.length > 0 &&
-    outputStubs.every((stub) => saver.planFor(stub) !== null);
-  const oneTarget = sharedSaveTarget(outputStubs, saver.targetFor);
+  const savesToTarget = outputStubs.some((stub) => saver.targetFor(stub));
   const saveButton = useSaveButton({
     saver,
     targets: outputStubs,
     singleFile: outputStubs.length === 1,
-    savesToDisk: Boolean(icons.saveAs),
     onSaveLocalCopy: () =>
       void (async () => {
-        for (const stub of outputStubs)
-          await saver.saveLocalCopy(stub, selectors.getFile(stub.id));
+        for (const stub of outputStubs) {
+          const outcome = await saver.saveLocalCopy(
+            stub,
+            selectors.getFile(stub.id),
+          );
+          if (outcome === "cancelled") break;
+        }
       })(),
     fileFor: async (stub) => selectors.getFile(stub.id),
   });
-  const onlyPlan =
-    outputStubs.length === 1 ? saver.planFor(outputStubs[0]) : null;
-  const saveLabel = oneTarget
-    ? (saveButton.label ?? terminology.download)
-    : onlyPlan === "copy"
-      ? t("saveFile.menu.copy", "Save a copy next to it")
-      : onlyPlan === "ask"
-        ? t("saveFile.result.ask", "Save…")
-        : terminology.download;
-  const saveTooltip =
-    saveButton.label && saveButton.label !== saveLabel
-      ? saveButton.label
-      : undefined;
+  const saveLabel = saveButton.label ?? terminology.download;
 
   const handleUndo = async () => {
     try {
@@ -118,13 +107,13 @@ function ReviewStepContent<TParams = unknown>({
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
-    if (savesHome) {
+    if (savesToTarget) {
       for (const stub of outputStubs) {
         const outcome = await saver.saveStoredFile(
           stub,
           selectors.getFile(stub.id),
         );
-        if (outcome !== "saved") break;
+        if (outcome === "cancelled") break;
       }
       return;
     }
@@ -221,40 +210,39 @@ function ReviewStepContent<TParams = unknown>({
         </Tooltip>
       )}
       {operation.downloadUrl && !saveButton.menu && (
-        <Tooltip position="left" content={saveTooltip} disabled={!saveTooltip}>
+        <Button
+          data-testid="download-result-button"
+          leftSection={<Icon name={saveButton.icon ?? icons.download} />}
+          fullWidth
+          style={{ marginBottom: "1rem" }}
+          onClick={handleDownload}
+        >
+          {saveLabel}
+        </Button>
+      )}
+      {operation.downloadUrl && saveButton.menu && (
+        <Button.Group style={{ marginBottom: "1rem", width: "100%" }}>
           <Button
             data-testid="download-result-button"
-            leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
-            fullWidth
-            style={{ marginBottom: "1rem" }}
+            leftSection={<Icon name={saveButton.icon ?? icons.download} />}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              // Mantine's left-section padding plus the menu button's width, so the
+              // label centres on the whole group rather than this half.
+              paddingInlineStart: `calc(var(--button-padding-x) / 1.5 + ${SAVE_MENU_BUTTON_WIDTH})`,
+            }}
             onClick={handleDownload}
           >
             {saveLabel}
           </Button>
-        </Tooltip>
-      )}
-      {operation.downloadUrl && saveButton.menu && (
-        <Button.Group style={{ marginBottom: "1rem", width: "100%" }}>
-          <Tooltip
-            position="left"
-            content={saveTooltip}
-            disabled={!saveTooltip}
-          >
-            <Button
-              data-testid="download-result-button"
-              leftSection={<Icon name={oneTarget?.icon ?? icons.download} />}
-              style={{ flex: 1, minWidth: 0 }}
-              onClick={handleDownload}
-            >
-              {saveLabel}
-            </Button>
-          </Tooltip>
-          <Menu shadow="md" position="bottom-end">
+          <Menu shadow="md" width={270} position="bottom-end">
             <Menu.Target>
               <Button
                 data-testid="download-result-menu"
-                px="sm"
+                px="none"
                 style={{
+                  width: SAVE_MENU_BUTTON_WIDTH,
                   borderInlineStart:
                     "1px solid color-mix(in srgb, currentColor 35%, transparent)",
                 }}
@@ -263,16 +251,16 @@ function ReviewStepContent<TParams = unknown>({
                 <Icon name="chevron-down" />
               </Button>
             </Menu.Target>
-            <Menu.Dropdown className="save-menu">
+            <Menu.Dropdown>
               {saveButton.menu.map((item) => (
                 <Menu.Item
                   key={item.key}
                   leftSection={<Icon name={item.icon} size="1rem" />}
                   onClick={item.onClick}
                 >
-                  <span className="save-menu__text">{item.label}</span>
+                  {item.label}
                   {item.description && (
-                    <Text size="xs" c="dimmed" className="save-menu__text">
+                    <Text size="xs" c="dimmed">
                       {item.description}
                     </Text>
                   )}

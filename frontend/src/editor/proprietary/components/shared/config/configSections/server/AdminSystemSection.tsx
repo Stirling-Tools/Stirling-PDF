@@ -24,7 +24,6 @@ import type {
 } from "@editor/components/shared/config/configSections/server/serverSettings";
 import { SystemCard } from "@editor/components/shared/config/configSections/server/SystemCard";
 import { UserDefaultsCard } from "@editor/components/shared/config/configSections/server/UserDefaultsCard";
-import { SaveModeDefaults } from "@editor/components/shared/config/configSections/server/SaveModeDefaults";
 import { EndpointManagementCard } from "@editor/components/shared/config/configSections/server/EndpointManagementCard";
 import { StorageSharingCard } from "@editor/components/shared/config/configSections/server/StorageSharingCard";
 import { FolderAccessCard } from "@editor/components/shared/config/configSections/server/FolderAccessCard";
@@ -182,8 +181,6 @@ export default function AdminSystemSection() {
         "system.customHTMLFiles": settings.system?.customHTMLFiles,
         "system.fileUploadLimit": settings.system?.fileUploadLimit,
         "system.frontendUrl": settings.system?.frontendUrl,
-        "system.saveMode": settings.system?.saveMode,
-        "system.allowUserSaveMode": settings.system?.allowUserSaveMode,
         "premium.proFeatures.customMetadata.autoUpdateMetadata":
           settings.customMetadata?.autoUpdateMetadata,
         "premium.proFeatures.customMetadata.author":
@@ -443,9 +440,7 @@ export default function AdminSystemSection() {
             setSettings={setUiDefaults}
             isFieldPending={isUiFieldPending}
             loginEnabled={loginEnabled}
-          >
-            <SaveModeDefaults {...generalCard} />
-          </UserDefaultsCard>
+          />
         </SettingsCard>
 
         <SettingsCard

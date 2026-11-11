@@ -27,8 +27,6 @@ export interface GeneralSettingsData {
     customHTMLFiles?: boolean;
     fileUploadLimit?: string;
     frontendUrl?: string;
-    saveMode?: string;
-    allowUserSaveMode?: boolean;
   };
   serverCertificate?: {
     enabled?: boolean;

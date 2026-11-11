@@ -393,7 +393,7 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated.locator("[data-page-id]")).toHaveCount(3);
 
     const download = page.waitForEvent("download", { timeout: 30_000 });
-    await page.getByRole("button", { name: "Download", exact: true }).click();
+    await page.getByRole("button", { name: "Download Files" }).click();
     const edited = await download;
     expect(edited.suggestedFilename()).toBe("rotated-pages.pdf");
     const target = path.join(
@@ -631,7 +631,7 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated).toContainText("edited");
 
     const download = page.waitForEvent("download", { timeout: 30_000 });
-    await page.getByRole("button", { name: "Download", exact: true }).click();
+    await page.getByRole("button", { name: "Download Files" }).click();
     const target = path.join(
       fs.mkdtempSync(path.join(os.tmpdir(), "page-tracks-")),
       "rotated-pages.pdf",

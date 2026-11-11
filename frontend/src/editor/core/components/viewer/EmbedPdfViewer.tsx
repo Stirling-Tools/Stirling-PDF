@@ -48,6 +48,7 @@ import type {
 } from "@editor/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
+import { hasUnsavedWork } from "@editor/services/unsavedWork";
 import {
   isStirlingFile,
   getFormFillFileId,
@@ -671,12 +672,6 @@ const EmbedPdfViewerContent = ({
   // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
-  const versionFileName = useCallback(() => {
-    const stub = currentFileStableId
-      ? selectors.getStirlingFileStub(currentFileStableId)
-      : undefined;
-    return stub?.name || currentFile?.name || "document.pdf";
-  }, [currentFileStableId, currentFile, selectors]);
   const previousActiveFileIdsRef = useRef(activeFileIds);
   // Follow removals, but do not overwrite a save's new id before its bytes enter FileContext.
   useEffect(() => {
@@ -868,14 +863,11 @@ const EmbedPdfViewerContent = ({
             return;
           case "s":
           case "S":
-            // Ctrl+S: Save/apply changes
+            // Ctrl+S: Save/apply changes. Every apply adds a version, so only
+            // when there is something to apply.
             if (!event.shiftKey) {
               event.preventDefault();
-              const hasViewerEdits =
-                hasAnnotationChangesRef.current ||
-                (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0 ||
-                redactionsAppliedRef.current;
-              if (viewerApplyChanges && hasViewerEdits) {
+              if (viewerApplyChanges && hasUnsavedWork()) {
                 viewerApplyChanges();
               }
             }
@@ -1135,7 +1127,7 @@ const EmbedPdfViewerContent = ({
 
       // Step 2: Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const filename = versionFileName();
+      const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
       rememberPlainPdfExport(currentFile, file);
 
@@ -1201,7 +1193,6 @@ const EmbedPdfViewerContent = ({
     applyChangesInFlightRef.current = savePromise;
     return savePromise;
   }, [
-    versionFileName,
     currentFile,
     activeFiles,
     exportActions,
@@ -1231,7 +1222,7 @@ const EmbedPdfViewerContent = ({
         );
 
         // Convert Blob to File
-        const filename = versionFileName();
+        const filename = currentFile.name || "document.pdf";
         const file = new File([filledBlob], filename, {
           type: "application/pdf",
         });
@@ -1282,7 +1273,6 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
-      versionFileName,
       currentFile,
       currentFileStableId,
       selectedTool,
@@ -1317,7 +1307,7 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
-        const filename = versionFileName();
+        const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
         });
@@ -1346,7 +1336,6 @@ const EmbedPdfViewerContent = ({
       }
     },
     [
-      versionFileName,
       currentFile,
       activeFiles,
       actions,
@@ -1379,7 +1368,7 @@ const EmbedPdfViewerContent = ({
 
       // Convert ArrayBuffer to File
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const filename = versionFileName();
+      const filename = currentFile.name || "document.pdf";
       const file = new File([blob], filename, { type: "application/pdf" });
       rememberPlainPdfExport(currentFile, file);
 
@@ -1409,7 +1398,6 @@ const EmbedPdfViewerContent = ({
       console.error("Failed to save applied redactions:", error);
     }
   }, [
-    versionFileName,
     redactionsApplied,
     currentFile,
     activeFiles,

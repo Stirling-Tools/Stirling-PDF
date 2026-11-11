@@ -63,8 +63,6 @@ export interface StirlingFileStub extends BaseFileMetadata {
   thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
   blobUrl?: string; // File access blob URL for downloads/processing
   localFilePath?: string; // Original local filesystem path (desktop app only)
-  /** Stirling wrote localFilePath as a copy, so Save keeps updating it. */
-  localFileIsCopy?: boolean;
   // Size/mtime of the disk file the last time we read it. An external edit moves
   // one of them, which is how a stale stored copy is spotted without hashing.
   diskSyncedSize?: number;

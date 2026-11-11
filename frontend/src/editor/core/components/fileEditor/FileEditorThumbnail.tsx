@@ -44,6 +44,7 @@ import { LARGE_PDF_PARSE_LIMIT } from "@editor/utils/thumbnailUtils";
 import { truncateCenter } from "@editor/utils/textUtils";
 import { FileEditorStatusDot } from "@editor/components/fileEditor/FileEditorStatusDot";
 import type { SaveTarget } from "@editor/services/saveTargets";
+import { SAVES_TO_DISK } from "@editor/services/downloadService";
 import { useToolEligibleFileIds } from "@editor/contexts/ToolFileEligibilityContext";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
 
@@ -65,8 +66,6 @@ interface FileEditorThumbnailProps {
   unsaved?: boolean;
   /** Set when Save sends this file somewhere other than disk or a download. */
   saveTarget?: SaveTarget;
-  /** The target's label for Save; set alongside saveTarget. */
-  targetLabel?: string;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
@@ -82,7 +81,6 @@ const FileEditorThumbnail = ({
   onSaveFile,
   unsaved = false,
   saveTarget,
-  targetLabel,
   onUnzipFile,
   isSupported = true,
   policies = [],
@@ -292,12 +290,12 @@ const FileEditorThumbnail = ({
   const backgroundPolicy = policies.find((p) => p.background && !p.enforcing);
 
   const hoverActions = useMemo<HoverAction[]>(() => {
-    // Beside a save to another home, the plain one needs to say it stays local.
-    const downloadLabel = !saveTarget
-      ? terminology.download
-      : icons.saveAs
-        ? t("saveFile.menu.saveToComputer", "Save to this computer…")
-        : t("saveFile.menu.download", "Download a copy");
+    const targetLabel = saveTarget?.saveLabel(file);
+    // A plain "Save" beside the save to another home would read as that save.
+    const downloadLabel =
+      saveTarget && SAVES_TO_DISK
+        ? t("saveFile.menu.saveCopy", "Save a copy...")
+        : terminology.download;
     const uploadLabel = isUploaded
       ? t("fileManager.updateOnServer", "Update on Server")
       : t("fileManager.uploadToServer", "Upload to Server");
@@ -496,9 +494,7 @@ const FileEditorThumbnail = ({
     onDownloadFile,
     onSaveFile,
     saveTarget,
-    targetLabel,
     file,
-    icons.saveAs,
     onUnzipFile,
     handleCloseWithConfirmation,
     policyEnforcing,

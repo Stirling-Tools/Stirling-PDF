@@ -58,10 +58,14 @@ export interface WorkbenchExportFile {
    *  to its disk location and lets export policies version it. Omit for bytes
    *  the workbench does not hold, such as unsaved edits. */
   fileId?: FileId;
+  /** Set for a version the export just committed: it is not in the file
+   *  selectors until the next render. */
   stub?: StirlingFileStub;
 }
 
 export interface WorkbenchExportOptions {
+  /** Commit unsaved edits as new versions first, so the exported files are ones
+   *  the workbench holds. Cancelling or failing that commit cancels the export. */
   commitEdits?: boolean;
 }
 
