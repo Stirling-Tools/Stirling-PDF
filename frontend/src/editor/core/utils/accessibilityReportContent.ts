@@ -5,8 +5,8 @@ import type {
 } from "@editor/types/checkAccessibility";
 import type {
   AccessibilityCategoryId,
-  AccessibilityGrade,
-} from "@editor/utils/accessibilityScore";
+  AccessibilityResult,
+} from "@editor/utils/accessibilityAssessment";
 import {
   describeLocation,
   describeObject,
@@ -77,13 +77,28 @@ export const categoryTip = (t: TFunction, id: AccessibilityCategoryId) =>
     ),
   })[id];
 
-export const gradeLabel = (t: TFunction, grade: AccessibilityGrade) =>
+export const resultLabel = (t: TFunction, result: AccessibilityResult) =>
   ({
-    pass: t("checkAccessibility.grade.pass", "Passes automated checks"),
-    minor: t("checkAccessibility.grade.minor", "Minor issues"),
-    needsWork: t("checkAccessibility.grade.needsWork", "Needs work"),
-    poor: t("checkAccessibility.grade.poor", "Not accessible"),
-  })[grade];
+    pass: t("checkAccessibility.result.pass", "Pass"),
+    partial: t("checkAccessibility.result.partial", "Partial"),
+    fail: t("checkAccessibility.result.fail", "Fail"),
+  })[result];
+
+export const resultSummary = (t: TFunction, result: AccessibilityResult) =>
+  ({
+    pass: t(
+      "checkAccessibility.result.passSummary",
+      "Passes every automated PDF/UA check.",
+    ),
+    partial: t(
+      "checkAccessibility.result.partialSummary",
+      "Screen readers can read it, but some checks fail.",
+    ),
+    fail: t(
+      "checkAccessibility.result.failSummary",
+      "Screen readers may not be able to read all of it.",
+    ),
+  })[result];
 
 export interface AccessibilityFact {
   ok: boolean;

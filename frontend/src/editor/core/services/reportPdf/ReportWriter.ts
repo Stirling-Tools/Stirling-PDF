@@ -38,9 +38,8 @@ export interface ReportWriterOptions {
 const LINE_HEIGHT = 1.35;
 
 /**
- * Lays a report down a sequence of pages, starting a new page whenever the next block would run
- * into the footer. y is the top of the next block, in PDF points from the page bottom; callers
- * move it down as they draw.
+ * Lays a report down pages, starting a new one before a block would reach the footer. y is the top
+ * of the next block in PDF points from the page bottom, and callers move it down as they draw.
  */
 export class ReportWriter {
   y = 0;

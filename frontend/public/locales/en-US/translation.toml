@@ -3278,10 +3278,8 @@ fileFailed = "failed"
 pickFile = "Show results for"
 submit = "Check accessibility"
 
-[checkAccessibility.breakdown]
-failingCount = "{{count}} failing"
-ok = "No issues"
-passing = "{{passed}} of {{total}} rules pass"
+[checkAccessibility.basics]
+met = "{{met}} of {{total}} met"
 
 [checkAccessibility.category]
 altText = "Alternative text"
@@ -3298,9 +3296,6 @@ language = "Whether the document says what language its text is in, so screen re
 links = "Whether links, comments and form fields are tagged and described, and reached in a sensible tab order."
 metadata = "Whether the file has a title, shows it when opened, declares PDF/UA, and has the settings assistive technology relies on."
 structure = "Whether the content is tagged so screen readers can follow it: headings, paragraphs, lists, tables and reading order, with decoration marked so it is skipped."
-
-[checkAccessibility.chip]
-untagged = "Untagged"
 
 [checkAccessibility.error]
 download = "The accessibility report could not be created. Try again."
@@ -3320,12 +3315,6 @@ title = "Has a title"
 summary_one = "{{count}} image needs a description (page {{pages}})"
 summary_other = "{{count}} images need a description (pages {{pages}})"
 
-[checkAccessibility.grade]
-minor = "Minor issues"
-needsWork = "Needs work"
-pass = "Passes automated checks"
-poor = "Not accessible"
-
 [checkAccessibility.issue]
 appliesTo = "Applies to"
 clauseValue = "{{spec}} §{{clause}}, test {{test}}"
@@ -3344,9 +3333,6 @@ standard = "Standard"
 times_one = "{{count}} time"
 times_other = "{{count}} times"
 where = "Where"
-
-[checkAccessibility.manual]
-tip = "Automated checks cover only part of PDF/UA. These need a person."
 
 [checkAccessibility.objects]
 annotation = "An annotation"
@@ -3372,11 +3358,17 @@ translatedMetadata = "A metadata entry with translations"
 
 [checkAccessibility.pdf]
 continued = "{{name}} (continued)"
-fail = "Fail"
 footer = "Checked with Stirling PDF"
 page = "Page {{n}}"
-pass = "Pass"
 title = "Accessibility report"
+
+[checkAccessibility.result]
+fail = "Fail"
+failSummary = "Screen readers may not be able to read all of it."
+partial = "Partial"
+partialSummary = "Screen readers can read it, but some checks fail."
+pass = "Pass"
+passSummary = "Passes every automated PDF/UA check."
 
 [checkAccessibility.rules]
 annotationLanguage = "The language of comment or link text can't be worked out. Setting a language for the document fixes this."
@@ -3439,20 +3431,16 @@ titleNotDisplayed = "Title isn't shown when opened"
 untaggedContent = "Content that isn't tagged"
 
 [checkAccessibility.score]
-aria = "Accessibility score {{score}} out of 100"
-checksTip = "{{failed}} of {{total}} checks failed, across {{rules}} of {{ruleTotal}} PDF/UA rules."
-how = "Each bar is how much of that area's share of the 100 points this file keeps. The numbers beside it are how many of that area's rules pass, out of how many it has. An area's first failing rule halves its share, and each further rule takes more. Untagged PDFs have their score halved."
 issues_one = "{{count}} issue"
 issues_other = "{{count}} issues"
 noIssues = "No issues found"
 subtitle_one = "{{profile}} · {{count}} page"
 subtitle_other = "{{profile}} · {{count}} pages"
-untaggedTip = "Screen readers can't follow an untagged PDF, so its score is halved."
 
 [checkAccessibility.sections]
 basics = "Document basics"
 breakdown = "Breakdown"
-manual = "Manual checks"
+limits = "What this tool can't check"
 
 [checkAccessibility.status]
 checking = "Checking {{current}} of {{total}}..."

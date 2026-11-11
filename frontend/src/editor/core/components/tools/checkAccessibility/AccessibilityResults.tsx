@@ -6,10 +6,12 @@ import { Icon } from "@editor/ui/Icon";
 import { Select } from "@editor/ui/Select";
 import { Spinner } from "@editor/ui/Spinner";
 import { downloadFile } from "@editor/services/downloadService";
+import { ToolPanelFooter } from "@editor/components/tools/ToolPanelFooter";
 import { AccessibilityReportView } from "@editor/components/tools/checkAccessibility/AccessibilityReportView";
 import type { CheckAccessibilityOperationHook } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibility/accessibilityReportPdf";
-import { scoreAccessibilityReport } from "@editor/utils/accessibilityScore";
+import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
+import { resultLabel } from "@editor/utils/accessibilityReportContent";
 import type { FileId } from "@editor/types/file";
 import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
@@ -34,7 +36,7 @@ export function AccessibilityResults({
       results.map((entry) => ({
         value: entry.fileId,
         label: entry.report
-          ? `${entry.fileName} · ${scoreAccessibilityReport(entry.report).score}`
+          ? `${entry.fileName} · ${resultLabel(t, assessAccessibilityReport(entry.report).result)}`
           : `${entry.fileName} · ${t("checkAccessibility.fileFailed", "failed")}`,
       })),
     [results, t],
@@ -96,8 +98,8 @@ export function AccessibilityResults({
 
       {selected.report ? (
         <AccessibilityReportView
+          key={selected.fileId}
           report={selected.report}
-          reportKey={selected.fileId}
         />
       ) : (
         <Banner
@@ -111,26 +113,31 @@ export function AccessibilityResults({
       )}
 
       {reportFile && (
-        <div className="a11y-download">
-          {downloadFailed && (
-            <Banner
-              tone="danger"
-              title={t(
-                "checkAccessibility.error.download",
-                "The accessibility report could not be created. Try again.",
+        <ToolPanelFooter>
+          <div className="a11y-download">
+            {downloadFailed && (
+              <Banner
+                tone="danger"
+                title={t(
+                  "checkAccessibility.error.download",
+                  "The accessibility report could not be created. Try again.",
+                )}
+                onDismiss={() => setDownloadFailed(false)}
+              />
+            )}
+            <Button
+              fullWidth
+              loading={buildingPdf}
+              leftSection={<Icon name="download" size={16} />}
+              onClick={() => void downloadReportPdf(selected)}
+            >
+              {t(
+                "checkAccessibility.download",
+                "Download accessibility report",
               )}
-              onDismiss={() => setDownloadFailed(false)}
-            />
-          )}
-          <Button
-            fullWidth
-            loading={buildingPdf}
-            leftSection={<Icon name="download" size={16} />}
-            onClick={() => void downloadReportPdf(selected)}
-          >
-            {t("checkAccessibility.download", "Download accessibility report")}
-          </Button>
-        </div>
+            </Button>
+          </div>
+        </ToolPanelFooter>
       )}
     </div>
   );

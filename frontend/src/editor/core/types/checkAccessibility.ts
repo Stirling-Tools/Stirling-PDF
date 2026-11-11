@@ -52,8 +52,6 @@ export interface AccessibilityChecks {
   passed: number;
   rulesInProfile: number;
   rulesFailed: number;
-  /** Profile rules counted by their comma-joined veraPDF tags. */
-  rulesByTags?: Record<string, number>;
 }
 
 export interface AccessibilityReport {

@@ -33,23 +33,15 @@
   min-width: 0;
 }
 
-.a11y-hero__grade {
-  font-size: 1rem;
+.a11y-hero__result {
+  font-size: 1.125rem;
   font-weight: 650;
   line-height: 1.25;
 }
 
-.a11y-hero__grade--pass,
-.a11y-hero__grade--minor {
-  color: var(--c-success);
-}
-
-.a11y-hero__grade--needsWork {
-  color: var(--c-warning);
-}
-
-.a11y-hero__grade--poor {
-  color: var(--c-danger);
+.a11y-hero__summary {
+  font-size: 0.8125rem;
+  color: var(--c-text);
 }
 
 .a11y-hero__sub {
@@ -57,36 +49,20 @@
   color: var(--c-text-muted);
 }
 
-.a11y-ring {
-  position: relative;
+.a11y-result {
   flex-shrink: 0;
 }
 
-.a11y-ring__track {
-  stroke: var(--c-border-subtle);
+.a11y-result--pass {
+  color: var(--c-success);
 }
 
-.a11y-ring__value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  padding-top: 2.6rem;
-  font-variant-numeric: tabular-nums;
+.a11y-result--partial {
+  color: var(--c-warning);
 }
 
-.a11y-ring__number {
-  font-size: 2.125rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--c-text);
-}
-
-.a11y-ring__out-of {
-  margin-left: 0.125rem;
-  font-size: 0.75rem;
-  color: var(--c-text-subtle);
+.a11y-result--fail {
+  color: var(--c-danger);
 }
 
 .a11y-inline {
@@ -108,20 +84,6 @@
   gap: 0.625rem;
 }
 
-.a11y-section--target {
-  scroll-margin-top: 0.5rem;
-}
-
-.a11y-section--target:focus {
-  outline: none;
-}
-
-.a11y-section--target:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: 4px;
-  border-radius: var(--radius-md);
-}
-
 .a11y-breakdown {
   display: flex;
   flex-direction: column;
@@ -131,54 +93,66 @@
   list-style: none;
 }
 
-.a11y-breakdown__row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  column-gap: 0.5rem;
-  row-gap: 0.3rem;
-  color: var(--c-text-muted);
-}
-
 .a11y-breakdown__label {
   font-size: 0.8125rem;
   color: var(--c-text);
 }
 
-.a11y-breakdown__name {
-  display: inline-flex;
+.a11y-area__row {
+  display: flex;
   align-items: center;
   gap: 0.375rem;
-  min-width: 0;
 }
 
-.a11y-breakdown__link {
+.a11y-area__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
   padding: 0;
   border: 0;
   background: none;
   font: inherit;
-  font-size: 0.8125rem;
   text-align: left;
+  color: var(--c-text-muted);
+}
+
+.a11y-area__toggle--button {
   cursor: pointer;
 }
 
-.a11y-breakdown__link:hover {
+.a11y-area__toggle--button:hover .a11y-breakdown__label {
   color: var(--c-accent-fg, var(--c-primary));
 }
 
-.a11y-breakdown__link:focus-visible {
+.a11y-area__toggle--button:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
-.a11y-breakdown__value {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
+/* Passing rows keep an empty chevron slot so every label lines up. */
+.a11y-area__chevron {
+  flex-shrink: 0;
+  width: 16px;
+  color: var(--c-text-subtle);
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
 }
 
-.a11y-breakdown__bar {
-  grid-column: 1 / -1;
+.a11y-area__toggle[aria-expanded="true"] .a11y-area__chevron {
+  transform: rotate(0deg);
+}
+
+.a11y-area__status {
+  margin-left: auto;
+}
+
+.a11y-area__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .a11y-issues {
@@ -250,7 +224,24 @@
   padding-left: 1.375rem;
 }
 
-.a11y-facts,
+.a11y-basics {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.a11y-basics__progress {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
 .a11y-manual {
   display: flex;
   flex-direction: column;
@@ -290,13 +281,10 @@
   color: var(--c-text-muted);
 }
 
+/* Inset to line up with the report, which sits inside the flow's padding and scrollbar gutter. */
 .a11y-download {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-block: 0.75rem;
-  background: var(--c-surface);
+  padding: 0.75rem 1rem 0.75rem 1.5rem;
 }

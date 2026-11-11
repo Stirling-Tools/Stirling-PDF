@@ -17,19 +17,21 @@ import {
   type TextStyle,
 } from "@editor/services/reportPdf/ReportWriter";
 import {
+  type AccessibilityIssue,
   type AccessibilityReport,
   type AccessibilityReportEntry,
 } from "@editor/types/checkAccessibility";
 import {
-  scoreAccessibilityReport,
-  type AccessibilityGrade,
-} from "@editor/utils/accessibilityScore";
+  assessAccessibilityReport,
+  type AccessibilityResult,
+} from "@editor/utils/accessibilityAssessment";
 import {
   categoryLabel,
   describeIssue,
   documentBasics,
   figuresSummary,
-  gradeLabel,
+  resultLabel,
+  resultSummary,
 } from "@editor/utils/accessibilityReportContent";
 
 const LAYOUT: ReportLayout = {
@@ -44,22 +46,24 @@ const PAGE_HEIGHT = LAYOUT.pageHeight;
 const MARGIN_X = LAYOUT.marginX;
 const MARGIN_TOP = LAYOUT.marginTop;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
+const CONTENT_RIGHT = MARGIN_X + CONTENT_WIDTH;
+const ISSUE_INDENT = 14;
 const DETAIL_LABEL_WIDTH = 84;
-const WHITE = rgb(1, 1, 1);
 
-const gradeColor = (grade: AccessibilityGrade): PdfiumColor =>
-  grade === "poor"
-    ? statusText.danger
-    : grade === "needsWork"
+const resultColor = (result: AccessibilityResult): PdfiumColor =>
+  result === "pass"
+    ? statusText.success
+    : result === "partial"
       ? statusText.warning
-      : statusText.success;
+      : statusText.danger;
 
-const barColor = (fraction: number): PdfiumColor =>
-  fraction >= 0.999
-    ? colorPalette.success
-    : fraction >= 0.5
-      ? colorPalette.warning
-      : colorPalette.danger;
+/** `color` laid over white at `amount`, for the soft fills the on-screen chips use. */
+const tint = (color: PdfiumColor, amount: number): PdfiumColor =>
+  rgb(
+    1 - (1 - color._r) * amount,
+    1 - (1 - color._g) * amount,
+    1 - (1 - color._b) * amount,
+  );
 
 function sectionHeading(writer: ReportWriter, title: string, count?: string) {
   writer.ensure(40);
@@ -123,49 +127,35 @@ function drawHeader(
   writer.y = PAGE_HEIGHT - bandHeight - 20;
 }
 
-function drawScore(
+function drawResult(
   writer: ReportWriter,
   t: TFunction,
   report: AccessibilityReport,
+  result: AccessibilityResult,
 ) {
-  const scored = scoreAccessibilityReport(report);
-  const cardHeight = report.tagged ? 64 : 78;
+  const height = 70;
   const top = writer.y;
+  const color = resultColor(result);
   writer.rect(
     MARGIN_X,
     top,
     CONTENT_WIDTH,
-    cardHeight,
+    height,
     colorPalette.boxBackground,
     colorPalette.boxBorder,
   );
-
-  const scoreText = String(scored.score);
-  const scoreSize = 34;
-  const scoreX = MARGIN_X + 18;
-  writer.y = top - 14;
-  writer.text(scoreText, scoreX, {
+  writer.rect(MARGIN_X, top, 4, height, color);
+  const textX = MARGIN_X + 20;
+  writer.y = top - 12;
+  writer.text(resultLabel(t, result), textX, {
     font: writer.boldFont,
-    size: scoreSize,
-    color: gradeColor(scored.grade),
+    size: 18,
+    color,
   });
-  writer.y = top - 14 - scoreSize + 10;
-  writer.text(
-    "/100",
-    scoreX + writer.boldFont.widthOfTextAtSize(scoreText, scoreSize) + 3,
-    {
-      font: writer.font,
-      size: 10,
-      color: colorPalette.textMuted,
-    },
-  );
-
-  const textX = MARGIN_X + 120;
-  writer.y = top - 14;
-  writer.text(gradeLabel(t, scored.grade), textX, {
-    font: writer.boldFont,
-    size: 14,
-    color: gradeColor(scored.grade),
+  writer.text(resultSummary(t, result), textX, {
+    font: writer.font,
+    size: 10,
+    color: colorPalette.textPrimary,
   });
   writer.text(
     report.issues.length === 0
@@ -174,162 +164,38 @@ function drawScore(
           count: report.issues.length,
         }),
     textX,
-    { font: writer.font, size: 10, color: colorPalette.textPrimary },
+    { font: writer.font, size: 9, color: colorPalette.textMuted },
   );
-  if (!report.tagged) {
-    writer.text(
-      t(
-        "checkAccessibility.score.untaggedTip",
-        "Screen readers can't follow an untagged PDF, so its score is halved.",
-      ),
-      textX,
-      { font: writer.font, size: 9, color: statusText.danger },
-    );
-  }
-  writer.y = top - cardHeight - 4;
+  writer.y = top - height - 6;
 }
 
-function drawBreakdown(
-  writer: ReportWriter,
-  t: TFunction,
-  report: AccessibilityReport,
-) {
-  sectionHeading(
-    writer,
-    t("checkAccessibility.sections.breakdown", "Breakdown"),
-  );
-  const scored = scoreAccessibilityReport(report);
-  for (const category of scored.categories) {
-    writer.ensure(26);
-    const failed = category.issues.length;
-    const value =
-      category.rulesInProfile !== undefined
-        ? `${Math.max(0, category.rulesInProfile - failed)}/${category.rulesInProfile}`
-        : t("checkAccessibility.breakdown.failingCount", "{{count}} failing", {
-            count: failed,
-          });
-    const label: TextStyle = {
-      font: writer.font,
-      size: 10,
-      color: colorPalette.textPrimary,
-    };
-    writer.textRight(value, MARGIN_X + CONTENT_WIDTH, {
-      ...label,
-      color: colorPalette.textMuted,
-    });
-    writer.text(categoryLabel(t, category.id), MARGIN_X, label);
-    const fraction = category.points / category.weight;
-    const barTop = writer.y + 1;
-    writer.rect(MARGIN_X, barTop, CONTENT_WIDTH, 3.5, colorPalette.boxBorder);
-    if (fraction > 0) {
-      writer.rect(
-        MARGIN_X,
-        barTop,
-        CONTENT_WIDTH * fraction,
-        3.5,
-        barColor(fraction),
-      );
-    }
-    writer.y -= 10;
-  }
-}
-
-function drawIssues(
-  writer: ReportWriter,
-  t: TFunction,
-  report: AccessibilityReport,
-) {
-  const scored = scoreAccessibilityReport(report);
-  for (const category of scored.categories) {
-    if (category.issues.length === 0) continue;
-    sectionHeading(
-      writer,
-      categoryLabel(t, category.id),
-      String(category.issues.length),
-    );
-    category.issues.forEach((issue, index) => {
-      const content = describeIssue(t, issue);
-      if (index > 0) {
-        writer.ensure(12);
-        writer.rule(writer.y + 4);
-        writer.y -= 6;
-      }
-      writer.ensure(48);
-      writer.paragraph(content.title, MARGIN_X, CONTENT_WIDTH, {
-        font: writer.boldFont,
-        size: 11,
-        color: colorPalette.textPrimary,
-      });
-      writer.paragraph(content.summary, MARGIN_X, CONTENT_WIDTH, {
-        font: writer.font,
-        size: 9,
-        color: colorPalette.textMuted,
-      });
-      if (content.explanation) {
-        writer.y -= 3;
-        writer.paragraph(content.explanation, MARGIN_X, CONTENT_WIDTH, {
-          font: writer.font,
-          size: 10,
-          color: colorPalette.textPrimary,
-        });
-      }
-      writer.y -= 4;
-      const detailStyle: TextStyle = {
-        font: writer.font,
-        size: 8.5,
-        color: colorPalette.textPrimary,
-      };
-      for (const detail of content.details) {
-        const lines = wrapText(
-          detail.value,
-          writer.font,
-          detailStyle.size,
-          CONTENT_WIDTH - DETAIL_LABEL_WIDTH,
-        );
-        lines.forEach((line, lineIndex) => {
-          writer.ensure(detailStyle.size * 1.35);
-          if (lineIndex === 0) {
-            writer.currentPage.drawText(detail.label, {
-              x: MARGIN_X,
-              y: writer.y - detailStyle.size,
-              size: detailStyle.size,
-              font: writer.font,
-              color: colorPalette.textMuted,
-            });
-          }
-          writer.text(line, MARGIN_X + DETAIL_LABEL_WIDTH, detailStyle);
-        });
-      }
-      writer.y -= 4;
-    });
-  }
-
-  const figures = figuresSummary(t, report);
-  if (figures) {
-    writer.y -= 8;
-    writer.paragraph(figures, MARGIN_X, CONTENT_WIDTH, {
-      font: writer.font,
-      size: 10,
-      color: colorPalette.textMuted,
-    });
-  }
-}
-
-function drawStatusPill(
+/** A soft pill like the on-screen chips; `right` anchors it to the content edge instead. */
+function drawPill(
   writer: ReportWriter,
   x: number,
   label: string,
-  color: PdfiumColor,
+  ok: boolean,
+  anchor: "left" | "right" = "left",
 ) {
-  const size = 7;
-  const width = writer.boldFont.widthOfTextAtSize(label, size) + 10;
-  writer.rect(x, writer.y + 1, width, 12, color);
+  const size = 7.5;
+  const width = writer.boldFont.widthOfTextAtSize(label, size) + 12;
+  const left = anchor === "right" ? x - width : x;
+  const base = ok ? colorPalette.success : colorPalette.danger;
+  writer.currentPage.drawRectangle({
+    x: left,
+    y: writer.y - 11,
+    width,
+    height: 12,
+    color: tint(base, 0.14),
+    borderColor: tint(base, 0.55),
+    borderWidth: 0.75,
+  });
   writer.currentPage.drawText(label, {
-    x: x + 5,
-    y: writer.y - 8,
+    x: left + 6,
+    y: writer.y - 8.5,
     size,
     font: writer.boldFont,
-    color: WHITE,
+    color: ok ? statusText.success : statusText.danger,
   });
   return width;
 }
@@ -344,39 +210,54 @@ function drawBasics(
   sectionHeading(
     writer,
     t("checkAccessibility.sections.basics", "Document basics"),
-    `${met}/${basics.length}`,
   );
-  const pass = t("checkAccessibility.pdf.pass", "Pass");
-  const fail = t("checkAccessibility.pdf.fail", "Fail");
+  const pass = t("checkAccessibility.result.pass", "Pass");
+  const fail = t("checkAccessibility.result.fail", "Fail");
   const pillWidth =
     Math.max(
-      writer.boldFont.widthOfTextAtSize(pass, 7),
-      writer.boldFont.widthOfTextAtSize(fail, 7),
-    ) + 10;
+      writer.boldFont.widthOfTextAtSize(pass, 7.5),
+      writer.boldFont.widthOfTextAtSize(fail, 7.5),
+    ) + 12;
+  const rows = Math.ceil((basics.length + 1) / 2);
+  const rowHeight = 18;
   const columnWidth = CONTENT_WIDTH / 2;
-  for (let index = 0; index < basics.length; index += 2) {
-    writer.ensure(18);
-    const rowTop = writer.y;
-    basics.slice(index, index + 2).forEach((fact, column) => {
-      writer.y = rowTop;
-      const x = MARGIN_X + column * columnWidth;
-      drawStatusPill(
-        writer,
-        x,
-        fact.ok ? pass : fail,
-        fact.ok ? statusText.success : statusText.danger,
-      );
-      writer.text(fact.label, x + pillWidth + 8, {
-        font: writer.font,
-        size: 10,
-        color: colorPalette.textPrimary,
-      });
+  writer.ensure(rows * rowHeight);
+  const top = writer.y;
+  basics.forEach((fact, index) => {
+    const column = Math.floor(index / rows);
+    writer.y = top - (index % rows) * rowHeight;
+    const x = MARGIN_X + column * columnWidth;
+    drawPill(writer, x, fact.ok ? pass : fail, fact.ok);
+    writer.text(fact.label, x + pillWidth + 8, {
+      font: writer.font,
+      size: 10,
+      color: colorPalette.textPrimary,
     });
-    writer.y = rowTop - 18;
-  }
+  });
+  const progressX = MARGIN_X + columnWidth;
+  const barWidth = columnWidth;
+  writer.y = top - (rows - 1) * rowHeight;
+  writer.text(
+    t("checkAccessibility.basics.met", "{{met}} of {{total}} met", {
+      met,
+      total: basics.length,
+    }),
+    progressX,
+    { font: writer.font, size: 9, color: colorPalette.textMuted },
+  );
+  const fraction = met / basics.length;
+  writer.rect(progressX, writer.y, barWidth, 3.5, colorPalette.boxBorder);
+  writer.rect(
+    progressX,
+    writer.y,
+    barWidth * fraction,
+    3.5,
+    fraction === 1 ? colorPalette.success : colorPalette.warning,
+  );
+  writer.y = top - rows * rowHeight;
 }
 
-function drawManualChecks(
+function drawLimits(
   writer: ReportWriter,
   t: TFunction,
   report: AccessibilityReport,
@@ -384,19 +265,8 @@ function drawManualChecks(
   if (report.humanChecks.length === 0) return;
   sectionHeading(
     writer,
-    t("checkAccessibility.sections.manual", "Manual checks"),
-    String(report.humanChecks.length),
+    t("checkAccessibility.sections.limits", "What this tool can't check"),
   );
-  writer.paragraph(
-    t(
-      "checkAccessibility.manual.tip",
-      "Automated checks cover only part of PDF/UA. These need a person.",
-    ),
-    MARGIN_X,
-    CONTENT_WIDTH,
-    { font: writer.font, size: 9, color: colorPalette.textMuted },
-  );
-  writer.y -= 4;
   const style: TextStyle = {
     font: writer.font,
     size: 10,
@@ -419,6 +289,127 @@ function drawManualChecks(
     });
     writer.y -= 3;
   }
+}
+
+function drawIssue(
+  writer: ReportWriter,
+  t: TFunction,
+  issue: AccessibilityIssue,
+) {
+  const x = MARGIN_X + ISSUE_INDENT;
+  const width = CONTENT_RIGHT - x;
+  const content = describeIssue(t, issue);
+  writer.ensure(48);
+  writer.paragraph(content.title, x, width, {
+    font: writer.boldFont,
+    size: 10.5,
+    color: colorPalette.textPrimary,
+  });
+  writer.paragraph(content.summary, x, width, {
+    font: writer.font,
+    size: 9,
+    color: colorPalette.textMuted,
+  });
+  if (content.explanation) {
+    writer.y -= 3;
+    writer.paragraph(content.explanation, x, width, {
+      font: writer.font,
+      size: 9.5,
+      color: colorPalette.textPrimary,
+    });
+  }
+  writer.y -= 4;
+  const detailStyle: TextStyle = {
+    font: writer.font,
+    size: 8.5,
+    color: colorPalette.textPrimary,
+  };
+  for (const detail of content.details) {
+    const lines = wrapText(
+      detail.value,
+      writer.font,
+      detailStyle.size,
+      width - DETAIL_LABEL_WIDTH,
+    );
+    lines.forEach((line, lineIndex) => {
+      writer.ensure(detailStyle.size * 1.35);
+      if (lineIndex === 0) {
+        writer.currentPage.drawText(detail.label, {
+          x,
+          y: writer.y - detailStyle.size,
+          size: detailStyle.size,
+          font: writer.font,
+          color: colorPalette.textMuted,
+        });
+      }
+      writer.text(line, x + DETAIL_LABEL_WIDTH, detailStyle);
+    });
+  }
+  writer.y -= 6;
+}
+
+function drawBreakdown(
+  writer: ReportWriter,
+  t: TFunction,
+  report: AccessibilityReport,
+) {
+  sectionHeading(
+    writer,
+    t("checkAccessibility.sections.breakdown", "Breakdown"),
+  );
+  const { areas } = assessAccessibilityReport(report);
+  const figures = figuresSummary(t, report);
+  areas.forEach((area, areaIndex) => {
+    const passes = area.issues.length === 0;
+    const note = area.id === "altText" ? figures : null;
+    writer.ensure(passes && !note ? 20 : 68);
+    if (areaIndex > 0) {
+      writer.rule(writer.y + 4);
+      writer.y -= 4;
+    }
+    drawPill(
+      writer,
+      CONTENT_RIGHT,
+      passes
+        ? t("checkAccessibility.result.pass", "Pass")
+        : t("checkAccessibility.result.fail", "Fail"),
+      passes,
+      "right",
+    );
+    writer.text(categoryLabel(t, area.id), MARGIN_X, {
+      font: writer.boldFont,
+      size: 10.5,
+      color: colorPalette.textPrimary,
+    });
+    writer.y -= 4;
+    area.issues.forEach((issue, index) => {
+      if (index > 0) {
+        writer.ensure(10);
+        writer.currentPage.drawLine({
+          start: { x: MARGIN_X + ISSUE_INDENT, y: writer.y + 3 },
+          end: { x: CONTENT_RIGHT, y: writer.y + 3 },
+          thickness: 0.5,
+          color: colorPalette.boxBorder,
+        });
+        writer.y -= 4;
+      }
+      drawIssue(writer, t, issue);
+    });
+    if (note) {
+      writer.paragraph(
+        note,
+        MARGIN_X + ISSUE_INDENT,
+        CONTENT_RIGHT - MARGIN_X - ISSUE_INDENT,
+        {
+          font: writer.font,
+          size: 9,
+          color: colorPalette.textMuted,
+        },
+      );
+      writer.y -= 4;
+    }
+    writer.y -= 4;
+  });
 }
 
 function drawFailedEntry(
@@ -489,11 +480,10 @@ export async function createAccessibilityReportPdf(
       : null,
   );
   if (report) {
-    drawScore(writer, t, report);
-    drawBreakdown(writer, t, report);
-    drawIssues(writer, t, report);
+    drawResult(writer, t, report, assessAccessibilityReport(report).result);
     drawBasics(writer, t, report);
-    drawManualChecks(writer, t, report);
+    drawLimits(writer, t, report);
+    drawBreakdown(writer, t, report);
   } else {
     drawFailedEntry(writer, t, entry);
   }
