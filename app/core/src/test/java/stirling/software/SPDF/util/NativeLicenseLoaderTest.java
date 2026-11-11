@@ -3,6 +3,7 @@ package stirling.software.SPDF.util;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
@@ -10,10 +11,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -489,6 +492,43 @@ class NativeLicenseLoaderTest {
             assertNull(
                     dependency.getModuleLicenseText(),
                     "traversal and scheme references must not be resolved");
+        }
+    }
+
+    @Test
+    void rejectsSymlinkedLicenseFiles(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Link Codec\n   - License: MIT License (see REF-LINK.txt)\n");
+        Path secret = tempDir.resolve("secret.txt");
+        Files.writeString(secret, "secret text");
+        try {
+            Files.createSymbolicLink(licensesDir.resolve("REF-LINK.txt"), secret);
+            Files.createSymbolicLink(licensesDir.resolve("ORPHAN-LINK.txt"), secret);
+        } catch (UnsupportedOperationException | IOException e) {
+            Assumptions.assumeTrue(false, "symlinks unavailable: " + e);
+        }
+        Files.writeString(licensesDir.resolve("REAL.txt"), "Real text.");
+
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+        Dependency link = byName.get("Link Codec");
+        assertNotNull(link);
+        assertNull(link.getModuleLicenseText(), "a referenced symlink is not read");
+        assertTrue(byName.containsKey("REAL"), "a regular orphan is still listed");
+        for (Dependency dependency : dependencies) {
+            assertFalse(
+                    Objects.toString(dependency.getModuleLicenseText(), "")
+                            .contains("secret text"));
+            assertFalse(
+                    Objects.toString(dependency.getModuleNoticeText(), "").contains("secret text"));
         }
     }
 

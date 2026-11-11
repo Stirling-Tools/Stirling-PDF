@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -406,7 +407,7 @@ public final class NativeLicenseLoader {
                 return List.of();
             }
             try (Stream<Path> entries = Files.list(directory)) {
-                return entries.filter(Files::isRegularFile)
+                return entries.filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
                         .map(path -> path.getFileName().toString())
                         .filter(name -> name.toLowerCase(Locale.ROOT).endsWith(".txt"))
                         .sorted()
@@ -476,8 +477,28 @@ public final class NativeLicenseLoader {
                     noticeUrl);
             return null;
         }
-        try (InputStream in = siblingUrl(noticeUrl, licenseFile).openStream()) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8).strip();
+        try {
+            URL sibling = siblingUrl(noticeUrl, licenseFile);
+            if ("file".equals(sibling.getProtocol())) {
+                Path path = Path.of(sibling.toURI());
+                if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) {
+                    log.warn(
+                            "Ignoring non-regular native license file {} beside {}",
+                            licenseFile,
+                            noticeUrl);
+                    return null;
+                }
+            }
+            try (InputStream in = sibling.openStream()) {
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8).strip();
+            }
+        } catch (URISyntaxException e) {
+            log.warn(
+                    "Unable to resolve native license file {} beside {}",
+                    licenseFile,
+                    noticeUrl,
+                    e);
+            return null;
         } catch (IOException e) {
             log.warn("Unable to read native license text {} beside {}", licenseFile, noticeUrl, e);
             return null;
