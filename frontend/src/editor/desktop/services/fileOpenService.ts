@@ -2,6 +2,8 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 
 export interface FileOpenService {
   getOpenedFiles(): Promise<string[]>;
+  /** Whether the OS has queued files for this window, without taking them. */
+  hasOpenedFiles(): Promise<boolean>;
   readFileAsArrayBuffer(
     filePath: string,
   ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
@@ -24,6 +26,14 @@ class TauriFileOpenService implements FileOpenService {
     } catch (error) {
       console.error("❌ Failed to get opened files:", error);
       return [];
+    }
+  }
+
+  async hasOpenedFiles(): Promise<boolean> {
+    try {
+      return (await invoke<string[]>("get_opened_files")).length > 0;
+    } catch {
+      return false;
     }
   }
 
@@ -161,6 +171,10 @@ class WebFileOpenService implements FileOpenService {
   async getOpenedFiles(): Promise<string[]> {
     // In web mode, there's no file association support
     return [];
+  }
+
+  async hasOpenedFiles(): Promise<boolean> {
+    return false;
   }
 
   async readFileAsArrayBuffer(

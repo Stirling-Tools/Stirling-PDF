@@ -87,6 +87,9 @@ vi.mock("@editor/components/DesktopQueryCacheReset", () => ({
 vi.mock("@editor/components/LocalProcessingFolders", () => ({
   LocalProcessingFolders: () => null,
 }));
+vi.mock("@editor/components/ProcessorPageHandlers", () => ({
+  ProcessorPageHandlers: () => null,
+}));
 vi.mock("@editor/components/UsageLimitModalHost", () => ({
   default: () => null,
 }));

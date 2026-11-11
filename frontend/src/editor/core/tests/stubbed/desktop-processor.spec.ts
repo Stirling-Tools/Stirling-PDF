@@ -1,6 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { installTauri } from "@editor/tests/helpers/tauriDiskStub";
+import {
+  dismissModals,
+  installTauri,
+  setDisk,
+} from "@editor/tests/helpers/tauriDiskStub";
 
 // The real desktop build, signed in to a self-hosted server the stubs stand in
 // for. Desktop requests go through the native HTTP plugin, which the IPC stub
@@ -15,6 +21,14 @@ function jwt(payload: Record<string, unknown>): string {
 }
 
 const TOKEN = jwt({ sub: "alice", exp: 4_102_444_800 });
+const PDF_PATH = "C:/Docs/report.pdf";
+const PDF_BYTES = Array.from(
+  fs.readFileSync(
+    path.resolve(
+      "src/editor/core/tests/test-fixtures/annotation-text-sample.pdf",
+    ),
+  ),
+);
 const CLOUD_TOKEN = jwt({
   sub: "5f0c2a7e-0000-4000-8000-000000000001",
   email: "alice@example.com",
@@ -55,6 +69,89 @@ async function signInToServer(page: Page) {
   await page.addInitScript((token) => {
     localStorage.setItem("stirling_jwt", token);
   }, TOKEN);
+}
+
+async function go(page: Page, to: string) {
+  await page.evaluate((path) => {
+    window.history.pushState({}, "", path);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, to);
+}
+
+/** Opens a PDF from the OS, as a double-click in Explorer would: Rust queues it, then signals. */
+async function openFromOs(page: Page) {
+  await setDisk(page, {
+    [PDF_PATH]: { bytes: PDF_BYTES, modifiedMs: 1_700_000_000_000 },
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => Reflect.get(window, "__listeners")["files-changed"]),
+    )
+    .toBeDefined();
+  await page.evaluate((path) => {
+    Reflect.set(window, "__openedPaths", [path]);
+    const callbacks = Reflect.get(window, "__callbacks");
+    const listeners = Reflect.get(window, "__listeners");
+    callbacks[listeners["files-changed"]]({
+      event: "files-changed",
+      payload: null,
+    });
+  }, PDF_PATH);
+}
+
+async function openEditorWithFile(page: Page) {
+  await signInToServer(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await dismissModals(page);
+  await openFromOs(page);
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+    timeout: 30_000,
+  });
+}
+
+async function openProcessor(page: Page) {
+  await go(page, "/processor");
+  await expect(page.locator(".desktop-processor .portal-shell")).toBeVisible({
+    timeout: 30_000,
+  });
+}
+
+async function requestClose(page: Page) {
+  await page.evaluate(() => {
+    const callbacks = Reflect.get(window, "__callbacks");
+    const listeners = Reflect.get(window, "__listeners");
+    callbacks[listeners["tauri://close-requested"]]({
+      event: "tauri://close-requested",
+      id: 1,
+      payload: null,
+    });
+  });
+}
+
+async function markStoredFilesUnsaved(page: Page) {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open("stirling-pdf-files");
+        request.onsuccess = () => {
+          const db = request.result;
+          const store = db
+            .transaction("files", "readwrite")
+            .objectStore("files");
+          const read = store.getAll();
+          read.onsuccess = () => {
+            for (const record of read.result)
+              store.put({ ...record, isDirty: true });
+            store.transaction.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+          };
+          read.onerror = () => reject(read.error);
+        };
+        request.onerror = () => reject(request.error);
+      }),
+  );
 }
 
 test("opens the Processor as a page of the desktop app", async ({ page }) => {
@@ -119,4 +216,73 @@ test("sends local mode back to the editor", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
   await expect(page.locator(".portal-shell")).toHaveCount(0);
+});
+
+test("keeps the editor's files across a trip to the Processor", async ({
+  page,
+}) => {
+  await openEditorWithFile(page);
+  await openProcessor(page);
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(0);
+
+  await go(page, "/");
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+    timeout: 30_000,
+  });
+});
+
+test("opens a file from the OS in the editor while on the Processor", async ({
+  page,
+}) => {
+  await signInToServer(page);
+  await page.goto("/processor", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".desktop-processor .portal-shell")).toBeVisible({
+    timeout: 30_000,
+  });
+
+  await openFromOs(page);
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1, {
+    timeout: 30_000,
+  });
+});
+
+test("warns about unsaved files when the window closes on the Processor", async ({
+  page,
+}) => {
+  await openEditorWithFile(page);
+  await openProcessor(page);
+  await markStoredFilesUnsaved(page);
+  await page.evaluate(() =>
+    Reflect.set(window, "__dialogAnswer", "Open in the editor"),
+  );
+
+  await requestClose(page);
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => Reflect.get(window, "__dialogs")?.[0]?.message),
+    )
+    .toContain("report.pdf");
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => Reflect.get(window, "__destroyed"))).toBe(
+    undefined,
+  );
+});
+
+test("closes from the Processor without asking when nothing is unsaved", async ({
+  page,
+}) => {
+  await openEditorWithFile(page);
+  await openProcessor(page);
+
+  await requestClose(page);
+
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "__destroyed")))
+    .toBe(true);
+  expect(await page.evaluate(() => Reflect.get(window, "__dialogs"))).toBe(
+    undefined,
+  );
 });
