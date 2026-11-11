@@ -27,9 +27,7 @@ const TEST_DEFAULTS = {
   pool: process.env.CI ? "forks" : "threads",
   // Mantine is hundreds of small ESM files that every component test re-imports;
   // pre-bundled it is one module (~250ms -> ~25ms of collect per file).
-  deps: {
-    optimizer: { client: { enabled: true, include: MANTINE_PACKAGES } },
-  },
+  deps: {},
   // All our tests are designed to run in the browser
   testTransformMode: { web: ["**/*"] },
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
