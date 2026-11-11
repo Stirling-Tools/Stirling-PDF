@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.connectedaccount.CloudProvider;
 import stirling.software.proprietary.connectedaccount.ConnectedAccount;
 import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
@@ -20,7 +19,6 @@ public class MicrosoftConnectionResolver {
 
     private final ConnectionLookup connections;
     private final ConnectedAccountAccess accountAccess;
-    private final ApplicationProperties applicationProperties;
 
     public MicrosoftDriveConfig resolve(
             Map<String, Object> options, MicrosoftDrive expected, String owner) {
@@ -39,8 +37,7 @@ public class MicrosoftConnectionResolver {
                                 IntegrationType.MICROSOFT_365,
                                 "Microsoft 365",
                                 LocationOptions.PER_USE_KEYS,
-                                owner),
-                        appDefaults());
+                                owner));
         if (expected != null && config.drive() != expected) {
             throw new IllegalArgumentException(
                     "a "
@@ -52,12 +49,5 @@ public class MicrosoftConnectionResolver {
                             + " one");
         }
         return config;
-    }
-
-    public MicrosoftDriveConfig.AppDefaults appDefaults() {
-        ApplicationProperties.Premium.ProFeatures.Microsoft app =
-                applicationProperties.getPremium().getProFeatures().getMicrosoft();
-        return new MicrosoftDriveConfig.AppDefaults(
-                app.getTenant(), app.getClientId(), app.getClientSecret());
     }
 }

@@ -8897,14 +8897,13 @@ description = "Email a document or a notification when a policy runs."
 label = "Mailgun"
 
 [portal.connections.types.microsoft365.fields.clientId]
-helperText = "Leave blank to use the server's Microsoft app from Settings. A separate app registration needs Microsoft Graph application permissions with admin consent."
+helperText = "Needs Microsoft Graph application permissions with admin consent."
 label = "Application (client) ID"
 
 [portal.connections.types.microsoft365.fields.clientSecret]
 label = "Client secret"
 
 [portal.connections.types.microsoft365.fields.tenantId]
-helperText = "Leave blank when the server's Microsoft app is set to one organisation."
 label = "Directory (tenant) ID"
 placeholder = "contoso.onmicrosoft.com or tenant GUID"
 
@@ -11449,7 +11448,7 @@ description = "From one Microsoft Entra app registration."
 label = "Application (client) ID"
 
 [provider.microsoft.clientSecret]
-description = "Needed for connected accounts and organisation connections. Stays on the server."
+description = "Needed for connected accounts. Stays on the server."
 label = "Client secret"
 
 [provider.microsoft.enabled]
