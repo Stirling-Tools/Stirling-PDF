@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@editor-proprietary/components/AppProviders";
 import { DesktopBannerInitializer } from "@editor/components/DesktopBannerInitializer";
-import { ProcessorStartupView } from "@editor/components/ProcessorStartupView";
 import { SaveShortcutListener } from "@editor/components/SaveShortcutListener";
 import { DiskConflictHost } from "@editor/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@editor/components/DesktopOnboardingModal";
@@ -29,7 +28,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <ProprietaryAppProviders>
       <ToolActionsContext.Provider value={toolActions}>
         <SaaSTeamProvider key={appKey}>
-          <ProcessorStartupView />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
           <DiskConflictHost />
