@@ -4,6 +4,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   dismissTourTooltip,
+  switchView,
 } from "@editor/tests/helpers/ui-helpers";
 
 /**
@@ -35,17 +36,6 @@ function tile(
   return track(page, name).locator("[data-page-id]").nth(index);
 }
 
-async function switchView(
-  page: import("@playwright/test").Page,
-  label: string,
-) {
-  await page
-    .locator('[data-tour="view-switcher"]')
-    .first()
-    .locator(".mantine-SegmentedControl-label", { hasText: label })
-    .click();
-}
-
 /** Intrinsic rotations as the editor shows them, in track order. */
 async function readRotations(
   lane: import("@playwright/test").Locator,
@@ -64,6 +54,14 @@ async function openPageEditor(page: import("@playwright/test").Page) {
     timeout: 120_000,
   });
   await uploadFiles(page, [ROTATED_PDF, SAMPLE_PDF]);
+  // The upload opens Active Files itself once its writes settle, which undoes
+  // any view picked before then.
+  await expect(
+    page
+      .locator('[data-tour="view-switcher"]')
+      .first()
+      .getByRole("radio", { name: "Active Files" }),
+  ).toBeChecked({ timeout: 30_000 });
   await dismissTourTooltip(page);
   await switchView(page, "Page Editor");
   await expect(page.getByTestId("page-tracks")).toBeVisible({

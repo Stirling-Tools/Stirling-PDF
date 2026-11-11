@@ -53,8 +53,10 @@ export async function uploadFiles(
   const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
+  // The sidebar lists the library from IndexedDB, so it waits on the same
+  // write as waitForStoredFiles.
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-    timeout: 10_000,
+    timeout: 30_000,
   });
   await waitForStoredFiles(page, names);
 }
@@ -100,6 +102,29 @@ async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
     // it lands, just not always within 10s, so give the commit room to finish.
     { timeout: 30_000, polling: 100 },
   );
+}
+
+/**
+ * Switches workbench view by clicking the label of its segment, since the radio
+ * itself is visually hidden. The selected view's label opens a beat after the
+ * selection changes and slides the other segments sideways, so this first waits
+ * for that to finish: mid-slide, the click lands on the neighbouring segment.
+ */
+export async function switchView(page: Page, label: string): Promise<void> {
+  const switcher = page.locator('[data-tour="view-switcher"]').first();
+  await expect(
+    switcher.locator(
+      ".mantine-SegmentedControl-control:has(input:checked) .workbench-bar-view-label.is-open",
+    ),
+  ).toHaveCount(1);
+  await expect
+    .poll(() =>
+      switcher.evaluate((el) => el.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+  await switcher
+    .locator(".mantine-SegmentedControl-label", { hasText: label })
+    .click();
 }
 
 /** Leaves upload-induced viewer mode when present, so tool controls can enable. */
