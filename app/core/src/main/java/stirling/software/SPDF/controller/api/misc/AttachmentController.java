@@ -99,7 +99,7 @@ public class AttachmentController {
 
                 ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
 
-                String outputFilename = baseFileName + "_with_attachments_PDFA-3b.pdf";
+                String outputFilename = baseFileName + ".pdf";
                 return WebResponseUtils.pdfDocToWebResponse(
                         pdfaDocument, outputFilename, tempFileManager);
             }
@@ -111,7 +111,7 @@ public class AttachmentController {
                         GeneralUtils.generateFilename(
                                 Filenames.toSimpleFileName(
                                         sourceFileName(fileInput, request.getFileId())),
-                                "_with_attachments.pdf"),
+                                ".pdf"),
                         tempFileManager);
             }
         }
@@ -247,7 +247,7 @@ public class AttachmentController {
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(
                                     sourceFileName(fileInput, request.getFileId())),
-                            "_attachment_renamed.pdf"),
+                            ".pdf"),
                     tempFileManager);
         }
     }
@@ -279,7 +279,7 @@ public class AttachmentController {
                     GeneralUtils.generateFilename(
                             Filenames.toSimpleFileName(
                                     sourceFileName(fileInput, request.getFileId())),
-                            "_attachment_deleted.pdf"),
+                            ".pdf"),
                     tempFileManager);
         }
     }
@@ -399,7 +399,7 @@ public class AttachmentController {
                 try (PDDocument pdfaDocument = Loader.loadPDF(pdfaBytes)) {
                     convertPDFToPDFA.ensureEmbeddedFileCompliance(pdfaDocument);
                     ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
-                    String outputFilename = baseFileName + "_attachments_modified_PDFA-3b.pdf";
+                    String outputFilename = baseFileName + ".pdf";
                     return WebResponseUtils.pdfDocToWebResponse(
                             pdfaDocument, outputFilename, tempFileManager);
                 }
@@ -409,7 +409,7 @@ public class AttachmentController {
                         GeneralUtils.generateFilename(
                                 Filenames.toSimpleFileName(
                                         sourceFileName(fileInput, request.getFileId())),
-                                "_attachments_modified.pdf"),
+                                ".pdf"),
                         tempFileManager);
             }
         }

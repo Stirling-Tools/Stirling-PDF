@@ -13,7 +13,7 @@ the English value.
 
 Usage:
     python check_language_toml.py check --base-dir <dir> --head-dir <dir> --main-dir <dir> [--actor <login>]
-    python check_language_toml.py sync --reference-file frontend/editor/public/locales/en-US/translation.toml
+    python check_language_toml.py sync --reference-file frontend/public/locales/en-US/translation.toml
 """
 
 import argparse
@@ -26,7 +26,7 @@ from pathlib import Path
 
 import tomli_w  # For writing TOML files
 
-LOCALES_DIR = Path("frontend", "editor", "public", "locales")
+LOCALES_DIR = Path("frontend", "public", "locales")
 REFERENCE_LOCALE = "en-US"
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_KEYS_LISTED = 20

@@ -6,7 +6,7 @@ the translation was last written, so the change can be replicated to that langua
 
 How it works:
   1. Walk the first-parent history of HEAD for every locale file (following the
-     translation.json -> translation.toml and frontend/ -> frontend/editor/ moves).
+     translation.json -> translation.toml and frontend/ -> frontend/editor/ -> frontend/ moves).
   2. For each language key, find the commit where its value last changed.
   3. Look up the English text at that commit and compare it with today's en-US text.
      A mismatch means the translation was written against older English.
@@ -33,8 +33,8 @@ LEGACY_SOURCE_LANG = "en-GB"
 
 # Every path a locale file has lived at; the first existing one wins in a snapshot
 PATH_TEMPLATES = [
-    "frontend/editor/public/locales/{lang}/translation.toml",
     "frontend/public/locales/{lang}/translation.toml",
+    "frontend/editor/public/locales/{lang}/translation.toml",
     "frontend/public/locales/{lang}/translation.json",
 ]
 PATH_RE = re.compile(r"^frontend/(?:editor/)?public/locales/([^/]+)/translation\.(?:toml|json)$")

@@ -40,6 +40,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -114,7 +115,7 @@ public class BlankPageController {
             List<PDPage> blankPages = new ArrayList<>();
             int pageIndex = 0;
 
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (PDPage page : pages) {
                 log.info("checking page {}", pageIndex);
@@ -174,7 +175,7 @@ public class BlankPageController {
             try (OutputStream fos = Files.newOutputStream(tempOut.getFile().toPath());
                     ZipOutputStream zos = new ZipOutputStream(fos)) {
                 if (!nonBlankPages.isEmpty()) {
-                    createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+                    createZipEntry(zos, nonBlankPages, filename + ".pdf");
                 } else {
                     createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
                 }
@@ -187,8 +188,8 @@ public class BlankPageController {
                 throw e;
             }
 
-            log.info("Returning ZIP file: {}", filename + "_processed.zip");
-            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + "_processed.zip");
+            log.info("Returning ZIP file: {}", filename + ".zip");
+            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + ".zip");
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;

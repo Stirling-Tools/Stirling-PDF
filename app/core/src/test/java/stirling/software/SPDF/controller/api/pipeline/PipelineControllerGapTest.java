@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -40,11 +41,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.PipelineLimits;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.databind.ObjectMapper;
@@ -226,6 +230,26 @@ class PipelineControllerGapTest {
         }
 
         @Test
+        @DisplayName("releases the step outputs once the response copy exists")
+        void singleOutput_releasesStepOutputs() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            List<Resource> inputFiles = List.of(namedResource("input.pdf", "in".getBytes()));
+            when(processor.generateInputFiles(files)).thenReturn(inputFiles);
+
+            TempFile stepOutput = mock(TempFile.class);
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(List.of(namedResource("result.pdf", "out".getBytes())));
+            result.addTempFile(stepOutput);
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            assertNotNull(controller.handleData(request(files, VALID_JSON)));
+
+            verify(stepOutput).close();
+            verify(processor).deleteInputFiles(inputFiles);
+        }
+
+        @Test
         @DisplayName("captures analytics event with operations and file count")
         void singleOutput_capturesAnalytics() throws Exception {
             stubTempFiles();
@@ -301,6 +325,54 @@ class PipelineControllerGapTest {
             Map<String, String> entries = readZip(response.getBody());
             // Two distinct zip entry names despite the same source filename.
             assertEquals(2, entries.size());
+            assertEquals("second", entries.get("dup (1).pdf"));
+        }
+
+        @Test
+        @DisplayName("a renamed duplicate skips a name another output already has")
+        void multipleOutputs_renamedDuplicateSkipsTakenName() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            when(processor.generateInputFiles(files))
+                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(
+                    List.of(
+                            namedResource("a.pdf", "one".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("a.pdf", "two".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("a (1).pdf", "three".getBytes(StandardCharsets.UTF_8))));
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
+
+            assertNotNull(response);
+            Map<String, String> entries = readZip(response.getBody());
+            assertEquals("one", entries.get("a.pdf"));
+            assertEquals("two", entries.get("a (1).pdf"));
+            assertEquals("three", entries.get("a (1) (1).pdf"));
+        }
+
+        @Test
+        @DisplayName("a renamed duplicate stays in its folder")
+        void multipleOutputs_duplicateInFolderKeepsFolder() throws Exception {
+            stubTempFiles();
+            MultipartFile[] files = oneFile();
+            when(processor.generateInputFiles(files))
+                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+
+            PipelineResult result = new PipelineResult();
+            result.setOutputFiles(
+                    List.of(
+                            namedResource("images/p.png", "one".getBytes(StandardCharsets.UTF_8)),
+                            namedResource("images/p.png", "two".getBytes(StandardCharsets.UTF_8))));
+            when(processor.runPipelineAgainstFiles(any(), any())).thenReturn(result);
+
+            ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
+
+            assertNotNull(response);
+            Map<String, String> entries = readZip(response.getBody());
+            assertEquals("two", entries.get("images/p (1).png"));
         }
 
         private Map<String, String> readZip(Resource zipResource) throws IOException {
@@ -349,6 +421,27 @@ class PipelineControllerGapTest {
             ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
 
             assertNull(response);
+        }
+
+        @Test
+        @DisplayName("answers 400 with the setting to raise when the run breaks a limit")
+        void limitExceeded_isABadRequest() throws Exception {
+            MultipartFile[] files = oneFile();
+            List<Resource> inputFiles = List.of(namedResource("input.pdf", "in".getBytes()));
+            when(processor.generateInputFiles(files)).thenReturn(inputFiles);
+            when(processor.runPipelineAgainstFiles(any(), any()))
+                    .thenThrow(
+                            new PipelineLimits.LimitExceededException(
+                                    "raise policies.maxSteps to allow more"));
+
+            ResponseStatusException error =
+                    org.junit.jupiter.api.Assertions.assertThrows(
+                            ResponseStatusException.class,
+                            () -> controller.handleData(request(files, VALID_JSON)));
+
+            assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+            assertEquals("raise policies.maxSteps to allow more", error.getReason());
+            verify(processor).deleteInputFiles(inputFiles);
         }
 
         @Test

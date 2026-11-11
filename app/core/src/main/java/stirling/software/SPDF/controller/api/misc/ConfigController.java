@@ -220,6 +220,11 @@ public class ConfigController {
 
             // User preference defaults
             configData.put(
+                    "defaultToolPanelMode",
+                    applicationProperties.getUi().getDefaultToolPanelMode());
+            configData.put(
+                    "defaultStartupView", applicationProperties.getUi().getDefaultStartupView());
+            configData.put(
                     "defaultHideUnavailableTools",
                     applicationProperties.getUi().isDefaultHideUnavailableTools());
             configData.put(
@@ -251,6 +256,15 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+
+            configData.put(
+                    "googleDriveAccountConnections",
+                    enableLogin && googleDrive.accountConnectionsReady());
+            ApplicationProperties.Premium.ProFeatures.Microsoft microsoft =
+                    applicationProperties.getPremium().getProFeatures().getMicrosoft();
+            configData.put(
+                    "microsoftAccountConnections",
+                    enableLogin && microsoft.accountConnectionsReady());
             configData.put(
                     "honorOwnerPasswords",
                     applicationProperties.getSecurity().isHonorOwnerPasswords());
@@ -307,6 +321,7 @@ public class ConfigController {
 
             // Check if this is a new server (version was 0.0.0 before initialization)
             configData.put("isNewServer", InitialSetup.isNewServer());
+            configData.put("setupCompleted", applicationProperties.getSystem().isSetupCompleted());
 
             // Check if the current user is a first-time user
             boolean isNewUser =
@@ -341,6 +356,7 @@ public class ConfigController {
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
             configData.put(
                     "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
+            configData.put("enableFeedback", applicationProperties.getSystem().isEnableFeedback());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));

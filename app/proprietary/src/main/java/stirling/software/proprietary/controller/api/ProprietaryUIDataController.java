@@ -188,6 +188,8 @@ public class ProprietaryUIDataController {
 
         data.setFirstTimeSetup(isFirstTimeSetup);
         data.setShowDefaultCredentials(showDefaultCredentials);
+        data.setDefaultSignIn(
+                showDefaultCredentials && !applicationProperties.getSystem().isSetupCompleted());
 
         OAUTH2 oauth = securityProps.getOauth2();
 
@@ -452,7 +454,7 @@ public class ProprietaryUIDataController {
 
         String settingsJson;
         try {
-            settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
+            settingsJson = objectMapper.writeValueAsString(maskSecrets(user.get().getSettings()));
         } catch (JacksonException e) {
             log.error("Error converting settings map", e);
             return ResponseEntity.status(500).build();
@@ -662,6 +664,10 @@ public class ProprietaryUIDataController {
         private boolean altLogin;
         private boolean firstTimeSetup;
         private boolean showDefaultCredentials;
+
+        /** Login may sign in as the default admin: only before setup, while that login works. */
+        private boolean defaultSignIn;
+
         private List<String> languages;
         private String defaultLocale;
     }

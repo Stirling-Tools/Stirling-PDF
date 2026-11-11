@@ -164,6 +164,26 @@ class UserControllerTest {
     }
 
     @Test
+    void changingThePasswordEndsTheFirstLogin() throws Exception {
+        User admin = new User();
+        admin.setUsername("admin");
+        admin.setFirstLogin(true);
+        Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "pw");
+        when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+        when(userService.isPasswordCorrect(admin, "stirling")).thenReturn(true);
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-password")
+                                .param("currentPassword", "stirling")
+                                .param("newPassword", "a-new-pass")
+                                .principal(authentication))
+                .andExpect(status().isOk());
+
+        verify(userService).changePassword(admin, "a-new-pass");
+        verify(userService).changeFirstUse(admin, false);
+    }
+
+    @Test
     void updateLoginLandingViewStoresTheOptIn() throws Exception {
         UpdateLoginLandingView payload = new UpdateLoginLandingView();
         payload.setLoginLandingView("processor");
@@ -203,6 +223,43 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("User account unlocked successfully"));
 
         verify(loginAttemptService).resetAttempts("lockeduser");
+    }
+
+    @Test
+    void changeUsernameRejectsCaseVariantOfAnotherAccount() throws Exception {
+        User caller = user(1L, "bob", true, null);
+        when(userService.isUsernameValid("stirling-pdf-backend-api-user")).thenReturn(true);
+        when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
+        when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
+        when(userService.isUsernameTakenByOtherUser("stirling-pdf-backend-api-user", 1L))
+                .thenReturn(true);
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-username")
+                                .principal(auth("bob"))
+                                .param("currentPasswordChangeUsername", "pw")
+                                .param("newUsername", "stirling-pdf-backend-api-user"))
+                .andExpect(status().isConflict());
+
+        verify(userService, never()).changeUsername(any(), any());
+    }
+
+    @Test
+    void changeUsernameAllowsChangingCaseOfOwnName() throws Exception {
+        User caller = user(1L, "bob", true, null);
+        when(userService.isUsernameValid("Bob")).thenReturn(true);
+        when(userService.findByUsername("bob")).thenReturn(Optional.of(caller));
+        when(userService.isPasswordCorrect(caller, "pw")).thenReturn(true);
+        when(userService.isUsernameTakenByOtherUser("Bob", 1L)).thenReturn(false);
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-username")
+                                .principal(auth("bob"))
+                                .param("currentPasswordChangeUsername", "pw")
+                                .param("newUsername", "Bob"))
+                .andExpect(status().isOk());
+
+        verify(userService).changeUsername(caller, "Bob");
     }
 
     private static User user(long id, String username, boolean enabled, Team team) {

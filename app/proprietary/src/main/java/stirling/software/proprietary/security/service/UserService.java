@@ -6,16 +6,18 @@ import static stirling.software.proprietary.security.service.MfaService.MFA_REQU
 import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.hibernate.KeyType;
+import org.hibernate.Session;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
@@ -34,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import jakarta.persistence.EntityManager;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,10 +45,10 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.connectedaccount.ConnectedAccountService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
@@ -60,6 +64,7 @@ import stirling.software.proprietary.security.model.exception.UserLimitExceededE
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.UsernameRules;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StorageCleanupEntry;
@@ -77,7 +82,11 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
 
+    private static final Set<String> SELF_SERVICE_SETTING_KEYS =
+            Set.of("emailNotifications", "theme", "language");
+
     private final UserRepository userRepository;
+    private final EntityManager entityManager;
     private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
@@ -102,6 +111,7 @@ public class UserService implements UserServiceInterface {
     private final FileShareAccessRepository fileShareAccessRepository;
     private final ResourceGrantRepository resourceGrantRepository;
     private final IntegrationConfigRepository integrationConfigRepository;
+    private final ConnectedAccountService connectedAccountService;
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final ToolUsageStatRepository toolUsageStatRepository;
@@ -295,6 +305,7 @@ public class UserService implements UserServiceInterface {
                     ResourceType.INTEGRATION_CONFIG, String.valueOf(cfg.getId()));
         }
         integrationConfigRepository.deleteByOwnerUser(user);
+        connectedAccountService.removeAllFor(user.getId());
 
         // Membership rows and invitation references would dangle once the user row is gone
         teamMembershipService.deleteAllForUser(user);
@@ -360,6 +371,16 @@ public class UserService implements UserServiceInterface {
         return findByUsernameIgnoreCase(username).isPresent();
     }
 
+    public boolean isUsernameTakenByOtherUser(String username, Long userId) {
+        return userRepository.existsByUsernameIgnoreCaseAndIdNot(username, userId);
+    }
+
+    /** True when an enabled admin is not waiting on a first-login password change. */
+    public boolean hasAdminPastFirstLogin() {
+        return userRepository.findEnabledAdminsByIdAsc().stream()
+                .anyMatch(user -> !user.isFirstLogin());
+    }
+
     public boolean hasUsers() {
         long userCount = userRepository.count();
         if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {
@@ -368,6 +389,7 @@ public class UserService implements UserServiceInterface {
         return userCount > 0;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserSettings(String username, Map<String, String> updates)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
@@ -377,16 +399,23 @@ public class UserService implements UserServiceInterface {
             if (settingsMap == null) {
                 settingsMap = new HashMap<>();
             }
-            settingsMap.clear();
-            settingsMap.putAll(updates);
+            // The same map holds the MFA state, so only the self-service preference keys may be
+            // written, and nothing else is cleared.
+            for (Map.Entry<String, String> update : updates.entrySet()) {
+                if (SELF_SERVICE_SETTING_KEYS.contains(update.getKey())) {
+                    settingsMap.put(update.getKey(), update.getValue());
+                }
+            }
             user.setSettings(settingsMap);
             userRepository.save(user);
-            databaseService.exportDatabase();
+            exportAfterCommit();
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        User user = entityManager.unwrap(Session.class).find(User.class, username, KeyType.NATURAL);
+        return Optional.ofNullable(user);
     }
 
     /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */
@@ -576,10 +605,6 @@ public class UserService implements UserServiceInterface {
         } else {
             settings.remove(MFA_LAST_USED_STEP_KEY);
         }
-        log.info(
-                "MFA required set to true for user {} {}",
-                request.getUsername(),
-                user.getSettings().toString());
 
         // Set role (authority)
         user.addAuthority(new Authority(request.getRole(), user));
@@ -679,28 +704,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean isUsernameValid(String username) {
-        // Checks whether the simple username is formatted correctly
-        // Regular expression for user name: Min. 3 characters, max. 50 characters
-        boolean isValidSimpleUsername =
-                RegexPatternUtils.getInstance()
-                        .getUsernameValidationPattern()
-                        .matcher(username)
-                        .matches();
-
-        // Checks whether the email address is formatted correctly
-        // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
-        boolean isValidEmail =
-                RegexPatternUtils.getInstance()
-                        .getEmailValidationPattern()
-                        .matcher(username)
-                        .matches();
-
-        List<String> notAllowedUserList = new ArrayList<>();
-        notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
-        notAllowedUserList.add("anonymoususer");
-        String normalizedUsername = username.toLowerCase(Locale.ROOT);
-        boolean notAllowedUser = notAllowedUserList.contains(normalizedUsername);
-        return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
+        return UsernameRules.isValid(username);
     }
 
     private String getInvalidUsernameMessage() {

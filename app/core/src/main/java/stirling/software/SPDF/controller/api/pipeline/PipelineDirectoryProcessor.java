@@ -6,6 +6,7 @@ import java.nio.file.FileSystemException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
@@ -16,10 +17,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -347,7 +350,7 @@ public class PipelineDirectoryProcessor {
         Path filePath = directory.resolve(originalFileName);
         int counter = 1;
         while (Files.exists(filePath)) {
-            String newName = appendSuffixToFileName(originalFileName, "(" + counter + ")");
+            String newName = appendSuffixToFileName(originalFileName, " (" + counter + ")");
             filePath = directory.resolve(newName);
             counter++;
         }
@@ -365,16 +368,17 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private PipelineResult runPipelineAgainstFiles(
+    PipelineResult runPipelineAgainstFiles(
             List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir)
             throws IOException {
+        PipelineResult result = null;
         try {
             List<Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return new PipelineResult();
             }
-            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+            result = processor.runPipelineAgainstFiles(inputFiles, config);
 
             if (result.isHasErrors()) {
                 log.error("Errors occurred during processing, retaining original files");
@@ -386,7 +390,11 @@ public class PipelineDirectoryProcessor {
             return result;
         } catch (Exception e) {
             log.error("Error during processing", e);
-            moveFilesBack(filesToProcess, processingDir);
+            if (result != null) {
+                result.close();
+            }
+            // processing/ is never scanned, so leaving them there would lose them silently.
+            moveToErrorDirectory(filesToProcess, dir);
             return new PipelineResult();
         }
     }
@@ -398,7 +406,10 @@ public class PipelineDirectoryProcessor {
         }
 
         for (File file : files) {
-            Path target = errorDir.resolve(file.getName());
+            if (!file.exists()) {
+                continue;
+            }
+            Path target = resolveUniqueFilePath(errorDir, file.getName());
             Files.move(file.toPath(), target);
             log.info("Moved failed file to error directory for investigation: {}", target);
         }
@@ -406,6 +417,7 @@ public class PipelineDirectoryProcessor {
 
     private void moveAndRenameFiles(List<Resource> resources, PipelineConfig config, Path dir)
             throws IOException {
+        Set<Path> written = new HashSet<>();
         for (Resource resource : resources) {
             String outputFileName = createOutputFileName(resource, config);
             Path outputPath = determineOutputPath(config, dir);
@@ -413,13 +425,26 @@ public class PipelineDirectoryProcessor {
                 Files.createDirectories(outputPath);
                 log.info("Created directory: {}", outputPath);
             }
-            Path outputFile = outputPath.resolve(outputFileName);
+            Path outputFile = unwrittenThisRun(outputPath, outputFileName, written);
             try (OutputStream os = new FileOutputStream(outputFile.toFile());
                     InputStream is = resource.getInputStream()) {
                 is.transferTo(os);
             }
             log.info("File moved and renamed to {}", outputFile);
         }
+    }
+
+    /**
+     * A second output of one run with the same name gets "name (n).ext" rather than overwriting the
+     * first, since the inputs are deleted afterwards. Files left by earlier runs are still
+     * replaced.
+     */
+    private Path unwrittenThisRun(Path directory, String fileName, Set<Path> written) {
+        Path candidate = directory.resolve(fileName);
+        for (int n = 1; !written.add(candidate); n++) {
+            candidate = directory.resolve(appendSuffixToFileName(fileName, " (" + n + ")"));
+        }
+        return candidate;
     }
 
     private String createOutputFileName(Resource resource, PipelineConfig config) {
@@ -443,15 +468,35 @@ public class PipelineDirectoryProcessor {
         return outputFileName;
     }
 
-    private Path determineOutputPath(PipelineConfig config, Path dir) {
+    Path determineOutputPath(PipelineConfig config, Path dir) {
+        Path outputRoot = Path.of(finishedFoldersDir).toAbsolutePath().normalize();
+        String configured = config.getOutputDir();
+        if (configured == null || configured.isBlank()) {
+            return outputRoot;
+        }
         String outputDir =
                 WATCHED_FOLDERS_PATTERN
                         .matcher(
-                                config.getOutputDir()
+                                configured
                                         .replace("{outputFolder}", finishedFoldersDir)
                                         .replace("{folderName}", dir.toString()))
                         .replaceAll("");
-        return Path.of(outputDir).isAbsolute() ? Path.of(outputDir) : Path.of(".", outputDir);
+        Path resolved;
+        try {
+            resolved = Path.of(outputDir).toAbsolutePath().normalize();
+        } catch (InvalidPathException e) {
+            log.warn("Ignoring invalid outputDir '{}' in {}", configured, dir);
+            return outputRoot;
+        }
+        if (!resolved.startsWith(outputRoot)) {
+            log.warn(
+                    "Ignoring outputDir '{}' in {}: it resolves outside {}",
+                    configured,
+                    dir,
+                    outputRoot);
+            return outputRoot;
+        }
+        return resolved;
     }
 
     private void deleteOriginalFiles(List<File> filesToProcess, Path processingDir)
@@ -459,20 +504,6 @@ public class PipelineDirectoryProcessor {
         for (File file : filesToProcess) {
             Files.deleteIfExists(processingDir.resolve(file.getName()));
             log.info("Deleted original file: {}", file.getName());
-        }
-    }
-
-    private void moveFilesBack(List<File> filesToProcess, Path processingDir) {
-        for (File file : filesToProcess) {
-            try {
-                Files.move(processingDir.resolve(file.getName()), file.toPath());
-                log.info(
-                        "Moved file back to original location: {} , {}",
-                        file.toPath(),
-                        file.getName());
-            } catch (IOException e) {
-                log.error("Error moving file back to original location: {}", file.getName(), e);
-            }
         }
     }
 }

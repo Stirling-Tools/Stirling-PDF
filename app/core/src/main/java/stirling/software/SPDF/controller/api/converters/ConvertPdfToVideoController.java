@@ -29,6 +29,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -146,7 +147,7 @@ public class ConvertPdfToVideoController {
 
             byte[] videoBytes = Files.readAllBytes(outputVideo.getPath());
             MediaType mediaType = getMediaType(format);
-            String outputName = pdfBaseName + "-video." + format;
+            String outputName = pdfBaseName + "." + format;
             return WebResponseUtils.bytesToWebResponse(videoBytes, outputName, mediaType);
         }
     }
@@ -161,7 +162,7 @@ public class ConvertPdfToVideoController {
             boolean isWatermarkEnabled)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(inputPdf.toFile())) {
-            PDFRenderer renderer = new PDFRenderer(document);
+            PDFRenderer renderer = new LimitedPDFRenderer(document);
             renderer.setSubsamplingAllowed(true);
             int pageCount = document.getNumberOfPages();
             if (pageCount == 0) {
@@ -170,10 +171,6 @@ public class ConvertPdfToVideoController {
             }
             for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
                 final int currentPageIndex = pageIndex;
-
-                // Validate dimensions BEFORE attempting to render to prevent OOM
-                ExceptionUtils.validateRenderingDimensions(
-                        document.getPage(currentPageIndex), currentPageIndex + 1, dpi);
 
                 BufferedImage image =
                         ExceptionUtils.handleOomRendering(

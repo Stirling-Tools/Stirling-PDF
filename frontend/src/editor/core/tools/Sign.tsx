@@ -1,0 +1,14 @@
+import { createStampTool } from "@editor/tools/stamp/createStampTool";
+
+const Sign = createStampTool({
+  toolId: "sign",
+  translationScope: "sign",
+  allowedSignatureSources: ["canvas", "image", "text", "saved"],
+  defaultSignatureSource: "canvas",
+  defaultSignatureType: "canvas",
+  enableApplyAction: true,
+  enableSharedSigning: true,
+  settingsPanel: "wallet",
+});
+
+export default Sign;

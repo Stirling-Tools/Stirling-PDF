@@ -258,6 +258,9 @@ def get_language_info(language_code: str) -> tuple:
         "sk-SK": ("Slovak", "sk-SK"),
         "sl-SI": ("Slovenian", "sl-SI"),
         "ca-CA": ("Catalan", "ca-CA"),
+        "eu-ES": ("Basque", "eu-ES"),
+        "gl-ES": ("Galician", "gl-ES"),
+        "ga-IE": ("Irish", "ga-IE"),
     }
 
     return languages.get(language_code, (language_code, language_code))

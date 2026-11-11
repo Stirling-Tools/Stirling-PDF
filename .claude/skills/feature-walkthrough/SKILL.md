@@ -32,7 +32,7 @@ vs `main`. Flags: `--html` (also emit a rendered HTML twin), `--no-screens`.
 - Read the PR description / commit messages for stated intent. Do **not** invent
   history or motivation that isn't evidenced (state current behavior in present tense).
 - Classify touched files by layer:
-  - **Frontend**: tools (`frontend/editor/src/core/components/tools/*` or `.../core/tools/*`),
+  - **Frontend**: tools (`frontend/src/editor/core/components/tools/*` or `.../core/tools/*`),
     hooks (`core/hooks/tools/*`, `useToolOperation`), contexts, routes, i18n
     (`public/locales/en-US`).
   - **Java backend**: controllers (`.../controller/api/...`), services, models, config.
@@ -92,6 +92,6 @@ Give the doc path and a short chat summary. Offer to `SendUserFile` it.
 - **True to the code.** Every claim traces to a file you read; cite `path:line`.
   No fabricated migration/version history.
 - **Newcomer-first.** Define repo-specific terms (FileContext, `useToolOperation`,
-  the `@app/*` layer cascade, stubbed vs live tests) on first use.
+  the `@editor/*` layer cascade, stubbed vs live tests) on first use.
 - **Show, don't assert.** Prefer a diagram + a real example over adjectives.
 - Don't commit the `walkthrough/` output unless asked.

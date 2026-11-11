@@ -1,0 +1,209 @@
+import { expect, type Page, type Locator } from "@playwright/test";
+
+const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
+
+/** Opens Recents through in-app navigation, preserving the current workspace. */
+export async function openRecents(page: Page): Promise<void> {
+  await page
+    .getByRole("navigation", { name: /Quick navigation/i })
+    .getByRole("button", { name: /^File library$/i })
+    .click();
+  await page
+    .getByRole("navigation", { name: "File sources", exact: true })
+    .getByRole("button", { name: "Recents", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/files\?view=recent$/);
+}
+
+/**
+ * Installs file-chooser interception for every browser; specs supply files via setInputFiles().
+ * A listener is required even for hidden-input clicks, or Firefox/WebKit open a real OS dialog.
+ * Stub and live fixtures install this once per page.
+ */
+export function suppressNativeFilePicker(page: Page): void {
+  page.on("filechooser", () => {});
+}
+
+export async function waitForModalOpen(
+  page: Page,
+  timeout = 5_000,
+): Promise<void> {
+  await page.waitForSelector(MANTINE_MODAL_OVERLAY, {
+    state: "visible",
+    timeout,
+  });
+}
+
+export async function waitForModalClose(
+  page: Page,
+  timeout = 10_000,
+): Promise<void> {
+  await page.waitForSelector(MANTINE_MODAL_OVERLAY, {
+    state: "hidden",
+    timeout,
+  });
+}
+
+/**
+ * Uploads through the sidebar and returns once the app has finished with it:
+ * every file stored, and the view switched to wherever an upload lands. Not for
+ * encrypted PDFs, whose upload stays open until the unlock prompt is answered.
+ */
+export async function uploadFiles(
+  page: Page,
+  filePaths: string | string[],
+): Promise<void> {
+  const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+  await page.getByTestId("files-button").click();
+  await page.locator('[data-testid="file-input"]').setInputFiles(paths);
+  // The pick marks the list busy inside the change event, before setInputFiles
+  // returns, so this cannot read the idle state from before the upload. No
+  // timeout of its own: under load an upload is slow, not stuck, and the test
+  // timeout still ends a real hang.
+  await expect(page.locator(".file-sidebar-scroll")).toHaveAttribute(
+    "aria-busy",
+    "false",
+    { timeout: 0 },
+  );
+}
+
+/**
+ * Switches workbench view by clicking the label of its segment, since the radio
+ * itself is visually hidden. The selected view's label opens a beat after the
+ * selection changes and slides the other segments sideways, so this first waits
+ * for that to finish: mid-slide, the click lands on the neighbouring segment.
+ */
+export async function switchView(page: Page, label: string): Promise<void> {
+  const switcher = page.locator('[data-tour="view-switcher"]').first();
+  await expect(
+    switcher.locator(
+      ".mantine-SegmentedControl-control:has(input:checked) .workbench-bar-view-label.is-open",
+    ),
+  ).toHaveCount(1);
+  await expect
+    .poll(() =>
+      switcher.evaluate((el) => el.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+  await switcher
+    .locator(".mantine-SegmentedControl-label", { hasText: label })
+    .click();
+}
+
+/** Leaves upload-induced viewer mode when present, so tool controls can enable. */
+export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
+  const goToEditor = page.getByRole("button", {
+    name: /go to file editor/i,
+  });
+  // Auto-navigation may detach this button; the caller's run-button assertion checks readiness.
+  if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
+    await goToEditor.click({ timeout: 5_000 }).catch(() => {});
+  }
+}
+
+/** Runs the tool and waits for its output review panel; rejects if either stays unavailable. */
+export async function runToolAndWaitForReview(
+  page: Page,
+  opts: { runTimeout?: number; reviewTimeout?: number } = {},
+): Promise<void> {
+  const { runTimeout = 15_000, reviewTimeout = 60_000 } = opts;
+  const runBtn = page.locator('[data-tour="run-button"]');
+  await expect(runBtn).toBeEnabled({ timeout: runTimeout });
+  await runBtn.click();
+  await expect(
+    page.locator('[data-testid="review-panel-container"]'),
+  ).toBeVisible({ timeout: reviewTimeout });
+}
+
+/** The settings page's root. Settings is a route, not a dialog. */
+export const SETTINGS_SURFACE = ".settings-page";
+
+/** Opens Settings through the avatar and returns its root for scoped queries. Defaults to Account. */
+export async function openSettings(
+  page: Page,
+  section?: string | RegExp,
+): Promise<Locator> {
+  await page.locator('[data-testid="config-button"]').first().click();
+  const surface = page.locator(SETTINGS_SURFACE);
+  await expect(surface).toBeVisible({ timeout: 5_000 });
+  if (section) {
+    await surface
+      .locator(".modal-nav-item")
+      .filter({ hasText: section })
+      .first()
+      .click();
+    // The URL flips before React commits the section, so wait on the page
+    // title rather than on the address bar.
+    await expect(surface.locator(".settings-page__title")).toHaveText(section, {
+      timeout: 5_000,
+    });
+  }
+  return surface;
+}
+
+/** Uses browser Back to leave Settings; section changes replace the current history entry. */
+export async function closeSettings(page: Page): Promise<void> {
+  const surface = page.locator(SETTINGS_SURFACE);
+  // Retry: one back can land on another /settings entry if a spec pushed one.
+  await expect(async () => {
+    if (await surface.isVisible().catch(() => false)) {
+      await page.goBack({ timeout: 2_000 }).catch(() => {});
+    }
+    await expect(surface).not.toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 12_000 });
+}
+
+/** Unfold every sidebar group, for checks that scan the whole section list. */
+export async function expandSettingsGroups(page: Page): Promise<void> {
+  // Wait for the aside to render its groups first; evaluateAll on an empty set
+  // is a silent no-op that surfaces later as an unrelated missing-item failure.
+  await expect(
+    page.locator(`${SETTINGS_SURFACE} .settings-page__group`).first(),
+  ).toBeAttached({ timeout: 5_000 });
+  await page
+    .locator(`${SETTINGS_SURFACE} .settings-page__group[aria-expanded="false"]`)
+    .evaluateAll((buttons) =>
+      buttons.forEach((b) => (b as HTMLButtonElement).click()),
+    );
+}
+
+/**
+ * Dismiss the onboarding tour tooltip (`Watch walkthroughs here…`) when it's
+ * blocking pointer events on firefox/webkit. No-op when absent.
+ */
+export async function dismissTourTooltip(page: Page): Promise<void> {
+  const closeBtn = page.getByRole("button", { name: /close tooltip/i }).first();
+  if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    await closeBtn.click();
+  }
+}
+
+/**
+ * The tool picker mounts categories when they come near its viewport, so an
+ * offscreen tile or header is not in the DOM yet. Scroll the picker in steps
+ * until the target exists, then return it. No-op when it is already mounted.
+ */
+export async function revealInPicker(
+  page: Page,
+  target: Locator,
+): Promise<Locator> {
+  const scroller = page.locator(".tool-picker-scrollable").first();
+  for (let step = 0; step < 20 && (await target.count()) === 0; step += 1) {
+    await scroller.evaluate((el) => {
+      el.scrollTop = Math.min(el.scrollTop + el.clientHeight, el.scrollHeight);
+    });
+    await page.waitForTimeout(150);
+  }
+  return target;
+}
+
+/** Reveal a tool tile by its tool id, then return it. */
+export async function revealPickerTool(
+  page: Page,
+  toolId: string,
+): Promise<Locator> {
+  return revealInPicker(
+    page,
+    page.locator(`[data-tour="tool-button-${toolId}"]`),
+  );
+}
