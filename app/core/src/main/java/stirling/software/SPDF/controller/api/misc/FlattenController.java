@@ -1,16 +1,9 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,10 +26,12 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
-import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.LimitedPDFRenderer;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.SaveOptions;
 
 @MiscApi
 @Slf4j
@@ -64,104 +59,68 @@ public class FlattenController {
     public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
+        Boolean flattenOnlyForms = request.getFlattenOnlyForms();
+        if (Boolean.TRUE.equals(flattenOnlyForms)) {
+            return flattenFormsOnly(file);
+        }
 
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
-            Boolean flattenOnlyForms = request.getFlattenOnlyForms();
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        Integer configuredMaxDpi = null;
+        if (properties != null && properties.getSystem() != null) {
+            configuredMaxDpi = properties.getSystem().getMaxDPI();
+        }
 
-            if (Boolean.TRUE.equals(flattenOnlyForms)) {
-                PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
-                if (acroForm != null) {
-                    acroForm.flatten();
-                }
-                return WebResponseUtils.pdfDocToWebResponse(
-                        document,
-                        Filenames.toSimpleFileName(file.getOriginalFilename()),
-                        tempFileManager);
-            } else {
-                // flatten whole page aka convert each page to image and re-add it (making text
-                // unselectable)
-                PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
-                pdfRenderer.setSubsamplingAllowed(
-                        true); // Enable subsampling to reduce memory usage
+        int maxDpi =
+                (configuredMaxDpi != null && configuredMaxDpi > 0)
+                        ? configuredMaxDpi
+                        : FLATTEN_RENDER_DPI;
 
-                try (PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+        Integer requestedDpi = request.getRenderDpi();
+        // maxDpi is a ceiling; without an explicit request use the print-quality target
+        int renderDpiTemp = Math.min(FLATTEN_RENDER_DPI, maxDpi);
+        if (requestedDpi != null) {
+            renderDpiTemp = Math.min(requestedDpi, maxDpi);
+            renderDpiTemp = Math.max(renderDpiTemp, 72);
+        }
+        final int renderDpi = renderDpiTemp;
 
-                    ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
-                    Integer configuredMaxDpi = null;
-                    if (properties != null && properties.getSystem() != null) {
-                        configuredMaxDpi = properties.getSystem().getMaxDPI();
-                    }
-
-                    int maxDpi =
-                            (configuredMaxDpi != null && configuredMaxDpi > 0)
-                                    ? configuredMaxDpi
-                                    : FLATTEN_RENDER_DPI;
-
-                    Integer requestedDpi = request.getRenderDpi();
-                    // maxDpi is a ceiling; without an explicit request use the print-quality target
-                    int renderDpiTemp = Math.min(FLATTEN_RENDER_DPI, maxDpi);
-                    if (requestedDpi != null) {
-                        renderDpiTemp = Math.min(requestedDpi, maxDpi);
-                        renderDpiTemp = Math.max(renderDpiTemp, 72);
-                    }
-                    final int renderDpi = renderDpiTemp;
-
-                    int numPages = document.getNumberOfPages();
-                    for (int i = 0; i < numPages; i++) {
-                        final int pageIndex = i;
-                        BufferedImage image = null;
-                        try {
-                            // Wrap entire rendering operation to catch OutOfMemoryError from any
-                            // depth
-                            image =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            renderDpi,
-                                            () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, renderDpi, ImageType.RGB));
-
-                            PDPage page = new PDPage();
-                            page.setMediaBox(document.getPage(i).getMediaBox());
-                            newDocument.addPage(page);
-                            // resetContext=true: Ensure clean graphics state when overwriting.
-                            try (PDPageContentStream contentStream =
-                                    new PDPageContentStream(
-                                            newDocument,
-                                            page,
-                                            PDPageContentStream.AppendMode.OVERWRITE,
-                                            true,
-                                            true)) {
-                                PDImageXObject pdImage =
-                                        JPEGFactory.createFromImage(newDocument, image);
-                                float pageWidth = page.getMediaBox().getWidth();
-                                float pageHeight = page.getMediaBox().getHeight();
-
-                                contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
-                            }
-                        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-                            // Re-throw OutOfMemoryDpiException to be handled by
-                            // GlobalExceptionHandler
-                            throw e;
-                        } catch (IOException e) {
-                            log.error("IOException during page processing: ", e);
-                            // Continue processing other pages
-                        } catch (OutOfMemoryError e) {
-                            // Catch any OutOfMemoryError that escaped the inner try block
-                            throw ExceptionUtils.createOutOfMemoryDpiException(i + 1, renderDpi, e);
-                        } finally {
-                            // Help GC by clearing the image reference
-                            image = null;
-                        }
-                    }
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            newDocument,
-                            Filenames.toSimpleFileName(file.getOriginalFilename()),
-                            tempFileManager);
-                }
+        // JPDFium flattens in place, so there is no extract-and-rebuild round-trip:
+        // FULL rasterizes each page at the requested DPI.
+        TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            try (PdfDocument document = PdfDocument.open(file.getBytes())) {
+                document.flatten(FlattenMode.FULL, renderDpi);
+                document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
+            } catch (RuntimeException e) {
+                throw new IOException("JPDFium flatten failed", e);
             }
+
+            TempFile out = tempOutputFile;
+            tempOutputFile = null; // ownership transferred to the response
+            return WebResponseUtils.pdfFileToWebResponse(
+                    out, Filenames.toSimpleFileName(file.getOriginalFilename()));
+        } finally {
+            if (tempOutputFile != null) {
+                tempOutputFile.close();
+            }
+        }
+    }
+
+    /**
+     * JPDFium's ANNOTATIONS flatten mode bakes every visible annotation, not just form widgets.
+     * Keep the form-only contract on PDFBox until JPDFium exposes a widget-only operation.
+     */
+    private ResponseEntity<Resource> flattenFormsOnly(MultipartFile file) throws IOException {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm != null) {
+                acroForm.flatten();
+            }
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    Filenames.toSimpleFileName(file.getOriginalFilename()),
+                    tempFileManager);
         }
     }
 }
