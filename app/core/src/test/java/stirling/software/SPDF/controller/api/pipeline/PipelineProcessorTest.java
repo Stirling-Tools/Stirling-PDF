@@ -142,6 +142,37 @@ class PipelineProcessorTest {
     }
 
     @Test
+    void stepOutputKeepsTheToolsFilename() throws Exception {
+        PipelineOperation op = new PipelineOperation();
+        op.setOperation("/api/v1/misc/compress");
+        op.setParameters(Map.of());
+        PipelineConfig config = new PipelineConfig();
+        config.setOperations(List.of(op));
+
+        Path tempPath = Files.createTempFile("test-output", ".pdf");
+        Files.write(tempPath, "processed_data".getBytes());
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"q3_report.pdf\"");
+
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.getExtensionTypes(anyBoolean(), anyString()))
+                .thenReturn(List.of("pdf"));
+        when(apiDocService.isValidOperation(anyString(), anyMap())).thenReturn(true);
+        when(internalApiClient.post(anyString(), any()))
+                .thenReturn(
+                        new ResponseEntity<>(
+                                new FileSystemResource(tempPath.toFile()), headers, HttpStatus.OK));
+
+        PipelineResult result =
+                pipelineProcessor.runPipelineAgainstFiles(
+                        List.of(new MyFileByteArrayResource()), config);
+
+        assertEquals("q3_report.pdf", result.getOutputFiles().get(0).getFilename());
+
+        Files.deleteIfExists(tempPath);
+    }
+
+    @Test
     void failingStepReleasesEarlierStepOutputs() throws Exception {
         PipelineOperation first = new PipelineOperation();
         first.setOperation("/api/v1/misc/compress");
