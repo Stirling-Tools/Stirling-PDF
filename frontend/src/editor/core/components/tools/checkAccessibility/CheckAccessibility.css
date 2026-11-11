@@ -235,6 +235,35 @@
   list-style: none;
 }
 
+.a11y-basics--single {
+  grid-auto-flow: row;
+  grid-template-columns: 1fr;
+  grid-template-rows: none;
+}
+
+.a11y-basics:not(.a11y-basics--single) .a11y-fact__label {
+  white-space: nowrap;
+}
+
+.a11y-fact__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Stacks every result word in one cell and shows only the active one, so pills share a width. */
+.a11y-result-word {
+  display: inline-grid;
+  text-align: center;
+}
+
+.a11y-result-word > span {
+  grid-area: 1 / 1;
+}
+
+.a11y-result-word > span[data-active="false"] {
+  visibility: hidden;
+}
+
 .a11y-basics__progress {
   display: flex;
   flex-direction: column;

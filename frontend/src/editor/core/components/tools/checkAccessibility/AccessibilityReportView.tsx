@@ -1,4 +1,11 @@
-import { useId, useMemo, useState } from "react";
+import {
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@editor/ui/Card";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -37,6 +44,73 @@ const RESULT_ICON: Record<AccessibilityResult, IconName> = {
   fail: "circle-x",
 };
 
+let measureContext: CanvasRenderingContext2D | null | undefined;
+
+function textWidth(text: string, font: string): number {
+  measureContext ??= document.createElement("canvas").getContext("2d");
+  if (!measureContext) return 0;
+  measureContext.font = font;
+  return measureContext.measureText(text).width;
+}
+
+/**
+ * Whether every basics label fits on one line in half the list's width. Measured from the text
+ * rather than the layout, so the answer does not depend on which layout is showing.
+ */
+function useBasicsFitTwoColumns(
+  list: RefObject<HTMLUListElement | null>,
+  labels: string[],
+): boolean {
+  const [fits, setFits] = useState(true);
+  const labelsKey = labels.join("\n");
+  useLayoutEffect(() => {
+    const texts = labelsKey.split("\n");
+    const element = list.current;
+    if (!element) return;
+    const check = () => {
+      const label = element.querySelector<HTMLElement>(".a11y-fact__label");
+      const fact = label?.parentElement;
+      if (!label || !fact) return;
+      const gap = parseFloat(getComputedStyle(element).columnGap) || 0;
+      const column = (element.clientWidth - gap) / 2;
+      const inset =
+        label.getBoundingClientRect().left - fact.getBoundingClientRect().left;
+      const font = getComputedStyle(label).font;
+      const widest = Math.max(...texts.map((text) => textWidth(text, font)));
+      setFits(inset + widest <= column);
+    };
+    check();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(check);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [list, labelsKey]);
+  return fits;
+}
+
+/** Every result word stacked in one cell, so each pill is as wide as the longest in any language. */
+function ResultWord({ result }: { result: AccessibilityResult }) {
+  const { t } = useTranslation();
+  const words: Record<AccessibilityResult, string> = {
+    pass: t("checkAccessibility.result.pass", "Pass"),
+    partial: t("checkAccessibility.result.partial", "Partial"),
+    fail: t("checkAccessibility.result.fail", "Fail"),
+  };
+  return (
+    <span className="a11y-result-word">
+      {(Object.keys(words) as AccessibilityResult[]).map((key) => (
+        <span
+          key={key}
+          data-active={key === result}
+          aria-hidden={key !== result}
+        >
+          {words[key]}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 interface AccessibilityReportViewProps {
   report: AccessibilityReport;
 }
@@ -62,6 +136,11 @@ export function AccessibilityReportView({
     });
 
   const basics = documentBasics(t, report);
+  const basicsList = useRef<HTMLUListElement>(null);
+  const basicsFit = useBasicsFitTwoColumns(
+    basicsList,
+    basics.map((fact) => fact.label),
+  );
   const basicsMet = basics.filter((fact) => fact.ok).length;
   const figures = figuresSummary(t, report);
 
@@ -98,7 +177,12 @@ export function AccessibilityReportView({
         <SectionHeader
           title={t("checkAccessibility.sections.basics", "Document basics")}
         />
-        <ul className="a11y-basics">
+        <ul
+          ref={basicsList}
+          className={
+            basicsFit ? "a11y-basics" : "a11y-basics a11y-basics--single"
+          }
+        >
           {basics.map((fact) => (
             <li key={fact.label} className="a11y-fact">
               <Icon
@@ -113,7 +197,7 @@ export function AccessibilityReportView({
                     : t("checkAccessibility.result.fail", "Fail")
                 }
               />
-              <span>{fact.label}</span>
+              <span className="a11y-fact__label">{fact.label}</span>
             </li>
           ))}
           <li className="a11y-basics__progress">
@@ -210,9 +294,7 @@ export function AccessibilityReportView({
                     accent={passes ? "success" : "danger"}
                     size="xs"
                   >
-                    {passes
-                      ? t("checkAccessibility.result.pass", "Pass")
-                      : t("checkAccessibility.result.fail", "Fail")}
+                    <ResultWord result={passes ? "pass" : "fail"} />
                   </Chip>
                 </div>
                 {(!passes || note) && (

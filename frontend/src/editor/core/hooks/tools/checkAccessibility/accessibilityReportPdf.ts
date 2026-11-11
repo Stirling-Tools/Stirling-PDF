@@ -169,17 +169,32 @@ function drawResult(
   writer.y = top - height - 6;
 }
 
-/** A soft pill like the on-screen chips; `right` anchors it to the content edge instead. */
+const PILL_TEXT_SIZE = 7.5;
+
+/** Wide enough for the longest result word, so every pill matches in any language. */
+function pillWidth(writer: ReportWriter, t: TFunction): number {
+  const words = [
+    t("checkAccessibility.result.pass", "Pass"),
+    t("checkAccessibility.result.partial", "Partial"),
+    t("checkAccessibility.result.fail", "Fail"),
+  ];
+  return (
+    Math.max(
+      ...words.map((word) =>
+        writer.boldFont.widthOfTextAtSize(word, PILL_TEXT_SIZE),
+      ),
+    ) + 12
+  );
+}
+
+/** A soft pill like the on-screen chips, with its label centred; `left` is its left edge. */
 function drawPill(
   writer: ReportWriter,
-  x: number,
+  left: number,
+  width: number,
   label: string,
   ok: boolean,
-  anchor: "left" | "right" = "left",
 ) {
-  const size = 7.5;
-  const width = writer.boldFont.widthOfTextAtSize(label, size) + 12;
-  const left = anchor === "right" ? x - width : x;
   const base = ok ? colorPalette.success : colorPalette.danger;
   writer.currentPage.drawRectangle({
     x: left,
@@ -190,14 +205,14 @@ function drawPill(
     borderColor: tint(base, 0.55),
     borderWidth: 0.75,
   });
+  const textWidth = writer.boldFont.widthOfTextAtSize(label, PILL_TEXT_SIZE);
   writer.currentPage.drawText(label, {
-    x: left + 6,
+    x: left + (width - textWidth) / 2,
     y: writer.y - 8.5,
-    size,
+    size: PILL_TEXT_SIZE,
     font: writer.boldFont,
     color: ok ? statusText.success : statusText.danger,
   });
-  return width;
 }
 
 function drawBasics(
@@ -213,29 +228,35 @@ function drawBasics(
   );
   const pass = t("checkAccessibility.result.pass", "Pass");
   const fail = t("checkAccessibility.result.fail", "Fail");
-  const pillWidth =
-    Math.max(
-      writer.boldFont.widthOfTextAtSize(pass, 7.5),
-      writer.boldFont.widthOfTextAtSize(fail, 7.5),
-    ) + 12;
-  const rows = Math.ceil((basics.length + 1) / 2);
+  const pill = pillWidth(writer, t);
+  const labelStyle: TextStyle = {
+    font: writer.font,
+    size: 10,
+    color: colorPalette.textPrimary,
+  };
+  const labelInset = pill + 8;
+  // One column when any label would not fit beside its pill in half the page.
+  const twoColumns = basics.every(
+    (fact) =>
+      labelInset +
+        labelStyle.font.widthOfTextAtSize(fact.label, labelStyle.size) <=
+      CONTENT_WIDTH / 2 - 8,
+  );
+  const columns = twoColumns ? 2 : 1;
+  const rows = Math.ceil((basics.length + 1) / columns);
   const rowHeight = 18;
-  const columnWidth = CONTENT_WIDTH / 2;
+  const columnWidth = CONTENT_WIDTH / columns;
   writer.ensure(rows * rowHeight);
   const top = writer.y;
   basics.forEach((fact, index) => {
     const column = Math.floor(index / rows);
     writer.y = top - (index % rows) * rowHeight;
     const x = MARGIN_X + column * columnWidth;
-    drawPill(writer, x, fact.ok ? pass : fail, fact.ok);
-    writer.text(fact.label, x + pillWidth + 8, {
-      font: writer.font,
-      size: 10,
-      color: colorPalette.textPrimary,
-    });
+    drawPill(writer, x, pill, fact.ok ? pass : fail, fact.ok);
+    writer.text(fact.label, x + labelInset, labelStyle);
   });
-  const progressX = MARGIN_X + columnWidth;
-  const barWidth = columnWidth;
+  const progressX = MARGIN_X + (columns - 1) * columnWidth;
+  const barWidth = twoColumns ? columnWidth : CONTENT_WIDTH / 2;
   writer.y = top - (rows - 1) * rowHeight;
   writer.text(
     t("checkAccessibility.basics.met", "{{met}} of {{total}} met", {
@@ -367,14 +388,15 @@ function drawBreakdown(
       writer.rule(writer.y + 4);
       writer.y -= 4;
     }
+    const pill = pillWidth(writer, t);
     drawPill(
       writer,
-      CONTENT_RIGHT,
+      CONTENT_RIGHT - pill,
+      pill,
       passes
         ? t("checkAccessibility.result.pass", "Pass")
         : t("checkAccessibility.result.fail", "Fail"),
       passes,
-      "right",
     );
     writer.text(categoryLabel(t, area.id), MARGIN_X, {
       font: writer.boldFont,
