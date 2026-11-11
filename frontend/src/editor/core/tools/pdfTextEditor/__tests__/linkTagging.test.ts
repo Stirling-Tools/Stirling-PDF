@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import path from "node:path";
 import {
   afterAll,
   afterEach,
@@ -430,5 +431,77 @@ describe("describing links", () => {
       LINK,
     ]);
     expect(taggableLinks(doc, 0, "another run")).toEqual([]);
+  });
+});
+
+describe("links in a word processor's tagged export", () => {
+  const SAMPLE = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/tagged-sample.pdf",
+  );
+  const PAGE = 1;
+
+  async function sampleStructure() {
+    return (await readFileStructure(new Uint8Array(await readFile(SAMPLE))))!;
+  }
+
+  async function openSample(): Promise<EditorDocument> {
+    const doc = await EditorDocument.open(
+      new Uint8Array(await readFile(SAMPLE)),
+    );
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(PAGE));
+    return doc;
+  }
+
+  test("reads the link its Link holds, and the one nothing holds", async () => {
+    const structure = await sampleStructure();
+    const link = structure.pages
+      .get(PAGE)!
+      .elements.find((el) => el.type === "Link")!;
+    expect(
+      structure.links
+        .get(PAGE)!
+        .map(({ contents, holder }) => ({ contents, holder })),
+    ).toEqual([
+      { contents: "Appendix: method", holder: link.key },
+      { contents: null, holder: null },
+    ]);
+  });
+
+  test("shows the description of the link the file's Link holds", async () => {
+    const doc = await openSample();
+    const run = doc.page(PAGE).runs.find((r) => r.text.includes("appendix"))!;
+    const tag = innerTags(doc, run.snapshot()).find(
+      (inner) => inner.role.type === "Link",
+    );
+    expect(tag?.link).toMatchObject({
+      description: "Appendix: method",
+      editable: true,
+    });
+  });
+
+  test("tags the link nothing holds as a Link of the word it covers", async () => {
+    const appendixHolder = (await sampleStructure()).links.get(PAGE)![0].holder;
+    const doc = await openSample();
+    const [atlas] = taggableLinks(doc, PAGE);
+    const run = doc.page(PAGE).findRun(atlas.text.runId)!;
+    expect(run.text.slice(atlas.text.start, atlas.text.end)).toBe("Atlas");
+    new HistoryStack().execute(
+      new TagLinkCommand({ pageIndex: PAGE, annotation: atlas.annotation }),
+      doc,
+    );
+
+    const structure = (await readFileStructure(await savedBytes(doc)))!;
+    const [appendix, tagged] = structure.links.get(PAGE)!;
+    expect(appendix).toMatchObject({
+      contents: "Appendix: method",
+      holder: appendixHolder,
+    });
+    expect(tagged.contents).toBe("Atlas");
+    expect(
+      structure.pages.get(PAGE)!.elements.find((el) => el.key === tagged.holder)
+        ?.type,
+    ).toBe("Link");
   });
 });
