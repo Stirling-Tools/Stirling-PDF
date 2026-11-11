@@ -3,9 +3,9 @@ import { ProcessorEditionBoundary } from "@processor/ProcessorEditionBoundary";
 import "@editor/portal/DesktopProcessor.css";
 
 /**
- * The Processor as a page of the desktop app, under the editor's providers, so
- * the connection, session and open files survive moving between the two. The
- * web mounts it beside the editor instead.
+ * The Processor beside the editor, as on the web. The edition boundary picks
+ * the Stirling Cloud or self-hosted seams from the connection and drops their
+ * state when it changes.
  */
 export function DesktopProcessor() {
   return (
