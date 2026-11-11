@@ -30,6 +30,10 @@ const TEST_DEFAULTS = {
   deps: {
     optimizer: { client: { enabled: true, include: MANTINE_PACKAGES } },
   },
+  // jsdom tests run through Vite's server dependency pipeline, not the browser
+  // optimizer. Inline Mantine there as well so every component sees the same
+  // MantineProvider context instead of an externalized duplicate module.
+  server: { deps: { inline: MANTINE_PACKAGES } },
   // All our tests are designed to run in the browser
   testTransformMode: { web: ["**/*"] },
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
