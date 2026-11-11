@@ -297,35 +297,9 @@ public class MergeController {
 
             int tocOffset = 0;
             if (generateTocPage) {
-                MultipartFileWithPdfPageCount[] fileWithPageCount = toFileWithPageCount(files);
-
-                File tocPage = tempFileManager.createTempFile(".pdf");
-
-                int tocFilesToGenerate = (fileWithPageCount.length / 32) + 1;
-                int totalPages = tocFilesToGenerate + 1;
-
-                try (PDDocument document = new PDDocument()) {
-                    for (int i = 0; i < tocFilesToGenerate; i++) {
-                        totalPages +=
-                                addTocPage(
-                                        Arrays.copyOfRange(
-                                                fileWithPageCount,
-                                                (i * 32),
-                                                Math.min((i * 32) + 31, fileWithPageCount.length)),
-                                        document,
-                                        totalPages,
-                                        i == 0);
-                    }
-
-                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                        document.save(baos);
-
-                        Files.write(tocPage.toPath(), baos.toByteArray());
-                    }
-                }
-
-                tocOffset = tocFilesToGenerate;
-                inputPaths.addFirst(tocPage.toPath());
+                File tocDocument = generateToc(toFileWithPageCount(files));
+                inputPaths.addFirst(tocDocument.toPath());
+                tocOffset = 1;
             }
 
             int[] pageCounts;
@@ -430,6 +404,33 @@ public class MergeController {
             }
         }
         return result.toArray(MultipartFileWithPdfPageCount[]::new);
+    }
+
+    private File generateToc(MultipartFileWithPdfPageCount[] files) throws IOException {
+        File tocPage = tempFileManager.createTempFile(".pdf");
+
+        int filesToGenerate = (files.length / 32) + 1;
+        int totalPages = filesToGenerate + 1;
+
+        try (PDDocument document = new PDDocument()) {
+            for (int i = 0; i < filesToGenerate; i++) {
+                totalPages +=
+                        addTocPage(
+                                Arrays.copyOfRange(
+                                        files, (i * 32), Math.min((i * 32) + 31, files.length)),
+                                document,
+                                totalPages,
+                                i == 0);
+            }
+
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                document.save(baos);
+
+                Files.write(tocPage.toPath(), baos.toByteArray());
+            }
+        }
+
+        return tocPage;
     }
 
     private static int addTocPage(
