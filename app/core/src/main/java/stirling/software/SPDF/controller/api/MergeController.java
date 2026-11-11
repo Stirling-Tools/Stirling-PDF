@@ -60,6 +60,7 @@ public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private static final String TOC_FONT_PATH = "static/fonts/NotoSans-Regular.ttf";
+    public static final int ENTRIES_PER_TOC_PAGE = 32;
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();
@@ -409,15 +410,17 @@ public class MergeController {
     private File generateToc(MultipartFileWithPdfPageCount[] files) throws IOException {
         File tocPage = tempFileManager.createTempFile(".pdf");
 
-        int filesToGenerate = (files.length / 32) + 1;
-        int totalPages = filesToGenerate + 1;
+        int tocFilesToGenerate = (files.length + 31) / ENTRIES_PER_TOC_PAGE;
+        int totalPages = tocFilesToGenerate + 1;
 
         try (PDDocument document = new PDDocument()) {
-            for (int i = 0; i < filesToGenerate; i++) {
+            for (int i = 0; i < tocFilesToGenerate; i++) {
                 totalPages +=
                         addTocPage(
                                 Arrays.copyOfRange(
-                                        files, (i * 32), Math.min((i * 32) + 31, files.length)),
+                                        files,
+                                        i * ENTRIES_PER_TOC_PAGE,
+                                        Math.min((i + 1) * ENTRIES_PER_TOC_PAGE, files.length)),
                                 document,
                                 totalPages,
                                 i == 0);
