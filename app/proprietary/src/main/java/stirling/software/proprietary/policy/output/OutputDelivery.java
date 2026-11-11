@@ -19,22 +19,32 @@ public record OutputDelivery(
         String policyId,
         PolicyInputs inputs,
         String fileOwner,
-        String documentIdentity) {
+        String documentIdentity,
+        String pipelineOwner) {
 
     public OutputDelivery {
         inputs = inputs == null ? PolicyInputs.of(List.of()) : inputs;
     }
 
+    public OutputDelivery(
+            String runId,
+            String policyId,
+            PolicyInputs inputs,
+            String fileOwner,
+            String documentIdentity) {
+        this(runId, policyId, inputs, fileOwner, documentIdentity, null);
+    }
+
     public OutputDelivery(String runId, String policyId, PolicyInputs inputs, String fileOwner) {
-        this(runId, policyId, inputs, fileOwner, null);
+        this(runId, policyId, inputs, fileOwner, null, null);
     }
 
     public OutputDelivery(String runId, String policyId, PolicyInputs inputs) {
-        this(runId, policyId, inputs, null, null);
+        this(runId, policyId, inputs, null, null, null);
     }
 
     public OutputDelivery(String runId, String policyId) {
-        this(runId, policyId, null, null, null);
+        this(runId, policyId, null, null, null, null);
     }
 
     /** Reuses the run's document reference, scoped to its source or submitting user. */
@@ -51,6 +61,7 @@ public record OutputDelivery(
                 identity = "user:" + run.getTriggeringUser() + "\n" + run.getFileIdentity();
             }
         }
-        return new OutputDelivery(run.getRunId(), run.getPolicyId(), inputs, null, identity);
+        return new OutputDelivery(
+                run.getRunId(), run.getPolicyId(), inputs, null, identity, run.getPipelineOwner());
     }
 }

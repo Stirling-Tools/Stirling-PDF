@@ -410,8 +410,6 @@ public class AutoRotateController {
                         ? request.getFileInput().getOriginalFilename()
                         : "document.pdf";
         return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(originalName, "_auto_rotated.pdf"),
-                tempFileManager);
+                document, GeneralUtils.generateFilename(originalName, ".pdf"), tempFileManager);
     }
 }

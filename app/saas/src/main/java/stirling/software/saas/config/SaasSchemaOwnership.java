@@ -90,6 +90,7 @@ public final class SaasSchemaOwnership {
                     "account_link_usage_counter",
                     "api_key_daily_usage",
                     "api_keys",
+                    "connected_accounts",
                     "file_encryption_keys",
                     "file_share_accesses",
                     "file_shares",

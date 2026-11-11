@@ -125,7 +125,7 @@ export const ocrResponseHandler = async (
     } catch {
       /* fall through */
     }
-    return [new File([blob], `ocr_${base}.zip`, { type: "application/zip" })];
+    return [new File([blob], `${base}.zip`, { type: "application/zip" })];
   }
 
   // Not a PDF: surface error details if present

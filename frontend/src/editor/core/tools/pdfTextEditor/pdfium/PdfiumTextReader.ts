@@ -59,6 +59,7 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    doc.claimArtifactMarks(page.index);
     const m = doc.module;
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);

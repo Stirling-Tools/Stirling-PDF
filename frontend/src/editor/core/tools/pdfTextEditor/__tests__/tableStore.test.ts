@@ -32,6 +32,7 @@ async function makeStore() {
     loadedPages: () => [page],
     documentLanguage: () => null,
     languagesInUse: () => [],
+    onArtifactKinds: () => () => {},
     module: {},
     dispose: () => {},
   } as unknown as EditorDocument;
