@@ -116,8 +116,7 @@ public class AddCommentsController {
                 throw e;
             }
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_commented.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"));
         }
     }
 

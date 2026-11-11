@@ -106,7 +106,7 @@ class UnlockPDFFormsControllerTest {
     }
 
     @Test
-    void unlockPDFForms_responseFilenameContainsUnlockedForms() throws Exception {
+    void unlockPDFForms_responseFilenameKeepsInputName() throws Exception {
         PDDocument document = new PDDocument();
         document.addPage(new PDPage());
         when(pdfDocumentFactory.load(any(PDFFile.class))).thenReturn(document);
@@ -119,7 +119,7 @@ class UnlockPDFFormsControllerTest {
         assertNotNull(response);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
         assertNotNull(contentDisposition);
-        assertTrue(contentDisposition.contains("unlocked_forms"));
+        assertTrue(contentDisposition.contains("filename=\"test.pdf\""));
     }
 
     @Test
