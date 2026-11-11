@@ -12856,6 +12856,7 @@ emptyEmail = "Please enter your email"
 emptyPassword = "Please enter your password"
 emptyUsername = "Please enter your username"
 oauthFailed = "OAuth login failed. Please try again."
+openResetFailed = "Could not open your browser to reset your password."
 
 [setup.saas]
 title = "Sign in to Stirling"
