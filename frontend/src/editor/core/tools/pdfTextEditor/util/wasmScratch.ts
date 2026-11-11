@@ -83,6 +83,8 @@ export const SCRATCH = {
   tagName: key(),
   tagNameLen: key(),
   tagMcid: key(),
+  tagParam: key(),
+  tagParamLen: key(),
   splitMatrix: key(),
   splitOriginX: key(),
   splitOriginY: key(),

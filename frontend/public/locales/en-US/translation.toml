@@ -7469,10 +7469,15 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Add tag"
+applyToOtherPages_one = "Apply to {{count}} other page"
+applyToOtherPages_other = "Apply to {{count}} other pages"
+artifactGroup = "Skipped by screen readers"
 artifactText = "Decorative"
 cannotChange = "This image's accessibility can't be changed."
 cannotRetag = "This text's tag can't be changed."
+cannotSetDecorative = "This can't be marked or unmarked as decorative."
 cannotTagPage = "This page's content can't be tagged."
+contentGroup = "Content"
 customTag = "{{role}} (custom tag)"
 decorativeInfo = "Screen readers skip decorative images. Use it for borders, backgrounds and other images that carry no information."
 decorativeLabel = "Decorative image"
@@ -7507,6 +7512,12 @@ untaggedDocument = "Document has no tags"
 untaggedImage = "Can't be tagged here"
 untaggedImages = "Untagged images"
 untaggedPages = "Pages to tag"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Footer"
+header = "Header"
+pageNumber = "Page number"
+watermark = "Watermark"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Heading with no text"
