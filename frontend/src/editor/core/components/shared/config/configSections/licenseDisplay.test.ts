@@ -159,6 +159,16 @@ describe("resolveModuleUrl", () => {
     );
   });
 
+  it("matches a native title after its parenthetical qualifier changes", () => {
+    expect(
+      resolveModuleUrl(
+        dependency(
+          "Kvazaar (H.265/HEVC encoder, used for HEIC encoding on Linux/macOS/Windows)",
+        ),
+      ),
+    ).toBe("https://github.com/ultravideo/Kvazaar");
+  });
+
   it("prefers the module URL, then the homepage, then the license URL", () => {
     expect(
       resolveModuleUrl({

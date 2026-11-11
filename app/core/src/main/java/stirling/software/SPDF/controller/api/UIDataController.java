@@ -47,6 +47,10 @@ public class UIDataController {
     private final RuntimePathConfig runtimePathConfig;
     private final ObjectMapper objectMapper;
 
+    // The license bundle is static for the life of the process; caching keeps
+    // each settings request from re-reading the multi-hundred-kilobyte notices.
+    private volatile List<Dependency> licensesCache;
+
     public UIDataController(
             ApplicationProperties applicationProperties,
             SharedSignatureService signatureService,
@@ -93,6 +97,24 @@ public class UIDataController {
     @Operation(summary = "Get third-party licenses data")
     public ResponseEntity<LicensesData> getLicensesData() {
         LicensesData data = new LicensesData();
+        data.setDependencies(loadLicenses());
+        return ResponseEntity.ok(data);
+    }
+
+    private List<Dependency> loadLicenses() {
+        List<Dependency> cached = licensesCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (licensesCache == null) {
+                licensesCache = readLicenses();
+            }
+            return licensesCache;
+        }
+    }
+
+    private List<Dependency> readLicenses() {
         List<Dependency> combined = new ArrayList<>();
         try {
             Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
@@ -122,9 +144,7 @@ public class UIDataController {
         } catch (RuntimeException e) {
             log.warn("Unable to load JPDFium native licenses", e);
         }
-        data.setDependencies(combined);
-
-        return ResponseEntity.ok(data);
+        return List.copyOf(combined);
     }
 
     @GetMapping("/pipeline")
