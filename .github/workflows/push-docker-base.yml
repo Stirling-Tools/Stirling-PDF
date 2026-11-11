@@ -20,19 +20,12 @@ jobs:
     # Own environment: docker-publish is branch-locked to release/main,
     # which excludes the baseDockerImage/accessIssueFix branches this runs on.
     environment: docker-base-publish
-    if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
+    if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
     steps:
-      - name: Verify authorized user
-        run: |
-          if [ "${{ github.actor }}" != "Frooodle" ]; then
-            echo "Error: Only Frooodle is authorized to run this workflow"
-            exit 1
-          fi
-
       - name: Set version
         id: version
         env:
