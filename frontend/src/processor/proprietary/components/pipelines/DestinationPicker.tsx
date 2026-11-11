@@ -40,7 +40,7 @@ export function DestinationPicker({
   const chosen = value[0] ?? "";
   const hasSources = sources.length > 0;
 
-  // Mirrors the input row: the dropdown-plus-edit sits in a field, and "Connect source" lives on its
+  // Mirrors the input row: the dropdown-plus-edit sits in a field, and "Connect destination" lives on its
   // own line below rather than inline. With nowhere to write to yet, only the connect button shows.
   return (
     <>
@@ -79,7 +79,7 @@ export function DestinationPicker({
         onClick={onCreateNew}
         leftSection={<Icon name="plus" size={"1.125rem"} />}
       >
-        {t("portal.sources.actions.connectSource")}
+        {t("portal.sources.actions.connectDestination")}
       </Button>
     </>
   );

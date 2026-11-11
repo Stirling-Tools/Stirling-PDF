@@ -82,10 +82,13 @@ public class ConfigInitializer {
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
             boolean ssoAutoLoginMigrated =
                     migrateSsoAutoLoginToSecurity(settingsFile, settingsTemplateFile);
+            boolean setupCompletedMigrated =
+                    markExistingServerSetUp(settingsFile, settingsTemplateFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile)
-                            || ssoAutoLoginMigrated;
+                            || ssoAutoLoginMigrated
+                            || setupCompletedMigrated;
             if (changesMade) {
                 settingsTemplateFile.save(destPath);
                 log.info("Settings file updated based on template changes.");
@@ -170,5 +173,13 @@ public class ConfigInitializer {
             }
         }
         return false;
+    }
+
+    /** A settings file from before the wizard lacks setupCompleted: that server is set up. */
+    boolean markExistingServerSetUp(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("system", "setupCompleted") != null) {
+            return false;
+        }
+        return template.updateValue(List.of("system", "setupCompleted"), true);
     }
 }

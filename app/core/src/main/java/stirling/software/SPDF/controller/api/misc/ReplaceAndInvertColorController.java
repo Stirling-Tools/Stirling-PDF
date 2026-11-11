@@ -58,8 +58,7 @@ public class ReplaceAndInvertColorController {
 
         // Return the modified PDF as a downloadable file
         String filename =
-                GeneralUtils.generateFilename(
-                        request.getFileInput().getOriginalFilename(), "_inverted.pdf");
+                GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), ".pdf");
 
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try (InputStream in = resource.getInputStream()) {

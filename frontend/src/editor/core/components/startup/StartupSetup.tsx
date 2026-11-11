@@ -16,6 +16,11 @@ import { DEFAULT_RUNTIME_STATE } from "@editor/components/onboarding/orchestrato
 import StaticOnboardingSlide from "@editor/components/onboarding/StaticOnboardingSlide";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
+import {
+  ServerSetupGate,
+  ServerSetupLoading,
+  useServerSetupPending,
+} from "@editor/components/startup/ServerSetupGate";
 
 function requiresMfaSetup(account: AccountData): boolean {
   if (account.mfaEnabled) return false;
@@ -44,6 +49,8 @@ export function StartupSetup({ children }: { children: ReactNode }) {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsConfigured, setAnalyticsConfigured] = useState(false);
   const [mfaCompleted, setMfaCompleted] = useState(false);
+  const [passwordChangedInSetup, setPasswordChangedInSetup] = useState(false);
+  const serverSetupPending = useServerSetupPending();
   const loginEnabled = config?.enableLogin === true;
 
   const requirements = useQuery({
@@ -90,7 +97,9 @@ export function StartupSetup({ children }: { children: ReactNode }) {
     });
   };
 
-  if (requirements.isPending || requirements.isFetching) return null;
+  if (requirements.isPending || requirements.isFetching) {
+    return <ServerSetupLoading />;
+  }
 
   if (requirements.isError) {
     return (
@@ -115,7 +124,9 @@ export function StartupSetup({ children }: { children: ReactNode }) {
   }
 
   const runtimeState = DEFAULT_RUNTIME_STATE;
+  // Server setup asks the analytics question itself, after the password change.
   if (
+    !serverSetupPending &&
     !analyticsConfigured &&
     effectiveIsAdmin &&
     config?.enableAnalytics == null
@@ -138,7 +149,10 @@ export function StartupSetup({ children }: { children: ReactNode }) {
   }
 
   const { account, login } = requirements.data ?? {};
-  if (account?.changeCredsFlag) {
+  const mustChangePassword =
+    account?.changeCredsFlag === true && !passwordChangedInSetup;
+  // Server setup ends by setting the password, so it replaces this screen.
+  if (mustChangePassword && !serverSetupPending) {
     return (
       <StaticOnboardingSlide
         key="first-login"
@@ -170,5 +184,16 @@ export function StartupSetup({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <ServerSetupGate
+      passwordChange={
+        mustChangePassword
+          ? { usingDefaultCredentials: login?.showDefaultCredentials === true }
+          : undefined
+      }
+      onPasswordChanged={() => setPasswordChangedInSetup(true)}
+    >
+      {children}
+    </ServerSetupGate>
+  );
 }

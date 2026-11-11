@@ -5,8 +5,9 @@ export interface AuthShellProps {
   children: ReactNode;
   /** Optional fixed footer slot (the editor passes its legal/cookie footer). */
   footer?: ReactNode;
-  /** `wide` fits content with code samples or side-by-side rows. Default `narrow`. */
-  size?: "narrow" | "wide";
+  /** `medium` fits a setting's label beside its control; `wide` fits code
+   *  samples or side-by-side rows. Default `narrow`. */
+  size?: "narrow" | "medium" | "wide";
 }
 
 /**
@@ -14,6 +15,12 @@ export interface AuthShellProps {
  * card centered on the screen. Purely presentational - callers provide the
  * form (children) and an optional footer.
  */
+const SIZE_CLASS: Record<NonNullable<AuthShellProps["size"]>, string> = {
+  narrow: "",
+  medium: styles.authCardMedium,
+  wide: styles.authCardWide,
+};
+
 export function AuthShell({
   children,
   footer,
@@ -22,7 +29,7 @@ export function AuthShell({
   return (
     <div className={styles.authContainer}>
       <div
-        className={[styles.authCard, size === "wide" ? styles.authCardWide : ""]
+        className={[styles.authCard, SIZE_CLASS[size]]
           .filter(Boolean)
           .join(" ")}
       >

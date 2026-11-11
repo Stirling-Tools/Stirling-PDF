@@ -36,6 +36,8 @@ import {
 import { BrandMark } from "@processor/components/BrandMarks";
 import { S3ConnectionPicker } from "@processor/components/sources/S3ConnectionPicker";
 import { ConnectionPicker } from "@processor/components/sources/ConnectionPicker";
+import { ConnectedAccountPicker } from "@processor/components/sources/ConnectedAccountPicker";
+import { useConnectedAccounts } from "@editor/hooks/useConnectedAccounts";
 import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
 import {
   CREATABLE_CONNECTION_TYPES,
@@ -72,6 +74,26 @@ function optionsFor(
   const out = defaultOptions(type);
   for (const [key, value] of Object.entries(options ?? {})) {
     out[key] = value == null ? "" : String(value);
+  }
+  if (
+    type.fields.some((field) => field.key === "authMode") &&
+    !options?.authMode
+  ) {
+    out.authMode = options?.connectionId ? "organisation" : "account";
+  }
+  return out;
+}
+
+function visibleOptions(
+  type: CreatableSourceType,
+  options: Record<string, string>,
+  visible: (field: SourceFieldDef) => boolean,
+): Record<string, string> {
+  const out = { ...options };
+  for (const field of type.fields) {
+    if (!visible(field)) {
+      delete out[field.key];
+    }
   }
   return out;
 }
@@ -132,6 +154,7 @@ export function SourceModal({
 }: SourceModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { available: accountsAvailable } = useConnectedAccounts();
   const isEdit = Boolean(sourceId);
   const offeredTypes = useMemo(
     () =>
@@ -183,6 +206,7 @@ export function SourceModal({
   // The "Advanced" disclosure starts closed; on edit it opens if a stored value
   // there differs from its default, so nothing non-standard hides behind it.
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [authModeChosen, setAuthModeChosen] = useState(false);
 
   // Seed on every open: fresh catalogue for create, fetched record for edit.
   useEffect(() => {
@@ -199,6 +223,7 @@ export function SourceModal({
       setEnabled(true);
       setLoaded(null);
       setShowAdvanced(Boolean(initialOptions?.mode));
+      setAuthModeChosen(Boolean(initialOptions?.authMode));
       return;
     }
     setStage("configure");
@@ -226,15 +251,22 @@ export function SourceModal({
     setType(next);
     setOptions({ ...defaultOptions(next), ...initialOptions });
     setShowAdvanced(Boolean(initialOptions?.mode));
+    setAuthModeChosen(Boolean(initialOptions?.authMode));
     setStage("configure");
   }
 
   function setOption(key: string, value: string) {
+    if (key === "authMode") {
+      setAuthModeChosen(true);
+    }
     setOptions((current) => ({ ...current, [key]: value }));
   }
 
   const requiredComplete = type.fields.every(
-    (field) => !field.required || (options[field.key] ?? "").trim() !== "",
+    (field) =>
+      !field.required ||
+      !fieldShown(field) ||
+      (options[field.key] ?? "").trim() !== "",
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
@@ -291,7 +323,7 @@ export function SourceModal({
         id: isEdit ? (sourceId ?? undefined) : undefined,
         name: name.trim(),
         type: type.type,
-        options,
+        options: visibleOptions(type, options, fieldVisible),
         enabled,
       });
       await invalidateSources();
@@ -359,7 +391,9 @@ export function SourceModal({
         return t(
           isEdit
             ? "portal.sources.builder.editTitle"
-            : "portal.sources.builder.createTitle",
+            : direction === "output"
+              ? "portal.sources.builder.createDestinationTitle"
+              : "portal.sources.builder.createTitle",
         );
     }
   }
@@ -415,7 +449,9 @@ export function SourceModal({
             >
               {isEdit
                 ? t("portal.sources.builder.save")
-                : t("portal.sources.builder.create")}
+                : direction === "output"
+                  ? t("portal.sources.builder.createDestination")
+                  : t("portal.sources.builder.create")}
             </Button>
           </div>
         );
@@ -503,13 +539,21 @@ export function SourceModal({
     );
   }
 
+  function placeholderFor(field: SourceFieldDef): string | undefined {
+    const when = field.placeholderWhen;
+    if (when && when.oneOf.includes(options[when.key] ?? "")) {
+      return t(when.placeholderKey);
+    }
+    return field.placeholderKey ? t(field.placeholderKey) : undefined;
+  }
+
   function renderInputControl(field: SourceFieldDef) {
     return (
       <Input
         type={field.control === "password" ? "password" : undefined}
         value={options[field.key] ?? ""}
         className={privateContentClassName}
-        placeholder={field.placeholderKey ? t(field.placeholderKey) : undefined}
+        placeholder={placeholderFor(field)}
         onChange={(e) => setOption(field.key, e.target.value)}
       />
     );
@@ -521,11 +565,34 @@ export function SourceModal({
         return renderS3ConnectionControl(field);
       case "connection":
         return renderConnectionControl(field);
+      case "account":
+        return (
+          <ConnectedAccountPicker
+            provider={field.provider ?? "microsoft"}
+            value={options[field.key] ?? ""}
+            onChange={(id) => setOption(field.key, id)}
+            onUnavailable={
+              isEdit || authModeChosen
+                ? undefined
+                : () => setOptions((o) => ({ ...o, authMode: "organisation" }))
+            }
+          />
+        );
       case "select":
         return renderSelectControl(field);
       default:
         return renderInputControl(field);
     }
+  }
+
+  function personalAccountsOff(field: SourceFieldDef): boolean {
+    if (field.key !== "authMode" || options.authMode !== "organisation") {
+      return false;
+    }
+    const accountField = type.fields.find((f) => f.control === "account");
+    return Boolean(
+      accountField?.provider && !accountsAvailable(accountField.provider),
+    );
   }
 
   function renderField(field: SourceFieldDef) {
@@ -534,6 +601,11 @@ export function SourceModal({
         key={field.key}
         label={t(field.labelKey)}
         info={field.helperTextKey ? t(field.helperTextKey) : undefined}
+        helperText={
+          personalAccountsOff(field)
+            ? t("portal.sources.cloudFields.authMode.accountsOff")
+            : undefined
+        }
         required={field.required}
       >
         {renderControl(field)}
@@ -548,7 +620,14 @@ export function SourceModal({
     return !cond || cond.oneOf.includes(options[cond.key] ?? "");
   }
 
-  const visibleFields = type.fields.filter(fieldVisible);
+  function fieldShown(field: SourceFieldDef): boolean {
+    return (
+      fieldVisible(field) &&
+      !(field.inputOnly && direction === "output" && !isEdit)
+    );
+  }
+
+  const visibleFields = type.fields.filter(fieldShown);
   const primaryFields = visibleFields.filter((field) => !field.advanced);
   const advancedFields = visibleFields.filter((field) => field.advanced);
   const back = stageBack();
@@ -594,7 +673,11 @@ export function SourceModal({
                     {t(ct.labelKey)}
                   </span>
                   <span className="portal-source-modal__card-desc">
-                    {t(ct.descriptionKey)}
+                    {t(
+                      direction === "output"
+                        ? (ct.outputDescriptionKey ?? ct.descriptionKey)
+                        : ct.descriptionKey,
+                    )}
                   </span>
                 </span>
               </button>

@@ -139,8 +139,7 @@ public class RepairController {
             // Return the repaired PDF as a streaming response
             return WebResponseUtils.pdfFileToWebResponse(
                     tempOutputFile,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_repaired.pdf"));
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf"));
         } catch (IOException | InterruptedException e) {
             tempOutputFile.close();
             throw e;

@@ -1,3 +1,4 @@
+import type { CloudProvider } from "@editor/services/connectedAccountsService";
 import type { ChipAccent } from "@editor/ui";
 
 /**
@@ -57,6 +58,18 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.webhook.label",
     accent: "warning",
   },
+  googledrive: {
+    labelKey: "portal.sources.types.googledrive.label",
+    accent: "brand",
+  },
+  onedrive: {
+    labelKey: "portal.sources.types.onedrive.label",
+    accent: "brand",
+  },
+  sharepoint: {
+    labelKey: "portal.sources.types.sharepoint.label",
+    accent: "brand",
+  },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
@@ -72,9 +85,16 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "password" | "select" | "s3Connection" | "connection";
+  control:
+    | "text"
+    | "password"
+    | "select"
+    | "s3Connection"
+    | "connection"
+    | "account";
   required?: boolean;
   placeholderKey?: string;
+  placeholderWhen?: { key: string; oneOf: string[]; placeholderKey: string };
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
@@ -87,13 +107,18 @@ export interface SourceFieldDef {
    * "sftp"). Filters the picker to matching connections and pins the inline "new connection" form.
    */
   connectionTypeId?: string;
+  provider?: CloudAccountProvider;
+  inputOnly?: boolean;
 }
+
+export type CloudAccountProvider = CloudProvider;
 
 /** A source type the wizard can create, with the fields its config needs. */
 export interface CreatableSourceType {
   type: string;
   labelKey: string;
   descriptionKey: string;
+  outputDescriptionKey?: string;
   fields: SourceFieldDef[];
   readable?: boolean;
 }
@@ -122,6 +147,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
     },
     {
       key: "mode",
+      inputOnly: true,
       labelKey: "portal.sources.networkFields.mode.label",
       control: "select",
       defaultValue: "consume",
@@ -144,6 +170,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
     },
     {
       key: "recursive",
+      inputOnly: true,
       labelKey: "portal.sources.networkFields.recursive.label",
       control: "select",
       defaultValue: "false",
@@ -162,11 +189,89 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
   ];
 }
 
+const CLOUD_FOLDER_COPY = {
+  onedrive: {
+    placeholderKey: "portal.sources.cloudFields.onedrive.placeholder",
+    helperTextKey: "portal.sources.cloudFields.onedrive.helperText",
+  },
+  sharepoint: {
+    placeholderKey: "portal.sources.cloudFields.sharepoint.placeholder",
+    placeholderWhen: {
+      key: "authMode",
+      oneOf: ["organisation"],
+      placeholderKey:
+        "portal.sources.cloudFields.sharepoint.organisationPlaceholder",
+    },
+    helperTextKey: "portal.sources.cloudFields.sharepoint.helperText",
+  },
+  googledrive: {
+    placeholderKey: "portal.sources.cloudFields.googledrive.placeholder",
+    helperTextKey: "portal.sources.cloudFields.googledrive.helperText",
+  },
+};
+
+function cloudSourceFields(
+  provider: CloudAccountProvider,
+  organisationConnectionTypeId: string,
+  copyKey: keyof typeof CLOUD_FOLDER_COPY,
+): SourceFieldDef[] {
+  const network = networkSourceFields(organisationConnectionTypeId);
+  const modeAndDepth = network
+    .filter((field) => field.key === "mode" || field.key === "recursive")
+    .map((field) =>
+      field.key === "mode" ? { ...field, defaultValue: "track" } : field,
+    );
+  return [
+    {
+      key: "authMode",
+      labelKey: "portal.sources.cloudFields.authMode.label",
+      control: "select",
+      defaultValue: "account",
+      helperTextKey: "portal.sources.cloudFields.authMode.helperText",
+      options: [
+        {
+          value: "account",
+          labelKey: "portal.sources.cloudFields.authMode.options.account",
+        },
+        {
+          value: "organisation",
+          labelKey: "portal.sources.cloudFields.authMode.options.organisation",
+        },
+      ],
+    },
+    {
+      key: "accountId",
+      labelKey: "portal.sources.cloudFields.account.label",
+      control: "account",
+      provider,
+      required: true,
+      visibleWhen: { key: "authMode", oneOf: ["account"] },
+    },
+    {
+      key: "connectionId",
+      labelKey: "portal.sources.cloudFields.connection.label",
+      control: "connection",
+      connectionTypeId: organisationConnectionTypeId,
+      required: true,
+      helperTextKey: "portal.sources.cloudFields.connection.helperText",
+      visibleWhen: { key: "authMode", oneOf: ["organisation"] },
+    },
+    {
+      key: "directory",
+      labelKey: "portal.sources.networkFields.directory.label",
+      control: "text",
+      ...CLOUD_FOLDER_COPY[copyKey],
+    },
+    ...modeAndDepth,
+  ];
+}
+
 export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
   {
     type: "folder",
     labelKey: "portal.sources.types.folder.label",
     descriptionKey: "portal.sources.types.folder.description",
+    outputDescriptionKey: "portal.sources.types.folder.outputDescription",
     fields: [
       {
         key: "directory",
@@ -180,6 +285,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "mode",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
@@ -203,6 +309,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "recursive",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.recursive.label",
         control: "select",
         defaultValue: "false",
@@ -223,6 +330,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "identity",
+        inputOnly: true,
         labelKey: "portal.sources.types.folder.fields.identity.label",
         control: "select",
         defaultValue: "stat",
@@ -250,6 +358,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     type: "s3",
     labelKey: "portal.sources.types.s3.label",
     descriptionKey: "portal.sources.types.s3.description",
+    outputDescriptionKey: "portal.sources.types.s3.outputDescription",
     fields: [
       {
         key: "connectionId",
@@ -267,6 +376,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
       },
       {
         key: "mode",
+        inputOnly: true,
         labelKey: "portal.sources.types.s3.fields.mode.label",
         control: "select",
         defaultValue: "consume",
@@ -306,6 +416,27 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     labelKey: "portal.sources.types.network.label",
     descriptionKey: "portal.sources.types.network.description",
     fields: networkSourceFields("smb"),
+  },
+  {
+    type: "onedrive",
+    labelKey: "portal.sources.types.onedrive.label",
+    descriptionKey: "portal.sources.types.onedrive.description",
+    outputDescriptionKey: "portal.sources.types.onedrive.outputDescription",
+    fields: cloudSourceFields("microsoft", "onedrive", "onedrive"),
+  },
+  {
+    type: "sharepoint",
+    labelKey: "portal.sources.types.sharepoint.label",
+    descriptionKey: "portal.sources.types.sharepoint.description",
+    outputDescriptionKey: "portal.sources.types.sharepoint.outputDescription",
+    fields: cloudSourceFields("microsoft", "sharepoint", "sharepoint"),
+  },
+  {
+    type: "googledrive",
+    labelKey: "portal.sources.types.googledrive.label",
+    descriptionKey: "portal.sources.types.googledrive.description",
+    outputDescriptionKey: "portal.sources.types.googledrive.outputDescription",
+    fields: cloudSourceFields("google", "googleworkspace", "googledrive"),
   },
   {
     type: WEBHOOK_SOURCE_TYPE,
@@ -364,9 +495,6 @@ export interface ComingSoonSourceType {
  * nothing here can be created and the backend never sees these type strings.
  */
 export const COMING_SOON_SOURCE_TYPES: ComingSoonSourceType[] = [
-  "sharepoint",
-  "onedrive",
-  "googledrive",
   "dropbox",
   "box",
   "email",
