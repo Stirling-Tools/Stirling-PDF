@@ -173,6 +173,7 @@ export const buildConvertFormData = (
   } else if (fromExtension === "pdf" && toExtension === "pdfx") {
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || "pdfx");
+    formData.append("strict", String(!!pdfxOptions?.strict));
   } else if (fromExtension === "pdf" && toExtension === "csv") {
     formData.append("pageNumbers", "all");
   } else if (fromExtension === "pdf" && toExtension === "xlsx") {

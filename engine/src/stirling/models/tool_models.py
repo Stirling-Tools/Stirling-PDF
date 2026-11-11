@@ -1054,7 +1054,7 @@ class PdfToMarkdownParams(ApiModel):
 
 class OutputFormat1(StrEnum):
     """
-    pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.
+    pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a; pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.
     """
 
     pdfa = "pdfa"
@@ -1067,23 +1067,27 @@ class OutputFormat1(StrEnum):
     pdfa_2a = "pdfa-2a"
     pdfa_3a = "pdfa-3a"
     pdfx = "pdfx"
+    pdfx_1a = "pdfx-1a"
+    pdfx_3 = "pdfx-3"
+    pdfx_4 = "pdfx-4"
+    pdfx_6 = "pdfx-6"
 
 
 class PdfToPdfaParams(ApiModel):
     """
-    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, or to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
+    This endpoint converts a PDF file to PDF/A using Stirling Office Convert, Ghostscript or PDFBox/LibreOffice, and to PDF/X in process with JPDFium. PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO
     """
 
     output_format: OutputFormat1 = Field(
         ...,
-        description="pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X.",
+        description="pdfa, pdfa-2, pdfa-2b = PDF/A-2b (usual choice); pdfa-1 = PDF/A-1b; pdfa-3, pdfa-3b = PDF/A-3b (allows attachments, e.g. e-invoice XML); pdfa-1a/2a/3a also tag, else fall back to level B (strict=true errors instead); pdfx = PDF/X-4 alias; pdfx-1a = PDF/X-1a; pdfx-3 = PDF/X-3; pdfx-4 = PDF/X-4; pdfx-6 = PDF/X-6.",
     )
     pdf_ua: bool = Field(
         False,
         description="Also declare PDF/UA accessibility alongside PDF/A. Only applies to the level A formats, and the claim is written only if it validates.",
     )
     strict: bool | None = Field(
-        None, description="If true, the conversion will fail if the output is not perfectly compliant"
+        None, description="PDF/A: fail if the output is not perfectly compliant. PDF/X: fail if a font is not embedded."
     )
     use_stirling_office_convert: bool | None = Field(
         None, description="Use Stirling Office Convert; when omitted, follow the server setting"
