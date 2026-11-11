@@ -90,6 +90,7 @@ export const SCRATCH = {
   splitOriginY: key(),
   splitFontSize: key(),
   splitStrokeWidth: key(),
+  linkCharBox: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */

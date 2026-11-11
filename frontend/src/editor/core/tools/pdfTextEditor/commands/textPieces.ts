@@ -124,7 +124,11 @@ export function charOrigins(
 }
 
 /** Where `char` comes next in `text` from code unit `at`, past spaces; null when it does not. */
-function nextMatch(text: string, at: number, char: string): number | null {
+export function nextMatch(
+  text: string,
+  at: number,
+  char: string,
+): number | null {
   let unit = at;
   while (!text.startsWith(char, unit) && /\s/.test(text[unit] ?? "")) unit++;
   return text.startsWith(char, unit) ? unit : null;

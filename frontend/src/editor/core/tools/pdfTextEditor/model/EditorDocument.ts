@@ -16,6 +16,7 @@ import {
   effectiveLanguage,
   type TextLanguage,
 } from "@editor/tools/pdfTextEditor/model/languageTag";
+import type { AnnotationEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import {
   readPageStructure,
@@ -329,10 +330,16 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([], null, 0);
+    const links = this.fileStructure.links.get(pageIndex) ?? [];
+    const retaggedAs = (key: string) => this.retaggedAs(key);
+    if (!page) return new PageStructure([], null, 0, retaggedAs, links);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
-    return new PageStructure(page.elements, null, page.slotCount, (key) =>
-      this.retaggedAs(key),
+    return new PageStructure(
+      page.elements,
+      null,
+      page.slotCount,
+      retaggedAs,
+      links,
     );
   }
 
@@ -655,6 +662,13 @@ export class EditorDocument {
       ...retags,
       ...blockLangs,
     ];
+  }
+
+  /** Every unsaved change to a link annotation, in the form the save pass takes. */
+  annotationEdits(): AnnotationEdit[] {
+    return [...this.structureCache].flatMap(([pageIndex, structure]) =>
+      structure.linkEdits().map((edit) => ({ pageIndex, ...edit })),
+    );
   }
 
   /**
