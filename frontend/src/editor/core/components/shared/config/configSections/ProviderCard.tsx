@@ -22,6 +22,7 @@ import {
 } from "@editor/components/shared/config/configSections/providerDefinitions";
 
 import { Icon, isIconName } from "@editor/ui/Icon";
+import { copyText } from "@editor/utils/copyText";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface ProviderCardProps {
   provider: Provider;
@@ -81,6 +82,18 @@ export default function ProviderCard({
     setExpanded(!expanded);
   };
 
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyField = async (key: string, value: string) => {
+    if (await copyText(value)) {
+      setCopiedField(key);
+      window.setTimeout(
+        () => setCopiedField((current) => (current === key ? null : current)),
+        1500,
+      );
+    }
+  };
+
   const handleFieldChange = (key: string, value: unknown) => {
     if (disabled) return; // Block changes when disabled
     const updated = { ...localSettings, [key]: value };
@@ -102,6 +115,39 @@ export default function ProviderCard({
     const raw = localSettings[field.key] ?? field.defaultValue;
 
     switch (field.type) {
+      case "copy":
+        return (
+          <TextInput
+            key={field.key}
+            label={field.label}
+            description={field.description}
+            value={field.value ?? ""}
+            readOnly
+            onFocus={(e) => e.currentTarget.select()}
+            data-testid={`provider-copy-${field.key}`}
+            rightSectionWidth="auto"
+            rightSectionPointerEvents="all"
+            rightSection={
+              <Button
+                size="sm"
+                variant="tertiary"
+                accent={copiedField === field.key ? "success" : undefined}
+                leftSection={
+                  <Icon
+                    name={copiedField === field.key ? "check" : "copy"}
+                    size={14}
+                  />
+                }
+                onClick={() => void copyField(field.key, field.value ?? "")}
+              >
+                {copiedField === field.key
+                  ? t("common.copied", "Copied!")
+                  : t("common.copy", "Copy")}
+              </Button>
+            }
+          />
+        );
+
       case "switch":
         return (
           <SettingsToggleRow
