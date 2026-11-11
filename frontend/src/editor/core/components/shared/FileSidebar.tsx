@@ -846,9 +846,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         }
         await addFiles(files);
         if (!staysOnAdd) {
-          navActions.setWorkbench(
-            files.length === 1 ? "viewer" : "fileEditor",
-          );
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
         }
       });
     }, [
