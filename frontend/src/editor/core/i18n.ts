@@ -24,11 +24,16 @@ export {
   toUnderscoreLanguages,
 };
 
-i18n
-  .use(TomlBackend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
+const i18nInstance = i18n.use(TomlBackend).use(LanguageDetector);
+
+// Some focused tests mock react-i18next with only the hooks they exercise.
+// The React plugin is optional for i18next's core initialization, so do not
+// make those lightweight mocks provide an unused integration plugin.
+if (initReactI18next) {
+  i18nInstance.use(initReactI18next);
+}
+
+i18nInstance.init({
     fallbackLng: "en-US",
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
