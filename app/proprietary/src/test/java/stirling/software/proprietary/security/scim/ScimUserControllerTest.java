@@ -13,9 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -41,6 +45,13 @@ class ScimUserControllerTest {
         alice = user(7L, "alice@example.com", Role.USER);
         when(userRepository.findById(7L)).thenReturn(Optional.of(alice));
         when(userService.isUsernameValid(any())).thenReturn(true);
+        RequestContextHolder.setRequestAttributes(
+                new ServletRequestAttributes(new MockHttpServletRequest()));
+    }
+
+    @AfterEach
+    void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
     }
 
     private static User user(long id, String name, Role role) {
@@ -62,11 +73,44 @@ class ScimUserControllerTest {
         when(userService.saveUserCore(any())).thenReturn(alice);
         var response = controller.create(Map.of("userName", "alice@example.com", "active", true));
         assertEquals(201, response.getStatusCode().value());
+        assertEquals(
+                "http://localhost/api/v1/scim/v2/Users/7",
+                response.getHeaders().getLocation().toString());
         assertEquals("7", response.getBody().get("id"));
         ArgumentCaptor<SaveUserRequest> request = ArgumentCaptor.forClass(SaveUserRequest.class);
         verify(userService).saveUserCore(request.capture());
         assertEquals("alice@example.com", request.getValue().getUsername());
         assertEquals(null, request.getValue().getPassword());
+    }
+
+    @Test
+    void missingUserNameIsRejected() {
+        var e = assertThrows(ResponseStatusException.class, () -> controller.create(Map.of()));
+        assertEquals(400, e.getStatusCode().value());
+    }
+
+    @Test
+    void attributeNamesAreCaseInsensitive() throws Exception {
+        controller.patch(
+                7L,
+                Map.of(
+                        "operations",
+                        List.of(Map.of("op", "replace", "path", "Active", "value", false))));
+        verify(userService).changeUserEnabled(alice, false);
+    }
+
+    @Test
+    void unsupportedOrRequiredAttributeRemovalIsRejected() {
+        for (Map<String, Object> op :
+                List.<Map<String, Object>>of(
+                        Map.of("op", "remove", "path", "userName"),
+                        Map.of("op", "move", "path", "active"))) {
+            var e =
+                    assertThrows(
+                            ResponseStatusException.class,
+                            () -> controller.patch(7L, Map.of("Operations", List.of(op))));
+            assertEquals(400, e.getStatusCode().value());
+        }
     }
 
     @Test

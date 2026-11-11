@@ -1,16 +1,21 @@
 package stirling.software.proprietary.security.scim;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
@@ -86,7 +91,9 @@ public class ScimUserController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@RequestBody Map<String, Object> body)
             throws Exception {
-        String userName = String.valueOf(body.get("userName"));
+        if (!(attr(body, "userName") instanceof String userName) || userName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userName is required");
+        }
         if (userService.usernameExistsIgnoreCase(userName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "userName already exists");
         }
@@ -104,25 +111,40 @@ public class ScimUserController {
                                 .enabled(
                                         !"false"
                                                 .equalsIgnoreCase(
-                                                        String.valueOf(body.get("active"))))
+                                                        String.valueOf(attr(body, "active"))))
                                 .build());
         log.info("SCIM created user {}", userName);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toScim(user));
+        return ResponseEntity.created(location(user)).body(toScim(user));
     }
 
     @PutMapping("/{id}")
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> replace(@PathVariable long id, @RequestBody Map<String, Object> body)
             throws Exception {
         return toScim(apply(findModifiable(id), body));
     }
 
+    // One transaction so a failing operation rolls back the ones before it.
     @PatchMapping("/{id}")
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> patch(@PathVariable long id, @RequestBody Map<String, Object> body)
             throws Exception {
         User user = findModifiable(id);
-        for (Object item : (List<?>) body.getOrDefault("Operations", List.of())) {
+        Object operations = attr(body, "Operations");
+        for (Object item : operations instanceof List<?> list ? list : List.of()) {
             Map<?, ?> op = (Map<?, ?>) item;
             Object path = op.get("path");
+            String kind = String.valueOf(op.get("op")).toLowerCase(Locale.ROOT);
+            if (!Set.of("add", "replace", "remove").contains(kind)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported op");
+            }
+            if (kind.equals("remove")) {
+                if (path == null || Set.of("username", "active").contains(lower(path))) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "userName and active cannot be removed");
+                }
+                continue;
+            }
             // Okta omits the path and sends an attribute map; Entra names the attribute in path.
             user =
                     apply(
@@ -167,7 +189,7 @@ public class ScimUserController {
 
     private User apply(User user, Map<?, ?> attrs) throws Exception {
         if (attrs == null) return user;
-        Object userName = attrs.get("userName");
+        Object userName = attr(attrs, "userName");
         if (userName != null && !userName.toString().equals(user.getUsername())) {
             if (userService.isUsernameTakenByOtherUser(userName.toString(), user.getId())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "userName already exists");
@@ -175,7 +197,7 @@ public class ScimUserController {
             log.info("SCIM renamed user {} to {}", user.getUsername(), userName);
             userService.changeUsername(user, userName.toString());
         }
-        Object active = attrs.get("active");
+        Object active = attr(attrs, "active");
         boolean enable =
                 active == null ? user.isEnabled() : Boolean.parseBoolean(active.toString());
         if (enable != user.isEnabled()) {
@@ -203,6 +225,26 @@ public class ScimUserController {
         return user;
     }
 
+    // SCIM attribute names are case-insensitive (RFC 7643).
+    private static Object attr(Map<?, ?> attrs, String name) {
+        return attrs.entrySet().stream()
+                .filter(e -> name.equalsIgnoreCase(String.valueOf(e.getKey())))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
+    }
+
+    private static String lower(Object value) {
+        return String.valueOf(value).toLowerCase(Locale.ROOT);
+    }
+
+    private static URI location(User user) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/scim/v2/Users/{id}")
+                .buildAndExpand(user.getId())
+                .toUri();
+    }
+
     private static boolean hasRole(User user, Role role) {
         return user.getAuthorities().stream()
                 .anyMatch(a -> role.getRoleId().equals(a.getAuthority()));
@@ -214,6 +256,6 @@ public class ScimUserController {
                 "id", String.valueOf(user.getId()),
                 "userName", user.getUsername(),
                 "active", user.isEnabled(),
-                "meta", Map.of("resourceType", "User"));
+                "meta", Map.of("resourceType", "User", "location", location(user).toString()));
     }
 }

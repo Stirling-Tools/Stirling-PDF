@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -135,7 +136,12 @@ public class ApplicationProperties {
             environment.getPropertySources().addFirst(propertySource);
         }
 
-        log.debug("Loaded properties: {}", propertySource.getSource());
+        // Names only: values include secrets such as security.scimToken.
+        log.debug(
+                "Loaded property keys: {}",
+                propertySource instanceof EnumerablePropertySource<?> keys
+                        ? Arrays.toString(keys.getPropertyNames())
+                        : propertySource.getName());
 
         return propertySource;
     }
