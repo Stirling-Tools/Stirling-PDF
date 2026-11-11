@@ -47,8 +47,7 @@ public class SigningSessionFinalizationService {
         }
         byte[] original = workflowSessionService.getOriginalFile(sessionId);
         byte[] pdf = signingFinalizationService.finalizeDocument(session, original);
-        String filename =
-                session.getDocumentName().replaceFirst("(?i)\\.pdf$", "") + "_shared_signed.pdf";
+        String filename = session.getDocumentName().replaceFirst("(?i)\\.pdf$", "") + ".pdf";
         workflowSessionService.storeProcessedFile(session, pdf, filename);
         signingFinalizationService.clearSensitiveMetadata(session);
         workflowSessionService.finalizeSession(sessionId, owner);
