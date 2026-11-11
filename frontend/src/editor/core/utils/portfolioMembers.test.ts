@@ -72,6 +72,9 @@ describe("readPortfolioMembers", () => {
       "first.txt",
       "second.txt",
     ]);
+    expect(await readPortfolioMemberBytes(file, "first.txt")).toEqual(
+      new TextEncoder().encode("first member body"),
+    );
   });
 
   it("returns null for a PDF that is not a portfolio", async () => {
