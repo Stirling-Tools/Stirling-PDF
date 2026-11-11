@@ -569,6 +569,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [ingestsInFlight, setIngestsInFlight] = useState(0);
+    const trackIngest = useCallback(async (ingest: () => Promise<void>) => {
+      setIngestsInFlight((n) => n + 1);
+      try {
+        await ingest();
+      } finally {
+        setIngestsInFlight((n) => n - 1);
+      }
+    }, []);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);
@@ -874,16 +883,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       async (picker: CloudFilePicker) => {
         const files = await picker.openPicker({ multiple: true });
         if (files.length === 0) return;
-        if (onPickCloudFiles) {
-          await onPickCloudFiles(files);
-          return;
-        }
-        await addFiles(files);
-        if (!staysOnAdd) {
-          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-        }
+        await trackIngest(async () => {
+          if (onPickCloudFiles) {
+            await onPickCloudFiles(files);
+            return;
+          }
+          await addFiles(files);
+          if (!staysOnAdd) {
+            navActions.setWorkbench(
+              files.length === 1 ? "viewer" : "fileEditor",
+            );
+          }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onPickCloudFiles],
+      [trackIngest, addFiles, navActions, staysOnAdd, onPickCloudFiles],
     );
 
     const failedPicker = cloudPickers.find((picker) => picker.error);
@@ -1042,9 +1055,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const ingestFiles = useCallback(
       async (files: File[]) => {
         if (files.length === 0) return;
-        if (onUploadFiles) {
-          await onUploadFiles(files);
-        } else {
+        await trackIngest(async () => {
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+            return;
+          }
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
@@ -1053,9 +1068,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
-        }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onUploadFiles,
+        currentWorkbench,
+      ],
     );
 
     const handleNativeFilePick = useCallback(
@@ -1245,7 +1267,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
-            <div className="file-sidebar-scroll">
+            <div
+              className="file-sidebar-scroll"
+              aria-busy={ingestsInFlight > 0}
+            >
               {currentWorkbench === "myFiles" ? (
                 <FolderTreeSection />
               ) : (

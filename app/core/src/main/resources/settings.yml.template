@@ -113,7 +113,7 @@ premium:
       enabled: false # Enable OneDrive and SharePoint (editor picker, connected accounts, pipeline locations)
       clientId: "" # Application (client) ID of the Microsoft Entra app registration
       tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
-      clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
+      clientSecret: "" # Client secret; needed for connected accounts (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
       allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
       allowEditorSaves: true # set to 'false' to stop the editor saving files back to OneDrive; the server then refuses those saves
   enterpriseFeatures:
@@ -191,6 +191,7 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
+  setupCompleted: false # 'true' once an admin has finished or skipped the first-run setup wizard. An existing settings file without this key is marked 'true' on upgrade, so the wizard only appears on new servers
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enableEasterEggs: true # Set to 'false' to remove the app's hidden novelty features
   enableFeedback: true # Set to 'false' to disable ability to send feedback to Stirling from the app

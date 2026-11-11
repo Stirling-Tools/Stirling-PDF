@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,6 @@ import tools.jackson.databind.JsonNode;
 @RequiredArgsConstructor
 public class GoogleOAuthClient implements CloudOAuthClient {
 
-    private static final Set<String> DRIVE_SCOPES = Set.of("drive", "drive.file", "drive.readonly");
     private static final String SCOPE_PREFIX = "https://www.googleapis.com/auth/";
     private static final HttpClient HTTP =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -116,31 +114,34 @@ public class GoogleOAuthClient implements CloudOAuthClient {
     }
 
     String driveScope() {
-        return SCOPE_PREFIX + configuredDriveScope(app().getAccountScope());
+        return SCOPE_PREFIX + accountScope(app());
     }
 
     /**
      * Scope for tokens handed to the browser picker, which only lists and downloads files. A
      * refresh can only ask for scopes granted at consent, so {@link #consentScopes()} must request
      * this one too.
+     *
+     * @throws IllegalStateException when {@code accountScope} is not a Drive scope
      */
-    static String browserScope(String configuredAccountScope) {
+    static String browserScope(ApplicationProperties.Premium.ProFeatures.GoogleDrive app) {
         return SCOPE_PREFIX
-                + ("drive.file".equals(configuredDriveScope(configuredAccountScope))
-                        ? "drive.file"
-                        : "drive.readonly");
+                + ("drive.file".equals(accountScope(app)) ? "drive.file" : "drive.readonly");
     }
 
     String consentScopes() {
         String drive = driveScope();
-        String browser = browserScope(app().getAccountScope());
+        String browser = browserScope(app());
         return "openid email profile " + (drive.equals(browser) ? drive : drive + " " + browser);
     }
 
-    private static String configuredDriveScope(String configured) {
-        return configured == null || !DRIVE_SCOPES.contains(configured.trim())
-                ? "drive"
-                : configured.trim();
+    private static String accountScope(ApplicationProperties.Premium.ProFeatures.GoogleDrive app) {
+        String scope = app.validAccountScope();
+        if (scope == null) {
+            throw new IllegalStateException(
+                    "googleDrive.accountScope must be drive, drive.file or drive.readonly");
+        }
+        return scope;
     }
 
     private ApplicationProperties.Premium.ProFeatures.GoogleDrive app() {

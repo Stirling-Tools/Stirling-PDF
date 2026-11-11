@@ -98,7 +98,7 @@ class MicrosoftDriveGraphTest {
         ConnectionLookup lookup = new ConnectionLookup(connections, ownership, users);
         MicrosoftConnectionResolver resolver =
                 new MicrosoftConnectionResolver(
-                        lookup, new ConnectedAccountAccess(connectedAccounts, lookup), properties);
+                        lookup, new ConnectedAccountAccess(connectedAccounts, lookup));
         MicrosoftCloudDrive drive = new MicrosoftCloudDrive(resolver, client);
         InProcessProcessedLedger ledger = new InProcessProcessedLedger();
         source = new MicrosoftDriveInputSource(drive);
@@ -376,16 +376,16 @@ class MicrosoftDriveGraphTest {
     }
 
     @Test
-    void aBlankConnectionSecretUsesTheServersApp() throws Exception {
+    void aBlankConnectionSecretNeverBorrowsTheServersApp() {
         storeConnection(
                 true,
                 "{\"drive\":\"onedrive\",\"tenantId\":\"contoso.onmicrosoft.com\",\"user\":\""
                         + FakeGraphServer.USER
                         + "\"}");
-        graph.put("Inbox/a.pdf", "a");
 
-        assertEquals(1, source.resolve(onedrive(Map.of("mode", "snapshot")), ctx).size());
-        assertEquals("client-1", graph.tokenForms.getLast().get("client_id"));
-        assertEquals("server-secret", graph.tokenForms.getLast().get("client_secret"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> source.resolve(onedrive(Map.of("mode", "snapshot")), ctx));
+        assertTrue(graph.tokenForms.isEmpty());
     }
 }

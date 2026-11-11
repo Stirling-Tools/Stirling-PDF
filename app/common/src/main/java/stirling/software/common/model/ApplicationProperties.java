@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -1329,6 +1330,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        // True when absent: older and read-only settings files belong to servers already set up.
+        private boolean setupCompleted = true;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
@@ -1895,11 +1898,21 @@ public class ApplicationProperties {
                 private boolean allowAccountConnections = true;
                 private String accountScope = "drive";
 
+                private static final Set<String> ACCOUNT_SCOPES =
+                        Set.of("drive", "drive.file", "drive.readonly");
+
                 public boolean accountConnectionsReady() {
                     return enabled
                             && allowAccountConnections
                             && !clientId.isBlank()
-                            && !clientSecret.isBlank();
+                            && !clientSecret.isBlank()
+                            && validAccountScope() != null;
+                }
+
+                /** The trimmed {@code accountScope}, or null when it is not a Drive scope. */
+                public String validAccountScope() {
+                    String scope = accountScope == null ? "" : accountScope.trim();
+                    return ACCOUNT_SCOPES.contains(scope) ? scope : null;
                 }
             }
 

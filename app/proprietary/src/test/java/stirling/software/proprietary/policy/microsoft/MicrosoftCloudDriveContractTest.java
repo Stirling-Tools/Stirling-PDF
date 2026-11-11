@@ -50,7 +50,7 @@ class MicrosoftCloudDriveContractTest extends CloudDriveContract<MicrosoftDriveC
                         mock(UserService.class));
         MicrosoftConnectionResolver resolver =
                 new MicrosoftConnectionResolver(
-                        lookup, new ConnectedAccountAccess(connected, lookup), properties);
+                        lookup, new ConnectedAccountAccess(connected, lookup));
         return new MicrosoftCloudDrive(
                 resolver,
                 new GraphDriveClient(endpoints, new GraphTokenProvider(endpoints, connected)));

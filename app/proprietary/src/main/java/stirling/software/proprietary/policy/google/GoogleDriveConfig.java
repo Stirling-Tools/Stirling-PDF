@@ -36,7 +36,6 @@ public record GoogleDriveConfig(
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern FOLDER_LINK = Pattern.compile("/folders/([A-Za-z0-9_-]+)");
     private static final Pattern ID_QUERY = Pattern.compile("[?&]id=([A-Za-z0-9_-]+)");
-    private static final Pattern BARE_ID = Pattern.compile("[A-Za-z0-9_-]{10,}");
     private static final Pattern EMAIL = Pattern.compile("[^@\\s]+@[^@\\s]+");
 
     public static GoogleDriveConfig forAccount(long accountId, Map<String, Object> options) {
@@ -80,23 +79,21 @@ public record GoogleDriveConfig(
         return new ServiceAccountCredential(clientEmail, privateKey, subject);
     }
 
+    /** The folder ID a pasted link names, or null when the folder is a path from My Drive. */
     public String folderId() {
-        if (folder.isEmpty()) {
+        if (!folder.startsWith("https://")) {
             return null;
         }
-        if (folder.startsWith("https://")) {
-            Matcher link = FOLDER_LINK.matcher(folder);
-            if (link.find()) {
-                return link.group(1);
-            }
-            Matcher query = ID_QUERY.matcher(folder);
-            if (query.find()) {
-                return query.group(1);
-            }
-            throw new IllegalArgumentException(
-                    "that link does not name a Drive folder; open the folder and copy its link");
+        Matcher link = FOLDER_LINK.matcher(folder);
+        if (link.find()) {
+            return link.group(1);
         }
-        return !folder.contains("/") && BARE_ID.matcher(folder).matches() ? folder : null;
+        Matcher query = ID_QUERY.matcher(folder);
+        if (query.find()) {
+            return query.group(1);
+        }
+        throw new IllegalArgumentException(
+                "that link does not name a Drive folder; open the folder and copy its link");
     }
 
     public String location() {

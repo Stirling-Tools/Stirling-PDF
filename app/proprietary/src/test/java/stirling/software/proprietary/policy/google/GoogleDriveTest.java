@@ -133,6 +133,14 @@ class GoogleDriveTest {
     }
 
     @Test
+    void aFolderNameThatLooksLikeAnIdIsStillAPath() throws Exception {
+        google.file(google.folder("root", "Statements"), "a.pdf", "a");
+
+        assertThat(source.resolve(new InputSpec("googledrive", mine("Statements")), ctx))
+                .hasSize(1);
+    }
+
+    @Test
     void largeOutputsUseAResumableUpload() throws Exception {
         byte[] large = new byte[(int) GoogleDriveClient.SIMPLE_UPLOAD_LIMIT + 1234];
         new Random(3).nextBytes(large);
@@ -140,7 +148,7 @@ class GoogleDriveTest {
         sink.deliver(
                 new OutputDelivery("run-1", POLICY),
                 List.of(named(large, "big.pdf")),
-                new OutputSpec("googledrive", mine(inbox)));
+                new OutputSpec("googledrive", mine("Scans/Inbox")));
 
         assertThat(google.named(inbox, "big.pdf").content).isEqualTo(large);
     }
@@ -170,7 +178,7 @@ class GoogleDriveTest {
                                         "connectionId",
                                         CONNECTION,
                                         "directory",
-                                        inbox,
+                                        "Scans/Inbox",
                                         "mode",
                                         "snapshot")),
                         ctx);
