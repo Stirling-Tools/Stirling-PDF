@@ -193,11 +193,6 @@ async function openPageEditor(page: import("@playwright/test").Page) {
     timeout: 120_000,
   });
   await uploadFiles(page, [ROTATED_PDF, SAMPLE_PDF]);
-  // The upload opens Active Files itself once its writes settle, which undoes
-  // any view picked before then.
-  await expect(viewOption(page, "Active Files")).toBeChecked({
-    timeout: 30_000,
-  });
   await dismissTourTooltip(page);
   await switchView(page, "Page Editor");
   await expect(page.getByTestId("page-tracks")).toBeVisible({
@@ -1058,9 +1053,6 @@ test.describe("Page Editor tracks", () => {
         timeout: 120_000,
       });
       await uploadFiles(page, [longPdf, SAMPLE_PDF]);
-      await expect(viewOption(page, "Active Files")).toBeChecked({
-        timeout: 30_000,
-      });
       await dismissTourTooltip(page);
       await switchView(page, "Page Editor");
 

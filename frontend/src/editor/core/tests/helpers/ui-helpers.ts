@@ -44,63 +44,26 @@ export async function waitForModalClose(
   });
 }
 
-/** Uploads through the sidebar and waits for IndexedDB persistence before callers navigate. */
+/**
+ * Uploads through the sidebar and returns once the app has finished with it:
+ * every file stored, and the view switched to wherever an upload lands. Not for
+ * encrypted PDFs, whose upload stays open until the unlock prompt is answered.
+ */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
-  const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
-  // The sidebar lists the library from IndexedDB, so it waits on the same
-  // write as waitForStoredFiles.
-  await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-    timeout: 30_000,
-  });
-  await waitForStoredFiles(page, names);
-}
-
-/** Polls an existing database without creating or upgrading it, so setup cannot race the app. */
-async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
-  await page.waitForFunction(
-    (expected) =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open("stirling-pdf-files");
-        open.onupgradeneeded = () => {
-          open.transaction?.abort();
-          resolve(false);
-        };
-        open.onsuccess = () => {
-          const db = open.result;
-          if (!db.objectStoreNames.contains("files")) {
-            db.close();
-            resolve(false);
-            return;
-          }
-          const request = db
-            .transaction("files", "readonly")
-            .objectStore("files")
-            .getAll();
-          request.onsuccess = () => {
-            const stored = new Set(
-              (request.result as Array<{ name?: string }>).map((r) => r.name),
-            );
-            db.close();
-            resolve(expected.every((name) => stored.has(name)));
-          };
-          request.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-        open.onerror = () => resolve(false);
-        open.onblocked = () => resolve(false);
-      }),
-    names,
-    // The IndexedDB write can lag the upload on WebKit under parallel CI load;
-    // it lands, just not always within 10s, so give the commit room to finish.
-    { timeout: 30_000, polling: 100 },
+  // The pick marks the list busy inside the change event, before setInputFiles
+  // returns, so this cannot read the idle state from before the upload. No
+  // timeout of its own: under load an upload is slow, not stuck, and the test
+  // timeout still ends a real hang.
+  await expect(page.locator(".file-sidebar-scroll")).toHaveAttribute(
+    "aria-busy",
+    "false",
+    { timeout: 0 },
   );
 }
 
