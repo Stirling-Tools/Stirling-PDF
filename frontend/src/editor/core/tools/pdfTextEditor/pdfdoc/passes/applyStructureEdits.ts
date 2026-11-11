@@ -130,7 +130,7 @@ export async function applyStructureEdits(
   const cutsFromAdded = cutsFromAddedElements(added, cuts);
   for (const edit of edits) {
     if (edit.newElement || edit.cut) continue;
-    const owner = elementFor(pdf, treeRoot, edit);
+    const owner = elementOwning(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
       continue;
@@ -291,7 +291,7 @@ function edited(
 }
 
 /** The body with text-string entry `key` set to `value`, or removed for null. */
-function withTextEntry(
+export function withTextEntry(
   body: string,
   key: string,
   value: string | null,
@@ -301,13 +301,13 @@ function withTextEntry(
     : setDictEntry(body, key, encodeTextString(value));
 }
 
-/** The structure element's object number, or why it cannot be found. */
-function elementFor(
+/** The object number of the element owning MCID `mcid` on the page, or why it cannot be found. */
+export function elementOwning(
   pdf: RawPdf,
   treeRoot: number,
-  edit: StructureEdit,
+  { pageIndex, mcid }: { pageIndex: number; mcid: number },
 ): number | string {
-  const pageNum = pdf.pageNumberAt(edit.pageIndex);
+  const pageNum = pdf.pageNumberAt(pageIndex);
   const page = pageNum === null ? null : pdf.objectBody(pageNum);
   if (!page) return "no such page";
   const key = pdf.dictInt(page, "StructParents");
@@ -317,7 +317,7 @@ function elementFor(
   if (!tree) return "the ParentTree has no entry for the page";
   if (!tree.items) return "the page's ParentTree entry is not an array";
 
-  const num = referencedObject(tree.items[edit.mcid]?.text ?? "");
+  const num = referencedObject(tree.items[mcid]?.text ?? "");
   if (num === null) return "no structure element owns this MCID";
   const body = pdf.objectBody(num);
   if (!body || pdf.dictName(body, "S") === null) {
