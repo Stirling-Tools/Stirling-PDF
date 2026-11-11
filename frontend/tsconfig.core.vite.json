@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@editor/*": ["./src/editor/core/*"]
+      "@editor/*": ["./src/editor/core/*"],
+      "@editor-test/*": ["./src/editor/test/*"]
     }
   },
   "exclude": ["src/editor/proprietary", "src/editor/desktop"]

@@ -36,6 +36,7 @@
         "./src/editor/core/*"
       ],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
+      "@editor-test/*": ["./src/editor/test/*"],
       "@editor-core/*": ["./src/editor/core/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */

@@ -1,4 +1,4 @@
-import "../test/setupCommon";
+import "@editor-test/setupCommon";
 import { vi } from "vitest";
 import i18n from "i18next";
 import { installFailOnConsole } from "@editor/tests/failOnConsole";

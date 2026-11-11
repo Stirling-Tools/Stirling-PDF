@@ -1,16 +1,14 @@
-import "../test/setupCommon";
+import "@editor-test/setupCommon";
 import { vi } from "vitest";
 import i18n from "i18next";
 import { installFailOnConsole } from "@editor/tests/failOnConsole";
 
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi
-    .fn()
-    .mockResolvedValue({
-      mode: "saas",
-      server_config: null,
-      lock_connection_mode: false,
-    }),
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
   isTauri: () => false,
 }));
 

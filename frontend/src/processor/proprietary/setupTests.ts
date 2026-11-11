@@ -1,4 +1,4 @@
-import "../../editor/test/setupCommon";
+import "@editor-test/setupCommon";
 import { vi } from "vitest";
 import i18n from "i18next";
 
@@ -11,13 +11,11 @@ vi.mock("react-i18next", () => ({
   I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi
-    .fn()
-    .mockResolvedValue({
-      mode: "saas",
-      server_config: null,
-      lock_connection_mode: false,
-    }),
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
   isTauri: () => false,
 }));
 void i18n.init({
