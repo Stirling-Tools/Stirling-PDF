@@ -20,9 +20,9 @@ import stirling.software.proprietary.security.service.UserService;
  * {@code @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)")} annotations on {@code
  * SaasTeamController} endpoints.
  *
- * <p>The current-user resolution uses the saas-mode authentication primitives ({@link
- * EnhancedJwtAuthenticationToken} from a Supabase JWT, or our existing API-key path) and looks the
- * local {@link User} row up via {@link UserService#findBySupabaseId(UUID)}.
+ * <p>The current user is the {@link User} the authentication filters already attached as the
+ * principal. Only a principal that is not a {@link User} is looked up: a guest's raw Jwt via {@link
+ * UserService#findBySupabaseId(UUID)}, a bare username via {@link UserService#findByUsername}.
  */
 @Component("teamSecurity")
 @Profile("saas")
@@ -31,6 +31,7 @@ public class TeamSecurityExpressions {
 
     private final TeamMembershipRepository membershipRepository;
     private final UserService userService;
+    private final UserTeamResolver userTeamResolver;
 
     /** Whether the current authenticated user is a {@code LEADER} of the given team. */
     public boolean isTeamLeader(Long teamId) {
@@ -46,23 +47,12 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of their own team. */
     public boolean isCurrentUserTeamLeader() {
-        User currentUser = getCurrentUser();
-        if (currentUser == null || currentUser.getTeam() == null) {
-            return false;
-        }
-        return membershipRepository
-                .findByTeamIdAndUserId(currentUser.getTeam().getId(), currentUser.getId())
-                .map(membership -> membership.getRole() == TeamRole.LEADER)
-                .orElse(false);
+        return userTeamResolver.isLeader(getCurrentUser());
     }
 
     /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */
     public Long currentUserTeamId() {
-        User currentUser = getCurrentUser();
-        if (currentUser == null || currentUser.getTeam() == null) {
-            return null;
-        }
-        return currentUser.getTeam().getId();
+        return userTeamResolver.teamId(getCurrentUser()).orElse(null);
     }
 
     /** The current authenticated user's id, or {@code null} if unauthenticated. */
@@ -86,6 +76,12 @@ public class TeamSecurityExpressions {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
+        // Both the JWT and API-key filters attach the resolved User to the token, so prefer it over
+        // another lookup. Guests carry a raw Jwt and fall through to the supabase-id path.
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
         if (authentication instanceof EnhancedJwtAuthenticationToken jwt) {
             try {
                 UUID supabaseId = UUID.fromString(jwt.getSupabaseId());
@@ -93,11 +89,6 @@ public class TeamSecurityExpressions {
             } catch (IllegalArgumentException e) {
                 return null;
             }
-        }
-        // API-key path: the principal is the User entity itself.
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof User user) {
-            return user;
         }
         // Username fallback.
         if (principal instanceof String username) {

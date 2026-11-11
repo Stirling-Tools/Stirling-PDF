@@ -52,6 +52,8 @@ class UserRoleWebhookControllerTest {
     @Mock private SaasUserAccountService saasUserAccountService;
     @Mock private SupabaseUserService supabaseUserService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private UserRoleWebhookController controller;
 
     private static final String SUPABASE_ID = "11111111-2222-3333-4444-555555555555";

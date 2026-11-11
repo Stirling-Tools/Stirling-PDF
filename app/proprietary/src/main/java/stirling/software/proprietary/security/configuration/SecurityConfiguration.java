@@ -39,7 +39,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
@@ -80,7 +79,6 @@ public class SecurityConfiguration {
 
     private final ApplicationProperties applicationProperties;
     private final ApplicationProperties.Security securityProperties;
-    private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JwtServiceInterface jwtService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -102,7 +100,6 @@ public class SecurityConfiguration {
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            AppConfig appConfig,
             ApplicationProperties applicationProperties,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
@@ -123,7 +120,6 @@ public class SecurityConfiguration {
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
-        this.appConfig = appConfig;
         this.applicationProperties = applicationProperties;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
@@ -213,7 +209,10 @@ public class SecurityConfiguration {
                         "X-Page-Number",
                         "X-Page-Size",
                         "Content-Disposition",
-                        "Content-Type"));
+                        "Content-Type",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total",
+                        "X-Stirling-Detected-Fields"));
 
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
@@ -233,7 +232,7 @@ public class SecurityConfiguration {
         http.securityMatcher("/saml2/**", "/login/saml2/**");
 
         SessionCreationPolicy sessionPolicy =
-                (securityProperties.isSaml2Active() && runningProOrHigher)
+                securityProperties.isSaml2Active()
                         ? SessionCreationPolicy.IF_REQUIRED
                         : SessionCreationPolicy.STATELESS;
 
@@ -314,11 +313,10 @@ public class SecurityConfiguration {
                     exceptions ->
                             exceptions.defaultAuthenticationEntryPointFor(
                                     jwtAuthenticationEntryPoint,
-                                    request -> {
-                                        String contextPath = request.getContextPath();
-                                        String requestURI = request.getRequestURI();
-                                        return requestURI.startsWith(contextPath + "/api/");
-                                    }));
+                                    request ->
+                                            RequestUriUtils.isApiRequest(
+                                                    request.getContextPath(),
+                                                    request.getRequestURI())));
 
             http.logout(
                     logout ->
@@ -328,9 +326,9 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
                                                     securityProperties,
-                                                    appConfig,
                                                     jwtService,
-                                                    aiUserDataService))
+                                                    aiUserDataService,
+                                                    applicationProperties))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
@@ -355,12 +353,12 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
-                                                // Check if it's a public auth endpoint or static
-                                                // resource
                                                 return RequestUriUtils.isStaticResource(
                                                                 contextPath, uri)
                                                         || RequestUriUtils.isPublicAuthEndpoint(
-                                                                uri, contextPath);
+                                                                uri, contextPath)
+                                                        || RequestUriUtils.isFrontendRoute(
+                                                                contextPath, uri);
                                             })
                                     .permitAll()
                                     .anyRequest()
@@ -390,43 +388,43 @@ public class SecurityConfiguration {
             // Handle OAUTH2 Logins
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
-                        oauth2 -> {
-                            oauth2.loginPage("/login")
-                                    .authorizationEndpoint(
-                                            authorizationEndpoint -> {
-                                                if (clientRegistrationRepository != null) {
-                                                    authorizationEndpoint
-                                                            .authorizationRequestResolver(
-                                                                    new TauriAuthorizationRequestResolver(
-                                                                            clientRegistrationRepository));
-                                                }
-                                            })
-                                    .successHandler(
-                                            new CustomOAuth2AuthenticationSuccessHandler(
-                                                    loginAttemptService,
-                                                    securityProperties.getOauth2(),
-                                                    userService,
-                                                    jwtService,
-                                                    licenseSettingsService,
-                                                    applicationProperties))
-                                    .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
-                                    // Add existing Authorities from the database
-                                    .userInfoEndpoint(
-                                            userInfoEndpoint ->
-                                                    userInfoEndpoint
-                                                            .oidcUserService(
-                                                                    new CustomOAuth2UserService(
-                                                                            securityProperties
-                                                                                    .getOauth2(),
-                                                                            userService,
-                                                                            loginAttemptService))
-                                                            .userAuthoritiesMapper(
-                                                                    oAuth2userAuthoritiesMapper))
-                                    .permitAll();
-                        });
+                        oauth2 ->
+                                oauth2.loginPage("/login")
+                                        .authorizationEndpoint(
+                                                authorizationEndpoint -> {
+                                                    if (clientRegistrationRepository != null) {
+                                                        authorizationEndpoint
+                                                                .authorizationRequestResolver(
+                                                                        new TauriAuthorizationRequestResolver(
+                                                                                clientRegistrationRepository));
+                                                    }
+                                                })
+                                        .successHandler(
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        loginAttemptService,
+                                                        securityProperties.getOauth2(),
+                                                        userService,
+                                                        jwtService,
+                                                        licenseSettingsService,
+                                                        applicationProperties))
+                                        .failureHandler(
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        // Add existing Authorities from the database
+                                        .userInfoEndpoint(
+                                                userInfoEndpoint ->
+                                                        userInfoEndpoint
+                                                                .oidcUserService(
+                                                                        new CustomOAuth2UserService(
+                                                                                securityProperties
+                                                                                        .getOauth2(),
+                                                                                userService,
+                                                                                loginAttemptService))
+                                                                .userAuthoritiesMapper(
+                                                                        oAuth2userAuthoritiesMapper))
+                                        .permitAll());
             }
             // Handle SAML
-            if (securityProperties.isSaml2Active() && runningProOrHigher) {
+            if (securityProperties.isSaml2Active()) {
                 OpenSaml5AuthenticationProvider authenticationProvider =
                         new OpenSaml5AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(

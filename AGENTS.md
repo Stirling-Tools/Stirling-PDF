@@ -21,6 +21,43 @@ Task `desc:` fields should describe **what** the task does, not **how** it does 
 - `task docker:build` — build standard Docker image
 - `task docker:up` — start Docker compose stack
 
+## Comments
+
+A comment must carry information the code cannot. If a reader could derive it from the code in front of them, delete it.
+
+Comment the current state. Not what the code used to do, not what changed, not why it changed: git holds that. Where history explains the shape, state the reason instead, so "this used to reimplement the modal internals" becomes "thin wrapper over the shared Modal: duplicating its portal and focus trap is how dialogs drift apart". Future state goes in a TODO with an issue.
+
+Write a comment when it does one of these four jobs:
+
+- **Contract.** What a caller must know that the signature cannot say: preconditions, invariants, units, ownership and lifetime, thread-safety, error semantics, side effects. Document the contract of everything a caller outside the file can reach, and nothing else. Goes on the type/method/module as Javadoc, JSDoc, or a docstring.
+- **Why.** The constraint the code satisfies, the bug it avoids, the alternative rejected and the reason.
+- **Hazard.** "Must stay in sync with X", "order matters because Y", "do not remove, it prevents Z".
+- **Map.** A short orientation at the top of a genuinely complex file: what it owns, and what it deliberately does not.
+
+Never write:
+
+- A comment that restates the next line. `// Handle drag start` above `handleDragStart` is noise.
+- Section banners or position markers: `// --- Types ---`, `// Helpers`, `// =====`.
+- Step narration in a function body (`// Step 1:`, `// Then we`). If the steps need labels they need names: extract functions. Numbering a genuinely numbered thing, like a wizard step, is fine.
+- Commented-out code. Delete it.
+- Doc tags that restate the signature. `@param blob - The blob` says nothing; omit the tag rather than pad it.
+- Docs on self-explanatory members with no constraint to state.
+
+Two tests before keeping a comment:
+
+- **Delete it.** Is any information lost? If not, it stays deleted.
+- **Could a name carry it instead?** A better identifier, an extracted function, or a named constant beats a comment. Prefer the code change.
+
+A comment at the end of a line usually decodes that line, and that is worth keeping: `{0x25, 0x50} // "%PDF"`, `50L * 1024 * 1024 // 50 MB`. The rules that compare a comment against the code below it do not apply there, but a trailing TODO or a trailing bit of history is judged like any other.
+
+A reference is supplementary, never load-bearing: the comment must survive deleting it. `// See #1234` is a dead end; `// saving first loses every annotation (#6865)` is not. Prefer a spec (`RFC 3161`) or CVE where one applies.
+
+A TODO needs an issue, not an owner: `// TODO(#1234): re-enable the gate once account syncing lands`. If it is not worth an issue, it is not worth a TODO. A question is not a TODO.
+
+A comment block over ~12 lines outside a file or type header usually means the code needs restructuring, or that the prose is product documentation and belongs in the docs repo.
+
+`task comment-lint` checks the mechanical part of this on the lines you add, and runs inside `task pre-commit`. Reasoning, worked examples and the linter's own rules: @docs/developer/CODE_COMMENTS.md
+
 ## Common Development Commands
 
 ### Build and Test
@@ -70,7 +107,7 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 - Avoid nested functions and nested classes unless the language construct requires them.
 - Prefer composition to inheritance when combining concepts.
 - Avoid speculative abstractions. Add a layer only when it removes real duplication or clarifies lifecycle.
-- Add comments sparingly and only when they explain non-obvious intent.
+- Comments follow the repo-wide rules in the "Comments" section above.
 
 #### Python Typing and Models
 - Deserialize into Pydantic models as early as possible.
@@ -139,10 +176,10 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate committed env file:
-  - `frontend/editor/.env` — core and shared vars (base, loaded in every mode)
-  - `frontend/editor/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
-  - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
-  - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+  - `frontend/.env` — core and shared vars (base, loaded in every mode)
+  - `frontend/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
+  - `frontend/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
+  - `frontend/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
 - These files are committed to Git and must not contain private keys
 - Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
@@ -151,32 +188,34 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
-**ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
+**ALWAYS use `@editor/*` for imports** (`@processor/*` in the processor app); both cascade through the build's layers. The `@<app>-<layer>` aliases (`@editor-core/*`, `@editor-proprietary/*`, `@editor-cloud/*`, `@processor-proprietary/*`) pin exactly `src/<app>/<layer>`: do not use them unless explicitly wrapping/extending a lower layer implementation.
 
-For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
+For a broader explanation of the frontend layering and override architecture, read @frontend/DeveloperGuide.md
 
-Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
+Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/src/editor/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
+
+Before adding or styling an icon, read @frontend/src/editor/core/icons/README.md — `<Icon name="…" />` comes from `@editor/ui/Icon`, icon sources live as `.svg` files in `core/icons/svg/`, and inline `<svg>` in TS/TSX is linted out.
 
 ```typescript
-// ✅ CORRECT - Use @app/* for all imports
-import { AppLayout } from "@app/components/AppLayout";
-import { useFileContext } from "@app/contexts/FileContext";
-import { FileContext } from "@app/contexts/FileContext";
+// ✅ CORRECT - Use @editor/* for all imports
+import { AppLayout } from "@editor/components/AppLayout";
+import { useFileContext } from "@editor/contexts/FileContext";
+import { FileContext } from "@editor/contexts/FileContext";
 
-// ❌ WRONG - Do not use @core/* or @proprietary/* in normal code
-import { AppLayout } from "@core/components/AppLayout";
-import { useFileContext } from "@proprietary/contexts/FileContext";
+// ❌ WRONG - Do not use @editor-core/* or @editor-proprietary/* in normal code
+import { AppLayout } from "@editor-core/components/AppLayout";
+import { useFileContext } from "@editor-proprietary/contexts/FileContext";
 ```
 
 **Only use explicit aliases when:**
 - Building layer-specific override that wraps a lower layer's component
-- Example: `import { AppProviders as CoreAppProviders } from "@core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
+- Example: `import { AppProviders as CoreAppProviders } from "@editor-core/components/AppProviders"` when creating proprietary/AppProviders.tsx that extends the core version
 
-The `@app/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
+The `@editor/*` alias automatically resolves to the correct layer based on build target (core/proprietary/saas/desktop/cloud) and handles the fallback cascade — see "Frontend `cloud/` Layer" below for the full per-flavor order.
 
 #### Frontend `cloud/` Layer
 
-`@app/*` resolves through a per-flavor cascade — first existing file wins (shadow/override):
+`@editor/*` resolves through a per-flavor cascade — first existing file wins (shadow/override):
 
 - **core** → core
 - **proprietary** → proprietary → core
@@ -192,11 +231,11 @@ What goes where:
 - **saas** — web-only: Supabase web auth, AuthCallback, avatar canvas, `window.location`.
 - **desktop** — Tauri-only: keyring authService, tauriHttpClient, native files/windows, backend routing.
 
-`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@app/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
+`cloud/` MUST NOT import `@supabase/*`, `@tauri-apps/*`, raw `fetch`, `window.location`, `localStorage`, `sessionStorage`, or `import.meta.env.VITE_*` (all enforced by the linter). It reaches platform-specific things only via `@editor/*` seams: `services/apiClient`, `auth/session.getAccessToken`, `auth/supabase`, `platform/openExternal`, `services/billing`, `hooks/useSaaSMode` — each provided per-platform in `saas/` and `desktop/`.
 
-Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
+Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@editor/*` path in a leaf (`saas/` or `desktop/`).
 
-**Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local/self-hosted and the server keeps the on/off switch (no desktop release needed to flip a flag). Gate a feature behind a per-platform seam — e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useSaasAppConfig()`) — rather than hardcoding the flag on.
+**Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local mode and the server keeps the on/off switch (no desktop release needed to flip a flag). In self-hosted mode the connected server's own `AppConfigContext` is the authority instead. Gate a feature behind a per-platform seam - e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useAppConfig()` when signed in to a self-hosted server and `useSaasAppConfig()` otherwise) - rather than hardcoding the flag on.
 
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
@@ -204,7 +243,7 @@ Use this pattern for desktop-specific or proprietary-specific features WITHOUT r
 **How it works:**
 1. Core defines stub component (returns null or no-op)
 2. Desktop/proprietary overrides with same path/name
-3. Core imports via `@app/*` - higher layer "shadows" core in those builds
+3. Core imports via `@editor/*` - higher layer "shadows" core in those builds
 4. No `@ts-ignore`, no `isTauri()` checks, no runtime conditionals!
 
 **Example - Desktop-specific footer:**
@@ -223,7 +262,7 @@ export function WorkbenchBarFooterExtensions(_props: WorkbenchBarFooterExtension
 ```tsx
 // desktop/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
-import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
+import { BackendHealthIndicator } from '@editor/components/BackendHealthIndicator';
 
 interface WorkbenchBarFooterExtensionsProps {
   className?: string;
@@ -240,7 +279,7 @@ export function WorkbenchBarFooterExtensions({ className }: WorkbenchBarFooterEx
 
 ```tsx
 // core/components/shared/WorkbenchBar.tsx (usage - works in ALL builds)
-import { WorkbenchBarFooterExtensions } from '@app/components/workbenchBar/WorkbenchBarFooterExtensions';
+import { WorkbenchBarFooterExtensions } from '@editor/components/workbenchBar/WorkbenchBarFooterExtensions';
 
 export function WorkbenchBar() {
   return (
@@ -254,8 +293,8 @@ export function WorkbenchBar() {
 ```
 
 **Build resolution:**
-- **Core build**: `@app/*` → `core/*` → Gets stub (returns null)
-- **Desktop build**: `@app/*` → `desktop/*` → Gets real implementation (shadows core)
+- **Core build**: `@editor/*` → `core/*` → Gets stub (returns null)
+- **Desktop build**: `@editor/*` → `desktop/*` → Gets real implementation (shadows core)
 
 **Benefits:**
 - No runtime checks or feature flags
@@ -270,7 +309,7 @@ Frontend designed for **stateful document processing**:
 - No file reloading between tools - performance critical for large PDFs (up to 100GB+)
 
 #### FileContext - Central State Management
-**Location**: `frontend/editor/src/core/contexts/FileContext.tsx`
+**Location**: `frontend/src/editor/core/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
 - **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
@@ -295,7 +334,7 @@ Without cleanup: browser crashes with memory leaks.
 
 **Architecture**: Modular hook-based system with clear separation of concerns:
 
-- **useToolOperation** (`frontend/editor/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+- **useToolOperation** (`frontend/src/editor/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
   - Coordinates all tool operations with consistent interface
   - Integrates with FileContext for operation tracking
   - Handles validation, error handling, and UI state management
@@ -383,11 +422,11 @@ return useToolOperation({
 ### Frontend Directory Structure
 The frontend is organized with a clear separation of concerns:
 
-- **`frontend/editor/src/core/`**: Main application code (shared, production-ready components)
+- **`frontend/src/editor/core/`**: Main application code (shared, production-ready components)
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
-    - `core/components/pageEditor/`: Page manipulation UI
+    - `core/components/pageTracks/`: Page editor (every open PDF as a track of pages)
     - `core/components/tooltips/`: Help tooltips for tools
     - `core/components/shared/`: Reusable UI components
   - **`core/contexts/`**: React Context providers
@@ -401,17 +440,17 @@ The frontend is organized with a clear separation of concerns:
   - **`core/data/`**: Static data (tool taxonomy, etc.)
   - **`core/services/`**: Business logic services (PDF processing, storage, etc.)
 
-- **`frontend/editor/src/desktop/`**: Desktop-specific (Tauri) code
-- **`frontend/editor/src/proprietary/`**: Proprietary/licensed features
-- **`frontend/editor/src-tauri/`**: Tauri (Rust) native desktop application code
-- **`frontend/editor/public/`**: Static assets served directly
+- **`frontend/src/editor/desktop/`**: Desktop-specific (Tauri) code
+- **`frontend/src/editor/proprietary/`**: Proprietary/licensed features
+- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/public/`**: Static assets served directly
   - `public/locales/`: Translation JSON files
 
 ### Component Architecture
-- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/editor/public/` (modern)
+- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/public/` (modern)
 - **Internationalization**:
   - Backend: `messages_*.properties` files
-  - Frontend: JSON files in `frontend/editor/public/locales/` (converted from .properties)
+  - Frontend: JSON files in `frontend/public/locales/` (converted from .properties)
   - Conversion Script: `scripts/convert_properties_to_json.py`
 
 ### Configuration Modes
@@ -425,6 +464,9 @@ The frontend is organized with a clear separation of concerns:
 - **Docker Testing**: `test.sh` validates all Docker variants
 - **Manual Testing**: No unit tests currently - relies on UI and API testing
 
+#### No fixed waits in tests
+Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes flakes. Wait for the actual condition instead (`expect(...)`, `expect.poll`, `waitForFunction`, `vi.waitFor`), or use fake timers for time-based behaviour.
+
 ## Development Workflow
 
 1. **Local Development** (using Taskfile):
@@ -436,7 +478,7 @@ The frontend is organized with a clear separation of concerns:
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)
 5. **Translations**:
    - Backend: Use helper scripts in `/scripts` for multi-language updates
-   - Frontend: Update JSON files in `frontend/editor/public/locales/` or use conversion script
+   - Frontend: Update JSON files in `frontend/public/locales/` or use conversion script
 6. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
 
 ## Frontend Architecture Status
@@ -454,7 +496,7 @@ The frontend is organized with a clear separation of concerns:
 ## Translation Rules
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
-- Translation files are located in `frontend/editor/public/locales/`
+- Translation files are located in `frontend/public/locales/`
 - After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes
@@ -465,13 +507,13 @@ The frontend is organized with a clear separation of concerns:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
-- **Import Paths**: ALWAYS use `@app/*` for imports - never use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer
+- **Import Paths**: ALWAYS use `@editor/*` for imports - never use `@editor-core/*` or `@editor-proprietary/*` unless explicitly wrapping/extending a lower layer
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code
 - **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
 - **Performance Target**: Must handle PDFs up to 100GB+ without browser crashes
 - **Preview System**: Tools can preview results without polluting main file context (see Split tool implementation)
-- **Adding Tools**: See `ADDING_TOOLS.md` for complete guide to creating new PDF tools
+- **Adding Tools**: See `docs/developer/ADDING_TOOLS.md` for complete guide to creating new PDF tools
 
 ## Communication Style
 - Be direct and to the point
@@ -490,7 +532,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
 
-This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
+This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.1.1**,
 **Jackson 3 (`tools.jackson`)**, **JDK 21/25 source/target with JDK 25 toolchain**.
 All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
 Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no

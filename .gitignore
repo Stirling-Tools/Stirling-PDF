@@ -19,13 +19,15 @@ version.properties
 #### Stirling-PDF Files ###
 pipeline/
 !pipeline/.gitkeep
+# The rule above also matches these Java source packages; without these a new file there is
+# refused by git add and never listed by git status, so it silently never reaches CI.
+!app/core/src/main/java/stirling/software/SPDF/controller/api/pipeline/
+!app/core/src/test/java/stirling/software/SPDF/controller/api/pipeline/
 customFiles/
 configs/
 watchedFolders/
-# The rule above targets the app's runtime watched-folders working dir, but it
-# also matches this frontend source component dir; keep the source tracked.
-!frontend/editor/src/proprietary/components/watchedFolders/
 clientWebUI/
+policy-webhook-spool/
 # Scratch dir used by local fixture-regeneration runs (see
 # app/proprietary/src/test/resources/db-migration-fixtures/README.md).
 # Holds downloaded JARs and disposable workdirs. Never committed.
@@ -38,8 +40,13 @@ exampleYmlFiles/stirling/
 /testing/file_snapshots
 /testing/cucumber/junit/
 /testing/cucumber/report.html
+/testing/cucumber/.parallel/
 /testing/.failed_tests
+# Runtime artifacts of the multi-node test scripts
+/testing/compose/multinode/.active-topology
+/testing/compose/multinode/regression-report/
 /.test-state/
+/.test-state-*.exit
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)
@@ -53,18 +60,17 @@ app/core/src/main/resources/static/index.html
 app/core/src/main/resources/static/*.html
 !app/core/src/main/resources/static/api-landing.html
 !app/core/src/main/resources/static/mobile-upload.html
-# Prerendered nested-route pages (e.g. settings/people.html)
+# Prerendered nested-route pages (e.g. settings/people.html, processor/sources.html)
 app/core/src/main/resources/static/settings/
+app/core/src/main/resources/static/processor/
 app/core/src/main/resources/static/locales/
 app/core/src/main/resources/static/Login/
-app/core/src/main/resources/static/classic-logo/
 app/core/src/main/resources/static/modern-logo/
 app/core/src/main/resources/static/og_images/
 app/core/src/main/resources/static/samples/
-app/core/src/main/resources/static/manifest-classic.json
 app/core/src/main/resources/static/og-metadata.json
 app/core/src/main/resources/static/og-metadata.saas.json
-app/core/src/main/resources/static/sw-folder-retry.js
+app/core/src/main/resources/static/sitemap.xml
 app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/android-chrome-*.png
 app/core/src/main/resources/static/mstile-*.png
@@ -174,6 +180,8 @@ app/core/src/main/resources/static/images/google-drive.svg
 *.nar
 *.ear
 *.zip
+# Real backend archives the form-bundle reader is tested against.
+!frontend/src/editor/core/tools/formFill/__fixtures__/*.zip
 *.tar.gz
 *.rar
 *.db
@@ -184,7 +192,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/editor/src-tauri/provisioner/target
+frontend/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -235,7 +243,7 @@ out/
 *.asc
 
 # Allow test fixture certificates (synthetic, no real credentials)
-!frontend/editor/src/core/tests/test-fixtures/certs/**
+!frontend/src/editor/core/tests/test-fixtures/certs/**
 
 # SSH Keys
 *.pub
@@ -252,8 +260,9 @@ id_ed25519.pub
 !docs/security/signing-key.pub
 *ssh
 
-# Taskfile checksum cache
-.task/
+# Task cache plus the committed default env the root Taskfile reads.
+.task/*
+!.task/.env
 
 # cache
 .cache
@@ -268,6 +277,8 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
+# A symlink named node_modules is a file, which the slash form does not match.
+node_modules
 
 # weasyPrint
 **/LOCAL_APPDATA_FONTCONFIG_CACHE/**
@@ -277,7 +288,8 @@ node_modules/
 *compact*.json
 test_batch.json
 *.backup.*.json
-frontend/editor/public/locales/*/translation.backup*.json
+frontend/public/locales/*/translation.backup*.json
+/translation_logs/
 
 # Development/build artifacts
 .gradle-cache/
@@ -285,21 +297,20 @@ scripts/pdf-collection/
 **/tmp/
 *.backup
 
-# Type3 development data
-docs/type3/signatures/
-
-
-# Type3 sample PDFs (development only)
-**/type3/samples/
-
 **/application-dev-local.properties
 
-# Claude
-.claude/
+# Claude. Contents are ignored so personal config stays local, with the two
+# shared pieces re-included: settings.json (the comment-lint hook) and skills/.
+# The directory itself cannot be ignored or git will not look inside it.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+.claude/settings.local.json
 
 # Playwright MCP screenshots / traces
 .playwright-mcp/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/editor/screenshots/
+frontend/screenshots/
+frontend/src-tauri/libs/.variant

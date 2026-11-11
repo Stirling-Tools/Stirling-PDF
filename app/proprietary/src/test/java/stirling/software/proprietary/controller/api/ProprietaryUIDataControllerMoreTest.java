@@ -68,6 +68,10 @@ class ProprietaryUIDataControllerMoreTest {
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private ResourceAccessService resourceAccessService;
 
+    @Mock
+    private stirling.software.proprietary.security.repository.InviteTokenRepository
+            inviteTokenRepository;
+
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
     private ObjectMapper objectMapper;
@@ -100,7 +104,10 @@ class ProprietaryUIDataControllerMoreTest {
                         auditRepository,
                         mfaService,
                         loginAttemptService,
-                        resourceAccessService);
+                        resourceAccessService,
+                        inviteTokenRepository,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class));
     }
 
     private static User normalUser(Long id, String username) {
@@ -222,6 +229,25 @@ class ProprietaryUIDataControllerMoreTest {
 
             assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
             assertThat(response.getBody().isOAuth2Login()).isTrue();
+        }
+
+        @Test
+        @DisplayName("masks the MFA secret in the returned settings")
+        void masksMfaSecret() {
+            User user = normalUser(4L, "mfauser");
+            user.setSettings(Map.of("mfaEnabled", "true", "mfaSecret", "JBSWY3DPEHPK3PXP"));
+            when(userRepository.findByUsernameIgnoreCaseWithSettings("mfauser"))
+                    .thenReturn(Optional.of(user));
+            lenient().when(mfaService.isMfaEnabled(user)).thenReturn(true);
+            lenient().when(mfaService.isMfaRequired(user)).thenReturn(false);
+            Authentication auth =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+            ResponseEntity<AccountData> response = controller.getAccountData(auth);
+
+            assertThat(response.getBody().getSettings())
+                    .doesNotContain("JBSWY3DPEHPK3PXP")
+                    .contains("mfaEnabled");
         }
 
         @Test

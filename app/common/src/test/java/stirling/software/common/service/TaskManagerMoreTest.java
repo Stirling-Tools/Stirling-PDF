@@ -290,7 +290,8 @@ class TaskManagerMoreTest {
             ReflectionTestUtils.setField(job, "complete", true);
             ReflectionTestUtils.setField(job, "completedAt", LocalDateTime.now().minusHours(2));
 
-            when(fileStorage.deleteFile("doomed")).thenThrow(new RuntimeException("locked"));
+            when(fileStorage.deleteFileAsSystem("doomed"))
+                    .thenThrow(new RuntimeException("locked"));
 
             // Must not propagate; the job is still removed afterwards.
             taskManager.cleanupOldJobs();

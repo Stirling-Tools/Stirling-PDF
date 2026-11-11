@@ -25,7 +25,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
@@ -38,6 +37,7 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 import stirling.software.proprietary.service.AiUserDataService;
 
 @Slf4j
@@ -48,11 +48,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     private final ApplicationProperties.Security securityProperties;
 
-    private final AppConfig appConfig;
-
     private final JwtServiceInterface jwtService;
 
     private final AiUserDataService aiUserDataService;
+
+    private final ApplicationProperties applicationProperties;
 
     private static final AuthenticationTrustResolver TRUST_RESOLVER =
             new AuthenticationTrustResolverImpl();
@@ -70,21 +70,23 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         if (!response.isCommitted()) {
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, samlAuthentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
-                    // Handle OAuth2 logout redirection
-                    getRedirect_oauth2(request, response, oAuthToken);
-                } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
-                    // Handle Username/Password logout
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                } else {
-                    // Handle unknown authentication types
-                    log.error(
-                            "Authentication class unknown: {}",
-                            authentication.getClass().getSimpleName());
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                switch (authentication) {
+                    case Saml2Authentication samlAuthentication ->
+                            // Handle SAML2 logout redirection
+                            getRedirect_saml2(request, response, samlAuthentication);
+                    case OAuth2AuthenticationToken oAuthToken ->
+                            // Handle OAuth2 logout redirection
+                            getRedirect_oauth2(request, response, oAuthToken);
+                    case UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken ->
+                            // Handle Username/Password logout
+                            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    default -> {
+                        // Handle unknown authentication types
+                        log.error(
+                                "Authentication class unknown: {}",
+                                authentication.getClass().getSimpleName());
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
                 }
             } else {
                 if (jwtService != null) {
@@ -145,7 +147,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             certificates.add(certificate);
 
             // Construct URLs required for SAML configuration
-            SamlClient samlClient = getSamlClient(registrationId, samlConf, certificates);
+            SamlClient samlClient = getSamlClient(request, registrationId, samlConf, certificates);
 
             // Read private key for service provider
             Resource privateKeyResource = samlConf.getPrivateKey();
@@ -156,7 +158,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
             // Build relay state to return user to login page after IdP logout
             String relayState =
-                    UrlUtils.getOrigin(request) + request.getContextPath() + LOGOUT_PATH;
+                    RedirectBaseUrl.landingBase(
+                                            samlConf.getRedirectBaseUrl(),
+                                            applicationProperties.getSystem().getFrontendUrl())
+                                    .orElseGet(() -> UrlUtils.getOrigin(request))
+                            + LOGOUT_PATH;
 
             // Redirect to identity provider for logout with relay state
             samlClient.redirectToIdentityProvider(response, relayState, nameIdValue);
@@ -180,7 +186,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
 
-        String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
+        String baseUrl =
+                RedirectBaseUrl.landingBase(
+                                oauth.getRedirectBaseUrl(),
+                                applicationProperties.getSystem().getFrontendUrl())
+                        .orElseGet(() -> UrlUtils.getOrigin(request));
+        String redirectUrl = baseUrl + "/login?" + path;
         registrationId = oAuthToken.getAuthorizedClientRegistrationId();
 
         // Redirect based on OAuth2 provider
@@ -230,9 +241,17 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     private SamlClient getSamlClient(
-            String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
+            HttpServletRequest request,
+            String registrationId,
+            SAML2 samlConf,
+            List<X509Certificate> certificates)
             throws SamlException {
-        String serverUrl = appConfig.getBackendUrl() + ":" + appConfig.getServerPort();
+        // Must match the entity ID and ACS URL that Saml2Configuration publishes.
+        String serverUrl =
+                RedirectBaseUrl.overrideOr(
+                                samlConf.getRedirectBaseUrl(),
+                                applicationProperties.getSystem().getBackendUrl())
+                        .orElseGet(() -> UrlUtils.getOrigin(request));
 
         String relyingPartyIdentifier =
                 serverUrl + "/saml2/service-provider-metadata/" + registrationId;

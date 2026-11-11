@@ -174,6 +174,7 @@ Feature: API Validation
             | dpi         | 300      |
             | imageFormat | <format> |
         When I send the API request to the endpoint "/api/v1/convert/pdf/img"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response file should have size greater than 100
         And the response file should have extension ".zip"
@@ -231,6 +232,7 @@ Feature: API Validation
         Given I generate a PDF file as "fileInput"
         And the pdf contains 3 pages with random text
         When I send the API request to the endpoint "/api/v1/convert/pdf/markdown"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response file should have size greater than 100
         And the response file should have extension ".md"
@@ -244,32 +246,8 @@ Feature: API Validation
             | outputFormat | csv   |
             | pageNumbers  | all   |
         When I send the API request to the endpoint "/api/v1/convert/pdf/csv"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response file should have size greater than 200
         And the response file should have extension ".zip"
         And the response ZIP should contain 3 files
-
-
-    @positive @pdftojson
-    Scenario: Convert PDF to JSON (text editor format)
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages with random text
-        When I send the API request to the endpoint "/api/v1/convert/pdf/text-editor"
-        Then the response status code should be 200
-        And the response content type should be "application/json"
-        And the response file should have size greater than 100
-        And the response file should have extension ".json"
-
-
-    @positive @pdftojson
-    Scenario: Convert PDF to JSON in lightweight mode
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 2 pages with random text
-        And the request data includes
-            | parameter   | value |
-            | lightweight | true  |
-        When I send the API request to the endpoint "/api/v1/convert/pdf/text-editor"
-        Then the response status code should be 200
-        And the response content type should be "application/json"
-        And the response file should have size greater than 50
-        And the response file should have extension ".json"

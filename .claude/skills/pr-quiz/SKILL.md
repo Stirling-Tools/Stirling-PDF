@@ -67,7 +67,7 @@ Read the full diff plus enough surrounding context and related files to answer
 every question you plan to ask. You cannot grade understanding you don't have.
 Note the non-obvious parts: the design decisions, the risky lines, the edge cases,
 the cross-file ripples, and anything that violates or upholds repo conventions
-(for this repo e.g. `@app/*` import layering, all file ops via FileContext,
+(for this repo e.g. `@editor/*` import layering, all file ops via FileContext,
 Jackson 3 / Spring Boot 4 APIs, engine typed-contract boundaries).
 
 ### 3. Build the question set

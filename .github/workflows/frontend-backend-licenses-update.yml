@@ -28,20 +28,24 @@ jobs:
       licenses-backend: ${{ steps.changes.outputs.licenses-backend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check for file changes
-        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: changes
         with:
           filters: .github/config/.files.yaml
 
   generate-frontend-license-report:
+    # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
+    environment:
+      name: ci-bot
+      deployment: false
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
     needs: files-changed
@@ -52,14 +56,13 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
       - name: Checkout PR head (default)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup GitHub App Bot
@@ -72,7 +75,7 @@ jobs:
 
       - name: Checkout BASE branch (safe script)
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
@@ -80,7 +83,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "npm"
@@ -93,7 +96,9 @@ jobs:
         run: npm ci --ignore-scripts --audit=false --fund=false
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Generate frontend license report (Push only)
         if: github.event_name == 'push'
@@ -113,31 +118,31 @@ jobs:
           NPM_CONFIG_IGNORE_SCRIPTS: "true"
         working-directory: frontend
         run: |
-          mkdir -p editor/src/assets
-          npx --yes license-report --only=prod --output=json > editor/src/assets/3rdPartyLicenses.json
+          mkdir -p src/assets
+          npx --yes license-report --only=prod --output=json > src/assets/3rdPartyLicenses.json
 
       - name: Postprocess with project script (BASE version)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
         env:
           PR_IS_FORK: "true"
         run: |
-          node base/frontend/editor/scripts/generate-licenses.js \
-            --input frontend/editor/src/assets/3rdPartyLicenses.json
+          node base/frontend/scripts/generate-licenses.js \
+            --input frontend/src/assets/3rdPartyLicenses.json
 
       - name: Copy postprocessed artifacts back (fork PRs)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
         run: |
-          mkdir -p frontend/editor/src/assets
-          if [ -f "base/frontend/editor/src/assets/3rdPartyLicenses.json" ]; then
-            cp base/frontend/editor/src/assets/3rdPartyLicenses.json frontend/editor/src/assets/3rdPartyLicenses.json
+          mkdir -p frontend/src/assets
+          if [ -f "base/frontend/src/assets/3rdPartyLicenses.json" ]; then
+            cp base/frontend/src/assets/3rdPartyLicenses.json frontend/src/assets/3rdPartyLicenses.json
           fi
-          if [ -f "base/frontend/editor/src/assets/license-warnings.json" ]; then
-            cp base/frontend/editor/src/assets/license-warnings.json frontend/editor/src/assets/license-warnings.json
+          if [ -f "base/frontend/src/assets/license-warnings.json" ]; then
+            cp base/frontend/src/assets/license-warnings.json frontend/src/assets/license-warnings.json
           fi
 
       - name: Check for license warnings
         run: |
-          if [ -f "frontend/editor/src/assets/license-warnings.json" ]; then
+          if [ -f "frontend/src/assets/license-warnings.json" ]; then
             echo "LICENSE_WARNINGS_EXIST=true" >> $GITHUB_ENV
           else
             echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
@@ -162,7 +167,7 @@ jobs:
             });
 
             // Filter for license check comments
-            const licenseComments = comments.filter(comment => 
+            const licenseComments = comments.filter(comment =>
               comment.body.includes('## ✅ Frontend License Check Passed') ||
               comment.body.includes('## ❌ Frontend License Check Failed')
             );
@@ -185,10 +190,10 @@ jobs:
             echo ""
             if [ "${LICENSE_WARNINGS_EXIST}" = "true" ]; then
               echo "❌ **Failed** – incompatible or unknown licenses found."
-              if [ -f "frontend/editor/src/assets/license-warnings.json" ]; then
+              if [ -f "frontend/src/assets/license-warnings.json" ]; then
                 echo ""
                 echo "### Warnings"
-                jq -r '.warnings[] | "- \(.message)"' frontend/editor/src/assets/license-warnings.json || true
+                jq -r '.warnings[] | "- \(.message)"' frontend/src/assets/license-warnings.json || true
               fi
             else
               echo "✅ **Passed** – no license warnings detected."
@@ -214,7 +219,7 @@ jobs:
               const fs = require('fs');
               let warningDetails = '';
               try {
-                const warnings = JSON.parse(fs.readFileSync('frontend/editor/src/assets/license-warnings.json', 'utf8'));
+                const warnings = JSON.parse(fs.readFileSync('frontend/src/assets/license-warnings.json', 'utf8'));
                 warningDetails = warnings.warnings.map(w => `- ${w.message}`).join('\n');
               } catch (e) {
                 warningDetails = 'Unable to read warning details';
@@ -254,7 +259,7 @@ jobs:
       - name: Commit changes (Push only)
         if: github.event_name == 'push'
         run: |
-          git add frontend/editor/src/assets/3rdPartyLicenses.json
+          git add frontend/src/assets/3rdPartyLicenses.json
           # Note: Do NOT commit license-warnings.json - it's only for PR review
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
@@ -272,7 +277,7 @@ jobs:
 
           The following licenses may require review for corporate compatibility:
 
-          $(cat frontend/editor/src/assets/license-warnings.json | jq -r '.warnings[].message')
+          $(cat frontend/src/assets/license-warnings.json | jq -r '.warnings[].message')
 
           Please review these licenses to ensure they are acceptable for your use case."
           fi
@@ -316,6 +321,10 @@ jobs:
           GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
 
   generate-backend-license-report:
+    # ci-bot, not bot-identity: this job runs on PRs too, and bot-identity is main-only.
+    environment:
+      name: ci-bot
+      deployment: false
     if: needs.files-changed.outputs.licenses-backend == 'true'
     needs: files-changed
     name: Generate Backend License Report
@@ -326,14 +335,13 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup GitHub App Bot
@@ -344,25 +352,23 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle User Home
+      - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-            gradle-${{ runner.os }}-${{ runner.arch }}-
+          key: gradle-license-report-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+
+      - name: Set up JDK 25
+        uses: ./.github/actions/java
+        with:
+          java-version: "25"
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        with:
+          version: 3.54.0
 
       - name: Check licenses and generate report
         id: license-check
@@ -386,7 +392,7 @@ jobs:
 
       - name: Upload artifact on license issues
         if: env.LICENSE_WARNINGS_EXIST == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: backend-dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
@@ -413,7 +419,7 @@ jobs:
               per_page: 100
             });
 
-            const backendLicenseComments = comments.filter(comment => 
+            const backendLicenseComments = comments.filter(comment =>
               comment.body.includes('## ✅ Backend License Check Passed') ||
               comment.body.includes('## ❌ Backend License Check Failed')
             );

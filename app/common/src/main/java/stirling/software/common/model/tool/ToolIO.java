@@ -21,6 +21,12 @@ public @interface ToolIO {
     /** Defaulting to a plain PDF is what makes an ordinary endpoint reject an encrypted one. */
     ToolFormat[] accepts() default {ToolFormat.PDF};
 
+    /** Filename suffixes when the input parser accepts less or more than the format categories. */
+    String[] inputExtensions() default {};
+
+    /** Derive input suffixes from the installed ImageIO readers used by the endpoint. */
+    boolean imageIOInput() default false;
+
     ToolFormat produces();
 
     ToolArity arity() default ToolArity.SISO;

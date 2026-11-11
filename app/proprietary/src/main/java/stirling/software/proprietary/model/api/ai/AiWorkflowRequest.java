@@ -25,4 +25,7 @@ public class AiWorkflowRequest {
                     "Prior chat messages exchanged between the user and the assistant, ordered"
                             + " oldest-first. Excludes the current userMessage.")
     private List<AiConversationMessage> conversationHistory = new ArrayList<>();
+
+    @Schema(description = "IETF language tag the reply should be written in", example = "fr-FR")
+    private String locale;
 }

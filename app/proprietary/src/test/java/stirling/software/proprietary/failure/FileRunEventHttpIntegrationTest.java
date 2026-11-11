@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -75,6 +78,23 @@ class FileRunEventHttpIntegrationTest {
                 .id();
     }
 
+    /** As {@link #seed}, for a row a source fed rather than a client. */
+    private String seedFromSource(FailureKind kind, String sourceId, String identity) {
+        FileRunEventStore store = new FileRunEventStore(repository);
+        return store.record(
+                        new RecordFailure(
+                                kind,
+                                FailureOrigin.POLICY,
+                                TEAM,
+                                "author@example.com",
+                                "policy-1",
+                                "run-1",
+                                sourceId,
+                                identity,
+                                "boom"))
+                .id();
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         return http.send(
                 HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build(),
@@ -95,6 +115,23 @@ class FileRunEventHttpIntegrationTest {
     @Nested
     @DisplayName("the read path")
     class ReadPath {
+
+        @Test
+        void serialisesASourceFedRowWithoutThePathBehindIt() throws Exception {
+            // The portal is the second surface that renders these rows, and it maps them itself,
+            // so the withholding is asserted here too rather than only on the bell's projection.
+            seedFromSource(
+                    FailureKind.UNKNOWN,
+                    "src-downloads",
+                    "/Users/someone/Documents/Payroll/march.pdf");
+
+            HttpResponse<String> response = get("/api/v1/file-run-events");
+
+            JsonNode row = mapper.readTree(response.body()).get("events").get(0);
+            assertThat(row.get("documentLocation").asString()).isEqualTo("SMART_FOLDER");
+            assertThat(row.get("fileId").isNull()).isTrue();
+            assertThat(response.body()).doesNotContain("/Users/someone", "march.pdf");
+        }
 
         @Test
         void serialisesAnEventWithItsFacetsCopyKeysAndResolvedActions() throws Exception {
@@ -120,13 +157,21 @@ class FileRunEventHttpIntegrationTest {
             // Epoch millis, not an ISO string: the client renders relative times from a number.
             assertThat(row.get("lastSeenAt").isNumber()).isTrue();
 
+            // Resolved for this reader: a leader looking at a colleague's password failure is
+            // offered the run and a way to close the row, not a password they do not have.
             JsonNode actions = row.get("actions");
             assertThat(actions).hasSize(2);
-            assertThat(actions.get(0).get("id").asString()).isEqualTo("ACKNOWLEDGE");
+            assertThat(actions.get(0).get("id").asString()).isEqualTo("VIEW_IN_PROCESSOR");
             assertThat(actions.get(0).get("labelKey").asString())
-                    .isEqualTo("portal.failures.action.acknowledge");
+                    .isEqualTo("portal.failures.action.viewInProcessor");
+            assertThat(actions.get(0).get("defaultLabel").asString())
+                    .isEqualTo("View in processor");
+            assertThat(actions.get(0).get("execution").asString()).isEqualTo("CLIENT");
+            assertThat(actions.get(0).get("slot").asString()).isEqualTo("OVERFLOW");
             assertThat(actions.get(0).get("enabled").asBoolean()).isTrue();
             assertThat(actions.get(0).get("disabledReasonKey").isNull()).isTrue();
+            assertThat(actions.get(1).get("id").asString()).isEqualTo("DISMISS");
+            assertThat(actions.get(1).get("execution").asString()).isEqualTo("SERVER");
         }
 
         @Test
@@ -152,18 +197,19 @@ class FileRunEventHttpIntegrationTest {
 
         @Test
         void coercesQueryParametersAndFiltersOnThem() throws Exception {
-            String open = seed(FailureKind.UNKNOWN, TEAM, "open", "a");
-            seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked", "b");
-            post("/api/v1/file-run-events/" + open + "/actions/ACKNOWLEDGE", "{\"inputs\":{}}");
+            String locked = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked", "b");
+            seed(FailureKind.UNKNOWN, TEAM, "open", "a");
+            post("/api/v1/file-run-events/" + locked + "/actions/DISMISS", "{\"inputs\":{}}");
 
-            JsonNode acknowledged =
-                    mapper.readTree(get("/api/v1/file-run-events?status=ACKNOWLEDGED").body())
+            JsonNode dismissed =
+                    mapper.readTree(get("/api/v1/file-run-events?status=DISMISSED").body())
                             .get("events");
-            assertThat(acknowledged).hasSize(1);
+            assertThat(dismissed).hasSize(1);
 
             JsonNode byKind =
                     mapper.readTree(
-                                    get("/api/v1/file-run-events?kindId=INPUT_PASSWORD_PROTECTED")
+                                    get("/api/v1/file-run-events?status=DISMISSED"
+                                                    + "&kindId=INPUT_PASSWORD_PROTECTED")
                                             .body())
                             .get("events");
             assertThat(byKind).hasSize(1);
@@ -190,6 +236,75 @@ class FileRunEventHttpIntegrationTest {
     }
 
     @Nested
+    @DisplayName("reporting from the editor")
+    class Reporting {
+
+        @Test
+        void bindsAReportBodyAndAnswersNoContent() throws Exception {
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"remove-password\",\"errorCode\":\"E004\","
+                                    + "\"fileIds\":[\"f-1\",\"f-2\"],\"detail\":\"locked\"}");
+
+            assertThat(response.statusCode()).isEqualTo(204);
+            assertThat(response.body()).isEmpty();
+
+            JsonNode events = mapper.readTree(get("/api/v1/file-run-events").body()).get("events");
+            assertThat(events).hasSize(2);
+            assertThat(events.get(0).get("origin").asString()).isEqualTo("TOOL");
+            assertThat(events.get(0).get("kindId").asString())
+                    .isEqualTo("INPUT_PASSWORD_PROTECTED");
+        }
+
+        @Test
+        void acceptsAReportWithNoCodeOrFiles() throws Exception {
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"compress\",\"detail\":\"network died\"}");
+
+            assertThat(response.statusCode()).isEqualTo(204);
+            JsonNode events = mapper.readTree(get("/api/v1/file-run-events").body()).get("events");
+            assertThat(events).hasSize(1);
+            assertThat(events.get(0).get("kindId").asString()).isEqualTo("UNKNOWN");
+            assertThat(events.get(0).get("fileId").isNull()).isTrue();
+        }
+
+        @Test
+        void rejectsAReportWithNoOperation() throws Exception {
+            assertThat(
+                            post(
+                                            "/api/v1/file-run-events/reports",
+                                            "{\"errorCode\":\"E004\",\"detail\":\"boom\"}")
+                                    .statusCode())
+                    .isEqualTo(400);
+        }
+
+        @Test
+        void rejectsAnOversizedReportWithoutRecordingAnyOfIt() throws Exception {
+            // Over the wire because that is where the flood would arrive: one request, an
+            // arbitrarily long fileIds array, a permanent row per entry. The read-back is the point
+            // of the test, since a partial write would be worse than either accepting or refusing.
+            String ids =
+                    java.util.stream.IntStream.range(0, EditorFailureReport.MAX_FILE_IDS + 1)
+                            .mapToObj(i -> "\"f-" + i + "\"")
+                            .collect(java.util.stream.Collectors.joining(","));
+
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"compress\",\"errorCode\":\"E004\",\"fileIds\":["
+                                    + ids
+                                    + "],\"detail\":\"boom\"}");
+
+            assertThat(response.statusCode()).isEqualTo(400);
+            assertThat(mapper.readTree(get("/api/v1/file-run-events").body()).get("events"))
+                    .isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("action dispatch")
     class Dispatch {
 
@@ -197,28 +312,26 @@ class FileRunEventHttpIntegrationTest {
         void bindsTheRequestBodyAndReturnsTheUpdatedRow() throws Exception {
             // The regression guard: an object body, sent as real JSON over the wire, binding into
             // ActionRequest. A double-encoded string would fail here.
-            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+            String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "boom");
 
             HttpResponse<String> response =
-                    post(
-                            "/api/v1/file-run-events/" + id + "/actions/ACKNOWLEDGE",
-                            "{\"inputs\":{}}");
+                    post("/api/v1/file-run-events/" + id + "/actions/DISMISS", "{\"inputs\":{}}");
 
             assertThat(response.statusCode()).isEqualTo(200);
             JsonNode row = mapper.readTree(response.body());
-            assertThat(row.get("status").asString()).isEqualTo("ACKNOWLEDGED");
+            assertThat(row.get("status").asString()).isEqualTo("DISMISSED");
             assertThat(row.get("statusActor").asString()).isEqualTo(ACTOR);
         }
 
         @Test
         void acceptsAPopulatedInputsMap() throws Exception {
-            // Nothing consumes inputs yet, but the shape must bind so the first action that needs
-            // one (a password) does not discover a broken contract.
+            // No server action consumes inputs, but the shape must still bind rather than 400, so a
+            // client that posts an empty or stale map is not refused over its body.
             String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "locked");
 
             HttpResponse<String> response =
                     post(
-                            "/api/v1/file-run-events/" + id + "/actions/ACKNOWLEDGE",
+                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                             "{\"inputs\":{\"password\":\"hunter2\"}}");
 
             assertThat(response.statusCode()).isEqualTo(200);
@@ -247,14 +360,26 @@ class FileRunEventHttpIntegrationTest {
         }
 
         @Test
+        void mapsAnActionTheClientRunsToBadRequest() throws Exception {
+            // Declared by the kind, refused here: over the wire, so a client that posts a retry
+            // gets a refusal rather than a 200 implying the server did something.
+            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+
+            assertThat(
+                            post(
+                                            "/api/v1/file-run-events/" + id + "/actions/VIEW_FILE",
+                                            "{\"inputs\":{}}")
+                                    .statusCode())
+                    .isEqualTo(400);
+        }
+
+        @Test
         void mapsAnotherTeamsRowToNotFound() throws Exception {
             String id = seed(FailureKind.UNKNOWN, 999L, "theirs", "boom");
 
             assertThat(
                             post(
-                                            "/api/v1/file-run-events/"
-                                                    + id
-                                                    + "/actions/ACKNOWLEDGE",
+                                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                                             "{\"inputs\":{}}")
                                     .statusCode())
                     .isEqualTo(404);
@@ -262,14 +387,12 @@ class FileRunEventHttpIntegrationTest {
 
         @Test
         void mapsAnAlreadyClosedRowToConflict() throws Exception {
-            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+            String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "boom");
             post("/api/v1/file-run-events/" + id + "/actions/DISMISS", "{\"inputs\":{}}");
 
             assertThat(
                             post(
-                                            "/api/v1/file-run-events/"
-                                                    + id
-                                                    + "/actions/ACKNOWLEDGE",
+                                            "/api/v1/file-run-events/" + id + "/actions/DISMISS",
                                             "{\"inputs\":{}}")
                                     .statusCode())
                     .isEqualTo(409);
@@ -334,6 +457,34 @@ class FileRunEventHttpIntegrationTest {
             return new DismissAction(store);
         }
 
+        /**
+         * A stand-in, so the registry's completeness check passes without dragging a ledger and a
+         * runner into an HTTP-layer test. Covered by {@code RetryInFolderActionTest}.
+         */
+        @Bean
+        FailureAction retryInFolderAction() {
+            return new NoopFolderAction(FailureActionId.OPEN_IN_TOOL);
+        }
+
+        /** Every source-fed row in these tests came from a smart folder. */
+        @Bean
+        PolicyStore policyStore() {
+            PolicyStore store = org.mockito.Mockito.mock(PolicyStore.class);
+            Policy folder =
+                    new Policy(
+                                    "p-1",
+                                    "Payroll",
+                                    ACTOR,
+                                    true,
+                                    List.of(),
+                                    List.of(),
+                                    OutputSpec.inline())
+                            .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+            org.mockito.Mockito.when(store.get(org.mockito.ArgumentMatchers.anyString()))
+                    .thenReturn(java.util.Optional.of(folder));
+            return store;
+        }
+
         @Bean
         ApplicationProperties applicationProperties() {
             ApplicationProperties props = new ApplicationProperties();
@@ -364,16 +515,14 @@ class FileRunEventHttpIntegrationTest {
                 FailureActionRegistry registry,
                 PolicyManagementAuthority authority,
                 UserServiceInterface users,
-                ApplicationProperties props) {
-            return new FileRunEventService(store, registry, authority, users, props);
+                ApplicationProperties props,
+                PolicyStore policyStore) {
+            return new FileRunEventService(store, registry, authority, users, props, policyStore);
         }
 
         @Bean
-        FileRunEventController fileRunEventController(
-                FileRunEventService service,
-                PolicyManagementAuthority authority,
-                ApplicationProperties props) {
-            return new FileRunEventController(service, authority, props);
+        FileRunEventController fileRunEventController(FileRunEventService service) {
+            return new FileRunEventController(service);
         }
     }
 }

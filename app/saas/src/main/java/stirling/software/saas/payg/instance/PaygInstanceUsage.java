@@ -19,9 +19,9 @@ import lombok.Setter;
 
 /**
  * Last-seen cumulative usage a linked self-hosted instance has reported for one {@code (team,
- * billing period, category)} (combined-billing "Mode A"). The instance reports monotonic cumulative
- * unit totals on its daily sync; SaaS bills {@code reportedCumulative - lastCumulativeUnits} via
- * the standard charge path and advances this row. {@code lastSyncSeq} dedups replays.
+ * billing period, category)} (combined billing). The instance reports monotonic cumulative unit
+ * totals on its daily sync; SaaS bills {@code reportedCumulative - lastCumulativeUnits} via the
+ * standard charge path and advances this row. {@code lastSyncSeq} dedups replays.
  */
 @Entity
 @Table(

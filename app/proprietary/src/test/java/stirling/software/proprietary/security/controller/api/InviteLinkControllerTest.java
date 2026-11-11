@@ -29,6 +29,7 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -41,6 +42,7 @@ class InviteLinkControllerTest {
     @Mock private UserService userService;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private InviteRedemptionService inviteRedemptionService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -62,7 +64,8 @@ class InviteLinkControllerTest {
                         userService,
                         applicationProperties,
                         Optional.of(emailService),
-                        userLicenseSettingsService);
+                        userLicenseSettingsService,
+                        inviteRedemptionService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -105,6 +108,19 @@ class InviteLinkControllerTest {
     }
 
     @Test
+    void keylessTeamCountsPendingInvitesAgainstCapacity() throws Exception {
+        applicationProperties.getPremium().setEnabled(false);
+        when(userService.getTotalUsersCount()).thenReturn(299L);
+        when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(1L);
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(300);
+
+        mockMvc.perform(post("/api/v1/invite/generate").principal(adminPrincipal))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(startsWith("License limit reached (300/300")));
+        verify(inviteTokenRepository, never()).save(any());
+    }
+
+    @Test
     void generateInviteLinkAllowedOnServerLicense() throws Exception {
         // SERVER license has raw maxUsers=0, but calculateMaxAllowedUsers() returns
         // Integer.MAX_VALUE
@@ -117,7 +133,7 @@ class InviteLinkControllerTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
 
         mockMvc.perform(
@@ -129,10 +145,11 @@ class InviteLinkControllerTest {
 
     @Test
     void generateInviteLinkBuildsFrontendUrl() throws Exception {
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(5);
         Team defaultTeam = new Team();
         defaultTeam.setId(5L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(inviteTokenRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
@@ -173,6 +190,8 @@ class InviteLinkControllerTest {
         invite.setEmail(null); // email required from request
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
+        when(inviteRedemptionService.redeem(invite, "new@example.com", "password123"))
+                .thenReturn(true);
 
         mockMvc.perform(
                         post("/api/v1/invite/accept/abc")
@@ -182,7 +201,6 @@ class InviteLinkControllerTest {
                 .andExpect(jsonPath("$.message").value("Account created successfully"))
                 .andExpect(jsonPath("$.username").value("new@example.com"));
 
-        verify(userService).saveUserCore(any());
-        verify(inviteTokenRepository).save(invite);
+        verify(inviteRedemptionService).redeem(invite, "new@example.com", "password123");
     }
 }

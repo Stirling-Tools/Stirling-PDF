@@ -5,9 +5,11 @@
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS calibre-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS calibre-build
 ARG TARGETPLATFORM
-ARG CALIBRE_VERSION=9.4.0
+ARG CALIBRE_VERSION=9.17.0
+ARG EXPAT_VERSION=2.10.0
+ARG EXPAT_SHA256=c624ba2998fc65df1163a49641ff3f9ab73138b11641d92c86bee0fb01b1bc7f
 ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -17,7 +19,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       ca-certificates curl xz-utils libnss3 libfontconfig1 \
       libgl1 libegl1 libdbus-1-3 libasound2t64 libxcomposite1 \
       libxrandr2 libxkbcommon0 libxi6 libxtst6 libopengl0 \
-      poppler-utils; \
+      poppler-utils tzdata build-essential cmake; \
     rm -rf /var/lib/apt/lists/*; \
     \
     case "$(uname -m)" in \
@@ -39,8 +41,27 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
+    # Calibre loads its own Expat independently of Ubuntu's patched libexpat1.
+    EXPAT_TAG="R_$(printf '%s' "${EXPAT_VERSION}" | tr '.' '_')"; \
+    curl -fsSL --retry 3 \
+      "https://github.com/libexpat/libexpat/releases/download/${EXPAT_TAG}/expat-${EXPAT_VERSION}.tar.xz" \
+      -o /tmp/expat.tar.xz; \
+    echo "${EXPAT_SHA256}  /tmp/expat.tar.xz" | sha256sum -c -; \
+    tar xJf /tmp/expat.tar.xz -C /tmp; \
+    cmake -S "/tmp/expat-${EXPAT_VERSION}" -B /tmp/expat-build \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/tmp/expat-install \
+      -DCMAKE_INSTALL_LIBDIR=lib -DEXPAT_SHARED_LIBS=ON \
+      -DEXPAT_BUILD_TESTS=OFF -DEXPAT_BUILD_TOOLS=OFF \
+      -DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_DOCS=OFF; \
+    cmake --build /tmp/expat-build --parallel "$(nproc)"; \
+    cmake --install /tmp/expat-build; \
+    cp -L /tmp/expat-install/lib/libexpat.so.1 /opt/calibre/lib/libexpat.so.1; \
+    /opt/calibre/calibre-debug -c \
+      "import pyexpat; assert pyexpat.EXPAT_VERSION == 'expat_${EXPAT_VERSION}', pyexpat.EXPAT_VERSION"; \
+    rm -rf /tmp/expat.tar.xz "/tmp/expat-${EXPAT_VERSION}" /tmp/expat-build /tmp/expat-install; \
+    \
     # We only need Qt6 WebEngine (Chromium) for ebook->PDF output.
-    # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
+    # PDF input is parsed through pdftohtml, not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
            /opt/calibre/lib/libQt6SpatialAudio.so.* \
@@ -218,8 +239,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Keep iso639.calibre_msgpack (required)
     # Keep only en-US.pak from qtwebengine_locales (required for WebEngine)
     rm -rf /opt/calibre/lib/qt6/translations; \
-    find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} +; \
-    find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+    if [ -d /opt/calibre/translations ]; then \
+      find /opt/calibre/translations -mindepth 1 -maxdepth 1 ! -name 'qtwebengine_locales' -exec rm -rf {} + 2>/dev/null || true; \
+      if [ -d /opt/calibre/translations/qtwebengine_locales ]; then \
+        find /opt/calibre/translations/qtwebengine_locales -type f ! -name 'en-US.pak' -delete 2>/dev/null || true; \
+      fi; \
+    fi; \
     if [ -d /opt/calibre/resources/localization ]; then \
       rm -rf /opt/calibre/resources/localization/locales.zip \
              /opt/calibre/resources/localization/stats.calibre_msgpack \
@@ -249,7 +274,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     /opt/calibre/ebook-convert /tmp/test.txt /tmp/test.epub; \
     rm -f /tmp/test.txt /tmp/test.epub; \
     \
-    # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
     pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
 
@@ -270,9 +294,9 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 
 
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS gs-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS gs-build
 ARG TARGETPLATFORM
-ARG GS_VERSION=10.06.0
+ARG GS_VERSION=10.08.0
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
@@ -294,10 +318,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS pdf-tools-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS pdf-tools-build
 ARG TARGETPLATFORM
-ARG QPDF_VERSION=12.3.2
-ARG IM_VERSION=7.1.2-13
+ARG QPDF_VERSION=12.4.2
+ARG IM_VERSION=7.1.2-33
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
@@ -339,22 +363,32 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS python-venv-build
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS python-venv-build
 ARG TARGETPLATFORM
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
+ARG LXML_VERSION=6.1.3
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-venv ca-certificates binutils && \
+      python3 python3-venv python3-dev build-essential libxml2-dev libxslt1-dev \
+      ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
-      cryptography \
-      "unoserver==${UNOSERVER_VERSION}" && \
-    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+      cryptography "pillow>=13.0.0" "Brotli>=1.2.1" \
+      "unoserver==${UNOSERVER_VERSION}"
+
+# Use distribution XML libraries so their package updates also cover lxml.
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    /opt/venv/bin/pip install --no-cache-dir --no-binary=lxml --force-reinstall \
+      "lxml==${LXML_VERSION}" && \
+    /opt/venv/bin/python -c \
+      "from lxml import etree; assert etree.LIBXML_VERSION == (2, 9, 14), etree.LIBXML_VERSION"
+
+RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
     rm -rf /opt/venv/lib/python*/site-packages/pip \
            /opt/venv/lib/python*/site-packages/pip-*.dist-info \
@@ -363,8 +397,19 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
+FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS lo-sandbox-build
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY lo-sandbox.c /src/lo-sandbox.c
+RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c && \
+    strip --strip-unneeded /usr/local/bin/lo-sandbox
+
+
 # Final runtime image - the actual base image
-FROM eclipse-temurin:25-jre-noble@sha256:2f1da100788559b397bcf48c736169ea5b070bde84e55f203bbee8e83d87a175 AS runtime
+FROM eclipse-temurin:25-jre-noble@sha256:a98128a57de944a72bd31fbc79b898edd5a5864d3652071d5bbd2160ab7d7dce AS runtime
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -373,14 +418,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     TESS_BASE_PATH=/usr/share/tesseract-ocr/5/tessdata
 
-ARG UNOSERVER_VERSION=3.6
+ARG UNOSERVER_VERSION=3.7
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
     apt-get update; \
+    apt-get upgrade -y --no-install-recommends; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
-    add-apt-repository -y ppa:libreoffice/ppa; \
+    ppa_attempt=1; \
+    until add-apt-repository -y --no-update ppa:libreoffice/ppa; do \
+      if [ "${ppa_attempt}" -ge 4 ]; then \
+        echo "LibreOffice PPA setup failed after ${ppa_attempt} attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "LibreOffice PPA setup failed; retrying in $((ppa_attempt * 5)) seconds" >&2; \
+      sleep "$((ppa_attempt * 5))"; \
+      ppa_attempt=$((ppa_attempt + 1)); \
+    done; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
@@ -398,6 +453,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime & UNO bridge
       python3 python3-uno python3-packaging \
+      libxml2 libxslt1.1 \
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
@@ -626,6 +682,22 @@ RUN set -eux; \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
     fi
 
+RUN set -eux; \
+    if ! getent group stirlingofficegroup >/dev/null 2>&1; then \
+      groupadd -g 1100 stirlingofficegroup 2>/dev/null \
+        || groupadd stirlingofficegroup; \
+    fi; \
+    if ! id -u stirlingofficeuser >/dev/null 2>&1; then \
+      useradd -m -u 1100 -g stirlingofficegroup \
+        -d /home/stirlingofficeuser -s /usr/sbin/nologin stirlingofficeuser 2>/dev/null \
+        || useradd -m -g stirlingofficegroup \
+          -d /home/stirlingofficeuser -s /usr/sbin/nologin stirlingofficeuser; \
+    fi; \
+    mkdir -p /var/lib/libreoffice-sandbox; \
+    chown stirlingofficeuser:stirlingofficegroup \
+      /home/stirlingofficeuser /var/lib/libreoffice-sandbox; \
+    chmod 700 /var/lib/libreoffice-sandbox
+
 # Application directories
 RUN set -eux; \
     mkdir -p /configs /configs/cache /configs/heap_dumps /logs /customFiles \
@@ -647,6 +719,25 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
     ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
     fc-cache -f
+
+COPY --from=lo-sandbox-build /usr/local/bin/lo-sandbox /usr/local/lib/stirling/lo-sandbox
+COPY stirling-hardening.xcd /usr/lib/libreoffice/share/registry/stirling-hardening.xcd
+COPY unoserver-pipe-transport.py /usr/local/lib/stirling/unoserver-pipe-transport.py
+
+RUN set -eux; \
+    chown root:root /usr/local/lib/stirling/lo-sandbox \
+                    /usr/lib/libreoffice/share/registry/stirling-hardening.xcd; \
+    chmod 0755 /usr/local/lib/stirling/lo-sandbox; \
+    chmod 0644 /usr/lib/libreoffice/share/registry/stirling-hardening.xcd; \
+    for name in /usr/bin/soffice /usr/bin/libreoffice /usr/bin/ooffice; do \
+      if [ -e "$name" ] || [ -L "$name" ]; then rm -f "$name"; fi; \
+      cp /usr/local/lib/stirling/lo-sandbox "$name"; \
+      chown root:root "$name"; \
+      chmod 0755 "$name"; \
+    done; \
+    /opt/venv/bin/python /usr/local/lib/stirling/unoserver-pipe-transport.py \
+      "$(/opt/venv/bin/python -c 'import unoserver, os; print(os.path.dirname(unoserver.__file__))')"; \
+    STIRLING_LO_SANDBOX=off /usr/bin/soffice --version
 
 # Metadata labels - base image
 LABEL org.opencontainers.image.title="Stirling-PDF Base" \

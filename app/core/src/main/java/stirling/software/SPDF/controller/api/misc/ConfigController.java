@@ -216,10 +216,14 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
-            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // User preference defaults
+            configData.put(
+                    "defaultToolPanelMode",
+                    applicationProperties.getUi().getDefaultToolPanelMode());
+            configData.put(
+                    "defaultStartupView", applicationProperties.getUi().getDefaultStartupView());
             configData.put(
                     "defaultHideUnavailableTools",
                     applicationProperties.getUi().isDefaultHideUnavailableTools());
@@ -252,6 +256,9 @@ public class ConfigController {
             boolean enableLogin =
                     applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
+            configData.put(
+                    "honorOwnerPasswords",
+                    applicationProperties.getSecurity().isHonorOwnerPasswords());
             configData.put(
                     "showSettingsWhenNoLogin",
                     applicationProperties.getSystem().isShowSettingsWhenNoLogin());
@@ -323,6 +330,9 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            configData.put(
+                    "stirlingOfficeConversion",
+                    applicationProperties.getSystem().isStirlingOfficeConversion());
             boolean shouldShowUpdate =
                     applicationProperties.getSystem().isShowUpdate()
                             && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
@@ -334,9 +344,25 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put(
+                    "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
+            configData.put("enableFeedback", applicationProperties.getSystem().isEnableFeedback());
 
             // Premium/Enterprise settings
-            configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+            configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));
+
+            // Whether this instance can link a Stirling (SaaS) account at all. The account-link
+            // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when
+            // it is off they are absent and /api/v1/account-link/* returns 404. The frontend cannot
+            // tell that 404 apart from "not linked yet", so it needs this told to it explicitly
+            // before it can prompt anyone to link. Read from the environment rather than
+            // AccountLinkProperties because :core must not depend on :proprietary.
+            configData.put(
+                    "accountLinkAvailable",
+                    applicationContext
+                            .getEnvironment()
+                            .getProperty(
+                                    "stirling.billing.account-link.enabled", Boolean.class, false));
 
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();

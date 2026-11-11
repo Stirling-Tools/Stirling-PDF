@@ -61,7 +61,12 @@ public class CustomSaml2ResponseAuthenticationConverter
 
     @Override
     public Saml2Authentication convert(ResponseToken responseToken) {
-        Assertion assertion = responseToken.getResponse().getAssertions().getFirst();
+        List<Assertion> assertions = responseToken.getResponse().getAssertions();
+        if (assertions == null || assertions.isEmpty()) {
+            log.error("SAML response contains no assertions");
+            return null;
+        }
+        Assertion assertion = assertions.getFirst();
         Map<String, List<Object>> attributes = extractAttributes(assertion);
 
         // Debug log with actual values

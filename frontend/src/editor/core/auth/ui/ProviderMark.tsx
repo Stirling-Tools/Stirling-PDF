@@ -1,0 +1,46 @@
+import type { CSSProperties } from "react";
+
+import { Icon } from "@editor/ui/Icon";
+import { MONOCHROME_MARKS, oauthIconName } from "@editor/auth/ui/oauthIcons";
+
+interface ProviderMarkProps {
+  /** Provider icon filename, e.g. "google.svg". */
+  file: string;
+  /** Accessible name; without one the mark is decorative. */
+  label?: string;
+  className?: string;
+  style?: CSSProperties;
+}
+
+/** A sign-in provider's mark: its own artwork where we have it, a neutral glyph otherwise. */
+export function ProviderMark({
+  file,
+  label,
+  className,
+  style,
+}: ProviderMarkProps) {
+  const name = oauthIconName(file);
+  if (!name) {
+    return (
+      <Icon
+        name="shield-user"
+        className={className}
+        style={style}
+        size="1em"
+        title={label}
+      />
+    );
+  }
+  return (
+    <Icon
+      name={name}
+      className={className}
+      style={
+        MONOCHROME_MARKS.has(name)
+          ? { ...style, color: "var(--c-mark-mono)" }
+          : style
+      }
+      title={label}
+    />
+  );
+}

@@ -33,7 +33,8 @@ final class PolicyDtos {
             Boolean isDefault,
             String notes,
             String createdBy,
-            LocalDateTime createdAt) {
+            LocalDateTime createdAt,
+            Long teamIncludedUnits) {
 
         static PolicyResponse from(PricingPolicy p) {
             return new PolicyResponse(
@@ -53,7 +54,8 @@ final class PolicyDtos {
                     p.getIsDefault(),
                     p.getNotes(),
                     p.getCreatedBy(),
-                    p.getCreatedAt());
+                    p.getCreatedAt(),
+                    p.getTeamIncludedUnits());
         }
     }
 
@@ -72,7 +74,35 @@ final class PolicyDtos {
             Map<JobSource, Integer> stepLimits,
             Set<String> stripePriceIds,
             String notes,
-            String createdBy) {}
+            String createdBy,
+            Long teamIncludedUnits) {
+        CreatePolicyRequest(
+                String version,
+                LocalDateTime effectiveFrom,
+                LocalDateTime effectiveTo,
+                Integer docPagesPerUnit,
+                Long docBytesPerUnit,
+                Integer minChargeUnits,
+                Integer fileUnitCap,
+                Map<JobSource, Integer> stepLimits,
+                Set<String> stripePriceIds,
+                String notes,
+                String createdBy) {
+            this(
+                    version,
+                    effectiveFrom,
+                    effectiveTo,
+                    docPagesPerUnit,
+                    docBytesPerUnit,
+                    minChargeUnits,
+                    fileUnitCap,
+                    stepLimits,
+                    stripePriceIds,
+                    notes,
+                    createdBy,
+                    null);
+        }
+    }
 
     /**
      * Inbound payload for {@code PUT /teams/{teamId}/policy-override}. {@code policyId = null}

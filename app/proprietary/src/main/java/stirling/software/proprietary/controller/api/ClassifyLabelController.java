@@ -7,8 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -20,12 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
@@ -36,10 +39,13 @@ import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiFeatureGate;
+import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
@@ -48,11 +54,13 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
  * engine to classify the document against the built-in label set, and stores the engine's JSON
  * answer — minus the transport-only {@code outcome} field — in the custom Info-dictionary key
- * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF. Not intended for direct
- * client use.
+ * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF.
+ *
+ * <p>Published in the API spec rather than hidden, so the tool-model generator emits it and a
+ * pipeline can name it as a step like any other tool. Classification is a thing a pipeline does,
+ * not a thing only the Classification policy may do.
  */
 @Slf4j
-@Hidden
 @RestController
 @RequestMapping("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
@@ -99,18 +107,38 @@ public class ClassifyLabelController {
     }
 
     @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // PDF in, the same PDF out with a verdict on it, so a chain can be checked across this step.
+    @ToolIO(accepts = ToolFormat.PDF, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Classify a PDF and label its metadata",
+            summary =
+                    "Classify a PDF (invoice, receipt, contract...), store the labels in its"
+                            + " metadata and return them",
             description =
                     "Reads the first two and last two pages, classifies the document via the AI"
-                            + " engine, and stores the result in the StirlingPDFClassification"
-                            + " metadata field. Dispatched by the Classification policy; not"
-                            + " intended for direct client use.")
+                            + " engine against the built-in label set, and stores the result in"
+                            + " the StirlingPDFClassification metadata field. The label ids are"
+                            + " also returned in the X-Stirling-Tool-Report header, e.g."
+                            + " {\"labels\":[\"invoice\"]}. A document that already carries a"
+                            + " verdict is passed through untouched unless reclassify=true; its"
+                            + " stored labels are reported with alreadyClassified=true.")
     public ResponseEntity<Resource> classifyAndLabel(
-            @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+            @RequestParam("fileInput") MultipartFile fileInput,
+            @RequestParam(value = "reclassify", defaultValue = "false") boolean reclassify)
+            throws IOException {
         aiFeatureGate.requireClassify();
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
+
+            if (!reclassify && isClassified(document)) {
+                // Classifying twice costs a second engine call and charges for it, and a document
+                // that already carries a verdict has nothing new to learn. A pipeline can run this
+                // step over a mixed batch without paying for the ones already done.
+                log.debug("[classify-and-label] {} already classified; passing through", fileName);
+                String report = storedVerdictReport(document);
+                return withReport(
+                        WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager),
+                        report);
+            }
 
             List<EngineLabel> allowed = resolveAllowedLabels();
             if (allowed.isEmpty()) {
@@ -128,11 +156,63 @@ public class ClassifyLabelController {
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
 
-            pdfMetadataService.setClassificationMetadata(document, toMetadataValue(responseJson));
+            String verdict = toMetadataValue(responseJson);
+            pdfMetadataService.setClassificationMetadata(document, verdict);
             log.debug("[classify-and-label] labelled {} ({} window pages)", fileName, pages.size());
 
-            return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
+            return withReport(
+                    WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager),
+                    verdict);
         }
+    }
+
+    /**
+     * Whether a verdict is already on the document.
+     *
+     * <p>This only reads back what a previous run of this step wrote. It is not a statement that
+     * the verdict is trustworthy: the key is ordinary PDF metadata that whoever supplied the file
+     * can set. Skipping the engine on the strength of it is safe because the cost of being wrong is
+     * a missing re-classification, not a wrong decision. Anything that makes a SECURITY decision
+     * from this field - routing a document somewhere on the strength of its label, say - must
+     * classify with {@code reclassify=true} rather than trust what arrived.
+     */
+    private static boolean isClassified(PDDocument document) {
+        PDDocumentInformation info = document.getDocumentInformation();
+        if (info == null) {
+            return false;
+        }
+        String existing = info.getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
+        return existing != null && !existing.isBlank();
+    }
+
+    /** Echoes only known label ids: the stored value is whatever metadata the file arrived with. */
+    private String storedVerdictReport(PDDocument document) {
+        Set<String> known =
+                resolveAllowedLabels().stream().map(EngineLabel::id).collect(Collectors.toSet());
+        ObjectNode report = objectMapper.createObjectNode();
+        report.put("alreadyClassified", true);
+        ArrayNode labels = report.putArray("labels");
+        String stored =
+                document.getDocumentInformation()
+                        .getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
+        try {
+            for (JsonNode label : objectMapper.readTree(stored).path("labels")) {
+                if (label.isTextual() && known.contains(label.asString())) {
+                    labels.add(label.asString());
+                }
+            }
+        } catch (JacksonException e) {
+            log.debug("[classify-and-label] stored verdict is not JSON: {}", e.getMessage());
+        }
+        return objectMapper.writeValueAsString(report);
+    }
+
+    private static ResponseEntity<Resource> withReport(
+            ResponseEntity<Resource> response, String report) {
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(AiToolResponseHeaders.TOOL_REPORT, report)
+                .body(response.getBody());
     }
 
     private List<AiPageText> extractWindow(PDDocument document) throws IOException {

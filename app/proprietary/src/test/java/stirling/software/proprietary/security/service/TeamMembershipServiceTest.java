@@ -21,11 +21,13 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TeamMembershipServiceTest {
 
     @Mock private TeamMembershipRepository membershipRepository;
+    @Mock private TeamRepository teamRepository;
     @Mock private org.springframework.core.env.Environment environment;
 
     @InjectMocks private TeamMembershipService service;
@@ -40,6 +42,8 @@ class TeamMembershipServiceTest {
     @Test
     void syncCreatesMemberRowForUsersTeam() {
         User user = userInTeam(5, 7);
+        when(teamRepository.lockById(7L)).thenReturn(Optional.of(user.getTeam()));
+        when(membershipRepository.countByTeamId(7L)).thenReturn(1L);
         when(membershipRepository.findByUserId(5L)).thenReturn(List.of());
 
         service.syncMembership(user);
@@ -54,6 +58,8 @@ class TeamMembershipServiceTest {
     @Test
     void syncMovesRowsWhenUserChangedTeam() {
         User user = userInTeam(5, 8);
+        when(teamRepository.lockById(8L)).thenReturn(Optional.of(user.getTeam()));
+        when(membershipRepository.countByTeamId(8L)).thenReturn(1L);
         TeamMembership oldRow = row(7, user, TeamRole.LEADER);
         when(membershipRepository.findByUserId(5L)).thenReturn(List.of(oldRow));
 
@@ -76,6 +82,16 @@ class TeamMembershipServiceTest {
 
         verify(membershipRepository, never()).delete(any());
         verify(membershipRepository, never()).save(any());
+    }
+
+    @Test
+    void syncPreservesManualDemotionOnSameTeam() {
+        User user = userInTeam(5, 7);
+        TeamMembership existing = row(7, user, TeamRole.MEMBER);
+        when(membershipRepository.findByUserId(5L)).thenReturn(List.of(existing));
+        service.syncMembership(user);
+        verify(membershipRepository, never()).save(any());
+        assertThat(existing.getRole()).isEqualTo(TeamRole.MEMBER);
     }
 
     @Test
@@ -136,6 +152,36 @@ class TeamMembershipServiceTest {
 
         verify(membershipRepository).deleteByUserId(5L);
         verify(membershipRepository).clearInvitedBy(user);
+    }
+
+    @Test
+    void firstPersonAddedBecomesLead() {
+        User user = userInTeam(5, 7);
+        user.getTeam().setName("Finance");
+        when(teamRepository.lockById(7L)).thenReturn(Optional.of(user.getTeam()));
+        service.syncMembership(user);
+        ArgumentCaptor<TeamMembership> captor = ArgumentCaptor.forClass(TeamMembership.class);
+        verify(membershipRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(TeamRole.LEADER);
+    }
+
+    @Test
+    void defaultTeamDoesNotAutoAssignLead() {
+        User user = userInTeam(5, 7);
+        user.getTeam().setName(TeamService.DEFAULT_TEAM_NAME);
+        when(teamRepository.lockById(7L)).thenReturn(Optional.of(user.getTeam()));
+        service.syncMembership(user);
+        ArgumentCaptor<TeamMembership> captor = ArgumentCaptor.forClass(TeamMembership.class);
+        verify(membershipRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(TeamRole.MEMBER);
+    }
+
+    @Test
+    void saasMembershipLifecycleIsUnchanged() {
+        when(environment.getActiveProfiles()).thenReturn(new String[] {"saas"});
+        service.syncMembership(userInTeam(5, 7));
+        verify(teamRepository, never()).lockById(any());
+        verify(membershipRepository, never()).save(any());
     }
 
     private User userInTeam(long userId, long teamId) {

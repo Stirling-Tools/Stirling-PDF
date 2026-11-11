@@ -7,8 +7,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -28,6 +31,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import stirling.software.proprietary.billing.BillingStepLimit;
 import stirling.software.saas.payg.model.JobSource;
 
 /**
@@ -37,6 +41,8 @@ import stirling.software.saas.payg.model.JobSource;
  */
 @Entity
 @Table(name = "pricing_policy")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -74,14 +80,16 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
-     * One-time lifetime free document grant handed to a team on creation. {@code 0} (default) means
-     * no free grant. NOT per-cycle: it never replenishes and a team keeps any unused portion after
-     * subscribing. The value is copied into {@code payg_team_extensions.free_units_remaining} when
-     * the team's sidecar row is created (V14 trigger, updated in V19); from then on the per-team
-     * counter is authoritative and this column is only the seed for new teams.
+     * Free document grant a team gets each billing period; {@code 0} (default) means none. The
+     * size, not the balance: {@code payg_team_extensions.free_units_remaining} is reset to it at
+     * each period boundary and does not carry over.
      */
     @Column(name = "free_tier_units", nullable = false)
     private Long freeTierUnits = 0L;
+
+    /** Null inherits the default policy's Team allowance. */
+    @Column(name = "team_included_units")
+    private Long teamIncludedUnits;
 
     /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
@@ -90,6 +98,7 @@ public class PricingPolicy implements Serializable {
      * <p>Persisted as a normalized child table {@code pricing_policy_step_limit (policy_id,
      * job_source, step_limit)} rather than JSONB — values are typed and queryable directly.
      */
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "pricing_policy_step_limit",
@@ -99,6 +108,11 @@ public class PricingPolicy implements Serializable {
     @Column(name = "step_limit", nullable = false)
     private Map<JobSource, Integer> stepLimits = new HashMap<>();
 
+    /** Successful tool calls covered by one charge, using the shared fallback if unconfigured. */
+    public int resolveStepLimit(JobSource source) {
+        return BillingStepLimit.resolve(stepLimits == null ? null : stepLimits.get(source));
+    }
+
     /**
      * Stripe Price IDs this policy resolves to — one per currency we support. Currency is not
      * stored here; it comes from {@code stripe.prices.currency} via Sync Engine when picking the
@@ -107,6 +121,7 @@ public class PricingPolicy implements Serializable {
      *
      * <p>Persisted as {@code pricing_policy_stripe_price (policy_id, stripe_price_id)}.
      */
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-pricing-policies")
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "pricing_policy_stripe_price",

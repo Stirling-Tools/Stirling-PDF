@@ -183,7 +183,7 @@ public class VeraPDFService {
     public void initialize() {
         try {
             VeraGreenfieldFoundryProvider.initialise();
-            log.info("VeraPDF Greenfield initialized successfully");
+            log.debug("VeraPDF Greenfield initialized successfully");
         } catch (Exception e) {
             log.error("Failed to initialize VeraPDF", e);
         }
@@ -285,6 +285,8 @@ public class VeraPDFService {
             }
         }
 
+        // Never force PDF/UA here - it flags every ordinary document as non-compliant and doubles
+        // verify cost; /accessibility-report checks PDF/UA on demand.
         if (!hasPdfaDeclaration) {
             results.add(createNoPdfaDeclarationResult());
         }

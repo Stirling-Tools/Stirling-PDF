@@ -26,9 +26,13 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 
 @Slf4j
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
+
+    // Print-quality raster for the inverted page; capped by system maxDPI
+    private static final int INVERT_RENDER_DPI = 300;
 
     public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
         super(file, replaceAndInvert);
@@ -46,18 +50,18 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             // Load the uploaded PDF
             try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
                 // Render each page and invert colors
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
                 pdfRenderer.setSubsamplingAllowed(
                         true); // Enable subsampling to reduce memory usage
                 for (int page = 0; page < document.getNumberOfPages(); page++) {
                     BufferedImage image;
 
-                    // Use global maximum DPI setting, fallback to 300 if not set
-                    int renderDpi = 300; // Default fallback
+                    // maxDPI is a safety ceiling for user-supplied values, not a target resolution
+                    int renderDpi = INVERT_RENDER_DPI;
                     ApplicationProperties properties =
                             ApplicationContextProvider.getBean(ApplicationProperties.class);
                     if (properties != null && properties.getSystem() != null) {
-                        renderDpi = properties.getSystem().getMaxDPI();
+                        renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                     }
                     final int dpi = renderDpi;
                     final int pageNum = page;

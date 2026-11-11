@@ -22,7 +22,6 @@ class ConfigInitializerTest {
             """
             premium:
               proFeatures:
-                ssoAutoLogin: false
                 customMetadata:
                   autoUpdateMetadata: false
                   author: username
@@ -49,8 +48,6 @@ class ConfigInitializerTest {
 
         new ConfigInitializer().migrateProFeaturesKeyCasing(existing, template);
 
-        assertEquals(
-                "true", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
         assertEquals(
                 "true",
                 template.getValueByExactKeyPath(
@@ -85,8 +82,6 @@ class ConfigInitializerTest {
 
         new ConfigInitializer().migrateProFeaturesKeyCasing(existing, template);
 
-        assertEquals(
-                "false", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
         assertEquals(
                 "username",
                 template.getValueByExactKeyPath(

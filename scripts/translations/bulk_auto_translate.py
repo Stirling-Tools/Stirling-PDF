@@ -3,17 +3,28 @@
 Bulk Auto-Translate All Languages
 Automatically translates all languages in parallel using OpenAI API.
 Supports concurrent translation with configurable thread pool.
+
+Modes:
+  missing  keys present in en-US but absent from the language (default)
+  changed  keys whose en-US text changed after the language last translated them (git history)
+  all      both of the above
 """
 
 import argparse
+import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from pathlib import Path
+
+from stale_translations import find_stale, git
 
 # Thread-safe print lock
 print_lock = threading.Lock()
@@ -34,7 +45,8 @@ def get_all_languages(locales_dir: Path) -> list[str]:
         return []
 
     for lang_dir in sorted(locales_dir.iterdir()):
-        if lang_dir.is_dir() and lang_dir.name != "en-US":
+        # en-GB is derived from en-US by scripts/sync_en_us_spelling.py, not translated
+        if lang_dir.is_dir() and lang_dir.name not in ("en-US", "en-GB"):
             toml_file = lang_dir / "translation.toml"
             if toml_file.exists():
                 languages.append(lang_dir.name)
@@ -84,6 +96,31 @@ def get_language_completion(locales_dir: Path, language: str) -> float | None:
         return None
 
 
+def find_error_line(output: str) -> str:
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if not lines:
+        return "Unknown error"
+    error_line = next((line for line in lines if "Error" in line), lines[-1])
+    return error_line[:300]
+
+
+def write_log(log_file: Path, cmd: list[str], stdout: str | bytes | None, stderr: str | bytes | None) -> str:
+    api_key = cmd[cmd.index("--api-key") + 1]
+
+    def as_text(stream: str | bytes | None) -> str:
+        if isinstance(stream, bytes):
+            stream = stream.decode("utf-8", errors="replace")
+        return (stream or "").replace(api_key, "***")
+
+    output = as_text(stdout) + as_text(stderr)
+    shown_cmd = " ".join("***" if part == api_key else part for part in cmd)
+    log_file.write_text(
+        f"$ {shown_cmd}\n\n--- stdout ---\n{as_text(stdout)}\n--- stderr ---\n{as_text(stderr)}",
+        encoding="utf-8",
+    )
+    return output
+
+
 def translate_language(
     language: str,
     api_key: str,
@@ -92,6 +129,9 @@ def translate_language(
     skip_verification: bool,
     include_existing: bool,
     model: str,
+    log_dir: Path,
+    keys_file: Path | None = None,
+    only_keys: bool = False,
 ) -> tuple[str, bool, str]:
     """
     Translate a single language.
@@ -119,6 +159,13 @@ def translate_language(
     if include_existing:
         cmd.append("--include-existing")
 
+    if keys_file:
+        cmd.extend(["--keys-file", str(keys_file)])
+        if only_keys:
+            cmd.append("--only-keys")
+
+    log_file = log_dir / f"{language}.log"
+
     try:
         result = subprocess.run(
             cmd,
@@ -126,6 +173,7 @@ def translate_language(
             text=True,
             timeout=timeout * 5,  # Overall timeout = 5x per-batch timeout
         )
+        output = write_log(log_file, cmd, result.stdout, result.stderr)
 
         if result.returncode == 0:
             # Check if nothing to translate
@@ -135,14 +183,13 @@ def translate_language(
             safe_print(f"[{language}] ✓ Success")
             return (language, True, "Success")
         else:
-            # Show the actual error (last line of output), not the header
-            output = result.stderr.strip() or result.stdout.strip() or "Unknown error"
-            error_msg = output.splitlines()[-1][:200]
-            safe_print(f"[{language}] ✗ Failed: {error_msg}")
+            error_msg = find_error_line(output)
+            safe_print(f"[{language}] ✗ Failed: {error_msg} (log: {log_file})")
             return (language, False, error_msg)
 
-    except subprocess.TimeoutExpired:
-        safe_print(f"[{language}] ✗ Timeout exceeded")
+    except subprocess.TimeoutExpired as e:
+        write_log(log_file, cmd, e.stdout, e.stderr)
+        safe_print(f"[{language}] ✗ Timeout exceeded (log: {log_file})")
         return (language, False, "Timeout exceeded")
     except Exception as e:
         safe_print(f"[{language}] ✗ Error: {str(e)}")
@@ -167,11 +214,28 @@ Examples:
   # Dry run to see what would be translated
   python3 bulk_auto_translate.py --dry-run
 
+  # Retranslate keys whose en-US text changed since they were translated
+  python3 bulk_auto_translate.py --mode changed --parallel 5
+
+  # Missing and changed keys in one pass
+  python3 bulk_auto_translate.py --mode all --parallel 5
+
 Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 """,
     )
 
     parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
+    parser.add_argument(
+        "--stale-report",
+        help="Use a stale_translations.py --json report instead of scanning git (e.g. when git can't run here)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["missing", "changed", "all"],
+        default="missing",
+        help="missing: keys absent from the language (default); changed: keys whose en-US text "
+        "changed since they were translated, found via git history; all: both",
+    )
     parser.add_argument(
         "--model",
         default="gpt-5.5",
@@ -208,7 +272,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/editor/public/locales",
+        default="frontend/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(
@@ -220,6 +284,12 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         "--include-existing",
         action="store_true",
         help="Also retranslate existing keys that match English (default: only translate missing keys)",
+    )
+    parser.add_argument(
+        "--log-dir",
+        default="translation_logs",
+        help="Directory for each language's full pipeline output, one timestamped folder per run "
+        "(default: translation_logs)",
     )
     parser.add_argument(
         "--dry-run",
@@ -270,9 +340,28 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
             print("\nNo languages below threshold!")
             sys.exit(0)
 
+    stale: dict[str, list[dict]] = {}
+    if args.mode != "missing" and args.stale_report:
+        print(f"\nLoading changed keys from {args.stale_report}...")
+        with open(args.stale_report, encoding="utf-8") as f:
+            stale = {lang: entries for lang, entries in json.load(f).items() if lang in languages}
+    elif args.mode != "missing":
+        print("\nScanning git history for en-US changes not yet reflected in translations...")
+        repo = Path(git("rev-parse", "--show-toplevel").strip())
+        stale = find_stale(repo, [lang for lang in languages if lang != "en-US"])
+    if args.mode != "missing":
+        for lang in languages:
+            print(f"  {lang}: {len(stale.get(lang, []))} changed")
+        if args.mode == "changed":
+            languages = [lang for lang in languages if stale.get(lang)]
+            if not languages:
+                print("\nNo changed translations found!")
+                sys.exit(0)
+
     print(f"\n{'=' * 60}")
     print("Bulk Translation Configuration")
     print(f"{'=' * 60}")
+    print(f"Mode: {args.mode}")
     print(f"Languages to translate: {len(languages)}")
     print(f"Model: {args.model}")
     print(f"Parallel threads: {args.parallel}")
@@ -287,11 +376,25 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         for lang in languages:
             completion = get_language_completion(locales_dir, lang)
             comp_str = f"{completion:.1f}%" if completion is not None else "Unknown"
-            print(f"  - {lang} ({comp_str})")
+            changed_str = f", {len(stale.get(lang, []))} changed" if args.mode != "missing" else ""
+            print(f"  - {lang} ({comp_str}{changed_str})")
         print(f"\nTotal: {len(languages)} languages")
         sys.exit(0)
 
     start_time = time.time()
+
+    log_root = Path(args.log_dir)
+    log_root.mkdir(parents=True, exist_ok=True)
+    log_dir = Path(tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S_"), dir=log_root))
+    print(f"Logging each language's output to {log_dir}/\n")
+
+    # Stale key lists are handed to auto_translate.py as files
+    keys_dir = Path(tempfile.mkdtemp(prefix="stale_keys_"))
+    keys_files: dict[str, Path] = {}
+    for lang, entries in stale.items():
+        if entries:
+            keys_files[lang] = keys_dir / f"{lang}.json"
+            keys_files[lang].write_text(json.dumps([e["key"] for e in entries]), encoding="utf-8")
 
     # Translate in parallel
     results = {"success": [], "failed": [], "already_complete": []}
@@ -307,6 +410,9 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.skip_verification,
                 args.include_existing,
                 args.model,
+                log_dir,
+                keys_files.get(lang),
+                args.mode == "changed",
             ): lang
             for lang in languages
         }
@@ -323,6 +429,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 results["failed"].append((language, message))
 
     elapsed = time.time() - start_time
+    shutil.rmtree(keys_dir, ignore_errors=True)
 
     # Print summary
     print("\n" + "=" * 60)
@@ -349,6 +456,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         print(f"\n❌ Failed ({len(results['failed'])}):")
         for lang, msg in sorted(results["failed"]):
             print(f"  - {lang}: {msg}")
+            print(f"    log: {log_dir / f'{lang}.log'}")
         sys.exit(1)
 
     print("\n✅ Bulk translation completed successfully!")

@@ -25,6 +25,54 @@ import stirling.software.proprietary.workflow.model.WorkflowType;
  */
 class WorkflowMapperShareTokenTest {
 
+    @Test
+    void participantPreviewExposesOnlySubmittedMarksAndPublicProgress() {
+        var session = buildSessionWithTwoParticipants();
+        var alice = session.getParticipants().get(0);
+        var bob = session.getParticipants().get(1);
+        var mark =
+                java.util.Map.of(
+                        "type",
+                        "image",
+                        "data",
+                        "data:image/png;base64,AA==",
+                        "page",
+                        0,
+                        "x",
+                        .1,
+                        "y",
+                        .2,
+                        "width",
+                        .3,
+                        "height",
+                        .1);
+        var metadata =
+                java.util.Map.<String, Object>of(
+                        "wetSignatures", java.util.List.of(mark),
+                        "certificateSubmission",
+                                java.util.Map.of(
+                                        "password", "private-password", "p12Data", "private-key"));
+        alice.setParticipantMetadata(metadata);
+        alice.setStatus(ParticipantStatus.SIGNED);
+        bob.setParticipantMetadata(metadata);
+        var mapper = new tools.jackson.databind.ObjectMapper();
+
+        var previews = WorkflowMapper.toSigningParticipantPreviews(session, mapper);
+        assertEquals(1, previews.get(0).wetSignatures().size());
+        assertEquals(0, previews.get(1).wetSignatures().size());
+        var json = mapper.valueToTree(previews);
+        org.assertj.core.api.Assertions.assertThat(json.get(0).propertyNames())
+                .containsExactlyInAnyOrder("id", "name", "status", "wetSignatures");
+        org.assertj.core.api.Assertions.assertThat(json.toString())
+                .doesNotContain(
+                        TOKEN_A, TOKEN_B, "private-password", "private-key", "alice@example.com");
+
+        session.setFinalized(true);
+        org.assertj.core.api.Assertions.assertThat(
+                        WorkflowMapper.toSigningParticipantPreviews(session, mapper))
+                .allMatch(p -> p.wetSignatures().isEmpty());
+    }
+
     private static final String TOKEN_A = "token-aaaa-1111";
     private static final String TOKEN_B = "token-bbbb-2222";
 

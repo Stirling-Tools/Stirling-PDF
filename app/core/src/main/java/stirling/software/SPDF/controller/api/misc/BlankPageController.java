@@ -40,6 +40,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -49,6 +50,10 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 @RequiredArgsConstructor
 public class BlankPageController {
+
+    // Lowest resolution that classifies the same as 300-500 DPI. Below this a thin rule can
+    // antialias away and a page with content is dropped as blank.
+    private static final int BLANK_DETECTION_DPI = 150;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -110,7 +115,7 @@ public class BlankPageController {
             List<PDPage> blankPages = new ArrayList<>();
             int pageIndex = 0;
 
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (PDPage page : pages) {
                 log.info("checking page {}", pageIndex);
@@ -130,12 +135,12 @@ public class BlankPageController {
                         // Render image and save as temp file
                         BufferedImage image;
 
-                        // Use global maximum DPI setting
-                        int renderDpi = 30; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = BLANK_DETECTION_DPI;
                         ApplicationProperties properties =
                                 ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
-                            renderDpi = properties.getSystem().getMaxDPI();
+                            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int currentPageIndex = pageIndex;

@@ -7,6 +7,7 @@ Feature: Merge and Overlay PDF API Validation
         And the pdf contains 2 pages with random text
         And I also generate a PDF file as "fileInput"
         When I send the API request to the endpoint "/api/v1/general/merge-pdfs"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0
@@ -51,6 +52,7 @@ Feature: Merge and Overlay PDF API Validation
             | overlayMode     | SequentialOverlay |
             | overlayPosition | 0                 |
         When I send the API request to the endpoint "/api/v1/general/overlay-pdfs"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0

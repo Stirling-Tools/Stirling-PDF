@@ -22,9 +22,10 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
-import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
@@ -38,6 +39,7 @@ public class InviteLinkController {
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService userLicenseSettingsService;
+    private final InviteRedemptionService inviteRedemptionService;
 
     /**
      * Generate a new invite link (admin only)
@@ -72,8 +74,9 @@ public class InviteLinkController {
 
             // If email is provided, validate and check for conflicts
             if (email != null && !email.trim().isEmpty()) {
-                // Validate email format
-                if (!email.contains("@")) {
+                // The address becomes the account's username at redemption, so it has to be
+                // usable now: a link minted for "a@" only fails when someone tries to redeem it.
+                if (!EmailAddresses.isValidAccountAddress(email)) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Invalid email address"));
                 }
@@ -108,24 +111,21 @@ public class InviteLinkController {
                 }
             }
 
-            // Check license limits
-            if (applicationProperties.getPremium().isEnabled()) {
-                long currentUserCount = userService.getTotalUsersCount();
-                long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
-                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
+            long currentUserCount = userService.getTotalUsersCount();
+            long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
+            int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
 
-                if (currentUserCount + activeInvites >= maxUsers) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(
-                                    Map.of(
-                                            "error",
-                                            "License limit reached ("
-                                                    + (currentUserCount + activeInvites)
-                                                    + "/"
-                                                    + maxUsers
-                                                    + " users). Contact your administrator to"
-                                                    + " upgrade your license."));
-                }
+            if (currentUserCount + activeInvites >= maxUsers) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "License limit reached ("
+                                                + (currentUserCount + activeInvites)
+                                                + "/"
+                                                + maxUsers
+                                                + " users). Contact your administrator to"
+                                                + " upgrade your license."));
             }
 
             // Validate role
@@ -144,14 +144,19 @@ public class InviteLinkController {
             Long effectiveTeamId = teamId;
             if (effectiveTeamId == null) {
                 Team defaultTeam =
-                        teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                        teamRepository
+                                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                                .orElse(null);
                 if (defaultTeam != null) {
                     effectiveTeamId = defaultTeam.getId();
                 }
             } else {
                 Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-                if (selectedTeam != null
-                        && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+                if (selectedTeam == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of("error", "Team not found"));
+                }
+                if (TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Cannot assign users to Internal team"));
                 }
@@ -435,34 +440,51 @@ public class InviteLinkController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Map.of("error", "Email address is required"));
                 }
-
-                // Validate email format
-                if (!email.contains("@")) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "Invalid email address"));
-                }
-
-                effectiveEmail = email.trim().toLowerCase();
+                effectiveEmail = email;
             }
+
+            // Preset addresses on older invites were never validated, so check both sources
+            if (!EmailAddresses.isValidAccountAddress(effectiveEmail)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Invalid email address"));
+            }
+            effectiveEmail = effectiveEmail.trim().toLowerCase(Locale.ROOT);
 
             // Check if user already exists
             if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
                 return invalidInviteResponse();
             }
 
-            // Create the user account
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(effectiveEmail)
-                            .password(password)
-                            .teamId(invite.getTeamId())
-                            .role(invite.getRole());
-            userService.saveUserCore(builder.build());
+            // The team may have been deleted since the invite was issued
+            if (invite.getTeamId() != null && !teamRepository.existsById(invite.getTeamId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "Team not found"));
+            }
 
-            // Mark invite as used
-            invite.setUsed(true);
-            invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
+            // Re-check the licence limit at redemption. The check when the link was generated
+            // counted the invites outstanding at that moment; users can have been added since, and
+            // a link issued while slots were free must not be able to create the user over the cap.
+            if (userLicenseSettingsService.wouldExceedLimit(1)) {
+                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
+                log.warn(
+                        "Invite redemption refused for {}: licence limit of {} users reached",
+                        effectiveEmail,
+                        maxUsers);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(
+                                Map.of(
+                                        "error",
+                                        "This workspace has reached its limit of "
+                                                + maxUsers
+                                                + " users. Ask an administrator to add capacity,"
+                                                + " then use this link again."));
+            }
+
+            // Consume the token and create the account together, so two redemptions racing on
+            // one single-use link cannot both produce an account.
+            if (!inviteRedemptionService.redeem(invite, effectiveEmail, password)) {
+                return invalidInviteResponse();
+            }
 
             log.info(
                     "User account created via invite link: {} with role: {}",

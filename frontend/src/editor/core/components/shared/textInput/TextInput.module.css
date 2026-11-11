@@ -1,0 +1,80 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-size: 16px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-subtle);
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+  background-color: var(--c-input-bg);
+  color: var(--c-text-subtle);
+}
+
+.input::placeholder {
+  color: var(--c-text-subtle);
+  opacity: 1;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input:read-only {
+  cursor: default;
+}
+
+.clearButton {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  --ai-size: 1.35rem !important;
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+  min-width: 1.35rem !important;
+  min-height: 1.35rem !important;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full, 9999px);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--c-text-subtle);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.clearButton:hover {
+  color: var(--c-text);
+  background-color: var(--c-hover) !important;
+}

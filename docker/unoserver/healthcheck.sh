@@ -4,6 +4,11 @@ set -eu
 
 PORT="${UNOSERVER_PORT:-2003}"
 
+if [ -f /tmp/uno-idle-state ]; then
+  echo "Idle (intentional)"
+  exit 0
+fi
+
 if command -v unoping >/dev/null 2>&1; then
   unoping --host 127.0.0.1 --port "$PORT" >/dev/null 2>&1
   exit $?

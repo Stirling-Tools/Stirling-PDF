@@ -6,7 +6,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
- * Authentication for a linked self-hosted instance (combined-billing "Mode A").
+ * Authentication for a linked self-hosted instance (combined billing).
  *
  * <p>Deliberately <em>not</em> a user: the principal is the instance ({@code instanceId}) bound to
  * a {@code teamId}, with the single authority {@code ROLE_LINKED_INSTANCE}. It carries no {@code

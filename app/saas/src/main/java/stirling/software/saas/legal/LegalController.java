@@ -1,6 +1,7 @@
 package stirling.software.saas.legal;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -41,7 +41,7 @@ public class LegalController {
 
     private final LegalDocumentRegistry registry;
     private final LegalConsentService consents;
-    private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final UserRepository userRepository;
 
     /** A legal document rendered for viewing: registry metadata + the static markdown body. */
@@ -56,10 +56,23 @@ public class LegalController {
 
     public record ConsentRequest(String documentId, String context) {}
 
-    /** Fetch a legal document's current version as markdown. 404 for an unknown document. */
+    /**
+     * The documents a visitor may read before signing in. The enterprise agreement is not one: it
+     * is served with its deal through the procurement controller.
+     */
+    private static final Set<String> PUBLIC_DOCUMENT_IDS = Set.of("eula", "sla", "subprocessors");
+
+    /**
+     * Fetch a legal document's current version as markdown. 404 for an unknown document. Public:
+     * visitors are asked to agree to these before they have an account, so they must be able to
+     * read them first.
+     */
     @GetMapping("/{docId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<LegalDocumentResponse> document(@PathVariable String docId) {
+        if (!PUBLIC_DOCUMENT_IDS.contains(docId)) {
+            return ResponseEntity.notFound().build();
+        }
         return registry.meta(docId)
                 .<ResponseEntity<LegalDocumentResponse>>map(
                         meta ->
@@ -86,9 +99,9 @@ public class LegalController {
         if (request == null || request.documentId() == null || request.context() == null) {
             return ResponseEntity.badRequest().build();
         }
-        Optional<TeamMembership> membership = primaryMembership(auth);
-        Long teamId = membership.map(m -> m.getTeam().getId()).orElse(null);
-        Long userId = membership.map(m -> m.getUser().getId()).orElse(null);
+        Optional<User> caller = currentUser(auth);
+        Long teamId = caller.flatMap(userTeamResolver::teamId).orElse(null);
+        Long userId = caller.map(User::getId).orElse(null);
         // Best-effort for real: consent is audit metadata, not an authorisation gate, so a failed
         // write must not fail the trial start or quote generation this call accompanies. Previously
         // that only held because the caller happened to swallow the 500.
@@ -105,14 +118,12 @@ public class LegalController {
         return ResponseEntity.ok().build();
     }
 
-    private Optional<TeamMembership> primaryMembership(Authentication auth) {
-        User user;
+    private Optional<User> currentUser(Authentication auth) {
         try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+            return Optional.of(AuthenticationUtils.getCurrentUser(auth, userRepository));
         } catch (SecurityException e) {
             return Optional.empty();
         }
-        return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
     }
 
     /**

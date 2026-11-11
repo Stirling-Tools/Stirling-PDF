@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Singleton row holding this instance's daily-sync bookkeeping (combined-billing "Mode A").
+ * Singleton row holding this instance's daily-sync bookkeeping (combined billing).
  *
  * <p>{@link #lastSyncSeq} is reserved (incremented + persisted) <em>before</em> each report so it
  * is strictly monotonic across restarts and partial failures — SaaS dedups replays by comparing it,

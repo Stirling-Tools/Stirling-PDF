@@ -59,6 +59,12 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsStaticResource_percentEncodedApiRoute_notStatic() {
+        assertFalse(RequestUriUtils.isStaticResource("/%61pi/v1/general/files/report.png"));
+        assertFalse(RequestUriUtils.isStaticResource("/app", "/%61pp/a%70i/v1/x.js"));
+    }
+
+    @Test
     void testIsStaticResource_apiStatusEndpoint() {
         assertTrue(RequestUriUtils.isStaticResource("/api/v1/info/status"));
     }
@@ -101,6 +107,15 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsFrontendRoute_percentEncodedApiPath() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%61pi/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/a%70%69/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("/app", "/app/%61pi/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("/app", "/%61pp/api/v1/info/load/all"));
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%61ctuator/prometheus"));
+    }
+
+    @Test
     void testIsFrontendRoute_backendOnlyPath() {
         assertFalse(RequestUriUtils.isFrontendRoute("", "/swagger"));
         assertFalse(RequestUriUtils.isFrontendRoute("", "/register"));
@@ -111,6 +126,16 @@ class RequestUriUtilsTest {
     void testIsFrontendRoute_extensionlessPath() {
         assertTrue(RequestUriUtils.isFrontendRoute("", "/merge"));
         assertTrue(RequestUriUtils.isFrontendRoute("", "/split-pdf"));
+    }
+
+    @Test
+    void testIsFrontendRoute_editorRouteOwnedByFrontend() {
+        // /editor (and its tool routes) is an SPA route: a direct-nav/refresh must
+        // serve index.html, not the auth filter's 302-to-/login. Regression test for
+        // the editor moving from / to /editor, whose refresh bounced processor users
+        // to the processor because the redirect dropped the return path.
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/editor"));
+        assertTrue(RequestUriUtils.isFrontendRoute("/app", "/app/editor"));
     }
 
     @Test
@@ -191,8 +216,55 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_mobileScannerPhoneCallsOnly() {
+        // The phone has no credentials; everything the desktop calls stays behind login.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/abc", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/abc", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/api/v1/mobile-scanner/upload/abc", "/app"));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/abc/a.jpg", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/session/abc", ""));
+        // Anything beyond a bare session id stays protected, whatever the firewall allows.
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/../../files/abc", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc/extra", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload/", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
+    }
+
+    // --- share-link download API (public links are checked by the service) ---
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkDownloadApi() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f/metadata",
+                        ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/accessed", ""));
     }
 
     // --- share-link SPA bootstrap ---
@@ -206,12 +278,24 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkTokenTrailingSlash() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/abc123/", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f/", ""));
     }
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkWithContextPath() {
-        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/share/abc123", "/app"));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkWithInvalidTokenLength() {
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/share/abc123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62fa", ""));
     }
 
     @Test
@@ -235,5 +319,162 @@ class RequestUriUtilsTest {
         assertFalse(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/storage/share-links/abc123/metadata", ""));
+    }
+
+    // --- invite-accept SPA bootstrap ---
+
+    private static final String INVITE_TOKEN = "06a20e7e-2e35-4e26-be7d-2dce14f28f12";
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkToken() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN, ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkTokenTrailingSlash() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteLinkWithContextPath() {
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/invite/" + INVITE_TOKEN, "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteRootNotPublic() {
+        // Avoid matching bare "/invite" or "/invite/" - must have a token segment
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteNestedPathNotPublic() {
+        // Guard against future additions like /invite/<token>/foo becoming accidentally public
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/" + INVITE_TOKEN + "/foo", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_invitePrefixDoesNotOvermatch() {
+        // "/inviteX" must not match the invite pattern
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/inviteX", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteNonUuidTokenNotPublic() {
+        // Only exactly-shaped 36-char lowercase UUID tokens are treated as invite links
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc123", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteUppercaseUuidNotPublic() {
+        // Tokens are generated lowercase by UUID.randomUUID().toString()
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06A20E7E-2E35-4E26-BE7D-2DCE14F28F12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongLengthNotPublic() {
+        // 35-char and 37-char UUID-like tokens are not valid UUIDs
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f122", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteWrongGroupingNotPublic() {
+        // Groups of 8-4-4-4-4 must not be shifted around (e.g. 4-4-4-4-8)
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a2-0e7e-2e35-4e26-be7d2dce14f28f12", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_inviteTokenInvalidCharsNotPublic() {
+        // Hex-only; anything outside [0-9a-f] or the UUID hyphens is rejected
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc$123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc..123", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/invite/abc%2F123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/invite/06a20e7e-2e35-4e26-be7d-2dce14f28f1g", ""));
+    }
+
+    @Test
+    void testNormalizeUri_decodesAndStripsContextPath() {
+        assertEquals(
+                "/api/v1/info/load/all",
+                RequestUriUtils.normalizeUri("", "/%61pi/v1/info/load/all"));
+        assertEquals(
+                "/api/v1/info/load/all",
+                RequestUriUtils.normalizeUri(null, "/%61pi/v1/info/load/all"));
+        assertEquals(
+                "/actuator/prometheus", RequestUriUtils.normalizeUri("", "/%61ctuator/prometheus"));
+        assertEquals("/api/x.png", RequestUriUtils.normalizeUri("", "/a%70i/x.png"));
+        assertEquals("/api/v1/x", RequestUriUtils.normalizeUri("/app", "/app/%61pi/v1/x"));
+        assertEquals("/api/v1/x", RequestUriUtils.normalizeUri("/app", "/%61pp/api/v1/x"));
+        assertEquals("/files/abc", RequestUriUtils.normalizeUri("/app", "/app/files/abc"));
+        assertEquals("/", RequestUriUtils.normalizeUri("", "/"));
+    }
+
+    @Test
+    void testNormalizeUri_malformedEscapeThrows() {
+        assertThrows(
+                IllegalArgumentException.class, () -> RequestUriUtils.normalizeUri("", "/%zz"));
+        assertThrows(
+                IllegalArgumentException.class, () -> RequestUriUtils.normalizeUri("", "/api%"));
+    }
+
+    @Test
+    void testEncodedApiPaths_areNeitherPublicNorFrontend() {
+        for (String uri :
+                new String[] {
+                    "/%61pi/v1/info/load/all", "/%61ctuator/prometheus", "/a%70i/x.png"
+                }) {
+            assertFalse(RequestUriUtils.isFrontendRoute("", uri), uri);
+            assertFalse(RequestUriUtils.isStaticResource("", uri), uri);
+            assertFalse(RequestUriUtils.isPublicAuthEndpoint(uri, ""), uri);
+            assertFalse(RequestUriUtils.isFrontendRoute("/app", "/app" + uri), uri);
+            assertFalse(RequestUriUtils.isStaticResource("/app", "/app" + uri), uri);
+            assertFalse(RequestUriUtils.isPublicAuthEndpoint("/app" + uri, "/app"), uri);
+        }
+    }
+
+    @Test
+    void testMalformedEscape_failsClosed() {
+        assertFalse(RequestUriUtils.isFrontendRoute("", "/%zz"));
+        assertFalse(RequestUriUtils.isStaticResource("", "/%zz.png"));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/login%zz", ""));
+        assertTrue(RequestUriUtils.isApiRequest("", "/%zz"));
+    }
+
+    @Test
+    void testIsApiRequest() {
+        assertTrue(RequestUriUtils.isApiRequest("", "/api/v1/info/load/all"));
+        assertTrue(RequestUriUtils.isApiRequest("", "/%61pi/v1/info/load/all"));
+        assertTrue(RequestUriUtils.isApiRequest("/app", "/app/a%70i/v1/x"));
+        assertFalse(RequestUriUtils.isApiRequest("", "/"));
+        assertFalse(RequestUriUtils.isApiRequest("", "/login"));
+        assertFalse(RequestUriUtils.isApiRequest("/app", "/app/files/abc"));
+    }
+
+    @Test
+    void testLegitimateRoutes_classifyAsBefore() {
+        for (String ctx : new String[] {"", "/app"}) {
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/"), ctx);
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/files/abc"), ctx);
+            assertTrue(RequestUriUtils.isFrontendRoute(ctx, ctx + "/processor"), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/login"), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/processor"), ctx);
+            assertTrue(RequestUriUtils.isPublicAuthEndpoint(ctx + "/login", ctx), ctx);
+            assertTrue(RequestUriUtils.isStaticResource(ctx, ctx + "/api/v1/info/status"), ctx);
+            assertFalse(RequestUriUtils.isFrontendRoute(ctx, ctx + "/api/v1/info/load/all"), ctx);
+            assertFalse(RequestUriUtils.isFrontendRoute(ctx, ctx + "/actuator/prometheus"), ctx);
+            assertFalse(
+                    RequestUriUtils.isPublicAuthEndpoint(ctx + "/api/v1/info/load/all", ctx), ctx);
+        }
     }
 }

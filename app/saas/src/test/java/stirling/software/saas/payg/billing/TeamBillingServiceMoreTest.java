@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
@@ -64,11 +66,12 @@ class TeamBillingServiceMoreTest {
         e.setTeamId(TEAM_ID);
         e.setPaygSubscriptionId(subscriptionId);
         e.setFreeUnitsRemaining(freeRemaining);
+        e.setFreeUnitsPeriodStart(TeamBillingService.calendarMonthWindow()[0]);
         return e;
     }
 
     private void stubGrant(long grant) {
-        PricingPolicy policy = org.mockito.Mockito.mock(PricingPolicy.class);
+        PricingPolicy policy = Mockito.mock(PricingPolicy.class);
         lenient().when(policy.getFreeTierUnits()).thenReturn(grant);
         lenient().when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
     }
@@ -189,8 +192,8 @@ class TeamBillingServiceMoreTest {
             // Window is the calendar month.
             LocalDateTime[] expected =
                     new LocalDateTime[] {
-                        YearMonth.now().atDay(1).atStartOfDay(),
-                        YearMonth.now().plusMonths(1).atDay(1).atStartOfDay()
+                        YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay(),
+                        YearMonth.now(ZoneOffset.UTC).plusMonths(1).atDay(1).atStartOfDay()
                     };
             assertThat(ctx.periodStart()).isEqualTo(expected[0]);
             assertThat(ctx.periodEnd()).isEqualTo(expected[1]);
@@ -228,7 +231,7 @@ class TeamBillingServiceMoreTest {
         }
 
         @Test
-        @DisplayName("missing extension row yields zero free remaining")
+        @DisplayName("missing extension row has no included pool")
         void noExtensionRow_zeroFreeRemaining() {
             stubGrant(500L);
             when(extensionsRepository.findById(TEAM_ID)).thenReturn(Optional.empty());
@@ -237,7 +240,7 @@ class TeamBillingServiceMoreTest {
 
             TeamBillingContext ctx = service.forTeam(TEAM_ID);
 
-            assertThat(ctx.freeGrantUnits()).isEqualTo(500L);
+            assertThat(ctx.freeGrantUnits()).isZero();
             assertThat(ctx.freeRemainingUnits()).isZero();
             assertThat(ctx.subscriptionId()).isNull();
         }
@@ -298,7 +301,9 @@ class TeamBillingServiceMoreTest {
                     rate,
                     "usd",
                     null,
-                    null);
+                    null,
+                    LocalDateTime.now(),
+                    LocalDateTime.now());
         }
 
         @Test
@@ -356,8 +361,96 @@ class TeamBillingServiceMoreTest {
         @DisplayName("no-arg overload anchors on the current month")
         void noArgOverload() {
             LocalDateTime[] window = TeamBillingService.calendarMonthWindow();
-            assertThat(window[0]).isEqualTo(YearMonth.now().atDay(1).atStartOfDay());
-            assertThat(window[1]).isEqualTo(YearMonth.now().plusMonths(1).atDay(1).atStartOfDay());
+            assertThat(window[0]).isEqualTo(YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay());
+            assertThat(window[1])
+                    .isEqualTo(YearMonth.now(ZoneOffset.UTC).plusMonths(1).atDay(1).atStartOfDay());
+        }
+    }
+
+    @Nested
+    @DisplayName("compute: recurring free grant")
+    class RecurringFreeGrant {
+
+        private static final long GRANT = 500L;
+
+        private PaygTeamExtensions stamped(LocalDateTime stamp, long remaining) {
+            PaygTeamExtensions e = new PaygTeamExtensions();
+            e.setTeamId(TEAM_ID);
+            e.setFreeUnitsRemaining(remaining);
+            e.setFreeUnitsPeriodStart(stamp);
+            return e;
+        }
+
+        @Test
+        @DisplayName("a counter stamped with a past period reads as a fresh grant")
+        void staleStampReadsAsFreshGrant() {
+            stubGrant(GRANT);
+            // Nothing has persisted the reset yet, so the read has to show it anyway.
+            when(extensionsRepository.findById(TEAM_ID))
+                    .thenReturn(
+                            Optional.of(
+                                    stamped(
+                                            LocalDateTime.now().minusMonths(2).withDayOfMonth(1),
+                                            0L)));
+
+            TeamBillingContext ctx = service.forTeam(TEAM_ID);
+
+            assertThat(ctx.freeGrantUnits()).isEqualTo(GRANT);
+            assertThat(ctx.freeRemainingUnits()).isEqualTo(GRANT);
+        }
+
+        @Test
+        @DisplayName("a counter stamped with the current period reads as the stored balance")
+        void currentStampReadsStoredBalance() {
+            stubGrant(GRANT);
+            when(extensionsRepository.findById(TEAM_ID))
+                    .thenReturn(
+                            Optional.of(
+                                    stamped(TeamBillingService.calendarMonthWindow()[0], 120L)));
+
+            assertThat(service.forTeam(TEAM_ID).freeRemainingUnits()).isEqualTo(120L);
+        }
+
+        @Test
+        @DisplayName(
+                "an unstamped row — written before the grant recurred — reads as a fresh grant")
+        void nullStampReadsAsFreshGrant() {
+            stubGrant(GRANT);
+            when(extensionsRepository.findById(TEAM_ID)).thenReturn(Optional.of(stamped(null, 0L)));
+
+            assertThat(service.forTeam(TEAM_ID).freeRemainingUnits()).isEqualTo(GRANT);
+        }
+
+        @Test
+        @DisplayName("advancing the Stripe window does not replenish included credits")
+        void subscribedGrantIsIndependentOfStripeWindow() {
+            stubGrant(GRANT);
+            LocalDateTime includedStart = TeamBillingService.calendarMonthWindow()[0];
+            LocalDateTime stripeStart = includedStart.plusDays(9);
+            when(extensionsRepository.findById(TEAM_ID))
+                    .thenReturn(Optional.of(subscribedRow(includedStart)));
+            when(subscriptionDao.findBilling("sub_1"))
+                    .thenReturn(
+                            Optional.of(
+                                    new SubscriptionBilling(
+                                            stripeStart,
+                                            stripeStart.plusMonths(1),
+                                            "price_1",
+                                            "active",
+                                            "usd",
+                                            new BigDecimal("2"))));
+
+            TeamBillingContext ctx = service.forTeam(TEAM_ID);
+
+            assertThat(ctx.periodStart()).isEqualTo(stripeStart);
+            assertThat(ctx.includedPeriodStart()).isEqualTo(includedStart);
+            assertThat(ctx.freeRemainingUnits()).isZero();
+        }
+
+        private PaygTeamExtensions subscribedRow(LocalDateTime stamp) {
+            PaygTeamExtensions e = stamped(stamp, 0L);
+            e.setPaygSubscriptionId("sub_1");
+            return e;
         }
     }
 }

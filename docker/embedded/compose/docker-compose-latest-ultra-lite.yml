@@ -21,8 +21,8 @@ services:
       - ../../../stirling/latest/logs:/logs:rw
     environment:
       SECURITY_ENABLELOGIN: "false"
-      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
-      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
+      # JAVA_BASE_OPTS: ""               # Full JVM flag override (default comes from the image _JVM_OPTS)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active options
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF-Ultra-lite
       UI_HOMEDESCRIPTION: Demo site for Stirling-PDF-Ultra-lite Latest

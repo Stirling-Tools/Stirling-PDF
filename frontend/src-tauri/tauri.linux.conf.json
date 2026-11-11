@@ -1,0 +1,12 @@
+{
+  "bundle": {
+    "icon": [
+      "icons/linux/app-512.png",
+      "icons/linux/app-192.png",
+      "icons/linux/app-128.png",
+      "icons/linux/app-64.png",
+      "icons/linux/app-32.png",
+      "icons/linux/app-16.png"
+    ]
+  }
+}

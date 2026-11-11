@@ -2,7 +2,9 @@ package stirling.software.common.aop;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -10,6 +12,7 @@ import java.util.function.Supplier;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +26,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
+import stirling.software.common.service.JobOwnershipService;
 
 @Aspect
 @Component
@@ -33,9 +37,14 @@ public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
+    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+
     private final JobExecutorService jobExecutorService;
     private final HttpServletRequest request;
     private final FileStorage fileStorage;
+
+    @Autowired(required = false)
+    private JobOwnershipService jobOwnershipService;
 
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
@@ -273,6 +282,7 @@ public class AutoJobAspect {
 
                         // Store the fileId for later reference
                         pdfFile.setFileId(fileId);
+                        recordPendingInputFile(fileId);
 
                         // Replace the original MultipartFile with our persistent copy
                         MultipartFile persistentFile = fileStorage.retrieveFile(fileId);
@@ -288,6 +298,29 @@ public class AutoJobAspect {
         }
 
         return originalArgs;
+    }
+
+    /**
+     * Queue an input copy for attribution to the job. The job id does not exist yet at this point,
+     * so {@link JobExecutorService} drains this list once it mints one.
+     */
+    @SuppressWarnings("unchecked")
+    private void recordPendingInputFile(String fileId) {
+        try {
+            Object existing = request.getAttribute(JobExecutorService.PENDING_INPUT_FILE_IDS_ATTR);
+            List<String> ids;
+            if (existing instanceof List<?> list) {
+                ids = (List<String>) list;
+            } else {
+                ids = new ArrayList<>();
+                request.setAttribute(JobExecutorService.PENDING_INPUT_FILE_IDS_ATTR, ids);
+            }
+            ids.add(fileId);
+        } catch (RuntimeException ex) {
+            // Without a bound request the copy cannot be attributed; the periodic sweep is the
+            // only backstop, so make the miss visible rather than silently leaking the file.
+            log.warn("Could not record input copy {} for cleanup: {}", fileId, ex.getMessage());
+        }
     }
 
     private String getJobIdFromContext() {
@@ -306,6 +339,10 @@ public class AutoJobAspect {
      */
     private <T> Supplier<T> wrapWithMDC(Supplier<T> supplier) {
         final Map<String, String> captured = MDC.getCopyOfContextMap();
+        final String caller =
+                jobOwnershipService != null
+                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                        : null;
         return () -> {
             final Map<String, String> previous = MDC.getCopyOfContextMap();
             try {
@@ -314,6 +351,9 @@ public class AutoJobAspect {
                     MDC.setContextMap(new HashMap<>(captured));
                 } else {
                     MDC.clear();
+                }
+                if (caller != null && MDC.get(AUDIT_PRINCIPAL_MDC_KEY) == null) {
+                    MDC.put(AUDIT_PRINCIPAL_MDC_KEY, caller);
                 }
                 return supplier.get();
             } finally {

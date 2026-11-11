@@ -1,0 +1,204 @@
+/**
+ * Types for the Form Fill PDF Viewer feature.
+ * These mirror the backend FormFieldWithCoordinates model.
+ */
+
+export interface WidgetCoordinates {
+  pageIndex: number;
+  x: number; // PDF points, un-rotated, CSS upper-left origin
+  y: number; // PDF points, un-rotated, CSS upper-left origin
+  width: number; // PDF points
+  height: number; // PDF points
+  /** Export value for this specific widget (radio/checkbox only) */
+  exportValue?: string;
+  /** Font size in PDF points */
+  fontSize?: number;
+  /** CropBox height in PDF points; lets the editor reverse the backend's Y-flip when sending coordinates back. */
+  cropBoxHeight?: number;
+}
+
+export interface FormField {
+  name: string;
+  label: string;
+  type: FormFieldType;
+  value: string;
+  /** Export values used for data binding (sent to backend) */
+  options: string[] | null;
+  /** Human-readable display labels parallel to options. Null when same as options. */
+  displayOptions: string[] | null;
+  required: boolean;
+  readOnly: boolean;
+  multiSelect: boolean;
+  multiline: boolean;
+  tooltip: string | null;
+  widgets: WidgetCoordinates[] | null;
+  /** Visual label for push buttons (from /MK/CA in the PDF appearance dict) */
+  buttonLabel?: string | null;
+  /** Action descriptor for push buttons */
+  buttonAction?: ButtonAction | null;
+  /** Same action as the editable spec string the backend round-trips ("reset", "uri:<url>", ...) */
+  buttonActionSpec?: string | null;
+  /** Text field /MaxLen; >0 also makes it a comb field */
+  maxLength?: number | null;
+  /** Pre-rendered appearance image for signed signature fields (data URL). */
+  appearanceDataUrl?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
+}
+
+export type FormFieldType =
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
+
+export type ButtonActionType =
+  | "named"
+  | "javascript"
+  | "submitForm"
+  | "resetForm"
+  | "uri"
+  | "none";
+
+export interface ButtonAction {
+  type: ButtonActionType;
+  /** For 'named' actions: the PDF action name (e.g. 'Print', 'NextPage', 'PrevPage') */
+  namedAction?: string;
+  /** For 'javascript' actions: the JavaScript source code */
+  javascript?: string;
+  /** For 'submitForm' / 'uri' actions: the target URL */
+  url?: string;
+  /** For 'submitForm' actions: submit flags bitmask */
+  submitFlags?: number;
+}
+
+/** Field types that can be created/edited structurally through the editor. */
+export type CreatableFieldType =
+  | "text"
+  | "checkbox"
+  | "combobox"
+  | "listbox"
+  | "radio"
+  | "button"
+  | "signature";
+
+export const CREATABLE_FIELD_TYPES: CreatableFieldType[] = [
+  "text",
+  "checkbox",
+  "combobox",
+  "listbox",
+  "radio",
+  "button",
+  "signature",
+];
+
+/**
+ * A new field queued for creation. Coordinates are CropBox-relative,
+ * lower-left-origin PDF points - the reverse of what WidgetCoordinates carries.
+ */
+export interface NewFieldDefinition {
+  name: string;
+  label?: string;
+  type: CreatableFieldType;
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
+}
+
+/**
+ * A change to an existing field. Only non-undefined properties are applied.
+ * Coordinates (when present) are CropBox-relative, lower-left-origin PDF points.
+ */
+export interface ModifyFieldDefinition {
+  targetName: string;
+  name?: string;
+  label?: string;
+  type?: FormFieldType;
+  pageIndex?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  required?: boolean;
+  multiSelect?: boolean;
+  options?: string[];
+  defaultValue?: string;
+  tooltip?: string;
+  fontSize?: number;
+  readOnly?: boolean;
+  multiline?: boolean;
+  maxLength?: number; // text only; >0 also makes it a comb field
+  /** Push-button activation action: "reset" | "print" | "uri:<url>" | "submit:<url>" */
+  buttonAction?: string;
+  /** Gap between radio options in points; derived from the drawn box when unset. */
+  optionGap?: number;
+  /** Radio option size in points; derived from the drawn box when unset. */
+  optionSize?: number;
+}
+
+/** A batch of field edits committed in one request via /api/v1/form/edit-fields. */
+export interface FieldEditBatch {
+  add?: NewFieldDefinition[];
+  modify?: ModifyFieldDefinition[];
+  delete?: string[];
+}
+
+/** One requested edit the document could not take. The rest of the batch still applied. */
+export interface SkippedFieldEdit {
+  operation: "add" | "modify" | "delete";
+  target?: string | null;
+  reason?: string | null;
+}
+
+/** The updated PDF plus whatever the backend had to drop. */
+export interface FieldEditResult {
+  blob: Blob;
+  /** Capped at 20 entries so the response header stays inside Jetty's budget. */
+  skipped: SkippedFieldEdit[];
+  /** How many were skipped in total, which may exceed skipped.length. */
+  skippedTotal: number;
+  /** Present when the backend bundled the field list in, saving a second upload. */
+  fields?: FormField[];
+}
+
+/** The form tool's working mode. */
+export type FormMode = "fill" | "create" | "modify";
+
+export interface FormFillState {
+  /** Fields fetched from backend with coordinates */
+  fields: FormField[];
+  /** Current user-entered values keyed by field name */
+  values: Record<string, string>;
+  /** Whether a backend fetch is in progress */
+  loading: boolean;
+  /** Error message from fetch */
+  error: string | null;
+  /** Currently focused/selected field name */
+  activeFieldName: string | null;
+  /** Whether the form has been modified */
+  isDirty: boolean;
+  /** Current validation errors keyed by field name */
+  validationErrors: Record<string, string>;
+}

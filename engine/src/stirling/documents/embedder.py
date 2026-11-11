@@ -1,17 +1,24 @@
 from __future__ import annotations
 
+from openai import OpenAIError
 from pydantic_ai import Embedder
+from pydantic_ai.embeddings import infer_embedding_model
 from pydantic_ai.embeddings.openai import OpenAIEmbeddingModel
+from pydantic_ai.exceptions import UserError
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from stirling.documents.chunker import chunk_text
 from stirling.documents.store import Document
+from stirling.documents.voyage import VoyageEmbeddingModel, build_voyage_model
 
 # Keep each upstream embed request under every major provider's per-call limit while
 # still batching large enough that a book-sized document ingests in a reasonable number
 # of round trips. VoyageAI caps at 1000, OpenAI at 2048, Cohere at 96; 256 is a good
 # default for Voyage/OpenAI. Cohere users should pass a lower value via construction.
 DEFAULT_EMBED_BATCH_SIZE = 256
+
+
+VOYAGE_PROVIDER = "voyageai"
 
 
 def _build_embedder(
@@ -23,11 +30,17 @@ def _build_embedder(
 ) -> Embedder:
     """Construct an :class:`Embedder`; explicit provider/api_key/base_url is the config-push path, else env form."""
     if not provider and not api_key and not base_url:
+        # Env form is a "provider:model" string; Voyage needs the SDK-free adapter.
+        env_provider, sep, env_model = model_name.partition(":")
+        if sep and env_provider.lower() == VOYAGE_PROVIDER:
+            return Embedder(build_voyage_model(env_model))
         return Embedder(model_name)
 
     provider_name = (provider or "").lower()
     key = api_key or None
-    if provider_name in ("voyageai", "openai"):
+    if provider_name == VOYAGE_PROVIDER:
+        return Embedder(build_voyage_model(model_name, api_key=key, base_url=base_url or None))
+    if provider_name == "openai":
         return Embedder(f"{provider_name}:{model_name}")
     if provider_name in ("ollama", "custom"):
         openai_provider = OpenAIProvider(base_url=base_url or None, api_key=key or "ollama")
@@ -53,6 +66,15 @@ class EmbeddingService:
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._embed_batch_size = embed_batch_size
+
+    @property
+    def configured(self) -> bool:
+        """Check local provider configuration without embedding or writing documents."""
+        try:
+            model = infer_embedding_model(self._embedder.model)
+        except (ValueError, ImportError, UserError, OpenAIError):
+            return False
+        return model.configured if isinstance(model, VoyageEmbeddingModel) else True
 
     async def embed_query(self, text: str) -> list[float]:
         """Embed a search query, optimised for retrieval."""

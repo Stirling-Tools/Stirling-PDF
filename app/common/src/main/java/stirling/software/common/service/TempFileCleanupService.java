@@ -47,6 +47,9 @@ public class TempFileCleanupService {
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
 
+    // JPDFium sweeps its own extraction dirs on native load
+    private static final String JPDFIUM_DIR_PREFIX = "jpdfium-";
+
     // File patterns that identify our temp files
     private static final Predicate<String> IS_OUR_TEMP_FILE =
             fileName ->
@@ -119,7 +122,7 @@ public class TempFileCleanupService {
                 Path loTempDir = Path.of(libreOfficeTempDir);
                 if (!Files.exists(loTempDir)) {
                     Files.createDirectories(loTempDir);
-                    log.info("Created LibreOffice temp directory: {}", loTempDir);
+                    log.debug("Created LibreOffice temp directory: {}", loTempDir);
                 }
             }
         } catch (IOException e) {
@@ -133,12 +136,11 @@ public class TempFileCleanupService {
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
-        log.info("Running scheduled temporary file cleanup");
+        log.debug("Running scheduled temporary file cleanup");
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();
 
         // Clean up registered temp files (managed by TempFileRegistry)
         int registeredDeletedCount = tempFileManager.cleanupOldTempFiles(maxAgeMillis);
-        log.info("Cleaned up {} registered temporary files", registeredDeletedCount);
 
         // Clean up registered temp directories
         int directoriesDeletedCount = 0;
@@ -181,18 +183,17 @@ public class TempFileCleanupService {
     private void runStartupCleanup() {
         boolean containerMode = isContainerMode();
 
-        log.info(
-                "Running in {} mode, using {} cleanup strategy",
-                machineType,
-                containerMode ? "aggressive" : "conservative");
+        log.info("Running in {} mode", machineType);
 
         // For startup cleanup, we use a longer timeout for non-container environments
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
-        log.info(
-                "Startup cleanup complete. Deleted {} temporary files/directories",
-                totalDeletedCount);
+        if (totalDeletedCount > 0) {
+            log.info(
+                    "Startup cleanup complete. Deleted {} temporary files/directories",
+                    totalDeletedCount);
+        }
     }
 
     /**
@@ -261,7 +262,7 @@ public class TempFileCleanupService {
                                     int count = dirDeletedCount.get();
                                     totalDeletedCount.addAndGet(count);
                                     if (count > 0) {
-                                        log.info(
+                                        log.debug(
                                                 "Cleaned up {} files/directories in {}",
                                                 count,
                                                 tempDir);
@@ -346,6 +347,11 @@ public class TempFileCleanupService {
                             }
 
                             if (Files.isDirectory(path)) {
+                                if (fileName.startsWith(JPDFIUM_DIR_PREFIX)) {
+                                    // JPDFium's lock-aware sweep owns these; unlinking a
+                                    // live .lock would hide it from that sweep.
+                                    return;
+                                }
                                 subdirectories.add(path);
                                 return;
                             }

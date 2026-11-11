@@ -1,0 +1,38 @@
+.quick-nav-rail-container {
+  /* On the column, so the parts outside the nav inherit them too. */
+  --quicknav-item-gap: var(--space-3);
+  --quicknav-surface-pad: 0.375rem;
+
+  width: var(--nav-rail-w);
+  height: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  /* On the column, not the bar, so the fill covers the gutters too. */
+  background-color: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--nav-gutter);
+  padding-inline: calc(var(--nav-gutter) / 2);
+}
+
+/* Child selector to beat .sui-nav-surface, which would win on order. */
+.quick-nav-rail-container > .quick-nav-rail-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.quick-nav-rail-surface {
+  flex: 1;
+  min-height: 0;
+  /* No inline padding: the bar is one target wide and would squeeze the buttons. */
+  padding: var(--quicknav-surface-pad) 0;
+}
+
+/* Below this width the sidebar is an off-canvas drawer, and the rail is just noise. */
+@media (max-width: 48rem) {
+  .quick-nav-rail-container {
+    display: none;
+  }
+}

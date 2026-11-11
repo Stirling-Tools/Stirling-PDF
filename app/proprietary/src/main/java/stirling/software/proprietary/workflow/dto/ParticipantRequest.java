@@ -2,7 +2,6 @@ package stirling.software.proprietary.workflow.dto;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,10 +10,12 @@ import stirling.software.proprietary.storage.model.ShareAccessRole;
 /**
  * Request DTO for adding or configuring a workflow participant. Supports both registered users and
  * external email participants.
+ *
+ * <p>No all-args constructor: Jackson would bind through it and drop the field defaults below, so
+ * an omitted {@code sendNotification} would arrive as false.
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ParticipantRequest {
 
     /** User ID if participant is a registered user */

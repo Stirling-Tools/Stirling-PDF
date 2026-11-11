@@ -90,7 +90,9 @@ class VeraPDFServicePdfaFixtureTest {
                         () -> service.validatePDF(new ByteArrayInputStream(pdfBytes)),
                         "Empty veraPDF flavour list must not surface as IndexOutOfBoundsException");
 
-        assertEquals(1, results.size());
+        // One result: PDF/UA is checked by the dedicated accessibility-report endpoint, not here.
+        assertEquals(1, results.size(), () -> "Expected a single PDF/A result, got: " + results);
+
         PDFVerificationResult result = results.get(0);
         assertEquals("not-pdfa", result.getStandard());
         assertFalse(result.isDeclaredPdfa());
@@ -161,13 +163,22 @@ class VeraPDFServicePdfaFixtureTest {
         }
     }
 
+    /** The PDF/A result; every document is also checked against PDF/UA, so filter that one out. */
     private PDFVerificationResult onlyResult(byte[] pdfBytes) throws Exception {
         List<PDFVerificationResult> results =
                 service.validatePDF(new ByteArrayInputStream(pdfBytes));
 
         assertNotNull(results);
-        assertEquals(1, results.size(), () -> "Expected a single result, got: " + results);
-        return results.get(0);
+        List<PDFVerificationResult> pdfaResults =
+                results.stream().filter(r -> !isUaResult(r)).toList();
+        assertEquals(
+                1, pdfaResults.size(), () -> "Expected a single PDF/A result, got: " + results);
+        return pdfaResults.get(0);
+    }
+
+    private static boolean isUaResult(PDFVerificationResult result) {
+        String profile = result.getValidationProfile();
+        return profile != null && profile.toLowerCase().contains("ua");
     }
 
     private static String messages(PDFVerificationResult result) {

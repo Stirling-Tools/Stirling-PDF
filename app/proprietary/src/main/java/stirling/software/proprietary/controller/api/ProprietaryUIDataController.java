@@ -3,6 +3,7 @@ package stirling.software.proprietary.controller.api;
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
+import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -54,6 +56,7 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 import tools.jackson.core.JacksonException;
@@ -78,6 +81,8 @@ public class ProprietaryUIDataController {
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
+    private final InviteTokenRepository inviteTokenRepository;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -94,7 +99,10 @@ public class ProprietaryUIDataController {
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
             LoginAttemptService loginAttemptService,
-            ResourceAccessService resourceAccessService) {
+            ResourceAccessService resourceAccessService,
+            InviteTokenRepository inviteTokenRepository,
+            stirling.software.proprietary.service.OrgOwnerService orgOwnerService) {
+        this.orgOwnerService = orgOwnerService;
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -110,22 +118,18 @@ public class ProprietaryUIDataController {
         this.mfaService = mfaService;
         this.loginAttemptService = loginAttemptService;
         this.resourceAccessService = resourceAccessService;
+        this.inviteTokenRepository = inviteTokenRepository;
     }
 
     /**
-     * Get the backend base URL for SAML/OAuth redirects. Uses system.backendUrl from config if set,
-     * otherwise defaults to http://localhost:8080
+     * Base URL for the SAML login link: security.saml2.redirectBaseUrl, then system.backendUrl,
+     * then http://localhost:8080 for development.
      */
     private String getBackendBaseUrl() {
-        String backendUrl = applicationProperties.getSystem().getBackendUrl();
-
-        // If backendUrl is configured, use it
-        if (backendUrl != null && !backendUrl.trim().isEmpty()) {
-            return backendUrl.trim();
-        }
-
-        // For development, default to localhost:8080 (backend port)
-        return "http://localhost:8080";
+        return RedirectBaseUrl.overrideOr(
+                        applicationProperties.getSecurity().getSaml2().getRedirectBaseUrl(),
+                        applicationProperties.getSystem().getBackendUrl())
+                .orElse("http://localhost:8080");
     }
 
     @GetMapping("/audit-dashboard")
@@ -160,7 +164,7 @@ public class ProprietaryUIDataController {
 
         // Add enableLogin flag so frontend doesn't need to call /app-config
         data.setEnableLogin(securityProps.isEnableLogin());
-        data.setSsoAutoLogin(applicationProperties.getPremium().getProFeatures().isSsoAutoLogin());
+        data.setSsoAutoLogin(applicationProperties.getSecurity().isSsoAutoLogin());
 
         // Check if this is first-time setup with default credentials
         // The isFirstLogin flag captures: default username/password usage and unchanged state
@@ -223,7 +227,7 @@ public class ProprietaryUIDataController {
 
         SAML2 saml2 = securityProps.getSaml2();
         // Only add SAML2 providers if loginMethod allows it
-        if (securityProps.isSaml2Active() && applicationProperties.getPremium().isEnabled()) {
+        if (securityProps.isSaml2Active() && licenseSettingsService.hasPaidLicense()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
@@ -343,7 +347,8 @@ public class ProprietaryUIDataController {
         long availableSlots = licenseSettingsService.getAvailableUserSlots();
         int grandfatheredCount = licenseSettingsService.getDisplayGrandfatheredCount();
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
-        boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
+        boolean premiumEnabled = licenseSettingsService.hasPaidLicense();
+        long pendingInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
 
         // Resolve portal access for the whole roster. The teamLead display flag counts a
         // LEADER membership on any team (mirrors /me), but the portal default policy only
@@ -366,9 +371,18 @@ public class ProprietaryUIDataController {
                         .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        Long ownerId = orgOwnerService.ownerId().orElse(null);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user -> {
+                                    AdminUserSummary summary =
+                                            convertUserToSummary(
+                                                    user, leaderUserIds, portalAccessUserIds);
+                                    summary.setOrgOwner(
+                                            java.util.Objects.equals(ownerId, user.getId()));
+                                    return summary;
+                                })
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -386,6 +400,11 @@ public class ProprietaryUIDataController {
         data.setAvailableSlots(availableSlots);
         data.setGrandfatheredUserCount(grandfatheredCount);
         data.setLicenseMaxUsers(licenseMaxUsers);
+        // Read straight off the verified licence rather than the settings row: these are display
+        // fields, repopulated on every licence check, and not worth a schema change.
+        data.setServerQuantity(applicationProperties.getPremium().getServerQuantity());
+        data.setUserBlockSize(applicationProperties.getPremium().getUserBlockSize());
+        data.setPendingInvites(pendingInvites);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
         // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
@@ -399,7 +418,8 @@ public class ProprietaryUIDataController {
     }
 
     @GetMapping("/account")
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize(
+            "!@principalPolicy.isInternalApiUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @Operation(summary = "Get account page data")
     public ResponseEntity<AccountData> getAccountData(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -432,7 +452,7 @@ public class ProprietaryUIDataController {
 
         String settingsJson;
         try {
-            settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
+            settingsJson = objectMapper.writeValueAsString(maskSecrets(user.get().getSettings()));
         } catch (JacksonException e) {
             log.error("Error converting settings map", e);
             return ResponseEntity.status(500).build();
@@ -596,7 +616,9 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
+        summary.setSupabaseId(
+                user.getSupabaseId() == null ? null : user.getSupabaseId().toString());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());
@@ -660,6 +682,23 @@ public class ProprietaryUIDataController {
         private long availableSlots;
         private int grandfatheredUserCount;
         private int licenseMaxUsers;
+
+        /**
+         * Capacity breakdown for the People page: how many servers the licence covers and how many
+         * users each grants. Both 0 on a licence issued before the cap, in which case the UI has
+         * only {@code maxAllowedUsers} to show.
+         */
+        private int serverQuantity;
+
+        private int userBlockSize;
+
+        /**
+         * Invites issued but not yet redeemed. They hold a slot the same way a disabled account
+         * does, so the capacity UI can show what is consuming the limit and offer a way to reclaim
+         * it before asking anyone to pay.
+         */
+        private long pendingInvites;
+
         private boolean premiumEnabled;
         private boolean mailEnabled;
         private boolean emailInvitesEnabled;
