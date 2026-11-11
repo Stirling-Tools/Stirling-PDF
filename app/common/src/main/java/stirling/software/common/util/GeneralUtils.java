@@ -892,13 +892,18 @@ public class GeneralUtils {
                         ? PageToken.IN_RANGE
                         : PageToken.OUT_OF_RANGE;
             }
-            if (token.matches("\\d+\\s*-\\s*\\d*")) {
+            if (token.matches("(?:\\d+\\s*-\\s*\\d*|-\\s*\\d+)")) {
                 String[] range = token.split("-", -1);
-                int start = Math.max(1, Integer.parseInt(range[0].trim()));
+                String firstPart = range[0].trim();
+                String secondPart = range[1].trim();
+                if (firstPart.isEmpty() && secondPart.isEmpty()) {
+                    return PageToken.MALFORMED;
+                }
+                int start = firstPart.isEmpty() ? 1 : Math.max(1, Integer.parseInt(firstPart));
                 int end =
-                        range[1].isBlank()
+                        secondPart.isEmpty()
                                 ? Math.max(start, totalPages)
-                                : Integer.parseInt(range[1].trim());
+                                : Integer.parseInt(secondPart);
                 if (end < start) {
                     return PageToken.MALFORMED;
                 }
@@ -932,19 +937,26 @@ public class GeneralUtils {
             // Process ranges only if it's not n-syntax
             // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
             String[] rangeParts = trimmedPart.split("-", -1);
-            try {
-                int start = Integer.parseInt(rangeParts[0].trim());
-                int end =
-                        (rangeParts.length > 1 && !rangeParts[1].trim().isEmpty())
-                                ? Integer.parseInt(rangeParts[1].trim())
-                                : totalPages;
-                for (int i = start; i <= end; i++) {
-                    if (i >= 1 && i <= totalPages) {
-                        partResult.add(i - 1 + offset);
-                    }
+            if (rangeParts.length == 2) {
+                String firstPart = rangeParts[0].trim();
+                String secondPart = rangeParts[1].trim();
+                if (firstPart.isEmpty() && secondPart.isEmpty()) {
+                    return partResult;
                 }
-            } catch (NumberFormatException e) {
-                log.debug("Invalid range: {}", trimmedPart);
+                try {
+                    int start = firstPart.isEmpty() ? 1 : Integer.parseInt(firstPart);
+                    int end = secondPart.isEmpty() ? totalPages : Integer.parseInt(secondPart);
+                    int clampedStart = Math.max(1, start);
+                    int clampedEnd = Math.min(totalPages, end);
+                    for (int i = clampedStart; i <= clampedEnd; i++) {
+                        partResult.add(i - 1 + offset);
+                        if (i == Integer.MAX_VALUE) {
+                            break;
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    log.debug("Invalid range: {}", trimmedPart);
+                }
             }
         } else {
             // This is a single page number
