@@ -6,7 +6,8 @@
         "./src/editor/saas/*",
         "./src/editor/cloud/*",
         "./src/editor/proprietary/*",
-        "./src/editor/core/*"
+        "./src/editor/core/*",
+        "./src/editor/desktop/*"
       ],
       "@editor/portal/*": [
         "./src/editor/saas/portal/*",
