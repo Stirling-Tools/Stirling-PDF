@@ -194,6 +194,10 @@
   text-overflow: ellipsis;
 }
 
+.file-sidebar-file-meta:not(.labelled) {
+  flex-shrink: 0;
+}
+
 /* ---- Cloud badge (file saved to the server) ---- */
 .file-sidebar-cloud-badge {
   position: relative;

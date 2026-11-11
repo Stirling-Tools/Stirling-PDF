@@ -9,6 +9,8 @@ import { useFileContext } from "@editor/contexts/FileContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
+import { rightsManagedToolAccepts } from "@editor/services/rightsManagedTools";
+import { isKnownRightsManagedPdf } from "@editor/services/rightsManagedPdf";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
@@ -177,7 +179,8 @@ export const useToolOperation = <TParams>(
       if (
         !runtimeEndpoint ||
         config.toolType === ToolType.custom ||
-        !notificationsAvailable
+        !notificationsAvailable ||
+        fileIds.some(isKnownRightsManagedPdf)
       ) {
         return;
       }
@@ -207,11 +210,12 @@ export const useToolOperation = <TParams>(
         typeof config.endpoint === "function"
           ? config.endpoint(params)
           : config.endpoint;
-      return selectedFiles.filter((file) =>
-        toolAcceptsFile(
-          endpoint ?? undefined,
-          selectors.getStirlingFileStub(file.fileId) ?? file,
-        ),
+      return selectedFiles.filter(
+        (file) =>
+          toolAcceptsFile(
+            endpoint ?? undefined,
+            selectors.getStirlingFileStub(file.fileId) ?? file,
+          ) && rightsManagedToolAccepts(endpoint ?? undefined, file.fileId),
       );
     },
     [config.endpoint, selectors],
@@ -338,7 +342,7 @@ export const useToolOperation = <TParams>(
           (file) =>
             fileActions.requestPdfOwnerAccess(
               file.fileId,
-              t(`${config.operationType}.title`, config.operationType),
+              t(`home.${config.operationType}.title`, config.operationType),
             ),
           cancellation.signal,
           (file) =>

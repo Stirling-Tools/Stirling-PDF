@@ -4,9 +4,13 @@ import { useTranslation } from "react-i18next";
 import { useSuggestedTools } from "@editor/hooks/useSuggestedTools";
 import { ToolIcon } from "@editor/components/shared/ToolIcon";
 
-export function SuggestedToolsSection(): React.ReactElement {
+export function SuggestedToolsSection({
+  rightsManaged = false,
+}: {
+  rightsManaged?: boolean;
+}): React.ReactElement {
   const { t } = useTranslation();
-  const suggestedTools = useSuggestedTools();
+  const suggestedTools = useSuggestedTools({ rightsManaged });
 
   return (
     <Stack gap="md">

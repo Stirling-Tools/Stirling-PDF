@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import stirling.software.proprietary.policy.remote.CloudHttp;
@@ -22,6 +23,9 @@ import tools.jackson.databind.ObjectMapper;
 public final class OAuthHttp {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    private static final Pattern SCOPE_REFUSALS =
+            Pattern.compile("AADSTS(65001|70000|70011|500011|650052|650056|650057)\\b");
     private static final HttpClient HTTP =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build();
 
@@ -102,7 +106,11 @@ public final class OAuthHttp {
         String detail = description != null ? firstLine(description) : error;
         throw new OAuthException(
                 "sign-in refused: " + (detail == null ? "HTTP " + response.statusCode() : detail),
-                "invalid_grant".equals(error));
+                "invalid_grant".equals(error) && !refusesOnlyTheScope(description));
+    }
+
+    static boolean refusesOnlyTheScope(String description) {
+        return description != null && SCOPE_REFUSALS.matcher(description).find();
     }
 
     public static JsonNode idTokenClaims(String idToken) {

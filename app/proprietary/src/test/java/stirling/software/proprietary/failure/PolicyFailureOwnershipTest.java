@@ -42,6 +42,7 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyEngine;
 import stirling.software.proprietary.policy.engine.PolicyExecutor;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
+import stirling.software.proprietary.policy.engine.ProtectedPdfRunsFixtures;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -122,7 +123,8 @@ class PolicyFailureOwnershipTest {
                         new PolicyOutputResolver(new InProcessSourceStore()),
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        ProtectedPdfRunsFixtures.unused());
 
         lenient()
                 .when(jobOwnershipService.createScopedJobKey(anyString(), any()))

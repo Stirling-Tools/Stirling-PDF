@@ -65,6 +65,7 @@ import stirling.software.common.util.JobContext;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.integration.purview.protection.ProtectedPdfFixtures;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
@@ -146,7 +147,8 @@ class PolicyEngineTest {
                         outputResolver,
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        ProtectedPdfRunsFixtures.unused());
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
@@ -617,6 +619,32 @@ class PolicyEngineTest {
     }
 
     @Test
+    void aPasswordProtectedUploadFailsBeforeAToolCanDropItsProtection() throws Exception {
+        lenient()
+                .when(internalApiClient.post(eq(ROTATE), any()))
+                .thenReturn(ResponseEntity.ok(pdf(ProtectedPdfFixtures.plain(), "locked.pdf")));
+        lenient()
+                .when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("unprotected", 7L));
+
+        PolicyRun run =
+                engine.runPolicy(
+                                policyOwnedBy("alice"),
+                                PolicyInputs.of(
+                                        List.of(
+                                                pdf(
+                                                        ProtectedPdfFixtures.passwordProtected(""),
+                                                        "locked.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        assertTrue(run.getError().contains("password-protected"), run.getError());
+        verify(internalApiClient, never()).post(anyString(), any());
+    }
+
+    @Test
     void successfulRunRecordsNoFailureEvent() throws Exception {
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
@@ -934,7 +962,11 @@ class PolicyEngineTest {
     }
 
     private static ByteArrayResource pdf(String content, String filename) {
-        return new ByteArrayResource(content.getBytes()) {
+        return pdf(content.getBytes(), filename);
+    }
+
+    private static ByteArrayResource pdf(byte[] content, String filename) {
+        return new ByteArrayResource(content) {
             @Override
             public String getFilename() {
                 return filename;

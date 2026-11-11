@@ -34,27 +34,25 @@ function RemovePasswordAction() {
   );
 }
 
+export interface UnavailableProtectedFile {
+  file: StirlingFileStub;
+  reason: string;
+  passwordProtected: boolean;
+}
+
 /** Protected inputs remain visible in the Files list even when this tool cannot process them. */
 export function ProtectedPdfToolNotice({
   files,
 }: {
-  files: readonly StirlingFileStub[];
+  files: readonly UnavailableProtectedFile[];
 }) {
   const { t } = useTranslation();
   if (!files.length) return null;
   return (
     <Stack gap="xs" role="list">
-      {files.map((file) => (
+      {files.map(({ file, reason, passwordProtected }) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
-          <Tooltip
-            content={t(
-              "encryptedPdfUnlock.toolUnavailable",
-              "This tool doesn't support encrypted PDFs. Remove the password first.",
-            )}
-            position="top"
-            maxWidth={260}
-            arrow
-          >
+          <Tooltip content={reason} position="bottom" maxWidth={260} arrow>
             <ActionIcon
               variant="quiet"
               accent="warning"
@@ -80,7 +78,7 @@ export function ProtectedPdfToolNotice({
           >
             <PrivateContent>{file.name}</PrivateContent>
           </Text>
-          <RemovePasswordAction />
+          {passwordProtected && <RemovePasswordAction />}
         </Group>
       ))}
     </Stack>

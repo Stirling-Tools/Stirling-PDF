@@ -1924,12 +1924,19 @@ public class ApplicationProperties {
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
                 private boolean allowEditorSaves = true;
+                private RightsManagement rightsManagement = new RightsManagement();
 
                 public boolean accountConnectionsReady() {
                     return enabled
                             && allowAccountConnections
                             && !clientId.isBlank()
                             && !clientSecret.isBlank();
+                }
+
+                @Data
+                public static class RightsManagement {
+                    private boolean enabled = false;
+                    private String helperPath = "/opt/stirling-mip/bin/stirling-mip";
                 }
             }
 

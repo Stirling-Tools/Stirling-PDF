@@ -8,6 +8,20 @@ import {
 import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
+import {
+  connectedAccounts,
+  fetchRightsManagementStatus,
+  getOpenedRightsManagedPdf,
+  openWithOnlyConnectedAccount,
+  isMicrosoftProtectedPdf,
+  protectLikeOriginal,
+  type OpenedRightsManagedPdf,
+} from "@editor/services/rightsManagedPdf";
+import {
+  assertRightsManagedRun,
+  rightsManagedToolRule,
+  rightsManagedWithPasswordError,
+} from "@editor/services/rightsManagedTools";
 
 import type { StirlingFile } from "@editor/types/fileContext";
 import { PdfPermissionFlag } from "@embedpdf/models";
@@ -20,20 +34,54 @@ import {
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 
-const SUPPORTED_ENDPOINTS = new Set([
+const PASSWORD_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
   "/api/v1/security/remove-password",
-  "/api/v1/general/rotate-pdf",
-  "/api/v1/general/remove-pages",
-  "/api/v1/general/rearrange-pages",
-  "/api/v1/general/merge-pdfs",
-  "/api/v1/general/split-pages",
-  "/api/v1/general/split-pdf-by-sections",
-  "/api/v1/general/split-by-size-or-count",
-  "/api/v1/general/split-pdf-by-chapters",
-  "/api/v1/general/split-for-poster-print",
-  "/api/v1/misc/auto-split-pdf",
-  "/api/v1/misc/compress-pdf",
+]);
+
+const {
+  AssembleDocument: assemble,
+  CopyContents: copy,
+  ModifyAnnotations: annotate,
+  ModifyContents: modify,
+} = PdfPermissionFlag;
+
+const SESSION_OPERATIONS = new Map<string, readonly PdfPermissionFlag[]>([
+  ["/api/v1/general/rotate-pdf", [assemble]],
+  ["/api/v1/general/remove-pages", [assemble]],
+  ["/api/v1/general/rearrange-pages", [assemble]],
+  ["/api/v1/general/merge-pdfs", [assemble]],
+  ["/api/v1/general/split-pages", [copy]],
+  ["/api/v1/general/split-pdf-by-sections", [copy]],
+  ["/api/v1/general/split-by-size-or-count", [copy]],
+  ["/api/v1/general/split-pdf-by-chapters", [copy]],
+  ["/api/v1/general/split-for-poster-print", [copy]],
+  ["/api/v1/misc/auto-split-pdf", [copy]],
+  ["/api/v1/misc/compress-pdf", [modify]],
+  ["/api/v1/security/add-watermark", [modify]],
+  ["/api/v1/misc/add-stamp", [modify]],
+  ["/api/v1/misc/add-page-numbers", [modify]],
+  ["/api/v1/general/scale-pages", [modify, annotate]],
+  ["/api/v1/general/crop", [modify, annotate]],
+  ["/api/v1/misc/replace-invert-pdf", [modify]],
+  ["/api/v1/general/remove-image-pdf", [modify]],
+  ["/api/v1/security/auto-redact", [modify]],
+  ["/api/v1/misc/ocr-pdf", [modify]],
+  ["/api/v1/misc/repair", [modify]],
+  ["/api/v1/misc/update-metadata", [modify]],
+  ["/api/v1/misc/flatten", [modify, annotate]],
+  ["/api/v1/security/sanitize-pdf", [modify, annotate]],
+  ["/api/v1/misc/unlock-pdf-forms", [modify, annotate]],
+  ["/api/v1/general/booklet-imposition", [modify, assemble, annotate]],
+  ["/api/v1/general/pdf-to-single-page", [modify, assemble, annotate]],
+  ["/api/v1/general/multi-page-layout", [modify, assemble, annotate]],
+  ["/api/v1/misc/remove-blanks", [assemble, copy]],
+  ["/api/v1/misc/auto-rename", [copy]],
+  ["/api/v1/misc/list-attachments", []],
+  ["/api/v1/misc/extract-attachments", [copy]],
+  ["/api/v1/misc/extract-single-attachment", [copy]],
+  ["/api/v1/misc/add-attachments", [modify]],
+  ["/api/v1/misc/batch-process-attachments", [modify]],
 ]);
 
 async function requestWorkingPdf(
@@ -62,7 +110,18 @@ async function requestWorkingPdf(
 
 /** These interactive operations restore protection before exposing or persisting any result. */
 export function supportsSessionUnlock(endpoint: string | undefined): boolean {
-  return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
+  return (
+    endpoint !== undefined &&
+    (SESSION_OPERATIONS.has(endpoint) || PASSWORD_ENDPOINTS.has(endpoint))
+  );
+}
+
+function allowsOperation(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+): boolean {
+  const required = (endpoint && SESSION_OPERATIONS.get(endpoint)) || [modify];
+  return required.every((flag) => pdfAllows(access, flag));
 }
 
 /**
@@ -71,7 +130,7 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
  * recorded for them: nothing has proved them unencrypted.
  */
 async function ensureAccessUnlessDamaged(
-  file: StirlingFile,
+  file: File,
   signal?: AbortSignal,
 ): Promise<PdfAccess | undefined> {
   try {
@@ -80,6 +139,54 @@ async function ensureAccessUnlessDamaged(
     if (isDamagedPdfError(error) && !(await looksEncryptedFromTrailer(file)))
       return undefined;
     throw error;
+  }
+}
+
+async function unopenedRightsManagedMessage(): Promise<string> {
+  const status = await fetchRightsManagementStatus();
+  if (!status.available)
+    return i18n.t(
+      "rightsManagedPdf.unavailable",
+      "This server cannot open Microsoft Purview protected PDFs. Ask your administrator to turn it on, or open the file in a Microsoft 365 app.",
+    );
+  if (connectedAccounts(status).length === 0)
+    return i18n.t(
+      "rightsManagedPdf.signInFirst",
+      "Sign in with Microsoft in the viewer to open this Microsoft Purview protected PDF, then run the tool again.",
+    );
+  return i18n.t(
+    "rightsManagedPdf.openFirst",
+    "Open this Microsoft Purview protected PDF in the viewer first, then run the tool again.",
+  );
+}
+
+async function preflightRightsManaged(
+  files: readonly StirlingFile[],
+  endpoint: string | undefined,
+  combinesFiles: boolean,
+): Promise<void> {
+  const protectedFiles: StirlingFile[] = [];
+  for (const file of files) {
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (await isMicrosoftProtectedPdf(file)) protectedFiles.push(file);
+  }
+  if (protectedFiles.length === 0) return;
+  const rule = rightsManagedToolRule(endpoint);
+  if (!rule.supported) throw new Error(rule.reason);
+  if (combinesFiles && protectedFiles.length > 1)
+    throw new Error(
+      i18n.t(
+        "rightsManagedPdf.mixedProtection",
+        "Process Microsoft Purview protected PDFs one at a time. Protected files: {{files}}.",
+        { files: protectedFiles.map((file) => file.name).join(", ") },
+      ),
+    );
+  for (const file of protectedFiles) {
+    const opened =
+      getOpenedRightsManagedPdf(file) ??
+      (await openWithOnlyConnectedAccount(file));
+    if (!opened) throw new Error(await unopenedRightsManagedMessage());
+    await assertRightsManagedRun(opened, endpoint);
   }
 }
 
@@ -92,6 +199,7 @@ export async function preflightPdfOperation(
   signal?: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
 ): Promise<boolean> {
+  await preflightRightsManaged(files, endpoint, combinesFiles);
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
     endpoint === "/api/v1/security/add-password" ||
@@ -99,6 +207,7 @@ export async function preflightPdfOperation(
   for (const file of files) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) continue;
+    if (getOpenedRightsManagedPdf(file)) continue;
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
@@ -123,6 +232,12 @@ export async function preflightPdfOperation(
       );
     protectedFiles.push(file);
   }
+  if (
+    combinesFiles &&
+    protectedFiles.length > 0 &&
+    files.some((file) => getOpenedRightsManagedPdf(file))
+  )
+    throw rightsManagedWithPasswordError();
   if (combinesFiles && protectedFiles.length > 1)
     throw new Error(
       i18n.t(
@@ -136,19 +251,11 @@ export async function preflightPdfOperation(
     const access = getPdfAccess(file);
     const needsOwner = endpoint?.includes("password")
       ? !hasPdfPermissionOverride(access)
-      : !pdfAllows(access, operationPermission(endpoint));
+      : !allowsOperation(access, endpoint);
     if (needsOwner && !(await requestOwner(file))) return false;
   }
   if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
   return true;
-}
-
-function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
-  return endpoint === "/api/v1/misc/compress-pdf"
-    ? PdfPermissionFlag.ModifyContents
-    : endpoint?.includes("split")
-      ? PdfPermissionFlag.CopyContents
-      : PdfPermissionFlag.AssembleDocument;
 }
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
@@ -174,11 +281,16 @@ export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
  * Navigation cancels fresh permission reads; preparation stops on explicit cancellation or source closure.
  */
 export async function prepareUnlockedFile(
-  file: StirlingFile,
+  file: File,
   endpoint: string | undefined,
   inspectionSignal?: AbortSignal,
   cancelToken?: CancelToken,
 ): Promise<File> {
+  const rightsManaged = getOpenedRightsManagedPdf(file);
+  if (rightsManaged) {
+    await assertRightsManagedRun(rightsManaged, endpoint);
+    return rightsManaged.plaintext;
+  }
   if (
     endpoint === "/api/v1/security/remove-password" ||
     endpoint === "/api/v1/security/add-password"
@@ -204,8 +316,7 @@ export async function prepareUnlockedFile(
         "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet.",
       ),
     );
-  const permission = operationPermission(endpoint);
-  if (!pdfAllows(access, permission))
+  if (!allowsOperation(access, endpoint))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.restrictedOperation",
@@ -238,6 +349,63 @@ function protectionRestoreError(): Error {
   );
 }
 
+function rightsManagedRestoreError(): Error {
+  return new Error(
+    i18n.t(
+      "rightsManagedPdf.protectFailed",
+      "Unable to re-apply Microsoft Purview protection. No unprotected result was saved.",
+    ),
+  );
+}
+
+async function protectEachPdf(
+  outputs: File[],
+  protect: (output: File) => Promise<File>,
+  failure: () => Error,
+): Promise<File[]> {
+  const protectedFiles: File[] = [];
+  for (const output of outputs) {
+    if (await zipFileService.isZipResponse(output)) {
+      const extracted = await zipFileService.extractAllFiles(output);
+      if (
+        !extracted.success ||
+        extracted.errors.length > 0 ||
+        extracted.extractedCount !== extracted.totalFiles ||
+        extracted.extractedFiles.length === 0
+      )
+        throw failure();
+      const protectedEntries: File[] = [];
+      for (const entry of extracted.extractedFiles) {
+        protectedEntries.push(await protect(entry));
+      }
+      const { zipFile } = await zipFileService.createZipFromFiles(
+        protectedEntries,
+        output.name,
+      );
+      protectedFiles.push(zipFile);
+    } else {
+      protectedFiles.push(await protect(output));
+    }
+  }
+  return protectedFiles;
+}
+
+async function protectRightsManagedOutput(
+  output: File,
+  source: OpenedRightsManagedPdf,
+): Promise<File> {
+  if (
+    output.type !== "application/pdf" &&
+    !output.name.toLowerCase().endsWith(".pdf")
+  )
+    throw rightsManagedRestoreError();
+  try {
+    return await protectLikeOriginal(source, output);
+  } catch {
+    throw rightsManagedRestoreError();
+  }
+}
+
 async function protectPdfOutput(
   output: File,
   source: File,
@@ -268,6 +436,24 @@ export async function protectUnlockedResults(
   inputs: readonly File[],
   endpoint: string | undefined,
 ): Promise<File[]> {
+  const rightsSources = inputs
+    .map((file) => getOpenedRightsManagedPdf(file))
+    .filter((opened): opened is OpenedRightsManagedPdf => Boolean(opened));
+  if (rightsSources.length > 1) throw rightsManagedRestoreError();
+  if (
+    rightsSources.length === 1 &&
+    inputs.some(
+      (file) =>
+        !getOpenedRightsManagedPdf(file) && getPdfAccess(file)?.encrypted,
+    )
+  )
+    throw rightsManagedWithPasswordError();
+  if (rightsSources.length === 1)
+    return protectEachPdf(
+      outputs,
+      (output) => protectRightsManagedOutput(output, rightsSources[0]),
+      rightsManagedRestoreError,
+    );
   if (
     endpoint === "/api/v1/security/remove-password" ||
     endpoint === "/api/v1/security/add-password"
@@ -283,31 +469,11 @@ export async function protectUnlockedResults(
   const source = inputs.find((file) => getPdfAccess(file)?.encrypted);
   if (!source) return outputs;
   const access = getPdfAccess(source)!;
-  const protectedFiles: File[] = [];
-  for (const output of outputs) {
-    if (await zipFileService.isZipResponse(output)) {
-      const extracted = await zipFileService.extractAllFiles(output);
-      if (
-        !extracted.success ||
-        extracted.errors.length > 0 ||
-        extracted.extractedCount !== extracted.totalFiles ||
-        extracted.extractedFiles.length === 0
-      )
-        throw protectionRestoreError();
-      const protectedEntries: File[] = [];
-      for (const entry of extracted.extractedFiles) {
-        protectedEntries.push(await protectPdfOutput(entry, source, access));
-      }
-      const { zipFile } = await zipFileService.createZipFromFiles(
-        protectedEntries,
-        output.name,
-      );
-      protectedFiles.push(zipFile);
-    } else {
-      protectedFiles.push(await protectPdfOutput(output, source, access));
-    }
-  }
-  return protectedFiles;
+  return protectEachPdf(
+    outputs,
+    (output) => protectPdfOutput(output, source, access),
+    protectionRestoreError,
+  );
 }
 
 /** Session credentials authenticate the source without selecting which passwords to remove. */

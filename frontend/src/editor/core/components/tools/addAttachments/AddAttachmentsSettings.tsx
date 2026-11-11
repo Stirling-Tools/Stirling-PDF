@@ -1,7 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { AddAttachmentsParameters } from "@editor/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import { useAttachmentManager } from "@editor/hooks/tools/addAttachments/useAttachmentManager";
 import { AttachmentManagerUI } from "@editor/components/tools/addAttachments/AttachmentManagerUI";
+import ErrorNotification from "@editor/components/tools/shared/ErrorNotification";
 
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
@@ -30,10 +31,19 @@ const AddAttachmentsSettings = ({
     [onFileUpdated],
   );
 
+  const [error, setError] = useState<string | null>(null);
+  const handleError = useCallback(
+    (message: string) => {
+      setError(message);
+      onError?.(message);
+    },
+    [onError],
+  );
+
   const manager = useAttachmentManager({
     activeFile,
     onFileUpdated: handleFileUpdated,
-    onError,
+    onError: handleError,
   });
 
   const handleStageFiles = (files: File[]) => {
@@ -43,6 +53,7 @@ const AddAttachmentsSettings = ({
   };
 
   const handleSaveDraft = async () => {
+    setError(null);
     const success = await manager.saveDraft(parameters.convertToPdfA3b);
     if (success) {
       onParameterChange("attachments", []);
@@ -50,27 +61,31 @@ const AddAttachmentsSettings = ({
   };
 
   return (
-    <AttachmentManagerUI
-      rows={manager.rows}
-      hasChanges={manager.hasChanges}
-      pendingChangesCount={manager.pendingChangesCount}
-      isLoading={manager.isLoading}
-      isSaving={manager.isSaving}
-      activeAction={manager.activeAction}
-      convertToPdfA3b={parameters?.convertToPdfA3b || false}
-      disabled={disabled}
-      onStageFiles={handleStageFiles}
-      onToggleDeleteRow={manager.toggleDeleteRow}
-      onRestoreRow={manager.restoreRow}
-      onRenameRow={manager.renameRow}
-      onExtractSingle={manager.extractSingle}
-      onExtractAllZip={manager.extractAllZip}
-      onSaveDraft={handleSaveDraft}
-      onDiscardDraft={manager.discardDraft}
-      onConvertToPdfA3bChange={(val) =>
-        onParameterChange("convertToPdfA3b", val)
-      }
-    />
+    <>
+      <ErrorNotification error={error} onClose={() => setError(null)} />
+      <AttachmentManagerUI
+        rows={manager.rows}
+        hasChanges={manager.hasChanges}
+        pendingChangesCount={manager.pendingChangesCount}
+        isLoading={manager.isLoading}
+        isSaving={manager.isSaving}
+        activeAction={manager.activeAction}
+        convertToPdfA3b={parameters?.convertToPdfA3b || false}
+        disabled={disabled}
+        onStageFiles={handleStageFiles}
+        onToggleDeleteRow={manager.toggleDeleteRow}
+        onRestoreRow={manager.restoreRow}
+        onRenameRow={manager.renameRow}
+        onExtractSingle={manager.extractSingle}
+        onExtractAllZip={manager.extractAllZip}
+        extractBlockedReason={manager.extractBlockedReason}
+        onSaveDraft={handleSaveDraft}
+        onDiscardDraft={manager.discardDraft}
+        onConvertToPdfA3bChange={(val) =>
+          onParameterChange("convertToPdfA3b", val)
+        }
+      />
+    </>
   );
 };
 
