@@ -1,10 +1,23 @@
-import type { ReactElement } from "react";
+import { lazy, type ReactElement } from "react";
+import { Route } from "react-router-dom";
+import { PORTAL_BASENAME } from "@editor/routes/portalBasename";
+
+// Its own chunk: most sessions never open it.
+const DesktopProcessor = lazy(async () => {
+  const m = await import("@processor/DesktopProcessor");
+  return { default: m.DesktopProcessor };
+});
 
 /**
- * Desktop inherits proprietary's App but must NOT ship the portal. Shadowing
- * the seam back to empty means the desktop bundle never references PortalApp,
- * so the portal chunk is not emitted (and @processor never has to resolve there).
+ * The Processor beside the editor, as on the web. Desktop has no Enterprise
+ * page, and links accounts in the app rather than through a callback page.
  */
 export function getAdminRouteExtensions(): ReactElement[] {
-  return [];
+  return [
+    <Route
+      key="portal"
+      path={`${PORTAL_BASENAME}/*`}
+      element={<DesktopProcessor />}
+    />,
+  ];
 }

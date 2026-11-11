@@ -157,9 +157,17 @@ export async function installTauri(page: Page, options: TauriStubOptions = {}) {
             w.__openedPaths = [];
             return paths;
           }
+          // Rust's non-destructive read of the same queue.
           case "get_opened_files":
+            return [...(w.__openedPaths ?? [])];
           case "pop_window_file_ids":
             return [];
+          case "plugin:dialog|message":
+            (w.__dialogs ??= []).push(args);
+            return w.__dialogAnswer ?? null;
+          case "plugin:window|destroy":
+            w.__destroyed = true;
+            return null;
           case "get_desktop_os":
             return "windows";
           case "get_app_version":
