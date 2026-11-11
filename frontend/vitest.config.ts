@@ -66,6 +66,7 @@ export default defineConfig({
     projects: [
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
         test: {
           name: "core",
           ...TEST_DEFAULTS,
@@ -92,6 +93,7 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
         test: {
           name: "processor",
           ...TEST_DEFAULTS,
@@ -117,6 +119,7 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
         test: {
           name: "proprietary",
           ...TEST_DEFAULTS,
@@ -140,6 +143,7 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
@@ -163,6 +167,7 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
