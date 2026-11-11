@@ -46,6 +46,27 @@ class ConnectedDriveControllerTest {
     @ParameterizedTest
     @CsvSource(
             nullValues = "null",
+            value = {
+                "'..', i, null, null",
+                "'.', i, null, null",
+                "d, '..', null, null",
+                "d, '.', null, null",
+                "d, null, '..', x.pdf",
+                "d, null, '.', x.pdf"
+            })
+    void idsThatCouldLeaveTheGraphPathAreRefused(
+            String driveId, String itemId, String parentId, String name) {
+        assertThatThrownBy(
+                        () ->
+                                ConnectedDriveController.target(
+                                        driveId, itemId, "\"e\"", parentId, name))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("invalid drive or item ID");
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            nullValues = "null",
             value = {"' ', i, null, null", "d, null, null, x.pdf"})
     void aDriveAndATargetAreRequired(String driveId, String itemId, String parentId, String name) {
         assertThatThrownBy(
