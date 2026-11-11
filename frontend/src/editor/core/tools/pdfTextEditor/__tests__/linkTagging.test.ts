@@ -11,7 +11,11 @@ import {
   vi,
 } from "vitest";
 import { linkTexts } from "@editor/tools/pdfTextEditor/commands/linkText";
-import { TagLinkCommand } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
+import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/SetLinkContentsCommand";
+import {
+  TagLinkCommand,
+  taggableLinks,
+} from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import {
   TagPageContentCommand,
   hasUntaggedContent,
@@ -27,6 +31,7 @@ import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString"
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { innerTags } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -349,5 +354,81 @@ describe("tagging links", () => {
         doc,
       ),
     ).toThrow();
+  });
+});
+
+describe("describing links", () => {
+  function linkTag(doc: EditorDocument) {
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    return innerTags(doc, run.snapshot()).find(
+      (tag) => tag.role.type === "Link",
+    );
+  }
+
+  test("shows the link a tagged Link holds, and its description", async () => {
+    const doc = await open(taggedPdf());
+    new HistoryStack().execute(
+      new TagLinkCommand({ pageIndex: 0, annotation: LINK }),
+      doc,
+    );
+    expect(linkTag(doc)?.link).toEqual({
+      annotations: [LINK],
+      description: "stirlingpdf.com",
+      editable: true,
+    });
+  });
+
+  test("saves an edited description, and undoing it restores the one before", async () => {
+    const doc = await open(taggedPdf());
+    const history = new HistoryStack();
+    history.execute(
+      new TagLinkCommand({ pageIndex: 0, annotation: LINK }),
+      doc,
+    );
+    history.execute(
+      new SetLinkContentsCommand({
+        pageIndex: 0,
+        annotations: [LINK],
+        contents: "Stirling PDF home page",
+      }),
+      doc,
+    );
+    expect(contents(await saved(doc))).toBe("Stirling PDF home page");
+    history.undo(doc);
+    expect(linkTag(doc)?.link?.description).toBe("stirlingpdf.com");
+  });
+
+  test("describes a link the file already gives an element without moving it", async () => {
+    const doc = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1 /Contents (Old)"),
+        parentTree: " 1 10 0 R",
+      }),
+    );
+    expect(linkTag(doc)?.link?.description).toBe("Old");
+    new HistoryStack().execute(
+      new SetLinkContentsCommand({
+        pageIndex: 0,
+        annotations: [LINK],
+        contents: "New",
+      }),
+      doc,
+    );
+    expect(doc.annotationEdits()).toEqual([
+      { pageIndex: 0, annotation: LINK, contents: "New" },
+    ]);
+    const pdf = await saved(doc);
+    expect(contents(pdf)).toBe("New");
+    expect(holder(pdf)).toBe(10);
+  });
+
+  test("lists a run's untagged links, and no other run's", async () => {
+    const doc = await open(taggedPdf());
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    expect(taggableLinks(doc, 0, run.id).map((l) => l.annotation)).toEqual([
+      LINK,
+    ]);
+    expect(taggableLinks(doc, 0, "another run")).toEqual([]);
   });
 });

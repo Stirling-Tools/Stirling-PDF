@@ -911,6 +911,14 @@ export class PageStructure {
     this.linkHolders.set(annotation, mcid);
   }
 
+  /** The link annotations element `key` holds, as the session has it. */
+  linksHeldBy(key: string): number[] {
+    return this.links().flatMap(({ annotation, holder }) => {
+      const held = holder ?? this.sessionLinkHolder(annotation)?.key;
+      return held === key ? [annotation] : [];
+    });
+  }
+
   /** The link's /Contents as it will be saved: the session's, else the file's. Throws as holdLink does for an unknown annotation. */
   linkContents(annotation: number): string | null {
     if (this.linkContentsEdits.has(annotation)) {

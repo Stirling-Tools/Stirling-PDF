@@ -20,9 +20,16 @@ import { isInlineType } from "@editor/tools/pdfTextEditor/model/PageStructure";
  * or by giving it to the Link that text already is. `contents` is that text,
  * for a link with no /Contents.
  */
-type LinkTagPlan =
-  | { kind: "cut"; text: LinkText; contents: string }
-  | { kind: "existing"; mcid: number; contents: string };
+type LinkTagPlan = { text: LinkText; contents: string } & (
+  | { kind: "cut" }
+  | { kind: "existing"; mcid: number }
+);
+
+/** A link TagLinkCommand can tag, and the text it covers. */
+export interface TaggableLink {
+  annotation: number;
+  text: LinkText;
+}
 
 interface AppliedPlan {
   cut: TagTextRangeCommand | null;
@@ -110,18 +117,24 @@ export class TagLinkCommand implements Command {
   }
 }
 
-/** The link annotations TagLinkCommand can tag on a page, which must already be read. */
+/**
+ * The links TagLinkCommand can tag on a page, which must already be read;
+ * with `runId`, only those over that run's text.
+ */
 export function taggableLinks(
   doc: EditorDocument,
   pageIndex: number,
-): number[] {
+  runId?: string,
+): TaggableLink[] {
   const structure = doc.structure(pageIndex);
   const untagged = structure
     .links()
     .flatMap(({ annotation }) =>
       structure.linkHeld(annotation) ? [] : [annotation],
     );
-  return [...planLinkTags(doc, pageIndex, untagged).keys()];
+  return [...planLinkTags(doc, pageIndex, untagged, runId)].map(
+    ([annotation, { text }]) => ({ annotation, text }),
+  );
 }
 
 /**
@@ -133,6 +146,7 @@ function planLinkTags(
   doc: EditorDocument,
   pageIndex: number,
   annotations: readonly number[],
+  runId?: string,
 ): Map<number, LinkTagPlan> {
   const structure = doc.structure(pageIndex);
   const out = new Map<number, LinkTagPlan>();
@@ -147,7 +161,7 @@ function planLinkTags(
   const page = doc.page(pageIndex);
   for (const [annotation, text] of linkTexts(doc, pageIndex, links)) {
     const run = page.findRun(text.runId);
-    if (!run) continue;
+    if (!run || (runId !== undefined && run.id !== runId)) continue;
     const contents = run.text
       .slice(text.start, text.end)
       .replace(/\s+/g, " ")
@@ -156,11 +170,12 @@ function planLinkTags(
       (stretch) => stretch.start <= text.start && stretch.end >= text.end,
     )?.element;
     if (owner?.type === "Link") {
-      out.set(annotation, { kind: "existing", mcid: owner.mcids[0], contents });
+      const mcid = owner.mcids[0];
+      out.set(annotation, { kind: "existing", mcid, text, contents });
       continue;
     }
-    const { runId, start, end } = text;
-    if (rangeTagTypes(doc, pageIndex, runId, start, end).some(isInlineType)) {
+    const { start, end } = text;
+    if (rangeTagTypes(doc, pageIndex, run.id, start, end).some(isInlineType)) {
       out.set(annotation, { kind: "cut", text, contents });
     }
   }

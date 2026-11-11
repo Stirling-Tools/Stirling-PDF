@@ -149,7 +149,7 @@ export class TagPageContentCommand implements Command {
   private tagLinks(doc: EditorDocument): void {
     if (this.links === null) {
       this.links = [];
-      for (const annotation of taggableLinks(doc, this.pageIndex)) {
+      for (const { annotation } of taggableLinks(doc, this.pageIndex)) {
         const link = new TagLinkCommand({
           pageIndex: this.pageIndex,
           annotation,
