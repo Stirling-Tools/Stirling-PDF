@@ -20,18 +20,22 @@ function Where() {
 async function launch(path = "/") {
   // Once per launch is module state, so each case is a fresh launch.
   vi.resetModules();
-  const { ProcessorStartupView } =
-    await import("@editor/components/ProcessorStartupView");
-  window.history.replaceState({}, "", path);
+  const { RootGate } = await import("@editor/routes/RootGate");
   const view = render(
     <MemoryRouter initialEntries={[path]}>
-      <ProcessorStartupView />
       <Routes>
-        <Route path="*" element={<Where />} />
+        <Route
+          path="*"
+          element={
+            <RootGate>
+              <Where />
+            </RootGate>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   );
-  return { ...view, ProcessorStartupView };
+  return { ...view, RootGate };
 }
 
 beforeEach(() => {
@@ -50,6 +54,12 @@ it("leaves the editor alone for any other start", async () => {
   expect(screen.getByLabelText("Path")).toHaveTextContent(/^\/$/);
 });
 
+it("holds the editor back until the connection is known", async () => {
+  h.server = { connected: false, settled: false };
+  await launch();
+  expect(screen.queryByLabelText("Path")).toBeNull();
+});
+
 it("stays in the editor without a connected server", async () => {
   h.server = { connected: false, settled: true };
   await launch();
@@ -62,14 +72,20 @@ it("keeps a deep link the app was opened on", async () => {
 });
 
 it("decides once, so coming back to the editor does not bounce", async () => {
-  const { unmount, ProcessorStartupView } = await launch();
+  const { unmount, RootGate } = await launch();
   unmount();
 
   render(
     <MemoryRouter initialEntries={["/"]}>
-      <ProcessorStartupView />
       <Routes>
-        <Route path="*" element={<Where />} />
+        <Route
+          path="*"
+          element={
+            <RootGate>
+              <Where />
+            </RootGate>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   );

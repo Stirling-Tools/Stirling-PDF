@@ -1,28 +1,29 @@
 import { expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Suspense } from "react";
 
 vi.mock("@processor/DesktopProcessor", () => ({
   DesktopProcessor: () => <p>Processor page</p>,
 }));
-vi.mock("@editor/components/layout/AppRoot", () => ({
-  AppRoot: () => <p>Editor app</p>,
-}));
 
-import Landing from "@editor/routes/Landing";
+import { getAdminRouteExtensions } from "@editor/routes/adminRouteExtensions";
 
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/*" element={<Landing />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          {getAdminRouteExtensions()}
+          <Route path="*" element={<p>Editor app</p>} />
+        </Routes>
+      </Suspense>
     </MemoryRouter>,
   );
 }
 
 it.each(["/processor", "/processor/pipelines/p-1"])(
-  "renders the Processor inside the app on %s",
+  "renders the Processor instead of the editor on %s",
   async (path) => {
     renderAt(path);
     expect(await screen.findByText("Processor page")).toBeInTheDocument();
@@ -31,7 +32,7 @@ it.each(["/processor", "/processor/pipelines/p-1"])(
 );
 
 it.each(["/", "/settings/billing", "/processorish"])(
-  "renders the editor app on %s",
+  "renders the editor on %s",
   (path) => {
     renderAt(path);
     expect(screen.getByText("Editor app")).toBeInTheDocument();
