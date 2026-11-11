@@ -28,9 +28,6 @@ export type ToolFormat =
   | "JAVASCRIPT"
   | "EBOOK"
   | "EMAIL"
-  | "POSTSCRIPT"
-  | "PCL"
-  | "XPS"
   | "VIDEO"
   | "CBZ"
   | "CBR"
@@ -55,9 +52,6 @@ export const TOOL_FORMATS = [
   "JAVASCRIPT",
   "EBOOK",
   "EMAIL",
-  "POSTSCRIPT",
-  "PCL",
-  "XPS",
   "VIDEO",
   "CBZ",
   "CBR",
@@ -81,7 +75,6 @@ export const TOOL_FORMAT_EXTENSIONS = {
     "svg",
     "psd",
     "ai",
-    "eps",
   ],
   ZIP: ["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"],
   WORD: ["doc", "docx", "odt", "rtf"],
@@ -96,9 +89,6 @@ export const TOOL_FORMAT_EXTENSIONS = {
   JAVASCRIPT: ["js", "jsx"],
   EBOOK: ["epub", "mobi", "azw3", "fb2", "txt", "docx"],
   EMAIL: ["eml", "msg"],
-  POSTSCRIPT: ["ps", "eps"],
-  PCL: ["pcl", "pxl"],
-  XPS: ["xps", "oxps"],
   VIDEO: ["mp4", "webm", "avi", "mov", "mkv"],
   CBZ: ["cbz"],
   CBR: ["cbr"],
@@ -305,28 +295,6 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
-  "/api/v1/convert/pdf/vector": {
-    accepts: ["PDF"],
-    produces: "IMAGE",
-    arity: "SISO",
-    cases: [
-      {
-        when: [{ param: "outputFormat", matches: ["ps"], default: "eps" }],
-        produces: "POSTSCRIPT",
-        arity: "SISO",
-      },
-      {
-        when: [{ param: "outputFormat", matches: ["pcl"], default: "eps" }],
-        produces: "PCL",
-        arity: "SISO",
-      },
-      {
-        when: [{ param: "outputFormat", matches: ["xps"], default: "eps" }],
-        produces: "XPS",
-        arity: "SISO",
-      },
-    ],
-  },
   "/api/v1/convert/pdf/word": {
     accepts: ["PDF"],
     produces: "WORD",
@@ -363,11 +331,6 @@ export const TOOL_IO: ToolIOTable = {
   },
   "/api/v1/convert/url/pdf": {
     accepts: ["NONE"],
-    produces: "PDF",
-    arity: "SISO",
-  },
-  "/api/v1/convert/vector/pdf": {
-    accepts: ["POSTSCRIPT"],
     produces: "PDF",
     arity: "SISO",
   },

@@ -33,9 +33,6 @@ class ToolFormat(StrEnum):
     JAVASCRIPT = "JAVASCRIPT"
     EBOOK = "EBOOK"
     EMAIL = "EMAIL"
-    POSTSCRIPT = "POSTSCRIPT"
-    PCL = "PCL"
-    XPS = "XPS"
     VIDEO = "VIDEO"
     CBZ = "CBZ"
     CBR = "CBR"
@@ -127,28 +124,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.PDF_TO_UA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(
-        accepts=[ToolFormat.PDF],
-        produces=ToolFormat.IMAGE,
-        arity=ToolArity.SISO,
-        cases=[
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["ps"], default="eps")],
-                produces=ToolFormat.POSTSCRIPT,
-                arity=ToolArity.SISO,
-            ),
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["pcl"], default="eps")],
-                produces=ToolFormat.PCL,
-                arity=ToolArity.SISO,
-            ),
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["xps"], default="eps")],
-                produces=ToolFormat.XPS,
-                arity=ToolArity.SISO,
-            ),
-        ],
-    ),
     ToolEndpoint.PDF_TO_WORD: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.WORD, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XLSX: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.EXCEL, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XML: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.XML, arity=ToolArity.SISO),
@@ -165,9 +140,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.URL_TO_PDF: ToolIOSpec(accepts=[ToolFormat.NONE], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.VECTOR_TO_PDF: ToolIOSpec(
-        accepts=[ToolFormat.POSTSCRIPT], produces=ToolFormat.PDF, arity=ToolArity.SISO
-    ),
     ToolEndpoint.BOOKLET_IMPOSITION: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),

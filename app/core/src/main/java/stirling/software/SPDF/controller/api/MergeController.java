@@ -233,7 +233,7 @@ public class MergeController {
     @StandardPdfResponse
     @ToolIO(
             accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
-            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai/eps have none.
+            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai has none.
             inputExtensions = {
                 "pdf", "png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp", "svg", "psd"
             },
