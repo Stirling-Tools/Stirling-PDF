@@ -1,7 +1,6 @@
 package stirling.software.proprietary.model.api.ua;
 
 import java.util.List;
-import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -70,12 +69,6 @@ public class AccessibilityReport {
         private int passed;
         private int rulesInProfile;
         private int rulesFailed;
-
-        @Schema(
-                description =
-                        "Rules in the profile counted by their comma-joined veraPDF tags, for"
-                                + " totalling rules per area")
-        private Map<String, Integer> rulesByTags = Map.of();
     }
 
     @Data

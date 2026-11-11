@@ -93,7 +93,6 @@ public class AccessibilityAuditService {
         checks.setPassed(Math.max(0, validation.totalChecks() - validation.totalFailures()));
         checks.setRulesInProfile(validation.rulesInProfile());
         checks.setRulesFailed(validation.issues().size());
-        checks.setRulesByTags(validation.rulesByTags());
         return checks;
     }
 

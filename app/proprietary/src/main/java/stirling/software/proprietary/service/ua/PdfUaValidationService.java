@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,9 +43,8 @@ public class PdfUaValidationService {
     private static final Map<String, ClauseInfo> CLAUSES = buildClauseTable();
 
     /**
-     * Failed assertions veraPDF keeps per rule, which is where pages and locations come from. It
-     * still counts every failure, so occurrence totals are exact; only the page list is a sample.
-     * -1 would keep up to 10,000 in total, letting the first rules checked crowd out the rest.
+     * Failures kept per rule, the sample pages come from; totals stay exact. -1 would keep 10,000
+     * in all, letting the first rules checked crowd out the rest.
      */
     private static final int MAX_FAILURES_KEPT_PER_RULE = 100;
 
@@ -84,14 +82,7 @@ public class PdfUaValidationService {
             issue.setSeverity("error");
             issue.setClause("n/a");
             return new UaValidationResult(
-                    profile.displayName(),
-                    false,
-                    List.of(issue),
-                    0,
-                    0,
-                    0,
-                    Map.of(),
-                    issue.getMessage());
+                    profile.displayName(), false, List.of(issue), 0, 0, 0, issue.getMessage());
         }
     }
 
@@ -188,29 +179,12 @@ public class PdfUaValidationService {
                 total,
                 result.getTotalAssertions(),
                 rulesInProfile,
-                rulesByTags(validationProfile),
                 null);
     }
 
-    private static Map<String, Integer> rulesByTags(ValidationProfile validationProfile) {
-        Map<String, Integer> counts = new TreeMap<>();
-        if (validationProfile == null) {
-            return counts;
-        }
-        for (Rule rule : validationProfile.getRules()) {
-            String tags =
-                    rule.getTagsSet() == null
-                            ? ""
-                            : String.join(",", new TreeSet<>(rule.getTagsSet()));
-            counts.merge(tags, 1, Integer::sum);
-        }
-        return counts;
-    }
-
     /**
-     * Replaces the logged occurrence counts with veraPDF's own per-rule totals, since it logs at
-     * most 100 assertions per rule, and marks those issues' page lists incomplete. Returns the
-     * corrected total.
+     * Swaps logged counts for veraPDF's per-rule totals and marks capped page lists incomplete,
+     * since it logs at most 100 assertions per rule. Returns the corrected total.
      */
     static int applyFullFailureCounts(
             Map<String, AccessibilityIssue> grouped,
