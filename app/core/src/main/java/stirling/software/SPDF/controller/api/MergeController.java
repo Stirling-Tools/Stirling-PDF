@@ -295,15 +295,44 @@ public class MergeController {
                 }
             }
 
+            int tocOffset = 0;
             if (generateTocPage) {
-                File tocDocument = generateToc(toFileWithPageCount(files));
-                inputPaths.addFirst(tocDocument.toPath());
+                MultipartFileWithPdfPageCount[] fileWithPageCount = toFileWithPageCount(files);
+
+                File tocPage = tempFileManager.createTempFile(".pdf");
+
+                int tocFilesToGenerate = (fileWithPageCount.length / 32) + 1;
+                int totalPages = tocFilesToGenerate + 1;
+
+                try (PDDocument document = new PDDocument()) {
+                    for (int i = 0; i < tocFilesToGenerate; i++) {
+                        totalPages +=
+                                addTocPage(
+                                        Arrays.copyOfRange(
+                                                fileWithPageCount,
+                                                (i * 32),
+                                                Math.min((i * 32) + 31, fileWithPageCount.length)),
+                                        document,
+                                        totalPages,
+                                        i == 0);
+                    }
+
+                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                        document.save(baos);
+
+                        Files.write(tocPage.toPath(), baos.toByteArray());
+                    }
+                }
+
+                tocOffset = tocFilesToGenerate;
+                inputPaths.addFirst(tocPage.toPath());
             }
 
             int[] pageCounts;
             try {
                 pageCounts =
-                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
+                        mergeWithJpdfium(
+                                inputPaths, files, generateToc, tocOffset, mt.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -401,33 +430,6 @@ public class MergeController {
             }
         }
         return result.toArray(MultipartFileWithPdfPageCount[]::new);
-    }
-
-    private File generateToc(MultipartFileWithPdfPageCount[] files) throws IOException {
-        File tocPage = tempFileManager.createTempFile(".pdf");
-
-        int filesToGenerate = (files.length / 32) + 1;
-        int totalPages = filesToGenerate + 1;
-
-        try (PDDocument document = new PDDocument()) {
-            for (int i = 0; i < filesToGenerate; i++) {
-                totalPages +=
-                        addTocPage(
-                                Arrays.copyOfRange(
-                                        files, (i * 32), Math.min((i * 32) + 31, files.length)),
-                                document,
-                                totalPages,
-                                i == 0);
-            }
-
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                document.save(baos);
-
-                Files.write(tocPage.toPath(), baos.toByteArray());
-            }
-        }
-
-        return tocPage;
     }
 
     private static int addTocPage(
@@ -617,7 +619,11 @@ public class MergeController {
     }
 
     private int[] mergeWithJpdfium(
-            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
+            List<Path> inputPaths,
+            MultipartFile[] files,
+            boolean generateToc,
+            int tocOffset,
+            Path outputPath)
             throws IOException {
         if (inputPaths.isEmpty()) {
             try (PdfDocument empty = PdfDocument.open(new byte[0])) {
@@ -645,7 +651,8 @@ public class MergeController {
             }
 
             BookmarkTree combinedTree =
-                    buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
+                    buildCombinedBookmarkTree(
+                            files, pageOffsets, tocOffset, sourceBookmarks, generateToc);
 
             try (PdfDocument merged = PdfMerge.merge(docs)) {
                 if (combinedTree.entries().isEmpty()) {
@@ -670,13 +677,14 @@ public class MergeController {
     private BookmarkTree buildCombinedBookmarkTree(
             MultipartFile[] files,
             int[] pageOffsets,
+            int tocOffset,
             List<List<Bookmark>> sourceBookmarks,
             boolean generateToc) {
         BookmarkTree.Builder builder = BookmarkTree.builder();
 
         if (generateToc) {
             for (int i = 0; i < files.length; i++) {
-                builder.add(getTocTitle(files[i], i), pageOffsets[i]);
+                builder.add(getTocTitle(files[i], i), pageOffsets[i + tocOffset]);
             }
         }
 
