@@ -343,7 +343,7 @@ test.describe("Saving files opened from OneDrive", () => {
 
     await expect(card.getByTestId("file-card-save-status")).toBeVisible();
     await expect(
-      card.getByRole("button", { name: "Download a copy" }),
+      card.getByRole("button", { name: "Download", exact: true }),
     ).toBeVisible();
     await expect(sidebarUnsavedDot(page)).toBeVisible();
     await shot(page, "5-file-card");
