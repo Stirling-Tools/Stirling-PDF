@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.officeconvert.memory.Admission;
@@ -96,7 +97,8 @@ public class OfficeToPdfService {
                 result.pages(),
                 result.warnings().size());
         if (result.truncated() || result.pageLimitReached()) {
-            throw new IOException("Only part of " + in.getFileName() + " could be converted");
+            throw ExceptionUtils.createConversionIncompleteException(
+                    String.valueOf(in.getFileName()));
         }
     }
 
