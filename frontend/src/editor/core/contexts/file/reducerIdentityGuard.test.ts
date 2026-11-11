@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { MockInstance } from "vitest";
 import { withReducerIdentityGuard } from "@editor/contexts/file/FileReducer";
 import type {
   FileContextState,
@@ -25,7 +26,7 @@ function baseState(): FileContextState {
   };
 }
 
-const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+const guardErrors = (spy: MockInstance<typeof console.error>) =>
   spy.mock.calls.filter((a: unknown[]) =>
     String(a[0]).includes("[FileReducer]"),
   );

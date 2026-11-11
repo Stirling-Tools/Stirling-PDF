@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import type { MockInstance } from "vitest";
 import { render, act } from "@testing-library/react";
 import { useEffect } from "react";
 import { MantineProvider } from "@mantine/core";
@@ -120,7 +121,7 @@ describe("file hooks — selector subscriptions", () => {
 });
 
 describe("useFileSelectors — render-phase misuse guard", () => {
-  const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+  const guardErrors = (spy: MockInstance<typeof console.error>) =>
     spy.mock.calls.filter((args: unknown[]) =>
       String(args[0]).includes("[useFileSelectors]"),
     );
@@ -170,7 +171,7 @@ describe("useFileContext — render-phase misuse guard", () => {
   // useFileContext subscribes to files + pinnedFiles only, so a render-time read
   // of the SELECTION slice through its exposed selectors would silently go
   // stale. The guard covers exactly those selectors and nothing else.
-  const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+  const guardErrors = (spy: MockInstance<typeof console.error>) =>
     spy.mock.calls.filter((args: unknown[]) =>
       String(args[0]).includes("[useFileContext]"),
     );
