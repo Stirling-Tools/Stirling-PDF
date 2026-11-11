@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
@@ -43,14 +45,16 @@ class KeygenServerLicenseVerifierTest {
     private final HttpClient http = mock(HttpClient.class);
     private KeyPair signingKey;
     private KeygenServerLicenseVerifier verifier;
+    private KeygenConfigurationProperties keygen;
+    private ServerRegistrationCloudProperties properties;
 
     @BeforeEach
     void setup() throws Exception {
         signingKey = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
-        var keygen = new KeygenConfigurationProperties();
+        keygen = new KeygenConfigurationProperties();
         keygen.setAccountId(ACCOUNT.toString());
         keygen.setApiToken("test-token");
-        var properties = new ServerRegistrationCloudProperties();
+        properties = new ServerRegistrationCloudProperties();
         properties.setServerProductIds(Set.of(PRODUCT.toString()));
         byte[] encoded = signingKey.getPublic().getEncoded();
         properties.setLicensePublicKey(
@@ -90,6 +94,39 @@ class KeygenServerLicenseVerifierTest {
         verify(http).send(request.capture(), any());
         assertThat(request.getValue().uri().getPath())
                 .endsWith("/licenses/" + LICENSE + "/actions/validate");
+    }
+
+    @Test
+    void perpetualSignedFileStillRequiresLiveValidation() throws Exception {
+        String proof = certificate(NOW.minusSeconds(1), null, signingKey);
+        respond(200, liveBody());
+        assertThat(verifier.verify(proof, "machine").id()).isEqualTo(LICENSE);
+        ObjectNode revoked = liveBody();
+        ((ObjectNode) revoked.path("meta")).put("valid", false);
+        respond(200, revoked);
+        assertThatThrownBy(() -> verifier.verify(proof, "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+        verify(http, times(2)).send(any(), any());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "not-hex", "abcd"})
+    void missingOrMalformedSigningKeyFailsAtStartup(String publicKey) {
+        properties.setLicensePublicKey(publicKey);
+        assertThatIllegalStateException()
+                .isThrownBy(
+                        () ->
+                                new KeygenServerLicenseVerifier(
+                                        keygen,
+                                        properties,
+                                        mapper,
+                                        http,
+                                        Clock.fixed(NOW, ZoneOffset.UTC)))
+                .withMessageContaining("license public key");
+        verifyNoInteractions(http);
     }
 
     @Test
@@ -216,13 +253,12 @@ class KeygenServerLicenseVerifierTest {
     }
 
     private String certificate(Instant issued, Instant expiry, KeyPair key) throws Exception {
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("issued", issued.toString());
+        meta.put("expiry", expiry == null ? null : expiry.toString());
         byte[] snapshot =
                 mapper.writeValueAsBytes(
-                        Map.of(
-                                "meta",
-                                Map.of("issued", issued.toString(), "expiry", expiry.toString()),
-                                "data",
-                                Map.of("type", "licenses", "id", LICENSE)));
+                        Map.of("meta", meta, "data", Map.of("type", "licenses", "id", LICENSE)));
         String enc = Base64.getEncoder().encodeToString(snapshot);
         Signature signature = Signature.getInstance("Ed25519");
         signature.initSign(key.getPrivate());

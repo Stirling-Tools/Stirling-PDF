@@ -38,6 +38,7 @@ public class ServerRegistrationStateStore {
         if (!hash.equals(state.getProofHash())) {
             state.setProofHash(hash);
             state.setRegistrationId(null);
+            state.setPurchaseMapping(null);
             state.setLastSuccessAt(null);
         }
         state.setReportSequence(Math.incrementExact(state.getReportSequence()));
@@ -57,6 +58,7 @@ public class ServerRegistrationStateStore {
             return;
         }
         current.setRegistrationId(receipt.registrationId());
+        current.setPurchaseMapping(receipt.purchaseMapping());
         current.setLastSuccessAt(Instant.now());
         repository.saveAndFlush(current);
     }

@@ -5,8 +5,11 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +25,10 @@ import lombok.Setter;
 public class ServerRegistrationState {
     @Id private Long id = 1L;
 
+    @Version
+    @Column(nullable = false, columnDefinition = "bigint not null default 0")
+    private Long version;
+
     @Column(nullable = false)
     private UUID installationId;
 
@@ -32,6 +39,9 @@ public class ServerRegistrationState {
     private String proofHash;
 
     private UUID registrationId;
+
+    @Enumerated(EnumType.STRING)
+    private ServerRegistrationProtocol.PurchaseMapping purchaseMapping;
 
     @Column(nullable = false)
     private long reportSequence;

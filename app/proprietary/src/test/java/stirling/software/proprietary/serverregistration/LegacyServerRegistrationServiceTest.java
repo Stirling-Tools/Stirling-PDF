@@ -101,6 +101,7 @@ class LegacyServerRegistrationServiceTest {
     @Test
     void linkedRegistrationUsesOnlyTrackingSecret() throws Exception {
         state.setRegistrationId(UUID.randomUUID());
+        state.setPurchaseMapping(ServerRegistrationProtocol.PurchaseMapping.RESOLVED);
         when(licenses.getLicenseKeyResult()).thenReturn(License.SERVER);
         when(users.getTotalUsersCount()).thenReturn(200L);
         when(states.reserve(any())).thenReturn(state);
@@ -112,6 +113,25 @@ class LegacyServerRegistrationServiceTest {
                                         request.registrationId().equals(state.getRegistrationId())
                                                 && request.report().reportedUserCount() == 200));
         verify(client, never()).register(any());
+    }
+
+    @Test
+    void unresolvedPurchaseRetriesProofWithTheSameInstallationAndCredential() throws Exception {
+        state.setRegistrationId(UUID.randomUUID());
+        state.setPurchaseMapping(ServerRegistrationProtocol.PurchaseMapping.UNRESOLVED);
+        when(licenses.getLicenseKeyResult()).thenReturn(License.SERVER);
+        when(users.getTotalUsersCount()).thenReturn(200L);
+        when(states.reserve(any())).thenReturn(state);
+        service.reportNow();
+        verify(client)
+                .register(
+                        argThat(
+                                request ->
+                                        request.installationId().equals(state.getInstallationId())
+                                                && request.registrationSecret()
+                                                        .equals(state.getRegistrationSecret())
+                                                && request.report().reportedUserCount() == 200));
+        verify(client, never()).sync(any());
     }
 
     @Test

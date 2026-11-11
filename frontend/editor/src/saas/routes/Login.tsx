@@ -32,7 +32,6 @@ import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg"
 export default function Login() {
   const navigate = useNavigate();
   const { session, loading, refreshSession } = useAuth();
-  const hasAccountSession = !!session && !session.user.is_anonymous;
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,10 +68,10 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (hasAccountSession && !loading && nextPath) {
+    if (session && !loading && nextPath) {
       navigate(nextPath, { replace: true });
     }
-  }, [hasAccountSession, loading, nextPath, navigate]);
+  }, [session, loading, nextPath, navigate]);
 
   // Stashed as well as held in the URL: leaving to create an account loses the
   // query string, and the confirmation link cannot carry a `next`.
@@ -102,7 +101,8 @@ export default function Login() {
     return <LoadingFallback />;
   }
 
-  if (hasAccountSession) {
+  // Show logged in state if authenticated (unless bouncing back to `next`)
+  if (session && !loading) {
     if (nextPath) {
       return null;
     }
@@ -248,11 +248,9 @@ export default function Login() {
       setError(null);
       console.log("[Login] Signing in anonymously");
 
-      const user = session?.user.is_anonymous
-        ? session.user
-        : (await signInAnonymously()).data.user;
+      const { data } = await signInAnonymously();
 
-      if (user) {
+      if (data.user) {
         console.log(
           "[Login] Anonymous sign in successful, refreshing session...",
         );
@@ -260,10 +258,10 @@ export default function Login() {
         // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
 
-        const remembered = takePendingDestination();
-        navigate(nextPath ?? remembered ?? (await resolveLandingPath()), {
-          replace: true,
-        });
+        console.log(
+          "[Login] Session refreshed, user will be redirected by auth state change",
+        );
+        // User will be redirected by the auth state change after session refresh
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);

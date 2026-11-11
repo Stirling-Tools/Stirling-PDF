@@ -96,7 +96,8 @@ public class ServerRegistrationClient {
             } catch (RuntimeException e) {
                 throw new IOException("Invalid registration response");
             }
-            if (receipt.registrationId() == null
+            if (receipt == null
+                    || receipt.registrationId() == null
                     || receipt.acceptedSequence() < 1
                     || receipt.purchaseMapping() == null) {
                 throw new IOException("Incomplete registration response");

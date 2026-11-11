@@ -61,6 +61,28 @@ class ServerRegistrationClientTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void nullResponseIsRejectedWithoutAcknowledging() throws Exception {
+        var http = mock(HttpClient.class);
+        HttpResponse<String> response = mock(HttpResponse.class);
+        when(response.statusCode()).thenReturn(200);
+        when(response.body()).thenReturn("null");
+        when(http.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(response);
+        var client =
+                new ServerRegistrationClient(new AccountLinkProperties(), new ObjectMapper(), http);
+        assertThatThrownBy(
+                        () ->
+                                client.sync(
+                                        new ServerRegistrationProtocol.SyncRequest(
+                                                UUID.randomUUID(),
+                                                "a".repeat(43),
+                                                new ServerRegistrationProtocol.Report(
+                                                        1L, 0L, "test", 1))))
+                .isInstanceOf(IOException.class)
+                .hasMessage("Incomplete registration response");
+    }
+
+    @Test
     void countsAndSequencesAreRequiredAndSecretsAreRedacted() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
             var validator = factory.getValidator();

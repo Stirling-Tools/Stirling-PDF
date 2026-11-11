@@ -45,16 +45,7 @@ public class ServerLicenseRegistrationStore {
     @Transactional
     public Receipt register(
             RegistrationRequest request, KeygenServerLicenseVerifier.VerifiedLicense license) {
-        List<Purchase> matches =
-                jdbc.query(
-                        "SELECT id, nullif(trim(server_subscription_id), '') AS server_subscription_id FROM public.license_keys WHERE license_key = ?"
-                                + " AND plan = 'server' AND enterprise_seat_subscription_id IS NULL LIMIT 2",
-                        (rs, row) ->
-                                new Purchase(
-                                        rs.getObject("id", UUID.class),
-                                        rs.getString("server_subscription_id")),
-                        license.key());
-        Purchase purchase = matches.size() == 1 ? matches.getFirst() : new Purchase(null, null);
+        Purchase purchase = findPurchase(license.key());
         jdbc.update(
                 """
                 INSERT INTO public.server_license_registrations
@@ -80,23 +71,15 @@ public class ServerLicenseRegistrationStore {
                         license.id(),
                         request.installationId());
         authenticate(row, request.registrationSecret());
-        Receipt receipt = accept(row, request.report());
         jdbc.update(
                 """
                 UPDATE public.server_license_registrations
-                SET license_record_id = ?, server_subscription_id = ?, license_user_limit = ?
+                SET license_user_limit = ?
                 WHERE registration_id = ?
                 """,
-                purchase.id(),
-                purchase.subscription(),
                 license.userLimit(),
                 row.id());
-        return new Receipt(
-                receipt.registrationId(),
-                receipt.acceptedSequence(),
-                purchase.subscription() == null
-                        ? PurchaseMapping.UNRESOLVED
-                        : PurchaseMapping.RESOLVED);
+        return accept(row, request.report(), purchase);
     }
 
     /** Replays never refresh liveness. Changed payloads at the same sequence are rejected. */
@@ -110,10 +93,30 @@ public class ServerLicenseRegistrationStore {
         if (rows.isEmpty()) throw unauthorized();
         Row row = rows.getFirst();
         authenticate(row, request.registrationSecret());
-        return accept(row, request.report());
+        List<String> keys =
+                jdbc.query(
+                        "SELECT license_key FROM public.license_keys WHERE id = ?",
+                        (rs, index) -> rs.getString("license_key"),
+                        row.licenseRecordId());
+        Purchase purchase =
+                keys.size() == 1 ? findPurchase(keys.getFirst()) : new Purchase(null, null);
+        return accept(row, request.report(), purchase);
     }
 
-    private Receipt accept(Row row, Report report) {
+    private Purchase findPurchase(String key) {
+        List<Purchase> matches =
+                jdbc.query(
+                        "SELECT id, nullif(trim(server_subscription_id), '') AS server_subscription_id FROM public.license_keys WHERE license_key = ?"
+                                + " AND plan = 'server' AND enterprise_seat_subscription_id IS NULL LIMIT 2",
+                        (rs, index) ->
+                                new Purchase(
+                                        rs.getObject("id", UUID.class),
+                                        rs.getString("server_subscription_id")),
+                        key);
+        return matches.size() == 1 ? matches.getFirst() : new Purchase(null, null);
+    }
+
+    private Receipt accept(Row row, Report report, Purchase purchase) {
         if (report.sequence() < row.sequence()
                 || (report.sequence() == row.sequence()
                         && (!report.reportedUserCount().equals(row.users())
@@ -136,10 +139,17 @@ public class ServerLicenseRegistrationStore {
                     report.capabilityVersion(),
                     row.id());
         }
+        jdbc.update(
+                "UPDATE public.server_license_registrations SET license_record_id = ?, server_subscription_id = ? WHERE registration_id = ?",
+                purchase.id(),
+                purchase.subscription(),
+                row.id());
         return new Receipt(
                 row.id(),
                 report.sequence(),
-                row.subscription() == null ? PurchaseMapping.UNRESOLVED : PurchaseMapping.RESOLVED);
+                purchase.subscription() == null
+                        ? PurchaseMapping.UNRESOLVED
+                        : PurchaseMapping.RESOLVED);
     }
 
     private void authenticate(Row row, String secret) {
@@ -157,7 +167,7 @@ public class ServerLicenseRegistrationStore {
         return new Row(
                 rs.getObject("registration_id", UUID.class),
                 rs.getString("credential_hash"),
-                rs.getString("server_subscription_id"),
+                rs.getObject("license_record_id", UUID.class),
                 rs.getLong("report_sequence"),
                 rs.getObject("reported_user_count", Long.class),
                 rs.getString("application_version"),
@@ -186,7 +196,7 @@ public class ServerLicenseRegistrationStore {
     private record Row(
             UUID id,
             String hash,
-            String subscription,
+            UUID licenseRecordId,
             long sequence,
             Long users,
             String version,

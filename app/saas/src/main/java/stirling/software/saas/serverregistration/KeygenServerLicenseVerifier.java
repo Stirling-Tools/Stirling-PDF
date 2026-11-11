@@ -46,6 +46,7 @@ public class KeygenServerLicenseVerifier {
     private final ObjectMapper mapper;
     private final HttpClient http;
     private final Clock clock;
+    private final java.security.PublicKey licensePublicKey;
 
     @Autowired
     public KeygenServerLicenseVerifier(
@@ -81,6 +82,20 @@ public class KeygenServerLicenseVerifier {
                 || properties.getServerProductIds().isEmpty()) {
             throw new IllegalStateException(
                     "Server registration needs Keygen credentials and an explicit Server product allowlist");
+        }
+        try {
+            byte[] rawKey = HexFormat.of().parseHex(properties.getLicensePublicKey());
+            if (rawKey.length != 32) throw new IllegalArgumentException();
+            byte[] encodedKey = new byte[44];
+            System.arraycopy(
+                    HexFormat.of().parseHex("302a300506032b6570032100"), 0, encodedKey, 0, 12);
+            System.arraycopy(rawKey, 0, encodedKey, 12, 32);
+            licensePublicKey =
+                    KeyFactory.getInstance("Ed25519")
+                            .generatePublic(new X509EncodedKeySpec(encodedKey));
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Server registration needs the account's 32-byte Ed25519 license public key in hexadecimal");
         }
     }
 
@@ -180,28 +195,25 @@ public class KeygenServerLicenseVerifier {
     }
 
     private UUID certificateId(String proof) throws Exception {
-        if (!proof.endsWith(END) || properties.getLicensePublicKey() == null) throw denied();
+        if (!proof.endsWith(END)) throw denied();
         String envelope =
                 proof.substring(BEGIN.length(), proof.length() - END.length())
                         .replaceAll("\\s", "");
         JsonNode signed = mapper.readTree(Base64.getDecoder().decode(envelope));
         if (!"base64+ed25519".equals(signed.path("alg").asText())) throw denied();
         String encoded = signed.path("enc").asText();
-        byte[] rawKey = HexFormat.of().parseHex(properties.getLicensePublicKey());
-        if (rawKey.length != 32) throw denied();
-        byte[] key = new byte[44];
-        System.arraycopy(HexFormat.of().parseHex("302a300506032b6570032100"), 0, key, 0, 12);
-        System.arraycopy(rawKey, 0, key, 12, 32);
         Signature signature = Signature.getInstance("Ed25519");
-        signature.initVerify(
-                KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(key)));
+        signature.initVerify(licensePublicKey);
         signature.update(("license/" + encoded).getBytes(StandardCharsets.UTF_8));
         if (!signature.verify(Base64.getDecoder().decode(signed.path("sig").asText())))
             throw denied();
         JsonNode snapshot = mapper.readTree(Base64.getDecoder().decode(encoded));
         Instant issued = Instant.parse(snapshot.path("meta").path("issued").asText());
-        Instant expires = Instant.parse(snapshot.path("meta").path("expiry").asText());
-        if (issued.isAfter(clock.instant()) || !expires.isAfter(clock.instant())) throw denied();
+        JsonNode expiry = snapshot.path("meta").path("expiry");
+        Instant now = clock.instant();
+        if (issued.isAfter(now)
+                || (!expiry.isNull() && !Instant.parse(expiry.asText()).isAfter(now)))
+            throw denied();
         if (!"licenses".equals(snapshot.path("data").path("type").asText())) throw denied();
         return UUID.fromString(snapshot.path("data").path("id").asText());
     }

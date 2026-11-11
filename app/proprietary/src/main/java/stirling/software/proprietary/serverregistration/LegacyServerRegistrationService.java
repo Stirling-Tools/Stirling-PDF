@@ -86,7 +86,9 @@ public class LegacyServerRegistrationService implements SchedulingConfigurer {
                             version,
                             ServerRegistrationProtocol.CAPABILITY_VERSION);
             ServerRegistrationProtocol.Receipt receipt;
-            if (state.getRegistrationId() == null) {
+            if (state.getRegistrationId() == null
+                    || state.getPurchaseMapping()
+                            != ServerRegistrationProtocol.PurchaseMapping.RESOLVED) {
                 receipt =
                         client.register(
                                 new ServerRegistrationProtocol.RegistrationRequest(

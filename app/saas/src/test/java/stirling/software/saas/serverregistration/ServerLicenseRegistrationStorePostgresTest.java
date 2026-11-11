@@ -165,6 +165,49 @@ class ServerLicenseRegistrationStorePostgresTest {
     }
 
     @Test
+    void syncRefreshesThePurchaseAssociationAndDropsInvalidMappings() {
+        Receipt first = register(1, 147, SECRET);
+        jdbc.update("UPDATE public.license_keys SET server_subscription_id='sub_corrected'");
+        assertThat(sync(first, 2, 200, SECRET).purchaseMapping())
+                .isEqualTo(PurchaseMapping.RESOLVED);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT server_subscription_id FROM public.server_license_registrations",
+                                String.class))
+                .isEqualTo("sub_corrected");
+        jdbc.update(
+                "UPDATE public.license_keys SET enterprise_seat_subscription_id='sub_enterprise'");
+        assertThat(sync(first, 3, 201, SECRET).purchaseMapping())
+                .isEqualTo(PurchaseMapping.UNRESOLVED);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT server_subscription_id FROM public.server_license_registrations",
+                                String.class))
+                .isNull();
+        jdbc.update("UPDATE public.license_keys SET enterprise_seat_subscription_id=NULL");
+        assertThat(register(4, 202, SECRET).registrationId()).isEqualTo(first.registrationId());
+        jdbc.update("DELETE FROM public.license_keys");
+        assertThat(sync(first, 5, 203, SECRET).purchaseMapping())
+                .isEqualTo(PurchaseMapping.UNRESOLVED);
+    }
+
+    @Test
+    void ambiguousPurchaseIntroducedAfterRegistrationIsNotKeptOnSync() {
+        Receipt first = register(1, 147, SECRET);
+        jdbc.update(
+                "INSERT INTO public.license_keys VALUES (?, ?, 'server', 'sub_other', NULL)",
+                UUID.randomUUID(),
+                license.key());
+        assertThat(sync(first, 2, 200, SECRET).purchaseMapping())
+                .isEqualTo(PurchaseMapping.UNRESOLVED);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT license_record_id FROM public.server_license_registrations",
+                                UUID.class))
+                .isNull();
+    }
+
+    @Test
     void concurrentLostReplyRetriesReturnTheSameRegistration() throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
