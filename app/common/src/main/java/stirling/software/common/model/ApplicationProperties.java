@@ -1329,6 +1329,8 @@ public class ApplicationProperties {
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
         private Boolean enableAnalytics;
+        // True when absent: older and read-only settings files belong to servers already set up.
+        private boolean setupCompleted = true;
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
