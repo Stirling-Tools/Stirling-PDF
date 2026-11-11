@@ -130,8 +130,10 @@ public class ScimUserController {
     public Map<String, Object> patch(@PathVariable long id, @RequestBody Map<String, Object> body)
             throws Exception {
         User user = findModifiable(id);
-        Object operations = attr(body, "Operations");
-        for (Object item : operations instanceof List<?> list ? list : List.of()) {
+        if (!(attr(body, "Operations") instanceof List<?> operations) || operations.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operations is required");
+        }
+        for (Object item : operations) {
             Map<?, ?> op = (Map<?, ?>) item;
             Object path = op.get("path");
             String kind = String.valueOf(op.get("op")).toLowerCase(Locale.ROOT);

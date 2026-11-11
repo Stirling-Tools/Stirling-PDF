@@ -982,7 +982,7 @@ public class ApplicationProperties {
         private String loginMethod = "all";
         private String customGlobalAPIKey;
         // Bearer token (32+ chars) for SCIM 2.0 provisioning at /api/v1/scim/v2; blank disables it.
-        private String scimToken;
+        @ToString.Exclude private String scimToken;
         // SCIM DELETE erases the user and their files; when false it only deactivates them.
         private boolean scimDeleteRemovesUser = false;
         private Jwt jwt = new Jwt();

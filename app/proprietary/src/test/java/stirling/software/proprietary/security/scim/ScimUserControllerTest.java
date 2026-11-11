@@ -101,6 +101,7 @@ class ScimUserControllerTest {
 
     @Test
     void unsupportedOrRequiredAttributeRemovalIsRejected() {
+        assertThrows(ResponseStatusException.class, () -> controller.patch(7L, Map.of()));
         for (Map<String, Object> op :
                 List.<Map<String, Object>>of(
                         Map.of("op", "remove", "path", "userName"),
