@@ -21,8 +21,9 @@ export type { SettingsNav };
 /**
  * Desktop settings: the build's own sections plus the processor's, by the
  * rules of the edition the connection runs - Stirling Cloud as on web SaaS, a
- * self-hosted server as on web self-hosted. Billing is the browser handoff in
- * configNavSections.
+ * self-hosted server as on web self-hosted. Every signed-in Stirling Cloud
+ * member gets Usage & Billing (purchases stay leader-only inside it); a
+ * self-hosted owner's billing is the browser handoff in configNavSections.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const connected = useConnectedServer();
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isAnonymous, loading } = useAuth();
   const { config } = useAppConfig();
   const rosterAvailable = useRosterAvailable();
 
@@ -58,7 +59,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
         includeApiKeys: portalAccess,
         includeAudit: portalAccess,
         includeEncryption: false,
-        includeBilling: false,
+        includeBilling: !isAnonymous,
         includeAccountLink: false,
       });
     }
@@ -82,6 +83,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     mode,
     rosterAvailable,
     portalAccess,
+    isAnonymous,
     config?.enableLogin,
     isAdmin,
     loading,
@@ -107,6 +109,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     delete aliases.people;
     delete aliases.teams;
   }
+  // The billing page may be the processor's or the browser handoff.
   const hasBilling = sections.some((group) =>
     group.items.some((item) => item.key === "billing"),
   );

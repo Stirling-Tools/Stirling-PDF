@@ -20,6 +20,7 @@ import {
   isFilled,
 } from "@processor/components/procurement/formField";
 import "@processor/views/Procurement.css";
+import { downloadFile } from "@editor/services/downloadService";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
@@ -64,14 +65,10 @@ export function ProcurementAgreement({
     setDownloadError(false);
     try {
       const blob = await fetchAgreementPdf();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "stirling-enterprise-agreement.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await downloadFile({
+        data: blob,
+        filename: "stirling-enterprise-agreement.pdf",
+      });
     } catch {
       // Surface the failure — the PDF is rendered server-side, so a failure here means the
       // render service is unavailable rather than something the buyer can retry around.

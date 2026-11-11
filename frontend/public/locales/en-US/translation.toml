@@ -4394,6 +4394,11 @@ title = "File changed on disk"
 blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
 localFiles = "Local files"
 
+[desktopReturn]
+body = "You can close this tab once Stirling PDF opens."
+open = "Open Stirling PDF"
+title = "Returning to Stirling PDF"
+
 [desktopUpdate]
 downloading = "Downloading update..."
 installing = "Installing update..."
@@ -7151,6 +7156,10 @@ thisPeriod = "This billing period"
 [payment]
 annually = "Annually"
 billingPeriod = "Billing period"
+browserCheckout = "Checkout is open in your browser. Come back here once you have paid."
+browserCheckoutDone = "I've paid"
+browserCheckoutReopen = "Open checkout again"
+browserOpenFailed = "Couldn't open your browser. Try again."
 cancelTeamChange = "Keep current plan"
 canCloseWindow = "You can now close this window."
 createSessionFailed = "Failed to create checkout session"
@@ -8305,6 +8314,11 @@ title = "Add a payment method"
 body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
 close = "Close"
 title = "Almost there"
+
+[portal.billing.checkout.browser]
+body = "Checkout is open in your browser. Come back here once you have paid."
+done = "I've paid"
+reopen = "Open checkout again"
 
 [portal.billing.checkout.cap]
 amountAria = "Monthly spend limit"
