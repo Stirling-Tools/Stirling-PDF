@@ -121,18 +121,38 @@ public final class NativeLicenseLoader {
             if (!sameNameAndLicense(current, incoming)) {
                 continue;
             }
-            if (Objects.equals(current.getModuleLicenseText(), incoming.getModuleLicenseText())) {
+            if (sameTexts(current, incoming)) {
                 return;
             }
-            if (current.getModuleLicenseText() == null && incoming.getModuleLicenseText() != null) {
+            if (incomingExtends(current, incoming)) {
                 merged.set(i, incoming);
                 return;
             }
-            if (incoming.getModuleLicenseText() == null) {
+            if (currentExtends(current, incoming)) {
                 return;
             }
         }
         merged.add(incoming);
+    }
+
+    private static boolean sameTexts(Dependency left, Dependency right) {
+        return Objects.equals(left.getModuleLicenseText(), right.getModuleLicenseText())
+                && Objects.equals(left.getModuleNoticeText(), right.getModuleNoticeText());
+    }
+
+    private static boolean incomingExtends(Dependency current, Dependency incoming) {
+        return extendsText(current.getModuleLicenseText(), incoming.getModuleLicenseText())
+                && extendsText(current.getModuleNoticeText(), incoming.getModuleNoticeText())
+                && !sameTexts(current, incoming);
+    }
+
+    private static boolean currentExtends(Dependency current, Dependency incoming) {
+        return extendsText(incoming.getModuleLicenseText(), current.getModuleLicenseText())
+                && extendsText(incoming.getModuleNoticeText(), current.getModuleNoticeText());
+    }
+
+    private static boolean extendsText(String current, String incoming) {
+        return current == null || Objects.equals(current, incoming);
     }
 
     private static boolean sameNameAndLicense(Dependency left, Dependency right) {

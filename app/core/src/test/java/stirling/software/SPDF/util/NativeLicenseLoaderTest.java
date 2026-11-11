@@ -186,6 +186,36 @@ class NativeLicenseLoaderTest {
     }
 
     @Test
+    void sameComponentWithDifferentAttributionIsPreserved(@TempDir Path tempDir) throws Exception {
+        Path first = tempDir.resolve("first.jar");
+        Path second = tempDir.resolve("second.jar");
+        writeJar(
+                first,
+                Map.of(
+                        "licenses/NOTICE.txt",
+                        "1. Noticed Codec\n"
+                                + "   - License: BSD-2-Clause\n"
+                                + "   - First attribution.\n"));
+        writeJar(
+                second,
+                Map.of(
+                        "licenses/NOTICE.txt",
+                        "1. Noticed Codec\n"
+                                + "   - License: BSD-2-Clause\n"
+                                + "   - Second attribution.\n"));
+
+        List<Dependency> dependencies = loadFromJars(first, second);
+
+        assertEquals(2, dependencies.size());
+        assertTrue(
+                dependencies.stream()
+                        .anyMatch(d -> "First attribution.".equals(d.getModuleNoticeText())));
+        assertTrue(
+                dependencies.stream()
+                        .anyMatch(d -> "Second attribution.".equals(d.getModuleNoticeText())));
+    }
+
+    @Test
     void validTextSurvivesWhenTheFirstJarLacksIt(@TempDir Path tempDir) throws Exception {
         Path first = tempDir.resolve("first.jar");
         Path second = tempDir.resolve("second.jar");
