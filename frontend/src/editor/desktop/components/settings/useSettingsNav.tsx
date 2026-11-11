@@ -21,9 +21,10 @@ export type { SettingsNav };
 /**
  * Desktop settings: the build's own sections plus the processor's, by the
  * rules of the edition the connection runs - Stirling Cloud as on web SaaS, a
- * self-hosted server as on web self-hosted. Every signed-in Stirling Cloud
- * member gets Usage & Billing (purchases stay leader-only inside it); a
- * self-hosted owner's billing is the browser handoff in configNavSections.
+ * self-hosted server as on web self-hosted. Usage & Billing is the only billing
+ * page in both: every signed-in Stirling Cloud member gets it (purchases stay
+ * leader-only inside it), and on a self-hosted server the organisation owner
+ * does.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
@@ -32,7 +33,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const connected = useConnectedServer();
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin, isAnonymous, loading } = useAuth();
+  const { isAdmin, isAnonymous, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
   const { config } = useAppConfig();
   const rosterAvailable = useRosterAvailable();
 
@@ -73,8 +75,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
           !loading,
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
-        includeBilling: false,
-        includeAccountLink: false,
+        includeBilling: isOwner,
+        includeAccountLink: isOwner,
       });
     }
     return [];
@@ -86,6 +88,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     isAnonymous,
     config?.enableLogin,
     isAdmin,
+    isOwner,
     loading,
     t,
   ]);
@@ -109,14 +112,10 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     delete aliases.people;
     delete aliases.teams;
   }
-  // The billing page may be the processor's or the browser handoff.
-  const hasBilling = sections.some((group) =>
+  const hasBilling = portalSections.some((group) =>
     group.items.some((item) => item.key === "billing"),
   );
-  if (hasBilling) {
-    aliases.plan = "billing";
-    aliases.adminPlan = "billing";
-  } else {
+  if (!hasBilling) {
     delete aliases.plan;
     delete aliases.adminPlan;
   }
