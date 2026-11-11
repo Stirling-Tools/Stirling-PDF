@@ -162,9 +162,7 @@ it("is a save target for files opened from OneDrive", () => {
   const target = result.current.target!;
   expect(target.handles(stub)).toBe(true);
   expect(target.handles({ ...stub, cloudOrigin: undefined })).toBe(false);
-  expect(target.saveLabel(stub, "replace")).toBe(
-    "oneDriveSave.toolbar.replace",
-  );
+  expect(target.saveLabel(stub)).toBe("oneDriveSave.toolbar.replace");
   expect(
     target.isUnsaved({
       ...stub,
