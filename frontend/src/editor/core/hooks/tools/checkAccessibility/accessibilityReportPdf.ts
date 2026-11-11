@@ -23,12 +23,13 @@ import {
 } from "@editor/types/checkAccessibility";
 import {
   assessAccessibilityReport,
+  type AccessibilityAssessment,
   type AccessibilityResult,
 } from "@editor/utils/accessibilityAssessment";
 import {
+  basicLabel,
   categoryLabel,
   describeIssue,
-  documentBasics,
   figuresSummary,
   resultLabel,
   resultSummary,
@@ -127,13 +128,76 @@ function drawHeader(
   writer.y = PAGE_HEIGHT - bandHeight - 20;
 }
 
+const RING_RADIUS = 25;
+const RING_STROKE = 6;
+const RING_SEGMENTS = 120;
+
+/** An arc clockwise from 12 o'clock, drawn as short overlapping strokes. */
+function drawArc(
+  writer: ReportWriter,
+  cx: number,
+  cy: number,
+  fraction: number,
+  color: PdfiumColor,
+) {
+  const segments = Math.ceil(RING_SEGMENTS * fraction);
+  const step = (2 * Math.PI * fraction) / segments;
+  const overlap = step * 0.25;
+  const point = (angle: number) => ({
+    x: cx + RING_RADIUS * Math.sin(angle),
+    y: cy + RING_RADIUS * Math.cos(angle),
+  });
+  for (let index = 0; index < segments; index++) {
+    writer.currentPage.drawLine({
+      start: point(Math.max(0, index * step - overlap)),
+      end: point((index + 1) * step),
+      thickness: RING_STROKE,
+      color,
+    });
+  }
+}
+
+function drawChecksRing(
+  writer: ReportWriter,
+  cx: number,
+  cy: number,
+  assessment: AccessibilityAssessment,
+) {
+  const { passed, total } = assessment.checks;
+  drawArc(writer, cx, cy, 1, colorPalette.boxBorder);
+  if (passed > 0) {
+    drawArc(writer, cx, cy, passed / total, resultColor(assessment.result));
+  }
+  const number = String(passed);
+  const outOf = `/${total}`;
+  const numberWidth = writer.boldFont.widthOfTextAtSize(number, 16);
+  const width = numberWidth + 1 + writer.font.widthOfTextAtSize(outOf, 8);
+  const left = cx - width / 2;
+  const baseline = cy - 5.5;
+  writer.currentPage.drawText(number, {
+    x: left,
+    y: baseline,
+    size: 16,
+    font: writer.boldFont,
+    color: colorPalette.textPrimary,
+  });
+  writer.currentPage.drawText(outOf, {
+    x: left + numberWidth + 1,
+    y: baseline,
+    size: 8,
+    font: writer.font,
+    color: colorPalette.textMuted,
+  });
+}
+
 function drawResult(
   writer: ReportWriter,
   t: TFunction,
   report: AccessibilityReport,
-  result: AccessibilityResult,
+  assessment: AccessibilityAssessment,
 ) {
-  const height = 70;
+  const { result } = assessment;
+  const height = 84;
   const top = writer.y;
   const color = resultColor(result);
   writer.rect(
@@ -144,9 +208,10 @@ function drawResult(
     colorPalette.boxBackground,
     colorPalette.boxBorder,
   );
-  writer.rect(MARGIN_X, top, 4, height, color);
-  const textX = MARGIN_X + 20;
-  writer.y = top - 12;
+  const ringLeft = MARGIN_X + 18;
+  drawChecksRing(writer, ringLeft + RING_RADIUS, top - height / 2, assessment);
+  const textX = ringLeft + RING_RADIUS * 2 + RING_STROKE + 16;
+  writer.y = top - 19;
   writer.text(resultLabel(t, result), textX, {
     font: writer.boldFont,
     size: 18,
@@ -213,69 +278,6 @@ function drawPill(
     font: writer.boldFont,
     color: ok ? statusText.success : statusText.danger,
   });
-}
-
-function drawBasics(
-  writer: ReportWriter,
-  t: TFunction,
-  report: AccessibilityReport,
-) {
-  const basics = documentBasics(t, report);
-  const met = basics.filter((fact) => fact.ok).length;
-  sectionHeading(
-    writer,
-    t("checkAccessibility.sections.basics", "Document basics"),
-  );
-  const pass = t("checkAccessibility.result.pass", "Pass");
-  const fail = t("checkAccessibility.result.fail", "Fail");
-  const pill = pillWidth(writer, t);
-  const labelStyle: TextStyle = {
-    font: writer.font,
-    size: 10,
-    color: colorPalette.textPrimary,
-  };
-  const labelInset = pill + 8;
-  // One column when any label would not fit beside its pill in half the page.
-  const twoColumns = basics.every(
-    (fact) =>
-      labelInset +
-        labelStyle.font.widthOfTextAtSize(fact.label, labelStyle.size) <=
-      CONTENT_WIDTH / 2 - 8,
-  );
-  const columns = twoColumns ? 2 : 1;
-  const rows = Math.ceil((basics.length + 1) / columns);
-  const rowHeight = 18;
-  const columnWidth = CONTENT_WIDTH / columns;
-  writer.ensure(rows * rowHeight);
-  const top = writer.y;
-  basics.forEach((fact, index) => {
-    const column = Math.floor(index / rows);
-    writer.y = top - (index % rows) * rowHeight;
-    const x = MARGIN_X + column * columnWidth;
-    drawPill(writer, x, pill, fact.ok ? pass : fail, fact.ok);
-    writer.text(fact.label, x + labelInset, labelStyle);
-  });
-  const progressX = MARGIN_X + (columns - 1) * columnWidth;
-  const barWidth = twoColumns ? columnWidth : CONTENT_WIDTH / 2;
-  writer.y = top - (rows - 1) * rowHeight;
-  writer.text(
-    t("checkAccessibility.basics.met", "{{met}} of {{total}} met", {
-      met,
-      total: basics.length,
-    }),
-    progressX,
-    { font: writer.font, size: 9, color: colorPalette.textMuted },
-  );
-  const fraction = met / basics.length;
-  writer.rect(progressX, writer.y, barWidth, 3.5, colorPalette.boxBorder);
-  writer.rect(
-    progressX,
-    writer.y,
-    barWidth * fraction,
-    3.5,
-    fraction === 1 ? colorPalette.success : colorPalette.warning,
-  );
-  writer.y = top - rows * rowHeight;
 }
 
 function drawLimits(
@@ -369,16 +371,40 @@ function drawIssue(
   writer.y -= 6;
 }
 
+/** A breakdown row's label with its Pass or Fail pill at the right edge. */
+function drawRowHeading(
+  writer: ReportWriter,
+  t: TFunction,
+  label: string,
+  passes: boolean,
+) {
+  const pill = pillWidth(writer, t);
+  drawPill(
+    writer,
+    CONTENT_RIGHT - pill,
+    pill,
+    passes
+      ? t("checkAccessibility.result.pass", "Pass")
+      : t("checkAccessibility.result.fail", "Fail"),
+    passes,
+  );
+  writer.text(label, MARGIN_X, {
+    font: writer.boldFont,
+    size: 10.5,
+    color: colorPalette.textPrimary,
+  });
+}
+
 function drawBreakdown(
   writer: ReportWriter,
   t: TFunction,
   report: AccessibilityReport,
+  { areas, basics }: AccessibilityAssessment,
 ) {
   sectionHeading(
     writer,
     t("checkAccessibility.sections.breakdown", "Breakdown"),
   );
-  const { areas } = assessAccessibilityReport(report);
   const figures = figuresSummary(t, report);
   areas.forEach((area, areaIndex) => {
     const passes = area.issues.length === 0;
@@ -388,21 +414,7 @@ function drawBreakdown(
       writer.rule(writer.y + 4);
       writer.y -= 4;
     }
-    const pill = pillWidth(writer, t);
-    drawPill(
-      writer,
-      CONTENT_RIGHT - pill,
-      pill,
-      passes
-        ? t("checkAccessibility.result.pass", "Pass")
-        : t("checkAccessibility.result.fail", "Fail"),
-      passes,
-    );
-    writer.text(categoryLabel(t, area.id), MARGIN_X, {
-      font: writer.boldFont,
-      size: 10.5,
-      color: colorPalette.textPrimary,
-    });
+    drawRowHeading(writer, t, categoryLabel(t, area.id), passes);
     writer.y -= 4;
     area.issues.forEach((issue, index) => {
       if (index > 0) {
@@ -432,6 +444,13 @@ function drawBreakdown(
     }
     writer.y -= 4;
   });
+  for (const basic of basics) {
+    writer.ensure(20);
+    writer.rule(writer.y + 4);
+    writer.y -= 4;
+    drawRowHeading(writer, t, basicLabel(t, basic.id), basic.ok);
+    writer.y -= 8;
+  }
 }
 
 function drawFailedEntry(
@@ -502,10 +521,10 @@ export async function createAccessibilityReportPdf(
       : null,
   );
   if (report) {
-    drawResult(writer, t, report, assessAccessibilityReport(report).result);
-    drawBasics(writer, t, report);
+    const assessment = assessAccessibilityReport(report);
+    drawResult(writer, t, report, assessment);
+    drawBreakdown(writer, t, report, assessment);
     drawLimits(writer, t, report);
-    drawBreakdown(writer, t, report);
   } else {
     drawFailedEntry(writer, t, entry);
   }

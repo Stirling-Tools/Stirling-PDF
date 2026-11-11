@@ -49,8 +49,36 @@
   color: var(--c-text-muted);
 }
 
-.a11y-result {
+.a11y-ring {
+  position: relative;
   flex-shrink: 0;
+}
+
+.a11y-ring__track {
+  stroke: var(--c-border-subtle);
+}
+
+.a11y-ring__value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  padding-top: 2.45rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.a11y-ring__number {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-text);
+}
+
+.a11y-ring__out-of {
+  margin-left: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
 }
 
 .a11y-result--pass {
@@ -148,11 +176,16 @@
   margin-left: auto;
 }
 
+/* Spaced with a child margin: padding on the clipped inner would show while collapsed. */
 .a11y-area__body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-top: 0.5rem;
+  padding-top: 0;
+}
+
+.a11y-area__body > :first-child {
+  margin-top: 0.5rem;
 }
 
 .a11y-issues {
@@ -178,6 +211,11 @@
   text-align: left;
   font-weight: 500;
   color: var(--c-text);
+}
+
+/* Same reason as .a11y-area__body: the inner's padding would show while collapsed. */
+.a11y-issue .sui-collapsible__body-inner {
+  padding-top: 0;
 }
 
 .a11y-issue .sui-collapsible__chevron {
@@ -221,33 +259,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  margin-top: 0.625rem;
   padding-left: 1.375rem;
-}
-
-.a11y-basics {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(4, auto);
-  gap: 0.5rem 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.a11y-basics--single {
-  grid-auto-flow: row;
-  grid-template-columns: 1fr;
-  grid-template-rows: none;
-}
-
-.a11y-basics:not(.a11y-basics--single) .a11y-fact__label {
-  white-space: nowrap;
-}
-
-.a11y-fact__label {
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 /* Stacks every result word in one cell and shows only the active one, so pills share a width. */
@@ -264,13 +277,6 @@
   visibility: hidden;
 }
 
-.a11y-basics__progress {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
-}
-
 .a11y-manual {
   display: flex;
   flex-direction: column;
@@ -278,14 +284,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.a11y-fact {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  color: var(--c-text);
 }
 
 .a11y-manual li {

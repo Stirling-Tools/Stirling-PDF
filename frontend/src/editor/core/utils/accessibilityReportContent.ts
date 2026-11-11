@@ -4,6 +4,7 @@ import type {
   AccessibilityReport,
 } from "@editor/types/checkAccessibility";
 import type {
+  AccessibilityBasicId,
   AccessibilityCategoryId,
   AccessibilityResult,
 } from "@editor/utils/accessibilityAssessment";
@@ -92,55 +93,69 @@ export const resultSummary = (t: TFunction, result: AccessibilityResult) =>
     ),
     partial: t(
       "checkAccessibility.result.partialSummary",
-      "Screen readers can read it, but some checks fail.",
+      "Screen readers can read this document, but some checks fail.",
     ),
     fail: t(
       "checkAccessibility.result.failSummary",
-      "Screen readers may not be able to read all of it.",
+      "Screen readers may not be able to read all of this document.",
     ),
   })[result];
 
-export interface AccessibilityFact {
-  ok: boolean;
-  label: string;
-}
+export const basicLabel = (t: TFunction, id: AccessibilityBasicId) =>
+  ({
+    tagged: t("checkAccessibility.facts.tagged", "Tagged"),
+    title: t("checkAccessibility.facts.title", "Has a title"),
+    displaysTitle: t(
+      "checkAccessibility.facts.displaysTitle",
+      "Shows its title",
+    ),
+    language: t("checkAccessibility.facts.language", "Declares a language"),
+    fonts: t("checkAccessibility.facts.fonts", "Fonts embedded"),
+    declares: t("checkAccessibility.facts.declares", "Declares PDF/UA"),
+    notEncrypted: t("checkAccessibility.facts.notEncrypted", "Not encrypted"),
+  })[id];
 
-export function documentBasics(
+export const basicTip = (t: TFunction, id: AccessibilityBasicId) =>
+  ({
+    tagged: t(
+      "checkAccessibility.factTip.tagged",
+      "Whether the file has tags at all. Without them, screen readers get the text with no headings, lists or reading order.",
+    ),
+    title: t(
+      "checkAccessibility.factTip.title",
+      "Whether the file has a title in its metadata.",
+    ),
+    displaysTitle: t(
+      "checkAccessibility.factTip.displaysTitle",
+      "Whether PDF readers show the document title, rather than the file name, when it opens.",
+    ),
+    language: t(
+      "checkAccessibility.factTip.language",
+      "Whether the document declares the language of its text.",
+    ),
+    fonts: t(
+      "checkAccessibility.factTip.fonts",
+      "Whether every font is included in the file.",
+    ),
+    declares: t(
+      "checkAccessibility.factTip.declares",
+      "Whether the metadata says the file follows PDF/UA.",
+    ),
+    notEncrypted: t(
+      "checkAccessibility.factTip.notEncrypted",
+      "Whether the file is free of encryption, which can stop assistive technology reading it.",
+    ),
+  })[id];
+
+export const checksLabel = (
   t: TFunction,
-  report: AccessibilityReport,
-): AccessibilityFact[] {
-  const { summary } = report;
-  return [
-    {
-      ok: report.tagged,
-      label: t("checkAccessibility.facts.tagged", "Tagged"),
-    },
-    {
-      ok: summary.hasTitle,
-      label: t("checkAccessibility.facts.title", "Has a title"),
-    },
-    {
-      ok: summary.displaysDocTitle,
-      label: t("checkAccessibility.facts.displaysTitle", "Shows its title"),
-    },
-    {
-      ok: summary.hasLanguage,
-      label: t("checkAccessibility.facts.language", "Declares a language"),
-    },
-    {
-      ok: summary.allFontsEmbedded,
-      label: t("checkAccessibility.facts.fonts", "Fonts embedded"),
-    },
-    {
-      ok: report.declaresConformance,
-      label: t("checkAccessibility.facts.declares", "Declares PDF/UA"),
-    },
-    {
-      ok: !summary.encrypted,
-      label: t("checkAccessibility.facts.notEncrypted", "Not encrypted"),
-    },
-  ];
-}
+  checks: { passed: number; total: number },
+) =>
+  t(
+    "checkAccessibility.checks.label",
+    "{{passed}} of {{total}} checks passed",
+    checks,
+  );
 
 export function figuresSummary(
   t: TFunction,

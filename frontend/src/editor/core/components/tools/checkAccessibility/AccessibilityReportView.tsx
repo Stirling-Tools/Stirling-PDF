@@ -1,23 +1,18 @@
-import {
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@editor/ui/Card";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { InfoTooltip } from "@editor/ui/InfoTooltip";
-import { ProgressBar } from "@editor/ui/ProgressBar";
 import { SectionHeader } from "@editor/ui/SectionHeader";
 import { Chip } from "@editor/ui/Chip";
+import { ChecksRing } from "@editor/components/tools/checkAccessibility/ChecksRing";
 import { AccessibilityIssueItem } from "@editor/components/tools/checkAccessibility/AccessibilityIssueItem";
 import {
+  basicLabel,
+  basicTip,
   categoryLabel,
   categoryTip,
-  documentBasics,
+  checksLabel,
   figuresSummary,
   resultLabel,
   resultSummary,
@@ -25,6 +20,7 @@ import {
 import type { AccessibilityReport } from "@editor/types/checkAccessibility";
 import {
   assessAccessibilityReport,
+  type AccessibilityBasicId,
   type AccessibilityCategoryId,
   type AccessibilityResult,
 } from "@editor/utils/accessibilityAssessment";
@@ -38,55 +34,15 @@ const CATEGORY_ICON: Record<AccessibilityCategoryId, IconName> = {
   links: "link",
 };
 
-const RESULT_ICON: Record<AccessibilityResult, IconName> = {
-  pass: "circle-check",
-  partial: "circle-alert",
-  fail: "circle-x",
+const BASIC_ICON: Record<AccessibilityBasicId, IconName> = {
+  tagged: "tags",
+  title: "file-pen",
+  displaysTitle: "eye",
+  language: "globe",
+  fonts: "type",
+  declares: "shield-check",
+  notEncrypted: "lock-open",
 };
-
-let measureContext: CanvasRenderingContext2D | null | undefined;
-
-function textWidth(text: string, font: string): number {
-  measureContext ??= document.createElement("canvas").getContext("2d");
-  if (!measureContext) return 0;
-  measureContext.font = font;
-  return measureContext.measureText(text).width;
-}
-
-/**
- * Whether every basics label fits on one line in half the list's width. Measured from the text
- * rather than the layout, so the answer does not depend on which layout is showing.
- */
-function useBasicsFitTwoColumns(
-  list: RefObject<HTMLUListElement | null>,
-  labels: string[],
-): boolean {
-  const [fits, setFits] = useState(true);
-  const labelsKey = labels.join("\n");
-  useLayoutEffect(() => {
-    const texts = labelsKey.split("\n");
-    const element = list.current;
-    if (!element) return;
-    const check = () => {
-      const label = element.querySelector<HTMLElement>(".a11y-fact__label");
-      const fact = label?.parentElement;
-      if (!label || !fact) return;
-      const gap = parseFloat(getComputedStyle(element).columnGap) || 0;
-      const column = (element.clientWidth - gap) / 2;
-      const inset =
-        label.getBoundingClientRect().left - fact.getBoundingClientRect().left;
-      const font = getComputedStyle(label).font;
-      const widest = Math.max(...texts.map((text) => textWidth(text, font)));
-      setFits(inset + widest <= column);
-    };
-    check();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(check);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [list, labelsKey]);
-  return fits;
-}
 
 /** Every result word stacked in one cell, so each pill is as wide as the longest in any language. */
 function ResultWord({ result }: { result: AccessibilityResult }) {
@@ -111,6 +67,58 @@ function ResultWord({ result }: { result: AccessibilityResult }) {
   );
 }
 
+interface BreakdownRowProps {
+  icon: IconName;
+  label: string;
+  tip: string;
+  passes: boolean;
+  /** Turns the label into a toggle for the details below the row. */
+  toggle?: { open: boolean; controls: string; onToggle: () => void };
+}
+
+function BreakdownRow({ icon, label, tip, passes, toggle }: BreakdownRowProps) {
+  const content: ReactNode = (
+    <>
+      <Icon name={icon} size={16} />
+      <span className="a11y-breakdown__label">{label}</span>
+    </>
+  );
+  return (
+    <div className="a11y-area__row">
+      {toggle ? (
+        <button
+          type="button"
+          className="a11y-area__toggle a11y-area__toggle--button"
+          aria-expanded={toggle.open}
+          aria-controls={toggle.controls}
+          onClick={toggle.onToggle}
+        >
+          <Icon
+            name="chevron-down"
+            size={16}
+            strokeWidth={2}
+            className="a11y-area__chevron"
+          />
+          {content}
+        </button>
+      ) : (
+        <span className="a11y-area__toggle">
+          <span className="a11y-area__chevron" />
+          {content}
+        </span>
+      )}
+      <InfoTooltip label={tip} />
+      <Chip
+        className="a11y-area__status"
+        accent={passes ? "success" : "danger"}
+        size="xs"
+      >
+        <ResultWord result={passes ? "pass" : "fail"} />
+      </Chip>
+    </div>
+  );
+}
+
 interface AccessibilityReportViewProps {
   report: AccessibilityReport;
 }
@@ -119,7 +127,7 @@ export function AccessibilityReportView({
   report,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
-  const { result, areas } = useMemo(
+  const { result, areas, basics, checks } = useMemo(
     () => assessAccessibilityReport(report),
     [report],
   );
@@ -134,23 +142,16 @@ export function AccessibilityReportView({
       if (!next.delete(id)) next.add(id);
       return next;
     });
-
-  const basics = documentBasics(t, report);
-  const basicsList = useRef<HTMLUListElement>(null);
-  const basicsFit = useBasicsFitTwoColumns(
-    basicsList,
-    basics.map((fact) => fact.label),
-  );
-  const basicsMet = basics.filter((fact) => fact.ok).length;
   const figures = figuresSummary(t, report);
 
   return (
     <div className="a11y-report" data-testid="a11y-report">
       <Card padding="default" className="a11y-hero">
-        <Icon
-          name={RESULT_ICON[result]}
-          size={40}
-          className={`a11y-result a11y-result--${result}`}
+        <ChecksRing
+          passed={checks.passed}
+          total={checks.total}
+          result={result}
+          label={checksLabel(t, checks)}
         />
         <div className="a11y-hero__text">
           <span className={`a11y-hero__result a11y-result--${result}`}>
@@ -175,78 +176,6 @@ export function AccessibilityReportView({
 
       <section className="a11y-section">
         <SectionHeader
-          title={t("checkAccessibility.sections.basics", "Document basics")}
-        />
-        <ul
-          ref={basicsList}
-          className={
-            basicsFit ? "a11y-basics" : "a11y-basics a11y-basics--single"
-          }
-        >
-          {basics.map((fact) => (
-            <li key={fact.label} className="a11y-fact">
-              <Icon
-                name={fact.ok ? "circle-check" : "circle-x"}
-                size={16}
-                style={{
-                  color: fact.ok ? "var(--c-success)" : "var(--c-danger)",
-                }}
-                title={
-                  fact.ok
-                    ? t("checkAccessibility.result.pass", "Pass")
-                    : t("checkAccessibility.result.fail", "Fail")
-                }
-              />
-              <span className="a11y-fact__label">{fact.label}</span>
-            </li>
-          ))}
-          <li className="a11y-basics__progress">
-            <span className="a11y-note">
-              {t("checkAccessibility.basics.met", "{{met}} of {{total}} met", {
-                met: basicsMet,
-                total: basics.length,
-              })}
-            </span>
-            <ProgressBar
-              value={basicsMet / basics.length}
-              height={4}
-              color={
-                basicsMet === basics.length
-                  ? "var(--c-success)"
-                  : "var(--c-warning)"
-              }
-              label={t("checkAccessibility.sections.basics", "Document basics")}
-            />
-          </li>
-        </ul>
-      </section>
-
-      {report.humanChecks.length > 0 && (
-        <section className="a11y-section">
-          <SectionHeader
-            title={t(
-              "checkAccessibility.sections.limits",
-              "What this tool can't check",
-            )}
-            collapsible
-            expanded={showLimits}
-            onToggle={() => setShowLimits((value) => !value)}
-          />
-          {showLimits && (
-            <ul className="a11y-manual">
-              {report.humanChecks.map((check) => (
-                <li key={check}>
-                  <Icon name="user-check" size={14} />
-                  <span>{check}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      <section className="a11y-section">
-        <SectionHeader
           title={t("checkAccessibility.sections.breakdown", "Breakdown")}
         />
         <ul className="a11y-breakdown">
@@ -255,49 +184,25 @@ export function AccessibilityReportView({
             const note = area.id === "altText" ? figures : null;
             const open = openAreas.has(area.id);
             const bodyId = `${idPrefix}-area-${area.id}`;
-            const label = (
-              <>
-                <Icon name={CATEGORY_ICON[area.id]} size={16} />
-                <span className="a11y-breakdown__label">
-                  {categoryLabel(t, area.id)}
-                </span>
-              </>
-            );
+            const expandable = !passes || note !== null;
             return (
               <li key={area.id} className="a11y-area">
-                <div className="a11y-area__row">
-                  {passes && !note ? (
-                    <span className="a11y-area__toggle">
-                      <span className="a11y-area__chevron" />
-                      {label}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="a11y-area__toggle a11y-area__toggle--button"
-                      aria-expanded={open}
-                      aria-controls={bodyId}
-                      onClick={() => toggleArea(area.id)}
-                    >
-                      <Icon
-                        name="chevron-down"
-                        size={16}
-                        strokeWidth={2}
-                        className="a11y-area__chevron"
-                      />
-                      {label}
-                    </button>
-                  )}
-                  <InfoTooltip label={categoryTip(t, area.id)} />
-                  <Chip
-                    className="a11y-area__status"
-                    accent={passes ? "success" : "danger"}
-                    size="xs"
-                  >
-                    <ResultWord result={passes ? "pass" : "fail"} />
-                  </Chip>
-                </div>
-                {(!passes || note) && (
+                <BreakdownRow
+                  icon={CATEGORY_ICON[area.id]}
+                  label={categoryLabel(t, area.id)}
+                  tip={categoryTip(t, area.id)}
+                  passes={passes}
+                  toggle={
+                    expandable
+                      ? {
+                          open,
+                          controls: bodyId,
+                          onToggle: () => toggleArea(area.id),
+                        }
+                      : undefined
+                  }
+                />
+                {expandable && (
                   <div
                     id={bodyId}
                     className="sui-collapsible__body"
@@ -327,8 +232,42 @@ export function AccessibilityReportView({
               </li>
             );
           })}
+          {basics.map((basic) => (
+            <li key={basic.id} className="a11y-area">
+              <BreakdownRow
+                icon={BASIC_ICON[basic.id]}
+                label={basicLabel(t, basic.id)}
+                tip={basicTip(t, basic.id)}
+                passes={basic.ok}
+              />
+            </li>
+          ))}
         </ul>
       </section>
+
+      {report.humanChecks.length > 0 && (
+        <section className="a11y-section">
+          <SectionHeader
+            title={t(
+              "checkAccessibility.sections.limits",
+              "What this tool can't check",
+            )}
+            collapsible
+            expanded={showLimits}
+            onToggle={() => setShowLimits((value) => !value)}
+          />
+          {showLimits && (
+            <ul className="a11y-manual">
+              {report.humanChecks.map((check) => (
+                <li key={check}>
+                  <Icon name="user-check" size={14} />
+                  <span>{check}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

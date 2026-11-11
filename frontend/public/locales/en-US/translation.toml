@@ -3278,9 +3278,6 @@ fileFailed = "failed"
 pickFile = "Show results for"
 submit = "Check accessibility"
 
-[checkAccessibility.basics]
-met = "{{met}} of {{total}} met"
-
 [checkAccessibility.category]
 altText = "Alternative text"
 fonts = "Fonts"
@@ -3297,6 +3294,9 @@ links = "Whether links, comments and form fields are tagged and described, and r
 metadata = "Whether the file has a title, shows it when opened, declares PDF/UA, and has the settings assistive technology relies on."
 structure = "Whether the content is tagged so screen readers can follow it: headings, paragraphs, lists, tables and reading order, with decoration marked so it is skipped."
 
+[checkAccessibility.checks]
+label = "{{passed}} of {{total}} checks passed"
+
 [checkAccessibility.error]
 download = "The accessibility report could not be created. Try again."
 fileTitle = "This file could not be checked"
@@ -3310,6 +3310,15 @@ language = "Declares a language"
 notEncrypted = "Not encrypted"
 tagged = "Tagged"
 title = "Has a title"
+
+[checkAccessibility.factTip]
+declares = "Whether the metadata says the file follows PDF/UA."
+displaysTitle = "Whether PDF readers show the document title, rather than the file name, when it opens."
+fonts = "Whether every font is included in the file."
+language = "Whether the document declares the language of its text."
+notEncrypted = "Whether the file is free of encryption, which can stop assistive technology reading it."
+tagged = "Whether the file has tags at all. Without them, screen readers get the text with no headings, lists or reading order."
+title = "Whether the file has a title in its metadata."
 
 [checkAccessibility.figures]
 summary_one = "{{count}} image needs a description (page {{pages}})"
@@ -3364,9 +3373,9 @@ title = "Accessibility report"
 
 [checkAccessibility.result]
 fail = "Fail"
-failSummary = "Screen readers may not be able to read all of it."
+failSummary = "Screen readers may not be able to read all of this document."
 partial = "Partial"
-partialSummary = "Screen readers can read it, but some checks fail."
+partialSummary = "Screen readers can read this document, but some checks fail."
 pass = "Pass"
 passSummary = "Passes every automated PDF/UA check."
 
@@ -3438,7 +3447,6 @@ subtitle_one = "{{profile}} · {{count}} page"
 subtitle_other = "{{profile}} · {{count}} pages"
 
 [checkAccessibility.sections]
-basics = "Document basics"
 breakdown = "Breakdown"
 limits = "What this tool can't check"
 

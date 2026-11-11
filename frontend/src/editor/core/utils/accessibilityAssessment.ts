@@ -61,10 +61,53 @@ export interface AccessibilityArea {
   issues: AccessibilityIssue[];
 }
 
+export type AccessibilityBasicId =
+  | "tagged"
+  | "title"
+  | "displaysTitle"
+  | "language"
+  | "fonts"
+  | "declares"
+  | "notEncrypted";
+
+/** The area whose rules also catch each basic, so a basic failing there is reported only once. */
+const BASIC_AREA: Record<AccessibilityBasicId, AccessibilityCategoryId | null> =
+  {
+    tagged: "structure",
+    title: "metadata",
+    displaysTitle: "metadata",
+    language: "language",
+    fonts: "fonts",
+    declares: "metadata",
+    notEncrypted: null,
+  };
+
+export interface AccessibilityBasic {
+  id: AccessibilityBasicId;
+  ok: boolean;
+}
+
 export interface AccessibilityAssessment {
   result: AccessibilityResult;
   /** Every area in display order; an area passes when it has no issues. */
   areas: AccessibilityArea[];
+  /** Basics the breakdown does not already report: a failing basic is left out when its area fails. */
+  basics: AccessibilityBasic[];
+  /** The basics and areas above, together. */
+  checks: { passed: number; total: number };
+}
+
+function documentBasics(report: AccessibilityReport): AccessibilityBasic[] {
+  const { summary } = report;
+  return [
+    { id: "tagged", ok: report.tagged },
+    { id: "title", ok: summary.hasTitle },
+    { id: "displaysTitle", ok: summary.displaysDocTitle },
+    { id: "language", ok: summary.hasLanguage },
+    { id: "fonts", ok: summary.allFontsEmbedded },
+    { id: "declares", ok: report.declaresConformance },
+    { id: "notEncrypted", ok: !summary.encrypted },
+  ];
 }
 
 /**
@@ -85,5 +128,15 @@ export function assessAccessibilityReport(
       : failing.length === 0 && report.passesAutomatedChecks
         ? "pass"
         : "partial";
-  return { result, areas };
+  const failingIds = new Set(failing.map((area) => area.id));
+  const basics = documentBasics(report).filter((basic) => {
+    const area = BASIC_AREA[basic.id];
+    return basic.ok || area === null || !failingIds.has(area);
+  });
+  const checks = {
+    passed:
+      basics.filter((basic) => basic.ok).length + areas.length - failing.length,
+    total: basics.length + areas.length,
+  };
+  return { result, areas, basics, checks };
 }

@@ -96,4 +96,30 @@ describe("assessAccessibilityReport", () => {
       areas.filter((area) => area.issues.length > 0).map((area) => area.id),
     ).toEqual(["metadata", "fonts"]);
   });
+
+  it("counts every basic and area when nothing overlaps", () => {
+    expect(assessAccessibilityReport(report([])).checks).toEqual({
+      passed: 13,
+      total: 13,
+    });
+  });
+
+  it("leaves out a failing basic its failing area already counts", () => {
+    const { checks, basics } = assessAccessibilityReport(
+      report([issue("7.1", ["structure"]), issue("7.1", ["metadata"])], {
+        tagged: false,
+        summary: { ...report([]).summary, hasTitle: false },
+      }),
+    );
+    expect(basics.map((basic) => basic.id)).not.toContain("tagged");
+    expect(basics.map((basic) => basic.id)).not.toContain("title");
+    expect(checks).toEqual({ passed: 9, total: 11 });
+  });
+
+  it("counts a failing basic whose area passes", () => {
+    const { checks } = assessAccessibilityReport(
+      report([], { summary: { ...report([]).summary, hasLanguage: false } }),
+    );
+    expect(checks).toEqual({ passed: 12, total: 13 });
+  });
 });
