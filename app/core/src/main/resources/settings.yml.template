@@ -113,7 +113,7 @@ premium:
       enabled: false # Enable OneDrive and SharePoint (connected accounts, pipeline locations)
       clientId: "" # Application (client) ID of the Microsoft Entra app registration
       tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
-      clientSecret: "" # Client secret; needed for connected accounts and organisation connections (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
+      clientSecret: "" # Client secret; needed for connected accounts (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
       allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
   enterpriseFeatures:
     audit:

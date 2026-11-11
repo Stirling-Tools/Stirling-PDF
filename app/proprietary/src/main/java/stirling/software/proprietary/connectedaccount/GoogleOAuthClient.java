@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,6 @@ import tools.jackson.databind.JsonNode;
 @RequiredArgsConstructor
 public class GoogleOAuthClient implements CloudOAuthClient {
 
-    private static final Set<String> DRIVE_SCOPES = Set.of("drive", "drive.file", "drive.readonly");
     private static final HttpClient HTTP =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
@@ -115,11 +113,11 @@ public class GoogleOAuthClient implements CloudOAuthClient {
     }
 
     String driveScope() {
-        String configured = app().getAccountScope();
-        String scope =
-                configured == null || !DRIVE_SCOPES.contains(configured.trim())
-                        ? "drive"
-                        : configured.trim();
+        String scope = app().validAccountScope();
+        if (scope == null) {
+            throw new IllegalStateException(
+                    "googleDrive.accountScope must be drive, drive.file or drive.readonly");
+        }
         return "https://www.googleapis.com/auth/" + scope;
     }
 
