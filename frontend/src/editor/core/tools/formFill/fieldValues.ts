@@ -2,6 +2,8 @@ import type { FormField } from "@editor/tools/formFill/types";
 
 /**
  * Maps radio button values from the UI's widget-index representation ("0", "1", ...)
+ * Contract: This boundary strictly expects UI widget index representations.
+ * If a value is already equal to the target export value, it is preserved.
  * back to the canonical export value or appearance state expected by backend endpoints
  * and file export formats (JSON, CSV, XLSX).
  */
