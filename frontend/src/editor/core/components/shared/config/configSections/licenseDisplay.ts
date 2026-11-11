@@ -334,8 +334,9 @@ export interface DependencyRow extends Dependency {
 // The license report lists one row per resolved artifact, so the same module
 // shows up at several versions; a notice names each module once per license.
 // Versions aggregate only within records that already agree on everything else:
-// a version is never borrowed onto a row carrying a different license text, and
-// a textless record keeps its own versions instead of inventing a relationship.
+// a version is never borrowed onto a row carrying different license or notice
+// text, and a textless record keeps its own versions instead of inventing a
+// relationship.
 export function dedupeDependencies(
   dependencies: Dependency[],
 ): DependencyRow[] {
@@ -363,16 +364,23 @@ export function dedupeDependencies(
     const textSlots = new Map<string, VersionSlot>();
     let bare: VersionSlot | undefined;
     for (const dependency of group) {
-      const slot = dependency.moduleLicenseText
+      const hasText = Boolean(
+        dependency.moduleLicenseText || dependency.moduleNoticeText,
+      );
+      const textKey = [
+        dependency.moduleLicenseText || "",
+        dependency.moduleNoticeText || "",
+      ].join("\u0000");
+      const slot = hasText
         ? (() => {
-            const existing = textSlots.get(dependency.moduleLicenseText);
+            const existing = textSlots.get(textKey);
             if (existing) return existing;
             const created: VersionSlot = {
               row: dependency,
               versions: [],
               seen: new Set(),
             };
-            textSlots.set(dependency.moduleLicenseText, created);
+            textSlots.set(textKey, created);
             return created;
           })()
         : (bare ??= { row: dependency, versions: [], seen: new Set() });

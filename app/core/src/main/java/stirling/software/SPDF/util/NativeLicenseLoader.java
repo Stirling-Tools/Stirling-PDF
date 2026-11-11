@@ -60,6 +60,9 @@ public final class NativeLicenseLoader {
     private static final Pattern FILE_TOKEN = Pattern.compile("(?i)[a-z0-9._+/-]+\\.txt\\b");
     private static final Pattern PARENTHETICAL_FILE_REFERENCE =
             Pattern.compile("\\([^()]*\\.txt[^()]*\\)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DANGLING_REFERENCE =
+            Pattern.compile(
+                    "(?i)\\b(?:see|text\\s+is\\s+in|text\\s+in|is\\s+in|in)\\s*(?=[,.;]|$)");
     private static final Set<String> LICENSE_MARKERS =
             Set.of(
                     "APACHE",
@@ -79,13 +82,19 @@ public final class NativeLicenseLoader {
     private NativeLicenseLoader() {}
 
     public static List<Dependency> loadNativeLicenses(ClassLoader classLoader) {
+        return loadNativeLicensesResult(classLoader).dependencies();
+    }
+
+    /** Loads native notices and reports whether every discovered notice was readable. */
+    public static LoadResult loadNativeLicensesResult(ClassLoader classLoader) {
         List<Dependency> merged = new ArrayList<>();
+        boolean complete = true;
         Enumeration<URL> notices;
         try {
             notices = classLoader.getResources(NOTICE_RESOURCE);
         } catch (IOException e) {
             log.warn("Unable to enumerate native license notices", e);
-            return List.of();
+            return new LoadResult(List.of(), false);
         }
         while (notices.hasMoreElements()) {
             URL noticeUrl = notices.nextElement();
@@ -98,10 +107,11 @@ public final class NativeLicenseLoader {
                     mergeNotice(merged, orphan);
                 }
             } catch (Exception e) {
+                complete = false;
                 log.warn("Skipping unreadable native license notice {}", noticeUrl, e);
             }
         }
-        return merged;
+        return new LoadResult(merged, complete);
     }
 
     private static void mergeNotice(List<Dependency> merged, Dependency incoming) {
@@ -257,6 +267,9 @@ public final class NativeLicenseLoader {
         Dependency dependency = new Dependency();
         dependency.setModuleName(name);
         dependency.setModuleLicense(moduleLicense);
+        if (!notesText.isEmpty()) {
+            dependency.setModuleNoticeText(notesText);
+        }
         if (!licenseFiles.isEmpty()) {
             List<String> texts = new ArrayList<>();
             for (String file : licenseFiles) {
@@ -273,9 +286,6 @@ public final class NativeLicenseLoader {
                 String copyrightText = copyright.toString().trim();
                 if (!copyrightText.isEmpty()) {
                     parts.add("Copyright " + copyrightText);
-                }
-                if (!notesText.isEmpty()) {
-                    parts.add(notesText);
                 }
                 parts.add(String.join("\n\n", texts));
                 dependency.setModuleLicenseText(String.join("\n\n", parts));
@@ -305,12 +315,17 @@ public final class NativeLicenseLoader {
         if (text.isEmpty()) {
             return text;
         }
+        boolean hadFileReference = FILE_TOKEN.matcher(text).find();
         String stripped = PARENTHETICAL_FILE_REFERENCE.matcher(text).replaceAll("");
         String withoutReferences = removeSentencesWithFileReferences(stripped);
-        if (withoutReferences.isBlank() && FILE_TOKEN.matcher(stripped).find()) {
+        if (withoutReferences.isBlank() && hadFileReference) {
             withoutReferences = FILE_TOKEN.matcher(stripped).replaceAll("");
         }
-        return tidyLabel(FILE_TOKEN.matcher(withoutReferences).replaceAll(""));
+        String cleaned = FILE_TOKEN.matcher(withoutReferences).replaceAll("");
+        if (hadFileReference) {
+            cleaned = DANGLING_REFERENCE.matcher(cleaned).replaceAll("");
+        }
+        return tidyLabel(cleaned);
     }
 
     private static String removeSentencesWithFileReferences(String text) {
@@ -481,6 +496,8 @@ public final class NativeLicenseLoader {
             throw new IOException("Cannot resolve native license file " + licenseFile, e);
         }
     }
+
+    public record LoadResult(List<Dependency> dependencies, boolean complete) {}
 
     private record ParsedNotice(List<Dependency> dependencies, Set<String> referencedFiles) {}
 }

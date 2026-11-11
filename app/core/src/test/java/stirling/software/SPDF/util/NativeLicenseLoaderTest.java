@@ -335,8 +335,46 @@ class NativeLicenseLoaderTest {
         assertEquals("(MIT OR Apache-2.0) AND IJG", jpeg.getModuleLicense());
         assertTrue(jpeg.getModuleLicenseText().contains("IJG text."));
         assertTrue(
-                jpeg.getModuleLicenseText().contains("Independent JPEG Group"),
+                jpeg.getModuleNoticeText().contains("Independent JPEG Group"),
                 "the IJG attribution sentence survives as supporting notice text");
+    }
+
+    @Test
+    void keepsFilelessAttributionAndStripsInlineReferences(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Fileless Attribution\n"
+                        + "   - Copyright (c) 2026 Attribution Authors\n"
+                        + "   - License: BSD-2-Clause\n"
+                        + "   - The JIT compiler bundles SLJIT, Copyright Zoltan Herczeg.\n"
+                        + "2. Inline Only\n"
+                        + "   - License: Apache-2.0 text is in INLINE.txt\n"
+                        + "3. Bare See\n"
+                        + "   - License: MIT License. See BARE.txt\n");
+        Files.writeString(licensesDir.resolve("INLINE.txt"), "Inline text.");
+        Files.writeString(licensesDir.resolve("BARE.txt"), "Bare text.");
+
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+
+        Dependency fileless = byName.get("Fileless Attribution");
+        assertNotNull(fileless);
+        assertEquals("BSD-2-Clause", fileless.getModuleLicense());
+        assertNull(
+                fileless.getModuleLicenseText(),
+                "attribution notes are not presented as the full license text");
+        assertTrue(fileless.getModuleNoticeText().contains("SLJIT"));
+
+        assertEquals("Apache-2.0", byName.get("Inline Only").getModuleLicense());
+        assertEquals("MIT License.", byName.get("Bare See").getModuleLicense());
+        assertTrue(byName.get("Bare See").getModuleLicenseText().contains("Bare text."));
     }
 
     @Test

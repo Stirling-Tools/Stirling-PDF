@@ -216,6 +216,20 @@ describe("dedupeDependencies", () => {
     expect(text?.moduleVersion).toBeUndefined();
   });
 
+  it("keeps a notice-only record separate from a bare record", () => {
+    const result = dedupeDependencies([
+      {
+        ...dependency("fileless-codec", "BSD-2-Clause"),
+        moduleNoticeText: "SLJIT notice",
+      },
+      dependency("fileless-codec", "BSD-2-Clause"),
+    ]);
+    expect(result).toHaveLength(2);
+    expect(result.some((row) => row.moduleNoticeText === "SLJIT notice")).toBe(
+      true,
+    );
+  });
+
   it("attributes each version to the text it arrived with", () => {
     const result = dedupeDependencies([
       {

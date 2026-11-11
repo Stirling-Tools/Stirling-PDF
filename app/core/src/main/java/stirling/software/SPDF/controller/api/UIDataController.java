@@ -47,8 +47,8 @@ public class UIDataController {
     private final RuntimePathConfig runtimePathConfig;
     private final ObjectMapper objectMapper;
 
-    // The license bundle is static for the life of the process; caching keeps
-    // each settings request from re-reading the multi-hundred-kilobyte notices.
+    // The license bundle is static for the life of the process, but a partial
+    // read must not be cached: a transient classpath failure should retry.
     private volatile List<Dependency> licensesCache;
 
     public UIDataController(
@@ -108,13 +108,18 @@ public class UIDataController {
         }
         synchronized (this) {
             if (licensesCache == null) {
-                licensesCache = readLicenses();
+                LicenseLoad loaded = readLicenses();
+                if (loaded.complete()) {
+                    licensesCache = loaded.dependencies();
+                }
+                return loaded.dependencies();
             }
             return licensesCache;
         }
     }
 
-    private List<Dependency> readLicenses() {
+    private LicenseLoad readLicenses() {
+        boolean complete = true;
         List<Dependency> combined = new ArrayList<>();
         try {
             Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
@@ -133,19 +138,25 @@ public class UIDataController {
         } catch (IOException | JacksonException e) {
             // Jackson 3 reports malformed JSON with an unchecked JacksonException,
             // which must not suppress the native notices loaded below.
+            complete = false;
             log.error("Failed to load licenses data", e);
         }
         try {
             // Resource discovery follows the thread context loader, which hosted
             // runtimes and tests both control.
-            combined.addAll(
-                    NativeLicenseLoader.loadNativeLicenses(
-                            Thread.currentThread().getContextClassLoader()));
+            NativeLicenseLoader.LoadResult nativeLicenses =
+                    NativeLicenseLoader.loadNativeLicensesResult(
+                            Thread.currentThread().getContextClassLoader());
+            combined.addAll(nativeLicenses.dependencies());
+            complete = complete && nativeLicenses.complete();
         } catch (RuntimeException e) {
+            complete = false;
             log.warn("Unable to load JPDFium native licenses", e);
         }
-        return List.copyOf(combined);
+        return new LicenseLoad(List.copyOf(combined), complete);
     }
+
+    private record LicenseLoad(List<Dependency> dependencies, boolean complete) {}
 
     @GetMapping("/pipeline")
     @Operation(summary = "Get pipeline configuration data")
