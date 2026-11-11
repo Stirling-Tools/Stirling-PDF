@@ -178,25 +178,17 @@ it("is a save target for files opened from OneDrive", () => {
   ).toBe(false);
 });
 
-it("keeps updating a copy Stirling made, whatever the setting", () => {
-  const { result } = renderHook(useOneDriveSave);
-  const target = result.current.target!;
-  const copy = { ...stub, cloudOrigin: { ...origin, stirlingCopy: true } };
-  expect(target.plan!(copy, "copy")).toBe("replace");
-  expect(target.plan!(stub, "copy")).toBe("copy");
-});
-
-it("saves a copy next to the original when asked to", async () => {
+it("saves a copy next to the original from Save a copy", async () => {
   mocks.save.mockResolvedValue({
     ...origin,
     itemId: "item-2",
     name: "Report (edited).pdf",
   });
   const { result } = renderHook(useOneDriveSave);
-  const outcome = await act(() =>
-    result.current.target!.save(stub, new File(["%PDF"], "Report.pdf"), "copy"),
+  const saved = await act(() =>
+    result.current.saveCopy(stub, new File(["%PDF"], "Report.pdf")),
   );
-  expect(outcome).toBe("saved");
+  expect(saved).toBeTruthy();
   expect(mocks.save).toHaveBeenCalledWith(
     expect.any(File),
     expect.objectContaining({ kind: "copy", name: "Report (edited).pdf" }),
