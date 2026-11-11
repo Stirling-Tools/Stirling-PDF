@@ -82,7 +82,9 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
     }
   };
 
-  const displayError = error || validationError;
+  // The local message wins because it is always the newer one: every path that
+  // can set `error` (email submit, OAuth success) clears validationError first.
+  const displayError = validationError || error;
 
   return (
     <>
@@ -94,7 +96,10 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
       <ErrorMessage error={displayError} />
 
       <DesktopOAuthButtons
-        onOAuthSuccess={onOAuthSuccess}
+        onOAuthSuccess={(userInfo) => {
+          setValidationError(null);
+          return onOAuthSuccess(userInfo);
+        }}
         onError={handleOAuthError}
         isDisabled={loading}
         serverUrl={serverUrl}

@@ -21,7 +21,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-function show() {
+function show(error: string | null = null) {
   render(
     <MantineProvider>
       <SaaSLoginScreen
@@ -30,7 +30,7 @@ function show() {
         onOAuthSuccess={vi.fn()}
         onSwitchToSignup={vi.fn()}
         loading={false}
-        error={null}
+        error={error}
       />
     </MantineProvider>,
   );
@@ -66,6 +66,19 @@ it("says so when the system browser cannot open, and clears on retry", async () 
   expect(
     screen.queryByText("Could not open your browser to reset your password."),
   ).toBeNull();
+});
+
+it("shows the reset failure over an earlier login failure", async () => {
+  vi.mocked(openExternal).mockRejectedValue(new Error("Shell unavailable"));
+  show("Invalid username or password.");
+  expect(screen.getByText("Invalid username or password.")).toBeVisible();
+  fireEvent.click(forgotPassword());
+  expect(
+    await screen.findByText(
+      "Could not open your browser to reset your password.",
+    ),
+  ).toBeVisible();
+  expect(screen.queryByText("Invalid username or password.")).toBeNull();
 });
 
 it("reports a missing web URL instead of opening anything", async () => {
