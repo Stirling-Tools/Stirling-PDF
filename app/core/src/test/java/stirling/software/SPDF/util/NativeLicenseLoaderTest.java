@@ -254,6 +254,161 @@ class NativeLicenseLoaderTest {
     }
 
     @Test
+    void parsesLetteredSubsectionsAndBareSeeBullets(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Parent\n"
+                        + "   - License: BSD 3-Clause (see PARENT.txt)\n"
+                        + "2a. Abseil\n"
+                        + "   - Copyright (c) 2017 The Abseil Authors\n"
+                        + "   - License: Apache License 2.0 (see ABSEIL.txt)\n"
+                        + "2b. JPDFium compact CMYK profile\n"
+                        + "   - See PROFILE.NOTICE.txt\n"
+                        + "6a. Lerc\n"
+                        + "   - License: Apache License 2.0 (see LERC.txt)\n");
+        Files.writeString(licensesDir.resolve("PARENT.txt"), "Parent text.");
+        Files.writeString(licensesDir.resolve("ABSEIL.txt"), "Abseil text.");
+        Files.writeString(licensesDir.resolve("PROFILE.NOTICE.txt"), "Profile notice text.");
+        Files.writeString(licensesDir.resolve("LERC.txt"), "Lerc text.");
+
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+        assertEquals(4, byName.size());
+
+        Dependency abseil = byName.get("Abseil");
+        assertNotNull(abseil, "lettered subsections are components too");
+        assertEquals("Apache License 2.0", abseil.getModuleLicense());
+        assertTrue(abseil.getModuleLicenseText().contains("Abseil text."));
+
+        Dependency profile = byName.get("JPDFium compact CMYK profile");
+        assertNotNull(profile, "a section that only names a bundled notice still appears");
+        assertEquals("Bundled notice", profile.getModuleLicense());
+        assertTrue(profile.getModuleLicenseText().contains("Profile notice text."));
+
+        assertTrue(byName.get("Lerc").getModuleLicenseText().contains("Lerc text."));
+    }
+
+    @Test
+    void resolvesInlineTextReferencesAndKeepsAttributionBullets(@TempDir Path tempDir)
+            throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. SVG rasterization\n"
+                        + "   - License: Apache-2.0 OR MIT (resvg/...), BSD-3-Clause"
+                        + " (tiny-skia).\n"
+                        + "     The Apache-2.0 text is in HIGHWAY.txt, MIT in HARFBUZZ.txt.\n"
+                        + "2. jpeg-encoder\n"
+                        + "   - License: (MIT OR Apache-2.0) AND IJG (Apache-2.0 text in\n"
+                        + "     HIGHWAY.txt, MIT in HARFBUZZ.txt, IJG in IJG.txt)\n"
+                        + "   - This software is based in part on the work of the\n"
+                        + "     Independent JPEG Group.\n");
+        Files.writeString(licensesDir.resolve("HIGHWAY.txt"), "Highway text.");
+        Files.writeString(licensesDir.resolve("HARFBUZZ.txt"), "HarfBuzz text.");
+        Files.writeString(licensesDir.resolve("IJG.txt"), "IJG text.");
+
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+        Dependency resvg = byName.get("SVG rasterization");
+        assertNotNull(resvg);
+        assertEquals(
+                "Apache-2.0 OR MIT (resvg/...), BSD-3-Clause (tiny-skia).",
+                resvg.getModuleLicense());
+        assertTrue(resvg.getModuleLicenseText().contains("Highway text."));
+        assertTrue(resvg.getModuleLicenseText().contains("HarfBuzz text."));
+
+        Dependency jpeg = byName.get("jpeg-encoder");
+        assertNotNull(jpeg);
+        assertEquals("(MIT OR Apache-2.0) AND IJG", jpeg.getModuleLicense());
+        assertTrue(jpeg.getModuleLicenseText().contains("IJG text."));
+        assertTrue(
+                jpeg.getModuleLicenseText().contains("Independent JPEG Group"),
+                "the IJG attribution sentence survives as supporting notice text");
+    }
+
+    @Test
+    void treatsAnySiblingTxtMentionAsAFileReference(@TempDir Path tempDir) throws Exception {
+        Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+        Files.writeString(
+                licensesDir.resolve("NOTICE.txt"),
+                "1. Future Phrasing\n"
+                        + "   - License: MIT (bundled as FUTURE-A.txt; attribution in"
+                        + " FUTURE-B.txt)\n"
+                        + "2. Star Bullets\n"
+                        + "   * Copyright (c) 2026 Star\n"
+                        + "   * License: BSD 3-Clause (see STAR.txt)\n"
+                        + "   * Additional attribution lives in STAR-NOTICE.txt\n");
+        Files.writeString(licensesDir.resolve("FUTURE-A.txt"), "Future A text.");
+        Files.writeString(licensesDir.resolve("FUTURE-B.txt"), "Future B text.");
+        Files.writeString(licensesDir.resolve("STAR.txt"), "Star text.");
+        Files.writeString(licensesDir.resolve("STAR-NOTICE.txt"), "Star notice text.");
+
+        List<Dependency> dependencies;
+        try (URLClassLoader loader =
+                new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+            dependencies = NativeLicenseLoader.loadNativeLicenses(loader);
+        }
+
+        Map<String, Dependency> byName =
+                dependencies.stream().collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+        Dependency future = byName.get("Future Phrasing");
+        assertNotNull(future);
+        assertEquals("MIT", future.getModuleLicense());
+        assertTrue(future.getModuleLicenseText().contains("Future A text."));
+        assertTrue(future.getModuleLicenseText().contains("Future B text."));
+
+        Dependency star = byName.get("Star Bullets");
+        assertNotNull(star, "bullets other than '-' are still metadata");
+        assertEquals("BSD 3-Clause", star.getModuleLicense());
+        assertTrue(star.getModuleLicenseText().contains("Star text."));
+        assertTrue(star.getModuleLicenseText().contains("Star notice text."));
+    }
+
+    @Test
+    void listsLicenseFilesTheNoticeDoesNotReference(@TempDir Path tempDir) throws Exception {
+        Path jar = tempDir.resolve("natives.jar");
+        writeJar(
+                jar,
+                Map.of(
+                        "licenses/NOTICE.txt",
+                        notice("Referenced Codec", "MIT License (see REFERENCED-MIT.txt)"),
+                        "licenses/REFERENCED-MIT.txt",
+                        "Referenced text.",
+                        "licenses/AOM-BSD-2.txt",
+                        "AOM text.",
+                        "licenses/DAV1D-ISC.txt",
+                        "dav1d text.",
+                        "licenses/UTIL-LINUX-LGPL-2.1.txt",
+                        "util-linux text.",
+                        "licenses/README.md",
+                        "not a license"));
+
+        Map<String, Dependency> byName =
+                loadFromJars(jar).stream()
+                        .collect(Collectors.toMap(Dependency::getModuleName, d -> d));
+
+        assertEquals(4, byName.size(), "referenced file is not repeated as an orphan");
+        assertEquals("BSD-2-Clause", byName.get("AOM").getModuleLicense());
+        assertEquals("ISC", byName.get("DAV1D").getModuleLicense());
+        assertEquals("LGPL-2.1", byName.get("UTIL-LINUX").getModuleLicense());
+        assertTrue(
+                byName.get("Referenced Codec").getModuleLicenseText().contains("Referenced text."));
+    }
+
+    @Test
     void noNoticeOnTheClasspathReturnsEmptyList() throws Exception {
         List<Dependency> dependencies;
         try (URLClassLoader loader = new URLClassLoader(new URL[0], null)) {
