@@ -30,10 +30,6 @@ const TEST_DEFAULTS = {
   deps: {
     optimizer: { client: { enabled: true, include: MANTINE_PACKAGES } },
   },
-  // jsdom tests run through Vite's server dependency pipeline, not the browser
-  // optimizer. Inline Mantine there as well so every component sees the same
-  // MantineProvider context instead of an externalized duplicate module.
-  server: { deps: { inline: MANTINE_PACKAGES } },
   // All our tests are designed to run in the browser
   testTransformMode: { web: ["**/*"] },
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
@@ -70,6 +66,8 @@ export default defineConfig({
     projects: [
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
+        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "core",
           ...TEST_DEFAULTS,
@@ -96,6 +94,8 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
+        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "processor",
           ...TEST_DEFAULTS,
@@ -121,6 +121,8 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
+        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "proprietary",
           ...TEST_DEFAULTS,
@@ -144,6 +146,8 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
+        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "desktop",
           ...TEST_DEFAULTS,
@@ -167,6 +171,8 @@ export default defineConfig({
       },
       {
         extends: true,
+        resolve: { dedupe: MANTINE_PACKAGES },
+        server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "saas",
           ...TEST_DEFAULTS,
