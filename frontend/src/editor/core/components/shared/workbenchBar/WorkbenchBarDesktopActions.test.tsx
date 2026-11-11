@@ -14,6 +14,14 @@ const renderActions = (downloadDisabledReason?: string) =>
         downloadLabel="Download"
         downloadIconName="download"
         saveAsIconName="save"
+        saveMenu={[
+          {
+            key: "local",
+            label: "Save a copy...",
+            icon: "laptop",
+            onClick: vi.fn(),
+          },
+        ]}
         onPrint={vi.fn()}
         downloadDisabledReason={downloadDisabledReason}
         onExport={vi.fn()}
@@ -28,13 +36,17 @@ describe("WorkbenchBarDesktopActions", () => {
       "Your Microsoft Purview permissions do not allow saving a copy of this PDF.",
     );
     expect(screen.getByRole("button", { name: "Download" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /save ?as/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "saveFile.menu.more" }),
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: /print/i })).toBeEnabled();
   });
 
   test("keeps saving available otherwise", () => {
     renderActions();
     expect(screen.getByRole("button", { name: "Download" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /save ?as/i })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "saveFile.menu.more" }),
+    ).toBeEnabled();
   });
 });
