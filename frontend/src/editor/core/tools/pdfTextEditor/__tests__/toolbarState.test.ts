@@ -53,3 +53,42 @@ describe("deriveToolbarState mixed.fontFamily", () => {
     expect(s.mixed.fontFamily).toBe(false);
   });
 });
+
+describe("deriveToolbarState documentFontId", () => {
+  const changed = (id: string, from: string) => ({
+    ...mkRun(id, "device:Arial"),
+    documentFontId: from,
+  });
+
+  it("is null while the runs are still in the PDF's own font", () => {
+    const s = deriveToolbarState(
+      mkPages([mkRun("a", "pdf:1:Garamond")]),
+      mkSel(["a"]),
+    );
+    expect(s.documentFontId).toBeNull();
+  });
+
+  it("names the font every selected run was changed away from", () => {
+    const s = deriveToolbarState(
+      mkPages([changed("a", "pdf:1:Garamond"), changed("b", "pdf:1:Garamond")]),
+      mkSel(["a", "b"]),
+    );
+    expect(s.documentFontId).toBe("pdf:1:Garamond");
+  });
+
+  it("is null when the runs came from different fonts", () => {
+    const s = deriveToolbarState(
+      mkPages([changed("a", "pdf:1:Garamond"), changed("b", "pdf:2:Bodoni")]),
+      mkSel(["a", "b"]),
+    );
+    expect(s.documentFontId).toBeNull();
+  });
+
+  it("is null when only some runs were changed", () => {
+    const s = deriveToolbarState(
+      mkPages([changed("a", "pdf:1:Garamond"), mkRun("b", "device:Arial")]),
+      mkSel(["a", "b"]),
+    );
+    expect(s.documentFontId).toBeNull();
+  });
+});

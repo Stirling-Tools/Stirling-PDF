@@ -13,6 +13,7 @@ import type {
 
 export const EMPTY_TOOLBAR: ToolbarState = {
   fontFamily: null,
+  documentFontId: null,
   fontSize: null,
   fill: null,
   bold: false,
@@ -66,8 +67,13 @@ export function deriveToolbarState(
   const sameItalic = selected.every(
     (r) => isItalicFamily(r.fontId) === firstItalic,
   );
+  const documentFontId = first.documentFontId ?? null;
+  const sameDocumentFont = selected.every(
+    (r) => (r.documentFontId ?? null) === documentFontId,
+  );
   return {
     fontFamily: first.fontId,
+    documentFontId: sameDocumentFont ? documentFontId : null,
     fontSize: sameSize ? first.fontSize : null,
     fill: sameFill ? first.fill : null,
     bold: firstBold,

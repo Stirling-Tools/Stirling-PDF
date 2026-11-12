@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { alert } from "@editor/components/toast";
+import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   faceStyleFlags,
@@ -66,6 +67,12 @@ type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
+  /**
+   * The fontId of the PDF's own font the selection was changed away from.
+   * Listed as a pickable option whose value is that fontId, so the text can be
+   * put back in it.
+   */
+  documentFontId?: string | null;
   onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
   disabled?: boolean;
@@ -75,6 +82,7 @@ interface FontFamilySelectProps {
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
 export function FontFamilySelect({
   value,
+  documentFontId = null,
   onChange,
   mixed = false,
   disabled = false,
@@ -146,12 +154,18 @@ export function FontFamilySelect({
     if (
       serverOptions.length === 0 &&
       deviceOptions.length === 0 &&
-      !documentFamily
+      !documentFamily &&
+      !documentFontId
     ) {
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    if (documentFamily) {
+    if (documentFontId) {
+      groups.push({
+        group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
+        items: [{ value: documentFontId, label: familyOf(documentFontId) }],
+      });
+    } else if (documentFamily) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
         items: [
@@ -176,7 +190,7 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [serverOptions, deviceOptions, documentFamily, t]);
+  }, [serverOptions, deviceOptions, documentFamily, documentFontId, t]);
 
   const pickFailureText = useCallback(
     (failure: FontPickFailure): string => {
