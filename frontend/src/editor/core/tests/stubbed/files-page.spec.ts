@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { readFileSync } from "node:fs";
 import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@editor/services/indexedDBManager";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 /** Stubbed coverage for the /files page UI invariants. */
 
@@ -1505,7 +1506,7 @@ test.describe("Files page", () => {
   test.describe("Clear library", () => {
     test.use({ autoGoto: false });
 
-    test("clears loose files but keeps foldered ones and never touches the cloud", async ({
+    test("clears loose and open files but keeps foldered ones and never touches the cloud", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -1532,19 +1533,25 @@ test.describe("Files page", () => {
       await page.goto("/editor", { waitUntil: "domcontentloaded" });
       const rows = page.locator(".file-sidebar-file-item");
       await expect(rows).toHaveCount(3, { timeout: 10_000 });
+      // An upload lands open in the workbench; the clear closes it too.
+      await uploadFiles(
+        page,
+        `${import.meta.dirname}/../test-fixtures/sample.pdf`,
+      );
+      await expect(rows).toHaveCount(4);
 
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
-      await expect(dialog).toContainText("Remove 2 files from your library?");
+      await expect(dialog).toContainText("Remove 3 files from your library?");
       await expect(dialog).toContainText("(1)");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
       await expect(rows).toHaveCount(1);
       await expect(rows.first()).toContainText("filed.pdf");
       // Only the foldered file is left, so there is nothing more to clear.
-      await expect(
-        page.getByTestId("file-sidebar-clear-library"),
-      ).toHaveCount(0);
+      await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
+        0,
+      );
       expect(serverDeletes).toEqual([]);
     });
   });

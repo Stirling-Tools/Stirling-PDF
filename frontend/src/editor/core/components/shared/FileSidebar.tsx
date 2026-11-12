@@ -839,15 +839,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
-    // "Clear library" spares anything filed in a folder, and anything open, so it
-    // never closes the document being worked on. It only removes the library's
-    // own copies: cloud files stay on the server and nothing on disk is touched.
+    // "Clear library" spares anything filed in a folder, and closes whatever else
+    // is open. It only removes the library's own copies: cloud files stay on the
+    // server and nothing on disk is touched.
     const clearableStubs = useMemo(
-      () =>
-        allFileStubs.filter(
-          (s) => s.folderId == null && !workbenchIds.has(s.id as string),
-        ),
-      [allFileStubs, workbenchIds],
+      () => allFileStubs.filter((s) => s.folderId == null),
+      [allFileStubs],
     );
     const handleConfirmClearLibrary = useCallback(async () => {
       const ids = clearableStubs.map((s) => s.id);

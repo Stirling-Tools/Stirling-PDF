@@ -4811,7 +4811,7 @@ body_other = "Remove {{count}} files from your library? This clears them from St
 button = "Clear library"
 confirm = "Clear library"
 error = "Could not clear. Try again."
-kept = "Files in folders and files you have open are kept ({{kept}})."
+kept = "Files in folders are kept ({{kept}})."
 title = "Clear PDF library?"
 
 [fileSidebar.fileItem]

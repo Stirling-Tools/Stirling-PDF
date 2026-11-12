@@ -8,7 +8,7 @@ interface ClearLibraryDialogProps {
   opened: boolean;
   /** Files the clear will remove. */
   clearCount: number;
-  /** Files it leaves alone (in a folder, or open in the workbench). */
+  /** Files it leaves alone because they are filed in a folder. */
   keptCount: number;
   onClose: () => void;
   /** Perform the clear; may throw to surface an error. */
@@ -70,7 +70,7 @@ export function ClearLibraryDialog({
           <Text size="sm" c="dimmed">
             {t(
               "fileSidebar.clearLibrary.kept",
-              "Files in folders and files you have open are kept ({{kept}}).",
+              "Files in folders are kept ({{kept}}).",
               { kept: keptCount },
             )}
           </Text>
