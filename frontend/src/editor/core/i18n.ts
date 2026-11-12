@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
+import * as reactI18next from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import TomlBackend from "@editor/i18n/tomlBackend";
 import {
@@ -27,10 +27,15 @@ export {
 const i18nInstance = i18n.use(TomlBackend).use(LanguageDetector);
 
 // Some focused tests mock react-i18next with only the hooks they exercise.
-// The React plugin is optional for i18next's core initialization, so do not
-// make those lightweight mocks provide an unused integration plugin.
-if (initReactI18next) {
-  i18nInstance.use(initReactI18next);
+// Vitest throws when a missing named export is read from an automock, so read
+// the optional integration plugin defensively.
+try {
+  const initReactI18next = reactI18next.initReactI18next;
+  if (initReactI18next) {
+    i18nInstance.use(initReactI18next);
+  }
+} catch {
+  // The React plugin is optional for i18next's core initialization.
 }
 
 i18nInstance.init({
