@@ -124,7 +124,7 @@ describe("editor inline OCR", () => {
     });
     mocks.exportPdf.mockResolvedValue({
       blob: new Blob(["%PDF-1.7\ncurrent edits"], { type: "application/pdf" }),
-      filename: "scan_edited.pdf",
+      filename: "scan.pdf",
     });
     mocks.checkCredits.mockResolvedValue(null);
     mocks.ensureReady.mockResolvedValue(true);

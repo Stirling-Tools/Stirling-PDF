@@ -19,7 +19,7 @@ import {
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
 
-/** Serialize the editor document to a Blob plus the download filename. */
+/** Serialize the editor document to a Blob plus the name to save it under: the opened file's own. */
 export async function exportToBlob(
   doc: EditorDocument,
   sourceName?: string | null,
@@ -183,11 +183,10 @@ function pdfBlob(bytes: Uint8Array): Blob {
   });
 }
 
-// Derive from the opened file's name so downloads don't all collide on
-// a generic "edited.pdf".
+// The opened file's own name: a save lands on that file as its next version,
+// and a suffix here would rename it on every save.
 function exportName(sourceName?: string | null): string {
-  const base = (sourceName ?? "").replace(/\.pdf$/i, "").trim();
-  return base ? `${base}_edited.pdf` : "edited.pdf";
+  return sourceName?.trim() || "edited.pdf";
 }
 
 /**
