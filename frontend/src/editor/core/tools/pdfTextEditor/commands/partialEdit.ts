@@ -224,6 +224,12 @@ export interface PartialEditPlan {
   ops: PartialEditOp[];
   /** Per-sub-run status (parallel to prevMergedFromPtrs). */
   subRunStatus: Array<"all-kept" | "all-deleted" | "mixed">;
+  /**
+   * Deleted whitespace that belonged to no object, by the sub-run right after
+   * it. Removing it frees no object, so the apply has to close the space it
+   * took by shifting what follows.
+   */
+  ghostGaps: Array<{ beforeSubRunIdx: number; removed: number }>;
   /** Snapshot of current model arrays for revert. */
   prevMergedFromPtrs: number[];
   prevMergedFromTexts: string[];
@@ -388,6 +394,30 @@ export function planPartialEdit(
     }
   }
 
+  // Sub-runs in text order; a gap's whitespace sits between consecutive ones.
+  // A gap after an all-deleted sub-run is already covered by that sub-run's
+  // advance, which the apply subtracts.
+  const ghostGaps: Array<{ beforeSubRunIdx: number; removed: number }> = [];
+  const textOrder = subRunRanges
+    .map((range, idx) => ({ range, idx }))
+    .filter(
+      (e): e is { range: { start: number; end: number }; idx: number } =>
+        e.range !== null && e.range.end > e.range.start,
+    )
+    .sort((a, b) => a.range.start - b.range.start);
+  for (let k = 1; k < textOrder.length; k++) {
+    const before = textOrder[k - 1];
+    const after = textOrder[k];
+    if (subRunStatus[before.idx] === "all-deleted") continue;
+    let removed = 0;
+    for (let c = before.range.end; c < after.range.start; c++) {
+      if (charToSubRun[c] === -1 && /\s/.test(prevText[c]) && !keptA.has(c)) {
+        removed += 1;
+      }
+    }
+    if (removed > 0) ghostGaps.push({ beforeSubRunIdx: after.idx, removed });
+  }
+
   // Build ops by walking nextText.
   const ops: PartialEditOp[] = [];
   let lastSubRun = -1;
@@ -512,6 +542,7 @@ export function planPartialEdit(
     removePtrs,
     ops,
     subRunStatus,
+    ghostGaps,
     prevMergedFromPtrs: [...run.mergedFromPtrs],
     prevMergedFromTexts: [...run.mergedFromTexts],
     prevMergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -723,6 +754,38 @@ export function applyPartialEditPlan(
   let offset = 0;
   // Tracks the highest sub-run index we've already accounted for in `offset`.
   let processedUpTo = -1;
+  // Closing a deleted ghost space mirrors inserting one (same width), but
+  // never past the visible gap, so objects can't be pulled onto each other.
+  const ghostGapBefore = new Map(
+    plan.ghostGaps.map((g) => [g.beforeSubRunIdx, g.removed]),
+  );
+  function absorbGhostGap(idx: number): void {
+    const removed = ghostGapBefore.get(idx);
+    if (!removed) return;
+    ghostGapBefore.delete(idx);
+    const width =
+      measureWhitespaceAdvancePt(
+        " ".repeat(removed),
+        fallbackFamily,
+        run.fontSize,
+      ) +
+      run.charSpacingPt * removed;
+    const here = plan.prevMergedFromBounds[idx];
+    const left = previousRightEdge(idx);
+    const gap = here && left !== null ? Math.max(0, here.x - left) : width;
+    offset -= Math.min(width, gap);
+  }
+  // Right edge of the sub-run drawn just before `idx` in the original layout.
+  function previousRightEdge(idx: number): number | null {
+    const here = plan.prevMergedFromBounds[idx];
+    if (!here) return null;
+    let best: number | null = null;
+    for (const b of plan.prevMergedFromBounds) {
+      if (b.right <= here.x + 0.01 && (best === null || b.right > best))
+        best = b.right;
+    }
+    return best;
+  }
   function absorbDeletesBefore(idx: number): void {
     for (let i = processedUpTo + 1; i < idx; i++) {
       if (plan.subRunStatus[i] === "all-deleted") {
@@ -739,6 +802,7 @@ export function applyPartialEditPlan(
   for (const op of plan.ops) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
       absorbDeletesBefore(op.subRunIdx);
+      absorbGhostGap(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
@@ -764,6 +828,7 @@ export function applyPartialEditPlan(
       // Edit a mixed sub-run's EXISTING object in place: SetText the surviving
       // chars so the embedded font is kept.
       absorbDeletesBefore(op.subRunIdx);
+      absorbGhostGap(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       const origWidth = origBounds.right - origBounds.x;
@@ -865,8 +930,13 @@ export function applyPartialEditPlan(
       );
       const anchorIdx = op.anchorSubRunIdx;
       const beforeIdx = op.anchorBeforeSubRunIdx;
-      if (anchorIdx !== undefined) absorbDeletesBefore(anchorIdx);
-      else if (beforeIdx !== undefined) absorbDeletesBefore(beforeIdx);
+      if (anchorIdx !== undefined) {
+        absorbDeletesBefore(anchorIdx);
+        absorbGhostGap(anchorIdx);
+      } else if (beforeIdx !== undefined) {
+        absorbDeletesBefore(beforeIdx);
+        absorbGhostGap(beforeIdx);
+      }
       const origBounds =
         anchorIdx !== undefined ? plan.prevMergedFromBounds[anchorIdx] : null;
       // "prefix of the following word" anchor: emit at that kept sub-run's
