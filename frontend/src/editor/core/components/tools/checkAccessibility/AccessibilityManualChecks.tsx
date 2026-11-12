@@ -1,48 +1,53 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
-import { SectionHeader } from "@editor/ui/SectionHeader";
+import { BreakdownRow } from "@editor/components/tools/checkAccessibility/AccessibilityBreakdownRow";
 
 interface AccessibilityManualChecksProps {
   checks: string[];
   /** Indexes into `checks` the user has ticked. */
   ticked: ReadonlySet<number>;
   onToggle: (index: number) => void;
+  /** Ticks every check, or clears them all when `done` is false. */
+  onSetAll: (done: boolean) => void;
 }
 
-/** The checks a person has to make, as a checklist whose ticks go into the downloaded report. */
+/** The checks a person has to make, as a breakdown row whose ticks go into the downloaded report. */
 export function AccessibilityManualChecks({
   checks,
   ticked,
   onToggle,
+  onSetAll,
 }: AccessibilityManualChecksProps) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(true);
+  const bodyId = useId();
+  const allDone = ticked.size === checks.length;
 
   return (
-    <section className="a11y-section">
-      <SectionHeader
-        title={t(
-          "checkAccessibility.sections.limits",
-          "What this tool can't check",
+    <li className="a11y-area">
+      <BreakdownRow
+        icon="user-check"
+        label={t("checkAccessibility.manual.title", "Manual checks")}
+        tip={t(
+          "checkAccessibility.manual.tip",
+          "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report.",
         )}
-        count={t(
-          "checkAccessibility.manual.count",
-          "{{ticked}} of {{total}} done",
-          { ticked: ticked.size, total: checks.length },
-        )}
-        collapsible
-        expanded={expanded}
-        onToggle={() => setExpanded((value) => !value)}
+        status={allDone ? "done" : "inProgress"}
+        toggle={{
+          open,
+          controls: bodyId,
+          onToggle: () => setOpen((value) => !value),
+        }}
       />
-      {expanded && (
-        <>
-          <p className="a11y-note">
-            {t(
-              "checkAccessibility.manual.hint",
-              "Tick each one once you've checked it yourself. Your ticks are included in the downloaded report.",
-            )}
-          </p>
+      <div
+        id={bodyId}
+        className="sui-collapsible__body"
+        data-open={open}
+        inert={!open}
+      >
+        <div className="sui-collapsible__body-inner a11y-area__body">
           <ul className="a11y-manual">
             {checks.map((check, index) => (
               <li key={check}>
@@ -54,8 +59,18 @@ export function AccessibilityManualChecks({
               </li>
             ))}
           </ul>
-        </>
-      )}
-    </section>
+          <Button
+            className="a11y-manual__all"
+            variant="tertiary"
+            size="sm"
+            onClick={() => onSetAll(!allDone)}
+          >
+            {allDone
+              ? t("checkAccessibility.manual.clearAll", "Clear all")
+              : t("checkAccessibility.manual.markAllDone", "Mark all as done")}
+          </Button>
+        </div>
+      </div>
+    </li>
   );
 }

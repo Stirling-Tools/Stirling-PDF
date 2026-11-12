@@ -121,6 +121,16 @@ export function AccessibilityResults({
           report={selected.report}
           manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
           onToggleManual={(index) => toggleManual(selected.fileId, index)}
+          onSetAllManual={(done) =>
+            setManualTicks((current) => ({
+              ...current,
+              [selected.fileId]: new Set(
+                done
+                  ? selected.report?.humanChecks.map((_, index) => index)
+                  : [],
+              ),
+            }))
+          }
         />
       ) : (
         <Banner

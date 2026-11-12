@@ -36,12 +36,14 @@ interface AccessibilityReportViewProps {
   /** Indexes into `report.humanChecks` the user has ticked. */
   manualTicked: ReadonlySet<number>;
   onToggleManual: (index: number) => void;
+  onSetAllManual: (done: boolean) => void;
 }
 
 export function AccessibilityReportView({
   report,
   manualTicked,
   onToggleManual,
+  onSetAllManual,
 }: AccessibilityReportViewProps) {
   const { t } = useTranslation();
   const { result, areas, basics, checks } = useMemo(
@@ -98,20 +100,20 @@ export function AccessibilityReportView({
                 icon={BASIC_ICON[basic.id]}
                 label={basicLabel(t, basic.id)}
                 tip={basicTip(t, basic.id)}
-                passes={basic.ok}
+                status={basic.ok ? "pass" : "fail"}
               />
             </li>
           ))}
+          {report.humanChecks.length > 0 && (
+            <AccessibilityManualChecks
+              checks={report.humanChecks}
+              ticked={manualTicked}
+              onToggle={onToggleManual}
+              onSetAll={onSetAllManual}
+            />
+          )}
         </ul>
       </section>
-
-      {report.humanChecks.length > 0 && (
-        <AccessibilityManualChecks
-          checks={report.humanChecks}
-          ticked={manualTicked}
-          onToggle={onToggleManual}
-        />
-      )}
     </div>
   );
 }

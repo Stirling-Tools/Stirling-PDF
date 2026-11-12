@@ -1,25 +1,34 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Chip } from "@editor/ui/Chip";
+import { Chip, type ChipAccent } from "@editor/ui/Chip";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
-import type { AccessibilityResult } from "@editor/utils/accessibilityAssessment";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 
-/** Every result word stacked in one cell, so each pill is as wide as the longest in any language. */
-function ResultWord({ result }: { result: AccessibilityResult }) {
+export type BreakdownStatus = "pass" | "fail" | "inProgress" | "done";
+
+const STATUS_ACCENT: Record<BreakdownStatus, ChipAccent> = {
+  pass: "success",
+  fail: "danger",
+  inProgress: "warning",
+  done: "success",
+};
+
+/** Every status word stacked in one cell, so each pill is as wide as the longest in any language. */
+function StatusWord({ status }: { status: BreakdownStatus }) {
   const { t } = useTranslation();
-  const words: Record<AccessibilityResult, string> = {
+  const words: Record<BreakdownStatus, string> = {
     pass: t("checkAccessibility.result.pass", "Pass"),
-    partial: t("checkAccessibility.result.partial", "Partial"),
     fail: t("checkAccessibility.result.fail", "Fail"),
+    inProgress: t("checkAccessibility.manual.inProgress", "In progress"),
+    done: t("checkAccessibility.manual.done", "Done"),
   };
   return (
     <span className="a11y-result-word">
-      {(Object.keys(words) as AccessibilityResult[]).map((key) => (
+      {(Object.keys(words) as BreakdownStatus[]).map((key) => (
         <span
           key={key}
-          data-active={key === result}
-          aria-hidden={key !== result}
+          data-active={key === status}
+          aria-hidden={key !== status}
         >
           {words[key]}
         </span>
@@ -32,7 +41,7 @@ interface BreakdownRowProps {
   icon: IconName;
   label: string;
   tip: string;
-  passes: boolean;
+  status: BreakdownStatus;
   /** Turns the label into a toggle for the details below the row. */
   toggle?: { open: boolean; controls: string; onToggle: () => void };
 }
@@ -41,9 +50,10 @@ export function BreakdownRow({
   icon,
   label,
   tip,
-  passes,
+  status,
   toggle,
 }: BreakdownRowProps) {
+  const { t } = useTranslation();
   const content: ReactNode = (
     <>
       <Icon name={icon} size={16} />
@@ -74,13 +84,29 @@ export function BreakdownRow({
           {content}
         </span>
       )}
-      <InfoTooltip label={tip} />
+      <Tooltip
+        position="top"
+        maxWidth={280}
+        pinOnClick
+        header={{ title: label }}
+        tips={[{ description: tip }]}
+      >
+        <button
+          type="button"
+          className="a11y-area__info"
+          aria-label={t("checkAccessibility.aboutRow", "About {{label}}", {
+            label,
+          })}
+        >
+          <Icon name="info" size={14} />
+        </button>
+      </Tooltip>
       <Chip
         className="a11y-area__status"
-        accent={passes ? "success" : "danger"}
+        accent={STATUS_ACCENT[status]}
         size="xs"
       >
-        <ResultWord result={passes ? "pass" : "fail"} />
+        <StatusWord status={status} />
       </Chip>
     </div>
   );

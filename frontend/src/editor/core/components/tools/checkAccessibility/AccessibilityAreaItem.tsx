@@ -44,7 +44,7 @@ export function AccessibilityAreaItem({
         icon={CATEGORY_ICON[area.id]}
         label={categoryLabel(t, area.id)}
         tip={categoryTip(t, area.id)}
-        passes={passes}
+        status={passes ? "pass" : "fail"}
         toggle={
           expandable
             ? {

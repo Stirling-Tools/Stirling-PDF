@@ -98,7 +98,7 @@ const tint = (color: PdfiumColor, amount: number): PdfiumColor =>
 /** Height a section heading needs with at least one row under it, so it never ends a page. */
 const SECTION_HEADING_KEEP = 40;
 
-function sectionHeading(writer: ReportWriter, title: string, count?: string) {
+function sectionHeading(writer: ReportWriter, title: string) {
   writer.ensure(SECTION_HEADING_KEEP);
   writer.y -= SPACE.lg;
   const style: TextStyle = {
@@ -106,7 +106,6 @@ function sectionHeading(writer: ReportWriter, title: string, count?: string) {
     size: TYPE.heading,
     color: colorPalette.textMuted,
   };
-  if (count) writer.textRight(count, CONTENT_RIGHT, style);
   writer.text(title.toUpperCase(), MARGIN_X, style);
   writer.rule(writer.y + SPACE.xxs);
   writer.y -= SPACE.md;
@@ -292,17 +291,33 @@ function drawResult(
   writer.y = top - RESULT_CARD_HEIGHT - SPACE.md;
 }
 
-/** Wide enough for the longest result word, so every pill matches in any language. */
+type RowStatus = "pass" | "fail" | "inProgress" | "done";
+
+const statusWord = (t: TFunction, status: RowStatus) =>
+  ({
+    pass: t("checkAccessibility.result.pass", "Pass"),
+    fail: t("checkAccessibility.result.fail", "Fail"),
+    inProgress: t("checkAccessibility.manual.inProgress", "In progress"),
+    done: t("checkAccessibility.manual.done", "Done"),
+  })[status];
+
+const STATUS_COLORS: Record<
+  RowStatus,
+  { base: PdfiumColor; text: PdfiumColor }
+> = {
+  pass: { base: colorPalette.success, text: statusText.success },
+  done: { base: colorPalette.success, text: statusText.success },
+  fail: { base: colorPalette.danger, text: statusText.danger },
+  inProgress: { base: colorPalette.warning, text: statusText.warning },
+};
+
+/** Wide enough for the longest status word, so every pill matches in any language. */
 function pillWidth(writer: ReportWriter, t: TFunction): number {
-  const words = [
-    t("checkAccessibility.result.pass", "Pass"),
-    t("checkAccessibility.result.partial", "Partial"),
-    t("checkAccessibility.result.fail", "Fail"),
-  ];
+  const statuses: RowStatus[] = ["pass", "fail", "inProgress", "done"];
   return (
     Math.max(
-      ...words.map((word) =>
-        writer.boldFont.widthOfTextAtSize(word, TYPE.pill),
+      ...statuses.map((status) =>
+        writer.boldFont.widthOfTextAtSize(statusWord(t, status), TYPE.pill),
       ),
     ) +
     PILL.padding * 2
@@ -312,12 +327,13 @@ function pillWidth(writer: ReportWriter, t: TFunction): number {
 /** A soft pill like the on-screen chips, with its label centred; `left` is its left edge. */
 function drawPill(
   writer: ReportWriter,
+  t: TFunction,
   left: number,
   width: number,
-  label: string,
-  ok: boolean,
+  status: RowStatus,
 ) {
-  const base = ok ? colorPalette.success : colorPalette.danger;
+  const { base, text } = STATUS_COLORS[status];
+  const label = statusWord(t, status);
   const bottom = writer.y - PILL.height + 1;
   writer.currentPage.drawRectangle({
     x: left,
@@ -334,7 +350,7 @@ function drawPill(
     y: bottom + (PILL.height - TYPE.pill * 0.7) / 2,
     size: TYPE.pill,
     font: writer.boldFont,
-    color: ok ? statusText.success : statusText.danger,
+    color: text,
   });
 }
 
@@ -366,6 +382,7 @@ function drawCheckbox(writer: ReportWriter, left: number, ticked: boolean) {
   });
 }
 
+/** The checks a person has to make, as the last breakdown row with the user's ticks under it. */
 function drawManualChecks(
   writer: ReportWriter,
   t: TFunction,
@@ -373,20 +390,22 @@ function drawManualChecks(
   ticked: ReadonlySet<number>,
 ) {
   if (report.humanChecks.length === 0) return;
-  sectionHeading(
-    writer,
-    t("checkAccessibility.sections.limits", "What this tool can't check"),
-    t("checkAccessibility.manual.count", "{{ticked}} of {{total}} done", {
-      ticked: ticked.size,
-      total: report.humanChecks.length,
-    }),
-  );
   const style: TextStyle = {
     font: writer.font,
     size: TYPE.body,
     color: colorPalette.textPrimary,
   };
-  const textX = MARGIN_X + CHECKBOX.size + SPACE.md;
+  writer.ensure(lineHeight(TYPE.rowLabel) + SPACE.md + lineHeight(style.size));
+  rowDivider(writer);
+  drawRowHeading(
+    writer,
+    t,
+    t("checkAccessibility.manual.title", "Manual checks"),
+    ticked.size === report.humanChecks.length ? "done" : "inProgress",
+  );
+  writer.y -= SPACE.sm;
+  const boxX = MARGIN_X + INDENT;
+  const textX = boxX + CHECKBOX.size + SPACE.md;
   report.humanChecks.forEach((check, index) => {
     const lines = wrapText(
       check,
@@ -396,7 +415,7 @@ function drawManualChecks(
     );
     lines.forEach((line, lineIndex) => {
       writer.ensure(lineHeight(style.size));
-      if (lineIndex === 0) drawCheckbox(writer, MARGIN_X, ticked.has(index));
+      if (lineIndex === 0) drawCheckbox(writer, boxX, ticked.has(index));
       writer.text(line, textX, style);
     });
     writer.y -= SPACE.xs;
@@ -467,23 +486,15 @@ function drawIssue(
   writer.y -= SPACE.md;
 }
 
-/** A breakdown row's label with its Pass or Fail pill at the right edge. */
+/** A breakdown row's label with its status pill at the right edge. */
 function drawRowHeading(
   writer: ReportWriter,
   t: TFunction,
   label: string,
-  passes: boolean,
+  status: RowStatus,
 ) {
   const pill = pillWidth(writer, t);
-  drawPill(
-    writer,
-    CONTENT_RIGHT - pill,
-    pill,
-    passes
-      ? t("checkAccessibility.result.pass", "Pass")
-      : t("checkAccessibility.result.fail", "Fail"),
-    passes,
-  );
+  drawPill(writer, t, CONTENT_RIGHT - pill, pill, status);
   writer.text(label, MARGIN_X, {
     font: writer.boldFont,
     size: TYPE.rowLabel,
@@ -514,7 +525,12 @@ function drawBreakdown(
     // A failing area keeps its first issue's title with it.
     writer.ensure(passes && !note ? rowHeight : rowHeight * 3);
     if (areaIndex > 0) rowDivider(writer);
-    drawRowHeading(writer, t, categoryLabel(t, area.id), passes);
+    drawRowHeading(
+      writer,
+      t,
+      categoryLabel(t, area.id),
+      passes ? "pass" : "fail",
+    );
     writer.y -= SPACE.sm;
     area.issues.forEach((issue, index) => {
       if (index > 0) {
@@ -542,7 +558,12 @@ function drawBreakdown(
   for (const basic of basics) {
     writer.ensure(rowHeight);
     rowDivider(writer);
-    drawRowHeading(writer, t, basicLabel(t, basic.id), basic.ok);
+    drawRowHeading(
+      writer,
+      t,
+      basicLabel(t, basic.id),
+      basic.ok ? "pass" : "fail",
+    );
     writer.y -= SPACE.md;
   }
 }

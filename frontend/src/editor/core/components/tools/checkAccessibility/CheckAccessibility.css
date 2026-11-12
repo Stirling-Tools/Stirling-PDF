@@ -172,6 +172,21 @@
   transform: rotate(0deg);
 }
 
+.a11y-area__info {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--icon-files-color);
+  cursor: pointer;
+}
+
+.a11y-area__info:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .a11y-area__status {
   margin-left: auto;
 }
@@ -277,12 +292,18 @@
   visibility: hidden;
 }
 
+.a11y-manual__all {
+  align-self: flex-start;
+  margin-left: 1rem;
+}
+
+/* Indented to line up with the row labels, past the chevron. */
 .a11y-manual {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 1.5rem;
   list-style: none;
 }
 
@@ -293,11 +314,6 @@
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--c-text-muted);
-}
-
-.a11y-manual li svg {
-  flex-shrink: 0;
-  margin-top: 0.125rem;
 }
 
 .a11y-issue__body .sui-collapsible__head {

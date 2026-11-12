@@ -3272,6 +3272,7 @@ unsupported_capability = "Unsupported capability: {{capability}}"
 usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [checkAccessibility]
+aboutRow = "About {{label}}"
 checking = "Checking..."
 download = "Download accessibility report"
 fileFailed = "failed"
@@ -3342,8 +3343,12 @@ standard = "Standard"
 where = "Where"
 
 [checkAccessibility.manual]
-count = "{{ticked}} of {{total}} done"
-hint = "Tick each one once you've checked it yourself. Your ticks are included in the downloaded report."
+clearAll = "Clear all"
+done = "Done"
+inProgress = "In progress"
+markAllDone = "Mark all as done"
+tip = "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report."
+title = "Manual checks"
 
 [checkAccessibility.objects]
 annotation = "An annotation"
@@ -3466,7 +3471,6 @@ subtitle_other = "{{profile}} - {{count}} pages"
 
 [checkAccessibility.sections]
 breakdown = "Breakdown"
-limits = "What this tool can't check"
 
 [checkAccessibility.status]
 checking = "Checking {{current}} of {{total}}..."
