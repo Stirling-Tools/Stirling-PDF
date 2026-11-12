@@ -12,3 +12,6 @@ export function cloudUrl(
   )?.replace(/\/+$/, "");
   return base ? `${base}${path}` : null;
 }
+
+/** The cloud's one link for buying Team. It signs the visitor in first when needed. */
+export const CLOUD_TEAM_PATH = "/team";

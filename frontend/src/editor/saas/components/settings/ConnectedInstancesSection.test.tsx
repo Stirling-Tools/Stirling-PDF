@@ -111,7 +111,7 @@ describe("Connected instances", () => {
     expect(state.get).not.toHaveBeenCalled();
     expect(state.getKeys).not.toHaveBeenCalled();
     expect(
-      screen.queryByRole("button", { name: "Add a server with a key" }),
+      screen.queryByRole("button", { name: "Add an instance" }),
     ).not.toBeInTheDocument();
   });
 
@@ -132,7 +132,7 @@ describe("Connected instances", () => {
     );
     mount();
     fireEvent.click(
-      await screen.findByRole("button", { name: "Add a server with a key" }),
+      await screen.findByRole("button", { name: "Add an instance" }),
     );
     const dialog = screen.getByRole("dialog");
     fireEvent.change(within(dialog).getByRole("textbox"), {

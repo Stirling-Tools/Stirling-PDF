@@ -202,6 +202,16 @@ describe("PortalBillingGate — self-hosted", () => {
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
+  it("names the spent link key rather than an empty license", () => {
+    config.isAdmin = true;
+    link.is = true;
+    keyLinked.is = true;
+    license.licenseInfo.licenseKey = null;
+    renderGate();
+    expect(screen.getByText("Linked with a link key")).toBeInTheDocument();
+    expect(screen.queryByText("No license installed")).toBeNull();
+  });
+
   it("asks for nothing on the way in", () => {
     gate.gated = true;
     renderGate();

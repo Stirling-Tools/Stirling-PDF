@@ -80,6 +80,20 @@ describe("CloudManagedPlanView", () => {
     expect(screen.queryByRole("button", { name: /limit/i })).toBeNull();
   });
 
+  it("sends a team without Team to the linked cloud's Team link", async () => {
+    mount();
+    expect(
+      await screen.findByRole("link", { name: /Upgrade to Team/ }),
+    ).toHaveAttribute("href", "https://linked.example/app/team");
+  });
+
+  it("offers no Team upgrade to a team that holds Team", async () => {
+    fetchCloudPlan.mockResolvedValue({ ...plan, licensedUsers: 200 });
+    mount();
+    await screen.findByText("Processor");
+    expect(screen.queryByRole("link", { name: /Upgrade to Team/ })).toBeNull();
+  });
+
   it("feeds the tier from the cached plan, since there is no wallet to read", async () => {
     mount();
     await screen.findByText("Processor");

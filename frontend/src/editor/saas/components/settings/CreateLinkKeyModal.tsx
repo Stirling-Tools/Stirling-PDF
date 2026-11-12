@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
 import { Banner, Button, FormField, Input, Modal } from "@editor/ui";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export const LINK_KEYS_PATH = "/api/v1/account-link/keys";
@@ -79,17 +80,7 @@ export function CreateLinkKeyModal({
       open={open}
       onClose={close}
       width="md"
-      title={
-        created
-          ? t(
-              "settings.connectedInstances.linkKey.createdTitle",
-              "Link key created",
-            )
-          : t(
-              "settings.connectedInstances.linkKey.title",
-              "Add a server with a key",
-            )
-      }
+      title={t("settings.connectedInstances.linkKey.title", "Add an instance")}
       disableBackdropClose={create.isPending || Boolean(created)}
       disableEscapeClose={create.isPending}
       footer={
@@ -121,26 +112,50 @@ export function CreateLinkKeyModal({
       }
     >
       {created ? (
-        <FormField
-          label={t("settings.connectedInstances.linkKey.caption", "Link key")}
-          info={t(
-            "settings.connectedInstances.linkKey.envHint",
-            "A server can also read it from the STIRLING_BILLING_ACCOUNT_LINK_KEY setting.",
-          )}
-          helperText={t(
-            "settings.connectedInstances.linkKey.useIt",
-            "Add it as the License key under Usage & Billing on the server. Shown once, works once, expires {{date}}.",
-            { date: expires },
-          )}
-        >
-          <Input
-            ref={keyField}
-            readOnly
-            value={created.key}
-            className={`account-connection__key ${privateContentClassName}`}
-            onFocus={(event) => event.currentTarget.select()}
-          />
-        </FormField>
+        <ol className="account-connection__steps">
+          <li>
+            <p>
+              {t(
+                "settings.connectedInstances.linkKey.step.copy",
+                "Copy this link key. It works once and expires on {{date}}.",
+                { date: expires },
+              )}
+            </p>
+            <Input
+              ref={keyField}
+              readOnly
+              value={created.key}
+              aria-label={t(
+                "settings.connectedInstances.linkKey.caption",
+                "Link key",
+              )}
+              className={`account-connection__key ${privateContentClassName}`}
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </li>
+          <li>
+            <p>
+              {t(
+                "settings.connectedInstances.linkKey.step.open",
+                "On the instance, sign in as the admin and open Settings, then Usage & Billing.",
+              )}
+            </p>
+          </li>
+          <li>
+            <p>
+              {t(
+                "settings.connectedInstances.linkKey.step.paste",
+                "Next to License key, select Add, paste the key and select Connect. The instance then appears in this list.",
+              )}{" "}
+              <InfoTooltip
+                label={t(
+                  "settings.connectedInstances.linkKey.envHint",
+                  "An instance can also read the key from the STIRLING_BILLING_ACCOUNT_LINK_KEY setting.",
+                )}
+              />
+            </p>
+          </li>
+        </ol>
       ) : (
         <form
           id={formId}
@@ -153,7 +168,7 @@ export function CreateLinkKeyModal({
           <FormField
             label={t(
               "settings.connectedInstances.linkKey.name",
-              "Server name (optional)",
+              "Instance name (optional)",
             )}
           >
             <Input

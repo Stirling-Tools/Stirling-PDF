@@ -21,6 +21,16 @@
   padding: 1.75rem 2.5rem 0.75rem;
 }
 
+.billing-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.billing-page__actions:empty {
+  display: none;
+}
+
 .billing-page__title {
   margin: 0;
   font-size: 1.75rem;

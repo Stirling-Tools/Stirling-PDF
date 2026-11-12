@@ -150,6 +150,53 @@
   font-size: 0.8125rem;
 }
 
+.account-connection__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: account-connection-step;
+}
+
+.account-connection__steps > li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  align-items: start;
+  counter-increment: account-connection-step;
+}
+
+.account-connection__steps > li::before {
+  content: counter(account-connection-step);
+  grid-row: span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--c-primary);
+  color: var(--color-text-on-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.account-connection__steps > li > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.account-connection__steps p {
+  margin: 0;
+  padding-top: 0.125rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--c-text);
+}
+
 .account-connection__actions {
   display: flex;
   justify-content: flex-end;

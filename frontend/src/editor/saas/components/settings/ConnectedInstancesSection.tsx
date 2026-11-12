@@ -196,7 +196,7 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
           className="account-connection__list"
           aria-label={t(
             "settings.connectedInstances.linkKey.waitingTitle",
-            "Keys waiting for a server",
+            "Keys waiting for an instance",
           )}
         >
           {waitingKeys.map((key) => (
@@ -207,14 +207,14 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
                     {key.name ??
                       t(
                         "settings.connectedInstances.linkKey.unnamed",
-                        "Unnamed server",
+                        "Unnamed instance",
                       )}
                   </h3>
                 </div>
                 <p>
                   {t(
                     "settings.connectedInstances.linkKey.waiting",
-                    "Waiting for the server to use its link key. The key expires on {{date}}.",
+                    "Waiting for the instance to use its link key. The key expires on {{date}}.",
                     { date: formatDay(key.expiresAt) },
                   )}
                 </p>
@@ -466,13 +466,10 @@ export default function ConnectedInstancesSection() {
       actions={
         canManage && (
           <Button
-            leftSection={<Icon name="key" />}
+            leftSection={<Icon name="plus" />}
             onClick={() => setCreatingKey(true)}
           >
-            {t(
-              "settings.connectedInstances.linkKey.add",
-              "Add a server with a key",
-            )}
+            {t("settings.connectedInstances.linkKey.add", "Add an instance")}
           </Button>
         )
       }

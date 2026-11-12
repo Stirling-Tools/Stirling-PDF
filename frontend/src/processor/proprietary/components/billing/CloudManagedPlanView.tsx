@@ -8,7 +8,10 @@ import { formatPeriodDate } from "@editor/billing/format";
 import { fetchCloudPlan } from "@processor/api/link";
 import { useApplyLinkFacts } from "@processor/contexts/LinkContext";
 import { qk } from "@processor/queries/keys";
-import { cloudUrl } from "@processor/components/account-link/cloudLinks";
+import {
+  CLOUD_TEAM_PATH,
+  cloudUrl,
+} from "@processor/components/account-link/cloudLinks";
 import { useAccountLinkOptional } from "@processor/contexts/AccountLinkContext";
 import { AccountConnectionNotice } from "@processor/components/account-link/AccountConnectionNotice";
 import "@editor/billing/billing-screen.css";
@@ -31,11 +34,14 @@ export function CloudManagedPlanView({
     refetchInterval: 60_000,
     retry: false,
   });
-  const billingUrl = cloudUrl(
-    "/settings/billing",
-    useAccountLinkOptional()?.status?.cloudAppUrl,
-  );
+  const cloudAppUrl = useAccountLinkOptional()?.status?.cloudAppUrl;
+  const billingUrl = cloudUrl("/settings/billing", cloudAppUrl);
   const data = plan.data;
+  // licensedUsers is stated exactly when the cloud team holds Team.
+  const teamUrl =
+    data?.known && data.licensedUsers == null
+      ? cloudUrl(CLOUD_TEAM_PATH, cloudAppUrl)
+      : null;
 
   // The tier everywhere else reads from the wallet, which a key-linked server cannot load.
   useEffect(() => {
@@ -62,37 +68,39 @@ export function CloudManagedPlanView({
             )}
           </p>
         </div>
-        {billingUrl && (
-          <Button
-            as="a"
-            href={billingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            rightSection={<Icon name="external-link" size={20} />}
-          >
-            {t(
-              "portal.billing.cloudManaged.manage",
-              "Manage billing in Stirling Cloud",
-            )}
-          </Button>
-        )}
+        <div className="billing-page__actions">
+          {teamUrl && (
+            <Button
+              as="a"
+              href={teamUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              rightSection={<Icon name="external-link" size={20} />}
+            >
+              {t("portal.billing.cloudManaged.upgradeTeam", "Upgrade to Team")}
+            </Button>
+          )}
+          {billingUrl && (
+            <Button
+              as="a"
+              href={billingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant={teamUrl ? "secondary" : undefined}
+              rightSection={<Icon name="external-link" size={20} />}
+            >
+              {t(
+                "portal.billing.cloudManaged.manage",
+                "Manage billing in Stirling Cloud",
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="billing-page__body">
         <div className="billing-page__notices">
           <AccountConnectionNotice />
-          <Banner
-            tone="info"
-            title={t(
-              "portal.billing.cloudManaged.noticeTitle",
-              "Billing is managed in Stirling Cloud",
-            )}
-          >
-            {t(
-              "portal.billing.cloudManaged.noticeBody",
-              "This server was connected with a link key. Your Stirling Cloud team changes the plan, payment details and spend limit there.",
-            )}
-          </Banner>
           {data?.state === "OVER_LIMIT" && (
             <Banner
               tone="warning"
