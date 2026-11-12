@@ -76,36 +76,43 @@ public class LegacyServerRegistrationService implements SchedulingConfigurer {
         try {
             String proof = readProof();
             if (proof == null || proof.isBlank() || proof.length() > 65536) return;
-            long count = localUsers.getTotalUsersCount();
-            if (count < 0 || count > Integer.MAX_VALUE) return;
-            ServerRegistrationState state = states.reserve(proof);
-            var report =
-                    new ServerRegistrationProtocol.Report(
-                            state.getReportSequence(),
-                            count,
-                            version,
-                            ServerRegistrationProtocol.CAPABILITY_VERSION);
-            ServerRegistrationProtocol.Receipt receipt;
-            if (state.getRegistrationId() == null
-                    || state.getPurchaseMapping()
-                            != ServerRegistrationProtocol.PurchaseMapping.RESOLVED) {
-                receipt =
-                        client.register(
-                                new ServerRegistrationProtocol.RegistrationRequest(
-                                        state.getInstallationId(),
-                                        proof,
-                                        GeneralUtils.generateMachineFingerprint(),
-                                        state.getRegistrationSecret(),
-                                        report));
-            } else {
-                receipt =
-                        client.sync(
-                                new ServerRegistrationProtocol.SyncRequest(
-                                        state.getRegistrationId(),
-                                        state.getRegistrationSecret(),
-                                        report));
+            for (int attempt = 0; attempt < 2; attempt++) {
+                long count = localUsers.getTotalUsersCount();
+                if (count < 0 || count > Integer.MAX_VALUE) return;
+                ServerRegistrationState state = states.reserve(proof);
+                var report =
+                        new ServerRegistrationProtocol.Report(
+                                state.getReportSequence(),
+                                count,
+                                version,
+                                ServerRegistrationProtocol.CAPABILITY_VERSION);
+                ServerRegistrationProtocol.Receipt receipt;
+                try {
+                    if (state.getRegistrationId() == null
+                            || state.getPurchaseMapping()
+                                    != ServerRegistrationProtocol.PurchaseMapping.RESOLVED) {
+                        receipt =
+                                client.register(
+                                        new ServerRegistrationProtocol.RegistrationRequest(
+                                                state.getInstallationId(),
+                                                proof,
+                                                GeneralUtils.generateMachineFingerprint(),
+                                                state.getRegistrationSecret(),
+                                                report));
+                    } else {
+                        receipt =
+                                client.sync(
+                                        new ServerRegistrationProtocol.SyncRequest(
+                                                state.getRegistrationId(),
+                                                state.getRegistrationSecret(),
+                                                report));
+                    }
+                    states.acknowledge(state, receipt);
+                    return;
+                } catch (ServerRegistrationClient.SequenceConflictException e) {
+                    if (attempt != 0 || !states.reconcile(state, e.conflict())) throw e;
+                }
             }
-            states.acknowledge(state, receipt);
         } catch (IOException | RuntimeException e) {
             log.debug("Server registration unavailable; reporting will retry");
         }

@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -203,6 +205,126 @@ class ServerRegistrationStateStoreDbTest {
                 .isEqualTo(ServerRegistrationProtocol.PurchaseMapping.RESOLVED);
         assertThat(restored.getLastSuccessAt()).isNotNull();
         assertThat(repository.count()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @SuppressWarnings("unchecked")
+    void restoredReporterRecoversImmediatelyWithFreshCountAndSameIdentity(boolean linked)
+            throws Exception {
+        var original = store.reserve("test-license");
+        UUID registrationId = UUID.randomUUID();
+        if (linked) {
+            store.acknowledge(
+                    original,
+                    new ServerRegistrationProtocol.Receipt(
+                            registrationId,
+                            original.getReportSequence(),
+                            ServerRegistrationProtocol.PurchaseMapping.RESOLVED));
+        }
+        var transaction = new TransactionTemplate(transactionManager);
+        transaction.executeWithoutResult(
+                status -> {
+                    var restored = repository.findById(1L).orElseThrow();
+                    restored.setReportSequence(10);
+                    repository.saveAndFlush(restored);
+                });
+        var mapper = new ObjectMapper();
+        var requests = new CopyOnWriteArrayList<JsonNode>();
+        var paths = new CopyOnWriteArrayList<String>();
+        var cloud = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        cloud.createContext(
+                ServerRegistrationProtocol.PATH,
+                exchange -> {
+                    var body = mapper.readTree(exchange.getRequestBody().readAllBytes());
+                    requests.add(body);
+                    paths.add(exchange.getRequestURI().getPath());
+                    boolean stale = body.at("/report/sequence").asLong() <= 100;
+                    byte[] response =
+                            mapper.writeValueAsBytes(
+                                    stale
+                                            ? new ServerRegistrationProtocol.SequenceConflict(
+                                                    registrationId, 100)
+                                            : new ServerRegistrationProtocol.Receipt(
+                                                    registrationId,
+                                                    101,
+                                                    ServerRegistrationProtocol.PurchaseMapping
+                                                            .RESOLVED));
+                    exchange.sendResponseHeaders(stale ? 409 : 200, response.length);
+                    exchange.getResponseBody().write(response);
+                    exchange.close();
+                });
+        cloud.start();
+        try {
+            var licenses = mock(LicenseKeyChecker.class);
+            when(licenses.getLicenseKeyResult()).thenReturn(License.SERVER);
+            var users = mock(UserService.class);
+            when(users.getTotalUsersCount()).thenReturn(200L, 201L);
+            ObjectProvider<UserService> provider = mock(ObjectProvider.class);
+            when(provider.getIfAvailable()).thenReturn(users);
+            var application = new ApplicationProperties();
+            application.getPremium().setKey("test-license");
+            application.getPremium().setMaxUsers(100);
+            var properties = new AccountLinkProperties();
+            properties.setSaasBaseUrl("http://127.0.0.1:" + cloud.getAddress().getPort());
+            new LegacyServerRegistrationService(
+                            licenses,
+                            application,
+                            provider,
+                            store,
+                            new ServerRegistrationClient(properties, mapper),
+                            new ServerRegistrationProperties(),
+                            "test-version")
+                    .reportNow();
+            assertThat(requests)
+                    .extracting(r -> r.at("/report/sequence").asLong())
+                    .containsExactly(11L, 101L);
+            assertThat(requests)
+                    .extracting(r -> r.at("/report/reportedUserCount").asLong())
+                    .containsExactly(200L, 201L);
+            assertThat(requests)
+                    .extracting(r -> r.path("registrationSecret").asText())
+                    .containsOnly(original.getRegistrationSecret());
+            assertThat(paths)
+                    .containsOnly(ServerRegistrationProtocol.PATH + (linked ? "/sync" : ""));
+            var current = transaction.execute(status -> repository.findById(1L).orElseThrow());
+            assertThat(current.getReportSequence()).isEqualTo(101);
+            assertThat(current.getRegistrationId()).isEqualTo(registrationId);
+            assertThat(current.getInstallationId()).isEqualTo(original.getInstallationId());
+            assertThat(current.getLastSuccessAt()).isNotNull();
+            assertThat(application.getPremium().getMaxUsers()).isEqualTo(100);
+            assertThat(repository.count()).isEqualTo(1);
+        } finally {
+            cloud.stop(0);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {"licenseChanged", "reservedAgain", "foreignId", "olderSequence", "overflow"})
+    void recoveryCannotApplyToChangedStateOrUnrelatedSequence(String change) {
+        var sent = store.reserve("proof");
+        UUID registration = UUID.randomUUID();
+        store.acknowledge(
+                sent,
+                new ServerRegistrationProtocol.Receipt(
+                        registration,
+                        sent.getReportSequence(),
+                        ServerRegistrationProtocol.PurchaseMapping.RESOLVED));
+        if (change.equals("licenseChanged")) store.reserve("replacement");
+        if (change.equals("reservedAgain")) store.reserve("proof");
+        long sequence =
+                switch (change) {
+                    case "olderSequence" -> 0;
+                    case "overflow" -> Long.MAX_VALUE;
+                    default -> 100;
+                };
+        UUID id = change.equals("foreignId") ? UUID.randomUUID() : registration;
+        assertThat(
+                        store.reconcile(
+                                sent,
+                                new ServerRegistrationProtocol.SequenceConflict(id, sequence)))
+                .isFalse();
     }
 
     @SpringBootConfiguration

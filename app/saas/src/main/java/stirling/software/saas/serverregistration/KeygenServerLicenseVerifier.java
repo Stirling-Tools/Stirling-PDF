@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.proprietary.serverregistration.RegistrationHttpTransport;
 import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
 
 import tools.jackson.databind.JsonNode;
@@ -41,12 +42,14 @@ import tools.jackson.databind.ObjectMapper;
 public class KeygenServerLicenseVerifier {
     private static final String BEGIN = "-----BEGIN LICENSE FILE-----";
     private static final String END = "-----END LICENSE FILE-----";
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
     private final KeygenConfigurationProperties keygen;
     private final ServerRegistrationCloudProperties properties;
     private final ObjectMapper mapper;
     private final HttpClient http;
     private final Clock clock;
     private final java.security.PublicKey licensePublicKey;
+    private volatile UUID canonicalAccountId;
 
     @Autowired
     public KeygenServerLicenseVerifier(
@@ -84,6 +87,11 @@ public class KeygenServerLicenseVerifier {
                     "Server registration needs Keygen credentials and an explicit Server product allowlist");
         }
         try {
+            canonicalAccountId = UUID.fromString(keygen.getAccountId());
+        } catch (IllegalArgumentException ignored) {
+            // Slugs need a live account lookup; startup must not depend on Keygen availability.
+        }
+        try {
             byte[] rawKey = HexFormat.of().parseHex(properties.getLicensePublicKey());
             if (rawKey.length != 32) throw new IllegalArgumentException();
             byte[] encodedKey = new byte[44];
@@ -118,6 +126,7 @@ public class KeygenServerLicenseVerifier {
         try {
             boolean certificate = proof.strip().startsWith(BEGIN);
             UUID certificateId = certificate ? certificateId(proof.strip()) : null;
+            UUID expectedAccountId = accountId();
             Map<String, Object> scope = Map.of("fingerprint", fingerprint);
             Map<String, Object> meta =
                     certificate ? Map.of("scope", scope) : Map.of("key", proof, "scope", scope);
@@ -125,25 +134,14 @@ public class KeygenServerLicenseVerifier {
                     certificate
                             ? "/licenses/" + certificateId + "/actions/validate"
                             : "/licenses/actions/validate-key";
-            URI uri =
-                    URI.create(
-                            keygen.getApiBase().replaceAll("/+$", "")
-                                    + "/accounts/"
-                                    + URLEncoder.encode(
-                                            keygen.getAccountId(), StandardCharsets.UTF_8)
-                                    + endpoint);
             HttpRequest request =
-                    HttpRequest.newBuilder(uri)
-                            .timeout(Duration.ofSeconds(10))
-                            .header("Authorization", "Bearer " + keygen.getApiToken())
-                            .header("Content-Type", "application/vnd.api+json")
-                            .header("Accept", "application/vnd.api+json")
+                    request(endpoint)
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             mapper.writeValueAsString(Map.of("meta", meta))))
                             .build();
             HttpResponse<String> response =
-                    http.send(request, HttpResponse.BodyHandlers.ofString());
+                    RegistrationHttpTransport.send(http, request, REQUEST_TIMEOUT);
             if (response.statusCode() == 429 || response.statusCode() >= 500) {
                 throw unavailable();
             }
@@ -159,12 +157,12 @@ public class KeygenServerLicenseVerifier {
             String account = license.at("/relationships/account/data/id").asText();
             String key = attrs.path("key").asText("");
             if (!"licenses".equals(license.path("type").asText())
-                    || !keygen.getAccountId().equals(account)
+                    || !expectedAccountId.equals(UUID.fromString(account))
                     || !properties.getServerProductIds().contains(product)
                     || !metadata.path("isEnterprise").isBoolean()
                     || metadata.path("isEnterprise").asBoolean()
-                    || (metadata.hasNonNull("plan_type")
-                            && !"server".equals(metadata.path("plan_type").asText()))
+                    || (metadata.hasNonNull("planType")
+                            && !"server".equals(metadata.path("planType").asText()))
                     || attrs.path("suspended").asBoolean(false)
                     || key.isBlank()
                     || (certificate && !id.equals(certificateId))
@@ -216,6 +214,41 @@ public class KeygenServerLicenseVerifier {
             throw denied();
         if (!"licenses".equals(snapshot.path("data").path("type").asText())) throw denied();
         return UUID.fromString(snapshot.path("data").path("id").asText());
+    }
+
+    private UUID accountId() throws IOException, InterruptedException {
+        UUID cached = canonicalAccountId;
+        if (cached != null) return cached;
+        HttpResponse<String> response =
+                RegistrationHttpTransport.send(http, request("").GET().build(), REQUEST_TIMEOUT);
+        if (response.statusCode() != 200) throw unavailable();
+        try {
+            JsonNode account = mapper.readTree(response.body()).path("data");
+            if (!"accounts".equals(account.path("type").asText())
+                    || !keygen.getAccountId()
+                            .equals(account.path("attributes").path("slug").asText())) {
+                throw unavailable();
+            }
+            UUID resolved = UUID.fromString(account.path("id").asText());
+            canonicalAccountId = resolved;
+            return resolved;
+        } catch (RuntimeException e) {
+            throw unavailable();
+        }
+    }
+
+    private HttpRequest.Builder request(String endpoint) {
+        URI uri =
+                URI.create(
+                        keygen.getApiBase().replaceAll("/+$", "")
+                                + "/accounts/"
+                                + URLEncoder.encode(keygen.getAccountId(), StandardCharsets.UTF_8)
+                                + endpoint);
+        return HttpRequest.newBuilder(uri)
+                .timeout(REQUEST_TIMEOUT)
+                .header("Authorization", "Bearer " + keygen.getApiToken())
+                .header("Content-Type", "application/vnd.api+json")
+                .header("Accept", "application/vnd.api+json");
     }
 
     private static ResponseStatusException denied() {

@@ -72,6 +72,30 @@ public class ServerRegistrationStateStore {
         return state;
     }
 
+    /**
+     * Advances restored state to the authenticated cloud sequence without acknowledging old data. A
+     * concurrent reservation or identity change makes recovery inapplicable.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean reconcile(
+            ServerRegistrationState sent, ServerRegistrationProtocol.SequenceConflict conflict) {
+        ServerRegistrationState current = repository.findById(1L).orElseThrow();
+        if (current.getReportSequence() != sent.getReportSequence()
+                || !current.getProofHash().equals(sent.getProofHash())
+                || !current.getInstallationId().equals(sent.getInstallationId())
+                || !current.getRegistrationSecret().equals(sent.getRegistrationSecret())
+                || conflict.registrationId() == null
+                || conflict.acceptedSequence() < current.getReportSequence()
+                || conflict.acceptedSequence() == Long.MAX_VALUE
+                || (current.getRegistrationId() != null
+                        && !current.getRegistrationId().equals(conflict.registrationId()))) {
+            return false;
+        }
+        current.setReportSequence(conflict.acceptedSequence());
+        repository.saveAndFlush(current);
+        return true;
+    }
+
     private static String hash(String proof) {
         try {
             return HexFormat.of()

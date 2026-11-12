@@ -164,4 +164,26 @@ class ServerLicenseRegistrationControllerTest {
         return new RegistrationRequest(
                 UUID.randomUUID(), "test-proof", "machine", "a".repeat(43), report);
     }
+
+    @Test
+    void conflictResponseCarriesSequenceWithoutAcknowledgingTheStaleReport() throws Exception {
+        var request =
+                new SyncRequest(
+                        UUID.randomUUID(), "a".repeat(43), new Report(11L, 200L, "test", 1));
+        var conflict = new SequenceConflict(request.registrationId(), 100);
+        when(store.sync(request))
+                .thenThrow(new ServerLicenseRegistrationStore.SequenceConflictException(conflict));
+        String body =
+                mvc.perform(
+                                post(ServerRegistrationProtocol.PATH + "/sync")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(mapper.writeValueAsString(request)))
+                        .andExpect(status().isConflict())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        assertThat(mapper.readValue(body, SequenceConflict.class)).isEqualTo(conflict);
+        assertThat(body).doesNotContain(request.registrationSecret());
+        verifyNoInteractions(verifier);
+    }
 }

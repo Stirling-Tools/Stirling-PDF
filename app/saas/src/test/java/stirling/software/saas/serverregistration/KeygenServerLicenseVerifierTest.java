@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -21,15 +22,24 @@ import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.sun.net.httpserver.HttpServer;
 
 import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
 
@@ -74,7 +84,7 @@ class KeygenServerLicenseVerifierTest {
         assertThat(result.userLimit()).isZero();
         assertThat(result.toString()).doesNotContain("test-license-secret");
         var request = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(http).send(request.capture(), any());
+        verify(http).sendAsync(request.capture(), any());
         assertThat(request.getValue().uri().getPath()).endsWith("/licenses/actions/validate-key");
     }
 
@@ -91,7 +101,7 @@ class KeygenServerLicenseVerifierTest {
                                 .id())
                 .isEqualTo(LICENSE);
         var request = ArgumentCaptor.forClass(HttpRequest.class);
-        verify(http).send(request.capture(), any());
+        verify(http).sendAsync(request.capture(), any());
         assertThat(request.getValue().uri().getPath())
                 .endsWith("/licenses/" + LICENSE + "/actions/validate");
     }
@@ -108,7 +118,7 @@ class KeygenServerLicenseVerifierTest {
                 .isInstanceOfSatisfying(
                         ResponseStatusException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
-        verify(http, times(2)).send(any(), any());
+        verify(http, times(2)).sendAsync(any(), any());
     }
 
     @ParameterizedTest
@@ -168,7 +178,7 @@ class KeygenServerLicenseVerifierTest {
         switch (problem) {
             case "invalid" -> ((ObjectNode) body.path("meta")).put("valid", false);
             case "untypedValidity" -> ((ObjectNode) body.path("meta")).put("valid", "true");
-            case "wrongPlan" -> metadata.put("plan_type", "enterprise");
+            case "wrongPlan" -> metadata.put("planType", "enterprise");
             case "wrongProduct" ->
                     ((ObjectNode) body.at("/data/relationships/product/data"))
                             .put("id", UUID.randomUUID().toString());
@@ -214,6 +224,137 @@ class KeygenServerLicenseVerifierTest {
                                         .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
     }
 
+    @Test
+    @Timeout(20)
+    @SuppressWarnings("unchecked")
+    void deadlineCancelsKeygenResponseThatStallsAfterHeaders() throws Exception {
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        var headersSent = new CountDownLatch(1);
+        server.createContext(
+                "/",
+                exchange -> {
+                    exchange.getRequestBody().readAllBytes();
+                    exchange.sendResponseHeaders(200, 100);
+                    exchange.getResponseBody().write('{');
+                    exchange.getResponseBody().flush();
+                    headersSent.countDown();
+                });
+        server.start();
+        try (var realHttp = HttpClient.newHttpClient()) {
+            keygen.setApiBase("http://127.0.0.1:" + server.getAddress().getPort());
+            var pending = new AtomicReference<CompletableFuture<HttpResponse<String>>>();
+            when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                    .thenAnswer(
+                            call -> {
+                                var future =
+                                        realHttp.sendAsync(
+                                                call.getArgument(0),
+                                                HttpResponse.BodyHandlers.ofString());
+                                pending.set(future);
+                                return future;
+                            });
+            assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e ->
+                                    assertThat(e.getStatusCode())
+                                            .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+            assertThat(headersSent.getCount()).isZero();
+            assertThatThrownBy(() -> pending.get().get(1, TimeUnit.SECONDS))
+                    .isInstanceOfAny(CancellationException.class, ExecutionException.class)
+                    .satisfies(
+                            failure ->
+                                    assertThat(
+                                                    failure instanceof CancellationException
+                                                            ? failure
+                                                            : failure.getCause())
+                                            .isInstanceOf(CancellationException.class));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void slugResolvesCanonicalAccountAndStillRejectsForeignLicenses() throws Exception {
+        useSlug();
+        HttpResponse<String> accountResponse = mock(HttpResponse.class);
+        when(accountResponse.statusCode()).thenReturn(200);
+        when(accountResponse.body())
+                .thenReturn(
+                        mapper.writeValueAsString(
+                                Map.of(
+                                        "data",
+                                        Map.of(
+                                                "type",
+                                                "accounts",
+                                                "id",
+                                                ACCOUNT,
+                                                "attributes",
+                                                Map.of("slug", "stirling-test")))));
+        HttpResponse<String> licenseResponse = mock(HttpResponse.class);
+        when(licenseResponse.statusCode()).thenReturn(200);
+        when(licenseResponse.body()).thenReturn(mapper.writeValueAsString(liveBody()));
+        when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(
+                        CompletableFuture.completedFuture(accountResponse),
+                        CompletableFuture.completedFuture(licenseResponse));
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/relationships/account/data"))
+                .put("id", UUID.randomUUID().toString());
+        when(licenseResponse.body()).thenReturn(mapper.writeValueAsString(body));
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http, times(4)).sendAsync(requests.capture(), any());
+        assertThat(requests.getAllValues().getFirst().method()).isEqualTo("GET");
+        assertThat(requests.getAllValues().getFirst().uri().getPath())
+                .isEqualTo("/v1/accounts/stirling-test");
+        assertThat(requests.getAllValues().subList(1, 4))
+                .allSatisfy(
+                        request ->
+                                assertThat(request.uri().getPath())
+                                        .endsWith("/stirling-test/licenses/actions/validate-key"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 500, 200})
+    void failedOrMalformedSlugResolutionFailsClosedAndCanRetry(int status) throws Exception {
+        useSlug();
+        respond(status, liveBody());
+        for (int attempt = 0; attempt < 2; attempt++) {
+            assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e ->
+                                    assertThat(e.getStatusCode())
+                                            .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+        }
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http, times(2)).sendAsync(requests.capture(), any());
+        assertThat(requests.getAllValues())
+                .allSatisfy(request -> assertThat(request.method()).isEqualTo("GET"));
+    }
+
+    @Test
+    void explicitServerPlanMetadataIsAccepted() throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes/metadata")).put("planType", "server");
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+    }
+
+    private void useSlug() {
+        keygen.setAccountId("stirling-test");
+        verifier =
+                new KeygenServerLicenseVerifier(
+                        keygen, properties, mapper, http, Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
     private ObjectNode liveBody() {
         return (ObjectNode)
                 mapper.valueToTree(
@@ -249,7 +390,8 @@ class KeygenServerLicenseVerifierTest {
         HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(status);
         when(response.body()).thenReturn(mapper.writeValueAsString(body));
-        when(http.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(response);
+        when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
     }
 
     private String certificate(Instant issued, Instant expiry, KeyPair key) throws Exception {

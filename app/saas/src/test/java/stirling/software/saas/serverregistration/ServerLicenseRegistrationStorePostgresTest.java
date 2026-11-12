@@ -148,6 +148,52 @@ class ServerLicenseRegistrationStorePostgresTest {
     }
 
     @Test
+    void sequenceRecoveryRevealsOnlyAuthenticatedHighWaterMarkAndDoesNotAcceptStaleData() {
+        Receipt first = register(100, 147, SECRET);
+        jdbc.update(
+                "UPDATE public.server_license_registrations SET last_seen_at='2020-01-01T00:00:00Z', reported_at='2020-01-01T00:00:00Z'");
+        assertThatThrownBy(() -> sync(first, 11, 200, SECRET))
+                .isInstanceOfSatisfying(
+                        ServerLicenseRegistrationStore.SequenceConflictException.class,
+                        e ->
+                                assertThat(e.conflict())
+                                        .isEqualTo(
+                                                new SequenceConflict(first.registrationId(), 100)));
+        assertThatThrownBy(() -> register(11, 200, SECRET))
+                .isInstanceOfSatisfying(
+                        ServerLicenseRegistrationStore.SequenceConflictException.class,
+                        e ->
+                                assertThat(e.conflict())
+                                        .isEqualTo(
+                                                new SequenceConflict(first.registrationId(), 100)));
+        assertStatus(HttpStatus.UNAUTHORIZED, () -> sync(first, 11, 200, "b".repeat(43)));
+        assertStatus(HttpStatus.UNAUTHORIZED, () -> register(11, 200, "b".repeat(43)));
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT reported_user_count FROM public.server_license_registrations",
+                                Long.class))
+                .isEqualTo(147);
+        assertThat(
+                        jdbc.queryForObject(
+                                        "SELECT last_seen_at FROM public.server_license_registrations",
+                                        java.sql.Timestamp.class)
+                                .toInstant())
+                .isEqualTo(Instant.parse("2020-01-01T00:00:00Z"));
+        assertThat(sync(first, 101, 201, SECRET).registrationId())
+                .isEqualTo(first.registrationId());
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT reported_user_count FROM public.server_license_registrations",
+                                Long.class))
+                .isEqualTo(201);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM public.server_license_registrations",
+                                Integer.class))
+                .isEqualTo(1);
+    }
+
+    @Test
     void ambiguousOrBlankPurchasesStayUnresolvedAndCanBeReconciledOnBootstrap() {
         jdbc.update("UPDATE public.license_keys SET server_subscription_id=' '");
         Receipt first = register(1, 147, SECRET);

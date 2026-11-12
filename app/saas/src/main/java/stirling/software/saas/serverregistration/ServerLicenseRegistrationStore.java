@@ -22,6 +22,7 @@ import stirling.software.proprietary.serverregistration.ServerRegistrationProtoc
 import stirling.software.proprietary.serverregistration.ServerRegistrationProtocol.Receipt;
 import stirling.software.proprietary.serverregistration.ServerRegistrationProtocol.RegistrationRequest;
 import stirling.software.proprietary.serverregistration.ServerRegistrationProtocol.Report;
+import stirling.software.proprietary.serverregistration.ServerRegistrationProtocol.SequenceConflict;
 import stirling.software.proprietary.serverregistration.ServerRegistrationProtocol.SyncRequest;
 
 /**
@@ -122,8 +123,7 @@ public class ServerLicenseRegistrationStore {
                         && (!report.reportedUserCount().equals(row.users())
                                 || !report.applicationVersion().equals(row.version())
                                 || report.capabilityVersion() != row.capability()))) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Report sequence already superseded");
+            throw new SequenceConflictException(new SequenceConflict(row.id(), row.sequence()));
         }
         if (report.sequence() > row.sequence()) {
             jdbc.update(
@@ -192,6 +192,20 @@ public class ServerLicenseRegistrationStore {
     }
 
     private record Purchase(UUID id, String subscription) {}
+
+    /** Carries only the authenticated record's sequence; the rejected transaction rolls back. */
+    static final class SequenceConflictException extends ResponseStatusException {
+        private final SequenceConflict conflict;
+
+        SequenceConflictException(SequenceConflict conflict) {
+            super(HttpStatus.CONFLICT, "Report sequence already superseded");
+            this.conflict = conflict;
+        }
+
+        SequenceConflict conflict() {
+            return conflict;
+        }
+    }
 
     private record Row(
             UUID id,

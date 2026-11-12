@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -73,6 +74,13 @@ public class ServerLicenseRegistrationController {
     public ProblemDetail invalidRequest() {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, "Invalid registration request");
+    }
+
+    /** Exposes recovery information only after the store authenticates the tracking credential. */
+    @ExceptionHandler(ServerLicenseRegistrationStore.SequenceConflictException.class)
+    public ResponseEntity<ServerRegistrationProtocol.SequenceConflict> sequenceConflict(
+            ServerLicenseRegistrationStore.SequenceConflictException failure) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(failure.conflict());
     }
 
     private void rateLimit(String operation, String address, long capacity) {

@@ -146,6 +146,22 @@ class LegacyServerRegistrationServiceTest {
     }
 
     @Test
+    void recurringConflictRetriesOnlyOnceAndNeverAcknowledges() throws Exception {
+        when(licenses.getLicenseKeyResult()).thenReturn(License.SERVER);
+        when(users.getTotalUsersCount()).thenReturn(147L);
+        when(states.reserve(any())).thenReturn(state);
+        var conflict = new ServerRegistrationProtocol.SequenceConflict(UUID.randomUUID(), 100);
+        when(client.register(any()))
+                .thenThrow(new ServerRegistrationClient.SequenceConflictException(conflict));
+        when(states.reconcile(state, conflict)).thenReturn(true);
+        service.reportNow();
+        verify(client, times(2)).register(any());
+        verify(states).reconcile(state, conflict);
+        verify(states, never()).acknowledge(any(), any());
+        verify(licenses, only()).getLicenseKeyResult();
+    }
+
+    @Test
     void enterpriseAndTeamOnlyInstancesDoNotBootstrap() {
         when(licenses.getLicenseKeyResult()).thenReturn(License.ENTERPRISE, License.NORMAL);
         service.reportNow();

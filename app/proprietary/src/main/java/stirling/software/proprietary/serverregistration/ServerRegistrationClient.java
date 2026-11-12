@@ -72,6 +72,20 @@ public class ServerRegistrationClient {
         return send(ServerRegistrationProtocol.PATH + "/sync", request);
     }
 
+    /** Authenticated conflict data is for sequence recovery only, never an acknowledgement. */
+    public static final class SequenceConflictException extends IOException {
+        private final ServerRegistrationProtocol.SequenceConflict conflict;
+
+        public SequenceConflictException(ServerRegistrationProtocol.SequenceConflict conflict) {
+            super("Report sequence already superseded");
+            this.conflict = conflict;
+        }
+
+        public ServerRegistrationProtocol.SequenceConflict conflict() {
+            return conflict;
+        }
+    }
+
     private ServerRegistrationProtocol.Receipt send(String path, Object payload)
             throws IOException {
         HttpRequest request =
@@ -84,8 +98,25 @@ public class ServerRegistrationClient {
                                         mapper.writeValueAsString(payload)))
                         .build();
         try {
-            HttpResponse<String> response =
-                    http.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = RegistrationHttpTransport.send(http, request, timeout);
+            if (response.statusCode() == 409) {
+                ServerRegistrationProtocol.SequenceConflict conflict;
+                try {
+                    conflict =
+                            mapper.readValue(
+                                    response.body(),
+                                    ServerRegistrationProtocol.SequenceConflict.class);
+                } catch (RuntimeException e) {
+                    throw new IOException("Invalid registration conflict");
+                }
+                if (conflict == null
+                        || conflict.registrationId() == null
+                        || conflict.acceptedSequence() < 1
+                        || conflict.acceptedSequence() == Long.MAX_VALUE) {
+                    throw new IOException("Invalid registration conflict");
+                }
+                throw new SequenceConflictException(conflict);
+            }
             if (response.statusCode() != 200) {
                 throw new IOException("Registration returned HTTP " + response.statusCode());
             }

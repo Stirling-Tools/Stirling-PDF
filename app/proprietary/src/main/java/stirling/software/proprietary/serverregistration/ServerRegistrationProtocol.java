@@ -68,4 +68,7 @@ public final class ServerRegistrationProtocol {
      */
     public record Receipt(
             UUID registrationId, long acceptedSequence, PurchaseMapping purchaseMapping) {}
+
+    /** Returned only after credential authentication; does not accept or refresh the report. */
+    public record SequenceConflict(UUID registrationId, long acceptedSequence) {}
 }
