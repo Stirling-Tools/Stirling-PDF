@@ -207,6 +207,11 @@ export function FontFamilySelect({
           "pdfTextEditor.fontPicker.embeddingForbidden",
           "This font's licence does not allow embedding it in a PDF. The text was left unchanged.",
         );
+      if (failure === "embedFailed")
+        return t(
+          "pdfTextEditor.fontPicker.embedFailed",
+          "This font could not be embedded in the PDF. The text was left unchanged.",
+        );
       return t(
         "pdfTextEditor.fontPicker.noGlyphs",
         "This font has no characters for the selected text. The text was left unchanged.",

@@ -7339,6 +7339,7 @@ deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still
 deviceGroup = "Device fonts"
 documentGroup = "Document font"
 embeddingForbidden = "This font's licence does not allow embedding it in a PDF. The text was left unchanged."
+embedFailed = "This font could not be embedded in the PDF. The text was left unchanged."
 includedGroup = "Included fonts"
 label = "Font family"
 mixed = "Mixed"

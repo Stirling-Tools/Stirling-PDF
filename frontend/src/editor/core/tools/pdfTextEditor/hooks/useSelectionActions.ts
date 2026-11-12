@@ -13,6 +13,7 @@ import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import {
   deviceFontDrawsAnyOf,
   ensureDeviceFontReady,
+  loadDeviceFontInto,
 } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
@@ -45,6 +46,7 @@ interface SelectedRun {
 export type FontPickFailure =
   | "serverFontFailed"
   | "embeddingForbidden"
+  | "embedFailed"
   | "noGlyphs";
 
 async function serverFontUnavailable(family: string): Promise<boolean> {
@@ -205,6 +207,14 @@ export function useSelectionActions(store: EditorStore) {
       );
       if (failure) return failure;
       if (store.document !== doc) return null;
+      // The command falls back to a standard face when the font will not
+      // embed, which would change the text to a font the user never picked.
+      if (
+        doc &&
+        nearestStandardFont(family) !== family &&
+        !loadDeviceFontInto(doc, family)
+      )
+        return "embedFailed";
       await dispatchAfterScanFit(
         targets.map((run, i) => ({ page: pages[i], run: run as TextRun })),
         () => {
