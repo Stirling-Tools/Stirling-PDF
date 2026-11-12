@@ -348,7 +348,12 @@ export function measureScanInk(
     // while a wider gap would reach into the neighbouring line.
     const gap = Math.round(scale * 0.8);
     const boxPx = coreBottom - coreTop;
-    const grow = (from: number, step: number, limit: number) => {
+    const grow = (
+      from: number,
+      step: number,
+      limit: number,
+      maxBlank = gap,
+    ) => {
       let edge = from;
       let blank = 0;
       for (
@@ -360,7 +365,7 @@ export function measureScanInk(
         if (rowSolid[y] > 0) {
           edge = y;
           blank = 0;
-        } else if (++blank > gap) break;
+        } else if (++blank > maxBlank) break;
       }
       return edge;
     };
@@ -380,6 +385,12 @@ export function measureScanInk(
     const solidBottom = grow(last, 1, boxPx * 0.7);
     const top = fringe(solidTop, -1);
     const bottom = fringe(solidBottom, 1);
+    // The dot of an i or j floats further above its stem than `gap` allows at
+    // body sizes, and a word with no ascender then ends at the x-height. The
+    // cover and the copied pixels must take the dot too, or moving the word
+    // leaves it behind; the glyph measurements above stay as they were.
+    const dotGap = Math.max(gap, Math.round(boxPx * 0.2));
+    const coverTop = fringe(grow(first, -1, boxPx * 0.6, dotGap), -1);
 
     // Glyph bodies end on the baseline and only descenders go below it, so
     // the baseline is where the ink per row falls away most sharply. A fixed
@@ -497,7 +508,7 @@ export function measureScanInk(
         a: 255,
       },
       rect: pageBox(
-        top - clearance(top, -1, (y) => ruled[y] === 1),
+        coverTop - clearance(coverTop, -1, (y) => ruled[y] === 1),
         bottom + clearance(bottom, 1, (y) => ruled[y] === 1),
         left - clearance(left, -1, (x) => edgeCols.includes(x)),
         right + clearance(right, 1, (x) => edgeCols.includes(x)),
