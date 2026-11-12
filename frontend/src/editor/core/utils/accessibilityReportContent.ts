@@ -30,12 +30,12 @@ export function formatPageRanges(pages: number[]): string {
       previous = page;
       continue;
     }
-    ranges.push(start === previous ? `${start}` : `${start}–${previous}`);
+    ranges.push(start === previous ? `${start}` : `${start}-${previous}`);
     start = page;
     previous = page;
   }
   if (start !== undefined) {
-    ranges.push(start === previous ? `${start}` : `${start}–${previous}`);
+    ranges.push(start === previous ? `${start}` : `${start}-${previous}`);
   }
   return ranges.join(", ");
 }
