@@ -61,7 +61,7 @@ export function AccessibilityManualChecks({
           </ul>
           <Button
             className="a11y-manual__all"
-            variant="tertiary"
+            variant="secondary"
             size="sm"
             onClick={() => onSetAll(!allDone)}
           >
