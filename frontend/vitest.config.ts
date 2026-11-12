@@ -11,6 +11,13 @@ import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.
 const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
+const FRONTEND_ROOT = [
+  process.env.INIT_CWD,
+  process.cwd(),
+  resolve(process.cwd(), "frontend"),
+].find((candidate) =>
+  candidate ? existsSync(resolve(candidate, "src/editor")) : false,
+) ?? process.cwd();
 
 // Every @mantine/* package, so they share one pre-bundled core: one left
 // unbundled imports its own copy and cannot see the bundled MantineProvider.
@@ -20,7 +27,7 @@ const MANTINE_PACKAGES = Object.keys(frontendPackage.dependencies).filter(
 
 const CORE_TOAST_ALIAS = {
   find: /^@editor\/components\/toast(?:\/(.*))?$/,
-  replacement: resolve(import.meta.dirname, "src/editor/core/components/toast"),
+  replacement: resolve(FRONTEND_ROOT, "src/editor/core/components/toast"),
 };
 
 // Projects do NOT inherit the root test options, so every project silently ran
