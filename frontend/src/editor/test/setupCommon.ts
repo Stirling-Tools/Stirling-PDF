@@ -72,6 +72,7 @@ Object.defineProperty(globalThis, "crypto", {
   value: {
     subtle: { digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)) },
     getRandomValues: vi.fn((array: Uint8Array) => array),
+    randomUUID: vi.fn(() => "00000000-0000-4000-8000-000000000000"),
   },
   writable: true,
   configurable: true,

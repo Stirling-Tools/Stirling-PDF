@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -16,6 +17,11 @@ const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
 const MANTINE_PACKAGES = Object.keys(frontendPackage.dependencies).filter(
   (name) => name.startsWith("@mantine/"),
 );
+
+const CORE_TOAST_ALIAS = {
+  find: /^@editor\/components\/toast(?:\/(.*))?$/,
+  replacement: resolve(import.meta.dirname, "src/editor/core/components/toast"),
+};
 
 // Projects do NOT inherit the root test options, so every project silently ran
 // at vitest's 5s default and printed all app stdout. Spread these into each one.
@@ -38,6 +44,7 @@ const TEST_DEFAULTS = {
 export default defineConfig({
   resolve: {
     dedupe: MANTINE_PACKAGES,
+    alias: [CORE_TOAST_ALIAS],
   },
   test: {
     globals: true,
@@ -64,7 +71,10 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        resolve: { dedupe: MANTINE_PACKAGES },
+        resolve: {
+          dedupe: MANTINE_PACKAGES,
+          alias: [CORE_TOAST_ALIAS],
+        },
         server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "core",
@@ -92,7 +102,10 @@ export default defineConfig({
       },
       {
         extends: true,
-        resolve: { dedupe: MANTINE_PACKAGES },
+        resolve: {
+          dedupe: MANTINE_PACKAGES,
+          alias: [CORE_TOAST_ALIAS],
+        },
         server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "processor",
@@ -119,7 +132,10 @@ export default defineConfig({
       },
       {
         extends: true,
-        resolve: { dedupe: MANTINE_PACKAGES },
+        resolve: {
+          dedupe: MANTINE_PACKAGES,
+          alias: [CORE_TOAST_ALIAS],
+        },
         server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "proprietary",
@@ -144,7 +160,10 @@ export default defineConfig({
       },
       {
         extends: true,
-        resolve: { dedupe: MANTINE_PACKAGES },
+        resolve: {
+          dedupe: MANTINE_PACKAGES,
+          alias: [CORE_TOAST_ALIAS],
+        },
         server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "desktop",
@@ -169,7 +188,10 @@ export default defineConfig({
       },
       {
         extends: true,
-        resolve: { dedupe: MANTINE_PACKAGES },
+        resolve: {
+          dedupe: MANTINE_PACKAGES,
+          alias: [CORE_TOAST_ALIAS],
+        },
         server: { deps: { inline: MANTINE_PACKAGES } },
         test: {
           name: "saas",
