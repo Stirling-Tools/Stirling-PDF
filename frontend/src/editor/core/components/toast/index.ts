@@ -6,7 +6,7 @@ import {
 import { useToast, ToastProvider } from "@editor/components/toast/ToastContext";
 import ToastRenderer from "@editor/components/toast/ToastRenderer";
 
-export { useToast, ToastProvider, ToastRenderer, ToastPortalBinder };
+export { useToast, ToastProvider, ToastRenderer };
 
 // Global imperative API via module singleton
 let _api: ReturnType<typeof createImperativeApi> | null = null;
