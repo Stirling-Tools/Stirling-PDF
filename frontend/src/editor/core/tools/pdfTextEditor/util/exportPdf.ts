@@ -143,7 +143,11 @@ async function serializeEdits(
   // First, while the file is still exactly what PDFium wrote. Skipped for an
   // incremental save, whose earlier bytes a signature covers.
   if (!incremental) {
-    bytes = await subsetEmbeddedFonts(bytes, doc.embeddedFontFiles());
+    bytes = await subsetEmbeddedFonts(
+      bytes,
+      doc.embeddedFontFiles(),
+      doc.openedBytes,
+    );
   }
   const regenerated = doc.regeneratedPages();
 

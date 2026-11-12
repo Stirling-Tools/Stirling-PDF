@@ -48,7 +48,7 @@ function dictPart(body: string): string {
 
 function collectDicts(pdf: RawPdf): Dict[] {
   const out: Dict[] = [];
-  for (let num = 1; num <= pdf.highestObjectNumber; num++) {
+  for (const num of pdf.objectNumbers()) {
     if (pdf.bodyOffset(num) < 0) continue;
     const body = pdf.objectBody(num);
     if (body) out.push({ num, text: dictPart(body) });
@@ -72,6 +72,32 @@ async function findFontFiles(
     if (file) found.set(num, file);
   }
   return found;
+}
+
+/**
+ * `files` without any the opened document already embedded whole: that copy
+ * may serve text this pass never sees, such as a form field filled in later.
+ * A stream that cannot be read counts as a match, and an unreadable file as
+ * matching everything.
+ */
+async function newToDocument(
+  opened: Uint8Array,
+  files: readonly Uint8Array[],
+): Promise<Uint8Array[]> {
+  if (opened.length === 0) return [...files];
+  const pdf = await RawPdf.parse(opened);
+  if (!pdf) return [];
+  const had = new Set<Uint8Array>();
+  for (const { num, text } of collectDicts(pdf)) {
+    const length1 = pdf.dictInt(text, "Length1");
+    if (length1 === null) continue;
+    const sameLength = files.filter((file) => file.length === length1);
+    if (sameLength.length === 0) continue;
+    const data = pdf.encrypted ? null : await pdf.streamData(num);
+    for (const file of sameLength)
+      if (!data || sameBytes(file, data)) had.add(file);
+  }
+  return files.filter((file) => !had.has(file));
 }
 
 // Text addresses a font by glyph id only when it is a CID TrueType font with an
@@ -108,8 +134,9 @@ function fontUsers(pdf: RawPdf, dicts: Dict[], file: number): FontUsers | null {
 /** Every resource name any dictionary binds to one of `fonts`. */
 function resourceNames(dicts: Dict[], fonts: number[]): Set<string> {
   const names = new Set<string>();
+  // Every dictionary, not only those holding /Font: a resource dictionary may
+  // point at its font map indirectly, and a stray name only keeps more glyphs.
   for (const { text } of dicts) {
-    if (!text.includes("/Font")) continue;
     for (const m of text.matchAll(RESOURCE_REF)) {
       if (fonts.includes(parseInt(m[2], 10))) names.add(m[1]);
     }
@@ -171,6 +198,8 @@ function scanContent(content: Uint8Array): ScannedStream {
     else if (text === "Q") font = saved.pop() ?? UNKNOWN_FONT;
     else if (text === "Tf" && i >= 2 && tokens[i - 2].text.startsWith("/"))
       font = tokens[i - 2].text.slice(1);
+    // An ExtGState may set the font too, and which one is not read here.
+    else if (text === "gs") font = UNKNOWN_FONT;
     const literal = text.startsWith("(");
     if (!literal && !(text.startsWith("<") && !text.startsWith("<<"))) continue;
     const bytes = literal ? literalBytes(text) : hexBytes(text);
@@ -265,6 +294,7 @@ function usedWidths(widths: string, used: Set<number>): string | null {
 
 function retitledCidFont(
   pdf: RawPdf,
+  dicts: Dict[],
   num: number,
   tag: string,
   used: Set<number>,
@@ -280,7 +310,11 @@ function retitledCidFont(
   // The array moves inline; an indirect one would otherwise stay in the file
   // at full size with nothing pointing at it.
   const indirect = pdf.dictRef(body, "W");
-  if (indirect !== null) out.push({ num: indirect, body: fromLatin1("null") });
+  const shared = dicts.some(
+    (d) => d.num !== num && pdf.dictRef(d.text, "W") === indirect,
+  );
+  if (indirect !== null && !shared)
+    out.push({ num: indirect, body: fromLatin1("null") });
   return out;
 }
 
@@ -354,8 +388,8 @@ function replaceObjects(
 /**
  * Replace each of `fontFiles` that the saved file embeds whole with a copy
  * holding only the glyphs the file's content draws. `fontFiles` are the exact
- * font programs embedded during this session; fonts the document already had
- * are never touched.
+ * font programs embedded during this session; fonts `opened`, the file as it
+ * was opened, already had are never touched.
  *
  * Must run on the bytes PDFium wrote, before any pass appends a revision: it
  * rewrites the cross-reference table in place. Never throws and never guesses:
@@ -365,13 +399,16 @@ function replaceObjects(
 export async function subsetEmbeddedFonts(
   bytes: Uint8Array,
   fontFiles: readonly Uint8Array[],
+  opened: Uint8Array = new Uint8Array(0),
 ): Promise<Uint8Array> {
   if (fontFiles.length === 0) return bytes;
   try {
+    const added = await newToDocument(opened, fontFiles);
+    if (added.length === 0) return bytes;
     const pdf = await RawPdf.parse(bytes);
     if (!pdf || pdf.encrypted || pdf.usesXrefStream) return bytes;
     const dicts = collectDicts(pdf);
-    const embedded = await findFontFiles(pdf, dicts, fontFiles);
+    const embedded = await findFontFiles(pdf, dicts, added);
     if (embedded.size === 0) return bytes;
     const streams = await scanAllContent(pdf, dicts);
 
@@ -402,7 +439,9 @@ export async function subsetEmbeddedFonts(
       const tag = subsetTag(used);
       const renames = [
         ...users.type0.map((n) => tagged(pdf, n, "BaseFont", tag)),
-        ...users.cidFonts.flatMap((n) => retitledCidFont(pdf, n, tag, used)),
+        ...users.cidFonts.flatMap((n) =>
+          retitledCidFont(pdf, dicts, n, tag, used),
+        ),
         ...users.descriptors.map((n) => tagged(pdf, n, "FontName", tag)),
       ];
       for (const rename of renames) if (rename) replacements.push(rename);

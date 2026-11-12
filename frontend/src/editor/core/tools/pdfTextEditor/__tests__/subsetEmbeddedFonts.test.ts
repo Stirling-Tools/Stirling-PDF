@@ -59,6 +59,11 @@ interface PdfOptions {
   content: string;
   encoding?: string;
   cidSubtype?: string;
+  /** The page's /Font entry, in place of the inline `<< /F1 5 0 R >>`. */
+  fonts?: string;
+  info?: string;
+  /** Body of an object 11 added after the others. */
+  extra?: string;
 }
 
 function pdfWithFont(font: Uint8Array, options: PdfOptions): Uint8Array {
@@ -67,7 +72,7 @@ function pdfWithFont(font: Uint8Array, options: PdfOptions): Uint8Array {
     latin1("<< /Type /Catalog /Pages 2 0 R >>"),
     latin1("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
     latin1(
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font ${options.fonts ?? "<< /F1 5 0 R >>"} >> >>`,
     ),
     latin1(
       `<< /Length ${options.content.length} >>\nstream\n${options.content}\nendstream`,
@@ -94,9 +99,10 @@ function pdfWithFont(font: Uint8Array, options: PdfOptions): Uint8Array {
       out.set(tailPart, headPart.length + font.length);
       return out;
     })(),
-    latin1("<< /Producer (after the font) >>"),
+    latin1(options.info ?? "<< /Producer (after the font) >>"),
     latin1(`[0 [${Array.from({ length: 400 }, (_, i) => 500 + i).join(" ")}]]`),
   ];
+  if (options.extra) objects.push(latin1(options.extra));
   const parts: Uint8Array[] = [latin1("%PDF-1.4\n")];
   const offsets: number[] = [];
   let size = parts[0].length;
@@ -248,6 +254,76 @@ describe("subsetEmbeddedFonts", () => {
     });
     expect(await subsetEmbeddedFonts(pdf, known ? [font] : [])).toBe(pdf);
   });
+
+  test("leaves a font the opened document already embedded", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const pdf = pdfWithFont(font, { content: "BT /F1 12 Tf <0001> Tj ET" });
+    const without = pdfWithFont(font.subarray(0, 64), { content: "" });
+
+    expect(await subsetEmbeddedFonts(pdf, [font], pdf)).toBe(pdf);
+    expect(
+      (await subsetEmbeddedFonts(pdf, [font], without)).length,
+    ).toBeLessThan(pdf.length / 5);
+  });
+
+  test("keeps glyphs shown in a font bound through an indirect /Font", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const [h] = gidsOf(font, "H");
+    const pdf = pdfWithFont(font, {
+      content: `BT /F1 12 Tf <${hex([h])}> Tj ET`,
+      fonts: "11 0 R",
+      extra: "<< /F1 5 0 R >>",
+    });
+
+    const embedded = await fontFileIn(await subsetEmbeddedFonts(pdf, [font]));
+
+    expect(glyph(embedded, h).length).toBeGreaterThan(0);
+  });
+
+  test("keeps glyphs shown after a graphics state may have set the font", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const [h] = gidsOf(font, "H");
+    const pdf = pdfWithFont(font, {
+      content: `BT /Other 12 Tf /GS1 gs <${hex([h])}> Tj ET`,
+    });
+
+    const embedded = await fontFileIn(await subsetEmbeddedFonts(pdf, [font]));
+
+    expect(glyph(embedded, h).length).toBeGreaterThan(0);
+  });
+
+  test("keeps a widths array another font still points at", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const pdf = pdfWithFont(font, {
+      content: "BT /F1 12 Tf <0001> Tj ET",
+      extra: "<< /Type /Font /Subtype /CIDFontType2 /W 10 0 R >>",
+    });
+
+    const reread = (await RawPdf.parse(
+      await subsetEmbeddedFonts(pdf, [font]),
+    ))!;
+
+    expect(reread.objectBody(10)!.trim()).not.toBe("null");
+    expect(
+      reread.valueSpan(reread.objectBody(6)!, "W")!.text.length,
+    ).toBeLessThan(200);
+  });
+
+  test(
+    "is not slowed by a /Size inside a string",
+    { timeout: 5000 },
+    async () => {
+      const font = new Uint8Array(await readFile(FONT));
+      const pdf = pdfWithFont(font, {
+        content: "BT /F1 12 Tf <0001> Tj ET",
+        info: "<< /Title (/Size 1000000000) >>",
+      });
+
+      expect((await subsetEmbeddedFonts(pdf, [font])).length).toBeLessThan(
+        pdf.length / 5,
+      );
+    },
+  );
 
   test("leaves the file alone when a page holds an inline image", async () => {
     const font = new Uint8Array(await readFile(FONT));
