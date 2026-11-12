@@ -147,6 +147,78 @@ export const basicTip = (t: TFunction, id: AccessibilityBasicId) =>
     ),
   })[id];
 
+/**
+ * The clauses each row covers, from the veraPDF rules the row groups. Must follow
+ * TAG_PRECEDENCE and BASIC_AREA in accessibilityAssessment, which decide that grouping.
+ */
+const AREA_CLAUSES: Record<string, Record<AccessibilityCategoryId, string>> = {
+  "PDF/UA-1": {
+    structure: "7.1, 7.4, 7.5, 7.9",
+    altText: "7.3, 7.7",
+    language: "7.2",
+    metadata: "5, 6.2, 7.1",
+    fonts: "7.21",
+    links: "7.18",
+  },
+  "PDF/UA-2": {
+    structure: "8.2",
+    altText: "8.2.5.28, 8.4.3",
+    language: "8.4.4",
+    metadata: "5, 6.2, 8.11",
+    fonts: "8.4.5",
+    links: "8.9, 8.10",
+  },
+};
+
+const BASIC_CLAUSES: Record<
+  string,
+  Partial<Record<AccessibilityBasicId, string>>
+> = {
+  "PDF/UA-1": {
+    tagged: "7.1",
+    title: "7.1",
+    displaysTitle: "7.1",
+    language: "7.2",
+    fonts: "7.21.4",
+    declares: "5",
+    notEncrypted: "7.16",
+  },
+  "PDF/UA-2": {
+    tagged: "8.2.1",
+    title: "8.11.1",
+    displaysTitle: "8.11.2",
+    language: "8.4.4",
+    fonts: "8.4.5.5",
+    declares: "5",
+  },
+};
+
+function clauseReference(
+  t: TFunction,
+  profile: string,
+  clauses: string | undefined,
+): string | null {
+  return clauses
+    ? t("checkAccessibility.clauseRef", "{{profile}} §{{clauses}}", {
+        profile,
+        clauses,
+      })
+    : null;
+}
+
+/** e.g. "PDF/UA-1 §7.21"; null for a profile the tool has no clause list for. */
+export const categoryReference = (
+  t: TFunction,
+  profile: string,
+  id: AccessibilityCategoryId,
+) => clauseReference(t, profile, AREA_CLAUSES[profile]?.[id]);
+
+export const basicReference = (
+  t: TFunction,
+  profile: string,
+  id: AccessibilityBasicId,
+) => clauseReference(t, profile, BASIC_CLAUSES[profile]?.[id]);
+
 export const checksLabel = (
   t: TFunction,
   checks: { passed: number; total: number },

@@ -5,6 +5,7 @@ import { BreakdownRow } from "@editor/components/tools/checkAccessibility/Access
 import { AccessibilityIssueItem } from "@editor/components/tools/checkAccessibility/AccessibilityIssueItem";
 import {
   categoryLabel,
+  categoryReference,
   categoryTip,
 } from "@editor/utils/accessibilityReportContent";
 import type {
@@ -23,6 +24,8 @@ const CATEGORY_ICON: Record<AccessibilityCategoryId, IconName> = {
 
 interface AccessibilityAreaItemProps {
   area: AccessibilityArea;
+  /** The report's profile, e.g. "PDF/UA-1", for the tooltip's clause reference. */
+  profile: string;
   /** Shown under the issues, such as how many images need a description. */
   note: string | null;
 }
@@ -30,6 +33,7 @@ interface AccessibilityAreaItemProps {
 /** One breakdown area: its result, and its issues behind a toggle when there is anything to show. */
 export function AccessibilityAreaItem({
   area,
+  profile,
   note,
 }: AccessibilityAreaItemProps) {
   const { t } = useTranslation();
@@ -44,6 +48,7 @@ export function AccessibilityAreaItem({
         icon={CATEGORY_ICON[area.id]}
         label={categoryLabel(t, area.id)}
         tip={categoryTip(t, area.id)}
+        reference={categoryReference(t, profile, area.id)}
         status={passes ? "pass" : "fail"}
         toggle={
           expandable

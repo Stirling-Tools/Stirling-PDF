@@ -16,14 +16,14 @@ export const useCheckAccessibilityTips = (): TooltipContent => {
         title: t("checkAccessibility.tooltip.ua1.title", "PDF/UA-1"),
         description: t(
           "checkAccessibility.tooltip.ua1.text",
-          "The established standard, and the one most organisations and checklists ask for. Choose this if you're not sure.",
+          "The first version of PDF/UA, published in 2012 as ISO 14289-1, for PDF 1.7 files.",
         ),
       },
       {
         title: t("checkAccessibility.tooltip.ua2.title", "PDF/UA-2"),
         description: t(
           "checkAccessibility.tooltip.ua2.text",
-          "The newer standard, for PDF 2.0 files. Choose it if your file is PDF 2.0 or someone has asked for PDF/UA-2: a PDF 1.7 file checked against it fails rules that only apply to PDF 2.0.",
+          "The newer version, published in 2024 as ISO 14289-2, for PDF 2.0 files. A PDF 1.7 file checked against it fails the rules that only apply to PDF 2.0.",
         ),
       },
     ],

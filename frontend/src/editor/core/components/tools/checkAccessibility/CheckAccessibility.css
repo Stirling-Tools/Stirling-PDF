@@ -172,12 +172,19 @@
   transform: rotate(0deg);
 }
 
+.a11y-tip__reference {
+  display: block;
+  margin-top: 0.375rem;
+  font-size: 0.75em;
+  opacity: 0.75;
+}
+
 .a11y-area__info {
   display: inline-flex;
   padding: 0;
   border: 0;
   background: none;
-  color: var(--icon-files-color);
+  color: var(--c-text-subtle);
   cursor: pointer;
 }
 

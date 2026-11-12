@@ -9,6 +9,7 @@ import { BreakdownRow } from "@editor/components/tools/checkAccessibility/Access
 import { AccessibilityManualChecks } from "@editor/components/tools/checkAccessibility/AccessibilityManualChecks";
 import {
   basicLabel,
+  basicReference,
   basicTip,
   checksLabel,
   figuresSummary,
@@ -91,6 +92,7 @@ export function AccessibilityReportView({
             <AccessibilityAreaItem
               key={area.id}
               area={area}
+              profile={report.profile}
               note={area.id === "altText" ? figures : null}
             />
           ))}
@@ -100,6 +102,7 @@ export function AccessibilityReportView({
                 icon={BASIC_ICON[basic.id]}
                 label={basicLabel(t, basic.id)}
                 tip={basicTip(t, basic.id)}
+                reference={basicReference(t, report.profile, basic.id)}
                 status={basic.ok ? "pass" : "fail"}
               />
             </li>

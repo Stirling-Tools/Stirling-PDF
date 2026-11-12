@@ -41,6 +41,8 @@ interface BreakdownRowProps {
   icon: IconName;
   label: string;
   tip: string;
+  /** The standard's clauses the row covers, shown under the tip. */
+  reference?: string | null;
   status: BreakdownStatus;
   /** Turns the label into a toggle for the details below the row. */
   toggle?: { open: boolean; controls: string; onToggle: () => void };
@@ -50,6 +52,7 @@ export function BreakdownRow({
   icon,
   label,
   tip,
+  reference,
   status,
   toggle,
 }: BreakdownRowProps) {
@@ -85,11 +88,17 @@ export function BreakdownRow({
         </span>
       )}
       <Tooltip
+        content={
+          <span className="a11y-tip">
+            {tip}
+            {reference && (
+              <span className="a11y-tip__reference">{reference}</span>
+            )}
+          </span>
+        }
         position="top"
         maxWidth={280}
-        pinOnClick
-        header={{ title: label }}
-        tips={[{ description: tip }]}
+        arrow
       >
         <button
           type="button"
