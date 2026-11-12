@@ -38,6 +38,7 @@ export class CompositeCommand implements Command {
     order: Command[],
     phase: "apply" | "revert",
   ): void {
+    if (this.last.moveGroup?.(doc, this.commands, phase)) return;
     const done: Command[] = [];
     for (const cmd of order) {
       try {

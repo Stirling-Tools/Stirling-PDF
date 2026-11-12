@@ -636,13 +636,17 @@ export function applyPartialEditPlan(
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
     if (!ptr) continue;
+    let removed = false;
     if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
       try {
-        formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
+        removed = !!formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
       } catch {
         /* best-effort */
       }
-    } else {
+    }
+    // Text typed into a run inside a form XObject is drawn on the page, so a
+    // run's pieces can live in either place.
+    if (!removed) {
       try {
         m.FPDFPage_RemoveObject(page.pagePtr, ptr);
       } catch {

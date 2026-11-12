@@ -15,6 +15,17 @@ export interface Command {
   // Optional - when true, a matching `coalesceKey` merges this command into the
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
+  /**
+   * Optional - undo (`revert`) or redo (`apply`) a whole group of merged
+   * commands in one move, called on the group's last command. Returning false
+   * leaves the group to be stepped through child by child. For commands whose
+   * own revert depends on objects a later command in the group replaces.
+   */
+  moveGroup?(
+    doc: EditorDocument,
+    group: readonly Command[],
+    phase: "apply" | "revert",
+  ): boolean;
 }
 
 export class RolledBackError extends Error {

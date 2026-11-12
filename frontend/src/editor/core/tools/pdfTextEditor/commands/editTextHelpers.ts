@@ -228,16 +228,19 @@ export function removeMemberPtrs(
     }
     const container = containerByPtr.get(ptr) ?? fallbackContainerPtr;
     let ok: boolean;
+    ok = false;
     if (container && formMod.FPDFFormObj_RemoveObject) {
       try {
         ok = !!formMod.FPDFFormObj_RemoveObject(container, ptr);
       } catch {
         ok = false;
       }
-    } else {
+    }
+    // Pieces added to a form XObject's run are drawn on the page instead.
+    if (!ok) {
       try {
-        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
-        ok = true;
+        const removed = m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+        ok = !container || !!removed;
       } catch {
         ok = false;
       }
