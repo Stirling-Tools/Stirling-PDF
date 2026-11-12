@@ -3,12 +3,14 @@
 export type CharcodeStrategy =
   | "helvetica" // Legacy: always fall back to Helvetica for new chars.
   | "cmap" // Parse the embedded font's cmap table.
-  | "content-stream"; // Read raw PDF content streams to extract charcode bytes.
+  | "content-stream" // Guesses codes by numbering characters in page order.
+  | "tounicode"; // Inverts the font's own ToUnicode mapping.
 
 export const CHARCODE_STRATEGIES: readonly CharcodeStrategy[] = [
   "helvetica",
   "cmap",
   "content-stream",
+  "tounicode",
 ] as const;
 
 const STORAGE_KEY = "pdfTextEditor.charcodeStrategy";
@@ -16,7 +18,10 @@ const URL_PARAM = "charcodeStrategy";
 
 // Resolve the active strategy: URL param wins over localStorage, which wins
 // over the default.
-export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "content-stream";
+// "content-stream" numbers characters 1, 2, 3... in the order they appear on
+// the page, which few producers do, so its codes can draw a different glyph.
+// It is only used when selected explicitly.
+export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "tounicode";
 
 export function getActiveCharcodeStrategy(): CharcodeStrategy {
   if (typeof window === "undefined") return DEFAULT_CHARCODE_STRATEGY;

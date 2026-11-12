@@ -13,6 +13,7 @@ import {
 import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { resetToUnicodeCache } from "@editor/tools/pdfTextEditor/charcode/ToUnicodeResolver";
 import {
   resetCharCoverageCache,
   resetDroppedBase14Chars,
@@ -40,6 +41,7 @@ function resetCharcodeCaches(): void {
   resetFontHelperCaches();
   resetCmapCache();
   resetContentStreamCache();
+  resetToUnicodeCache();
   resetOnPageAdvCache();
   // The per-char ptr set is doc-scoped since PDFium reuses pointers.
   resetPerCharBranchPtrs();
