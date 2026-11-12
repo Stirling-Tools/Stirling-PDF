@@ -2,7 +2,6 @@ import type { StirlingFileStub } from "@editor/types/fileContext";
 import { isAxiosError } from "axios";
 import apiClient from "@editor/services/apiClient";
 import type { CloudOrigin } from "@editor/types/file";
-import { inMemoryFile } from "@editor/utils/inMemoryFile";
 import type { ConnectedAccount } from "@editor/services/connectedAccountsService";
 
 export type OneDriveSaveTarget =
@@ -65,7 +64,7 @@ export async function saveToOneDrive(
 ): Promise<CloudOrigin> {
   const accountId = targetAccountId(target);
   const form = new FormData();
-  form.append("fileInput", await inMemoryFile(file));
+  form.append("fileInput", file);
   if (target.kind === "replace") {
     if (!target.origin.eTag) {
       throw new OneDriveSaveError(
@@ -120,7 +119,7 @@ function saveError(error: unknown): OneDriveSaveError {
     "server",
     "OneDrive or the Stirling server had a problem saving the file.",
   );
-  if (!isAxiosError<{ code?: string } | undefined>(error)) return server;
+  if (!isAxiosError(error)) return server;
   const response = error.response;
   if (!response) {
     return new OneDriveSaveError(
@@ -128,13 +127,14 @@ function saveError(error: unknown): OneDriveSaveError {
       "Couldn't reach OneDrive. Check your connection and try again.",
     );
   }
-  if (response.status === 409 && response.data?.code === "conflict") {
+  const code = errorCode(response.data);
+  if (response.status === 409 && code === "conflict") {
     return new OneDriveSaveError(
       "conflict",
       "The file changed in OneDrive since you opened it.",
     );
   }
-  if (response.status === 410 && response.data?.code === "missing") {
+  if (response.status === 410 && code === "missing") {
     return new OneDriveSaveError(
       "missing",
       "The file was moved or deleted in OneDrive.",
@@ -147,6 +147,22 @@ function saveError(error: unknown): OneDriveSaveError {
     );
   }
   return server;
+}
+
+/** Some transports hand an error body over as its raw text rather than parsed JSON. */
+function errorCode(data: unknown): string | undefined {
+  let body = data;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof body !== "object" || body === null || !("code" in body)) {
+    return undefined;
+  }
+  return typeof body.code === "string" ? body.code : undefined;
 }
 
 export function copyName(name: string): string {

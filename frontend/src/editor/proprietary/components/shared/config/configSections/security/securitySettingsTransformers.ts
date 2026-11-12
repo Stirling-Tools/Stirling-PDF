@@ -192,6 +192,8 @@ export async function fetchConnectionsSettings(): Promise<
       clientSecret: premiumData.proFeatures?.microsoft?.clientSecret || "",
       allowAccountConnections:
         premiumData.proFeatures?.microsoft?.allowAccountConnections !== false,
+      allowEditorSaves:
+        premiumData.proFeatures?.microsoft?.allowEditorSaves !== false,
     },
   };
 

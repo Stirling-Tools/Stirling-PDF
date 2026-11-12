@@ -34,7 +34,7 @@ function sent(): Record<string, FormDataEntryValue> {
   return Object.fromEntries(form.entries());
 }
 
-function failure(status: number, data: object = {}) {
+function failure(status: number, data: object | string = {}) {
   return new AxiosError("failed", "ERR", undefined, undefined, {
     status,
     statusText: "Failed",
@@ -106,6 +106,17 @@ describe("saveToOneDrive", () => {
       failure(410, { code: "missing" }),
       "missing",
     ],
+    [
+      "a changed file whose body is raw text",
+      failure(409, '{"code":"conflict","message":"changed"}'),
+      "conflict",
+    ],
+    [
+      "a deleted file whose body is raw text",
+      failure(410, '{"code":"missing"}'),
+      "missing",
+    ],
+    ["a 410 whose body is not JSON", failure(410, "Gone"), "server"],
     ["an account that must sign in again", failure(409), "reconnect"],
     ["a rejected account", failure(401), "reconnect"],
     [
