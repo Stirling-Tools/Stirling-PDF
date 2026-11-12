@@ -20,6 +20,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   layoutScanEdit,
+  rewrapLines,
   type LayoutWord,
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
 import {
@@ -1314,6 +1315,67 @@ export function scanEditOf(
   if (!isScanRun(run)) return run.scanEdit;
   run.scanEdit ??= captureScanEdit(doc.module, run, doc.page(run.pageIndex));
   return run.scanEdit;
+}
+
+/**
+ * The run's text reflowed to `maxWidthPt` in the style its edits are drawn in,
+ * or null when the run is not scanned text. A new line is only added below the
+ * block while nothing else on the page sits there.
+ */
+export function wrapScanText(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  maxWidthPt: number,
+): string | null {
+  const state = scanEditOf(doc, run);
+  if (!state || state.lines.length === 0) return null;
+  const style =
+    state.override.style ?? drawnBlockStyle(doc, state) ?? fallbackStyle(state);
+  const width = (line: string) =>
+    spanOf(doc, page, line, style.family, style.fontSize) * style.stretch;
+  const fits = (line: string) => line === "" || width(line) <= maxWidthPt;
+  const lineCount = run.text.split("\n").length;
+  const wrapped = rewrapLines(
+    run.text,
+    fits,
+    roomBelow(page, run, state, linePitch(state, style), lineCount),
+  );
+  // All or nothing: with no room for the last line's overflow the text would
+  // only move to another line and stick out there instead.
+  const settled = wrapped
+    .split("\n")
+    .every((line) => fits(line.trim()) || !line.trim().includes(" "));
+  return settled ? wrapped : run.text;
+}
+
+function roomBelow(
+  page: Page,
+  run: TextRun,
+  state: ScanEditState,
+  pitch: number,
+  lineCount: number,
+): boolean {
+  // Lines of a turned block are not in the page space other runs are in.
+  if (state.frame) return false;
+  const last = state.lines[state.lines.length - 1];
+  const added = Math.max(0, lineCount - state.lines.length) + 1;
+  const bottom = last.baseline - added * pitch - last.height * 0.35;
+  const top = last.baseline - last.height * 0.35;
+  const left = Math.min(...state.lines.map((l) => l.words[0]?.x ?? Infinity));
+  const right = Math.max(
+    ...state.lines.map((l) => l.words[l.words.length - 1]?.right ?? -Infinity),
+  );
+  return !page.runs.some((other) => {
+    if (other === run) return false;
+    const b = other.bounds;
+    return (
+      b.x < right &&
+      b.x + b.width > left &&
+      b.y < top &&
+      b.y + b.height > bottom
+    );
+  });
 }
 
 function upright<T>(

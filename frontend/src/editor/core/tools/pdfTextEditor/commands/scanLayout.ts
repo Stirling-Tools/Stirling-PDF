@@ -229,3 +229,48 @@ export function layoutScanEdit(input: LayoutInput): Layout {
   flushTyped();
   return layout;
 }
+
+/**
+ * `text` with its line breaks moved so every line `fits`, the way a paragraph
+ * reflows: the words that overflow a line go to the front of the next one.
+ * Only spaces and line breaks swap places, so every character keeps its offset
+ * and a caret in the text stays where it was. A last line overflows onto a new
+ * line only when `canAddLine`; a single word too wide to fit stays put.
+ */
+export function rewrapLines(
+  text: string,
+  fits: (line: string) => boolean,
+  canAddLine: boolean,
+): string {
+  const chars = [...text];
+  if (chars.length !== text.length) return text;
+  let start = 0;
+  while (start < chars.length) {
+    let end = chars.indexOf("\n", start);
+    if (end < 0) end = chars.length;
+    while (!fits(chars.slice(start, end).join("").trim())) {
+      const at = lastBreak(chars, start, end);
+      if (at < 0) break;
+      const nextEnd = chars.indexOf("\n", end + 1);
+      const next = chars
+        .slice(end + 1, nextEnd < 0 ? chars.length : nextEnd)
+        .join("");
+      const joins = end < chars.length && next.trim() !== "";
+      if (!joins && !canAddLine) break;
+      if (joins) chars[end] = " ";
+      chars[at] = "\n";
+      end = at;
+    }
+    start = end + 1;
+  }
+  return chars.join("");
+}
+
+// The last space on [start, end) with a word on both sides of it.
+function lastBreak(chars: string[], start: number, end: number): number {
+  let at = end - 1;
+  while (at > start && chars[at] === " ") at--;
+  while (at > start && chars[at] !== " ") at--;
+  if (at <= start || chars[at] !== " ") return -1;
+  return chars.slice(start, at).some((ch) => ch !== " ") ? at : -1;
+}

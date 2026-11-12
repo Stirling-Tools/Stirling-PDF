@@ -36,6 +36,7 @@ import {
   renderScanEdit,
   scanDrawnSize,
   scanEditOf,
+  wrapScanText,
   scanRunNeedsFit,
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -631,6 +632,33 @@ describe("editing sideways scanned text", () => {
           if (Math.abs(before[i] - after[i]) > 40) changed++;
         expect(changed).toBeGreaterThan(50);
         expect(await savedText(doc)).toContain("Mary");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
+describe("wrapping scanned text to a width", () => {
+  test(
+    "moves the overflow to a new line and still draws the edit",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const full = words[words.length - 1].right - words[0].x;
+        expect(wrapScanText(doc, page, run, full * 2)).toBe(run.text);
+        const wrapped = wrapScanText(doc, page, run, full * 0.6)!;
+        expect(wrapped.split("\n").length).toBeGreaterThan(1);
+        expect(wrapped.replace(/\n/g, " ")).toBe(run.text);
+        expect(renderScanEdit(doc, page, run, state, wrapped)).toBe(true);
+        expect(run.text).toBe(wrapped);
       } finally {
         doc.dispose();
       }

@@ -26,7 +26,10 @@ import { ZoomPill } from "@editor/tools/pdfTextEditor/components/ZoomPill";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
-import { scanBlockOffInk } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  scanBlockOffInk,
+  wrapScanText,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { MoveShapeCommand } from "@editor/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -445,6 +448,18 @@ function pageViewHandlers(store: EditorStore) {
       store.dispatch(new MoveTextRunCommand({ pageIndex, runId, dx, dy }));
     },
     onWrapRun: (pageIndex: number, runId: string, maxWidthPt: number) => {
+      const doc = store.document;
+      const page = doc?.page(pageIndex);
+      const run = page?.findRun(runId);
+      const wrapped =
+        doc && page && run ? wrapScanText(doc, page, run, maxWidthPt) : null;
+      if (wrapped !== null) {
+        if (wrapped !== run?.text)
+          store.dispatch(
+            new EditTextCommand({ pageIndex, runId, nextText: wrapped }),
+          );
+        return;
+      }
       store.dispatch(new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }));
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
