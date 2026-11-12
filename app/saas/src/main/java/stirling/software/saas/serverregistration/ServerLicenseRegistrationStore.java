@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,11 +34,9 @@ import stirling.software.proprietary.serverregistration.ServerRegistrationProtoc
 @ConditionalOnProperty(name = "stirling.server-registration.enabled", havingValue = "true")
 public class ServerLicenseRegistrationStore {
     private final JdbcTemplate jdbc;
-    private final ApplicationEventPublisher events;
 
-    public ServerLicenseRegistrationStore(JdbcTemplate jdbc, ApplicationEventPublisher events) {
+    public ServerLicenseRegistrationStore(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.events = events;
     }
 
     /**
@@ -49,18 +46,6 @@ public class ServerLicenseRegistrationStore {
     @Transactional
     public Receipt register(
             RegistrationRequest request, KeygenServerLicenseVerifier.VerifiedLicense license) {
-        // Different installations of one license must agree on which committed report is first.
-        jdbc.queryForObject(
-                "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))",
-                (rs, index) -> true,
-                "server-license-first-sync:" + license.id());
-        boolean firstSync =
-                Boolean.TRUE.equals(
-                        jdbc.queryForObject(
-                                "SELECT NOT EXISTS (SELECT 1 FROM public.server_license_registrations"
-                                        + " WHERE keygen_license_id = ? AND report_sequence > 0)",
-                                Boolean.class,
-                                license.id()));
         Purchase purchase = findPurchase(license.key());
         jdbc.update(
                 """
@@ -95,18 +80,7 @@ public class ServerLicenseRegistrationStore {
                 """,
                 license.userLimit(),
                 row.id());
-        Receipt receipt = accept(row, request.report(), purchase);
-        if (firstSync) {
-            events.publishEvent(
-                    new ServerLicenseRegistrationNotifier.FirstSync(
-                            license.id(),
-                            request.installationId(),
-                            row.id(),
-                            purchase.subscription(),
-                            request.report().reportedUserCount(),
-                            license.userLimit()));
-        }
-        return receipt;
+        return accept(row, request.report(), purchase);
     }
 
     /** Replays never refresh liveness. Changed payloads at the same sequence are rejected. */
