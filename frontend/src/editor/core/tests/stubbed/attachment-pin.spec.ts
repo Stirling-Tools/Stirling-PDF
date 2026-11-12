@@ -167,6 +167,150 @@ test("keeps the placement overlay inside the viewer while scrolling", async ({
   expect(after.banner?.top).toBe(before.banner.top);
 });
 
+test("wheel and trackpad scrolling stay available while placing a pin", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/misc/list-attachments", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.goto("/add-attachments", { waitUntil: "domcontentloaded" });
+  await page.locator('input[type="file"]').first().setInputFiles(MULTI_SAMPLE);
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.locator("#attachments-input").setInputFiles({
+    name: "evidence.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("evidence"),
+  });
+  await page.locator('[data-testid^="attachment-pin-action-"]').first().click();
+  await expect(page.getByTestId("attachment-pin-overlay")).toBeVisible();
+
+  const scrollTop = () =>
+    page.evaluate(() => {
+      const pageElement =
+        document.querySelector<HTMLElement>("[data-page-index]");
+      let scroller = pageElement?.parentElement ?? null;
+      while (
+        scroller &&
+        !["auto", "scroll"].includes(getComputedStyle(scroller).overflowY)
+      ) {
+        scroller = scroller.parentElement;
+      }
+      return scroller?.scrollTop ?? -1;
+    });
+
+  const pageBox = await page
+    .getByTestId("attachment-pin-page")
+    .first()
+    .boundingBox();
+  expect(pageBox).not.toBeNull();
+  if (!pageBox) return;
+
+  const before = await scrollTop();
+  await page.mouse.move(
+    pageBox.x + pageBox.width / 2,
+    pageBox.y + pageBox.height / 2,
+  );
+  await page.mouse.wheel(0, 500);
+
+  await expect.poll(scrollTop).toBeGreaterThan(before);
+  await expect(page.getByTestId("attachment-pin-overlay")).toBeVisible();
+  await expect(page.getByTestId("attachment-pin-banner")).toBeVisible();
+
+  const bannerBox = await page
+    .getByTestId("attachment-pin-banner")
+    .boundingBox();
+  expect(bannerBox).not.toBeNull();
+  if (!bannerBox) return;
+  const beforeBannerWheel = await scrollTop();
+  await page.mouse.move(
+    bannerBox.x + bannerBox.width / 2,
+    bannerBox.y + bannerBox.height / 2,
+  );
+  await page.mouse.wheel(0, 300);
+  await expect.poll(scrollTop).toBeGreaterThan(beforeBannerWheel);
+});
+
+test("removes a pin directly from the page", async ({ page }) => {
+  await page.route("**/api/v1/misc/list-attachments", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.goto("/add-attachments", { waitUntil: "domcontentloaded" });
+  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE);
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.locator("#attachments-input").setInputFiles({
+    name: "evidence.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("evidence"),
+  });
+  await page.locator('[data-testid^="attachment-pin-action-"]').first().click();
+
+  const pageBox = await page
+    .getByTestId("attachment-pin-page")
+    .first()
+    .boundingBox();
+  expect(pageBox).not.toBeNull();
+  if (!pageBox) return;
+  await page.mouse.click(
+    pageBox.x + pageBox.width * 0.4,
+    pageBox.y + pageBox.height * 0.55,
+  );
+
+  const marker = page.locator(".attachment-pin-overlay__marker").first();
+  await expect(marker).toBeVisible();
+  await marker.hover();
+  await page.locator('[data-testid^="attachment-pin-remove-"]').first().click();
+
+  await expect(marker).toHaveCount(0);
+  await expect(page.getByTestId("attachment-pin-link")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /Save Changes/ }),
+  ).toBeVisible();
+});
+
+test("only rings the page under the pointer while placing", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/misc/list-attachments", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.goto("/add-attachments", { waitUntil: "domcontentloaded" });
+  await page.locator('input[type="file"]').first().setInputFiles(MULTI_SAMPLE);
+  await expect(page.locator("[data-page-index]").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.locator("#attachments-input").setInputFiles({
+    name: "evidence.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("evidence"),
+  });
+  await page.locator('[data-testid^="attachment-pin-action-"]').first().click();
+
+  const overlayPage = page.getByTestId("attachment-pin-page").first();
+  await expect(overlayPage).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(
+    page.locator(".attachment-pin-overlay__page--hovered"),
+  ).toHaveCount(0);
+
+  const pageBox = await overlayPage.boundingBox();
+  expect(pageBox).not.toBeNull();
+  if (!pageBox) return;
+  await page.mouse.move(
+    pageBox.x + pageBox.width / 2,
+    pageBox.y + pageBox.height / 2,
+  );
+
+  await expect(
+    page.locator(".attachment-pin-overlay__page--hovered"),
+  ).toHaveCount(1);
+});
+
 test("placed pin tracks page position when scrolled", async ({ page }) => {
   await page.route("**/api/v1/misc/list-attachments", (route) =>
     route.fulfill({ json: [] }),

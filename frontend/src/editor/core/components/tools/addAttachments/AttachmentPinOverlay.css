@@ -5,8 +5,12 @@
   pointer-events: none;
 }
 
-.attachment-pin-overlay--placing {
-  pointer-events: auto;
+/* Placement reads the page under the pointer directly, so the overlay must
+   never block wheel, scrollbar, or touch panning on the viewer. */
+.attachment-pin-placing [data-page-index],
+.attachment-pin-placing [data-page-index] * {
+  cursor: crosshair !important;
+  user-select: none;
 }
 
 .attachment-pin-overlay__page {
@@ -14,39 +18,50 @@
   overflow: hidden;
   border-radius: 2px;
   pointer-events: none;
-  transition:
-    box-shadow 0.2s ease,
-    background 0.2s ease;
 }
 
-.attachment-pin-overlay__page--active {
-  pointer-events: auto;
-  cursor: crosshair;
-  outline: 2px solid var(--c-primary);
-  outline-offset: -1px;
-  background: color-mix(in srgb, var(--c-primary) 3%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-primary) 20%, transparent);
+/* Ring only the page under the cursor; tinting every page makes the whole
+   document look selected and hides its content. */
+.attachment-pin-overlay__page--hovered {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--c-primary) 55%, transparent);
 }
 
 /* Designed Pin Marker */
-.attachment-pin-overlay__marker {
+.attachment-pin-overlay__marker-wrap {
   position: absolute;
+  z-index: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+}
+
+.attachment-pin-overlay__marker-wrap:hover,
+.attachment-pin-overlay__marker-wrap:focus-within {
+  z-index: 2;
+}
+
+.attachment-pin-overlay--placing .attachment-pin-overlay__marker-wrap {
+  pointer-events: none;
+}
+
+.attachment-pin-overlay__marker {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
-  pointer-events: auto;
-  transform: translate(-50%, -100%);
+  transform: translateY(-1px);
   transition:
     transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
     filter 0.18s ease;
 }
 
 .attachment-pin-overlay__marker:hover {
-  transform: translate(-50%, -108%) scale(1.08);
+  transform: translateY(-2px) scale(1.06);
 }
 
 .attachment-pin-overlay__marker:disabled {
@@ -57,7 +72,7 @@
 .attachment-pin-overlay__marker:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .attachment-pin-overlay__marker-pin {
@@ -89,6 +104,54 @@
   pointer-events: none;
 }
 
+/* Direct pin removal: appears on hover/focus, stays visible on touch. */
+.attachment-pin-overlay__marker-remove {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+  color: var(--c-danger);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: auto;
+  transform: scale(0.8);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease,
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.attachment-pin-overlay__marker-wrap:hover
+  .attachment-pin-overlay__marker-remove,
+.attachment-pin-overlay__marker-wrap:focus-within
+  .attachment-pin-overlay__marker-remove,
+.attachment-pin-overlay__marker-remove:focus-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.attachment-pin-overlay__marker-remove:hover {
+  background: var(--c-danger);
+  color: var(--c-surface);
+}
+
+@media (hover: none) {
+  .attachment-pin-overlay__marker-remove {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Ghost Preview Pin following cursor */
 .attachment-pin-overlay__ghost {
   position: absolute;
@@ -110,10 +173,10 @@
   left: 50%;
   z-index: 50;
   display: flex;
-  max-width: min(580px, calc(100vw - 32px));
+  max-width: min(620px, calc(100vw - 32px));
   align-items: center;
   gap: 12px;
-  padding: 8px 14px;
+  padding: 8px 12px 8px 14px;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-full, 9999px);
   background: var(--c-surface);
@@ -123,17 +186,6 @@
   color: var(--c-text);
   pointer-events: auto;
   transform: translateX(-50%);
-}
-
-@keyframes attachmentPinBannerFadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -8px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
 }
 
 .attachment-pin-overlay__banner-badge {
@@ -148,21 +200,38 @@
   flex-shrink: 0;
 }
 
+.attachment-pin-overlay__banner-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .attachment-pin-overlay__banner-text {
+  overflow: hidden;
   font-size: 0.84rem;
   font-weight: 500;
   line-height: 1.3;
   color: var(--c-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.attachment-pin-overlay__banner-kbd {
+.attachment-pin-overlay__banner-help {
   font-size: 0.72rem;
-  font-family: inherit;
-  font-weight: 600;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: var(--c-surface-sunken);
-  border: 1px solid var(--c-border);
+  line-height: 1.3;
   color: var(--c-text-muted);
-  margin-left: 2px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .attachment-pin-overlay__banner {
+    top: 12px;
+    gap: 8px;
+    padding: 8px 10px 8px 12px;
+  }
+
+  .attachment-pin-overlay__banner-help {
+    display: none;
+  }
 }

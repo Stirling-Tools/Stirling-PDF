@@ -100,6 +100,7 @@ const AddAttachmentsSettings = ({
         pins={pins}
         onPlace={manager.placePin}
         onOpenPin={(filename) => void manager.extractSingle(filename)}
+        onRemovePin={manager.clearPin}
         onCancel={manager.cancelPinPlacement}
       />
     </>

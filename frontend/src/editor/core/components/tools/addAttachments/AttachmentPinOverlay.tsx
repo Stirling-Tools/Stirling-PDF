@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { WheelEvent } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -23,6 +23,7 @@ interface AttachmentPinOverlayProps {
   pins: AttachmentPinMarker[];
   onPlace: (pageIndex: number, x: number, y: number) => void;
   onOpenPin?: (filename: string) => void;
+  onRemovePin?: (id: string) => void;
   onCancel: () => void;
 }
 
@@ -47,6 +48,11 @@ interface GhostPinState {
   yPercent: number;
 }
 
+interface PointerPoint {
+  x: number;
+  y: number;
+}
+
 function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -56,12 +62,37 @@ function findScrollContainer(element: HTMLElement): HTMLElement | null {
   let node = element.parentElement;
   while (node) {
     const overflowY = getComputedStyle(node).overflowY;
-    if (overflowY === "auto" || overflowY === "scroll") {
+    if (
+      overflowY === "auto" ||
+      overflowY === "scroll" ||
+      overflowY === "overlay"
+    ) {
       return node;
     }
     node = node.parentElement;
   }
   return null;
+}
+
+function findPageElement(element: Element | null): HTMLElement | null {
+  return element?.closest<HTMLElement>("[data-page-index]") ?? null;
+}
+
+function ghostPinAt(
+  page: HTMLElement,
+  clientX: number,
+  clientY: number,
+): GhostPinState | null {
+  const pageIndex = Number(page.dataset.pageIndex);
+  const rect = page.getBoundingClientRect();
+  if (!Number.isFinite(pageIndex) || rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+  return {
+    pageIndex,
+    xPercent: clampUnit((clientX - rect.left) / rect.width),
+    yPercent: clampUnit((clientY - rect.top) / rect.height),
+  };
 }
 
 /** Clip fallback when the viewer is not mounted inside a scroll container. */
@@ -97,6 +128,20 @@ function samePageRects(a: PageRect[], b: PageRect[]): boolean {
   );
 }
 
+function sameGhostPin(
+  a: GhostPinState | null,
+  b: GhostPinState | null,
+): boolean {
+  return (
+    a === b ||
+    (a !== null &&
+      b !== null &&
+      a.pageIndex === b.pageIndex &&
+      a.xPercent === b.xPercent &&
+      a.yPercent === b.yPercent)
+  );
+}
+
 /**
  * Designed Pin Marker rendering an elevated teardrop pin with central icon.
  */
@@ -115,12 +160,17 @@ export function AttachmentPinGraphic() {
 
 /**
  * Fixed-position pin layer over the viewer's page elements.
+ *
+ * The layer never captures pointer events, so wheel, trackpad, scrollbar and
+ * touch panning keep working while pins are being placed. Page clicks are
+ * resolved against the real page element instead of the overlay.
  */
 export function AttachmentPinOverlay({
   target,
   pins,
   onPlace,
   onOpenPin,
+  onRemovePin,
   onCancel,
 }: AttachmentPinOverlayProps) {
   const { t } = useTranslation();
@@ -128,6 +178,21 @@ export function AttachmentPinOverlay({
   const [viewport, setViewport] = useState<ViewportRect>(fullViewport);
   const [ghostPin, setGhostPin] = useState<GhostPinState | null>(null);
   const frameRef = useRef<number | null>(null);
+  const targetRef = useRef(target);
+  const lastPointerRef = useRef<PointerPoint | null>(null);
+  targetRef.current = target;
+
+  /** Wheel over a pin or the banner would otherwise miss the viewer's scroller. */
+  const forwardWheelToViewer = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      const pageElement =
+        document.querySelector<HTMLElement>("[data-page-index]");
+      const scroller = pageElement ? findScrollContainer(pageElement) : null;
+      if (!scroller) return;
+      scroller.scrollBy({ top: event.deltaY, left: event.deltaX });
+    },
+    [],
+  );
 
   /** Re-read page and viewer geometry after scroll, zoom, or layout changes. */
   const measure = useCallback(() => {
@@ -191,6 +256,19 @@ export function AttachmentPinOverlay({
     setPageRects((previous) =>
       samePageRects(previous, next) ? previous : next,
     );
+
+    // Scrolling moves pages under a stationary cursor: re-resolve the ghost
+    // pin so the preview stays under the pointer instead of drifting away.
+    const pointer = lastPointerRef.current;
+    if (targetRef.current && pointer) {
+      const page = findPageElement(
+        document.elementFromPoint(pointer.x, pointer.y),
+      );
+      const nextGhost = page ? ghostPinAt(page, pointer.x, pointer.y) : null;
+      setGhostPin((previous) =>
+        sameGhostPin(previous, nextGhost) ? previous : nextGhost,
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -236,16 +314,74 @@ export function AttachmentPinOverlay({
   useEffect(() => {
     if (!target) {
       setGhostPin(null);
+      lastPointerRef.current = null;
       return;
     }
+
+    document.body.classList.add("attachment-pin-placing");
+    let downPoint: PointerPoint | null = null;
+
+    const onPointerDown = (event: PointerEvent) => {
+      downPoint =
+        event.button === 0 ? { x: event.clientX, y: event.clientY } : null;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      lastPointerRef.current = { x: event.clientX, y: event.clientY };
+      const page = findPageElement(
+        document.elementFromPoint(event.clientX, event.clientY),
+      );
+      const nextGhost = page
+        ? ghostPinAt(page, event.clientX, event.clientY)
+        : null;
+      setGhostPin((previous) =>
+        sameGhostPin(previous, nextGhost) ? previous : nextGhost,
+      );
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (event.button !== 0) return;
+      // A drag is a pan or text-selection gesture, not a pin placement.
+      if (
+        downPoint &&
+        Math.hypot(event.clientX - downPoint.x, event.clientY - downPoint.y) > 6
+      ) {
+        return;
+      }
+      const page = findPageElement(event.target as Element | null);
+      if (!page) return;
+      const point = ghostPinAt(page, event.clientX, event.clientY);
+      if (!point) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onPlace(point.pageIndex, point.xPercent, point.yPercent);
+    };
+
+    const onWindowBlur = () => {
+      lastPointerRef.current = null;
+      setGhostPin(null);
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onCancel();
       }
     };
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("pointermove", onPointerMove, true);
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("blur", onWindowBlur);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel, target]);
+    return () => {
+      document.body.classList.remove("attachment-pin-placing");
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("pointermove", onPointerMove, true);
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("blur", onWindowBlur);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onCancel, onPlace, target]);
 
   if (!target && pins.length === 0) {
     return null;
@@ -257,37 +393,11 @@ export function AttachmentPinOverlay({
         pins.some((pin) => pin.pageIndex === rect.pageIndex),
       );
 
-  const handlePageClick =
-    (rect: PageRect) => (event: MouseEvent<HTMLDivElement>) => {
-      if (!target) return;
-      onPlace(
-        rect.pageIndex,
-        clampUnit((event.clientX - rect.left) / rect.width),
-        clampUnit((event.clientY - rect.top) / rect.height),
-      );
-    };
-
-  const handlePageMouseMove =
-    (rect: PageRect) => (event: MouseEvent<HTMLDivElement>) => {
-      if (!target) return;
-      setGhostPin({
-        pageIndex: rect.pageIndex,
-        xPercent: clampUnit((event.clientX - rect.left) / rect.width),
-        yPercent: clampUnit((event.clientY - rect.top) / rect.height),
-      });
-    };
-
-  const handlePageMouseLeave = () => {
-    setGhostPin(null);
-  };
-
   return createPortal(
     <div
-      className={`attachment-pin-overlay${
-        target ? " attachment-pin-overlay--placing" : ""
-      }`}
+      className={`attachment-pin-overlay${target ? " attachment-pin-overlay--placing" : ""}`}
       data-testid="attachment-pin-overlay"
-      onClick={target ? onCancel : undefined}
+      onWheel={forwardWheelToViewer}
       style={{
         left: viewport.left,
         top: viewport.top,
@@ -299,19 +409,26 @@ export function AttachmentPinOverlay({
         <div
           className="attachment-pin-overlay__banner"
           role="status"
-          onClick={(e) => e.stopPropagation()}
+          data-testid="attachment-pin-banner"
         >
           <div className="attachment-pin-overlay__banner-badge">
             <Icon name="map-pin" size={14} />
           </div>
-          <span className="attachment-pin-overlay__banner-text">
-            {t(
-              "attachments.placingPin",
-              "Click anywhere on a page to place pin for {{name}}",
-              { name: target.name },
-            )}
-            <kbd className="attachment-pin-overlay__banner-kbd">Esc</kbd>
-          </span>
+          <div className="attachment-pin-overlay__banner-copy">
+            <span className="attachment-pin-overlay__banner-text">
+              {t(
+                "attachments.placingPin",
+                "Click a page to place the pin for {{name}}",
+                { name: target.name },
+              )}
+            </span>
+            <span className="attachment-pin-overlay__banner-help">
+              {t(
+                "attachments.placingPinHelp",
+                "Scroll to reach more pages, or press Esc to cancel.",
+              )}
+            </span>
+          </div>
           <Button size="sm" variant="tertiary" type="button" onClick={onCancel}>
             {t("cancel", "Cancel")}
           </Button>
@@ -321,13 +438,12 @@ export function AttachmentPinOverlay({
       {renderedPageRects.map((rect) => {
         const pagePins = pins.filter((pin) => pin.pageIndex === rect.pageIndex);
         const isGhostOnThisPage = ghostPin?.pageIndex === rect.pageIndex;
+        const isHovered = Boolean(target) && isGhostOnThisPage;
 
         return (
           <div
             key={rect.pageIndex}
-            className={`attachment-pin-overlay__page${
-              target ? " attachment-pin-overlay__page--active" : ""
-            }`}
+            className={`attachment-pin-overlay__page${isHovered ? " attachment-pin-overlay__page--hovered" : ""}`}
             data-testid="attachment-pin-page"
             style={{
               left: rect.left - viewport.left,
@@ -335,9 +451,6 @@ export function AttachmentPinOverlay({
               width: rect.width,
               height: rect.height,
             }}
-            onClick={target ? handlePageClick(rect) : undefined}
-            onMouseMove={target ? handlePageMouseMove(rect) : undefined}
-            onMouseLeave={target ? handlePageMouseLeave : undefined}
           >
             {pagePins.map((pin) => {
               const openLabel = pin.openName
@@ -348,30 +461,52 @@ export function AttachmentPinOverlay({
                     "attachments.pinNotSaved",
                     "Save the attachment before opening its pin",
                   );
+              const removeLabel = t("attachments.removePin", "Remove pin");
               return (
-                <Tooltip key={pin.id} label={openLabel} withArrow offset={6}>
-                  <button
-                    type="button"
-                    className="attachment-pin-overlay__marker"
-                    title={openLabel}
-                    data-open-name={pin.openName ?? ""}
-                    aria-label={openLabel}
-                    disabled={!pin.openName}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (pin.openName) {
-                        onOpenPin?.(pin.openName);
-                      }
-                    }}
-                    style={{
-                      left: `${pin.x * 100}%`,
-                      top: `${pin.y * 100}%`,
-                      pointerEvents: target ? "none" : undefined,
-                    }}
-                  >
-                    <AttachmentPinGraphic />
-                  </button>
-                </Tooltip>
+                <div
+                  key={pin.id}
+                  className="attachment-pin-overlay__marker-wrap"
+                  style={{
+                    left: `${pin.x * 100}%`,
+                    top: `${pin.y * 100}%`,
+                  }}
+                >
+                  <Tooltip label={openLabel} withArrow offset={6}>
+                    <button
+                      type="button"
+                      className="attachment-pin-overlay__marker"
+                      title={openLabel}
+                      data-open-name={pin.openName ?? ""}
+                      aria-label={openLabel}
+                      disabled={!pin.openName}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (pin.openName) {
+                          onOpenPin?.(pin.openName);
+                        }
+                      }}
+                    >
+                      <AttachmentPinGraphic />
+                    </button>
+                  </Tooltip>
+                  {onRemovePin && (
+                    <Tooltip label={removeLabel} withArrow offset={4}>
+                      <button
+                        type="button"
+                        className="attachment-pin-overlay__marker-remove"
+                        aria-label={removeLabel}
+                        title={removeLabel}
+                        data-testid={`attachment-pin-remove-${pin.id}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onRemovePin(pin.id);
+                        }}
+                      >
+                        <Icon name="x" size={11} strokeWidth={2.6} />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
               );
             })}
 

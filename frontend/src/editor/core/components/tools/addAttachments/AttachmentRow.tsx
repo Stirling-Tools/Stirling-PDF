@@ -222,7 +222,6 @@ export const AttachmentRow = memo(function AttachmentRow({
                 <Badge
                   size="xs"
                   variant="light"
-                  color="blue"
                   data-testid="attachment-pin-link"
                   role={onStartPinPlacement ? "button" : undefined}
                   tabIndex={onStartPinPlacement ? 0 : undefined}
@@ -253,6 +252,11 @@ export const AttachmentRow = memo(function AttachmentRow({
                     fontSize: "0.7rem",
                     padding: "0 6px",
                     height: 18,
+                    background:
+                      "color-mix(in srgb, var(--c-primary) 12%, transparent)",
+                    border:
+                      "1px solid color-mix(in srgb, var(--c-primary) 28%, transparent)",
+                    color: "var(--c-primary)",
                   }}
                   leftSection={<Icon name="map-pin" size={10} />}
                 >
