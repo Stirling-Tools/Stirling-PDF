@@ -115,11 +115,11 @@
   width: 20px;
   height: 20px;
   padding: 0;
-  border: 1px solid var(--c-border);
+  border: 1px solid color-mix(in srgb, var(--c-border) 80%, transparent);
   border-radius: 50%;
-  background: var(--c-surface);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
-  color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-surface) 88%, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  color: var(--c-text-muted);
   cursor: pointer;
   opacity: 0;
   pointer-events: auto;
@@ -128,6 +128,7 @@
     opacity 0.14s ease,
     transform 0.14s ease,
     background-color 0.14s ease,
+    border-color 0.14s ease,
     color 0.14s ease;
 }
 
@@ -140,9 +141,11 @@
   transform: scale(1);
 }
 
-.attachment-pin-overlay__marker-remove:hover {
-  background: var(--c-danger);
-  color: var(--c-surface);
+.attachment-pin-overlay__marker-remove:hover,
+.attachment-pin-overlay__marker-remove:focus-visible {
+  background: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-danger) 35%, var(--c-border));
+  color: var(--c-danger);
 }
 
 @media (hover: none) {

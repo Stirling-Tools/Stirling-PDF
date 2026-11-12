@@ -502,7 +502,7 @@ export function AttachmentPinOverlay({
                           onRemovePin(pin.id);
                         }}
                       >
-                        <Icon name="x" size={11} strokeWidth={2.6} />
+                        <Icon name="x" size={10} strokeWidth={2.2} />
                       </button>
                     </Tooltip>
                   )}
