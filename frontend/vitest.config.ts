@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
@@ -11,13 +11,14 @@ import { embedpdfFontFallbackPlugin } from "./scripts/embedpdfFontFallbackPatch.
 const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
-const FRONTEND_ROOT = [
-  process.env.INIT_CWD,
-  process.cwd(),
-  resolve(process.cwd(), "frontend"),
-].find((candidate) =>
-  candidate ? existsSync(resolve(candidate, "src/editor")) : false,
-) ?? process.cwd();
+const FRONTEND_ROOT =
+  [
+    process.env.INIT_CWD,
+    process.cwd(),
+    resolve(process.cwd(), "frontend"),
+  ].find((candidate) =>
+    candidate ? existsSync(resolve(candidate, "src/editor")) : false,
+  ) ?? process.cwd();
 
 // Every @mantine/* package, so they share one pre-bundled core: one left
 // unbundled imports its own copy and cannot see the bundled MantineProvider.
@@ -100,6 +101,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
+            root: FRONTEND_ROOT,
             projects: ["./tsconfig.core.vite.json"],
           }),
         ],
@@ -128,6 +130,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
+            root: FRONTEND_ROOT,
             // Broad project so @editor/@processor resolve in every editor file the
             // portal tests pull in (core/ui, core, ...).
             projects: ["./tsconfig.processor.vite.json"],
@@ -158,6 +161,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
+            root: FRONTEND_ROOT,
             projects: ["./tsconfig.proprietary.vite.json"],
           }),
         ],
@@ -186,6 +190,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
+            root: FRONTEND_ROOT,
             projects: ["./tsconfig.desktop.vite.json"],
           }),
         ],
@@ -220,6 +225,7 @@ export default defineConfig({
           iconSvgr(),
           react(),
           tsconfigPaths({
+            root: FRONTEND_ROOT,
             projects: ["./tsconfig.saas.vite.json"],
           }),
         ],

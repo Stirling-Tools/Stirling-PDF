@@ -68,11 +68,16 @@ if (typeof File !== "undefined" && !File.prototype.arrayBuffer)
 if (typeof Blob !== "undefined" && !Blob.prototype.arrayBuffer)
   Blob.prototype.arrayBuffer = () => Promise.resolve(new ArrayBuffer(8));
 
+let testUuidCounter = 0;
+
 Object.defineProperty(globalThis, "crypto", {
   value: {
     subtle: { digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)) },
     getRandomValues: vi.fn((array: Uint8Array) => array),
-    randomUUID: vi.fn(() => "00000000-0000-4000-8000-000000000000"),
+    randomUUID: vi.fn(
+      () =>
+        `00000000-0000-4000-8000-${String(++testUuidCounter).padStart(12, "0")}`,
+    ),
   },
   writable: true,
   configurable: true,
