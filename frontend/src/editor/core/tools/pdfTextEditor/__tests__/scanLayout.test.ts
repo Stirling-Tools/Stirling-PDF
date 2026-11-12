@@ -39,6 +39,23 @@ function run(
 }
 
 describe("layoutScanEdit", () => {
+  it("opens a gap for every extra space typed between kept words", () => {
+    const l = run(block("NORTH HARBOUR CO"), "NORTH   HARBOUR CO");
+    expect(l.kept.map((k) => k.x)).toEqual([10, 39 + 8, 78 + 8]);
+  });
+
+  it("keeps the extra spaces inside and before typed text", () => {
+    const l = run(block("NORTH HARBOUR CO"), "NORTH  OLD  PIER HARBOUR CO");
+    expect(l.typed.map((t) => [t.text, t.x])).toEqual([["OLD  PIER", 39 + 4]]);
+  });
+
+  it("does not move a word for spaces the scan's text already had", () => {
+    const lines = block("NORTH HARBOUR CO");
+    lines[0].words[1].lead = 2;
+    const l = run(lines, "NORTH   HARBOUR CO");
+    expect(l.kept.every((k) => !k.moved)).toBe(true);
+  });
+
   it("measures no word on a line the edit left alone", () => {
     const measured: string[] = [];
     run(block("NORTH HARBOUR CO", "TEL 123"), "NORTH HARBOUR CO\nFAX 123", {

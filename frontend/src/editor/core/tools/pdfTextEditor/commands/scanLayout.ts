@@ -9,6 +9,8 @@ export interface LayoutWord {
   text: string;
   /** OCR left edge, raw page x. */
   x: number;
+  /** Spaces the scan's own text has before it beyond the separating one. */
+  lead?: number;
 }
 
 export interface LayoutLine {
@@ -58,15 +60,29 @@ export interface Layout {
 }
 
 type Op =
-  | { kind: "keep"; word: LayoutWord; line: number }
+  | { kind: "keep"; word: LayoutWord; line: number; lead: number }
   | { kind: "del"; word: LayoutWord }
-  | { kind: "ins"; text: string; line: number };
+  | { kind: "ins"; text: string; line: number; lead: number };
+
+interface Token {
+  text: string;
+  line: number;
+  /** Spaces typed before the word beyond the one that separates words. */
+  lead: number;
+}
+
+function tokensOf(text: string): Token[] {
+  return text.split("\n").flatMap((t, line) =>
+    [...t.matchAll(/( *)(\S+)/g)].map((found, i) => ({
+      text: found[2],
+      line,
+      lead: Math.max(0, found[1].length - (i === 0 ? 0 : 1)),
+    })),
+  );
+}
 
 // Longest common subsequence of the scan's words and the new words, as ops.
-function align(
-  words: LayoutWord[],
-  tokens: Array<{ text: string; line: number }>,
-): Op[] {
+function align(words: LayoutWord[], tokens: Token[]): Op[] {
   const n = words.length;
   const m = tokens.length;
   const lcs = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
@@ -81,9 +97,10 @@ function align(
   let j = 0;
   while (i < n || j < m) {
     if (i < n && j < m && words[i].text === tokens[j].text) {
-      ops.push({ kind: "keep", word: words[i++], line: tokens[j++].line });
+      const { line, lead } = tokens[j++];
+      ops.push({ kind: "keep", word: words[i++], line, lead });
     } else if (j < m && (i >= n || lcs[i][j + 1] >= lcs[i + 1][j])) {
-      ops.push({ kind: "ins", text: tokens[j].text, line: tokens[j++].line });
+      ops.push({ kind: "ins", ...tokens[j++] });
     } else {
       ops.push({ kind: "del", word: words[i++] });
     }
@@ -96,13 +113,7 @@ const SNAP_BACK = 0.75;
 export function layoutScanEdit(input: LayoutInput): Layout {
   const { lines } = input;
   const words = lines.flatMap((l) => l.words).filter((w) => w.text);
-  const newLines = input.text.split("\n");
-  const tokens = newLines.flatMap((t, line) =>
-    t
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((text) => ({ text, line })),
-  );
+  const tokens = tokensOf(input.text);
   const ops: Op[] = input.redraw
     ? [
         ...words.map((word): Op => ({ kind: "del", word })),
@@ -134,7 +145,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
   let prev: LayoutWord | null = null;
   // Removed words since the last kept one: the first stands for typed text.
   let dels: LayoutWord[] = [];
-  let pending: { text: string[]; line: number } | null = null;
+  let pending: { text: string; lead: number; line: number } | null = null;
 
   const startLine = (line: number) => {
     if (line === penLine) return;
@@ -149,8 +160,10 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     const line = pending.line;
     // A line starts where it always did, so deleting its first word pulls
     // the rest left rather than leaving a hole.
-    const x = pen === null ? lineStart(line) : pen() + gap(prev, anchor);
-    const text = pending.text.join(" ");
+    const x =
+      (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
+      pending.lead * input.space;
+    const text = pending.text;
     layout.typed.push({
       text,
       x,
@@ -177,22 +190,27 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     if (op.kind === "ins") {
       if (pending && pending.line !== op.line) flushTyped();
       startLine(op.line);
-      pending ??= { text: [], line: op.line };
-      pending.text.push(op.text);
+      if (pending) pending.text += " ".repeat(op.lead + 1) + op.text;
+      else pending = { text: op.text, lead: op.lead, line: op.line };
       continue;
     }
     if (pending && pending.line !== op.line) flushTyped();
     startLine(op.line);
     flushTyped();
     const w = op.word;
+    // The scan's own gap already shows the spaces its text came with.
+    const extra = Math.max(0, op.lead - (w.lead ?? 0));
     const flowed: number =
-      pen === null
+      (pen === null
         ? lineStart(op.line)
         : lastKept && besideInScan(lastKept.word, w)
           ? w.x + (lastKept.x - lastKept.word.x)
-          : pen() + gap(prev, w);
+          : pen() + gap(prev, w)) +
+      extra * input.space;
     const x =
-      w.line === op.line && Math.abs(flowed - w.x) < input.space * SNAP_BACK
+      extra === 0 &&
+      w.line === op.line &&
+      Math.abs(flowed - w.x) < input.space * SNAP_BACK
         ? w.x
         : flowed;
     const baseline = baselineOf(op.line);
