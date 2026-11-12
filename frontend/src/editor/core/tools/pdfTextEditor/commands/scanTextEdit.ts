@@ -1495,3 +1495,34 @@ function previewOnScan(
   if (style.softness > 0) blurRgba(drawn, style.softness);
   return { scan, drawn };
 }
+
+/** The font a scanned block's changed words are drawn in. */
+export interface ScanDrawnFont {
+  /** The family as the font picker names it. */
+  family: string;
+  /** How the scan matcher names the face, e.g. "Calibri (Carlito)". */
+  label: string;
+}
+
+/**
+ * The font in force for a scanned run: the one the user picked, else the one
+ * the matcher chose. Null when the block is not fitted yet, or its typing is
+ * rebuilt from the scan's own letters and so uses no font at all. The run's
+ * `fontId` is never the answer: that is the invisible OCR layer's font.
+ *
+ * Reads the run's scan state without capturing it, so it is cheap enough to
+ * call for every run of a large selection.
+ */
+export function scanDrawnFont(
+  doc: EditorDocument,
+  run: TextRun,
+): ScanDrawnFont | null {
+  const state = run.scanEdit;
+  if (!state || state.typedFromScan) return null;
+  const style = state.override.style ?? drawnBlockStyle(doc, state);
+  if (!style) return null;
+  const face = scanFaces().find(
+    (f) => f.family === style.family || f.bold === style.family,
+  );
+  return { family: style.family, label: face?.label ?? style.family };
+}
