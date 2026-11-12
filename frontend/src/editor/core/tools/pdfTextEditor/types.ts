@@ -61,6 +61,11 @@ export interface TextRunSnapshot {
   fontSubset: boolean;
   /** The PDF's own font the run was in before its family was changed. */
   documentFontId?: string;
+  /**
+   * For scanned text, the family its ink is matched to or redrawn in. The
+   * run's `fontId` there is only the invisible OCR layer's font.
+   */
+  scanFamily?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
   /** Outline colour, when the run's render mode strokes its glyphs. */

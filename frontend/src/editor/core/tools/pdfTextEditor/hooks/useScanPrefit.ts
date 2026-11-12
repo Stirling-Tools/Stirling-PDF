@@ -134,6 +134,7 @@ export function useScanPrefit(
     let ready = false;
     let timer = 0;
     let idle = true;
+    let fittedSinceSnapshot = false;
     let hovered: string | null = null;
     const skipped = new WeakSet<object>();
     const onPointerOver = (e: PointerEvent) => {
@@ -161,6 +162,12 @@ export function useScanPrefit(
         )
           timer = window.setTimeout(step, UNSHOWN_RECHECK_MS);
         else idle = true;
+        // The match decides the font the editing layer and the font box show,
+        // and both read it from the run snapshots.
+        if (idle && fittedSinceSnapshot) {
+          fittedSinceSnapshot = false;
+          store.resnapshot();
+        }
         return;
       }
       try {
@@ -172,7 +179,13 @@ export function useScanPrefit(
         );
         const ranked = next.run.scanEdit?.block?.ranked;
         if (finished && scanRunNeedsFit(doc, next.run)) skipped.add(next.run);
-        else if (finished && ranked) noteRankedWithCurrentFaces(ranked);
+        else if (finished && ranked) {
+          noteRankedWithCurrentFaces(ranked);
+          // A fit changes no page content, so nothing else marks the page's
+          // snapshot as out of date.
+          next.page.bumpRevision();
+          fittedSinceSnapshot = true;
+        }
       } catch {
         skipped.add(next.run);
       }
