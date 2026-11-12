@@ -49,7 +49,7 @@ it("names the OneDrive file an update will replace and links to it", async () =>
     "oneDriveSave.replaces",
   );
   expect(screen.getByTestId("file-save-onedrive-folder").textContent).toContain(
-    "oneDriveSave.saveToFolder",
+    "oneDriveSave.uploadToOneDrive",
   );
 
   fireEvent.click(screen.getByTestId("file-open-onedrive"));

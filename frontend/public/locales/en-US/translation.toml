@@ -1014,6 +1014,7 @@ mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disa
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "How to set up {{name}}"
 title = "Connections"
 unlinkedServices = "Unlinked Services"
 
@@ -6570,20 +6571,15 @@ fromOneDrive = "From OneDrive"
 linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
 missing = "This file was moved or deleted in OneDrive. Save your version as a copy instead."
 open = "Open in OneDrive"
-personalUnsupported = "Uploading to a chosen folder needs a work or school Microsoft account."
+personalUnsupported = "Uploading to OneDrive needs a work or school Microsoft account."
 reconnect = "Reconnect"
 replaces = "Replaces {{name}}"
-saveCopy = "Save a copy"
-saveCopyToOneDrive = "Save a copy next to it"
+saveCopyToOneDrive = "Save a copy in OneDrive"
 saved = "Saved to OneDrive"
-saveToFolder = "Upload copy to OneDrive…"
-saving = "Saving to OneDrive…"
+saving = "Saving to OneDrive..."
 signInToSave = "Sign in to your server to save to OneDrive."
 updateOriginal = "Update in OneDrive"
-uploadToOneDrive = "Upload to OneDrive…"
-
-[oneDriveSave.menu]
-folderHint = "Choose a folder"
+uploadToOneDrive = "Upload to OneDrive..."
 
 [oneDriveSave.status]
 saved = "Saved to OneDrive"
@@ -6591,7 +6587,7 @@ unsaved = "Changes not saved to OneDrive yet"
 
 [oneDriveSave.toolbar]
 replace = "Update {{name}} in OneDrive"
-saveAll = "Save all to OneDrive"
+saveAll = "Update all in OneDrive"
 
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
@@ -11501,6 +11497,13 @@ label = "Single-page application redirect URI"
 description = "Add this as a Web redirect URI on the Entra app registration."
 label = "Redirect URI"
 
+[provider.microsoft.setupSteps]
+connect = "Save, restart, then connect an account under Connected accounts."
+permissions = "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All."
+redirects = "Add the two redirect URIs below to it: one as Web, one as Single-page application."
+register = "Register an app in the Microsoft Entra admin center. Allow personal Microsoft accounts if people use personal OneDrive."
+secret = "Create a client secret, then paste its value and the app's client ID below."
+
 [provider.microsoft.tenant]
 description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
 label = "Directory (tenant) ID"
@@ -11607,7 +11610,7 @@ description = "Field to use as username (email, name, given_name, family_name, p
 label = "Use as Username"
 
 [provider.onedrive]
-pickerLoading = "Connecting to OneDrive…"
+pickerLoading = "Connecting to OneDrive..."
 pickerTitle = "Choose files from OneDrive"
 
 [provider.onedrive.errors]

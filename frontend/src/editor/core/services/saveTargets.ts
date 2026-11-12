@@ -24,7 +24,7 @@ export interface SaveTarget {
   isUnsaved: (stub: StirlingFileStub) => boolean;
   /** What Save does for this file, e.g. "Update Report.pdf in OneDrive". */
   saveLabel: (stub: StirlingFileStub) => string;
-  /** Label for several files, e.g. "Save all to OneDrive". */
+  /** Label for several files, e.g. "Update all in OneDrive". */
   saveAllLabel: () => string;
   statusLabel: (unsaved: boolean) => string;
   icon: IconName;

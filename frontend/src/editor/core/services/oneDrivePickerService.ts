@@ -315,7 +315,7 @@ class OneDrivePickerService {
       options.labels ?? {
         title: "OneDrive",
         close: "Close",
-        loading: "Connecting to OneDrive…",
+        loading: "Connecting to OneDrive...",
       },
     );
     const pickerUrl = personal

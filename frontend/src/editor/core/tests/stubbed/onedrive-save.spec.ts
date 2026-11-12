@@ -179,7 +179,7 @@ async function expectOtherDestinations(page: Page): Promise<void> {
     page.getByRole("menuitem", { name: "Download", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("menuitem", { name: /Upload copy to OneDrive/ }),
+    page.getByRole("menuitem", { name: /Upload to OneDrive/ }),
   ).toBeVisible();
 }
 
@@ -244,7 +244,7 @@ test.describe("Saving files opened from OneDrive", () => {
       page.getByRole("menuitem", { name: "Download", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("menuitem", { name: /Upload copy to OneDrive/ }),
+      page.getByRole("menuitem", { name: /Upload to OneDrive/ }),
     ).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(page.getByRole("menu")).toHaveCount(0);
