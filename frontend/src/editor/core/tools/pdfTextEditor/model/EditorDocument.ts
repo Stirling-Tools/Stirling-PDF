@@ -89,6 +89,7 @@ export class EditorDocument {
   private readonly fileStructure: FileStructure | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
+  private readonly embeddedFonts: Uint8Array[] = [];
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
   // this layer, so without it such fields are invisible in the editor while
@@ -722,6 +723,19 @@ export class EditorDocument {
         },
       ];
     });
+  }
+
+  /**
+   * Note a font file handed to PDFium for embedding in this document. PDFium
+   * writes such a font whole; the save uses these to find and subset them.
+   */
+  recordEmbeddedFontFile(bytes: Uint8Array): void {
+    this.embeddedFonts.push(bytes);
+  }
+
+  /** The exact font files embedded into this document during the session. */
+  embeddedFontFiles(): readonly Uint8Array[] {
+    return this.embeddedFonts;
   }
 
   registerOwnedFont(font: FontRef): void {
