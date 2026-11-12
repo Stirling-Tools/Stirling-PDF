@@ -168,7 +168,6 @@ class KeygenServerLicenseVerifierTest {
                 "enterprise",
                 "missingTier",
                 "suspended",
-                "negativeUsers",
                 "changedKey"
             })
     void activeStatusAloneCannotAuthorizeRegistration(String problem) throws Exception {
@@ -188,7 +187,6 @@ class KeygenServerLicenseVerifierTest {
             case "enterprise" -> metadata.put("isEnterprise", true);
             case "missingTier" -> metadata.remove("isEnterprise");
             case "suspended" -> attributes.put("suspended", true);
-            case "negativeUsers" -> metadata.put("users", -1);
             case "changedKey" -> attributes.put("key", "different-key");
             default -> throw new AssertionError(problem);
         }
@@ -346,6 +344,65 @@ class KeygenServerLicenseVerifierTest {
         ((ObjectNode) body.at("/data/attributes/metadata")).put("planType", "server");
         respond(200, body);
         assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{\"isEnterprise\":false,\"users\":100}",
+                "{\"isEnterprise\":\" FALSE \",\"users\":\" 100 \"}",
+                "{\"planType\":\" Server \",\"users\":\"100\"}",
+                "{\"plan_type\":\"SERVER\",\"users\":100}",
+                "{\"isEnterprise\":null,\"plan_type\":\"server\",\"users\":100}",
+                "{\"isEnterprise\":false,\"planType\":\" \",\"users\":100}",
+                "{\"planType\":\"server\",\"plan_type\":\"SERVER\",\"users\":100,\"custom\":true}"
+            })
+    void manualServerMetadataAcceptsKnownAliasesAndFormatting(String metadata) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes")).set("metadata", mapper.readTree(metadata));
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").userLimit()).isEqualTo(100);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "null",
+                "-1",
+                "2147483648",
+                "\"unlimited\"",
+                "\"invalid\"",
+                "1.5",
+                "true",
+                "{}"
+            })
+    void unparseableAllowanceIsUnknownRatherThanUnlimited(String limit) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes/metadata")).set("users", mapper.readTree(limit));
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").userLimit()).isNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{}",
+                "{\"isEnterprise\":true,\"plan_type\":\"server\"}",
+                "{\"isEnterprise\":\" TRUE \",\"planType\":\"server\"}",
+                "{\"isEnterprise\":false,\"plan_type\":\" Enterprise \"}",
+                "{\"planType\":\"server\",\"plan_type\":\"enterprise\"}",
+                "{\"isEnterprise\":\"unknown\",\"planType\":\"server\"}",
+                "{\"isEnterprise\":false,\"planType\":\"team\"}",
+                "{\"isEnterprise\":false,\"plan_type\":42}"
+            })
+    void conflictingOrUnknownTierNeverRegistersAsServer(String metadata) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes")).set("metadata", mapper.readTree(metadata));
+        respond(200, body);
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
     }
 
     private void useSlug() {

@@ -51,6 +51,7 @@ class ServerLicenseRegistrationControllerTest {
                 .withUserConfiguration(
                         ServerLicenseRegistrationController.class,
                         KeygenServerLicenseVerifier.class,
+                        ServerLicenseRegistrationNotifier.class,
                         ServerLicenseRegistrationStore.class)
                 .run(
                         context -> {
@@ -58,6 +59,8 @@ class ServerLicenseRegistrationControllerTest {
                             assertThat(context)
                                     .doesNotHaveBean(ServerLicenseRegistrationController.class);
                             assertThat(context).doesNotHaveBean(KeygenServerLicenseVerifier.class);
+                            assertThat(context)
+                                    .doesNotHaveBean(ServerLicenseRegistrationNotifier.class);
                             assertThat(context)
                                     .doesNotHaveBean(ServerLicenseRegistrationStore.class);
                         });

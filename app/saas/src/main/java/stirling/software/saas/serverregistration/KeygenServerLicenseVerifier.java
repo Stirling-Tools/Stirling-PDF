@@ -159,10 +159,6 @@ public class KeygenServerLicenseVerifier {
             if (!"licenses".equals(license.path("type").asText())
                     || !expectedAccountId.equals(UUID.fromString(account))
                     || !properties.getServerProductIds().contains(product)
-                    || !metadata.path("isEnterprise").isBoolean()
-                    || metadata.path("isEnterprise").asBoolean()
-                    || (metadata.hasNonNull("planType")
-                            && !"server".equals(metadata.path("planType").asText()))
                     || attrs.path("suspended").asBoolean(false)
                     || key.isBlank()
                     || (certificate && !id.equals(certificateId))
@@ -172,14 +168,8 @@ public class KeygenServerLicenseVerifier {
                                     proof.getBytes(StandardCharsets.UTF_8)))) {
                 throw denied();
             }
-            JsonNode limit = metadata.path("users");
-            Integer users = null;
-            if (!limit.isMissingNode() && !limit.isNull()) {
-                if (!limit.isIntegralNumber() || !limit.canConvertToInt() || limit.asInt() < 0)
-                    throw denied();
-                users = limit.asInt();
-            }
-            return new VerifiedLicense(id, key, users);
+            requireServerMetadata(metadata);
+            return new VerifiedLicense(id, key, userLimit(metadata.path("users")));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (InterruptedException e) {
@@ -190,6 +180,45 @@ public class KeygenServerLicenseVerifier {
         } catch (Exception e) {
             throw denied();
         }
+    }
+
+    private void requireServerMetadata(JsonNode metadata) {
+        boolean server = false;
+        JsonNode enterprise = metadata.path("isEnterprise");
+        if (!enterprise.isMissingNode() && !enterprise.isNull()) {
+            if (!(enterprise.isBoolean() && !enterprise.asBoolean())
+                    && !(enterprise.isString()
+                            && "false".equalsIgnoreCase(enterprise.asText().strip()))) {
+                throw denied();
+            }
+            server = true;
+        }
+        for (String field : new String[] {"planType", "plan_type"}) {
+            JsonNode plan = metadata.path(field);
+            if (plan.isMissingNode()
+                    || plan.isNull()
+                    || (plan.isString() && plan.asText().isBlank())) continue;
+            if (!plan.isString() || !"server".equalsIgnoreCase(plan.asText().strip()))
+                throw denied();
+            server = true;
+        }
+        if (!server) throw denied();
+    }
+
+    private Integer userLimit(JsonNode limit) {
+        // Allowance metadata is observational; unknown must not become the unlimited sentinel.
+        if (limit.isIntegralNumber() && limit.canConvertToInt()) {
+            return limit.asInt() >= 0 ? limit.asInt() : null;
+        }
+        if (limit.isString()) {
+            try {
+                int value = Integer.parseInt(limit.asText().strip());
+                return value >= 0 ? value : null;
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private UUID certificateId(String proof) throws Exception {

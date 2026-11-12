@@ -1,6 +1,7 @@
 package stirling.software.saas.serverregistration;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -9,12 +10,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.event.TransactionalEventListenerFactory;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -32,6 +40,8 @@ class ServerLicenseRegistrationStorePostgresTest {
     private JdbcTemplate jdbc;
     private TransactionTemplate transactions;
     private ServerLicenseRegistrationStore store;
+    private AnnotationConfigApplicationContext events;
+    private ServerLicenseRegistrationNotifier notifier;
     private final UUID installation = UUID.randomUUID();
     private final KeygenServerLicenseVerifier.VerifiedLicense license =
             new KeygenServerLicenseVerifier.VerifiedLicense(UUID.randomUUID(), "test-license", 0);
@@ -43,7 +53,19 @@ class ServerLicenseRegistrationStorePostgresTest {
                         POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
         jdbc = new JdbcTemplate(dataSource);
         transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
-        store = new ServerLicenseRegistrationStore(jdbc);
+        notifier = mock(ServerLicenseRegistrationNotifier.class);
+        events = new AnnotationConfigApplicationContext();
+        events.getEnvironment().setActiveProfiles("saas");
+        events.getEnvironment()
+                .getPropertySources()
+                .addFirst(
+                        new MapPropertySource(
+                                "test",
+                                java.util.Map.of("stirling.server-registration.enabled", "true")));
+        events.registerBean(TransactionalEventListenerFactory.class);
+        events.registerBean(ServerLicenseRegistrationNotifier.class, () -> notifier);
+        events.refresh();
+        store = new ServerLicenseRegistrationStore(jdbc, events);
         // Constraint and RLS coverage uses the real migration in the SaaS repository's PGlite test.
         jdbc.execute(
                 "DROP TABLE IF EXISTS public.server_license_registrations, public.license_keys");
@@ -62,6 +84,11 @@ class ServerLicenseRegistrationStorePostgresTest {
                 "INSERT INTO public.license_keys VALUES (?, ?, 'server', 'sub_test', NULL)",
                 UUID.randomUUID(),
                 license.key());
+    }
+
+    @AfterEach
+    void closeEvents() {
+        if (events != null) events.close();
     }
 
     @Test
@@ -100,6 +127,34 @@ class ServerLicenseRegistrationStorePostgresTest {
                                 "SELECT credential_hash FROM public.server_license_registrations",
                                 String.class))
                 .doesNotContain(SECRET);
+        var notification =
+                ArgumentCaptor.forClass(ServerLicenseRegistrationNotifier.FirstSync.class);
+        verify(notifier).notifyFirstSync(notification.capture());
+        assertThat(notification.getValue().licenseId()).isEqualTo(license.id());
+        assertThat(notification.getValue().subscriptionId()).isEqualTo("sub_test");
+        assertThat(notification.getValue().reportedUsers()).isEqualTo(147);
+        assertThat(notification.getValue().toString()).doesNotContain(SECRET, license.key());
+        sync(first, 2, 200, SECRET);
+        register(UUID.randomUUID(), 1, 90, SECRET);
+        verifyNoMoreInteractions(notifier);
+    }
+
+    @Test
+    void rolledBackFirstSyncDoesNotSendAnAlertOrConsumeTheFirstNotification() {
+        transactions.executeWithoutResult(
+                status -> {
+                    register(1, 147, SECRET);
+                    verifyNoInteractions(notifier);
+                    status.setRollbackOnly();
+                });
+        verifyNoInteractions(notifier);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM public.server_license_registrations",
+                                Long.class))
+                .isZero();
+        register(1, 147, SECRET);
+        verify(notifier).notifyFirstSync(any());
     }
 
     @Test
@@ -253,8 +308,10 @@ class ServerLicenseRegistrationStorePostgresTest {
                 .isNull();
     }
 
-    @Test
-    void concurrentLostReplyRetriesReturnTheSameRegistration() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void concurrentFirstReportsSendOnlyOneLicenseAlert(boolean separateInstallations)
+            throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
         try (var executor = Executors.newFixedThreadPool(2)) {
@@ -263,27 +320,39 @@ class ServerLicenseRegistrationStorePostgresTest {
                             () -> {
                                 ready.countDown();
                                 assertThat(start.await(10, TimeUnit.SECONDS)).isTrue();
-                                return register(1, 147, SECRET);
+                                return register(
+                                        separateInstallations ? UUID.randomUUID() : installation,
+                                        1,
+                                        147,
+                                        SECRET);
                             };
             var one = executor.submit(task);
             var two = executor.submit(task);
             assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
             start.countDown();
-            assertThat(one.get(20, TimeUnit.SECONDS)).isEqualTo(two.get(20, TimeUnit.SECONDS));
+            Receipt first = one.get(20, TimeUnit.SECONDS);
+            Receipt second = two.get(20, TimeUnit.SECONDS);
+            if (separateInstallations) assertThat(first).isNotEqualTo(second);
+            else assertThat(first).isEqualTo(second);
         }
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT count(*) FROM public.server_license_registrations",
                                 Long.class))
-                .isEqualTo(1);
+                .isEqualTo(separateInstallations ? 2 : 1);
+        verify(notifier).notifyFirstSync(any());
     }
 
     private Receipt register(long sequence, long count, String secret) {
+        return register(installation, sequence, count, secret);
+    }
+
+    private Receipt register(UUID installationId, long sequence, long count, String secret) {
         return transactions.execute(
                 status ->
                         store.register(
                                 new RegistrationRequest(
-                                        installation,
+                                        installationId,
                                         "proof",
                                         "machine",
                                         secret,
