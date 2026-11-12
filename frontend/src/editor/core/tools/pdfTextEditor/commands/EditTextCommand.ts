@@ -25,6 +25,10 @@ import {
   bestFontPtrForText,
   applyParagraphEditPlan,
   applyPartialEditPlan,
+  journalIsReversible,
+  pageObjectIndexer,
+  reverseJournal,
+  type PartialEditJournal,
   planModifiesWhitespace,
   planParagraphEdit,
   planPartialEdit,
@@ -165,6 +169,18 @@ export class EditTextCommand implements Command {
   /** Set when the apply path took the partial-edit (LCS) shortcut. */
   private partialPlan: PartialEditPlan | null = null;
   private partialInsertedPtrs: number[] = [];
+  /** What the partial apply did to pre-existing objects, for an exact undo. */
+  private partialJournal: PartialEditJournal | null = null;
+  /** Same, for the paragraph-aware apply. */
+  private paragraphJournal: PartialEditJournal | null = null;
+  /**
+   * Overlay apply: the original objects it took off the page and the run as it
+   * was, so undo puts back the very same objects (font, glyphs and position).
+   */
+  private overlayJournal: PartialEditJournal | null = null;
+  private overlaySnapshot:
+    | (RunModelSnapshot & { containerPtr: number; coverRectPtr: number })
+    | null = null;
   private prevMergedFromPtrs: number[] = [];
   private prevMergedFromTexts: string[] = [];
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
@@ -260,6 +276,7 @@ export class EditTextCommand implements Command {
           nextTags,
         );
         this.paragraphInsertedPtrs = result.insertedPtrs;
+        this.paragraphJournal = result.journal;
         run.paragraphLineSlots = result.newSlots;
         run.bounds = {
           ...run.bounds,
@@ -356,6 +373,7 @@ export class EditTextCommand implements Command {
         this.editSnapshot = snapshotRunModel(run);
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
+        this.partialJournal = result.journal;
         run.mergedFromPtrs = result.newMergedFromPtrs;
         run.mergedFromTexts = result.newMergedFromTexts;
         run.mergedFromBounds = result.newMergedFromBounds;
@@ -411,6 +429,13 @@ export class EditTextCommand implements Command {
     }
 
     this.overlaid = true;
+    this.overlaySnapshot = {
+      ...snapshotRunModel(run),
+      containerPtr: run.containerPtr,
+      coverRectPtr: run.coverRectPtr,
+    };
+    const overlayJournal: PartialEditJournal = { shifted: [], detached: [] };
+    const indexOf = pageObjectIndexer(doc.module, page.pagePtr);
     this.prevObjPtr = run.pdfiumObjPtr;
     if (this.prevFontId === null) this.prevFontId = run.fontId;
     if (this.prevFontPtr === 0 && run.containerPtr === 0 && run.pdfiumObjPtr) {
@@ -474,6 +499,11 @@ export class EditTextCommand implements Command {
 
     // Detach any cover rect that a PRIOR overlay edit left on the page.
     if (run.coverRectPtr) {
+      overlayJournal.detached.push({
+        ptr: run.coverRectPtr,
+        containerPtr: 0,
+        index: indexOf(run.coverRectPtr),
+      });
       try {
         m.FPDFPage_RemoveObject(page.pagePtr, run.coverRectPtr);
       } catch {
@@ -488,6 +518,14 @@ export class EditTextCommand implements Command {
 
     const memberPtrs = collectMemberPtrs(run);
     const containers = collectContainersByPtr(run);
+    for (const ptr of memberPtrs) {
+      if (!ptr) continue;
+      overlayJournal.detached.push({
+        ptr,
+        containerPtr: containers.get(ptr) ?? run.containerPtr,
+        index: indexOf(ptr),
+      });
+    }
     const allRemoved = removeMemberPtrs(
       m,
       page,
@@ -495,6 +533,8 @@ export class EditTextCommand implements Command {
       containers,
       run.containerPtr,
     );
+    // Only an apply that detached every original cleanly can be undone exactly.
+    this.overlayJournal = allRemoved ? overlayJournal : null;
 
     // Only stamp a cover rect when the sampler is CONFIDENT it found a uniform
     // background colour.
@@ -753,6 +793,37 @@ export class EditTextCommand implements Command {
         }
       }
       this.paragraphInsertedPtrs = [];
+      // Exact undo, as for single-line partial edits: reverse the recorded
+      // changes to the original objects instead of re-typing their text.
+      const paraJournal = this.paragraphJournal;
+      this.paragraphJournal = null;
+      if (
+        paraJournal &&
+        journalIsReversible(paraJournal) &&
+        this.editSnapshot
+      ) {
+        reverseJournal(m, page.pagePtr, paraJournal);
+        for (let s = 0; s < this.prevParagraphSlots.length; s++) {
+          const prevSlot = this.prevParagraphSlots[s];
+          const entry = this.paragraphPlan.perSlot.find((e) => e.slotIdx === s);
+          for (const op of entry?.plan?.ops ?? []) {
+            if (op.type === "modify" && op.subRunIdx !== undefined) {
+              setObjText(
+                m,
+                prevSlot.mergedFromPtrs[op.subRunIdx],
+                prevSlot.mergedFromTexts[op.subRunIdx] ?? "",
+              );
+            }
+          }
+        }
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.paragraphPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       // Pure-insert edit (no original object freed/mutated): every original
       // object is still alive, so restore the exact pre-edit model.
       const pureInsert = this.paragraphPlan.perSlot.every(
@@ -832,6 +903,30 @@ export class EditTextCommand implements Command {
         }
       }
       this.partialInsertedPtrs = [];
+      // Exact undo: put back every original object the apply detached, move
+      // the shifted ones back, restore modified text, and restore the model.
+      // The rebuild below is for journals that can't be reversed.
+      const journal = this.partialJournal;
+      this.partialJournal = null;
+      if (journal && journalIsReversible(journal) && this.editSnapshot) {
+        reverseJournal(m, page.pagePtr, journal);
+        for (const op of this.partialPlan.ops) {
+          if (op.type === "modify" && op.subRunIdx !== undefined) {
+            setObjText(
+              m,
+              this.prevMergedFromPtrs[op.subRunIdx],
+              this.prevMergedFromTexts[op.subRunIdx] ?? "",
+            );
+          }
+        }
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.partialPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       // In-place "modify" sub-runs kept their object (and font); restore
       // their original text so undo shows the pre-edit characters.
       for (const op of this.partialPlan.ops) {
@@ -906,6 +1001,31 @@ export class EditTextCommand implements Command {
     this.coverRectPtr = 0;
     this.newTextPtr = 0;
     this.createdPtrs = [];
+
+    // Exact undo: the originals were only detached, so put the very same
+    // objects back where they were and restore the run as it was. The re-emit
+    // below is for applies that couldn't detach every original cleanly.
+    const overlayJournal = this.overlayJournal;
+    const overlaySnapshot = this.overlaySnapshot;
+    this.overlayJournal = null;
+    this.overlaySnapshot = null;
+    if (
+      overlayJournal &&
+      overlaySnapshot &&
+      !this.scanSource &&
+      journalIsReversible(overlayJournal)
+    ) {
+      reverseJournal(m, page.pagePtr, overlayJournal);
+      restoreRunModel(run, overlaySnapshot);
+      run.containerPtr = overlaySnapshot.containerPtr;
+      run.coverRectPtr = overlaySnapshot.coverRectPtr;
+      run.text = this.prevText;
+      run.dirty = true;
+      this.overlaid = false;
+      page.markDirty();
+      page.markNeedsGenerate();
+      return;
+    }
     if (this.scanSource) {
       run.fill = this.scanSource.fill;
       run.fontSize = this.scanSource.fontSize;
