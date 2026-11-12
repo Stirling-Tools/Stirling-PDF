@@ -14,6 +14,7 @@ import {
 import { subscribePreferredScanFace } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
   loadBundledScanFaces,
+  loadDeviceScanFacesIfAllowed,
   loadScriptScanFaces,
   scanScriptsOf,
   subscribeScanFaces,
@@ -198,6 +199,10 @@ export function useScanPrefit(
         ready = true;
         resume.current();
       });
+    // Not awaited: reading installed fonts can take seconds, and the bundled
+    // faces are enough to start. Their arrival re-ranks through the face
+    // subscription above.
+    void loadDeviceScanFacesIfAllowed().catch(() => undefined);
     return () => {
       stopped = true;
       resume.current = () => {};

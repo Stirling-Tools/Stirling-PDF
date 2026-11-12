@@ -1,6 +1,7 @@
 import { getFontBaseUrl } from "@editor/services/fontBaseUrl";
 import {
   faceStyleFlags,
+  localFontPermission,
   retryLocalFonts,
   loadLocalFontBytes,
   loadedLocalFonts,
@@ -596,4 +597,14 @@ export function loadDeviceScanFaces(): Promise<number> {
   })();
   deviceJob = job;
   return job;
+}
+
+/**
+ * Read this device's fonts for scan matching, but only when that cannot
+ * prompt: access was granted earlier, or the build needs no permission. Lets
+ * the automatic match consider installed fonts without the user opening the
+ * picker. Resolves at once when access would have to be asked for.
+ */
+export async function loadDeviceScanFacesIfAllowed(): Promise<void> {
+  if ((await localFontPermission()) === "granted") await loadDeviceScanFaces();
 }
