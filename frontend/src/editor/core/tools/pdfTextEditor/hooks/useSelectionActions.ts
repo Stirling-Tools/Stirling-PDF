@@ -56,13 +56,21 @@ async function serverFontUnavailable(family: string): Promise<boolean> {
   );
 }
 
+// A family the server also supplies is embedded from the server's bytes, so a
+// restricted local copy of it does not matter.
+function localEmbeddingForbidden(family: string): boolean {
+  return (
+    serverFaceFor(family) === null && isLocalFontEmbeddingForbidden(family)
+  );
+}
+
 async function fontPickFailure(
   family: string,
   text: string,
 ): Promise<FontPickFailure | null> {
   if (nearestStandardFont(family) === family) return null;
   if (await serverFontUnavailable(family)) return "serverFontFailed";
-  if (isLocalFontEmbeddingForbidden(family)) return "embeddingForbidden";
+  if (localEmbeddingForbidden(family)) return "embeddingForbidden";
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
@@ -283,8 +291,7 @@ export function useSelectionActions(store: EditorStore) {
     for (const target of targets) {
       if (target.device && (await serverFontUnavailable(target.family)))
         continue;
-      if (target.device && isLocalFontEmbeddingForbidden(target.family))
-        continue;
+      if (target.device && localEmbeddingForbidden(target.family)) continue;
       ready.push(target);
     }
     if (store.document !== doc) return;

@@ -43,6 +43,12 @@ export async function localFontPermission(): Promise<LocalFontPermission> {
   return (await permissionStatus())?.state ?? "prompt";
 }
 
+/**
+ * Calls `listener` each time the permission changes. It is not called with the
+ * current value: read that with {@link localFontPermission}. Registers nothing
+ * when there is no way to ask for fonts. The returned function stops the
+ * watch, including one whose registration is still pending.
+ */
 export function watchLocalFontPermission(
   listener: (permission: LocalFontPermission) => void,
 ): () => void {

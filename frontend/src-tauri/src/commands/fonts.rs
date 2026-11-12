@@ -31,6 +31,13 @@ fn embedding_allowed(face: &Face) -> bool {
     face.permissions() != Some(Permissions::Restricted) && face.is_outline_embedding_allowed()
 }
 
+/// The editor embeds device fonts as TrueType, which PostScript (CFF) outlines
+/// are not: such a face would save as a broken font resource.
+fn has_truetype_outlines(face: &Face) -> bool {
+    let tables = face.tables();
+    tables.glyf.is_some() && tables.cff.is_none() && tables.cff2.is_none()
+}
+
 fn english_name(face: &Face, id: u16) -> Option<String> {
     let mut fallback = None;
     for name in face.names() {
@@ -48,11 +55,12 @@ fn english_name(face: &Face, id: u16) -> Option<String> {
     fallback
 }
 
-/// The face's display names, or `None` when it cannot be parsed or its licence
-/// forbids embedding: an unreadable permission is treated as a refusal.
+/// The face's display names, or `None` when it cannot be parsed, its licence
+/// forbids embedding, or its outlines are not TrueType: an unreadable
+/// permission is treated as a refusal.
 fn embeddable_face_names(data: &[u8], index: u32) -> Option<FaceNames> {
     let face = Face::parse(data, index).ok()?;
-    if !embedding_allowed(&face) {
+    if !embedding_allowed(&face) || !has_truetype_outlines(&face) {
         return None;
     }
     Some(FaceNames {
@@ -128,7 +136,8 @@ fn catalog() -> &'static [CatalogEntry] {
     })
 }
 
-/// The installed font faces whose licence allows embedding in a document.
+/// The installed font faces the editor can embed in a document: TrueType
+/// outlines, and a licence that allows embedding.
 #[tauri::command]
 pub async fn list_system_fonts() -> Result<Vec<SystemFontFace>, String> {
     tauri::async_runtime::spawn_blocking(|| {
@@ -160,12 +169,16 @@ mod tests {
 
     const FS_TYPE_OFFSET: usize = 8;
 
-    fn bundled_font() -> Vec<u8> {
-        let path = concat!(
+    fn bundled(name: &str) -> Vec<u8> {
+        let dir = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../app/core/src/main/resources/static/fonts/Carlito-Regular.ttf"
+            "/../../app/core/src/main/resources/static/fonts/"
         );
-        std::fs::read(path).expect("bundled font is readable")
+        std::fs::read(format!("{dir}{name}")).expect("bundled font is readable")
+    }
+
+    fn bundled_font() -> Vec<u8> {
+        bundled("Carlito-Regular.ttf")
     }
 
     fn with_fs_type(mut data: Vec<u8>, fs_type: u16) -> Vec<u8> {
@@ -213,6 +226,11 @@ mod tests {
     #[test]
     fn drops_a_bitmap_only_face() {
         assert!(catalog_of(with_fs_type(bundled_font(), 0x0208)).is_empty());
+    }
+
+    #[test]
+    fn drops_a_face_with_postscript_outlines() {
+        assert!(catalog_of(bundled("NotoSansTC-Regular.ttf")).is_empty());
     }
 
     #[test]
