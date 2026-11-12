@@ -234,7 +234,10 @@ export function composeText(
       placed.push({ glyph, x: Math.round(i * atlas.pitch - centre) });
       continue;
     }
-    if (placed.length > 0) pen += afterSpace ? wordGap : atlas.letterGap;
+    // Whole pixels only: a fractional pen makes the image width fractional,
+    // and every row then lands at a different offset in the pixel buffer.
+    if (placed.length > 0)
+      pen += afterSpace ? Math.round(wordGap) : atlas.letterGap;
     afterSpace = false;
     placed.push({ glyph, x: pen - glyph.inkLeft });
     pen += glyph.inkRight - glyph.inkLeft;

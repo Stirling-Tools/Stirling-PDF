@@ -92,6 +92,24 @@ describe("building the atlas from the scan's letters", () => {
     expect(composeText(accentOnly, "on", 0)).not.toBeNull();
   });
 
+  test("keeps both words intact across a gap that is not a whole pixel", () => {
+    const atlas = buildGlyphAtlas([proportional("noun")], DESCENT)!;
+    const composed = composeText(atlas, "no un", 9.4)!;
+
+    expect(Number.isInteger(composed.width)).toBe(true);
+    expect(composed.rgba.length).toBe(composed.width * composed.height * 4);
+    const inkPerRow = (row: number) => {
+      let ink = 0;
+      for (let x = 0; x < composed.width; x++)
+        if (composed.rgba[(row * composed.width + x) * 4 + 3] > 0) ink++;
+      return ink;
+    };
+    // Four x-height letters, each a solid block as wide as it is.
+    const row = BASE_ROW - 4;
+    expect(inkPerRow(row)).toBe(4 * X.width);
+    expect(inkPerRow(BASE_ROW - X.top - 2)).toBe(0);
+  });
+
   test("never pastes a capital the OCR read as lowercase", () => {
     const atlas = buildGlyphAtlas(
       [
