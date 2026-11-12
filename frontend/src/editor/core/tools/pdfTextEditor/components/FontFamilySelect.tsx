@@ -179,16 +179,22 @@ export function FontFamilySelect({
   }, [serverOptions, deviceOptions, documentFamily, t]);
 
   const pickFailureText = useCallback(
-    (failure: FontPickFailure): string =>
-      failure === "serverFontFailed"
-        ? t(
-            "pdfTextEditor.fontPicker.serverFontFailed",
-            "That server font could not be downloaded. The text was left unchanged.",
-          )
-        : t(
-            "pdfTextEditor.fontPicker.noGlyphs",
-            "This font has no characters for the selected text. The text was left unchanged.",
-          ),
+    (failure: FontPickFailure): string => {
+      if (failure === "serverFontFailed")
+        return t(
+          "pdfTextEditor.fontPicker.serverFontFailed",
+          "That server font could not be downloaded. The text was left unchanged.",
+        );
+      if (failure === "embedFailed")
+        return t(
+          "pdfTextEditor.fontPicker.embedFailed",
+          "This font could not be embedded in the PDF. The text was left unchanged.",
+        );
+      return t(
+        "pdfTextEditor.fontPicker.noGlyphs",
+        "This font has no characters for the selected text. The text was left unchanged.",
+      );
+    },
     [t],
   );
 

@@ -83,8 +83,29 @@ function run(id: string, fontId: string, text = "Hello"): FakeRun {
   };
 }
 
-function fakeStore(runs: FakeRun[], selected: string[]) {
-  const openDocument = () => ({ loadedPages: () => [{ runs }] });
+const FONT_HANDLE = 7;
+
+function fakeStore(
+  runs: FakeRun[],
+  selected: string[],
+  pdfiumLoadsFont = true,
+) {
+  const openDocument = () => {
+    const owned = new Map<string, { id: string }>();
+    return {
+      loadedPages: () => [{ runs }],
+      docPtr: 1,
+      ownedFont: (id: string) => owned.get(id),
+      registerOwnedFont: (font: { id: string }) => owned.set(font.id, font),
+      module: {
+        FPDFText_LoadFont: () => (pdfiumLoadsFont ? FONT_HANDLE : 0),
+        pdfium: {
+          HEAPU8: new Uint8Array(1 << 20),
+          wasmExports: { malloc: () => 8, free: () => {} },
+        },
+      },
+    };
+  };
   let doc = openDocument();
   const selection = { value: { runIds: selected } };
   const dispatch = vi.fn();
@@ -175,6 +196,21 @@ describe("useSelectionActions font changes", () => {
 
     expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBe(
       "serverFontFailed",
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("leaves the text alone when the font will not embed", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica")],
+      ["a"],
+      false,
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBe(
+      "embedFailed",
     );
     expect(dispatch).not.toHaveBeenCalled();
   });
