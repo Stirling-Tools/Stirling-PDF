@@ -22,17 +22,28 @@ export function readLinks(
   pdf: RawPdf,
   treeRoot: number | null,
 ): Map<number, LinkAnnotation[]> {
-  const out = new Map<number, LinkAnnotation[]>();
+  return annotationsByPage(pdf, (num) => readLink(pdf, num, treeRoot));
+}
+
+/**
+ * What `read` makes of each annotation a page's /Annots references, by page
+ * index; null leaves one out. Pages with none are left out.
+ */
+export function annotationsByPage<T>(
+  pdf: RawPdf,
+  read: (num: number) => T | null,
+): Map<number, T[]> {
+  const out = new Map<number, T[]>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
     const annots = page ? pdf.resolve(page, "Annots")?.trim() : null;
     const refs = (annots ? arrayItems(annots) : null) ?? [];
-    const links = refs.slice(0, MAX_ANNOTS).flatMap((ref) => {
+    const found = refs.slice(0, MAX_ANNOTS).flatMap((ref) => {
       const num = referencedObject(ref.text);
-      const link = num === null ? null : readLink(pdf, num, treeRoot);
-      return link ? [link] : [];
+      const annotation = num === null ? null : read(num);
+      return annotation ? [annotation] : [];
     });
-    if (links.length > 0) out.set(pageIndex, links);
+    if (found.length > 0) out.set(pageIndex, found);
   });
   return out;
 }
@@ -86,13 +97,14 @@ function quadAreas(values: readonly number[]): PageArea[] {
 }
 
 /** An array of numbers; null when the value is not one. */
-function numbers(value: string | null): number[] | null {
+export function numbers(value: string | null): number[] | null {
   const items = value ? arrayItems(value.trim()) : null;
   const read = items?.map((item) => Number(item.text));
   return read?.every(Number.isFinite) ? read : null;
 }
 
-function holderKey(
+/** The key of the element the annotation's /StructParent names; null when none. */
+export function holderKey(
   pdf: RawPdf,
   body: string,
   treeRoot: number | null,

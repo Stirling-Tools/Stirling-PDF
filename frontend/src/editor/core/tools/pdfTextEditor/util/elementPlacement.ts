@@ -11,10 +11,12 @@ import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 /** Tops this close (points) read as one line. */
 const SAME_LINE = 2;
 
-interface Box {
+/** A rect as the page displays it, y-up. */
+export interface DisplayBox {
   left: number;
   right: number;
   top: number;
+  bottom: number;
 }
 
 /** Page-level content with an MCID, and where it is drawn. */
@@ -33,9 +35,29 @@ export function precedingTaggedMcid(
   page: Page,
   target: TaggedContent,
 ): number | null {
-  const box = displayBox(page, target.bounds);
+  return lastTaggedBefore(page, displayBox(page, target.bounds), target.mcid);
+}
+
+/**
+ * The MCID of the tagged content read last before a form field drawn in
+ * `rect`, as precedingTaggedMcid reads it. The field's line is its middle,
+ * since its box is taller than the text beside it.
+ */
+export function taggedMcidBeforeField(
+  page: Page,
+  rect: PageRect,
+): number | null {
+  const box = displayBox(page, rect);
+  return lastTaggedBefore(page, { ...box, top: (box.top + box.bottom) / 2 });
+}
+
+function lastTaggedBefore(
+  page: Page,
+  box: DisplayBox,
+  except?: number,
+): number | null {
   const before = taggedContent(page)
-    .filter((c) => c.mcid !== target.mcid)
+    .filter((c) => c.mcid !== except)
     .map((c) => ({ mcid: c.mcid, box: displayBox(page, c.bounds) }))
     .filter((c) => readsBefore(c.box, box));
   const inColumn = before.filter(
@@ -70,19 +92,19 @@ function taggedContent(page: Page): TaggedContent[] {
   return content;
 }
 
-function readsBefore(a: Box, b: Box): boolean {
+function readsBefore(a: DisplayBox, b: DisplayBox): boolean {
   if (Math.abs(a.top - b.top) > SAME_LINE) return a.top > b.top;
   return a.left < b.left;
 }
 
-function readingOrder(a: Box, b: Box): number {
+function readingOrder(a: DisplayBox, b: DisplayBox): number {
   if (readsBefore(a, b)) return -1;
   if (readsBefore(b, a)) return 1;
   return 0;
 }
 
 /** The rect's bounds as displayed, y-up, so a /Rotate page reads as it is shown. */
-function displayBox(page: Page, rect: PageRect): Box {
+export function displayBox(page: Page, rect: PageRect): DisplayBox {
   const corners = [
     page.display.apply(rect.x, rect.y),
     page.display.apply(rect.x + rect.width, rect.y),
@@ -90,9 +112,11 @@ function displayBox(page: Page, rect: PageRect): Box {
     page.display.apply(rect.x + rect.width, rect.y + rect.height),
   ];
   const xs = corners.map((c) => c.x);
+  const ys = corners.map((c) => c.y);
   return {
     left: Math.min(...xs),
     right: Math.max(...xs),
-    top: Math.max(...corners.map((c) => c.y)),
+    top: Math.max(...ys),
+    bottom: Math.min(...ys),
   };
 }

@@ -1,5 +1,7 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import { PageFormFields } from "@editor/tools/pdfTextEditor/model/PageFormFields";
+import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type {
   StructureRole,
   StructureType,
@@ -274,6 +276,14 @@ export interface ElementLanguageEdit {
   lang: string | null;
 }
 
+/** The page's annotations the save can give an element. */
+export interface PageAnnotations {
+  links: readonly LinkAnnotation[];
+  widgets: readonly WidgetAnnotation[];
+}
+
+const NO_ANNOTATIONS: PageAnnotations = { links: [], widgets: [] };
+
 /** A change to one of the page's link annotations, for the save (see AnnotationEdit). */
 export interface LinkEdit {
   annotation: number;
@@ -326,6 +336,7 @@ export class PageStructure {
 
   /** Why the save cannot write descriptions for this page, or null when it can. */
   readonly readOnly: ReadOnlyReason | null;
+  readonly formFields: PageFormFields;
   /**
    * The length of the page's ParentTree array, so the first MCID it has no
    * slot for; null when the page has no array to add an element to.
@@ -338,15 +349,16 @@ export class PageStructure {
     readOnly: ReadOnlyReason | null = null,
     slotCount: number | null = null,
     retaggedAs: RetagLookup = () => null,
-    links: readonly LinkAnnotation[] = [],
+    annotations: PageAnnotations = NO_ANNOTATIONS,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
     this.slotCount = slotCount;
     this.retaggedAs = retaggedAs;
     this.linkAnnotations = new Map(
-      links.map((link) => [link.annotation, link]),
+      annotations.links.map((link) => [link.annotation, link]),
     );
+    this.formFields = new PageFormFields(annotations.widgets, readOnly);
     this.fileElements = new Set(elements);
     for (const el of elements) {
       for (const mcid of el.mcids) this.byMcid.set(mcid, el);

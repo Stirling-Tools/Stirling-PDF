@@ -32,6 +32,7 @@ import {
   plainObject,
   unusedObjectNumber,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
+import { separateField } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 
 /** A change to one annotation on a page. */
@@ -306,14 +307,10 @@ class AnnotationRevision {
     return array?.items?.map((item) => item.text) ?? [];
   }
 
-  /**
-   * The widget's body with its field's /TU set. A widget with no /T but a
-   * /Parent is one of that field's kids, as PDFBox reads it; any other is its
-   * own field.
-   */
+  /** The widget's body with its field's /TU set (see separateField). */
   private withTooltip(widget: string, tooltip: string | null): string {
-    const parent = this.pdf.dictRef(widget, "Parent");
-    if (parent === null || this.pdf.valueSpan(widget, "T") !== null) {
+    const parent = separateField(this.pdf, widget);
+    if (parent === null) {
       return dictionary(withTextEntry(widget, "TU", tooltip));
     }
     const field = this.body(parent);
