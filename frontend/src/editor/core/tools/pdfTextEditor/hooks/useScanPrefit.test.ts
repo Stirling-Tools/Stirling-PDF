@@ -6,7 +6,10 @@ import {
   prefitScanRun,
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
-import { loadBundledScanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import {
+  loadBundledScanFaces,
+  loadDeviceScanFacesIfAllowed,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
   EditorStore,
@@ -23,6 +26,7 @@ vi.mock(
   async (importOriginal) => ({
     ...(await importOriginal<object>()),
     loadBundledScanFaces: vi.fn(() => Promise.resolve()),
+    loadDeviceScanFacesIfAllowed: vi.fn(() => Promise.resolve()),
     loadScriptScanFaces: vi.fn(() => Promise.resolve()),
   }),
 );
@@ -115,6 +119,16 @@ describe("background scan font fitting", () => {
     select(["c"]);
     await vi.advanceTimersByTimeAsync(100);
     expect(order).toEqual(["c", "a", "b"]);
+  });
+
+  test("asks for the device's fonts without holding up the first fit", async () => {
+    vi.mocked(loadDeviceScanFacesIfAllowed).mockReturnValueOnce(
+      new Promise(() => {}),
+    );
+    setup([{ ids: ["a"], near: true }]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(loadDeviceScanFacesIfAllowed).toHaveBeenCalled();
+    expect(order).toEqual(["a"]);
   });
 
   test("leaves runs on far pages until one is selected or the page comes near", async () => {
