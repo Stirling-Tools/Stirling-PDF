@@ -158,6 +158,18 @@ describe("caret offsets", () => {
     expect(plainCaretOffset(el)).toBe(5);
   });
 
+  it("round-trips every offset of plain text that spans lines", () => {
+    const el = host();
+    const text = "• First item\n• Second item\nthird";
+    // innerText's own <br>s, which jsdom does not produce for us.
+    el.innerHTML = "• First item<br>• Second item<br>third";
+    expect(readOverlayText(el)).toBe(text);
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
   it("clamps past the end instead of throwing", () => {
     const el = host();
     paintLines(el, [line("abc")], OPTS);

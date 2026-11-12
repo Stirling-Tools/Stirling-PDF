@@ -432,18 +432,40 @@ function domPosition(
     }
   }
 
-  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+  // Plain-painted text breaks its lines with <br>, each one a "\n" of the
+  // model text, so those count as a character here as readOverlayText counts
+  // them. Inside a painted block a <br> is only ever a browser filler.
+  const countBreaks = blocks.length === 0;
+  const walker = document.createTreeWalker(
+    scope,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+  );
   let seen = 0;
-  let node = walker.nextNode();
-  while (node) {
-    const length = (node.nodeValue ?? "").length;
-    if (seen + length >= remaining) {
-      return { node, offset: remaining - seen };
+  let last: Node | null = null;
+  // Just past a break, the caret belongs at the start of the next line's
+  // text: the position right after the <br> reads back as the line above.
+  let afterBreak: { node: Node; offset: number } | null = null;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const length = (node.nodeValue ?? "").length;
+      if (seen + length >= remaining) {
+        return { node, offset: remaining - seen };
+      }
+      seen += length;
+      last = node;
+    } else if (countBreaks && (node as Element).tagName === "BR") {
+      if (afterBreak) return afterBreak;
+      const parent = node.parentNode;
+      if (!parent) continue;
+      const index = Array.prototype.indexOf.call(parent.childNodes, node);
+      if (seen >= remaining) return { node: parent, offset: index };
+      seen += 1;
+      if (seen >= remaining) afterBreak = { node: parent, offset: index + 1 };
     }
-    seen += length;
-    node = walker.nextNode();
   }
-  return { node: scope, offset: 0 };
+  if (afterBreak) return afterBreak;
+  if (last) return { node: last, offset: (last.nodeValue ?? "").length };
+  return { node: scope, offset: scope.childNodes.length };
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {
