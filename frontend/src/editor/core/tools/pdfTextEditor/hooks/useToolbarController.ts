@@ -6,6 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useFormFieldAccessibility } from "@editor/tools/pdfTextEditor/hooks/useFormFieldAccessibility";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
 import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
@@ -55,6 +56,7 @@ export function useToolbarController(
   const sel = useSelectionActions(store);
   const imageA11y = useImageAccessibility(store, state, selection);
   const textA11y = useTextAccessibility(store, state, selection);
+  const formFieldA11y = useFormFieldAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -532,6 +534,9 @@ export function useToolbarController(
     textLanguage: textA11y.language,
     textOtherPages: textA11y.otherPages,
     textUntaggedLinks: textA11y.untaggedLinks,
+    formFieldAccessibility: formFieldA11y.accessibility,
+    onTagFormField: formFieldA11y.tag,
+    onSetFormFieldDescription: formFieldA11y.setDescription,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

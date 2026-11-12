@@ -70,7 +70,8 @@ export function EditorSidebar({
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
-    selection.shapeIds.length > 0;
+    selection.shapeIds.length > 0 ||
+    selection.formFieldId !== null;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the

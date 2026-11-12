@@ -4,6 +4,8 @@ import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 export interface WidgetAnnotation {
   /** Its object number, which the save gives it a Form element by. */
   annotation: number;
+  /** Its index in the page's /Annots: the AnnotationBox.index PDFium reads it at. */
+  position: number;
   /** Its /Rect, in page space (y-up). */
   rect: PageRect;
   /** Its field's /FT, inherited through /Parent; null when none says. */

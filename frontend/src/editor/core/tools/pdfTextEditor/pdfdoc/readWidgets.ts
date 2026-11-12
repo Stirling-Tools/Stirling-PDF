@@ -21,7 +21,9 @@ export function readWidgets(
   pdf: RawPdf,
   treeRoot: number | null,
 ): Map<number, WidgetAnnotation[]> {
-  return annotationsByPage(pdf, (num) => readWidget(pdf, num, treeRoot));
+  return annotationsByPage(pdf, (num, position) =>
+    readWidget(pdf, num, position, treeRoot),
+  );
 }
 
 /**
@@ -36,6 +38,7 @@ export function separateField(pdf: RawPdf, widget: string): number | null {
 function readWidget(
   pdf: RawPdf,
   num: number,
+  position: number,
   treeRoot: number | null,
 ): WidgetAnnotation | null {
   const body = pdf.objectBody(num);
@@ -56,6 +59,7 @@ function readWidget(
   const tooltip = field ? pdf.resolve(field, "TU") : null;
   return {
     annotation: num,
+    position,
     rect: area,
     fieldType: fieldType(pdf, body),
     tooltip: tooltip === null ? null : decodeTextString(tooltip.trim()),

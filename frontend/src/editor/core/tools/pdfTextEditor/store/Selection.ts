@@ -42,6 +42,7 @@ export class Selection {
       runIds: [],
       imageIds: [],
       shapeIds: [],
+      formFieldId: null,
       caret: null,
       textRange: null,
     };
@@ -63,6 +64,7 @@ export class Selection {
       runIds: [],
       imageIds: [],
       shapeIds: [],
+      formFieldId: null,
       caret: null,
       textRange: null,
     });
@@ -73,6 +75,7 @@ export class Selection {
       runIds: [runId],
       imageIds: [],
       shapeIds: [],
+      formFieldId: null,
       caret,
       textRange: null,
     });
@@ -83,6 +86,7 @@ export class Selection {
       this.set({
         ...this.state,
         runIds: this.state.runIds.filter((id) => id !== runId),
+        formFieldId: null,
         caret: null,
         textRange: null,
       });
@@ -90,6 +94,7 @@ export class Selection {
       this.set({
         ...this.state,
         runIds: [...this.state.runIds, runId],
+        formFieldId: null,
         caret: null,
         textRange: null,
       });
@@ -101,6 +106,7 @@ export class Selection {
       runIds: [],
       imageIds: [imageId],
       shapeIds: [],
+      formFieldId: null,
       caret: null,
       textRange: null,
     });
@@ -111,6 +117,7 @@ export class Selection {
       runIds: [],
       imageIds: [],
       shapeIds: [shapeId],
+      formFieldId: null,
       caret: null,
       textRange: null,
     });
@@ -120,7 +127,25 @@ export class Selection {
     const shapeIds = this.state.shapeIds.includes(shapeId)
       ? this.state.shapeIds.filter((id) => id !== shapeId)
       : [...this.state.shapeIds, shapeId];
-    this.set({ ...this.state, shapeIds, caret: null, textRange: null });
+    this.set({
+      ...this.state,
+      shapeIds,
+      formFieldId: null,
+      caret: null,
+      textRange: null,
+    });
+  }
+
+  /** Select form field widget `annotationId` (an AnnotationBox id) alone. */
+  selectFormField(annotationId: string): void {
+    this.set({
+      runIds: [],
+      imageIds: [],
+      shapeIds: [],
+      formFieldId: annotationId,
+      caret: null,
+      textRange: null,
+    });
   }
 
   /**
@@ -139,6 +164,7 @@ export class Selection {
         runIds: [...runIds],
         imageIds: [...imageIds],
         shapeIds: [...shapeIds],
+        formFieldId: null,
         caret: null,
         textRange: null,
       });
@@ -148,6 +174,7 @@ export class Selection {
       runIds: unionInOrder(this.state.runIds, runIds),
       imageIds: unionInOrder(this.state.imageIds, imageIds),
       shapeIds: unionInOrder(this.state.shapeIds, shapeIds),
+      formFieldId: null,
       caret: null,
       textRange: null,
     });

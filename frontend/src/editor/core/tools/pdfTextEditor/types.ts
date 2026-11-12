@@ -224,6 +224,8 @@ export interface SelectionState {
   imageIds: string[];
   /** Selected vector shape ids. */
   shapeIds: string[];
+  /** The AnnotationBox id of the selected form field widget; only ever selected alone. */
+  formFieldId: string | null;
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
   /**

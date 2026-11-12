@@ -26,21 +26,22 @@ export function readLinks(
 }
 
 /**
- * What `read` makes of each annotation a page's /Annots references, by page
- * index; null leaves one out. Pages with none are left out.
+ * What `read` makes of each annotation a page's /Annots references, given its
+ * object number and its index in /Annots, by page index; null leaves one out.
+ * Pages with none are left out.
  */
 export function annotationsByPage<T>(
   pdf: RawPdf,
-  read: (num: number) => T | null,
+  read: (num: number, position: number) => T | null,
 ): Map<number, T[]> {
   const out = new Map<number, T[]>();
   pdf.pageNumbers().forEach((pageNum, pageIndex) => {
     const page = pdf.objectBody(pageNum);
     const annots = page ? pdf.resolve(page, "Annots")?.trim() : null;
     const refs = (annots ? arrayItems(annots) : null) ?? [];
-    const found = refs.slice(0, MAX_ANNOTS).flatMap((ref) => {
+    const found = refs.slice(0, MAX_ANNOTS).flatMap((ref, position) => {
       const num = referencedObject(ref.text);
-      const annotation = num === null ? null : read(num);
+      const annotation = num === null ? null : read(num, position);
       return annotation ? [annotation] : [];
     });
     if (found.length > 0) out.set(pageIndex, found);

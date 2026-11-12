@@ -10,6 +10,7 @@ import {
   test,
   vi,
 } from "vitest";
+import { SetFormFieldTooltipCommand } from "@editor/tools/pdfTextEditor/commands/SetFormFieldTooltipCommand";
 import {
   TagFormFieldCommand,
   taggableFormFields,
@@ -29,6 +30,7 @@ import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString"
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { formFieldAccessibility } from "@editor/tools/pdfTextEditor/util/formFieldAccessibility";
 import {
   buildClassicPdf,
   streamBody,
@@ -237,6 +239,7 @@ describe("reading form fields", () => {
     expect(structure!.widgets.get(0)).toEqual([
       {
         annotation: NAME_FIELD,
+        position: 0,
         rect: { x: 110, y: 694, width: 190, height: 20 },
         fieldType: "Tx",
         tooltip: null,
@@ -244,6 +247,7 @@ describe("reading form fields", () => {
       },
       expect.objectContaining({
         annotation: EMAIL_FIELD,
+        position: 1,
         fieldType: "Tx",
         tooltip: "Email address",
       }),
@@ -355,5 +359,85 @@ describe("tagging form fields", () => {
     const doc = await open(taggedPdf({ held: true }));
     expect(taggableFormFields(doc, 0)).toEqual([]);
     expect(hasUntaggedContent(doc, 0)).toBe(false);
+  });
+});
+
+describe("describing form fields", () => {
+  test("finds a widget by its place in the page's /Annots", async () => {
+    const doc = await open(taggedPdf());
+    expect(formFieldAccessibility(doc, 0, 0)).toEqual({
+      kind: "editable",
+      widget: expect.objectContaining({ annotation: NAME_FIELD }),
+      tagged: false,
+      description: null,
+    });
+    expect(formFieldAccessibility(doc, 0, 1)).toEqual({
+      kind: "blocked",
+      blocker: "unknown",
+    });
+  });
+
+  test("shows a field as tagged once tagged, named by its label", async () => {
+    const doc = await open(taggedPdf());
+    new HistoryStack().execute(
+      new TagFormFieldCommand({ pageIndex: 0, annotation: NAME_FIELD }),
+      doc,
+    );
+    expect(formFieldAccessibility(doc, 0, 0)).toMatchObject({
+      tagged: true,
+      description: "Name",
+    });
+  });
+
+  test("shows a field the file gives an element as tagged", async () => {
+    const doc = await open(taggedPdf({ held: true }));
+    expect(formFieldAccessibility(doc, 0, 0)).toMatchObject({ tagged: true });
+  });
+
+  test("saves an edited description on the field, and undoing it restores the file's", async () => {
+    const doc = await open(
+      untaggedPdf(EMAIL_LINE, emailField(" /TU (Email address)")),
+    );
+    const history = new HistoryStack();
+    history.execute(
+      new SetFormFieldTooltipCommand({
+        pageIndex: 0,
+        annotation: EMAIL_FIELD,
+        tooltip: "Work email",
+      }),
+      doc,
+    );
+    expect(tooltip(await saved(doc), EMAIL_PARENT)).toBe("Work email");
+    history.undo(doc);
+    expect(doc.annotationEdits()).toEqual([]);
+  });
+
+  test("removes a description with null", async () => {
+    const doc = await open(
+      untaggedPdf(NAME_LINE, [nameField(" /TU (Full name)")]),
+    );
+    new HistoryStack().execute(
+      new SetFormFieldTooltipCommand({
+        pageIndex: 0,
+        annotation: NAME_FIELD,
+        tooltip: null,
+      }),
+      doc,
+    );
+    expect(tooltip(await saved(doc), NAME_FIELD)).toBeNull();
+  });
+
+  test("refuses a widget the page does not have", async () => {
+    const doc = await open(taggedPdf());
+    expect(() =>
+      new HistoryStack().execute(
+        new SetFormFieldTooltipCommand({
+          pageIndex: 0,
+          annotation: EMAIL_FIELD,
+          tooltip: "Email",
+        }),
+        doc,
+      ),
+    ).toThrow();
   });
 });

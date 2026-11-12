@@ -40,11 +40,15 @@ interface PageViewProps {
   selectedRunIds: string[];
   selectedImageIds: string[];
   selectedShapeIds: string[];
+  /** The AnnotationBox id of the selected form field widget. */
+  selectedFormFieldId?: string | null;
   /** Run id currently highlighted by the find-bar (yellow). */
   highlightedRunId?: string | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
   onSelectImage: (imageId: string) => void;
   onSelectShape: (shapeId: string, extend: boolean) => void;
+  /** Selects a form field widget by its AnnotationBox id. */
+  onSelectFormField?: (annotationId: string) => void;
   /** Fires when a shape drag completes; dx/dy in raw PDF points. */
   onMoveShape?: (
     pageIndex: number,
@@ -108,10 +112,12 @@ export const PageView = memo(function PageView({
   selectedRunIds,
   selectedImageIds,
   selectedShapeIds,
+  selectedFormFieldId = null,
   highlightedRunId,
   onSelectRun,
   onSelectImage,
   onSelectShape,
+  onSelectFormField,
   onMoveShape,
   onEditRun,
   onSelectRunText,
@@ -381,6 +387,14 @@ export const PageView = memo(function PageView({
             pageHeight={page.height}
             transform={transform}
             scale={cssScale}
+            selected={annotation.id === selectedFormFieldId}
+            onSelect={
+              ACCESSIBILITY_EDITING &&
+              annotation.kind === "widget" &&
+              onSelectFormField
+                ? () => onSelectFormField(annotation.id)
+                : undefined
+            }
           />
         ))}
         {/* Before images and runs: anything drawn over a shape wins its clicks. */}

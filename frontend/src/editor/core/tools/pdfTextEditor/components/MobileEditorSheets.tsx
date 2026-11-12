@@ -27,7 +27,8 @@ export function MobileEditorSheets(props: Omit<SidebarProps, "initialTab">) {
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
-    selection.shapeIds.length > 0;
+    selection.shapeIds.length > 0 ||
+    selection.formFieldId !== null;
 
   useEffect(() => {
     if (sheet === "style" && !controller.hasRunSelection) {
