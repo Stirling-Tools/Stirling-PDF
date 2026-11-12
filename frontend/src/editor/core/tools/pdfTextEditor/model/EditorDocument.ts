@@ -7,13 +7,17 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
+  givenMcids,
   isInlineType,
+  type AddedElement,
+  type CutElement,
   type ReadOnlyReason,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   effectiveLanguage,
   type TextLanguage,
 } from "@editor/tools/pdfTextEditor/model/languageTag";
+import type { AnnotationEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import {
   readPageStructure,
@@ -327,10 +331,16 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([], null, 0);
+    const links = this.fileStructure.links.get(pageIndex) ?? [];
+    const retaggedAs = (key: string) => this.retaggedAs(key);
+    if (!page) return new PageStructure([], null, 0, retaggedAs, links);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
-    return new PageStructure(page.elements, null, page.slotCount, (key) =>
-      this.retaggedAs(key),
+    return new PageStructure(
+      page.elements,
+      null,
+      page.slotCount,
+      retaggedAs,
+      links,
     );
   }
 
@@ -656,9 +666,28 @@ export class EditorDocument {
   }
 
   /**
+   * Every unsaved change to a link annotation, in the form the save pass
+   * takes. A link whose holder's text is no longer on the page is left
+   * unheld, as the save drops a session element with no text (cutEdits,
+   * addedElementEdits).
+   */
+  annotationEdits(): AnnotationEdit[] {
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => {
+      const page = this.pageCache.get(pageIndex);
+      const carried = page && carriedMcids(this.module, page.pagePtr);
+      return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
+        const held = mcid !== undefined && (!carried || carried.has(mcid));
+        if (!held && edit.contents === undefined) return [];
+        return [{ pageIndex, ...edit, ...(held && { mcid }) }];
+      });
+    });
+  }
+
+  /**
    * The page's added elements, each after the added element it reads after,
-   * so it finds that already in the tree. An element whose content was
-   * deleted is left out: there is nothing left for it to tag.
+   * so it finds that already in the tree. Text cut from an element stands
+   * for it, which keeps one whose text was all cut out. An element whose
+   * content was deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -670,17 +699,25 @@ export class EditorDocument {
     );
     if (!page || added.size === 0) return [];
     const content = taggedContentInReadingOrder(page);
-    const carried = new Set(content.map(({ mcid }) => mcid));
+    // The save writes a cut from an added element after every added element,
+    // so content is placed beside the element its text was cut from.
+    const owners = addedOwners(added, structure.cutElements());
+    const ownerOf = (mcid: number) => owners.get(mcid) ?? mcid;
+    const present = new Set(content.map(({ mcid }) => ownerOf(mcid)));
     const edits = new Map<number, StructureEdit>();
     for (const item of content) {
-      const element = added.get(item.mcid);
+      const element = added.get(ownerOf(item.mcid));
       if (!element) continue;
-      added.delete(item.mcid);
+      added.delete(element.mcid);
       const { follows } = element;
+      const preceding = () => {
+        const mcid = precedingTaggedMcid(page, item);
+        return mcid === null ? null : ownerOf(mcid);
+      };
       const after =
-        follows === null || (follows !== undefined && carried.has(follows))
+        follows === null || (follows !== undefined && present.has(follows))
           ? follows
-          : precedingTaggedMcid(page, item);
+          : preceding();
       edits.set(element.mcid, {
         pageIndex,
         mcid: element.mcid,
@@ -885,6 +922,25 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * The added element each cut's text was taken from, through cuts from cuts,
+ * by the cut's MCID and those it gave the text it was cut from. Cuts from
+ * the file's elements are left out.
+ */
+function addedOwners(
+  added: ReadonlyMap<number, AddedElement>,
+  cuts: readonly CutElement[],
+): Map<number, number> {
+  const owners = new Map<number, number>();
+  for (const { mcid, cut } of cuts) {
+    const from = cut.from[0];
+    const owner = added.has(from) ? from : owners.get(from);
+    if (owner === undefined) continue;
+    for (const part of [mcid, ...givenMcids(cut)]) owners.set(part, owner);
+  }
+  return owners;
 }
 
 /**
