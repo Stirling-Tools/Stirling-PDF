@@ -629,13 +629,13 @@ export const FileItem = React.memo(function FileItem({
               {hasOneDriveOrigin && onSaveToOneDrive && (
                 <FileMenuItem
                   disabledReason={oneDriveBlockedReason(updateInOneDriveLabel)}
-                  icon={<Icon name="onedrive" size={16} />}
+                  icon={<Icon name="cloud-upload" size={16} />}
                   onClick={() => onSaveToOneDrive(fileId)}
                   testId="file-save-onedrive"
                 >
                   <span className="file-sidebar-kebab-item-stack">
                     <span>{updateInOneDriveLabel}</span>
-                    {oneDriveName && (
+                    {oneDriveName && oneDriveName !== name && (
                       <span
                         className="file-sidebar-kebab-item-detail"
                         data-testid="file-save-onedrive-target"
