@@ -41,7 +41,8 @@ export interface NewElement {
   cutFrom?: boolean;
 }
 
-interface Placement {
+/** Where a new element joins `parent`'s kids: beside `sibling`, or last when that is null or not among them. */
+export interface Placement {
   parent: number;
   sibling: number | null;
   before: boolean;
@@ -117,7 +118,7 @@ export function textEntry(key: string, value: string | null): string {
  * page's first tagged content; else last in the document's top element, for a
  * page with no tagged content.
  */
-function placement(
+export function placement(
   pdf: RawPdf,
   body: (num: number) => string | null,
   treeRoot: number,
@@ -145,7 +146,7 @@ function placement(
 }
 
 /** The parent's body with `num` among its /K as `place` puts it; at the end when the sibling is not there. */
-function withKid(
+export function withKid(
   pdf: RawPdf,
   parent: string,
   place: Placement,
