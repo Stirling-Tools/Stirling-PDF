@@ -199,6 +199,10 @@ export class TextRun {
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
       documentFontId: this.documentFont?.fontId,
+      scanFamily:
+        this.scanEdit?.override.style?.family ??
+        this.scanEdit?.override.family ??
+        this.scanEdit?.block?.style.family,
       renderMode: this.renderMode || undefined,
       stroke: this.stroke ? { ...this.stroke } : undefined,
       strokeWidth: this.strokeWidth || undefined,

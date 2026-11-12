@@ -1,3 +1,4 @@
+import { scanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
@@ -102,6 +103,22 @@ function cssFontFamilyFor(fontId: string): string {
 function ownFaceFor(fontId: string): string {
   const m = /^pdf:(\d+):/.exec(fontId);
   return m ? `"${embeddedFaceFamily(Number(m[1]))}", ` : "";
+}
+
+// For scanned text the page shows the scan's own lettering, which the matched
+// face approximates and the invisible OCR layer's font does not. The caret is
+// placed by this font's letter widths, so it has to be the matched one.
+function cssFontFamilyForScan(family: string): string {
+  const face = scanFaces().find(
+    (f) => f.family === family || f.bold === family,
+  );
+  const server = serverFontCssFamily(family);
+  const named = `${server ? `"${server}", ` : ""}"${family}", `;
+  if (face?.kind === "serif")
+    return `${named}"Liberation Serif", "Times New Roman", Times, serif`;
+  if (face?.kind === "mono")
+    return `${named}"Liberation Mono", "Courier New", Courier, monospace`;
+  return `${named}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
 }
 
 function cssWeightFor(fontId: string): number {
@@ -451,9 +468,12 @@ export function TextRunOverlay({
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
-  const fontFamily = cssFontFamilyFor(run.fontId);
-  const fontWeight = cssWeightFor(run.fontId);
-  const fontStyle = cssStyleFor(run.fontId);
+  const faceName = run.scanFamily ?? run.fontId;
+  const fontFamily = run.scanFamily
+    ? cssFontFamilyForScan(run.scanFamily)
+    : cssFontFamilyFor(run.fontId);
+  const fontWeight = cssWeightFor(faceName);
+  const fontStyle = cssStyleFor(faceName);
   const fontSizePx = Math.max(4, run.fontSize * scale);
   const font = cssFontShorthand(fontStyle, fontWeight, fontSizePx, fontFamily);
   const { ascent, descent } = useMemo(
