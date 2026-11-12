@@ -177,17 +177,20 @@ export function FontFamilySelect({
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    if (documentFontId) {
+    // The current font is listed even when it cannot be picked: a Select whose
+    // value has no option keeps the last search text and filters by it.
+    const documentItems = [
+      ...(documentFontId
+        ? [{ value: documentFontId, label: familyOf(documentFontId) }]
+        : []),
+      ...(documentFamily
+        ? [{ value: documentFamily, label: documentFamily, disabled: true }]
+        : []),
+    ];
+    if (documentItems.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: [{ value: documentFontId, label: familyOf(documentFontId) }],
-      });
-    } else if (documentFamily) {
-      groups.push({
-        group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: [
-          { value: documentFamily, label: documentFamily, disabled: true },
-        ],
+        items: documentItems,
       });
     }
     groups.push({
