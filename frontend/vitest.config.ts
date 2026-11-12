@@ -27,7 +27,7 @@ const MANTINE_PACKAGES = Object.keys(frontendPackage.dependencies).filter(
 );
 
 const CORE_TOAST_ALIAS = {
-  find: /^@editor\/components\/toast(?:\/(.*))?$/,
+  find: /^@editor\/components\/toast$/,
   replacement: resolve(FRONTEND_ROOT, "src/editor/core/components/toast"),
 };
 
