@@ -860,6 +860,13 @@ function implausibleLine(line: ScanLine): boolean {
   return span < chars * line.height * 0.15;
 }
 
+function extraSpacesBefore(line: ScanLine, w: ScanWord, index: number) {
+  const upTo = w.start + w.text.length - w.text.trimStart().length;
+  const before = line.text.slice(0, upTo);
+  const spaces = before.length - before.trimEnd().length;
+  return Math.max(0, spaces - (index === 0 ? 0 : 1));
+}
+
 const UNSHAPED_SCRIPT =
   /[\u0590-\u08ff\u0d00-\u0d7f\u0f00-\u0fff\ufb1d-\ufdff\ufe70-\ufeff]/u;
 
@@ -1008,6 +1015,7 @@ function renderUprightScanEdit(
         index: wi,
         text: w.text.trim(),
         x: w.x,
+        lead: extraSpacesBefore(l, w, wi),
       })),
     }));
     const pitch = linePitch(state, spacing);
