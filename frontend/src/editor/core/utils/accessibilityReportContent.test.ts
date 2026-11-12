@@ -26,7 +26,7 @@ function issue(overrides: Partial<AccessibilityIssue>): AccessibilityIssue {
 
 describe("formatPageRanges", () => {
   it("collapses consecutive pages into ranges", () => {
-    expect(formatPageRanges([1, 2, 3, 5, 7, 8])).toBe("1–3, 5, 7–8");
+    expect(formatPageRanges([1, 2, 3, 5, 7, 8])).toBe("1-3, 5, 7-8");
     expect(formatPageRanges([])).toBe("");
   });
 });
@@ -44,7 +44,7 @@ describe("describeIssue", () => {
       }),
     );
     expect(content.title).toBe("Content that isn't tagged");
-    expect(content.summary).toBe("Pages 1–3 - 4 instances");
+    expect(content.summary).toBe("Pages 1-3 - 4 instances");
     expect(content.details.map((detail) => detail.label)).toEqual([
       "Rule",
       "Applies to",
@@ -59,12 +59,12 @@ describe("describeIssue", () => {
       issue({ occurrences: 1200, pages: [1, 2, 3, 4], pagesComplete: false }),
     );
     expect(content.summary).toBe(
-      "Pages 1–4 (list may be incomplete) - 1200 instances",
+      "Pages 1-4 (list may be incomplete) - 1200 instances",
     );
     expect(content.details).toContainEqual({
       label: "Pages",
       value:
-        "1–4 (only the first occurrences record a page, so this list may be incomplete)",
+        "1-4 (only the first occurrences record a page, so this list may be incomplete)",
     });
   });
 

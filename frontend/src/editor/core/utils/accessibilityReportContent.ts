@@ -183,7 +183,7 @@ export interface IssueDetail {
 
 export interface IssueContent {
   title: string;
-  /** Where the issue was found and how often, e.g. "Pages 1–3 - 12 instances"; null when unknown. */
+  /** Where the issue was found and how often, e.g. "Pages 1-3 - 12 instances"; null when unknown. */
   summary: string | null;
   explanation: string | null;
   details: IssueDetail[];
