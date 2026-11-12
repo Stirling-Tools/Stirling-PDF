@@ -33,8 +33,8 @@ export function copyBudgetBytes(maxTouchPoints: number): number {
 /**
  * A copy of `form` with files read into memory, in entry order, until their combined size would
  * pass `budgetBytes`. Files past the budget are re-wrapped instead of copied: the WebKit bug
- * thread reports a fresh File over the same bytes uploading correctly, which costs no memory but
- * has not been confirmed here. String fields are kept as they are.
+ * thread reports a fresh File over the same bytes uploading correctly, which costs no memory.
+ * String fields are kept as they are.
  */
 export async function inMemoryFormData(
   form: FormData,
