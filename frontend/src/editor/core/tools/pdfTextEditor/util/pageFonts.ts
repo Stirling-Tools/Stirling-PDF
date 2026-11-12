@@ -1,6 +1,9 @@
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { getCachedFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
-import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  documentFontHandle,
+  familyOf,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { deviceFontCoverage } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 
 // Editability status of a font as the PDF text editor can determine it purely
@@ -46,13 +49,6 @@ export function isDeviceFontId(fontId: string): boolean {
   return fontId.startsWith("device:");
 }
 
-/** Parse the live PDFium font handle out of a `pdf:<ptr>:<family>` fontId. */
-function fontHandleOf(fontId: string): number {
-  if (!fontId.startsWith("pdf:")) return 0;
-  const n = Number(fontId.split(":")[1]);
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-
 /** a-zA-Z0-9 coverage for a font, from the loader-primed cache (no WASM). */
 function coverageFor(fontId: string, status: FontStatus): GlyphCoverage {
   // Base-14 fonts carry the whole standard set - always full, no cmap needed.
@@ -63,7 +59,7 @@ function coverageFor(fontId: string, status: FontStatus): GlyphCoverage {
       ? { known: true, missing: missingAlnumFromCmap(coverage) }
       : { known: false, missing: [] };
   }
-  const handle = fontHandleOf(fontId);
+  const handle = documentFontHandle(fontId);
   if (!handle) return { known: false, missing: [] };
   const cmap = getCachedFontGlyphMap(handle);
   if (!cmap || cmap.size === 0) return { known: false, missing: [] };

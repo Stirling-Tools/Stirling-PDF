@@ -337,6 +337,20 @@ describe("useSelectionActions font changes", () => {
     ).toBeNull();
     expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
   });
+
+  it("puts text back in the PDF's own font without fetching anything", async () => {
+    const { store, dispatch } = fakeStore(
+      [run("a", "device:Acme Sans")],
+      ["a"],
+    );
+
+    expect(
+      await actionsFor(store).changeFontFamily("pdf:7:Garamond"),
+    ).toBeNull();
+
+    expect(get).not.toHaveBeenCalled();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:7:Garamond"]);
+  });
 });
 
 describe("useSelectionActions on unfitted scanned text", () => {
