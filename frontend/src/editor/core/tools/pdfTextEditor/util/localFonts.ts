@@ -1,7 +1,17 @@
-// Local Font Access API wrapper. Chromium-only and permission-gated, so every
-// entry point degrades to null instead of throwing.
+// The fonts installed on this device. The source may be missing or refuse, so
+// every entry point degrades to null instead of throwing.
 
-import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
+import {
+  embeddingForbidden,
+  fontFace,
+} from "@editor/tools/pdfTextEditor/util/fontCollection";
+import { localFontQuery } from "@editor/tools/pdfTextEditor/util/localFontSource";
+
+export {
+  localFontPermission,
+  watchLocalFontPermission,
+  type LocalFontPermission,
+} from "@editor/tools/pdfTextEditor/util/localFontSource";
 
 export interface LocalFont {
   family: string;
@@ -13,16 +23,6 @@ export interface LocalFont {
 export interface LocalFontFamily {
   family: string;
   styles: string[];
-}
-
-type QueryLocalFonts = () => Promise<unknown[]>;
-
-function localFontQuery(): QueryLocalFonts | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { queryLocalFonts?: QueryLocalFonts };
-  if (typeof w.queryLocalFonts !== "function") return null;
-  // Bound: Chrome throws "Illegal invocation" when the method is detached.
-  return w.queryLocalFonts.bind(w);
 }
 
 /** Feature detection only - never prompts and has no side effects. */
@@ -93,47 +93,6 @@ export async function retryLocalFonts(): Promise<LocalFont[] | null> {
   return listLocalFonts();
 }
 
-export type LocalFontPermission =
-  | "granted"
-  | "prompt"
-  | "denied"
-  | "unsupported";
-
-async function permissionStatus(): Promise<PermissionStatus | null> {
-  try {
-    return await navigator.permissions.query({
-      name: "local-fonts" as PermissionName,
-    });
-  } catch {
-    return null;
-  }
-}
-
-export async function localFontPermission(): Promise<LocalFontPermission> {
-  if (!isLocalFontAccessSupported()) return "unsupported";
-  return (await permissionStatus())?.state ?? "prompt";
-}
-
-export function watchLocalFontPermission(
-  listener: (permission: LocalFontPermission) => void,
-): () => void {
-  if (!isLocalFontAccessSupported()) return () => {};
-  let status: PermissionStatus | null = null;
-  let stopped = false;
-  const onChange = () => {
-    if (status) listener(status.state);
-  };
-  void permissionStatus().then((s) => {
-    if (stopped || !s) return;
-    status = s;
-    s.addEventListener("change", onChange);
-  });
-  return () => {
-    stopped = true;
-    status?.removeEventListener("change", onChange);
-  };
-}
-
 /**
  * The faces {@link listLocalFonts} has already resolved, or null.
  *
@@ -160,6 +119,7 @@ export function resetLocalFontsCache(): void {
   bytesByFamily.clear();
   faceKeyByFamily.clear();
   bytesPending.clear();
+  embeddingForbiddenFamilies.clear();
 }
 
 function compareNames(a: string, b: string): number {
@@ -345,6 +305,15 @@ async function readFaceBytes(source: unknown): Promise<Uint8Array | null> {
 const bytesByFamily = new Map<string, Uint8Array>();
 const faceKeyByFamily = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
+const embeddingForbiddenFamilies = new Set<string>();
+
+/**
+ * Whether {@link loadLocalFontBytes} refused `family` because its licence
+ * forbids embedding. Only known once a load for that family has settled.
+ */
+export function isLocalFontEmbeddingForbidden(family: string): boolean {
+  return embeddingForbiddenFamilies.has(normaliseName(family));
+}
 
 export function registerFontBytes(family: string, bytes: Uint8Array): void {
   const key = normaliseName(family);
@@ -362,7 +331,8 @@ export function getLocalFaceKey(family: string): string | null {
 }
 
 // The font file bytes behind a family name, cached for the session. Null when
-// unsupported, denied, unmatched, or unreadable - never throws.
+// unsupported, denied, unmatched, unreadable, or not licensed for embedding -
+// never throws.
 export async function loadLocalFontBytes(
   family: string,
 ): Promise<Uint8Array | null> {
@@ -380,6 +350,10 @@ export async function loadLocalFontBytes(
     const entry = faceEntries.find((candidate) => candidate.font === picked);
     const file = entry ? await readFaceBytes(entry.source) : null;
     const bytes = file ? fontFace(file, picked.postscriptName) : null;
+    if (bytes && embeddingForbidden(bytes)) {
+      embeddingForbiddenFamilies.add(key);
+      return null;
+    }
     if (bytes) {
       bytesByFamily.set(key, bytes);
       faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);

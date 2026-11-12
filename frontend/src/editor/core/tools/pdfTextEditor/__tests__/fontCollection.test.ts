@@ -1,12 +1,18 @@
 // @vitest-environment node
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import {
+  embeddingForbidden,
   facePostscriptNames,
   fontFace,
 } from "@editor/tools/pdfTextEditor/util/fontCollection";
 import { parseFontMetrics } from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import {
+  resetLocalFontsCache,
+  isLocalFontEmbeddingForbidden,
+  loadLocalFontBytes,
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 
 const FONTS = path.join(
   import.meta.dirname,
@@ -59,5 +65,75 @@ describe("fontFace", () => {
   test("gives up on a name the collection does not hold", async () => {
     const ttc = collect([await read("Carlito-Regular.ttf")]);
     expect(fontFace(ttc, "Calibri")).toBeNull();
+  });
+});
+
+const OS2 = 0x4f532f32;
+
+function withFsType(font: Uint8Array, fsType: number): Uint8Array {
+  const out = font.slice();
+  const dv = new DataView(out.buffer);
+  const count = dv.getUint16(4);
+  for (let t = 0; t < count; t++) {
+    const rec = 12 + t * 16;
+    if (dv.getUint32(rec) === OS2)
+      dv.setUint16(dv.getUint32(rec + 8) + 8, fsType);
+  }
+  return out;
+}
+
+describe("embeddingForbidden", () => {
+  test.each([
+    ["installable", 0x0000, false],
+    ["preview and print", 0x0004, false],
+    ["editable", 0x0008, false],
+    ["editable, no subsetting", 0x0108, false],
+    ["restricted licence", 0x0002, true],
+    ["bitmap only", 0x0208, true],
+  ])("%s", async (_label, fsType, forbidden) => {
+    const font = withFsType(await read("Carlito-Regular.ttf"), fsType);
+    expect(embeddingForbidden(font)).toBe(forbidden);
+  });
+
+  test("a file with no OS/2 table declares no restriction", () => {
+    expect(embeddingForbidden(new Uint8Array([0, 1, 0, 0, 0, 0]))).toBe(false);
+  });
+});
+
+describe("loadLocalFontBytes", () => {
+  type Query = () => Promise<unknown[]>;
+  const scope = globalThis as unknown as {
+    window?: { queryLocalFonts?: Query };
+  };
+
+  function installFont(bytes: Uint8Array): void {
+    scope.window = {
+      queryLocalFonts: async () => [
+        {
+          family: "Carlito",
+          fullName: "Carlito",
+          style: "Regular",
+          postscriptName: "Carlito",
+          blob: async () => new Blob([bytes.slice()]),
+        },
+      ],
+    };
+  }
+
+  afterEach(() => {
+    resetLocalFontsCache();
+    delete scope.window;
+  });
+
+  test("hands over a font whose licence allows embedding", async () => {
+    installFont(withFsType(await read("Carlito-Regular.ttf"), 0x0008));
+    expect(await loadLocalFontBytes("Carlito")).not.toBeNull();
+    expect(isLocalFontEmbeddingForbidden("Carlito")).toBe(false);
+  });
+
+  test("refuses a font whose licence forbids embedding", async () => {
+    installFont(withFsType(await read("Carlito-Regular.ttf"), 0x0002));
+    expect(await loadLocalFontBytes("Carlito")).toBeNull();
+    expect(isLocalFontEmbeddingForbidden("Carlito")).toBe(true);
   });
 });

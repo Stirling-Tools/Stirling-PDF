@@ -22,6 +22,7 @@ import {
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { loadedExternalFonts } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import { serverFaceFor } from "@editor/tools/pdfTextEditor/util/serverFonts";
+import { isLocalFontEmbeddingForbidden } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -41,7 +42,10 @@ interface SelectedRun {
   fill: { r: number; g: number; b: number; a: number };
 }
 
-export type FontPickFailure = "serverFontFailed" | "noGlyphs";
+export type FontPickFailure =
+  | "serverFontFailed"
+  | "embeddingForbidden"
+  | "noGlyphs";
 
 async function serverFontUnavailable(family: string): Promise<boolean> {
   return (
@@ -55,6 +59,7 @@ async function fontPickFailure(
 ): Promise<FontPickFailure | null> {
   if (nearestStandardFont(family) === family) return null;
   if (await serverFontUnavailable(family)) return "serverFontFailed";
+  if (isLocalFontEmbeddingForbidden(family)) return "embeddingForbidden";
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
@@ -252,6 +257,8 @@ export function useSelectionActions(store: EditorStore) {
     const ready: typeof targets = [];
     for (const target of targets) {
       if (target.device && (await serverFontUnavailable(target.family)))
+        continue;
+      if (target.device && isLocalFontEmbeddingForbidden(target.family))
         continue;
       ready.push(target);
     }

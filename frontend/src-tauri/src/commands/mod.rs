@@ -1,5 +1,6 @@
 pub mod backend;
 pub mod files;
+pub mod fonts;
 pub mod file_drop;
 pub mod connection;
 pub mod auth;

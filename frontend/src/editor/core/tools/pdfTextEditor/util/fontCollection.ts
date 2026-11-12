@@ -1,5 +1,10 @@
 const TTCF = 0x74746366;
 const NAME = 0x6e616d65;
+const OS2 = 0x4f532f32;
+const FS_TYPE_OFFSET = 8;
+const FS_TYPE_USAGE_MASK = 0x000f;
+const FS_TYPE_RESTRICTED = 0x0002;
+const FS_TYPE_BITMAP_ONLY = 0x0200;
 
 function isCollection(dv: DataView): boolean {
   return dv.byteLength >= 12 && dv.getUint32(0) === TTCF;
@@ -106,5 +111,27 @@ export function facePostscriptNames(bytes: Uint8Array): string[] {
     return offsets.map((o) => readPostscriptName(dv, o) ?? "");
   } catch {
     return [];
+  }
+}
+
+/**
+ * Whether a single face's licence forbids embedding its outlines in a
+ * document, per the OS/2 `fsType` field: Restricted Licence, or bitmap-only.
+ * Must stay in sync with `EditorFontReader` on the server. A face with no
+ * readable OS/2 table declares no restriction. Takes one face, not a
+ * collection.
+ */
+export function embeddingForbidden(bytes: Uint8Array): boolean {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  try {
+    const os2 = tableRecords(dv, 0).find((t) => t.tag === OS2);
+    if (!os2 || os2.offset + FS_TYPE_OFFSET + 2 > dv.byteLength) return false;
+    const fsType = dv.getUint16(os2.offset + FS_TYPE_OFFSET);
+    return (
+      (fsType & FS_TYPE_USAGE_MASK) === FS_TYPE_RESTRICTED ||
+      (fsType & FS_TYPE_BITMAP_ONLY) !== 0
+    );
+  } catch {
+    return false;
   }
 }

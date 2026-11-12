@@ -272,6 +272,8 @@ pub fn run() {
       get_update_mode,
       set_update_mode,
       restart_app,
+      commands::fonts::list_system_fonts,
+      commands::fonts::read_system_font,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
