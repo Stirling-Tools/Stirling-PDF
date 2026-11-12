@@ -4805,6 +4805,15 @@ uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
 
+[fileSidebar.clearLibrary]
+body_one = "Remove 1 file from your library? This clears it from Stirling PDF only, not from your computer or the cloud."
+body_other = "Remove {{count}} files from your library? This clears them from Stirling PDF only, not from your computer or the cloud."
+button = "Clear library"
+confirm = "Clear library"
+error = "Could not clear. Try again."
+kept = "Files in folders and files you have open are kept ({{kept}})."
+title = "Clear PDF library?"
+
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
 dataLost = "Data lost"
@@ -4832,13 +4841,6 @@ illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
 label = "File name"
 save = "Rename"
 title = "Rename file"
-
-[fileSidebar.selection]
-cancel = "Cancel selection"
-count = "{{count}} selected"
-delete = "Delete selected"
-selectAll = "Select all"
-start = "Select files"
 
 [filesPage]
 addedToLibrary = "Added to Stirling library"

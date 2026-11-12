@@ -11,7 +11,6 @@ import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
-import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
@@ -48,6 +47,7 @@ import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServe
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { ClearLibraryDialog } from "@editor/components/shared/ClearLibraryDialog";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -83,16 +83,6 @@ const NO_POLICIES: never[] = [];
 
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
 const BULK_ADD_INDICATOR_MIN = 8;
-
-/** A cloud copy this user may delete, which turns a delete into a scope choice. */
-function hasDeletableCloudCopy(
-  stub: StirlingFileStub,
-): stub is StirlingFileStub & { remoteStorageId: number } {
-  return (
-    typeof stub.remoteStorageId === "number" &&
-    stub.remoteOwnedByCurrentUser === true
-  );
-}
 
 export interface FileSidebarProps {
   onOpenSettings?: () => void;
@@ -211,16 +201,6 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
-interface LibrarySelection {
-  active: boolean;
-  selectedCount: number;
-  onStart: () => void;
-  onSelectAll: () => void;
-  onClear: () => void;
-  onDelete: () => void;
-  onCancel: () => void;
-}
-
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
@@ -228,64 +208,8 @@ interface LibraryHeaderProps {
   onGoogleDrive: () => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
-  selection: LibrarySelection;
-}
-
-function SelectionHeader({
-  scrolled,
-  total,
-  selection,
-}: {
-  scrolled: boolean;
-  total: number;
-  selection: LibrarySelection;
-}) {
-  const { t } = useTranslation();
-  const { selectedCount } = selection;
-  const allSelected = total > 0 && selectedCount === total;
-  return (
-    <div
-      className="file-sidebar-section-header"
-      data-scrolled={scrolled || undefined}
-      data-testid="file-sidebar-selection-header"
-    >
-      <Checkbox
-        checked={allSelected}
-        indeterminate={selectedCount > 0 && !allSelected}
-        onChange={allSelected ? selection.onClear : selection.onSelectAll}
-        aria-label={t("fileSidebar.selection.selectAll", "Select all")}
-        data-testid="file-sidebar-select-all"
-      />
-      <span className="file-sidebar-section-label">
-        {t("fileSidebar.selection.count", "{{count}} selected", {
-          count: selectedCount,
-        })}
-      </span>
-      <div className="file-sidebar-selection-actions">
-        <ActionIcon
-          variant="quiet"
-          className="file-sidebar-section-btn"
-          onClick={selection.onDelete}
-          disabled={selectedCount === 0}
-          title={t("fileSidebar.selection.delete", "Delete selected")}
-          aria-label={t("fileSidebar.selection.delete", "Delete selected")}
-          data-testid="file-sidebar-delete-selected"
-        >
-          <Icon name="trash" size={"1rem"} />
-        </ActionIcon>
-        <ActionIcon
-          variant="quiet"
-          className="file-sidebar-section-btn"
-          onClick={selection.onCancel}
-          title={t("fileSidebar.selection.cancel", "Cancel selection")}
-          aria-label={t("fileSidebar.selection.cancel", "Cancel selection")}
-          data-testid="file-sidebar-cancel-selection"
-        >
-          <Icon name="x" size={"1rem"} />
-        </ActionIcon>
-      </div>
-    </div>
-  );
+  /** Absent when nothing is clearable, which hides the button. */
+  onClearLibrary?: () => void;
 }
 
 function LibraryHeader({
@@ -295,18 +219,9 @@ function LibraryHeader({
   onGoogleDrive,
   onAddFiles,
   onOpenFilesPage,
-  selection,
+  onClearLibrary,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
-  if (selection.active) {
-    return (
-      <SelectionHeader
-        scrolled={scrolled}
-        total={stubs.length}
-        selection={selection}
-      />
-    );
-  }
   return (
     <div
       className="file-sidebar-section-header"
@@ -339,16 +254,16 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {stubs.length > 0 && (
+      {onClearLibrary && (
         <ActionIcon
           variant="quiet"
           className="file-sidebar-section-btn"
-          onClick={selection.onStart}
-          title={t("fileSidebar.selection.start", "Select files")}
-          aria-label={t("fileSidebar.selection.start", "Select files")}
-          data-testid="file-sidebar-start-selection"
+          onClick={onClearLibrary}
+          title={t("fileSidebar.clearLibrary.button", "Clear library")}
+          aria-label={t("fileSidebar.clearLibrary.button", "Clear library")}
+          data-testid="file-sidebar-clear-library"
         >
-          <Icon name="list-checks" size={"1rem"} />
+          <Icon name="trash" size={"1rem"} />
         </ActionIcon>
       )}
       {isGoogleDriveEnabled && (
@@ -557,14 +472,14 @@ interface FileLibrarySectionProps extends Omit<
   isGoogleDriveEnabled: boolean;
   onGoogleDrive: () => void;
   onAddFiles: () => void;
-  selection: LibrarySelection;
+  onClearLibrary?: () => void;
 }
 
 function FileLibrarySection({
   isGoogleDriveEnabled,
   onGoogleDrive,
   onAddFiles,
-  selection,
+  onClearLibrary,
   ...list
 }: FileLibrarySectionProps) {
   const { scrolled, scrollRef } = useIsScrolled();
@@ -577,7 +492,7 @@ function FileLibrarySection({
         onGoogleDrive={onGoogleDrive}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
-        selection={selection}
+        onClearLibrary={onClearLibrary}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />
@@ -649,15 +564,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     >(null);
     const [versionHistoryTarget, setVersionHistoryTarget] =
       useState<StirlingFileStub | null>(null);
-    // Files awaiting the delete dialog: a cloud-backed kebab delete (local-only
-    // files delete immediately) or a bulk selection, which always confirms.
-    const [deleteTargets, setDeleteTargets] = useState<
-      StirlingFileStub[] | null
-    >(null);
-    const [selecting, setSelecting] = useState(false);
-    const [bulkSelectedIds, setBulkSelectedIds] = useState<ReadonlySet<FileId>>(
-      () => new Set(),
+    // Kebab "Delete" target when the file is on the cloud; drives the
+    // local/cloud/both choice dialog. Local-only files delete immediately.
+    const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
     );
+    const [clearLibraryOpen, setClearLibraryOpen] = useState(false);
     const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
       null,
     );
@@ -726,8 +638,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const handleSidebarDelete = useCallback(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
-        if (stub && hasDeletableCloudCopy(stub)) {
-          setDeleteTargets([stub]);
+        const hasCloud =
+          !!stub &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true;
+        if (hasCloud && stub) {
+          setDeleteTarget(stub);
           return;
         }
         // Its superseded versions go too - see orphanedAncestorIds.
@@ -738,28 +654,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs, fileActions, refreshStubs],
     );
 
-    const exitSelection = useCallback(() => {
-      setSelecting(false);
-      setBulkSelectedIds(new Set());
-    }, []);
-
     const handleConfirmSidebarDelete = useCallback(
       async (scope: DeleteScope) => {
-        const stubs = deleteTargets ?? [];
-        if (stubs.length === 0) return;
-        const cloudStubs = stubs.filter(hasDeletableCloudCopy);
-        if (scope === "cloud" || scope === "everywhere") {
-          await Promise.all(
-            cloudStubs.map((s) => deleteServerFile(s.remoteStorageId)),
-          );
+        const stub = deleteTarget;
+        if (!stub) return;
+        if (
+          (scope === "cloud" || scope === "everywhere") &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true
+        ) {
+          await deleteServerFile(stub.remoteStorageId);
         }
         if (scope === "device" || scope === "everywhere") {
-          const ids = stubs.map((s) => s.id);
-          const orphans = await fileStorage.orphanedAncestorIds(ids);
-          await fileActions.removeFiles([...ids, ...orphans], true);
+          const orphans = await fileStorage.orphanedAncestorIds([stub.id]);
+          await fileActions.removeFiles([stub.id, ...orphans], true);
         } else if (scope === "cloud") {
-          // Local copies kept - drop the dead remote pointers so the cloud badges
-          // clear (the sidebar doesn't reconcile with the server itself).
+          // Local copy kept - drop the dead remote pointer so the cloud badge
+          // clears (the sidebar doesn't reconcile with the server itself).
           const cleared = {
             remoteStorageId: undefined,
             remoteStorageUpdatedAt: undefined,
@@ -767,52 +678,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             remoteSharedViaLink: false,
             remoteHasShareLinks: undefined,
           };
-          for (const stub of cloudStubs) {
-            fileActions.updateStirlingFileStub(stub.id, cleared);
-            await fileStorage.updateFileMetadata(stub.id, cleared);
-          }
+          fileActions.updateStirlingFileStub(stub.id, cleared);
+          await fileStorage.updateFileMetadata(stub.id, cleared);
         }
-        setDeleteTargets(null);
-        exitSelection();
+        setDeleteTarget(null);
         await refreshStubs();
       },
-      [deleteTargets, exitSelection, fileActions, refreshStubs],
+      [deleteTarget, fileActions, refreshStubs],
     );
-
-    const toggleBulkSelected = useCallback((fileId: FileId) => {
-      setBulkSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (!next.delete(fileId)) next.add(fileId);
-        return next;
-      });
-    }, []);
-
-    // Ids are kept as clicked; files deleted elsewhere drop out here, so the
-    // count and the delete never include a row that has gone.
-    const bulkSelectedStubs = useMemo(
-      () => allFileStubs.filter((s) => bulkSelectedIds.has(s.id)),
-      [allFileStubs, bulkSelectedIds],
-    );
-
-    const librarySelection: LibrarySelection = {
-      active: selecting,
-      selectedCount: bulkSelectedStubs.length,
-      onStart: () => setSelecting(true),
-      onSelectAll: () =>
-        setBulkSelectedIds(new Set(allFileStubs.map((s) => s.id))),
-      onClear: () => setBulkSelectedIds(new Set()),
-      onDelete: () => setDeleteTargets(bulkSelectedStubs),
-      onCancel: exitSelection,
-    };
-
-    useEffect(() => {
-      if (!selecting || deleteTargets) return;
-      const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") exitSelection();
-      };
-      window.addEventListener("keydown", onKeyDown);
-      return () => window.removeEventListener("keydown", onKeyDown);
-    }, [selecting, deleteTargets, exitSelection]);
 
     const handleSaveToCloud = useCallback(
       (fileId: FileId) => {
@@ -966,6 +839,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
+    // "Clear library" spares anything filed in a folder, and anything open, so it
+    // never closes the document being worked on. It only removes the library's
+    // own copies: cloud files stay on the server and nothing on disk is touched.
+    const clearableStubs = useMemo(
+      () =>
+        allFileStubs.filter(
+          (s) => s.folderId == null && !workbenchIds.has(s.id as string),
+        ),
+      [allFileStubs, workbenchIds],
+    );
+    const handleConfirmClearLibrary = useCallback(async () => {
+      const ids = clearableStubs.map((s) => s.id);
+      const orphans = await fileStorage.orphanedAncestorIds(ids);
+      await fileActions.removeFiles([...ids, ...orphans], true);
+      await refreshStubs();
+    }, [clearableStubs, fileActions, refreshStubs]);
+
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
       (id: string, open: boolean) =>
@@ -1226,13 +1116,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           name={stub.name}
           size={stub.size}
           lastModified={stub.lastModified}
-          isSelected={selecting ? bulkSelectedIds.has(stub.id) : isInWorkbench}
-          selectionMode={selecting}
+          isSelected={isInWorkbench}
           isActive={isActive}
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
           isEncrypted={isEncryptedFile}
-          onClick={selecting ? toggleBulkSelected : handleFileClick}
+          onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
           isDamaged={isDamaged}
@@ -1337,7 +1226,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   onGoogleDrive={handleGoogleDriveClick}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
-                  selection={librarySelection}
+                  onClearLibrary={
+                    clearableStubs.length > 0
+                      ? () => setClearLibraryOpen(true)
+                      : undefined
+                  }
                 />
               )}
             </div>
@@ -1366,10 +1259,18 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         />
 
         <DeleteFilesDialog
-          opened={Boolean(deleteTargets?.length)}
-          files={deleteTargets ?? []}
-          onClose={() => setDeleteTargets(null)}
+          opened={Boolean(deleteTarget)}
+          files={deleteTarget ? [deleteTarget] : []}
+          onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
+        />
+
+        <ClearLibraryDialog
+          opened={clearLibraryOpen}
+          clearCount={clearableStubs.length}
+          keptCount={allFileStubs.length - clearableStubs.length}
+          onClose={() => setClearLibraryOpen(false)}
+          onConfirm={handleConfirmClearLibrary}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

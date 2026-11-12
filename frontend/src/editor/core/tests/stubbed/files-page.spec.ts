@@ -1501,4 +1501,51 @@ test.describe("Files page", () => {
       expect(await cards.count()).toBeLessThan(COUNT / 2);
     });
   });
+
+  test.describe("Clear library", () => {
+    test.use({ autoGoto: false });
+
+    test("clears loose files but keeps foldered ones and never touches the cloud", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "loose", name: "loose.pdf", remoteStorageId: null },
+          { id: "cloudy", name: "cloudy.pdf", remoteStorageId: 7 },
+          {
+            id: "filed",
+            name: "filed.pdf",
+            remoteStorageId: null,
+            folderId: "vf-1",
+          },
+        ],
+        [{ id: "vf-1", name: "Kept" }],
+      );
+      const serverDeletes: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "DELETE" && req.url().includes("/api/v1/storage"))
+          serverDeletes.push(req.url());
+      });
+
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(3, { timeout: 10_000 });
+
+      await page.getByTestId("file-sidebar-clear-library").click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toContainText("Remove 2 files from your library?");
+      await expect(dialog).toContainText("(1)");
+      await page.getByTestId("file-sidebar-clear-library-confirm").click();
+
+      await expect(rows).toHaveCount(1);
+      await expect(rows.first()).toContainText("filed.pdf");
+      // Only the foldered file is left, so there is nothing more to clear.
+      await expect(
+        page.getByTestId("file-sidebar-clear-library"),
+      ).toHaveCount(0);
+      expect(serverDeletes).toEqual([]);
+    });
+  });
 });
