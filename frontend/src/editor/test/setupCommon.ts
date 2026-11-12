@@ -2,6 +2,15 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import "@editor/utils/engineShims";
 
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+  }),
+  isTauri: () => false,
+}));
+
 // Component tests do not start the bundled desktop backend. Provide the
 // stable local endpoint that the production service would expose so unrelated
 // UI tests do not fail while trying to build API URLs.
