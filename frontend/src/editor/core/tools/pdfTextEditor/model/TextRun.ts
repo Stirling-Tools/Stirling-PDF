@@ -104,6 +104,11 @@ export class TextRun {
   // Pointer to the LATEST background cover-rect emitted on the page for this
   // run.
   coverRectPtr: number;
+  /**
+   * The PDF's own font this run was drawn in before its family was changed,
+   * so the change can be taken back. Null while the run is still in it.
+   */
+  documentFont: { fontId: string; subset: boolean } | null;
   /** Word-level edit state once an invisible OCR run over a scan is edited. */
   scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
@@ -166,6 +171,7 @@ export class TextRun {
     this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
     this.scanEdit = null;
+    this.documentFont = null;
     this.locked = init.locked ?? false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
@@ -192,6 +198,7 @@ export class TextRun {
       fontSize: this.fontSize,
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
+      documentFontId: this.documentFont?.fontId,
       renderMode: this.renderMode || undefined,
       stroke: this.stroke ? { ...this.stroke } : undefined,
       strokeWidth: this.strokeWidth || undefined,
