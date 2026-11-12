@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import path from "node:path";
 import {
   afterAll,
   afterEach,
@@ -439,5 +440,103 @@ describe("describing form fields", () => {
         doc,
       ),
     ).toThrow();
+  });
+});
+
+describe("form fields in a word processor's tagged export", () => {
+  const SAMPLE = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/tagged-sample.pdf",
+  );
+  const PAGE = 2;
+
+  async function sampleBytes(): Promise<Uint8Array> {
+    return new Uint8Array(await readFile(SAMPLE));
+  }
+
+  async function openSample(): Promise<EditorDocument> {
+    const doc = await EditorDocument.open(await sampleBytes());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(PAGE));
+    return doc;
+  }
+
+  /** The field each of the page's widgets belongs to, in /Annots order. */
+  function fields(pdf: RawPdf, widgets: readonly number[]): number[] {
+    return widgets.map(
+      (widget) => pdf.dictRef(pdf.objectBody(widget)!, "Parent") ?? widget,
+    );
+  }
+
+  test("reads the field its Form holds, and the two nothing holds", async () => {
+    const bytes = await sampleBytes();
+    const widgets = (await readFileStructure(bytes))!.widgets.get(PAGE)!;
+    expect(
+      widgets.map(({ fieldType, tooltip, holder }) => ({
+        fieldType,
+        tooltip,
+        held: holder !== null,
+      })),
+    ).toEqual([
+      { fieldType: "Tx", tooltip: "Reviewer name", held: true },
+      { fieldType: "Tx", tooltip: null, held: false },
+      { fieldType: "Btn", tooltip: null, held: false },
+    ]);
+    const pdf = (await RawPdf.parse(bytes))!;
+    const form = pdf.objectBody(Number(widgets[0].holder))!;
+    expect(pdf.dictName(form, "S")).toBe("Form");
+  });
+
+  test("finds each outline PDFium draws as the widget at its place in /Annots", async () => {
+    const doc = await openSample();
+    const boxes = doc.page(PAGE).annotations;
+    expect(boxes.map((box) => box.kind)).toEqual([
+      "widget",
+      "widget",
+      "widget",
+    ]);
+    for (const box of boxes) {
+      const field = formFieldAccessibility(doc, PAGE, box.index);
+      if (field.kind !== "editable") throw new Error(`no widget ${box.index}`);
+      expect(field.widget.rect).toEqual(box.rect);
+    }
+    expect(formFieldAccessibility(doc, PAGE, 0)).toMatchObject({
+      tagged: true,
+      description: "Reviewer name",
+    });
+  });
+
+  test("tags each untagged field after its label, named by it, and leaves the Form the file has", async () => {
+    const doc = await openSample();
+    expect(hasUntaggedContent(doc, PAGE)).toBe(true);
+    const widgets = doc
+      .structure(PAGE)
+      .formFields.all()
+      .map((w) => w.annotation);
+    new HistoryStack().execute(
+      new TagPageContentCommand({ pageIndex: PAGE }),
+      doc,
+    );
+    expect(hasUntaggedContent(doc, PAGE)).toBe(false);
+
+    const pdf = await saved(doc);
+    expect(kidsOf(pdf, documentElement(pdf)).slice(-7)).toEqual([
+      "/P",
+      "/P",
+      "/Form",
+      "/P",
+      "/Form",
+      "/P",
+      "/Form",
+    ]);
+    expect(fields(pdf, widgets).map((field) => tooltip(pdf, field))).toEqual([
+      "Reviewer name",
+      "Department",
+      "Approved for release",
+    ]);
+    const structure = (await readFileStructure(await sampleBytes()))!;
+    expect(holder(pdf, widgets[0])).toBe(
+      Number(structure.widgets.get(PAGE)![0].holder),
+    );
   });
 });
