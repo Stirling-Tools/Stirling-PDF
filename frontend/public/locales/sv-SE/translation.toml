@@ -1516,7 +1516,7 @@ placeholder = "Hittas automatiskt från utfärdaren"
 
 [admin.settings.mcp.mode]
 apikey = "API-nyckel (Stirling-nyckel per användare)"
-description = "OAuth behöver en extern IdP. API-nyckel använder en Stirling-API-nyckel per användare (X-API-KEY) – enklast för självhosting."
+description = "OAuth behöver en extern IdP. API-nyckel använder en Stirling-API-nyckel per användare (X-API-KEY); det är enklast för självhosting."
 label = "Autentiseringsläge"
 oauth = "OAuth 2.1 (extern IdP)"
 
@@ -6540,7 +6540,7 @@ roleUser = "Användare"
 title = "Säkerhetskontroll"
 
 [onboarding.serverLicense]
-freeBody = "Vår <strong>Open-Core</strong>-licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis per server. För att skala utan avbrott och få tidig åtkomst till vårt nya <strong>PDF-textredigeringsverktyg</strong> rekommenderar vi Stirling Server-planen - full redigering och <strong>obegränsade platser</strong> för $99/server/mån."
+freeBody = "Vår <strong>Open-Core</strong>-licens omfattar <strong>OAuth SSO</strong> och upp till <strong>{{freeTierLimit}}</strong> användare utan kostnad. För att skala utan avbrott rekommenderar vi Stirling Team-abonnemanget: <strong>100 användare</strong> för $99/mån."
 freeTitle = "Team-abonnemang"
 overLimitBody = "Vår licens tillåter upp till <strong>{{freeTierLimit}}</strong> användare gratis. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-användare. För att fortsätta utan avbrott, uppgradera till Stirling Team-abonnemanget – <strong>100 användare</strong>, PDF-textredigering och full administratörskontroll för $99/mån."
 overLimitTitle = "Team-abonnemang krävs"
@@ -6944,8 +6944,8 @@ title = "Senaste debiterbara aktivitet"
 [payg.cap]
 amount = "Beloppsgräns"
 custom = "Anpassad"
-docsEstimate = "≈ {{docs}} bearbetade PDF:er per månad"
-docsRate = "vid {{rate}} per PDF"
+docsEstimate = "≈ {{docs}} krediter per månad"
+docsRate = "vid {{rate}} per kredit"
 noCapDesc = "Användning debiteras utan övre gräns. Du kan återaktivera en gräns när som helst."
 noCapLabel = "Ingen gräns"
 noneShort = "Ingen gräns"
