@@ -2,6 +2,22 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import "@editor/utils/engineShims";
 
+// Component tests do not start the bundled desktop backend. Provide the
+// stable local endpoint that the production service would expose so unrelated
+// UI tests do not fail while trying to build API URLs.
+vi.mock("@editor/services/tauriBackendService", () => ({
+  tauriBackendService: {
+    isOnline: true,
+    isBackendRunning: () => true,
+    getBackendStatus: () => "healthy",
+    getBackendPort: () => 8080,
+    getBackendUrl: () => "http://localhost:8080",
+    subscribeToStatus: () => () => {},
+    checkBackendHealth: vi.fn().mockResolvedValue(true),
+    initializeExternalBackend: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 if (typeof HTMLCanvasElement !== "undefined") {
   Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
     value: vi.fn(() => null),
