@@ -1,4 +1,4 @@
-import type { i18n as I18n, TFunction } from "i18next";
+import type { TFunction } from "i18next";
 import {
   PdfiumDocument,
   StandardFonts,
@@ -12,7 +12,6 @@ import {
 import { wrapText } from "@editor/services/reportPdf/reportText";
 import {
   LETTER_PAGE,
-  LINE_HEIGHT,
   ReportWriter,
   type ReportLayout,
   type TextStyle,
@@ -69,7 +68,8 @@ const TYPE = {
 
 const SPACE = { xxs: 2, xs: 3, sm: 4, md: 8, lg: 14, xl: 20 } as const;
 
-const lineHeight = (size: number) => size * LINE_HEIGHT;
+// Must match ReportWriter's line height, which moves y by this much per line it draws.
+const lineHeight = (size: number) => size * 1.35;
 
 const INDENT = 14;
 const DETAIL_LABEL_WIDTH = 84;
@@ -567,32 +567,21 @@ function drawFailedEntry(
   }
 }
 
-/** Every string the report can draw, so the fonts its characters need are loaded up front. */
-function reportText(i18n: I18n, entry: AccessibilityReportEntry): string {
-  const strings: unknown = i18n.getResourceBundle(
-    i18n.language,
-    "translation",
-  )?.checkAccessibility;
-  return JSON.stringify(strings ?? {}) + JSON.stringify(entry);
-}
-
 /** "Report.pdf" -> "Report-accessibility-report.pdf". */
 export function accessibilityReportPdfName(fileName: string): string {
   return `${fileName.replace(/\.pdf$/i, "")}-accessibility-report.pdf`;
 }
 
 /**
- * One file's on-screen report as a PDF, with the manual checks the user ticked. Characters the
- * standard fonts cannot show are drawn in the Noto face for their script, without shaping.
+ * One file's on-screen report as a PDF, with the manual checks the user ticked. Text is set in the
+ * standard Helvetica fonts, so characters outside WinAnsi do not render.
  */
 export async function createAccessibilityReportPdf(
   entry: AccessibilityReportEntry,
   t: TFunction,
-  i18n: I18n,
   manualTicked: ReadonlySet<number>,
 ): Promise<File> {
   const doc = await PdfiumDocument.create();
-  await doc.embedUnicodeFonts(reportText(i18n, entry), i18n.language);
   const writer = new ReportWriter(doc, {
     layout: LAYOUT,
     regular: await doc.embedFont(StandardFonts.Helvetica),

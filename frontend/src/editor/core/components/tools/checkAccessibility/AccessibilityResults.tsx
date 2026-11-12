@@ -30,7 +30,7 @@ export function AccessibilityResults({
   selectedFileId,
   onSelectFile,
 }: AccessibilityResultsProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { results, isLoading, status } = operation;
 
   const options = useMemo(
@@ -68,7 +68,6 @@ export function AccessibilityResults({
       const pdf = await createAccessibilityReportPdf(
         entry,
         t,
-        i18n,
         manualTicks[entry.fileId] ?? NO_TICKS,
       );
       await downloadFile({ data: pdf, filename: pdf.name });
