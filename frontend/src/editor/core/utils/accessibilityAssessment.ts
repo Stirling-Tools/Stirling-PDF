@@ -22,22 +22,32 @@ const CATEGORY_ORDER: readonly AccessibilityCategoryId[] = [
 ];
 
 /**
- * Rules carry several tags, so each goes to the first category its tags match. Order matters: the
- * language of alternative text is an alt-text problem before it is a language one.
+ * Rules carry several tags, so each goes to the first category its tags match. Order matters: a
+ * rule about the language or description of an annotation is fixed there, not in the alt text.
  */
 const TAG_PRECEDENCE: ReadonlyArray<{
   category: AccessibilityCategoryId;
   tags: readonly string[];
 }> = [
-  { category: "altText", tags: ["alt-text", "figure"] },
   { category: "language", tags: ["lang"] },
+  { category: "links", tags: ["annotation", "page"] },
+  { category: "altText", tags: ["alt-text"] },
   { category: "fonts", tags: ["font"] },
-  { category: "links", tags: ["annotation"] },
   {
     category: "structure",
-    tags: ["structure", "table", "list", "heading", "toc", "note", "artifact"],
+    tags: [
+      "structure",
+      "table",
+      "list",
+      "heading",
+      "toc",
+      "note",
+      "artifact",
+      "figure",
+      "caption",
+    ],
   },
-  { category: "metadata", tags: ["metadata", "syntax", "page"] },
+  { category: "metadata", tags: ["metadata", "syntax"] },
 ];
 
 /** Failures here keep screen readers from the content itself, not just from details about it. */
@@ -112,7 +122,7 @@ function documentBasics(report: AccessibilityReport): AccessibilityBasic[] {
 
 /**
  * Fail when the file is untagged or a blocking area fails, since screen readers may then miss
- * content. Pass only when nothing fails and veraPDF agrees; anything else is partial.
+ * content. Pass only when no area or basic fails and veraPDF agrees; anything else is partial.
  */
 export function assessAccessibilityReport(
   report: AccessibilityReport,
@@ -122,14 +132,17 @@ export function assessAccessibilityReport(
     issues: report.issues.filter((issue) => categoryOf(issue) === id),
   }));
   const failing = areas.filter((area) => area.issues.length > 0);
+  const allBasics = documentBasics(report);
   const result: AccessibilityResult =
     !report.tagged || failing.some((area) => BLOCKING_CATEGORIES.has(area.id))
       ? "fail"
-      : failing.length === 0 && report.passesAutomatedChecks
+      : failing.length === 0 &&
+          report.passesAutomatedChecks &&
+          allBasics.every((basic) => basic.ok)
         ? "pass"
         : "partial";
   const failingIds = new Set(failing.map((area) => area.id));
-  const basics = documentBasics(report).filter((basic) => {
+  const basics = allBasics.filter((basic) => {
     const area = BASIC_AREA[basic.id];
     return basic.ok || area === null || !failingIds.has(area);
   });

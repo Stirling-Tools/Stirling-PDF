@@ -50,7 +50,7 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   compare: CREDIT_COSTS.SMALL,
   addAttachments: CREDIT_COSTS.SMALL,
   getPdfInfo: CREDIT_COSTS.MEDIUM,
-  checkAccessibility: CREDIT_COSTS.MEDIUM,
+  checkAccessibility: CREDIT_COSTS.LARGE,
   validateSignature: CREDIT_COSTS.SMALL,
   read: CREDIT_COSTS.SMALL,
 

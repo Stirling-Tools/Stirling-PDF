@@ -35,7 +35,8 @@ export interface ReportWriterOptions {
   pageLabel: (pageNumber: number) => string;
 }
 
-const LINE_HEIGHT = 1.35;
+/** Line height as a multiple of the font size. */
+export const LINE_HEIGHT = 1.35;
 
 /**
  * Lays a report down pages, starting a new one before a block would reach the footer. y is the top

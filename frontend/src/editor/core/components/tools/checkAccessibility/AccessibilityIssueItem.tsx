@@ -25,7 +25,7 @@ export function AccessibilityIssueItem({ issue }: AccessibilityIssueItemProps) {
         header={
           <span className="a11y-issue__head">
             <span className="a11y-issue__title">{title}</span>
-            <span className="a11y-issue__meta">{summary}</span>
+            {summary && <span className="a11y-issue__meta">{summary}</span>}
           </span>
         }
       >

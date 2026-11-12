@@ -6,7 +6,7 @@ import {
   describeObject,
   explainRule,
   ruleTitle,
-} from "@editor/utils/accessibilityPlainEnglish";
+} from "@editor/utils/accessibilityPlainLanguage";
 
 const t = ((_key: string, fallback: string, values?: Record<string, unknown>) =>
   fallback.replace(/\{\{(\w+)\}\}/g, (_, name: string) =>

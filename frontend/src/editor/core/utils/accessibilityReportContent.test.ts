@@ -32,7 +32,7 @@ describe("formatPageRanges", () => {
 });
 
 describe("describeIssue", () => {
-  it("leads with the plain title and keeps veraPDF's wording in the details", () => {
+  it("leads with the plain title and keeps veraPDF's requirement in the details", () => {
     const content = describeIssue(
       t,
       issue({
@@ -44,12 +44,11 @@ describe("describeIssue", () => {
       }),
     );
     expect(content.title).toBe("Content that isn't tagged");
-    expect(content.summary).toBe("Pages 1–3 · 4 times");
+    expect(content.summary).toBe("Pages 1–3 - 4 instances");
     expect(content.details.map((detail) => detail.label)).toEqual([
       "Rule",
       "Applies to",
       "Pages",
-      "Reported as",
       "Requirement",
     ]);
   });
@@ -60,7 +59,7 @@ describe("describeIssue", () => {
       issue({ occurrences: 1200, pages: [1, 2, 3, 4], pagesComplete: false }),
     );
     expect(content.summary).toBe(
-      "Pages 1–4 (list may be incomplete) · 1200 times",
+      "Pages 1–4 (list may be incomplete) - 1200 instances",
     );
     expect(content.details).toContainEqual({
       label: "Pages",
@@ -86,9 +85,26 @@ describe("describeIssue", () => {
       issue({ clause: "7.99", errorMessage: "Something veraPDF said" }),
     );
     expect(content.title).toBe("Something veraPDF said");
-    expect(content.summary).toBe("Whole document");
+  });
+
+  it("gives no location when the validator recorded no page", () => {
+    const content = describeIssue(t, issue({ occurrences: 12, pages: [] }));
+    expect(content.summary).toBe("12 instances");
     expect(content.details.map((detail) => detail.label)).not.toContain(
-      "Reported as",
+      "Pages",
     );
+  });
+
+  it("explains PDF/UA-2 rules in plain language", () => {
+    const content = describeIssue(
+      t,
+      issue({
+        specification: "PDF/UA-2",
+        clause: "8.2.5.2",
+        testNumber: "2",
+        errorMessage: "namespace URI = null",
+      }),
+    );
+    expect(content.title).toBe("Tags aren't PDF 2.0 tags");
   });
 });

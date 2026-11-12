@@ -1,23 +1,24 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@editor/services/apiClient";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
-import {
-  ACCESSIBILITY_REPORT_FILENAME,
-  type AccessibilityReport,
-  type AccessibilityReportEntry,
+import type {
+  AccessibilityReport,
+  AccessibilityReportEntry,
 } from "@editor/types/checkAccessibility";
 import type { CheckAccessibilityParameters } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityParameters";
+
+const NO_FILES: File[] = [];
 
 export interface CheckAccessibilityOperationHook extends ToolOperationHook<CheckAccessibilityParameters> {
   results: AccessibilityReportEntry[];
 }
 
 /**
- * Reports on each file in turn without changing it. `files` holds the run as JSON so the tool
- * counts as having results; the PDF report is built only when it is downloaded.
+ * Reports on each file in turn without changing it. `files` stays empty: a file there makes
+ * useBaseTool skip the next selection change, which would leave the old report on screen.
  */
 export const useCheckAccessibilityOperation =
   (): CheckAccessibilityOperationHook => {
@@ -25,21 +26,29 @@ export const useCheckAccessibilityOperation =
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [files, setFiles] = useState<File[]>([]);
     const [results, setResults] = useState<AccessibilityReportEntry[]>([]);
     // Each run takes the next id; a run whose id is no longer current was cancelled or replaced
     // and must not touch state, or a cancelled run could resume beside the run that replaced it.
     const currentRun = useRef(0);
+    const runAbort = useRef<AbortController | null>(null);
+
+    /** Stops the current run, including the request in flight, so it is not billed for nothing. */
+    const stopRun = useCallback(() => {
+      currentRun.current += 1;
+      runAbort.current?.abort();
+      runAbort.current = null;
+    }, []);
+
+    useEffect(() => stopRun, [stopRun]);
 
     const resetResults = useCallback(() => {
-      currentRun.current += 1;
+      stopRun();
       // The run this just invalidated may no longer touch state, so it cannot clear loading itself.
       setIsLoading(false);
       setResults([]);
-      setFiles([]);
       setStatus("");
       setErrorMessage(null);
-    }, []);
+    }, [stopRun]);
 
     const clearError = useCallback(() => setErrorMessage(null), []);
 
@@ -53,12 +62,14 @@ export const useCheckAccessibilityOperation =
           return;
         }
 
-        const run = ++currentRun.current;
+        stopRun();
+        const run = currentRun.current;
+        const abort = new AbortController();
+        runAbort.current = abort;
         const isCurrent = () => run === currentRun.current;
         setIsLoading(true);
         setErrorMessage(null);
         setResults([]);
-        setFiles([]);
 
         const collected: AccessibilityReportEntry[] = [];
         try {
@@ -82,6 +93,7 @@ export const useCheckAccessibilityOperation =
               const { data } = await apiClient.post<AccessibilityReport>(
                 "/api/v1/security/accessibility-report",
                 formData,
+                { signal: abort.signal },
               );
               // A report the validator could not produce describes the failure, not the file,
               // so scoring it would grade a document nothing has checked.
@@ -104,20 +116,6 @@ export const useCheckAccessibilityOperation =
             setResults([...collected]);
           }
 
-          const payload = collected.map(({ fileName, report, error }) => ({
-            fileName,
-            report,
-            error,
-          }));
-          setFiles([
-            new File(
-              [JSON.stringify(payload, null, 2)],
-              ACCESSIBILITY_REPORT_FILENAME,
-              {
-                type: "application/json",
-              },
-            ),
-          ]);
           if (collected.some((entry) => entry.error)) {
             setErrorMessage(
               t(
@@ -128,18 +126,21 @@ export const useCheckAccessibilityOperation =
           }
           setStatus(t("checkAccessibility.status.complete", "Check complete"));
         } finally {
-          if (isCurrent()) setIsLoading(false);
+          if (isCurrent()) {
+            runAbort.current = null;
+            setIsLoading(false);
+          }
         }
       },
-      [t],
+      [stopRun, t],
     );
 
     const cancelOperation = useCallback(() => {
       if (!isLoading) return;
-      currentRun.current += 1;
+      stopRun();
       setIsLoading(false);
       setStatus(t("operationCancelled", "Operation cancelled"));
-    }, [isLoading, t]);
+    }, [isLoading, stopRun, t]);
 
     const undoOperation = useCallback(async () => {
       resetResults();
@@ -147,7 +148,7 @@ export const useCheckAccessibilityOperation =
 
     return useMemo<CheckAccessibilityOperationHook>(
       () => ({
-        files,
+        files: NO_FILES,
         thumbnails: [],
         isGeneratingThumbnails: false,
         downloadUrl: null,
@@ -168,7 +169,6 @@ export const useCheckAccessibilityOperation =
         clearError,
         errorMessage,
         executeOperation,
-        files,
         isLoading,
         resetResults,
         results,

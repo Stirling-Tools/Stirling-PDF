@@ -77,5 +77,3 @@ export interface AccessibilityReportEntry {
   report: AccessibilityReport | null;
   error: string | null;
 }
-
-export const ACCESSIBILITY_REPORT_FILENAME = "accessibility-report.json";

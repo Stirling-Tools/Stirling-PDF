@@ -46,8 +46,24 @@ const report = (
 });
 
 describe("categoryOf", () => {
-  it("puts the language of alternative text under alt text", () => {
-    expect(categoryOf(issue("7.2", ["lang", "alt-text"]))).toBe("altText");
+  it("puts the language of alternative text under language", () => {
+    expect(categoryOf(issue("7.2", ["lang", "alt-text"]))).toBe("language");
+  });
+
+  it("puts a missing annotation description under links", () => {
+    expect(categoryOf(issue("7.18.1", ["annotation", "alt-text"]))).toBe(
+      "links",
+    );
+  });
+
+  it("puts tab order under links", () => {
+    expect(categoryOf(issue("7.18.3", ["page"]))).toBe("links");
+  });
+
+  it("puts a PDF/UA-2 figure nesting rule under structure", () => {
+    expect(
+      categoryOf(issue("Table 5. TR-Figure", ["structure", "figure"])),
+    ).toBe("structure");
   });
 
   it("puts a table rule under structure", () => {
@@ -84,6 +100,14 @@ describe("assessAccessibilityReport", () => {
     expect(
       assessAccessibilityReport(report([], { passesAutomatedChecks: false }))
         .result,
+    ).toBe("partial");
+  });
+
+  it("is partial when a basic fails though no rule does", () => {
+    expect(
+      assessAccessibilityReport(
+        report([], { summary: { ...report([]).summary, encrypted: true } }),
+      ).result,
     ).toBe("partial");
   });
 

@@ -13,7 +13,7 @@ import {
   describeObject,
   explainRule,
   ruleTitle,
-} from "@editor/utils/accessibilityPlainEnglish";
+} from "@editor/utils/accessibilityPlainLanguage";
 
 /**
  * The words of an accessibility report, shared by the on-screen report and its PDF so the two
@@ -54,27 +54,27 @@ export const categoryTip = (t: TFunction, id: AccessibilityCategoryId) =>
   ({
     structure: t(
       "checkAccessibility.categoryTip.structure",
-      "Whether the content is tagged so screen readers can follow it: headings, paragraphs, lists, tables and reading order, with decoration marked so it is skipped.",
+      "Tags tell screen readers what each part of a page is, such as a heading, list or table, and the order to read it in.",
     ),
     altText: t(
       "checkAccessibility.categoryTip.altText",
-      "Whether images and other non-text content have descriptions a screen reader can read out.",
+      "Images need a short text description for screen readers to read out instead.",
     ),
     language: t(
       "checkAccessibility.categoryTip.language",
-      "Whether the document says what language its text is in, so screen readers pronounce it correctly.",
+      "Screen readers need to know the document's language to pronounce it correctly.",
     ),
     metadata: t(
       "checkAccessibility.categoryTip.metadata",
-      "Whether the file has a title, shows it when opened, declares PDF/UA, and has the settings assistive technology relies on.",
+      "The title, PDF/UA declaration and other settings that assistive technology reads from the file.",
     ),
     fonts: t(
       "checkAccessibility.categoryTip.fonts",
-      "Whether fonts are included in the file and every character maps to real text, so it can be read aloud, searched and copied.",
+      "Fonts need to be in the file, with every character linked to real text, so the text can be read aloud and copied.",
     ),
     links: t(
       "checkAccessibility.categoryTip.links",
-      "Whether links, comments and form fields are tagged and described, and reached in a sensible tab order.",
+      "Links, comments and form fields need tags and descriptions, and a tab order that follows the page.",
     ),
   })[id];
 
@@ -119,31 +119,31 @@ export const basicTip = (t: TFunction, id: AccessibilityBasicId) =>
   ({
     tagged: t(
       "checkAccessibility.factTip.tagged",
-      "Whether the file has tags at all. Without them, screen readers get the text with no headings, lists or reading order.",
+      "The file has tags describing its structure. Without them, screen readers only get plain text.",
     ),
     title: t(
       "checkAccessibility.factTip.title",
-      "Whether the file has a title in its metadata.",
+      "The file has a title in its metadata.",
     ),
     displaysTitle: t(
       "checkAccessibility.factTip.displaysTitle",
-      "Whether PDF readers show the document title, rather than the file name, when it opens.",
+      "PDF readers show the title, not the file name, when the file opens.",
     ),
     language: t(
       "checkAccessibility.factTip.language",
-      "Whether the document declares the language of its text.",
+      "The file says which language its text is in.",
     ),
     fonts: t(
       "checkAccessibility.factTip.fonts",
-      "Whether every font is included in the file.",
+      "Every font the text uses is included in the file.",
     ),
     declares: t(
       "checkAccessibility.factTip.declares",
-      "Whether the metadata says the file follows PDF/UA.",
+      "The file's metadata says it follows PDF/UA.",
     ),
     notEncrypted: t(
       "checkAccessibility.factTip.notEncrypted",
-      "Whether the file is free of encryption, which can stop assistive technology reading it.",
+      "The file isn't encrypted. Encryption can stop assistive technology reading it.",
     ),
   })[id];
 
@@ -183,8 +183,8 @@ export interface IssueDetail {
 
 export interface IssueContent {
   title: string;
-  /** Where the issue was found and how often, e.g. "Pages 1–3 · 12 times". */
-  summary: string;
+  /** Where the issue was found and how often, e.g. "Pages 1–3 - 12 instances"; null when unknown. */
+  summary: string | null;
   explanation: string | null;
   details: IssueDetail[];
 }
@@ -200,9 +200,10 @@ export function describeIssue(
   const pageList = formatPageRanges(pages);
   // The validator records pages for only some occurrences of a frequent failure.
   const pagesPartial = issue.pagesComplete === false;
+  // Tag-tree elements and document-level rules have no page, so an empty list says nothing.
   const where =
     pages.length === 0
-      ? t("checkAccessibility.issue.documentLevel", "Whole document")
+      ? null
       : pagesPartial
         ? t(
             "checkAccessibility.issue.onPagesPartial",
@@ -213,12 +214,14 @@ export function describeIssue(
             pages: pageList,
             count: pages.length,
           });
-  const summary =
+  const instances =
     issue.occurrences > 1
-      ? `${where} · ${t("checkAccessibility.issue.times", "{{count}} times", {
+      ? t("checkAccessibility.issue.instances", "{{count}} instances", {
           count: issue.occurrences,
-        })}`
-      : where;
+        })
+      : null;
+  const summary =
+    [where, instances].filter((part) => part !== null).join(" - ") || null;
   const plainExplanation = explainRule(t, issue);
   const requirement =
     issue.technicalMessage && issue.technicalMessage !== reportedTitle
@@ -245,30 +248,21 @@ export function describeIssue(
       value: describeObject(t, issue.object),
     });
   }
-  if (issue.occurrences > 1 || !issue.location) {
-    details.push({
-      label: t("checkAccessibility.issue.pages", "Pages"),
-      value:
-        pages.length === 0
-          ? t("checkAccessibility.issue.documentLevel", "Whole document")
-          : pagesPartial
-            ? t(
-                "checkAccessibility.issue.pagesPartialValue",
-                "{{pages}} (only the first occurrences record a page, so this list may be incomplete)",
-                { pages: pageList },
-              )
-            : pageList,
-    });
-  } else {
+  if (issue.occurrences === 1 && issue.location) {
     details.push({
       label: t("checkAccessibility.issue.where", "Where"),
       value: describeLocation(t, issue.location),
     });
-  }
-  if (plainTitle) {
+  } else if (pages.length > 0) {
     details.push({
-      label: t("checkAccessibility.issue.reportedAs", "Reported as"),
-      value: reportedTitle,
+      label: t("checkAccessibility.issue.pages", "Pages"),
+      value: pagesPartial
+        ? t(
+            "checkAccessibility.issue.pagesPartialValue",
+            "{{pages}} (only the first occurrences record a page, so this list may be incomplete)",
+            { pages: pageList },
+          )
+        : pageList,
     });
   }
   if (plainExplanation && requirement) {

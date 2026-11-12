@@ -16,6 +16,7 @@ import {
 } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { AccessibilityResults } from "@editor/components/tools/checkAccessibility/AccessibilityResults";
 import type { FileId } from "@editor/types/file";
+import { useCheckAccessibilityTips } from "@editor/components/tooltips/useCheckAccessibilityTips";
 
 const PROFILE_OPTIONS: { value: AccessibilityProfile; label: string }[] = [
   { value: "ua1", label: "PDF/UA-1" },
@@ -34,6 +35,7 @@ const CheckAccessibility = (props: BaseToolProps) => {
   const operation = base.operation as CheckAccessibilityOperationHook;
   const hasReports = operation.results.length > 0;
   const [selectedFileId, setSelectedFileId] = useState<FileId | null>(null);
+  const profileTips = useCheckAccessibilityTips();
 
   return createToolFlow({
     files: {
@@ -45,6 +47,7 @@ const CheckAccessibility = (props: BaseToolProps) => {
         title: t("checkAccessibility.steps.standard", "Standard"),
         isCollapsed: hasReports,
         onCollapsedClick: base.handleSettingsReset,
+        tooltip: profileTips,
         content: (
           <Select
             aria-label={t("checkAccessibility.steps.standard", "Standard")}

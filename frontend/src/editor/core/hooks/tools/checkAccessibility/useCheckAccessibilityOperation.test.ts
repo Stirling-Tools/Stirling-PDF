@@ -134,4 +134,40 @@ describe("useCheckAccessibilityOperation", () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.results).toEqual([]);
   });
+
+  it("aborts the request in flight and checks no more files once unmounted", async () => {
+    const stalled = deferred<{ data: AccessibilityReport }>();
+    (apiClient.post as Mock).mockReturnValueOnce(stalled.promise);
+    const { result, unmount } = renderHook(() =>
+      useCheckAccessibilityOperation(),
+    );
+
+    let run!: Promise<void>;
+    act(() => {
+      run = result.current.executeOperation(defaultParameters, [
+        pdf("a.pdf"),
+        pdf("b.pdf"),
+      ]);
+    });
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledTimes(1));
+    const { signal } = (apiClient.post as Mock).mock.calls[0][2] as {
+      signal: AbortSignal;
+    };
+    unmount();
+    expect(signal.aborted).toBe(true);
+
+    stalled.resolve({ data: report() });
+    await run;
+    expect(apiClient.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves files empty so the next selection change clears the report", async () => {
+    (apiClient.post as Mock).mockResolvedValue({ data: report() });
+    const { result } = renderHook(() => useCheckAccessibilityOperation());
+    await act(() =>
+      result.current.executeOperation(defaultParameters, [pdf("a.pdf")]),
+    );
+    expect(result.current.results).toHaveLength(1);
+    expect(result.current.files).toEqual([]);
+  });
 });

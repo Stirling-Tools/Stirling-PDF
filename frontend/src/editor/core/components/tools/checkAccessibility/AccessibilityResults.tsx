@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@editor/ui/Banner";
 import { Button } from "@editor/ui/Button";
@@ -16,6 +16,8 @@ import type { FileId } from "@editor/types/file";
 import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
 
+const NO_TICKS: ReadonlySet<number> = new Set();
+
 interface AccessibilityResultsProps {
   operation: CheckAccessibilityOperationHook;
   /** Falls back to the first report when this file is not in the run. */
@@ -28,19 +30,33 @@ export function AccessibilityResults({
   selectedFileId,
   onSelectFile,
 }: AccessibilityResultsProps) {
-  const { t } = useTranslation();
-  const { results, isLoading, status, files } = operation;
+  const { t, i18n } = useTranslation();
+  const { results, isLoading, status } = operation;
 
   const options = useMemo(
     () =>
       results.map((entry) => ({
         value: entry.fileId,
         label: entry.report
-          ? `${entry.fileName} · ${resultLabel(t, assessAccessibilityReport(entry.report).result)}`
-          : `${entry.fileName} · ${t("checkAccessibility.fileFailed", "failed")}`,
+          ? `${entry.fileName} - ${resultLabel(t, assessAccessibilityReport(entry.report).result)}`
+          : `${entry.fileName} - ${t("checkAccessibility.fileFailed", "failed")}`,
       })),
     [results, t],
   );
+
+  const [manualTicks, setManualTicks] = useState<
+    Partial<Record<FileId, ReadonlySet<number>>>
+  >({});
+  // A new run starts a new checklist: the ticks were for the files as they were checked.
+  useEffect(() => {
+    if (isLoading) setManualTicks({});
+  }, [isLoading]);
+  const toggleManual = (fileId: FileId, index: number) =>
+    setManualTicks((current) => {
+      const next = new Set(current[fileId]);
+      if (!next.delete(index)) next.add(index);
+      return { ...current, [fileId]: next };
+    });
 
   const [buildingPdf, setBuildingPdf] = useState(false);
   const [downloadFailed, setDownloadFailed] = useState(false);
@@ -49,7 +65,12 @@ export function AccessibilityResults({
     setBuildingPdf(true);
     setDownloadFailed(false);
     try {
-      const pdf = await createAccessibilityReportPdf(entry, t);
+      const pdf = await createAccessibilityReportPdf(
+        entry,
+        t,
+        i18n,
+        manualTicks[entry.fileId] ?? NO_TICKS,
+      );
       await downloadFile({ data: pdf, filename: pdf.name });
     } catch (error) {
       console.warn("[checkAccessibility] PDF report failed", error);
@@ -61,7 +82,6 @@ export function AccessibilityResults({
 
   const selected =
     results.find((entry) => entry.fileId === selectedFileId) ?? results[0];
-  const reportFile = files[0];
 
   if (!selected) {
     return isLoading ? (
@@ -100,6 +120,8 @@ export function AccessibilityResults({
         <AccessibilityReportView
           key={selected.fileId}
           report={selected.report}
+          manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+          onToggleManual={(index) => toggleManual(selected.fileId, index)}
         />
       ) : (
         <Banner
@@ -112,7 +134,7 @@ export function AccessibilityResults({
         />
       )}
 
-      {reportFile && (
+      {!isLoading && (
         <ToolPanelFooter>
           <div className="a11y-download">
             {downloadFailed && (

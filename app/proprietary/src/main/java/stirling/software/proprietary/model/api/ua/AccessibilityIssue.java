@@ -56,8 +56,8 @@ public class AccessibilityIssue {
     @Schema(
             description =
                     "One-based pages the issue occurs on, from the first 100 occurrences the"
-                            + " validator keeps; empty when it is document-level. See"
-                            + " pagesComplete.")
+                            + " validator keeps; empty when it recorded no page, as for"
+                            + " document-level rules and tag-tree elements. See pagesComplete.")
     private List<Integer> pages = List.of();
 
     @Schema(

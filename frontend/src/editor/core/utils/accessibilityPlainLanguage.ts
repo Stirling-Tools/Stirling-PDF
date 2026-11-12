@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
 
 /**
- * Turns veraPDF's vocabulary into plain English: what a failing rule means, what it failed on and
+ * Turns veraPDF's vocabulary into plain language: what a failing rule means, what it failed on and
  * where. It only rewords the report; nothing here changes what veraPDF found.
  */
 
@@ -12,6 +12,9 @@ import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
  */
 const UA1_RULE_KEYS: Record<string, string> = {
   "5-1": "noConformanceClaim",
+  "5-3": "conformancePrefix",
+  "5-4": "conformancePrefix",
+  "5-5": "conformancePrefix",
   "6.2-1": "notMarkedTagged",
   "7.1-1": "artifactInsideTagged",
   "7.1-2": "taggedInsideArtifact",
@@ -41,9 +44,41 @@ const UA1_RULE_KEYS: Record<string, string> = {
   "7.21.8-1": "notdefGlyph",
 };
 
+/** The same for ISO 14289-2, whose clauses are numbered differently. */
+const UA2_RULE_KEYS: Record<string, string> = {
+  "5-1": "noConformanceClaim",
+  "5-3": "conformancePrefix",
+  "5-4": "conformancePrefix",
+  "6.2-1": "notMarkedTagged",
+  "8.2.1-1": "noTags",
+  "8.2.2-1": "untaggedContent",
+  "8.2.4-1": "customTagNotMapped",
+  "8.2.4-4": "standardTagRemapped",
+  "8.2.5.2-1": "noDocumentTag",
+  "8.2.5.2-2": "notPdf2Tags",
+  "8.2.5.12-1": "genericHeading",
+  "8.2.5.14-1": "noteTag",
+  "8.2.5.20-1": "linkNotTagged",
+  "8.2.5.28.2-1": "figureNoAlt",
+  "8.4.4-1": "noLanguage",
+  "8.4.5.5.1-1": "fontNotEmbedded",
+  "8.4.5.5.1-2": "fontMissingGlyphs",
+  "8.4.5.6-1": "glyphWidths",
+  "8.4.5.8-1": "noUnicode",
+  "8.4.5.9-1": "notdefGlyph",
+  "8.9.2.3-1": "annotationNotTagged",
+  "8.9.3.3-1": "tabOrder",
+  "8.10.1-1": "formFieldNotTagged",
+  "8.11.1-1": "noTitle",
+  "8.11.1-2": "noMetadataStream",
+  "8.11.2-1": "titleNotDisplayed",
+};
+
 const RULE_DEFAULTS: Record<string, string> = {
   noConformanceClaim:
     "The file doesn't say it follows PDF/UA. Its metadata needs a PDF/UA identification entry.",
+  conformancePrefix:
+    "The PDF/UA declaration in the metadata uses the wrong prefix, so PDF readers may not recognise it.",
   notMarkedTagged:
     "The file isn't flagged as tagged, so assistive technology may ignore the tags it has.",
   artifactInsideTagged:
@@ -53,26 +88,40 @@ const RULE_DEFAULTS: Record<string, string> = {
   untaggedContent:
     "Something on the page is neither tagged as content nor marked as decoration, so screen readers can't tell whether to read it. This is often a background image, header, footer or page number.",
   noMetadataStream:
-    "The file has no XMP metadata, where PDF/UA keeps the document's title and conformance details.",
+    "The file has no XMP metadata, which is where PDF/UA keeps the document's title and conformance details.",
   noTitle: "The document has no title in its metadata.",
   titleNotDisplayed:
-    'PDF viewers will show the file name instead of the document\'s title. The file needs its "display document title" setting turned on.',
+    'PDF readers will show the file name instead of the document\'s title. The file needs its "display document title" setting turned on.',
   noTags:
     "The file has no tags at all, so screen readers can't tell headings, paragraphs, lists or tables apart, or read them in the right order.",
+  noDocumentTag:
+    "The tags need a single Document tag at the top, with everything else inside it.",
+  notPdf2Tags:
+    "PDF/UA-2 needs the tags a PDF 2.0 file uses. These look like PDF 1.7 tags, which usually means the file was tagged for PDF/UA-1.",
+  customTagNotMapped:
+    "A tag uses a custom name that isn't linked to a standard tag, so screen readers don't know what it is.",
+  standardTagRemapped:
+    "A standard tag is linked to a custom tag, so screen readers lose its meaning.",
+  noteTag:
+    "The file uses the Note tag, which PDF/UA-2 replaces with FENote for footnotes and endnotes.",
+  genericHeading:
+    "A heading uses the H tag, which has no level. PDF/UA-2 needs H1 to H6 so screen reader users can tell how headings nest.",
+  noLanguage:
+    "The document doesn't say which language it is in, so screen readers may read it in the wrong language.",
   bookmarkLanguage:
-    "The language of the bookmarks can't be worked out. Setting a language for the document fixes this.",
+    "The bookmarks don't have a language set, so screen readers don't know which language to read them in. Set the document's language to fix this.",
   annotationLanguage:
-    "The language of comment or link text can't be worked out. Setting a language for the document fixes this.",
+    "Comment or link text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this.",
   replacementTextLanguage:
-    "The language of some replacement text can't be worked out. Setting a language for the document fixes this.",
+    "Some replacement text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this.",
   metadataLanguage:
-    "The language of the document's metadata, such as its title, can't be worked out. Setting a language for the document fixes this.",
+    "The metadata, such as the title, doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this.",
   contentLanguage:
-    "The language of the page text can't be worked out, so screen readers may pronounce it wrongly. Setting a language for the document fixes this.",
+    "The text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this.",
   figureNoAlt:
     "An image is tagged as a figure but has no description, so screen reader users won't know what it shows.",
   headingSkipped:
-    "Heading levels skip a step, for example from Heading 1 straight to Heading 3, which makes navigating by headings confusing.",
+    "Heading levels skip a step, for example from Heading 1 straight to Heading 3, which makes moving between headings confusing.",
   annotationNotTagged:
     "A comment or drawing isn't tagged as an annotation, so screen readers can't reach it in reading order.",
   annotationNoDescription:
@@ -94,13 +143,14 @@ const RULE_DEFAULTS: Record<string, string> = {
   symbolicEncoding:
     "A symbol font carries an encoding it shouldn't, so its characters may come out as the wrong letters.",
   noUnicode:
-    "Some characters can't be converted to readable text, so screen readers and copy and paste may get them wrong.",
+    "Some characters can't be turned into readable text, so screen readers and copy and paste may get them wrong.",
   notdefGlyph:
     'The text uses a "missing character" placeholder, which shows as a blank or a box and can\'t be read aloud.',
 };
 
 const RULE_TITLE_DEFAULTS: Record<string, string> = {
   noConformanceClaim: "Doesn't declare PDF/UA",
+  conformancePrefix: "PDF/UA declaration written incorrectly",
   notMarkedTagged: "Not flagged as tagged",
   artifactInsideTagged: "Decoration inside tagged content",
   taggedInsideArtifact: "Tagged content hidden as decoration",
@@ -109,11 +159,18 @@ const RULE_TITLE_DEFAULTS: Record<string, string> = {
   noTitle: "No document title",
   titleNotDisplayed: "Title isn't shown when opened",
   noTags: "No tags",
-  bookmarkLanguage: "Bookmark language unknown",
-  annotationLanguage: "Comment and link language unknown",
-  replacementTextLanguage: "Replacement text language unknown",
-  metadataLanguage: "Metadata language unknown",
-  contentLanguage: "Text language unknown",
+  noDocumentTag: "Tags don't start with a Document tag",
+  notPdf2Tags: "Tags aren't PDF 2.0 tags",
+  customTagNotMapped: "Custom tag with no standard meaning",
+  standardTagRemapped: "Standard tag turned into a custom one",
+  noteTag: "Uses the Note tag",
+  genericHeading: "Heading without a level",
+  noLanguage: "No document language",
+  bookmarkLanguage: "No language for bookmarks",
+  annotationLanguage: "No language for comments or links",
+  replacementTextLanguage: "No language for replacement text",
+  metadataLanguage: "No language for metadata",
+  contentLanguage: "No language for text",
   figureNoAlt: "Image without a description",
   headingSkipped: "Heading level skipped",
   annotationNotTagged: "Comment or drawing not tagged",
@@ -131,12 +188,17 @@ const RULE_TITLE_DEFAULTS: Record<string, string> = {
 };
 
 function knownRuleKey(issue: AccessibilityIssue): string | null {
-  // The report names the profile ("PDF/UA-1"), not the ISO part; UA-2 numbers its clauses differently.
-  if (issue.specification !== "PDF/UA-1") return null;
-  return UA1_RULE_KEYS[`${issue.clause}-${issue.testNumber}`] ?? null;
+  // The report names the profile ("PDF/UA-1"), not the ISO part.
+  const keys =
+    issue.specification === "PDF/UA-1"
+      ? UA1_RULE_KEYS
+      : issue.specification === "PDF/UA-2"
+        ? UA2_RULE_KEYS
+        : null;
+  return keys?.[`${issue.clause}-${issue.testNumber}`] ?? null;
 }
 
-/** A short plain-English name for the failing rule, or null when the rule is not one we know. */
+/** A short plain-language name for the failing rule, or null when the rule is not one we know. */
 export function ruleTitle(
   t: TFunction,
   issue: AccessibilityIssue,
@@ -147,7 +209,7 @@ export function ruleTitle(
     : null;
 }
 
-/** A plain-English account of what the failing rule means, or null when the rule is not one we know. */
+/** A plain-language account of what the failing rule means, or null when the rule is not one we know. */
 export function explainRule(
   t: TFunction,
   issue: AccessibilityIssue,

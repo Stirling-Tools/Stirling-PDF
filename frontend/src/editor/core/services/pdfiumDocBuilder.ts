@@ -12,8 +12,17 @@ import {
   getPdfiumModule,
   writeUtf16,
   saveRawDocument,
+  type ExtendedPdfiumRuntime,
 } from "@editor/services/pdfiumService";
 import { embedBitmapImageOnPage } from "@editor/utils/pdfiumBitmapUtils";
+import {
+  faceFileFor,
+  faceFilesFor,
+  fetchFaceBytes,
+  hanFaceFor,
+  isWinAnsi,
+  registerFaceForMeasuring,
+} from "@editor/services/pdfiumUnicodeFonts";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 // ---------------------------------------------------------------------------
@@ -58,16 +67,40 @@ export const StandardFonts = {
   TimesBold: "Times-Bold",
 } as const;
 
+/** A TrueType face loaded into one document, for text a standard font cannot encode. */
+interface UnicodeFace {
+  handle: number;
+  cssFamily: string;
+}
+
+/** A stretch of text drawn in one face: a standard font when `face` is null. */
+interface TextRun {
+  text: string;
+  face: UnicodeFace | null;
+}
+
+type UnicodeFaceLookup = (file: string) => UnicodeFace | undefined;
+
+const FPDF_FONT_TRUETYPE = 2;
+
 export class PdfiumFont {
   readonly name: string;
+  private readonly _faces: UnicodeFaceLookup;
+  private readonly _hanFile: () => string;
   private _canvas: OffscreenCanvas | HTMLCanvasElement | null = null;
   private _ctx:
     | CanvasRenderingContext2D
     | OffscreenCanvasRenderingContext2D
     | null = null;
 
-  constructor(name: string) {
+  constructor(
+    name: string,
+    faces: UnicodeFaceLookup = () => undefined,
+    hanFile: () => string = () => "",
+  ) {
     this.name = name;
+    this._faces = faces;
+    this._hanFile = hanFile;
   }
 
   /**
@@ -75,10 +108,10 @@ export class PdfiumFont {
    * Uses canvas font metrics as a reliable cross-browser measurement.
    */
   widthOfTextAtSize(text: string, fontSize: number): number {
-    const ctx = this._getCtx();
-    // Unquoted: quoting the list makes one unknown family, measured in a fallback font.
-    ctx.font = `${fontSize}px ${this._cssFontFamily()}`;
-    return ctx.measureText(text).width;
+    return this.runs(text).reduce(
+      (width, run) => width + this._runWidth(run, fontSize),
+      0,
+    );
   }
 
   /**
@@ -86,6 +119,41 @@ export class PdfiumFont {
    */
   heightAtSize(fontSize: number): number {
     return fontSize * 1.2;
+  }
+
+  /** Splits `text` where it changes between this font and a loaded Unicode face. */
+  runs(text: string): TextRun[] {
+    const bold = this._isBold();
+    const runs: TextRun[] = [];
+    for (const char of text) {
+      const face = isWinAnsi(char)
+        ? null
+        : (this._faces(faceFileFor(char, bold, this._hanFile())) ?? null);
+      const last = runs[runs.length - 1];
+      if (last && last.face === face) last.text += char;
+      else runs.push({ text: char, face });
+    }
+    return runs;
+  }
+
+  _runWidth(run: TextRun, fontSize: number): number {
+    const ctx = this._getCtx();
+    // Unquoted: quoting the list makes one unknown family, measured in a fallback font.
+    const family = run.face
+      ? `"${run.face.cssFamily}", sans-serif`
+      : this._cssFontFamily();
+    ctx.font = `${this._cssStyle()}${fontSize}px ${family}`;
+    return ctx.measureText(run.text).width;
+  }
+
+  private _isBold(): boolean {
+    return this.name.includes("Bold");
+  }
+
+  /** Weight and style, so bold and oblique text is measured at its real width. */
+  private _cssStyle(): string {
+    const italic = /Oblique|Italic/.test(this.name) ? "italic " : "";
+    return `${italic}${this._isBold() ? "bold " : ""}`;
   }
 
   /** Map PDF font name to a CSS font-family for canvas measurement. */
@@ -205,27 +273,39 @@ export class PdfiumPage {
    * Draw text on the page. API compatible with pdf-lib's `PDFPage.drawText()`.
    */
   drawText(text: string, options: DrawTextOptions): void {
-    const { x, y, size, font, color } = options;
-    const m = this._m;
-    const fontName = font?.name ?? "Helvetica";
+    const { y, size, font, color } = options;
+    let x = options.x;
+    const runs = font ? font.runs(text) : [{ text, face: null }];
+    for (const run of runs) {
+      this._drawRun(run, x, y, size, font, color);
+      if (font) x += font._runWidth(run, size);
+    }
+  }
 
-    const textObjPtr = m.FPDFPageObj_NewTextObj(this._docPtr, fontName, size);
+  private _drawRun(
+    run: TextRun,
+    x: number,
+    y: number,
+    size: number,
+    font: PdfiumFont | undefined,
+    color: PdfiumColor | undefined,
+  ): void {
+    const m = this._m;
+    const textObjPtr = run.face
+      ? m.FPDFPageObj_CreateTextObj(this._docPtr, run.face.handle, size)
+      : m.FPDFPageObj_NewTextObj(this._docPtr, font?.name ?? "Helvetica", size);
     if (!textObjPtr) return;
 
-    // Set text content (UTF-16)
-    const textPtr = writeUtf16(m, text);
+    const textPtr = writeUtf16(m, run.text);
     m.FPDFText_SetText(textObjPtr, textPtr);
     m.pdfium.wasmExports.free(textPtr);
 
-    // Set color
     if (color) {
       const [r, g, b, a] = colorToRGBA(color);
       m.FPDFPageObj_SetFillColor(textObjPtr, r, g, b, a);
     }
 
-    // Position the text object
-    // FPDFPageObj_Transform(obj, a, b, c, d, e, f) — applies affine transform
-    // Identity + translate: a=1, b=0, c=0, d=1, e=x, f=y
+    // Identity plus a translation to (x, y).
     m.FPDFPageObj_Transform(textObjPtr, 1, 0, 0, 1, x, y);
 
     m.FPDFPage_InsertObject(this._pagePtr, textObjPtr);
@@ -338,6 +418,10 @@ export class PdfiumDocument {
   readonly _docPtr: number;
   private _pages: PdfiumPage[] = [];
   private _fonts: Map<string, PdfiumFont> = new Map();
+  private _unicodeFaces: Map<string, UnicodeFace> = new Map();
+  /** Wasm buffers backing the faces; PDFium reads them until the document closes. */
+  private _faceBuffers: number[] = [];
+  private _hanFile = "";
 
   private constructor(m: WrappedPdfiumModule, docPtr: number) {
     this._m = m;
@@ -371,9 +455,62 @@ export class PdfiumDocument {
   /** Embed a standard PDF font. Returns a PdfiumFont for text measurement and drawing. */
   async embedFont(fontName: string): Promise<PdfiumFont> {
     if (this._fonts.has(fontName)) return this._fonts.get(fontName)!;
-    const font = new PdfiumFont(fontName);
+    const font = new PdfiumFont(
+      fontName,
+      (file) => this._unicodeFaces.get(file),
+      () => this._hanFile,
+    );
     this._fonts.set(fontName, font);
     return font;
+  }
+
+  /**
+   * Loads the Noto faces that `sampleText` needs beyond WinAnsi, for every font of this document.
+   * `language` picks the Chinese face; a face the server lacks is skipped and its text stays blank.
+   */
+  async embedUnicodeFonts(sampleText: string, language: string): Promise<void> {
+    this._hanFile = hanFaceFor(language);
+    const files = [...faceFilesFor(sampleText, this._hanFile)].filter(
+      (file) => !this._unicodeFaces.has(file),
+    );
+    const loaded = await Promise.all(
+      files.map(async (file) => {
+        const bytes = await fetchFaceBytes(file);
+        if (!bytes) return null;
+        return {
+          file,
+          bytes,
+          cssFamily: await registerFaceForMeasuring(file, bytes),
+        };
+      }),
+    );
+    for (const face of loaded) {
+      if (face) this._loadFace(face.file, face.bytes, face.cssFamily);
+    }
+  }
+
+  private _loadFace(file: string, bytes: Uint8Array, cssFamily: string): void {
+    const m = this._m;
+    const buffer = m.pdfium.wasmExports.malloc(bytes.length);
+    if (!buffer) return;
+    (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(
+      bytes,
+      buffer,
+    );
+    // A composite (CID) font, so text can use code points beyond 255.
+    const handle = m.FPDFText_LoadFont(
+      this._docPtr,
+      buffer,
+      bytes.length,
+      FPDF_FONT_TRUETYPE,
+      true,
+    );
+    if (!handle) {
+      m.pdfium.wasmExports.free(buffer);
+      return;
+    }
+    this._faceBuffers.push(buffer);
+    this._unicodeFaces.set(file, { handle, cssFamily });
   }
 
   /** Embed a PNG image from raw bytes. */
@@ -410,7 +547,13 @@ export class PdfiumDocument {
     for (const page of this._pages) {
       page._close();
     }
+    for (const face of this._unicodeFaces.values()) {
+      this._m.FPDFFont_Close(face.handle);
+    }
     this._m.FPDF_CloseDocument(this._docPtr);
+    for (const buffer of this._faceBuffers) {
+      this._m.pdfium.wasmExports.free(buffer);
+    }
 
     return new Uint8Array(buf);
   }
