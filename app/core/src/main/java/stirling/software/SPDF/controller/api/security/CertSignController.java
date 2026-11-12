@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -481,9 +482,10 @@ public class CertSignController {
         }
 
         /**
-         * The name shown in the visible signature. Certificates without a CN fall back to the
-         * full subject, and the CN is read as stored so RFC 4514 escapes (e.g. "García\, Ana")
-         * are not shown.
+         * The name shown in the visible signature. Certificates without a CN fall back to the full
+         * subject, and the CN is read as stored so RFC 4514 escapes (e.g. "García\, Ana") are not
+         * shown. For a multi-valued RDN the CN is picked by type, so it is returned whichever
+         * attribute comes first.
          */
         static String getSignerName(X509Certificate cert) {
             X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
@@ -491,7 +493,12 @@ public class CertSignController {
             if (cn.length == 0) {
                 return x500Name.toString();
             }
-            ASN1Encodable value = cn[0].getFirst().getValue();
+            ASN1Encodable value =
+                    Arrays.stream(cn[0].getTypesAndValues())
+                            .filter(a -> BCStyle.CN.equals(a.getType()))
+                            .findFirst()
+                            .orElseThrow()
+                            .getValue();
             return value instanceof ASN1String asn1String
                     ? asn1String.getString()
                     : IETFUtils.valueToString(value);
@@ -499,9 +506,9 @@ public class CertSignController {
 
         /**
          * Shrinks the font so {@code text} fits within {@code maxWidth} points, never below 6pt.
-         * The signature box is 200 points wide and the text starts 10 points in, so the
-         * "Signed by" label has 190 points; a long signer name (in particular the
-         * full-subject fallback for certificates without a CN) would otherwise be clipped.
+         * The signature box is 200 points wide and the text starts 10 points in, so the "Signed by"
+         * label has 190 points; a long signer name (in particular the full-subject fallback for
+         * certificates without a CN) would otherwise be clipped.
          */
         static float fitSignerFontSize(PDFont font, String text, float fontSize, float maxWidth) {
             float width = WidthCalculator.calculateAccurateWidth(font, text, fontSize);
@@ -512,11 +519,11 @@ public class CertSignController {
         }
 
         /**
-         * Resolves the font for the visible signature. Times Bold is kept whenever it can
-         * encode the label, so Latin signer names look exactly as before. When it cannot
-         * (a no-CN subject such as {@code O=株式会社}), the embedded Noto face covering
-         * the script is loaded instead, following the watermark/stamp pattern; a
-         * {@code PDType1Font} would throw in {@code showText} for those characters.
+         * Resolves the font for the visible signature. Times Bold is kept whenever it can encode
+         * the label, so Latin signer names look exactly as before. When it cannot (a no-CN subject
+         * such as {@code O=株式会社}), the embedded Noto face covering the script is loaded instead,
+         * following the watermark/stamp pattern; a {@code PDType1Font} would throw in {@code
+         * showText} for those characters.
          */
         static PDFont resolveSignatureFont(PDDocument doc, String label) throws IOException {
             PDFont timesBold = new PDType1Font(FontName.TIMES_BOLD);
@@ -530,9 +537,9 @@ public class CertSignController {
         }
 
         /**
-         * Picks a bundled Noto face for text Times Bold cannot encode, by the first
-         * non-Latin script found in the text. CJK ideographs without kana default to
-         * Simplified Chinese, which covers the common shared characters.
+         * Picks a bundled Noto face for text Times Bold cannot encode, by the first non-Latin
+         * script found in the text. CJK ideographs without kana default to Simplified Chinese,
+         * which covers the common shared characters.
          */
         static String signatureFontResource(String text) {
             for (int i = 0; i < text.length(); ) {
@@ -577,8 +584,8 @@ public class CertSignController {
         }
 
         /**
-         * Builds the visible signature appearance (a 200 by 50 point box showing the signer
-         * name, the signing date and, when present, the reason) as a standalone PDF.
+         * Builds the visible signature appearance (a 200 by 50 point box showing the signer name,
+         * the signing date and, when present, the reason) as a standalone PDF.
          */
         public InputStream createVisibleSignature(
                 PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
