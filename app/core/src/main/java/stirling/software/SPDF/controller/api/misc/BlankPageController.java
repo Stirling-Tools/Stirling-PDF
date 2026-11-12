@@ -175,7 +175,7 @@ public class BlankPageController {
             try (OutputStream fos = Files.newOutputStream(tempOut.getFile().toPath());
                     ZipOutputStream zos = new ZipOutputStream(fos)) {
                 if (!nonBlankPages.isEmpty()) {
-                    createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+                    createZipEntry(zos, nonBlankPages, filename + ".pdf");
                 } else {
                     createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
                 }
@@ -188,8 +188,8 @@ public class BlankPageController {
                 throw e;
             }
 
-            log.info("Returning ZIP file: {}", filename + "_processed.zip");
-            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + "_processed.zip");
+            log.info("Returning ZIP file: {}", filename + ".zip");
+            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + ".zip");
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;

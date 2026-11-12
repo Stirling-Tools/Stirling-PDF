@@ -8,10 +8,12 @@ import {
   MarkInfoError,
   applyMarked,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
+import { nameArtifactKinds } from "@editor/tools/pdfTextEditor/pdfdoc/passes/nameArtifactKinds";
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { writesArtifactKinds } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   assertIncrementalAppend,
   assertSavedPdf,
@@ -49,6 +51,11 @@ export async function exportToBlob(
     bytes = doc.openedBytes;
   } else {
     bytes = await serializeEdits(doc, incremental);
+    try {
+      bytes = await nameArtifactKinds(bytes, pagesWritingArtifactKinds(doc));
+    } catch (err) {
+      throw accessibilitySaveFailed(err);
+    }
   }
 
   // Throws rather than dropping them: a description the user wrote that the
@@ -98,6 +105,16 @@ export async function exportToBlob(
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+}
+
+function pagesWritingArtifactKinds(doc: EditorDocument): number[] {
+  return doc
+    .loadedPages()
+    .filter(
+      (page) =>
+        page.regenerated && writesArtifactKinds(doc.module, page.pagePtr),
+    )
+    .map((page) => page.index);
 }
 
 function accessibilitySaveFailed(cause: unknown): Error {

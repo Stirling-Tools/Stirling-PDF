@@ -157,7 +157,7 @@ public class TimestampController {
 
         return WebResponseUtils.pdfFileToWebResponse(
                 tempOutputFile,
-                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_timestamped.pdf"));
+                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf"));
     }
 
     private byte[] requestTimestampToken(InputStream content, String tsaUrl) throws IOException {

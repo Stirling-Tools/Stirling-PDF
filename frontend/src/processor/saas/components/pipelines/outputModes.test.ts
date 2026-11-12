@@ -5,6 +5,12 @@ import { availableOutputModes } from "@processor/components/pipelines/outputMode
 
 describe("availableOutputModes (SaaS)", () => {
   it("offers durable destinations without exposing the server filesystem", () => {
-    expect(availableOutputModes()).toEqual(["s3", "vectordb"]);
+    expect(availableOutputModes()).toEqual([
+      "s3",
+      "onedrive",
+      "sharepoint",
+      "googledrive",
+      "vectordb",
+    ]);
   });
 });

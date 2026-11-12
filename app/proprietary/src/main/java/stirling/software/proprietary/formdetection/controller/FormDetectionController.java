@@ -207,11 +207,9 @@ public class FormDetectionController {
         if (original == null || original.isBlank()) {
             original = "document";
         }
-        String stem =
-                original.toLowerCase().endsWith(".pdf")
-                        ? original.substring(0, original.length() - 4)
-                        : original;
-        return stem + "_form";
+        return original.toLowerCase().endsWith(".pdf")
+                ? original.substring(0, original.length() - 4)
+                : original;
     }
 
     /** JSON body returned when {@code applyToPdf} is false. */

@@ -190,17 +190,24 @@ describe("textTag", () => {
   }
 
   test("gives text the block it belongs to", async () => {
-    const tagged = (role: string, cannotRetag: string | null) => ({
+    const tagged = (
+      role: string,
+      cannotRetag: string | null,
+      canBeArtifact: boolean,
+    ) => ({
       kind: "tagged",
       block: { role, type: role },
       cannotRetag,
+      canBeArtifact,
     });
     expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(
-      tagged("H1", null),
+      tagged("H1", null, true),
     );
-    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P", null));
+    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(
+      tagged("P", null, false),
+    );
     expect(await tagOf(paragraphsPdf(), "Item")).toEqual(
-      tagged("LI", "not-text"),
+      tagged("LI", "not-text", false),
     );
   });
 

@@ -131,6 +131,7 @@ class StorageFolderTriggerTest {
                                             inv.<Source>getArgument(3).id(),
                                             identity,
                                             null,
+                                            null,
                                             null);
                             CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
                             Runnable finish =

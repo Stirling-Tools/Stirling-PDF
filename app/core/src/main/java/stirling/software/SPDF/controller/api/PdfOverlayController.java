@@ -95,8 +95,7 @@ public class PdfOverlayController {
                 tempOut = tempFileManager.createManagedTempFile(".pdf");
                 overlay.overlay(overlayGuide).save(tempOut.getFile());
                 String outputFilename =
-                        GeneralUtils.generateFilename(
-                                baseFile.getOriginalFilename(), "_overlayed.pdf");
+                        GeneralUtils.generateFilename(baseFile.getOriginalFilename(), ".pdf");
 
                 TempFile out = tempOut;
                 tempOut = null; // ownership transferred to response Resource

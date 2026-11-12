@@ -5929,7 +5929,7 @@ title = "Visualizza/Modifica PDF"
 
 [home.watermark]
 desc = "Aggiungi una filigrana al tuo PDF."
-tags = "timbro,segno,sovrapposizione,watermark,branding,logo,riservato,bozza,copyright,marchio,testo sovrapposto,immagine sovrapposta,testo di sfondo"
+tags = "timbro,segno,sovrapposizione,filigrana,branding,logo,riservato,bozza,copyright,marchio,testo sovrapposto,immagine sovrapposta,testo di sfondo"
 title = "Aggiungi Filigrana"
 
 [HTMLToPDF]
@@ -13411,7 +13411,7 @@ title = "Risultati moduli sbloccati"
 
 [update]
 allReleases = "Tutti i rilasci"
-breaking = "Breaking"
+breaking = "Blocco"
 breakingChanges = "Modifiche incompatibili"
 breakingChangesDefault = "Questa versione contiene modifiche incompatibili."
 close = "Chiudi"
@@ -13518,7 +13518,7 @@ you = "(tu)"
 
 [users.action]
 cancelInvite = "Annulla invito"
-createFromDefault = "Crea team da Default"
+createFromDefault = "Crea team da impostazione predefinita"
 deleteTeam = "Elimina team"
 disableMfa = "Reimposta MFA"
 move = "Sposta nel team"
@@ -13643,8 +13643,8 @@ title = "Nuovo team"
 [users.renameTeam]
 apply = "Rinomina"
 defaultApply = "Crea e sposta"
-defaultDescription = "Default resterà disponibile per i nuovi utenti. Tutti quelli attualmente in Default verranno spostati nel nuovo team."
-defaultTitle = "Crea team da Default"
+defaultDescription = "L'impostazione predefinita resterà disponibile per i nuovi utenti. Tutti quelli attualmente predefiniti verranno spostati nel nuovo team."
+defaultTitle = "Crea team da impostazione predefinita"
 name = "Nome del team"
 title = "Rinomina team"
 

@@ -530,6 +530,7 @@ export function useToolbarController(
     onSetTextTag: textA11y.setTag,
     innerTextTags: textA11y.inner,
     textLanguage: textA11y.language,
+    textOtherPages: textA11y.otherPages,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,
