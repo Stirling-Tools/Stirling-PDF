@@ -76,6 +76,12 @@ type DeviceFontNotice = "unavailable" | "none";
 interface FontFamilySelectProps {
   value: string | null;
   /**
+   * Set when the selection is scanned text, whose `value` is the font the
+   * scan matcher drew it in rather than a font of the document. `label` is the
+   * matcher's name for that face; `value` is null while no font is in force.
+   */
+  scanned?: { label?: string };
+  /**
    * The fontId of the PDF's own font the selection was changed away from.
    * Listed as a pickable option whose value is that fontId, so the text can be
    * put back in it.
@@ -90,6 +96,7 @@ interface FontFamilySelectProps {
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
 export function FontFamilySelect({
   value,
+  scanned,
   documentFontId = null,
   onChange,
   mixed = false,
@@ -184,12 +191,20 @@ export function FontFamilySelect({
         ? [{ value: documentFontId, label: familyOf(documentFontId) }]
         : []),
       ...(documentFamily
-        ? [{ value: documentFamily, label: documentFamily, disabled: true }]
+        ? [
+            {
+              value: documentFamily,
+              label: scanned?.label ?? documentFamily,
+              disabled: true,
+            },
+          ]
         : []),
     ];
     if (documentItems.length > 0) {
       groups.push({
-        group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
+        group: scanned
+          ? t("pdfTextEditor.fontPicker.matchedGroup", "Matched font")
+          : t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
         items: documentItems,
       });
     }
@@ -215,6 +230,7 @@ export function FontFamilySelect({
     deviceOptions,
     documentFamily,
     documentFontId,
+    scanned,
     serverGroupLabel,
     t,
   ]);
@@ -296,7 +312,9 @@ export function FontFamilySelect({
         placeholder={
           mixed
             ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
-            : t("pdfTextEditor.fontPicker.placeholder", "Font family")
+            : scanned
+              ? t("pdfTextEditor.fontPicker.scannedText", "Scanned text")
+              : t("pdfTextEditor.fontPicker.placeholder", "Font family")
         }
         aria-label={t("pdfTextEditor.fontPicker.label", "Font family")}
         nothingFoundMessage={t(

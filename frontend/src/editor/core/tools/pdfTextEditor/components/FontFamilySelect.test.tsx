@@ -157,4 +157,43 @@ describe("font picker server fonts", () => {
       expect(onChange).toHaveBeenCalledWith("pdf:7:Garamond"),
     );
   });
+
+  it("names the font a scan was matched to, not a document font", async () => {
+    render(
+      <MantineProvider env="test">
+        <FontFamilySelect
+          value="Carlito"
+          scanned={{ label: "Calibri (Carlito)" }}
+          onChange={async () => null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByTestId("pdf-editor-font-family");
+    expect(input).toHaveValue("Calibri (Carlito)");
+
+    fireEvent.click(input);
+
+    expect(
+      await screen.findByText("pdfTextEditor.fontPicker.matchedGroup"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("pdfTextEditor.fontPicker.documentGroup"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says scanned text when no font is in force for it", () => {
+    render(
+      <MantineProvider env="test">
+        <FontFamilySelect
+          value={null}
+          scanned={{}}
+          onChange={async () => null}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.getByTestId("pdf-editor-font-family")).toHaveAttribute(
+      "placeholder",
+      "pdfTextEditor.fontPicker.scannedText",
+    );
+  });
 });
