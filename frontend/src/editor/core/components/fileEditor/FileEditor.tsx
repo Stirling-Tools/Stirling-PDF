@@ -11,6 +11,7 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { zipFileService } from "@editor/services/zipFileService";
 import { detectFileExtension } from "@editor/utils/fileUtils";
+import { withViewTransition } from "@editor/utils/viewTransition";
 import FileEditorThumbnail from "@editor/components/fileEditor/FileEditorThumbnail";
 import AddFileCard from "@editor/components/fileEditor/AddFileCard";
 import FilePickerModal from "@editor/components/shared/FilePickerModal";
@@ -190,8 +191,7 @@ const FileEditor = ({
 
       newOrder.splice(insertIndex, 0, ...filesToMove);
 
-      // View transitions can crash WebKitGTK when accelerated compositing is unavailable.
-      reorderFiles(newOrder);
+      void withViewTransition(() => reorderFiles(newOrder));
 
       const moveCount = filesToMove.length;
       showStatus(

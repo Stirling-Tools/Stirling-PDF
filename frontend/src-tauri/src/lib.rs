@@ -92,14 +92,39 @@ fn is_app_url(url: &tauri::Url) -> bool {
   }
 }
 
+// WebKitGTK >= 2.44 has only the DMA-BUF backing store, so disabling it leaves none and the UI
+// process segfaults entering compositing. FORCE_SHM (new in 2.44) still dodges NVIDIA DMA-BUF.
+#[cfg(target_os = "linux")]
+fn webkit_renderer_env_var(major: u32, minor: u32) -> &'static str {
+  if (major, minor) >= (2, 44) {
+    "WEBKIT_DMABUF_RENDERER_FORCE_SHM"
+  } else {
+    "WEBKIT_DISABLE_DMABUF_RENDERER"
+  }
+}
+
+#[cfg(target_os = "linux")]
+fn configure_webkit_renderer() {
+  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_some()
+    || std::env::var_os("WEBKIT_DMABUF_RENDERER_FORCE_SHM").is_some()
+  {
+    return;
+  }
+  // SAFETY: constant getters of the loaded libwebkit2gtk; they need no WebKit/GTK init.
+  let (major, minor) = unsafe {
+    (
+      webkit2gtk_sys::webkit_get_major_version(),
+      webkit2gtk_sys::webkit_get_minor_version(),
+    )
+  };
+  std::env::set_var(webkit_renderer_env_var(major, minor), "1");
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
-  // Wayland stacks (blank window, app dying on tool switch). Opt out unless overridden.
+  // Avoid the DMA-BUF renderer crash on NVIDIA unless the user overrode it.
   #[cfg(target_os = "linux")]
-  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
-    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-  }
+  configure_webkit_renderer();
 
   tauri::Builder::default()
     .plugin(
@@ -388,5 +413,15 @@ mod tests {
     // Look-alike hosts must not slip past the allowlist.
     assert!(!allows("https://localhost.evil.test/"));
     assert!(!allows("https://nottauri.localhost.evil.test/"));
+  }
+
+  #[cfg(target_os = "linux")]
+  #[test]
+  fn keeps_a_webkit_backing_store() {
+    use super::webkit_renderer_env_var;
+    assert_eq!(webkit_renderer_env_var(2, 42), "WEBKIT_DISABLE_DMABUF_RENDERER");
+    assert_eq!(webkit_renderer_env_var(2, 44), "WEBKIT_DMABUF_RENDERER_FORCE_SHM");
+    assert_eq!(webkit_renderer_env_var(2, 52), "WEBKIT_DMABUF_RENDERER_FORCE_SHM");
+    assert_eq!(webkit_renderer_env_var(3, 0), "WEBKIT_DMABUF_RENDERER_FORCE_SHM");
   }
 }
