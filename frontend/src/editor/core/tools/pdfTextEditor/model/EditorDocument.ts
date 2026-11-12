@@ -7,6 +7,7 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
+  givenMcids,
   isInlineType,
   type AddedElement,
   type CutElement,
@@ -664,11 +665,22 @@ export class EditorDocument {
     ];
   }
 
-  /** Every unsaved change to a link annotation, in the form the save pass takes. */
+  /**
+   * Every unsaved change to a link annotation, in the form the save pass
+   * takes. A link whose holder's text is no longer on the page is left
+   * unheld, as the save drops a session element with no text (cutEdits,
+   * addedElementEdits).
+   */
   annotationEdits(): AnnotationEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) =>
-      structure.linkEdits().map((edit) => ({ pageIndex, ...edit })),
-    );
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => {
+      const page = this.pageCache.get(pageIndex);
+      const carried = page && carriedMcids(this.module, page.pagePtr);
+      return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
+        const held = mcid !== undefined && (!carried || carried.has(mcid));
+        if (!held && edit.contents === undefined) return [];
+        return [{ pageIndex, ...edit, ...(held && { mcid }) }];
+      });
+    });
   }
 
   /**
@@ -914,7 +926,8 @@ function insertionPoint(
 
 /**
  * The added element each cut's text was taken from, through cuts from cuts,
- * by the cut's MCID. Cuts from the file's elements are left out.
+ * by the cut's MCID and those it gave the text it was cut from. Cuts from
+ * the file's elements are left out.
  */
 function addedOwners(
   added: ReadonlyMap<number, AddedElement>,
@@ -924,7 +937,8 @@ function addedOwners(
   for (const { mcid, cut } of cuts) {
     const from = cut.from[0];
     const owner = added.has(from) ? from : owners.get(from);
-    if (owner !== undefined) owners.set(mcid, owner);
+    if (owner === undefined) continue;
+    for (const part of [mcid, ...givenMcids(cut)]) owners.set(part, owner);
   }
   return owners;
 }

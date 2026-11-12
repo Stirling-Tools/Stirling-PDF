@@ -27,7 +27,10 @@ import {
   type ArtifactKind,
   type Furniture,
 } from "@editor/tools/pdfTextEditor/model/artifactKind";
-import type { ContentCut } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  givenMcids,
+  type ContentCut,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
@@ -241,8 +244,8 @@ export async function applyStructureEdits(
 
 /**
  * The cuts taking text from an element the save adds, directly or through
- * an earlier such cut, in the order made: none can be written until that
- * element is in the tree.
+ * the element or the parts an earlier such cut made, in the order made: none
+ * can be written until that element is in the tree.
  */
 function cutsFromAddedElements(
   added: readonly StructureEdit[],
@@ -254,7 +257,9 @@ function cutsFromAddedElements(
   for (const edit of cuts) {
     if (!owners.has(key(edit.pageIndex, edit.cut!.from[0]))) continue;
     late.add(edit);
-    owners.add(key(edit.pageIndex, edit.mcid));
+    for (const mcid of [edit.mcid, ...givenMcids(edit.cut!)]) {
+      owners.add(key(edit.pageIndex, mcid));
+    }
   }
   return late;
 }

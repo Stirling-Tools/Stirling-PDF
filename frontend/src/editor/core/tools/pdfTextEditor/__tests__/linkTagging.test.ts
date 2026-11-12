@@ -11,6 +11,7 @@ import {
   test,
   vi,
 } from "vitest";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { linkTexts } from "@editor/tools/pdfTextEditor/commands/linkText";
 import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/SetLinkContentsCommand";
 import {
@@ -338,6 +339,24 @@ describe("tagging links", () => {
     expect(kidsOf(pdf, 9)).toEqual(["0", "/Link", "2"]);
     expect(kidsOf(pdf, 10)).toEqual(["1", `OBJR ${LINK}`]);
     expect(holder(pdf)).toBe(10);
+  });
+
+  test("leaves a tagged link unheld once its text is deleted, keeping its description", async () => {
+    const doc = await open(taggedPdf());
+    const history = new HistoryStack();
+    history.execute(
+      new TagLinkCommand({ pageIndex: 0, annotation: LINK }),
+      doc,
+    );
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    history.execute(
+      new DeleteObjectCommand({ pageIndex: 0, runId: run.id }),
+      doc,
+    );
+
+    const pdf = await saved(doc);
+    expect(holder(pdf)).toBeNull();
+    expect(contents(pdf)).toBe("stirlingpdf.com");
   });
 
   test("leaves a link the file already gives an element alone", async () => {

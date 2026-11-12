@@ -801,6 +801,21 @@ describe("tagging part of the text of an element the session added", () => {
     const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
     expect(kidsOf(pdf, documentElement(pdf))).toEqual(["/H2", "/P"]);
   });
+
+  test("saves a cut from the text an earlier cut left before it", async () => {
+    const { doc, history } = await taggedPage("Read the guide for more.");
+    tagRange(doc, history, "guide", "Span");
+    tagRange(doc, history, "Read", "Span");
+
+    const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
+    const p = kidNamed(pdf, documentElement(pdf), "P");
+    expect(kidsOf(pdf, p)).toEqual([
+      "/Span",
+      expect.any(String),
+      "/Span",
+      expect.any(String),
+    ]);
+  });
 });
 
 describe("which tags part of a run's text can take", () => {

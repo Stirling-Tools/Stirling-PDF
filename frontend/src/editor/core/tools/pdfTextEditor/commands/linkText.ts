@@ -39,6 +39,7 @@ export function linkTexts(
   pageIndex: number,
   links: readonly LinkAnnotation[],
 ): Map<number, LinkText> {
+  if (links.length === 0) return new Map();
   const byAnnotation = new Map<number, Covered[]>();
   for (const char of coveredCharacters(doc, pageIndex, links)) {
     const chars = byAnnotation.get(char.annotation) ?? [];

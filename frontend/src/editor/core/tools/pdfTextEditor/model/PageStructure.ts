@@ -221,7 +221,7 @@ export interface ContentCut {
 }
 
 /** The MCIDs a cut gave to the content it was cut from. */
-function givenMcids(cut: ContentCut): number[] {
+export function givenMcids(cut: ContentCut): number[] {
   return [cut.before, cut.after].filter(
     (mcid): mcid is number => mcid !== null && !cut.from.includes(mcid),
   );
