@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.accountlink.LinkKeyFormat;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -96,6 +97,18 @@ public class AdminLicenseController {
         if (licenseKey == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "error", "License key is required"));
+        }
+        // A link key saved here would be written to settings.yml in plain text and never link.
+        if (LinkKeyFormat.looksLikeLinkKey(licenseKey)) {
+            return ResponseEntity.badRequest()
+                    .body(
+                            Map.of(
+                                    "success",
+                                    false,
+                                    "error",
+                                    "This is a Stirling Cloud link key, not a license key",
+                                    "code",
+                                    "LINK_KEY"));
         }
 
         try {

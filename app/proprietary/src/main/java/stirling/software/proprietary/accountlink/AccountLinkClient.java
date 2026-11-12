@@ -114,8 +114,18 @@ public class AccountLinkClient {
         UNAVAILABLE
     }
 
+    /** {@code appUrl} is the cloud's web app, when it says; only a key redeem carries it today. */
     public record ConnectClaimResult(
-            ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+            ConnectClaimOutcome outcome,
+            String deviceId,
+            String deviceSecret,
+            Long teamId,
+            String appUrl) {
+        public ConnectClaimResult(
+                ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+            this(outcome, deviceId, deviceSecret, teamId, null);
+        }
+
         static ConnectClaimResult of(ConnectClaimOutcome outcome) {
             return new ConnectClaimResult(outcome, null, null, null);
         }
@@ -228,6 +238,65 @@ public class AccountLinkClient {
         } catch (RuntimeException e) {
             log.debug("Connect claim parse failed: {}", e.getMessage());
             return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
+    }
+
+    /**
+     * Exchanges a one-time link key for this server's own device credential. Only {@code GRANTED},
+     * {@code REJECTED} and {@code UNAVAILABLE} are returned; SaaS gives one answer for every kind
+     * of refused key.
+     */
+    public ConnectClaimResult redeemKey(String key, String name) {
+        HttpResponse<String> response;
+        try {
+            ObjectNode root = mapper.createObjectNode();
+            root.put("key", key);
+            if (name != null && !name.isBlank()) {
+                root.put("name", name.strip());
+            }
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/account-link/keys/redeem"))
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            mapper.writeValueAsString(root)))
+                            .build();
+            response = send(request);
+        } catch (Exception e) {
+            log.debug("Link key redeem failed (transport): {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        int status = response.statusCode();
+        // Only a 400 is a verdict on the key. Anything else (an older SaaS without the endpoint, a
+        // proxy, an outage) leaves it unspent and worth retrying.
+        if (status == 400) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
+        if (status / 100 != 2) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        try {
+            JsonNode body = mapper.readTree(response.body());
+            String deviceId = text(body, "deviceId");
+            String deviceSecret = text(body, "deviceSecret");
+            if (deviceId == null || deviceSecret == null) {
+                log.warn("Link key redeem succeeded but the reply carried no credential");
+                return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+            }
+            Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
+            String appUrl = text(body, "appUrl");
+            return new ConnectClaimResult(
+                    ConnectClaimOutcome.GRANTED,
+                    deviceId,
+                    deviceSecret,
+                    teamId,
+                    appUrl != null && isAbsoluteHttpUrl(appUrl) ? appUrl : null);
+        } catch (RuntimeException e) {
+            log.debug("Link key redeem parse failed: {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
         }
     }
 

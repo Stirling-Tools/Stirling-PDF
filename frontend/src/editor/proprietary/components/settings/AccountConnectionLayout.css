@@ -141,6 +141,15 @@
   margin-bottom: 1rem;
 }
 
+.account-connection__key {
+  width: 100%;
+}
+
+.account-connection__key .sui-input__el {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
 .account-connection__actions {
   display: flex;
   justify-content: flex-end;
