@@ -452,7 +452,11 @@ function measureFaces(
       score: compare(doc, page, ref, c, undefined, true).score,
     }));
   if (sizes.length === 0) return [];
-  const floor = Math.round(scanPixelSpan(doc, page, ref.ink.rect) / 2);
+  // A scan pixel `span` render pixels wide blurs like a box of that width,
+  // which is a radius of (span - 1) / 2: one render pixel or less is crisp.
+  const floor = Math.round(
+    Math.max(0, scanPixelSpan(doc, page, ref.ink.rect) - 1) / 2,
+  );
   // Compare the tuned faces at the scan's softness. Blurring both images
   // gives the scan a second blur, which makes regular strokes look bold.
   const candidates: Candidate[] = faces
