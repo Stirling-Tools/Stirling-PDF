@@ -534,8 +534,7 @@ class CertSignControllerTest {
 
     @Test
     void fallbackSignerNameFitsInsideSignatureBox() throws Exception {
-        X509Certificate cert =
-                certificateWithSubject("O=Test Organisation, SERIALNUMBER=12345");
+        X509Certificate cert = certificateWithSubject("O=Test Organisation, SERIALNUMBER=12345");
         String label = "Signed by " + CertSignController.CreateSignature.getSignerName(cert);
         PDFont font = new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
         float fitted = CertSignController.CreateSignature.fitSignerFontSize(font, label, 10, 190);
@@ -567,8 +566,7 @@ class CertSignControllerTest {
                             doc, "Signed by Test Organisation");
             assertEquals("Times-Bold", latinFont.getName());
 
-            PDFont font =
-                    CertSignController.CreateSignature.resolveSignatureFont(doc, label);
+            PDFont font = CertSignController.CreateSignature.resolveSignatureFont(doc, label);
             assertTrue(
                     TextEncodingHelper.canEncodeCharacters(font, label),
                     "resolved font must encode the non-Latin label");
@@ -583,6 +581,20 @@ class CertSignControllerTest {
         X509Certificate cert = certificateWithSubject("CN=García\\, Ana");
 
         assertEquals("García, Ana", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    @Test
+    void signerNameFromMultiValuedRdnIsTheCommonName() throws Exception {
+        X509Certificate cert = certificateWithSubject("SERIALNUMBER=12345678Z+CN=JUAN GARCIA");
+
+        assertEquals("JUAN GARCIA", CertSignController.CreateSignature.getSignerName(cert));
+    }
+
+    @Test
+    void signerNameFromMultiValuedRdnIsTheCommonNameRegardlessOfOrder() throws Exception {
+        X509Certificate cert = certificateWithSubject("CN=JUAN GARCIA+SERIALNUMBER=12345678Z");
+
+        assertEquals("JUAN GARCIA", CertSignController.CreateSignature.getSignerName(cert));
     }
 
     private static X509Certificate certificateWithSubject(String subjectDn) throws Exception {
