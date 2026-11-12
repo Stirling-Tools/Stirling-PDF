@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   layoutScanEdit,
+  rewrapLines,
   type LayoutInput,
   type LayoutLine,
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
@@ -130,5 +131,46 @@ describe("layoutScanEdit", () => {
     expect(l.kept).toEqual([]);
     expect(l.removed).toHaveLength(4);
     expect(l.typed.map((t) => t.text)).toEqual(["NORTH CO", "TEL 1"]);
+  });
+});
+
+describe("rewrapLines", () => {
+  const upTo = (n: number) => (line: string) => line.length <= n;
+
+  it("moves the words that overflow to the front of the next line", () => {
+    expect(rewrapLines("one two three four\nfive", upTo(13), false)).toBe(
+      "one two three\nfour five",
+    );
+  });
+
+  it("keeps every character at its offset", () => {
+    const text = "one two three four\nfive six seven\neight";
+    const wrapped = rewrapLines(text, upTo(13), true);
+    expect(wrapped.replace(/\n/g, " ")).toBe(text.replace(/\n/g, " "));
+    expect(wrapped.split("\n").every((l) => l.trim().length <= 13)).toBe(true);
+  });
+
+  it("adds a line under the last one only when there is room", () => {
+    expect(rewrapLines("one two three four", upTo(13), true)).toBe(
+      "one two three\nfour",
+    );
+    expect(rewrapLines("one two three four", upTo(13), false)).toBe(
+      "one two three four",
+    );
+  });
+
+  it("does not pull a paragraph break into the line above", () => {
+    expect(rewrapLines("one two three four\n\nfive", upTo(13), true)).toBe(
+      "one two three\nfour\n\nfive",
+    );
+  });
+
+  it("leaves a single word that cannot fit, and text that already fits", () => {
+    expect(rewrapLines("incomprehensibilities", upTo(5), true)).toBe(
+      "incomprehensibilities",
+    );
+    expect(rewrapLines("one two\nthree", upTo(13), true)).toBe(
+      "one two\nthree",
+    );
   });
 });
