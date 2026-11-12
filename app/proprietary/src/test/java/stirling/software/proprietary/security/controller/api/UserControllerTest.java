@@ -164,6 +164,26 @@ class UserControllerTest {
     }
 
     @Test
+    void changingThePasswordEndsTheFirstLogin() throws Exception {
+        User admin = new User();
+        admin.setUsername("admin");
+        admin.setFirstLogin(true);
+        Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "pw");
+        when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+        when(userService.isPasswordCorrect(admin, "stirling")).thenReturn(true);
+
+        mockMvc.perform(
+                        post("/api/v1/user/change-password")
+                                .param("currentPassword", "stirling")
+                                .param("newPassword", "a-new-pass")
+                                .principal(authentication))
+                .andExpect(status().isOk());
+
+        verify(userService).changePassword(admin, "a-new-pass");
+        verify(userService).changeFirstUse(admin, false);
+    }
+
+    @Test
     void updateLoginLandingViewStoresTheOptIn() throws Exception {
         UpdateLoginLandingView payload = new UpdateLoginLandingView();
         payload.setLoginLandingView("processor");

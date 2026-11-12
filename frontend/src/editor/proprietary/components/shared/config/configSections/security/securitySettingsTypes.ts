@@ -100,6 +100,17 @@ export interface GoogleDriveSettings {
   clientId?: string;
   apiKey?: string;
   appId?: string;
+  clientSecret?: string;
+  allowAccountConnections?: boolean;
+  accountScope?: string;
+}
+
+export interface MicrosoftSettings {
+  enabled?: boolean;
+  clientId?: string;
+  tenant?: string;
+  clientSecret?: string;
+  allowAccountConnections?: boolean;
 }
 
 export interface OAuth2GenericSettings {
@@ -141,6 +152,7 @@ export type ProviderSettings =
   | MailSettings
   | TelegramSettingsData
   | GoogleDriveSettings
+  | MicrosoftSettings
   | OAuth2GenericSettings
   | Saml2Settings
   | OAuth2ClientSettings;
@@ -171,4 +183,8 @@ export interface ConnectionsSettingsData {
   googleDriveClientId?: string;
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
+  googleDriveClientSecret?: string;
+  googleDriveAllowAccountConnections?: boolean;
+  googleDriveAccountScope?: string;
+  microsoft?: MicrosoftSettings;
 }

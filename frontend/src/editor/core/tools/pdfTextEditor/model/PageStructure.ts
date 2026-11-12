@@ -1,3 +1,4 @@
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type {
   StructureRole,
   StructureType,
@@ -113,6 +114,8 @@ export interface StructureElementEdit {
   alt: string | null;
   /** Turn the element's content into an artifact and drop the element. */
   decorative: boolean;
+  /** The page furniture the artifact is, when `decorative`; absent for a plain one. */
+  furniture?: Furniture;
 }
 
 /**
@@ -130,8 +133,16 @@ export type ReadOnlyReason = "encrypted" | "unreadable";
 /** Why content cannot take a description. */
 export type DescriptionBlocker = "untagged" | "not-figure" | ReadOnlyReason;
 
-/** Why content cannot be marked decorative. */
-export type DecorativeBlocker = DescriptionBlocker | "mixed-content";
+/**
+ * Why content cannot be marked decorative. "not-content" is an element that
+ * is neither a figure nor a block of text, such as a list item, whose
+ * structure would be left broken without it.
+ */
+export type DecorativeBlocker =
+  | "untagged"
+  | "not-content"
+  | "mixed-content"
+  | ReadOnlyReason;
 
 /** What a whole element's text can be retagged as. Lbl and Span only tag part of one (TEXT_RANGE_TYPES). */
 export const TEXT_BLOCK_TYPES = [
@@ -375,16 +386,44 @@ export class PageStructure {
     return null;
   }
 
-  /** Why the content `mcid` marks cannot be marked decorative, or null when it can. */
+  /**
+   * Why the content `mcid` marks cannot be marked decorative, or null when it
+   * can: a figure or formula, or one of the file's blocks of text, owning
+   * nothing but marked content.
+   */
   cannotMarkDecorative(mcid: number): DecorativeBlocker | null {
-    const blocker = this.cannotDescribe(mcid);
-    if (blocker) return blocker;
-    return this.element(mcid)!.onlyMarkedContent ? null : "mixed-content";
+    const el = this.element(mcid);
+    if (!el) return "untagged";
+    if (this.readOnly) return this.readOnly;
+    const describable = el.type !== null && DESCRIBABLE_TYPES.has(el.type);
+    if (!describable && !this.isFileTextBlock(el)) return "not-content";
+    return el.onlyMarkedContent && !this.hasCutsFrom(el)
+      ? null
+      : "mixed-content";
+  }
+
+  private isFileTextBlock(el: StructureElement): boolean {
+    return (
+      this.fileElements.has(el) &&
+      el.key === el.block.key &&
+      this.cannotRetag(el.mcids[0]) === null
+    );
+  }
+
+  /** True when the session cut text out of `el`, which then still reads as part of it. */
+  private hasCutsFrom(el: StructureElement): boolean {
+    return [...this.cuts.values()].some(({ owner }) => owner === el);
   }
 
   /** True when the session has marked the element owning `mcid` decorative. */
   decorative(mcid: number): boolean {
     return this.editFor(mcid)?.decorative ?? false;
+  }
+
+  /** The page furniture the session marked the element owning `mcid` as; null when none. */
+  furniture(mcid: number): Furniture | null {
+    const edit = this.editFor(mcid);
+    return (edit?.decorative && edit.furniture) || null;
   }
 
   /** The description as it will be saved: the session's edit, else the file's. */
@@ -403,18 +442,40 @@ export class PageStructure {
 
   /** Set the description, keeping any decorative mark. Throws as setEdit does. */
   setAlt(mcid: number, alt: string | null): void {
-    this.setEdit(mcid, { mcid, alt, decorative: this.decorative(mcid) });
+    const edit = this.editFor(mcid);
+    this.setEdit(mcid, {
+      mcid,
+      alt,
+      decorative: edit?.decorative ?? false,
+      ...(edit?.furniture && { furniture: edit.furniture }),
+    });
   }
 
   /**
-   * Mark or unmark decorative, keeping the description. Throws as setEdit
-   * does, and for an added element, whose content is retagged instead.
+   * Mark or unmark decorative, as `furniture` or a plain artifact, keeping
+   * the description. Throws as setEdit does, and for an added element, whose
+   * content is retagged instead.
    */
-  setDecorative(mcid: number, decorative: boolean): void {
+  setDecorative(
+    mcid: number,
+    decorative: boolean,
+    furniture: Furniture | null = null,
+  ): void {
     if (this.added.has(mcid)) {
       throw new Error(`MCID ${mcid} is an added element`);
     }
-    this.setEdit(mcid, { mcid, alt: this.alt(mcid), decorative });
+    const alt = this.alt(mcid);
+    if (!decorative) {
+      const unchanged = alt === this.element(mcid)?.alt;
+      this.setEdit(mcid, unchanged ? null : { mcid, alt, decorative });
+      return;
+    }
+    this.setEdit(mcid, {
+      mcid,
+      alt,
+      decorative,
+      ...(furniture && { furniture }),
+    });
   }
 
   /** Throws when no element owns `mcid`: a command must not record an edit the save cannot address. */
@@ -523,6 +584,28 @@ export class PageStructure {
     this.added.set(mcid, element);
     this.byMcid.set(mcid, element);
     return element;
+  }
+
+  /**
+   * The element the session added for untagged content `mcid` marks, where
+   * nothing else depends on it: not cut from another element's text, and
+   * with no text cut from it. Null otherwise.
+   */
+  standaloneAdded(mcid: number): AddedElement | null {
+    const element = this.added.get(mcid);
+    if (!element || this.cuts.has(mcid) || this.hasCutsFrom(element)) {
+      return null;
+    }
+    return this.addedElement(mcid);
+  }
+
+  /** Put back an element removeElement dropped, as standaloneAdded read it. */
+  restoreElement(element: AddedElement): void {
+    this.addElement(element.mcid, element.type, element.follows);
+    if (element.lang !== null) {
+      this.langs.set(addedKey(element.mcid), element.lang);
+    }
+    if (element.alt !== null) this.setAlt(element.mcid, element.alt);
   }
 
   /** Drop an added element, its description and language, and the cut it was made by. */

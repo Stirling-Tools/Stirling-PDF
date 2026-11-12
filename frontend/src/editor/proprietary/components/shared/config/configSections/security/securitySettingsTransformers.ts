@@ -179,6 +179,20 @@ export async function fetchConnectionsSettings(): Promise<
     googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || "",
     googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || "",
     googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || "",
+    googleDriveClientSecret:
+      premiumData.proFeatures?.googleDrive?.clientSecret || "",
+    googleDriveAllowAccountConnections:
+      premiumData.proFeatures?.googleDrive?.allowAccountConnections !== false,
+    googleDriveAccountScope:
+      premiumData.proFeatures?.googleDrive?.accountScope || "drive",
+    microsoft: {
+      enabled: premiumData.proFeatures?.microsoft?.enabled || false,
+      clientId: premiumData.proFeatures?.microsoft?.clientId || "",
+      tenant: premiumData.proFeatures?.microsoft?.tenant || "common",
+      clientSecret: premiumData.proFeatures?.microsoft?.clientSecret || "",
+      allowAccountConnections:
+        premiumData.proFeatures?.microsoft?.allowAccountConnections !== false,
+    },
   };
 
   // Merge pending blocks from all endpoints
@@ -234,6 +248,20 @@ export async function fetchConnectionsSettings(): Promise<
   if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
     pendingBlock.googleDriveAppId =
       premiumData._pending.proFeatures.googleDrive.appId;
+  }
+  const pendingGoogle = premiumData._pending?.proFeatures?.googleDrive;
+  if (pendingGoogle?.clientSecret !== undefined) {
+    pendingBlock.googleDriveClientSecret = pendingGoogle.clientSecret;
+  }
+  if (pendingGoogle?.allowAccountConnections !== undefined) {
+    pendingBlock.googleDriveAllowAccountConnections =
+      pendingGoogle.allowAccountConnections;
+  }
+  if (pendingGoogle?.accountScope !== undefined) {
+    pendingBlock.googleDriveAccountScope = pendingGoogle.accountScope;
+  }
+  if (premiumData._pending?.proFeatures?.microsoft !== undefined) {
+    pendingBlock.microsoft = premiumData._pending.proFeatures.microsoft;
   }
 
   if (Object.keys(pendingBlock).length > 0) {
@@ -336,6 +364,24 @@ export function saveConnectionsSettings(
   if (currentSettings?.googleDriveAppId !== undefined) {
     deltaSettings["premium.proFeatures.googleDrive.appId"] =
       currentSettings.googleDriveAppId;
+  }
+  const googleExtras: [string, unknown][] = [
+    ["clientSecret", currentSettings?.googleDriveClientSecret],
+    [
+      "allowAccountConnections",
+      currentSettings?.googleDriveAllowAccountConnections,
+    ],
+    ["accountScope", currentSettings?.googleDriveAccountScope],
+  ];
+  for (const [key, value] of googleExtras) {
+    if (value !== undefined) {
+      deltaSettings[`premium.proFeatures.googleDrive.${key}`] = value;
+    }
+  }
+  for (const [key, value] of Object.entries(currentSettings?.microsoft ?? {})) {
+    if (value !== undefined) {
+      deltaSettings[`premium.proFeatures.microsoft.${key}`] = value;
+    }
   }
 
   return {

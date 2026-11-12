@@ -76,10 +76,10 @@ class ConvertImgPDFControllerTest {
                                             eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
-            guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", "_converted.pdf"))
-                    .thenReturn("photo_converted.pdf");
+            guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", ".pdf"))
+                    .thenReturn("photo.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
+            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo.pdf"))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.convertToPdf(request);
@@ -119,10 +119,10 @@ class ConvertImgPDFControllerTest {
                                             eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
-            guMock.when(() -> GeneralUtils.generateFilename("photo.png", "_converted.pdf"))
-                    .thenReturn("photo_converted.pdf");
+            guMock.when(() -> GeneralUtils.generateFilename("photo.png", ".pdf"))
+                    .thenReturn("photo.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
+            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo.pdf"))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.convertToPdf(request);
@@ -162,10 +162,10 @@ class ConvertImgPDFControllerTest {
                                             eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
-            guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", "_converted.pdf"))
-                    .thenReturn("photo_converted.pdf");
+            guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", ".pdf"))
+                    .thenReturn("photo.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
+            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo.pdf"))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<byte[]> response = controller.convertToPdf(request);

@@ -13,7 +13,9 @@ export type IntegrationType =
   | "API"
   | "PURVIEW"
   | "CONSIGNO"
-  | "VECTOR_DB";
+  | "VECTOR_DB"
+  | "MICROSOFT_365"
+  | "GOOGLE_WORKSPACE";
 export type OwnerScope = "USER" | "TEAM" | "SERVER";
 
 /** Mirrors the backend IntegrationConfigResponse; `config` values are masked. */

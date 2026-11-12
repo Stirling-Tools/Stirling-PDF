@@ -81,6 +81,7 @@ export function SelectionInspector({
             onSetTag={controller.onSetTextTag}
             inner={controller.innerTextTags}
             language={controller.textLanguage}
+            otherPages={controller.textOtherPages}
           />
         )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
