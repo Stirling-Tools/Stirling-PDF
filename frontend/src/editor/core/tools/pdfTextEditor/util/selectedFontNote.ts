@@ -4,7 +4,10 @@ import {
 } from "@editor/tools/pdfTextEditor/types";
 import {
   analyzePageFonts,
+  coverageFor,
   missingAlnumFromCmap,
+  type FontStatus,
+  type GlyphCoverage,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import {
   deviceFontCoverage,
@@ -97,6 +100,21 @@ function completedNote(fontIds: Iterable<string>): SelectedFontNote | null {
   return { kind: "completed", name: first.family, source };
 }
 
+// analyzePageFonts merges same-named fonts, device faces included, so read each selected font's own coverage.
+function selectedCoverage(
+  fontIds: Set<string>,
+  status: FontStatus,
+): GlyphCoverage {
+  const missing = new Set<string>();
+  let known = true;
+  for (const id of fontIds) {
+    const coverage = coverageFor(id, status);
+    known &&= coverage.known;
+    for (const ch of coverage.missing) missing.add(ch);
+  }
+  return { known, missing: [...missing] };
+}
+
 function documentFontNote(
   pages: PageSnapshot[],
   fontIds: Set<string>,
@@ -106,9 +124,9 @@ function documentFontNote(
     Array.from(fontIds).some((id) => id.endsWith(f.name)),
   );
   const font = fonts.length === 1 ? fonts[0] : null;
-  const gaps = font?.coverage.known ? font.coverage.missing : [];
-  const complete =
-    !!font && (font.status === "standard" || font.coverage.known);
+  const coverage = font ? selectedCoverage(fontIds, font.status) : null;
+  const gaps = coverage?.missing ?? [];
+  const complete = !!font && (font.status === "standard" || !!coverage?.known);
   // A subset says so itself, whatever the page-wide coverage scan concludes.
   const mayLack = allSubset || (!!font && (gaps.length > 0 || !complete));
   const completed = mayLack ? completedNote(fontIds) : null;

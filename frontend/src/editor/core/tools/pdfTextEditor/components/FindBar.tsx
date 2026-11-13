@@ -152,7 +152,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
    * The replacement is spliced literally, so "$&" stays "$&".
    */
   const doReplaceOne = useCallback(() => {
-    if (!query) return;
+    if (!query || replacing) return;
     const m = matches[activeIndex];
     if (!m) return;
     // A locked run is still findable, but must not be rewritten.
@@ -167,7 +167,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       }),
     );
     setReplaceCount(1);
-  }, [query, replace, matches, activeIndex, store]);
+  }, [query, replacing, replace, matches, activeIndex, store]);
 
   /**
    * Replace EVERY match. Each affected run gets one EditTextCommand,

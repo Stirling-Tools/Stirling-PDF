@@ -325,6 +325,45 @@ describe("useSelectionActions font changes", () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it("leaves a run locked during the download unchanged", async () => {
+    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    serveFaces(
+      () =>
+        new Promise((resolve) => {
+          finishDownload = resolve;
+        }),
+    );
+    await loadServerFonts();
+    const runs = [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")];
+    const { store, dispatch } = fakeStore(runs, ["a", "b"]);
+
+    const picked = actionsFor(store).changeFontFamily("Acme Sans");
+    runs[1].locked = true;
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    finishDownload(fontBytes());
+
+    expect(await picked).toBeNull();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Acme Sans"]);
+  });
+
+  it("keeps a run's font when its italic face will not embed", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "device:Acme Sans")],
+      ["a"],
+      false,
+    );
+
+    await actionsFor(store).toggleItalic();
+
+    expect(get).toHaveBeenCalledWith(
+      `${SERVER_FONTS_URL}/${ITALIC}`,
+      expect.anything(),
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it("refuses a font that has none of the selected characters", async () => {
     serveFaces(async () => ({
       data: HEBREW_TTF.buffer.slice(

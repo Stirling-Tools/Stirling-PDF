@@ -217,16 +217,21 @@ export function familyOptions(
 ): FontFamilyOption[] {
   if (!fonts) return [];
   const hidden = new Set(taken.map(normaliseName));
+  const families = groupByFamily(fonts);
+  const listed = new Set([
+    ...hidden,
+    ...families.map(({ family }) => normaliseName(family)),
+  ]);
   const withBold = new Set<string>();
   for (const font of fonts) {
     const flags = faceStyleFlags(font);
     if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
   }
-  return groupByFamily(fonts).flatMap(({ family }) => {
+  return families.flatMap(({ family }) => {
     const key = normaliseName(family);
     if (hidden.has(key)) return [];
     const options = [{ value: family, label: family }];
-    if (withBold.has(key)) {
+    if (withBold.has(key) && !listed.has(normaliseName(`${family} Bold`))) {
       options.push({ value: `${family} Bold`, label: `${family} Bold` });
     }
     return options;
