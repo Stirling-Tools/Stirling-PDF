@@ -1328,6 +1328,10 @@ label = "감시 폴더 디렉터리"
 description = "신규 사용자의 기본 언어(예: en_US, es_ES)"
 label = "기본 로케일"
 
+[admin.settings.general.enableFeedback]
+description = "Let users send feedback to the Stirling team"
+label = "Enable Feedback"
+
 [admin.settings.general.fileUploadLimit]
 description = "최대 파일 업로드 크기(예: 100MB, 1GB)"
 label = "파일 업로드 제한"
@@ -2969,6 +2973,7 @@ loadError = "사용자를 불러오지 못했습니다"
 noTeam = "팀 없음"
 noUsers = "다른 사용자를 찾을 수 없습니다."
 placeholder = "사용자 선택..."
+signInRequired = "Sign in to request signatures from other people."
 you = "{{name}} (본인)"
 
 [certSign.device]
@@ -3056,7 +3061,6 @@ ssoManaged = "귀하의 계정은 ID 공급자에서 관리됩니다."
 title = "자격 증명 변경"
 
 [changeMetadata]
-filenamePrefix = "메타데이터"
 submit = "변경"
 tags = "편집,수정,업데이트,메타데이터,속성,문서 속성,작성자,제목,주제,키워드,생성자,제작자,정보,문서 정보,파일 속성"
 
@@ -3265,6 +3269,248 @@ not_found = "요청한 정보를 찾을 수 없습니다."
 processing = "처리 중({{outcome}})..."
 unsupported_capability = "지원되지 않는 기능: {{capability}}"
 usage_limit_reached = "사용 한도에 도달했습니다. 계속하려면 플랜 옵션을 확인하세요."
+
+[checkAccessibility]
+aboutRow = "About {{label}}"
+checking = "Checking..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Download accessibility report"
+fileFailed = "failed"
+pickFile = "Show results for"
+submit = "Check accessibility"
+
+[checkAccessibility.category]
+altText = "Alternative text"
+fonts = "Fonts"
+language = "Language"
+links = "Links & annotations"
+metadata = "Metadata & settings"
+structure = "Tags & structure"
+
+[checkAccessibility.categoryTip]
+altText = "Images need a short text description for screen readers to read out instead."
+fonts = "Fonts need to be in the file, with every character linked to real text, so the text can be read aloud and copied."
+language = "Screen readers need to know the document's language to pronounce it correctly."
+links = "Links, comments and form fields need tags and descriptions, and a tab order that follows the page."
+metadata = "The title, PDF/UA declaration and other settings that assistive technology reads from the file."
+structure = "Tags tell screen readers what each part of a page is, such as a heading, list or table, and the order to read it in."
+
+[checkAccessibility.checks]
+label = "{{passed}} of {{total}} checks passed"
+
+[checkAccessibility.error]
+download = "The accessibility report could not be created. Try again."
+fileTitle = "This file could not be checked"
+partial = "Some files could not be checked."
+
+[checkAccessibility.facts]
+declares = "Declares PDF/UA"
+displaysTitle = "Shows its title"
+fonts = "Fonts embedded"
+language = "Declares a language"
+notEncrypted = "Not encrypted"
+tagged = "Tagged"
+title = "Has a title"
+
+[checkAccessibility.factTip]
+declares = "The file's metadata says it follows PDF/UA."
+displaysTitle = "PDF readers show the title, not the file name, when the file opens."
+fonts = "Every font the text uses is included in the file."
+language = "The file says which language its text is in."
+notEncrypted = "The file isn't encrypted. Encryption can stop assistive technology reading it."
+tagged = "The file has tags describing its structure. Without them, screen readers only get plain text."
+title = "The file has a title in its metadata."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} image needs a description (page {{pages}})"
+summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Applies to"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Details"
+instances_one = "{{count}} instance"
+instances_other = "{{count}} instances"
+onPages_one = "Page {{pages}}"
+onPages_other = "Pages {{pages}}"
+onPagesPartial_one = "Page {{pages}} (list may be incomplete)"
+onPagesPartial_other = "Pages {{pages}} (list may be incomplete)"
+pages = "Pages"
+pagesPartialValue = "{{pages}} (only the first occurrences record a page, so this list may be incomplete)"
+requirement = "Requirement"
+rule = "Rule"
+standard = "Standard"
+where = "Where"
+
+[checkAccessibility.manual]
+clearAll = "Clear all"
+done = "Done"
+inProgress = "In progress"
+markAllDone = "Mark all as done"
+tip = "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report."
+title = "Manual checks"
+
+[checkAccessibility.objects]
+annotation = "An annotation"
+bookmark = "A bookmark"
+character = "A character in a font"
+contentPiece = "A piece of page content"
+document = "The document"
+drawing = "A drawing"
+figure = "A figure"
+file = "The file itself"
+font = "A font"
+form = "The form"
+formField = "A form field"
+link = "A link"
+markedContent = "Marked page content"
+metadata = "The document metadata"
+page = "A page"
+properties = "The document properties"
+tag = "A {{name}} tag"
+tagTree = "The tag tree"
+textPiece = "A piece of text"
+translatedMetadata = "A metadata entry with translations"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continued)"
+footer = "Checked with Stirling PDF"
+page = "Page {{n}}"
+title = "Accessibility report"
+
+[checkAccessibility.result]
+fail = "Fail"
+failSummary = "Screen readers may not be able to read all of this document."
+partial = "Partial"
+partialSummary = "Screen readers can read this document, but some checks fail."
+pass = "Pass"
+passSummary = "Passes every automated PDF/UA check."
+
+[checkAccessibility.rules]
+annotationLanguage = "Comment or link text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+annotationNoDescription = "A comment, link or drawing has no text description, so screen readers have nothing to announce."
+annotationNotTagged = "A comment or drawing isn't tagged as an annotation, so screen readers can't reach it in reading order."
+artifactInsideTagged = "Something marked as decoration sits inside tagged content, so it is both read and skipped."
+bookmarkLanguage = "The bookmarks don't have a language set, so screen readers don't know which language to read them in. Set the document's language to fix this."
+conformancePrefix = "The PDF/UA declaration in the metadata uses the wrong prefix, so PDF readers may not recognise it."
+contentLanguage = "The text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+customTagNotMapped = "A tag uses a custom name that isn't linked to a standard tag, so screen readers don't know what it is."
+figureNoAlt = "An image is tagged as a figure but has no description, so screen reader users won't know what it shows."
+fontMissingGlyphs = "An included font is missing some of the characters the document uses."
+fontNotEmbedded = "A font isn't included in the file, so the text may look different, or be read differently, on another computer."
+formFieldNotTagged = "A form field isn't tagged as part of a form, so screen readers may not find it."
+genericHeading = "A heading uses the H tag, which has no level. PDF/UA-2 needs H1 to H6 so screen reader users can tell how headings nest."
+glyphWidths = "A font's character widths in the file don't match the font itself, so text may be spaced wrongly."
+headingSkipped = "Heading levels skip a step, for example from Heading 1 straight to Heading 3, which makes moving between headings confusing."
+linkNoDescription = "A link has no description, so screen readers can only read out its address, or nothing."
+linkNotTagged = "A link isn't tagged as a link, so screen readers won't announce it as one."
+metadataLanguage = "The metadata, such as the title, doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+noConformanceClaim = "The file doesn't say it follows PDF/UA. Its metadata needs a PDF/UA identification entry."
+noDocumentTag = "The tags need a single Document tag at the top, with everything else inside it."
+noLanguage = "The document doesn't say which language it is in, so screen readers may read it in the wrong language."
+noMetadataStream = "The file has no XMP metadata, which is where PDF/UA keeps the document's title and conformance details."
+noTags = "The file has no tags at all, so screen readers can't tell headings, paragraphs, lists or tables apart, or read them in the right order."
+notdefGlyph = "The text uses a \"missing character\" placeholder, which shows as a blank or a box and can't be read aloud."
+noteTag = "The file uses the Note tag, which PDF/UA-2 replaces with FENote for footnotes and endnotes."
+noTitle = "The document has no title in its metadata."
+notMarkedTagged = "The file isn't flagged as tagged, so assistive technology may ignore the tags it has."
+notPdf2Tags = "PDF/UA-2 needs the tags a PDF 2.0 file uses. These look like PDF 1.7 tags, which usually means the file was tagged for PDF/UA-1."
+noUnicode = "Some characters can't be turned into readable text, so screen readers and copy and paste may get them wrong."
+replacementTextLanguage = "Some replacement text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+standardTagRemapped = "A standard tag is linked to a custom tag, so screen readers lose its meaning."
+symbolicEncoding = "A symbol font carries an encoding it shouldn't, so its characters may come out as the wrong letters."
+tabOrder = "A page with links or comments doesn't set its tab order to follow the document, so keyboard users may jump around the page."
+taggedInsideArtifact = "Tagged content sits inside something marked as decoration, so screen readers may skip it."
+titleNotDisplayed = "PDF readers will show the file name instead of the document's title. The file needs its \"display document title\" setting turned on."
+untaggedContent = "Something on the page is neither tagged as content nor marked as decoration, so screen readers can't tell whether to read it. This is often a background image, header, footer or page number."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "No language for comments or links"
+annotationNoDescription = "Comment, link or drawing without a description"
+annotationNotTagged = "Comment or drawing not tagged"
+artifactInsideTagged = "Decoration inside tagged content"
+bookmarkLanguage = "No language for bookmarks"
+conformancePrefix = "PDF/UA declaration written incorrectly"
+contentLanguage = "No language for text"
+customTagNotMapped = "Custom tag with no standard meaning"
+figureNoAlt = "Image without a description"
+fontMissingGlyphs = "Font missing characters"
+fontNotEmbedded = "Font not embedded"
+formFieldNotTagged = "Form field not tagged"
+genericHeading = "Heading without a level"
+glyphWidths = "Font character widths don't match"
+headingSkipped = "Heading level skipped"
+linkNoDescription = "Link without a description"
+linkNotTagged = "Link not tagged"
+metadataLanguage = "No language for metadata"
+noConformanceClaim = "Doesn't declare PDF/UA"
+noDocumentTag = "Tags don't start with a Document tag"
+noLanguage = "No document language"
+noMetadataStream = "No XMP metadata"
+noTags = "No tags"
+notdefGlyph = "Missing-character placeholder used"
+noteTag = "Uses the Note tag"
+noTitle = "No document title"
+notMarkedTagged = "Not flagged as tagged"
+notPdf2Tags = "Tags aren't PDF 2.0 tags"
+noUnicode = "Characters that can't be read as text"
+replacementTextLanguage = "No language for replacement text"
+standardTagRemapped = "Standard tag turned into a custom one"
+symbolicEncoding = "Symbol font has the wrong encoding"
+tabOrder = "Tab order doesn't follow the document"
+taggedInsideArtifact = "Tagged content hidden as decoration"
+titleNotDisplayed = "Title isn't shown when opened"
+untaggedContent = "Content that isn't tagged"
+
+[checkAccessibility.score]
+issues_one = "{{count}} issue"
+issues_other = "{{count}} issues"
+noIssues = "No issues found"
+subtitle_one = "{{profile}} - {{count}} page"
+subtitle_other = "{{profile}} - {{count}} pages"
+
+[checkAccessibility.sections]
+breakdown = "Breakdown"
+
+[checkAccessibility.status]
+checking = "Checking {{current}} of {{total}}..."
+complete = "Check complete"
+
+[checkAccessibility.steps]
+results = "Results"
+standard = "Standard"
+
+[checkAccessibility.tooltip.header]
+title = "Which standard to check"
+
+[checkAccessibility.tooltip.ua1]
+text = "The first version of PDF/UA, published in 2012 as ISO 14289-1, for PDF 1.7 files."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "The newer version, published in 2024 as ISO 14289-2, for PDF 2.0 files. A PDF 1.7 file checked against it fails the rules that only apply to PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Annotation {{n}}"
+bookmarks = "Bookmarks"
+character = "A character in {{font}}"
+contentItem = "Content item {{n}}"
+drawingStep = "Drawing step {{n}}"
+embeddedGraphic = "Embedded graphic"
+font = "Font {{name}}"
+metadata = "Document metadata"
+page = "Page {{n}}"
+piece = "Piece {{n}}"
+tag = "{{tag}} tag"
+tagTree = "Tag tree"
+wholeDocument = "Whole document"
+
+[checkAccessibility.where.properties]
+author = "Author"
+description = "Description"
+pdfUaPart = "PDF/UA part"
+title = "Title"
 
 [classification.families]
 correspondence = "서신"
@@ -4046,6 +4292,30 @@ failed = "로그인을 갱신할 수 없습니다. 다시 시도하거나 이 �
 lead = "이 서버는 이미 계정에 연결되어 있습니다. 서버의 청구 및 사용량으로 돌아가려면 로그인을 갱신하세요."
 title = "서버 로그인 갱신"
 
+[connectedAccounts]
+connect = "Connect"
+connectAnother = "Connect another"
+connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
+disconnect = "Disconnect"
+google = "Google Drive"
+intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling can no longer reach this account, so pipelines using it are paused."
+none = "Your administrator hasn't turned on connected accounts."
+personal = "Personal account"
+popupBlocked = "Your browser blocked the sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Sign in again"
+work = "Work account"
+
+[connectedAccounts.disconnectConfirm]
+body = "Sources and pipelines that use this account will stop until you connect it again."
+confirm = "Disconnect"
+title = "Disconnect {{account}}?"
+
+[connectedAccounts.status]
+connected = "Connected"
+needsSignIn = "Needs sign-in"
+
 [convert]
 autoRotate = "자동 회전"
 autoRotateDescription = "이미지를 자동으로 회전하여 PDF 페이지에 더 잘 맞춥니다"
@@ -4648,6 +4918,17 @@ title = "설정"
 [extractPages.tooltip]
 description = "선택한 페이지를 순서를 유지한 채 새 PDF로 추출합니다."
 
+[feedback.page]
+open = "Send feedback"
+sendMore = "Send more feedback"
+sent = "Thanks for your feedback"
+title = "Help us improve Stirling"
+unavailable = "Feedback is unavailable"
+
+[feedback.tag]
+dismiss = "Hide the feedback button"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "파일 편집기에서 열기"
 viewInViewer = "뷰어에서 보기"
@@ -4657,7 +4938,6 @@ closeFile = "파일 닫기"
 
 [fileEditor]
 closedFile = "{{name}} 닫힘"
-couldNotSave = "{{name}}을(를) 저장할 수 없습니다"
 filesReordered_one = "파일 순서가 변경됨"
 filesReordered_other = "파일 {{count}}개의 순서가 변경됨"
 loadedFromStorage_one = "저장소에서 파일 {{count}}개를 불러왔습니다"
@@ -5672,6 +5952,11 @@ title = "메타데이터 변경"
 desc = "문서 제한 및 권한 변경"
 tags = "권한,제한,권리,접근 제어,허용,거부,인쇄,복사,편집,권한 수정,보안 설정,사용자 권한"
 title = "권한 변경"
+
+[home.checkAccessibility]
+desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Check PDF accessibility"
 
 [home.classify]
 desc = "이 문서의 종류를 식별하고 태그를 지정합니다."
@@ -7110,6 +7395,7 @@ resetsTomorrow = "내일 재설정"
 thisPeriod = "현재 청구 기간"
 
 [payment]
+annually = "Annually"
 billingPeriod = "청구 기간"
 cancelTeamChange = "현재 플랜 유지"
 canCloseWindow = "이제 이 창을 닫아도 됩니다."
@@ -7157,11 +7443,14 @@ title = "Team 플랜 조정"
 
 [payment.capacityStage]
 adjustmentNote = "확인하기 전에 Stripe에서 정확한 청구 금액, 일할 계산 및 다음 청구일을 표시합니다. 사용 가능한 경우 저장된 결제 수단이 사용됩니다."
+billingLabel = "Billing"
 continue = "결제로 계속"
 currencyAtCheckout = "Stripe가 결제 시 최종 금액과 결제 통화를 확인합니다."
+custom = "Custom"
 customLabel = "사용자 수"
 dueToday = "오늘 결제 금액"
 enterpriseQuote = "엔터프라이즈 견적 받기"
+enterUsers = "Enter a number of users."
 estimatedTotal = "예상 합계"
 lineItem = "Team · 사용자 {{block}}명당 {{price}}{{period}}"
 minimumForCurrentUsers = "사용자가 {{users}}명이므로 플랜은 최소 {{minimum}}명을 포함해야 합니다."
@@ -7173,12 +7462,16 @@ overCapacityConsequence = "기존 계정은 그대로 유지됩니다. 용량을
 overCapacityTitle = "서버의 사용자 수가 플랜에서 허용하는 수보다 많습니다"
 perMonth = "/월"
 perYear = "/년"
+planName = "Stirling Team"
 reductionNote = "더 낮은 용량은 다음 갱신 시 시작됩니다. 그때까지 현재 허용량을 사용할 수 있습니다. 기존 사용자는 유지되며, 변경 적용 시 용량을 초과한 경우 새 사용자는 차단됩니다."
 renewalNote = "{{total}}{{period}}에 갱신됩니다. 사용량 및 청구에서 언제든지 취소할 수 있습니다."
 reviewChange = "Stripe에서 변경 검토"
-roundsTo = "{{users}}명으로 반올림"
+roundsUp = "Rounds up to {{users}} users."
+selfServeLimit = "Up to {{users}} users here."
 subheading = "초대한 모든 사용자를 {{users}}명 단위로 포함합니다."
 subheadingAdd = "현재 플랜은 사용자 {{current}}명을 포함합니다. 새 총계를 선택하세요."
+talkToEnterprise = "For more, talk to us about Enterprise."
+usersCovered = "users covered"
 usersLabel = "사용자"
 userTotal = "사용자 {{users}}명"
 
@@ -7261,12 +7554,16 @@ widget = "양식 필드 - 페이지 텍스트가 아니므로 여기에서 편�
 
 [pdfTextEditor.commands]
 edit = "편집"
+markTagged = "Mark as fully tagged"
 mergeRuns_one = "{{count}}개 run을 단락으로 병합"
 mergeRuns_other = "{{count}}개 run을 단락으로 병합"
 setColour = "{{run}}에 색상 설정"
 setOutline = "{{run}}에 윤곽선 설정"
+tagLink = "Tag link"
+tagPageContent = "Auto-tag page"
 typeInto = "{{run}}에 입력"
 ungroupParagraph = "단락 {{run}} 그룹 해제"
+unmarkTagged = "Mark as not fully tagged"
 wrap = "{{run}} 줄 바꿈"
 
 [pdfTextEditor.discard]
@@ -7418,9 +7715,17 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "태그 추가"
+applyToOtherPages_one = "Apply to {{count}} other page"
+applyToOtherPages_other = "Apply to {{count}} other pages"
+artifactGroup = "Skipped by screen readers"
 artifactText = "장식용"
 cannotChange = "이 이미지의 접근성은 변경할 수 없습니다."
+cannotDescribeLink = "This link's description can't be changed."
 cannotRetag = "이 텍스트의 태그는 변경할 수 없습니다."
+cannotSetDecorative = "This can't be marked or unmarked as decorative."
+cannotTagLink = "This link can't be tagged."
+cannotTagPage = "This page's content can't be tagged."
+contentGroup = "Content"
 customTag = "{{role}} (사용자 지정 태그)"
 decorativeInfo = "스크린 리더는 장식용 이미지를 건너뜁니다. 테두리, 배경 및 정보를 담고 있지 않은 기타 이미지에 사용하세요."
 decorativeLabel = "장식용 이미지"
@@ -7430,22 +7735,40 @@ encrypted = "암호화된 파일에서는 태그를 편집할 수 없습니다"
 heading = "접근성"
 innerTagLabel = "태그 {{number}}"
 innerTags = "이 텍스트의 태그"
+linkDescription = "Link description"
+markedTagged = "Document is fully tagged"
+markedTaggedHint = "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged."
+markedWithUntagged = "Some content has no tags, so screen readers may skip it."
 missingDescriptions = "누락된 설명"
 mixedContent = "그림에 다른 콘텐츠가 포함되어 있음"
+mixedTags = "Mixed"
 needsDescriptionBadge = "설명 없음"
 nextImage = "다음 이미지"
 notFigure = "텍스트의 일부로 태그됨"
 removeTag = "태그 제거"
 saveFailed = "접근성 변경 사항을 저장할 수 없어 파일이 저장되지 않았습니다. 변경 사항을 실행 취소하고 다시 시도하세요."
 selectedText = "선택한 텍스트"
+tagging = "Tagging pages"
 tagLabel = "태그"
+tagLinks_one = "Tag link"
+tagLinks_other = "Tag {{count}} links"
+tagUntagged = "Auto-tag document"
+tagUntaggedHint = "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards."
 unknownTag = "여기서 읽을 수 없음"
+unmarkedWithTags = "Some PDF viewers will use the tags anyway and may skip content without them."
 unreadable = "이 파일의 태그는 편집할 수 없습니다"
 untaggableImages = "여기서 태그할 수 없음"
 untaggedBadge = "태그되지 않음"
 untaggedDocument = "문서에 태그가 없습니다"
 untaggedImage = "여기서 태그할 수 없음"
 untaggedImages = "태그되지 않은 이미지"
+untaggedPages = "Pages to tag"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Footer"
+header = "Header"
+pageNumber = "Page number"
+watermark = "Watermark"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "텍스트가 없는 제목"
@@ -7504,6 +7827,23 @@ tableHead = "표 머리글"
 tableHeader = "표 헤더"
 tableRow = "표 행"
 title = "제목"
+
+[pdfTextEditor.inspector.language]
+allLanguages = "All languages"
+cannotSetDocument = "This document's language can't be changed."
+cannotSetText = "This text's language can't be changed."
+documentHint = "The language screen readers use unless a part of the text sets its own."
+documentLabel = "Language"
+documentLocked = "An encrypted document's language can't be changed here."
+inDocument = "In this document"
+innerLabel = "Tag {{number}} language"
+label = "Language"
+missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
+mixed = "Mixed"
+noMatch = "No matching language. Type its code instead, such as mt or en-IE."
+placeholder = "Select language"
+selectedText = "Selected text language"
+textHint = "Screen readers switch voice and pronunciation to this language."
 
 [pdfTextEditor.mobile]
 actions = "편집기 작업"
@@ -7935,8 +8275,6 @@ triggerImport = "가져오기 시 실행"
 [policies.enforcement]
 applying = "{{names}} 적용 중"
 applyingProgress = "{{names}} 적용 중 ({{done}}/{{total}})"
-exportFailureBody = "보안 정책을 적용할 수 없습니다. 파일은 있는 그대로 내보냈습니다."
-exportFailureTitle = "정책 적용 없이 내보냄"
 failureBody = "일부 정책을 {{total}}개 파일 중 {{failures}}개에 적용할 수 없습니다."
 failureTitle = "완전한 정책 적용 없이 내보냄"
 printPolicyAppliedBody = "정책을 충족하도록 이 PDF가 업데이트되었습니다. 변경 사항을 확인한 후 다시 인쇄하세요."
@@ -8787,6 +9125,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "정책이 실행될 때 Google Chat 공간에 메시지를 게시합니다."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "A service account that reads and writes Google Drive for the organisation."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Paste the service account's JSON key from Google Cloud. It is encrypted and never shown again."
+label = "Service account key (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Optional. With domain-wide delegation, the user whose Drive this acts as (a dedicated bot user keeps working when people leave). Blank reaches only shared drives and folders shared with the service account."
+label = "Act as user"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "처리된 문서를 Jira 이슈에 첨부합니다."
@@ -8795,6 +9146,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Needs Microsoft Graph application permissions with admin consent."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com or tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9191,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "앱 password"
+
+[portal.connections.types.onedrive]
+description = "Read from and write to one user's OneDrive for Business."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Whose OneDrive this connection reaches. The app registration needs the Files.ReadWrite.All application permission."
+label = "OneDrive owner"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9265,18 @@ helperText = "대신 private key로 인증하는 경우 비워 두세요."
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "선택 사항입니다. password 대신 key로 인증하려면 OpenSSH private key를 붙여넣으세요."
 label = "개인 키"
+
+[portal.connections.types.sharepoint]
+description = "Read from and write to a SharePoint site's document library."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Optional. Leave blank for the site's default Documents library."
+label = "Document library"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "정책이 문서를 처리할 때 Slack에 메시지를 게시합니다."
@@ -9142,6 +9525,130 @@ status = "상태"
 time = "시간"
 user = "사용자"
 
+[portal.enterprise]
+backTo = "Back to {{stage}}"
+brandTag = "Enterprise"
+callInfo = "A 15-minute call. Bring your questions on pricing, deployment or security, or plan your rollout together."
+callTitle = "Talk to a solutions engineer"
+deployment = "Deployment"
+footer = "Questions about Stirling Enterprise?"
+home = "Go to Stirling"
+member = "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here."
+memberDeal = "Your team leader runs this deal. You can follow its progress here."
+quotePanel = "Your quote"
+signIn = "Sign in"
+signInToStart = "Sign in to start your trial"
+stage = "Stage {{current}} of {{total}}"
+stagesLabel = "Progress"
+
+[portal.enterprise.connect]
+ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
+unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
+
+[portal.enterprise.landing]
+lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
+tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
+tickCompliance = "SCIM, data residency and uptime SLAs"
+tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Offline licence docs"
+point1 = "Activated with a licence file that works offline, not a key checked online"
+point2 = "Installs like self-hosted, from an image you bring across"
+point3 = "Sign-in stays inside your network"
+tagline = "Self-hosted on a network with no internet access."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud docs"
+point1 = "Your team signs in at stirling.com/app"
+point2 = "Runs on AWS, with stored files encrypted at rest"
+point3 = "Single sign-on through your own identity provider needs self-hosting"
+tagline = "Hosted for you, with nothing to install."
+
+[portal.enterprise.options.selfhost]
+more = "Self-hosting docs"
+point1 = "Install with Docker, or the Helm chart on Kubernetes"
+point2 = "Documents are processed on your own infrastructure"
+point3 = "OAuth2, OIDC or SAML single sign-on"
+tagline = "On your own servers, on-premises or in your own cloud."
+
+[portal.enterprise.review]
+back = "Return to {{stage}}"
+company = "Company"
+completed = "Completed"
+extensions = "Extensions used"
+paid = "Paid. Your invoice stays available here."
+people = "People"
+started = "Started"
+trialEnds = "Trial end date"
+trialTitle = "Your trial"
+version = "Version"
+viewInvoice = "View invoice"
+
+[portal.enterprise.setup]
+copied = "Copied"
+copy = "Copy"
+markDone = "Mark “{{step}}” done"
+progress = "{{done}} of {{total}} done"
+subtitle = "Make the most of your trial by trying it the way you'll run it."
+subtitleLive = "The steps to finish before you roll out to everyone."
+title = "Get set up"
+titleLive = "Go-live checklist"
+
+[portal.enterprise.setup.firstDocument]
+body = "Upload a PDF your team works with and try the tools you'd use day to day, such as redact, compress or OCR."
+title = "Run your first document"
+
+[portal.enterprise.setup.getApp]
+body = "Install the desktop app for Windows, Mac or Linux and sign in with the account you just made, or use it straight from your browser."
+title = "Get Stirling"
+
+[portal.enterprise.setup.install]
+body = "Run this on your server. It starts Stirling with your licence applied, and the image includes OCR and office conversion. For larger teams, use Kubernetes."
+title = "Install and start Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Bring in the people who'll use it, so the trial reflects real work."
+title = "Invite your team"
+
+[portal.enterprise.setup.licence]
+body = "Open <code>http://your-server:8080/settings/adminPlan</code>, where your Enterprise licence should show as active. Installed another way? Add the key under <code>premium.key</code> in <code>settings.yml</code> and restart."
+title = "Check your licence is active"
+
+[portal.enterprise.setup.links]
+browser = "Use it in your browser"
+docker = "Docker guide"
+download = "Download the app"
+downloadForTeam = "Get the app for your team"
+downloading = "Downloading..."
+downloadLicence = "Download licence file"
+invite = "Invite teammates"
+kubernetes = "Kubernetes guide"
+licence = "Licence activation"
+ocr = "OCR languages"
+openApp = "Open Stirling"
+samlGuide = "SAML guide"
+ssoGuide = "SSO guide"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Pull the full image on a connected machine, carry it and the licence file across, then load and start it. The full image adds the fonts an offline server can't download."
+title = "Bring Stirling across and start it"
+
+[portal.enterprise.setup.offlineLicence]
+body = "An air-gapped server can't reach our licence service, so it checks this signed file instead. Keep it with the image you carry across."
+title = "Download your offline licence"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Create accounts at <code>/settings/people</code>, or point Stirling at your internal identity provider so sign-in never leaves your network."
+bodySelfHosted = "Create accounts at <code>/settings/people</code>, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
+title = "Add your people"
+
+[portal.enterprise.setup.signIn]
+body = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>. You'll be asked to choose a new password straight away."
+bodyAirgap = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>, choose a new password, then check <code>/settings/adminPlan</code> shows your licence as active."
+title = "Sign in as the admin"
+
 [portal.errorBoundary]
 description = "이 보기에서 예기치 않은 오류가 발생했습니다. 다시 시도하거나 사이드바에서 다른 섹션을 선택하세요."
 retry = "다시 시도"
@@ -9293,6 +9800,7 @@ title = "검토할 항목 없음"
 [portal.home.download]
 back = "뒤로"
 body = "데스크톱 앱을 다운로드하거나 서버를 자체 호스팅하세요."
+bodyDesktop = "Download the desktop app, then sign in with your Stirling account."
 done = "완료"
 guide = "{{name}} 가이드 열기"
 openInBrowser = "대신 브라우저에서 열기"
@@ -10442,7 +10950,6 @@ cloud = "Drive · Box · S3"
 email = "Email 수신"
 
 [portal.procurement]
-subtitle = "팀 평가, 계약, 온보딩을 완료하세요. 모든 문서를 한곳에서 관리합니다."
 title = "조달"
 
 [portal.procurement.agreement]
@@ -10460,7 +10967,6 @@ loadError = "계약서를 불러올 수 없습니다. 다시 시도하세요."
 loading = "계약서를 불러오는 중..."
 ref = "참조 {{ref}} · {{version}}"
 requestChanges = "변경 요청"
-scrollHint = "검토하려면 스크롤"
 signatory = "서명자 이름"
 signatoryPlaceholder = "전체 이름"
 signatoryTitle = "서명자 직함"
@@ -10468,27 +10974,37 @@ signatoryTitlePlaceholder = "예: General Counsel"
 signError = "서명을 기록할 수 없습니다. 다시 시도하세요."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} one-time"
+addonPerYear = "+{{amount}}/yr"
 addons = "추가 기능"
 addressLine1 = "주소 줄 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "주소 줄 2"
 addressLine2Placeholder = "스위트, 층, 건물"
 back = "뒤로"
+belowMinimum = "This quote is below the minimum size for an Enterprise deal."
 businessName = "회사명"
 businessNamePlaceholder = "귀사"
 city = "시/군/구"
 cityPlaceholder = "San Francisco"
 completeRequired = "견적을 생성하기 전에 필수 필드(* 표시)를 유효한 이메일과 함께 완료하세요."
+conflict = "This deal has changed since you opened it. Close the builder and reload the page to see where it stands."
 contactEmail = "연락처 이메일"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "연락처 이름"
 contactNamePlaceholder = "Jane Doe"
 continue = "계속"
 done = "완료"
+editUsage = "Edit usage"
 eula = "Stirling Enterprise EULA를 읽었으며 이에 동의합니다. 이 견적에서 생성되는 계약에 적용됩니다."
 generate = "견적 생성"
 indemnification = "향상된 IP 보호"
 indemnificationSub = "당사의 IP 방어를 특허 청구까지 확장합니다. 기본 저작권, 상표 및 영업비밀 면책은 무료로 포함됩니다."
+minimum = "Enterprise requires a minimum yearly spend of {{min}}."
+minimumBelow = "This quote comes to {{annual}} a year. If you expect to use more, raise your estimated usage; otherwise the Team plan is likely a better fit."
+minimumNear = "Enterprise requires a minimum yearly spend of {{min}}. Raise your estimated usage to reach it, or talk it through with us."
+minimumNearTitle = "You're {{gap}} a year short of Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise 견적"
 paperFor = "대상"
 pdfSize = "PDF 크기"
@@ -10506,9 +11022,13 @@ posture_regulated = "규제됨"
 posture_regulatedSub = "모든 범주 — 규정 준수, 보존, 수집"
 qbr = "분기별 비즈니스 리뷰"
 qbrSub = "담당 SE가 매 분기 사용량과 로드맵을 검토합니다"
+raiseUsage = "Raise estimated usage"
 region = "주 / 지역"
 regionPlaceholder = "California"
-running = "{{annual}} / 년 · {{years}}년 {{tcv}}"
+runningLabel = "Estimated price"
+runningLabelIssued = "Quoted price"
+runningOneYear = "{{annual}} a year"
+runningTotal = "{{tcv}} total over {{years}} years"
 s1Sub = "귀하의 팀과 매년 실행할 것으로 예상되는 PDFs입니다."
 s1Title = "얼마나 처리하시겠습니까?"
 s2Sub = "기간이 길수록 요금 할인이 적용되며, 서비스 수준에 따라 지원이 결정됩니다."
@@ -10547,6 +11067,19 @@ volumePlaceholder = "예: 1,000,000"
 years_one = "{{count}}년"
 years_other = "{{count}}년"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} deployment"
+indemnification = "IP indemnification"
+multiYear_one = "{{count}}-year commitment"
+multiYear_other = "{{count}}-year commitment"
+qbr = "Quarterly business reviews"
+seats_one = "{{users}} agreed user + SSO / RBAC / audit"
+seats_other = "{{users}} agreed users + SSO / RBAC / audit"
+seatsUnset = "Users + SSO / RBAC / audit"
+support = "Dedicated SE / CSM"
+training = "Onboarding & training"
+usage = "PDF processing — {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} automation)"
+
 [portal.procurement.documents]
 agreement = "Enterprise 계약서"
 agreementSub = "MSA, 주문서 및 DPA가 하나의 서명으로 제공됩니다."
@@ -10557,6 +11090,8 @@ invoice = "인보이스"
 invoiceSub = "첫 구독 인보이스입니다."
 laterInvoice = "수락 후 사용 가능"
 laterQuote = "견적이 발행되면 사용 가능"
+laterSigning = "Available once the agreement is signed"
+laterTitle = "Later in your deal"
 quote = "견적"
 quoteSub = "항목별 Enterprise 견적입니다."
 sla = "SLA 별첨"
@@ -10573,15 +11108,12 @@ title = "문제가 발생했습니다"
 [portal.procurement.hero]
 barAria = "{{total}}단계 중 {{current}}단계"
 ctaAgreement = "계약 검토 및 서명"
-ctaExploring = "평가판 설정"
 ctaQuote = "견적 검토"
 ctaReviewQuote = "견적 검토"
 ctaTrial = "견적 만들기"
-documents = "문서"
 eyebrow = "엔터프라이즈"
 eyebrowCompany = "{{company}} 엔터프라이즈"
 inviteTeammates = "팀원 초대"
-licenseKey = "라이선스 키"
 liveSub = "조직이 프로비저닝되었고 라이선스가 활성 상태입니다."
 liveTitle = "Stirling Enterprise에서 라이브 상태입니다"
 next = "다음: {{stage}}"
@@ -10630,19 +11162,15 @@ downloadError = "아직 오프라인 라이선스 파일을 생성할 수 없습
 downloadOffline = "오프라인 라이선스 다운로드(.lic)"
 hint = "이 키를 self-hosted 인스턴스에 붙여넣어 활성화하거나 기록용으로 보관하세요. 안전하게 보관하세요."
 label = "라이선스 키"
-subtitle = "이 키로 셀프 호스팅 인스턴스를 활성화하거나 기록용으로 보관하세요."
-title = "라이선스 키"
 trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완료되면 돌아와 다시 다운로드하세요 — 온라인 라이선스 키와 달리 .lic 파일은 자동으로 업데이트되지 않습니다."
 
 [portal.procurement.link]
 cta = "계정 연결"
 description = "조달은 연결된 Stirling 계정에서 실행됩니다. 이 계정으로 평가판을 프로비저닝하고, 견적 가격을 책정하며, 청구를 시작합니다. 시작하려면 계정을 연결하세요."
-eyebrow = "엔터프라이즈"
 title = "시작하려면 계정을 연결하세요"
 
 [portal.procurement.live]
 description = "구독이 활성화되었으며 라이선스가 발급되었습니다. 팀이 프로비저닝되었고 청구가 시작되었습니다."
-eyebrow = "라이브"
 title = "Stirling Enterprise에서 라이브 상태입니다"
 
 [portal.procurement.milestone]
@@ -10650,16 +11178,14 @@ downloadError = "아직 견적 PDF를 다운로드할 수 없습니다. 잠시 �
 
 [portal.procurement.payment]
 description = "견적이 수락되었고 라이선스가 이미 활성화되어 팀이 바로 시작할 수 있습니다. 준비되면 첫 번째 송장을 결제하세요. 이메일 없이 여기에서 결제하거나 다운로드할 수 있습니다."
-downloadAgreement = "서명된 계약서 다운로드"
 downloadInvoice = "송장 다운로드"
-eyebrow = "결제"
-title = "구독 생성됨"
 viewInvoice = "송장 보기 및 결제"
 
 [portal.procurement.review]
 acceptCta = "견적 수락"
 annual = "연간 요금(1년 차)"
 downloadCta = "견적 다운로드"
+oneTime = "one-time"
 poNumber = "구매 주문: {{po}}"
 renewal = "기간 이후 {{amount}}/년으로 갱신(+{{pct}}% CPI)"
 tcv = "{{years}}년 기간, 선불 일시납: {{tcv}}"
@@ -10705,11 +11231,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "연장하면 7일이 추가되고 담당 솔루션 엔지니어에게 알림이 전송됩니다."
 bodyMaxed = "모든 연장 횟수를 사용했습니다. 시간이 더 필요하면 담당 솔루션 엔지니어에게 문의하세요."
-cancel = "평가판 취소"
 extend = "7일 연장"
 maxed = "한도 도달"
 subtitle = "무료 평가판은 {{date}}까지 진행됩니다. 카드가 필요하지 않습니다."
 title = "Enterprise 평가판"
+
+[portal.procurement.validation]
+confirm = "Confirm you're authorized to sign for the organization."
+email = "Enter a valid email address."
+eula = "Agree to the EULA to continue."
+required = "This field is required."
+seats = "Enter how many people will trial it."
+volume = "Enter how many PDFs you expect to process a year."
 
 [portal.review]
 subtitle = "정책 실행 및 팀 편집기에서 주의가 필요한 모든 항목입니다."
@@ -10735,6 +11268,7 @@ subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연
 title = "소스"
 
 [portal.sources.actions]
+connectDestination = "Connect destination"
 connectSource = "소스 연결"
 
 [portal.sources.builder]
@@ -10748,6 +11282,8 @@ chooseOutputHint = "처리된 문서가 이동할 위치를 선택하세요. 회
 comingSoon = "곧 제공 예정"
 comingSoonHeading = "곧 제공 예정"
 create = "소스 생성"
+createDestination = "Create destination"
+createDestinationTitle = "Add a destination"
 createTitle = "소스 연결"
 delete = "삭제"
 editTitle = "소스 편집"
@@ -10757,6 +11293,41 @@ save = "변경 사항 저장"
 description = "폴더 자동화는 관리자가 허용한 폴더만 사용할 수 있습니다. 폴더 액세스 설정에서 추가한 다음 다시 시도하세요."
 openSettings = "폴더 액세스 설정"
 title = "이 폴더는 허용되지 않습니다"
+
+[portal.sources.cloudFields.account]
+connect = "Connect your account"
+connectAnother = "Connect another account"
+connectFailed = "The account couldn't be connected. Try again, or ask your administrator to check the app registration."
+label = "Account"
+placeholder = "Choose an account"
+reconnect = "sign in again"
+unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Personal accounts are turned off on this server."
+helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
+label = "Sign in as"
+
+[portal.sources.cloudFields.authMode.options]
+account = "My account"
+organisation = "Organisation connection"
+
+[portal.sources.cloudFields.connection]
+helperText = "Set up by an administrator under Integrations. Shared by every location that uses it."
+label = "Organisation connection"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Paste the folder's link, or type a path from the top of My Drive. Leave empty for the top of My Drive. The folder must already exist."
+placeholder = "Folder link, or Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Leave empty for the top of the OneDrive. The folder must already exist."
+placeholder = "Scans/Inbox, or a folder link"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library; leave empty for the library root. The folder must already exist."
+organisationPlaceholder = "Folder link, or Scans/Inbox"
+placeholder = "Folder link"
 
 [portal.sources.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 이를 참조하는 정책은 업데이트해야 합니다."
@@ -10821,6 +11392,7 @@ label = "Email 받은편지함"
 [portal.sources.types.folder]
 description = "서버의 디렉터리에서 새 문서를 감시합니다."
 label = "폴더"
+outputDescription = "Save results to a directory on the server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "새 파일을 감시할 폴더의 절대 경로입니다."
@@ -10859,6 +11431,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "공유 Google Drive 폴더에서 문서를 가져옵니다."
 label = "Google Drive"
+outputDescription = "Save results to a Google Drive folder."
 
 [portal.sources.types.network]
 description = "새 문서를 위해 SMB 네트워크 공유를 감시합니다."
@@ -10867,10 +11440,12 @@ label = "네트워크 드라이브"
 [portal.sources.types.onedrive]
 description = "새 문서를 위해 OneDrive 폴더를 감시합니다."
 label = "OneDrive"
+outputDescription = "Save results to a OneDrive folder."
 
 [portal.sources.types.s3]
 description = "Amazon S3 또는 S3 호환 버킷에서 문서를 가져옵니다."
 label = "Amazon S3"
+outputDescription = "Save results to an Amazon S3 or S3-compatible bucket."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "버킷과 자격 증명이 포함된 저장된 연결입니다. 이를 사용하는 모든 소스와 파이프라인 출력에서 공유됩니다."
@@ -10896,6 +11471,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint 문서 라이브러리에서 문서를 가져옵니다."
 label = "SharePoint"
+outputDescription = "Save results to a SharePoint document library folder."
 
 [portal.sources.types.unknown]
 label = "소스"
@@ -11074,6 +11650,14 @@ waiting = "대기 중 ..."
 name = "Google Drive"
 scope = "파일 가져오기"
 
+[provider.googledrive.accountScope]
+description = "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates"
+label = "Drive access"
+
+[provider.googledrive.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
 [provider.googledrive.apiKey]
 description = "Google Cloud Console의 Google Picker API용 Google API 키"
 label = "API 키"
@@ -11086,6 +11670,10 @@ label = "앱 ID"
 description = "Google Cloud Console의 Google OAuth 2.0 클라이언트 ID"
 label = "클라이언트 ID"
 
+[provider.googledrive.clientSecret]
+description = "Lets people connect their Google account for their pipelines. Add the redirect URI below as an authorised redirect URI of the OAuth client."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "사용자가 Google Drive에서 직접 파일을 가져오도록 허용합니다"
 label = "Google Drive 파일 선택기 사용"
@@ -11093,6 +11681,38 @@ label = "Google Drive 파일 선택기 사용"
 [provider.googledrive.errors]
 notConfigured = "Google Drive가 구성되지 않았습니다"
 pickerFailed = "Google Drive 선택기를 열지 못했습니다"
+
+[provider.googledrive.redirectUri]
+description = "Add this as an authorised redirect URI of the OAuth client in Google Cloud Console."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Files & pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
+[provider.microsoft.clientId]
+description = "From one Microsoft Entra app registration."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Needed for connected accounts. Stays on the server."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Let people use OneDrive and SharePoint in pipelines"
+label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.redirectUri]
+description = "Add this as a Web redirect URI on the Entra app registration."
+label = "Redirect URI"
+
+[provider.microsoft.tenant]
+description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "일반 OAuth2"
@@ -11811,6 +12431,13 @@ title = "PDF 정리"
 [sanitizePdf]
 tags = "청소,보안,안전,위협-제거"
 
+[saveFile.menu]
+more = "More save options"
+saveCopy = "Save a copy..."
+
+[saveFile.toolbar]
+mixed = "Save all"
+
 [scalePages]
 tags = "크기 조정,조정,배율,페이지 크기,페이지 크기 조정,페이지 배율 조정,크기 변경,크기 조절,확대,페이지 축소,페이지에 맞춤,A4,letter size"
 title = "페이지 크기 조정"
@@ -11905,6 +12532,162 @@ showTools = "사용할 수 없는 도구 보기 ▾"
 title = "Stirling-PDF 서버에 연결할 수 없습니다"
 toolNotAvailableLocally = "Stirling-PDF 서버가 오프라인이며 로컬 백엔드에서 \"{{endpoint}}\"를 사용할 수 없습니다."
 
+[serverSetup]
+back = "Back"
+collapse = "Hide {{setting}} settings"
+configured = "Configured"
+continue = "Continue"
+dialogLabel = "Server setup"
+expand = "Show {{setting}} settings"
+finishSetup = "Finish setup"
+loadErrorSubtitle = "Setup needs the server's current settings to start."
+loadErrorTitle = "Couldn't load your settings"
+off = "Off"
+on = "On"
+save = "Save"
+stepCount = "{{current}} of {{total}}"
+
+[serverSetup.account]
+failed = "Couldn't save your details. Check the server is reachable and try again."
+save = "Save and continue"
+signIn = "Sign in"
+signInAgainSubtitle = "Sign in again with your new username and password to carry on."
+signInAgainTitle = "Your details are saved"
+subtitle = "Choose how you'll sign in from now on."
+title = "Set up your account"
+updating = "Updating"
+updatingSubtitle = "One moment."
+updatingTitle = "Updating your details"
+username = "Username"
+usernameHelp = "What you'll sign in with. An email address works too."
+
+[serverSetup.addresses]
+backendUrl = "Server address"
+backendUrlHelp = "Where sign-in providers send people back. Usually the same as the web address."
+frontendUrl = "Web address"
+frontendUrlHelp = "Where people open Stirling PDF. Used in emails, share links and QR codes."
+subtitle = "How people and sign-in providers reach this server."
+title = "Addresses"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "Leave empty to use the key the AI engine already has."
+baseUrl = "Base URL"
+engineUrl = "AI engine address"
+fastModel = "Fast model"
+label = "Self-hosted AI"
+provider = "Model provider"
+providerCustom = "OpenAI-compatible"
+smartModel = "Full model"
+stirling = "Stirling AI"
+subtitle = "Document questions, automated edits and AI agents."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Accept and continue"
+acceptFinish = "Accept and finish"
+changeLater = "You can change this at any time in {{path}}."
+decline = "Decline and continue"
+declineFinish = "Decline and finish"
+learnMore = "What we collect"
+note = "Share usage data from this server with us to help us improve Stirling PDF. We never collect files or their contents."
+title = "Server analytics"
+
+[serverSetup.documents]
+label = "Document questions"
+model = "Embedding model"
+provider = "Embedding provider"
+providerHelp = "Turns document text into the search index that answers questions."
+
+[serverSetup.email]
+from = "From address"
+host = "SMTP host"
+label = "Send email"
+password = "Password"
+port = "Port"
+subtitle = "For invites, signing requests and shares."
+title = "Email"
+username = "Username"
+
+[serverSetup.error]
+email = "Enter an email address"
+issuerUnreachable = "Couldn't reach this issuer. Check the address, and that this server can reach it."
+passwordIncorrect = "Incorrect password"
+passwordLength = "Use at least 8 characters"
+passwordMismatch = "Passwords don't match"
+passwordRejected = "The server didn't accept this password. Try another."
+passwordUnchanged = "Choose a password different from the current one"
+port = "Enter a port from 1 to 65535"
+providerName = "Use letters, numbers, dashes or underscores only"
+required = "Required"
+url = "Enter a full address, starting with http:// or https://"
+username = "Use 3 to 50 letters, numbers or . _ + - @, or an email address"
+usernameTaken = "That username is taken"
+
+[serverSetup.files]
+sharing = "File sharing"
+sharingOffWarning = "With sharing off, existing share links stop working."
+storage = "Store files"
+storageOffWarning = "With storage off, files people saved on the server can no longer be opened."
+subtitle = "Manage file storage and sharing."
+title = "Files"
+
+[serverSetup.finish]
+errorNote = "Check the server is reachable and that you're still signed in as an admin."
+errorSubtitle = "Nothing was restarted."
+errorTitle = "Couldn't save your settings"
+manualSubtitle = "This server can't restart itself. Restart its container or service to apply them."
+manualTitle = "Settings saved"
+restartFailedSubtitle = "The server didn't restart. Restart its container or service to apply them."
+restartingSubtitle = "This page reloads when it's back, usually within a minute."
+restartingTitle = "Restarting your server"
+retry = "Try again"
+saving = "Saving"
+savingSubtitle = "One moment."
+savingTitle = "Saving your settings"
+
+[serverSetup.language]
+auto = "Match each browser"
+label = "Default language"
+subtitle = "What new visitors see first."
+title = "Language"
+
+[serverSetup.mcp]
+label = "MCP server"
+
+[serverSetup.password]
+confirm = "Confirm new password"
+current = "Current password"
+new = "New password"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Sign in with"
+oidc = "Other OpenID Connect"
+password = "Username and password"
+providerName = "Provider name"
+providerNameHelp = "Shown on the sign-in button, for example okta or entra."
+redirectNote = "Add this redirect URI in your provider:"
+subtitle = "How your team signs in."
+title = "Sign-in"
+
+[serverSetup.signingIn]
+button = "Signing in"
+title = "Signing in with default credentials"
+
+[serverSetup.start]
+custom = "Custom"
+quick = "Quick start"
+setupLabel = "Setup"
+subtitle = "Set it up for your team in a few steps."
+title = "Your server is up"
+
+[serverSetup.summary]
+subtitle = "Check the essentials. Everything else keeps its default."
+title = "Quick start"
+
 [session]
 expired = "세션이 만료되었습니다. 페이지를 새로 고침하고 다시 시도하세요."
 
@@ -11939,6 +12722,10 @@ mcp = "MCP Server"
 privacy = "개인정보 보호"
 storageSharing = "파일 저장 및 공유"
 systemSettings = "시스템 설정"
+
+[settings.connectedAccounts]
+description = "Your own OneDrive, SharePoint and Google Drive, for your pipelines."
+title = "Connected accounts"
 
 [settings.connectedInstances]
 confirmBody = "이렇게 하면 해당 인스턴스의 Stirling Cloud 내 팀 액세스가 취소됩니다. 로컬 파일을 삭제하거나 이미 기록된 사용량을 제거하지는 않습니다. 다시 연결하려면 인스턴스에서 원래 연결 단계를 따르세요."
@@ -11992,6 +12779,13 @@ selfhosted = "자가 호스팅"
 apiKeys = "API 키"
 apiKeysDescription = "스크립트 및 통합에서 Stirling API를 호출하기 위한 개인 키입니다."
 title = "개발자"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Report a problem or suggest an improvement to the Stirling team."
+label = "Send feedback"
 
 [settings.general]
 autoUnzip = "API 응답 자동 압축 해제"
@@ -12058,6 +12852,7 @@ checkForUpdates = "업데이트 확인"
 currentBackendVersion = "현재 Backend 버전"
 currentFrontendVersion = "현재 Frontend 버전"
 description = "업데이트 확인 및 버전 정보 보기"
+descriptionManaged = "View version information"
 latestVersion = "최신 버전"
 managedByAdmin = "관리자가 관리함"
 modeAuto = "업데이트 자동 설치"
@@ -12135,15 +12930,24 @@ title = "법적 문서"
 backendDescription = "이 서버에 번들로 포함된 backend 종속성의 라이선스입니다."
 backendLabel = "Backend 라이선스"
 backendTitle = "Backend 3rd Party 라이선스"
+clearSearch = "Clear search"
 empty = "종속성을 찾을 수 없습니다."
 frontendDescription = "릴리스 빌드에 번들로 포함된 frontend 종속성의 라이선스입니다."
 frontendLabel = "Frontend 라이선스"
 frontendTitle = "Frontend 3rd Party 라이선스"
 license = "라이선스"
+licenseAbout = "About"
+licenseAboutCompound = "About {{short}}"
+licenseAboutTitle = "About {{short}}"
 listDescription = "목록은 릴리스 번들 또는 backend 엔드포인트에서 UI에 직접 표시됩니다."
 listTitle = "번들 종속성"
 loadError = "타사 라이선스를 로드하지 못했습니다"
 module = "모듈"
+noMatch = "No matching dependencies."
+searchPlaceholder = "Search dependencies"
+showingCount = "{{count}} dependencies"
+showingCount_one = "{{count}} dependency"
+showingCount_other = "{{count}} dependencies"
 version = "버전"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13097,7 @@ emptyEmail = "이메일을 입력하세요"
 emptyPassword = "비밀번호를 입력하세요"
 emptyUsername = "사용자 이름을 입력하세요"
 oauthFailed = "OAuth 로그인에 실패했습니다. 다시 시도하세요."
+openResetFailed = "Could not open your browser to reset your password."
 
 [setup.saas]
 title = "Stirling에 로그인"
@@ -13248,6 +14053,11 @@ pending = "대기 중"
 remove = "제거"
 roleColumn = "역할"
 title = "팀원"
+
+[teamWelcome]
+invite = "Invite people"
+message = "Invite your team so they can start working with you."
+title = "Your Team plan is active."
 
 [textAlign]
 center = "가운데"
