@@ -146,6 +146,7 @@ export class EditTextCommand implements Command {
   private prevText: string | null = null;
   /** `prevText`'s tags, read from the run's objects on the first apply. */
   private prevTags: TextTags | null = null;
+  private readonly nextTagsOverride: TextTags | null;
 
   private overlaid = false;
   private prevObjPtr = 0;
@@ -199,10 +200,16 @@ export class EditTextCommand implements Command {
     prev: RunModelSnapshot;
   } | null = null;
 
-  constructor(opts: { pageIndex: number; runId: string; nextText: string }) {
+  constructor(opts: {
+    pageIndex: number;
+    runId: string;
+    nextText: string;
+    nextTags?: TextTags | null;
+  }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextText = opts.nextText;
+    this.nextTagsOverride = opts.nextTags ?? null;
   }
 
   apply(doc: EditorDocument): void {
@@ -224,14 +231,16 @@ export class EditTextCommand implements Command {
     }
 
     this.prevTags ??= readRunTags(doc, page, run);
-    const nextTags = editedTags(
-      doc,
-      this.pageIndex,
-      this.prevTags,
-      this.prevText,
-      this.nextText,
-      run.tagMarks,
-    );
+    const nextTags =
+      this.nextTagsOverride ??
+      editedTags(
+        doc,
+        this.pageIndex,
+        this.prevTags,
+        this.prevText,
+        this.nextText,
+        run.tagMarks,
+      );
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
     // Invisible OCR text over a scan: rewrite the whole run visibly so the
@@ -1443,6 +1452,7 @@ export class EditTextCommand implements Command {
       pageIndex: this.pageIndex,
       runId: this.runId,
       nextText: phase === "revert" ? first : this.nextText,
+      nextTags: phase === "revert" ? edits[0].prevTags : null,
     });
     try {
       move.apply(doc);
