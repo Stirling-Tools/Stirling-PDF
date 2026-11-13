@@ -11878,7 +11878,9 @@ title = "White Percentage Threshold"
 label = "White Percentage Threshold"
 
 [removeCertSign]
-description = "This tool will remove digital certificate signatures from your PDF document."
+removeVisibleSignature = "Remove visible signature"
+removeVisibleSignatureDescription = "Also remove the certificate's visible signature. Signatures in scanned images or embedded in page content will remain."
+settings = "Settings"
 submit = "Remove Signature"
 tags = "authenticate,PEM,P12,official,decrypt"
 title = "Remove Certificate Signature"
@@ -11888,6 +11890,7 @@ failed = "An error occurred while removing certificate signatures."
 
 [removeCertSign.results]
 title = "Certificate Removal Results"
+visibleSignatureKept = "The visible signature stamp was kept. Turn on 'Remove visible signature' to remove it too."
 
 [removeImage]
 submit = "Remove image"

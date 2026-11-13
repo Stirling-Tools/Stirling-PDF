@@ -885,7 +885,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["remove-cert-sign"],
         operationConfig: asRegistryConfig(removeCertificateSignOperationConfig),
         synonyms: getSynonyms(t, "removeCertSign"),
-        automationSettings: null,
+        automationSettings: lazySettings(
+          () =>
+            import("@editor/components/tools/removeCertificateSign/RemoveCertificateSignSettings"),
+        ),
       },
 
       // Automation
