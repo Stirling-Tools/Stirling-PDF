@@ -42,6 +42,8 @@ export interface Dependency {
   moduleLicenseUrl?: string;
   /** Full license text the backend parsed from a bundled notice file. Present on native-component entries; generated-report entries carry moduleLicenseUrl instead. */
   moduleLicenseText?: string;
+  /** Attribution the notice carried outside the license line, such as an IJG or SLJIT sentence. */
+  moduleNoticeText?: string;
 }
 
 interface LicensesResponse {
@@ -369,7 +371,7 @@ function LicenseCell({
         {" - "}
       </Text>
     ) : null;
-  if (dependency.moduleLicenseText) {
+  if (dependency.moduleLicenseText || dependency.moduleNoticeText) {
     return (
       <span>
         <Anchor
@@ -548,9 +550,16 @@ function LicenseModal({
         <Text size="sm" c="dimmed">
           {dependency?.moduleLicense || "-"}
         </Text>
-        <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
-          {dependency?.moduleLicenseText}
-        </Text>
+        {dependency?.moduleLicenseText ? (
+          <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
+            {dependency.moduleLicenseText}
+          </Text>
+        ) : null}
+        {dependency?.moduleNoticeText ? (
+          <Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
+            {dependency.moduleNoticeText}
+          </Text>
+        ) : null}
         {selectedLinks.length > 0 ? (
           <div style={{ marginTop: 8 }}>
             <AboutLinks links={selectedLinks} />

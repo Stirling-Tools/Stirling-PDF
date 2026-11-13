@@ -224,6 +224,84 @@ class UIDataControllerGapTest {
                 }
             }
         }
+
+        @Test
+        @DisplayName("caches the license bundle across requests")
+        void cachesLoadedLicenses(@TempDir Path tempDir) throws Exception {
+            Files.createDirectories(tempDir.resolve("static"));
+            Files.writeString(
+                    tempDir.resolve("static/3rdPartyLicenses.json"), "{\"dependencies\":[]}");
+            Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+            Files.writeString(
+                    licensesDir.resolve("NOTICE.txt"),
+                    "1. Cached Native Codec\n"
+                            + "   - License: Cached License (see CACHED-LICENSE.txt)\n");
+            Path licenseText = licensesDir.resolve("CACHED-LICENSE.txt");
+            Files.writeString(licenseText, "Cached license text.");
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try (URLClassLoader isolated =
+                    new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+                Thread.currentThread().setContextClassLoader(isolated);
+                try {
+                    UIDataController controller = controller(userService);
+                    List<Dependency> first =
+                            controller.getLicensesData().getBody().getDependencies();
+                    assertEquals(1, first.size());
+                    assertEquals("Cached license text.", first.get(0).getModuleLicenseText());
+
+                    Files.writeString(licenseText, "Changed license text.");
+                    List<Dependency> second =
+                            controller.getLicensesData().getBody().getDependencies();
+                    assertEquals(1, second.size());
+                    assertEquals(
+                            "Cached license text.",
+                            second.get(0).getModuleLicenseText(),
+                            "the controller should not re-read static notices per request");
+                } finally {
+                    Thread.currentThread().setContextClassLoader(original);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("retries after an incomplete read")
+        void retriesAfterIncompleteLoad(@TempDir Path tempDir) throws Exception {
+            Path licensesDir = Files.createDirectories(tempDir.resolve("licenses"));
+            Files.writeString(
+                    licensesDir.resolve("NOTICE.txt"),
+                    "1. Retry Native Codec\n"
+                            + "   - License: Retry License (see RETRY-LICENSE.txt)\n");
+            Files.writeString(licensesDir.resolve("RETRY-LICENSE.txt"), "Retry license text.");
+            ClassLoader original = Thread.currentThread().getContextClassLoader();
+            try (URLClassLoader isolated =
+                    new URLClassLoader(new URL[] {tempDir.toUri().toURL()}, null)) {
+                Thread.currentThread().setContextClassLoader(isolated);
+                try {
+                    UIDataController controller = controller(userService);
+                    List<Dependency> first =
+                            controller.getLicensesData().getBody().getDependencies();
+                    assertEquals(1, first.size());
+                    assertEquals("Retry Native Codec", first.get(0).getModuleName());
+
+                    Files.createDirectories(tempDir.resolve("static"));
+                    Files.writeString(
+                            tempDir.resolve("static/3rdPartyLicenses.json"),
+                            "{\"dependencies\":[{\"moduleName\":\"Report Codec\","
+                                    + "\"moduleLicense\":\"MIT\"}]}");
+                    List<Dependency> second =
+                            controller.getLicensesData().getBody().getDependencies();
+                    assertEquals(2, second.size(), "an incomplete read is retried");
+                    assertTrue(
+                            second.stream()
+                                    .anyMatch(
+                                            dependency ->
+                                                    "Report Codec"
+                                                            .equals(dependency.getModuleName())));
+                } finally {
+                    Thread.currentThread().setContextClassLoader(original);
+                }
+            }
+        }
     }
 
     @Nested
