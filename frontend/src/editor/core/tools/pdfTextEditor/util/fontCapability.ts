@@ -55,11 +55,32 @@ function deviceFaceFor(
     .join(" ");
 }
 
+// Keyed by font list, so loading fonts (a new list) can never return a stale answer.
+const capabilityCache = new WeakMap<
+  LocalFont[],
+  Map<string, StyleCapability>
+>();
+
 /** Base-14 flips in place unless an external family of that name exists; others need a real face. */
 export function italicCapability(
   fontId: string,
   italic: boolean,
   fonts: LocalFont[] | null = loadedExternalFonts(),
+): StyleCapability {
+  if (!fonts) return computeItalicCapability(fontId, italic, fonts);
+  let cached = capabilityCache.get(fonts);
+  if (!cached) capabilityCache.set(fonts, (cached = new Map()));
+  const key = `${italic ? 1 : 0}${fontId}`;
+  let found = cached.get(key);
+  if (!found)
+    cached.set(key, (found = computeItalicCapability(fontId, italic, fonts)));
+  return found;
+}
+
+function computeItalicCapability(
+  fontId: string,
+  italic: boolean,
+  fonts: LocalFont[] | null,
 ): StyleCapability {
   const family = familyOf(fontId);
   if (!family) return NONE;
