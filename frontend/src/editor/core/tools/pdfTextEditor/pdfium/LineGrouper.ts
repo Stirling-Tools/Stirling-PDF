@@ -84,12 +84,15 @@ function lineSpaceUnitRatio(
     if (ratio > WORD_GAP_MIN_RATIO) wordGaps.push(ratio);
   }
   if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
-  // Two gaps cannot tell one space from several: the narrower may itself be a double space.
+  wordGaps.sort((a, b) => a - b);
+  // Two unequal gaps cannot tell one space from several: the narrower may itself be a double space.
   if (wordGaps.length === 2) {
     const em = fontSpaceEm(members, spaceAdvance);
-    if (em !== null) return clampSpaceUnit(em);
+    if (em !== null) {
+      const fontUnit = clampSpaceUnit(em);
+      if (wordGaps[1] - wordGaps[0] >= fontUnit) return fontUnit;
+    }
   }
-  wordGaps.sort((a, b) => a - b);
   return clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]);
 }
 

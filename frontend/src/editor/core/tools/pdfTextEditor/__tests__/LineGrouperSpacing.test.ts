@@ -188,6 +188,22 @@ describe("LineGrouper inter-run space synthesis", () => {
     expect(text).toBe("documents  A   B");
   });
 
+  it("keeps two equal justified gaps as ONE space each when the font space is narrower", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "The", width: 16, gapAfter: 7.4 },
+          { text: "quick", width: 25, gapAfter: 7.4 },
+          { text: "brown", width: 29 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("The quick brown");
+  });
+
   it("keeps the gap-based count when the font reports no usable space width", () => {
     const text = joinLine(
       lineOf(
