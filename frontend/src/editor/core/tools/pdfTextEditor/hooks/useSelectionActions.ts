@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -12,7 +12,10 @@ import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFont
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isDocumentFontId,
+  isItalicFamily,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { loadedLocalFonts } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
@@ -49,6 +52,14 @@ export function useSelectionActions(store: EditorStore) {
   // `deleteSelection` groups its deletes. Select-all now reaches the whole
   // document, so a per-run dispatch left the user hundreds of undos behind and
   // the first Ctrl+Z looked like the restyle had only covered part of the file.
+  const dispatchAsOneStep = useCallback(
+    (cmds: Command[]) => {
+      if (cmds.length === 1) store.dispatch(cmds[0]);
+      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+    },
+    [store],
+  );
+
   const dispatchPerRun = useCallback(
     (build: (run: SelectedRun) => Command | null) => {
       const cmds: Command[] = [];
@@ -56,10 +67,9 @@ export function useSelectionActions(store: EditorStore) {
         const cmd = build(run);
         if (cmd) cmds.push(cmd);
       });
-      if (cmds.length === 1) store.dispatch(cmds[0]);
-      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+      dispatchAsOneStep(cmds);
     },
-    [store, forEachSelectedRun],
+    [forEachSelectedRun, dispatchAsOneStep],
   );
 
   const changeFontSize = useCallback(
@@ -110,21 +120,54 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
+  const fontRequests = useRef({
+    last: 0,
+    latestByRun: new Map<string, number>(),
+  });
+  const claimFontChange = useCallback(
+    (runIds: string[]) => {
+      const requests = fontRequests.current;
+      const request = ++requests.last;
+      const doc = store.document;
+      for (const runId of runIds) requests.latestByRun.set(runId, request);
+      return () => {
+        // Run ids repeat across documents, so a change outliving its document would hit unrelated text.
+        if (!doc || store.document !== doc) return () => false;
+        const editable = new Set<string>();
+        for (const page of doc.loadedPages()) {
+          for (const run of page.runs) if (!run.locked) editable.add(run.id);
+        }
+        return (runId: string) =>
+          editable.has(runId) && requests.latestByRun.get(runId) === request;
+      };
+    },
+    [store],
+  );
+
   const changeFontFamily = useCallback(
     async (family: string) => {
+      const runs: SelectedRun[] = [];
+      forEachSelectedRun((run) => runs.push(run));
+      const stillApplies = claimFontChange(runs.map((run) => run.id));
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      await ensureDeviceFontReady(family);
-      dispatchPerRun(
-        (run) =>
-          new SetFontFamilyCommand({
-            pageIndex: run.pageIndex,
-            runId: run.id,
-            nextFamily: family,
-          }),
+      if (!isDocumentFontId(family)) await ensureDeviceFontReady(family);
+      // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
+      const applies = stillApplies();
+      dispatchAsOneStep(
+        runs
+          .filter((run) => applies(run.id))
+          .map(
+            (run) =>
+              new SetFontFamilyCommand({
+                pageIndex: run.pageIndex,
+                runId: run.id,
+                nextFamily: family,
+              }),
+          ),
       );
     },
-    [dispatchPerRun],
+    [forEachSelectedRun, claimFontChange, dispatchAsOneStep],
   );
 
   const toggleItalic = useCallback(async () => {
@@ -151,21 +194,25 @@ export function useSelectionActions(store: EditorStore) {
         device: cap.source === "device",
       });
     });
+    const stillApplies = claimFontChange(targets.map((target) => target.runId));
     // Embedding is async and Command.apply is not, so warm the bytes first.
     for (const target of targets) {
       if (target.device) await ensureDeviceFontReady(target.family);
     }
-    const cmds = targets.map(
-      (target) =>
-        new SetFontFamilyCommand({
-          pageIndex: target.pageIndex,
-          runId: target.runId,
-          nextFamily: target.family,
-        }),
+    const applies = stillApplies();
+    dispatchAsOneStep(
+      targets
+        .filter((target) => applies(target.runId))
+        .map(
+          (target) =>
+            new SetFontFamilyCommand({
+              pageIndex: target.pageIndex,
+              runId: target.runId,
+              nextFamily: target.family,
+            }),
+        ),
     );
-    if (cmds.length === 1) store.dispatch(cmds[0]);
-    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-  }, [store, forEachSelectedRun]);
+  }, [forEachSelectedRun, claimFontChange, dispatchAsOneStep]);
 
   const deleteSelection = useCallback(() => {
     const sel = store.selection.value;
