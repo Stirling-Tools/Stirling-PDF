@@ -23,14 +23,8 @@ import {
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
 
-/** Serialize the editor document to a Blob plus the download filename. */
-export async function exportToBlob(
-  doc: EditorDocument,
-  sourceName?: string | null,
-): Promise<{
-  blob: Blob;
-  filename: string;
-}> {
+/** Serialize the editor document to a Blob. */
+export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   const structureEdits = doc.structureEdits();
   const annotationEdits = doc.annotationEdits();
   const documentLanguage = doc.documentLanguageEdit();
@@ -49,10 +43,7 @@ export async function exportToBlob(
       documentLanguage === undefined &&
       !doc.markedTaggedChanged()
     ) {
-      return {
-        blob: pdfBlob(doc.openedBytes),
-        filename: exportName(sourceName),
-      };
+      return pdfBlob(doc.openedBytes);
     }
     bytes = doc.openedBytes;
   } else {
@@ -117,7 +108,7 @@ export async function exportToBlob(
   assertSavedPdf(bytes);
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
-  return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+  return pdfBlob(bytes);
 }
 
 function pagesWritingArtifactKinds(doc: EditorDocument): number[] {
@@ -194,13 +185,6 @@ function pdfBlob(bytes: Uint8Array): Blob {
   return new Blob([bytes as unknown as ArrayBuffer], {
     type: "application/pdf",
   });
-}
-
-// Derive from the opened file's name so downloads don't all collide on
-// a generic "edited.pdf".
-function exportName(sourceName?: string | null): string {
-  const base = (sourceName ?? "").replace(/\.pdf$/i, "").trim();
-  return base ? `${base}_edited.pdf` : "edited.pdf";
 }
 
 /**

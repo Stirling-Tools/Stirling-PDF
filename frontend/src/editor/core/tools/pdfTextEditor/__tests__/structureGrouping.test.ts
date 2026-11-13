@@ -426,7 +426,7 @@ describe("Chrome-style tagging", () => {
       }),
       doc,
     );
-    const { blob } = await exportToBlob(doc, "chrome.pdf");
+    const blob = await exportToBlob(doc);
     const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
     expect(pdf.dictName(pdf.objectBody(8)!, "S")).toBe("H2");
     expect(pdf.dictName(pdf.objectBody(9)!, "S")).toBe("NonStruct");

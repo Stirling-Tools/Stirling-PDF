@@ -39,7 +39,7 @@ async function open(bytes: Uint8Array, password: string) {
 }
 
 async function savedBytes(doc: EditorDocument) {
-  const { blob } = await exportToBlob(doc, "encrypted.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 
