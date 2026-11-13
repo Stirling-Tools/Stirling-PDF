@@ -8,7 +8,25 @@ import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import "@editor/components/viewer/PdfViewerToolbar.css";
-import { Icon } from "@editor/ui/Icon";
+import { Icon, type IconName } from "@editor/ui/Icon";
+import type { PdfRenderMode } from "@editor/services/preferencesService";
+import type { TFunction } from "i18next";
+
+function renderModeToggleLabel(t: TFunction, mode: PdfRenderMode): string {
+  if (mode === "normal") {
+    return t("viewer.enableDarkFilter", "Enable Dark Filter");
+  }
+  if (mode === "dark") {
+    return t("viewer.enableSepiaFilter", "Enable Sepia Filter");
+  }
+  return t("viewer.disableColorFilter", "Disable Color Filter");
+}
+
+function renderModeIconName(mode: PdfRenderMode): IconName {
+  if (mode === "normal") return "moon";
+  if (mode === "dark") return "sunset";
+  return "sun";
+}
 
 // Sizing constants for the page number input
 const MIN_PAGE_DIGITS = 2;
@@ -347,13 +365,7 @@ export function PdfViewerToolbar({
       {/* PDF Render Mode Toggle */}
       {!isPhone && (
         <Tooltip
-          content={
-            pdfRenderMode === "normal"
-              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-              : pdfRenderMode === "dark"
-                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                : t("viewer.disableColorFilter", "Disable Color Filter")
-          }
+          content={renderModeToggleLabel(t, pdfRenderMode)}
           position="top"
           arrow
         >
@@ -363,13 +375,7 @@ export function PdfViewerToolbar({
             className="pdf-viewer-toolbar-wide-only"
             onClick={cyclePdfRenderMode}
             style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")
-            }
+            aria-label={renderModeToggleLabel(t, pdfRenderMode)}
           >
             {pdfRenderMode === "normal" && <Icon name="moon" size={18} />}
             {pdfRenderMode === "dark" && <Icon name="sunset" size={18} />}
@@ -554,21 +560,11 @@ export function PdfViewerToolbar({
             )}
             <Menu.Item
               leftSection={
-                pdfRenderMode === "normal" ? (
-                  <Icon name="moon" size={18} />
-                ) : pdfRenderMode === "dark" ? (
-                  <Icon name="sunset" size={18} />
-                ) : (
-                  <Icon name="sun" size={18} />
-                )
+                <Icon name={renderModeIconName(pdfRenderMode)} size={18} />
               }
               onClick={cyclePdfRenderMode}
             >
-              {pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")}
+              {renderModeToggleLabel(t, pdfRenderMode)}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

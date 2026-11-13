@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import type { MeasureScale, Measurement } from "@editor/utils/measurementTypes";
 import {
@@ -76,6 +77,16 @@ const DELETE_LINE_GAP = 10;
 const DELETE_LABEL_GAP = 8;
 const LINE_HIT_WIDTH = 18;
 const LABEL_MODE_BUTTON_WIDTH = 124;
+const MONO_FONT = "'Roboto Mono','Consolas',monospace";
+
+function labelModeButtonText(
+  t: TFunction,
+  mode: RulerLabelVisibilityMode,
+): string {
+  if (mode === "hideSmall") return t("ruler.showAllLabels", "Show all labels");
+  if (mode === "showAll") return t("ruler.hideAllLabels", "Hide all labels");
+  return t("ruler.hideSmallLabels", "Hide small labels");
+}
 
 function dist(a: RulerPoint, b: RulerPoint): number {
   return Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
@@ -321,6 +332,96 @@ function getVisibleIdleLabelIds(
   return visibleIds;
 }
 
+function SelectedRulerLabel({
+  labelCenter,
+  zoomScale,
+  hoverLine1,
+  hoverLine2,
+  contextLabel,
+}: {
+  labelCenter: RulerPoint;
+  zoomScale: number;
+  hoverLine1: string;
+  hoverLine2: string | null;
+  contextLabel: string;
+}) {
+  if (hoverLine2 === null) {
+    return (
+      <>
+        <text
+          x={labelCenter.x}
+          y={labelCenter.y - Math.round(6 * zoomScale)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#1e88e5"
+          fontSize={12}
+          fontFamily={MONO_FONT}
+          fontWeight={600}
+          style={{ userSelect: "none" }}
+        >
+          {hoverLine1}
+        </text>
+        <text
+          x={labelCenter.x}
+          y={labelCenter.y + Math.round(13 * zoomScale)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#5c6bc0"
+          fontSize={11}
+          fontFamily={MONO_FONT}
+          fontWeight={500}
+          style={{ userSelect: "none" }}
+        >
+          {contextLabel}
+        </text>
+      </>
+    );
+  }
+  return (
+    <>
+      <text
+        x={labelCenter.x}
+        y={labelCenter.y - Math.round(17 * zoomScale)}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="#1e88e5"
+        fontSize={12}
+        fontFamily={MONO_FONT}
+        fontWeight={600}
+        style={{ userSelect: "none" }}
+      >
+        {hoverLine1}
+      </text>
+      <text
+        x={labelCenter.x}
+        y={labelCenter.y}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="#546e7a"
+        fontSize={11}
+        fontFamily={MONO_FONT}
+        fontWeight={500}
+        style={{ userSelect: "none" }}
+      >
+        {hoverLine2}
+      </text>
+      <text
+        x={labelCenter.x}
+        y={labelCenter.y + Math.round(17 * zoomScale)}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="#5c6bc0"
+        fontSize={10}
+        fontFamily={MONO_FONT}
+        fontWeight={500}
+        style={{ userSelect: "none" }}
+      >
+        {contextLabel}
+      </text>
+    </>
+  );
+}
+
 interface MeasurementLineProps {
   id: string;
   startS: RulerPoint;
@@ -373,11 +474,12 @@ function MeasurementLine({
       })()
     : `${formatDist(distPts)} / ${formatInches(distPts)}`;
 
-  const hoverLine2 = measureScale
-    ? imperialFirst
+  let hoverLine2: string | null = null;
+  if (measureScale) {
+    hoverLine2 = imperialFirst
       ? `${labels.physical}: ${formatInches(distPts)} / ${formatDist(distPts)}`
-      : `${labels.physical}: ${formatDist(distPts)} / ${formatInches(distPts)}`
-    : null;
+      : `${labels.physical}: ${formatDist(distPts)} / ${formatInches(distPts)}`;
+  }
 
   const scaleLabel = measureScale
     ? generateScaleLabel(measureScale.ratio, measureScale.unit)
@@ -396,12 +498,6 @@ function MeasurementLine({
   const isCompactIdle = !isInspecting;
   const showLabel = isSelected || isHovered || showIdleLabel;
   const showDelete = isSelected || isHovered;
-  const lh = isSelected
-    ? maxHoverLh
-    : isHoveredLabelExpanded
-      ? scaledLH
-      : idleDimensions.height;
-
   const lwNormal = Math.max(distLabel.length * 8 + LP * 2, 80);
   const lwHover = Math.max(
     hoverLine1.length * 8 + LP * 2,
@@ -409,16 +505,19 @@ function MeasurementLine({
     contextLabel.length * 8 + LP * 2,
     80,
   );
-  const lw = isSelected
-    ? lwHover
-    : isHoveredLabelExpanded
-      ? lwNormal
-      : idleDimensions.width;
+  let lh = idleDimensions.height;
+  let lw = idleDimensions.width;
+  if (isSelected) {
+    lh = maxHoverLh;
+    lw = lwHover;
+  } else if (isHoveredLabelExpanded) {
+    lh = scaledLH;
+    lw = lwNormal;
+  }
   const sw = isSelected ? 3 : 2;
 
   const labelCenter = getLabelCenter(startS, endS, lw, lh);
   const deleteCenter = getDeleteCenter(startS, endS, labelCenter, lw, lh);
-  const mono = "'Roboto Mono','Consolas',monospace";
 
   return (
     <g
@@ -520,77 +619,14 @@ function MeasurementLine({
             filter="url(#ruler-shadow)"
           />
 
-          {isSelected && measureScale ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#546e7a"
-                fontSize={11}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine2}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(17 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={10}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
-          ) : isSelected ? (
-            <>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y - Math.round(6 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#1e88e5"
-                fontSize={12}
-                fontFamily={mono}
-                fontWeight={600}
-                style={{ userSelect: "none" }}
-              >
-                {hoverLine1}
-              </text>
-              <text
-                x={labelCenter.x}
-                y={labelCenter.y + Math.round(13 * zoomScale)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#5c6bc0"
-                fontSize={11}
-                fontFamily={mono}
-                fontWeight={500}
-                style={{ userSelect: "none" }}
-              >
-                {contextLabel}
-              </text>
-            </>
+          {isSelected ? (
+            <SelectedRulerLabel
+              labelCenter={labelCenter}
+              zoomScale={zoomScale}
+              hoverLine1={hoverLine1}
+              hoverLine2={hoverLine2}
+              contextLabel={contextLabel}
+            />
           ) : (
             <text
               x={labelCenter.x}
@@ -599,7 +635,7 @@ function MeasurementLine({
               dominantBaseline="middle"
               fill="#1e88e5"
               fontSize={isCompactIdle ? 10 : 12}
-              fontFamily={mono}
+              fontFamily={MONO_FONT}
               fontWeight={600}
               style={{ userSelect: "none" }}
             >
@@ -796,12 +832,7 @@ export function RulerMeasurementLayer({
     return visibleIdleLabelIds.has(measurementId);
   };
 
-  const labelModeButtonLabel =
-    labelVisibilityMode === "hideSmall"
-      ? t("ruler.showAllLabels", "Show all labels")
-      : labelVisibilityMode === "showAll"
-        ? t("ruler.hideAllLabels", "Hide all labels")
-        : t("ruler.hideSmallLabels", "Hide small labels");
+  const labelModeButtonLabel = labelModeButtonText(t, labelVisibilityMode);
 
   return (
     <>
