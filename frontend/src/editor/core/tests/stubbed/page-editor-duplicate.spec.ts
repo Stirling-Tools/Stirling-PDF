@@ -100,6 +100,7 @@ test.describe("Page editor duplicate", () => {
     await tile(page, "rotated-pages.pdf", 0).click();
     await tile(page, "rotated-pages.pdf", 1).click({ modifiers: ["Shift"] });
     await page
+      .locator(".workbench-bar")
       .getByRole("button", { name: "Duplicate selected pages" })
       .click();
     await expect(rotated.locator("[data-page-id]")).toHaveCount(6);
