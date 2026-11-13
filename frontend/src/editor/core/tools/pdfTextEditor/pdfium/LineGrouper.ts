@@ -38,9 +38,11 @@ const FALLBACK_SPACE_UNIT_RATIO = 0.5;
 const MIN_SPACE_UNIT_RATIO = 0.3;
 const MAX_SPACE_UNIT_RATIO = 1;
 const MULTI_SPACE_UNITS = 1.7;
-// A font with no space glyph reports zero or its missing width, so only a plausible advance is trusted.
+// A font with no space glyph reports zero or its missing width (1em by default), so only a plausible advance is trusted.
 const MIN_FONT_SPACE_EM = 0.05;
 const MAX_FONT_SPACE_EM = 1;
+// Ink bounds add side bearings to a space, so one space in a wide font can read as up to this many of its advance.
+const MAX_JOIN_SPACES = 1.5;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
   return gapRatio(
@@ -72,7 +74,7 @@ function fontSpaceEm(
   let narrowest: number | null = null;
   for (const member of members) {
     const em = spaceAdvance(member);
-    if (em === null || em < MIN_FONT_SPACE_EM || em > MAX_FONT_SPACE_EM)
+    if (em === null || em < MIN_FONT_SPACE_EM || em >= MAX_FONT_SPACE_EM)
       continue;
     if (narrowest === null || em < narrowest) narrowest = em;
   }
@@ -140,9 +142,21 @@ function lineBlock(members: TextRun[], blockKey: BlockKey): string | null {
 
 // Sort one container's runs top-to-bottom / left-to-right and merge
 // same-baseline, close-together runs into line groups.
+// A word saved as its own object in a font whose space the file never draws has no space width to read.
+function meanLetterAdvancePt(runs: TextRun[]): number {
+  let letters = 0;
+  let width = 0;
+  for (const run of runs) {
+    letters += run.text.replace(/\s/g, "").length;
+    width += run.bounds.width;
+  }
+  return letters > 0 ? width / letters : 0;
+}
+
 function groupPartitionIntoLines(
   runs: TextRun[],
   blockKey: BlockKey,
+  spaceAdvance: SpaceAdvance,
   out: LineGroupInfo[],
 ): void {
   const sorted = [...runs].sort((a, b) => {
@@ -169,7 +183,15 @@ function groupPartitionIntoLines(
     const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
     // The gap cap must scale with font size: an inter-word space in a 50pt
     // heading is ~15-25pt, which a flat 12pt cap would treat as a line break.
-    const maxGap = Math.max(ABS_MAX_GAP_PT, 0.5 * Math.max(ref.fontSize, 4));
+    const spaceEm = fontSpaceEm([prev], spaceAdvance);
+    const maxGap = Math.max(
+      ABS_MAX_GAP_PT,
+      0.5 * Math.max(ref.fontSize, 4),
+      MAX_JOIN_SPACES *
+        (spaceEm === null
+          ? meanLetterAdvancePt(current.members)
+          : spaceEm * prev.fontSize),
+    );
     // A leading bullet is indented from its item by more than an inter-word
     // space; let the item attach across that wider indent.
     const effMaxGap = isBulletLead(prev)
@@ -211,7 +233,7 @@ export class LineGrouper {
 
     const groups: LineGroupInfo[] = [];
     for (const partition of partitions.values()) {
-      groupPartitionIntoLines(partition, blockKey, groups);
+      groupPartitionIntoLines(partition, blockKey, spaceAdvance, groups);
     }
 
     // Refine: a "line" whose glyphs heavily OVERLAP in x is not real running

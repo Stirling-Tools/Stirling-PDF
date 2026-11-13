@@ -59,6 +59,61 @@ function runsBetween(text: string, before: string, after: string): number {
 }
 
 describe("LineGrouper inter-run space synthesis", () => {
+  it("keeps an 18pt monospace heading saved one word per object on one line", () => {
+    const menloSpace = () => 0.602;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Heading ", width: 73, gapAfter: 12.9 },
+          { text: "in ", width: 18, gapAfter: 12 },
+          { text: "a ", width: 8.1, gapAfter: 13 },
+          { text: "bigger ", width: 62, gapAfter: 12.9 },
+          { text: "size", width: 41 },
+        ],
+        18,
+      ),
+      menloSpace,
+    );
+    expect(text).toBe("Heading in a bigger size");
+  });
+
+  it("keeps the heading on one line when its subset font reports the 1em missing space width", () => {
+    const missingSpace = () => 1;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns(
+      lineOf(
+        [
+          { text: "Heading", width: 73, gapAfter: 12.2 },
+          { text: "in", width: 19, gapAfter: 11.7 },
+          { text: "a", width: 9, gapAfter: 12 },
+          { text: "bigger", width: 62, gapAfter: 12.3 },
+          { text: "size", width: 41 },
+        ],
+        18,
+      ),
+    );
+    page.loaded = true;
+    const groups = LineGrouper.apply(page, undefined, missingSpace);
+    expect(groups.map((g) => g.representative.text)).toEqual([
+      "Heading in a bigger size",
+    ]);
+  });
+
+  it("still splits two 18pt columns a wide gutter apart", () => {
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns(
+      lineOf(
+        [
+          { text: "Left", width: 40, gapAfter: 40 },
+          { text: "Right", width: 50 },
+        ],
+        18,
+      ),
+    );
+    page.loaded = true;
+    expect(LineGrouper.apply(page, undefined, () => 1)).toHaveLength(2);
+  });
+
   it("emits one space for normal 10pt word gaps", () => {
     const text = joinLine(
       lineOf(
