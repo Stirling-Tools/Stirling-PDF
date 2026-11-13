@@ -18,7 +18,6 @@ import {
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
-  isDocumentFontId,
   isItalicFamily,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
@@ -203,11 +202,6 @@ export function useSelectionActions(store: EditorStore) {
         runId: run.id,
         family,
       }));
-      // Going back to the PDF's own font needs no bytes: it is still in the file.
-      if (isDocumentFontId(family)) {
-        await dispatchFamilyChanges(doc, changes, []);
-        return null;
-      }
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
       const failure = await fontPickFailure(

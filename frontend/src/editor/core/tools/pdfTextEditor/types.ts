@@ -61,8 +61,6 @@ export interface TextRunSnapshot {
   fill: RGBA;
   /** True if PDFium says the source PDF subsetted this run's font */
   fontSubset: boolean;
-  /** The PDF's own font the run was in before its family was changed. */
-  documentFontId?: string;
   /** For scanned text, the family its ink is matched to or redrawn in; `fontId` there is only the OCR layer's font. */
   scanFamily?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
@@ -245,8 +243,6 @@ export interface TextRange {
 
 export interface ToolbarState {
   fontFamily: string | null;
-  /** The document fontId every selected run can be restored to, or null. */
-  documentFontId: string | null;
   fontSize: number | null;
   fill: RGBA | null;
   bold: boolean;

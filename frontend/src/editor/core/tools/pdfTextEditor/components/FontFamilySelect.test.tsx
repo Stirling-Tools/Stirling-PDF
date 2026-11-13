@@ -138,26 +138,6 @@ describe("font picker server fonts", () => {
     expect(alert).not.toHaveBeenCalled();
   });
 
-  it("offers the PDF's own font again once the text was changed away from it", async () => {
-    const onChange = vi.fn(async () => null);
-    render(
-      <MantineProvider env="test">
-        <FontFamilySelect
-          value="Helvetica"
-          documentFontId="pdf:7:Garamond"
-          onChange={onChange}
-        />
-      </MantineProvider>,
-    );
-
-    fireEvent.click(screen.getByTestId("pdf-editor-font-family"));
-    fireEvent.click(await screen.findByText("Garamond"));
-
-    await waitFor(() =>
-      expect(onChange).toHaveBeenCalledWith("pdf:7:Garamond"),
-    );
-  });
-
   it("names the font a scan was matched to, not a document font", async () => {
     render(
       <MantineProvider env="test">

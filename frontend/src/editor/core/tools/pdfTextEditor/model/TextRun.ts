@@ -104,8 +104,6 @@ export class TextRun {
   // Pointer to the LATEST background cover-rect emitted on the page for this
   // run.
   coverRectPtr: number;
-  /** The document font this run had before a family change, so it can be restored; null if unchanged. */
-  documentFont: { fontId: string; subset: boolean } | null;
   /** Word-level edit state once an invisible OCR run over a scan is edited. */
   scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
@@ -168,7 +166,6 @@ export class TextRun {
     this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
     this.scanEdit = null;
-    this.documentFont = null;
     this.locked = init.locked ?? false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
@@ -195,7 +192,6 @@ export class TextRun {
       fontSize: this.fontSize,
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
-      documentFontId: this.documentFont?.fontId,
       scanFamily:
         this.scanEdit?.override.style?.family ??
         this.scanEdit?.override.family ??

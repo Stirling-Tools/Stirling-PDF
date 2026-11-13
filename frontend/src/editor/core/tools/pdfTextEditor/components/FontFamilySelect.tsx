@@ -1,15 +1,10 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
-import type {
-  ComboboxData,
-  ComboboxItem,
-  ComboboxItemGroup,
-} from "@mantine/core";
+import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { alert } from "@editor/components/toast";
-import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   familyOptions,
@@ -59,8 +54,6 @@ interface FontFamilySelectProps {
   value: string | null;
   /** Set for scanned text: `value` is the matched font (null while none is in force) and `label` the matcher's name for it. */
   scanned?: { label?: string };
-  /** The document font the selection was changed from, offered so the text can go back to it. */
-  documentFontId?: string | null;
   onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
   disabled?: boolean;
@@ -71,7 +64,6 @@ interface FontFamilySelectProps {
 export function FontFamilySelect({
   value,
   scanned,
-  documentFontId = null,
   onChange,
   mixed = false,
   disabled = false,
@@ -143,31 +135,23 @@ export function FontFamilySelect({
     if (
       serverOptions.length === 0 &&
       deviceOptions.length === 0 &&
-      !documentFamily &&
-      !documentFontId
+      !documentFamily
     ) {
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    // Always list the current font: a Select whose value has no option filters by stale search text.
-    const documentItems: ComboboxItem[] = [];
-    if (documentFontId)
-      documentItems.push({
-        value: documentFontId,
-        label: familyOf(documentFontId),
-      });
-    if (documentFamily)
-      documentItems.push({
-        value: documentFamily,
-        label: scanned?.label ?? documentFamily,
-        disabled: true,
-      });
-    if (documentItems.length > 0) {
+    if (documentFamily) {
       groups.push({
         group: scanned
           ? t("pdfTextEditor.fontPicker.matchedGroup", "Matched font")
           : t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: documentItems,
+        items: [
+          {
+            value: documentFamily,
+            label: scanned?.label ?? documentFamily,
+            disabled: true,
+          },
+        ],
       });
     }
     groups.push({
@@ -187,14 +171,7 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [
-    serverOptions,
-    deviceOptions,
-    documentFamily,
-    documentFontId,
-    scanned,
-    t,
-  ]);
+  }, [serverOptions, deviceOptions, documentFamily, scanned, t]);
 
   const pickFailureText = useCallback(
     (failure: FontPickFailure): string => {

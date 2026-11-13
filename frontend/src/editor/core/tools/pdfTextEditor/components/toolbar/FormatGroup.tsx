@@ -58,7 +58,6 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
         scanned={
           scanFont === undefined ? undefined : { label: scanFont?.label }
         }
-        documentFontId={state.documentFontId}
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
         touch={touch}
