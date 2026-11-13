@@ -18,12 +18,6 @@ export type BlockKey = (run: TextRun) => string;
 
 export const SAME_BLOCK: BlockKey = () => "";
 
-const RENDER_MODE_INVISIBLE = 3;
-
-export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
-  (a.renderMode === RENDER_MODE_INVISIBLE) ===
-  (b.renderMode === RENDER_MODE_INVISIBLE);
-
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
 // between them is below this absolute cap.
@@ -152,7 +146,7 @@ function groupPartitionIntoLines(
     const sameBlock =
       isBulletLead(run) || block === null || blockKey(run) === block;
 
-    if (sameLine && close && sameBlock && sameTextLayer(prev, run)) {
+    if (sameLine && close && sameBlock) {
       current.members.push(run);
     } else {
       current = { representative: run, members: [run] };

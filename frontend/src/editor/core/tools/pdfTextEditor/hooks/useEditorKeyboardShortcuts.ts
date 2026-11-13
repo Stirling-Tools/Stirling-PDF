@@ -4,7 +4,6 @@ import {
   findVisiblePageIndex,
   isFocusInContentEditable,
   isFocusInFormField,
-  isModalOpen,
   pageElements,
 } from "@editor/tools/pdfTextEditor/util/dom";
 
@@ -45,9 +44,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
-      const key = e.key.toLowerCase();
-      if (key !== "s" && isModalOpen()) return;
-      switch (key) {
+      switch (e.key.toLowerCase()) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
           if (isFocusInFormField()) return;
@@ -120,7 +117,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         onToggleHelp();
         return;
       }
-      if (isModalOpen()) return;
       if (e.key === "F3") {
         e.preventDefault();
         onFindNext(e.shiftKey);
@@ -149,7 +145,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     }
 
     function onPageNav(e: KeyboardEvent) {
-      if (isFocusInContentEditable() || isModalOpen()) return;
+      if (isFocusInContentEditable()) return;
       const isHome = e.key === "Home" && (e.ctrlKey || e.metaKey);
       const isEnd = e.key === "End" && (e.ctrlKey || e.metaKey);
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
