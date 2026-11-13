@@ -12,6 +12,12 @@ vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
     constructor(readonly opts: { runId: string; nextFamily: string }) {}
   },
 }));
+vi.mock("@editor/tools/pdfTextEditor/util/fontCapability", () => ({
+  italicCapability: (fontId: string) => ({
+    family: `${fontId} Italic`,
+    source: "device",
+  }),
+}));
 vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
   CompositeCommand: class {
     constructor(readonly commands: unknown[]) {}
@@ -21,23 +27,31 @@ vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
-function fakeStore(fontId: string) {
-  const runs = [
-    {
-      id: "a",
-      pageIndex: 0,
-      fontId,
-      locked: false,
-      fill: { r: 0, g: 0, b: 0, a: 255 },
-    },
-  ];
+function fakeStore(fontId: string, runIds: string[] = ["a"]) {
+  const runs = runIds.map((id) => ({
+    id,
+    pageIndex: 0,
+    fontId,
+    locked: false,
+    fill: { r: 0, g: 0, b: 0, a: 255 },
+  }));
+  const selection = { value: { runIds: [runIds[0]] } };
   const dispatch = vi.fn();
   const store = {
-    selection: { value: { runIds: ["a"] } },
+    selection,
     dispatch,
     document: { loadedPages: () => [{ runs }] },
   } as unknown as EditorStore;
-  return { store, dispatch };
+  const select = (id: string) => (selection.value = { runIds: [id] });
+  return { store, dispatch, select };
+}
+
+function holdFontLoad(): (ready: boolean) => void {
+  let finishLoading: (ready: boolean) => void = () => {};
+  ensureDeviceFontReady.mockImplementationOnce(
+    () => new Promise<boolean>((resolve) => (finishLoading = resolve)),
+  );
+  return (ready) => finishLoading(ready);
 }
 
 function dispatchedChanges(dispatch: ReturnType<typeof vi.fn>): string[] {
@@ -71,10 +85,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("drops a font still loading once a later font change has been made", async () => {
-    let finishLoading: (ready: boolean) => void = () => {};
-    ensureDeviceFontReady.mockImplementationOnce(
-      () => new Promise<boolean>((resolve) => (finishLoading = resolve)),
-    );
+    const finishLoading = holdFontLoad();
     const { store, dispatch } = fakeStore("device:Acme Sans");
     const actions = renderHook(() => useSelectionActions(store)).result.current;
 
@@ -84,5 +95,45 @@ describe("useSelectionActions font changes", () => {
     await pending;
 
     expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:7:Garamond"]);
+  });
+
+  it("still applies a font still loading for text a later change did not touch", async () => {
+    const finishLoading = holdFontLoad();
+    const { store, dispatch, select } = fakeStore("device:Acme Sans", [
+      "a",
+      "b",
+    ]);
+    const actions = renderHook(() => useSelectionActions(store)).result.current;
+
+    const pending = actions.changeFontFamily("Slow Serif");
+    select("b");
+    await actions.changeFontFamily("pdf:7:Garamond");
+    finishLoading(true);
+    await pending;
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "b:pdf:7:Garamond",
+      "a:Slow Serif",
+    ]);
+  });
+
+  it("still applies an italic still loading for text a later change did not touch", async () => {
+    const finishLoading = holdFontLoad();
+    const { store, dispatch, select } = fakeStore("device:Acme Sans", [
+      "a",
+      "b",
+    ]);
+    const actions = renderHook(() => useSelectionActions(store)).result.current;
+
+    const pending = actions.toggleItalic();
+    select("b");
+    await actions.changeFontFamily("pdf:7:Garamond");
+    finishLoading(true);
+    await pending;
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "b:pdf:7:Garamond",
+      "a:device:Acme Sans Italic",
+    ]);
   });
 });
