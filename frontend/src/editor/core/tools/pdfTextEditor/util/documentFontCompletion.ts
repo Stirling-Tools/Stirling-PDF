@@ -201,7 +201,8 @@ export async function resolveOriginalFonts(
 ): Promise<void> {
   const fonts = loadedExternalFonts();
   if (!fonts || fonts.length === 0) return;
-  for (const fontId of new Set(fontIds)) {
+  const ids = new Set(fontIds);
+  for (const fontId of ids) {
     const handle = documentFontHandle(fontId);
     if (lookedUp.get(handle) === fonts || lookingUp.has(handle)) continue;
     if (!fontCanBeCompleted(m, fontId)) continue;
@@ -213,4 +214,7 @@ export async function resolveOriginalFonts(
     lookedUp.set(handle, fonts);
     changed();
   }
+  // A call made while this one was reading skipped the fonts it was looking up.
+  if (stillOpen() && loadedExternalFonts() !== fonts)
+    await resolveOriginalFonts(m, ids, stillOpen);
 }

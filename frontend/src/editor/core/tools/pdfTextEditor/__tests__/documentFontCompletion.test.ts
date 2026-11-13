@@ -238,6 +238,52 @@ describe("resolveOriginalFonts", () => {
     expect(fallbackFamilyFor(id)).toBe("Helvetica");
   });
 
+  it("looks again when the font list changes while a lookup is reading a file", async () => {
+    const regular = face(
+      "Liberation Sans",
+      "Regular",
+      "LiberationSans",
+      "LiberationSans-Regular.ttf",
+    );
+    const regularBytes = await fontFile(regular.file);
+    let release: () => void = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const blob = vi.fn(async () => {
+      await held;
+      return { arrayBuffer: async () => regularBytes.slice().buffer };
+    });
+    (window as unknown as { queryLocalFonts: unknown }).queryLocalFonts = vi.fn(
+      async () => [{ ...regular, blob }],
+    );
+    await listLocalFonts();
+    vi.mocked(embeddedFontProgram).mockReturnValue(
+      await fontFile("LiberationSans-Bold.ttf"),
+    );
+    const id = "pdf:19:Liberation Sans";
+    const m = documentNaming("EAAAAA+LiberationSans-Bold");
+
+    const first = resolveOriginalFonts(m, [id], stillOpen);
+    await vi.waitFor(() => expect(blob).toHaveBeenCalled());
+    resetLocalFontsCache();
+    await install([
+      regular,
+      face(
+        "Liberation Sans",
+        "Bold",
+        "LiberationSans-Bold",
+        "LiberationSans-Bold.ttf",
+      ),
+    ]);
+    await resolveOriginalFonts(m, [id], stillOpen);
+    release();
+    await first;
+
+    expect(fontCompletionFor(id)).toEqual({
+      family: "Liberation Sans Bold",
+      source: "original",
+    });
+  });
+
   it("records nothing once the document has been closed", async () => {
     await install([
       face(
