@@ -52,6 +52,10 @@ export const createPortfolioOperationConfig = defineMultiFileTool({
   operationType: "createPortfolio",
   endpoint: ENDPOINT,
   filePrefix: "portfolio_",
+  // Create-portfolio always returns a PDF (PortfolioController produces
+  // ToolFormat.PDF and answers application/pdf), so unidentified content may
+  // still be named .pdf.
+  expectedOutputExtension: "pdf",
   defaultParameters: DEFAULT_CREATE_PORTFOLIO_PARAMETERS,
 });
 

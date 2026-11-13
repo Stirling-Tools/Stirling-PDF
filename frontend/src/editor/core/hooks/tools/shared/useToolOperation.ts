@@ -42,7 +42,14 @@ import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
 import { useResolutionContinuation } from "@editor/hooks/tools/shared/useResolutionContinuation";
 import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@editor/services/zipFileService";
-import { getFilenameWithoutExtension } from "@editor/utils/fileUtils";
+import {
+  detectExtensionFromSignature,
+  detectFileExtension,
+  extensionToMimeType,
+  getFilenameWithoutExtension,
+  mimeTypeToExtension,
+} from "@editor/utils/fileUtils";
+import { getFilenameFromHeaders } from "@editor/utils/fileResponseUtils";
 import {
   createChildStub,
   generateProcessedFileMetadata,
@@ -441,9 +448,69 @@ export const useToolOperation = <TParams>(
             ) {
               processedFiles = await extractZipFiles(responseBlob);
             } else {
-              const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
+              const inputName = filesForAPI[0]?.name || "document.pdf";
+              const rawType =
+                typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+              // A missing Content-Type says nothing about the content: unlike
+              // the old code, do not assume "application/pdf" here. The
+              // extension below is only ever "pdf" when the response proves
+              // it (MIME mapping / byte signature) or the operation declares
+              // a confirmed PDF-output contract.
+              const outputType = rawType.split(";")[0].trim();
+              const dispositionHeader =
+                response.headers?.["content-disposition"];
+              const disposition =
+                typeof dispositionHeader === "string" ? dispositionHeader : "";
+              // Prefer the backend-provided filename when present. Otherwise
+              // build one from the first input name, deriving the extension
+              // from the response MIME type so it always matches the actual
+              // content (#8404: merged images were named
+              // "merged_sample.jpeg" for PDF content, which broke downstream
+              // tool selection). When the MIME type is generic (e.g.
+              // "application/octet-stream" set by a proxy), sniff the
+              // response signature instead of trusting the input extension:
+              // the first input may be a JPEG while the output is a PDF.
+              // Content that stays unidentified keeps no extension instead
+              // of being labelled PDF: the "pdf" fallback applies only to
+              // operations whose backend contract guarantees PDF output
+              // (see config.expectedOutputExtension).
+              // A missing Content-Type is equally uninformative: it says
+              // nothing about the content, so the input extension must not
+              // stand in for it either.
+              const isGenericMimeType =
+                outputType === "" ||
+                outputType === "application/octet-stream" ||
+                outputType === "application/binary";
+              const baseName =
+                getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
+                "document";
+              // Extension identified from the response itself (MIME mapping
+              // or byte signature). The File type follows the identified
+              // content, not a possibly generic response header.
+              const identifiedExtension =
+                mimeTypeToExtension(outputType) ||
+                (await detectExtensionFromSignature(responseBlob));
+              let extension = identifiedExtension;
+              let fileType =
+                identifiedExtension !== ""
+                  ? extensionToMimeType(identifiedExtension) || rawType
+                  : rawType;
+              if (extension === "" && !isGenericMimeType) {
+                // Unmapped but specific MIME type: keep the previous
+                // behaviour of falling back to the input extension.
+                extension = detectFileExtension(inputName);
+              }
+              if (extension === "" && config.expectedOutputExtension) {
+                extension = config.expectedOutputExtension;
+                fileType = extensionToMimeType(extension) || rawType;
+              }
+              const filename =
+                getFilenameFromHeaders(disposition) ||
+                (extension === ""
+                  ? `${config.filePrefix}${baseName}`
+                  : `${config.filePrefix}${baseName}.${extension}`);
               processedFiles = [
-                new File([responseBlob], filename, { type: "application/pdf" }),
+                new File([responseBlob], filename, { type: fileType }),
               ];
             }
 
