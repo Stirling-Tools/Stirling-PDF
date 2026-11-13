@@ -18,6 +18,11 @@ export type BlockKey = (run: TextRun) => string;
 
 export const SAME_BLOCK: BlockKey = () => "";
 
+/** The advance of a space in the run's font, in ems, or null when the font cannot say. */
+export type SpaceAdvance = (run: TextRun) => number | null;
+
+const NO_SPACE_ADVANCE: SpaceAdvance = () => null;
+
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
 // between them is below this absolute cap.
@@ -28,6 +33,9 @@ const FALLBACK_SPACE_UNIT_RATIO = 0.5;
 const MIN_SPACE_UNIT_RATIO = 0.3;
 const MAX_SPACE_UNIT_RATIO = 1;
 const MULTI_SPACE_UNITS = 1.7;
+// A font with no space glyph reports zero or its missing width, so only a plausible advance is trusted.
+const MIN_FONT_SPACE_EM = 0.05;
+const MAX_FONT_SPACE_EM = 1;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
   return gapRatio(
@@ -48,19 +56,41 @@ export function readsWordGap(gapPt: number, fontSize: number): boolean {
   return gapRatio(gapPt, fontSize) > WORD_GAP_MIN_RATIO;
 }
 
-function lineSpaceUnitRatio(members: TextRun[]): number {
+function clampSpaceUnit(ratio: number): number {
+  return Math.min(MAX_SPACE_UNIT_RATIO, Math.max(MIN_SPACE_UNIT_RATIO, ratio));
+}
+
+function fontSpaceEm(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+): number | null {
+  let narrowest: number | null = null;
+  for (const member of members) {
+    const em = spaceAdvance(member);
+    if (em === null || em < MIN_FONT_SPACE_EM || em > MAX_FONT_SPACE_EM)
+      continue;
+    if (narrowest === null || em < narrowest) narrowest = em;
+  }
+  return narrowest;
+}
+
+function lineSpaceUnitRatio(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+): number {
   const wordGaps: number[] = [];
   for (let i = 1; i < members.length; i++) {
     const ratio = junctionGapRatio(members[i - 1], members[i]);
     if (ratio > WORD_GAP_MIN_RATIO) wordGaps.push(ratio);
   }
   if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
+  // Two gaps cannot tell one space from several: the narrower may itself be a double space.
+  if (wordGaps.length === 2) {
+    const em = fontSpaceEm(members, spaceAdvance);
+    if (em !== null) return clampSpaceUnit(em);
+  }
   wordGaps.sort((a, b) => a - b);
-  const lowerMedian = wordGaps[Math.floor((wordGaps.length - 1) / 2)];
-  return Math.min(
-    MAX_SPACE_UNIT_RATIO,
-    Math.max(MIN_SPACE_UNIT_RATIO, lowerMedian),
-  );
+  return clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]);
 }
 
 function spacesForGap(gapRatio: number, unitRatio: number): number {
@@ -157,7 +187,11 @@ function groupPartitionIntoLines(
 
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
-  static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): LineGroupInfo[] {
+  static apply(
+    page: Page,
+    blockKey: BlockKey = SAME_BLOCK,
+    spaceAdvance: SpaceAdvance = NO_SPACE_ADVANCE,
+  ): LineGroupInfo[] {
     // Partition by form-xobject container BEFORE grouping.
     const partitions = new Map<number, TextRun[]>();
     for (const run of page.runs) {
@@ -222,7 +256,7 @@ export class LineGrouper {
       const parts: string[] = [memberTexts[0]];
       const memberCharStarts: number[] = [0];
       let cumulativeLen = memberTexts[0].length;
-      const spaceUnitRatio = lineSpaceUnitRatio(group.members);
+      const spaceUnitRatio = lineSpaceUnitRatio(group.members, spaceAdvance);
       for (let i = 1; i < group.members.length; i++) {
         const prev = group.members[i - 1];
         const cur = group.members[i];
