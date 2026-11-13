@@ -95,7 +95,7 @@ public class ConvertOfficeController {
         }
 
         // The caller deletes it on success: the returned PDF lives in it.
-        Path workDir = Files.createTempDirectory("office2pdf_");
+        Path workDir = tempFileManager.createTempDirectory();
         boolean converted = false;
         try {
             File pdf =
@@ -105,7 +105,7 @@ public class ConvertOfficeController {
             return pdf;
         } finally {
             if (!converted) {
-                FileUtils.deleteQuietly(workDir.toFile());
+                tempFileManager.deleteTempDirectory(workDir);
             }
         }
     }
@@ -350,7 +350,7 @@ public class ConvertOfficeController {
             throw e;
         } finally {
             if (file != null && file.getParent() != null) {
-                FileUtils.deleteDirectory(file.getParentFile());
+                tempFileManager.deleteTempDirectory(file.getParentFile().toPath());
             }
         }
     }
