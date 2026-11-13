@@ -74,7 +74,10 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
         // Below this width the file manager collapses to its mobile layout,
         // so keep new windows above the breakpoint.
         .min_inner_size(1030.0, 600.0)
-        .resizable(true);
+        .resizable(true)
+        // As in the main window: the native handler swallows HTML5 drags (page
+        // and file reordering) and drops files a source offers only as data.
+        .disable_drag_drop_handler();
 
     // WebView2 (Windows only) requires every webview sharing a user-data folder
     // to use identical additional_browser_args. wry's behaviour
