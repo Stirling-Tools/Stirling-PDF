@@ -1,56 +1,102 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
+  applyVector,
+  moveAllObjects,
+  scanFrameFor,
+  type ScanFrame,
+} from "@editor/tools/pdfTextEditor/commands/scanFrame";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
+import { BLACK, WHITE, luma } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import {
-  INK_SCALE,
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type RGBA,
+} from "@editor/tools/pdfTextEditor/types";
+import {
+  composeAffine,
+  invertAffine,
+  transformRectAABB,
+} from "@editor/tools/pdfTextEditor/model/affine";
+import {
   capturePatch,
   measureScanInk,
   sampleBackground,
   type PixelPatch,
-  type ScanInk,
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
+  inkBesideOcr,
+  lineExtent,
+  lineRegion,
+  type PlacedWord,
+} from "@editor/tools/pdfTextEditor/commands/scanOffInk";
+import {
   layoutScanEdit,
+  rewrapLines,
   type LayoutWord,
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
-import { createBitmapImageObject } from "@editor/utils/pdfiumBitmapUtils";
-import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import {
   emitFillRect,
-  emitTextLine,
-  measureObjSpanPt,
   removeAndDestroyObject,
   removeMemberPtrs,
+  recordUndrawableChars,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
-  COURIER,
-  FACES,
-  HELVETICA,
-  clampStretch,
-  fitFace,
-  isEvenlySpaced,
-  matchScan,
-  median,
-  placeText,
+  FIT_PAUSED,
   blurRgba,
-  softnessOf,
-  toInkOnly,
-  opaqueStroke,
+  checkDeadline,
+  fitFace,
+  placeText,
   spanOf,
-  topShare,
-  type Face,
+  toInkOnly,
+  withFitDeadline,
 } from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import {
+  inkTop,
+  preferredScanFace,
+  preferredStyle,
+  rankStyles,
+  withPreferredFace,
+  type FitInput,
+  type FitWord,
+  type RankedStyle,
+  type ScanStyle,
+  type SpanInk,
+} from "@editor/tools/pdfTextEditor/commands/scanFit";
+import {
+  drawFromAtlas,
+  drawInFont,
+  emitSearchable,
+  invisibleText,
+  pasteImage,
+  wordGap,
+  type Canvas,
+} from "@editor/tools/pdfTextEditor/commands/scanPaint";
+import {
+  COURIER,
+  HELVETICA,
+  faceCovers,
+  scanFaces,
+  scanFacesGeneration,
+  type Face,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import {
+  buildGlyphAtlas,
+  composeText,
+  type ComposedText,
+  type GlyphAtlas,
+  type ScannedWord,
+} from "@editor/tools/pdfTextEditor/commands/scanGlyphs";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 
 // Editing OCR text on a scanned page. The words live twice: as pixels in the
 // scan and as invisible (Tr 3) text. An edit draws only the words the user
 // typed; every other word stays the scan's own pixels (moved if it has to make
 // room), so OCR misreads never reach the page.
 
-const INVISIBLE = 3;
-const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
+const REFERENCE_CHARS = 72;
 
 interface ScanWord {
   text: string;
@@ -58,6 +104,7 @@ interface ScanWord {
   start: number;
   x: number;
   right: number;
+  baseline: number;
   ptr: number;
   extraPtrs?: number[];
   container: number;
@@ -72,19 +119,6 @@ interface ScanLine {
   words: ScanWord[];
 }
 
-// How scanned text is redrawn: one face, size and colour for a whole block.
-interface ScanStyle {
-  family: string;
-  fontSize: number;
-  /** Horizontal scale that gives the face the scan's letter widths. */
-  stretch: number;
-  ink: RGBA;
-  /** Outline that thickens the strokes to the scan's weight, in points. */
-  weight: number;
-  /** Blur, in render pixels, that softens drawn text to the scan's focus. */
-  softness: number;
-}
-
 /** A move or restyle the user applied to the whole block. */
 export interface ScanOverride {
   dx: number;
@@ -92,17 +126,7 @@ export interface ScanOverride {
   family?: string;
   fontSize?: number;
   fill?: RGBA;
-}
-
-interface SpanInk {
-  ink: ScanInk;
-  /** Paper colour right around the span. */
-  paper: RGBA;
-  baseline: number;
-  /** The OCR text of the span, minus any box edge it read as a bracket. */
-  original: string;
-  dropLead: boolean;
-  dropTrail: boolean;
+  style?: ScanStyle;
 }
 
 export interface ScanEditState {
@@ -119,91 +143,36 @@ export interface ScanEditState {
   patches: Map<string, PixelPatch | null>;
   override: ScanOverride;
   /** The block's style, and its glyph height above the baseline. */
-  block?: { style: ScanStyle; top: number } | null;
+  block?: {
+    style: ScanStyle;
+    top: number;
+    xHeight: number | null;
+    ranked: RankedStyle[];
+    ref: SpanInk;
+    preferred: string | null;
+    drawn?: boolean;
+  } | null;
+  undrawableWithFaces?: number;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
   face?: Face | null;
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
+  atlas?: GlyphAtlas | null;
+  atlasChars?: Set<string>;
+  frame?: ScanFrame;
+  upright?: boolean;
+  offScan?: boolean;
+  offInk?: boolean;
+  edited?: boolean;
+  typedFromScan?: boolean;
 }
 
-interface PlacedWord {
-  x: number;
-  right: number;
-  baseline: number;
+export function isScanRun(run: { renderMode?: number }): boolean {
+  return run.renderMode === RENDER_MODE_INVISIBLE;
 }
 
-export function isScanRun(run: TextRun): boolean {
-  return run.renderMode === INVISIBLE;
-}
-
-// Snapshot a run's OCR words. Null when the run carries no per-word geometry,
-// which leaves the caller on the whole-run rewrite.
-export function captureScanEdit(
-  m: WrappedPdfiumModule,
-  run: TextRun,
-): ScanEditState | null {
-  const texts = run.text.split("\n");
-  const slots =
-    run.paragraphLineSlots.length === texts.length
-      ? run.paragraphLineSlots
-      : texts.length === 1
-        ? [
-            {
-              baselineY: run.matrix.f,
-              containerPtr: run.containerPtr,
-              fontSize: run.fontSize,
-              mergedFromPtrs: run.mergedFromPtrs.length
-                ? run.mergedFromPtrs
-                : [run.pdfiumObjPtr],
-              mergedFromTexts: run.mergedFromTexts.length
-                ? run.mergedFromTexts
-                : [run.text],
-              mergedFromBounds: run.mergedFromBounds.length
-                ? run.mergedFromBounds
-                : [{ x: run.bounds.x, right: run.bounds.x + run.bounds.width }],
-              mergedFromCharStarts: run.mergedFromCharStarts.length
-                ? run.mergedFromCharStarts
-                : [0],
-            },
-          ]
-        : null;
-  if (!slots) return null;
-  const top = run.bounds.y + run.bounds.height;
-  const height = Math.max(2, top - slots[0].baselineY);
-  const lines: ScanLine[] = [];
-  for (let i = 0; i < slots.length; i++) {
-    const s = slots[i];
-    const n = s.mergedFromPtrs.length;
-    if (
-      n === 0 ||
-      s.mergedFromTexts.length !== n ||
-      s.mergedFromBounds.length !== n ||
-      s.mergedFromCharStarts.length !== n ||
-      s.mergedFromPtrs.some((p) => !p)
-    )
-      return null;
-    lines.push({
-      text: texts[i],
-      baseline: s.baselineY,
-      height,
-      words: s.mergedFromPtrs.map((ptr, w) => ({
-        text: s.mergedFromTexts[w],
-        start: s.mergedFromCharStarts[w],
-        x: s.mergedFromBounds[w].x,
-        right: s.mergedFromBounds[w].right,
-        ptr,
-        container: s.containerPtr || run.containerPtr,
-        fontSize: s.fontSize,
-      })),
-    });
-  }
-  let fontPtr = 0;
-  try {
-    fontPtr = m.FPDFTextObj_GetFont(lines[0].words[0].ptr);
-  } catch {
-    fontPtr = 0;
-  }
+function emptyState(lines: ScanLine[], fontPtr: number): ScanEditState {
   return {
     lines,
     fontPtr,
@@ -217,12 +186,156 @@ export function captureScanEdit(
   };
 }
 
+function runWords(run: TextRun) {
+  return {
+    ptrs: run.mergedFromPtrs.length ? run.mergedFromPtrs : [run.pdfiumObjPtr],
+    texts: run.mergedFromTexts.length ? run.mergedFromTexts : [run.text],
+    starts: run.mergedFromCharStarts.length ? run.mergedFromCharStarts : [0],
+    bounds: run.mergedFromBounds.length
+      ? run.mergedFromBounds
+      : [{ x: run.bounds.x, right: run.bounds.x + run.bounds.width }],
+  };
+}
+
+function fontOf(m: WrappedPdfiumModule, ptr: number): number {
+  try {
+    return m.FPDFTextObj_GetFont(ptr);
+  } catch {
+    return 0;
+  }
+}
+
+const affineOf = (v: Float32Array): Affine => ({
+  a: v[0],
+  b: v[1],
+  c: v[2],
+  d: v[3],
+  e: v[4],
+  f: v[5],
+});
+
+function pageMatrixReader(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+): (ptr: number, container: number) => Affine | null {
+  const runOwn = run.containerPtr ? readMatrix(m, run.pdfiumObjPtr) : null;
+  const form = runOwn
+    ? composeAffine(run.matrix, invertAffine(affineOf(runOwn)))
+    : null;
+  return (ptr, container) => {
+    if (container !== 0 && (container !== run.containerPtr || !form))
+      return null;
+    const own = readMatrix(m, ptr);
+    if (!own) return null;
+    return form ? composeAffine(form, affineOf(own)) : affineOf(own);
+  };
+}
+
+function captureRotatedScanEdit(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+  frame: ScanFrame,
+): ScanEditState | null {
+  if (run.text.includes("\n")) return null;
+  const { ptrs, texts, starts } = runWords(run);
+  if (texts.length !== ptrs.length || starts.length !== ptrs.length)
+    return null;
+  const baseline = composeAffine(frame.toUpright, run.matrix).f;
+  const box = transformRectAABB(frame.toUpright, run.bounds);
+  const length = Math.max(1, run.text.trimEnd().length);
+  const pageMatrix = pageMatrixReader(m, run);
+  const words: ScanWord[] = ptrs.map((ptr, w) => {
+    const start = starts[w];
+    const end = start + texts[w].trimEnd().length;
+    const own = pageMatrix(ptr, run.containerPtr);
+    return {
+      text: texts[w],
+      start,
+      x: box.x + (box.width * start) / length,
+      right: box.x + (box.width * Math.min(end, length)) / length,
+      baseline: own ? composeAffine(frame.toUpright, own).f : baseline,
+      ptr,
+      container: run.containerPtr,
+      fontSize: run.fontSize,
+    };
+  });
+  const line = {
+    text: run.text,
+    baseline,
+    height: Math.max(2, box.y + box.height - baseline),
+    words,
+  };
+  return { ...emptyState([line], fontOf(m, ptrs[0])), frame };
+}
+
+// Snapshot a run's OCR words. Null when the run carries no per-word geometry,
+// which leaves the caller on the whole-run rewrite.
+export function captureScanEdit(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+  page?: Page,
+): ScanEditState | null {
+  const frame = page ? scanFrameFor(page, run.matrix, run.bounds) : null;
+  if (frame) return captureRotatedScanEdit(m, run, frame);
+  const texts = run.text.split("\n");
+  const own = runWords(run);
+  const slots =
+    run.paragraphLineSlots.length === texts.length
+      ? run.paragraphLineSlots
+      : texts.length === 1
+        ? [
+            {
+              baselineY: run.matrix.f,
+              containerPtr: run.containerPtr,
+              fontSize: run.fontSize,
+              mergedFromPtrs: own.ptrs,
+              mergedFromTexts: own.texts,
+              mergedFromBounds: own.bounds,
+              mergedFromCharStarts: own.starts,
+            },
+          ]
+        : null;
+  if (!slots) return null;
+  const top = run.bounds.y + run.bounds.height;
+  const height = Math.max(2, top - slots[0].baselineY);
+  const lines: ScanLine[] = [];
+  const pageMatrix = pageMatrixReader(m, run);
+  for (const [i, s] of slots.entries()) {
+    const n = s.mergedFromPtrs.length;
+    if (
+      n === 0 ||
+      s.mergedFromTexts.length !== n ||
+      s.mergedFromBounds.length !== n ||
+      s.mergedFromCharStarts.length !== n ||
+      s.mergedFromPtrs.some((p) => !p)
+    )
+      return null;
+    const container = s.containerPtr || run.containerPtr;
+    lines.push({
+      text: texts[i],
+      baseline: s.baselineY,
+      height,
+      words: s.mergedFromPtrs.map((ptr, w) => ({
+        text: s.mergedFromTexts[w],
+        start: s.mergedFromCharStarts[w],
+        x: s.mergedFromBounds[w].x,
+        right: s.mergedFromBounds[w].right,
+        baseline: pageMatrix(ptr, container)?.f ?? s.baselineY,
+        ptr,
+        container,
+        fontSize: s.fontSize,
+      })),
+    });
+  }
+  return emptyState(lines, fontOf(m, lines[0].words[0].ptr));
+}
+
 /** Where word `w` of a line ends in the line's text, its trailing space included. */
 function wordEnd(line: ScanLine, w: number): number {
   return w + 1 < line.words.length ? line.words[w + 1].start : line.text.length;
 }
 
-const wordsOf = (lines: ScanLine[]) =>
+const wordsOf = (lines: ScanLine[]): FitWord[] =>
   lines
     .flatMap((l) => l.words)
     .map((w) => ({ text: w.text, width: w.right - w.x }));
@@ -245,8 +358,9 @@ function nearbyFace(
   state: ScanEditState,
 ): Face | null {
   if (state.nearbyFace !== undefined) return state.nearbyFace;
+  if (state.frame) return (state.nearbyFace = null);
   const own = state.lines[0];
-  const pooled: Array<{ text: string; width: number }> = [];
+  const pooled: FitWord[] = [];
   const others = page.runs
     .filter((r) => isScanRun(r) && r.scanEdit !== state)
     .map((run) => ({
@@ -259,10 +373,7 @@ function nearbyFace(
     .filter((o) => o.height / own.height > 0.75 && o.height / own.height < 1.33)
     .sort((p, q) => p.dist - q.dist);
   for (const { run } of others) {
-    const texts = run.mergedFromTexts.length ? run.mergedFromTexts : [run.text];
-    const bounds = run.mergedFromBounds.length
-      ? run.mergedFromBounds
-      : [{ x: run.bounds.x, right: run.bounds.x + run.bounds.width }];
+    const { texts, bounds } = runWords(run);
     texts.forEach((t, i) =>
       pooled.push({ text: t, width: bounds[i].right - bounds[i].x }),
     );
@@ -278,18 +389,19 @@ function otherWords(page: Page, state: ScanEditState): PlacedWord[] {
   const out: PlacedWord[] = [];
   for (const run of page.runs) {
     if (!isScanRun(run) || run.scanEdit === state) continue;
+    if (state.frame) {
+      const box = transformRectAABB(state.frame.toUpright, run.bounds);
+      const turned = composeAffine(state.frame.toUpright, run.matrix);
+      if (Math.abs(turned.b) > 1e-6 || turned.a <= 0) continue;
+      out.push({ x: box.x, right: box.x + box.width, baseline: turned.f });
+      continue;
+    }
     const slots = run.paragraphLineSlots.length
       ? run.paragraphLineSlots
-      : [{ baselineY: run.matrix.f, mergedFromBounds: run.mergedFromBounds }];
+      : [{ baselineY: run.matrix.f, mergedFromBounds: runWords(run).bounds }];
     for (const s of slots)
       for (const b of s.mergedFromBounds)
         out.push({ x: b.x, right: b.right, baseline: s.baselineY });
-    if (!run.mergedFromBounds.length && !run.paragraphLineSlots.length)
-      out.push({
-        x: run.bounds.x,
-        right: run.bounds.x + run.bounds.width,
-        baseline: run.matrix.f,
-      });
   }
   state.neighbours = out;
   return out;
@@ -307,27 +419,29 @@ function spanInk(
 ): SpanInk | null {
   const key = `${li}:${from}:${to}`;
   if (state.inks.has(key)) return state.inks.get(key) ?? null;
-  const m = doc.module;
   const line = state.lines[li];
   const words = line.words;
   const prev = words[from - 1];
   const next = words[to + 1];
+  const own = words.slice(from, to + 1).map((w) => w.baseline);
+  const low = Math.min(...own);
+  const high = Math.max(...own);
+  const mid = (low + high) / 2;
   // Stay clear of the neighbouring words' ink, however close they sit.
   let x0 = prev ? (prev.right + words[from].x) / 2 : words[from].x - 2;
   let x1 = next ? (words[to].right + next.x) / 2 : words[to].right + 2;
   // OCR word boxes can overrun into words the OCR put in another block.
   for (const w of otherWords(page, state)) {
-    if (Math.abs(w.baseline - line.baseline) > line.height * 0.5) continue;
+    if (Math.abs(w.baseline - mid) > line.height * 0.5) continue;
     if (w.x > words[to].x + 0.5) x1 = Math.min(x1, w.x - 0.3);
     if (w.right < words[from].x + 0.5) x0 = Math.max(x0, w.right + 0.3);
   }
-  const region = {
-    x0,
-    x1,
-    bottom: line.baseline - line.height * 0.1,
-    top: line.baseline + line.height * 0.9,
-  };
-  const ink = measureScanInk(m, page, region);
+  checkDeadline();
+  const ink = measureScanInk(
+    doc.module,
+    page,
+    lineRegion(x0, x1, low, high, line.height),
+  );
   let result: SpanInk | null = null;
   if (ink) {
     // OCR reads a box edge hugging the text as a bracket or bar.
@@ -339,9 +453,9 @@ function spanInk(
       paper: ink.paper,
       baseline:
         ink.baseline !== null &&
-        Math.abs(ink.baseline - line.baseline) < line.height * 0.4
+        Math.abs(ink.baseline - mid) < line.height * 0.4
           ? ink.baseline
-          : line.baseline,
+          : mid,
       original: raw.slice(dropLead ? 1 : 0, dropTrail ? -1 : undefined),
       dropLead,
       dropTrail,
@@ -358,187 +472,165 @@ const lineInk = (
   li: number,
 ) => spanInk(doc, page, state, li, 0, state.lines[li].words.length - 1);
 
-/** How far the glyphs of a span rise above its baseline. */
-const inkTop = (s: SpanInk) => s.ink.body.y + s.ink.body.height - s.baseline;
-
-// Readers judge size by the lowercase, so mostly-lowercase text is sized by
-// its x-height; ascenders, overshoot and blur all read taller than the face.
-// OCR's letter case is unreliable, so the scan's own rows decide.
-function sizeFor(face: Face, s: SpanInk): number {
-  if (s.ink.xLine !== null)
-    return (s.ink.xLine - s.baseline) / (face.xh / 1000);
-  return inkTop(s) / topShare(face, s.original);
-}
-
-// Render pixels per scanned pixel under `rect`. A low-res scan scaled up is
-// soft however sharp its pixel steps look, so this sets a floor on softness.
-function scanPixelSpan(
-  doc: EditorDocument,
-  page: Page,
-  rect: PageRect,
-): number {
-  const m = doc.module;
-  const cx = rect.x + rect.width / 2;
-  const cy = rect.y + rect.height / 2;
-  const under = page.images
+function inkedLines(doc: EditorDocument, page: Page, state: ScanEditState) {
+  return state.lines
+    .map((_, li) => ({ li, ink: lineInk(doc, page, state, li) }))
     .filter(
-      (img) =>
-        cx >= img.bounds.x &&
-        cx <= img.bounds.x + img.bounds.width &&
-        cy >= img.bounds.y &&
-        cy <= img.bounds.y + img.bounds.height,
-    )
-    .sort(
-      (p, q) =>
-        q.bounds.width * q.bounds.height - p.bounds.width * p.bounds.height,
-    )[0];
-  if (!under) return 0;
-  const wPtr = m.pdfium.wasmExports.malloc(4);
-  const hPtr = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFImageObj_GetImagePixelSize(under.pdfiumObjPtr, wPtr, hPtr))
-      return 0;
-    const pixels = m.pdfium.getValue(wPtr, "i32");
-    return pixels > 0 ? (INK_SCALE * under.bounds.width) / pixels : 0;
-  } catch {
-    return 0;
-  } finally {
-    m.pdfium.wasmExports.free(wPtr);
-    m.pdfium.wasmExports.free(hPtr);
-  }
+      (l): l is { li: number; ink: SpanInk } =>
+        l.ink !== null && l.ink.original.length > 0,
+    );
 }
 
-// The face, weight, size and letter width that redraw `ref` most like the
-// scan; the size is shared by every span in `spans`.
-function fitStyle(
+function offInk(doc: EditorDocument, page: Page, state: ScanEditState) {
+  state.offInk ??= onOriginalScan(doc, page, state, () => {
+    const lines = state.lines.filter((l) => l.words.length > 0);
+    if (lines.length === 0 || inkedLines(doc, page, state).length > 0)
+      return false;
+    return inkBesideOcr(doc, page, lines, otherWords(page, state));
+  });
+  return state.offInk;
+}
+
+const fitInput = (
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
   spans: SpanInk[],
   ref: SpanInk,
-): ScanStyle | null {
-  const fit = (face: Face, family: string, k: number) => {
-    const size = sizeFor(face, ref) * k;
-    const natural = spanOf(doc, page, ref.original, family, size);
-    const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
-    return { face, family, size, stretch, k };
-  };
-  // Typewriter evidence is sturdier than pixels on a blurry low-res scan, so
-  // it settles the face; the pixels still pick the weight.
-  const typewriter =
-    faceFor(doc, page, state) === COURIER ||
-    isEvenlySpaced(ref.ink.glyphCenters, ref.original);
-  // Fit size for both weights before choosing one. Blur and overshoot can
-  // inflate glyph height enough to favour the wrong face at the initial size.
-  const faces = typewriter ? [COURIER] : FACES;
-  const sizes = faces
-    .flatMap((face) =>
-      [face.family, face.bold].flatMap((family) =>
-        [0.88, 0.91, 0.94, 0.97, 1, 1.03].map((k) => fit(face, family, k)),
-      ),
-    )
-    .filter((c) => c.size > 2)
-    .map((c) => ({
-      ...c,
-      score: matchScan(doc, page, ref.ink, {
-        text: ref.original,
-        x: ref.ink.body.x,
-        baseline: ref.baseline,
-        family: c.family,
-        size: c.size,
-        stretch: c.stretch,
-      }).score,
-    }));
-  if (sizes.length === 0) return null;
-  const best = <T extends { score: number }>(cs: T[]) =>
-    cs.reduce((p, q) => (q.score > p.score ? q : p));
-  const floor = Math.round(scanPixelSpan(doc, page, ref.ink.rect) / 2);
-  // Compare the tuned faces at the scan's softness. Blurring both images
-  // gives the scan a second blur, which makes regular strokes look bold.
-  const candidates = faces
-    .flatMap((face) => [face.family, face.bold])
-    .map((family) => sizes.filter((c) => c.family === family))
-    .filter((cs) => cs.length > 0)
-    .map((cs) => {
-      const c = best(cs);
-      const placement = {
-        text: ref.original,
-        x: ref.ink.body.x,
-        baseline: ref.baseline,
-        family: c.family,
-        size: c.size,
-        stretch: c.stretch,
-      };
-      const measured = softnessOf(doc, page, ref.ink, placement);
-      const softness = Math.min(2, Math.max(measured, floor));
-      const match = matchScan(doc, page, ref.ink, placement, softness);
-      return {
-        ...c,
-        softness,
-        score: match.score,
-        strokeRatio: match.weight,
-      };
-    });
-  let chosen = best(candidates);
-  // A typewritten block nearby tips a close call its way.
-  const mono = candidates.filter((c) => c.face === COURIER);
-  if (
-    !typewriter &&
-    nearbyFace(doc, page, state) === COURIER &&
-    best(mono).score > chosen.score - 0.1
+): FitInput => ({
+  spans,
+  ref,
+  words: wordsOf(state.lines),
+  wordsLookMono: () => faceFor(doc, page, state) === COURIER,
+  neighboursLookMono: () => nearbyFace(doc, page, state) === COURIER,
+});
+
+const rank = (
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  spans: SpanInk[],
+  ref: SpanInk,
+) => rankStyles(doc, page, fitInput(doc, page, state, spans, ref));
+
+function fittedForOtherPreference(
+  doc: EditorDocument,
+  state: ScanEditState,
+): boolean {
+  const block = state.block;
+  if (!block || block.drawn) return false;
+  const preferred = preferredScanFace(doc);
+  return (
+    preferred !== null &&
+    block.preferred !== preferred &&
+    !block.ranked.some((r) => r.face.label === preferred)
+  );
+}
+
+const undrawableWithFewerFaces = (state: ScanEditState) =>
+  state.block === null && state.undrawableWithFaces !== scanFacesGeneration();
+
+export function scanRunNeedsFit(doc: EditorDocument, run: TextRun): boolean {
+  if (!isScanRun(run)) return false;
+  const state = run.scanEdit;
+  return (
+    !state ||
+    state.block === undefined ||
+    undrawableWithFewerFaces(state) ||
+    fittedForOtherPreference(doc, state)
+  );
+}
+
+export function prefitScanRun(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  deadline: number,
+): boolean {
+  const state = isScanRun(run) ? scanEditOf(doc, run) : null;
+  if (!state || !scanRunNeedsFit(doc, run)) return true;
+  try {
+    withFitDeadline(deadline, () =>
+      upright(doc, page, state, () => styleFor(doc, page, state, null)),
+    );
+    return true;
+  } catch (e) {
+    if (e === FIT_PAUSED) return false;
+    throw e;
+  }
+}
+
+function referenceSpan(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  line: { li: number; ink: SpanInk },
+): SpanInk {
+  if (line.ink.original.length <= REFERENCE_CHARS) return line.ink;
+  const words = state.lines[line.li].words;
+  let last = 0;
+  while (
+    last + 1 < words.length &&
+    wordEnd(state.lines[line.li], last + 1) <= REFERENCE_CHARS
   )
-    chosen = best(mono);
-  // Regular and bold can have almost the same blurred outlines. Settle close
-  // matches using stroke thickness, rather than rewarding blur as extra ink.
-  const weights = candidates.filter(
-    (c) => c.face === chosen.face && c.score >= chosen.score - 0.1,
+    last++;
+  if (last < 2) return line.ink;
+  return spanInk(doc, page, state, line.li, 0, last) ?? line.ink;
+}
+
+function fitBlock(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): ScanEditState["block"] {
+  const inked = inkedLines(doc, page, state);
+  if (inked.length === 0) return null;
+  const spans = inked.map((l) => l.ink);
+  const longest = inked.reduce((p, q) =>
+    q.ink.original.length > p.ink.original.length ? q : p,
   );
-  chosen = weights.reduce((p, q) =>
-    Math.abs(Math.log(q.strokeRatio)) < Math.abs(Math.log(p.strokeRatio))
-      ? q
-      : p,
+  const ref = referenceSpan(doc, page, state, longest);
+  const ranked = rank(doc, page, state, spans, ref);
+  if (ranked.length === 0) return null;
+  const xHeights = spans.flatMap((s) =>
+    s.ink.xLine === null ? [] : [s.ink.xLine - s.baseline],
   );
-  const { softness } = chosen;
-  // Blur thickens scanned strokes past any bold; add outline until the drawn
-  // strokes, softened the same way, are as thick as the scanned ones.
-  // Only past bold: on regular text blur alone would read as extra weight.
-  const weight = (chosen.family === chosen.face.bold ? [0, 0.025, 0.05] : [0])
-    .map((k) => k * chosen.size)
-    .map((w) => ({
-      w,
-      ratio: matchScan(
-        doc,
-        page,
-        ref.ink,
-        {
-          text: ref.original,
-          x: ref.ink.body.x,
-          baseline: ref.baseline,
-          family: chosen.family,
-          size: chosen.size,
-          stretch: chosen.stretch,
-          weight: w,
-        },
-        softness,
-      ).weight,
-    }))
-    .reduce((p, q) =>
-      Math.abs(Math.log(q.ratio)) < Math.abs(Math.log(p.ratio)) ? q : p,
-    ).w;
-  // One size for every line; the median shrugs off a line of lowercase.
-  const blockSizes = spans
-    .map((s) => sizeFor(chosen.face, s))
-    .filter((v) => v > 2);
   return {
-    family: chosen.family,
-    fontSize: blockSizes.length ? median(blockSizes) * chosen.k : chosen.size,
-    stretch: chosen.stretch,
-    // Softened text is blurred again, so it starts from the scan's darkest ink.
-    ink: softness > 0 ? ref.ink.core : ref.ink.fill,
-    weight,
-    softness,
+    style: ranked[0].style,
+    top: median(spans.map(inkTop)),
+    xHeight: xHeights.length ? median(xHeights) : null,
+    ranked,
+    ref,
+    preferred: preferredScanFace(doc),
   };
 }
+
+function withPreferredFit(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  block: NonNullable<ScanEditState["block"]>,
+): ScanEditState["block"] {
+  const spans = inkedLines(doc, page, state).map((l) => l.ink);
+  const input = fitInput(doc, page, state, spans, block.ref);
+  return {
+    ...block,
+    ranked: withPreferredFace(doc, page, input, block.ranked),
+    preferred: preferredScanFace(doc),
+  };
+}
+
+export function drawnBlockStyle(
+  doc: EditorDocument,
+  state: ScanEditState,
+): ScanStyle | null {
+  const block = state.block;
+  if (!block) return null;
+  if (block.drawn) return block.style;
+  return preferredStyle(doc, block.ranked) ?? block.style;
+}
+
+const X_HEIGHT_ONLY = /^[acemnorsuvwxz\s\p{P}]+$/u;
 
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
@@ -549,24 +641,44 @@ function styleFor(
   state: ScanEditState,
   span: SpanInk | null,
 ): ScanStyle | null {
+  return onOriginalScan(doc, page, state, () =>
+    styleOnScan(doc, page, state, span),
+  );
+}
+
+function styleOnScan(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  span: SpanInk | null,
+): ScanStyle | null {
+  if (undrawableWithFewerFaces(state)) state.block = undefined;
   if (state.block === undefined) {
-    const lines = state.lines
-      .map((_, li) => lineInk(doc, page, state, li))
-      .filter((s): s is SpanInk => s !== null && s.original.length > 0);
-    const ref = lines.length
-      ? lines.reduce((p, q) => (q.original.length > p.original.length ? q : p))
-      : null;
-    const style = ref ? fitStyle(doc, page, state, lines, ref) : null;
-    state.block = style ? { style, top: median(lines.map(inkTop)) } : null;
+    state.block = fitBlock(doc, page, state);
+    if (state.block === null) state.undrawableWithFaces = scanFacesGeneration();
   }
-  if (!state.block || !span) return state.block?.style ?? null;
+  if (state.block && fittedForOtherPreference(doc, state))
+    state.block = withPreferredFit(doc, page, state, state.block);
+  const block = state.block;
+  const blockStyle = drawnBlockStyle(doc, state);
+  if (!block || !blockStyle) return null;
+  if (!span) return blockStyle;
   const top = inkTop(span);
   const near = (t: number) => Math.abs(top / t - 1) < 0.25;
-  if (near(state.block.top)) return state.block.style;
+  if (near(block.top)) return blockStyle;
+  if (
+    block.xHeight !== null &&
+    X_HEIGHT_ONLY.test(span.original) &&
+    near(block.xHeight)
+  )
+    return blockStyle;
   const known = state.classes.find((c) => near(c.top));
   if (known) return known.style;
-  const style = fitStyle(doc, page, state, [span], span);
-  if (!style) return state.block.style;
+  const ranked = rank(doc, page, state, [span], span);
+  if (ranked.length === 0) return block.style;
+  const style = block.drawn
+    ? ranked[0].style
+    : (preferredStyle(doc, ranked) ?? ranked[0].style);
   state.classes.push({ style, top });
   return style;
 }
@@ -580,43 +692,6 @@ function linePitch(state: ScanEditState, style: ScanStyle): number {
   return gaps.length ? median(gaps) : style.fontSize * 1.25;
 }
 
-function lift(m: WrappedPdfiumModule, page: Page, word: ScanWord): void {
-  removeMemberPtrs(
-    m,
-    page,
-    [word.ptr, ...(word.extraPtrs ?? [])],
-    new Map([[word.ptr, word.container]]),
-    0,
-  );
-}
-
-// Invisible OCR text for a word, so search and copy still find it.
-function emitInvisible(
-  doc: EditorDocument,
-  page: Page,
-  state: ScanEditState,
-  word: ScanWord,
-  x: number,
-  baseline: number,
-  tagMarks: readonly TagMark[],
-): number[] {
-  const ptrs = emitTextLine({
-    doc,
-    page,
-    text: word.text.trimEnd() || word.text,
-    x,
-    y: baseline,
-    fontSize: word.fontSize,
-    fill: BLACK,
-    originalFontPtr: state.fontPtr,
-    fallbackFamily: "Helvetica",
-    renderMode: INVISIBLE,
-    tags: uniformTags(tagMarks),
-  });
-  opaqueStroke(doc.module, ptrs);
-  return ptrs;
-}
-
 /** Typical gap between neighbouring words in the block. */
 function wordSpace(state: ScanEditState, style: ScanStyle): number {
   const gaps = state.lines.flatMap((l) =>
@@ -628,15 +703,37 @@ function wordSpace(state: ScanEditState, style: ScanStyle): number {
   return gaps.length ? median(gaps) : style.fontSize * 0.28;
 }
 
-function fallbackStyle(state: ScanEditState): ScanStyle {
+function fallbackStyle(
+  state: ScanEditState,
+  ink = BLACK,
+  text = state.lines.map((l) => l.text).join(" "),
+): ScanStyle {
+  const face = scanFaces().find((f) => faceCovers(f, text)) ?? HELVETICA;
   return {
-    family: HELVETICA.family,
-    fontSize: state.lines[0].height / (HELVETICA.cap / 1000),
+    family: face.family,
+    fontSize: state.lines[0].height / (face.cap / 1000),
     stretch: 1,
-    ink: BLACK,
+    ink,
     weight: 0,
+    hollow: 0,
     softness: 0,
   };
+}
+
+function inkAgainst(
+  m: WrappedPdfiumModule,
+  page: Page,
+  state: ScanEditState,
+): RGBA {
+  const line = state.lines[0];
+  const { x0, x1 } = lineExtent(line);
+  const { fill } = sampleBackground(m, page, {
+    x: x0,
+    y: line.baseline - line.height * 0.2,
+    width: x1 - x0,
+    height: line.height * 1.2,
+  });
+  return luma(fill.r, fill.g, fill.b) < 128 ? WHITE : BLACK;
 }
 
 // The scanned pixels of one word, copied once: the scan under a word never
@@ -653,6 +750,89 @@ function patchOf(
   return state.patches.get(key) ?? null;
 }
 
+function atlasOf(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  needed: Set<string>,
+): GlyphAtlas | null {
+  const known = state.atlasChars ?? new Set<string>();
+  if (state.atlas !== undefined && [...needed].every((ch) => known.has(ch)))
+    return state.atlas;
+  const chars = new Set([...known, ...needed]);
+  const top = state.block?.top ?? state.lines[0].height;
+  const pitch =
+    state.lines.length > 1 ? linePitch(state, fallbackStyle(state)) : Infinity;
+  const descent = top * 0.35;
+  const frame = Math.min(top * 1.45, pitch * 0.95);
+  const words: ScannedWord[] = [];
+  state.lines.forEach((line, li) =>
+    line.words.forEach((word, wi) => {
+      if (![...word.text].some((ch) => chars.has(ch))) return;
+      const span = spanInk(doc, page, state, li, wi, wi);
+      if (!span || inkTop(span) > top * 1.3) return;
+      const patch = capturePatch(doc.module, page, {
+        x: span.ink.rect.x,
+        y: span.baseline - descent,
+        width: span.ink.rect.width,
+        height: frame,
+      });
+      if (!patch) return;
+      toInkOnly(patch, span.paper, span.ink.reversed);
+      words.push({
+        text: span.original.replace(/\s+/g, ""),
+        rgba: patch.rgba,
+        width: patch.width,
+        height: patch.height,
+        left: patch.rect.x,
+        scale: patch.width / patch.rect.width,
+        spans: span.ink.glyphSpans,
+      });
+    }),
+  );
+  state.atlas = buildGlyphAtlas(words, descent);
+  state.atlasChars = chars;
+  return state.atlas;
+}
+
+function styleCovers(style: ScanStyle, text: string): boolean {
+  const face = scanFaces().find(
+    (f) => f.family === style.family || f.bold === style.family,
+  );
+  return !face || faceCovers(face, text);
+}
+
+function implausibleLine(line: ScanLine): boolean {
+  const chars = line.text.replace(/\s/g, "").length;
+  if (chars <= 3 || line.words.length === 0) return false;
+  const { x0, x1 } = lineExtent(line);
+  return x1 - x0 < chars * line.height * 0.15;
+}
+
+function extraSpacesBefore(line: ScanLine, w: ScanWord, index: number) {
+  const upTo = w.start + w.text.length - w.text.trimStart().length;
+  const before = line.text.slice(0, upTo);
+  const spaces = before.length - before.trimEnd().length;
+  return Math.max(0, spaces - (index === 0 ? 0 : 1));
+}
+
+const UNSHAPED_SCRIPT =
+  /[\u0590-\u08ff\u0d00-\u0d7f\u0f00-\u0fff\ufb1d-\ufdff\ufe70-\ufeff]/u;
+
+function keepsOnlyScannedWords(state: ScanEditState, text: string): boolean {
+  const words = state.lines
+    .flatMap((l) => l.words.map((w) => w.text.trim()))
+    .filter(Boolean);
+  let i = 0;
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => {
+      while (i < words.length && words[i] !== token) i++;
+      return i++ < words.length;
+    });
+}
+
 // Make the page show `text` for this run. Words the user kept stay the scan's
 // own pixels, moved as a copy when something before them changed width or
 // wrapped; typed words are drawn in the block's style; removed ones covered.
@@ -662,82 +842,291 @@ export function renderScanEdit(
   run: TextRun,
   state: ScanEditState,
   text: string,
-): void {
-  const m = doc.module;
-  for (const p of state.created) removeAndDestroyObject(m, page.pagePtr, p);
-  state.created = [];
-  state.textPtrs = [];
+): boolean {
+  const drawn = upright(doc, page, state, () =>
+    renderUprightScanEdit(doc, page, run, state, text),
+  );
+  if (drawn && state.block && !state.block.drawn)
+    state.block = {
+      ...state.block,
+      style: preferredStyle(doc, state.block.ranked) ?? state.block.style,
+      drawn: true,
+    };
+  return drawn;
+}
 
-  const o = state.override;
-  const restyle =
-    o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
-  const block = styleFor(doc, page, state, null) ?? fallbackStyle(state);
+interface EditStyles {
+  blockFit: () => ScanStyle | null;
+  fitted: () => ScanStyle;
+  /** The fitted block style if anything has asked for it yet, without fitting. */
+  fittedSoFar: () => ScanStyle | undefined;
+  styleOf: (anchor: LayoutWord | null) => ScanStyle;
+  inkOf: (w: LayoutWord) => SpanInk | null;
+}
+
+function anchorBase(
+  o: ScanOverride,
+  own: ScanStyle,
+  blockStyle: ScanStyle,
+): ScanStyle {
+  if (own === blockStyle) return o.style ?? blockStyle;
+  if (!o.style) return own;
+  const scale = own.fontSize / blockStyle.fontSize;
+  return {
+    ...o.style,
+    fontSize: o.style.fontSize * scale,
+    weight: o.style.weight * scale,
+    hollow: o.style.hollow * scale,
+    ink: own.ink,
+  };
+}
+
+function withOverride(o: ScanOverride, base: ScanStyle): ScanStyle {
+  const newFamily = o.family !== undefined;
+  return {
+    family: o.family ?? base.family,
+    fontSize: o.fontSize ?? base.fontSize,
+    ink: o.fill ?? base.ink,
+    stretch: newFamily ? 1 : base.stretch,
+    weight: newFamily ? 0 : base.weight,
+    hollow: newFamily ? 0 : base.hollow,
+    softness: base.softness,
+  };
+}
+
+// Lazy: fitting renders the scan, and an edit that only deletes words needs no style.
+function editStyles(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  o: ScanOverride,
+  text: string,
+): EditStyles {
+  let blockFitted: ScanStyle | null | undefined;
+  const blockFit = () =>
+    blockFitted === undefined
+      ? (blockFitted = styleFor(doc, page, state, null))
+      : blockFitted;
+  let fittedStyle: ScanStyle | undefined;
+  const fitted = () =>
+    (fittedStyle ??=
+      blockFit() ??
+      fallbackStyle(state, inkAgainst(doc.module, page, state), text));
   const inkOf = (w: LayoutWord) =>
     spanInk(doc, page, state, w.line, w.index, w.index);
+  const styles = new Map<LayoutWord | null, ScanStyle>();
   const styleOf = (anchor: LayoutWord | null): ScanStyle => {
-    const base =
-      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? block;
-    return {
-      family: o.family ?? base.family,
-      fontSize: o.fontSize ?? base.fontSize,
-      ink: o.fill ?? base.ink,
-      stretch: o.family !== undefined ? 1 : base.stretch,
-      weight: o.family !== undefined ? 0 : base.weight,
-      softness: base.softness,
-    };
+    const known = styles.get(anchor);
+    if (known) return known;
+    const blockStyle = fitted();
+    const own =
+      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? blockStyle;
+    const style = withOverride(o, anchorBase(o, own, blockStyle));
+    styles.set(anchor, style);
+    return style;
   };
+  return {
+    blockFit,
+    fitted,
+    fittedSoFar: () => fittedStyle,
+    styleOf,
+    inkOf,
+  };
+}
+
+interface ScanGlyphSource {
+  atlas: () => GlyphAtlas | null;
+  composed: (text: string) => ComposedText | null;
+  /** The letters the edit types, read when the atlas is first built. */
+  setTyped: (chars: Iterable<string>) => void;
+}
+
+function scanGlyphSource(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  enabled: boolean,
+  fitBlock: () => unknown,
+  space: number,
+): ScanGlyphSource {
+  let atlasMemo: GlyphAtlas | null | undefined;
+  let typed = new Set<string>();
+  const atlas = () => {
+    if (atlasMemo !== undefined) return atlasMemo;
+    if (!enabled) return (atlasMemo = null);
+    fitBlock();
+    return (atlasMemo = atlasOf(doc, page, state, typed));
+  };
+  const cache = new Map<string, ComposedText | null>();
+  const composed = (t: string) => {
+    const a = atlas();
+    if (!a) return null;
+    if (!cache.has(t)) cache.set(t, composeText(a, t, space * a.scale));
+    return cache.get(t) ?? null;
+  };
+  return {
+    atlas,
+    composed,
+    setTyped: (chars) => {
+      typed = new Set(chars);
+    },
+  };
+}
+
+function renderUprightScanEdit(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  state: ScanEditState,
+  text: string,
+): boolean {
+  const m = doc.module;
+  if (state.lines.some(implausibleLine) || offInk(doc, page, state)) {
+    const original = state.lines.map((l) => l.text).join(" ");
+    recordUndrawableChars(
+      [...text].filter((ch) => !original.includes(ch)).join(""),
+    );
+    return false;
+  }
+
+  const shift = state.frame
+    ? applyVector(state.frame.toUpright, state.override.dx, state.override.dy)
+    : { dx: state.override.dx, dy: state.override.dy };
+  const o = { ...state.override, ...shift };
+  const restyle =
+    o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
+  const needsFont = restyle || !keepsOnlyScannedWords(state, text);
+  const styles = editStyles(doc, page, state, o, text);
+  const { blockFit, fitted, styleOf, inkOf } = styles;
+  const spacing = o.style ?? (needsFont ? fitted() : fallbackStyle(state));
   const lineBase = (li: number) =>
     lineInk(doc, page, state, li)?.baseline ?? state.lines[li].baseline;
   const scanWord = (w: LayoutWord) => state.lines[w.line].words[w.index];
+  const space = wordSpace(state, spacing);
+  const glyphSource = scanGlyphSource(
+    doc,
+    page,
+    state,
+    !restyle && !o.style,
+    blockFit,
+    space,
+  );
+  const { atlas, composed } = glyphSource;
+  const canDraw = (t: string) =>
+    !UNSHAPED_SCRIPT.test(t) &&
+    (!!composed(t) ||
+      !!o.style ||
+      o.family !== undefined ||
+      !!blockFit() ||
+      scanFaces().some((f) => faceCovers(f, t)));
 
-  const layout = layoutScanEdit({
-    lines: state.lines.map((l, li) => ({
+  const inkWidth = (w: LayoutWord) =>
+    inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x;
+  const shows = (t: string, anchor: LayoutWord | null) =>
+    !!composed(t) || styleCovers(styleOf(anchor), t);
+  // Text no face can show keeps the scanned words it replaces, so it spans them.
+  const keptWidth = (anchor: LayoutWord, replaced: LayoutWord[]) => {
+    const last =
+      replaced.filter((w) => w.line === anchor.line).at(-1) ?? anchor;
+    return last.x + inkWidth(last) - anchor.x;
+  };
+
+  const plan = onOriginalScan(doc, page, state, () => {
+    const lines = state.lines.map((l, li) => ({
       baseline: lineBase(li),
       words: l.words.map((w, wi) => ({
         line: li,
         index: wi,
         text: w.text.trim(),
         x: w.x,
+        lead: extraSpacesBefore(l, w, wi),
       })),
-    })),
-    text,
-    pitch: linePitch(state, block),
-    space: wordSpace(state, block),
-    wordWidth: (w) =>
-      inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x,
-    textWidth: (t, anchor) => {
-      const st = styleOf(anchor);
-      return spanOf(doc, page, t, st.family, st.fontSize) * st.stretch;
-    },
-    redraw: restyle,
-  });
-
-  // A whole-block move shifts everything, kept pixels included.
-  const shifted = o.dx !== 0 || o.dy !== 0;
-  const kept = layout.kept.map((k) => ({
-    ...k,
-    x: k.x + o.dx,
-    baseline: k.baseline + o.dy,
-    moved: k.moved || shifted,
-  }));
-  const typed = layout.typed.map((t) => ({
-    ...t,
-    x: t.x + o.dx,
-    baseline: t.baseline + o.dy,
-  }));
-
-  // Copy every moving word's pixels before anything is drawn over them.
-  const moving = kept
-    .filter((k) => k.moved)
-    .map((k) => {
-      const ink = inkOf(k.word);
-      const key = `${k.word.line}:${k.word.index}`;
-      return {
-        ...k,
-        ink,
-        patch: ink ? patchOf(doc, page, state, key, ink) : null,
-      };
+    }));
+    const pitch = linePitch(state, spacing);
+    glyphSource.setTyped(
+      layoutScanEdit({
+        lines,
+        text,
+        pitch,
+        space,
+        wordWidth: (w) => scanWord(w).right - w.x,
+        textWidth: () => 0,
+        redraw: restyle,
+      }).typed.flatMap((t) => [...t.text.replace(/\s+/g, "")]),
+    );
+    const layout = layoutScanEdit({
+      lines,
+      text,
+      pitch,
+      space,
+      wordWidth: inkWidth,
+      textWidth: (t, anchor, replaced) => {
+        if (!shows(t, anchor)) return anchor ? keptWidth(anchor, replaced) : 0;
+        const glyphs = composed(t);
+        const a = atlas();
+        if (glyphs && a) return (glyphs.inkRight - glyphs.inkLeft) / a.scale;
+        const st = styleOf(anchor);
+        return spanOf(doc, page, t, st.family, st.fontSize) * st.stretch;
+      },
+      redraw: restyle,
     });
+
+    // A whole-block move shifts everything, kept pixels included.
+    const shifted = o.dx !== 0 || o.dy !== 0;
+    const kept = layout.kept.map((k) => ({
+      ...k,
+      x: k.x + o.dx,
+      baseline: k.baseline + o.dy,
+      moved: k.moved || shifted,
+    }));
+    const moving = kept
+      .filter((k) => k.moved)
+      .map((k) => {
+        const ink = inkOf(k.word);
+        const key = `${k.word.line}:${k.word.index}`;
+        return {
+          ...k,
+          ink,
+          patch: ink ? patchOf(doc, page, state, key, ink) : null,
+        };
+      });
+
+    const drawn = [
+      ...layout.typed.map((t) => ({ text: t.text, anchor: t.anchor })),
+      ...moving
+        .filter((k) => !k.patch)
+        .map((k) => ({ text: k.word.text, anchor: k.word })),
+    ];
+    const refused = drawn.filter((d) => !canDraw(d.text));
+    if (refused.length > 0) {
+      recordUndrawableChars(refused.map((d) => d.text).join(""));
+      return null;
+    }
+    for (const d of drawn) styleOf(d.anchor);
+    const unshown = new Set(
+      layout.typed.filter((t) => !shows(t.text, t.anchor)),
+    );
+    if (unshown.size > 0)
+      recordUndrawableChars(
+        [...unshown].map((t) => t.text.replace(/\s+/g, "")).join(""),
+      );
+    return { layout, kept, moving, unshown };
+  });
+  if (!plan) return false;
+  const { layout, kept, moving, unshown } = plan;
+  const keptScan = new Set([...unshown].flatMap((t) => t.replaced));
+
+  for (const p of state.created) removeAndDestroyObject(m, page.pagePtr, p);
+  state.created = [];
+  state.textPtrs = [];
+  const canvas: Canvas = {
+    doc,
+    page,
+    tagMarks: run.tagMarks,
+    created: state.created,
+    textPtrs: state.textPtrs,
+    searchableFontPtr: state.fontPtr,
+  };
 
   // Cover what was removed or moved away.
   const coverWord = (w: LayoutWord) => {
@@ -746,7 +1135,7 @@ export function renderScanEdit(
     const line = state.lines[w.line];
     const rect = ink?.ink.rect ?? {
       x: sw.x - 0.5,
-      y: line.baseline - line.height * 0.35,
+      y: sw.baseline - line.height * 0.35,
       width: sw.right - sw.x + 1,
       height: line.height * 1.7,
     };
@@ -754,16 +1143,54 @@ export function renderScanEdit(
     const ptr = emitFillRect(m, page, rect, paper, 0);
     if (ptr) state.created.push(ptr);
   };
-  for (const w of layout.removed) coverWord(w);
+  for (const w of layout.removed) if (!keptScan.has(w)) coverWord(w);
   for (const k of moving) coverWord(k.word);
 
-  const drawText = (
+  const nextWordLimit = (start: number, baseline: number, size: number) => {
+    const next = kept
+      .filter((k) => Math.abs(k.baseline - baseline) < 1 && k.x > start + 0.5)
+      .map((k) => k.x);
+    return next.length === 0 ? Infinity : Math.min(...next) - wordGap(size);
+  };
+
+  const baselineAt = (li: number, x: number) => {
+    const words = state.lines[li].words;
+    const centres = words.map((w) => (w.x + w.right) / 2);
+    const mean = words.reduce((sum, w) => sum + w.baseline, 0) / words.length;
+    const correction = lineBase(li) - mean;
+    const after = centres.findIndex((c) => c >= x);
+    if (after <= 0)
+      return words[after < 0 ? words.length - 1 : 0].baseline + correction;
+    const a = words[after - 1];
+    const b = words[after];
+    const t =
+      (x - centres[after - 1]) / (centres[after] - centres[after - 1] || 1);
+    return a.baseline + (b.baseline - a.baseline) * t + correction;
+  };
+  const baselineFor = (
+    li: number,
+    layoutBaseline: number,
+    x: number,
+    anchor: LayoutWord | null,
+  ) => {
+    if (li >= state.lines.length) return layoutBaseline;
+    const shift = layoutBaseline - lineBase(li);
+    if (anchor && anchor.line === li)
+      return (inkOf(anchor)?.baseline ?? scanWord(anchor).baseline) + shift;
+    return baselineAt(li, x - o.dx) + shift;
+  };
+
+  let fromAtlas = 0;
+  let inFont = 0;
+  const drawTyped = (
     t: string,
     x: number,
-    baseline: number,
+    line: number,
+    layoutBaseline: number,
     anchor: LayoutWord | null,
     atAnchor: boolean,
   ) => {
+    const baseline = baselineFor(line, layoutBaseline, x, anchor);
     const ink = anchor ? inkOf(anchor) : null;
     let s = t;
     // OCR reads a box edge hugging the text as a bracket; never draw it.
@@ -771,156 +1198,108 @@ export function renderScanEdit(
     if (ink?.dropTrail) s = s.replace(/[\]|)]$/, "");
     if (!s) return;
     const st = styleOf(anchor);
-    const ptrs = placeText(doc, page, {
-      text: s,
-      x,
-      baseline,
-      family: st.family,
-      size: st.fontSize,
-      stretch: st.stretch,
-      inkLeft: atAnchor && ink ? ink.ink.body.x + o.dx : x,
-      fill: st.ink,
-      weight: st.weight,
-    });
-    const soft =
-      st.softness > 0
-        ? softened(ptrs, st, baseline, ink?.ink.rect, ink?.paper)
-        : null;
-    if (soft) {
-      for (const p of ptrs) removeAndDestroyObject(m, page.pagePtr, p);
-      // Searchable still: the visible copy is now a picture.
-      const hidden = emitTextLine({
-        doc,
-        page,
-        text: s,
-        x,
-        y: baseline,
-        fontSize: st.fontSize,
-        fill: BLACK,
-        originalFontPtr: 0,
-        fallbackFamily: st.family,
-        renderMode: INVISIBLE,
-        tags: uniformTags(run.tagMarks),
-      });
-      opaqueStroke(m, hidden);
-      state.created.push(soft, ...hidden);
-      state.textPtrs.push(...hidden);
+    const start = atAnchor && ink ? ink.ink.body.x + o.dx : x;
+    const limit = nextWordLimit(start, layoutBaseline, st.fontSize);
+    const glyphs = composed(s);
+    const a = atlas();
+    if (
+      a &&
+      glyphs &&
+      drawFromAtlas(canvas, a, glyphs, s, start, baseline, st, limit)
+    ) {
+      fromAtlas++;
       return;
     }
-    state.created.push(...ptrs);
-    state.textPtrs.push(...ptrs);
-  };
-
-  // Crisp vector text on a blurry scan stands out, so blurry blocks get their
-  // typed words as a picture softened to match.
-  const softened = (
-    ptrs: number[],
-    st: ScanStyle,
-    baseline: number,
-    /** The scanned word replaced: the copy stays within its height. */
-    within?: PageRect,
-    /** The paper under the text, which the copy leaves transparent. */
-    paper?: RGBA,
-  ): number => {
-    const span = measureObjSpanPt(m, ptrs);
-    if (!span) return 0;
-    // Just the glyphs and the blur's reach: a taller copy would also blur a
-    // rule or the next line's ink sitting close above or below.
-    const margin = st.softness / 4 + 0.25;
-    const rect = {
-      x: span.left - margin,
-      y: baseline - st.fontSize * 0.25 - margin,
-      width: span.right - span.left + margin * 2,
-      height: st.fontSize * 1.03 + margin * 2,
-    };
-    if (within) {
-      const top = Math.min(rect.y + rect.height, within.y + within.height);
-      const bottom = Math.max(rect.y, within.y);
-      if (top > bottom)
-        Object.assign(rect, { y: bottom, height: top - bottom });
-    }
-    const patch = capturePatch(m, page, rect);
-    if (!patch) return 0;
-    blurRgba(patch, st.softness);
-    toInkOnly(patch, paper ?? sampleBackground(m, page, rect).fill);
-    const img = createBitmapImageObject(
-      m,
-      doc.docPtr,
-      page.pagePtr,
-      patch,
-      patch.rect.x,
-      patch.rect.y,
-      patch.rect.width,
-      patch.rect.height,
-    );
-    if (!img) return 0;
-    m.FPDFPage_InsertObject(page.pagePtr, img);
-    return img;
+    inFont++;
+    drawInFont(canvas, s, x, start, baseline, st, limit);
   };
 
   // Moved words: the scan's own pixels at their new spot, plus invisible text.
   for (const k of moving) {
     const sw = scanWord(k.word);
-    const dx = k.x - sw.x;
-    const dy = k.baseline - lineBase(k.word.line);
     if (!k.patch) {
-      drawText(k.word.text, k.x, k.baseline, k.word, false);
+      drawTyped(k.word.text, k.x, k.line, k.baseline, k.word, false);
       continue;
     }
-    const r = k.patch.rect;
     const inkOnly = { ...k.patch, rgba: k.patch.rgba.slice() };
-    if (k.ink) toInkOnly(inkOnly, k.ink.paper);
-    const img = createBitmapImageObject(
-      m,
-      doc.docPtr,
-      page.pagePtr,
-      inkOnly,
-      r.x + dx,
-      r.y + dy,
-      r.width,
-      r.height,
+    if (k.ink) toInkOnly(inkOnly, k.ink.paper, k.ink.ink.reversed);
+    const r = k.patch.rect;
+    pasteImage(canvas, inkOnly, {
+      ...r,
+      x: r.x + k.x - sw.x,
+      y: r.y + k.baseline - lineBase(k.word.line),
+    });
+    emitSearchable(
+      canvas,
+      sw.text.trimEnd() || sw.text,
+      { left: k.x, right: k.x + sw.right - sw.x },
+      sw.baseline + k.baseline - lineBase(k.word.line),
+      sw.fontSize,
+      { originalFontPtr: state.fontPtr, family: "Helvetica" },
     );
-    if (img) {
-      m.FPDFPage_InsertObject(page.pagePtr, img);
-      state.created.push(img);
-    }
-    const hidden = emitInvisible(
-      doc,
-      page,
-      state,
-      sw,
-      k.x,
-      k.baseline,
-      run.tagMarks,
-    );
-    state.created.push(...hidden);
-    state.textPtrs.push(...hidden);
   }
-  for (const t of typed)
-    drawText(t.text, t.x, t.baseline, t.anchor, t.atAnchor);
+  for (const t of layout.typed)
+    if (!unshown.has(t))
+      drawTyped(
+        t.text,
+        t.x + o.dx,
+        t.line,
+        t.baseline + o.dy,
+        t.anchor,
+        t.atAnchor,
+      );
 
-  // Original OCR words leave the page when removed or moved, and come back
-  // when an undo puts them where they were.
-  const gone = new Set(
-    [...layout.removed, ...moving.map((k) => k.word)].map(
-      (w) => `${w.line}:${w.index}`,
+  syncOriginalWords(
+    canvas,
+    state,
+    new Set(
+      [
+        ...layout.removed.filter((w) => !keptScan.has(w)),
+        ...moving.map((k) => k.word),
+      ].map((w) => `${w.line}:${w.index}`),
     ),
   );
+  attachToRun(run, state);
+  state.edited = true;
+  state.typedFromScan = fromAtlas > 0 && inFont === 0;
+  // Show what is drawn, not OCR's guesses, so the size and colour controls start from it.
+  const shown = o.style ?? styles.fittedSoFar();
+  run.fontSize = o.fontSize ?? shown?.fontSize ?? run.fontSize;
+  run.fill = o.fill ?? shown?.ink ?? run.fill;
+  run.text = text;
+  run.dirty = true;
+  page.markDirty();
+  page.markNeedsGenerate();
+  return true;
+}
+
+// Original OCR words leave the page when removed or moved, and return when an undo puts them back.
+function syncOriginalWords(
+  canvas: Canvas,
+  state: ScanEditState,
+  gone: Set<string>,
+): void {
+  const { doc, page } = canvas;
   state.lines.forEach((line, li) =>
     line.words.forEach((word, wi) => {
       const key = `${li}:${wi}`;
       if (gone.has(key) && !state.lifted.has(key)) {
-        lift(m, page, word);
+        removeMemberPtrs(
+          doc.module,
+          page,
+          [word.ptr, ...(word.extraPtrs ?? [])],
+          new Map([[word.ptr, word.container]]),
+          0,
+        );
         state.lifted.add(key);
       } else if (!gone.has(key) && state.lifted.has(key)) {
-        const back = emitInvisible(
-          doc,
-          page,
-          state,
-          word,
-          word.x,
-          line.baseline,
-          run.tagMarks,
+        const back = invisibleText(
+          canvas,
+          word.text.trimEnd() || word.text,
+          { left: word.x, right: word.right },
+          word.baseline,
+          word.fontSize,
+          { originalFontPtr: state.fontPtr, family: "Helvetica" },
         );
         word.ptr = back[0] ?? 0;
         word.extraPtrs = back.slice(1);
@@ -929,9 +1308,10 @@ export function renderScanEdit(
       }
     }),
   );
+}
 
-  // Deleting the run takes the drawn text and the remaining OCR words with it;
-  // the covers stay, since the scan under them is the old text.
+// Deleting the run takes its drawn text and OCR words; the covers stay, as the scan under them is the old text.
+function attachToRun(run: TextRun, state: ScanEditState): void {
   const live = state.lines.flatMap((l, li) =>
     l.words.filter((_, wi) => !state.lifted.has(`${li}:${wi}`)),
   );
@@ -943,14 +1323,6 @@ export function renderScanEdit(
     ...live.flatMap((w) => [w.container, ...(w.extraPtrs ?? []).map(() => 0)]),
     ...state.textPtrs.map(() => 0),
   ];
-  // Show what is drawn, not OCR's guesses, so size and colour controls start
-  // from the right values.
-  run.fontSize = o.fontSize ?? block.fontSize;
-  run.fill = o.fill ?? block.ink;
-  run.text = text;
-  run.dirty = true;
-  page.markDirty();
-  page.markNeedsGenerate();
 }
 
 /** The run's scan-edit state, captured on first use; null when it has none. */
@@ -959,8 +1331,89 @@ export function scanEditOf(
   run: TextRun,
 ): ScanEditState | null {
   if (!isScanRun(run)) return run.scanEdit;
-  run.scanEdit ??= captureScanEdit(doc.module, run);
+  run.scanEdit ??= captureScanEdit(doc.module, run, doc.page(run.pageIndex));
   return run.scanEdit;
+}
+
+/** The run's text reflowed to `maxWidthPt` in its drawn style, or null for non-scanned text; a line is added below only where the page is clear. */
+export function wrapScanText(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  maxWidthPt: number,
+): string | null {
+  const state = scanEditOf(doc, run);
+  if (!state || state.lines.length === 0) return null;
+  const style = withOverride(
+    state.override,
+    state.override.style ?? drawnBlockStyle(doc, state) ?? fallbackStyle(state),
+  );
+  const width = (line: string) =>
+    spanOf(doc, page, line, style.family, style.fontSize) * style.stretch;
+  const fits = (line: string) => line === "" || width(line) <= maxWidthPt;
+  const grown = rewrapLines(run.text, fits, true);
+  const wrapped = roomBelow(
+    page,
+    run,
+    state,
+    linePitch(state, style),
+    grown.split("\n").length,
+  )
+    ? grown
+    : rewrapLines(run.text, fits, false);
+  // All or nothing: without room for the last line's overflow the text would just stick out on another line.
+  const settled = wrapped
+    .split("\n")
+    .every((line) => fits(line.trim()) || !line.trim().includes(" "));
+  return settled ? wrapped : run.text;
+}
+
+function roomBelow(
+  page: Page,
+  run: TextRun,
+  state: ScanEditState,
+  pitch: number,
+  lineCount: number,
+): boolean {
+  const added = lineCount - state.lines.length;
+  if (added <= 0) return true;
+  // Lines of a turned block are not in the page space other runs are in.
+  if (state.frame) return false;
+  const last = state.lines[state.lines.length - 1];
+  const bottom = last.baseline - added * pitch - last.height * 0.35;
+  const top = last.baseline - last.height * 0.35;
+  const left = Math.min(...state.lines.map((l) => l.words[0]?.x ?? Infinity));
+  const right = Math.max(
+    ...state.lines.map((l) => l.words[l.words.length - 1]?.right ?? -Infinity),
+  );
+  return !page.runs.some((other) => {
+    if (other === run) return false;
+    const b = other.bounds;
+    return (
+      b.x < right &&
+      b.x + b.width > left &&
+      b.y < top &&
+      b.y + b.height > bottom
+    );
+  });
+}
+
+function upright<T>(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  fn: () => T,
+): T {
+  const frame = state.frame;
+  if (!frame || state.upright) return fn();
+  moveAllObjects(doc.module, page, frame.toUpright);
+  state.upright = true;
+  try {
+    return fn();
+  } finally {
+    state.upright = false;
+    moveAllObjects(doc.module, page, frame.fromUpright);
+  }
 }
 
 /** The size the block is drawn at, fitting its style first if need be. */
@@ -973,7 +1426,11 @@ export function scanDrawnSize(
   if (!state) return null;
   return (
     state.override.fontSize ??
-    (styleFor(doc, page, state, null) ?? fallbackStyle(state)).fontSize
+    state.override.style?.fontSize ??
+    (
+      upright(doc, page, state, () => styleFor(doc, page, state, null)) ??
+      fallbackStyle(state)
+    ).fontSize
   );
 }
 
@@ -993,4 +1450,163 @@ export function setScanOverride(
   state.override = next(prev);
   renderScanEdit(doc, page, run, state, run.text);
   return prev;
+}
+
+function onOriginalScan<T>(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  fn: () => T,
+): T {
+  if (state.offScan) return fn();
+  const m = doc.module;
+  const created = [...state.created];
+  for (const p of created) m.FPDFPage_RemoveObject(page.pagePtr, p);
+  state.offScan = true;
+  try {
+    return fn();
+  } finally {
+    state.offScan = false;
+    for (const p of created) m.FPDFPage_InsertObject(page.pagePtr, p);
+  }
+}
+
+export function scanTypingDropped(run: TextRun): boolean {
+  if (!isScanRun(run)) return false;
+  const o = run.scanEdit?.override;
+  if (o?.style || o?.family !== undefined) return false;
+  return (
+    UNSHAPED_SCRIPT.test(run.text) ||
+    !scanFaces().some((f) => faceCovers(f, run.text))
+  );
+}
+
+export function scanBlockMisaligned(
+  doc: EditorDocument,
+  run: TextRun,
+): boolean {
+  return scanEditOf(doc, run)?.lines.some(implausibleLine) ?? false;
+}
+
+export function scanBlockOffInk(doc: EditorDocument, run: TextRun): boolean {
+  const state = scanEditOf(doc, run);
+  if (!state) return false;
+  const page = doc.page(run.pageIndex);
+  return upright(doc, page, state, () => offInk(doc, page, state));
+}
+
+export function scanBlockUndrawable(
+  doc: EditorDocument,
+  run: TextRun,
+): boolean {
+  return scanEditOf(doc, run)?.block === null;
+}
+
+export function rerankScanStyles(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): RankedStyle[] {
+  const state = scanEditOf(doc, run);
+  if (!state) return [];
+  return upright(doc, page, state, () =>
+    onOriginalScan(doc, page, state, () => rerank(doc, page, state)),
+  );
+}
+
+const rankedOf = (state: ScanEditState) => state.block?.ranked ?? [];
+
+function rerank(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): RankedStyle[] {
+  const before = state.block;
+  if (!before) {
+    state.block = undefined;
+    styleFor(doc, page, state, null);
+    return rankedOf(state);
+  }
+  const spans = inkedLines(doc, page, state).map((l) => l.ink);
+  const ranked = rank(doc, page, state, spans, before.ref);
+  if (ranked.length === 0) return before.ranked;
+  state.block = {
+    ...before,
+    ranked,
+    style: state.created.length > 0 ? before.style : ranked[0].style,
+  };
+  return ranked;
+}
+
+export function previewScanStyle(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  style: ScanStyle,
+): { scan: PixelPatch; drawn: PixelPatch } | null {
+  const state = scanEditOf(doc, run);
+  const ref = state?.block?.ref;
+  if (!state || !ref) return null;
+  return upright(doc, page, state, () =>
+    onOriginalScan(doc, page, state, () =>
+      previewOnScan(doc, page, ref, style),
+    ),
+  );
+}
+
+function previewOnScan(
+  doc: EditorDocument,
+  page: Page,
+  ref: SpanInk,
+  style: ScanStyle,
+): { scan: PixelPatch; drawn: PixelPatch } | null {
+  const m = doc.module;
+  const rect = ref.ink.rect;
+  const scan = capturePatch(m, page, rect);
+  if (!scan) return null;
+  const sheet = doc.scratchPageFor(page);
+  const cover = emitFillRect(m, sheet.page, rect, ref.paper);
+  const ptrs = placeText(sheet.doc, sheet.page, {
+    text: ref.original,
+    x: ref.ink.body.x,
+    baseline: ref.baseline,
+    family: style.family,
+    size: style.fontSize,
+    stretch: style.stretch,
+    inkLeft: ref.ink.body.x,
+    fill: style.ink,
+    weight: style.weight,
+    hollow: style.hollow,
+  });
+  const drawn = capturePatch(m, sheet.page, rect);
+  for (const p of [cover, ...ptrs])
+    removeAndDestroyObject(m, sheet.page.pagePtr, p);
+  if (!drawn) return null;
+  if (style.softness > 0) blurRgba(drawn, style.softness);
+  return { scan, drawn };
+}
+
+/** The font a scanned block's changed words are drawn in. */
+export interface ScanDrawnFont {
+  /** The family as the font picker names it. */
+  family: string;
+  /** How the scan matcher names the face, e.g. "Calibri (Carlito)". */
+  label: string;
+}
+
+/** The font in force for a scanned run (picked, else matched), never the OCR layer's `fontId`; null while unfitted or typed from scan letters. Cheap: captures no scan state. */
+export function scanDrawnFont(
+  doc: EditorDocument,
+  run: TextRun,
+): ScanDrawnFont | null {
+  const state = run.scanEdit;
+  if (!state || state.typedFromScan) return null;
+  const family =
+    state.override.family ??
+    (state.override.style ?? drawnBlockStyle(doc, state))?.family;
+  if (!family) return null;
+  const face = scanFaces().find(
+    (f) => f.family === family || f.bold === family,
+  );
+  return { family, label: face?.label ?? family };
 }

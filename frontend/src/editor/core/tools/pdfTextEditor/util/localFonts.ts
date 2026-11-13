@@ -1,6 +1,8 @@
 // Local Font Access API wrapper. Chromium-only and permission-gated, so every
 // entry point degrades to null instead of throwing.
 
+import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
+
 export interface FaceAxes {
   bold: boolean;
   italic: boolean;
@@ -97,6 +99,59 @@ let pending: Promise<LocalFont[] | null> | null = null;
 export async function listLocalFonts(): Promise<LocalFont[] | null> {
   if (!pending) pending = queryOnce();
   return pending;
+}
+
+export async function retryLocalFonts(): Promise<LocalFont[] | null> {
+  if (pending && (await pending) === null) pending = null;
+  return listLocalFonts();
+}
+
+export type LocalFontPermission =
+  | "granted"
+  | "prompt"
+  | "denied"
+  | "unsupported";
+
+async function permissionStatus(): Promise<PermissionStatus | null> {
+  try {
+    return await navigator.permissions.query({
+      name: "local-fonts" as PermissionName,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function localFontPermission(): Promise<LocalFontPermission> {
+  if (!isLocalFontAccessSupported()) return "unsupported";
+  return (await permissionStatus())?.state ?? "prompt";
+}
+
+/** Lists the device's fonts only when that cannot prompt: access was granted earlier. Resolves to what is already loaded, or null without access. */
+export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
+  if (!isLocalFontAccessSupported() || resolved) return resolved;
+  if ((await localFontPermission()) !== "granted") return null;
+  return retryLocalFonts();
+}
+
+export function watchLocalFontPermission(
+  listener: (permission: LocalFontPermission) => void,
+): () => void {
+  if (!isLocalFontAccessSupported()) return () => {};
+  let status: PermissionStatus | null = null;
+  let stopped = false;
+  const onChange = () => {
+    if (status) listener(status.state);
+  };
+  void permissionStatus().then((s) => {
+    if (stopped || !s) return;
+    status = s;
+    s.addEventListener("change", onChange);
+  });
+  return () => {
+    stopped = true;
+    status?.removeEventListener("change", onChange);
+  };
 }
 
 /**
@@ -305,7 +360,13 @@ export function pickLocalFontFace(
   fonts: LocalFont[],
   requested: string,
 ): LocalFont | null {
-  const wanted = resolveRequested(fonts, requested);
+  return pickRequestedFace(fonts, resolveRequested(fonts, requested));
+}
+
+export function pickRequestedFace(
+  fonts: LocalFont[],
+  wanted: RequestedFace,
+): LocalFont | null {
   const family = normaliseName(wanted.family);
   let best: LocalFont | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
@@ -348,6 +409,11 @@ const bytesByFamily = new Map<string, Uint8Array>();
 const faceKeyByFamily = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
 
+export function registerFontBytes(family: string, bytes: Uint8Array): void {
+  const key = normaliseName(family);
+  if (key && bytes.length > 0) bytesByFamily.set(key, bytes);
+}
+
 /** Already-read bytes for a family, or null. Never prompts, never awaits. */
 export function getLocalFontBytes(family: string): Uint8Array | null {
   return bytesByFamily.get(normaliseName(family)) ?? null;
@@ -375,7 +441,8 @@ export async function loadLocalFontBytes(
     const picked = pickLocalFontFace(fonts, family);
     if (!picked) return null;
     const entry = faceEntries.find((candidate) => candidate.font === picked);
-    const bytes = entry ? await readFaceBytes(entry.source) : null;
+    const file = entry ? await readFaceBytes(entry.source) : null;
+    const bytes = file ? fontFace(file, picked.postscriptName) : null;
     if (bytes) {
       bytesByFamily.set(key, bytes);
       faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);

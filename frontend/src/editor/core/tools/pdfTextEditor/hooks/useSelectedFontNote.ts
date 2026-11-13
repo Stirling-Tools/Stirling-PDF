@@ -8,9 +8,12 @@ import {
   subscribeServerFontBytes,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 
+export type ScanNote = "misaligned" | "offInk" | "dropsTyping" | null;
+
 export function useSelectedFontNote(
   state: EditorViewState,
   selection: SelectionState,
+  scanNote: ScanNote = null,
 ): string | null {
   const { t } = useTranslation();
   const fontBytesVersion = useSyncExternalStore(
@@ -23,10 +26,25 @@ export function useSelectedFontNote(
     if (!note) return null;
     switch (note.kind) {
       case "scanned":
-        return t(
-          "pdfTextEditor.inspector.scannedText",
-          "Scanned text · changed words are covered and redrawn in a matching font.",
-        );
+        if (scanNote === "misaligned")
+          return t(
+            "pdfTextEditor.inspector.scannedTextMisaligned",
+            "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted.",
+          );
+        if (scanNote === "offInk")
+          return t(
+            "pdfTextEditor.inspector.scannedTextOffInk",
+            "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again.",
+          );
+        return scanNote === "dropsTyping"
+          ? t(
+              "pdfTextEditor.inspector.scannedTextNoFont",
+              "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
+            )
+          : t(
+              "pdfTextEditor.inspector.scannedText",
+              "Scanned text · changed words are covered and redrawn in a matching font.",
+            );
       case "embeddedUnknown":
         return t(
           "pdfTextEditor.inspector.fontEmbedded",
@@ -45,5 +63,5 @@ export function useSelectedFontNote(
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
     }
-  }, [state.pages, selection.runIds, fontBytesVersion, t]);
+  }, [state.pages, selection.runIds, scanNote, fontBytesVersion, t]);
 }

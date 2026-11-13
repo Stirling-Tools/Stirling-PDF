@@ -185,6 +185,11 @@ export function forgetServerFontList(): void {
   notifyBytesChanged();
 }
 
+/** Changes on every `forgetServerFontList()`, so anything built from server fonts can tell it is stale. */
+export function serverFontsGeneration(): number {
+  return generation;
+}
+
 export function loadedServerFonts(): LocalFont[] | null {
   return resolved;
 }

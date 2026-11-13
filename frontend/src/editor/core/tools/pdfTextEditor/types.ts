@@ -62,6 +62,8 @@ export interface TextRunSnapshot {
   fill: RGBA;
   /** True if PDFium says the source PDF subsetted this run's font */
   fontSubset: boolean;
+  /** For scanned text, the family its ink is matched to or redrawn in; `fontId` there is only the OCR layer's font. */
+  scanFamily?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
   /** Outline colour, when the run's render mode strokes its glyphs. */

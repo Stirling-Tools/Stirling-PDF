@@ -1,0 +1,326 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import {
+  drawnBlockStyle,
+  isScanRun,
+  previewScanStyle,
+  rerankScanStyles,
+  scanBlockOffInk,
+  scanBlockUndrawable,
+  scanEditOf,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  preferredScanFace,
+  type RankedStyle,
+  type ScanStyle,
+} from "@editor/tools/pdfTextEditor/commands/scanFit";
+import { FIT_PAUSED } from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import {
+  FIT_GAP_MS,
+  inSlice,
+} from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
+import type { PixelPatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import {
+  localFontPermission,
+  watchLocalFontPermission,
+  type LocalFontPermission,
+} from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  deviceFontsCouldCover,
+  deviceScanFaceCount,
+  faceCovers,
+  loadDeviceScanFaces,
+  noteRankedWithCurrentFaces,
+  rankedWithCurrentFaces,
+  scanFaces,
+  scanFacesGeneration,
+  subscribeScanFaces,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+
+export const APPROXIMATE_MATCH_SCORE = 0.8;
+
+export interface ScanFontChoice {
+  label: string;
+  match: number;
+  preview: string | null;
+  active: boolean;
+  approximate: boolean;
+}
+
+export interface ScanFontMatch {
+  status: "matching" | "ready" | "unmeasurable" | "noFont";
+  scan: string | null;
+  choices: ScanFontChoice[];
+  choose: (index: number) => void;
+  open: boolean;
+  canShow: boolean;
+  approximate: boolean;
+  undrawable: boolean;
+  typedFromScan: boolean;
+  show: () => void;
+  close: () => void;
+  deviceFonts: {
+    available: boolean;
+    permission: LocalFontPermission;
+    loading: boolean;
+    count: number | null;
+    load: () => void;
+  };
+}
+
+function patchUrl(patch: PixelPatch): string | null {
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = patch.width;
+  canvas.height = patch.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.putImageData(
+    new ImageData(new Uint8ClampedArray(patch.rgba), patch.width, patch.height),
+    0,
+    0,
+  );
+  return canvas.toDataURL();
+}
+
+interface Ranked {
+  runId: string;
+  drawable: boolean;
+  ranked: RankedStyle[];
+  scan: string | null;
+  previews: Array<string | null>;
+}
+
+function currentRanking(
+  doc: EditorDocument,
+  run: TextRun,
+): RankedStyle[] | null {
+  const block = scanEditOf(doc, run)?.block;
+  if (!block || !rankedWithCurrentFaces(block.ranked)) return null;
+  const preferred = preferredScanFace(doc);
+  const fresh =
+    !preferred ||
+    block.preferred === preferred ||
+    block.ranked.some((r) => r.face.label === preferred);
+  return fresh ? block.ranked : null;
+}
+
+export function isApproximateMatch(
+  ranked: RankedStyle[],
+  choice: RankedStyle,
+): boolean {
+  return ranked.length > 1 && choice.score < APPROXIMATE_MATCH_SCORE;
+}
+
+function matchStatus(current: Ranked | null): ScanFontMatch["status"] {
+  if (!current) return "matching";
+  if (current.ranked.length > 0) return "ready";
+  return current.drawable ? "unmeasurable" : "noFont";
+}
+
+function drawnStyle(doc: EditorDocument, run: TextRun): ScanStyle | undefined {
+  const state = scanEditOf(doc, run);
+  if (!state || state.typedFromScan) return undefined;
+  return state.override.style ?? drawnBlockStyle(doc, state) ?? undefined;
+}
+
+interface ScanRunRef {
+  runId: string;
+  pageIndex: number;
+}
+
+function runOf(store: EditorStore, ref: ScanRunRef | null) {
+  const doc = store.document;
+  const run = ref ? doc?.page(ref.pageIndex).findRun(ref.runId) : null;
+  return doc && run ? { doc, run } : null;
+}
+
+export function useScanFontMatch(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): ScanFontMatch | null {
+  const facesVersion = useSyncExternalStore(
+    subscribeScanFaces,
+    scanFacesGeneration,
+    scanFacesGeneration,
+  );
+  const selected = useMemo<ScanRunRef | null>(() => {
+    if (selection.runIds.length !== 1) return null;
+    const id = selection.runIds[0];
+    for (const page of state.pages)
+      for (const run of page.runs)
+        if (run.id === id && isScanRun(run))
+          return { runId: id, pageIndex: page.pageIndex };
+    return null;
+  }, [selection.runIds, state.pages]);
+
+  const [ranked, setRanked] = useState<Ranked | null>(null);
+  const [loadingDevice, setLoadingDevice] = useState(false);
+  const [permission, setPermission] =
+    useState<LocalFontPermission>("unsupported");
+  const [opened, setPicking] = useState<
+    (ScanRunRef & { doc: EditorDocument | null }) | null
+  >(null);
+  const picking = opened && opened.doc === store.document ? opened : null;
+
+  const loadDevice = useCallback(() => {
+    setLoadingDevice(true);
+    void loadDeviceScanFaces()
+      .then(localFontPermission)
+      .then(setPermission)
+      .finally(() => setLoadingDevice(false));
+  }, []);
+
+  useEffect(() => {
+    if (!picking) return;
+    let stopped = false;
+    const settle = (next: LocalFontPermission) => {
+      if (stopped) return;
+      setPermission(next);
+      if (next === "granted" && deviceScanFaceCount() === null) loadDevice();
+    };
+    void localFontPermission().then(settle);
+    const unwatch = watchLocalFontPermission(settle);
+    return () => {
+      stopped = true;
+      unwatch();
+    };
+  }, [picking, loadDevice]);
+
+  const target = picking ?? selected;
+
+  useEffect(() => {
+    if (!picking) return;
+    let timer = 0;
+    let undrawable: boolean | null = null;
+    const attempt = () => {
+      const doc = store.document;
+      if (!doc || doc !== picking.doc) return;
+      const page = doc.page(picking.pageIndex);
+      const run = page.findRun(picking.runId);
+      undrawable ??= !!run && scanBlockUndrawable(doc, run);
+      const fitted = run
+        ? (currentRanking(doc, run) ??
+          inSlice(() => rerankScanStyles(doc, page, run)))
+        : [];
+      if (fitted === FIT_PAUSED) {
+        timer = window.setTimeout(attempt, FIT_GAP_MS);
+        return;
+      }
+      noteRankedWithCurrentFaces(fitted);
+      if (undrawable && fitted[0] && run && scanEditOf(doc, run)?.edited)
+        store.dispatch(
+          new SetScanStyleCommand({
+            pageIndex: picking.pageIndex,
+            runId: picking.runId,
+            choice: fitted[0],
+          }),
+        );
+      const previews = fitted.map((choice) =>
+        run ? previewScanStyle(doc, page, run, choice.style) : null,
+      );
+      setRanked({
+        runId: picking.runId,
+        drawable: !!run && scanFaces().some((f) => faceCovers(f, run.text)),
+        ranked: fitted,
+        scan: previews[0] ? patchUrl(previews[0].scan) : null,
+        previews: previews.map((p) => (p ? patchUrl(p.drawn) : null)),
+      });
+    };
+    timer = window.setTimeout(attempt, 0);
+    return () => window.clearTimeout(timer);
+  }, [store, picking, facesVersion]);
+
+  const targetRun = runOf(store, target);
+  const activeStyle = targetRun
+    ? drawnStyle(targetRun.doc, targetRun.run)
+    : undefined;
+  const activeFamily = activeStyle?.family;
+  const activeSize = activeStyle?.fontSize;
+  const isActive = useCallback(
+    (choice: RankedStyle) =>
+      activeFamily !== undefined &&
+      activeFamily === choice.style.family &&
+      activeSize === choice.style.fontSize,
+    [activeFamily, activeSize],
+  );
+
+  const choose = useCallback(
+    (index: number) => {
+      if (!target || !ranked || ranked.runId !== target.runId) return;
+      const choice = ranked.ranked[index];
+      if (!choice) return;
+      if (!isActive(choice))
+        store.dispatch(
+          new SetScanStyleCommand({
+            pageIndex: target.pageIndex,
+            runId: target.runId,
+            choice,
+          }),
+        );
+      setPicking(null);
+    },
+    [store, target, ranked, isActive],
+  );
+
+  if (!target) return null;
+  const selectedRun = runOf(store, selected);
+  const unfitted =
+    !!selectedRun && scanBlockUndrawable(selectedRun.doc, selectedRun.run);
+  const undrawable =
+    unfitted &&
+    !!selectedRun &&
+    !scanFaces().some((f) => faceCovers(f, selectedRun.run.text));
+  const scanEdit = selectedRun?.run.scanEdit;
+  const redrawn = !!scanEdit?.created.length || !!scanEdit?.override.style;
+  const offInk =
+    !!selectedRun && scanBlockOffInk(selectedRun.doc, selectedRun.run);
+  const current = ranked && ranked.runId === target.runId ? ranked : null;
+  const applied = targetRun
+    ? (scanEditOf(targetRun.doc, targetRun.run)?.block?.ranked ?? [])
+    : [];
+  const appliedChoice = applied.find(isActive);
+  return {
+    status: matchStatus(current),
+    scan: current?.scan ?? null,
+    choices: (current?.ranked ?? []).map((choice, i) => ({
+      label: choice.face.label,
+      match: Math.round(Math.max(0, choice.score) * 100),
+      preview: current?.previews[i] ?? null,
+      active: isActive(choice),
+      approximate: isApproximateMatch(current?.ranked ?? [], choice),
+    })),
+    choose,
+    open: !!picking,
+    canShow: (redrawn || unfitted) && !offInk,
+    approximate: !!appliedChoice && isApproximateMatch(applied, appliedChoice),
+    undrawable,
+    typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
+    show: () => {
+      setRanked(null);
+      setPicking(selected && { ...selected, doc: store.document });
+    },
+    close: () => setPicking(null),
+    deviceFonts: {
+      available: !!targetRun && deviceFontsCouldCover(targetRun.run.text),
+      permission,
+      loading: loadingDevice,
+      count: deviceScanFaceCount(),
+      load: loadDevice,
+    },
+  };
+}

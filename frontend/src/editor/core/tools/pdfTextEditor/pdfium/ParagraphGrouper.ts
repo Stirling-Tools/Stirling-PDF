@@ -1,12 +1,14 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   SAME_BLOCK,
+  sameTextLayer,
   type BlockKey,
 } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import type {
   ParagraphLineSlot,
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 
 /** Cluster consecutive `LineGroup` representatives into "paragraphs". */
 const MIN_LINE_FACTOR = 0.6;
@@ -293,7 +295,14 @@ function groupColumnLines(
 
     const sameBlock = blockKey(prev) === blockKey(line);
 
-    if (sameFont && sameColor && lineHeightOk && leftOk && sameBlock) {
+    if (
+      sameFont &&
+      sameColor &&
+      lineHeightOk &&
+      leftOk &&
+      sameBlock &&
+      sameTextLayer(prev, line)
+    ) {
       current.members.push(line);
       currentDeltas.push(baselineDelta);
       if (line.bounds.x < currentLeftEdge) currentLeftEdge = line.bounds.x;
@@ -304,15 +313,6 @@ function groupColumnLines(
       currentLeftEdge = line.bounds.x;
     }
   }
-}
-
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
 }
 
 function computeMedianLineHeight(members: TextRun[]): number {

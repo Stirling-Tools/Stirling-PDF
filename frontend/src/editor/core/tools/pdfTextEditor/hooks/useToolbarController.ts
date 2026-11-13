@@ -8,6 +8,15 @@ import {
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
 import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import {
+  isScanRun,
+  scanDrawnFont,
+  type ScanDrawnFont,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  scanFacesGeneration,
+  subscribeScanFaces,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
 import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
@@ -430,6 +439,28 @@ export function useToolbarController(
     [state.pages, selection, externalFonts],
   );
 
+  const scanFacesVersion = useSyncExternalStore(
+    subscribeScanFaces,
+    scanFacesGeneration,
+    scanFacesGeneration,
+  );
+  // Undefined unless the selection is wholly scanned text; null when no single font is in force.
+  const scanFont = useMemo<ScanDrawnFont | null | undefined>(() => {
+    const doc = store.document;
+    if (!doc || selection.runIds.length === 0) return undefined;
+    const ids = new Set(selection.runIds);
+    const runs = doc
+      .loadedPages()
+      .flatMap((page) => page.runs.filter((run) => ids.has(run.id)));
+    if (runs.length === 0 || !runs.every(isScanRun)) return undefined;
+    const fonts = runs.map((run) => scanDrawnFont(doc, run));
+    const first = fonts[0];
+    return first && fonts.every((font) => font?.family === first.family)
+      ? first
+      : null;
+    // state.pages and scanFacesVersion are unread but change whenever a block is refitted.
+  }, [store, selection.runIds, state.pages, scanFacesVersion]);
+
   const selectionAllLocked = useMemo(() => {
     const runs = new Set(selection.runIds);
     const images = new Set(selection.imageIds);
@@ -505,6 +536,7 @@ export function useToolbarController(
 
   return {
     state: toolbarState,
+    scanFont,
     canUndo: store.history.canUndo,
     canRedo: store.history.canRedo,
     onUndo: () => store.undo(),
@@ -544,6 +576,7 @@ export function useToolbarController(
       selection.shapeIds.length,
     canAlignLines,
     disabled:
+      sel.fittingScan ||
       !state.hasDocument ||
       (selection.runIds.length === 0 && selection.imageIds.length === 0),
   };

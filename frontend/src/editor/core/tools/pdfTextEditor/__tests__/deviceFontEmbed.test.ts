@@ -237,6 +237,24 @@ describe("pickLocalFontFace", () => {
     );
   });
 
+  it("finds the cuts of a family whose own name contains a style word", () => {
+    const named = [
+      plainFont("Times New Roman", "Regular"),
+      plainFont("Times New Roman", "Bold"),
+      plainFont("Times New Roman", "Italic"),
+      plainFont("Book Antiqua", "Regular"),
+      plainFont("Book Antiqua", "Bold"),
+    ];
+    expect(pickLocalFontFace(named, "Times New Roman Bold")?.style).toBe(
+      "Bold",
+    );
+    expect(pickLocalFontFace(named, "Times New Roman Italic")?.style).toBe(
+      "Italic",
+    );
+    expect(pickLocalFontFace(named, "Book Antiqua Bold")?.style).toBe("Bold");
+    expect(pickLocalFontFace(named, "Book Antiqua")?.style).toBe("Regular");
+  });
+
   it("returns null when nothing matches", () => {
     expect(pickLocalFontFace(faces, "Comic Sans MS")).toBeNull();
     expect(pickLocalFontFace([], "Segoe UI")).toBeNull();

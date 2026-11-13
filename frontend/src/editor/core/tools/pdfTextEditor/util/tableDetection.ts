@@ -4,6 +4,7 @@ import type {
   TableSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 
 // Recognizes tabular layouts from a page's text runs. PDF has no native table
 // object, so a "table" here is a derived grid: runs that line up into shared
@@ -53,15 +54,6 @@ interface Row {
   cy: number;
   top: number;
   bottom: number;
-}
-
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
 }
 
 // One candidate box per line of text. A table cell is a single line, but the

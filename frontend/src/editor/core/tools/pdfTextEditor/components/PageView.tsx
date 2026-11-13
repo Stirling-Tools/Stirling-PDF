@@ -9,6 +9,7 @@ import type {
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -199,6 +200,12 @@ export const PageView = memo(function PageView({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!nearViewport) return;
+    store.setPageNearViewport(page.pageIndex, true);
+    return () => store.setPageNearViewport(page.pageIndex, false);
+  }, [store, page.pageIndex, nearViewport]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -448,7 +455,7 @@ export const PageView = memo(function PageView({
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
             }
             onResize={
-              onResizeRun
+              onResizeRun && !isScanRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }

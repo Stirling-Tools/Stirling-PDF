@@ -2,41 +2,46 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
-import { renderLuma } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import { BLACK, luma } from "@editor/tools/pdfTextEditor/model/Color";
+import { boxBlur } from "@editor/tools/pdfTextEditor/util/boxBlur";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 import {
-  emitFillRect,
+  INK_SCALE,
+  blurLuma,
+  renderLuma,
+  type Luma,
+} from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import {
   emitTextLine,
   measureObjSpanPt,
   removeAndDestroyObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { advanceWidth } from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import {
+  BASE14_FACES,
+  COURIER,
+  HELVETICA,
+  TIMES,
+  type Face,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 // Picking and placing a face that passes for scanned text.
 
-// Base-14 metrics (AFM, per 1000 em) for the faces we can draw in.
-export const FACES = [
-  { family: "Helvetica", bold: "Helvetica-Bold", cap: 718, asc: 718, xh: 523 },
-  { family: "Times-Roman", bold: "Times-Bold", cap: 662, asc: 683, xh: 450 },
-  { family: "Courier", bold: "Courier-Bold", cap: 562, asc: 629, xh: 426 },
-];
-export const [HELVETICA, TIMES, COURIER] = FACES;
-export type Face = (typeof FACES)[number];
-
-const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
-
 /** How tall the tallest glyph of `text` is, as a share of the em. */
 export function topShare(face: Face, text: string): number {
-  if (/[A-Z0-9]/.test(text))
+  const tops = face.metrics?.get(face.family)?.tops;
+  if (tops) {
+    let tallest = 0;
+    for (const ch of text)
+      tallest = Math.max(tallest, tops.get(ch.codePointAt(0)!) ?? 0);
+    if (tallest > 0) return tallest / 1000;
+  }
+  if (/[\p{Lu}\p{Nd}]/u.test(text))
     return Math.max(face.cap, /[bdfhklt]/.test(text) ? face.asc : 0) / 1000;
   if (/[bdfhklt]/.test(text)) return face.asc / 1000;
   return face.xh / 1000;
 }
-
-export const median = (xs: number[]) => {
-  const v = [...xs].sort((p, q) => p - q);
-  const mid = v.length >> 1;
-  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
-};
 
 export const clampStretch = (s: number) =>
   Math.min(1.35, Math.max(0.7, s || 1));
@@ -49,9 +54,10 @@ export function spanOf(
   family: string,
   size: number,
 ): number {
+  const sheet = doc.scratchPageFor(page);
   const ptrs = emitTextLine({
-    doc,
-    page,
+    doc: sheet.doc,
+    page: sheet.page,
     text,
     x: 0,
     y: 0,
@@ -62,8 +68,47 @@ export function spanOf(
     tags: uniformTags([]),
   });
   const span = measureObjSpanPt(doc.module, ptrs);
-  for (const p of ptrs) removeAndDestroyObject(doc.module, page.pagePtr, p);
+  for (const p of ptrs)
+    removeAndDestroyObject(doc.module, sheet.page.pagePtr, p);
   return span ? span.right - span.left : 0;
+}
+
+const measuredAdvances = new Map<string, Map<string, number>>();
+
+function measuredAdvance(
+  doc: EditorDocument,
+  page: Page,
+  family: string,
+  ch: string,
+): number {
+  let byChar = measuredAdvances.get(family);
+  if (!byChar) {
+    byChar = new Map();
+    measuredAdvances.set(family, byChar);
+  }
+  let adv = byChar.get(ch);
+  if (adv === undefined) {
+    adv =
+      (spanOf(doc, page, `H${ch}H`, family, 100) -
+        spanOf(doc, page, "HH", family, 100)) *
+      10;
+    byChar.set(ch, adv);
+  }
+  return adv;
+}
+
+export function textAdvance(
+  doc: EditorDocument,
+  page: Page,
+  face: Face,
+  family: string,
+  text: string,
+): number | null {
+  const metrics = face.metrics?.get(family);
+  if (metrics) return advanceWidth(metrics, text);
+  let sum = 0;
+  for (const ch of text) sum += measuredAdvance(doc, page, family, ch);
+  return sum > 0 ? sum : null;
 }
 
 // The face whose letter widths explain these OCR word widths best. A single
@@ -87,7 +132,7 @@ export function fitFace(
     const k = median(ratios);
     return median(ratios.map((r) => Math.abs(r / k - 1)));
   };
-  const [sans, serif, mono] = FACES.map(err);
+  const [sans, serif, mono] = BASE14_FACES.map(err);
   // Three words line up with any face by chance often enough; ask for four.
   if (usable.length >= 4 && mono < Math.min(sans, serif) * 0.7) return COURIER;
   // Serif and sans widths differ little, so a few words cannot settle it.
@@ -102,11 +147,12 @@ export function isEvenlySpaced(centers: number[], text: string): boolean {
   const chars = text.replace(/\s/g, "");
   if (centers.length < 8 || /^\d+$/.test(chars)) return false;
   if (centers.length > chars.length * 1.1 + 1) return false;
+  if (centers.length < chars.length * 0.9) return false;
   const steps = centers.slice(1).map((c, i) => c - centers[i]);
-  const pitch = (centers[centers.length - 1] - centers[0]) / (chars.length - 1);
+  const pitch = median(steps);
   const onGrid = steps.filter((st) => {
     const n = Math.max(1, Math.round(st / pitch));
-    return Math.abs(st / pitch - n) / n < 0.15;
+    return Math.abs(st / pitch - n) < 0.15;
   });
   return onGrid.length >= steps.length * 0.85;
 }
@@ -123,6 +169,7 @@ export interface Placement {
   fill: RGBA;
   /** Outline in the fill colour that thickens the strokes, in points. */
   weight?: number;
+  hollow?: number;
 }
 
 /**
@@ -142,6 +189,17 @@ export function opaqueStroke(
       /* best-effort */
     }
   }
+}
+
+// Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
+function strokeOf(p: Placement): {
+  renderMode?: number;
+  stroke?: RGBA;
+  strokeWidth?: number;
+} {
+  if (p.hollow) return { renderMode: 1, stroke: p.fill, strokeWidth: p.hollow };
+  if (p.weight) return { renderMode: 2, stroke: p.fill, strokeWidth: p.weight };
+  return {};
 }
 
 // Emit text squeezed or widened to the scan's letter widths, its ink starting
@@ -165,12 +223,9 @@ export function placeText(
     // The invisible OCR layer carries the run's tags; tagging this visible
     // copy as well would have assistive technology read the words twice.
     tags: uniformTags([]),
-    // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
-    ...(p.weight
-      ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
-      : {}),
+    ...strokeOf(p),
   });
-  if (!p.weight) opaqueStroke(m, ptrs);
+  if (!p.weight && !p.hollow) opaqueStroke(m, ptrs);
   for (const ptr of ptrs)
     transformObject(m, ptr, p.stretch, 0, 0, 1, p.x * (1 - p.stretch), 0);
   const drawn = measureObjSpanPt(m, ptrs);
@@ -180,29 +235,86 @@ export function placeText(
   return ptrs;
 }
 
-// Pearson correlation of two same-sized luma images.
-function correlation(a: Float32Array, b: Float32Array): number {
-  const n = a.length;
-  let ma = 0;
-  let mb = 0;
-  for (let i = 0; i < n; i++) {
-    ma += a[i];
-    mb += b[i];
+function windowCorrelation(
+  scan: Luma,
+  drawn: Luma,
+  x0: number,
+  x1: number,
+  shift: number,
+): { r: number; spread: number } {
+  const { width, height } = scan;
+  const from = Math.max(x0, -shift);
+  const to = Math.min(x1, width - shift);
+  if (to <= from) return { r: 0, spread: 0 };
+  let n = 0;
+  let sa = 0;
+  let sb = 0;
+  let sab = 0;
+  let saa = 0;
+  let sbb = 0;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = from; x < to; x++) {
+      const a = scan.data[row + x];
+      const b = drawn.data[row + x + shift];
+      sa += a;
+      sb += b;
+      sab += a * b;
+      saa += a * a;
+      sbb += b * b;
+    }
+    n += to - from;
   }
-  ma /= n;
-  mb /= n;
-  let ab = 0;
-  let aa = 0;
-  let bb = 0;
-  for (let i = 0; i < n; i++) {
-    const da = a[i] - ma;
-    const db = b[i] - mb;
-    ab += da * db;
-    aa += da * da;
-    bb += db * db;
-  }
-  return aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0;
+  const aa = saa - (sa * sa) / n;
+  const bb = sbb - (sb * sb) / n;
+  const ab = sab - (sa * sb) / n;
+  return {
+    r: aa > 0 && bb > 0 ? ab / Math.sqrt(aa * bb) : 0,
+    spread: Math.sqrt(Math.max(0, aa) / n),
+  };
 }
+
+function bestShift(
+  scan: Luma,
+  drawn: Luma,
+  x0: number,
+  x1: number,
+  reach: number,
+): number {
+  let best = -1;
+  let at = 0;
+  for (let shift = -reach; shift <= reach; shift += 2) {
+    const r = windowCorrelation(scan, drawn, x0, x1, shift).r;
+    if (r > best) {
+      best = r;
+      at = shift;
+    }
+  }
+  for (const shift of [at - 1, at + 1]) {
+    if (Math.abs(shift) > reach) continue;
+    best = Math.max(best, windowCorrelation(scan, drawn, x0, x1, shift).r);
+  }
+  return best;
+}
+
+function slidingCorrelation(scan: Luma, drawn: Luma): number {
+  const { width, height } = scan;
+  const span = Math.max(8, Math.round(height * SLIDE_WINDOW));
+  const reach = Math.max(1, Math.round(height * SLIDE_REACH));
+  let total = 0;
+  let weight = 0;
+  for (let x0 = 0; x0 < width; x0 += Math.round(span / 2)) {
+    const x1 = Math.min(width, x0 + span);
+    const spread = windowCorrelation(scan, drawn, x0, x1, 0).spread;
+    if (spread === 0) continue;
+    total += bestShift(scan, drawn, x0, x1, reach) * spread;
+    weight += spread;
+  }
+  return weight > 0 ? total / weight : 0;
+}
+
+const SLIDE_WINDOW = 2;
+const SLIDE_REACH = 0.25;
 
 // Average stroke thickness: ink pixels per horizontal run of ink, cut halfway
 // between paper and ink. Unlike total darkness, paper grain and the grey core
@@ -225,9 +337,34 @@ function strokeWidth(
   return runs ? inked / runs : 0;
 }
 
-function percentile(values: Float32Array, p: number): number {
-  const sorted = Float32Array.from(values).sort();
-  return sorted[Math.floor((sorted.length - 1) * p)];
+function nthSmallest(values: Float32Array | Float64Array, n: number): number {
+  let lo = 0;
+  let hi = values.length - 1;
+  while (lo < hi) {
+    const pivot = values[(lo + hi) >> 1];
+    let i = lo;
+    let j = hi;
+    while (i <= j) {
+      while (values[i] < pivot) i++;
+      while (values[j] > pivot) j--;
+      if (i <= j) {
+        const t = values[i];
+        values[i] = values[j];
+        values[j] = t;
+        i++;
+        j--;
+      }
+    }
+    if (n <= j) hi = j;
+    else if (n >= i) lo = i;
+    else break;
+  }
+  return values[n];
+}
+
+function percentiles(values: Float32Array, ps: number[]): number[] {
+  const copy = Float32Array.from(values);
+  return ps.map((p) => nthSmallest(copy, Math.floor((copy.length - 1) * p)));
 }
 
 export interface ScanMatch {
@@ -235,6 +372,160 @@ export interface ScanMatch {
   score: number;
   /** Drawn stroke width over scanned: above 1 is heavier than the scan. */
   weight: number;
+}
+
+type ScanImage = { img: Luma; stroke: number; edge?: number } | null;
+
+interface FitMemory {
+  scans: Map<number, ScanImage>;
+  matches: Map<string, ScanMatch>;
+  softness: Map<string, number>;
+  measures: Map<string, number | null>;
+}
+
+const fitMemory = new WeakMap<object, FitMemory>();
+let fitDeadline = Infinity;
+let measuredThisSlice = false;
+
+export const FIT_PAUSED = Symbol("fit paused");
+
+export function withFitDeadline<T>(deadline: number, fit: () => T): T {
+  const outer = fitDeadline;
+  fitDeadline = deadline;
+  measuredThisSlice = false;
+  try {
+    return fit();
+  } finally {
+    fitDeadline = outer;
+  }
+}
+
+export function withScanCache<T>(ink: object, fit: () => T): T {
+  if (!fitMemory.has(ink))
+    fitMemory.set(ink, {
+      scans: new Map(),
+      matches: new Map(),
+      softness: new Map(),
+      measures: new Map(),
+    });
+  try {
+    const result = fit();
+    fitMemory.delete(ink);
+    return result;
+  } catch (e) {
+    if (e !== FIT_PAUSED) fitMemory.delete(ink);
+    throw e;
+  }
+}
+
+export function rememberForFit(
+  ink: object,
+  key: string,
+  measure: () => number | null,
+): number | null {
+  return remember(fitMemory.get(ink)?.measures, key, measure);
+}
+
+function remember<K, V>(
+  memory: Map<K, V> | undefined,
+  key: K,
+  measure: () => V,
+): V {
+  const known = memory?.get(key);
+  if (known !== undefined) return known;
+  const value = measure();
+  memory?.set(key, value);
+  return value;
+}
+
+const FIT_PROBE_PX = 96;
+
+export const fitScale = (ink: { rect: PageRect }) =>
+  Math.min(INK_SCALE, FIT_PROBE_PX / (ink.rect.height + 2));
+
+const probeOf = (rect: PageRect): PageRect => ({
+  x: rect.x - 1,
+  y: rect.y - 1,
+  width: rect.width + 2,
+  height: rect.height + 2,
+});
+
+export function checkDeadline(): void {
+  if (
+    measuredThisSlice &&
+    fitDeadline !== Infinity &&
+    performance.now() > fitDeadline
+  )
+    throw FIT_PAUSED;
+  measuredThisSlice = true;
+}
+
+function placementKey(
+  c: Omit<Placement, "inkLeft" | "fill">,
+  ...extra: unknown[]
+): string {
+  return [
+    c.text,
+    c.x,
+    c.baseline,
+    c.family,
+    c.size,
+    c.stretch,
+    c.weight ?? 0,
+    c.hollow ?? 0,
+    ...extra,
+  ].join("|");
+}
+
+function scanImage(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; reversed?: boolean },
+  probe: PageRect,
+  blur: number,
+): ScanImage {
+  return remember(fitMemory.get(ink)?.scans, blur, () => {
+    const sharp = blur === 0 ? null : scanImage(doc, page, ink, probe, 0);
+    if (blur !== 0 && !sharp) return null;
+    if (!sharp) checkDeadline();
+    const img = sharp
+      ? blurLuma(sharp.img, blur)
+      : renderLuma(doc.module, page, probe, 0, fitScale(ink));
+    if (img && !sharp && ink.reversed)
+      for (let i = 0; i < img.data.length; i++) img.data[i] = 255 - img.data[i];
+    return img ? { img, stroke: strokeWidth(img, midTone(img)) } : null;
+  });
+}
+
+// Each image cut halfway between its own paper and its own darkest ink.
+function midTone(img: { data: Float32Array }): number {
+  const [paper, ink] = percentiles(img.data, [0.85, 0.01]);
+  return (paper + ink) / 2;
+}
+
+function drawnLuma(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+  blur: number,
+): Luma | null {
+  const m = doc.module;
+  const sheet = doc.scratchPageFor(page);
+  const ptrs = placeText(sheet.doc, sheet.page, {
+    ...c,
+    inkLeft: ink.body.x,
+    fill: BLACK,
+  });
+  const drawn = renderLuma(
+    m,
+    sheet.page,
+    probeOf(ink.rect),
+    blur,
+    fitScale(ink),
+  );
+  for (const p of ptrs) removeAndDestroyObject(m, sheet.page.pagePtr, p);
+  return drawn;
 }
 
 /** How much `c` drawn on the spot looks like the scanned pixels there. */
@@ -245,30 +536,49 @@ export function matchScan(
   c: Omit<Placement, "inkLeft" | "fill">,
   /** Blur for the drawn copy; the scan is compared unblurred when set. */
   softness?: number,
+  rough = false,
 ): ScanMatch {
-  const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
+  return remember(
+    fitMemory.get(ink)?.matches,
+    placementKey(c, softness, rough),
+    () => measureMatch(doc, page, ink, c, softness, rough),
+  );
+}
+
+function measureMatch(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+  softness: number | undefined,
+  rough: boolean,
+): ScanMatch {
+  const probe = probeOf(ink.rect);
   const none = { score: 0, weight: 1 };
-  const scan = renderLuma(m, page, probe, softness === undefined ? 2 : 0);
-  if (!scan) return none;
-  const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
-  const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
-  const drawn = renderLuma(m, page, probe, softness ?? 2);
-  for (const p of [cover, ...ptrs]) removeAndDestroyObject(m, page.pagePtr, p);
+  const scanned = scanImage(
+    doc,
+    page,
+    ink,
+    probe,
+    softness === undefined ? 2 : 0,
+  );
+  if (!scanned) return none;
+  const scan = scanned.img;
+  checkDeadline();
+  const blur =
+    softness === undefined
+      ? 2
+      : Math.round((softness * fitScale(ink)) / INK_SCALE);
+  const drawn = drawnLuma(doc, page, ink, c, blur);
   if (!drawn || drawn.data.length !== scan.data.length) return none;
-  // Each image cut halfway between its own paper and its own darkest ink.
-  const mid = (img: { data: Float32Array }) =>
-    (percentile(img.data, 0.85) + percentile(img.data, 0.01)) / 2;
   return {
-    score: correlation(scan.data, drawn.data),
+    score: rough
+      ? windowCorrelation(scan, drawn, 0, scan.width, 0).r
+      : slidingCorrelation(scan, drawn),
     weight:
-      strokeWidth(drawn, mid(drawn)) /
-      Math.max(0.5, strokeWidth(scan, mid(scan))),
+      softness === undefined
+        ? 1
+        : strokeWidth(drawn, midTone(drawn)) / Math.max(0.5, scanned.stroke),
   };
 }
 
@@ -276,7 +586,8 @@ export function matchScan(
 // over the steepest gradients. Blur widens it; noise and colour do not.
 function edgeWidth(img: { data: Float32Array; width: number; height: number }) {
   const { data, width, height } = img;
-  const contrast = percentile(data, 0.95) - percentile(data, 0.02);
+  const [paper, ink] = percentiles(data, [0.95, 0.02]);
+  const contrast = paper - ink;
   if (contrast < 20) return 0;
   const grads: number[] = [];
   for (let y = 0; y < height - 1; y++)
@@ -289,8 +600,11 @@ function edgeWidth(img: { data: Float32Array; width: number; height: number }) {
       if (g > contrast * 0.05) grads.push(g);
     }
   if (grads.length === 0) return 0;
-  grads.sort((p, q) => p - q);
-  return contrast / grads[Math.floor(grads.length * 0.9)];
+  const steep = nthSmallest(
+    Float64Array.from(grads),
+    Math.floor(grads.length * 0.9),
+  );
+  return contrast / steep;
 }
 
 /**
@@ -303,28 +617,31 @@ export function softnessOf(
   ink: { rect: PageRect; body: PageRect },
   c: Omit<Placement, "inkLeft" | "fill">,
 ): number {
-  const m = doc.module;
-  const probe = {
-    x: ink.rect.x - 1,
-    y: ink.rect.y - 1,
-    width: ink.rect.width + 2,
-    height: ink.rect.height + 2,
-  };
-  const scan = renderLuma(m, page, probe, 0);
+  return remember(fitMemory.get(ink)?.softness, placementKey(c), () =>
+    measureSoftness(doc, page, ink, c),
+  );
+}
+
+function measureSoftness(
+  doc: EditorDocument,
+  page: Page,
+  ink: { rect: PageRect; body: PageRect },
+  c: Omit<Placement, "inkLeft" | "fill">,
+): number {
+  const scan = scanImage(doc, page, ink, probeOf(ink.rect), 0);
   if (!scan) return 0;
-  const target = edgeWidth(scan);
-  const cover = emitFillRect(m, page, probe, { r: 255, g: 255, b: 255 }, 1);
-  const ptrs = placeText(doc, page, { ...c, inkLeft: ink.body.x, fill: BLACK });
+  const target = (scan.edge ??= edgeWidth(scan.img));
+  checkDeadline();
+  const sharp = drawnLuma(doc, page, ink, c, 0);
+  if (!sharp) return 0;
   let best = { r: 0, err: Infinity };
   for (const r of [0, 1, 2]) {
-    const drawn = renderLuma(m, page, probe, r);
-    if (!drawn) continue;
+    const drawn = blurLuma(sharp, r);
     // Ties go to the sharper: crisp text should stay crisp.
     const err = Math.abs(edgeWidth(drawn) - target) + r * 0.05;
     if (err < best.err) best = { r, err };
   }
-  for (const p of [cover, ...ptrs]) removeAndDestroyObject(m, page.pagePtr, p);
-  return best.r;
+  return Math.round((best.r * INK_SCALE) / fitScale(ink));
 }
 
 /** Box-blur an RGBA image in place, `r` pixels each way. */
@@ -333,27 +650,8 @@ export function blurRgba(
   r: number,
 ): void {
   const { rgba, width, height } = img;
-  const tmp = new Uint8Array(rgba.length);
-  const pass = (src: Uint8Array, dst: Uint8Array, dx: number, dy: number) => {
-    for (let y = 0; y < height; y++)
-      for (let x = 0; x < width; x++)
-        for (let c = 0; c < 3; c++) {
-          let sum = 0;
-          let n = 0;
-          for (let k = -r; k <= r; k++) {
-            const xx = x + k * dx;
-            const yy = y + k * dy;
-            if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
-            sum += src[(yy * width + xx) * 4 + c];
-            n++;
-          }
-          const i = (y * width + x) * 4;
-          dst[i + c] = sum / n;
-          dst[i + 3] = 255;
-        }
-  };
-  pass(rgba, tmp, 1, 0);
-  pass(tmp, rgba, 0, 1);
+  rgba.set(boxBlur(rgba, width, height, r, 3, 4));
+  for (let i = 3; i < rgba.length; i += 4) rgba[i] = 255;
 }
 
 /**
@@ -364,17 +662,21 @@ export function blurRgba(
 export function toInkOnly(
   img: { rgba: Uint8Array; width: number; height: number },
   paper: RGBA,
+  lightInk = false,
 ): void {
   const { rgba } = img;
-  const lum = (i: number) =>
-    0.299 * rgba[i] + 0.587 * rgba[i + 1] + 0.114 * rgba[i + 2];
-  const paperL = 0.299 * paper.r + 0.587 * paper.g + 0.114 * paper.b;
-  let darkest = paperL;
-  for (let i = 0; i < rgba.length; i += 4) darkest = Math.min(darkest, lum(i));
-  const span = Math.max(60, paperL - darkest);
+  const paperL = luma(paper.r, paper.g, paper.b);
+  const inkiness = (i: number) => {
+    const l = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
+    return lightInk ? l - paperL : paperL - l;
+  };
+  let deepest = 0;
+  for (let i = 0; i < rgba.length; i += 4)
+    deepest = Math.max(deepest, inkiness(i));
+  const span = Math.max(60, deepest);
   const bg = [paper.r, paper.g, paper.b];
   for (let i = 0; i < rgba.length; i += 4) {
-    const a = Math.min(1, Math.max(0, (paperL - lum(i)) / span));
+    const a = Math.min(1, Math.max(0, inkiness(i) / span));
     if (a < 0.04) {
       rgba[i + 3] = 0;
       continue;

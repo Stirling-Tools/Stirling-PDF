@@ -57,7 +57,7 @@ function standardFallbackName(family: string): string {
 }
 
 function missingFromCoverage(
-  coverage: Map<number, number>,
+  coverage: ReadonlySet<number>,
   text: string,
 ): string[] {
   const missing = new Set<string>();

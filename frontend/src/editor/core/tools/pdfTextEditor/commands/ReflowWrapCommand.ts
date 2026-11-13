@@ -10,6 +10,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   SCRATCH,
   scratchPtr,
@@ -93,7 +94,7 @@ export class ReflowWrapCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run) return;
+    if (!run || isScanRun(run)) return;
     if (this.maxWidthPt <= 0) return;
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.

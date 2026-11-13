@@ -348,10 +348,7 @@ function samePositions(prev: number[] | null, next: number[]): boolean {
 // Record where the engine put every glyph, indexed by code unit of `text`.
 // Both units of a surrogate pair share a value; synthesised spaces stay NaN.
 function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
-  const glyphs = new Map<
-    TextRun,
-    Array<{ cp: number; x: number; end: number }>
-  >();
+  const glyphs = new Map<TextRun, PlacedGlyph[]>();
   for (const g of geometry) {
     if (!g.run || !g.cp || !g.ok) continue;
     if (!Number.isFinite(g.originX) || g.right < g.originX) continue;
@@ -362,7 +359,7 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     }
     // The loose box's right edge is the pen position after the glyph, which
     // is what makes consecutive word boxes tile without drift.
-    list.push({ cp: g.cp, x: g.originX, end: g.right });
+    list.push({ cp: g.cp, x: g.originX, end: g.right, bottom: g.bottom });
   }
 
   const changed = new Set<TextRun>();
@@ -373,7 +370,11 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
       continue;
     }
-    const aligned = alignToText(run.text, list);
+    // An edited scan's redrawn words are new objects at the end of the content, listed after lines that read later.
+    const ordered = run.scanEdit?.created.length
+      ? inReadingOrder(list, run.fontSize)
+      : list;
+    const aligned = alignToText(run.text, ordered);
     if (!aligned) continue;
     // Same positions under a still-current key is a no-op capture; skipping it
     // keeps untouched runs' snapshots stable across the periodic tick.
@@ -392,11 +393,34 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
   return changed;
 }
 
+export interface PlacedGlyph {
+  cp: number;
+  x: number;
+  end: number;
+  bottom: number;
+}
+
+// Top line first, then left to right; glyph boxes within half a font size share a line.
+export function inReadingOrder(
+  glyphs: PlacedGlyph[],
+  fontSize: number,
+): PlacedGlyph[] {
+  const tolerance = Math.max(1, fontSize * 0.5);
+  const byHeight = [...glyphs].sort((a, b) => b.bottom - a.bottom);
+  const lines: PlacedGlyph[][] = [];
+  for (const glyph of byHeight) {
+    const line = lines[lines.length - 1];
+    if (line && line[0].bottom - glyph.bottom <= tolerance) line.push(glyph);
+    else lines.push([glyph]);
+  }
+  return lines.flatMap((line) => line.sort((a, b) => a.x - b.x));
+}
+
 // Line up the engine's glyph list with the run's text - they are not
 // index-for-index, and anything unplaceable is left unknown, not guessed.
 function alignToText(
   text: string,
-  glyphs: Array<{ cp: number; x: number; end: number }>,
+  glyphs: PlacedGlyph[],
 ): { starts: number[]; ends: number[] } | null {
   const starts = new Array<number>(text.length).fill(Number.NaN);
   const ends = new Array<number>(text.length).fill(Number.NaN);

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
@@ -10,6 +10,14 @@ vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
     constructor(readonly opts: { runId: string; nextFamily: string }) {}
   },
 }));
+vi.mock(
+  "@editor/tools/pdfTextEditor/commands/scanTextEdit",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    prefitScanRun: vi.fn(() => true),
+    scanRunNeedsFit: vi.fn(() => false),
+  }),
+);
 vi.mock("@editor/tools/pdfTextEditor/commands/CompositeCommand", () => ({
   CompositeCommand: class {
     constructor(readonly commands: unknown[]) {}
@@ -25,6 +33,10 @@ import {
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  prefitScanRun,
+  scanRunNeedsFit,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
 const REGULAR = "1".repeat(64);
 const ITALIC = "2".repeat(64);
@@ -171,6 +183,17 @@ describe("useSelectionActions font changes", () => {
     expect(queryLocalFonts).not.toHaveBeenCalled();
     expect(get).not.toHaveBeenCalled();
     expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
+  });
+
+  it("leaves a run locked while its font change was waiting", async () => {
+    const runs = [run("a", "base14:Helvetica")];
+    const { store, dispatch } = fakeStore(runs, ["a"]);
+
+    const change = actionsFor(store).changeFontFamily("Times-Roman");
+    runs[0].locked = true;
+    expect(await change).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([]);
   });
 
   it("leaves the text alone when a server font cannot be downloaded", async () => {
@@ -364,5 +387,73 @@ describe("useSelectionActions font changes", () => {
       await actionsFor(mixed.store).changeFontFamily("Noto Sans Hebrew"),
     ).toBeNull();
     expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
+  });
+});
+
+describe("useSelectionActions on unfitted scanned text", () => {
+  afterEach(() => {
+    vi.mocked(prefitScanRun).mockReset().mockReturnValue(true);
+    vi.mocked(scanRunNeedsFit).mockReset().mockReturnValue(false);
+  });
+
+  it("fits the scanned blocks in slices behind a busy state before recolouring", async () => {
+    const fitted = new Set<string>();
+    let calls = 0;
+    vi.mocked(scanRunNeedsFit).mockImplementation(
+      (_doc, r) => !fitted.has(r.id),
+    );
+    vi.mocked(prefitScanRun).mockImplementation((_doc, _page, r) => {
+      calls++;
+      if (calls < 3) return false;
+      fitted.add(r.id);
+      return true;
+    });
+    const { store, dispatch } = fakeStore(
+      [run("scan", "base14:Helvetica")],
+      ["scan"],
+    );
+    const { result } = renderHook(() => useSelectionActions(store));
+
+    act(() => result.current.changeFill("#ff0000"));
+
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(result.current.fittingScan).toBe(true);
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.fittingScan).toBe(false));
+    expect(calls).toBe(3);
+    for (const [, , , deadline] of vi.mocked(prefitScanRun).mock.calls)
+      expect(Number.isFinite(deadline)).toBe(true);
+  });
+
+  it("builds each change from the run as it is once the fit has finished", async () => {
+    const fitted = new Set<string>();
+    vi.mocked(scanRunNeedsFit).mockImplementation(
+      (_doc, r) => !fitted.has(r.id),
+    );
+    const runs = [
+      run("scan", "base14:Helvetica"),
+      run("gone", "base14:Helvetica"),
+    ];
+    vi.mocked(prefitScanRun).mockImplementation((_doc, _page, r) => {
+      if (runs[0].fill.a === 255) {
+        runs[0].fill = { ...runs[0].fill, a: 128 };
+        runs.splice(1, 1);
+        return false;
+      }
+      fitted.add(r.id);
+      return true;
+    });
+    const { store, dispatch } = fakeStore(runs, ["scan", "gone"]);
+    const { result } = renderHook(() => useSelectionActions(store));
+
+    act(() => result.current.changeFill("#ff0000"));
+
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+    const dispatched = dispatch.mock.calls[0][0] as {
+      runId: string;
+      nextFill: { r: number; a: number };
+    };
+    expect(dispatched.runId).toBe("scan");
+    expect(dispatched.nextFill).toMatchObject({ r: 255, a: 128 });
   });
 });

@@ -3,6 +3,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { parseFontMetrics } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
   externalFaceKey,
@@ -58,7 +59,7 @@ interface DeviceFontModule {
 }
 
 /** Parsed cmap per family, so coverage is computed once per session. */
-const coverageByFamily = new Map<string, Map<number, number> | null>();
+const coverageByFamily = new Map<string, Set<number> | null>();
 /** Families PDFium already refused for a document; never retried. */
 let refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
 /** Successful device-font emits per document, keyed by owned-font id. */
@@ -80,20 +81,21 @@ export function resetDeviceFontEmbedCache(): void {
   emitCountByDoc = new WeakMap<EditorDocument, Map<string, number>>();
 }
 
-function coverageOf(
-  family: string,
-  bytes: Uint8Array,
-): Map<number, number> | null {
-  const key = deviceFontIdFor(family);
-  if (!coverageByFamily.has(key)) {
-    let parsed: Map<number, number> | null = null;
-    try {
-      parsed = parseTrueTypeCmap(bytes);
-    } catch {
-      parsed = null;
-    }
-    coverageByFamily.set(key, parsed);
+/** Code points the font draws, or null when its tables cannot be read. */
+export function fontCoverage(bytes: Uint8Array): Set<number> | null {
+  try {
+    const mapped =
+      parseFontMetrics(bytes)?.advances ?? parseTrueTypeCmap(bytes);
+    return mapped ? new Set(mapped.keys()) : null;
+  } catch {
+    return null;
   }
+}
+
+function coverageOf(family: string, bytes: Uint8Array): Set<number> | null {
+  const key = deviceFontIdFor(family);
+  if (!coverageByFamily.has(key))
+    coverageByFamily.set(key, fontCoverage(bytes));
   return coverageByFamily.get(key) ?? null;
 }
 
@@ -118,7 +120,7 @@ function deviceFontCovers(
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
-export function deviceFontCoverage(family: string): Map<number, number> | null {
+export function deviceFontCoverage(family: string): Set<number> | null {
   const bytes = getExternalFontBytes(family);
   return bytes ? coverageOf(family, bytes) : null;
 }

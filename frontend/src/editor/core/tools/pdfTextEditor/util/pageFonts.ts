@@ -40,7 +40,9 @@ const ALNUM_CODEPOINTS: readonly number[] = (() => {
 })();
 
 /** Pure: which of a-z A-Z 0-9 are absent from a Unicode→glyphId cmap. */
-export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
+export function missingAlnumFromCmap(cmap: {
+  has(codePoint: number): boolean;
+}): string[] {
   const out: string[] = [];
   for (const cp of ALNUM_CODEPOINTS)
     if (!cmap.has(cp)) out.push(String.fromCodePoint(cp));

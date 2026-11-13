@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
@@ -116,7 +117,6 @@ function planIsPureInsert(plan: PartialEditPlan): boolean {
   );
 }
 
-const RENDER_MODE_INVISIBLE = 3;
 const BLACK = { r: 0, g: 0, b: 0, a: 255 };
 // Cap height as a share of the em, near enough for the fallback faces.
 const CAP_HEIGHT_EM = 0.72;
@@ -158,6 +158,7 @@ export class EditTextCommand implements Command {
   private createdPtrs: number[] = [];
   /** Set when apply went through the word-level scanned-OCR path. */
   private scanEdited = false;
+  private scanRefused = false;
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   /** Rotation of the run when apply() snapshotted it; re-applied on revert. */
@@ -208,10 +209,16 @@ export class EditTextCommand implements Command {
     if (this.prevText === this.nextText) return;
 
     if (this.scanEdited || isScanRun(run)) {
-      run.scanEdit ??= captureScanEdit(doc.module, run);
+      run.scanEdit ??= captureScanEdit(doc.module, run, page);
       if (run.scanEdit) {
         this.scanEdited = true;
-        renderScanEdit(doc, page, run, run.scanEdit, this.nextText);
+        this.scanRefused = !renderScanEdit(
+          doc,
+          page,
+          run,
+          run.scanEdit,
+          this.nextText,
+        );
         return;
       }
     }
@@ -1382,6 +1389,17 @@ export class EditTextCommand implements Command {
   /** Consecutive typing on the SAME run coalesces into one undo step. */
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
+  }
+
+  supersedes(adjacent: Command): boolean {
+    return (
+      adjacent instanceof EditTextCommand &&
+      this.scanEdited &&
+      !this.scanRefused &&
+      adjacent.scanEdited &&
+      adjacent.pageIndex === this.pageIndex &&
+      adjacent.runId === this.runId
+    );
   }
 
   /** The text this edit produced - lets the history compare adjacent edits. */
