@@ -1,15 +1,10 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
-import type {
-  ComboboxData,
-  ComboboxItem,
-  ComboboxItemGroup,
-} from "@mantine/core";
+import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { alert } from "@editor/components/toast";
-import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   familyOptions,
@@ -57,8 +52,6 @@ type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
-  /** The document font the selection was changed from, offered so the text can go back to it. */
-  documentFontId?: string | null;
   onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
   disabled?: boolean;
@@ -68,7 +61,6 @@ interface FontFamilySelectProps {
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
 export function FontFamilySelect({
   value,
-  documentFontId = null,
   onChange,
   mixed = false,
   disabled = false,
@@ -140,29 +132,17 @@ export function FontFamilySelect({
     if (
       serverOptions.length === 0 &&
       deviceOptions.length === 0 &&
-      !documentFamily &&
-      !documentFontId
+      !documentFamily
     ) {
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    // Always list the current font: a Select whose value has no option filters by stale search text.
-    const documentItems: ComboboxItem[] = [];
-    if (documentFontId)
-      documentItems.push({
-        value: documentFontId,
-        label: familyOf(documentFontId),
-      });
-    if (documentFamily)
-      documentItems.push({
-        value: documentFamily,
-        label: documentFamily,
-        disabled: true,
-      });
-    if (documentItems.length > 0) {
+    if (documentFamily) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: documentItems,
+        items: [
+          { value: documentFamily, label: documentFamily, disabled: true },
+        ],
       });
     }
     groups.push({
@@ -182,7 +162,7 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [serverOptions, deviceOptions, documentFamily, documentFontId, t]);
+  }, [serverOptions, deviceOptions, documentFamily, t]);
 
   const pickFailureText = useCallback(
     (failure: FontPickFailure): string => {

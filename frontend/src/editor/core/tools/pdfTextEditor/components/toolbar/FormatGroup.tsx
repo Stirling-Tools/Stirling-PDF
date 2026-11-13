@@ -52,7 +52,6 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
     <>
       <FontFamilySelect
         value={fontFamily}
-        documentFontId={state.documentFontId}
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
         touch={touch}

@@ -18,11 +18,6 @@ export function familyOf(fontId: string): string {
 const DEVICE_FONT_PREFIX = "device:";
 const BASE14_FONT_PREFIX = "base14:";
 
-/** Whether a fontId names a font carried by the PDF itself. */
-export function isDocumentFontId(fontId: string): boolean {
-  return fontId.startsWith("pdf:");
-}
-
 /** Whether a fontId names an installed or server font embedded by the editor. */
 export function isDeviceFontId(fontId: string): boolean {
   return fontId.startsWith(DEVICE_FONT_PREFIX);
@@ -38,13 +33,6 @@ export function deviceFontId(family: string): string {
 
 export function base14FontId(family: string): string {
   return `${BASE14_FONT_PREFIX}${family}`;
-}
-
-/** The PDFium font handle in a pdf:<ptr>:<family> fontId, or 0; valid while some object uses it. */
-export function documentFontHandle(fontId: string): number {
-  if (!isDocumentFontId(fontId)) return 0;
-  const n = Number(fontId.split(":")[1]);
-  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 type Base14Root = "Helvetica" | "Times" | "Courier";
