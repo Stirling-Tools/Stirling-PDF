@@ -130,7 +130,7 @@ describe("PageView partial redraw", () => {
     const renderArea = vi
       .spyOn(PdfiumPageRenderer, "renderArea")
       .mockImplementation(
-        async (_doc, _page, _scale, area) => area as ImageData,
+        async (_doc, _page, _scale, area) => area as unknown as ImageData,
       );
     const edit = () => {
       const from = live.revision;
