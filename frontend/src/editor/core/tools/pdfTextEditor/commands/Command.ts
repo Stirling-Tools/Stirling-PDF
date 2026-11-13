@@ -1,4 +1,11 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
+
+export interface PageRepaintArea {
+  pageIndex: number;
+  /** Raw page space. */
+  area: PageRect;
+}
 
 // Every user-initiated mutation goes through a Command so it can be recorded,
 // replayed, and reverted by the HistoryStack.
@@ -15,6 +22,8 @@ export interface Command {
   // Optional - when true, a matching `coalesceKey` merges this command into the
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
+  /** The one page area this command draws in, asked before and after apply; null or absent redraws whole pages. */
+  repaintArea?(doc: EditorDocument): PageRepaintArea | null;
 }
 
 export class RolledBackError extends Error {

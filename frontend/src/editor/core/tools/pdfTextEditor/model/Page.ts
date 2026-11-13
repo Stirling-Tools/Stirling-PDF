@@ -2,10 +2,14 @@ import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import type { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { PageRuleSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageRect,
+  PageRuleSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
 
 /** Wraps one PDFium page pointer. */
 export class Page {
@@ -48,6 +52,10 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
+  // Everything revisions `repaintFrom` to `repaintTo` changed lies inside this.
+  private repaintArea: PageRect | null = null;
+  private repaintFrom = -1;
+  private repaintTo = -1;
 
   constructor(opts: {
     index: number;
@@ -104,6 +112,24 @@ export class Page {
   markDirty(): void {
     this.dirty = true;
     this.revision += 1;
+  }
+
+  /** Revisions `from` to `to` changed nothing outside raw-space `area`; any later unnoted revision voids it. */
+  noteRepaintArea(from: number, to: number, area: PageRect): void {
+    if (this.repaintArea && this.repaintTo === from) {
+      this.repaintArea = unionRect(this.repaintArea, area);
+    } else {
+      this.repaintArea = { ...area };
+      this.repaintFrom = from;
+    }
+    this.repaintTo = to;
+  }
+
+  /** What to redraw over a bitmap painted at revision `painted`, or null to draw the whole page. */
+  repaintAreaSince(painted: number): PageRect | null {
+    if (!this.repaintArea || this.revision !== this.repaintTo) return null;
+    if (painted < this.repaintFrom || painted >= this.repaintTo) return null;
+    return this.repaintArea;
   }
 
   /** Bump the snapshot revision WITHOUT marking the page dirty. */

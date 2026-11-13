@@ -1,5 +1,6 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 
 // A display ratio above this buys no visible sharpness for a PDF preview and
 // doubles memory per step, so the raster stops following it there.
@@ -46,14 +47,31 @@ export class PdfiumPageRenderer {
     page: Page,
     scale: number,
   ): Promise<ImageData> {
-    const m = doc.module;
-    // No flush: FPDF_RenderPageBitmap draws from the in-memory object list, so
-    // the preview is current without rewriting the content stream.
-    const { width: w, height: h } = PdfiumPageRenderer.rasterSize(
+    const { width, height } = PdfiumPageRenderer.rasterSize(
       page.width,
       page.height,
       scale,
     );
+    return PdfiumPageRenderer.renderArea(doc, page, scale, {
+      x: 0,
+      y: 0,
+      width,
+      height,
+    });
+  }
+
+  /** The pixels {@link render} would draw inside `area` (bitmap pixels, top-left origin), drawing nothing else. */
+  static async renderArea(
+    doc: EditorDocument,
+    page: Page,
+    scale: number,
+    area: PageRect,
+  ): Promise<ImageData> {
+    const m = doc.module;
+    // No flush needed: rendering reads the in-memory objects; the page is offset to the area and clipped.
+    const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+    const w = Math.max(1, area.width);
+    const h = Math.max(1, area.height);
 
     // BGRA bitmap = format 1, fill white, then render with REVERSE_BYTE_ORDER
     // so the pixel buffer is RGBA-ordered for ImageData.
@@ -64,10 +82,10 @@ export class PdfiumPageRenderer {
       m.FPDF_RenderPageBitmap(
         bitmapPtr,
         page.pagePtr,
-        0,
-        0,
-        w,
-        h,
+        -area.x,
+        -area.y,
+        full.width,
+        full.height,
         0,
         0x01 | 0x10,
       );
@@ -96,10 +114,10 @@ export class PdfiumPageRenderer {
             formEnv,
             bitmapPtr,
             page.pagePtr,
-            0,
-            0,
-            w,
-            h,
+            -area.x,
+            -area.y,
+            full.width,
+            full.height,
             0,
             0x01 | 0x10,
           );

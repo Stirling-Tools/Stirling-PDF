@@ -1,5 +1,8 @@
 import i18n from "i18next";
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type {
+  Command,
+  PageRepaintArea,
+} from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
@@ -131,6 +134,11 @@ function scanFontSize(
   const size = (ink.y + ink.height - baseline) / CAP_HEIGHT_EM;
   return size > 2 && size < ink.height * 3 ? size : fallback;
 }
+
+const UPRIGHT_TOLERANCE = 1e-6;
+const MIN_REPAINT_MARGIN_PT = 4;
+const REPAINT_MARGIN_PER_FONT_SIZE = 1.5;
+const PAGE_SPAN_PT = 100_000; // past any page edge; the bitmap clips the rest
 
 /** Edit a text run. */
 export class EditTextCommand implements Command {
@@ -1377,6 +1385,36 @@ export class EditTextCommand implements Command {
     return i18n.t("pdfTextEditor.commands.typeInto", "Type into {{run}}", {
       run: this.runId,
     });
+  }
+
+  repaintArea(doc: EditorDocument): PageRepaintArea | null {
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    // Turned text is typed along its own slant, out of its upright box.
+    if (
+      !run ||
+      Math.abs(run.matrix.b) > UPRIGHT_TOLERANCE ||
+      Math.abs(run.matrix.c) > UPRIGHT_TOLERANCE
+    )
+      return null;
+    // Covers what a scanned edit paints around its words: covers, softened edges, i-dots.
+    const margin = Math.max(
+      MIN_REPAINT_MARGIN_PT,
+      run.fontSize * REPAINT_MARGIN_PER_FONT_SIZE,
+    );
+    const { x, y, width, height } = run.bounds;
+    // A scanned edit moves the scan's own words, which can land past the run's box.
+    const [left, right] = isScanRun(run)
+      ? [-PAGE_SPAN_PT, PAGE_SPAN_PT]
+      : [x - margin, x + width + margin];
+    return {
+      pageIndex: this.pageIndex,
+      area: {
+        x: left,
+        y: y - margin,
+        width: right - left,
+        height: height + 2 * margin,
+      },
+    };
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */
