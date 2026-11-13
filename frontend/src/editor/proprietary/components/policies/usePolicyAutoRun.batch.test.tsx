@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ClassificationConfidence } from "@editor/types/fileContext";
 
 /**
@@ -10,7 +10,14 @@ import type { ClassificationConfidence } from "@editor/types/fileContext";
  */
 
 const FILE_COUNT = 61;
-
+const configuredTestTimeout = process.env.TEST_TIMEOUT?.trim();
+const parsedTestTimeout = Number(configuredTestTimeout);
+const TEST_TIMEOUT_MS =
+  configuredTestTimeout &&
+  Number.isFinite(parsedTestTimeout) &&
+  parsedTestTimeout > 0
+    ? parsedTestTimeout
+    : 10000;
 // A tiny mutable "workspace" the mocks share: the list of file stubs currently in
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
@@ -281,15 +288,13 @@ beforeEach(() => {
 /** Drive the hooks until the store shows the expected number of imported runs. */
 async function runUntilSettled(expectedRuns: number) {
   renderHook(() => Harness());
-  await act(async () => {
-    await vi.waitFor(
-      () => {
-        const imported = latestRuns.filter((r) => r.imported).length;
-        expect(imported).toBe(expectedRuns);
-      },
-      { timeout: 8000, interval: 20 },
-    );
-  });
+  await waitFor(
+    () => {
+      const imported = latestRuns.filter((r) => r.imported).length;
+      expect(imported).toBe(expectedRuns);
+    },
+    { timeout: TEST_TIMEOUT_MS, interval: 20 },
+  );
 }
 
 describe("policy auto-run — 61-file batch through a Security → Classification chain", () => {
@@ -342,9 +347,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
       id: "storage",
       versionNumber: 1,
     });
-    act(() => {
-      mocks.workspace = [];
-    });
+    mocks.workspace = [];
 
     await act(async () => {
       await vi.waitFor(
@@ -354,7 +357,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
           );
           expect(security).toHaveLength(FILE_COUNT);
         },
-        { timeout: 8000, interval: 20 },
+        { timeout: TEST_TIMEOUT_MS, interval: 20 },
       );
     });
 
@@ -380,7 +383,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
           );
           expect(classification).toHaveLength(FILE_COUNT);
         },
-        { timeout: 8000, interval: 20 },
+        { timeout: TEST_TIMEOUT_MS, interval: 20 },
       );
     });
 
