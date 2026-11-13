@@ -52,3 +52,26 @@ export function trackEditorOperation(toolId: string, fileCount: number): void {
     file_count: fileCount,
   });
 }
+
+/** `surface` names the checkout UI; `attempt` is 0 for the first load. */
+export function trackStripeJsLoadFailed(
+  surface: string,
+  attempt: number,
+): void {
+  capture("trackStripeJsLoadFailed", "billing_stripe_js_load_failed", {
+    source: "billing",
+    surface,
+    attempt,
+  });
+}
+
+export function trackStripeJsRetrySucceeded(
+  surface: string,
+  attempt: number,
+): void {
+  capture("trackStripeJsRetrySucceeded", "billing_stripe_js_retry_succeeded", {
+    source: "billing",
+    surface,
+    attempt,
+  });
+}
