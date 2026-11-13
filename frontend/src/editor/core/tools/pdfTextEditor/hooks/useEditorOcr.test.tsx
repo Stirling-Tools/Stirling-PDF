@@ -122,10 +122,9 @@ describe("editor inline OCR", () => {
     mocks.post.mockResolvedValue({
       data: new Blob(["%PDF-1.7\nOCR result"], { type: "application/pdf" }),
     });
-    mocks.exportPdf.mockResolvedValue({
-      blob: new Blob(["%PDF-1.7\ncurrent edits"], { type: "application/pdf" }),
-      filename: "scan.pdf",
-    });
+    mocks.exportPdf.mockResolvedValue(
+      new Blob(["%PDF-1.7\ncurrent edits"], { type: "application/pdf" }),
+    );
     mocks.checkCredits.mockResolvedValue(null);
     mocks.ensureReady.mockResolvedValue(true);
     mocks.assertAllowed.mockImplementation(() => {});
@@ -164,7 +163,7 @@ describe("editor inline OCR", () => {
   it("blocks upload if protection is discovered during export", async () => {
     mocks.exportPdf.mockImplementationOnce(async () => {
       protectSource();
-      return { blob: new Blob(["%PDF-1.7"]), filename: "scan.pdf" };
+      return new Blob(["%PDF-1.7"]);
     });
     const { result, store, onComplete } = await setup();
     await act(() => result.current.runOcr());
@@ -224,7 +223,7 @@ describe("editor inline OCR", () => {
     expect(new TextDecoder().decode(await readBytes(uploaded))).toContain(
       "current edits",
     );
-    expect(mocks.exportPdf).toHaveBeenCalledWith(store.document, "scan.pdf");
+    expect(mocks.exportPdf).toHaveBeenCalledWith(store.document);
     const output = onComplete.mock.calls[0][0];
     expect(output.name).toBe("scan.pdf");
     expect(new TextDecoder().decode(await readBytes(output))).toContain(
@@ -360,7 +359,7 @@ describe("editor inline OCR", () => {
       mocks.assertAllowed.mockImplementation(() => {
         throw new Error("File blocked");
       });
-      return { blob: new Blob(["%PDF-1.7"]), filename: "scan.pdf" };
+      return new Blob(["%PDF-1.7"]);
     });
     const { result, store } = await setup();
     await act(() => result.current.runOcr());

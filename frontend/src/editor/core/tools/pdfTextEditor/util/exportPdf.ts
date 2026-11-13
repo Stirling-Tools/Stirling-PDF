@@ -19,14 +19,8 @@ import {
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
 
-/** Serialize the editor document to a Blob plus the name to save it under: the opened file's own. */
-export async function exportToBlob(
-  doc: EditorDocument,
-  sourceName?: string | null,
-): Promise<{
-  blob: Blob;
-  filename: string;
-}> {
+/** Serialize the editor document to a Blob. */
+export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   const structureEdits = doc.structureEdits();
   const documentLanguage = doc.documentLanguageEdit();
   // A signed document is appended to rather than rewritten, so the bytes the
@@ -43,10 +37,7 @@ export async function exportToBlob(
       documentLanguage === undefined &&
       !doc.markedTaggedChanged()
     ) {
-      return {
-        blob: pdfBlob(doc.openedBytes),
-        filename: exportName(sourceName),
-      };
+      return pdfBlob(doc.openedBytes);
     }
     bytes = doc.openedBytes;
   } else {
@@ -104,7 +95,7 @@ export async function exportToBlob(
   assertSavedPdf(bytes);
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
-  return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+  return pdfBlob(bytes);
 }
 
 function pagesWritingArtifactKinds(doc: EditorDocument): number[] {
@@ -181,12 +172,6 @@ function pdfBlob(bytes: Uint8Array): Blob {
   return new Blob([bytes as unknown as ArrayBuffer], {
     type: "application/pdf",
   });
-}
-
-// The opened file's own name: a save lands on that file as its next version,
-// and a suffix here would rename it on every save.
-function exportName(sourceName?: string | null): string {
-  return sourceName?.trim() || "edited.pdf";
 }
 
 /**
