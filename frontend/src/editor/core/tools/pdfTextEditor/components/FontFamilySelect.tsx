@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
-import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
+import type {
+  ComboboxData,
+  ComboboxItem,
+  ComboboxItemGroup,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -8,25 +12,18 @@ import { alert } from "@editor/components/toast";
 import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
-  faceStyleFlags,
-  groupByFamily,
+  familyOptions,
   isLocalFontAccessSupported,
   listLocalFonts,
   loadedLocalFonts,
-  normaliseName,
   subscribeLocalFonts,
-  type LocalFont,
+  type FontFamilyOption,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   loadedServerFonts,
   loadServerFonts,
   subscribeServerFonts,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
-
-export interface FontFamilyOption {
-  value: string;
-  label: string;
-}
 
 /** Base-14 families, renderable by every viewer without embedding. */
 export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
@@ -41,43 +38,28 @@ export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
 
 const BUILT_IN_NAMES = BUILT_IN_FONT_FAMILIES.map((option) => option.value);
 
-function familyOptions(
-  fonts: LocalFont[] | null,
-  taken: string[],
-): FontFamilyOption[] {
-  if (!fonts) return [];
-  const hidden = new Set(taken.map(normaliseName));
-  const withBold = new Set<string>();
-  for (const font of fonts) {
-    const flags = faceStyleFlags(font);
-    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
-  }
-  return groupByFamily(fonts).flatMap(({ family }) => {
-    const key = normaliseName(family);
-    if (hidden.has(key)) return [];
-    const options = [{ value: family, label: family }];
-    if (withBold.has(key)) {
-      options.push({ value: `${family} Bold`, label: `${family} Bold` });
-    }
-    return options;
-  });
-}
+const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
+  serverFontFailed: [
+    "pdfTextEditor.fontPicker.serverFontFailed",
+    "That server font could not be downloaded. The text was left unchanged.",
+  ],
+  embedFailed: [
+    "pdfTextEditor.fontPicker.embedFailed",
+    "This font could not be embedded in the PDF. The text was left unchanged.",
+  ],
+  noGlyphs: [
+    "pdfTextEditor.fontPicker.noGlyphs",
+    "This font has no characters for the selected text. The text was left unchanged.",
+  ],
+};
 
 type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
-  /**
-   * Set when the selection is scanned text, whose `value` is the font the
-   * scan matcher drew it in rather than a font of the document. `label` is the
-   * matcher's name for that face; `value` is null while no font is in force.
-   */
+  /** Set for scanned text: `value` is the matched font (null while none is in force) and `label` the matcher's name for it. */
   scanned?: { label?: string };
-  /**
-   * The fontId of the PDF's own font the selection was changed away from.
-   * Listed as a pickable option whose value is that fontId, so the text can be
-   * put back in it.
-   */
+  /** The document font the selection was changed from, offered so the text can go back to it. */
   documentFontId?: string | null;
   onChange: (family: string) => void | Promise<FontPickFailure | null>;
   mixed?: boolean;
@@ -167,22 +149,19 @@ export function FontFamilySelect({
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    // The current font is listed even when it cannot be picked: a Select whose
-    // value has no option keeps the last search text and filters by it.
-    const documentItems = [
-      ...(documentFontId
-        ? [{ value: documentFontId, label: familyOf(documentFontId) }]
-        : []),
-      ...(documentFamily
-        ? [
-            {
-              value: documentFamily,
-              label: scanned?.label ?? documentFamily,
-              disabled: true,
-            },
-          ]
-        : []),
-    ];
+    // Always list the current font: a Select whose value has no option filters by stale search text.
+    const documentItems: ComboboxItem[] = [];
+    if (documentFontId)
+      documentItems.push({
+        value: documentFontId,
+        label: familyOf(documentFontId),
+      });
+    if (documentFamily)
+      documentItems.push({
+        value: documentFamily,
+        label: scanned?.label ?? documentFamily,
+        disabled: true,
+      });
     if (documentItems.length > 0) {
       groups.push({
         group: scanned
@@ -219,20 +198,8 @@ export function FontFamilySelect({
 
   const pickFailureText = useCallback(
     (failure: FontPickFailure): string => {
-      if (failure === "serverFontFailed")
-        return t(
-          "pdfTextEditor.fontPicker.serverFontFailed",
-          "That server font could not be downloaded. The text was left unchanged.",
-        );
-      if (failure === "embedFailed")
-        return t(
-          "pdfTextEditor.fontPicker.embedFailed",
-          "This font could not be embedded in the PDF. The text was left unchanged.",
-        );
-      return t(
-        "pdfTextEditor.fontPicker.noGlyphs",
-        "This font has no characters for the selected text. The text was left unchanged.",
-      );
+      const [key, fallback] = PICK_FAILURE_TEXT[failure];
+      return t(key, fallback);
     },
     [t],
   );

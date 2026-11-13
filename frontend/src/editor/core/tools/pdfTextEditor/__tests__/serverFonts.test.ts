@@ -11,7 +11,6 @@ import {
   loadServerFontBytes,
   loadServerFonts,
   loadedServerFonts,
-  resetServerFontsCache,
   serverFaceFor,
   serverFontCssFamily,
   subscribeServerFonts,
@@ -92,7 +91,7 @@ describe("server fonts", () => {
 
   beforeEach(() => {
     get.mockReset();
-    resetServerFontsCache();
+    forgetServerFontList();
     resetLocalFontsCache();
     resetDocumentFontMatchCache();
     delete (window as unknown as { queryLocalFonts?: unknown }).queryLocalFonts;
@@ -350,7 +349,7 @@ describe("server fonts", () => {
     expect(await loadServerFontBytes("Acme Sans")).not.toBeNull();
     expect(faceCalls).toBe(2);
 
-    resetServerFontsCache();
+    forgetServerFontList();
     faceCalls = 0;
     get.mockImplementation(async (url: string) => {
       if (url === SERVER_FONTS_URL) return { data: MANIFEST };

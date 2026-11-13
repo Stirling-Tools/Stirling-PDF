@@ -21,6 +21,7 @@ interface ServerFontFamily {
 
 const FONT_ID = /^[0-9a-f]{64}$/;
 export const SERVER_FONTS_REFRESH_MS = 30_000;
+const FACE_DOWNLOAD_ATTEMPTS = 2;
 
 let resolved: LocalFont[] | null = null;
 let manifestPending: Promise<LocalFont[] | null> | null = null;
@@ -139,7 +140,7 @@ function documentFonts(): FontFaceSet | null {
   return (document as Document & { fonts?: FontFaceSet }).fonts ?? null;
 }
 
-function clearServerFontState(): void {
+export function forgetServerFontList(): void {
   generation++;
   resolved = null;
   manifestPending = null;
@@ -154,10 +155,6 @@ function clearServerFontState(): void {
   const fonts = documentFonts();
   for (const css of cssFacesRegistered.values()) fonts?.delete(css);
   cssFacesRegistered.clear();
-}
-
-export function forgetServerFontList(): void {
-  clearServerFontState();
   notifyListeners();
 }
 
@@ -216,7 +213,7 @@ function fetchFaceBytes(id: string): Promise<Uint8Array | null> {
 
 async function downloadFace(id: string): Promise<Uint8Array | null> {
   const started = generation;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < FACE_DOWNLOAD_ATTEMPTS; attempt++) {
     try {
       const res = await apiClient.get<ArrayBuffer>(
         `${SERVER_FONTS_URL}/${id}`,
@@ -282,8 +279,4 @@ export async function loadServerFontBytes(
     faceIdByName.set(key, face.id);
     return bytes;
   });
-}
-
-export function resetServerFontsCache(): void {
-  clearServerFontState();
 }

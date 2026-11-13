@@ -63,13 +63,7 @@ function deviceFaceFor(
     .join(" ");
 }
 
-/**
- * Which family gives `fontId` its italic cut (or its upright one back).
- *
- * base-14 flips in place, unless a server or device family of exactly this
- * name exists. Anything else - an embedded or subset face - needs a server or
- * device font of the same family that genuinely carries the style.
- */
+/** Base-14 flips in place unless an external family of that name exists; others need a real face. */
 export function italicCapability(
   fontId: string,
   italic: boolean,

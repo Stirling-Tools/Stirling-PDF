@@ -1,10 +1,11 @@
 import { scanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  TextRange,
-  TextRunSnapshot,
-  WidthMode,
+import {
+  RENDER_MODE_INVISIBLE,
+  type TextRange,
+  type TextRunSnapshot,
+  type WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
@@ -16,7 +17,10 @@ import {
   embeddedFaceFamily,
   onEmbeddedFaceLoaded,
 } from "@editor/tools/pdfTextEditor/util/embeddedFace";
-import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isDeviceFontId,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   fitTextToWidth,
   NO_FIT,
@@ -53,8 +57,6 @@ import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWr
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
-const RENDER_MODE_INVISIBLE = 3;
-
 const SETTLE_MS = 400;
 
 const STALL_MS = 250;
@@ -84,7 +86,7 @@ function cssFontFamilyFor(fontId: string): string {
   // the overlay measuring and drawing what the page renders; without it
   // nearestStandardFont collapses it to Helvetica and every advance the
   // overlay predicts is a different font's.
-  if (fontId.startsWith("device:")) {
+  if (isDeviceFontId(fontId)) {
     const server = serverFontCssFamily(family);
     const served = server ? `"${server}", ` : "";
     return `${served}"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;

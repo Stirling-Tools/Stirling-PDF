@@ -53,7 +53,7 @@ import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetSca
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import {
   SERVER_FONTS_URL,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   COURIER,
@@ -921,7 +921,7 @@ describe("matching scanned text in other scripts", () => {
       } finally {
         doc.dispose();
         resetScanFaces();
-        resetServerFontsCache();
+        forgetServerFontList();
       }
     },
   );

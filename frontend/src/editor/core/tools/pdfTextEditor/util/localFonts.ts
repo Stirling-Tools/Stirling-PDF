@@ -10,6 +10,11 @@ export interface LocalFont {
   postscriptName: string;
 }
 
+export interface FontFamilyOption {
+  value: string;
+  label: string;
+}
+
 export interface LocalFontFamily {
   family: string;
   styles: string[];
@@ -188,6 +193,29 @@ export function groupByFamily(fonts: LocalFont[]): LocalFontFamily[] {
   for (const entry of families) entry.styles.sort(compareNames);
   families.sort((a, b) => compareNames(a.family, b.family));
   return families;
+}
+
+/** Picker options per family, plus a Bold entry where an upright bold cut exists; `taken` names are left out. */
+export function familyOptions(
+  fonts: LocalFont[] | null,
+  taken: string[],
+): FontFamilyOption[] {
+  if (!fonts) return [];
+  const hidden = new Set(taken.map(normaliseName));
+  const withBold = new Set<string>();
+  for (const font of fonts) {
+    const flags = faceStyleFlags(font);
+    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
+  }
+  return groupByFamily(fonts).flatMap(({ family }) => {
+    const key = normaliseName(family);
+    if (hidden.has(key)) return [];
+    const options = [{ value: family, label: family }];
+    if (withBold.has(key)) {
+      options.push({ value: `${family} Bold`, label: `${family} Bold` });
+    }
+    return options;
+  });
 }
 
 /** Case/separator-insensitive key, so "Segoe-UI" and "Segoe UI" are one name. */

@@ -29,7 +29,7 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 import {
   SERVER_FONTS_URL,
   loadServerFonts,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
@@ -159,7 +159,7 @@ function actionsFor(store: EditorStore) {
 describe("useSelectionActions font changes", () => {
   beforeEach(() => {
     get.mockReset();
-    resetServerFontsCache();
+    forgetServerFontList();
     resetLocalFontsCache();
     resetDeviceFontEmbedCache();
   });
