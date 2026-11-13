@@ -20,20 +20,49 @@ import {
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 
-const SUPPORTED_ENDPOINTS = new Set([
+const PASSWORD_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
   "/api/v1/security/remove-password",
-  "/api/v1/general/rotate-pdf",
-  "/api/v1/general/remove-pages",
-  "/api/v1/general/rearrange-pages",
-  "/api/v1/general/merge-pdfs",
-  "/api/v1/general/split-pages",
-  "/api/v1/general/split-pdf-by-sections",
-  "/api/v1/general/split-by-size-or-count",
-  "/api/v1/general/split-pdf-by-chapters",
-  "/api/v1/general/split-for-poster-print",
-  "/api/v1/misc/auto-split-pdf",
-  "/api/v1/misc/compress-pdf",
+]);
+
+const {
+  AssembleDocument: assemble,
+  CopyContents: copy,
+  ModifyAnnotations: annotate,
+  ModifyContents: modify,
+} = PdfPermissionFlag;
+
+const SESSION_OPERATIONS = new Map<string, readonly PdfPermissionFlag[]>([
+  ["/api/v1/general/rotate-pdf", [assemble]],
+  ["/api/v1/general/remove-pages", [assemble]],
+  ["/api/v1/general/rearrange-pages", [assemble]],
+  ["/api/v1/general/merge-pdfs", [assemble]],
+  ["/api/v1/general/split-pages", [copy]],
+  ["/api/v1/general/split-pdf-by-sections", [copy]],
+  ["/api/v1/general/split-by-size-or-count", [copy]],
+  ["/api/v1/general/split-pdf-by-chapters", [copy]],
+  ["/api/v1/general/split-for-poster-print", [copy]],
+  ["/api/v1/misc/auto-split-pdf", [copy]],
+  ["/api/v1/misc/compress-pdf", [modify]],
+  ["/api/v1/security/add-watermark", [modify]],
+  ["/api/v1/misc/add-stamp", [modify]],
+  ["/api/v1/misc/add-page-numbers", [modify]],
+  ["/api/v1/general/scale-pages", [modify, annotate]],
+  ["/api/v1/general/crop", [modify, annotate]],
+  ["/api/v1/misc/replace-invert-pdf", [modify]],
+  ["/api/v1/general/remove-image-pdf", [modify]],
+  ["/api/v1/security/auto-redact", [modify]],
+  ["/api/v1/misc/ocr-pdf", [modify]],
+  ["/api/v1/misc/repair", [modify]],
+  ["/api/v1/misc/update-metadata", [modify]],
+  ["/api/v1/misc/flatten", [modify, annotate]],
+  ["/api/v1/security/sanitize-pdf", [modify, annotate]],
+  ["/api/v1/misc/unlock-pdf-forms", [modify, annotate]],
+  ["/api/v1/general/booklet-imposition", [modify, assemble, annotate]],
+  ["/api/v1/general/pdf-to-single-page", [modify, assemble, annotate]],
+  ["/api/v1/general/multi-page-layout", [modify, assemble, annotate]],
+  ["/api/v1/misc/remove-blanks", [assemble, copy]],
+  ["/api/v1/misc/auto-rename", [copy]],
 ]);
 
 async function requestWorkingPdf(
@@ -62,7 +91,18 @@ async function requestWorkingPdf(
 
 /** These interactive operations restore protection before exposing or persisting any result. */
 export function supportsSessionUnlock(endpoint: string | undefined): boolean {
-  return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
+  return (
+    endpoint !== undefined &&
+    (SESSION_OPERATIONS.has(endpoint) || PASSWORD_ENDPOINTS.has(endpoint))
+  );
+}
+
+function allowsOperation(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+): boolean {
+  const required = (endpoint && SESSION_OPERATIONS.get(endpoint)) || [modify];
+  return required.every((flag) => pdfAllows(access, flag));
 }
 
 /**
@@ -136,19 +176,11 @@ export async function preflightPdfOperation(
     const access = getPdfAccess(file);
     const needsOwner = endpoint?.includes("password")
       ? !hasPdfPermissionOverride(access)
-      : !pdfAllows(access, operationPermission(endpoint));
+      : !allowsOperation(access, endpoint);
     if (needsOwner && !(await requestOwner(file))) return false;
   }
   if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
   return true;
-}
-
-function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
-  return endpoint === "/api/v1/misc/compress-pdf"
-    ? PdfPermissionFlag.ModifyContents
-    : endpoint?.includes("split")
-      ? PdfPermissionFlag.CopyContents
-      : PdfPermissionFlag.AssembleDocument;
 }
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
@@ -204,8 +236,7 @@ export async function prepareUnlockedFile(
         "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet.",
       ),
     );
-  const permission = operationPermission(endpoint);
-  if (!pdfAllows(access, permission))
+  if (!allowsOperation(access, endpoint))
     throw new Error(
       i18n.t(
         "encryptedPdfUnlock.restrictedOperation",
