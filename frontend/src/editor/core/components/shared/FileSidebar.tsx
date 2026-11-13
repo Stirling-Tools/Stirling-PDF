@@ -962,14 +962,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             navActions.setWorkbench("fileEditor");
           }
 
-          await fileActions.addStirlingFileStubs([stub]);
+          await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
 
-          if (staysOnAdd) {
-            fileActions.setSelectedFiles([
-              ...state.ui.selectedFileIds,
-              stub.id,
-            ]);
-          } else {
+          if (!staysOnAdd) {
             if (workbenchCount === 0) {
               navActions.setWorkbench("viewer");
             } else {
@@ -983,7 +978,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         lostFileIds,
         t,
         state.files.ids,
-        state.ui.selectedFileIds,
         fileActions,
         navActions,
         currentWorkbench,
@@ -1023,7 +1017,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
               navActions.setWorkbench("fileEditor");
             }
-            await fileActions.addStirlingFileStubs([stub]);
+            await fileActions.addStirlingFileStubs([stub], {
+              selectFiles: true,
+            });
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
