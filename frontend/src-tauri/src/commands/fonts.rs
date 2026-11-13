@@ -13,6 +13,9 @@ pub struct SystemFontFace {
     full_name: String,
     style: String,
     postscript_name: String,
+    weight: u16,
+    bold: bool,
+    italic: bool,
 }
 
 struct CatalogEntry {
@@ -69,10 +72,16 @@ fn embeddable_face_names(data: &[u8], index: u32) -> Option<FaceNames> {
     })
 }
 
+fn is_bold(info: &fontdb::FaceInfo) -> bool {
+    info.weight.0 >= SEMIBOLD_WEIGHT
+}
+
+fn is_italic(info: &fontdb::FaceInfo) -> bool {
+    info.style != fontdb::Style::Normal
+}
+
 fn style_from_axes(info: &fontdb::FaceInfo) -> String {
-    let bold = info.weight.0 >= SEMIBOLD_WEIGHT;
-    let italic = info.style != fontdb::Style::Normal;
-    match (bold, italic) {
+    match (is_bold(info), is_italic(info)) {
         (true, true) => "Bold Italic",
         (true, false) => "Bold",
         (false, true) => "Italic",
@@ -111,6 +120,9 @@ fn build_catalog(db: &fontdb::Database) -> Vec<CatalogEntry> {
                 full_name: names.full_name.unwrap_or_else(|| family.clone()),
                 style: names.style.unwrap_or_else(|| style_from_axes(info)),
                 postscript_name: info.post_script_name.clone(),
+                weight: info.weight.0,
+                bold: is_bold(info),
+                italic: is_italic(info),
             },
             path,
         });
@@ -204,6 +216,54 @@ mod tests {
         assert_eq!(face.style, "Regular");
         assert_eq!(face.postscript_name, "Carlito");
         assert_eq!(face.id, 0);
+    }
+
+    fn with_name_text(mut data: Vec<u8>, from: &str, to: &str) -> Vec<u8> {
+        let name = ttf_parser::RawFace::parse(&data, 0)
+            .expect("font parses")
+            .table(ttf_parser::Tag::from_bytes(b"name"))
+            .expect("font has a name table");
+        let start = name.as_ptr() as usize - data.as_ptr() as usize;
+        let end = start + name.len();
+        let encodings = [
+            (from.as_bytes().to_vec(), to.as_bytes().to_vec()),
+            (
+                from.encode_utf16().flat_map(u16::to_be_bytes).collect(),
+                to.encode_utf16().flat_map(u16::to_be_bytes).collect(),
+            ),
+        ];
+        for (needle, replacement) in encodings {
+            let mut at = start;
+            while at + needle.len() <= end {
+                if data[at..at + needle.len()] == needle[..] {
+                    data[at..at + needle.len()].copy_from_slice(&replacement);
+                    at += needle.len();
+                } else {
+                    at += 1;
+                }
+            }
+        }
+        data
+    }
+
+    #[test]
+    fn reports_the_style_axes_whatever_language_the_style_name_is_in() {
+        let entries = catalog_of(with_name_text(bundled("Carlito-Bold.ttf"), "Bold", "Fett"));
+        assert_eq!(entries.len(), 1);
+        let face = serde_json::to_value(&entries[0].face).expect("face serialises");
+        assert_eq!(face["style"], "Fett");
+        assert_eq!(face["bold"], true);
+        assert_eq!(face["italic"], false);
+        assert_eq!(face["weight"], 700);
+    }
+
+    #[test]
+    fn reports_an_italic_face_as_italic() {
+        let entries = catalog_of(bundled("LiberationSans-Italic.ttf"));
+        let face = serde_json::to_value(&entries[0].face).expect("face serialises");
+        assert_eq!(face["bold"], false);
+        assert_eq!(face["italic"], true);
+        assert_eq!(face["weight"], 400);
     }
 
     #[test]

@@ -1,10 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { LocalFontPermission } from "@editor-core/tools/pdfTextEditor/util/localFontSource";
-import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
+import type {
+  FaceAxes,
+  LocalFont,
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 
 export type { LocalFontPermission };
 
-interface SystemFontFace extends LocalFont {
+interface SystemFontFace extends Omit<LocalFont, "axes">, FaceAxes {
   id: number;
 }
 
@@ -17,7 +20,8 @@ export function hasDeviceFontSource(): boolean {
 // list_system_fonts already drops faces that are not TrueType or whose licence forbids embedding.
 export async function listDeviceFaces(): Promise<LocalFont[]> {
   const faces = await invoke<SystemFontFace[]>("list_system_fonts");
-  return faces.map(({ id, ...font }) => {
+  return faces.map(({ id, weight, bold, italic, ...names }) => {
+    const font: LocalFont = { ...names, axes: { weight, bold, italic } };
     idOf.set(font, id);
     return font;
   });

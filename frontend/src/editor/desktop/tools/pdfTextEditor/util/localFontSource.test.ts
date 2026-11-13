@@ -10,6 +10,11 @@ import {
   localFontPermission,
   readDeviceFace,
 } from "@editor/tools/pdfTextEditor/util/localFontSource";
+import {
+  faceStyleFlags,
+  familyOptions,
+  pickLocalFontFace,
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 
 const ARIAL = {
   id: 7,
@@ -17,7 +22,23 @@ const ARIAL = {
   fullName: "Arial Bold",
   style: "Bold",
   postscriptName: "Arial-BoldMT",
+  weight: 700,
+  bold: true,
+  italic: false,
 };
+
+function germanFace(style: string, weight: number, italic: boolean) {
+  return {
+    id: weight + (italic ? 1 : 0),
+    family: "Arial",
+    fullName: `Arial ${style}`,
+    style,
+    postscriptName: "Arial",
+    weight,
+    bold: weight >= 600,
+    italic,
+  };
+}
 
 describe("desktop local font source", () => {
   beforeEach(() => invoke.mockReset());
@@ -36,7 +57,30 @@ describe("desktop local font source", () => {
         fullName: "Arial Bold",
         style: "Bold",
         postscriptName: "Arial-BoldMT",
+        axes: { weight: 700, bold: true, italic: false },
       },
+    ]);
+  });
+
+  it("reads bold and italic from the native axes, not the localized style name", async () => {
+    invoke.mockResolvedValue([
+      germanFace("Standard", 400, false),
+      germanFace("Fett", 700, false),
+      germanFace("Kursiv", 400, true),
+      germanFace("Fett Kursiv", 700, true),
+    ]);
+    const faces = await listDeviceFaces();
+    expect(faces.map(faceStyleFlags)).toEqual([
+      { bold: false, italic: false },
+      { bold: true, italic: false },
+      { bold: false, italic: true },
+      { bold: true, italic: true },
+    ]);
+    expect(pickLocalFontFace(faces, "Arial")?.style).toBe("Standard");
+    expect(pickLocalFontFace(faces, "Arial Bold")?.style).toBe("Fett");
+    expect(familyOptions(faces, []).map((o) => o.value)).toEqual([
+      "Arial",
+      "Arial Bold",
     ]);
   });
 

@@ -12,11 +12,19 @@ import {
   readDeviceFace,
 } from "@editor/tools/pdfTextEditor/util/localFontSource";
 
+/** A face's style axes as its font file declares them; a source that can read them sets them so style names in any language never decide bold or italic. */
+export interface FaceAxes {
+  weight: number;
+  bold: boolean;
+  italic: boolean;
+}
+
 export interface LocalFont {
   family: string;
   fullName: string;
   style: string;
   postscriptName: string;
+  axes?: FaceAxes;
 }
 
 export interface FontFamilyOption {
@@ -223,6 +231,7 @@ export function faceStyleFlags(font: LocalFont): {
   bold: boolean;
   italic: boolean;
 } {
+  if (font.axes) return { bold: font.axes.bold, italic: font.axes.italic };
   const style = faceStyleText(font);
   return {
     bold: /bold|black|heavy|semib|demi/.test(style),
@@ -232,18 +241,25 @@ export function faceStyleFlags(font: LocalFont): {
   };
 }
 
+const REGULAR_WEIGHT = 400;
+
 function scoreFace(
   font: LocalFont,
   wantBold: boolean,
   wantItalic: boolean,
 ): number {
   const style = faceStyleText(font);
-  const bold = /bold|black|heavy|semib|demi/.test(style);
-  const italic = /italic|oblique/.test(style);
+  const { bold, italic } = font.axes ?? {
+    bold: /bold|black|heavy|semib|demi/.test(style),
+    italic: /italic|oblique/.test(style),
+  };
+  const plain = font.axes
+    ? font.axes.weight === REGULAR_WEIGHT && !italic
+    : /^(regular|book|normal|roman)?$/.test(style);
   let score = 0;
   if (bold === wantBold) score += 4;
   if (italic === wantItalic) score += 4;
-  if (/^(regular|book|normal|roman)?$/.test(style)) score += 2;
+  if (plain) score += 2;
   // Tie-break towards the plainer cut: "Light Condensed" also matches an
   // upright non-bold request, but "Regular" is what the user meant.
   return score - Math.min(style.length, 32) / 100;
