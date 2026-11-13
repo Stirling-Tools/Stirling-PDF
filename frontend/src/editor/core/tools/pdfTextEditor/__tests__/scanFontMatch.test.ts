@@ -146,6 +146,9 @@ async function choicesByLine(
   return out;
 }
 
+// Saving subsets embedded fonts, which tags their names (ABCDEF+Carlito).
+const SUBSET_TAG = /^[A-Z]{6}\+/;
+
 function drawnFontNames(doc: EditorDocument, ptrs: number[]): string[] {
   const m = doc.module;
   return ptrs.map((p) => {
@@ -154,7 +157,7 @@ function drawnFontNames(doc: EditorDocument, ptrs: number[]): string[] {
     const buf = m.pdfium.wasmExports.malloc(len);
     try {
       m.FPDFFont_GetBaseFontName(font, buf, len);
-      return m.pdfium.UTF8ToString(buf);
+      return m.pdfium.UTF8ToString(buf).replace(SUBSET_TAG, "");
     } finally {
       m.pdfium.wasmExports.free(buf);
     }
@@ -487,7 +490,7 @@ async function staticFace(family: string, file: string): Promise<Face | null> {
 }
 
 async function savedText(doc: EditorDocument): Promise<string> {
-  const { blob } = await exportToBlob(doc, "scan.pdf");
+  const blob = await exportToBlob(doc);
   const back = await EditorDocument.open(
     new Uint8Array(await blob.arrayBuffer()),
   );
@@ -501,12 +504,14 @@ async function savedText(doc: EditorDocument): Promise<string> {
 }
 
 async function savedFonts(doc: EditorDocument) {
-  const { blob } = await exportToBlob(doc, "scan.pdf");
+  const blob = await exportToBlob(doc);
   const text = new TextDecoder("latin1").decode(await blob.arrayBuffer());
   return {
     names: [
       ...new Set(
-        [...text.matchAll(/\/BaseFont\s*\/([^\s/<>[\]()]+)/g)].map((m) => m[1]),
+        [...text.matchAll(/\/BaseFont\s*\/([^\s/<>[\]()]+)/g)].map((m) =>
+          m[1].replace(SUBSET_TAG, ""),
+        ),
       ),
     ],
     embedded: text.split("/FontFile2").length - 1,

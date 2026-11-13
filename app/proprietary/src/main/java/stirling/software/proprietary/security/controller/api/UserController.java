@@ -336,6 +336,11 @@ public class UserController {
                     .body(Map.of("error", "incorrectPassword", "message", "Incorrect password"));
         }
         userService.changePassword(user, newPassword);
+        // The login page signs in with the default login until first login ends; left set, every
+        // visit would count a failed attempt until this account locked.
+        if (Boolean.TRUE.equals(user.getIsFirstLogin())) {
+            userService.changeFirstUse(user, false);
+        }
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
         return ResponseEntity.ok(

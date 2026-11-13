@@ -158,6 +158,7 @@ function fakeHarness(options: FakeModuleOptions = {}): FakeHarness {
       .FPDFPageObj_CreateTextObj;
   }
   const ownedFonts = new Map<string, FontRef>();
+  const embeddedFontFiles: Uint8Array[] = [];
   const doc = {
     module,
     docPtr: 7,
@@ -165,6 +166,9 @@ function fakeHarness(options: FakeModuleOptions = {}): FakeHarness {
       ownedFonts.set(font.id, font);
     },
     ownedFont: (id: string) => ownedFonts.get(id),
+    recordEmbeddedFontFile: (bytes: Uint8Array) =>
+      embeddedFontFiles.push(bytes),
+    embeddedFontFiles: () => embeddedFontFiles,
   } as unknown as EditorDocument;
   const page = new Page({ index: 0, pagePtr: 3, width: 200, height: 200 });
   return { doc, page, calls, ownedFonts };
@@ -364,6 +368,7 @@ describe("loadDeviceFontInto", () => {
     expect(loadDeviceFontInto(harness.doc, "Segoe UI")).toBe(900);
     expect(harness.calls.loadFont).toBe(1);
     expect(isDeviceFontEmbedded(harness.doc, "Segoe UI")).toBe(true);
+    expect(harness.doc.embeddedFontFiles()).toHaveLength(1);
   });
 
   it("embeds separately per document", async () => {

@@ -60,7 +60,7 @@ describe("processAutoFormDetection", () => {
     expect(url).toBe(DETECT_ENDPOINT);
     expect((body as FormData).get("applyToPdf")).toBe("true");
     expect(config).toMatchObject({ responseType: "blob" });
-    expect(files[0].name).toBe("doc_form.pdf");
+    expect(files[0].name).toBe("doc.pdf");
     expect(files[0].type).toBe("application/pdf");
   });
 
@@ -94,6 +94,6 @@ describe("processAutoFormDetection", () => {
     stop();
 
     expect(seen).toEqual([]);
-    expect(files[0].name).toBe("doc_form.pdf");
+    expect(files[0].name).toBe("doc.pdf");
   });
 });

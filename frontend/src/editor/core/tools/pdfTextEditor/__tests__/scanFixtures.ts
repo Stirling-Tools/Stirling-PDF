@@ -303,7 +303,7 @@ export async function buildScan(
     if (opts.rotate) m.FPDFPage_SetRotation(page.pagePtr, opts.rotate);
     page.markDirty();
     page.markNeedsGenerate();
-    const { blob } = await exportToBlob(scanned, "scan.pdf");
+    const blob = await exportToBlob(scanned);
     const doc = await EditorDocument.open(
       new Uint8Array(await blob.arrayBuffer()),
     );

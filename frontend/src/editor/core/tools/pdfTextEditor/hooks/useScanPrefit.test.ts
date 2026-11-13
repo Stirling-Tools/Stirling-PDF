@@ -78,16 +78,20 @@ function setup(
       return () => nearListeners.delete(l);
     },
   } as unknown as EditorStore;
-  const state = {
-    pages: pages.map((p, pageIndex) => ({
-      pageIndex,
-      runs: p.ids.map((id) => ({ id, renderMode: 3, text: "Invoice" })),
-    })),
-  } as unknown as EditorViewState;
-  const view = renderHook(() => useScanPrefit(store, state));
+  const stateOf = (text: string) =>
+    ({
+      pages: pages.map((p, pageIndex) => ({
+        pageIndex,
+        runs: p.ids.map((id) => ({ id, renderMode: 3, text })),
+      })),
+    }) as unknown as EditorViewState;
+  const view = renderHook(({ state }) => useScanPrefit(store, state), {
+    initialProps: { state: stateOf("Invoice") },
+  });
   return {
     doc,
     view,
+    showText: (text: string) => view.rerender({ state: stateOf(text) }),
     select: (ids: string[]) => {
       selection.runIds = ids;
       for (const l of [...selectionListeners]) l();
@@ -136,6 +140,15 @@ describe("background scan font fitting", () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(loadDeviceScanFacesIfAllowed).toHaveBeenCalled();
     expect(order).toEqual(["a"]);
+  });
+
+  test("reads installed fonts again when text in a new script turns up", async () => {
+    const { showText } = setup([{ ids: ["a"], near: true }]);
+    await vi.advanceTimersByTimeAsync(100);
+    vi.mocked(loadDeviceScanFacesIfAllowed).mockClear();
+    showText("請求書");
+    await vi.advanceTimersByTimeAsync(100);
+    expect(loadDeviceScanFacesIfAllowed).toHaveBeenCalled();
   });
 
   test("leaves runs on far pages until one is selected or the page comes near", async () => {

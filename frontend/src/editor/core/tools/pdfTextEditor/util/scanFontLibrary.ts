@@ -13,6 +13,7 @@ import {
 import {
   loadServerFontBytes,
   loadServerFonts,
+  serverFontsGeneration,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   parseFontMetrics,
@@ -322,8 +323,10 @@ let scriptFaces: Face[] = [];
 const neededScripts = new Set<Script>();
 const scriptJobs = new Map<Script, Promise<void>>();
 const serverFamiliesTaken = new Set<string>();
+let serverFontsSeen = serverFontsGeneration();
 let device: Face[] = [];
 let deviceRead = false;
+const deviceFamiliesRead = new Set<string>();
 let bundledJob: Promise<void> | null = null;
 let deviceJob: Promise<number> | null = null;
 let generation = 0;
@@ -442,9 +445,22 @@ function isFace(face: Face | "unusable" | null): face is Face {
   return face !== null && face !== "unusable";
 }
 
+function forgetFacesOfResetServer(): void {
+  if (serverFontsSeen === serverFontsGeneration()) return;
+  serverFontsSeen = serverFontsGeneration();
+  bundledJob = null;
+  scriptJobs.clear();
+  serverFamiliesTaken.clear();
+  if (scriptFaces.length === 0) return;
+  scriptFaces = [];
+  notify();
+}
+
 export function loadBundledScanFaces(): Promise<void> {
+  forgetFacesOfResetServer();
   if (bundledJob) return bundledJob;
-  const job = (async () => {
+  let job: Promise<void> | null = null;
+  job = (async () => {
     const faces = await Promise.all(
       BUNDLED_SCAN_FONTS.map((spec) =>
         loadFace(
@@ -459,7 +475,7 @@ export function loadBundledScanFaces(): Promise<void> {
       ),
     );
     bundled = faces.filter(isFace);
-    if (faces.includes(null)) bundledJob = null;
+    if (faces.includes(null) && bundledJob === job) bundledJob = null;
     notify();
   })();
   bundledJob = job;
@@ -476,8 +492,9 @@ function serverCandidates(script: ScriptFonts, fonts: LocalFont[]): string[] {
 }
 
 async function loadServerScript(script: ScriptFonts): Promise<boolean> {
+  const started = serverFontsGeneration();
   const fonts = await loadServerFonts();
-  if (!fonts) return false;
+  if (!fonts || started !== serverFontsGeneration()) return false;
   for (const family of serverCandidates(script, fonts)) {
     if (hasFaceFor(family)) {
       if (!script.clones) break;
@@ -498,6 +515,7 @@ async function loadServerScript(script: ScriptFonts): Promise<boolean> {
       loadServerFontBytes,
       fonts.some((f) => f.family === family && faceStyleFlags(f).bold),
     );
+    if (started !== serverFontsGeneration()) return false;
     if (face === null) {
       serverFamiliesTaken.delete(key);
       return false;
@@ -511,6 +529,7 @@ async function loadServerScript(script: ScriptFonts): Promise<boolean> {
 }
 
 export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
+  forgetFacesOfResetServer();
   const wanted = SCRIPTS.filter((s) => scripts.includes(s.script));
   const jobs = wanted.map((script) => {
     neededScripts.add(script.script);
@@ -521,7 +540,8 @@ export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
       job = loadServerScript(script)
         .catch(() => false)
         .then((settled) => {
-          if (!settled) scriptJobs.delete(script.script);
+          if (!settled && scriptJobs.get(script.script) === job)
+            scriptJobs.delete(script.script);
         });
       scriptJobs.set(script.script, job);
     }
@@ -542,8 +562,10 @@ export function _resetScanFacesForTests(): void {
   neededScripts.clear();
   scriptJobs.clear();
   serverFamiliesTaken.clear();
+  serverFontsSeen = serverFontsGeneration();
   device = [];
   deviceRead = false;
+  deviceFamiliesRead.clear();
   bundledJob = null;
   deviceJob = null;
   notify();
@@ -570,8 +592,11 @@ function sameOutlines(a: Face, b: Face): boolean {
   return !!key && key === b.metrics?.get(b.family)?.outlines;
 }
 
-async function readDeviceFaces(families: string[]): Promise<Face[]> {
-  const faces: Face[] = [];
+async function readDeviceFaces(
+  families: string[],
+  known: Face[],
+): Promise<Face[]> {
+  const faces = [...known];
   for (const family of families) {
     if (serverFamiliesTaken.has(normaliseName(family)) || hasFaceFor(family))
       continue;
@@ -582,22 +607,31 @@ async function readDeviceFaces(families: string[]): Promise<Face[]> {
   return faces;
 }
 
+function unreadDeviceFamilies(): string[] {
+  const families = [
+    ...DEVICE_TEXT_FAMILIES,
+    ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
+      (s) => s.device,
+    ),
+  ];
+  return [...new Set(families)].filter((f) => !deviceFamiliesRead.has(f));
+}
+
+/** Reads the installed fonts for Latin text and every script requested so far; a later call reads only the families a newly requested script adds. */
 export function loadDeviceScanFaces(): Promise<number> {
-  if (deviceJob) return deviceJob;
-  const job = (async () => {
+  if (deviceJob && unreadDeviceFamilies().length === 0) return deviceJob;
+  const previous = deviceJob;
+  let job: Promise<number> | null = null;
+  job = (async () => {
+    await previous?.catch(() => undefined);
     const fonts = await retryLocalFonts();
     if (!fonts) {
-      deviceJob = null;
-      return 0;
+      if (deviceJob === job) deviceJob = null;
+      return device.length;
     }
-    device = await readDeviceFaces([
-      ...new Set([
-        ...DEVICE_TEXT_FAMILIES,
-        ...SCRIPTS.filter((s) => neededScripts.has(s.script)).flatMap(
-          (s) => s.device,
-        ),
-      ]),
-    ]);
+    const families = unreadDeviceFamilies();
+    for (const family of families) deviceFamiliesRead.add(family);
+    device = await readDeviceFaces(families, device);
     deviceRead = true;
     notify();
     return device.length;

@@ -79,7 +79,7 @@ test("a base-14 emit writes WinAnsi punctuation in the base-14 font", async () =
     expect(getDroppedBase14Chars()).toEqual([]);
     page.markDirty();
     page.markNeedsGenerate();
-    const { blob } = await exportToBlob(doc, "punctuation.pdf");
+    const blob = await exportToBlob(doc);
     const back = await EditorDocument.open(
       new Uint8Array(await blob.arrayBuffer()),
     );

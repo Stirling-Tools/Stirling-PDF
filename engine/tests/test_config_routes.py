@@ -45,7 +45,7 @@ def _client(
             app.dependency_overrides[load_settings] = previous
 
 
-def _anthropic_push() -> dict[str, object]:
+def _anthropic_push() -> dict[str, dict[str, object]]:
     return {
         "models": {
             "provider": "anthropic",
@@ -134,7 +134,7 @@ def test_config_push_unsupported_provider_returns_400_without_swap() -> None:
     with _client(build_app_settings) as client:
         before = app.state.runtime
         payload = _anthropic_push()
-        payload["models"]["provider"] = "nonsense-provider"  # type: ignore[index]
+        payload["models"]["provider"] = "nonsense-provider"
         response = client.post("/api/v1/config", json=payload)
         assert response.status_code == 400
         # Running runtime is untouched when the push is rejected.
@@ -226,7 +226,7 @@ def test_config_push_ignores_unknown_fields() -> None:
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
         payload["futureTopLevelField"] = {"anything": 1}
-        payload["models"]["experimentalFlag"] = True  # type: ignore[index]
+        payload["models"]["experimentalFlag"] = True
         response = client.post("/api/v1/config", json=payload)
         assert response.status_code == 200
         assert app.state.settings.smart_model_name == "claude-haiku-4-5"
@@ -292,7 +292,7 @@ def test_config_push_rejects_out_of_range_numbers(section: str, field: str, valu
     """Out-of-range numbers are rejected by the contract before anything is applied."""
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
-        payload[section][field] = value  # type: ignore[index]
+        payload[section][field] = value
         response = client.post("/api/v1/config", json=payload)
         assert response.status_code == 422
         # Nothing was applied: the engine is still on its env config.
@@ -304,7 +304,7 @@ def test_config_push_allows_zero_max_searches() -> None:
     """0 searches is a legitimate "no retrieval" setting, not an out-of-range value."""
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
-        payload["rag"]["maxSearches"] = 0  # type: ignore[index]
+        payload["rag"]["maxSearches"] = 0
         response = client.post("/api/v1/config", json=payload)
         assert response.status_code == 200
         assert app.state.settings.rag_max_searches == 0
