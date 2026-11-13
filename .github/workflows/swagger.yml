@@ -50,10 +50,10 @@ jobs:
           java-version: "25"
 
       - name: Generate Swagger documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs --no-configuration-cache
 
       - name: Upload Swagger Documentation to SwaggerHub
-        run: ./gradlew swaggerhubUpload
+        run: ./gradlew swaggerhubUpload --no-configuration-cache
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
