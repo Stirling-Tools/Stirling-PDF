@@ -571,7 +571,8 @@ class S3VendorComprehensiveTest {
         // Stirling production keys are ~45 chars ({ownerId}/{uuid}). 200 chars exceeds that by
         // ~5x but stays inside every vendor's documented limit. The S3 spec max is 1024 bytes
         // but some vendors (Supabase) impose stricter caps (~250-byte total path including
-        // bucket prefix - 1000 chars fails with KeyTooLongError).
+        // bucket prefix - 1000 chars fails with KeyTooLongError). Neon accepts ~950 chars and
+        // answers longer keys with a 500, not a 4xx.
         StringBuilder sb = new StringBuilder(PREFIX + "long/");
         while (sb.length() < 200) {
             sb.append("abcdefghij");
@@ -611,7 +612,7 @@ class S3VendorComprehensiveTest {
         // Documents - rather than enforces - which key characters cause vendor rejection.
         // Stirling production code is safe because S3StorageProvider always emits an
         // ASCII-safe UUID-only key. If you ever change that, this test becomes a canary.
-        // AWS S3 and MinIO accept all of these; Supabase rejects all of them with 400.
+        // AWS S3, MinIO and Neon accept all of these; Supabase rejects all of them with 400.
         String[] suspiciousKeys = {
             PREFIX + "with space.txt",
             PREFIX + "with+plus.txt",
@@ -682,7 +683,7 @@ class S3VendorComprehensiveTest {
                                 HttpResponse.BodyHandlers.ofByteArray());
 
         assertThat(resp.statusCode()).isEqualTo(200);
-        // Supabase + AWS both honor response-content-disposition query param.
+        // Supabase, Neon and AWS all honor the response-content-disposition query param.
         assertThat(resp.headers().firstValue("content-disposition").orElse(""))
                 .as("vendor must honor response-content-disposition override in presigned URL")
                 .startsWith("attachment");
