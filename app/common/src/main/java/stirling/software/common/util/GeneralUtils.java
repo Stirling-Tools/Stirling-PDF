@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -49,10 +50,17 @@ public class GeneralUtils {
             Set.of("calibre_sandbox.py", "png_to_webp.py", "split_photos.py");
     private final Set<String> DEFAULT_VALID_PIPELINE =
             Set.of(
-                    "OCR images.json",
-                    "Prepare-pdfs-for-email.json",
-                    "Pre-publish-sanitization.json",
-                    "split-rotate-auto-rename.json");
+                    "OCR images.json.example",
+                    "Prepare-pdfs-for-email.json.example",
+                    "Pre-publish-sanitization.json.example",
+                    "split-rotate-auto-rename.json.example");
+    private final Set<String> LEGACY_PIPELINE_SHA256 =
+            Set.of(
+                    "04e001e65a96f98121d7a97094e4d81e307500c833c746c8ca42ff7e688f40e1",
+                    "a2fd9e5c745229f93e4cdd67c9eb1cb7cba029b08c2cb68095a8924396c5d831",
+                    "4fbe97c2d026358222d1e7ed3877aa56af4ad192086802b6d6a7335baac96fa6",
+                    "e62b49d9bc082294b7b9836e8f5f8f7b1fdf309029a23b32e22c4a7b31cff66d",
+                    "e2743fd653b2e1803f41eaf4f9580883f340a410e7d3ab7b964369fd23f4e5f7");
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
@@ -1101,8 +1109,8 @@ public class GeneralUtils {
     }
 
     /*
-     * Extracts the default pipeline configurations from the classpath to the installation path.
-     * Creates directories if needed and copies default JSON files.
+     * Extracts the example pipeline configurations from the classpath to the installation path.
+     * They are written as *.json.example so the UI ignores them until an admin renames one.
      *
      * <p>Existing files will be overwritten atomically (when supported). In case of unsupported
      * atomic moves, falls back to non-atomic replace.
@@ -1128,6 +1136,23 @@ public class GeneralUtils {
                 throw new IOException("Resource not found: " + res.getPath());
             }
             copyResourceToFile(res, target);
+            removeUneditedLegacyCopy(pipelineDir.resolve(name.replaceFirst("\\.example$", "")));
+        }
+    }
+
+    // Older releases extracted the examples as live *.json; drop those unless an admin edited them
+    private void removeUneditedLegacyCopy(Path legacy) throws IOException {
+        if (!Files.isRegularFile(legacy)) {
+            return;
+        }
+        byte[] digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(legacy));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IOException(e);
+        }
+        if (LEGACY_PIPELINE_SHA256.contains(HexFormat.of().formatHex(digest))) {
+            Files.delete(legacy);
         }
     }
 

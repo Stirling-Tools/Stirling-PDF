@@ -1,0 +1,39 @@
+{
+  "name": "OCR images",
+  "pipeline": [
+    {
+      "operation": "/api/v1/convert/img/pdf",
+      "parameters": {
+        "fromExtension": "image",
+        "toExtension": "pdf",
+        "imageOptions": {
+          "colorType": "color",
+          "dpi": 300,
+          "singleOrMultiple": "multiple",
+          "fitOption": "fillPage",
+          "autoRotate": true,
+          "combineImages": true
+        },
+        "fileInput": "automated"
+      }
+    },
+    {
+      "operation": "/api/v1/misc/ocr-pdf",
+      "parameters": {
+        "languages": [
+          "eng"
+        ],
+        "ocrType": "skip-text",
+        "ocrRenderType": "hocr",
+        "additionalOptions": [],
+        "fileInput": "automated"
+      }
+    }
+  ],
+  "_examples": {
+    "outputDir": "{outputFolder}/{folderName}",
+    "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+  },
+  "outputDir": "{outputFolder}",
+  "outputFileName": "{filename}"
+}

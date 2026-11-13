@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
 import AutomationImportModal from "@editor/components/tools/automate/AutomationImportModal";
+import { Banner } from "@editor/ui/Banner";
 import { useSuggestedAutomations } from "@editor/hooks/tools/automate/useSuggestedAutomations";
+import { useServerAutomations } from "@editor/hooks/tools/automate/useServerAutomations";
 import {
   AutomationConfig,
   SuggestedAutomation,
@@ -45,7 +47,19 @@ export default function AutomationSelection({
   toolRegistry,
 }: AutomationSelectionProps) {
   const { t } = useTranslation();
-  const suggestedAutomations = useSuggestedAutomations();
+  const builtInAutomations = useSuggestedAutomations();
+  const { automations: serverAutomations, loadFailed: serverLoadFailed } =
+    useServerAutomations(toolRegistry);
+  const serverAutomationIds = new Set(serverAutomations.map((a) => a.id));
+  const suggestedAutomations = [...serverAutomations, ...builtInAutomations];
+  const addedByAdmin = t(
+    "automate.selection.suggested.addedByAdmin",
+    "Added by your administrator",
+  );
+  const describeSuggested = (automation: SuggestedAutomation) =>
+    serverAutomationIds.has(automation.id)
+      ? [automation.description, addedByAdmin].filter(Boolean).join(" · ")
+      : automation.description;
 
   const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -148,11 +162,20 @@ export default function AutomationSelection({
             {t("automate.selection.suggested.title", "Suggested")}
           </Title>
           <Stack gap="xs">
+            {serverLoadFailed && (
+              <Banner
+                tone="warning"
+                description={t(
+                  "automate.selection.suggested.serverLoadFailed",
+                  "Couldn't load your server's automations.",
+                )}
+              />
+            )}
             {suggestedAutomations.map((automation) => (
               <AutomationEntry
                 key={automation.id}
                 title={automation.name}
-                description={automation.description}
+                description={describeSuggested(automation)}
                 badgeIcon={automation.icon}
                 operations={automation.operations.map((op) => op.operation)}
                 // Suggested automations carry a component icon for display; the

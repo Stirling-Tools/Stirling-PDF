@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { Banner } from "@editor/ui/Banner";
 import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 import { useViewScopedFiles } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
@@ -32,7 +33,7 @@ export default function AutomationRun({
 }: AutomationRunProps) {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
-  const { regularTools } = useToolRegistry();
+  const { regularTools, allTools } = useToolRegistry();
   const toolRegistry = regularTools;
   const cleanup = useResourceCleanup();
 
@@ -52,6 +53,29 @@ export default function AutomationRun({
   const signInReason = connectedServer
     ? null
     : t("automate.sequence.signInToRun", "Sign in to run automations.");
+
+  const unmappedSteps = (automation?.operations ?? []).flatMap((op, index) =>
+    allTools[op.operation as keyof typeof allTools]?.operationConfig
+      ? []
+      : [
+          t(
+            "automate.sequence.unmappedStep",
+            "step {{index}} ({{operation}})",
+            {
+              index: index + 1,
+              operation: op.operation,
+            },
+          ),
+        ],
+  );
+  const unmappedReason =
+    unmappedSteps.length > 0
+      ? t(
+          "automate.sequence.unmappedSteps",
+          "Can't run: {{count}} unmapped operation(s): {{steps}}",
+          { count: unmappedSteps.length, steps: unmappedSteps.join(", ") },
+        )
+      : null;
 
   // Initialize execution steps from automation
   useEffect(() => {
@@ -244,6 +268,10 @@ export default function AutomationRun({
           ))}
         </Stack>
 
+        {unmappedReason && (
+          <Banner tone="warning" description={unmappedReason} />
+        )}
+
         {/* Action Buttons */}
         <Group justify="space-between" mt="xl">
           <Tooltip label={signInReason} disabled={!signInReason} withArrow>
@@ -256,7 +284,8 @@ export default function AutomationRun({
                   isExecuting ||
                   !selectedFiles ||
                   selectedFiles.length === 0 ||
-                  Boolean(signInReason)
+                  Boolean(signInReason) ||
+                  Boolean(unmappedReason)
                 }
                 loading={isExecuting}
               >

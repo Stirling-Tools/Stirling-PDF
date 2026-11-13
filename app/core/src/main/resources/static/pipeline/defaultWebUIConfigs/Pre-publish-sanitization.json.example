@@ -1,5 +1,5 @@
 {
-  "name": "Pre-publish-sanitization",
+  "name": "Strip hidden data before publishing",
   "pipeline": [
     {
       "operation": "/api/v1/security/sanitize-pdf",
@@ -9,39 +9,50 @@
         "removeXMPMetadata": true,
         "removeMetadata": true,
         "removeLinks": true,
-        "removeFonts": false
+        "removeFonts": false,
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/misc/flatten",
       "parameters": {
-        "flattenOnlyForms": true
+        "flattenOnlyForms": true,
+        "fileInput": "automated"
       }
     },
     {
-      "operation": "/api/v1/general/remove-annotations",
-      "parameters": {}
+      "operation": "removeAnnotations",
+      "parameters": {
+        "fileInput": "automated"
+      }
     },
     {
       "operation": "/api/v1/misc/update-metadata",
       "parameters": {
         "deleteAll": true,
-        "author": "",
-        "creationDate": "",
-        "creator": "",
-        "keywords": "",
-        "modificationDate": "",
-        "producer": "",
-        "subject": "",
         "title": "",
-        "trapped": ""
+        "author": "",
+        "subject": "",
+        "keywords": "",
+        "creator": "",
+        "producer": "",
+        "creationDate": null,
+        "modificationDate": null,
+        "trapped": "Unknown",
+        "customMetadata": [],
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/misc/compress-pdf",
       "parameters": {
-        "optimizeLevel": 3,
-        "expectedOutputSize": ""
+        "compressionLevel": 3,
+        "grayscale": false,
+        "expectedSize": "",
+        "compressionMethod": "quality",
+        "fileSizeValue": "",
+        "fileSizeUnit": "MB",
+        "fileInput": "automated"
       }
     }
   ],
