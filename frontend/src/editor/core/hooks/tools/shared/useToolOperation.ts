@@ -38,6 +38,7 @@ import {
   wasCancelled,
 } from "@editor/services/failureReporting";
 import { stashRetryPayload } from "@editor/services/notificationRetry";
+import { namedForUpload } from "@editor/utils/uploadableFile";
 import { refreshNotificationsNow } from "@editor/hooks/useNotifications";
 import { useResolutionContinuation } from "@editor/hooks/tools/shared/useResolutionContinuation";
 import { useNotificationsAvailable } from "@editor/components/notifications/useNotificationsAvailable";
@@ -408,7 +409,10 @@ export const useToolOperation = <TParams>(
           case ToolType.multiFile: {
             // Multi-file processing - single API call with all files
             actions.setStatus("Processing files...");
-            const formData = config.buildFormData(params, filesForAPI);
+            const formData = config.buildFormData(
+              params,
+              await Promise.all(filesForAPI.map(namedForUpload)),
+            );
             const endpoint =
               typeof config.endpoint === "function"
                 ? config.endpoint(params)
