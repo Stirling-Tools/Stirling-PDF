@@ -52,6 +52,16 @@ export default function AuthCallback() {
       if (processingRef.current) return;
       processingRef.current = true;
 
+      const oauthError = new URLSearchParams(window.location.search).get(
+        "errorOAuth",
+      );
+      if (oauthError) {
+        navigate(`/login?${new URLSearchParams({ errorOAuth: oauthError })}`, {
+          replace: true,
+        });
+        return;
+      }
+
       try {
         const hash = window.location.hash.substring(1);
         const token = new URLSearchParams(hash).get("access_token");
