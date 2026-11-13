@@ -20,6 +20,7 @@ import {
   loadedExternalFonts,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
+  familyOptions,
   listLocalFonts,
   pickLocalFontFace,
   resetLocalFontsCache,
@@ -472,6 +473,71 @@ describe("server fonts", () => {
     expect(italicCapability("device:Acme Sans Bold", true)).toEqual({
       family: null,
       source: null,
+    });
+  });
+
+  it("loads the new face after a refresh replaces the one already loaded", async () => {
+    let now = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    serveManifestAndFaces();
+    expect((await loadServerFontBytes("Acme Sans"))?.[0]).toBe(1);
+
+    const REPLACED = "9".repeat(64);
+    get.mockImplementation(async (url: string) => {
+      if (url === SERVER_FONTS_URL) {
+        return {
+          data: {
+            families: [
+              {
+                family: "Acme Sans",
+                faces: [face(REPLACED, "Regular", false, false)],
+              },
+            ],
+          },
+        };
+      }
+      return { data: bytesFor(url.slice(SERVER_FONTS_URL.length + 1)) };
+    });
+    const listener = vi.fn();
+    const unsubscribe = subscribeServerFonts(listener);
+    now += SERVER_FONTS_REFRESH_MS;
+    loadServerFonts();
+    await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(1));
+
+    expect(serverFaceFor("Acme Sans")?.id).toBe(REPLACED);
+    expect(getServerFontBytes("Acme Sans")).toBeNull();
+    expect((await loadServerFontBytes("Acme Sans"))?.[0]).toBe(9);
+    expect(getExternalFontBytes("Acme Sans")?.[0]).toBe(9);
+    unsubscribe();
+  });
+
+  it("reads bold and italic from the server, not from the style name", async () => {
+    get.mockResolvedValue({
+      data: {
+        families: [
+          {
+            family: "Acme Sans",
+            faces: [
+              face(REGULAR, "Standard", false, false),
+              face(ITALIC, "Kursiv", false, true),
+              face(BOLD, "Fett", true, false),
+            ],
+          },
+        ],
+      },
+    });
+    const fonts = (await loadServerFonts()) ?? [];
+
+    expect(familyOptions(fonts, []).map((option) => option.value)).toEqual([
+      "Acme Sans",
+      "Acme Sans Bold",
+    ]);
+    expect(serverFaceFor("Acme Sans")?.id).toBe(REGULAR);
+    expect(serverFaceFor("Acme Sans Bold")?.id).toBe(BOLD);
+    expect(serverFaceFor("Acme Sans Italic")?.id).toBe(ITALIC);
+    expect(italicCapability("device:Acme Sans", true)).toEqual({
+      family: "Acme Sans Italic",
+      source: "device",
     });
   });
 
