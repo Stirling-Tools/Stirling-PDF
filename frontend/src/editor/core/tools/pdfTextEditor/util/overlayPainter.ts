@@ -372,6 +372,26 @@ export function restoreCaretOffset(el: HTMLElement, offset: number): void {
   setCollapsed(selection, at.node, at.offset);
 }
 
+/** Run `paint`, which replaces the run's nodes, then put back the caret or selected range it held when `restore`. */
+export function repaintKeepingSelection(
+  el: HTMLElement,
+  restore: boolean,
+  paint: () => void,
+): void {
+  const selected = plainSelectionRange(el);
+  const caret = plainCaretOffset(el);
+  paint();
+  if (!restore) return;
+  const range = selected && plainDomRange(el, selected);
+  const selection = window.getSelection();
+  if (range && selection) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else if (caret !== null) {
+    restoreCaretOffset(el, caret);
+  }
+}
+
 const TEXT_RANGE_HIGHLIGHT = "pdf-editor-text-range";
 
 /**

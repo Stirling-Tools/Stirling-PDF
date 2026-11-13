@@ -9,6 +9,7 @@ import {
   plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
+  repaintKeepingSelection,
   restoreCaretOffset,
 } from "@editor/tools/pdfTextEditor/util/overlayPainter";
 
@@ -405,6 +406,42 @@ describe("selection ranges", () => {
     const text = el.children[0].firstChild!.firstChild!;
     select([text, 2], [text, 2]);
     expect(plainSelectionRange(el)).toBeNull();
+  });
+
+  it("keeps a selected word selected across a repaint of the same text", () => {
+    const el = host();
+    paintLines(el, [line("Hello brave world")], OPTS);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(plainDomRange(el, { start: 6, end: 11 })!);
+
+    repaintKeepingSelection(el, true, () =>
+      paintLines(el, [line("Hello brave world")], OPTS),
+    );
+
+    expect(plainSelectionRange(el)).toEqual({ start: 6, end: 11 });
+  });
+
+  it("puts a caret back where it was across a repaint", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    restoreCaretOffset(el, 4);
+
+    repaintKeepingSelection(el, true, () => paintPlainText(el, "Hello world"));
+
+    expect(plainCaretOffset(el)).toBe(4);
+    expect(plainSelectionRange(el)).toBeNull();
+  });
+
+  it("leaves the selection alone when the run does not own it", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+
+    repaintKeepingSelection(el, false, () => paintPlainText(el, "Hello world"));
+
+    expect(selection.rangeCount).toBe(0);
   });
 
   it("maps a range back onto the painted text it was read from", () => {
