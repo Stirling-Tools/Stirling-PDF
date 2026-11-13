@@ -1505,6 +1505,18 @@ export function rerankScanStyles(
 
 const rankedOf = (state: ScanEditState) => state.block?.ranked ?? [];
 
+/** Ranks the available faces against text the page draws, as a scanned block is ranked; `state` from {@link captureScanEdit} stays off the run, and after FIT_PAUSED the same `state` carries on. */
+export function rankFacesForDrawnText(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+): RankedStyle[] {
+  return upright(doc, page, state, () => {
+    if (state.block === undefined) styleFor(doc, page, state, null);
+    return rankedOf(state);
+  });
+}
+
 function rerank(
   doc: EditorDocument,
   page: Page,

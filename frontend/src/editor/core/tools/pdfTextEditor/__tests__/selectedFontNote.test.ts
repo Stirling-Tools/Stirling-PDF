@@ -12,6 +12,10 @@ import {
   forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  resetFontCompletions,
+  setClosestFont,
+} from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 const SERIF_BOLD = "1".repeat(64);
@@ -141,6 +145,20 @@ describe("selectedFontNote", () => {
     expect(
       selectedFontNote(page([run("a", "pdf:0:Acme Sans", "Hi")]), ["a"]),
     ).toEqual({ kind: "embeddedUnknown" });
+  });
+
+  it("names the font that completes an embedded one, and how sure it is", () => {
+    const pages = page([run("a", "pdf:41:Acme Sans", "Hi")]);
+
+    setClosestFont("pdf:41:Acme Sans", "Times-Roman");
+
+    expect(selectedFontNote(pages, ["a"])).toEqual({
+      kind: "completed",
+      name: "Times-Roman",
+      source: "closest",
+    });
+    resetFontCompletions();
+    expect(selectedFontNote(pages, ["a"])).toEqual({ kind: "embeddedUnknown" });
   });
 
   it("says nothing for a selection mixing device and document fonts", () => {

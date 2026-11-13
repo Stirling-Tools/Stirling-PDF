@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFontCompletionsGeneration } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -283,6 +284,7 @@ function useSelectedFontNote(
   scanNote: ScanNote,
 ): string | null {
   const { t } = useTranslation();
+  const completions = useFontCompletionsGeneration();
   return useMemo(() => {
     const note = selectedFontNote(state.pages, selection.runIds);
     if (!note) return null;
@@ -318,6 +320,18 @@ function useSelectedFontNote(
           "{{name}} · a character it lacks falls back to {{fallback}}.",
           { name: note.name, fallback: note.fallback },
         );
+      case "completed":
+        return note.source === "original"
+          ? t(
+              "pdfTextEditor.inspector.fontCompletedOriginal",
+              "Embedded font · characters it lacks are drawn in {{name}}, the same font.",
+              { name: note.name },
+            )
+          : t(
+              "pdfTextEditor.inspector.fontCompletedClosest",
+              "Embedded font · characters it lacks are drawn in {{name}}, the closest match available.",
+              { name: note.name },
+            );
       case "gap":
         return t(
           "pdfTextEditor.inspector.fontGap",
@@ -325,7 +339,7 @@ function useSelectedFontNote(
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
     }
-  }, [state.pages, selection.runIds, scanNote, t]);
+  }, [state.pages, selection.runIds, scanNote, t, completions]);
 }
 
 function EmptySidebar({

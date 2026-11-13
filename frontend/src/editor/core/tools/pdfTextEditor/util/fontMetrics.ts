@@ -65,27 +65,20 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
     const t = readTableDirectory(dv);
     if (!t) return null;
     const head = t.get("head");
-    const hhea = t.get("hhea");
-    const hmtx = t.get("hmtx");
-    if (!head || !hhea || !hmtx) return null;
+    if (!head) return null;
     const upm = dv.getUint16(head.offset + 18) || 1000;
     const em = (v: number) => Math.round((v * 1000) / upm);
-    const numHMetrics = dv.getUint16(hhea.offset + 34);
     const cmap = parseTrueTypeCmap(bytes);
-    if (!cmap || numHMetrics === 0) return null;
-    const advanceOf = (gid: number) =>
-      dv.getUint16(hmtx.offset + Math.min(gid, numHMetrics - 1) * 4);
+    if (!cmap) return null;
+    const advances = advancesOf(dv, t, cmap);
+    if (!advances?.has(0x20)) return null;
 
-    const glyphTop = glyphTopReader(dv, t, head.offset);
-    const advances = new Map<number, number>();
+    const glyphRange = glyphRangeReader(dv, t);
     const tops = new Map<number, number>();
     for (const [cp, gid] of cmap) {
-      if (gid <= 0) continue;
-      advances.set(cp, em(advanceOf(gid)));
-      const y = glyphTop(gid);
-      if (y !== null) tops.set(cp, em(y));
+      const range = gid > 0 ? glyphRange?.(gid) : null;
+      if (range) tops.set(cp, em(dv.getInt16(range.start + 8)));
     }
-    if (!advances.has(0x20)) return null;
     const top = (ch: string) => tops.get(ch.charCodeAt(0)) ?? null;
 
     const os2 = t.get("OS/2");
@@ -136,24 +129,62 @@ function outlinesKey(bytes: Uint8Array, glyf: SfntTable | undefined): string {
   return `${tableChecksum(data)}:${glyf.length}`;
 }
 
-function glyphTopReader(
+function advancesOf(
   dv: DataView,
   t: Map<string, SfntTable>,
-  headOffset: number,
-): (gid: number) => number | null {
+  cmap: Map<number, number>,
+): Map<number, number> | null {
+  const head = t.get("head");
+  const hhea = t.get("hhea");
+  const hmtx = t.get("hmtx");
+  if (!head || !hhea || !hmtx) return null;
+  const upm = dv.getUint16(head.offset + 18) || 1000;
+  const numHMetrics = dv.getUint16(hhea.offset + 34);
+  if (numHMetrics === 0) return null;
+  const advances = new Map<number, number>();
+  for (const [cp, gid] of cmap) {
+    if (gid <= 0) continue;
+    const at = hmtx.offset + Math.min(gid, numHMetrics - 1) * 4;
+    advances.set(cp, Math.round((dv.getUint16(at) * 1000) / upm));
+  }
+  return advances;
+}
+
+/** Each mapped code point's advance in thousandths of an em, or null when the font has no cmap or horizontal metrics. */
+export function charAdvances(bytes: Uint8Array): Map<number, number> | null {
+  if (bytes.length < 12) return null;
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const t = readTableDirectory(dv);
+  const cmap = t && parseTrueTypeCmap(bytes);
+  return t && cmap ? advancesOf(dv, t, cmap) : null;
+}
+
+export interface GlyphRange {
+  start: number;
+  end: number;
+}
+
+/** Where each glyph's outline lies in the font bytes; null for a font without TrueType outlines, and the reader gives null for an empty or out-of-range glyph. */
+export function glyphRangeReader(
+  dv: DataView,
+  t: Map<string, SfntTable>,
+): ((gid: number) => GlyphRange | null) | null {
+  const head = t.get("head");
   const loca = t.get("loca");
   const glyf = t.get("glyf");
-  if (!loca || !glyf) return () => null;
-  const longOffsets = dv.getInt16(headOffset + 50) === 1;
-  return (gid) => {
-    const start = longOffsets
+  if (!head || !loca || !glyf) return null;
+  const longOffsets = dv.getInt16(head.offset + 50) === 1;
+  const entry = longOffsets ? 4 : 2;
+  const offsetAt = (gid: number) =>
+    longOffsets
       ? dv.getUint32(loca.offset + gid * 4)
       : dv.getUint16(loca.offset + gid * 2) * 2;
-    const end = longOffsets
-      ? dv.getUint32(loca.offset + (gid + 1) * 4)
-      : dv.getUint16(loca.offset + (gid + 1) * 2) * 2;
-    if (end <= start) return null;
-    return dv.getInt16(glyf.offset + start + 8);
+  return (gid) => {
+    if (gid < 0 || (gid + 2) * entry > loca.length) return null;
+    const start = offsetAt(gid);
+    const end = offsetAt(gid + 1);
+    if (end <= start || end > glyf.length) return null;
+    return { start: glyf.offset + start, end: glyf.offset + end };
   };
 }
 

@@ -8,14 +8,16 @@ import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaV
 import {
   faceStyleFlags,
   knownFamilyOf,
-  pickLocalFontFace,
   pickRequestedFace,
   resolveRequested,
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
+  fontCompletionFor,
+  fontNameRefused,
+} from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import {
   getExternalFontBytes,
-  loadExternalFontBytes,
   loadedExternalFonts,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 
@@ -33,16 +35,6 @@ export interface StyleCapability {
 }
 
 const NONE: StyleCapability = { family: null, source: null };
-
-/** Families {@link warmDocumentDeviceFonts} has already looked up this session. */
-const attempted = new Set<string>();
-let attemptedAgainst: LocalFont[] | null = null;
-
-/** Test hook: forget which document families have been matched. */
-export function resetDocumentFontMatchCache(): void {
-  attempted.clear();
-  attemptedAgainst = null;
-}
 
 /** The installed face for `family` in the requested style, or null. */
 function deviceFaceFor(
@@ -110,8 +102,11 @@ export function canToggleItalic(
  * subset from the device font keeps it.
  */
 export function fallbackFamilyFor(fontId: string): string {
+  const completion = fontCompletionFor(fontId);
+  if (completion) return completion.family;
   const family = familyOf(fontId);
-  if (family && getExternalFontBytes(family)) return family;
+  if (family && !fontNameRefused(fontId) && getExternalFontBytes(family))
+    return family;
   return helveticaVariantFor(fontId);
 }
 
@@ -123,39 +118,4 @@ export function fallbackFamilyFor(fontId: string): string {
  */
 export function fallbackFontIdFor(family: string): string {
   return `${getExternalFontBytes(family) ? "device" : "base14"}:${family}`;
-}
-
-/**
- * Read the installed faces matching the DOCUMENT's own families, so a later
- * edit that outgrows a subset has real bytes to complete it from.
- *
- * Only exact family matches are loaded - "Calibri" never warms "Calibri Light"
- * - so recognition stays a match, not a guess. Returns the families matched.
- */
-export async function warmDocumentDeviceFonts(
-  fontIds: Iterable<string>,
-): Promise<string[]> {
-  const fonts = loadedExternalFonts();
-  if (!fonts || fonts.length === 0) return [];
-  if (fonts !== attemptedAgainst) {
-    attempted.clear();
-    attemptedAgainst = fonts;
-  }
-  const wanted = new Set<string>();
-  for (const id of fontIds) {
-    const family = familyOf(id);
-    // base-14 renders everywhere already; nothing to complete.
-    if (!family || nearestStandardFont(family) === family) continue;
-    // Every edit re-runs this over the whole page model, and scanning a few
-    // thousand installed faces per keystroke is not free.
-    if (attempted.has(family)) continue;
-    attempted.add(family);
-    if (getExternalFontBytes(family)) continue;
-    if (pickLocalFontFace(fonts, family)) wanted.add(family);
-  }
-  const matched: string[] = [];
-  for (const family of wanted) {
-    if (await loadExternalFontBytes(family)) matched.push(family);
-  }
-  return matched;
 }

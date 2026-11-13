@@ -7416,6 +7416,8 @@ zoomDesc = "Zoom in / out"
 
 [pdfTextEditor.inspector]
 document = "Document"
+fontCompletedClosest = "Embedded font · characters it lacks are drawn in {{name}}, the closest match available."
+fontCompletedOriginal = "Embedded font · characters it lacks are drawn in {{name}}, the same font."
 fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
 fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}."
 fontUnknownCoverage = "{{name}} · a character it lacks falls back to {{fallback}}."

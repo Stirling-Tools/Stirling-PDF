@@ -4,14 +4,16 @@ import {
   fallbackFamilyFor,
   fallbackFontIdFor,
   italicCapability,
-  resetDocumentFontMatchCache,
-  warmDocumentDeviceFonts,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
+  resetFontCompletions,
+  resolveOriginalFonts,
+} from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import {
   listLocalFonts,
-  loadLocalFontBytes,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 // The editor used to answer "make this italic" for ANY font by swapping the run
@@ -37,6 +39,9 @@ const CALIBRI: LocalFont[] = [
     postscriptName: "Calibri-Italic",
   },
 ];
+
+// PDFium gives no name or program for these fonts, so only the family in the font id is left.
+const NO_FONT_DATA = {} as WrappedPdfiumModule;
 
 /** An installed family with no italic cut at all. */
 const STENCIL: LocalFont[] = [
@@ -66,7 +71,7 @@ function stubQueryLocalFonts(fonts: LocalFont[] | null): void {
 
 beforeEach(() => {
   resetLocalFontsCache();
-  resetDocumentFontMatchCache();
+  resetFontCompletions();
   stubQueryLocalFonts(null);
 });
 
@@ -131,7 +136,7 @@ describe("fallbackFamilyFor", () => {
   it("keeps a subset family whose real face is loaded", async () => {
     stubQueryLocalFonts(CALIBRI);
     await listLocalFonts();
-    await warmDocumentDeviceFonts(["pdf:4242:Calibri"]);
+    await resolveOriginalFonts(NO_FONT_DATA, ["pdf:4242:Calibri"], () => true);
 
     // Completing the subset now costs the document nothing: the edit re-emits
     // in Calibri's real bytes rather than Helvetica.
@@ -142,28 +147,10 @@ describe("fallbackFamilyFor", () => {
   it("does not forget the face on the NEXT edit", async () => {
     stubQueryLocalFonts(CALIBRI);
     await listLocalFonts();
-    await warmDocumentDeviceFonts(["pdf:4242:Calibri"]);
+    await resolveOriginalFonts(NO_FONT_DATA, ["pdf:4242:Calibri"], () => true);
 
     // The id an edit leaves behind must still resolve to the same real family.
     const nextId = fallbackFontIdFor(fallbackFamilyFor("pdf:4242:Calibri"));
     expect(fallbackFamilyFor(nextId)).toBe("Calibri");
-  });
-});
-
-describe("warmDocumentDeviceFonts", () => {
-  it("matches only the document's own families, exactly", async () => {
-    stubQueryLocalFonts(CALIBRI);
-    await listLocalFonts();
-    const matched = await warmDocumentDeviceFonts([
-      "base14:Helvetica",
-      "pdf:1:Calibri",
-      "pdf:2:SomeFontNobodyHas",
-    ]);
-    expect(matched).toEqual(["Calibri"]);
-    expect(await loadLocalFontBytes("SomeFontNobodyHas")).toBeNull();
-  });
-
-  it("is a no-op before the user loads their device fonts", async () => {
-    expect(await warmDocumentDeviceFonts(["pdf:1:Calibri"])).toEqual([]);
   });
 });

@@ -25,10 +25,8 @@ import {
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { deviceFontIdFor } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
-import {
-  italicCapability,
-  resetDocumentFontMatchCache,
-} from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 
 const requestsAtImport = get.mock.calls.length;
 
@@ -93,7 +91,7 @@ describe("server fonts", () => {
     get.mockReset();
     forgetServerFontList();
     resetLocalFontsCache();
-    resetDocumentFontMatchCache();
+    resetFontCompletions();
     delete (window as unknown as { queryLocalFonts?: unknown }).queryLocalFonts;
   });
 
