@@ -85,6 +85,7 @@ function fakeStore(
       docPtr: 1,
       ownedFont: (id: string) => owned.get(id),
       registerOwnedFont: (font: { id: string }) => owned.set(font.id, font),
+      recordEmbeddedFontFile: () => {},
       module: {
         FPDFText_LoadFont: () => (pdfiumLoadsFont ? FONT_HANDLE : 0),
         pdfium: {
