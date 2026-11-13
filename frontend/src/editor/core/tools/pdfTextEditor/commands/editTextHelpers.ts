@@ -108,8 +108,22 @@ export function recordUndrawableChars(chars: string): void {
   recordDroppedChars(chars, "");
 }
 
+let measuring = false;
+
+/** Run `measure`, which emits text only to size it, without adding to the characters a save warns were dropped. */
+export function withoutDroppedChars<T>(measure: () => T): T {
+  const was = measuring;
+  measuring = true;
+  try {
+    return measure();
+  } finally {
+    measuring = was;
+  }
+}
+
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
 function recordDroppedChars(original: string, kept: string): void {
+  if (measuring) return;
   const keptSet = new Set(kept);
   for (const ch of original) {
     if (!keptSet.has(ch) && ch.trim().length > 0) droppedBase14Chars.add(ch);
