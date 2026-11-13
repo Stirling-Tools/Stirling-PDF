@@ -1559,6 +1559,7 @@ test.describe("Files page", () => {
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toContainText("Clear 3 files from recents?");
+      await expect(dialog).toContainText("This can't be undone.");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
       await expect(rows).toHaveCount(2);

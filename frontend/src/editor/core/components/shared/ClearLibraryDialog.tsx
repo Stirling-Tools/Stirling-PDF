@@ -59,7 +59,7 @@ export function ClearLibraryDialog({
         <Text size="sm">
           {t(
             "fileSidebar.clearRecents.body",
-            "Clear {{count}} file(s) from recents?",
+            "Clear {{count}} file(s) from recents? This can't be undone.",
             { count: clearCount },
           )}
         </Text>

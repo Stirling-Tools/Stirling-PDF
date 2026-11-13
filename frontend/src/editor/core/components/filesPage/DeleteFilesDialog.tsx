@@ -142,7 +142,7 @@ export function DeleteFilesDialog({
             {cloudCount === 0
               ? t(
                   "filesPage.deleteFilesLocalBody",
-                  "Remove {{count}} file(s) from your library? This clears them from Stirling PDF, not from your computer.",
+                  "Remove {{count}} file(s) from your library? This clears them from Stirling PDF, not from your computer, and can't be undone.",
                   { count: total },
                 )
               : t(
