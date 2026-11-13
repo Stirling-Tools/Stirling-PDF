@@ -11,7 +11,11 @@ mod macos {
     use tauri::AppHandle;
 
     #[tauri::command]
-    pub fn print_pdf_file_native(app: AppHandle, file_path: String, title: Option<String>) -> Result<(), String> {
+    pub fn print_pdf_file_native(
+        app: AppHandle,
+        file_path: String,
+        title: Option<String>,
+    ) -> Result<(), String> {
         if !Path::new(&file_path).exists() {
             return Err(format!("Print file does not exist: {}", file_path));
         }
@@ -29,13 +33,12 @@ mod macos {
 
                 let print_info = NSPrintInfo::sharedPrintInfo();
                 let print_operation = unsafe {
-                    document
-                        .printOperationForPrintInfo_scalingMode_autoRotate(
-                            Some(&print_info),
-                            PDFPrintScalingMode::PageScaleDownToFit,
-                            true,
-                            mtm,
-                        )
+                    document.printOperationForPrintInfo_scalingMode_autoRotate(
+                        Some(&print_info),
+                        PDFPrintScalingMode::PageScaleDownToFit,
+                        true,
+                        mtm,
+                    )
                 }
                 .ok_or_else(|| "PDFKit did not create a print operation".to_string())?;
 
@@ -50,11 +53,10 @@ mod macos {
             });
 
             let _ = sender.send(result);
-        }).map_err(|error| error.to_string())?;
+        })
+        .map_err(|error| error.to_string())?;
 
-        receiver
-            .recv()
-            .map_err(|error| error.to_string())?
+        receiver.recv().map_err(|error| error.to_string())?
     }
 }
 
