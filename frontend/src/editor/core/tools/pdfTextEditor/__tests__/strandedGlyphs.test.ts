@@ -40,6 +40,13 @@ describe("planPartialEdit leaves no old glyph inside a new word", () => {
     expect(keptText(run, "Downloads", "Xk Quixotic")).not.toMatch(/[a-z]/i);
   });
 
+  it("retypes a letter left stranded once its neighbours are retyped", () => {
+    const run = glyphPerObjectRun("Quarterly report");
+    expect(
+      keptText(run, "Quarterly report", "Annual summary").replace(/_/g, ""),
+    ).not.toMatch(/l/);
+  });
+
   it("keeps the letters around a one-letter typo fix", () => {
     const run = glyphPerObjectRun("cat");
     expect(keptText(run, "cat", "cut")).toBe("c_t");

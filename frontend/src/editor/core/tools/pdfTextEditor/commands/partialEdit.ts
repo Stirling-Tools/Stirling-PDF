@@ -333,11 +333,14 @@ function withoutStrandedGlyphs(
   }
   if (stranded.size === 0) return { keptA, keptB, alignment };
   const kept = alignment.filter(({ bIdx }) => !stranded.has(bIdx));
-  return {
-    keptA: new Set(kept.map(({ aIdx }) => aIdx)),
-    keptB: new Set(kept.map(({ bIdx }) => bIdx)),
-    alignment: kept,
-  };
+  // Retyping one letter can strand its neighbour ("ua" then "l" of "Annual"), so repeat.
+  return withoutStrandedGlyphs(
+    prevText,
+    nextText,
+    new Set(kept.map(({ aIdx }) => aIdx)),
+    new Set(kept.map(({ bIdx }) => bIdx)),
+    kept,
+  );
 }
 
 export function planPartialEdit(
