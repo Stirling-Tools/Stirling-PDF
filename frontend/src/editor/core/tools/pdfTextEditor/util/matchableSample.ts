@@ -13,6 +13,7 @@ const MAX_RUNS_CAPTURED = 4; // a shorter run rarely captures where the longest 
 export interface MatchableSample {
   page: Page;
   captured: ScanEditState;
+  text: string;
 }
 
 /** The longest upright run in `fontId`, captured for ranking; turned text is skipped because measuring it turns the whole page upright and back. */
@@ -30,7 +31,7 @@ export function matchableSample(
   runs.sort((a, b) => b.letters - a.letters);
   for (const { page, run } of runs.slice(0, MAX_RUNS_CAPTURED)) {
     const captured = captureScanEdit(doc.module, run, page);
-    if (captured && !captured.frame) return { page, captured };
+    if (captured && !captured.frame) return { page, captured, text: run.text };
   }
   return null;
 }

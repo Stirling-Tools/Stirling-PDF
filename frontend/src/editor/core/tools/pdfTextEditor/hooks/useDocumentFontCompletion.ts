@@ -32,9 +32,12 @@ import { fitInSlices } from "@editor/tools/pdfTextEditor/commands/scanFitSlices"
 import {
   loadBundledScanFaces,
   loadDeviceScanFacesIfAllowed,
+  loadScriptScanFaces,
+  scanScriptsOf,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 const closestTried = new WeakMap<EditorDocument, Set<string>>();
+const unsampledAt = new WeakMap<EditorDocument, Map<string, number>>();
 
 /** Changes whenever a completion font is found or forgotten. */
 export function useFontCompletionsGeneration(): number {
@@ -80,6 +83,8 @@ export function useDocumentFontCompletion(
   useEffect(() => {
     selectedFont.current = selectedFontOf(state.pages, selection.runIds);
   }, [state.pages, selection.runIds]);
+  const wakeMatching = useRef<() => void>(() => {});
+  useEffect(() => wakeMatching.current(), [state.pages]);
 
   useEffect(() => {
     const doc = store.document;
@@ -96,13 +101,17 @@ export function useDocumentFontCompletion(
     if (!doc || !fontsKey) return;
     const tried = closestTried.get(doc) ?? new Set<string>();
     closestTried.set(doc, tried);
+    const unsampled = unsampledAt.get(doc) ?? new Map<string, number>();
+    unsampledAt.set(doc, unsampled);
     const fontIds = fontsKey.split("\n");
     let stopped = false;
     let running = false;
+    let wokenWhileRunning = false;
     const live = () => !stopped && store.document === doc;
 
     const wanted = (fontId: string) => {
       if (tried.has(fontId) || fontCompletionFor(fontId)) return false;
+      if (unsampled.get(fontId) === doc.loadedPages().length) return false;
       if (!fontCanBeCompleted(doc.module, fontId)) return false;
       // With font lists in, the original gets its chance first; one found later still takes over.
       return !loadedExternalFonts()?.length || originalFontLookedUp(fontId);
@@ -115,7 +124,10 @@ export function useDocumentFontCompletion(
     };
 
     const matchClosest = async () => {
-      if (running) return;
+      if (running) {
+        wokenWhileRunning = true;
+        return;
+      }
       running = true;
       try {
         await Promise.all([
@@ -123,9 +135,20 @@ export function useDocumentFontCompletion(
           loadDeviceScanFacesIfAllowed(),
         ]).catch(() => undefined);
         for (let fontId = nextFont(); fontId && live(); fontId = nextFont()) {
-          tried.add(fontId);
           const sample = matchableSample(doc, fontId);
-          if (!sample) continue;
+          if (!sample) {
+            unsampled.set(fontId, doc.loadedPages().length);
+            continue;
+          }
+          unsampled.delete(fontId);
+          tried.add(fontId);
+          await loadScriptScanFaces(scanScriptsOf(sample.text)).catch(
+            () => undefined,
+          );
+          if (!live()) {
+            tried.delete(fontId);
+            break;
+          }
           const ranked = await fitInSlices(
             () => rankFacesForDrawnText(doc, sample.page, sample.captured),
             live,
@@ -140,14 +163,20 @@ export function useDocumentFontCompletion(
       } finally {
         running = false;
       }
+      if (wokenWhileRunning && live()) {
+        wokenWhileRunning = false;
+        void matchClosest();
+      }
     };
 
     const wake = () => void matchClosest();
+    wakeMatching.current = wake;
     const unsubscribeCompletions = subscribeFontCompletions(wake);
     const unsubscribeFonts = subscribeExternalFonts(wake);
     wake();
     return () => {
       stopped = true;
+      wakeMatching.current = () => {};
       unsubscribeCompletions();
       unsubscribeFonts();
     };
