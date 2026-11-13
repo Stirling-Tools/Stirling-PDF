@@ -106,7 +106,7 @@ function labels(): string[] {
 
 beforeEach(() => {
   get.mockReset();
-  jarFetch.mockClear();
+  jarFetch.mockReset();
   vi.stubGlobal("fetch", jarFetch);
   forgetServerFontList();
   resetLocalFontsCache();
