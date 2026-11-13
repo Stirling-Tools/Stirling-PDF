@@ -182,7 +182,9 @@ function groupAndMeasure(
   // LineGrouper always runs (merges per-glyph/per-word source objects into
   // one line).
   const blockKey = structureBlockKey(doc, page.index);
-  LineGrouper.apply(page, blockKey);
+  LineGrouper.apply(page, blockKey, (run) =>
+    fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
+  );
   if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
   // One walk feeds both: each was reading the same characters with its
   // own WASM round-trips, doubling the cost of every page read.
@@ -191,6 +193,18 @@ function groupAndMeasure(
     inferRunCharSpacing(page, geometry);
     captureCharPositions(geometry);
   }
+}
+
+function fontSpaceAdvanceEm(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): number | null {
+  const fontPtr = objPtr ? m.FPDFTextObj_GetFont(objPtr) : 0;
+  if (!fontPtr) return null;
+  const widthPtr = scratchPtr(m, SCRATCH.readerSpaceWidth, 4);
+  // Font size 1 makes PDFium report the width in ems.
+  if (!m.FPDFFont_GetGlyphWidth(fontPtr, 0x20, 1, widthPtr)) return null;
+  return m.pdfium.getValue(widthPtr, "float");
 }
 
 /** Every backing PDFium object pointer mapped to its post-grouping run. */
