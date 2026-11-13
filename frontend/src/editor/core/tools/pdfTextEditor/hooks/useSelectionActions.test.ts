@@ -31,7 +31,10 @@ import {
   loadServerFonts,
   forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
-import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  listLocalFonts,
+  resetLocalFontsCache,
+} from "@editor/tools/pdfTextEditor/util/localFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   prefitScanRun,
@@ -311,6 +314,27 @@ describe("useSelectionActions font changes", () => {
       `${SERVER_FONTS_URL}/${ITALIC}`,
       expect.anything(),
     );
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("keeps a run's font when its device italic face cannot be embedded", async () => {
+    const cff = new Uint8Array([0x4f, 0x54, 0x54, 0x4f, 0, 0]);
+    const deviceFace = (style: string) => ({
+      family: "Acme Serif",
+      style,
+      postscriptName: `AcmeSerif-${style}`,
+      blob: async () => new Blob([cff]),
+    });
+    (window as unknown as { queryLocalFonts: unknown }).queryLocalFonts =
+      async () => [deviceFace("Regular"), deviceFace("Italic")];
+    await listLocalFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "device:Acme Serif")],
+      ["a"],
+    );
+
+    await actionsFor(store).toggleItalic();
+
     expect(dispatch).not.toHaveBeenCalled();
   });
 

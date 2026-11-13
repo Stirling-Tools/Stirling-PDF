@@ -16,9 +16,9 @@ import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import {
   familyOptions,
   isLocalFontAccessSupported,
-  listLocalFonts,
   listLocalFontsIfGranted,
   loadedLocalFonts,
+  retryLocalFonts,
   subscribeLocalFonts,
   type FontFamilyOption,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -119,7 +119,7 @@ export function FontFamilySelect({
     setLoading(true);
     setNotice(null);
     try {
-      const fonts = await listLocalFonts();
+      const fonts = await retryLocalFonts();
       // deviceFamilies recomputes off the store, so only the empty outcomes
       // need reporting here.
       if (!fonts) setNotice("unavailable");

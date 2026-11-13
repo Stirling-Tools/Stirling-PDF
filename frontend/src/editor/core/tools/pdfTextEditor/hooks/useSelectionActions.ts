@@ -258,7 +258,10 @@ export function useSelectionActions(store: EditorStore) {
     // Embedding is async and Command.apply is not, so warm the bytes first.
     const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
     for (const target of targets) {
-      if (target.device && (await prepareExternalFont(target.family))) continue;
+      if (target.device) {
+        if (await prepareExternalFont(target.family)) continue;
+        if (!doc || !tryEmbedDeviceFont(doc, target.family)) continue;
+      }
       ready.push(target);
     }
     await dispatchFamilyChanges(
