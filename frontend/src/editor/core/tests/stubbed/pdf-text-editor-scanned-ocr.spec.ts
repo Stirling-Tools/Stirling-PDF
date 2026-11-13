@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
@@ -126,6 +126,22 @@ async function bitmapSig(page: Page): Promise<string> {
     for (let k = 0; k < d.length; k += 16) h = (h * 31 + d[k]) | 0;
     return `${c.width}x${c.height}:${h}`;
   }, PAGE_TESTID);
+}
+
+// The picker slides in for ~150ms; a click aimed while it moves can land beside the button.
+async function untilStill(target: Locator): Promise<void> {
+  let prev = "";
+  await expect
+    .poll(
+      async () => {
+        const box = JSON.stringify(await target.boundingBox());
+        const still = box !== "null" && box === prev;
+        prev = box;
+        return still;
+      },
+      { message: "control never stopped moving", intervals: [100] },
+    )
+    .toBe(true);
 }
 
 // Wait until the bitmap differs from `from` (when given), then holds still.
@@ -801,6 +817,7 @@ test("a scanned edit applies the best font, the picker swaps it, and undo puts i
 
   await snap(page, "edited");
   const edited = await bitmapSig(page);
+  await untilStill(choices.nth(1));
   await choices.nth(1).click();
   await expect(choices).toHaveCount(0);
   await settle(page, edited);
@@ -808,7 +825,9 @@ test("a scanned edit applies the best font, the picker swaps it, and undo puts i
   await open.click();
   await expect(applied).toHaveCount(1, { timeout: 30_000 });
   await expect(applied).toContainText(runnerUp);
-  await page.getByTestId("pdf-editor-scan-font-done").click();
+  const done = page.getByTestId("pdf-editor-scan-font-done");
+  await untilStill(done);
+  await done.click();
   await expect(choices).toHaveCount(0);
 
   const picked = await bitmapSig(page);
