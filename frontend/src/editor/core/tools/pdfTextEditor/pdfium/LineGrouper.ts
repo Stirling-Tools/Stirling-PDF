@@ -34,6 +34,8 @@ const BASELINE_TOLERANCE = 0.4;
 const ABS_MAX_GAP_PT = 12;
 
 const WORD_GAP_MIN_RATIO = 0.2;
+// A condensed font's whole space can be narrower than WORD_GAP_MIN_RATIO; past this share of it a gap still reads as one.
+const NARROW_SPACE_SHARE = 0.6;
 const FALLBACK_SPACE_UNIT_RATIO = 0.5;
 const MIN_SPACE_UNIT_RATIO = 0.3;
 const MAX_SPACE_UNIT_RATIO = 1;
@@ -81,14 +83,21 @@ function fontSpaceEm(
   return narrowest;
 }
 
+function minWordGapRatio(spaceEm: number | null): number {
+  return spaceEm !== null && spaceEm < WORD_GAP_MIN_RATIO
+    ? NARROW_SPACE_SHARE * spaceEm
+    : WORD_GAP_MIN_RATIO;
+}
+
 function lineSpaceUnitRatio(
   members: TextRun[],
   spaceAdvance: SpaceAdvance,
+  minGap: number,
 ): number {
   const wordGaps: number[] = [];
   for (let i = 1; i < members.length; i++) {
     const ratio = junctionGapRatio(members[i - 1], members[i]);
-    if (ratio > WORD_GAP_MIN_RATIO) wordGaps.push(ratio);
+    if (ratio > minGap) wordGaps.push(ratio);
   }
   if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
   wordGaps.sort((a, b) => a - b);
@@ -103,8 +112,12 @@ function lineSpaceUnitRatio(
   return clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]);
 }
 
-function spacesForGap(gapRatio: number, unitRatio: number): number {
-  if (gapRatio <= WORD_GAP_MIN_RATIO) return 0;
+function spacesForGap(
+  gapRatio: number,
+  unitRatio: number,
+  minGap: number,
+): number {
+  if (gapRatio <= minGap) return 0;
   const units = gapRatio / unitRatio;
   if (units < MULTI_SPACE_UNITS) return 1;
   return Math.max(2, Math.round(units));
@@ -286,7 +299,12 @@ export class LineGrouper {
       const parts: string[] = [memberTexts[0]];
       const memberCharStarts: number[] = [0];
       let cumulativeLen = memberTexts[0].length;
-      const spaceUnitRatio = lineSpaceUnitRatio(group.members, spaceAdvance);
+      const minGap = minWordGapRatio(fontSpaceEm(group.members, spaceAdvance));
+      const spaceUnitRatio = lineSpaceUnitRatio(
+        group.members,
+        spaceAdvance,
+        minGap,
+      );
       for (let i = 1; i < group.members.length; i++) {
         const prev = group.members[i - 1];
         const cur = group.members[i];
@@ -295,6 +313,7 @@ export class LineGrouper {
         const extraSpaces = spacesForGap(
           junctionGapRatio(prev, cur),
           spaceUnitRatio,
+          minGap,
         );
         const prevEndsInSpace = /\s/.test(prevTail);
         const curStartsWithSpace = /\s/.test(curHead);
