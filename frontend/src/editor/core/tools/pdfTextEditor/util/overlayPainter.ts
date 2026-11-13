@@ -315,7 +315,10 @@ function plainOffset(
     const children = Array.from(el.childNodes);
     const isLineChild = (n: Node) =>
       n instanceof HTMLElement && !isLineBreak(n);
+    // A <br> just before the caret already opened that line in the truncated text.
+    const afterBreak = idx > 0 && isLineBreak(children[idx - 1]);
     if (
+      !afterBreak &&
       children.slice(0, idx).some(isLineChild) &&
       children.slice(idx).some(isLineChild)
     ) {

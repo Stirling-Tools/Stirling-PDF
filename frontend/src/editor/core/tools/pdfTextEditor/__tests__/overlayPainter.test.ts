@@ -186,6 +186,12 @@ describe("caret offsets", () => {
       "<div>a</div><div><br></div><div>b</div>",
       "a\n\nb",
     ],
+    ["a break between two blocks", "<div>a</div><br><div>b</div>", "a\n\nb"],
+    [
+      "two breaks between two blocks",
+      "<div>a</div><br><br><div>b</div>",
+      "a\n\n\nb",
+    ],
   ])("round-trips every offset through %s", (_shape, html, text) => {
     const el = host();
     el.innerHTML = html;
