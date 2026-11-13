@@ -28,15 +28,8 @@ export const PDFACTION_URI = 3;
 export const FLAT_PRINT = 2;
 
 /**
- * Convert an RGBA pixel buffer to BGRA (PDFium's expected format) **in place
- * inside the WASM heap** with a single bulk memcpy.
- *
- * When `stride === width * 4` the copy is a single `HEAPU8.set()`.
- * When the bitmap has padding (stride > width * 4), rows are copied
- * individually to skip the padding bytes.
- *
- * This is ~100× faster than per-pixel `m.pdfium.setValue()` calls for
- * large images.
+ * Convert an RGBA pixel buffer to BGRA (PDFium's expected format) directly
+ * into the WASM heap at `bufferPtr`.
  */
 export function copyRgbaToBgraHeap(
   m: WrappedPdfiumModule,
@@ -47,33 +40,81 @@ export function copyRgbaToBgraHeap(
   stride: number,
 ): void {
   const rowBytes = width * 4;
+  if (!Number.isInteger(width) || !Number.isInteger(height)) {
+    throw new RangeError("Bitmap dimensions must be integers");
+  }
+  const expectedBytes = rowBytes * height;
+  if (rgba.byteLength !== expectedBytes) {
+    throw new RangeError(
+      `Expected ${expectedBytes} RGBA bytes, got ${rgba.byteLength}`,
+    );
+  }
+  const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
+
+  const canUseUint32 =
+    (rgba.byteOffset & 3) === 0 && (bufferPtr & 3) === 0 && (stride & 3) === 0;
 
   if (stride === rowBytes) {
-    // Fast path: no padding — single bulk copy after swizzle
-    const bgra = new Uint8Array(rgba.length);
-    for (let i = 0; i < rgba.length; i += 4) {
-      bgra[i] = rgba[i + 2]; // B
-      bgra[i + 1] = rgba[i + 1]; // G
-      bgra[i + 2] = rgba[i]; // R
-      bgra[i + 3] = rgba[i + 3]; // A
-    }
-    (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8.set(
-      bgra,
-      bufferPtr,
-    );
-  } else {
-    // Stride has padding — swizzle + copy row by row
-    const rowBuf = new Uint8Array(rowBytes);
-    const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
-    for (let y = 0; y < height; y++) {
-      const srcRowStart = y * rowBytes;
-      for (let x = 0; x < rowBytes; x += 4) {
-        rowBuf[x] = rgba[srcRowStart + x + 2]; // B
-        rowBuf[x + 1] = rgba[srcRowStart + x + 1]; // G
-        rowBuf[x + 2] = rgba[srcRowStart + x]; // R
-        rowBuf[x + 3] = rgba[srcRowStart + x + 3]; // A
+    if (canUseUint32) {
+      const src = new Uint32Array(
+        rgba.buffer,
+        rgba.byteOffset,
+        rgba.byteLength >> 2,
+      );
+      const dst = new Uint32Array(heap.buffer, bufferPtr, src.length);
+      const len = src.length;
+      for (let i = 0; i < len; i++) {
+        const px = src[i];
+        dst[i] =
+          ((px & 0x000000ff) << 16) |
+          ((px & 0x00ff0000) >> 16) |
+          (px & 0xff00ff00);
       }
-      heap.set(rowBuf, bufferPtr + y * stride);
+    } else {
+      const len = rgba.length;
+      for (let i = 0, dst = bufferPtr; i < len; i += 4, dst += 4) {
+        heap[dst] = rgba[i + 2];
+        heap[dst + 1] = rgba[i + 1];
+        heap[dst + 2] = rgba[i];
+        heap[dst + 3] = rgba[i + 3];
+      }
+    }
+  } else {
+    if (canUseUint32) {
+      const strideWords = stride >> 2;
+      const widthWords = width;
+      const src = new Uint32Array(
+        rgba.buffer,
+        rgba.byteOffset,
+        rgba.byteLength >> 2,
+      );
+      const dst = new Uint32Array(
+        heap.buffer,
+        bufferPtr,
+        (stride * height) >> 2,
+      );
+      for (let y = 0; y < height; y++) {
+        const srcRow = y * widthWords;
+        const dstRow = y * strideWords;
+        for (let x = 0; x < widthWords; x++) {
+          const px = src[srcRow + x];
+          dst[dstRow + x] =
+            ((px & 0x000000ff) << 16) |
+            ((px & 0x00ff0000) >> 16) |
+            (px & 0xff00ff00);
+        }
+      }
+    } else {
+      for (let y = 0; y < height; y++) {
+        const srcRowStart = y * rowBytes;
+        const dstRowStart = bufferPtr + y * stride;
+        for (let x = 0; x < rowBytes; x += 4) {
+          heap[dstRowStart + x] = rgba[srcRowStart + x + 2];
+          heap[dstRowStart + x + 1] = rgba[srcRowStart + x + 1];
+          heap[dstRowStart + x + 2] = rgba[srcRowStart + x];
+          heap[dstRowStart + x + 3] = rgba[srcRowStart + x + 3];
+        }
+      }
     }
   }
 }
