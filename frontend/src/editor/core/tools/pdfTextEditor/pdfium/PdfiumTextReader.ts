@@ -1,3 +1,7 @@
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
@@ -59,6 +63,7 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    doc.claimArtifactMarks(page.index);
     const m = doc.module;
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
@@ -243,7 +248,7 @@ function collectCharGeometry(
   const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
   const out: CharGeometry[] = [];
   for (let i = 0; i < charCount; i += 1) {
-    const cp = m.FPDFText_GetUnicode(textPagePtr, i);
+    const cp = drawnCodePoint(m.FPDFText_GetUnicode(textPagePtr, i));
     const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
     const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
     const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
@@ -881,7 +886,7 @@ function readTextObjString(
   if (len <= 2) return "";
   const buf = scratchPtr(m, SCRATCH.readerReadTextA, len);
   m.FPDFTextObj_GetText(objPtr, textPagePtr, buf, len);
-  return readUtf16(m, buf, len);
+  return drawnText(readUtf16(m, buf, len));
 }
 
 /** 6-letter "ABCDEF+" subset tag PDFium prefixes onto subset font names. */

@@ -146,9 +146,8 @@ const createAutoRotateProcessor =
           );
         }
         const rotatedBytes = await saveRawDocument(docPtr);
-        const baseName = inputFile.name.replace(/\.pdf$/i, "");
         outputs.push(
-          new File([rotatedBytes], `${baseName}_auto_rotated.pdf`, {
+          new File([rotatedBytes], inputFile.name, {
             type: "application/pdf",
           }),
         );

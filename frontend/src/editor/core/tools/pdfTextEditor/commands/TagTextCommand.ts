@@ -4,35 +4,57 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  restoreObject,
+  retagObject,
+  type ObjectRetag,
+} from "@editor/tools/pdfTextEditor/commands/retagObjects";
+import {
+  furnitureKind,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
-  addTagMark,
+  ARTIFACT_TAG,
   highestMcid,
-  innermostMcid,
   readTagMarks,
-  removeTagMark,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { canTagText } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import {
+  retaggableText,
+  type RetaggableText,
+  type TextTagChoice,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
+
+interface Plan {
+  from: RetaggableText;
+  /** The element the text is given; null when it becomes an artifact. */
+  element: { mcid: number; type: StructureType } | null;
+  tag: TagMark;
+  objects: ObjectRetag[];
+  runMarks: readonly TagMark[];
+}
 
 /**
- * Tag untagged text as a new element of `as`. Like tagging an image this
- * changes the text's marks, so the save regenerates the page's content; the
- * save pass then gives the element its place in the tree. Every object
- * backing the run carries the one MCID, and the save's repair gives each
- * sequence PDFium writes for them its own.
+ * Tag text as a new element of `as`, or as an artifact of its kind, where
+ * retaggableText allows. Unlike a retag this changes the text's marks, so the
+ * save regenerates the page's content; the save pass then gives a new element
+ * its place in the tree. Every object backing the run carries the one MCID,
+ * and the save's repair gives each sequence PDFium writes for them its own.
+ * Text in an element the session added can only become an artifact here:
+ * RetagTextCommand changes its type.
  */
 export class TagTextCommand implements Command {
   readonly type = "tag-text";
   private readonly pageIndex: number;
   private readonly runId: string;
-  private readonly as: StructureType;
-  /** Chosen on first apply, so a redo reuses it. */
-  private mcid: number | null = null;
+  private readonly as: TextTagChoice;
+  /** Chosen on first apply, so a redo reuses its MCID. */
+  private plan: Plan | null = null;
 
-  constructor(opts: { pageIndex: number; runId: string; as: StructureType }) {
+  constructor(opts: { pageIndex: number; runId: string; as: TextTagChoice }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.as = opts.as;
@@ -41,17 +63,8 @@ export class TagTextCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.runs.find((r) => r.id === this.runId);
-    const members = run ? collectMemberPtrs(run) : [];
-    // Only the untagged objects: an artifact bullet beside the text stays one.
-    const ptrs = members.filter(
-      (ptr) => readTagMarks(doc.module, ptr).length === 0,
-    );
-    if (
-      !run ||
-      !canTagText(doc, run.snapshot()) ||
-      members.includes(0) ||
-      ptrs.length === 0
-    ) {
+    this.plan ??= run ? planTagging(doc, run, this.as) : null;
+    if (!run || !this.plan) {
       throw new RolledBackError(
         new Error(
           i18n.t(
@@ -61,40 +74,90 @@ export class TagTextCommand implements Command {
         ),
       );
     }
-    const structure = doc.structure(this.pageIndex);
-    this.mcid ??= structure.freeMcid(highestMcid(doc.module, page.pagePtr));
-    const tag = { name: this.as, mcid: this.mcid };
-    const marked: number[] = [];
-    for (const ptr of ptrs) {
-      if (!addTagMark(doc.module, doc.docPtr, ptr, tag)) {
-        for (const done of marked) removeTagMark(doc.module, done, this.as);
-        throw new Error("PDFium could not tag the text");
+    const { from, element, tag, objects } = this.plan;
+    const done: ObjectRetag[] = [];
+    try {
+      for (const object of objects) {
+        retagObject(doc, object, tag);
+        done.push(object);
       }
-      marked.push(ptr);
+    } catch (err) {
+      for (const object of done.reverse()) restoreObject(doc, object, tag.name);
+      throw new RolledBackError(err);
     }
+    const structure = doc.structure(this.pageIndex);
+    if (from.kind === "added") structure.removeElement(from.element.mcid);
+    if (element) structure.addElement(element.mcid, element.type);
     run.tagMarks = [tag];
-    structure.addElement(this.mcid, this.as);
     page.markDirty();
     page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
-    if (this.mcid === null) return;
+    if (!this.plan) return;
     const page = doc.page(this.pageIndex);
+    const { from, element, tag, objects, runMarks } = this.plan;
+    for (const object of [...objects].reverse()) {
+      restoreObject(doc, object, tag.name);
+    }
+    const structure = doc.structure(this.pageIndex);
+    if (element) structure.removeElement(element.mcid);
+    if (from.kind === "added") structure.restoreElement(from.element);
     const run = page.runs.find((r) => r.id === this.runId);
-    if (!run) return;
-    untag(doc, run, { name: this.as, mcid: this.mcid });
-    doc.structure(this.pageIndex).removeElement(this.mcid);
+    if (run) run.tagMarks = runMarks;
     page.markDirty();
     page.markNeedsGenerate();
   }
 }
 
-function untag(doc: EditorDocument, run: TextRun, tag: TagMark): void {
-  for (const ptr of collectMemberPtrs(run)) {
-    if (innermostMcid(readTagMarks(doc.module, ptr)) === tag.mcid) {
-      removeTagMark(doc.module, ptr, tag.name);
-    }
+/** The run's objects to retag as `as`; null when the text cannot be. */
+function planTagging(
+  doc: EditorDocument,
+  run: TextRun,
+  as: TextTagChoice,
+): Plan | null {
+  const snapshot = run.snapshot();
+  const from = retaggableText(doc, snapshot);
+  const members = collectMemberPtrs(run);
+  if (!from || members.includes(0)) return null;
+  // Already so, or a type change RetagTextCommand makes.
+  const unchanged =
+    typeof as === "string"
+      ? from.kind === "added"
+      : from.kind === "artifact" &&
+        as.artifact === (snapshot.furniture ?? null);
+  if (unchanged) return null;
+  const objects = members.flatMap((ptr) => {
+    const dropped = readTagMarks(doc.module, ptr);
+    return movable(from, dropped) ? [{ ptr, dropped }] : [];
+  });
+  if (objects.length === 0) return null;
+  const runMarks = run.tagMarks;
+  if (typeof as !== "string") {
+    const tag = artifactTag(as.artifact);
+    return { from, element: null, tag, objects, runMarks };
   }
-  run.tagMarks = [];
+  const mcid = doc
+    .structure(run.pageIndex)
+    .freeMcid(highestMcid(doc.module, doc.page(run.pageIndex).pagePtr));
+  const element = { mcid, type: as };
+  return { from, element, tag: { name: as, mcid }, objects, runMarks };
+}
+
+function artifactTag(furniture: Furniture | null): TagMark {
+  const tag = { name: ARTIFACT_TAG, mcid: null };
+  return furniture ? { ...tag, artifact: furnitureKind(furniture) } : tag;
+}
+
+/**
+ * True when an object of text tagged `from`, carrying `marks`, takes the new
+ * tag: one with no marks, or only the ones the text is moving from. An
+ * artifact beside untagged text, such as a bullet, stays one.
+ */
+function movable(from: RetaggableText, marks: readonly TagMark[]): boolean {
+  return marks.every((mark) =>
+    mark.name === ARTIFACT_TAG
+      ? from.kind === "artifact"
+      : from.kind === "added" && mark.mcid === from.element.mcid,
+  );
 }

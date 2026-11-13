@@ -169,8 +169,7 @@ public class ConvertEbookToPDFController {
                 throw new IllegalStateException("The ebook converter did not produce a PDF output");
             }
 
-            String outputFilename =
-                    GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
+            String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
 
             TempFile tempOut = null;
             try {

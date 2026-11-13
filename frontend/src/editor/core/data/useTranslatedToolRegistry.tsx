@@ -445,6 +445,23 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         maxFiles: 1,
       },
+      checkAccessibility: {
+        icon: <Icon name="universal-access" size="1.5rem" />,
+        name: t("home.checkAccessibility.title", "Check PDF accessibility"),
+        component: lazy(() => import("@editor/tools/CheckAccessibility")),
+        description: t(
+          "home.checkAccessibility.desc",
+          "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+        maxFiles: -1,
+        endpoints: ["accessibility-report"],
+        synonyms: getSynonyms(t, "checkAccessibility"),
+        // Reports rather than transforming the PDF, so it has no automation step.
+        supportsAutomate: false,
+        automationSettings: null,
+      },
       validateSignature: {
         icon: <Icon name="badge-check" size="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),

@@ -2,6 +2,7 @@
 
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 
 export const RENDER_MODE_INVISIBLE = 3;
 
@@ -89,6 +90,8 @@ export interface TextRunSnapshot {
   mcid?: number;
   /** Marked as an artifact: content that assistive technology skips. */
   artifact?: boolean;
+  /** The page furniture the artifact is, where its mark says so in a form the editor reads. */
+  furniture?: Furniture;
   /** Drawn by a form XObject, whose marks the editor does not read. */
   inForm?: boolean;
 }

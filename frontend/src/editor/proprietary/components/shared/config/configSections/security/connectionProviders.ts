@@ -33,6 +33,10 @@ export function isProviderConfigured(
     return settings?.googleDriveEnabled === true;
   }
 
+  if (provider.id === "microsoft") {
+    return settings?.microsoft?.enabled === true;
+  }
+
   if (provider.id === "oauth2-generic") {
     return settings?.oauth2?.enabled === true;
   }
@@ -64,8 +68,15 @@ export function getProviderSettings(
       clientId: settings?.googleDriveClientId,
       apiKey: settings?.googleDriveApiKey,
       appId: settings?.googleDriveAppId,
+      clientSecret: settings?.googleDriveClientSecret,
+      allowAccountConnections: settings?.googleDriveAllowAccountConnections,
+      accountScope: settings?.googleDriveAccountScope,
     };
     return gd;
+  }
+
+  if (provider.id === "microsoft") {
+    return settings?.microsoft ?? {};
   }
 
   if (provider.id === "oauth2-generic") {
@@ -108,7 +119,12 @@ export function updateProviderSettings(
       googleDriveClientId: gd.clientId,
       googleDriveApiKey: gd.apiKey,
       googleDriveAppId: gd.appId,
+      googleDriveClientSecret: gd.clientSecret,
+      googleDriveAllowAccountConnections: gd.allowAccountConnections,
+      googleDriveAccountScope: gd.accountScope,
     });
+  } else if (provider.id === "microsoft") {
+    setSettings({ ...settings, microsoft: updatedSettings });
   } else if (provider.id === "saml2") {
     setSettings({ ...settings, saml2: updatedSettings });
   } else if (provider.id === "oauth2-generic") {

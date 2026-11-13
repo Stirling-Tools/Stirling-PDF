@@ -8,6 +8,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   dismissTourTooltip,
+  switchView,
 } from "@editor/tests/helpers/ui-helpers";
 
 // 4 portrait pages whose intrinsic /Rotate is 0, 90, 270, 180.
@@ -25,23 +26,6 @@ test.use({ autoGoto: false });
 /** The lane of one track, addressed by the file it saves back to. */
 function track(page: import("@playwright/test").Page, name: string) {
   return page.locator(`section[aria-label="${name}"]`);
-}
-
-/**
- * Switches workbench view. The switcher is a Mantine SegmentedControl whose
- * radio input is visually hidden, so the click goes through the label. Only the
- * active segment shows its text (the rest are icon-only), so the label is found
- * by its text content and clicked as a whole rather than clicking the text node.
- */
-async function switchView(
-  page: import("@playwright/test").Page,
-  label: string,
-) {
-  await page
-    .locator('[data-tour="view-switcher"]')
-    .first()
-    .locator(".mantine-SegmentedControl-label", { hasText: label })
-    .click();
 }
 
 /**
@@ -104,6 +88,12 @@ function dropTarget(page: import("@playwright/test").Page) {
   return page.locator("[data-page-id][data-drop-before]");
 }
 
+/**
+ * Releases once the insertion line shows the drop landing beside `to`: the drop
+ * resolves against dnd-kit's hovered target, which can trail the last pointer
+ * move, so releasing at once can land a slot short. Past the midpoint, `to` must
+ * be the last page of its track.
+ */
 async function dragPageOnto(
   page: import("@playwright/test").Page,
   from: import("@playwright/test").Locator,
@@ -111,6 +101,10 @@ async function dragPageOnto(
   fractionAcross = 0.25,
 ) {
   await dragPageOver(page, from, to, fractionAcross);
+  await expect(to).toHaveAttribute(
+    fractionAcross < 0.5 ? "data-drop-before" : "data-drop-after-last",
+    "true",
+  );
   await page.mouse.up();
 }
 
@@ -140,6 +134,7 @@ async function dragPageIntoGap(
       { steps: 8 },
     );
   }
+  await expect(rightTile).toHaveAttribute("data-drop-before", "true");
   await page.mouse.up();
 }
 
@@ -185,6 +180,13 @@ async function dragTrackOnto(
   await page.mouse.up();
 }
 
+function viewOption(page: import("@playwright/test").Page, label: string) {
+  return page
+    .locator('[data-tour="view-switcher"]')
+    .first()
+    .getByRole("radio", { name: label });
+}
+
 async function openPageEditor(page: import("@playwright/test").Page) {
   await page.goto("/editor", {
     waitUntil: "domcontentloaded",
@@ -196,6 +198,15 @@ async function openPageEditor(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("page-tracks")).toBeVisible({
     timeout: 30_000,
   });
+  // Each file's pages load separately, and select-all or typed page numbers
+  // reach only the pages already there.
+  await expect(
+    track(page, "rotated-pages.pdf").locator("[data-page-id]"),
+  ).toHaveCount(4, { timeout: 30_000 });
+  await expect(track(page, "sample.pdf").locator("[data-page-id]")).toHaveCount(
+    1,
+    { timeout: 30_000 },
+  );
 }
 
 test.describe("Page Editor tracks", () => {
@@ -358,6 +369,11 @@ test.describe("Page Editor tracks", () => {
       page.getByRole("heading", { name: "Unsaved Changes" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Save & Leave" }).click();
+    // The prompt closes a render before the leave lands, and a click on the
+    // still-selected Page Editor in that gap changes nothing.
+    await expect(viewOption(page, "Active Files")).toBeChecked({
+      timeout: 90_000,
+    });
 
     // Back in the editor, the delete is now version 2 rather than pending.
     await switchView(page, "Page Editor");

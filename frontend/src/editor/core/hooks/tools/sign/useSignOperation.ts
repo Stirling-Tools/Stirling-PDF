@@ -59,7 +59,6 @@ export const signOperationConfig = defineSingleFileTool({
   // flattenSignatures); there is no backend endpoint and the standard execute
   // path is never used.
   endpoint: null,
-  filePrefix: "signed_",
   defaultParameters: DEFAULT_PARAMETERS,
 });
 

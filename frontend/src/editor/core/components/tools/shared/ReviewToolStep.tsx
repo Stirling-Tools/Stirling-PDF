@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Stack } from "@mantine/core";
+import { Menu, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -13,6 +13,11 @@ import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { saveOperationResults } from "@editor/services/operationResultsSaveService";
 import { useFileActions, useFileSelectors } from "@editor/contexts/FileContext";
 import i18n from "@editor/i18n";
+import { useSaveStoredFile } from "@editor/hooks/useSaveStoredFile";
+import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import type { FileId } from "@editor/types/file";
+
+const SAVE_MENU_BUTTON_WIDTH = "3rem";
 
 /**
  * Nearest scrolling ancestor - in the right rail that is the tool panel's
@@ -61,6 +66,29 @@ function ReviewStepContent<TParams = unknown>({
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
   const selectors = useFileSelectors();
+  const saver = useSaveStoredFile();
+  const outputStubs = selectors.getStirlingFileStubs(
+    (operation.outputFileIds ?? []) as FileId[],
+  );
+  // Results inherit their source's home, so Save sends them back there too.
+  const savesToTarget = outputStubs.some((stub) => saver.targetFor(stub));
+  const saveButton = useSaveButton({
+    saver,
+    targets: outputStubs,
+    singleFile: outputStubs.length === 1,
+    onSaveLocalCopy: () =>
+      void (async () => {
+        for (const stub of outputStubs) {
+          const outcome = await saver.saveLocalCopy(
+            stub,
+            selectors.getFile(stub.id),
+          );
+          if (outcome === "cancelled") break;
+        }
+      })(),
+    fileFor: async (stub) => selectors.getFile(stub.id),
+  });
+  const saveLabel = saveButton.label ?? terminology.download;
 
   const handleUndo = async () => {
     try {
@@ -79,6 +107,16 @@ function ReviewStepContent<TParams = unknown>({
 
   const handleDownload = async () => {
     if (!operation.downloadUrl) return;
+    if (savesToTarget) {
+      for (const stub of outputStubs) {
+        const outcome = await saver.saveStoredFile(
+          stub,
+          selectors.getFile(stub.id),
+        );
+        if (outcome === "cancelled") break;
+      }
+      return;
+    }
     try {
       await saveOperationResults({
         downloadUrl: operation.downloadUrl,
@@ -171,16 +209,66 @@ function ReviewStepContent<TParams = unknown>({
           </Button>
         </Tooltip>
       )}
-      {operation.downloadUrl && (
+      {operation.downloadUrl && !saveButton.menu && (
         <Button
           data-testid="download-result-button"
-          leftSection={<Icon name={icons.download} />}
+          leftSection={<Icon name={saveButton.icon ?? icons.download} />}
           fullWidth
           style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
         >
-          {terminology.download}
+          {saveLabel}
         </Button>
+      )}
+      {operation.downloadUrl && saveButton.menu && (
+        <Button.Group style={{ marginBottom: "1rem", width: "100%" }}>
+          <Button
+            data-testid="download-result-button"
+            leftSection={<Icon name={saveButton.icon ?? icons.download} />}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              // Mantine's left-section padding plus the menu button's width, so the
+              // label centres on the whole group rather than this half.
+              paddingInlineStart: `calc(var(--button-padding-x) / 1.5 + ${SAVE_MENU_BUTTON_WIDTH})`,
+            }}
+            onClick={handleDownload}
+          >
+            {saveLabel}
+          </Button>
+          <Menu shadow="md" width={270} position="bottom-end">
+            <Menu.Target>
+              <Button
+                data-testid="download-result-menu"
+                px="none"
+                style={{
+                  width: SAVE_MENU_BUTTON_WIDTH,
+                  borderInlineStart:
+                    "1px solid color-mix(in srgb, currentColor 35%, transparent)",
+                }}
+                aria-label={t("saveFile.menu.more", "More save options")}
+              >
+                <Icon name="chevron-down" />
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {saveButton.menu.map((item) => (
+                <Menu.Item
+                  key={item.key}
+                  leftSection={<Icon name={item.icon} size="1rem" />}
+                  onClick={item.onClick}
+                >
+                  {item.label}
+                  {item.description && (
+                    <Text size="xs" c="dimmed">
+                      {item.description}
+                    </Text>
+                  )}
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        </Button.Group>
       )}
 
       <SuggestedToolsSection />

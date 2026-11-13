@@ -21,6 +21,9 @@ vi.mock("react-i18next", () => ({
       typeof value === "string" ? value : key,
     i18n: { language: "en-US" },
   }),
+  // The copy as plain text, so tests read it the way the buyer does.
+  Trans: ({ defaults }: { defaults: string }) =>
+    defaults.split(/<\/?\w+>/).join(""),
 }));
 
 const state = vi.hoisted(() => ({
@@ -58,6 +61,10 @@ const saveTrialDraft = vi.hoisted(() => vi.fn());
 vi.mock("@processor/components/procurement/trialDraft", () => ({
   saveTrialDraft,
   takeTrialDraft: () => state.draft,
+}));
+vi.mock("@processor/components/procurement/CalendlyInline", async (actual) => ({
+  ...(await actual<object>()),
+  warmCalendly: vi.fn(),
 }));
 
 vi.mock("@processor/components/procurement/useProcurement", () => ({

@@ -6,6 +6,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.stereotype.Service;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
@@ -24,11 +29,13 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
+import stirling.software.common.util.XmpUtils;
 
 @Service
 @Slf4j
 public class VeraPDFService {
 
+    private static final COSName XML = COSName.getPDFName("XML");
     private static final String NOT_PDFA_STANDARD_ID = "not-pdfa";
     private static final String NOT_PDFA_STANDARD_NAME =
             "Not PDF/A (no PDF/A identification metadata)";
@@ -195,6 +202,18 @@ public class VeraPDFService {
         byte[] pdfBytes = pdfStream.readAllBytes();
         List<PDFVerificationResult> results = new ArrayList<>();
 
+        if (hasOversizedXmp(pdfBytes)) {
+            log.warn("Skipping standards validation: an XMP packet exceeds the size limit");
+            results.add(
+                    buildErrorResult(
+                            null,
+                            null,
+                            "Not validated: an XMP metadata packet is larger than "
+                                    + XmpUtils.MAX_XMP_BYTES
+                                    + " bytes"));
+            return results;
+        }
+
         PDFAFlavour declaredFlavour;
         List<PDFAFlavour> detectedFlavours;
 
@@ -321,6 +340,40 @@ public class VeraPDFService {
         }
 
         return results;
+    }
+
+    /**
+     * veraPDF parses every XMP packet it validates with no size limit, in time that grows with the
+     * square of an array's length. It reads the catalog's packet and each stream typed /Metadata
+     * /XML, so both are measured here before it starts.
+     */
+    static boolean hasOversizedXmp(byte[] pdfBytes) {
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            if (document.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.METADATA)
+                            instanceof COSStream catalogPacket
+                    && isOversized(catalogPacket)) {
+                return true;
+            }
+            for (COSObject object : document.getDocument().getObjectsByType(COSName.METADATA)) {
+                if (object.getObject() instanceof COSStream packet
+                        && XML.equals(packet.getCOSName(COSName.SUBTYPE))
+                        && isOversized(packet)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (IOException e) {
+            // veraPDF reports documents that PDFBox cannot open
+            return false;
+        }
+    }
+
+    private static boolean isOversized(COSStream packet) {
+        try (InputStream in = packet.createInputStream()) {
+            return in.readNBytes(XmpUtils.MAX_XMP_BYTES + 1).length > XmpUtils.MAX_XMP_BYTES;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private static boolean isPdfaFlavour(PDFAFlavour flavour) {

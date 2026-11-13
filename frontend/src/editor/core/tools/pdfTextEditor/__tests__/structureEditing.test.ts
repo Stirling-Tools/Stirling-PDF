@@ -121,7 +121,7 @@ async function openSample(): Promise<EditorDocument> {
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
-  const { blob } = await exportToBlob(doc, "sample.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -830,11 +830,27 @@ describe("SetDecorativeCommand", () => {
     ]);
   });
 
-  test("refuses a paragraph", async () => {
+  test("marks a paragraph decorative", async () => {
     const doc = await openSample();
+    new HistoryStack().execute(
+      new SetDecorativeCommand({ pageIndex: 0, mcid: 1, decorative: true }),
+      doc,
+    );
+    expect(doc.structureEdits()).toEqual([
+      { pageIndex: 0, mcid: 1, alt: null, decorative: true },
+    ]);
+  });
+
+  test("refuses text in a list item", async () => {
+    const doc = await openSample();
+    const body = doc.structure(1).elements.find((el) => el.type === "LBody")!;
     expect(() =>
       new HistoryStack().execute(
-        new SetDecorativeCommand({ pageIndex: 0, mcid: 1, decorative: true }),
+        new SetDecorativeCommand({
+          pageIndex: 1,
+          mcid: body.mcids[0],
+          decorative: true,
+        }),
         doc,
       ),
     ).toThrow(HistoryStepError);
@@ -931,7 +947,7 @@ describe("saving a description", () => {
     ]);
     // The detail is logged for a bug report; the user gets a message they can act on.
     expectConsole.error(/Could not write 1 tag edit/);
-    const error = await exportToBlob(doc, "sample.pdf").catch((e) => e);
+    const error = await exportToBlob(doc).catch((e) => e);
     expect(error.message).toBe(
       "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
     );
