@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.NoSuchFileException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeoutException;
 
+import org.eclipse.jetty.io.EofException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -273,6 +278,96 @@ class GlobalExceptionHandlerTest {
     void handleIOException_connectionReset_returns_empty_body() {
         IOException ex = new IOException("Connection reset by peer");
         ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_idleTimeoutMidWrite_returns_empty_body() {
+        IOException ex =
+                new AsyncRequestNotUsableException(
+                        "ServletOutputStream failed to write: "
+                                + "java.util.concurrent.TimeoutException: Idle timeout expired",
+                        new TimeoutException("Idle timeout expired: 60000/60000 ms"));
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_writeFailureInCause_returns_empty_body() {
+        IOException ex =
+                new IOException(
+                        "wrapper",
+                        new AsyncRequestNotUsableException("ServletOutputStream failed to write"));
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_serverSideWriteFailure_keeps_problem_detail_body() {
+        IOException ex =
+                new IOException("Failed to write temp file /tmp/x.png: No space left on device");
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_readSideIdleTimeout_keeps_problem_detail_body() {
+        IOException ex = new IOException("Idle timeout expired: 60000/60000 ms");
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_truncatedUploadEof_keeps_problem_detail_body() {
+        IOException ex = new EOFException("Unexpected end of ZLIB input stream");
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_eofBuriedInServerFailure_keeps_problem_detail_body() {
+        IOException ex =
+                new IOException(
+                        "Error parsing uploaded PDF", new EOFException("Missing 'endstream'"));
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_cyclicCauseChain_terminates_and_keeps_body() {
+        IOException outer = new IOException("outer");
+        IOException inner = new IOException("inner");
+        outer.initCause(inner);
+        inner.initCause(outer);
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(outer, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_cyclicCauseChainWithDisconnect_terminates_without_body() {
+        IOException outer = new IOException("outer");
+        IOException inner = new IOException("Broken pipe");
+        outer.initCause(inner);
+        inner.initCause(outer);
+        ResponseEntity<ProblemDetail> resp =
+                assertTimeoutPreemptively(
+                        Duration.ofSeconds(10), () -> handler.handleIOException(outer, request));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
+        assertNull(resp.getBody());
+    }
+
+    @Test
+    void handleIOException_jettyEofException_returns_empty_body() {
+        IOException ex = new EofException("Early EOF");
+        ResponseEntity<ProblemDetail> resp = handler.handleIOException(ex, request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
         assertNull(resp.getBody());
     }
 
