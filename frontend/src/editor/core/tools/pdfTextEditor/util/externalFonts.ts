@@ -2,10 +2,11 @@ import {
   getLocalFaceKey,
   getLocalFontBytes,
   loadedLocalFonts,
-  loadLocalFontBytes,
+  loadLocalFont,
   normaliseName,
   subscribeLocalFonts,
   type LocalFont,
+  type LocalFontLoad,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   getServerFaceId,
@@ -62,9 +63,16 @@ export function externalFaceKey(family: string): string {
   return local ? `local:${local}` : normaliseName(family);
 }
 
+/** A family's bytes from the server when it supplies the family, else from the device; never refused for licence when the server supplies it. */
+export async function loadExternalFont(family: string): Promise<LocalFontLoad> {
+  if (!serverFaceFor(family)) return loadLocalFont(family);
+  const bytes = await loadServerFontBytes(family);
+  return bytes ? { bytes } : { refused: "unavailable" };
+}
+
 export async function loadExternalFontBytes(
   family: string,
 ): Promise<Uint8Array | null> {
-  if (serverFaceFor(family)) return loadServerFontBytes(family);
-  return loadLocalFontBytes(family);
+  const load = await loadExternalFont(family);
+  return "bytes" in load ? load.bytes : null;
 }

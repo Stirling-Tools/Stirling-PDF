@@ -17,8 +17,8 @@ import {
   familyOptions,
   isLocalFontAccessSupported,
   listLocalFonts,
+  listLocalFontsIfGranted,
   loadedLocalFonts,
-  localFontPermission,
   subscribeLocalFonts,
   type FontFamilyOption,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -131,10 +131,7 @@ export function FontFamilySelect({
 
   // Already allowed, so listing cannot prompt: skip the button.
   useEffect(() => {
-    if (!supported || loadedLocalFonts()) return;
-    void localFontPermission().then((permission) => {
-      if (permission === "granted") void listLocalFonts();
-    });
+    if (supported && !loadedLocalFonts()) void listLocalFontsIfGranted();
   }, [supported]);
 
   const isKnown = useCallback(

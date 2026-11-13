@@ -1,7 +1,6 @@
 import { getFontBaseUrl } from "@editor/services/fontBaseUrl";
 import {
   faceStyleFlags,
-  localFontPermission,
   retryLocalFonts,
   loadLocalFontBytes,
   loadedLocalFonts,
@@ -10,11 +9,14 @@ import {
   registerFontBytes,
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { localFontPermission } from "@editor/tools/pdfTextEditor/util/localFontSource";
 import {
   loadServerFontBytes,
   loadServerFonts,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
+  embeddingForbidden,
+  hasTrueTypeOutlines,
   parseFontMetrics,
   type FaceKind,
   type FontMetrics,
@@ -372,8 +374,10 @@ function drawableMetrics(
   bytes: Uint8Array | null,
   weight: (variable: number) => boolean,
 ): FontMetrics | null {
-  const metrics = bytes ? parseFontMetrics(bytes) : null;
-  if (!metrics || metrics.restricted || metrics.cff) return null;
+  if (!bytes || embeddingForbidden(bytes) || !hasTrueTypeOutlines(bytes))
+    return null;
+  const metrics = parseFontMetrics(bytes);
+  if (!metrics) return null;
   if (metrics.variableWeight !== null && !weight(metrics.variableWeight))
     return null;
   return metrics;

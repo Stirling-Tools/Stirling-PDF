@@ -27,12 +27,13 @@ struct FaceNames {
 
 static CATALOG: OnceLock<Vec<CatalogEntry>> = OnceLock::new();
 
+const SEMIBOLD_WEIGHT: u16 = 600;
+
 fn embedding_allowed(face: &Face) -> bool {
     face.permissions() != Some(Permissions::Restricted) && face.is_outline_embedding_allowed()
 }
 
-/// The editor embeds device fonts as TrueType, which PostScript (CFF) outlines
-/// are not: such a face would save as a broken font resource.
+/// The editor embeds device fonts as TrueType; a CFF face would save as a broken font resource.
 fn has_truetype_outlines(face: &Face) -> bool {
     let tables = face.tables();
     tables.glyf.is_some() && tables.cff.is_none() && tables.cff2.is_none()
@@ -55,9 +56,7 @@ fn english_name(face: &Face, id: u16) -> Option<String> {
     fallback
 }
 
-/// The face's display names, or `None` when it cannot be parsed, its licence
-/// forbids embedding, or its outlines are not TrueType: an unreadable
-/// permission is treated as a refusal.
+/// The face's display names, or `None` when it is unparseable, not licensed for embedding, or not TrueType.
 fn embeddable_face_names(data: &[u8], index: u32) -> Option<FaceNames> {
     let face = Face::parse(data, index).ok()?;
     if !embedding_allowed(&face) || !has_truetype_outlines(&face) {
@@ -71,7 +70,7 @@ fn embeddable_face_names(data: &[u8], index: u32) -> Option<FaceNames> {
 }
 
 fn style_from_axes(info: &fontdb::FaceInfo) -> String {
-    let bold = info.weight.0 >= 600;
+    let bold = info.weight.0 >= SEMIBOLD_WEIGHT;
     let italic = info.style != fontdb::Style::Normal;
     match (bold, italic) {
         (true, true) => "Bold Italic",
@@ -102,10 +101,7 @@ fn build_catalog(db: &fontdb::Database) -> Vec<CatalogEntry> {
         if family.starts_with('.') || info.post_script_name.is_empty() {
             continue;
         }
-        let Some(names) = db
-            .with_face_data(info.id, embeddable_face_names)
-            .flatten()
-        else {
+        let Some(names) = db.with_face_data(info.id, embeddable_face_names).flatten() else {
             continue;
         };
         entries.push(CatalogEntry {
@@ -136,8 +132,7 @@ fn catalog() -> &'static [CatalogEntry] {
     })
 }
 
-/// The installed font faces the editor can embed in a document: TrueType
-/// outlines, and a licence that allows embedding.
+/// The installed faces the editor can embed: TrueType outlines and a licence that allows embedding.
 #[tauri::command]
 pub async fn list_system_fonts() -> Result<Vec<SystemFontFace>, String> {
     tauri::async_runtime::spawn_blocking(|| {
@@ -147,8 +142,7 @@ pub async fn list_system_fonts() -> Result<Vec<SystemFontFace>, String> {
     .map_err(|e| e.to_string())
 }
 
-/// The font file behind an id from [`list_system_fonts`]. Takes an id rather
-/// than a path so the webview can only ever read files the catalog found.
+/// The font file behind an id from [`list_system_fonts`]; an id, not a path, so the webview reads only catalogued files.
 #[tauri::command]
 pub async fn read_system_font(id: usize) -> Result<Response, String> {
     let path = CATALOG
@@ -188,7 +182,8 @@ mod tests {
             .expect("font has an OS/2 table")
             .as_ptr() as usize
             - data.as_ptr() as usize;
-        data[os2 + FS_TYPE_OFFSET..os2 + FS_TYPE_OFFSET + 2].copy_from_slice(&fs_type.to_be_bytes());
+        data[os2 + FS_TYPE_OFFSET..os2 + FS_TYPE_OFFSET + 2]
+            .copy_from_slice(&fs_type.to_be_bytes());
         data
     }
 
