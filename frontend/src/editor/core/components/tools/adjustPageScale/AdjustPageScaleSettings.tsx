@@ -67,6 +67,36 @@ const AdjustPageScaleSettings = ({
 
   return (
     <Stack gap="md">
+      <Select
+        label={t("adjustPageScale.pageSize.label", "Target Page Size")}
+        description={t(
+          "adjustPageScale.pageSize.description",
+          "Choose a standard size to fit every page proportionally; mixed sizes and orientations become consistent.",
+        )}
+        value={parameters.pageSize}
+        onChange={(value) => {
+          if (!value) return;
+          const next = value as PageSize;
+          if (!Object.values(PageSize).includes(next)) return;
+          onParameterChange("pageSize", next);
+        }}
+        data={pageSizeOptions}
+        disabled={disabled}
+        maxDropdownHeight={400}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
+      />
+
+      <SegmentedControl
+        aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
+        value={parameters.orientation}
+        onChange={(value) => onParameterChange("orientation", value)}
+        options={orientationOptions}
+        fullWidth
+      />
+
       <NumberInput
         label={t("adjustPageScale.scaleFactor.label", "Scale Factor")}
         value={parameters.scaleFactor}
@@ -81,31 +111,6 @@ const AdjustPageScaleSettings = ({
         step={0.1}
         decimalScale={2}
         disabled={disabled}
-      />
-
-      <Select
-        label={t("adjustPageScale.pageSize.label", "Target Page Size")}
-        value={parameters.pageSize}
-        onChange={(value) => {
-          if (!value) return;
-          const next = value as PageSize;
-          if (!Object.values(PageSize).includes(next)) return;
-          onParameterChange("pageSize", next);
-        }}
-        data={pageSizeOptions}
-        disabled={disabled}
-        comboboxProps={{
-          withinPortal: true,
-          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-        }}
-      />
-
-      <SegmentedControl
-        aria-label={t("adjustPageScale.orientation.label", "Page orientation")}
-        value={parameters.orientation}
-        onChange={(value) => onParameterChange("orientation", value)}
-        options={orientationOptions}
-        fullWidth
       />
     </Stack>
   );

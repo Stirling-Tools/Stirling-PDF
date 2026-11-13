@@ -521,6 +521,7 @@ landscape = "Landscape"
 portrait = "Portrait"
 
 [adjustPageScale.pageSize]
+description = "Choose a standard size to fit every page proportionally; mixed sizes and orientations become consistent."
 keep = "Keep Original Size"
 label = "Target Page Size"
 legal = "Legal"
@@ -540,7 +541,7 @@ title = "Description"
 title = "Page Scale Settings Overview"
 
 [adjustPageScale.tooltip.pageSize]
-text = "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, while other options resize to standard paper sizes."
+text = "Sets the dimensions of the output PDF pages. For a standard size, pages are scaled proportionally and centred, so mixed-size scans are fitted without stretching. 'Keep Original Size' maintains current dimensions."
 title = "Target Page Size"
 
 [adjustPageScale.tooltip.scaleFactor]
@@ -6156,7 +6157,7 @@ title = "Sanitize"
 
 [home.scalePages]
 desc = "Change the size/scale of a page and/or its contents."
-tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,A5,letter size,normalize page size,normalize pages,mixed page sizes,unify page size,consistent page size,book scan,scanned book"
 title = "Adjust page size/scale"
 
 [home.scannerImageSplit]

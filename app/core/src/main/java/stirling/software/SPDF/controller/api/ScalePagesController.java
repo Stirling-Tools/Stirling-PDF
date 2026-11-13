@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,11 +55,49 @@ public class ScalePagesController {
     }
 
     /** The page's own size, at the origin like the named sizes so the content lands centred. */
-    private static PDRectangle ownSize(PDRectangle mediaBox) {
-        if (mediaBox == null) {
+    private static PDRectangle ownSize(PDRectangle pageSize) {
+        if (pageSize == null) {
             throw ExceptionUtils.createInvalidPageSizeException("KEEP");
         }
-        return new PDRectangle(mediaBox.getWidth(), mediaBox.getHeight());
+        return new PDRectangle(pageSize.getWidth(), pageSize.getHeight());
+    }
+
+    private static int displayRotation(PDPage page) {
+        int rotation = page.getRotation() % 360;
+        return rotation < 0 ? rotation + 360 : rotation;
+    }
+
+    /** The size a viewer shows after applying the page's /Rotate. */
+    private static PDRectangle displaySize(PDRectangle viewBox, int rotation) {
+        if (rotation == 90 || rotation == 270) {
+            return new PDRectangle(viewBox.getHeight(), viewBox.getWidth());
+        }
+        return new PDRectangle(viewBox.getWidth(), viewBox.getHeight());
+    }
+
+    /**
+     * Bakes /Rotate into the imported form. LayerUtility's matrix squeezes rotated content into the
+     * unrotated box, which would stretch a scan whose pixels are stored sideways.
+     */
+    private static AffineTransform displayTransform(PDRectangle viewBox, int rotation) {
+        AffineTransform transform = new AffineTransform();
+        switch (rotation) {
+            case 90 -> {
+                transform.translate(0, viewBox.getWidth());
+                transform.quadrantRotate(3);
+            }
+            case 180 -> {
+                transform.translate(viewBox.getWidth(), viewBox.getHeight());
+                transform.quadrantRotate(2);
+            }
+            case 270 -> {
+                transform.translate(viewBox.getHeight(), 0);
+                transform.quadrantRotate(1);
+            }
+            default -> {}
+        }
+        transform.translate(-viewBox.getLowerLeftX(), -viewBox.getLowerLeftY());
+        return transform;
     }
 
     private static PDRectangle getTargetSize(String targetPDRectangle, String orientation) {
@@ -122,7 +161,11 @@ public class ScalePagesController {
             for (int i = 0; i < totalPages; i++) {
                 PDPage sourcePage = sourceDocument.getPage(i);
                 flattenStampAppearances(sourceDocument, sourcePage);
-                PDRectangle sourceSize = sourcePage.getMediaBox();
+                PDRectangle viewBox = sourcePage.getCropBox();
+                int rotation = displayRotation(sourcePage);
+                // KEEP stays a no-op resize: leave the page size and existing import path alone.
+                PDRectangle sourceSize =
+                        keepSize ? sourcePage.getMediaBox() : displaySize(viewBox, rotation);
                 // Per page, so a mixed-size document stays mixed.
                 PDRectangle targetSize = keepSize ? ownSize(sourceSize) : fixedSize;
 
@@ -149,6 +192,9 @@ public class ScalePagesController {
                     contentStream.transform(Matrix.getScaleInstance(scale, scale));
 
                     PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, i);
+                    if (!keepSize) {
+                        form.setMatrix(displayTransform(viewBox, rotation));
+                    }
                     contentStream.drawForm(form);
 
                     contentStream.restoreGraphicsState();
