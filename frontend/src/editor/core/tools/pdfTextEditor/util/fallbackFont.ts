@@ -100,6 +100,7 @@ export function loadFallbackFontInto(doc: EditorDocument): number {
       m.pdfium.wasmExports.free(ptr);
       return 0;
     }
+    doc.recordEmbeddedFontFile(bytes);
     doc.registerOwnedFont(
       new FontRef({
         id: FALLBACK_FONT_ID,

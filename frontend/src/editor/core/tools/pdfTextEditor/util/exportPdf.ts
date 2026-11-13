@@ -16,6 +16,7 @@ import { nameArtifactKinds } from "@editor/tools/pdfTextEditor/pdfdoc/passes/nam
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
+import { subsetEmbeddedFonts } from "@editor/tools/pdfTextEditor/pdfdoc/passes/subsetEmbeddedFonts";
 import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { writesArtifactKinds } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
@@ -143,6 +144,15 @@ async function serializeEdits(
   // so reading first always yielded an empty list and silently skipped the
   // shading repair on the first save after an edit.
   let bytes = PdfiumSave.serialize(doc, { incremental });
+  // First, while the file is still exactly what PDFium wrote. Skipped for an
+  // incremental save, whose earlier bytes a signature covers.
+  if (!incremental) {
+    bytes = await subsetEmbeddedFonts(
+      bytes,
+      doc.embeddedFontFiles(),
+      doc.openedBytes,
+    );
+  }
   const regenerated = doc.regeneratedPages();
 
   if (regenerated.length > 0 && doc.openedBytes.length > 0) {
