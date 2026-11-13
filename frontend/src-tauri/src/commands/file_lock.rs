@@ -7,10 +7,9 @@
 // same handle, so the lock never lapses mid-save. Windows only; elsewhere
 // nothing is locked and saves take the ordinary path.
 
-use crate::utils::add_log;
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::{ErrorKind, Seek, SeekFrom, Write};
+use std::io::{Seek, SeekFrom, Write};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -95,6 +94,8 @@ impl Locks {
 
 #[cfg(windows)]
 fn open_locked(path: &str) -> Option<(File, bool)> {
+    use crate::utils::add_log;
+    use std::io::ErrorKind;
     use std::os::windows::fs::OpenOptionsExt;
     const FILE_SHARE_READ: u32 = 0x1;
     let open = |write: bool| {
@@ -159,7 +160,7 @@ pub async fn write_locked_file(request: tauri::ipc::Request<'_>) -> Result<bool,
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
 
     fn temp_file(tag: &str) -> PathBuf {
         let dir =
@@ -171,12 +172,12 @@ mod tests {
         file
     }
 
-    fn key(path: &PathBuf) -> String {
+    fn key(path: &Path) -> String {
         path.to_string_lossy().to_string()
     }
 
     // What a DMS does to decide the file is no longer in use.
-    fn exclusive_open_succeeds(path: &PathBuf) -> bool {
+    fn exclusive_open_succeeds(path: &Path) -> bool {
         use std::os::windows::fs::OpenOptionsExt;
         std::fs::OpenOptions::new()
             .read(true)
@@ -243,9 +244,10 @@ mod tests {
     #[test]
     fn a_read_only_file_is_held_against_deletion_but_not_written() {
         let path = temp_file("read_only");
-        let mut perms = std::fs::metadata(&path).unwrap().permissions();
-        perms.set_readonly(true);
-        std::fs::set_permissions(&path, perms.clone()).unwrap();
+        let writable = std::fs::metadata(&path).unwrap().permissions();
+        let mut read_only = writable.clone();
+        read_only.set_readonly(true);
+        std::fs::set_permissions(&path, read_only).unwrap();
 
         // A read-only file refuses write access anyway, so probe with read.
         let exclusive_read_succeeds = || {
@@ -263,8 +265,7 @@ mod tests {
 
         locks.sync(&[], Instant::now());
         assert!(exclusive_read_succeeds());
-        perms.set_readonly(false);
-        std::fs::set_permissions(&path, perms).unwrap();
+        std::fs::set_permissions(&path, writable).unwrap();
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 }
