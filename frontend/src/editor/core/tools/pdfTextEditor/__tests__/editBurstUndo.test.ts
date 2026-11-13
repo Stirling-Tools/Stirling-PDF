@@ -147,6 +147,53 @@ describe("undoing a burst of edits to one line", () => {
     expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(HEADING));
   });
 
+  test.each([
+    ["a burst", 1],
+    ["separate edits", 2],
+  ])("leaves the edit before %s undoable", async (_case, undoSteps) => {
+    const doc = await open();
+    const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
+    const headingId = run.id;
+    const history = new HistoryStack();
+
+    burst(doc, history, headingId, [`${HEADING} Zq7`]);
+    history.breakCoalescing();
+    burst(doc, history, headingId, [`${HEADING} Wj9`]);
+    if (undoSteps > 1) history.breakCoalescing();
+    burst(doc, history, headingId, [`${HEADING} Wj90`]);
+    expect(history.size().undo).toBe(1 + undoSteps);
+    for (let i = 0; i < undoSteps; i++) history.undo(doc);
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(`${HEADING} Zq7`));
+    history.undo(doc);
+
+    expect(run.text).toBe(HEADING);
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(HEADING));
+  });
+
+  test.each([
+    [`Xk ${HEADING}`, [HEADING, `${HEADING} Q`]],
+    [`Xk Yz ${HEADING}`, [`Yz ${HEADING}`, `Yz ${HEADING}!`]],
+  ])(
+    "puts back the spacing a burst deleting the first piece of %s shifted",
+    async (start, steps) => {
+      const doc = await open();
+      const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
+      const history = new HistoryStack();
+      burst(doc, history, run.id, [start]);
+      history.breakCoalescing();
+      const pieces = piecesOnHeadingLine(doc, run.id);
+
+      burst(doc, history, run.id, steps);
+      history.undo(doc);
+
+      const restored = piecesOnHeadingLine(doc, run.id);
+      expect(restored.map((p) => p.text)).toEqual(pieces.map((p) => p.text));
+      restored.forEach((piece, i) =>
+        expect(piece.left).toBeCloseTo(pieces[i].left, 0),
+      );
+    },
+  );
+
   test("puts the line back where it started", async () => {
     const doc = await open();
     const run = doc.page(0).runs.find((r) => r.text === HEADING)!;

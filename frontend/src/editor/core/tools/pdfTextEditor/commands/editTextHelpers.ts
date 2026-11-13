@@ -179,7 +179,15 @@ export function sanitizeForBase14(text: string): string {
 }
 
 /** Every PDFium pointer that backs a run. */
-export function collectMemberPtrs(run: TextRun): number[] {
+export function collectMemberPtrs(
+  run: Pick<
+    TextRun,
+    | "paragraphLeafPtrs"
+    | "paragraphMemberPtrs"
+    | "mergedFromPtrs"
+    | "pdfiumObjPtr"
+  >,
+): number[] {
   if (run.paragraphLeafPtrs.length > 0) return run.paragraphLeafPtrs;
   if (run.paragraphMemberPtrs.length > 0) return run.paragraphMemberPtrs;
   if (run.mergedFromPtrs.length > 0) return run.mergedFromPtrs;

@@ -1,4 +1,5 @@
 import i18n from "i18next";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   RolledBackError,
   type Command,
@@ -111,6 +112,32 @@ interface RunModelSnapshot {
   fontId: string;
   fontSubset: boolean;
   pdfiumObjPtr: number;
+}
+
+// A later step's undo redraws what this edit inserted as new objects, which `inserted` cannot name.
+function withGained(
+  m: WrappedPdfiumModule,
+  page: Page,
+  run: TextRun,
+  inserted: readonly number[],
+  before: RunModelSnapshot | null,
+  removed: ReadonlySet<number>,
+): number[] {
+  if (!before) return [...inserted];
+  const kept = new Set(
+    collectMemberPtrs(before).filter((ptr) => ptr && !removed.has(ptr)),
+  );
+  const onPage = new Set(
+    Array.from({ length: m.FPDFPage_CountObjects(page.pagePtr) }, (_, i) =>
+      m.FPDFPage_GetObject(page.pagePtr, i),
+    ),
+  );
+  if (![...kept].every((ptr) => onPage.has(ptr))) return [...inserted];
+  const containers = collectContainersByPtr(run);
+  const gained = collectMemberPtrs(run).filter(
+    (ptr) => ptr && !kept.has(ptr) && !containers.get(ptr),
+  );
+  return [...new Set([...inserted, ...gained])];
 }
 
 // True when a partial-edit plan only ADDED objects (no original object was
@@ -842,7 +869,14 @@ export class EditTextCommand implements Command {
     // Partial-edit fast path revert: the removed sub-objects are gone from
     // PDFium permanently.
     if (this.partialPlan) {
-      for (const ptr of this.partialInsertedPtrs) {
+      for (const ptr of withGained(
+        m,
+        page,
+        run,
+        this.partialInsertedPtrs,
+        this.editSnapshot,
+        new Set(this.partialPlan.removePtrs.map((r) => r.ptr)),
+      )) {
         if (!ptr) continue;
         try {
           m.FPDFPage_RemoveObject(page.pagePtr, ptr);
@@ -1456,6 +1490,7 @@ export class EditTextCommand implements Command {
     });
     try {
       move.apply(doc);
+      if (phase === "revert") edits[0].restoreLayout(doc, run);
     } catch (err) {
       try {
         move.revert(doc);
@@ -1465,6 +1500,25 @@ export class EditTextCommand implements Command {
       throw new RolledBackError(err);
     }
     return true;
+  }
+
+  // The move plans from the burst's shifted pieces; a piece starting where one of this edit's did goes back there, and the pieces after it with it.
+  private restoreLayout(doc: EditorDocument, run: TextRun): void {
+    const snap = this.editSnapshot;
+    if (!snap || run.containerPtr !== 0 || run.text !== snap.text) return;
+    let shift = 0;
+    run.mergedFromBounds = run.mergedFromBounds.map((bounds, i) => {
+      const was = snap.mergedFromCharStarts.indexOf(
+        run.mergedFromCharStarts[i],
+      );
+      const x = snap.mergedFromBounds[was]?.x;
+      if (x !== undefined) shift = x - bounds.x;
+      const ptr = run.mergedFromPtrs[i];
+      if (ptr && shift) moveObjectLeftEdgeTo(doc.module, ptr, bounds.x + shift);
+      return { x: bounds.x + shift, right: bounds.right + shift };
+    });
+    run.bounds = { ...snap.bounds };
+    run.matrix = { ...run.matrix, e: snap.matrixE };
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */
