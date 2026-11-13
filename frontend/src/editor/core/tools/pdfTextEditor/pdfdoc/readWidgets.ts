@@ -21,8 +21,23 @@ export function readWidgets(
   pdf: RawPdf,
   treeRoot: number | null,
 ): Map<number, WidgetAnnotation[]> {
-  return annotationsByPage(pdf, (num, position) =>
+  const byPage = annotationsByPage(pdf, (num, position) =>
     readWidget(pdf, num, position, treeRoot),
+  );
+  const widgetCounts = new Map<number, number>();
+  for (const widgets of byPage.values()) {
+    for (const { field } of widgets) {
+      widgetCounts.set(field, (widgetCounts.get(field) ?? 0) + 1);
+    }
+  }
+  return new Map(
+    [...byPage].map(([pageIndex, widgets]) => [
+      pageIndex,
+      widgets.map((widget) => ({
+        ...widget,
+        fieldShared: (widgetCounts.get(widget.field) ?? 0) > 1,
+      })),
+    ]),
   );
 }
 
@@ -40,7 +55,7 @@ function readWidget(
   num: number,
   position: number,
   treeRoot: number | null,
-): WidgetAnnotation | null {
+): Omit<WidgetAnnotation, "fieldShared"> | null {
   const body = pdf.objectBody(num);
   if (!body || pdf.dictName(body, "Subtype") !== "Widget") return null;
   if (((pdf.dictInt(body, "F") ?? 0) & UNSHOWN) !== 0) return null;
@@ -54,12 +69,13 @@ function readWidget(
     height: Math.abs(y2 - y1),
   };
   if (area.width <= 0 || area.height <= 0) return null;
-  const parent = separateField(pdf, body);
-  const field = parent === null ? body : pdf.objectBody(parent);
-  const tooltip = field ? pdf.resolve(field, "TU") : null;
+  const field = separateField(pdf, body) ?? num;
+  const fieldBody = field === num ? body : pdf.objectBody(field);
+  const tooltip = fieldBody ? pdf.resolve(fieldBody, "TU") : null;
   return {
     annotation: num,
     position,
+    field,
     rect: area,
     fieldType: fieldType(pdf, body),
     tooltip: tooltip === null ? null : decodeTextString(tooltip.trim()),

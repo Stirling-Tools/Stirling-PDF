@@ -32,6 +32,7 @@ import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextR
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { formFieldAccessibility } from "@editor/tools/pdfTextEditor/util/formFieldAccessibility";
+import { fieldLabel } from "@editor/tools/pdfTextEditor/util/formLabel";
 import {
   buildClassicPdf,
   streamBody,
@@ -241,6 +242,8 @@ describe("reading form fields", () => {
       {
         annotation: NAME_FIELD,
         position: 0,
+        field: NAME_FIELD,
+        fieldShared: false,
         rect: { x: 110, y: 694, width: 190, height: 20 },
         fieldType: "Tx",
         tooltip: null,
@@ -249,6 +252,7 @@ describe("reading form fields", () => {
       expect.objectContaining({
         annotation: EMAIL_FIELD,
         position: 1,
+        field: EMAIL_PARENT,
         fieldType: "Tx",
         tooltip: "Email address",
       }),
@@ -538,5 +542,78 @@ describe("form fields in a word processor's tagged export", () => {
     expect(holder(pdf, widgets[0])).toBe(
       Number(structure.widgets.get(PAGE)![0].holder),
     );
+  });
+});
+
+describe("fields with several widgets", () => {
+  const GROUP = 30;
+  const YES = 31;
+  const NO = 32;
+  // "Yes" and "No" each sit right of their radio button, far enough apart
+  // that each would name its button were it the field's only widget.
+  const RADIO_LINES =
+    "BT /F1 12 Tf 90 602 Td (Yes) Tj ET\nBT /F1 12 Tf 90 540 Td (No) Tj ET\n";
+
+  function radioGroup(): FixtureObject[] {
+    return [
+      {
+        num: GROUP,
+        body: `<< /FT /Btn /Ff 49152 /T (agree) /Kids [${YES} 0 R ${NO} 0 R] >>`,
+      },
+      {
+        num: YES,
+        body: `<< /Type /Annot /Subtype /Widget /Parent ${GROUP} 0 R /Rect [72 600 84 612] >>`,
+      },
+      {
+        num: NO,
+        body: `<< /Type /Annot /Subtype /Widget /Parent ${GROUP} 0 R /Rect [72 538 84 550] >>`,
+      },
+    ];
+  }
+
+  test("tags each widget but names the field from neither's label", async () => {
+    const doc = await open(untaggedPdf(RADIO_LINES, radioGroup()));
+    const labels = doc
+      .structure(0)
+      .formFields.all()
+      .map((widget) => fieldLabel(doc.page(0), widget)?.text);
+    expect(labels).toEqual(["Yes", "No"]);
+    autoTag(doc);
+    expect(doc.annotationEdits()).toEqual([
+      expect.not.objectContaining({ tooltip: expect.anything() }),
+      expect.not.objectContaining({ tooltip: expect.anything() }),
+    ]);
+    const pdf = await saved(doc);
+    expect(holder(pdf, YES)).not.toBeNull();
+    expect(holder(pdf, NO)).not.toBeNull();
+    expect(tooltip(pdf, GROUP)).toBeNull();
+  });
+
+  test("shows and saves one description for the field, whichever widget it is edited through", async () => {
+    const doc = await open(untaggedPdf(RADIO_LINES, radioGroup()));
+    const history = new HistoryStack();
+    const describe = (annotation: number, text: string) =>
+      history.execute(
+        new SetFormFieldTooltipCommand({
+          pageIndex: 0,
+          annotation,
+          tooltip: text,
+        }),
+        doc,
+      );
+    describe(YES, "Agree to the terms");
+    describe(NO, "Consent");
+    expect(formFieldAccessibility(doc, 0, 0)).toMatchObject({
+      description: "Consent",
+    });
+    expect(doc.annotationEdits()).toEqual([
+      { pageIndex: 0, annotation: YES, tooltip: "Consent" },
+    ]);
+    expect(tooltip(await saved(doc), GROUP)).toBe("Consent");
+
+    history.undo(doc);
+    expect(formFieldAccessibility(doc, 0, 1)).toMatchObject({
+      description: "Agree to the terms",
+    });
   });
 });

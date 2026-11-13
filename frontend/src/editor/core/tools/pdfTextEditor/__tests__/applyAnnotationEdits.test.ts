@@ -245,8 +245,12 @@ describe("applyAnnotationEdits", () => {
     const WIDGETS: Record<number, string> = {
       3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 0 /Annots [20 0 R 24 0 R 25 0 R] >>",
     };
-    const widgetObjects = (overrides: Record<number, string> = {}) =>
+    const widgetObjects = (
+      overrides: Record<number, string> = {},
+      extra: FixtureObject[] = [],
+    ) =>
       objects({ ...WIDGETS, ...overrides }, [
+        ...extra,
         {
           num: 24,
           body: "<< /Type /Annot /Subtype /Widget /FT /Tx /T (name) /Rect [0 50 50 60] >>",
@@ -305,6 +309,29 @@ describe("applyAnnotationEdits", () => {
       const [form, paragraph] = refs(kids(pdf, 9));
       expect(paragraph).toBe(10);
       expect(kids(pdf, form)).toContain("/Obj 24 0 R");
+    });
+
+    test("adds a Form to a structure root with several kids, keeping it in the ParentTree too", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, newForm: { after: null } }],
+        widgetObjects(
+          {
+            3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /Annots [24 0 R] >>",
+            7: "<< /Type /StructTreeRoot /K [9 0 R 12 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R]] >> /ParentTreeNextKey 1 >>",
+          },
+          [
+            {
+              num: 12,
+              body: "<< /Type /StructElem /S /Sect /P 7 0 R /K [] >>",
+            },
+          ],
+        ),
+      );
+      const [, , form] = refs(kids(pdf, 7));
+      expect(kids(pdf, form)).toContain("/Obj 24 0 R");
+      expect(pdf.dictRef(pdf.objectBody(form)!, "P")).toBe(7);
+      const key = pdf.dictInt(pdf.objectBody(24)!, "StructParent")!;
+      expect(entry(pdf, key)).toBe(`${form} 0 R`);
     });
 
     test("gives a file with no structure tree one to hold the Form", async () => {

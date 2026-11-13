@@ -6,6 +6,10 @@ export interface WidgetAnnotation {
   annotation: number;
   /** Its index in the page's /Annots: the AnnotationBox.index PDFium reads it at. */
   position: number;
+  /** The object number of the field whose /TU names it: its /Parent when it is a kid, else itself. */
+  field: number;
+  /** True when another widget a page shows belongs to its field too, as a radio group's do. */
+  fieldShared: boolean;
   /** Its /Rect, in page space (y-up). */
   rect: PageRect;
   /** Its field's /FT, inherited through /Parent; null when none says. */

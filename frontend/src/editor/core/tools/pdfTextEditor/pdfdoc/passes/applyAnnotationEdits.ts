@@ -415,9 +415,10 @@ class ParentKeys {
       bodies.set(num, written);
       return num;
     };
+    // A Form placed under the root has already changed its /K.
     const extended = addTreeEntries(
       this.pdf,
-      this.rootBody,
+      bodies.get(this.treeRoot) ?? this.rootBody,
       this.entries,
       bodies,
       allocate,

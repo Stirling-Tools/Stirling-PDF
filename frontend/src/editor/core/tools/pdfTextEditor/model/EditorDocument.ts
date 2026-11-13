@@ -50,6 +50,7 @@ import {
   taggedContentInReadingOrder,
 } from "@editor/tools/pdfTextEditor/util/elementPlacement";
 import { fieldAnchor } from "@editor/tools/pdfTextEditor/util/formLabel";
+import type { FieldTooltips } from "@editor/tools/pdfTextEditor/model/PageFormFields";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -72,6 +73,8 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
+  /** Held here rather than per page: a field's widgets can sit on several pages. */
+  private readonly fieldTooltips: FieldTooltips = new Map();
   /**
    * Unsaved retags by block key, each with the content the save addresses it
    * by. Held here rather than per page: an element spanning a page break is
@@ -338,7 +341,16 @@ export class EditorDocument {
       widgets: this.fileStructure.widgets.get(pageIndex) ?? [],
     };
     const retaggedAs = (key: string) => this.retaggedAs(key);
-    if (!page) return new PageStructure([], null, 0, retaggedAs, annotations);
+    if (!page) {
+      return new PageStructure(
+        [],
+        null,
+        0,
+        retaggedAs,
+        annotations,
+        this.fieldTooltips,
+      );
+    }
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(
       page.elements,
@@ -346,6 +358,7 @@ export class EditorDocument {
       page.slotCount,
       retaggedAs,
       annotations,
+      this.fieldTooltips,
     );
   }
 
@@ -672,9 +685,10 @@ export class EditorDocument {
 
   /** Every unsaved change to a link or form field annotation, in the form the save pass takes. */
   annotationEdits(): AnnotationEdit[] {
+    const namedFields = new Set<number>();
     return [...this.structureCache].flatMap(([pageIndex, structure]) => [
       ...this.linkEdits(pageIndex, structure),
-      ...this.formFieldEdits(pageIndex, structure),
+      ...this.formFieldEdits(pageIndex, structure, namedFields),
     ]);
   }
 
@@ -696,20 +710,34 @@ export class EditorDocument {
     });
   }
 
-  /** A new Form reads where fieldAnchor places it on the page as the save finds it. */
+  /**
+   * A new Form reads where fieldAnchor places it on the page as the save
+   * finds it. A field's /TU goes through the first of its widgets only;
+   * `namedFields` collects the fields named so far.
+   */
   private formFieldEdits(
     pageIndex: number,
     structure: PageStructure,
+    namedFields: Set<number>,
   ): AnnotationEdit[] {
     const page = this.pageCache.get(pageIndex);
-    return structure.formFields.edits().map(({ widget, newForm, ...edit }) => ({
-      pageIndex,
-      annotation: widget.annotation,
-      ...edit,
-      ...(newForm && {
-        newForm: { after: page ? fieldAnchor(page, widget) : null },
-      }),
-    }));
+    return structure.formFields
+      .edits()
+      .flatMap(({ widget, newForm, tooltip }) => {
+        const names = tooltip !== undefined && !namedFields.has(widget.field);
+        if (names) namedFields.add(widget.field);
+        if (!newForm && !names) return [];
+        return [
+          {
+            pageIndex,
+            annotation: widget.annotation,
+            ...(names && { tooltip }),
+            ...(newForm && {
+              newForm: { after: page ? fieldAnchor(page, widget) : null },
+            }),
+          },
+        ];
+      });
   }
 
   /**

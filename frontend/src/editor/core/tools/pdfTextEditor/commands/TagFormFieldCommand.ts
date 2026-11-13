@@ -9,8 +9,9 @@ import { fieldLabel } from "@editor/tools/pdfTextEditor/util/formLabel";
 
 /**
  * Give form field widget `annotation` a Form element of its own. A field with
- * no /TU is named by its label (fieldLabel), where it has one. The page must
- * already be read.
+ * no /TU is named by the widget's label (fieldLabel), where it has one and the
+ * field has no other widget: one radio button's label does not name its
+ * group. The page must already be read.
  */
 export class TagFormFieldCommand implements Command {
   readonly type = "tag-form-field";
@@ -41,7 +42,9 @@ export class TagFormFieldCommand implements Command {
       );
     }
     if (this.label === undefined) {
-      this.label = fieldLabel(doc.page(this.pageIndex), widget)?.text ?? null;
+      this.label = widget.fieldShared
+        ? null
+        : (fieldLabel(doc.page(this.pageIndex), widget)?.text ?? null);
     }
     fields.setTagged(this.annotation, true);
     this.named =

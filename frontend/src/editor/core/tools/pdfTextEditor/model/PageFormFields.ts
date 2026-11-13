@@ -6,9 +6,16 @@ export interface FormFieldEdit {
   widget: WidgetAnnotation;
   /** True when the save gives it a Form element of its own. */
   newForm: boolean;
-  /** The /TU to save, null for none; absent leaves the file's. */
+  /** The /TU to save on its field, null for none; absent leaves the file's. */
   tooltip?: string | null;
 }
+
+/**
+ * The session's /TU edits, by field object number. One per document, shared
+ * by every page's PageFormFields, so all the widgets of a field show and save
+ * one name.
+ */
+export type FieldTooltips = Map<number, string | null>;
 
 /**
  * The page's form field widgets and the session's unsaved changes to them:
@@ -17,11 +24,11 @@ export interface FormFieldEdit {
 export class PageFormFields {
   private readonly widgets: ReadonlyMap<number, WidgetAnnotation>;
   private readonly tagged = new Set<number>();
-  private readonly tooltips = new Map<number, string | null>();
 
   constructor(
     widgets: readonly WidgetAnnotation[],
     private readonly readOnly: ReadOnlyReason | null,
+    private readonly tooltips: FieldTooltips = new Map(),
   ) {
     this.widgets = new Map(widgets.map((w) => [w.annotation, w]));
   }
@@ -50,30 +57,30 @@ export class PageFormFields {
     else this.tagged.delete(annotation);
   }
 
-  /** The field's /TU as it will be saved: the session's, else the file's. Throws for an unknown widget. */
+  /** The /TU of the widget's field as it will be saved: the session's, else the file's. Throws for an unknown widget. */
   tooltip(annotation: number): string | null {
-    if (this.tooltips.has(annotation)) return this.tooltips.get(annotation)!;
-    return this.known(annotation).tooltip;
+    const { field, tooltip } = this.known(annotation);
+    return this.tooltips.has(field) ? this.tooltips.get(field)! : tooltip;
   }
 
-  /** Set or, with null, remove the field's /TU. Throws as setTagged does, bar the holder. */
+  /** Set or, with null, remove the /TU of the widget's field. Throws as setTagged does, bar the holder. */
   setTooltip(annotation: number, tooltip: string | null): void {
     const widget = this.editable(annotation);
-    if (tooltip === widget.tooltip) this.tooltips.delete(annotation);
-    else this.tooltips.set(annotation, tooltip);
+    if (tooltip === widget.tooltip) this.tooltips.delete(widget.field);
+    else this.tooltips.set(widget.field, tooltip);
   }
 
+  /** Each widget of a renamed field carries the name: the caller saves it once per field. */
   edits(): FormFieldEdit[] {
     return this.all().flatMap((widget) => {
-      const { annotation } = widget;
-      const newForm = this.tagged.has(annotation);
-      const named = this.tooltips.has(annotation);
+      const newForm = this.tagged.has(widget.annotation);
+      const named = this.tooltips.has(widget.field);
       if (!newForm && !named) return [];
       return [
         {
           widget,
           newForm,
-          ...(named && { tooltip: this.tooltips.get(annotation)! }),
+          ...(named && { tooltip: this.tooltips.get(widget.field)! }),
         },
       ];
     });

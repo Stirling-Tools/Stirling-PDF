@@ -1,6 +1,9 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
-import { PageFormFields } from "@editor/tools/pdfTextEditor/model/PageFormFields";
+import {
+  PageFormFields,
+  type FieldTooltips,
+} from "@editor/tools/pdfTextEditor/model/PageFormFields";
 import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type {
   StructureRole,
@@ -350,6 +353,7 @@ export class PageStructure {
     slotCount: number | null = null,
     retaggedAs: RetagLookup = () => null,
     annotations: PageAnnotations = NO_ANNOTATIONS,
+    fieldTooltips?: FieldTooltips,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
@@ -358,7 +362,11 @@ export class PageStructure {
     this.linkAnnotations = new Map(
       annotations.links.map((link) => [link.annotation, link]),
     );
-    this.formFields = new PageFormFields(annotations.widgets, readOnly);
+    this.formFields = new PageFormFields(
+      annotations.widgets,
+      readOnly,
+      fieldTooltips,
+    );
     this.fileElements = new Set(elements);
     for (const el of elements) {
       for (const mcid of el.mcids) this.byMcid.set(mcid, el);

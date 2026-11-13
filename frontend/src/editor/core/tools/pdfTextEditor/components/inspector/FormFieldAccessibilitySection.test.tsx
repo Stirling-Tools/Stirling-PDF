@@ -8,6 +8,8 @@ const KEY = "pdfTextEditor.inspector.accessibility";
 const WIDGET = {
   annotation: 20,
   position: 0,
+  field: 20,
+  fieldShared: false,
   rect: { x: 110, y: 694, width: 190, height: 20 },
   fieldType: "Tx",
   tooltip: null,
