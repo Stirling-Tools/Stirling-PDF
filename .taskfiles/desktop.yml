@@ -41,6 +41,17 @@ tasks:
         vars: { MODE: desktop }
       - provisioner
 
+  aot:
+    desc: "Train the JDK AOT cache that speeds up bundled backend startup"
+    # Staging wipes libs/, so the generated cache going missing forces a retrain.
+    sources:
+      - src-tauri/libs/*.jar
+      - src-tauri/runtime/jre/release
+    generates:
+      - src-tauri/libs/*.aot
+    cmds:
+      - node scripts/train-aot-cache.mjs src-tauri
+
   provisioner:
     desc: "Build installer provisioner"
     platforms: [windows]
@@ -59,30 +70,35 @@ tasks:
     desc: "Build Tauri desktop app (production)"
     deps: [prepare]
     cmds:
+      - task: aot
       - npx tauri build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
     deps: [prepare]
     cmds:
+      - task: aot
       - npx tauri build --no-bundle
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
     deps: [prepare]
     cmds:
+      - task: aot
       - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     deps: [prepare]
     cmds:
+      - task: aot
       - npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [prepare]
     cmds:
+      - task: aot
       - npx tauri build --bundles appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   test:
@@ -108,7 +124,7 @@ tasks:
     dir: src-tauri
     env:
       # Clippy only needs the crate graph. Blanking the bundle resources stops
-      # tauri-build failing on the libs/*.jar and runtime/jre globs that only
+      # tauri-build failing on the libs/ and runtime/jre globs that only
       # `desktop:prepare` produces, so linting does not need a backend build.
       TAURI_CONFIG: '{"bundle":{"resources":[]}}'
     cmds:
@@ -190,9 +206,8 @@ tasks:
         platforms: [windows]
       - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
-      # The bundle globs libs/*.jar, so an old jar left behind would ship too
-      # (and could be selected as the backend). The script stages only the jar
-      # this build just produced, replacing whatever the last build left there.
+      # The bundle ships all of libs/, so anything an older build left there would ship
+      # too. The script replaces libs/ with this build's jar, unpacked for the AOT cache.
       - node frontend/scripts/stage-backend-jar.mjs app/core/build/libs frontend/src-tauri/libs
 
   jlink:runtime:

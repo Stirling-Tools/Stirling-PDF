@@ -298,6 +298,10 @@ jobs:
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
 
+      # After prepare so the cache matches the staged jars; the universal macOS JRE gets one per arch.
+      - name: Train backend AOT cache
+        run: task desktop:aot
+
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
