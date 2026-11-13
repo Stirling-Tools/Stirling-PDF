@@ -13,6 +13,9 @@ interface SeedFile {
   folderId?: string;
   versionNumber?: number;
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
+  /** Desktop disk link; with isDirty, edits not yet saved back to disk. */
+  localFilePath?: string;
+  isDirty?: boolean;
 }
 
 /** Seed IDB + register the cloud entries with the server stub. */
@@ -128,6 +131,8 @@ async function seedFiles(
             remoteSharedViaLink: false,
             remoteHasShareLinks: false,
             remoteShareToken: null,
+            localFilePath: f.localFilePath,
+            isDirty: f.isDirty,
           });
         }
         tx.oncomplete = () => db.close();
@@ -1506,7 +1511,7 @@ test.describe("Files page", () => {
   test.describe("Clear library", () => {
     test.use({ autoGoto: false });
 
-    test("clears loose and open files but keeps foldered ones and never touches the cloud", async ({
+    test("clears loose and open files, keeps foldered and unsaved ones, never touches the cloud", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -1521,6 +1526,13 @@ test.describe("Files page", () => {
             remoteStorageId: null,
             folderId: "vf-1",
           },
+          {
+            id: "dirty",
+            name: "dirty.pdf",
+            remoteStorageId: null,
+            localFilePath: "C:/docs/dirty.pdf",
+            isDirty: true,
+          },
         ],
         [{ id: "vf-1", name: "Kept" }],
       );
@@ -1532,23 +1544,24 @@ test.describe("Files page", () => {
 
       await page.goto("/editor", { waitUntil: "domcontentloaded" });
       const rows = page.locator(".file-sidebar-file-item");
-      await expect(rows).toHaveCount(3, { timeout: 10_000 });
+      await expect(rows).toHaveCount(4, { timeout: 10_000 });
       // An upload lands open in the workbench; the clear closes it too.
       await uploadFiles(
         page,
         `${import.meta.dirname}/../test-fixtures/sample.pdf`,
       );
-      await expect(rows).toHaveCount(4);
+      await expect(rows).toHaveCount(5);
 
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toContainText("Remove 3 files from your library?");
-      await expect(dialog).toContainText("(1)");
+      await expect(dialog).toContainText("(2)");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
-      await expect(rows).toHaveCount(1);
-      await expect(rows.first()).toContainText("filed.pdf");
-      // Only the foldered file is left, so there is nothing more to clear.
+      await expect(rows).toHaveCount(2);
+      await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
+      await expect(rows.filter({ hasText: "dirty.pdf" })).toHaveCount(1);
+      // Only kept files are left, so there is nothing more to clear.
       await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
         0,
       );
