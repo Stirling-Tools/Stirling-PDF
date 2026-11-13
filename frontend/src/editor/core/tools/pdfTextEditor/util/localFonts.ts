@@ -119,6 +119,13 @@ export async function localFontPermission(): Promise<LocalFontPermission> {
   return (await permissionStatus())?.state ?? "prompt";
 }
 
+/** Lists the device's fonts only when that cannot prompt: access was granted earlier. Resolves to what is already loaded, or null without access. */
+export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
+  if (!isLocalFontAccessSupported() || resolved) return resolved;
+  if ((await localFontPermission()) !== "granted") return null;
+  return listLocalFonts();
+}
+
 export function watchLocalFontPermission(
   listener: (permission: LocalFontPermission) => void,
 ): () => void {

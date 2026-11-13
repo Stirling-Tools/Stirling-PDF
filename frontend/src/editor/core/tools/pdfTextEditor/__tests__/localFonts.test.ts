@@ -3,6 +3,7 @@ import {
   groupByFamily,
   isLocalFontAccessSupported,
   listLocalFonts,
+  listLocalFontsIfGranted,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -157,6 +158,41 @@ describe("listLocalFonts", () => {
     await expect(listLocalFonts()).resolves.toBeNull();
     await expect(listLocalFonts()).resolves.toBeNull();
     expect(query).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("listLocalFontsIfGranted", () => {
+  function setPermission(state: PermissionState): void {
+    Object.defineProperty(navigator, "permissions", {
+      configurable: true,
+      value: { query: vi.fn().mockResolvedValue({ state }) },
+    });
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "permissions");
+  });
+
+  it("lists the fonts when access was already granted", async () => {
+    setPermission("granted");
+    setQuery(
+      vi.fn<QueryStub>().mockResolvedValue([face("Acme", "Regular", "Acme")]),
+    );
+    const fonts = await listLocalFontsIfGranted();
+    expect(fonts?.map((f) => f.family)).toEqual(["Acme"]);
+  });
+
+  it("never asks when access would have to be requested", async () => {
+    setPermission("prompt");
+    const query = vi.fn<QueryStub>().mockResolvedValue([]);
+    setQuery(query);
+    await expect(listLocalFontsIfGranted()).resolves.toBeNull();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("returns null in a browser without the API", async () => {
+    setPermission("granted");
+    await expect(listLocalFontsIfGranted()).resolves.toBeNull();
   });
 });
 
