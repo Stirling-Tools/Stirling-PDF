@@ -10,7 +10,9 @@ export const SERVER_FONTS_URL = "/api/v1/ui-data/editor-fonts";
 export interface ServerFontFace {
   id: string;
   style: string;
+  bold: boolean;
   italic: boolean;
+  weight: number | null;
   postscriptName: string;
 }
 
@@ -44,7 +46,12 @@ function readFace(value: unknown): ServerFontFace | null {
   return {
     id: face.id,
     style: typeof face.style === "string" ? face.style.trim() : "",
+    bold: face.bold === true,
     italic: face.italic === true,
+    weight:
+      typeof face.weight === "number" && Number.isFinite(face.weight)
+        ? face.weight
+        : null,
     postscriptName:
       typeof face.postscriptName === "string" ? face.postscriptName : "",
   };
@@ -79,15 +86,25 @@ function publish(families: ServerFontFamily[]): LocalFont[] {
         fullName: face.style ? `${family} ${face.style}` : family,
         style: face.style,
         postscriptName: face.postscriptName,
+        axes: { bold: face.bold, italic: face.italic, weight: face.weight },
       };
       fonts.push(font);
       byFont.set(font, face);
     }
   }
   faceByFont = byFont;
+  forgetFaceBindings(new Set([...byFont.values()].map((face) => face.id)));
   resolved = fonts;
   notifyListeners();
   return fonts;
+}
+
+function forgetFaceBindings(listed: Set<string>): void {
+  faceIdByName.clear();
+  bytesPending.clear();
+  for (const id of bytesByFaceId.keys()) {
+    if (!listed.has(id)) bytesByFaceId.delete(id);
+  }
 }
 
 function notifyListeners(): void {
@@ -281,7 +298,8 @@ export async function loadServerFontBytes(
     if (!bytes || started !== generation) return null;
     await registerCssFace(face, bytes);
     if (started !== generation) return null;
-    faceIdByName.set(key, face.id);
+    if (serverFaceFor(requested)?.id === face.id)
+      faceIdByName.set(key, face.id);
     return bytes;
   });
 }
