@@ -43,7 +43,7 @@ class CaffeineJCacheConfigTest {
     void applicationConfIsOnTheClasspath() {
         var config = ConfigFactory.load(getClass().getClassLoader());
         assertThat(config.hasPath("caffeine.jcache")).isTrue();
-        assertThat(config.getInt("caffeine.jcache.users.policy.maximum.size")).isEqualTo(5000);
+        assertThat(config.getInt("caffeine.jcache.users.policy.maximum.size")).isEqualTo(50000);
         assertThat(config.getString("caffeine.jcache.users.policy.eager-expiration.after-write"))
                 .isEqualTo("5m");
     }
@@ -55,15 +55,13 @@ class CaffeineJCacheConfigTest {
      */
     static Stream<Arguments> regions() {
         return Stream.of(
-                Arguments.of("policies", 500L, Duration.ofMinutes(30)),
-                Arguments.of("policy-sources", 500L, Duration.ofMinutes(30)),
-                Arguments.of("teams", 1000L, Duration.ofMinutes(15)),
-                Arguments.of("user-license-settings", 2000L, Duration.ofHours(1)),
-                Arguments.of("users", 5000L, Duration.ofMinutes(5)),
-                Arguments.of("usersNaturalId", 5000L, Duration.ofMinutes(5)),
-                Arguments.of("saas-pricing-policies", 100L, Duration.ofSeconds(30)),
-                Arguments.of("saas-legal-consents", 5000L, Duration.ofHours(1)),
-                Arguments.of("saas-subscriptions", 5000L, Duration.ofMinutes(15)));
+                Arguments.of("policies", 2000L, Duration.ofMinutes(30)),
+                Arguments.of("policy-sources", 2000L, Duration.ofMinutes(30)),
+                Arguments.of("teams", 20000L, Duration.ofMinutes(15)),
+                Arguments.of("user-license-settings", 100L, Duration.ofHours(1)),
+                Arguments.of("users", 50000L, Duration.ofMinutes(5)),
+                Arguments.of("usersNaturalId", 20000L, Duration.ofMinutes(5)),
+                Arguments.of("saas-pricing-policies", 100L, Duration.ofSeconds(30)));
     }
 
     @ParameterizedTest(name = "{0} applies its configured bounds")
