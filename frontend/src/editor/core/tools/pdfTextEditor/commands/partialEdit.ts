@@ -168,7 +168,7 @@ function surrogatePairsSurviveTogether(
   next: string,
   keptA: Set<number>,
   keptB: Set<number>,
-  alignment: Array<{ aIdx: number; bIdx: number }>,
+  alignment: Alignment,
 ): boolean {
   const aToB = new Map<number, number>();
   const bToA = new Map<number, number>();
@@ -228,7 +228,11 @@ export interface PartialEditPlan {
   prevMergedFromPtrs: number[];
   prevMergedFromTexts: string[];
   prevMergedFromBounds: Array<{ x: number; right: number }>;
+  /** The edited text that every op's startBIdx indexes into. */
+  nextText: string;
 }
+
+export type Alignment = Array<{ aIdx: number; bIdx: number }>;
 
 function lcsIndices(
   a: string,
@@ -236,7 +240,7 @@ function lcsIndices(
 ): {
   keptA: Set<number>;
   keptB: Set<number>;
-  alignment: Array<{ aIdx: number; bIdx: number }>;
+  alignment: Alignment;
 } {
   const m = a.length;
   const n = b.length;
@@ -251,7 +255,7 @@ function lcsIndices(
   }
   const keptA = new Set<number>();
   const keptB = new Set<number>();
-  const alignment: Array<{ aIdx: number; bIdx: number }> = [];
+  const alignment: Alignment = [];
   let i = m;
   let j = n;
   while (i > 0 && j > 0) {
@@ -268,6 +272,75 @@ function lcsIndices(
     }
   }
   return { keptA, keptB, alignment };
+}
+
+const MAX_STRANDED_KEEP = 2;
+const MAX_KEPT_SHARE = 0.5;
+
+function isWordChar(ch: string): boolean {
+  return /\S/.test(ch);
+}
+
+function mostlyDeletedWord(
+  prevText: string,
+  keptA: Set<number>,
+  at: number,
+): boolean {
+  let from = at;
+  while (from > 0 && isWordChar(prevText[from - 1])) from--;
+  let to = at;
+  while (to + 1 < prevText.length && isWordChar(prevText[to + 1])) to++;
+  let kept = 0;
+  for (let a = from; a <= to; a++) if (keptA.has(a)) kept++;
+  return kept < (to - from + 1) * MAX_KEPT_SHARE;
+}
+
+// A kept letter of a deleted word inside a typed one stays put and opens gaps, so retype it.
+function withoutStrandedGlyphs(
+  prevText: string,
+  nextText: string,
+  keptA: Set<number>,
+  keptB: Set<number>,
+  alignment: Alignment,
+): {
+  keptA: Set<number>;
+  keptB: Set<number>;
+  alignment: Alignment;
+} {
+  const typedLetter = (b: number) =>
+    b >= 0 && b < nextText.length && !keptB.has(b) && isWordChar(nextText[b]);
+  const deletedLetter = (a: number) =>
+    a >= 0 && a < prevText.length && !keptA.has(a) && isWordChar(prevText[a]);
+  const stranded = new Set<number>();
+  for (let i = 0; i < alignment.length;) {
+    let j = i;
+    while (
+      j + 1 < alignment.length &&
+      alignment[j + 1].bIdx === alignment[j].bIdx + 1 &&
+      alignment[j + 1].aIdx === alignment[j].aIdx + 1
+    )
+      j++;
+    const { aIdx: fromA, bIdx: b } = alignment[i];
+    const { aIdx: toA, bIdx: end } = alignment[j];
+    if (
+      end - b + 1 <= MAX_STRANDED_KEEP &&
+      (deletedLetter(fromA - 1) || deletedLetter(toA + 1)) &&
+      mostlyDeletedWord(prevText, keptA, fromA) &&
+      (typedLetter(b - 1) || typedLetter(end + 1))
+    )
+      for (let k = b; k <= end; k++) stranded.add(k);
+    i = j + 1;
+  }
+  if (stranded.size === 0) return { keptA, keptB, alignment };
+  const kept = alignment.filter(({ bIdx }) => !stranded.has(bIdx));
+  // Retyping one letter can strand its neighbour ("ua" then "l" of "Annual"), so repeat.
+  return withoutStrandedGlyphs(
+    prevText,
+    nextText,
+    new Set(kept.map(({ aIdx }) => aIdx)),
+    new Set(kept.map(({ bIdx }) => bIdx)),
+    kept,
+  );
 }
 
 export function planPartialEdit(
@@ -304,6 +377,14 @@ export function planPartialEdit(
       alignment.push({ aIdx: i, bIdx: i });
     }
   }
+
+  ({ keptA, keptB, alignment } = withoutStrandedGlyphs(
+    prevText,
+    nextText,
+    keptA,
+    keptB,
+    alignment,
+  ));
 
   // Only now, against the alignment the ops walk will actually use: a diff
   // boundary landing inside an astral char would emit a lone surrogate.
@@ -515,6 +596,7 @@ export function planPartialEdit(
     prevMergedFromPtrs: [...run.mergedFromPtrs],
     prevMergedFromTexts: [...run.mergedFromTexts],
     prevMergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
+    nextText,
   };
 }
 
@@ -691,6 +773,20 @@ export function applyPartialEditPlan(
   // Strategy: walk ops in order.
   let firstX = startX;
   let lastEnd = startX;
+  // Bounds stop at the last glyph's ink, so the trailing space must be added back.
+  let spacesAtEnd = "";
+  const trailingSpaces = (text: string) => /\s*$/.exec(text)?.[0] ?? "";
+  function extendLastEnd(right: number, text: string): void {
+    if (right < lastEnd) return;
+    lastEnd = right;
+    spacesAtEnd = trailingSpaces(text);
+  }
+  // Tc stretches spaces too, matching the gaps emitTextLine draws.
+  const whitespaceAdvancePt = (text: string) =>
+    text
+      ? measureWhitespaceAdvancePt(text, fallbackFamily, run.fontSize) +
+        run.charSpacingPt * text.length
+      : 0;
   let offset = 0;
   // Tracks the highest sub-run index we've already accounted for in `offset`.
   let processedUpTo = -1;
@@ -707,7 +803,74 @@ export function applyPartialEditPlan(
     processedUpTo = Math.max(processedUpTo, idx);
   }
 
-  for (const op of plan.ops) {
+  const nextSurvivorOp: Array<PartialEditOp | undefined> = [];
+  let upcoming: PartialEditOp | undefined;
+  for (let i = plan.ops.length - 1; i >= 0; i--) {
+    nextSurvivorOp[i] = upcoming;
+    const o = plan.ops[i];
+    if ((o.type === "keep" || o.type === "modify") && o.subRunIdx !== undefined)
+      upcoming = o;
+  }
+
+  // Null when nothing follows the insert or a deletion before it is still pending.
+  const followingX = (opIndex: number): number | null => {
+    const idx = nextSurvivorOp[opIndex]?.subRunIdx;
+    if (idx === undefined) return null;
+    for (let i = processedUpTo + 1; i < idx; i++)
+      if (plan.subRunStatus[i] === "all-deleted") return null;
+    const bounds = plan.prevMergedFromBounds[idx];
+    return bounds ? bounds.x + offset : null;
+  };
+
+  const insertAnchorX = (
+    origBounds: { x: number } | null,
+    beforeBounds: { x: number } | null,
+    leadingGap: number,
+  ): number => {
+    if (origBounds) return origBounds.x + offset;
+    if (beforeBounds) return beforeBounds.x + offset;
+    return lastEnd + leadingGap + whitespaceAdvancePt(spacesAtEnd);
+  };
+
+  const offsetAfterInsert = (
+    opIndex: number,
+    origBounds: { x: number; right: number } | null,
+    beforeBounds: { x: number } | null,
+    insert: {
+      text: string;
+      anchorX: number;
+      rightEdge: number;
+      width: number;
+      leadingGap: number;
+      hasInk: boolean;
+    },
+  ): number => {
+    // Anchored (mixed-replacement): delta vs original sub-run width.
+    if (origBounds) return insert.width - (origBounds.right - origBounds.x);
+    const op = plan.ops[opIndex];
+    const following = nextSurvivorOp[opIndex];
+    if (beforeBounds) {
+      // Spaces typed before the next word belong to no object, so add their width.
+      const between =
+        following && following.subRunIdx === op.anchorBeforeSubRunIdx
+          ? plan.nextText.slice(
+              op.startBIdx + insert.text.length,
+              following.startBIdx,
+            )
+          : "";
+      return insert.width + whitespaceAdvancePt(between);
+    }
+    // Keep the old gap from the new text's end: ink width drifts a side bearing per key.
+    const followX = followingX(opIndex);
+    if (followX === null || !insert.hasInk)
+      // The ghost-space gap also pushes everything after this insert right.
+      return insert.leadingGap + insert.width;
+    const gap = Math.max(0, followX - insert.anchorX);
+    const trailingAdvance = whitespaceAdvancePt(trailingSpaces(insert.text));
+    return insert.rightEdge + trailingAdvance + gap - followX;
+  };
+
+  for (const [opIndex, op] of plan.ops.entries()) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
       absorbDeletesBefore(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
@@ -726,7 +889,7 @@ export function applyPartialEditPlan(
       newMergedFromTexts.push(text);
       newMergedFromBounds.push({ x: newX, right: newRight });
       newMergedFromCharStarts.push(op.startBIdx);
-      if (newRight > lastEnd) lastEnd = newRight;
+      extendLastEnd(newRight, text);
     } else if (
       op.type === "modify" &&
       op.subRunIdx !== undefined &&
@@ -810,7 +973,7 @@ export function applyPartialEditPlan(
             cur += w;
             charCursor += slice.length;
           }
-          if (reRight > lastEnd) lastEnd = reRight;
+          extendLastEnd(reRight, modText);
           offset += reRight - newX - origWidth;
         }
       } else {
@@ -820,7 +983,7 @@ export function applyPartialEditPlan(
         newMergedFromTexts.push(modText);
         newMergedFromBounds.push({ x: newX, right: newRight });
         newMergedFromCharStarts.push(op.startBIdx);
-        if (newRight > lastEnd) lastEnd = newRight;
+        extendLastEnd(newRight, modText);
         // Subsequent sub-runs shift by the width delta (surviving text is
         // usually narrower than the original).
         offset += newRight - newX - origWidth;
@@ -845,11 +1008,7 @@ export function applyPartialEditPlan(
       // Anchor priority: * anchorSubRunIdx: emit at the replaced sub-run's x.
       const leadingGap =
         (op.leadingGhostCount ?? 0) * Math.max(1, run.fontSize) * 0.25;
-      const anchorX = origBounds
-        ? origBounds.x + offset
-        : beforeBounds
-          ? beforeBounds.x + offset
-          : lastEnd + leadingGap;
+      const anchorX = insertAnchorX(origBounds, beforeBounds, leadingGap);
 
       // Borrow the font from a survivor that actually contains the inserted
       // chars, so the new glyph reuses that exact embedded font.
@@ -926,16 +1085,7 @@ export function applyPartialEditPlan(
       // Add the advance width of whitespace chars so the offset that shifts
       // following kept sub-runs accounts for inserted spaces.
       const whitespaceLen = insertText.length - nonWhitespaceLen;
-      if (whitespaceLen > 0) {
-        const wsWidth = measureWhitespaceAdvancePt(
-          " ".repeat(whitespaceLen),
-          fallbackFamily,
-          run.fontSize,
-        );
-        // Letter-spaced runs stretch inserted spaces too (Tc applies to
-        // space glyphs), matching the widened gaps emitTextLine produced.
-        measuredWidth += wsWidth + run.charSpacingPt * whitespaceLen;
-      }
+      measuredWidth += whitespaceAdvancePt(" ".repeat(whitespaceLen));
       // Map emitted ptrs back to text. emitTextLine emits one ptr per
       // whitespace-separated WORD on the normal path.
       const insertWords: Array<{ text: string; start: number }> = [];
@@ -993,18 +1143,15 @@ export function applyPartialEditPlan(
           charCursor += sliceText.length;
         }
       }
-      if (realRightEdge > lastEnd) lastEnd = realRightEdge;
-      // Update offset: * anchored (mixed-replacement): delta vs original
-      // sub-run width.
-      if (origBounds) {
-        const origWidth = origBounds.right - origBounds.x;
-        offset += measuredWidth - origWidth;
-      } else if (beforeBounds) {
-        offset += measuredWidth;
-      } else {
-        // The ghost-space gap also pushes everything after this insert right.
-        offset += leadingGap + measuredWidth;
-      }
+      extendLastEnd(realRightEdge, insertText);
+      offset += offsetAfterInsert(opIndex, origBounds, beforeBounds, {
+        text: insertText,
+        anchorX,
+        rightEdge: realRightEdge,
+        width: measuredWidth,
+        leadingGap,
+        hasInk: nonWhitespaceLen > 0,
+      });
     }
   }
 
