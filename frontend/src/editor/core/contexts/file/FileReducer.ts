@@ -280,8 +280,12 @@ export function fileContextReducer(
       const selectedFileIds = Array.from(
         new Set([...state.ui.selectedFileIds, ...fileIds]),
       );
-      if (selectedFileIds.length === state.ui.selectedFileIds.length)
-        return state;
+      const selectionUnchanged =
+        selectedFileIds.length === state.ui.selectedFileIds.length &&
+        selectedFileIds.every(
+          (fileId, index) => fileId === state.ui.selectedFileIds[index],
+        );
+      if (selectionUnchanged) return state;
       return {
         ...state,
         ui: {

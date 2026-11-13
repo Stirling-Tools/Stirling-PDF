@@ -356,4 +356,19 @@ describe("fileContextReducer — ADD_SELECTED_FILES", () => {
     });
     expect(next.ui.selectedFileIds).toEqual(["a", "b"]);
   });
+
+  it("does not let existing duplicates mask a new selection", () => {
+    const start = {
+      ...stateWith([stub("a"), stub("b")]),
+      ui: {
+        ...initialFileContextState.ui,
+        selectedFileIds: ["a" as FileId, "a" as FileId],
+      },
+    };
+    const next = fileContextReducer(start, {
+      type: "ADD_SELECTED_FILES",
+      payload: { fileIds: ["b" as FileId] },
+    });
+    expect(next.ui.selectedFileIds).toEqual(["a", "b"]);
+  });
 });
