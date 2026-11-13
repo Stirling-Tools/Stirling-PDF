@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -172,6 +173,14 @@ public class JobExecutorService {
 
             CompletableFuture<ResponseEntity<?>> future =
                     jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
+            // A rejected job never runs, so fail its task here; otherwise the client polls
+            // forever and the abandoned-task sweep drops it without deleting its input copies.
+            future.whenComplete(
+                    (ignored, failure) -> {
+                        if (failure instanceof RejectedExecutionException) {
+                            taskManager.setError(capturedJobIdForQueue, failure.getMessage());
+                        }
+                    });
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
@@ -180,28 +189,33 @@ public class JobExecutorService {
 
             final String capturedJobId = jobId;
 
-            executor.execute(
-                    () -> {
-                        try {
-                            log.debug(
-                                    "Running async job {} with timeout {} ms",
-                                    capturedJobId,
-                                    timeoutToUse);
+            try {
+                executor.execute(
+                        () -> {
+                            try {
+                                log.debug(
+                                        "Running async job {} with timeout {} ms",
+                                        capturedJobId,
+                                        timeoutToUse);
 
-                            stirling.software.common.util.JobContext.setJobId(capturedJobId);
-                            stirling.software.common.util.JobContext.setOwner(jobOwner);
-                            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
-                            processJobResult(capturedJobId, result);
-                        } catch (TimeoutException te) {
-                            log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
-                            taskManager.setError(jobId, "Job timed out");
-                        } catch (Exception e) {
-                            log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
-                            taskManager.setError(jobId, e.getMessage());
-                        } finally {
-                            stirling.software.common.util.JobContext.clear();
-                        }
-                    });
+                                stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                                stirling.software.common.util.JobContext.setOwner(jobOwner);
+                                Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+                                processJobResult(capturedJobId, result);
+                            } catch (TimeoutException te) {
+                                log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
+                                taskManager.setError(jobId, "Job timed out");
+                            } catch (Exception e) {
+                                log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
+                                taskManager.setError(jobId, e.getMessage());
+                            } finally {
+                                stirling.software.common.util.JobContext.clear();
+                            }
+                        });
+            } catch (RejectedExecutionException e) {
+                // Executor shut down: fail the task so its input copies are cleaned up.
+                taskManager.setError(capturedJobId, "Job rejected: " + e.getMessage());
+            }
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else {

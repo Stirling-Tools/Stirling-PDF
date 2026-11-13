@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXCertPathBuilderResult;
@@ -107,7 +108,8 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        try (InputStream in = file.getInputStream();
+                PDDocument document = pdfDocumentFactory.load(in)) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -133,8 +135,16 @@ public class ValidateSignatureController {
                 result.setCoversEntireDocument(documentCovered);
 
                 try {
-                    byte[] signedContent = sig.getSignedContent(file.getInputStream());
-                    byte[] signatureBytes = sig.getContents(file.getInputStream());
+                    // Opened one after the other: an S3 stream left unread while the other is
+                    // consumed can be aborted by the SDK's idle timeout.
+                    byte[] signedContent;
+                    try (InputStream signedIn = file.getInputStream()) {
+                        signedContent = sig.getSignedContent(signedIn);
+                    }
+                    byte[] signatureBytes;
+                    try (InputStream contentsIn = file.getInputStream()) {
+                        signatureBytes = sig.getContents(contentsIn);
+                    }
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.

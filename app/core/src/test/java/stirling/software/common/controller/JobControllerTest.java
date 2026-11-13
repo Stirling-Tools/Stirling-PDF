@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -13,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -149,7 +151,9 @@ class JobControllerTest {
                 fileId, originalFileName, contentType, fileContent.length);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
-        when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
+        when(fileStorage.retrieveInputStream(fileId))
+                .thenReturn(new ByteArrayInputStream(fileContent));
+        when(fileStorage.getFileSize(fileId)).thenReturn((long) fileContent.length);
 
         // Act
         ResponseEntity<?> response = controller.getJobResult(jobId);
@@ -159,7 +163,10 @@ class JobControllerTest {
         assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
         assertTrue(
                 response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
-        assertEquals(fileContent, response.getBody());
+        assertEquals(fileContent.length, response.getHeaders().getContentLength());
+        assertArrayEquals(
+                fileContent,
+                ((InputStreamResource) response.getBody()).getInputStream().readAllBytes());
     }
 
     @Test
@@ -227,7 +234,8 @@ class JobControllerTest {
         mockResult.completeWithSingleFile(fileId, originalFileName, contentType, 1024L);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
-        when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
+        when(fileStorage.retrieveInputStream(fileId))
+                .thenThrow(new RuntimeException("File not found"));
 
         // Act
         ResponseEntity<?> response = controller.getJobResult(jobId);

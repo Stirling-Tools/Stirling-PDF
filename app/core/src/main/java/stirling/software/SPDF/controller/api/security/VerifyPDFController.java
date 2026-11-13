@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -57,7 +58,10 @@ public class VerifyPDFController {
         try {
             log.info("Detecting and verifying standards in PDF '{}'", file.getOriginalFilename());
 
-            List<PDFVerificationResult> results = veraPDFService.validatePDF(file.getInputStream());
+            List<PDFVerificationResult> results;
+            try (InputStream in = file.getInputStream()) {
+                results = veraPDFService.validatePDF(in);
+            }
 
             log.info(
                     "Verification complete for '{}': {} standard(s) checked",

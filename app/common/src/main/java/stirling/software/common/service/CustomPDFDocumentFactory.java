@@ -33,6 +33,7 @@ import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -240,7 +241,7 @@ public class CustomPDFDocumentFactory {
         if (size > 0 && size <= SMALL_FILE_THRESHOLD) {
             return load(pdfFile.getBytes(), readOnly);
         }
-        return streamToTemp(pdfFile.getInputStream(), null, readOnly);
+        return streamToTemp(pdfFile, true, null, readOnly);
     }
 
     public PDDocument load(MultipartFile fileInput, String password) throws IOException {
@@ -249,7 +250,7 @@ public class CustomPDFDocumentFactory {
 
     public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
             throws IOException {
-        return streamToTemp(fileInput.getInputStream(), password, readOnly);
+        return streamToTemp(fileInput, true, password, readOnly);
     }
 
     /**
@@ -550,10 +551,27 @@ public class CustomPDFDocumentFactory {
     /** Buffers an {@link InputStream} to a managed temp file then delegates to the core loader. */
     private PDDocument streamToTemp(InputStream input, String password, boolean readOnly)
             throws IOException {
+        return streamToTemp(() -> input, false, password, readOnly);
+    }
+
+    /**
+     * With {@code closeInput}, the stream is closed once buffered and before parsing, so a failed
+     * close cannot strand an already-loaded document.
+     */
+    private PDDocument streamToTemp(
+            InputStreamSource source, boolean closeInput, String password, boolean readOnly)
+            throws IOException {
         Path tempFile = createTempFilePath("pdf-stream-");
         boolean success = false;
         try {
-            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            InputStream input = source.getInputStream();
+            if (closeInput) {
+                try (input) {
+                    Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } else {
+                Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
             PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile), password);
             try {
                 PDDocument result = maybePostProcess(doc, readOnly);

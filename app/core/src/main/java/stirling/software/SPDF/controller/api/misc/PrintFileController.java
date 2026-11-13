@@ -7,6 +7,7 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -82,8 +83,9 @@ public class PrintFileController {
                 // Use Stream-to-File pattern: write to temp file first, then load from file
                 Path tempFile = Files.createTempFile("print-", ".pdf");
                 try {
-                    Files.copy(
-                            file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    try (InputStream in = file.getInputStream()) {
+                        Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    }
                     try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
                         PrinterJob job = PrinterJob.getPrinterJob();
                         job.setPrintService(selectedService);
