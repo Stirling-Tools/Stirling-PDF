@@ -194,6 +194,24 @@ describe("undoing a burst of edits to one line", () => {
     },
   );
 
+  test.each([
+    [["Heading in a bigger siz", "Heading in a bigger si"]],
+    [["Heading in a Qbigger size", "Heading in a QQbigger size"]],
+  ])("puts the line back in its own font after %j", async (steps) => {
+    const doc = await open();
+    const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
+    const font = run.fontId;
+    const history = new HistoryStack();
+
+    burst(doc, history, run.id, steps);
+    history.undo(doc);
+    expect(run.fontId).toBe(font);
+    history.redo(doc);
+    history.undo(doc);
+
+    expect(run.fontId).toBe(font);
+  });
+
   test("puts the line back where it started", async () => {
     const doc = await open();
     const run = doc.page(0).runs.find((r) => r.text === HEADING)!;

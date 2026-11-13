@@ -174,6 +174,7 @@ export class EditTextCommand implements Command {
   /** `prevText`'s tags, read from the run's objects on the first apply. */
   private prevTags: TextTags | null = null;
   private readonly nextTagsOverride: TextTags | null;
+  private readonly nextFont: { ptr: number; id: string } | null;
 
   private overlaid = false;
   private prevObjPtr = 0;
@@ -232,11 +233,13 @@ export class EditTextCommand implements Command {
     runId: string;
     nextText: string;
     nextTags?: TextTags | null;
+    nextFont?: { ptr: number; id: string } | null;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextText = opts.nextText;
     this.nextTagsOverride = opts.nextTags ?? null;
+    this.nextFont = opts.nextFont ?? null;
   }
 
   apply(doc: EditorDocument): void {
@@ -506,10 +509,11 @@ export class EditTextCommand implements Command {
         ? run.mergedFromTexts
         : borrowPtrs.map(() => run.text);
     const originalFontPtr =
-      canReuseFont && !scanText
+      this.nextFont?.ptr ||
+      (canReuseFont && !scanText
         ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
-        : 0;
+        : 0);
 
     this.revertLines = snapshotRevertLines(
       run,
@@ -644,6 +648,7 @@ export class EditTextCommand implements Command {
         run.fontSubset = false;
       } else {
         // Borrow path: the new objects use the borrowed font handle.
+        if (this.nextFont) run.fontId = this.nextFont.id;
         run.fontSubset = false;
       }
       run.paragraphMemberPtrs = lineAnchorPtrs;
@@ -1482,11 +1487,18 @@ export class EditTextCommand implements Command {
     const first = edits[0].prevText;
     const run = doc.page(this.pageIndex).findRun(this.runId);
     if (first === null || !run || isScanRun(run)) return false;
+    const { prevFontPtr, prevFontId } = edits[0];
+    // A later step may have redrawn the run in a fallback; undo goes back to the face the burst started from.
+    const firstFont =
+      edits[0].overlaid && prevFontPtr && prevFontId
+        ? { ptr: prevFontPtr, id: prevFontId }
+        : null;
     const move = new EditTextCommand({
       pageIndex: this.pageIndex,
       runId: this.runId,
       nextText: phase === "revert" ? first : this.nextText,
       nextTags: phase === "revert" ? edits[0].prevTags : null,
+      nextFont: phase === "revert" ? firstFont : null,
     });
     try {
       move.apply(doc);
