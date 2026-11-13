@@ -14,11 +14,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -99,6 +102,19 @@ class PageNumbersControllerTest {
             in.transferTo(baos);
         }
         return baos.toByteArray();
+    }
+
+    private List<String> pageTexts(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            List<String> pages = new ArrayList<>();
+            for (int page = 1; page <= document.getNumberOfPages(); page++) {
+                stripper.setStartPage(page);
+                stripper.setEndPage(page);
+                pages.add(stripper.getText(document).trim());
+            }
+            return pages;
+        }
     }
 
     // ---- happy path -------------------------------------------------------
@@ -479,7 +495,7 @@ class PageNumbersControllerTest {
             ResponseEntity<Resource> response = controller.addPageNumbers(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(drainBody(response)).isNotEmpty();
+            assertThat(pageTexts(drainBody(response))).containsExactly("00001", "00002", "00003");
         }
 
         @Test
@@ -508,6 +524,151 @@ class PageNumbersControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(drainBody(response)).isNotEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("Roman numerals")
+    class RomanNumerals {
+
+        @Test
+        @DisplayName("Lowercase format applies to {n} and {total}")
+        void lowercaseFormat() throws Exception {
+            MockMultipartFile file = createPdf(3, "roman-lower.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-lowercase");
+            request.setCustomText("{n} of {total}");
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response)))
+                    .containsExactly("i of iii", "ii of iii", "iii of iii");
+        }
+
+        @Test
+        @DisplayName("Uppercase format honors the starting number")
+        void uppercaseFormatHonorsStartingNumber() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-upper.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-uppercase");
+            request.setStartingNumber(4);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("IV", "V");
+        }
+
+        @Test
+        @DisplayName("Starting numbers above 3999 keep producing Roman numerals")
+        void startingNumberAboveRomanLimit() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-high.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-uppercase");
+            request.setStartingNumber(4999);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("MMMMCMXCIX", "MMMMM");
+        }
+
+        @Test
+        @DisplayName("Oversized Roman labels are rejected through the request path")
+        void oversizedRomanLabelRejected() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-too-long.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-uppercase");
+            request.setStartingNumber(4_096_999);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            assertThatThrownBy(() -> controller.addPageNumbers(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("maximum length");
+        }
+
+        @Test
+        @DisplayName("Zero-padding is ignored for Roman numerals")
+        void zeroPadIgnoredForRoman() throws Exception {
+            MockMultipartFile file = createPdf(2, "roman-pad.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("roman-lowercase");
+            request.setZeroPad(3);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("i", "ii");
+        }
+
+        @Test
+        @DisplayName("Unknown format falls back to numeric")
+        void unknownFormatFallsBackToNumeric() throws Exception {
+            MockMultipartFile file = createPdf(2, "unknown-format.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("not-a-format");
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("1", "2");
+        }
+    }
+
+    @Nested
+    @DisplayName("Alphabetic")
+    class Alphabetic {
+
+        @Test
+        @DisplayName("Lowercase format applies to {n} and {total}")
+        void lowercaseFormat() throws Exception {
+            MockMultipartFile file = createPdf(3, "alpha-lower.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-lowercase");
+            request.setCustomText("{n} of {total}");
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response)))
+                    .containsExactly("a of c", "b of c", "c of c");
+        }
+
+        @Test
+        @DisplayName("Uppercase format rolls over after Z")
+        void uppercaseFormatRollsOver() throws Exception {
+            MockMultipartFile file = createPdf(2, "alpha-upper.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-uppercase");
+            request.setStartingNumber(26);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("Z", "AA");
+        }
+
+        @Test
+        @DisplayName("Zero-padding is ignored for alphabetic numerals")
+        void zeroPadIgnoredForAlphabetic() throws Exception {
+            MockMultipartFile file = createPdf(2, "alpha-pad.pdf");
+            AddPageNumbersRequest request = baseRequest(file);
+            request.setNumberFormat("alpha-lowercase");
+            request.setZeroPad(3);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+
+            ResponseEntity<Resource> response = controller.addPageNumbers(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(pageTexts(drainBody(response))).containsExactly("a", "b");
         }
     }
 

@@ -10,6 +10,12 @@ export interface AddPageNumbersParameters extends BaseParameters {
   fontSize: number;
   fontType: "Times" | "Helvetica" | "Courier";
   startingNumber: number;
+  numberFormat:
+    | "numeric"
+    | "roman-lowercase"
+    | "roman-uppercase"
+    | "alpha-lowercase"
+    | "alpha-uppercase";
   pagesToNumber: string;
   customText: string;
   // Number of digits to zero-pad page numbers to. 0 = no padding.
@@ -22,6 +28,7 @@ export const defaultParameters: AddPageNumbersParameters = {
   fontSize: 12,
   fontType: "Times",
   startingNumber: 1,
+  numberFormat: "numeric",
   pagesToNumber: "",
   customText: "",
   zeroPad: 0,
