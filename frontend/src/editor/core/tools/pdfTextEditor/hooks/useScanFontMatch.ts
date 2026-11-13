@@ -12,6 +12,7 @@ import type {
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import {
   drawnBlockStyle,
+  isScanRun,
   previewScanStyle,
   rerankScanStyles,
   scanBlockOffInk,
@@ -23,20 +24,13 @@ import {
   type RankedStyle,
   type ScanStyle,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
-import {
-  FIT_PAUSED,
-  withFitDeadline,
-} from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import { FIT_PAUSED } from "@editor/tools/pdfTextEditor/commands/scanStyle";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   FIT_GAP_MS,
-  FIT_SLICE_MS,
-} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
-import {
-  noteRankedWithCurrentFaces,
-  rankedWithCurrentFaces,
-} from "@editor/tools/pdfTextEditor/util/scanRankingFaces";
+  inSlice,
+} from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetScanStyleCommand";
 import type { PixelPatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
@@ -49,7 +43,10 @@ import {
   deviceScanFaceCount,
   faceCovers,
   loadDeviceScanFaces,
+  noteRankedWithCurrentFaces,
+  rankedWithCurrentFaces,
   scanFaces,
+  scanFacesGeneration,
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
@@ -128,13 +125,10 @@ export function isApproximateMatch(
   return ranked.length > 1 && choice.score < APPROXIMATE_MATCH_SCORE;
 }
 
-function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
-  try {
-    return withFitDeadline(performance.now() + FIT_SLICE_MS, fit);
-  } catch (e) {
-    if (e === FIT_PAUSED) return FIT_PAUSED;
-    throw e;
-  }
+function matchStatus(current: Ranked | null): ScanFontMatch["status"] {
+  if (!current) return "matching";
+  if (current.ranked.length > 0) return "ready";
+  return current.drawable ? "unmeasurable" : "noFont";
 }
 
 function drawnStyle(doc: EditorDocument, run: TextRun): ScanStyle | undefined {
@@ -161,15 +155,15 @@ export function useScanFontMatch(
 ): ScanFontMatch | null {
   const facesVersion = useSyncExternalStore(
     subscribeScanFaces,
-    () => scanFaces().length,
-    () => scanFaces().length,
+    scanFacesGeneration,
+    scanFacesGeneration,
   );
   const selected = useMemo<ScanRunRef | null>(() => {
     if (selection.runIds.length !== 1) return null;
     const id = selection.runIds[0];
     for (const page of state.pages)
       for (const run of page.runs)
-        if (run.id === id && run.renderMode === 3)
+        if (run.id === id && isScanRun(run))
           return { runId: id, pageIndex: page.pageIndex };
     return null;
   }, [selection.runIds, state.pages]);
@@ -252,10 +246,15 @@ export function useScanFontMatch(
   const activeStyle = targetRun
     ? drawnStyle(targetRun.doc, targetRun.run)
     : undefined;
-  const isActive = (choice: RankedStyle) =>
-    !!activeStyle &&
-    activeStyle.family === choice.style.family &&
-    activeStyle.fontSize === choice.style.fontSize;
+  const activeFamily = activeStyle?.family;
+  const activeSize = activeStyle?.fontSize;
+  const isActive = useCallback(
+    (choice: RankedStyle) =>
+      activeFamily !== undefined &&
+      activeFamily === choice.style.family &&
+      activeSize === choice.style.fontSize,
+    [activeFamily, activeSize],
+  );
 
   const choose = useCallback(
     (index: number) => {
@@ -293,13 +292,7 @@ export function useScanFontMatch(
     : [];
   const appliedChoice = applied.find(isActive);
   return {
-    status: !current
-      ? "matching"
-      : current.ranked.length > 0
-        ? "ready"
-        : current.drawable
-          ? "unmeasurable"
-          : "noFont",
+    status: matchStatus(current),
     scan: current?.scan ?? null,
     choices: (current?.ranked ?? []).map((choice, i) => ({
       label: choice.face.label,

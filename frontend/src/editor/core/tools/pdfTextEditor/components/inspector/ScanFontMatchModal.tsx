@@ -15,14 +15,14 @@ const lineImage = {
   height: "auto",
   boxSizing: "border-box",
   padding: "4px 6px",
-  background: "white",
+  // Page pixels sit on paper in either theme.
+  background: "var(--c-document-bg)",
   borderRadius: 4,
   border: "1px solid var(--c-border-subtle)",
 } as const;
 
 export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
   const { t } = useTranslation();
-  const choicesLabelId = useId();
   return (
     <Modal
       opened={match.open}
@@ -32,108 +32,14 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
       data-testid="pdf-editor-scan-font-match"
     >
       <Stack gap="sm">
-        {(match.status === "matching" || match.status === "ready") && (
-          <Stack gap={4}>
-            <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-hint">
-              {match.typedFromScan
-                ? t(
-                    "pdfTextEditor.scanFont.hintFromScan",
-                    "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead.",
-                  )
-                : t(
-                    "pdfTextEditor.scanFont.hint",
-                    "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
-                  )}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "pdfTextEditor.scanFont.hintOthers",
-                "Your pick is also used for scanned text you have not edited yet.",
-              )}
-            </Text>
-          </Stack>
-        )}
-        {match.status === "matching" && (
-          <Group
-            gap="xs"
-            role="status"
-            data-testid="pdf-editor-scan-font-matching"
-          >
-            <Loader size="xs" />
-            <Text size="sm" c="dimmed">
-              {t("pdfTextEditor.scanFont.matching", "Matching fonts…")}
-            </Text>
-          </Group>
-        )}
-        {match.status === "noFont" && (
-          <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-none">
-            {t(
-              "pdfTextEditor.scanFont.noFont",
-              "None of the available fonts can draw this script, so typed text cannot be redrawn yet.",
-            )}
-          </Text>
-        )}
-        {match.status === "unmeasurable" && (
-          <Text size="sm" c="dimmed">
-            {t(
-              "pdfTextEditor.scanFont.unmeasurable",
-              "This scan is too faint or small to match a font to.",
-            )}
-          </Text>
-        )}
+        <ScanFontHint
+          status={match.status}
+          typedFromScan={match.typedFromScan}
+        />
         {match.status === "ready" && (
           <Stack gap="md">
-            {match.scan && (
-              <Stack
-                gap={6}
-                p="sm"
-                style={{
-                  background: "var(--c-surface-sunken)",
-                  borderRadius: 6,
-                }}
-                data-testid="pdf-editor-scan-font-original"
-              >
-                <Group gap={6} wrap="nowrap">
-                  <Icon name="scan-text" size={14} />
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                    {t("pdfTextEditor.scanFont.scan", "Original scan")}
-                  </Text>
-                </Group>
-                <img
-                  src={match.scan}
-                  alt={t("pdfTextEditor.scanFont.scanAlt", "The scanned line")}
-                  style={lineImage}
-                />
-                <Text
-                  size="xs"
-                  c="dimmed"
-                  data-testid="pdf-editor-scan-font-note"
-                >
-                  {t(
-                    "pdfTextEditor.scanFont.scanNote",
-                    "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
-                  )}
-                </Text>
-              </Stack>
-            )}
-            <Stack gap={6} role="group" aria-labelledby={choicesLabelId}>
-              <Text
-                id={choicesLabelId}
-                size="xs"
-                fw={600}
-                c="dimmed"
-                tt="uppercase"
-              >
-                {t("pdfTextEditor.scanFont.choose", "Choose a font")}
-              </Text>
-              {match.choices.map((choice, i) => (
-                <ScanFontChoiceButton
-                  key={choice.label}
-                  choice={choice}
-                  onChoose={() => match.choose(i)}
-                />
-              ))}
-            </Stack>
+            {match.scan && <OriginalScanPreview scan={match.scan} />}
+            <ScanFontChoices choices={match.choices} choose={match.choose} />
           </Stack>
         )}
         <DeviceFontsNote
@@ -151,6 +57,127 @@ export function ScanFontMatchModal({ match }: { match: ScanFontMatch }) {
         </Group>
       </Stack>
     </Modal>
+  );
+}
+
+function ScanFontHint({
+  status,
+  typedFromScan,
+}: {
+  status: ScanFontMatch["status"];
+  typedFromScan: boolean;
+}) {
+  const { t } = useTranslation();
+  if (status === "noFont")
+    return (
+      <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-none">
+        {t(
+          "pdfTextEditor.scanFont.noFont",
+          "None of the available fonts can draw this script, so typed text cannot be redrawn yet.",
+        )}
+      </Text>
+    );
+  if (status === "unmeasurable")
+    return (
+      <Text size="sm" c="dimmed">
+        {t(
+          "pdfTextEditor.scanFont.unmeasurable",
+          "This scan is too faint or small to match a font to.",
+        )}
+      </Text>
+    );
+  return (
+    <>
+      <Stack gap={4}>
+        <Text size="sm" c="dimmed" data-testid="pdf-editor-scan-font-hint">
+          {typedFromScan
+            ? t(
+                "pdfTextEditor.scanFont.hintFromScan",
+                "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead.",
+              )
+            : t(
+                "pdfTextEditor.scanFont.hint",
+                "Your typing is drawn in the closest font found. Pick another if it looks more like the scan.",
+              )}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t(
+            "pdfTextEditor.scanFont.hintOthers",
+            "Your pick is also used for scanned text you have not edited yet.",
+          )}
+        </Text>
+      </Stack>
+      {status === "matching" && (
+        <Group
+          gap="xs"
+          role="status"
+          data-testid="pdf-editor-scan-font-matching"
+        >
+          <Loader size="xs" />
+          <Text size="sm" c="dimmed">
+            {t("pdfTextEditor.scanFont.matching", "Matching fonts…")}
+          </Text>
+        </Group>
+      )}
+    </>
+  );
+}
+
+function OriginalScanPreview({ scan }: { scan: string }) {
+  const { t } = useTranslation();
+  return (
+    <Stack
+      gap={6}
+      p="sm"
+      style={{
+        background: "var(--c-surface-sunken)",
+        borderRadius: 6,
+      }}
+      data-testid="pdf-editor-scan-font-original"
+    >
+      <Group gap={6} wrap="nowrap">
+        <Icon name="scan-text" size={14} />
+        <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+          {t("pdfTextEditor.scanFont.scan", "Original scan")}
+        </Text>
+      </Group>
+      <img
+        src={scan}
+        alt={t("pdfTextEditor.scanFont.scanAlt", "The scanned line")}
+        style={lineImage}
+      />
+      <Text size="xs" c="dimmed" data-testid="pdf-editor-scan-font-note">
+        {t(
+          "pdfTextEditor.scanFont.scanNote",
+          "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
+        )}
+      </Text>
+    </Stack>
+  );
+}
+
+function ScanFontChoices({
+  choices,
+  choose,
+}: {
+  choices: ScanFontChoice[];
+  choose: (index: number) => void;
+}) {
+  const { t } = useTranslation();
+  const labelId = useId();
+  return (
+    <Stack gap={6} role="group" aria-labelledby={labelId}>
+      <Text id={labelId} size="xs" fw={600} c="dimmed" tt="uppercase">
+        {t("pdfTextEditor.scanFont.choose", "Choose a font")}
+      </Text>
+      {choices.map((choice, i) => (
+        <ScanFontChoiceButton
+          key={choice.label}
+          choice={choice}
+          onChoose={() => choose(i)}
+        />
+      ))}
+    </Stack>
   );
 }
 

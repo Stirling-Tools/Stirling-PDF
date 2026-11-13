@@ -1,4 +1,9 @@
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import {
+  readTableDirectory,
+  tableChecksum,
+  type SfntTable,
+} from "@editor/tools/pdfTextEditor/util/sfnt";
 
 export type FaceKind = "sans" | "serif" | "mono";
 
@@ -16,33 +21,6 @@ export interface FontMetrics {
   outlines: string;
 }
 
-const TAG = (s: string) =>
-  (s.charCodeAt(0) << 24) |
-  (s.charCodeAt(1) << 16) |
-  (s.charCodeAt(2) << 8) |
-  s.charCodeAt(3);
-
-interface TableRecord {
-  checksum: number;
-  offset: number;
-  length: number;
-}
-
-function tables(dv: DataView): Map<number, TableRecord> {
-  const out = new Map<number, TableRecord>();
-  const count = dv.getUint16(4);
-  for (let i = 0; i < count; i++) {
-    const rec = 12 + i * 16;
-    if (rec + 16 > dv.byteLength) break;
-    out.set(dv.getUint32(rec) | 0, {
-      checksum: dv.getUint32(rec + 4),
-      offset: dv.getUint32(rec + 8),
-      length: dv.getUint32(rec + 12),
-    });
-  }
-  return out;
-}
-
 function kindOf(fixedPitch: boolean, panose: number[] | null): FaceKind {
   if (fixedPitch || panose?.[3] === 9) return "mono";
   const serifStyle = panose?.[1] ?? 0;
@@ -50,6 +28,8 @@ function kindOf(fixedPitch: boolean, panose: number[] | null): FaceKind {
   if (serifStyle >= 2) return "serif";
   return "sans";
 }
+
+const WGHT_AXIS = 0x77676874; // "wght"
 
 function defaultWeight(
   dv: DataView,
@@ -61,7 +41,7 @@ function defaultWeight(
   const size = dv.getUint16(fvar.offset + 10);
   for (let i = 0; i < count; i++) {
     const axis = axes + i * size;
-    if (dv.getUint32(axis) !== TAG("wght") >>> 0) continue;
+    if (dv.getUint32(axis) !== WGHT_AXIS) continue;
     const max = dv.getInt32(axis + 12) / 65536;
     return max >= 100 ? dv.getInt32(axis + 8) / 65536 : null;
   }
@@ -82,10 +62,11 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
   if (scaler !== 0x00010000 && scaler !== 0x74727565 && scaler !== 0x4f54544f)
     return null;
   try {
-    const t = tables(dv);
-    const head = t.get(TAG("head"));
-    const hhea = t.get(TAG("hhea"));
-    const hmtx = t.get(TAG("hmtx"));
+    const t = readTableDirectory(dv);
+    if (!t) return null;
+    const head = t.get("head");
+    const hhea = t.get("hhea");
+    const hmtx = t.get("hmtx");
     if (!head || !hhea || !hmtx) return null;
     const upm = dv.getUint16(head.offset + 18) || 1000;
     const em = (v: number) => Math.round((v * 1000) / upm);
@@ -107,7 +88,7 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
     if (!advances.has(0x20)) return null;
     const top = (ch: string) => tops.get(ch.charCodeAt(0)) ?? null;
 
-    const os2 = t.get(TAG("OS/2"));
+    const os2 = t.get("OS/2");
     let weight = 400;
     let restricted = false;
     let os2Xh = 0;
@@ -125,7 +106,7 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
         os2Cap = em(dv.getInt16(os2.offset + 88));
       }
     }
-    const post = t.get(TAG("post"));
+    const post = t.get("post");
     const fixedPitch = !!post && dv.getUint32(post.offset + 12) !== 0;
 
     const cap = top("H") ?? (os2Cap || 700);
@@ -140,26 +121,28 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
       kind: kindOf(fixedPitch, panose),
       weight,
       restricted,
-      variableWeight: defaultWeight(dv, t.get(TAG("fvar"))),
-      cff: t.has(TAG("CFF ")) || t.has(TAG("CFF2")),
-      outlines: outlinesKey(t.get(TAG("glyf"))),
+      variableWeight: defaultWeight(dv, t.get("fvar")),
+      cff: t.has("CFF ") || t.has("CFF2"),
+      outlines: outlinesKey(bytes, t.get("glyf")),
     };
   } catch {
     return null;
   }
 }
 
-function outlinesKey(glyf: TableRecord | undefined): string {
-  return glyf ? `${glyf.checksum}:${glyf.length}` : "";
+function outlinesKey(bytes: Uint8Array, glyf: SfntTable | undefined): string {
+  if (!glyf) return "";
+  const data = bytes.subarray(glyf.offset, glyf.offset + glyf.length);
+  return `${tableChecksum(data)}:${glyf.length}`;
 }
 
 function glyphTopReader(
   dv: DataView,
-  t: Map<number, TableRecord>,
+  t: Map<string, SfntTable>,
   headOffset: number,
 ): (gid: number) => number | null {
-  const loca = t.get(TAG("loca"));
-  const glyf = t.get(TAG("glyf"));
+  const loca = t.get("loca");
+  const glyf = t.get("glyf");
   if (!loca || !glyf) return () => null;
   const longOffsets = dv.getInt16(headOffset + 50) === 1;
   return (gid) => {

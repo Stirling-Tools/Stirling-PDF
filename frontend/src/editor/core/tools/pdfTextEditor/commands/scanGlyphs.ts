@@ -1,4 +1,4 @@
-import { median } from "@editor/tools/pdfTextEditor/commands/scanStyle";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 
 export interface GlyphImage {
   rgba: Uint8Array;
@@ -62,21 +62,23 @@ const MIN_PITCH_STEPS = 7;
 const PITCH_SLACK = 0.15;
 const ON_PITCH = 0.85;
 
-const topClassOf = (ch: string) =>
-  /^[acegmnopqrsuvwxyz]$/.test(ch)
-    ? "x"
-    : /^[bdfhijkl]$/.test(ch)
-      ? "ascender"
-      : /^[A-Z0-9]$/.test(ch)
-        ? "capital"
-        : null;
+const TOP_CLASSES: Array<[RegExp, string]> = [
+  [/^[acegmnopqrsuvwxyz]$/, "x"],
+  [/^[bdfhijkl]$/, "ascender"],
+  [/^[A-Z0-9]$/, "capital"],
+];
 
-const bottomClassOf = (ch: string) =>
-  /^[gjpqy]$/.test(ch)
-    ? "descender"
-    : /^[a-zA-IK-PR-Z0-9]$/.test(ch)
-      ? "baseline"
-      : null;
+const BOTTOM_CLASSES: Array<[RegExp, string]> = [
+  [/^[gjpqy]$/, "descender"],
+  [/^[a-zA-IK-PR-Z0-9]$/, "baseline"],
+];
+
+const classIn = (classes: Array<[RegExp, string]>, ch: string) =>
+  classes.find(([chars]) => chars.test(ch))?.[1] ?? null;
+
+const topClassOf = (ch: string) => classIn(TOP_CLASSES, ch);
+
+const bottomClassOf = (ch: string) => classIn(BOTTOM_CLASSES, ch);
 
 function inkRows(
   word: ScannedWord,
@@ -234,8 +236,7 @@ export function composeText(
       placed.push({ glyph, x: Math.round(i * atlas.pitch - centre) });
       continue;
     }
-    // Whole pixels only: a fractional pen makes the image width fractional,
-    // and every row then lands at a different offset in the pixel buffer.
+    // Whole pixels only: a fractional pen makes the width fractional and shifts every row in the buffer.
     if (placed.length > 0)
       pen += afterSpace ? Math.round(wordGap) : atlas.letterGap;
     afterSpace = false;

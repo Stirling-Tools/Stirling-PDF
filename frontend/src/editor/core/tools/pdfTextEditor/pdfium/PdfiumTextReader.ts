@@ -365,8 +365,7 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
       continue;
     }
-    // An edited scan's redrawn words are new objects at the end of the page
-    // content, so the engine lists them after lines that read later.
+    // An edited scan's redrawn words are new objects at the end of the content, listed after lines that read later.
     const ordered = run.scanEdit?.created.length
       ? inReadingOrder(list, run.fontSize)
       : list;
@@ -396,8 +395,7 @@ export interface PlacedGlyph {
   bottom: number;
 }
 
-// Top line first, then left to right. Glyphs whose boxes sit within half a
-// font size of each other count as one line.
+// Top line first, then left to right; glyph boxes within half a font size share a line.
 export function inReadingOrder(
   glyphs: PlacedGlyph[],
   fontSize: number,

@@ -19,8 +19,7 @@ const read = (glyphs: PlacedGlyph[]) =>
 
 describe("inReadingOrder", () => {
   test("moves redrawn glyphs listed last back into their line", () => {
-    // Line one keeps "ab", line two is "ef"; "cd" was redrawn onto line one
-    // and so comes last in the page content.
+    // Lines keep "ab" and "ef"; "cd", redrawn onto line one, comes last in the page content.
     const listed = [
       glyph("a", 0, 700),
       glyph("b", 6, 700),

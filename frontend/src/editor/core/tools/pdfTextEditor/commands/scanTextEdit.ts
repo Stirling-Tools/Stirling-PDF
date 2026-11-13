@@ -1,23 +1,37 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
-  applyRect,
   applyVector,
-  compose,
   moveAllObjects,
   scanFrameFor,
   type ScanFrame,
 } from "@editor/tools/pdfTextEditor/commands/scanFrame";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
+import { BLACK, WHITE, luma } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import type { Affine, RGBA } from "@editor/tools/pdfTextEditor/types";
-import { invertAffine } from "@editor/tools/pdfTextEditor/model/affine";
+import {
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type RGBA,
+} from "@editor/tools/pdfTextEditor/types";
+import {
+  composeAffine,
+  invertAffine,
+  transformRectAABB,
+} from "@editor/tools/pdfTextEditor/model/affine";
 import {
   capturePatch,
   measureScanInk,
   sampleBackground,
   type PixelPatch,
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import {
+  inkBesideOcr,
+  lineExtent,
+  lineRegion,
+  type PlacedWord,
+} from "@editor/tools/pdfTextEditor/commands/scanOffInk";
 import {
   layoutScanEdit,
   rewrapLines,
@@ -34,7 +48,6 @@ import {
   blurRgba,
   checkDeadline,
   fitFace,
-  median,
   placeText,
   spanOf,
   toInkOnly,
@@ -53,7 +66,6 @@ import {
   type SpanInk,
 } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
-  INVISIBLE,
   drawFromAtlas,
   drawInFont,
   emitSearchable,
@@ -84,8 +96,6 @@ import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 // typed; every other word stays the scan's own pixels (moved if it has to make
 // room), so OCR misreads never reach the page.
 
-const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
-const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };
 const REFERENCE_CHARS = 72;
 
 interface ScanWord {
@@ -158,14 +168,8 @@ export interface ScanEditState {
   typedFromScan?: boolean;
 }
 
-interface PlacedWord {
-  x: number;
-  right: number;
-  baseline: number;
-}
-
 export function isScanRun(run: { renderMode?: number }): boolean {
-  return run.renderMode === INVISIBLE;
+  return run.renderMode === RENDER_MODE_INVISIBLE;
 }
 
 function emptyState(lines: ScanLine[], fontPtr: number): ScanEditState {
@@ -216,14 +220,14 @@ function pageMatrixReader(
 ): (ptr: number, container: number) => Affine | null {
   const runOwn = run.containerPtr ? readMatrix(m, run.pdfiumObjPtr) : null;
   const form = runOwn
-    ? compose(run.matrix, invertAffine(affineOf(runOwn)))
+    ? composeAffine(run.matrix, invertAffine(affineOf(runOwn)))
     : null;
   return (ptr, container) => {
     if (container !== 0 && (container !== run.containerPtr || !form))
       return null;
     const own = readMatrix(m, ptr);
     if (!own) return null;
-    return form ? compose(form, affineOf(own)) : affineOf(own);
+    return form ? composeAffine(form, affineOf(own)) : affineOf(own);
   };
 }
 
@@ -236,8 +240,8 @@ function captureRotatedScanEdit(
   const { ptrs, texts, starts } = runWords(run);
   if (texts.length !== ptrs.length || starts.length !== ptrs.length)
     return null;
-  const baseline = compose(frame.toUpright, run.matrix).f;
-  const box = applyRect(frame.toUpright, run.bounds);
+  const baseline = composeAffine(frame.toUpright, run.matrix).f;
+  const box = transformRectAABB(frame.toUpright, run.bounds);
   const length = Math.max(1, run.text.trimEnd().length);
   const pageMatrix = pageMatrixReader(m, run);
   const words: ScanWord[] = ptrs.map((ptr, w) => {
@@ -249,7 +253,7 @@ function captureRotatedScanEdit(
       start,
       x: box.x + (box.width * start) / length,
       right: box.x + (box.width * Math.min(end, length)) / length,
-      baseline: own ? compose(frame.toUpright, own).f : baseline,
+      baseline: own ? composeAffine(frame.toUpright, own).f : baseline,
       ptr,
       container: run.containerPtr,
       fontSize: run.fontSize,
@@ -386,8 +390,8 @@ function otherWords(page: Page, state: ScanEditState): PlacedWord[] {
   for (const run of page.runs) {
     if (!isScanRun(run) || run.scanEdit === state) continue;
     if (state.frame) {
-      const box = applyRect(state.frame.toUpright, run.bounds);
-      const turned = compose(state.frame.toUpright, run.matrix);
+      const box = transformRectAABB(state.frame.toUpright, run.bounds);
+      const turned = composeAffine(state.frame.toUpright, run.matrix);
       if (Math.abs(turned.b) > 1e-6 || turned.a <= 0) continue;
       out.push({ x: box.x, right: box.x + box.width, baseline: turned.f });
       continue;
@@ -433,12 +437,11 @@ function spanInk(
     if (w.right < words[from].x + 0.5) x0 = Math.max(x0, w.right + 0.3);
   }
   checkDeadline();
-  const ink = measureScanInk(doc.module, page, {
-    x0,
-    x1,
-    bottom: low - line.height * 0.1,
-    top: high + line.height * 0.9,
-  });
+  const ink = measureScanInk(
+    doc.module,
+    page,
+    lineRegion(x0, x1, low, high, line.height),
+  );
   let result: SpanInk | null = null;
   if (ink) {
     // OCR reads a box edge hugging the text as a bracket or bar.
@@ -478,68 +481,13 @@ function inkedLines(doc: EditorDocument, page: Page, state: ScanEditState) {
     );
 }
 
-const OFF_INK_SHIFTS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].flatMap((k) => [
-  k,
-  -k,
-]);
-
-function lineInkAt(
-  doc: EditorDocument,
-  page: Page,
-  line: ScanLine,
-  dy: number,
-): boolean {
-  const x0 = line.words[0].x;
-  const x1 = line.words[line.words.length - 1].right;
-  const ink = measureScanInk(doc.module, page, {
-    x0,
-    x1,
-    bottom: line.baseline + dy - line.height * 0.1,
-    top: line.baseline + dy + line.height * 0.9,
-  });
-  return !!ink && ink.rect.width >= (x1 - x0) * 0.5;
-}
-
-function claimedByOtherLine(
-  page: Page,
-  state: ScanEditState,
-  line: ScanLine,
-  dy: number,
-): boolean {
-  const x0 = line.words[0].x;
-  const x1 = line.words[line.words.length - 1].right;
-  const baseline = line.baseline + dy;
-  const placed = [
-    ...state.lines.filter((l) => l !== line).flatMap((l) => l.words),
-    ...otherWords(page, state),
-  ];
-  return placed.some(
-    (w) =>
-      w.right > x0 && w.x < x1 && Math.abs(w.baseline - baseline) < line.height,
-  );
-}
-
-function inkBesideOcr(
-  doc: EditorDocument,
-  page: Page,
-  state: ScanEditState,
-): boolean {
-  const lines = state.lines.filter((l) => l.words.length > 0);
-  if (lines.length === 0 || inkedLines(doc, page, state).length > 0)
-    return false;
-  return OFF_INK_SHIFTS.some((k) =>
-    lines.every(
-      (l) =>
-        !claimedByOtherLine(page, state, l, k * l.height) &&
-        lineInkAt(doc, page, l, k * l.height),
-    ),
-  );
-}
-
 function offInk(doc: EditorDocument, page: Page, state: ScanEditState) {
-  state.offInk ??= onOriginalScan(doc, page, state, () =>
-    inkBesideOcr(doc, page, state),
-  );
+  state.offInk ??= onOriginalScan(doc, page, state, () => {
+    const lines = state.lines.filter((l) => l.words.length > 0);
+    if (lines.length === 0 || inkedLines(doc, page, state).length > 0)
+      return false;
+    return inkBesideOcr(doc, page, lines, otherWords(page, state));
+  });
   return state.offInk;
 }
 
@@ -778,14 +726,14 @@ function inkAgainst(
   state: ScanEditState,
 ): RGBA {
   const line = state.lines[0];
-  const words = line.words;
+  const { x0, x1 } = lineExtent(line);
   const { fill } = sampleBackground(m, page, {
-    x: words[0].x,
+    x: x0,
     y: line.baseline - line.height * 0.2,
-    width: words[words.length - 1].right - words[0].x,
+    width: x1 - x0,
     height: line.height * 1.2,
   });
-  return 0.299 * fill.r + 0.587 * fill.g + 0.114 * fill.b < 128 ? WHITE : BLACK;
+  return luma(fill.r, fill.g, fill.b) < 128 ? WHITE : BLACK;
 }
 
 // The scanned pixels of one word, copied once: the scan under a word never
@@ -857,8 +805,8 @@ function styleCovers(style: ScanStyle, text: string): boolean {
 function implausibleLine(line: ScanLine): boolean {
   const chars = line.text.replace(/\s/g, "").length;
   if (chars <= 3 || line.words.length === 0) return false;
-  const span = line.words[line.words.length - 1].right - line.words[0].x;
-  return span < chars * line.height * 0.15;
+  const { x0, x1 } = lineExtent(line);
+  return x1 - x0 < chars * line.height * 0.15;
 }
 
 function extraSpacesBefore(line: ScanLine, w: ScanWord, index: number) {
@@ -907,6 +855,124 @@ export function renderScanEdit(
   return drawn;
 }
 
+interface EditStyles {
+  blockFit: () => ScanStyle | null;
+  fitted: () => ScanStyle;
+  /** The fitted block style if anything has asked for it yet, without fitting. */
+  fittedSoFar: () => ScanStyle | undefined;
+  styleOf: (anchor: LayoutWord | null) => ScanStyle;
+  inkOf: (w: LayoutWord) => SpanInk | null;
+}
+
+function anchorBase(
+  o: ScanOverride,
+  own: ScanStyle,
+  blockStyle: ScanStyle,
+): ScanStyle {
+  if (own === blockStyle) return o.style ?? blockStyle;
+  if (!o.style) return own;
+  const scale = own.fontSize / blockStyle.fontSize;
+  return {
+    ...o.style,
+    fontSize: o.style.fontSize * scale,
+    weight: o.style.weight * scale,
+    hollow: o.style.hollow * scale,
+    ink: own.ink,
+  };
+}
+
+function withOverride(o: ScanOverride, base: ScanStyle): ScanStyle {
+  const newFamily = o.family !== undefined;
+  return {
+    family: o.family ?? base.family,
+    fontSize: o.fontSize ?? base.fontSize,
+    ink: o.fill ?? base.ink,
+    stretch: newFamily ? 1 : base.stretch,
+    weight: newFamily ? 0 : base.weight,
+    hollow: newFamily ? 0 : base.hollow,
+    softness: base.softness,
+  };
+}
+
+// Lazy: fitting renders the scan, and an edit that only deletes words needs no style.
+function editStyles(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  o: ScanOverride,
+  text: string,
+): EditStyles {
+  let blockFitted: ScanStyle | null | undefined;
+  const blockFit = () =>
+    blockFitted === undefined
+      ? (blockFitted = styleFor(doc, page, state, null))
+      : blockFitted;
+  let fittedStyle: ScanStyle | undefined;
+  const fitted = () =>
+    (fittedStyle ??=
+      blockFit() ??
+      fallbackStyle(state, inkAgainst(doc.module, page, state), text));
+  const inkOf = (w: LayoutWord) =>
+    spanInk(doc, page, state, w.line, w.index, w.index);
+  const styles = new Map<LayoutWord | null, ScanStyle>();
+  const styleOf = (anchor: LayoutWord | null): ScanStyle => {
+    const known = styles.get(anchor);
+    if (known) return known;
+    const blockStyle = fitted();
+    const own =
+      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? blockStyle;
+    const style = withOverride(o, anchorBase(o, own, blockStyle));
+    styles.set(anchor, style);
+    return style;
+  };
+  return {
+    blockFit,
+    fitted,
+    fittedSoFar: () => fittedStyle,
+    styleOf,
+    inkOf,
+  };
+}
+
+interface ScanGlyphSource {
+  atlas: () => GlyphAtlas | null;
+  composed: (text: string) => ComposedText | null;
+  /** The letters the edit types, read when the atlas is first built. */
+  setTyped: (chars: Iterable<string>) => void;
+}
+
+function scanGlyphSource(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  enabled: boolean,
+  fitBlock: () => unknown,
+  space: number,
+): ScanGlyphSource {
+  let atlasMemo: GlyphAtlas | null | undefined;
+  let typed = new Set<string>();
+  const atlas = () => {
+    if (atlasMemo !== undefined) return atlasMemo;
+    if (!enabled) return (atlasMemo = null);
+    fitBlock();
+    return (atlasMemo = atlasOf(doc, page, state, typed));
+  };
+  const cache = new Map<string, ComposedText | null>();
+  const composed = (t: string) => {
+    const a = atlas();
+    if (!a) return null;
+    if (!cache.has(t)) cache.set(t, composeText(a, t, space * a.scale));
+    return cache.get(t) ?? null;
+  };
+  return {
+    atlas,
+    composed,
+    setTyped: (chars) => {
+      typed = new Set(chars);
+    },
+  };
+}
+
 function renderUprightScanEdit(
   doc: EditorDocument,
   page: Page,
@@ -930,71 +996,22 @@ function renderUprightScanEdit(
   const restyle =
     o.family !== undefined || o.fontSize !== undefined || o.fill !== undefined;
   const needsFont = restyle || !keepsOnlyScannedWords(state, text);
-  let blockFitted: ScanStyle | null | undefined;
-  const blockFit = () =>
-    blockFitted === undefined
-      ? (blockFitted = styleFor(doc, page, state, null))
-      : blockFitted;
-  let fittedStyle: ScanStyle | undefined;
-  const fitted = () =>
-    (fittedStyle ??=
-      blockFit() ?? fallbackStyle(state, inkAgainst(m, page, state), text));
-  const block = () => o.style ?? fitted();
+  const styles = editStyles(doc, page, state, o, text);
+  const { blockFit, fitted, styleOf, inkOf } = styles;
   const spacing = o.style ?? (needsFont ? fitted() : fallbackStyle(state));
-  const inkOf = (w: LayoutWord) =>
-    spanInk(doc, page, state, w.line, w.index, w.index);
-  const styles = new Map<LayoutWord | null, ScanStyle>();
-  const styleOf = (anchor: LayoutWord | null): ScanStyle => {
-    const known = styles.get(anchor);
-    if (known) return known;
-    const blockStyle = fitted();
-    const own =
-      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? blockStyle;
-    const scale = own.fontSize / blockStyle.fontSize;
-    const base =
-      own === blockStyle
-        ? block()
-        : o.style
-          ? {
-              ...o.style,
-              fontSize: o.style.fontSize * scale,
-              weight: o.style.weight * scale,
-              hollow: o.style.hollow * scale,
-              ink: own.ink,
-            }
-          : own;
-    const style = {
-      family: o.family ?? base.family,
-      fontSize: o.fontSize ?? base.fontSize,
-      ink: o.fill ?? base.ink,
-      stretch: o.family !== undefined ? 1 : base.stretch,
-      weight: o.family !== undefined ? 0 : base.weight,
-      hollow: o.family !== undefined ? 0 : base.hollow,
-      softness: base.softness,
-    };
-    styles.set(anchor, style);
-    return style;
-  };
   const lineBase = (li: number) =>
     lineInk(doc, page, state, li)?.baseline ?? state.lines[li].baseline;
   const scanWord = (w: LayoutWord) => state.lines[w.line].words[w.index];
   const space = wordSpace(state, spacing);
-  let atlasMemo: GlyphAtlas | null | undefined;
-  let typed = new Set<string>();
-  const atlas = () => {
-    if (atlasMemo !== undefined) return atlasMemo;
-    if (restyle || o.style) return (atlasMemo = null);
-    blockFit();
-    return (atlasMemo = atlasOf(doc, page, state, typed));
-  };
-  const composedCache = new Map<string, ComposedText | null>();
-  const composed = (t: string) => {
-    const a = atlas();
-    if (!a) return null;
-    if (!composedCache.has(t))
-      composedCache.set(t, composeText(a, t, space * a.scale));
-    return composedCache.get(t) ?? null;
-  };
+  const glyphSource = scanGlyphSource(
+    doc,
+    page,
+    state,
+    !restyle && !o.style,
+    blockFit,
+    space,
+  );
+  const { atlas, composed } = glyphSource;
   const canDraw = (t: string) =>
     !UNSHAPED_SCRIPT.test(t) &&
     (!!composed(t) ||
@@ -1020,7 +1037,7 @@ function renderUprightScanEdit(
       })),
     }));
     const pitch = linePitch(state, spacing);
-    typed = new Set(
+    glyphSource.setTyped(
       layoutScanEdit({
         lines,
         text,
@@ -1241,9 +1258,8 @@ function renderUprightScanEdit(
   attachToRun(run, state);
   state.edited = true;
   state.typedFromScan = fromAtlas > 0 && inFont === 0;
-  // Show what is drawn, not OCR's guesses, so size and colour controls start
-  // from the right values.
-  const shown = o.style ?? fittedStyle;
+  // Show what is drawn, not OCR's guesses, so the size and colour controls start from it.
+  const shown = o.style ?? styles.fittedSoFar();
   run.fontSize = o.fontSize ?? shown?.fontSize ?? run.fontSize;
   run.fill = o.fill ?? shown?.ink ?? run.fill;
   run.text = text;
@@ -1253,8 +1269,7 @@ function renderUprightScanEdit(
   return true;
 }
 
-// Original OCR words leave the page when removed or moved, and come back when
-// an undo puts them where they were.
+// Original OCR words leave the page when removed or moved, and return when an undo puts them back.
 function syncOriginalWords(
   canvas: Canvas,
   state: ScanEditState,
@@ -1291,8 +1306,7 @@ function syncOriginalWords(
   );
 }
 
-// Deleting the run takes the drawn text and the remaining OCR words with it;
-// the covers stay, since the scan under them is the old text.
+// Deleting the run takes its drawn text and OCR words; the covers stay, as the scan under them is the old text.
 function attachToRun(run: TextRun, state: ScanEditState): void {
   const live = state.lines.flatMap((l, li) =>
     l.words.filter((_, wi) => !state.lifted.has(`${li}:${wi}`)),
@@ -1317,11 +1331,7 @@ export function scanEditOf(
   return run.scanEdit;
 }
 
-/**
- * The run's text reflowed to `maxWidthPt` in the style its edits are drawn in,
- * or null when the run is not scanned text. A new line is only added below the
- * block while nothing else on the page sits there.
- */
+/** The run's text reflowed to `maxWidthPt` in its drawn style, or null for non-scanned text; a line is added below only where the page is clear. */
 export function wrapScanText(
   doc: EditorDocument,
   page: Page,
@@ -1341,8 +1351,7 @@ export function wrapScanText(
     fits,
     roomBelow(page, run, state, linePitch(state, style), lineCount),
   );
-  // All or nothing: with no room for the last line's overflow the text would
-  // only move to another line and stick out there instead.
+  // All or nothing: without room for the last line's overflow the text would just stick out on another line.
   const settled = wrapped
     .split("\n")
     .every((line) => fits(line.trim()) || !line.trim().includes(" "));
@@ -1574,15 +1583,7 @@ export interface ScanDrawnFont {
   label: string;
 }
 
-/**
- * The font in force for a scanned run: the one the user picked, else the one
- * the matcher chose. Null when the block is not fitted yet, or its typing is
- * rebuilt from the scan's own letters and so uses no font at all. The run's
- * `fontId` is never the answer: that is the invisible OCR layer's font.
- *
- * Reads the run's scan state without capturing it, so it is cheap enough to
- * call for every run of a large selection.
- */
+/** The font in force for a scanned run (picked, else matched), never the OCR layer's `fontId`; null while unfitted or typed from scan letters. Cheap: captures no scan state. */
 export function scanDrawnFont(
   doc: EditorDocument,
   run: TextRun,

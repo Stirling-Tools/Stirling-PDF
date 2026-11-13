@@ -2,6 +2,8 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { luma } from "@editor/tools/pdfTextEditor/model/Color";
+import { boxBlur } from "@editor/tools/pdfTextEditor/util/boxBlur";
 
 // Render the area of the page surrounding a text run and pick the dominant
 // background color.
@@ -48,8 +50,7 @@ function renderSlice(
   scale = SAMPLE_SCALE,
 ): Slice | null {
   // No flush needed: the render path draws from the in-memory object list.
-  // The bitmap is raw PDF space cropped to the CropBox, with /Rotate undone,
-  // so its rows run along the page's own x axis.
+  // The bitmap is raw PDF space cropped to the CropBox with /Rotate undone, so rows run along the page's x axis.
   const d = rawView(page);
   const cs = [
     d.apply(bounds.x, bounds.y),
@@ -174,9 +175,6 @@ export function sampleBackground(
   }
 }
 
-const luma = (r: number, g: number, b: number) =>
-  0.299 * r + 0.587 * g + 0.114 * b;
-
 export interface ScanInk {
   fill: RGBA;
   /** Box around the scanned glyphs and their blur, raw page space. */
@@ -200,6 +198,140 @@ export interface ScanInk {
   edgeLeft: boolean;
   edgeRight: boolean;
   reversed: boolean;
+}
+
+const INK_NONE = 0;
+const INK_SOFT = 1;
+const INK_SOLID = 2;
+const SOLID_INK_CUT = 60;
+const SOFT_INK_CUT = 30;
+const GROUND_SHARE = 0.65;
+const HIGHLIGHT_SHARE = 0.97;
+const REVERSED_GROUND_MAX = 110;
+const REVERSED_CONTRAST = 60;
+const DOT_GAP_SHARE = 0.2;
+
+// Faint anti-aliased edges still show once the paper around them is covered, so the extent uses a softer cut than the colour does.
+function inkLevel(l: number, paper: number): number {
+  if (l < paper - SOLID_INK_CUT) return INK_SOLID;
+  if (l < paper - SOFT_INK_CUT) return INK_SOFT;
+  return INK_NONE;
+}
+
+// Light text on a dark fill: the ground of the glyph rows is dark, and their brightest pixels stand well clear of it.
+function readGround(core: number[]): { ground: number; reversed: boolean } {
+  const sorted = [...core].sort((p, q) => p - q);
+  const ground = sorted[Math.floor(sorted.length * GROUND_SHARE)] ?? 255;
+  const highlight = sorted[Math.floor(sorted.length * HIGHLIGHT_SHARE)] ?? 0;
+  const reversed =
+    ground < REVERSED_GROUND_MAX && highlight > ground + REVERSED_CONTRAST;
+  return { ground, reversed };
+}
+
+interface InkGrid {
+  ink: Uint8Array;
+  width: number;
+  height: number;
+  x0: number;
+  x1: number;
+}
+
+interface InkRows {
+  rowInk: number[];
+  rowSolid: number[];
+  ruled: Uint8Array;
+}
+
+function countRows({ ink, width, height, x0, x1 }: InkGrid): InkRows {
+  const span = x1 - x0 + 1;
+  const rowInk = new Array<number>(height).fill(0);
+  const rowSolid = new Array<number>(height).fill(0);
+  const ruled = new Uint8Array(height);
+  for (let y = 0; y < height; y++)
+    for (let x = x0; x <= x1; x++) {
+      const v = ink[y * width + x];
+      if (v) rowInk[y]++;
+      if (v === INK_SOLID) rowSolid[y]++;
+    }
+  // A row solidly inked edge to edge is a rule or box border; its blurred fringe is not, or glyphs touching it would stop short.
+  for (let y = 0; y < height; y++) {
+    if (span <= 12 || rowSolid[y] <= span * 0.85) continue;
+    for (let k = y - 3; k <= y + 3; k++)
+      if (k >= 0 && k < height && (k === y || rowInk[k] > span * 0.3))
+        ruled[k] = 1;
+  }
+  return { rowInk, rowSolid, ruled };
+}
+
+// A column inked all the way between the rules around the text (or the whole slice) is a box edge: no glyph spans it. Clears those columns and returns them.
+function stripBoxEdges(
+  grid: InkGrid,
+  ruled: Uint8Array,
+  mid: number,
+): number[] {
+  const { ink, width, height, x0, x1 } = grid;
+  let above = mid;
+  while (above > 0 && !ruled[above]) above--;
+  let below = mid;
+  while (below < height - 1 && !ruled[below]) below++;
+  const edgeCols: number[] = [];
+  const interior = below - above - 1;
+  for (let x = x0; x <= x1 && interior > 4; x++) {
+    let n = 0;
+    for (let y = above + 1; y < below; y++) if (ink[y * width + x]) n++;
+    if (n < interior * 0.9) continue;
+    edgeCols.push(x);
+    for (let y = 0; y < height; y++) ink[y * width + x] = INK_NONE;
+  }
+  return edgeCols;
+}
+
+const pairInk = (rowInk: number[], y: number) =>
+  (rowInk[y] ?? 0) + (rowInk[y - 1] ?? 0);
+
+// Only descenders go below the baseline, so it is where the ink per row falls away most sharply; a share of the peak misses thin, light strokes.
+function baselineRow(rowInk: number[], top: number, bottom: number): number {
+  let baseRow = bottom + 1;
+  let drop = -1;
+  for (let y = Math.round(top + (bottom - top) * 0.4); y <= bottom; y++) {
+    const d = pairInk(rowInk, y) - pairInk(rowInk, y + 2);
+    if (d > drop) {
+      drop = d;
+      baseRow = y + 1;
+    }
+  }
+  return baseRow;
+}
+
+// Lowercase text is densest below its x-height, so the x-line is where ink rises most sharply going down.
+function xHeightRow(rowInk: number[], top: number, baseRow: number): number {
+  let xRow = top;
+  let rise = -1;
+  for (let y = top + 1; y <= baseRow - (baseRow - top) * 0.3; y++) {
+    const r = pairInk(rowInk, y + 1) - pairInk(rowInk, y - 1);
+    if (r > rise) {
+      rise = r;
+      xRow = y;
+    }
+  }
+  return xRow;
+}
+
+// A real lowercase band is several times denser than the ascenders and fills about two thirds of the height; capitals fill it all or leave only blur above.
+function isLowercaseBand(
+  rowInk: number[],
+  top: number,
+  xRow: number,
+  baseRow: number,
+): boolean {
+  const mean = (a: number, b: number) => {
+    let sum = 0;
+    for (let y = a; y < b; y++) sum += rowInk[y];
+    return b > a ? sum / (b - a) : 0;
+  };
+  const band = (baseRow - xRow) / Math.max(1, baseRow - top);
+  const density = mean(xRow, baseRow) / Math.max(0.1, mean(top, xRow));
+  return band > 0.5 && band < 0.75 && density > 2 && density < 15;
 }
 
 /** Where to look: an x span and the rows the OCR says hold the glyphs. */
@@ -248,14 +380,10 @@ export function measureScanInk(
     const core: number[] = [];
     for (let y = coreTop; y <= coreBottom; y += 2)
       for (let x = x0; x <= x1; x += 2) core.push(lumaAt(y * stride + x * 4));
-    core.sort((p, q) => p - q);
-    const ground = core[Math.floor(core.length * 0.65)] ?? 255;
-    const reversed =
-      ground < 110 && (core[Math.floor(core.length * 0.97)] ?? 0) > ground + 60;
+    const { ground, reversed } = readGround(core);
     const tone = reversed ? (i: number) => 255 - lumaAt(i) : lumaAt;
     const slicePaper = () => {
-      // The paper is what most of the slice is. Sampled from a ring instead, a
-      // ruled line under the ring passed for paper and hid every thin stroke.
+      // Paper is most of the slice: sampled from a ring, a ruled line under it passed for paper and hid thin strokes.
       const sample: number[] = [];
       for (let y = 0; y < height; y += 2)
         for (let x = x0; x <= x1; x += 2)
@@ -265,13 +393,11 @@ export function measureScanInk(
       return sample[Math.floor(sample.length * 0.75)] ?? 255;
     };
     const paper = reversed ? 255 - ground : slicePaper();
-    // Faint anti-aliased edges still show once the paper around them is
-    // covered, so the extent uses a softer cut than the colour does.
     const ink = new Uint8Array(width * height);
     for (let y = 0; y < height; y++) {
       for (let x = x0; x <= x1; x++) {
         const l = tone(y * stride + x * 4);
-        ink[y * width + x] = l < paper - 60 ? 2 : l < paper - 30 ? 1 : 0;
+        ink[y * width + x] = inkLevel(l, paper);
       }
     }
     // The cover colour is the paper itself: every pixel clear of ink, with a
@@ -294,47 +420,15 @@ export function measureScanInk(
         paperRgb[2] += rgba[i + 2];
         paperN++;
       }
-    const span = x1 - x0 + 1;
-    const rowInk = new Array<number>(height).fill(0);
-    const rowSolid = new Array<number>(height).fill(0);
-    const ruled = new Uint8Array(height);
-    const countRows = () => {
-      rowInk.fill(0);
-      rowSolid.fill(0);
-      ruled.fill(0);
-      for (let y = 0; y < height; y++)
-        for (let x = x0; x <= x1; x++) {
-          const v = ink[y * width + x];
-          if (v) rowInk[y]++;
-          if (v === 2) rowSolid[y]++;
-        }
-      // A row solidly inked edge to edge is a ruled line or box border; its
-      // blurred fringe is not, or glyphs touching the rule would stop short.
-      for (let y = 0; y < height; y++) {
-        if (span <= 12 || rowSolid[y] <= span * 0.85) continue;
-        for (let k = y - 3; k <= y + 3; k++)
-          if (k >= 0 && k < height && (k === y || rowInk[k] > span * 0.3))
-            ruled[k] = 1;
-      }
-    };
-    countRows();
-    // A column inked all the way between the rules around the text (or the
-    // whole slice) is a box edge, however tight the box: no glyph spans it.
-    const mid = Math.round((coreTop + coreBottom) / 2);
-    let above = mid;
-    while (above > 0 && !ruled[above]) above--;
-    let below = mid;
-    while (below < height - 1 && !ruled[below]) below++;
-    const edgeCols: number[] = [];
-    const interior = below - above - 1;
-    for (let x = x0; x <= x1 && interior > 4; x++) {
-      let n = 0;
-      for (let y = above + 1; y < below; y++) if (ink[y * width + x]) n++;
-      if (n < interior * 0.9) continue;
-      edgeCols.push(x);
-      for (let y = 0; y < height; y++) ink[y * width + x] = 0;
-    }
-    if (edgeCols.length) countRows();
+    const grid: InkGrid = { ink, width, height, x0, x1 };
+    let rows = countRows(grid);
+    const edgeCols = stripBoxEdges(
+      grid,
+      rows.ruled,
+      Math.round((coreTop + coreBottom) / 2),
+    );
+    if (edgeCols.length) rows = countRows(grid);
+    const { rowInk, rowSolid, ruled } = rows;
     const isRule = (y: number) => ruled[y] === 1;
     let first = -1;
     let last = -1;
@@ -385,53 +479,17 @@ export function measureScanInk(
     const solidBottom = grow(last, 1, boxPx * 0.7);
     const top = fringe(solidTop, -1);
     const bottom = fringe(solidBottom, 1);
-    // The dot of an i or j floats further above its stem than `gap` allows at
-    // body sizes, and a word with no ascender then ends at the x-height. The
-    // cover and the copied pixels must take the dot too, or moving the word
-    // leaves it behind; the glyph measurements above stay as they were.
-    const dotGap = Math.max(gap, Math.round(boxPx * 0.2));
+    // An i or j dot floats past `gap` at body sizes; the cover and copied pixels must take it, the measurements above must not.
+    const dotGap = Math.max(gap, Math.round(boxPx * DOT_GAP_SHARE));
     const coverTop = fringe(grow(first, -1, boxPx * 0.6, dotGap), -1);
 
-    // Glyph bodies end on the baseline and only descenders go below it, so
-    // the baseline is where the ink per row falls away most sharply. A fixed
-    // share of the peak misses it on thin, light strokes.
-    const ink2 = (y: number) => (rowInk[y] ?? 0) + (rowInk[y - 1] ?? 0);
-    let baseRow = bottom + 1;
-    let drop = -1;
-    for (let y = Math.round(top + (bottom - top) * 0.4); y <= bottom; y++) {
-      const d = ink2(y) - ink2(y + 2);
-      if (d > drop) {
-        drop = d;
-        baseRow = y + 1;
-      }
-    }
-    // Lowercase text is densest between the baseline and its x-height; the
-    // top of that band is where ink rises most sharply going down.
-    let xRow = top;
-    let rise = -1;
-    for (let y = top + 1; y <= baseRow - (baseRow - top) * 0.3; y++) {
-      const r = ink2(y + 1) - ink2(y - 1);
-      if (r > rise) {
-        rise = r;
-        xRow = y;
-      }
-    }
-    // A real lowercase band is several times denser than the ascenders above
-    // it and fills about two thirds of the glyph height. Capitals fill it all,
-    // or leave only empty blur above, which reads as a band with no ascenders.
-    const mean = (a: number, b: number) => {
-      let sum = 0;
-      for (let y = a; y < b; y++) sum += rowInk[y];
-      return b > a ? sum / (b - a) : 0;
-    };
-    const band = (baseRow - xRow) / Math.max(1, baseRow - top);
-    const density = mean(xRow, baseRow) / Math.max(0.1, mean(top, xRow));
-    const lowercaseBand =
-      band > 0.5 && band < 0.75 && density > 2 && density < 15;
+    const baseRow = baselineRow(rowInk, top, bottom);
+    const xRow = xHeightRow(rowInk, top, baseRow);
+    const lowercaseBand = isLowercaseBand(rowInk, top, xRow, baseRow);
 
     const colInk = (x: number) => {
       for (let y = top; y <= bottom; y++)
-        if (ink[y * width + x] === 2) return true;
+        if (ink[y * width + x] === INK_SOLID) return true;
       return false;
     };
     const colSoft = (x: number) => {
@@ -464,7 +522,7 @@ export function measureScanInk(
     const dark: Array<[number, number, number, number]> = [];
     for (let y = top; y <= bottom; y++) {
       for (let x = left; x <= right; x++) {
-        if (ink[y * width + x] !== 2) continue;
+        if (ink[y * width + x] !== INK_SOLID) continue;
         const i = y * stride + x * 4;
         dark.push([tone(i), rgba[i], rgba[i + 1], rgba[i + 2]]);
       }
@@ -609,28 +667,7 @@ export interface Luma {
 // Box blur rows then columns: scans are soft, drawn text is crisp.
 export function blurLuma(img: Luma, blur: number): Luma {
   const { width, height } = img;
-  let data = img.data;
-  for (const [dx, dy] of [
-    [1, 0],
-    [0, 1],
-  ]) {
-    const out = new Float32Array(data.length);
-    for (let y = 0; y < height; y++)
-      for (let x = 0; x < width; x++) {
-        let sum = 0;
-        let n = 0;
-        for (let k = -blur; k <= blur; k++) {
-          const xx = x + k * dx;
-          const yy = y + k * dy;
-          if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
-          sum += data[yy * width + xx];
-          n++;
-        }
-        out[y * width + x] = sum / n;
-      }
-    data = out;
-  }
-  return { data, width, height };
+  return { data: boxBlur(img.data, width, height, blur), width, height };
 }
 
 // The darker part of the ink pixels: glyph edges anti-alias toward the paper,

@@ -107,9 +107,7 @@ function ownFaceFor(fontId: string): string {
   return m ? `"${embeddedFaceFamily(Number(m[1]))}", ` : "";
 }
 
-// For scanned text the page shows the scan's own lettering, which the matched
-// face approximates and the invisible OCR layer's font does not. The caret is
-// placed by this font's letter widths, so it has to be the matched one.
+// The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
 function cssFontFamilyForScan(family: string): string {
   const face = scanFaces().find(
     (f) => f.family === family || f.bold === family,

@@ -4,66 +4,35 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import {
+  isScanRun,
   prefitScanRun,
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { subscribePreferredScanFace } from "@editor/tools/pdfTextEditor/commands/scanFit";
 import {
+  FIT_GAP_MS,
+  FIT_SLICE_MS,
+} from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import {
   loadBundledScanFaces,
   loadDeviceScanFacesIfAllowed,
   loadScriptScanFaces,
+  noteRankedWithCurrentFaces,
   scanScriptsOf,
   subscribeScanFaces,
   type Script,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
-import { noteRankedWithCurrentFaces } from "@editor/tools/pdfTextEditor/util/scanRankingFaces";
 
-export const FIT_SLICE_MS = 12;
-export const FIT_GAP_MS = 4;
 const UNSHOWN_RECHECK_MS = 500;
-
-export interface ScanFitTarget {
-  page: Page;
-  run: TextRun;
-}
-
-export function scanRunsToFit(
-  doc: EditorDocument,
-  targets: ScanFitTarget[],
-): ScanFitTarget[] {
-  return targets.filter((t) => scanRunNeedsFit(doc, t.run));
-}
-
-const nextSlice = () =>
-  new Promise<void>((resolve) => setTimeout(resolve, FIT_GAP_MS));
-
-export async function prefitInSlices(
-  doc: EditorDocument,
-  targets: ScanFitTarget[],
-): Promise<void> {
-  for (const { page, run } of targets) {
-    try {
-      while (!prefitScanRun(doc, page, run, performance.now() + FIT_SLICE_MS))
-        await nextSlice();
-    } catch {
-      continue;
-    }
-    await nextSlice();
-  }
-}
 
 const scriptsByPage = new WeakMap<PageSnapshot, Script[] | null>();
 
 function pageScripts(page: PageSnapshot): Script[] | null {
   let scripts = scriptsByPage.get(page);
   if (scripts === undefined) {
-    const text = page.runs
-      .filter((run) => run.renderMode === 3)
-      .map((run) => run.text);
+    const text = page.runs.filter(isScanRun).map((run) => run.text);
     scripts = text.length > 0 ? scanScriptsOf(text.join(" ")) : null;
     scriptsByPage.set(page, scripts);
   }
@@ -162,8 +131,7 @@ export function useScanPrefit(
         )
           timer = window.setTimeout(step, UNSHOWN_RECHECK_MS);
         else idle = true;
-        // The match decides the font the editing layer and the font box show,
-        // and both read it from the run snapshots.
+        // The editing layer and the font box both read the match from the run snapshots.
         if (idle && fittedSinceSnapshot) {
           fittedSinceSnapshot = false;
           store.resnapshot();
@@ -181,12 +149,12 @@ export function useScanPrefit(
         if (finished && scanRunNeedsFit(doc, next.run)) skipped.add(next.run);
         else if (finished && ranked) {
           noteRankedWithCurrentFaces(ranked);
-          // A fit changes no page content, so nothing else marks the page's
-          // snapshot as out of date.
+          // A fit changes no page content, so nothing else marks the snapshot stale.
           next.page.bumpRevision();
           fittedSinceSnapshot = true;
         }
-      } catch {
+      } catch (err) {
+        console.warn("[pdf-editor] scanned text could not be fitted", err);
         skipped.add(next.run);
       }
       timer = window.setTimeout(step, FIT_GAP_MS);
@@ -212,9 +180,7 @@ export function useScanPrefit(
         ready = true;
         resume.current();
       });
-    // Not awaited: reading installed fonts can take seconds, and the bundled
-    // faces are enough to start. Their arrival re-ranks through the face
-    // subscription above.
+    // Not awaited: installed fonts can take seconds to read; bundled faces suffice to start and later arrivals re-rank.
     void loadDeviceScanFacesIfAllowed().catch(() => undefined);
     return () => {
       stopped = true;

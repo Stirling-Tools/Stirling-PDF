@@ -16,10 +16,17 @@ import type {
   EditorViewState,
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
-vi.mock("@editor/tools/pdfTextEditor/commands/scanTextEdit", () => ({
-  prefitScanRun: vi.fn(),
-  scanRunNeedsFit: vi.fn(),
-}));
+vi.mock("@editor/tools/pdfTextEditor/commands/scanTextEdit", async () => {
+  const { RENDER_MODE_INVISIBLE } = await vi.importActual<
+    typeof import("@editor/tools/pdfTextEditor/types")
+  >("@editor/tools/pdfTextEditor/types");
+  return {
+    isScanRun: (run: { renderMode?: number }) =>
+      run.renderMode === RENDER_MODE_INVISIBLE,
+    prefitScanRun: vi.fn(),
+    scanRunNeedsFit: vi.fn(),
+  };
+});
 
 vi.mock(
   "@editor/tools/pdfTextEditor/util/scanFontLibrary",
@@ -158,10 +165,13 @@ describe("background scan font fitting", () => {
   });
 
   test("skips a run that cannot be fitted and finishes the rest", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     failing = new Set(["a"]);
     setup([{ ids: ["a", "b"], near: true }]);
     await vi.advanceTimersByTimeAsync(100);
     expect(order).toEqual(["a", "b"]);
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
   });
 
   test("waits for the bundled fonts before fitting", async () => {

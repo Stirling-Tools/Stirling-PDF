@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -29,11 +29,8 @@ import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/Composite
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import {
-  prefitInSlices,
-  scanRunsToFit,
-  type ScanFitTarget,
-} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
+import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
@@ -83,7 +80,8 @@ function liveRuns(store: EditorStore): Map<string, TextRun> {
 
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
-  const [fittingScan, setFittingScan] = useState(false);
+  const { busy: fittingScan, dispatch: dispatchAfterScanFit } =
+    useDispatchAfterScanFit(store);
   const forEachSelectedRun = useCallback(
     (visit: (run: SelectedRun, page: Page) => void) => {
       const sel = store.selection.value;
@@ -99,37 +97,6 @@ export function useSelectionActions(store: EditorStore) {
       }
     },
     [store],
-  );
-
-  // One command per run, dispatched as ONE undo step - same reason
-  // `deleteSelection` groups its deletes. Select-all now reaches the whole
-  // document, so a per-run dispatch left the user hundreds of undos behind and
-  // the first Ctrl+Z looked like the restyle had only covered part of the file.
-  const dispatchAll = useCallback(
-    (cmds: Command[]) => {
-      if (cmds.length === 1) store.dispatch(cmds[0]);
-      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-    },
-    [store],
-  );
-
-  const dispatchAfterScanFit = useCallback(
-    async (targets: ScanFitTarget[], build: () => Command[]) => {
-      const doc = store.document;
-      if (!doc) return;
-      const unfitted = scanRunsToFit(doc, targets);
-      if (unfitted.length > 0) {
-        setFittingScan(true);
-        try {
-          await prefitInSlices(doc, unfitted);
-        } finally {
-          setFittingScan(false);
-        }
-        if (store.document !== doc) return;
-      }
-      dispatchAll(build());
-    },
-    [store, dispatchAll],
   );
 
   const dispatchPerRun = useCallback(

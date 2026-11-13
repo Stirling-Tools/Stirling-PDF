@@ -14,7 +14,7 @@ import {
   type ScanDrawnFont,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
-  scanFaces,
+  scanFacesGeneration,
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
@@ -439,13 +439,12 @@ export function useToolbarController(
     [state.pages, selection, externalFonts],
   );
 
-  const scanFaceCount = useSyncExternalStore(
+  const scanFacesVersion = useSyncExternalStore(
     subscribeScanFaces,
-    () => scanFaces().length,
-    () => scanFaces().length,
+    scanFacesGeneration,
+    scanFacesGeneration,
   );
-  // Undefined when the selection is not wholly scanned text; null when it is
-  // but no single font is in force for it.
+  // Undefined unless the selection is wholly scanned text; null when no single font is in force.
   const scanFont = useMemo<ScanDrawnFont | null | undefined>(() => {
     const doc = store.document;
     if (!doc || selection.runIds.length === 0) return undefined;
@@ -459,9 +458,8 @@ export function useToolbarController(
     return first && fonts.every((font) => font?.family === first.family)
       ? first
       : null;
-    // state.pages and scanFaceCount are not read, but they are what changes
-    // when a block is refitted.
-  }, [store, selection.runIds, state.pages, scanFaceCount]);
+    // state.pages and scanFacesVersion are unread but change whenever a block is refitted.
+  }, [store, selection.runIds, state.pages, scanFacesVersion]);
 
   const selectionAllLocked = useMemo(() => {
     const runs = new Set(selection.runIds);

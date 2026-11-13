@@ -7,11 +7,12 @@ import {
   type RowFill,
   TableModel,
 } from "@editor/tools/pdfTextEditor/model/TableModel";
-import type {
-  PageRect,
-  RGBA,
-  TableCellStyle,
-  TableSnapshot,
+import {
+  RENDER_MODE_INVISIBLE,
+  type PageRect,
+  type RGBA,
+  type TableCellStyle,
+  type TableSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import {
   headerDiffers,
@@ -20,8 +21,6 @@ import {
 } from "@editor/tools/pdfTextEditor/util/tableStyle";
 
 const FALLBACK_FONT_SIZE = 11;
-/** PDF text render mode 3 = invisible, which is what an OCR layer writes. */
-const RENDER_INVISIBLE = 3;
 const LINE_WIDTH = 0.75;
 
 /** Id the editable twin of a recognized table takes. */
@@ -119,7 +118,7 @@ function looksScanned(
       const run = page.findRun(id);
       if (!run?.pdfiumObjPtr) continue;
       seen++;
-      if (run.renderMode === RENDER_INVISIBLE) {
+      if (run.renderMode === RENDER_MODE_INVISIBLE) {
         invisible++;
       }
     }

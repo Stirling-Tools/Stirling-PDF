@@ -231,6 +231,13 @@ export function FontFamilySelect({
     return isKnown(value) || documentFamily === value ? value : null;
   }, [mixed, value, isKnown, documentFamily]);
 
+  const placeholder = useMemo(() => {
+    if (mixed) return t("pdfTextEditor.fontPicker.mixed", "Mixed");
+    if (scanned)
+      return t("pdfTextEditor.fontPicker.scannedText", "Scanned text");
+    return t("pdfTextEditor.fontPicker.placeholder", "Font family");
+  }, [mixed, scanned, t]);
+
   return (
     <Group
       gap="xs"
@@ -253,13 +260,7 @@ export function FontFamilySelect({
         }}
         rightSection={applying ? <Loader size="xs" /> : undefined}
         disabled={disabled || applying}
-        placeholder={
-          mixed
-            ? t("pdfTextEditor.fontPicker.mixed", "Mixed")
-            : scanned
-              ? t("pdfTextEditor.fontPicker.scannedText", "Scanned text")
-              : t("pdfTextEditor.fontPicker.placeholder", "Font family")
-        }
+        placeholder={placeholder}
         aria-label={t("pdfTextEditor.fontPicker.label", "Font family")}
         nothingFoundMessage={t(
           "pdfTextEditor.fontPicker.noMatch",

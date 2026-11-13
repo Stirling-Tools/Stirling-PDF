@@ -18,7 +18,7 @@ import {
   loadBundledScanFaces,
   loadDeviceScanFaces,
   loadScriptScanFaces,
-  resetScanFaces,
+  _resetScanFacesForTests,
   scanFaces,
   scanFacesGeneration,
   scanScriptsOf,
@@ -109,7 +109,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", jarFetch);
   forgetServerFontList();
   resetLocalFontsCache();
-  resetScanFaces();
+  _resetScanFacesForTests();
 });
 
 afterEach(() => {

@@ -181,6 +181,13 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     pending = null;
   };
 
+  const flowStart = (w: LayoutWord, line: number): number => {
+    if (pen === null) return lineStart(line);
+    if (lastKept && besideInScan(lastKept.word, w))
+      return w.x + (lastKept.x - lastKept.word.x);
+    return pen() + gap(prev, w);
+  };
+
   for (const op of ops) {
     if (op.kind === "del") {
       layout.removed.push(op.word);
@@ -200,13 +207,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     const w = op.word;
     // The scan's own gap already shows the spaces its text came with.
     const extra = Math.max(0, op.lead - (w.lead ?? 0));
-    const flowed: number =
-      (pen === null
-        ? lineStart(op.line)
-        : lastKept && besideInScan(lastKept.word, w)
-          ? w.x + (lastKept.x - lastKept.word.x)
-          : pen() + gap(prev, w)) +
-      extra * input.space;
+    const flowed = flowStart(w, op.line) + extra * input.space;
     const x =
       extra === 0 &&
       w.line === op.line &&
@@ -230,13 +231,7 @@ export function layoutScanEdit(input: LayoutInput): Layout {
   return layout;
 }
 
-/**
- * `text` with its line breaks moved so every line `fits`, the way a paragraph
- * reflows: the words that overflow a line go to the front of the next one.
- * Only spaces and line breaks swap places, so every character keeps its offset
- * and a caret in the text stays where it was. A last line overflows onto a new
- * line only when `canAddLine`; a single word too wide to fit stays put.
- */
+/** `text` reflowed so every line `fits` by swapping only spaces and line breaks, so offsets and the caret hold; adds a line only when `canAddLine`, and a word too wide stays put. */
 export function rewrapLines(
   text: string,
   fits: (line: string) => boolean,

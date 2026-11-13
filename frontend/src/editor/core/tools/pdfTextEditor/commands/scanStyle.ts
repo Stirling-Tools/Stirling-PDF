@@ -2,6 +2,9 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
+import { BLACK, luma } from "@editor/tools/pdfTextEditor/model/Color";
+import { boxBlur } from "@editor/tools/pdfTextEditor/util/boxBlur";
+import { median } from "@editor/tools/pdfTextEditor/util/median";
 import {
   INK_SCALE,
   blurLuma,
@@ -25,8 +28,6 @@ import {
 
 // Picking and placing a face that passes for scanned text.
 
-const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
-
 /** How tall the tallest glyph of `text` is, as a share of the em. */
 export function topShare(face: Face, text: string): number {
   const tops = face.metrics?.get(face.family)?.tops;
@@ -41,12 +42,6 @@ export function topShare(face: Face, text: string): number {
   if (/[bdfhklt]/.test(text)) return face.asc / 1000;
   return face.xh / 1000;
 }
-
-export const median = (xs: number[]) => {
-  const v = [...xs].sort((p, q) => p - q);
-  const mid = v.length >> 1;
-  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
-};
 
 export const clampStretch = (s: number) =>
   Math.min(1.35, Math.max(0.7, s || 1));
@@ -196,6 +191,17 @@ export function opaqueStroke(
   }
 }
 
+// Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
+function strokeOf(p: Placement): {
+  renderMode?: number;
+  stroke?: RGBA;
+  strokeWidth?: number;
+} {
+  if (p.hollow) return { renderMode: 1, stroke: p.fill, strokeWidth: p.hollow };
+  if (p.weight) return { renderMode: 2, stroke: p.fill, strokeWidth: p.weight };
+  return {};
+}
+
 // Emit text squeezed or widened to the scan's letter widths, its ink starting
 // where the scanned ink started whatever the face's side bearing.
 export function placeText(
@@ -217,12 +223,7 @@ export function placeText(
     // The invisible OCR layer carries the run's tags; tagging this visible
     // copy as well would have assistive technology read the words twice.
     tags: uniformTags([]),
-    // Fill and stroke (Tr 2): blur makes scanned strokes heavier than any bold.
-    ...(p.hollow
-      ? { renderMode: 1, stroke: p.fill, strokeWidth: p.hollow }
-      : p.weight
-        ? { renderMode: 2, stroke: p.fill, strokeWidth: p.weight }
-        : {}),
+    ...strokeOf(p),
   });
   if (!p.weight && !p.hollow) opaqueStroke(m, ptrs);
   for (const ptr of ptrs)
@@ -649,27 +650,8 @@ export function blurRgba(
   r: number,
 ): void {
   const { rgba, width, height } = img;
-  const tmp = new Uint8Array(rgba.length);
-  const pass = (src: Uint8Array, dst: Uint8Array, dx: number, dy: number) => {
-    for (let y = 0; y < height; y++)
-      for (let x = 0; x < width; x++)
-        for (let c = 0; c < 3; c++) {
-          let sum = 0;
-          let n = 0;
-          for (let k = -r; k <= r; k++) {
-            const xx = x + k * dx;
-            const yy = y + k * dy;
-            if (xx < 0 || yy < 0 || xx >= width || yy >= height) continue;
-            sum += src[(yy * width + xx) * 4 + c];
-            n++;
-          }
-          const i = (y * width + x) * 4;
-          dst[i + c] = sum / n;
-          dst[i + 3] = 255;
-        }
-  };
-  pass(rgba, tmp, 1, 0);
-  pass(tmp, rgba, 0, 1);
+  rgba.set(boxBlur(rgba, width, height, r, 3, 4));
+  for (let i = 3; i < rgba.length; i += 4) rgba[i] = 255;
 }
 
 /**
@@ -683,9 +665,9 @@ export function toInkOnly(
   lightInk = false,
 ): void {
   const { rgba } = img;
-  const paperL = 0.299 * paper.r + 0.587 * paper.g + 0.114 * paper.b;
+  const paperL = luma(paper.r, paper.g, paper.b);
   const inkiness = (i: number) => {
-    const l = 0.299 * rgba[i] + 0.587 * rgba[i + 1] + 0.114 * rgba[i + 2];
+    const l = luma(rgba[i], rgba[i + 1], rgba[i + 2]);
     return lightInk ? l - paperL : paperL - l;
   };
   let deepest = 0;

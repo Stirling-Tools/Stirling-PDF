@@ -1,5 +1,10 @@
+import {
+  assembleSfnt,
+  readTableDirectory,
+  type SfntTable,
+} from "@editor/tools/pdfTextEditor/util/sfnt";
+
 const TTCF = 0x74746366;
-const NAME = 0x6e616d65;
 
 function isCollection(dv: DataView): boolean {
   return dv.byteLength >= 12 && dv.getUint32(0) === TTCF;
@@ -13,27 +18,17 @@ function faceOffsets(dv: DataView): number[] {
   return offsets;
 }
 
-function tableRecords(
-  dv: DataView,
-  sfnt: number,
-): Array<{ tag: number; checksum: number; offset: number; length: number }> {
-  const count = dv.getUint16(sfnt + 4);
-  const out = [];
-  for (let i = 0; i < count; i++) {
-    const rec = sfnt + 12 + i * 16;
-    if (rec + 16 > dv.byteLength) break;
-    out.push({
-      tag: dv.getUint32(rec),
-      checksum: dv.getUint32(rec + 4),
-      offset: dv.getUint32(rec + 8),
-      length: dv.getUint32(rec + 12),
-    });
-  }
-  return out;
+function tablesAt(dv: DataView, sfnt: number): Map<string, SfntTable> {
+  const face = new DataView(
+    dv.buffer,
+    dv.byteOffset + sfnt,
+    dv.byteLength - sfnt,
+  );
+  return readTableDirectory(face) ?? new Map();
 }
 
 function readPostscriptName(dv: DataView, sfnt: number): string | null {
-  const name = tableRecords(dv, sfnt).find((t) => t.tag === NAME);
+  const name = tablesAt(dv, sfnt).get("name");
   if (!name || name.offset + 6 > dv.byteLength) return null;
   const count = dv.getUint16(name.offset + 2);
   const strings = name.offset + dv.getUint16(name.offset + 4);
@@ -58,27 +53,11 @@ function readPostscriptName(dv: DataView, sfnt: number): string | null {
 }
 
 function standalone(dv: DataView, bytes: Uint8Array, sfnt: number): Uint8Array {
-  const records = tableRecords(dv, sfnt).filter(
-    (t) => t.offset + t.length <= bytes.length,
-  );
-  const header = 12 + records.length * 16;
-  const padded = (n: number) => (n + 3) & ~3;
-  const size = records.reduce((s, t) => s + padded(t.length), header);
-  const out = new Uint8Array(size);
-  const ov = new DataView(out.buffer);
-  out.set(bytes.subarray(sfnt, sfnt + 12), 0);
-  ov.setUint16(4, records.length);
-  let at = header;
-  records.forEach((t, i) => {
-    const rec = 12 + i * 16;
-    ov.setUint32(rec, t.tag);
-    ov.setUint32(rec + 4, t.checksum);
-    ov.setUint32(rec + 8, at);
-    ov.setUint32(rec + 12, t.length);
-    out.set(bytes.subarray(t.offset, t.offset + t.length), at);
-    at += padded(t.length);
-  });
-  return out;
+  const tables = new Map<string, Uint8Array>();
+  for (const [tag, t] of tablesAt(dv, sfnt))
+    if (t.offset + t.length <= bytes.length)
+      tables.set(tag, bytes.subarray(t.offset, t.offset + t.length));
+  return assembleSfnt(dv.getUint32(sfnt), tables);
 }
 
 export function fontFace(

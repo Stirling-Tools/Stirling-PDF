@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/tools/pdfTextEditor/components/FindBar.css";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
-import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import {
   findMatches,
   replaceMatches,
@@ -15,11 +14,8 @@ import type {
   TextMatch,
 } from "@editor/tools/pdfTextEditor/util/textMatching";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
-import {
-  prefitInSlices,
-  scanRunsToFit,
-  type ScanFitTarget,
-} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
+import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   PageSnapshot,
@@ -63,7 +59,8 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   const [ignoreAccents, setIgnoreAccents] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [replaceCount, setReplaceCount] = useState<number | null>(null);
-  const [replacing, setReplacing] = useState(false);
+  const { busy: replacing, dispatch: dispatchAfterScanFit } =
+    useDispatchAfterScanFit(store);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -190,35 +187,34 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const run = page?.findRun(m.runId);
       if (page && run) targets.push({ page, run });
     }
-    const unfitted = scanRunsToFit(doc, targets);
-    if (unfitted.length > 0) {
-      setReplacing(true);
-      try {
-        await prefitInSlices(doc, unfitted);
-      } finally {
-        setReplacing(false);
+    await dispatchAfterScanFit(targets, () => {
+      const cmds: EditTextCommand[] = [];
+      for (const { page, run: target } of targets) {
+        const run = page.findRun(target.id);
+        if (!run || run.locked) continue;
+        const ranges = findMatches(run.text, query, options);
+        const updated = replaceMatches(run.text, ranges, replace);
+        if (updated === run.text) continue;
+        cmds.push(
+          new EditTextCommand({
+            pageIndex: page.index,
+            runId: run.id,
+            nextText: updated,
+          }),
+        );
       }
-      if (store.document !== doc) return;
-    }
-    const cmds: EditTextCommand[] = [];
-    for (const { page, run: target } of targets) {
-      const run = page.findRun(target.id);
-      if (!run || run.locked) continue;
-      const ranges = findMatches(run.text, query, options);
-      const updated = replaceMatches(run.text, ranges, replace);
-      if (updated === run.text) continue;
-      cmds.push(
-        new EditTextCommand({
-          pageIndex: page.index,
-          runId: run.id,
-          nextText: updated,
-        }),
-      );
-    }
-    if (cmds.length === 1) store.dispatch(cmds[0]);
-    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-    setReplaceCount(cmds.length);
-  }, [query, replace, options, matches, store, replacing]);
+      setReplaceCount(cmds.length);
+      return cmds;
+    });
+  }, [
+    query,
+    replace,
+    options,
+    matches,
+    store,
+    replacing,
+    dispatchAfterScanFit,
+  ]);
 
   const countLabel =
     matches.length === 0
