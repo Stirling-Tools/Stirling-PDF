@@ -2,6 +2,40 @@
 bootRun {
     enabled = false
 }
+// -PjpdfiumPlatforms / -PjpdfiumNativePlatforms = auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64,windows-arm64>
+def resolveJpdfiumPlatforms = { String propertyName ->
+    def jpdfiumPlatformsProp = (project.findProperty(propertyName) ?: 'auto').toString().trim()
+    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64', 'windows-arm64']
+    def jpdfiumPlatforms
+    if (jpdfiumPlatformsProp == 'auto') {
+        def osName = System.getProperty('os.name').toLowerCase()
+        def osArch = System.getProperty('os.arch').toLowerCase()
+        def isArm64 = osArch.contains('aarch64') || osArch.contains('arm64')
+        if (osName.contains('linux')) {
+            jpdfiumPlatforms = isArm64 ? ['linux-arm64'] : ['linux-x64']
+        } else if (osName.contains('mac')) {
+            jpdfiumPlatforms = isArm64 ? ['darwin-arm64'] : ['darwin-x64']
+        } else if (osName.contains('win')) {
+            jpdfiumPlatforms = isArm64 ? ['windows-arm64'] : ['windows-x64']
+        } else {
+            // Fallback: bundle all platforms when host can't be determined
+            jpdfiumPlatforms = jpdfiumAllPlatforms
+        }
+    } else if (jpdfiumPlatformsProp == 'all') {
+        jpdfiumPlatforms = jpdfiumAllPlatforms
+    } else if (jpdfiumPlatformsProp == 'none') {
+        jpdfiumPlatforms = []
+    } else {
+        jpdfiumPlatforms = jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
+    }
+    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
+    if (jpdfiumInvalid) {
+        throw new GradleException("Unknown ${propertyName} value(s): ${jpdfiumInvalid.join(', ')}. " +
+                "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'auto', 'all' or 'none'.")
+    }
+    return jpdfiumPlatforms
+}
+
 dependencies {
     // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
     // Declared as api here so core + proprietary (which depend on common) get it transitively,
@@ -43,39 +77,24 @@ dependencies {
 
     api "com.stirling:jpdfium:${jpdfiumVersion}"
 
-    // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64,windows-arm64>
-    def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
-    def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'linux-musl-x64', 'linux-musl-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64', 'windows-arm64']
-    def jpdfiumPlatforms
-    if (jpdfiumPlatformsProp == 'auto') {
-        def osName = System.getProperty('os.name').toLowerCase()
-        def osArch = System.getProperty('os.arch').toLowerCase()
-        def isArm64 = osArch.contains('aarch64') || osArch.contains('arm64')
-        if (osName.contains('linux')) {
-            jpdfiumPlatforms = isArm64 ? ['linux-arm64'] : ['linux-x64']
-        } else if (osName.contains('mac')) {
-            jpdfiumPlatforms = isArm64 ? ['darwin-arm64'] : ['darwin-x64']
-        } else if (osName.contains('win')) {
-            jpdfiumPlatforms = isArm64 ? ['windows-arm64'] : ['windows-x64']
-        } else {
-            // Fallback: bundle all platforms when host can't be determined
-            jpdfiumPlatforms = jpdfiumAllPlatforms
-        }
-    } else if (jpdfiumPlatformsProp == 'all') {
-        jpdfiumPlatforms = jpdfiumAllPlatforms
-    } else if (jpdfiumPlatformsProp == 'none') {
-        jpdfiumPlatforms = []
-    } else {
-        jpdfiumPlatforms = jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
-    }
-    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
-    if (jpdfiumInvalid) {
-        throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
-                "Valid: ${jpdfiumAllPlatforms.join(', ')}, 'auto', 'all' or 'none'.")
-    }
+    def jpdfiumPlatforms = resolveJpdfiumPlatforms('jpdfiumPlatforms')
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
         runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+    }
+    def jpdfiumLicenseOnlyPlatforms = project.hasProperty('jpdfiumNativePlatforms')
+            ? resolveJpdfiumPlatforms('jpdfiumNativePlatforms') - jpdfiumPlatforms
+            : []
+    jpdfiumLicenseOnlyPlatforms.each { platform ->
+        def nativeJar = configurations.detachedConfiguration(
+                dependencies.create("com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"))
+        nativeJar.transitive = false
+        def licensesJar = tasks.register("jpdfiumLicensesJar-${platform}", Jar) {
+            from({ zipTree(nativeJar.singleFile) }) { include 'licenses/**' }
+            archiveFileName = "jpdfium-licenses-${platform}-${jpdfiumVersion}.jar"
+            destinationDirectory = layout.buildDirectory.dir('jpdfium-licenses')
+        }
+        runtimeOnly files(licensesJar)
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
@@ -83,4 +102,59 @@ dependencies {
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+}
+
+tasks.register('stageJpdfiumNatives') {
+    description = 'Extracts the JPDFium native libraries for the selected platforms into a directory.'
+    def platforms = resolveJpdfiumPlatforms('jpdfiumNativePlatforms')
+    def nativeJars = configurations.detachedConfiguration(
+            *platforms.collect { dependencies.create("com.stirling:jpdfium-natives-${it}:${jpdfiumVersion}") })
+    nativeJars.transitive = false
+    def xzClasspath = configurations.detachedConfiguration(dependencies.create("com.stirling:jpdfium:${jpdfiumVersion}"))
+    def outputDir = layout.buildDirectory.dir('jpdfium-natives')
+    inputs.files(nativeJars)
+    inputs.property('platforms', platforms)
+    outputs.dir(outputDir)
+    doLast {
+        def root = outputDir.get().asFile
+        root.deleteDir()
+        def xzLoader = new URLClassLoader(xzClasspath.files.collect { it.toURI().toURL() } as URL[], (ClassLoader) null)
+        def xzStream = xzLoader.loadClass('org.tukaani.xz.XZInputStream').getConstructor(InputStream)
+        try {
+            platforms.each { platform ->
+                def jar = nativeJars.files.find { it.name == "jpdfium-natives-${platform}-${jpdfiumVersion}.jar" }
+                def prefix = "natives/${platform}/"
+                def platformDir = new File(root, platform)
+                def licenseDir = new File(platformDir, 'licenses')
+                licenseDir.mkdirs()
+                new java.util.zip.ZipFile(jar).withCloseable { zip ->
+                    def readEntry = { String name -> zip.getInputStream(zip.getEntry(prefix + name)).getText('UTF-8') }
+                    def libs = readEntry('native-libs.txt').readLines()*.trim().findAll { it && !it.startsWith('#') }
+                    def hashes = readEntry('native-libs.sha256').readLines()*.trim().findAll { it && !it.startsWith('#') }
+                            .collectEntries { line -> [(line.substring(64).trim()): line.substring(0, 64).toLowerCase()] }
+                    libs.each { lib ->
+                        if (!hashes[lib]) throw new GradleException("No checksum for ${lib} in ${jar.name}")
+                        def entry = zip.getEntry(prefix + lib) ?: zip.getEntry(prefix + lib + '.xz')
+                        if (entry == null) throw new GradleException("${lib} is missing from ${jar.name}")
+                        def digest = java.security.MessageDigest.getInstance('SHA-256')
+                        InputStream raw = zip.getInputStream(entry)
+                        InputStream input = entry.name.endsWith('.xz') ? xzStream.newInstance(raw) : raw
+                        new File(platformDir, lib).withOutputStream { out ->
+                            new java.security.DigestInputStream(input, digest).withCloseable { it.transferTo(out) }
+                        }
+                        if (HexFormat.of().formatHex(digest.digest()) != hashes[lib]) {
+                            throw new GradleException("Checksum mismatch for ${lib} in ${jar.name}")
+                        }
+                    }
+                    new File(platformDir, 'native-libs.txt').text = libs.join('\n') + '\n'
+                    zip.entries().findAll { !it.directory && it.name.startsWith('licenses/') }.each { entry ->
+                        new File(licenseDir, entry.name.substring('licenses/'.length())).bytes = zip.getInputStream(entry).bytes
+                    }
+                }
+                logger.lifecycle("Staged JPDFium natives for ${platform} in ${platformDir}")
+            }
+        } finally {
+            xzLoader.close()
+        }
+    }
 }

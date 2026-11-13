@@ -162,6 +162,12 @@ tasks:
     # a stale, too-old JRE slips through.
     cmds:
       - task: jlink:verify
+      - task: jlink:natives
+
+  jlink:natives:
+    desc: "Install the JPDFium native libraries into the bundled JRE"
+    cmds:
+      - node scripts/stage-jpdfium-natives.mjs ../app/common/build/jpdfium-natives src-tauri/runtime/jre
 
   jlink:verify:
     desc: "Fail the build if the bundled JRE is older than the app JAR requires"
@@ -171,16 +177,16 @@ tasks:
       - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
 
   jlink:jar:
-    desc: "Build backend JAR for Tauri bundling (host-OS natives only by default)"
+    desc: "Build backend JAR and JPDFium natives for Tauri bundling (host-OS natives only by default)"
     run: once
     dir: ..
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
     cmds:
-      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
-      - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - echo "Building bootJar and extracting JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
+      - cmd: cmd /c gradlew.bat bootJar :common:stageJpdfiumNatives --no-daemon -PjpdfiumPlatforms=none -PjpdfiumNativePlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [windows]
-      - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - cmd: ./gradlew bootJar :common:stageJpdfiumNatives --no-daemon -PjpdfiumPlatforms=none -PjpdfiumNativePlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
       # The bundle globs libs/*.jar, so an old jar left behind would ship too
       # (and could be selected as the backend). The script stages only the jar
