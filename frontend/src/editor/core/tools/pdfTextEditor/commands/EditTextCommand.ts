@@ -20,6 +20,7 @@ import {
   emitTextLine,
   everyCharIn,
   inkFromRun,
+  measureObjBoundsPt,
   measureObjSpanPt,
   moveObjectLeftEdgeTo,
   removeMemberPtrs,
@@ -1581,18 +1582,24 @@ export class EditTextCommand implements Command {
       run.fontSize * REPAINT_MARGIN_PER_FONT_SIZE,
     );
     const { x, y, width, height } = run.bounds;
+    const scan = isScanRun(run);
     // A scanned edit moves the scan's own words, which can land past the run's box.
-    const [left, right] = isScanRun(run)
+    const [left, right] = scan
       ? [-PAGE_SPAN_PT, PAGE_SPAN_PT]
       : [x - margin, x + width + margin];
+    // Lines a scanned edit adds or drops sit below the run's one-line box.
+    const drawn =
+      scan && run.scanEdit
+        ? measureObjBoundsPt(doc.module, [
+            ...run.scanEdit.created,
+            ...run.scanEdit.textPtrs,
+          ])
+        : null;
+    const bottom = Math.min(y, drawn?.bottom ?? y) - margin;
+    const top = Math.max(y + height, drawn?.top ?? y + height) + margin;
     return {
       pageIndex: this.pageIndex,
-      area: {
-        x: left,
-        y: y - margin,
-        width: right - left,
-        height: height + 2 * margin,
-      },
+      area: { x: left, y: bottom, width: right - left, height: top - bottom },
     };
   }
 
