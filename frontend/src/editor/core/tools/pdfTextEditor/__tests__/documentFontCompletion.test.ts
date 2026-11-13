@@ -192,7 +192,10 @@ describe("resolveOriginalFonts", () => {
 
     const completion = fontCompletionFor(id);
     expect(completion?.source).toBe("original");
-    expect(getExternalFontBytes(completion!.family)).toEqual(light);
+    // toEqual walks a 750 KB array element by element, seconds on a CI runner.
+    expect(
+      Buffer.compare(getExternalFontBytes(completion!.family)!, light),
+    ).toBe(0);
     expect(fontNameRefused(id)).toBe(false);
   });
 
