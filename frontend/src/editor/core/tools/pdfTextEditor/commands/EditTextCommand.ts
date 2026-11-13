@@ -192,6 +192,8 @@ export class EditTextCommand implements Command {
    * lookalike.
    */
   private prevFontPtr = 0;
+  // The run's face before this edit's first apply, whichever path the edit then takes.
+  private startFont: { ptr: number; id: string } | null = null;
   private coverRectPtr = 0;
   // Ink of an invisible OCR run this edit made visible, restored on revert.
   private scanSource: { fill: TextRun["fill"]; fontSize: number } | null = null;
@@ -254,6 +256,10 @@ export class EditTextCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     if (this.prevText === null) this.prevText = run.text;
+    if (!this.startFont && run.containerPtr === 0 && run.pdfiumObjPtr) {
+      const ptr = safeGetFont(doc.module, run.pdfiumObjPtr);
+      if (ptr) this.startFont = { ptr, id: run.fontId };
+    }
     // No-op edit: a contentEditable insert can fire several `input` events for
     // one keystroke burst, re-dispatching the SAME final text.
     if (this.prevText === this.nextText) return;
@@ -292,6 +298,8 @@ export class EditTextCommand implements Command {
     // A run rotated within the page can't use the surgical partial/paragraph
     // paths - those assume horizontal layout.
     const isRotated = !!rotationFromMatrix(run.matrix);
+    // Only the full re-emit below can switch the run to a given face.
+    const keepsFont = this.nextFont === null;
 
     // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep per-line
     // sub-run data in `paragraphLineSlots`.
@@ -300,7 +308,8 @@ export class EditTextCommand implements Command {
       this.paragraphPlan === null &&
       run.paragraphLineSlots.length > 1 &&
       !isRotated &&
-      !scanText
+      !scanText &&
+      keepsFont
     ) {
       const paraPlan = planParagraphEdit(
         run,
@@ -358,7 +367,8 @@ export class EditTextCommand implements Command {
       this.prevText.length > 0 &&
       run.paragraphLineSlots.length >= 1 &&
       !isRotated &&
-      !scanText
+      !scanText &&
+      keepsFont
     ) {
       const prevLines = this.prevText.split(/\r?\n/);
       const nextLines = this.nextText.split(/\r?\n/);
@@ -402,7 +412,8 @@ export class EditTextCommand implements Command {
       run.paragraphLineSlots.length < 2 &&
       !/\r?\n/.test(this.nextText) &&
       !isRotated &&
-      !scanText
+      !scanText &&
+      keepsFont
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       // An in-place "modify" op that re-SetTexts whitespace paints „ on an
@@ -1509,11 +1520,11 @@ export class EditTextCommand implements Command {
     const first = edits[0].prevText;
     const run = doc.page(this.pageIndex).findRun(this.runId);
     if (first === null || !run || isScanRun(run)) return false;
-    const { prevFontPtr, prevFontId } = edits[0];
     // A later step may have redrawn the run in a fallback; undo goes back to the face the burst started from.
+    const { startFont } = edits[0];
     const firstFont =
-      edits[0].overlaid && prevFontPtr && prevFontId
-        ? { ptr: prevFontPtr, id: prevFontId }
+      startFont && (edits[0].overlaid || run.fontId !== startFont.id)
+        ? startFont
         : null;
     const move = new EditTextCommand({
       pageIndex: this.pageIndex,
