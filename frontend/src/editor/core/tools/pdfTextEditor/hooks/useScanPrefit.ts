@@ -180,8 +180,6 @@ export function useScanPrefit(
         ready = true;
         resume.current();
       });
-    // Not awaited: installed fonts can take seconds to read; bundled faces suffice to start and later arrivals re-rank.
-    void loadDeviceScanFacesIfAllowed().catch(() => undefined);
     return () => {
       stopped = true;
       resume.current = () => {};
@@ -198,5 +196,7 @@ export function useScanPrefit(
   useEffect(() => {
     if (!hasScannedText) return;
     void loadScriptScanFaces(scriptsRef.current).then(() => resume.current());
+    // Not awaited: installed fonts can take seconds to read; bundled faces suffice to start and later arrivals re-rank.
+    void loadDeviceScanFacesIfAllowed().catch(() => undefined);
   }, [hasScannedText, scriptKey]);
 }

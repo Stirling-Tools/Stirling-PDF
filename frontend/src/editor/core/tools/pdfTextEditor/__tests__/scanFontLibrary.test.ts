@@ -172,6 +172,18 @@ describe("bundled scan faces", () => {
     );
     expect(downloads("DejaVuSans.ttf")).toBe(1);
   });
+
+  it("loads the font bytes again after the server font list was reset", async () => {
+    serve();
+    await loadBundledScanFaces();
+    expect(getExternalFontBytes("Carlito")).not.toBeNull();
+
+    forgetServerFontList();
+    await loadBundledScanFaces();
+    expect(getExternalFontBytes("Carlito")?.byteLength).toBe(
+      bytesOf("Carlito-Regular.ttf").byteLength,
+    );
+  });
 });
 
 describe("script scan faces", () => {
@@ -213,6 +225,18 @@ describe("script scan faces", () => {
     serve();
     await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
     expect(labels()).toContain("Noto Sans JP");
+  });
+
+  it("loads the server's Japanese font again after the server font list was reset", async () => {
+    serve();
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
+
+    forgetServerFontList();
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
+    expect(labels().filter((label) => label === "Noto Sans JP")).toHaveLength(
+      1,
+    );
+    expect(getExternalFontBytes("Noto Sans JP")).not.toBeNull();
   });
 
   it("offers the Liberation clones for Cyrillic but not where base-14 can draw", async () => {
@@ -311,6 +335,19 @@ describe("device scan faces", () => {
     expect(scanFaces().filter((face) => face.family === "Helvetica")).toEqual([
       expect.objectContaining({ source: "base14" }),
     ]);
+  });
+
+  it("reads a script's installed fonts once that script turns up after Latin", async () => {
+    serve([]);
+    stubDeviceFonts([
+      { family: "Georgia", style: "Regular", file: "DejaVuSerif.ttf" },
+      { family: "Yu Gothic", style: "Regular", file: "NotoSansJP-Regular.ttf" },
+    ]);
+    expect(await loadDeviceScanFaces()).toBe(1);
+
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
+    expect(await loadDeviceScanFaces()).toBe(2);
+    expect(labels()).toEqual(expect.arrayContaining(["Georgia", "Yu Gothic"]));
   });
 
   it("keeps one face when two families share the same outlines", async () => {

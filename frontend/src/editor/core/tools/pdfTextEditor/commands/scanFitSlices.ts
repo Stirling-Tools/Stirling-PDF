@@ -28,14 +28,19 @@ export function scanRunsToFit(
 const nextSlice = () =>
   new Promise<void>((resolve) => setTimeout(resolve, FIT_GAP_MS));
 
+/** Fits each target between timer slices; returns early once `doc` is disposed, leaving the rest unfitted. */
 export async function prefitInSlices(
   doc: EditorDocument,
   targets: ScanFitTarget[],
 ): Promise<void> {
   for (const { page, run } of targets) {
     try {
-      while (!prefitScanRun(doc, page, run, performance.now() + FIT_SLICE_MS))
+      while (true) {
+        if (doc.disposed) return;
+        if (prefitScanRun(doc, page, run, performance.now() + FIT_SLICE_MS))
+          break;
         await nextSlice();
+      }
     } catch (err) {
       console.warn("[pdf-editor] scanned text could not be fitted", err);
       continue;
