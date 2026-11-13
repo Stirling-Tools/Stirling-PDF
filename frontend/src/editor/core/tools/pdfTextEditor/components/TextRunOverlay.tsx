@@ -38,13 +38,12 @@ import {
   paintLines,
   highlightTextRange,
   paintPlainText,
-  plainCaretOffset,
   plainDomRange,
   plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
   refitTokens,
-  restoreCaretOffset,
+  repaintKeepingSelection,
 } from "@editor/tools/pdfTextEditor/util/overlayPainter";
 import {
   cssFontShorthand,
@@ -661,18 +660,15 @@ export function TextRunOverlay({
     // Keyed off the selection, not the focus: replaceChildren below detaches
     // whatever node the caret sits in, and a caret this run holds without being
     // document.activeElement is still a caret the next insert needs.
-    const caret = plainCaretOffset(el);
-    if (freshExact) {
-      paintLines(el, freshExact.lines, paintOpts);
-    } else {
-      paintPlainText(el, run.text);
-    }
-    paintedSignatureRef.current = wantSignature;
     // Only while the run still holds focus. A selection outlives the blur that
     // ended the edit, so re-seating it into a blurred run takes focus BACK -
     // and the user's next click elsewhere then fires this run's blur handler,
     // dispatching a spurious wrap that also wipes the redo stack.
-    if (caret !== null && ownsFocus) restoreCaretOffset(el, caret);
+    repaintKeepingSelection(el, ownsFocus, () => {
+      if (freshExact) paintLines(el, freshExact.lines, paintOpts);
+      else paintPlainText(el, run.text);
+    });
+    paintedSignatureRef.current = wantSignature;
   }, [run.text, freshExact, font, fontSizePx, touched, faceEpoch]);
 
   // After the paint above, which replaces the nodes a range would hold. The
