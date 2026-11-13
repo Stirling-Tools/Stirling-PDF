@@ -73,9 +73,6 @@ const modernGlobals: OxlintGlobals = {
 };
 
 const nestedTernaryBacklog = [
-  "scripts/generate-og-metadata.mjs",
-  "scripts/lint/theme-lint.mjs",
-  "scripts/report-flaky-tests.mts",
   "src/editor/cloud/components/shared/config/configSections/Payg.tsx",
   "src/editor/cloud/components/shared/config/configSections/usageMeters.tsx",
   "src/editor/cloud/hooks/useFreeCreditsSummary.ts",
