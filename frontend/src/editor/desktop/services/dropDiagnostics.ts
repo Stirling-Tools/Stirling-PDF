@@ -43,16 +43,7 @@ export function captureDropDiagnostics(): () => void {
   let quiet: ReturnType<typeof setTimeout> | undefined;
   const since = (from: number) => `${Math.round(performance.now() - from)} ms`;
 
-  const enter = (event: DragEvent) => {
-    if (fromPage || enteredAt !== null) return;
-    enteredAt = performance.now();
-    lastOverAt = enteredAt;
-    logDropDiagnostic(`drag entered: ${describe(event.dataTransfer)}`);
-  };
-  const over = (event: DragEvent) => {
-    if (fromPage) return;
-    enter(event);
-    lastOverAt = performance.now();
+  const armQuiet = () => {
     clearTimeout(quiet);
     quiet = setTimeout(() => {
       if (enteredAt === null) return;
@@ -61,6 +52,22 @@ export function captureDropDiagnostics(): () => void {
       );
       enteredAt = null;
     }, QUIET_MS);
+  };
+
+  const enter = (event: DragEvent) => {
+    if (fromPage || enteredAt !== null) return;
+    enteredAt = performance.now();
+    lastOverAt = enteredAt;
+    logDropDiagnostic(`drag entered: ${describe(event.dataTransfer)}`);
+    // Armed here too: a drag that leaves before its first dragover would
+    // otherwise stay "entered" and hide the next drag's entry.
+    armQuiet();
+  };
+  const over = (event: DragEvent) => {
+    if (fromPage) return;
+    enter(event);
+    lastOverAt = performance.now();
+    armQuiet();
   };
   const drop = (event: DragEvent) => {
     if (fromPage) return;

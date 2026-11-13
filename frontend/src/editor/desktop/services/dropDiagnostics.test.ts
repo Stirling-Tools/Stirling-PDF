@@ -64,6 +64,17 @@ describe("drop diagnostics", () => {
     expect(logged().at(-1)?.message).toMatch(/^no dragover for 1500 ms/);
   });
 
+  it("logs the next drag after one that left before any dragover", () => {
+    fire("dragenter");
+    vi.advanceTimersByTime(2000);
+    fire("dragenter");
+
+    const messages = logged().map(({ message }) => message);
+    expect(messages).toHaveLength(3);
+    expect(messages[1]).toMatch(/^no dragover for 1500 ms/);
+    expect(messages[2]).toMatch(/^drag entered/);
+  });
+
   it("ignores drags that start inside the page", () => {
     fire("dragstart");
     fire("dragenter");
