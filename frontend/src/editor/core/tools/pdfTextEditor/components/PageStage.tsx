@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Center,
@@ -8,10 +8,12 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { alert } from "@editor/components/toast";
 import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
+import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
@@ -40,7 +42,10 @@ import type {
   SelectionState,
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
-import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 const DEFAULT_SCALE = 1.5;
 const DESKTOP_FIT_PAD_PX = 64;
@@ -89,10 +94,11 @@ export function PageStage() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [store, state.hasDocument, state.loading]);
 
-  // The strip carries undo/redo plus the contextual formatting group. The
-  // inspector derives from the same controller, so both surfaces read one
-  // source of truth.
-  const controller = useToolbarController(store, state, selection);
+  // Deferred so the typed letter is drawn before the bars, which a burst of typing outdates.
+  const bars = useDeferredPanelView(state, selection);
+  const [actionBarSlot, setActionBarSlot] = useState<HTMLDivElement | null>(
+    null,
+  );
 
   const lastFitRef = useRef<{
     doc: object;
@@ -125,32 +131,13 @@ export function PageStage() {
     return () => observer.disconnect();
   }, [isMobile, firstPageWidth, store]);
 
-  const topBar = isMobile ? (
-    <MobileEditorTopBar
-      controller={controller}
-      hasDocument={state.hasDocument}
-      dirty={state.dirty}
-    />
-  ) : (
-    <EditorTopBar
-      controller={controller}
-      hasDocument={state.hasDocument}
-      dirty={state.dirty}
-      addTextArmed={state.mode === "addText"}
-      addTableArmed={state.mode === "addTable"}
-      onToggleAddTable={() =>
-        store.setMode(
-          store.getState().mode === "addTable" ? "select" : "addTable",
-        )
-      }
-      onToggleAddText={() =>
-        store.setMode(
-          store.getState().mode === "addText" ? "select" : "addText",
-        )
-      }
-      findOpen={state.findOpen}
-      onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
-      onShowHelp={() => store.setHelpOpen(true)}
+  const topBar = (
+    <StageBars
+      store={store}
+      state={bars.state}
+      selection={bars.selection}
+      mobile={isMobile}
+      actionBarSlot={actionBarSlot}
     />
   );
 
@@ -387,14 +374,9 @@ export function PageStage() {
           />
         )}
       </Box>
+      {/* StageBars portals the action bar here so both bars share one toolbar controller. */}
       {isMobile && state.hasDocument && (
-        <MobileActionBar
-          store={store}
-          controller={controller}
-          addTextArmed={state.mode === "addText"}
-          addTableArmed={state.mode === "addTable"}
-          findOpen={state.findOpen}
-        />
+        <div ref={setActionBarSlot} style={{ display: "contents" }} />
       )}
     </Stack>
   );
@@ -514,3 +496,57 @@ function pageViewHandlers(store: EditorStore) {
     },
   };
 }
+
+interface StageBarsProps {
+  store: EditorStore;
+  state: EditorViewState;
+  selection: SelectionState;
+  mobile: boolean;
+  actionBarSlot: HTMLElement | null;
+}
+
+// One component for both bars so they share one toolbar controller; the action bar is portalled below the pages.
+const StageBars = memo(function StageBars({
+  store,
+  state,
+  selection,
+  mobile,
+  actionBarSlot,
+}: StageBarsProps) {
+  const controller = useToolbarController(store, state, selection);
+  if (!mobile)
+    return (
+      <EditorTopBar
+        controller={controller}
+        hasDocument={state.hasDocument}
+        dirty={state.dirty}
+        addTextArmed={state.mode === "addText"}
+        addTableArmed={state.mode === "addTable"}
+        onToggleAddTable={() => store.toggleMode("addTable")}
+        onToggleAddText={() => store.toggleMode("addText")}
+        findOpen={state.findOpen}
+        onToggleFind={() => store.toggleFindOpen()}
+        onShowHelp={() => store.setHelpOpen(true)}
+      />
+    );
+  return (
+    <>
+      <MobileEditorTopBar
+        controller={controller}
+        hasDocument={state.hasDocument}
+        dirty={state.dirty}
+      />
+      {actionBarSlot &&
+        createPortal(
+          <MobileActionBar
+            store={store}
+            controller={controller}
+            addTextArmed={state.mode === "addText"}
+            addTableArmed={state.mode === "addTable"}
+            findOpen={state.findOpen}
+          />,
+          actionBarSlot,
+        )}
+    </>
+  );
+});

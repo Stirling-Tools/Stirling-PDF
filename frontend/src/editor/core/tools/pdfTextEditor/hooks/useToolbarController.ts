@@ -57,12 +57,38 @@ type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
 // Everything the contextual `Toolbar` needs, derived from the shared
 // `EditorStore`.
+const CAN_UNDO = 1;
+const CAN_REDO = 2;
+
+// Read from the store, not the deferred state the bars render: a stale enabled redo gets clicked past the end of history.
+function useHistoryFlags(store: EditorStore): {
+  canUndo: boolean;
+  canRedo: boolean;
+} {
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
+  );
+  const read = useCallback(
+    () =>
+      (store.history.canUndo ? CAN_UNDO : 0) |
+      (store.history.canRedo ? CAN_REDO : 0),
+    [store],
+  );
+  const flags = useSyncExternalStore(subscribe, read, read);
+  return {
+    canUndo: (flags & CAN_UNDO) !== 0,
+    canRedo: (flags & CAN_REDO) !== 0,
+  };
+}
+
 export function useToolbarController(
   store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
 ) {
   const sel = useSelectionActions(store);
+  const history = useHistoryFlags(store);
   const imageA11y = useImageAccessibility(store, state, selection);
   const textA11y = useTextAccessibility(store, state, selection);
 
@@ -527,8 +553,8 @@ export function useToolbarController(
   return {
     state: toolbarState,
     scanFont,
-    canUndo: store.history.canUndo,
-    canRedo: store.history.canRedo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
     onUndo: () => store.undo(),
     onRedo: () => store.redo(),
     onChangeFontSize: sel.changeFontSize,

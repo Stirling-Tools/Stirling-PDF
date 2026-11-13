@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -9,7 +10,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function DiscardChangesModal({
+export const DiscardChangesModal = memo(function DiscardChangesModal({
   incomingFileName,
   onConfirm,
   onCancel,
@@ -58,4 +59,4 @@ export function DiscardChangesModal({
       </Stack>
     </Modal>
   );
-}
+});
