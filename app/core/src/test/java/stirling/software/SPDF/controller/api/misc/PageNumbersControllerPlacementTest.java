@@ -38,14 +38,15 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Where a page number ends up on the page as a reader sees it, found by rendering the output: the
+ * Where a page label ends up on the page as a reader sees it, found by rendering the output: the
  * renderer applies the page's rotation and crop box the way a viewer does.
  */
 @ExtendWith(MockitoExtension.class)
 class PageNumbersControllerPlacementTest {
 
-    // "000001" is wider than it is tall only while it reads upright.
-    private static final int ZERO_PAD = 6;
+    // An "L" looks different in each of its four orientations, so its pixels show which way up it
+    // is drawn. A number such as "1" looks much the same upside down.
+    private static final String LABEL = "L";
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -75,7 +76,7 @@ class PageNumbersControllerPlacementTest {
     @DisplayName("Each position lands in its cell of the displayed page, reading upright")
     void positionsFollowPageRotation(int rotation) throws Exception {
         for (int position = 1; position <= 9; position++) {
-            assertNumberShownAt(position, rotation, null);
+            assertLabelShownAt(position, rotation, null);
         }
     }
 
@@ -85,44 +86,52 @@ class PageNumbersControllerPlacementTest {
     void positionsFollowCropBox(int rotation) throws Exception {
         PDRectangle cropBox = new PDRectangle(100, 300, 300, 400);
         for (int position = 1; position <= 9; position++) {
-            assertNumberShownAt(position, rotation, cropBox);
+            assertLabelShownAt(position, rotation, cropBox);
         }
     }
 
-    private void assertNumberShownAt(int position, int rotation, PDRectangle cropBox)
+    private void assertLabelShownAt(int position, int rotation, PDRectangle cropBox)
             throws Exception {
-        MockMultipartFile file = singlePagePdf(rotation, cropBox);
+        Ink ink = labelAndRender(singlePagePdf(PDRectangle.LETTER, rotation, cropBox), position);
+        String where = "position " + position + " on a page rotated " + rotation;
+        assertThat(ink).as("label is visible for %s", where).isNotNull();
+        assertThat(ink.column()).as("column for %s", where).isEqualTo((position - 1) % 3);
+        assertThat(ink.row()).as("row for %s", where).isEqualTo((position - 1) / 3);
+        assertThat(ink.isUprightL()).as("reads upright for %s", where).isTrue();
+
+        PDRectangle displayed = new PDRectangle(ink.page().getWidth(), ink.page().getHeight());
+        Ink onPlainPage = labelAndRender(singlePagePdf(displayed, 0, null), position);
+        assertThat(ink.farthestEdgeFrom(onPlainPage))
+                .as("pixels away from a plain page of the same shape for %s", where)
+                .isLessThanOrEqualTo(2);
+    }
+
+    private Ink labelAndRender(MockMultipartFile file, int position) throws Exception {
         AddPageNumbersRequest request = new AddPageNumbersRequest();
         request.setFileInput(file);
-        request.setFontSize(12f);
+        request.setFontSize(36f);
         request.setFontType("helvetica");
         request.setStartingNumber(1);
-        request.setZeroPad(ZERO_PAD);
+        request.setCustomText(LABEL);
         request.setPosition(position);
         when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
 
         ResponseEntity<Resource> response = controller.addPageNumbers(request);
 
-        byte[] numbered;
+        byte[] labelled;
         try (InputStream body = response.getBody().getInputStream()) {
-            numbered = body.readAllBytes();
+            labelled = body.readAllBytes();
         }
-        try (PDDocument output = Loader.loadPDF(numbered)) {
-            BufferedImage shown = new PDFRenderer(output).renderImage(0);
-            Ink ink = Ink.find(shown);
-            String where = "position " + position + " on a page rotated " + rotation;
-            assertThat(ink).as("number is visible for %s", where).isNotNull();
-            assertThat(ink.column(shown)).as("column for %s", where).isEqualTo((position - 1) % 3);
-            assertThat(ink.row(shown)).as("row for %s", where).isEqualTo((position - 1) / 3);
-            assertThat(ink.width()).as("reads upright for %s", where).isGreaterThan(ink.height());
+        try (PDDocument output = Loader.loadPDF(labelled)) {
+            return Ink.find(new PDFRenderer(output).renderImage(0));
         }
     }
 
-    private static MockMultipartFile singlePagePdf(int rotation, PDRectangle cropBox)
-            throws IOException {
+    private static MockMultipartFile singlePagePdf(
+            PDRectangle mediaBox, int rotation, PDRectangle cropBox) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (PDDocument doc = new PDDocument()) {
-            PDPage page = new PDPage(PDRectangle.LETTER);
+            PDPage page = new PDPage(mediaBox);
             page.setRotation(rotation);
             if (cropBox != null) {
                 page.setCropBox(cropBox);
@@ -135,8 +144,9 @@ class PageNumbersControllerPlacementTest {
     }
 
     /** Bounding box, in pixels, of everything drawn on an otherwise blank white page. */
-    private record Ink(int left, int top, int right, int bottom) {
+    private record Ink(BufferedImage page, int left, int top, int right, int bottom) {
 
+        /** Null when the page is blank. */
         static Ink find(BufferedImage page) {
             int left = Integer.MAX_VALUE;
             int top = Integer.MAX_VALUE;
@@ -152,25 +162,45 @@ class PageNumbersControllerPlacementTest {
                     }
                 }
             }
-            return right < 0 ? null : new Ink(left, top, right, bottom);
-        }
-
-        int width() {
-            return right - left + 1;
-        }
-
-        int height() {
-            return bottom - top + 1;
+            return right < 0 ? null : new Ink(page, left, top, right, bottom);
         }
 
         /** Third of the page the box is centred in: 0 left, 1 middle, 2 right. */
-        int column(BufferedImage page) {
+        int column() {
             return (left + right) * 3 / (2 * page.getWidth());
         }
 
         /** Third of the page the box is centred in: 0 top, 1 middle, 2 bottom. */
-        int row(BufferedImage page) {
+        int row() {
             return (top + bottom) * 3 / (2 * page.getHeight());
+        }
+
+        /** An upright "L" is taller than wide, with its stem on the left and its foot below. */
+        boolean isUprightL() {
+            int middleX = (left + right) / 2;
+            int middleY = (top + bottom) / 2;
+            return bottom - top > right - left
+                    && inked(left, top, middleX, bottom) > inked(middleX + 1, top, right, bottom)
+                    && inked(left, middleY + 1, right, bottom) > inked(left, top, right, middleY);
+        }
+
+        /** Largest gap, in pixels, between an edge of this box and the same edge of another. */
+        int farthestEdgeFrom(Ink other) {
+            return Math.max(
+                    Math.max(Math.abs(left - other.left), Math.abs(top - other.top)),
+                    Math.max(Math.abs(right - other.right), Math.abs(bottom - other.bottom)));
+        }
+
+        private int inked(int fromX, int fromY, int toX, int toY) {
+            int pixels = 0;
+            for (int y = fromY; y <= toY; y++) {
+                for (int x = fromX; x <= toX; x++) {
+                    if (page.getRGB(x, y) != Color.WHITE.getRGB()) {
+                        pixels++;
+                    }
+                }
+            }
+            return pixels;
         }
     }
 }
