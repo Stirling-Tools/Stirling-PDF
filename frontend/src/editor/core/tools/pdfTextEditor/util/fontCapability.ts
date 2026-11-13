@@ -57,6 +57,12 @@ function deviceFaceFor(
   return wanted;
 }
 
+// Keyed by font list, so loading fonts (a new list) can never return a stale answer.
+const capabilityCache = new WeakMap<
+  LocalFont[],
+  Map<string, StyleCapability>
+>();
+
 /**
  * Which family gives `fontId` its italic cut (or its upright one back).
  *
@@ -68,6 +74,21 @@ export function italicCapability(
   fontId: string,
   italic: boolean,
   fonts: LocalFont[] | null = loadedLocalFonts(),
+): StyleCapability {
+  if (!fonts) return computeItalicCapability(fontId, italic, fonts);
+  let cached = capabilityCache.get(fonts);
+  if (!cached) capabilityCache.set(fonts, (cached = new Map()));
+  const key = `${italic ? 1 : 0}${fontId}`;
+  let found = cached.get(key);
+  if (!found)
+    cached.set(key, (found = computeItalicCapability(fontId, italic, fonts)));
+  return found;
+}
+
+function computeItalicCapability(
+  fontId: string,
+  italic: boolean,
+  fonts: LocalFont[] | null,
 ): StyleCapability {
   const family = familyOf(fontId);
   if (!family) return NONE;

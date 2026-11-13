@@ -107,6 +107,17 @@ describe("italicCapability", () => {
   });
 });
 
+describe("italicCapability answers", () => {
+  it("are kept per font list, so a new list is asked afresh", () => {
+    const before = italicCapability("pdf:4242:Calibri", true, STENCIL);
+    expect(before.family).toBeNull();
+    expect(italicCapability("pdf:4242:Calibri", true, STENCIL)).toBe(before);
+    expect(italicCapability("pdf:4242:Calibri", true, CALIBRI).family).toBe(
+      "Calibri Italic",
+    );
+  });
+});
+
 describe("canToggleItalic", () => {
   it("is false for an empty selection", () => {
     expect(canToggleItalic([], CALIBRI)).toBe(false);
