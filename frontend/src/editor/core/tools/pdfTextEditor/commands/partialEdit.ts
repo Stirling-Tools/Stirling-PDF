@@ -224,6 +224,12 @@ export interface PartialEditPlan {
   ops: PartialEditOp[];
   /** Per-sub-run status (parallel to prevMergedFromPtrs). */
   subRunStatus: Array<"all-kept" | "all-deleted" | "mixed">;
+  /**
+   * Deleted whitespace that belonged to no object, by the sub-run right after
+   * it. Removing it frees no object, so the apply has to close the space it
+   * took by shifting what follows.
+   */
+  ghostGaps: Array<{ beforeSubRunIdx: number; removed: number }>;
   /** Snapshot of current model arrays for revert. */
   prevMergedFromPtrs: number[];
   prevMergedFromTexts: string[];
@@ -388,6 +394,30 @@ export function planPartialEdit(
     }
   }
 
+  // Sub-runs in text order; a gap's whitespace sits between consecutive ones.
+  // A gap after an all-deleted sub-run is already covered by that sub-run's
+  // advance, which the apply subtracts.
+  const ghostGaps: Array<{ beforeSubRunIdx: number; removed: number }> = [];
+  const textOrder = subRunRanges
+    .map((range, idx) => ({ range, idx }))
+    .filter(
+      (e): e is { range: { start: number; end: number }; idx: number } =>
+        e.range !== null && e.range.end > e.range.start,
+    )
+    .sort((a, b) => a.range.start - b.range.start);
+  for (let k = 1; k < textOrder.length; k++) {
+    const before = textOrder[k - 1];
+    const after = textOrder[k];
+    if (subRunStatus[before.idx] === "all-deleted") continue;
+    let removed = 0;
+    for (let c = before.range.end; c < after.range.start; c++) {
+      if (charToSubRun[c] === -1 && /\s/.test(prevText[c]) && !keptA.has(c)) {
+        removed += 1;
+      }
+    }
+    if (removed > 0) ghostGaps.push({ beforeSubRunIdx: after.idx, removed });
+  }
+
   // Build ops by walking nextText.
   const ops: PartialEditOp[] = [];
   let lastSubRun = -1;
@@ -512,6 +542,7 @@ export function planPartialEdit(
     removePtrs,
     ops,
     subRunStatus,
+    ghostGaps,
     prevMergedFromPtrs: [...run.mergedFromPtrs],
     prevMergedFromTexts: [...run.mergedFromTexts],
     prevMergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -604,7 +635,21 @@ interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
 
+/**
+ * Every change an apply made to objects that existed before it, so undo can
+ * reverse exactly those. Re-emitting the old text instead cannot restore the
+ * original positions, and re-encodes it through a font path that may not
+ * reproduce the same glyphs.
+ */
+export interface PartialEditJournal {
+  /** Pre-existing objects moved sideways, in the order the moves happened. */
+  shifted: Array<{ ptr: number; dx: number }>;
+  /** Pre-existing objects taken off the page, with where they sat. */
+  detached: Array<{ ptr: number; containerPtr: number; index: number }>;
+}
+
 export interface PartialEditApplyResult {
+  journal: PartialEditJournal;
   newMergedFromPtrs: number[];
   newMergedFromTexts: string[];
   newMergedFromBounds: Array<{ x: number; right: number }>;
@@ -627,15 +672,30 @@ export function applyPartialEditPlan(
   // Override the left edge used for the FIRST unanchored insert (before any
   // keep op has set the cursor).
   defaultX?: number,
+  // Shared position lookup when several applies run as one edit (paragraph
+  // lines), so every recorded index refers to the order before the edit.
+  sharedIndexOf?: (ptr: number) => number,
 ): PartialEditApplyResult {
   const m = doc.module;
   const formMod = m as unknown as FormRemovalModule;
   const emitY = baselineY ?? run.matrix.f;
   const startX = defaultX ?? run.bounds.x;
+  const journal: PartialEditJournal = { shifted: [], detached: [] };
+  // Positions are read before anything moves, so they are the original order.
+  const indexOf = sharedIndexOf ?? pageObjectIndexer(m, page.pagePtr);
+  const shift = (ptr: number, dx: number) => {
+    transformObject(m, ptr, 1, 0, 0, 1, dx, 0);
+    journal.shifted.push({ ptr, dx });
+  };
   // Removals run before the walk below: it re-emits from the surviving
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
     if (!ptr) continue;
+    journal.detached.push({
+      ptr,
+      containerPtr: containerPtr ?? 0,
+      index: indexOf(ptr),
+    });
     if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
       try {
         formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
@@ -694,6 +754,38 @@ export function applyPartialEditPlan(
   let offset = 0;
   // Tracks the highest sub-run index we've already accounted for in `offset`.
   let processedUpTo = -1;
+  // Closing a deleted ghost space mirrors inserting one (same width), but
+  // never past the visible gap, so objects can't be pulled onto each other.
+  const ghostGapBefore = new Map(
+    plan.ghostGaps.map((g) => [g.beforeSubRunIdx, g.removed]),
+  );
+  function absorbGhostGap(idx: number): void {
+    const removed = ghostGapBefore.get(idx);
+    if (!removed) return;
+    ghostGapBefore.delete(idx);
+    const width =
+      measureWhitespaceAdvancePt(
+        " ".repeat(removed),
+        fallbackFamily,
+        run.fontSize,
+      ) +
+      run.charSpacingPt * removed;
+    const here = plan.prevMergedFromBounds[idx];
+    const left = previousRightEdge(idx);
+    const gap = here && left !== null ? Math.max(0, here.x - left) : width;
+    offset -= Math.min(width, gap);
+  }
+  // Right edge of the sub-run drawn just before `idx` in the original layout.
+  function previousRightEdge(idx: number): number | null {
+    const here = plan.prevMergedFromBounds[idx];
+    if (!here) return null;
+    let best: number | null = null;
+    for (const b of plan.prevMergedFromBounds) {
+      if (b.right <= here.x + 0.01 && (best === null || b.right > best))
+        best = b.right;
+    }
+    return best;
+  }
   function absorbDeletesBefore(idx: number): void {
     for (let i = processedUpTo + 1; i < idx; i++) {
       if (plan.subRunStatus[i] === "all-deleted") {
@@ -710,12 +802,13 @@ export function applyPartialEditPlan(
   for (const op of plan.ops) {
     if (op.type === "keep" && op.subRunIdx !== undefined) {
       absorbDeletesBefore(op.subRunIdx);
+      absorbGhostGap(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const text = plan.prevMergedFromTexts[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       if (Math.abs(offset) > 0.05) {
         try {
-          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
+          shift(ptr, offset);
         } catch {
           /* best-effort */
         }
@@ -735,6 +828,7 @@ export function applyPartialEditPlan(
       // Edit a mixed sub-run's EXISTING object in place: SetText the surviving
       // chars so the embedded font is kept.
       absorbDeletesBefore(op.subRunIdx);
+      absorbGhostGap(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       const origWidth = origBounds.right - origBounds.x;
@@ -746,7 +840,7 @@ export function applyPartialEditPlan(
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
-          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
+          shift(ptr, offset);
         } catch {
           /* best-effort */
         }
@@ -757,8 +851,10 @@ export function applyPartialEditPlan(
       const modNonWs = modText.replace(/\s+/g, "").length;
       const modMinExpected = modNonWs * run.fontSize * 0.15;
       if (modNonWs > 0 && measuredRight - newX < modMinExpected) {
+        const index = indexOf(ptr);
         try {
           m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+          journal.detached.push({ ptr, containerPtr: 0, index });
         } catch {
           /* best-effort */
         }
@@ -834,8 +930,13 @@ export function applyPartialEditPlan(
       );
       const anchorIdx = op.anchorSubRunIdx;
       const beforeIdx = op.anchorBeforeSubRunIdx;
-      if (anchorIdx !== undefined) absorbDeletesBefore(anchorIdx);
-      else if (beforeIdx !== undefined) absorbDeletesBefore(beforeIdx);
+      if (anchorIdx !== undefined) {
+        absorbDeletesBefore(anchorIdx);
+        absorbGhostGap(anchorIdx);
+      } else if (beforeIdx !== undefined) {
+        absorbDeletesBefore(beforeIdx);
+        absorbGhostGap(beforeIdx);
+      }
       const origBounds =
         anchorIdx !== undefined ? plan.prevMergedFromBounds[anchorIdx] : null;
       // "prefix of the following word" anchor: emit at that kept sub-run's
@@ -1017,6 +1118,7 @@ export function applyPartialEditPlan(
   // newMergedFromCharStarts is populated inline by the ops walk above.
 
   return {
+    journal,
     newMergedFromPtrs,
     newMergedFromTexts,
     newMergedFromBounds,
@@ -1025,6 +1127,81 @@ export function applyPartialEditPlan(
     newBoundsX: firstX,
     newBoundsWidth: lastEnd - firstX,
   };
+}
+
+interface PageObjectModule {
+  FPDFPage_CountObjects?: (page: number) => number;
+  FPDFPage_GetObject?: (page: number, index: number) => number;
+  FPDFPage_InsertObjectAtIndex?: (
+    page: number,
+    obj: number,
+    index: number,
+  ) => boolean;
+  FPDFPage_InsertObject?: (page: number, obj: number) => void;
+}
+
+/** Index lookup over the page's object list as it is right now (-1 = not found). */
+export function pageObjectIndexer(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+): (ptr: number) => number {
+  const mod = m as unknown as PageObjectModule;
+  let order: Map<number, number> | null = null;
+  return (ptr: number) => {
+    if (!order) {
+      order = new Map();
+      const count = mod.FPDFPage_CountObjects?.(pagePtr) ?? 0;
+      for (let i = 0; i < count; i++) {
+        const obj = mod.FPDFPage_GetObject?.(pagePtr, i) ?? 0;
+        if (obj) order.set(obj, i);
+      }
+    }
+    return order.get(ptr) ?? -1;
+  };
+}
+
+/**
+ * True when every change in the journal can be reversed exactly: objects
+ * detached from a form XObject can't be put back (PDFium has no insert into a
+ * form), and neither can ones whose position wasn't found.
+ */
+export function journalIsReversible(journal: PartialEditJournal): boolean {
+  return journal.detached.every((d) => d.containerPtr === 0 && d.index >= 0);
+}
+
+/**
+ * Undo a journal: put detached objects back at their original positions and
+ * move shifted ones back. The caller removes the objects the apply created
+ * first, so the original positions are valid again.
+ */
+export function reverseJournal(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+  journal: PartialEditJournal,
+): void {
+  const mod = m as unknown as PageObjectModule;
+  // Ascending original index: each insert lands where it was, and later ones
+  // see the list as it was at that point.
+  const detached = [...journal.detached].sort((a, b) => a.index - b.index);
+  for (const { ptr, index } of detached) {
+    let ok = false;
+    if (mod.FPDFPage_InsertObjectAtIndex) {
+      try {
+        ok = !!mod.FPDFPage_InsertObjectAtIndex(pagePtr, ptr, index);
+      } catch {
+        ok = false;
+      }
+    }
+    if (!ok) mod.FPDFPage_InsertObject?.(pagePtr, ptr);
+  }
+  for (let i = journal.shifted.length - 1; i >= 0; i--) {
+    const { ptr, dx } = journal.shifted[i];
+    try {
+      transformObject(m, ptr, 1, 0, 0, 1, -dx, 0);
+    } catch {
+      /* best-effort */
+    }
+  }
 }
 
 /** Paragraph-aware partial edit. */
@@ -1251,6 +1428,8 @@ export function planParagraphEdit(
 }
 
 export interface ParagraphEditApplyResult {
+  /** Changes to pre-existing objects across every line, for an exact undo. */
+  journal: PartialEditJournal;
   newSlots: ParagraphLineSlot[];
   insertedPtrs: number[];
   newBoundsX: number;
@@ -1285,6 +1464,8 @@ export function applyParagraphEditPlan(
   const allInsertedPtrs: number[] = [];
   let minX = Infinity;
   let maxRight = -Infinity;
+  const journal: PartialEditJournal = { shifted: [], detached: [] };
+  const indexOf = pageObjectIndexer(m, page.pagePtr);
 
   let lineStart = 0;
   for (let i = 0; i < newSlots.length; i++) {
@@ -1322,8 +1503,14 @@ export function applyParagraphEditPlan(
         siblingFontPtrForText(m, newSlots, i, slot.fontId, lineText);
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
+        const index = indexOf(ptr);
         try {
           m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+          journal.detached.push({
+            ptr,
+            containerPtr: slot.containerPtr ?? 0,
+            index,
+          });
         } catch {
           /* best-effort */
         }
@@ -1385,7 +1572,10 @@ export function applyParagraphEditPlan(
       lineTags,
       slot.baselineY,
       slot.mergedFromBounds[0]?.x ?? slot.matrixE,
+      indexOf,
     );
+    journal.shifted.push(...result.journal.shifted);
+    journal.detached.push(...result.journal.detached);
     slot.mergedFromPtrs = result.newMergedFromPtrs;
     slot.mergedFromTexts = result.newMergedFromTexts;
     slot.mergedFromBounds = result.newMergedFromBounds;
@@ -1423,6 +1613,7 @@ export function applyParagraphEditPlan(
   run.paragraphLeafContainers = leafContainers;
 
   return {
+    journal,
     newSlots,
     insertedPtrs: allInsertedPtrs,
     newBoundsX: isFinite(minX) ? minX : run.bounds.x,
