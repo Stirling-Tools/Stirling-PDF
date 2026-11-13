@@ -3,6 +3,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   RolledBackError,
   type Command,
+  type PageRepaintArea,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -163,6 +164,11 @@ function scanFontSize(
   const size = (ink.y + ink.height - baseline) / CAP_HEIGHT_EM;
   return size > 2 && size < ink.height * 3 ? size : fallback;
 }
+
+const UPRIGHT_TOLERANCE = 1e-6;
+const MIN_REPAINT_MARGIN_PT = 4;
+const REPAINT_MARGIN_PER_FONT_SIZE = 1.5;
+const PAGE_SPAN_PT = 100_000; // past any page edge; the bitmap clips the rest
 
 /** Edit a text run. */
 export class EditTextCommand implements Command {
@@ -710,6 +716,15 @@ export class EditTextCommand implements Command {
       const left = Math.min(run.bounds.x, span.left);
       const right = Math.max(run.bounds.x + run.bounds.width, span.right);
       run.bounds = { ...run.bounds, x: left, width: Math.max(0, right - left) };
+    }
+    const addedLines = outputLines.length - this.prevText.split(/\r?\n/).length;
+    if (addedLines > 0 && !rotationFromMatrix(run.matrix)) {
+      const drop = addedLines * lineHeight;
+      run.bounds = {
+        ...run.bounds,
+        y: run.bounds.y - drop,
+        height: run.bounds.height + drop,
+      };
     }
     run.text = this.nextText;
     run.dirty = true;
@@ -1538,6 +1553,34 @@ export class EditTextCommand implements Command {
     });
     run.bounds = { ...snap.bounds };
     run.matrix = { ...run.matrix, e: snap.matrixE };
+  repaintArea(doc: EditorDocument): PageRepaintArea | null {
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    // Turned text is typed along its own slant, out of its upright box.
+    if (
+      !run ||
+      Math.abs(run.matrix.b) > UPRIGHT_TOLERANCE ||
+      Math.abs(run.matrix.c) > UPRIGHT_TOLERANCE
+    )
+      return null;
+    // Covers what a scanned edit paints around its words: covers, softened edges, i-dots.
+    const margin = Math.max(
+      MIN_REPAINT_MARGIN_PT,
+      run.fontSize * REPAINT_MARGIN_PER_FONT_SIZE,
+    );
+    const { x, y, width, height } = run.bounds;
+    // A scanned edit moves the scan's own words, which can land past the run's box.
+    const [left, right] = isScanRun(run)
+      ? [-PAGE_SPAN_PT, PAGE_SPAN_PT]
+      : [x - margin, x + width + margin];
+    return {
+      pageIndex: this.pageIndex,
+      area: {
+        x: left,
+        y: y - margin,
+        width: right - left,
+        height: height + 2 * margin,
+      },
+    };
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */
