@@ -9,6 +9,9 @@ import type { FileId } from "@editor/types/file";
 
 const writeFile = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("@tauri-apps/plugin-fs", () => ({ writeFile }));
+// write_locked_file: true when the save went through the held file lock.
+const invoke = vi.hoisted(() => vi.fn(async () => false));
+vi.mock("@tauri-apps/api/core", () => ({ invoke, isTauri: () => true }));
 
 const getDiskFileState = vi.hoisted(() =>
   vi.fn(async () => ({
@@ -52,6 +55,7 @@ beforeEach(() => {
   __resetSelfWrites();
   vi.clearAllMocks();
   writeFile.mockResolvedValue(undefined);
+  invoke.mockResolvedValue(false);
 });
 
 describe("saveToLocalPath", () => {
@@ -64,6 +68,22 @@ describe("saveToLocalPath", () => {
     const result = await saveToLocalPath(file, PATH);
     expect(result).toEqual({ success: true });
     expect(writeFile).toHaveBeenCalledWith(PATH, expected);
+  });
+
+  test("saves an open, locked file through its lock instead", async () => {
+    invoke.mockResolvedValueOnce(true);
+    const file = new File([bytes], "report.pdf");
+    const expected = new Uint8Array(await file.arrayBuffer());
+
+    const result = await saveToLocalPath(
+      file,
+      "C:/Akten/Schröder Gläubiger.pdf",
+    );
+    expect(result).toEqual({ success: true });
+    expect(invoke).toHaveBeenCalledWith("write_locked_file", expected, {
+      headers: { path: encodeURIComponent("C:/Akten/Schröder Gläubiger.pdf") },
+    });
+    expect(writeFile).not.toHaveBeenCalled();
   });
 
   test("mutes the path so the watcher cannot re-read our own write", async () => {
