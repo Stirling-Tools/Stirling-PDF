@@ -8,9 +8,17 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 // this hook let the editor drop every edit silently. NavigationContext is the
 // app's own in-app guard - it is what PageEditor uses - and it drives
 // NavigationWarningModal.
-export function useUnsavedChangesGuard(dirty: boolean): void {
+/** `isDirty` must read the live state: navigation calls it while the `dirty` flag may still be pending. */
+export function useUnsavedChangesGuard(
+  dirty: boolean,
+  isDirty: () => boolean,
+): void {
   const { actions } = useNavigationActions();
-  const setHasUnsavedChanges = actions.setHasUnsavedChanges;
+  const {
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+  } = actions;
 
   useEffect(() => {
     if (!dirty) return;
@@ -21,6 +29,11 @@ export function useUnsavedChangesGuard(dirty: boolean): void {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
+
+  useEffect(() => {
+    registerUnsavedChangesChecker(isDirty);
+    return () => unregisterUnsavedChangesChecker();
+  }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 
   useEffect(() => {
     // The flag re-renders most of the app; urgent, it holds the first typed letter off screen.

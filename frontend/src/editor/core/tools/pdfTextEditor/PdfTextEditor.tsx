@@ -2,14 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -37,6 +30,7 @@ import {
 import { useAutoLoadFile } from "@editor/tools/pdfTextEditor/hooks/useAutoLoadFile";
 import { useWorkbenchPin } from "@editor/tools/pdfTextEditor/hooks/useWorkbenchPin";
 import { useUnsavedChangesGuard } from "@editor/tools/pdfTextEditor/hooks/useUnsavedChangesGuard";
+import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
 import { useEditorTestGlobal } from "@editor/tools/pdfTextEditor/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
@@ -115,7 +109,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [applying, setApplying] = useState(false);
 
   useEditorTestGlobal(store);
-  useUnsavedChangesGuard(state.dirty);
+  const isDirty = useCallback(() => store.getState().dirty, [store]);
+  useUnsavedChangesGuard(state.dirty, isDirty);
   const pinWorkbench = useWorkbenchPin({
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
@@ -739,9 +734,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const cancelPendingOpen = useCallback(() => setPendingOpen(null), []);
 
   // Deferred so the typed letter is drawn before the panel, which a burst of typing outdates.
-  const panel = useDeferredValue(
-    useMemo(() => ({ state, selection }), [state, selection]),
-  );
+  const panel = useDeferredPanelView(state, selection);
   const canUngroup = useMemo(() => {
     const ids = panel.selection.runIds;
     if (ids.length !== 1) return false;

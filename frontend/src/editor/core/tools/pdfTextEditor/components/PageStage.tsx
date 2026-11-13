@@ -1,11 +1,4 @@
-import {
-  memo,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Center,
@@ -18,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
+import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
@@ -95,9 +89,7 @@ export function PageStage() {
   }, [store, state.hasDocument, state.loading]);
 
   // Deferred so the typed letter is drawn before the bars, which a burst of typing outdates.
-  const bars = useDeferredValue(
-    useMemo(() => ({ state, selection }), [state, selection]),
-  );
+  const bars = useDeferredPanelView(state, selection);
   const [actionBarSlot, setActionBarSlot] = useState<HTMLDivElement | null>(
     null,
   );
