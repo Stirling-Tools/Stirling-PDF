@@ -20,6 +20,11 @@ import {
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
+  documentFontHandle,
+  isDocumentFontId,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { fallbackFamilyFor } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import {
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -53,6 +58,10 @@ export class SetFontFamilyCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    // A document fontId as nextFamily puts the run back in the font it was changed away from.
+    const restoring = isDocumentFontId(this.nextFamily);
+    const documentFont = run.documentFont;
+    if (restoring && documentFont?.fontId !== this.nextFamily) return;
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
       family: this.nextFamily,
@@ -66,6 +75,10 @@ export class SetFontFamilyCommand implements Command {
     if (this.prev === null) {
       this.prev = snapshotRun(run);
       this.prevMemberPtrs = collectMemberPtrs(run).slice();
+    }
+
+    if (!restoring && !documentFont && isDocumentFontId(run.fontId)) {
+      run.documentFont = { fontId: run.fontId, subset: run.fontSubset };
     }
 
     const tags = readRunTags(doc, page, run);
@@ -131,8 +144,12 @@ export class SetFontFamilyCommand implements Command {
       run,
       lines: emitLines.map(({ text, tags }) => ({ text, tags })),
       origins: emitLines.map((l) => ({ x: l.x, y: l.y })),
-      originalFontPtr: 0, // base-14: never reuse the source font
-      fallbackFamily: this.nextFamily,
+      // Only a restore reuses a document font; a new family never does.
+      originalFontPtr: restoring ? documentFontHandle(this.nextFamily) : 0,
+      originalFontSubset: restoring ? documentFont?.subset : undefined,
+      fallbackFamily: restoring
+        ? fallbackFamilyFor(this.nextFamily)
+        : this.nextFamily,
     });
     for (const line of emitted) {
       memberFs.push(line.y);
@@ -161,8 +178,14 @@ export class SetFontFamilyCommand implements Command {
     // keeps `base14:`, so nothing keying off that prefix changes meaning.
     const embedded =
       deviceFontEmitCount(doc, this.nextFamily) > deviceEmitsBefore;
-    run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
-    run.fontSubset = false;
+    if (restoring) {
+      run.fontId = this.nextFamily;
+      run.fontSubset = documentFont?.subset ?? false;
+      run.documentFont = null;
+    } else {
+      run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
+      run.fontSubset = false;
+    }
     // Reset ALL model bookkeeping to the freshly-emitted objects so later
     // commands act on the live objects, not the removed originals.
     run.mergedFromPtrs = [];
@@ -236,6 +259,7 @@ interface RunModelSnapshot {
   text: string;
   fontId: string;
   fontSubset: boolean;
+  documentFont: TextRun["documentFont"];
   fill: { r: number; g: number; b: number; a: number };
   pdfiumObjPtr: number;
   containerPtr: number;
@@ -257,6 +281,7 @@ function snapshotRun(run: TextRun): RunModelSnapshot {
     text: run.text,
     fontId: run.fontId,
     fontSubset: run.fontSubset,
+    documentFont: run.documentFont,
     fill: { ...run.fill },
     pdfiumObjPtr: run.pdfiumObjPtr,
     containerPtr: run.containerPtr,
@@ -278,6 +303,7 @@ function restoreRun(run: TextRun, snap: RunModelSnapshot): void {
   run.text = snap.text;
   run.fontId = snap.fontId;
   run.fontSubset = snap.fontSubset;
+  run.documentFont = snap.documentFont;
   run.fill = { ...snap.fill };
   run.pdfiumObjPtr = snap.pdfiumObjPtr;
   run.containerPtr = snap.containerPtr;

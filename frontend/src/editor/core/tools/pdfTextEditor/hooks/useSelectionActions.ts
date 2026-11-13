@@ -12,7 +12,10 @@ import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFont
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isDocumentFontId,
+  isItalicFamily,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { loadedLocalFonts } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
@@ -114,7 +117,7 @@ export function useSelectionActions(store: EditorStore) {
     async (family: string) => {
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      await ensureDeviceFontReady(family);
+      if (!isDocumentFontId(family)) await ensureDeviceFontReady(family);
       dispatchPerRun(
         (run) =>
           new SetFontFamilyCommand({

@@ -1,5 +1,6 @@
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
 import { getCachedFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { documentFontHandle } from "@editor/tools/pdfTextEditor/util/fontFamily";
 
 // Editability status of a font as the PDF text editor can determine it purely
 // client-side (from PDFium), without the backend JSON font model.
@@ -40,18 +41,11 @@ export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
   return out;
 }
 
-/** Parse the live PDFium font handle out of a `pdf:<ptr>:<family>` fontId. */
-function fontHandleOf(fontId: string): number {
-  if (!fontId.startsWith("pdf:")) return 0;
-  const n = Number(fontId.split(":")[1]);
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-
 /** a-zA-Z0-9 coverage for a font, from the loader-primed cache (no WASM). */
 function coverageFor(fontId: string, status: FontStatus): GlyphCoverage {
   // Base-14 fonts carry the whole standard set - always full, no cmap needed.
   if (status === "standard") return { known: true, missing: [] };
-  const handle = fontHandleOf(fontId);
+  const handle = documentFontHandle(fontId);
   if (!handle) return { known: false, missing: [] };
   const cmap = getCachedFontGlyphMap(handle);
   if (!cmap || cmap.size === 0) return { known: false, missing: [] };

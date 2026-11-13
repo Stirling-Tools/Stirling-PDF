@@ -1,9 +1,14 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Group, Select, Text, Tooltip } from "@mantine/core";
-import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
+import type {
+  ComboboxData,
+  ComboboxItem,
+  ComboboxItemGroup,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
+import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   groupByFamily,
   isLocalFontAccessSupported,
@@ -32,6 +37,8 @@ type DeviceFontNotice = "unavailable" | "none";
 
 interface FontFamilySelectProps {
   value: string | null;
+  /** The document font the selection was changed from, offered so the text can go back to it. */
+  documentFontId?: string | null;
   onChange: (family: string) => void;
   mixed?: boolean;
   disabled?: boolean;
@@ -41,6 +48,7 @@ interface FontFamilySelectProps {
 /** Font picker. Device fonts are additive: no prompt until the user asks. */
 export function FontFamilySelect({
   value,
+  documentFontId = null,
   onChange,
   mixed = false,
   disabled = false,
@@ -97,16 +105,27 @@ export function FontFamilySelect({
   );
 
   const data = useMemo<ComboboxData>(() => {
-    if (deviceFamilies.length === 0 && !documentFamily) {
+    if (deviceFamilies.length === 0 && !documentFamily && !documentFontId) {
       return BUILT_IN_FONT_FAMILIES;
     }
     const groups: ComboboxItemGroup[] = [];
-    if (documentFamily) {
+    // Always list the current font: a Select whose value has no option filters by stale search text.
+    const documentItems: ComboboxItem[] = [];
+    if (documentFontId)
+      documentItems.push({
+        value: documentFontId,
+        label: familyOf(documentFontId),
+      });
+    if (documentFamily)
+      documentItems.push({
+        value: documentFamily,
+        label: documentFamily,
+        disabled: true,
+      });
+    if (documentItems.length > 0) {
       groups.push({
         group: t("pdfTextEditor.fontPicker.documentGroup", "Document font"),
-        items: [
-          { value: documentFamily, label: documentFamily, disabled: true },
-        ],
+        items: documentItems,
       });
     }
     groups.push({
@@ -123,7 +142,7 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [deviceFamilies, documentFamily, t]);
+  }, [deviceFamilies, documentFamily, documentFontId, t]);
 
   // Mantine shows nothing for a value with no matching option; the document
   // font is in `data` precisely so a recognised face still gets named.
