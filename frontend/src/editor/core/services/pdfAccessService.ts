@@ -214,6 +214,8 @@ interface Inspection {
 
 const inspections = new WeakMap<Blob, Map<string, Inspection>>();
 const INSPECTION_TIMEOUT_MS = 30_000;
+// Fetching the worker and pdfium WASM can be slow on real networks; only cap a true stall.
+const READER_LOAD_TIMEOUT_MS = 180_000;
 const MAX_INSPECTION_WORKERS = 2;
 // Each worker holds the input buffer and a WASM copy. Larger files run alone.
 const INSPECTION_BYTE_BUDGET = 100 * 1024 * 1024;
@@ -274,18 +276,27 @@ function runInspection(
         started = true;
         activeInspections++;
         inspectingBytes += file.size;
-        timer = setTimeout(() => {
-          if (finish())
-            reject(
-              new DOMException(
-                "PDF permission inspection timed out. Try opening the file again.",
-                "TimeoutError",
-              ),
-            );
-        }, INSPECTION_TIMEOUT_MS);
+        const deadline = (ms: number, message: string) => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            if (finish()) reject(new DOMException(message, "TimeoutError"));
+          }, ms);
+        };
+        deadline(
+          READER_LOAD_TIMEOUT_MS,
+          "Loading the PDF reader timed out. Check your connection and try again.",
+        );
         try {
           worker = new PdfAccessWorker();
           worker.onmessage = ({ data }: MessageEvent<PdfAccessResponse>) => {
+            if ("ready" in data) {
+              if (!finished)
+                deadline(
+                  INSPECTION_TIMEOUT_MS,
+                  "PDF permission inspection timed out. Try opening the file again.",
+                );
+              return;
+            }
             if (!finish()) return;
             if ("access" in data) resolve(data.access);
             else

@@ -22,7 +22,10 @@ const workers = vi.hoisted(
   () =>
     [] as {
       onmessage?: (event: {
-        data: { access: PdfAccess } | { error: string; code: number };
+        data:
+          | { ready: true }
+          | { access: PdfAccess }
+          | { error: string; code: number };
       }) => void;
       onerror?: () => void;
       postMessage: ReturnType<typeof vi.fn>;
@@ -160,6 +163,7 @@ describe("local inspection lifetime", () => {
       name: "TimeoutError",
     });
     const next = inspectLocalPdfAccess(new File(["PDF"], "next.pdf"));
+    workers[0].onmessage?.({ data: { ready: true } });
     await vi.advanceTimersByTimeAsync(30_000);
     await failure;
     expect(workers[0].terminate).toHaveBeenCalledOnce();
@@ -169,6 +173,28 @@ describe("local inspection lifetime", () => {
     workers[1].onmessage?.({ data: { access } });
     await next;
   });
+  it("does not count slow reader downloads against the parse deadline", async () => {
+    vi.useFakeTimers();
+    const file = new File(["PDF"], "slow-network.pdf");
+    const pending = inspectLocalPdfAccess(file);
+    await vi.advanceTimersByTimeAsync(90_000);
+    workers[0].onmessage?.({ data: { ready: true } });
+    await vi.advanceTimersByTimeAsync(20_000);
+    workers[0].onmessage?.({ data: { access } });
+    await expect(pending).resolves.toBe(access);
+  });
+
+  it("gives up when the reader never finishes loading", async () => {
+    vi.useFakeTimers();
+    const pending = inspectLocalPdfAccess(new File(["PDF"], "offline.pdf"));
+    const failure = expect(pending).rejects.toMatchObject({
+      name: "TimeoutError",
+    });
+    await vi.advanceTimersByTimeAsync(180_000);
+    await failure;
+    expect(workers[0].terminate).toHaveBeenCalledOnce();
+  });
+
   it("shares a worker without letting one consumer cancel another", async () => {
     const file = new File(["PDF"], "protected.pdf");
     const first = new AbortController();
