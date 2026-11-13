@@ -441,6 +441,27 @@ describe("whose workbench it is", () => {
     expect(taken.userId).toBe(await fingerprintOwner("user-b"));
   });
 
+  it("does not hand the next person the pages read here, even with no files open", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: [],
+        selectedFileIds: [],
+        pages: { "root-a": 7 },
+        userId: await fingerprintOwner("user-a"),
+      }),
+    );
+    mocks.authUser = { id: "user-b" };
+
+    mount(makeStore());
+
+    await act(async () => {});
+    expect(
+      JSON.parse(sessionStorage.getItem(SESSION_KEY)!).pages,
+    ).toBeUndefined();
+  });
+
   it("reopens it for the user who left it", async () => {
     await record("user-a");
     mocks.authUser = { id: "user-a" };
