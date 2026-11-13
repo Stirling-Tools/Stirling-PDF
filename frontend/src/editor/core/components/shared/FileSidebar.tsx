@@ -84,6 +84,15 @@ const NO_POLICIES: never[] = [];
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
 const BULK_ADD_INDICATOR_MIN = 8;
 
+/** Edits that exist only here: not yet written back to the linked disk file, or
+ *  newer than the uploaded cloud copy. */
+function hasUnsyncedEdits(stub: StirlingFileStub): boolean {
+  if (stub.isDirty && stub.localFilePath) return true;
+  if (typeof stub.remoteStorageId !== "number") return false;
+  const localUpdatedAt = stub.createdAt ?? stub.lastModified ?? 0;
+  return (stub.remoteStorageUpdatedAt ?? 0) < localUpdatedAt;
+}
+
 export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
@@ -602,7 +611,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
       null,
     );
-    const [clearLibraryOpen, setClearLibraryOpen] = useState(false);
+    // Fixed when the dialog opens, so files added while it is up aren't cleared.
+    const [clearTargets, setClearTargets] = useState<StirlingFileStub[] | null>(
+      null,
+    );
     const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
       null,
     );
@@ -872,21 +884,23 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
-    // Kept: foldered files, which the user filed deliberately, and disk-linked
-    // files whose edits haven't been written back to disk yet.
+    // Kept: foldered files, which the user filed deliberately, and files whose
+    // edits would be lost with them.
     const clearableStubs = useMemo(
       () =>
-        allFileStubs.filter(
-          (s) => s.folderId == null && !(s.isDirty && s.localFilePath),
-        ),
+        allFileStubs.filter((s) => s.folderId == null && !hasUnsyncedEdits(s)),
       [allFileStubs],
     );
     const handleConfirmClearLibrary = useCallback(async () => {
-      const ids = clearableStubs.map((s) => s.id);
+      const ids = (clearTargets ?? []).map((s) => s.id);
       const orphans = await fileStorage.orphanedAncestorIds(ids);
-      await fileActions.removeFiles([...ids, ...orphans], true);
+      const doomed = [...ids, ...orphans];
+      // Storage goes first: removeFiles only logs a failed delete, and the dialog
+      // has to see it before any file is closed.
+      await indexedDB.deleteMultiple(doomed);
+      await fileActions.removeFiles(doomed, true);
       await refreshStubs();
-    }, [clearableStubs, fileActions, refreshStubs]);
+    }, [clearTargets, indexedDB, fileActions, refreshStubs]);
 
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -1260,7 +1274,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
                   onClearLibrary={
                     clearableStubs.length > 0
-                      ? () => requestNavigation(() => setClearLibraryOpen(true))
+                      ? () => setClearTargets(clearableStubs)
                       : undefined
                   }
                 />
@@ -1298,10 +1312,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         />
 
         <ClearLibraryDialog
-          opened={clearLibraryOpen}
-          clearCount={clearableStubs.length}
-          onClose={() => setClearLibraryOpen(false)}
+          opened={clearTargets !== null}
+          clearCount={clearTargets?.length ?? 0}
+          onClose={() => setClearTargets(null)}
           onConfirm={handleConfirmClearLibrary}
+          guard={requestNavigation}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

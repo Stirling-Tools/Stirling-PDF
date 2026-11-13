@@ -11,6 +11,9 @@ interface ClearLibraryDialogProps {
   onClose: () => void;
   /** Perform the clear; may throw to surface an error. */
   onConfirm: () => Promise<void>;
+  /** The unsaved-changes check, which may hold the confirm behind a save prompt;
+   *  cancelling that prompt leaves this dialog open with nothing cleared. */
+  guard: (run: () => void) => void;
 }
 
 export function ClearLibraryDialog({
@@ -18,6 +21,7 @@ export function ClearLibraryDialog({
   clearCount,
   onClose,
   onConfirm,
+  guard,
 }: ClearLibraryDialogProps) {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
@@ -30,17 +34,16 @@ export function ClearLibraryDialog({
     }
   }, [opened]);
 
-  const handleConfirm = async () => {
+  const runClear = async () => {
     setSubmitting(true);
     setError(null);
     try {
       await onConfirm();
       onClose();
     } catch (err) {
+      console.error("Failed to clear recents:", err);
       setError(
-        err instanceof Error
-          ? err.message
-          : t("fileSidebar.clearRecents.error", "Could not clear. Try again."),
+        t("fileSidebar.clearRecents.error", "Could not clear. Try again."),
       );
     } finally {
       setSubmitting(false);
@@ -50,7 +53,8 @@ export function ClearLibraryDialog({
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      // Closing mid-clear would let a reopen start a second run over the first.
+      onClose={submitting ? () => {} : onClose}
       title={t("fileSidebar.clearRecents.title", "Clear recents?")}
       centered
       size="md"
@@ -82,7 +86,7 @@ export function ClearLibraryDialog({
           <Button
             accent="danger"
             loading={submitting}
-            onClick={handleConfirm}
+            onClick={() => guard(() => void runClear())}
             data-testid="file-sidebar-clear-library-confirm"
           >
             {t("fileSidebar.clearRecents.confirm", "Clear recents")}

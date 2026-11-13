@@ -16,6 +16,8 @@ interface SeedFile {
   /** Desktop disk link; with isDirty, edits not yet saved back to disk. */
   localFilePath?: string;
   isDirty?: boolean;
+  /** Defaults to the seed time; earlier means local edits newer than the cloud copy. */
+  remoteStorageUpdatedAt?: number;
 }
 
 /** Seed IDB + register the cloud entries with the server stub. */
@@ -124,7 +126,9 @@ async function seedFiles(
             toolHistory: f.toolHistory ?? [],
             folderId: f.folderId ?? null,
             remoteStorageId: f.remoteStorageId,
-            remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
+            remoteStorageUpdatedAt: f.remoteStorageId
+              ? (f.remoteStorageUpdatedAt ?? now)
+              : null,
             remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
             remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
             remoteAccessRole: f.remoteStorageId ? "owner" : null,
@@ -1533,6 +1537,12 @@ test.describe("Files page", () => {
             localFilePath: "C:/docs/dirty.pdf",
             isDirty: true,
           },
+          {
+            id: "edited",
+            name: "edited.pdf",
+            remoteStorageId: 8,
+            remoteStorageUpdatedAt: 1,
+          },
         ],
         [{ id: "vf-1", name: "Kept" }],
       );
@@ -1544,13 +1554,13 @@ test.describe("Files page", () => {
 
       await page.goto("/editor", { waitUntil: "domcontentloaded" });
       const rows = page.locator(".file-sidebar-file-item");
-      await expect(rows).toHaveCount(4, { timeout: 10_000 });
+      await expect(rows).toHaveCount(5, { timeout: 10_000 });
       // An upload lands open in the workbench; the clear closes it too.
       await uploadFiles(
         page,
         `${import.meta.dirname}/../test-fixtures/sample.pdf`,
       );
-      await expect(rows).toHaveCount(5);
+      await expect(rows).toHaveCount(6);
 
       // The grouped sidebar shows it on the Recent header, revealed on hover.
       await page
@@ -1562,9 +1572,10 @@ test.describe("Files page", () => {
       await expect(dialog).toContainText("This can't be undone.");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
-      await expect(rows).toHaveCount(2);
+      await expect(rows).toHaveCount(3);
       await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
       await expect(rows.filter({ hasText: "dirty.pdf" })).toHaveCount(1);
+      await expect(rows.filter({ hasText: "edited.pdf" })).toHaveCount(1);
       // Only kept files are left, so there is nothing more to clear.
       await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
         0,

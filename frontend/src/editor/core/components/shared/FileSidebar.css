@@ -318,7 +318,7 @@
   pointer-events: none;
 }
 
-.file-sidebar-group-header-row:is(:hover, :focus-within)
+.file-sidebar-group-header-row:is(:hover, :has(:focus-visible))
   .file-sidebar-group-action {
   opacity: 1;
   pointer-events: auto;
@@ -326,10 +326,23 @@
 
 .file-sidebar-group-header-row:has(.file-sidebar-group-action):is(
     :hover,
-    :focus-within
+    :has(:focus-visible)
   )
   .file-sidebar-group-count {
   visibility: hidden;
+}
+
+/* Touch screens have no hover to reveal it, so it stays in place of the count. */
+@media (hover: none) {
+  .file-sidebar-group-action {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .file-sidebar-group-header-row:has(.file-sidebar-group-action)
+    .file-sidebar-group-count {
+    visibility: hidden;
+  }
 }
 
 .file-sidebar-group-header {
