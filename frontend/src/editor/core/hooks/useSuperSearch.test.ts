@@ -84,17 +84,22 @@ vi.mock("@editor/data/settingsSectionRegistry", () => ({
   ],
 }));
 
-vi.mock("@editor/data/settingsContentSearch", () => ({
-  findSettingsContentMatch: vi.fn((section: string, query: string) => {
-    if (query === "smtp" && (section === "general" || section === "email")) {
-      return { section, query };
-    }
-    return null;
-  }),
-  buildMatchSnippet: vi.fn(
-    (_match: unknown, query: string) => `Match: ${query}`,
-  ),
-}));
+vi.mock("@editor/data/settingsContentSearch", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@editor/data/settingsContentSearch")>();
+  return {
+    ...actual,
+    findSettingsContentMatch: vi.fn((section: string, query: string) => {
+      if (query === "smtp" && (section === "general" || section === "email")) {
+        return { section, query };
+      }
+      return null;
+    }),
+    buildMatchSnippet: vi.fn(
+      (_match: unknown, query: string) => `Match: ${query}`,
+    ),
+  };
+});
 
 vi.mock("@editor/data/processorSearchIndex", () => ({
   PROCESSOR_SEARCH_INDEX: [
@@ -121,6 +126,7 @@ import {
   assembleSuperSearchGroups,
   rankProcessorResults,
   rankSettingsResults,
+  rankToolResults,
 } from "@editor/hooks/useSuperSearch";
 
 const t = ((key: string, fallback?: string) =>
@@ -283,5 +289,53 @@ describe("useSuperSearch helpers", () => {
     );
 
     expect(results.map((result) => result.key)).toEqual(["processor:users"]);
+  });
+
+  it("finds tools by inner-UI content when direct name or synonyms do not match", () => {
+    const mockRegistry = {
+      replaceColor: {
+        name: "Replace & Invert Color",
+        description: "Replace or invert colors in PDF documents",
+        synonyms: ["invert", "swap colors"],
+        component: (() => null) as unknown as React.ComponentType,
+      },
+      split: {
+        name: "Split",
+        description: "Divide PDF into multiple documents",
+        synonyms: ["divide", "pages"],
+        component: (() => null) as unknown as React.ComponentType,
+      },
+    } as unknown as Parameters<typeof rankToolResults>[0];
+
+    const mockT = ((key: string) => {
+      if (key === "replaceColor") {
+        return {
+          options: {
+            cmyk: "Convert to CMYK",
+          },
+          tooltip: {
+            cmyk: {
+              text: "Convert the PDF from RGB color space to CMYK color space, optimized for professional printing.",
+            },
+          },
+        };
+      }
+      return {};
+    }) as unknown as TFunction;
+
+    const openTool = vi.fn();
+    const results = rankToolResults(mockRegistry, "CMYK", openTool, 10, mockT);
+
+    expect(results.some((r) => r.key === "tool-content:replaceColor")).toBe(
+      true,
+    );
+    const cmykResult = results.find(
+      (r) => r.key === "tool-content:replaceColor",
+    );
+    expect(cmykResult?.title).toBe("Replace & Invert Color");
+    expect(cmykResult?.subtitle).toContain("Convert to CMYK");
+
+    cmykResult?.onSelect();
+    expect(openTool).toHaveBeenCalledWith("replaceColor");
   });
 });
