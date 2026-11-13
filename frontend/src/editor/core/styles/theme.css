@@ -106,27 +106,21 @@
   --color-yellow-300: var(--p-amber-400);
   --color-yellow-400: var(--p-amber-400);
 
-  /* Category colors - consistent across light and dark modes */
-  --category-color-removal: var(--p-red-500); /* Red for removal tools */
-  --category-color-security: var(--p-amber-500); /* Orange for security tools */
-  --category-color-formatting: var(
-    --p-blue-400
-  ); /* Purple for formatting tools */
-  --category-color-extraction: var(
-    --p-blue-500
-  ); /* Cyan for extraction tools */
-  --category-color-signing: var(--p-green-500); /* Green for signing tools */
-  --category-color-general: var(--p-blue-500); /* Blue for general tools */
-  --category-color-verification: var(
-    --p-amber-600
-  ); /* Orange for verification tools */
-  --category-color-automation: var(--p-red-400); /* Pink for automation tools */
+  /* Category colors: one muted mid tone per family, shared by both themes. */
+  --category-color-removal: var(--p-cat-removal);
+  --category-color-security: var(--p-cat-security);
+  --category-color-formatting: var(--p-cat-formatting);
+  --category-color-extraction: var(--p-cat-extraction);
+  --category-color-signing: var(--p-cat-signing);
+  --category-color-general: var(--p-cat-general);
+  --category-color-verification: var(--p-cat-verification);
+  --category-color-automation: var(--p-cat-automation);
   --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
   --category-color-default: var(--p-gray-500); /* Default gray */
 
   /* Special section colors - consistent across light and dark modes */
   --special-color-favorites: var(--p-amber-400); /* Yellow/gold for favorites */
-  --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
+  --special-color-recommended: var(--p-cat-general); /* Steel for recommended */
   --color-yellow-500: var(--p-amber-500);
   --color-yellow-600: var(--p-amber-600);
   --color-yellow-700: var(--p-amber-600);
@@ -155,17 +149,19 @@
   --color-gray-800: var(--p-gray-800);
   --color-gray-900: var(--p-gray-900);
 
-  /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
-     token; the dark block overrides each with a LIGHTER shade for contrast on
-     dark backgrounds. JS consumers go through utils/accentColors.ts. */
-  --accent-orange: var(--p-amber-600);
-  --accent-purple: var(--p-blue-500);
-  --accent-teal: var(--p-blue-700);
-  --accent-pink: var(--p-red-500);
-  --accent-amber: var(--p-amber-600);
-  --accent-indigo: var(--p-blue-600);
-  --accent-cyan: var(--p-blue-600);
-  --accent-violet: var(--p-blue-600);
+  /* Categorical accents (sidebar groups, file-type icons, badges): one muted
+     mid tone per hue, shared by both themes; keep utils/accentColors.ts in sync. */
+  --accent-blue: var(--p-cat-general);
+  --accent-green: var(--p-cat-signing);
+  --accent-red: var(--p-cat-removal);
+  --accent-orange: var(--p-cat-security);
+  --accent-purple: var(--p-cat-formatting);
+  --accent-teal: var(--p-cat-extraction);
+  --accent-pink: var(--p-cat-automation);
+  --accent-amber: var(--p-cat-security);
+  --accent-indigo: var(--p-cat-verification);
+  --accent-cyan: var(--p-cat-extraction);
+  --accent-violet: var(--p-cat-formatting);
   --accent-gray: var(--p-gray-500);
 
   /* Shadow system */
@@ -377,38 +373,35 @@
   --color-gray-800: var(--p-gray-200);
   --color-gray-900: var(--p-gray-100);
 
-  /* Categorical accents: lighter shades of the same hues, for contrast on dark. */
-  --accent-orange: var(--p-amber-500);
-  --accent-purple: var(--p-blue-400);
-  --accent-teal: var(--p-blue-400);
-  --accent-pink: var(--p-red-400);
-  --accent-amber: var(--p-amber-400);
-  --accent-indigo: var(--p-blue-400);
-  --accent-cyan: var(--p-blue-400);
-  --accent-violet: var(--p-blue-400);
+  /* Same tones as light; each clears the 3:1 mark floor on either ground. */
+  --accent-blue: var(--p-cat-general);
+  --accent-green: var(--p-cat-signing);
+  --accent-red: var(--p-cat-removal);
+  --accent-orange: var(--p-cat-security);
+  --accent-purple: var(--p-cat-formatting);
+  --accent-teal: var(--p-cat-extraction);
+  --accent-pink: var(--p-cat-automation);
+  --accent-amber: var(--p-cat-security);
+  --accent-indigo: var(--p-cat-verification);
+  --accent-cyan: var(--p-cat-extraction);
+  --accent-violet: var(--p-cat-formatting);
   --accent-gray: var(--p-gray-400);
 
   /* Category colors - same as light mode for consistency */
-  --category-color-removal: var(--p-red-500); /* Red for removal tools */
-  --category-color-security: var(--p-amber-500); /* Orange for security tools */
-  --category-color-formatting: var(
-    --p-blue-400
-  ); /* Purple for formatting tools */
-  --category-color-extraction: var(
-    --p-blue-500
-  ); /* Cyan for extraction tools */
-  --category-color-signing: var(--p-green-500); /* Green for signing tools */
-  --category-color-general: var(--p-blue-500); /* Blue for general tools */
-  --category-color-verification: var(
-    --p-amber-600
-  ); /* Orange for verification tools */
-  --category-color-automation: var(--p-red-400); /* Pink for automation tools */
+  --category-color-removal: var(--p-cat-removal);
+  --category-color-security: var(--p-cat-security);
+  --category-color-formatting: var(--p-cat-formatting);
+  --category-color-extraction: var(--p-cat-extraction);
+  --category-color-signing: var(--p-cat-signing);
+  --category-color-general: var(--p-cat-general);
+  --category-color-verification: var(--p-cat-verification);
+  --category-color-automation: var(--p-cat-automation);
   --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
   --category-color-default: var(--p-gray-500); /* Default gray */
 
   /* Special section colors - same as light mode for consistency */
   --special-color-favorites: var(--p-amber-400); /* Yellow/gold for favorites */
-  --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
+  --special-color-recommended: var(--p-cat-general); /* Steel for recommended */
 
   /* Success (green) - dark */
   --color-green-50: var(--p-zinc-775);

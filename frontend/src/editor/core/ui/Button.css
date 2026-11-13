@@ -66,14 +66,12 @@
   background: var(--button-bg, transparent) !important;
 }
 
-/* Disabled buttons in dark read as a muted surface (not a dimmed accent that
-   still looks clickable, and not an invisible transparent pill). Covers every
-   variant so a disabled primary and a disabled secondary look alike. */
-[data-theme="dark"] .sui-btn.mantine-Button-root:disabled:not([data-loading]),
-[data-theme="dark"]
-  .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
-  background: var(--c-surface-sunken);
+/* Disabled buttons are a quiet outline in both modes: hairline border, muted
+   label, every variant alike. */
+.sui-btn.mantine-Button-root:disabled:not([data-loading]),
+.sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
+  background: transparent;
   color: var(--c-text-subtle);
-  border-color: transparent;
+  border-color: var(--c-border);
   opacity: 1;
 }

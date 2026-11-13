@@ -386,7 +386,7 @@ function GroupedFileList({
         onClick={onViewAll}
         rightSection={<Icon name="chevron-right" size={"1rem"} />}
       >
-        {t("fileSidebar.viewAll", "View all {{count}} files", {
+        {t("fileSidebar.viewAll", "View all {{count}} file(s)", {
           count: total,
         })}
       </Button>
