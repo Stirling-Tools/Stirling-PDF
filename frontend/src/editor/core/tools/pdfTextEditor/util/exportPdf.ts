@@ -144,8 +144,7 @@ async function serializeEdits(
   // so reading first always yielded an empty list and silently skipped the
   // shading repair on the first save after an edit.
   let bytes = PdfiumSave.serialize(doc, { incremental });
-  // First, while the file is still exactly what PDFium wrote. Skipped for an
-  // incremental save, whose earlier bytes a signature covers.
+  // First, on PDFium's exact bytes; skipped for incremental saves, whose bytes a signature covers.
   if (!incremental) {
     bytes = await subsetEmbeddedFonts(
       bytes,
