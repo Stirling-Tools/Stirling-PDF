@@ -19,6 +19,15 @@ export type { SettingsSectionEntry };
  */
 export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
   {
+    key: "users",
+    labelKey: "portal.nav.users",
+    labelFallback: "Users",
+    keywords: ["users", "people", "members", "roster", "invite", "teams"],
+    requiresPortalAccess: true,
+    groupLabelKey: "settings.workspace.title",
+    groupLabelFallback: "Workspace",
+  },
+  {
     key: "api-keys",
     labelKey: "settings.developer.apiKeys",
     labelFallback: "API Keys",
