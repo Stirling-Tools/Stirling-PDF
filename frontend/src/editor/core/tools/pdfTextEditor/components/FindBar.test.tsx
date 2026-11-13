@@ -119,4 +119,39 @@ describe("Replace all on unfitted scanned text", () => {
       "Mary Example",
     ]);
   });
+  it("ignores Enter in the replace field while Replace all is fitting", async () => {
+    const fitted = new Set<string>();
+    let hold = true;
+    vi.mocked(scanRunNeedsFit).mockImplementation(
+      (_doc, r) => !fitted.has(r.id),
+    );
+    vi.mocked(prefitScanRun).mockImplementation((_doc, _page, r) => {
+      if (hold) return false;
+      fitted.add(r.id);
+      return true;
+    });
+    const { dispatch } = setup();
+    fireEvent.change(screen.getByTestId("pdf-editor-find-input"), {
+      target: { value: "Jane" },
+    });
+    const replaceInput = screen.getByTestId("pdf-editor-replace-input");
+    fireEvent.change(replaceInput, { target: { value: "Mary" } });
+
+    fireEvent.click(screen.getByTestId("pdf-editor-replace-all"));
+    await waitFor(() =>
+      expect(vi.mocked(prefitScanRun).mock.calls.length).toBeGreaterThan(1),
+    );
+    fireEvent.keyDown(replaceInput, { key: "Enter" });
+
+    expect(dispatch).not.toHaveBeenCalled();
+    hold = false;
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+    const { commands } = dispatch.mock.calls[0][0] as unknown as {
+      commands: EditTextCommand[];
+    };
+    expect(commands.map((c) => c.resultText)).toEqual([
+      "Invoice for Mary",
+      "Mary Example",
+    ]);
+  });
 });

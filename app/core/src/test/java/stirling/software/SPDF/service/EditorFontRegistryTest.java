@@ -407,6 +407,42 @@ class EditorFontRegistryTest {
         assertThat(registry.resolve(id)).isEmpty();
     }
 
+    @Test
+    void listsTheReplacementOnceItsBytesFailVerification() throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        String oldId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FileTime modified = Files.getLastModifiedTime(font);
+        setFsType(font, 0x0008);
+        Files.setLastModifiedTime(font, modified);
+
+        assertThat(registry.resolve(oldId)).isEmpty();
+        String newId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        assertThat(newId).isNotEqualTo(oldId);
+        assertThat(registry.resolve(newId)).isPresent();
+    }
+
+    @Test
+    void retriesAFontThatCouldNotBeOpened() throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        Set<PosixFilePermission> original = Files.getPosixFilePermissions(font);
+        Files.setPosixFilePermissions(font, Set.of());
+        try {
+            assumeFalse(Files.isReadable(font), "running with permission to read any file");
+            assertThat(registry.snapshot().manifest().families()).isEmpty();
+        } finally {
+            Files.setPosixFilePermissions(font, original);
+        }
+
+        clock.advance(EditorFontRegistry.RESCAN_INTERVAL.plusSeconds(1));
+
+        assertThat(registry.snapshot().manifest().families())
+                .extracting(EditorFontFamily::family)
+                .containsExactly("DejaVu Sans");
+    }
+
     private static byte[] bytesOf(FontFile file) {
         try (InputStream in = file.resource().getInputStream()) {
             return in.readAllBytes();

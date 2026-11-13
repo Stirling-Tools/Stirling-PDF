@@ -10,7 +10,10 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
+import {
+  useSelectedFontNote,
+  type ScanNote,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -255,8 +258,6 @@ function NothingSelected(props: ScanHintProps) {
   );
 }
 
-type ScanNote = "misaligned" | "offInk" | "dropsTyping" | null;
-
 function selectedScanNote(
   store: EditorStore,
   state: EditorViewState,
@@ -276,57 +277,6 @@ function selectedScanNote(
   if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
   if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
   return null;
-}
-
-function useSelectedFontNote(
-  state: EditorViewState,
-  selection: SelectionState,
-  scanNote: ScanNote,
-): string | null {
-  const { t } = useTranslation();
-  return useMemo(() => {
-    const note = selectedFontNote(state.pages, selection.runIds);
-    if (!note) return null;
-    switch (note.kind) {
-      case "scanned":
-        if (scanNote === "misaligned")
-          return t(
-            "pdfTextEditor.inspector.scannedTextMisaligned",
-            "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted.",
-          );
-        if (scanNote === "offInk")
-          return t(
-            "pdfTextEditor.inspector.scannedTextOffInk",
-            "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again.",
-          );
-        return scanNote === "dropsTyping"
-          ? t(
-              "pdfTextEditor.inspector.scannedTextNoFont",
-              "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works.",
-            )
-          : t(
-              "pdfTextEditor.inspector.scannedText",
-              "Scanned text · changed words are covered and redrawn in a matching font.",
-            );
-      case "embeddedUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontEmbedded",
-          "Embedded font · a character it lacks falls back to Helvetica.",
-        );
-      case "deviceUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontUnknownCoverage",
-          "{{name}} · a character it lacks falls back to {{fallback}}.",
-          { name: note.name, fallback: note.fallback },
-        );
-      case "gap":
-        return t(
-          "pdfTextEditor.inspector.fontGap",
-          "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}.",
-          { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
-        );
-    }
-  }, [state.pages, selection.runIds, scanNote, t]);
 }
 
 function EmptySidebar({

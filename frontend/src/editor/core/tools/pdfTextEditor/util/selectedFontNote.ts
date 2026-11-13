@@ -4,7 +4,10 @@ import {
 } from "@editor/tools/pdfTextEditor/types";
 import {
   analyzePageFonts,
+  coverageFor,
   missingAlnumFromCmap,
+  type FontStatus,
+  type GlyphCoverage,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
 import {
   deviceFontCoverage,
@@ -78,6 +81,21 @@ function deviceFontNote(family: string, text: string): SelectedFontNote | null {
   };
 }
 
+// analyzePageFonts merges same-named fonts, device faces included, so read each selected font's own coverage.
+function selectedCoverage(
+  fontIds: Set<string>,
+  status: FontStatus,
+): GlyphCoverage {
+  const missing = new Set<string>();
+  let known = true;
+  for (const id of fontIds) {
+    const coverage = coverageFor(id, status);
+    known &&= coverage.known;
+    for (const ch of coverage.missing) missing.add(ch);
+  }
+  return { known, missing: [...missing] };
+}
+
 function documentFontNote(
   pages: PageSnapshot[],
   fontIds: Set<string>,
@@ -87,7 +105,8 @@ function documentFontNote(
   );
   if (fonts.length !== 1) return null;
   const font = fonts[0];
-  const gaps = font.coverage.known ? font.coverage.missing : [];
+  const coverage = selectedCoverage(fontIds, font.status);
+  const gaps = coverage.missing;
   if (gaps.length > 0) {
     return {
       kind: "gap",
@@ -96,7 +115,7 @@ function documentFontNote(
       fallback: PDF_FONT_FALLBACK,
     };
   }
-  if (font.status === "standard" || font.coverage.known) return null;
+  if (font.status === "standard" || coverage.known) return null;
   return { kind: "embeddedUnknown" };
 }
 

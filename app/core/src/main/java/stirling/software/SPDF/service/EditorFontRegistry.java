@@ -98,7 +98,7 @@ public class EditorFontRegistry {
     }
 
     public Snapshot snapshot() {
-        refreshIfDue(false);
+        refreshIfDue();
         return snapshot;
     }
 
@@ -106,14 +106,14 @@ public class EditorFontRegistry {
         if (id == null || !FONT_ID.matcher(id).matches()) {
             return Optional.empty();
         }
-        refreshIfDue(false);
+        refreshIfDue();
         IndexedFace custom = customById.get(id);
         if (custom == null) {
             return Optional.ofNullable(bundledById.get(id));
         }
         FontFile verified = readVerified(custom);
         if (verified == null) {
-            refreshIfDue(true);
+            forgetAndRescan(custom.path());
             IndexedFace rescanned = customById.get(id);
             verified = rescanned == null ? bundledById.get(id) : readVerified(rescanned);
         }
@@ -143,11 +143,15 @@ public class EditorFontRegistry {
         return bytes.length > MAX_FONT_BYTES ? null : bytes;
     }
 
-    private void refreshIfDue(boolean force) {
-        if (!force && !isScanDue()) {
-            return;
+    private void refreshIfDue() {
+        if (isScanDue()) {
+            rescan(false);
         }
-        rescan(force);
+    }
+
+    private synchronized void forgetAndRescan(Path path) {
+        scanned.remove(path);
+        rescan(true);
     }
 
     private boolean isScanDue() {
@@ -176,7 +180,11 @@ public class EditorFontRegistry {
                 next.put(path, previous);
                 continue;
             }
-            next.put(path, new ScanEntry(size, modified, index(path, size, modified)));
+            try {
+                next.put(path, new ScanEntry(size, modified, index(path, size, modified)));
+            } catch (IOException e) {
+                log.warn("Skipping editor font {} until the next scan: {}", path, e.getMessage());
+            }
         }
         scanned.clear();
         scanned.putAll(next);
@@ -246,7 +254,7 @@ public class EditorFontRegistry {
         return EditorFontReader.formatOf(path.getFileName().toString());
     }
 
-    private IndexedFace index(Path path, long size, long modified) {
+    private IndexedFace index(Path path, long size, long modified) throws IOException {
         if (formatOf(path) == null) {
             log.info("Skipping editor font {}: only .ttf and .otf files are supported", path);
             return null;
@@ -259,22 +267,16 @@ public class EditorFontRegistry {
                     MAX_FONT_BYTES);
             return null;
         }
-        try {
-            byte[] bytes = readBounded(path);
-            BasicFileAttributes after = Files.readAttributes(path, BasicFileAttributes.class);
-            if (bytes == null
-                    || bytes.length != size
-                    || after.size() != size
-                    || after.lastModifiedTime().toMillis() != modified) {
-                log.warn("Skipping editor font {}: it changed while being read", path);
-                return null;
-            }
-            ReadFace read = EditorFontReader.read(bytes, formatOf(path), path);
-            return read == null ? null : new IndexedFace(read.family(), read.face(), path);
-        } catch (IOException e) {
-            log.warn("Skipping editor font {}: {}", path, e.getMessage());
-            return null;
+        byte[] bytes = readBounded(path);
+        BasicFileAttributes after = Files.readAttributes(path, BasicFileAttributes.class);
+        if (bytes == null
+                || bytes.length != size
+                || after.size() != size
+                || after.lastModifiedTime().toMillis() != modified) {
+            throw new IOException("it changed while being read");
         }
+        ReadFace read = EditorFontReader.read(bytes, formatOf(path), path);
+        return read == null ? null : new IndexedFace(read.family(), read.face(), path);
     }
 
     private List<BundledFace> loadBundled() {
