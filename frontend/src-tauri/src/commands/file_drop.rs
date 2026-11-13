@@ -88,6 +88,14 @@ pub fn install_drag_capture(webview: tauri::WebviewWindow) {
 #[tauri::command]
 pub fn install_drag_capture() {}
 
+/// Drag-and-drop events from the page, written to the desktop log so a drop that
+/// stalls on a user's machine (e.g. one dragged out of a DMS) can be traced.
+#[tauri::command]
+pub fn log_drop_diagnostic(message: String) {
+    let message: String = message.chars().take(2000).collect();
+    crate::utils::add_log(format!("🧲 Drop: {}", message));
+}
+
 // Tauri keeps dragDropEnabled=false so the webview's own HTML5 drag-and-drop
 // (in-page reordering, the drop zones) keeps working; that also means wry never
 // reports the dropped paths to us. wry's WryWebView still overrides
