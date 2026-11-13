@@ -226,6 +226,35 @@ describe("undoing a burst of edits to one line", () => {
   });
 });
 
+describe("undoing a burst on a subset-embedded line", () => {
+  const SUBSET_SAMPLE = path.join(
+    import.meta.dirname,
+    "../../../tests/test-fixtures/subset-font-sample.pdf",
+  );
+  const LINE = "Body text with embedded subset glyphs";
+
+  test.each([
+    [[`${LINE}Z`, `${LINE}Z\nmore`]],
+    [[`${LINE.slice(0, -1)}`, `${LINE.slice(0, -1)}\nZ`]],
+    [[`${LINE}!`, `${LINE}!\nnew line`]],
+  ])("puts the line back in its embedded font after %j", async (steps) => {
+    const doc = await EditorDocument.open(
+      new Uint8Array(await readFile(SUBSET_SAMPLE)),
+    );
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    const run = doc.page(0).runs.find((r) => r.text === LINE)!;
+    const font = run.fontId;
+    const history = new HistoryStack();
+
+    burst(doc, history, run.id, steps);
+    history.undo(doc);
+
+    expect(run.text).toBe(LINE);
+    expect(run.fontId).toBe(font);
+  });
+});
+
 describe("undoing one edit that removed a piece of the line", () => {
   test.each([
     ["deleting", HEADING],
