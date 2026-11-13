@@ -201,6 +201,28 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
+function ClearLibraryButton({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ActionIcon
+      variant="quiet"
+      className={`file-sidebar-section-btn${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      title={t("fileSidebar.clearLibrary.button", "Clear library")}
+      aria-label={t("fileSidebar.clearLibrary.button", "Clear library")}
+      data-testid="file-sidebar-clear-library"
+    >
+      <Icon name="trash" size={"1rem"} />
+    </ActionIcon>
+  );
+}
+
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
@@ -208,7 +230,7 @@ interface LibraryHeaderProps {
   onGoogleDrive: () => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
-  /** Absent when nothing is clearable, which hides the button. */
+  /** Set only for a flat list; a grouped list carries it on its Recent group. */
   onClearLibrary?: () => void;
 }
 
@@ -254,18 +276,7 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {onClearLibrary && (
-        <ActionIcon
-          variant="quiet"
-          className="file-sidebar-section-btn"
-          onClick={onClearLibrary}
-          title={t("fileSidebar.clearLibrary.button", "Clear library")}
-          aria-label={t("fileSidebar.clearLibrary.button", "Clear library")}
-          data-testid="file-sidebar-clear-library"
-        >
-          <Icon name="trash" size={"1rem"} />
-        </ActionIcon>
-      )}
+      {onClearLibrary && <ClearLibraryButton onClick={onClearLibrary} />}
       {isGoogleDriveEnabled && (
         <ActionIcon
           variant="quiet"
@@ -329,31 +340,44 @@ interface FileGroupProps {
   isOpen: boolean;
   onToggle: () => void;
   renderFileRow: RenderFileRow;
+  /** A control beside the header; the header is itself a button, so it can't nest. */
+  action?: React.ReactNode;
 }
 
-function FileGroup({ group, isOpen, onToggle, renderFileRow }: FileGroupProps) {
+function FileGroup({
+  group,
+  isOpen,
+  onToggle,
+  renderFileRow,
+  action,
+}: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
-      <Button
-        variant="quiet"
-        fullWidth
-        justify="between"
-        className="file-sidebar-group-header"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        leftSection={
-          <FileGroupSymbol
-            icon={group.icon}
-            color={group.color}
-            isOpen={isOpen}
-          />
-        }
-        rightSection={
-          <span className="file-sidebar-group-count">{group.stubs.length}</span>
-        }
-      >
-        <span className="file-sidebar-group-label">{group.label}</span>
-      </Button>
+      <div className="file-sidebar-group-header-row">
+        <Button
+          variant="quiet"
+          fullWidth
+          justify="between"
+          className="file-sidebar-group-header"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          leftSection={
+            <FileGroupSymbol
+              icon={group.icon}
+              color={group.color}
+              isOpen={isOpen}
+            />
+          }
+          rightSection={
+            <span className="file-sidebar-group-count">
+              {group.stubs.length}
+            </span>
+          }
+        >
+          <span className="file-sidebar-group-label">{group.label}</span>
+        </Button>
+        {action}
+      </div>
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -369,6 +393,8 @@ interface GroupedFileListProps {
   renderFileRow: RenderFileRow;
   total: number;
   onViewAll: () => void;
+  /** Absent when nothing is clearable, which hides the button. */
+  onClearLibrary?: () => void;
 }
 
 function GroupedFileList({
@@ -378,6 +404,7 @@ function GroupedFileList({
   renderFileRow,
   total,
   onViewAll,
+  onClearLibrary,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -391,6 +418,14 @@ function GroupedFileList({
             isOpen={isOpen}
             onToggle={() => onGroupOpenChange(group.id, !isOpen)}
             renderFileRow={renderFileRow}
+            action={
+              group.id === "recent" && onClearLibrary ? (
+                <ClearLibraryButton
+                  onClick={onClearLibrary}
+                  className="file-sidebar-group-action"
+                />
+              ) : undefined
+            }
           />
         );
       })}
@@ -472,14 +507,12 @@ interface FileLibrarySectionProps extends Omit<
   isGoogleDriveEnabled: boolean;
   onGoogleDrive: () => void;
   onAddFiles: () => void;
-  onClearLibrary?: () => void;
 }
 
 function FileLibrarySection({
   isGoogleDriveEnabled,
   onGoogleDrive,
   onAddFiles,
-  onClearLibrary,
   ...list
 }: FileLibrarySectionProps) {
   const { scrolled, scrollRef } = useIsScrolled();
@@ -492,7 +525,7 @@ function FileLibrarySection({
         onGoogleDrive={onGoogleDrive}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
-        onClearLibrary={onClearLibrary}
+        onClearLibrary={list.groups ? undefined : list.onClearLibrary}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />

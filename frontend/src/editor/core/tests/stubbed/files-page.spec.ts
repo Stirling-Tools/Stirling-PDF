@@ -1552,6 +1552,10 @@ test.describe("Files page", () => {
       );
       await expect(rows).toHaveCount(5);
 
+      // The grouped sidebar shows it on the Recent header, revealed on hover.
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toContainText("Remove 3 files from your library?");

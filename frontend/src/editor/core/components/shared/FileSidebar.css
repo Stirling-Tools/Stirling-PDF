@@ -294,6 +294,44 @@
   margin-top: 2px;
 }
 
+.file-sidebar-group-header-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.file-sidebar-group-header-row:hover {
+  background: var(--c-hover);
+}
+
+/* The row carries the hover tint, so the header and its action read as one. */
+.file-sidebar-group-header-row .file-sidebar-group-header:hover {
+  background: transparent;
+}
+
+/* Sits over the count and swaps with it on hover, so counts stay aligned
+   across groups whether or not a group has an action. */
+.file-sidebar-group-action {
+  position: absolute;
+  right: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-sidebar-group-header-row:is(:hover, :focus-within)
+  .file-sidebar-group-action {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.file-sidebar-group-header-row:has(.file-sidebar-group-action):is(
+    :hover,
+    :focus-within
+  )
+  .file-sidebar-group-count {
+  visibility: hidden;
+}
+
 .file-sidebar-group-header {
   display: flex;
   align-items: center;
