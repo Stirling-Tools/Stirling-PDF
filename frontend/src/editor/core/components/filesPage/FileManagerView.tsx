@@ -672,7 +672,7 @@ export default function FileManagerView() {
 
         if (materialized.length > 0) {
           await fileActions.addStirlingFileStubs(materialized, {
-            selectFiles: false,
+            selectFiles: true,
           });
         }
 

@@ -482,7 +482,9 @@ function FileContextInner({
     const newFileIds = stirlingFiles.map((stirlingFile) => stirlingFile.fileId);
     dispatch({
       type: "SET_SELECTED_FILES",
-      payload: { fileIds: [...currentSelection, ...newFileIds] },
+      payload: {
+        fileIds: Array.from(new Set([...currentSelection, ...newFileIds])),
+      },
     });
   };
 
