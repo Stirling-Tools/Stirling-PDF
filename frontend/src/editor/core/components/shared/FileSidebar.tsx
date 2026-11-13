@@ -592,6 +592,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [ingestsInFlight, setIngestsInFlight] = useState(0);
+    const trackIngest = useCallback(async (ingest: () => Promise<void>) => {
+      setIngestsInFlight((n) => n + 1);
+      try {
+        await ingest();
+      } finally {
+        setIngestsInFlight((n) => n - 1);
+      }
+    }, []);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);
@@ -742,7 +751,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
         body: t(
           "fileSidebar.dataLostBody",
-          "This browser lost this file's contents. Upload it again to keep working with it.",
+          "Couldn't find this file's contents. Add it again to keep working with it.",
         ),
         expandable: false,
         durationMs: 6000,
@@ -901,17 +910,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       if (!isGoogleDriveEnabled) return;
       const files = await openGoogleDrivePicker({ multiple: true });
       if (files.length === 0) return;
-      if (onPickGoogleDriveFiles) {
-        await onPickGoogleDriveFiles(files);
-        return;
-      }
-      await addFiles(files);
-      if (!staysOnAdd) {
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-      }
+      await trackIngest(async () => {
+        if (onPickGoogleDriveFiles) {
+          await onPickGoogleDriveFiles(files);
+          return;
+        }
+        await addFiles(files);
+        if (!staysOnAdd) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
+      });
     }, [
       isGoogleDriveEnabled,
       openGoogleDrivePicker,
+      trackIngest,
       addFiles,
       navActions,
       staysOnAdd,
@@ -931,7 +943,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
             body: t(
               "fileSidebar.dataLostBody",
-              "This browser lost this file's contents. Upload it again to keep working with it.",
+              "Couldn't find this file's contents. Add it again to keep working with it.",
             ),
             expandable: false,
             durationMs: 6000,
@@ -1055,9 +1067,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const ingestFiles = useCallback(
       async (files: File[]) => {
         if (files.length === 0) return;
-        if (onUploadFiles) {
-          await onUploadFiles(files);
-        } else {
+        await trackIngest(async () => {
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+            return;
+          }
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
@@ -1066,9 +1080,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
-        }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onUploadFiles,
+        currentWorkbench,
+      ],
     );
 
     const handleNativeFilePick = useCallback(
@@ -1245,7 +1266,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
-            <div className="file-sidebar-scroll">
+            <div
+              className="file-sidebar-scroll"
+              aria-busy={ingestsInFlight > 0}
+            >
               {currentWorkbench === "myFiles" ? (
                 <FolderTreeSection />
               ) : (

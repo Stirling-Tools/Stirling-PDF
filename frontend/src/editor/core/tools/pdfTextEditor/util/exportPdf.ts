@@ -1,12 +1,23 @@
 import i18n from "i18next";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
+  AnnotationEditError,
+  applyAnnotationEdits,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
+import {
   StructureEditError,
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import {
+  MarkInfoError,
+  applyMarked,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
+import { nameArtifactKinds } from "@editor/tools/pdfTextEditor/pdfdoc/passes/nameArtifactKinds";
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
+import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
+import { writesArtifactKinds } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   assertIncrementalAppend,
   assertSavedPdf,
@@ -21,6 +32,8 @@ export async function exportToBlob(
   filename: string;
 }> {
   const structureEdits = doc.structureEdits();
+  const annotationEdits = doc.annotationEdits();
+  const documentLanguage = doc.documentLanguageEdit();
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
@@ -30,7 +43,12 @@ export async function exportToBlob(
     // starting from what we opened keeps the file byte-identical. Rewriting it
     // changed the bytes of 8 of this suite's 10 fixtures and inflated the small
     // ones by up to 35% - for no edit at all.
-    if (structureEdits.length === 0) {
+    if (
+      structureEdits.length === 0 &&
+      annotationEdits.length === 0 &&
+      documentLanguage === undefined &&
+      !doc.markedTaggedChanged()
+    ) {
       return {
         blob: pdfBlob(doc.openedBytes),
         filename: exportName(sourceName),
@@ -39,6 +57,11 @@ export async function exportToBlob(
     bytes = doc.openedBytes;
   } else {
     bytes = await serializeEdits(doc, incremental);
+    try {
+      bytes = await nameArtifactKinds(bytes, pagesWritingArtifactKinds(doc));
+    } catch (err) {
+      throw accessibilitySaveFailed(err);
+    }
   }
 
   // Throws rather than dropping them: a description the user wrote that the
@@ -47,15 +70,29 @@ export async function exportToBlob(
     bytes = await applyStructureEdits(bytes, structureEdits);
   } catch (err) {
     if (!(err instanceof StructureEditError)) throw err;
-    // Its failures name pages and MCIDs: for a bug report, not for the user.
-    console.error(err);
-    throw new Error(
-      i18n.t(
-        "pdfTextEditor.inspector.accessibility.saveFailed",
-        "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
-      ),
-      { cause: err },
-    );
+    throw accessibilitySaveFailed(err);
+  }
+  // After the structure edits, which add the elements links are given to.
+  try {
+    bytes = await applyAnnotationEdits(bytes, annotationEdits);
+  } catch (err) {
+    if (!(err instanceof AnnotationEditError)) throw err;
+    throw accessibilitySaveFailed(err);
+  }
+  if (documentLanguage !== undefined) {
+    try {
+      bytes = await setDocumentLanguage(bytes, documentLanguage);
+    } catch (err) {
+      throw accessibilitySaveFailed(err);
+    }
+  }
+  if (doc.markedTaggedChanged()) {
+    try {
+      bytes = await applyMarked(bytes, doc.markedTagged());
+    } catch (err) {
+      if (!(err instanceof MarkInfoError)) throw err;
+      throw accessibilitySaveFailed(err);
+    }
   }
 
   // After the edits: when the content an element described was deleted, the
@@ -81,6 +118,28 @@ export async function exportToBlob(
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+}
+
+function pagesWritingArtifactKinds(doc: EditorDocument): number[] {
+  return doc
+    .loadedPages()
+    .filter(
+      (page) =>
+        page.regenerated && writesArtifactKinds(doc.module, page.pagePtr),
+    )
+    .map((page) => page.index);
+}
+
+function accessibilitySaveFailed(cause: unknown): Error {
+  // It names pages and MCIDs: for a bug report, not for the user.
+  console.error(cause);
+  return new Error(
+    i18n.t(
+      "pdfTextEditor.inspector.accessibility.saveFailed",
+      "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again.",
+    ),
+    { cause },
+  );
 }
 
 async function serializeEdits(

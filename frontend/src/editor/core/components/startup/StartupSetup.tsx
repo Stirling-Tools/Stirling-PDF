@@ -16,6 +16,11 @@ import { DEFAULT_RUNTIME_STATE } from "@editor/components/onboarding/orchestrato
 import StaticOnboardingSlide from "@editor/components/onboarding/StaticOnboardingSlide";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_ONBOARDING_CARD } from "@editor/styles/zIndex";
+import {
+  ServerSetupGate,
+  ServerSetupLoading,
+  useServerSetupPending,
+} from "@editor/components/startup/ServerSetupGate";
 
 function requiresMfaSetup(account: AccountData): boolean {
   if (account.mfaEnabled) return false;
@@ -33,14 +38,8 @@ function requiresMfaSetup(account: AccountData): boolean {
   }
 }
 
-/** Rechecks setup on app entry; deferred backends can supply config without another fetch. */
-export function StartupSetup({
-  children,
-  refreshConfigOnMount = true,
-}: {
-  children: ReactNode;
-  refreshConfigOnMount?: boolean;
-}) {
+/** Rechecks setup on app entry. */
+export function StartupSetup({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { config, refetch } = useAppConfig();
   const { user, signOut, isAnonymous } = useAuth();
@@ -50,14 +49,13 @@ export function StartupSetup({
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsConfigured, setAnalyticsConfigured] = useState(false);
   const [mfaCompleted, setMfaCompleted] = useState(false);
+  const [passwordChangedInSetup, setPasswordChangedInSetup] = useState(false);
+  const serverSetupPending = useServerSetupPending();
   const loginEnabled = config?.enableLogin === true;
 
   const requirements = useQuery({
     queryKey: ["startup", "requirements", user?.id, loginEnabled],
     queryFn: async () => {
-      // Editor and Processor have separate query caches. Re-read server settings
-      // on entry so an analytics choice made in the other app is respected.
-      if (refreshConfigOnMount) await refetch();
       if (!loginEnabled || !user || isAnonymous) return null;
       const [account, login] = await Promise.all([
         accountService.getAccountData(),
@@ -99,7 +97,9 @@ export function StartupSetup({
     });
   };
 
-  if (requirements.isPending || requirements.isFetching) return null;
+  if (requirements.isPending || requirements.isFetching) {
+    return <ServerSetupLoading />;
+  }
 
   if (requirements.isError) {
     return (
@@ -124,7 +124,9 @@ export function StartupSetup({
   }
 
   const runtimeState = DEFAULT_RUNTIME_STATE;
+  // Server setup asks the analytics question itself, after the password change.
   if (
+    !serverSetupPending &&
     !analyticsConfigured &&
     effectiveIsAdmin &&
     config?.enableAnalytics == null
@@ -147,7 +149,10 @@ export function StartupSetup({
   }
 
   const { account, login } = requirements.data ?? {};
-  if (account?.changeCredsFlag) {
+  const mustChangePassword =
+    account?.changeCredsFlag === true && !passwordChangedInSetup;
+  // Server setup ends by setting the password, so it replaces this screen.
+  if (mustChangePassword && !serverSetupPending) {
     return (
       <StaticOnboardingSlide
         key="first-login"
@@ -179,5 +184,16 @@ export function StartupSetup({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <ServerSetupGate
+      passwordChange={
+        mustChangePassword
+          ? { usingDefaultCredentials: login?.showDefaultCredentials === true }
+          : undefined
+      }
+      onPasswordChanged={() => setPasswordChangedInSetup(true)}
+    >
+      {children}
+    </ServerSetupGate>
+  );
 }

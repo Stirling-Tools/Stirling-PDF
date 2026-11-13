@@ -12,15 +12,14 @@ import {
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@editor/ui";
 import { BillingScreen, KvRow, formatPeriodDate } from "@editor/billing";
 import { useLegacySubscriptions } from "@editor/hooks/useLegacySubscriptions";
 import { LegacySubscriptionPlan } from "@editor/components/shared/config/LegacySubscriptionPlan";
-import { useUI } from "@editor/portal/contexts/UIContext";
-import { useProcurement } from "@editor/portal/components/procurement/useProcurement";
-import { ControlledDealStatusHero } from "@editor/portal/components/procurement/ProcurementBanner";
-import { ProcurementFlow } from "@editor/portal/components/procurement/ProcurementFlow";
+import { useProcurementSnapshot } from "@processor/components/procurement/useProcurement";
+import { DealStatusHero } from "@processor/components/procurement/DealStatusHero";
+import { useOpenEnterprise } from "@processor/components/procurement/enterprisePath";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -38,6 +37,12 @@ import { useFleetStats } from "@editor/portal/queries/infrastructure";
 import { qk } from "@editor/portal/queries/keys";
 import { walletQuery, WALLET_POLL_MS } from "@editor/portal/queries/wallet";
 import { useCheckoutOptional } from "@editor/contexts/CheckoutContext";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import {
+  TEAM_CHECKOUT_PARAM,
+  requestsTeamCheckout,
+} from "@editor/routes/teamCheckoutLink";
+import { TEAM_WELCOME_STATE } from "@editor/billing/teamWelcome";
 import { SubscribedPlanView } from "@editor/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
@@ -112,51 +117,23 @@ export function Usage({
     previousSessionRevision.current = sessionRevision;
     refresh();
   }, [sessionRevision, refresh]);
-  const procurement = useProcurement();
-  const { trialSetupRequested, clearTrialSetupRequest } = useUI();
+  const dealQuery = useProcurementSnapshot();
+  const deal = dealQuery.data;
+  // Session failures surface through the session banner; anything else is shown here, since an
+  // unknown deal must not be read as "no deal" and offered a fresh start.
+  const dealError =
+    dealQuery.error && !(dealQuery.error instanceof SaasSessionRequiredError)
+      ? dealQuery.error.message
+      : null;
+  const openEnterprise = useOpenEnterprise();
   const [searchParams, setSearchParams] = useSearchParams();
-  const handledProcurementRequest = useRef(false);
-  const canManageProcurement = wallet?.role === "leader";
+  const navigate = useNavigate();
+  const isLeader = wallet?.role === "leader";
   const bundleFlow = useBundleFlowState(
     wallet?.teamId,
-    canManageProcurement && wallet?.status === "free",
+    isLeader && wallet?.status === "free",
   );
 
-  useEffect(() => {
-    const requested =
-      trialSetupRequested || searchParams.get("procurement") === "start";
-    if (!requested) {
-      handledProcurementRequest.current = false;
-      return;
-    }
-    if (
-      handledProcurementRequest.current ||
-      !wallet ||
-      !procurement.isLinked ||
-      procurement.loading ||
-      procurement.loadError
-    )
-      return;
-    handledProcurementRequest.current = true;
-    clearTrialSetupRequest();
-    if (searchParams.get("procurement") === "start") {
-      const next = new URLSearchParams(searchParams);
-      next.delete("procurement");
-      setSearchParams(next, { replace: true });
-    }
-    if (!canManageProcurement) return;
-    if (!procurement.started) procurement.onExploreEnterprise();
-    else if (procurement.stage === "exploring") procurement.onStartTrial();
-    else procurement.setOpen(true);
-  }, [
-    trialSetupRequested,
-    searchParams,
-    setSearchParams,
-    wallet,
-    procurement,
-    canManageProcurement,
-    clearTrialSetupRequest,
-  ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const hasLocalInstance = localUsersInUse !== undefined;
@@ -169,22 +146,6 @@ export function Usage({
     staleTime: WALLET_POLL_MS,
     retry: false,
   });
-  const previousDeal = useRef(procurement.data);
-  useEffect(() => {
-    const previous = previousDeal.current;
-    previousDeal.current = procurement.data;
-    if (!previous || previous === procurement.data) return;
-    // A trial or agreement can change entitlements while the buyer stays on this page.
-    let cancelled = false;
-    void refreshWalletCache()
-      .catch(() => {})
-      .then(() => {
-        if (!cancelled) refresh();
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [procurement.data, refresh]);
   // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
   const { data: fleetStats } = useFleetStats();
   const editorsDeployed = fleetStats?.editorsDeployed ?? null;
@@ -253,6 +214,10 @@ export function Usage({
   // The same flow the settings plan section uses, so there is one purchase implementation.
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
+  const overLocalLimit =
+    localUsersInUse != null &&
+    localUserLimit != null &&
+    localUsersInUse > localUserLimit;
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
   const usersInUse = wallet?.team?.fleet
     ? fleetUsersInUse(
@@ -263,44 +228,55 @@ export function Usage({
     : localUsersInUse === undefined
       ? wallet?.team?.usersInUse
       : localUsersInUse;
-  const addCapacity = useCallback(() => {
-    const teamId = wallet?.teamId;
-    // No email: the only one this instance holds is its local admin record, which is a Spring
-    // username and not an address the buyer owns. The checkout asks for one instead.
-    void checkout?.openCheckout("server", {
-      combinedChoose: true,
-      currentLimit: heldLimit,
-      minimumSeats: usersInUse ?? undefined,
-      resolveCurrency:
-        teamId != null
-          ? (preferredCurrency) =>
-              fetchCheckoutPricing(teamId, "currency", preferredCurrency)
-          : undefined,
-      capacityNotice:
-        !serverPlan &&
-        !wallet?.team?.held &&
-        localUsersInUse != null &&
-        localUserLimit != null &&
-        localUsersInUse > localUserLimit
-          ? { users: localUsersInUse, limit: localUserLimit }
-          : undefined,
-      onSuccess: refresh,
-    });
-  }, [
-    checkout,
-    refresh,
-    heldLimit,
-    usersInUse,
-    serverPlan,
-    wallet?.team?.held,
-    wallet?.teamId,
-    localUsersInUse,
-    localUserLimit,
-  ]);
+  const addCapacity = useCallback(
+    (afterPurchase?: () => void) => {
+      const teamId = wallet?.teamId;
+      // No email: the only one this instance holds is its local admin record, which is a Spring
+      // username and not an address the buyer owns. The checkout asks for one instead.
+      void checkout?.openCheckout("server", {
+        combinedChoose: true,
+        currentLimit: heldLimit,
+        minimumSeats: usersInUse ?? undefined,
+        resolveCurrency:
+          teamId != null
+            ? (preferredCurrency) =>
+                fetchCheckoutPricing(teamId, "currency", preferredCurrency)
+            : undefined,
+        capacityNotice:
+          !serverPlan && !wallet?.team?.held && overLocalLimit
+            ? { users: localUsersInUse, limit: localUserLimit }
+            : undefined,
+        onContactSales: openEnterprise,
+        onSuccess: refresh,
+        onClose: (paid) => {
+          if (paid) afterPurchase?.();
+        },
+      });
+    },
+    [
+      checkout,
+      refresh,
+      openEnterprise,
+      heldLimit,
+      usersInUse,
+      serverPlan,
+      wallet?.team?.held,
+      wallet?.teamId,
+      localUsersInUse,
+      localUserLimit,
+      overLocalLimit,
+    ],
+  );
+
+  // Someone who came to buy Team is done with billing once they have it; the editor is where they
+  // invite their team.
+  const welcomeToTeam = useCallback(() => {
+    navigate(EDITOR_BASENAME, { state: TEAM_WELCOME_STATE });
+  }, [navigate]);
 
   const handledTeamRequest = useRef(false);
   useEffect(() => {
-    if (searchParams.get("upgrade") !== "team") {
+    if (!requestsTeamCheckout(searchParams)) {
       handledTeamRequest.current = false;
       return;
     }
@@ -313,26 +289,25 @@ export function Usage({
       return;
     handledTeamRequest.current = true;
     const next = new URLSearchParams(searchParams);
-    next.delete("upgrade");
+    next.delete(TEAM_CHECKOUT_PARAM);
     setSearchParams(next, { replace: true });
-    if (
-      wallet.role === "leader" &&
-      !wallet.team?.held &&
-      !serverPlan &&
-      localUsersInUse != null &&
-      localUserLimit != null &&
-      localUsersInUse > localUserLimit
-    )
-      addCapacity();
+    if (wallet.role !== "leader" || wallet.team?.held || serverPlan) return;
+    // Hosted billing has no local server: the link is a buyer asking for Team.
+    if (!hasLocalInstance) {
+      addCapacity(welcomeToTeam);
+      return;
+    }
+    if (overLocalLimit) addCapacity();
   }, [
     searchParams,
     setSearchParams,
     wallet,
     checkout,
     localUsersInUse,
-    localUserLimit,
+    overLocalLimit,
     serverPlan,
     addCapacity,
+    welcomeToTeam,
     hasLocalInstance,
   ]);
 
@@ -442,26 +417,17 @@ export function Usage({
           {wallet?.team?.held && wallet.role === "leader" && (
             <TeamSubscriptionChange refreshKey={walletReadAt} />
           )}
-          {procurement.loadError && (
+          {dealError && (
             <Banner
               tone="danger"
               title={t("portal.procurement.error.title")}
               action={
-                <Button size="sm" onClick={procurement.retry}>
+                <Button size="sm" onClick={() => void dealQuery.refetch()}>
                   {t("portal.accountLink.gate.retry", "Try again")}
                 </Button>
               }
             >
-              {procurement.loadError}
-            </Banner>
-          )}
-          {procurement.error && !procurement.open && (
-            <Banner
-              tone="danger"
-              title={t("portal.procurement.error.title")}
-              onDismiss={() => procurement.setError(null)}
-            >
-              {procurement.error}
+              {dealError}
             </Banner>
           )}
           {sessionRecovery}
@@ -507,7 +473,7 @@ export function Usage({
       licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
         !enterpriseProcessor && checkout && wallet?.role === "leader"
-          ? addCapacity
+          ? () => addCapacity()
           : undefined
       }
       onActivateProcessor={
@@ -535,20 +501,18 @@ export function Usage({
           : undefined
       }
       procurementSection={
-        procurement.isLinked && procurement.started ? (
-          <ControlledDealStatusHero
-            controller={procurement}
-            readOnly={!canManageProcurement}
+        deal?.dealId != null && deal.stage !== "exploring" ? (
+          <DealStatusHero
+            snapshot={deal}
+            onOpen={isLeader ? openEnterprise : undefined}
           />
         ) : undefined
       }
       onEnterpriseQuote={
-        canManageProcurement &&
-        procurement.isLinked &&
-        !procurement.loading &&
-        !procurement.loadError &&
-        !procurement.started
-          ? procurement.onExploreEnterprise
+        isLeader &&
+        dealQuery.isSuccess &&
+        (deal?.dealId == null || deal.stage === "exploring")
+          ? openEnterprise
           : undefined
       }
       paymentSection={
@@ -596,7 +560,6 @@ export function Usage({
       }
       extras={
         <>
-          {canManageProcurement && <ProcurementFlow controller={procurement} />}
           {!enterpriseProcessor && wallet && wallet.status === "free" && (
             <FreePlanView
               wallet={wallet}

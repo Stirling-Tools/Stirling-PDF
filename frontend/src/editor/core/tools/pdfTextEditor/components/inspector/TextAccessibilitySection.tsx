@@ -1,0 +1,793 @@
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
+import { Box, Group, Stack, Textarea } from "@mantine/core";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
+import { Icon } from "@editor/ui/Icon";
+import { Select } from "@editor/ui/Select";
+import {
+  Field,
+  Section,
+  SectionLabel,
+  StatRow,
+} from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import {
+  FURNITURE,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
+import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type {
+  StructureRole,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
+import {
+  canBeArtifact,
+  canSetTextTag,
+  canTypeText,
+  type InnerTag,
+  type TextTag,
+  type TextTagChoice,
+} from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import type {
+  InnerTagsControl,
+  OtherPagesControl,
+  TextLanguageControl,
+  UntaggedLinksControl,
+} from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
+import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+
+/**
+ * What the selected text is tagged as and the language it is read in, with
+ * pickers to change them: retagging its block, giving untagged text an
+ * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, a
+ * way to tag the links over it, and pickers for characters selected in it.
+ * With several runs selected, the tag they share and their language.
+ */
+export function TextAccessibilitySection({
+  tag,
+  onSetTag,
+  inner,
+  language,
+  otherPages,
+  untaggedLinks,
+}: {
+  tag: TextTag | null;
+  onSetTag: (choice: TextTagChoice) => void;
+  inner: InnerTagsControl;
+  language: TextLanguageControl | null;
+  otherPages: OtherPagesControl | null;
+  untaggedLinks: UntaggedLinksControl | null;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Section testId="pdf-editor-text-accessibility">
+      <SectionLabel>
+        {t("pdfTextEditor.inspector.accessibility.heading", "Accessibility")}
+      </SectionLabel>
+      <Stack gap="xs">
+        {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {otherPages && <OtherPagesButton control={otherPages} />}
+        {language && <TextLanguageField control={language} />}
+        {tag && (
+          <>
+            <InnerTagList inner={inner} />
+            {untaggedLinks && <TagLinksButton control={untaggedLinks} />}
+            <NewTagPicker inner={inner} />
+            <NewLanguagePicker inner={inner} />
+          </>
+        )}
+      </Stack>
+    </Section>
+  );
+}
+
+function TagField({
+  tag,
+  onSetTag,
+}: {
+  tag: TextTag;
+  onSetTag: (choice: TextTagChoice) => void;
+}) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
+  return canSetTextTag(tag) ? (
+    <Field label={label}>
+      <BlockTagPicker
+        tag={tag}
+        placeholder={tagText(t, tag)}
+        onSetTag={onSetTag}
+        label={label}
+      />
+    </Field>
+  ) : (
+    <StatRow
+      label={label}
+      value={<span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>}
+    />
+  );
+}
+
+/** Select values for artifact choices: a structure type never starts with a lower-case letter. */
+const ARTIFACT_VALUE = "artifact:";
+
+function BlockTagPicker({
+  tag,
+  placeholder,
+  onSetTag,
+  label,
+}: {
+  tag: TextTag;
+  placeholder: string;
+  onSetTag: (choice: TextTagChoice) => void;
+  label: string;
+}) {
+  const { t } = useTranslation();
+  const typed = canTypeText(tag);
+  const artifactable = canBeArtifact(tag);
+  const artifacts = [null, ...FURNITURE];
+  const choices = new Map<string, TextTagChoice>([
+    ...TEXT_BLOCK_TYPES.map((type) => [type, type] as const),
+    ...artifacts.map(
+      (artifact) => [artifactValue(artifact), { artifact }] as const,
+    ),
+  ]);
+  const options = [
+    {
+      group: t("pdfTextEditor.inspector.accessibility.contentGroup", "Content"),
+      options: TEXT_BLOCK_TYPES.map((type) => ({
+        value: type,
+        label: typeName(t, type),
+        disabled: !typed,
+      })),
+    },
+    {
+      group: t(
+        "pdfTextEditor.inspector.accessibility.artifactGroup",
+        "Skipped by screen readers",
+      ),
+      options: artifacts.map((artifact) => ({
+        value: artifactValue(artifact),
+        label: artifactName(t, artifact),
+        disabled: !artifactable,
+      })),
+    },
+  ];
+  const current =
+    tag.kind === "artifact"
+      ? artifactValue(tag.furniture)
+      : (TEXT_BLOCK_TYPES.find(
+          (type) => tag.kind === "tagged" && type === tag.block.type,
+        ) ?? null);
+  return (
+    <div data-testid="pdf-editor-text-tag-picker">
+      <Select
+        inputSize="sm"
+        options={options}
+        value={current}
+        placeholder={placeholder}
+        onChange={(value) => {
+          const picked = value === null ? undefined : choices.get(value);
+          if (picked) onSetTag(picked);
+        }}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+function artifactValue(furniture: Furniture | null): string {
+  return `${ARTIFACT_VALUE}${furniture ?? ""}`;
+}
+
+/** Gives matching text on other pages the selected artifact's kind. */
+function OtherPagesButton({ control }: { control: OtherPagesControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="copy" size={20} />}
+      onClick={control.onApply}
+      data-testid="pdf-editor-text-tag-other-pages"
+    >
+      {t(
+        "pdfTextEditor.inspector.accessibility.applyToOtherPages",
+        "Apply to {{count}} other pages",
+        { count: control.pages },
+      )}
+    </Button>
+  );
+}
+
+function TagLinksButton({ control }: { control: UntaggedLinksControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="link" size={20} />}
+      onClick={control.onTag}
+      data-testid="pdf-editor-tag-links"
+    >
+      {t("pdfTextEditor.inspector.accessibility.tagLinks", "Tag link", {
+        count: control.count,
+      })}
+    </Button>
+  );
+}
+
+/** The language the selected text's blocks are read in; "Mixed" when they differ. */
+function TextLanguageField({ control }: { control: TextLanguageControl }) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.language.label", "Language");
+  const { language } = control;
+  return (
+    <Field
+      label={label}
+      hint={t(
+        "pdfTextEditor.inspector.language.textHint",
+        "Screen readers switch voice and pronunciation to this language.",
+      )}
+    >
+      <LanguagePicker
+        own={language?.own ?? null}
+        inherited={language?.inherited ?? null}
+        placeholder={
+          language
+            ? t(
+                "pdfTextEditor.inspector.language.placeholder",
+                "Select language",
+              )
+            : t("pdfTextEditor.inspector.language.mixed", "Mixed")
+        }
+        onChange={control.onSet}
+        label={label}
+        testId="pdf-editor-text-language-picker"
+      />
+    </Field>
+  );
+}
+
+/** The tags marking parts of the text, numbered in reading order; the one picked opens its controls. */
+function InnerTagList({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  if (inner.tags.length === 0) return null;
+  return (
+    <Field
+      label={t(
+        "pdfTextEditor.inspector.accessibility.innerTags",
+        "Tags in this text",
+      )}
+    >
+      <Stack gap={2} data-testid="pdf-editor-inner-tags">
+        {inner.tags.map((innerTag, index) => (
+          <InnerTagRow
+            key={innerTag.key}
+            number={index + 1}
+            innerTag={innerTag}
+            active={inner.active === index}
+            onSelect={() => inner.onSelect(index)}
+            onSet={(type) => inner.onSet(index, type)}
+            onSetLanguage={(lang) => inner.onSetLanguage(index, lang)}
+            onSetLinkDescription={(description) =>
+              inner.onSetLinkDescription(index, description)
+            }
+          />
+        ))}
+      </Stack>
+    </Field>
+  );
+}
+
+function InnerTagRow({
+  number,
+  innerTag,
+  active,
+  onSelect,
+  onSet,
+  onSetLanguage,
+  onSetLinkDescription,
+}: {
+  number: number;
+  innerTag: InnerTag;
+  active: boolean;
+  onSelect: () => void;
+  onSet: (type: StructureType | null) => void;
+  onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
+}) {
+  const text = innerTag.text.replace(/\s+/g, " ").trim();
+  return (
+    <div data-testid="pdf-editor-inner-tag">
+      <button
+        type="button"
+        className="pdf-editor-inner-tag__entry"
+        aria-pressed={active}
+        onClick={onSelect}
+      >
+        <span className="pdf-editor-inner-tag__number">{number}</span>
+        <span
+          className={`pdf-editor-inner-tag__text ${privateContentClassName}`}
+          title={text}
+        >
+          {text}
+        </span>
+      </button>
+      {active && (
+        <InnerTagControls
+          number={number}
+          innerTag={innerTag}
+          onSet={onSet}
+          onSetLanguage={onSetLanguage}
+          onSetLinkDescription={onSetLinkDescription}
+        />
+      )}
+    </div>
+  );
+}
+
+function InnerTagControls({
+  number,
+  innerTag,
+  onSet,
+  onSetLanguage,
+  onSetLinkDescription,
+}: {
+  number: number;
+  innerTag: InnerTag;
+  onSet: (type: StructureType | null) => void;
+  onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
+}) {
+  const { t } = useTranslation();
+  const removeLabel = t(
+    "pdfTextEditor.inspector.accessibility.removeTag",
+    "Remove tag",
+  );
+  return (
+    <Stack gap={4} mt={4}>
+      <Group gap={4} wrap="nowrap">
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <TagPicker
+            types={innerTag.types}
+            current={innerTag.role}
+            placeholder={blockName(t, innerTag.role)}
+            onSetTag={onSet}
+            label={t(
+              "pdfTextEditor.inspector.accessibility.innerTagLabel",
+              "Tag {{number}}",
+              { number },
+            )}
+            testId="pdf-editor-inner-tag-picker"
+          />
+        </Box>
+        {innerTag.removable && (
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={removeLabel}
+            title={removeLabel}
+            onClick={() => onSet(null)}
+            data-testid="pdf-editor-inner-tag-remove"
+          >
+            <Icon name="trash" size={14} />
+          </ActionIcon>
+        )}
+      </Group>
+      <LanguagePicker
+        own={innerTag.language.own}
+        inherited={innerTag.language.inherited}
+        placeholder={t(
+          "pdfTextEditor.inspector.language.placeholder",
+          "Select language",
+        )}
+        onChange={onSetLanguage}
+        label={t(
+          "pdfTextEditor.inspector.language.innerLabel",
+          "Tag {{number}} language",
+          { number },
+        )}
+        testId="pdf-editor-inner-tag-language-picker"
+        disabled={!innerTag.languageEditable}
+      />
+      {innerTag.link && (
+        <Textarea
+          label={t(
+            "pdfTextEditor.inspector.accessibility.linkDescription",
+            "Link description",
+          )}
+          value={innerTag.link.description ?? ""}
+          className={privateContentClassName}
+          onChange={(e) => onSetLinkDescription(e.currentTarget.value)}
+          disabled={!innerTag.link.editable}
+          autosize
+          minRows={1}
+          maxRows={4}
+          size="xs"
+          data-testid="pdf-editor-inner-tag-link-description"
+        />
+      )}
+    </Stack>
+  );
+}
+
+/** A picker tagging the characters selected in the text, shown while some are. */
+function NewTagPicker({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  if (!inner.newTagTypes) return null;
+  const label = t(
+    "pdfTextEditor.inspector.accessibility.selectedText",
+    "Selected text",
+  );
+  return (
+    <Field label={label}>
+      <TagPicker
+        types={inner.newTagTypes}
+        current={null}
+        placeholder={t(
+          "pdfTextEditor.inspector.accessibility.addTag",
+          "Add tag",
+        )}
+        onSetTag={inner.onTagSelection}
+        label={label}
+        testId="pdf-editor-new-tag-picker"
+      />
+    </Field>
+  );
+}
+
+/**
+ * A picker marking the characters selected in the text as a Span in another
+ * language, shown while some are and can take one.
+ */
+function NewLanguagePicker({ inner }: { inner: InnerTagsControl }) {
+  const { t } = useTranslation();
+  const onPick = inner.onLanguageSelection;
+  if (!onPick) return null;
+  const label = t(
+    "pdfTextEditor.inspector.language.selectedText",
+    "Selected text language",
+  );
+  return (
+    <Field label={label}>
+      <LanguagePicker
+        own={null}
+        inherited={null}
+        placeholder={t(
+          "pdfTextEditor.inspector.language.placeholder",
+          "Select language",
+        )}
+        onChange={(lang) => {
+          if (lang) onPick(lang);
+        }}
+        label={label}
+        testId="pdf-editor-new-language-picker"
+      />
+    </Field>
+  );
+}
+
+function TagPicker({
+  types,
+  current,
+  placeholder,
+  onSetTag,
+  label,
+  testId,
+}: {
+  types: readonly StructureType[];
+  /** Null for untagged text. */
+  current: StructureRole | null;
+  /** Shown when the current tag is not one the picker offers, such as a custom role. */
+  placeholder: string;
+  onSetTag: (type: StructureType) => void;
+  label: string;
+  testId: string;
+}) {
+  const { t } = useTranslation();
+  const offered = types.find((type) => type === current?.type) ?? null;
+  return (
+    <div data-testid={testId}>
+      <Select
+        disabled={types.length === 0}
+        inputSize="sm"
+        options={types.map((type) => ({
+          value: type,
+          label: typeName(t, type),
+        }))}
+        value={offered}
+        placeholder={placeholder}
+        onChange={(value) => {
+          const picked = types.find((type) => type === value);
+          if (picked) onSetTag(picked);
+        }}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+function tagText(t: TFunction, tag: TextTag): string {
+  return tag.kind === "tagged" ? blockName(t, tag.block) : statusText(t, tag);
+}
+
+function blockName(t: TFunction, { role, type }: StructureRole): string {
+  if (type !== null) return typeName(t, type);
+  return t(
+    "pdfTextEditor.inspector.accessibility.customTag",
+    "{{role}} (custom tag)",
+    { role },
+  );
+}
+
+function statusText(
+  t: TFunction,
+  tag: Exclude<TextTag, { kind: "tagged" }>,
+): string {
+  switch (tag.kind) {
+    case "artifact":
+      return artifactName(t, tag.furniture);
+    case "untagged":
+      return tag.documentTagged
+        ? t("pdfTextEditor.inspector.accessibility.untaggedBadge", "Not tagged")
+        : t(
+            "pdfTextEditor.inspector.accessibility.untaggedDocument",
+            "Document has no tags",
+          );
+    case "unknown":
+      return t(
+        "pdfTextEditor.inspector.accessibility.unknownTag",
+        "Can't be read here",
+      );
+    case "mixed":
+      return t("pdfTextEditor.inspector.accessibility.mixedTags", "Mixed");
+  }
+}
+
+function artifactName(t: TFunction, furniture: Furniture | null): string {
+  switch (furniture) {
+    case null:
+      return t(
+        "pdfTextEditor.inspector.accessibility.artifactText",
+        "Decorative",
+      );
+    case "Header":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.header",
+        "Header",
+      );
+    case "Footer":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.footer",
+        "Footer",
+      );
+    case "PageNum":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.pageNumber",
+        "Page number",
+      );
+    case "Watermark":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.watermark",
+        "Watermark",
+      );
+  }
+}
+
+/** The type's name for a reader; the type itself where it has no plain-language name. */
+function typeName(t: TFunction, type: StructureType): string {
+  switch (type) {
+    case "Document":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.document",
+        "Document",
+      );
+    case "DocumentFragment":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.documentFragment",
+        "Document fragment",
+      );
+    case "Part":
+      return t("pdfTextEditor.inspector.accessibility.tagName.part", "Part");
+    case "Art":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.article",
+        "Article",
+      );
+    case "Sect":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.section",
+        "Section",
+      );
+    case "Div":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.division",
+        "Division",
+      );
+    case "Aside":
+      return t("pdfTextEditor.inspector.accessibility.tagName.aside", "Aside");
+    case "BlockQuote":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.blockQuote",
+        "Block quote",
+      );
+    case "Caption":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.caption",
+        "Caption",
+      );
+    case "TOC":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.contents",
+        "Table of contents",
+      );
+    case "TOCI":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.contentsEntry",
+        "Contents entry",
+      );
+    case "Index":
+      return t("pdfTextEditor.inspector.accessibility.tagName.index", "Index");
+    case "Title":
+      return t("pdfTextEditor.inspector.accessibility.tagName.title", "Title");
+    case "FENote":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.footnote",
+        "Footnote",
+      );
+    case "P":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.paragraph",
+        "Paragraph",
+      );
+    case "H":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.heading",
+        "Heading",
+      );
+    case "L":
+      return t("pdfTextEditor.inspector.accessibility.tagName.list", "List");
+    case "LI":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.listItem",
+        "List item",
+      );
+    case "Lbl":
+      return t("pdfTextEditor.inspector.accessibility.tagName.label", "Label");
+    case "LBody":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.listItemBody",
+        "List item body",
+      );
+    case "Table":
+      return t("pdfTextEditor.inspector.accessibility.tagName.table", "Table");
+    case "TR":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableRow",
+        "Table row",
+      );
+    case "TH":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableHeader",
+        "Table header",
+      );
+    case "TD":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableCell",
+        "Table cell",
+      );
+    case "THead":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableHead",
+        "Table head",
+      );
+    case "TBody":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableBody",
+        "Table body",
+      );
+    case "TFoot":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.tableFoot",
+        "Table foot",
+      );
+    case "Span":
+      return t("pdfTextEditor.inspector.accessibility.tagName.span", "Span");
+    case "Quote":
+      return t("pdfTextEditor.inspector.accessibility.tagName.quote", "Quote");
+    case "Note":
+      return t("pdfTextEditor.inspector.accessibility.tagName.note", "Note");
+    case "Reference":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.reference",
+        "Reference",
+      );
+    case "BibEntry":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.bibliographyEntry",
+        "Bibliography entry",
+      );
+    case "Code":
+      return t("pdfTextEditor.inspector.accessibility.tagName.code", "Code");
+    case "Link":
+      return t("pdfTextEditor.inspector.accessibility.tagName.link", "Link");
+    case "Annot":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.annotation",
+        "Annotation",
+      );
+    case "Ruby":
+      return t("pdfTextEditor.inspector.accessibility.tagName.ruby", "Ruby");
+    case "RB":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.rubyBase",
+        "Ruby base",
+      );
+    case "RT":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.rubyText",
+        "Ruby text",
+      );
+    case "RP":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.rubyPunctuation",
+        "Ruby punctuation",
+      );
+    case "Em":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.emphasis",
+        "Emphasis",
+      );
+    case "Strong":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.strong",
+        "Strong emphasis",
+      );
+    case "Figure":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.figure",
+        "Figure",
+      );
+    case "Formula":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.formula",
+        "Formula",
+      );
+    case "Form":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.form",
+        "Form field",
+      );
+    case "Artifact":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.artifact",
+        "Artifact",
+      );
+    case "H1":
+    case "H2":
+    case "H3":
+    case "H4":
+    case "H5":
+    case "H6":
+      return t(
+        "pdfTextEditor.inspector.accessibility.tagName.headingLevel",
+        "Heading {{level}}",
+        { level: type.slice(1) },
+      );
+    case "NonStruct":
+    case "Private":
+    case "Sub":
+    case "Warichu":
+    case "WT":
+    case "WP":
+      return type;
+  }
+}

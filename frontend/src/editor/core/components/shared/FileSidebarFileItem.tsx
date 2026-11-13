@@ -17,6 +17,7 @@ import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { formatFileSize, IMAGE_EXTENSIONS } from "@editor/utils/fileUtils";
 import "@editor/components/shared/FileSidebarFileItem.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -267,7 +268,7 @@ export const FileItem = React.memo(function FileItem({
     if (needsBytes && dataUnavailable)
       return t(
         "fileSidebar.fileItem.dataLostTooltip",
-        "This browser lost this file's contents. Upload it again to keep working with it.",
+        "Couldn't find this file's contents. Add it again to keep working with it.",
       );
     return null;
   };
@@ -336,7 +337,7 @@ export const FileItem = React.memo(function FileItem({
         </div>
         <div className="file-sidebar-file-info">
           <span
-            className={`file-sidebar-file-name${isSelected ? " selected" : ""}`}
+            className={`file-sidebar-file-name${isSelected ? " selected" : ""} ${privateContentClassName}`}
           >
             {name}
           </span>
@@ -360,7 +361,7 @@ export const FileItem = React.memo(function FileItem({
               <Tooltip
                 label={t(
                   "fileSidebar.fileItem.dataLostTooltip",
-                  "This browser lost this file's contents. Upload it again to keep working with it.",
+                  "Couldn't find this file's contents. Add it again to keep working with it.",
                 )}
                 withArrow
                 position="top"
@@ -452,7 +453,11 @@ export const FileItem = React.memo(function FileItem({
               {/* Rows truncate long names; the menu header is where the whole
                   name (and the size the row has no space for) is readable. */}
               <Menu.Label className="file-sidebar-kebab-header">
-                <span className="file-sidebar-kebab-header-name">{name}</span>
+                <span
+                  className={`file-sidebar-kebab-header-name ${privateContentClassName}`}
+                >
+                  {name}
+                </span>
                 <span className="file-sidebar-kebab-header-meta">
                   {metaLine}
                 </span>
@@ -598,7 +603,7 @@ export const FileItem = React.memo(function FileItem({
         resolvedThumbnail &&
         createPortal(
           <div
-            className="file-sidebar-thumb-tooltip"
+            className={`file-sidebar-thumb-tooltip ${privateContentClassName}`}
             style={{ top: thumbPos.top, left: thumbPos.left }}
           >
             <img

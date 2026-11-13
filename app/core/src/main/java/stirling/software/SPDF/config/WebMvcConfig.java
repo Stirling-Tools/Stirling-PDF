@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.resource.EncodedResourceResolver;
 import org.springframework.web.servlet.resource.HttpResource;
 import org.springframework.web.servlet.resource.ResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
+import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -48,6 +51,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
             CacheControl.maxAge(Duration.ofDays(1))
                     .cachePublic()
                     .staleWhileRevalidate(Duration.ofDays(7));
+    private static final List<String> BRANDING_FOLDERS =
+            List.of(
+                    "icons",
+                    "modern-logo",
+                    "pdfjs",
+                    "pdfium",
+                    "locales",
+                    "css",
+                    "js",
+                    "vendor",
+                    "samples",
+                    "og_images",
+                    "Login");
+    private static final String PRIVATE_FONTS_FOLDER = "fonts";
+    private static final int MAX_DECODE_PASSES = 4;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -84,12 +102,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // so a one-year immutable policy would strand a browser on one release's
         // bytes. A day of freshness plus SWR keeps repeat opens cheap without
         // pinning an update.
-        registry.addResourceHandler("/images/**", "/fonts/**")
-                .addResourceLocations(
-                        staticPath + "images/",
-                        "classpath:/static/images/",
-                        staticPath + "fonts/",
-                        "classpath:/static/fonts/")
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(staticPath + "images/", "classpath:/static/images/")
+                .setCacheControl(STABLE_ONE_DAY)
+                .resourceChain(true)
+                .addResolver(new PreferredEncodingResourceResolver());
+        registry.addResourceHandler("/fonts/**")
+                .addResourceLocations("classpath:/static/fonts/")
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
@@ -102,46 +121,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/android-chrome-*.png",
                         "/mstile-*.png",
                         "/safari-pinned-tab.svg",
-                        "/icons/**",
-                        "/modern-logo/**",
-                        "/3rdPartyLicenses.json",
-                        "/pdfjs/**",
-                        "/pdfium/**",
-                        "/locales/**",
-                        "/css/**",
-                        "/js/**",
-                        "/vendor/**",
-                        "/samples/**",
-                        "/og_images/**",
-                        "/Login/**")
-                .addResourceLocations(
-                        staticPath,
-                        "classpath:/static/",
-                        staticPath + "pdfjs/",
-                        "classpath:/static/pdfjs/",
-                        staticPath + "pdfium/",
-                        "classpath:/static/pdfium/",
-                        staticPath + "locales/",
-                        "classpath:/static/locales/",
-                        staticPath + "css/",
-                        "classpath:/static/css/",
-                        staticPath + "js/",
-                        "classpath:/static/js/",
-                        staticPath + "vendor/",
-                        "classpath:/static/vendor/",
-                        staticPath + "samples/",
-                        "classpath:/static/samples/",
-                        staticPath + "og_images/",
-                        "classpath:/static/og_images/",
-                        staticPath + "Login/",
-                        "classpath:/static/Login/",
-                        staticPath + "icons/",
-                        "classpath:/static/icons/",
-                        staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/")
+                        "/3rdPartyLicenses.json")
+                .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
+        for (String folder : BRANDING_FOLDERS) {
+            registry.addResourceHandler("/" + folder + "/**")
+                    .addResourceLocations(
+                            staticPath + folder + "/", "classpath:/static/" + folder + "/")
+                    .setCacheControl(STABLE_ONE_DAY)
+                    .resourceChain(true)
+                    .addResolver(new PreferredEncodingResourceResolver());
+        }
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
@@ -149,6 +141,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
+                .addResolver(new BundledOnlyFolderResolver(PRIVATE_FONTS_FOLDER))
                 .addResolver(new PreferredEncodingResourceResolver());
     }
 
@@ -254,6 +247,98 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             httpResource
                                     .getResponseHeaders()
                                     .getFirst(HttpHeaders.CONTENT_ENCODING));
+        }
+    }
+
+    /**
+     * Restricts one top-level folder on the catch-all handler to classpath locations, so files an
+     * operator drops into the custom static directory under that name are never served publicly.
+     *
+     * <p>The folder is matched however the filesystem might resolve it: case-insensitively, after
+     * up to {@link #MAX_DECODE_PASSES} rounds of percent-decoding, with either separator, and with
+     * Windows stream suffixes and trailing dots or spaces stripped. A path that cannot be fully
+     * decoded is treated as targeting the folder.
+     *
+     * <p>Hazard: this is the only guard for spellings the {@code /fonts/**} handler does not match,
+     * so the two must name the same folder.
+     */
+    static final class BundledOnlyFolderResolver implements ResourceResolver {
+
+        private final String folder;
+
+        BundledOnlyFolderResolver(String folder) {
+            this.folder = folder.toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public Resource resolveResource(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveResource(
+                    request, requestPath, allowedLocations(requestPath, locations));
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, allowedLocations(resourcePath, locations));
+        }
+
+        List<? extends Resource> allowedLocations(String path, List<? extends Resource> locations) {
+            if (!targetsFolder(path)) {
+                return locations;
+            }
+            return locations.stream()
+                    .filter(location -> location instanceof ClassPathResource)
+                    .toList();
+        }
+
+        boolean targetsFolder(String path) {
+            if (path == null) {
+                return false;
+            }
+            String decoded = fullyDecoded(path);
+            if (decoded == null) {
+                return true;
+            }
+            for (String segment : decoded.split("[/\\\\]")) {
+                String name = windowsName(segment);
+                if (!name.isEmpty()) {
+                    return name.toLowerCase(Locale.ROOT).equals(folder);
+                }
+            }
+            return false;
+        }
+
+        private static String fullyDecoded(String path) {
+            String current = path;
+            for (int pass = 0; pass < MAX_DECODE_PASSES; pass++) {
+                String next;
+                try {
+                    next = UriUtils.decode(current, StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
+                if (next.equals(current)) {
+                    return current;
+                }
+                current = next;
+            }
+            return null;
+        }
+
+        private static String windowsName(String segment) {
+            int stream = segment.indexOf(':');
+            String name = stream >= 0 ? segment.substring(0, stream) : segment;
+            int end = name.length();
+            while (end > 0 && (name.charAt(end - 1) == '.' || name.charAt(end - 1) == ' ')) {
+                end--;
+            }
+            return name.substring(0, end);
         }
     }
 

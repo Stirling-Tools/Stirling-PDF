@@ -46,7 +46,6 @@ class CalibreSandboxScriptTest {
                 new ArrayList<>(List.of("python3", "-I", launcher.toString(), workDir.toString()));
         full.addAll(List.of(command));
         ProcessBuilder builder = new ProcessBuilder(full).directory(workDir.toFile());
-        builder.environment().put("STIRLING_CALIBRE_SANDBOX", "required");
         builder.redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD);
         Process process = builder.start();
         if (!process.waitFor(60, TimeUnit.SECONDS)) {

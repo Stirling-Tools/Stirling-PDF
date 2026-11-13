@@ -30,7 +30,17 @@ const OFFICE_ENGINE_ENDPOINTS = [
   "pdf-to-word",
   "pdf-to-presentation",
   "pdf-to-text",
+  "pdf-to-rtf",
   "pdf-to-xlsx",
+  "pdf-to-html",
+  "pdf-to-markdown",
+  "pdf-to-xml",
+  "pdf-to-epub",
+  "pdf-to-pdfa",
+  "html-to-pdf",
+  "markdown-to-pdf",
+  "ebook-to-pdf",
+  "eml-to-pdf",
 ];
 
 const OFFICE_EXTENSIONS = [
@@ -46,18 +56,108 @@ const OFFICE_EXTENSIONS = [
   "ppt",
   "pptx",
   "odp",
+  "docm",
+  "dot",
+  "dotx",
+  "dotm",
+  "ott",
+  "fodt",
+  "odm",
+  "xlsm",
+  "xlt",
+  "xltx",
+  "xltm",
+  "xlsb",
+  "ots",
+  "fods",
+  "tsv",
+  "tab",
+  "pptm",
+  "pps",
+  "ppsx",
+  "ppsm",
+  "pot",
+  "potx",
+  "potm",
+  "otp",
+  "fodp",
+  "odg",
+  "otg",
+  "fodg",
+  "xml",
+  "sxw",
+  "stw",
+  "sxc",
+  "stc",
+  "sxi",
+  "sti",
+  "sxd",
+  "std",
+  "vsdx",
+  "vsdm",
+  "vssx",
+  "vssm",
+  "vstx",
+  "vstm",
+  "vsd",
+  "vss",
+  "vst",
+  "vsw",
+  "slk",
+  "sylk",
+  "dif",
+  "dbf",
+  "wk1",
+  "wks",
+  "wk3",
+  "wk4",
+  "123",
+  "pages",
+  "numbers",
+  "key",
+  "pub",
+  "text",
+  "log",
+  "asc",
+  "json",
+  "html",
+  "htm",
+  "xhtml",
+  "mobi",
+  "azw3",
+  "azw",
+  "prc",
+  "fb2",
+  "fbz",
+  "htmlz",
 ];
 
-/** Whether the conversion can run on Stirling Office Convert instead of LibreOffice. */
+/** Whether the conversion can run on Stirling Office Convert instead of its standard converter. */
 export const usesOfficeEngine = (
   fromExtension: string,
   toExtension: string,
 ): boolean => {
+  if (toExtension === "pdfx") return false;
   const endpoint = getEndpointName(fromExtension, toExtension);
   if (endpoint === "file-to-pdf") {
-    return OFFICE_EXTENSIONS.includes(fromExtension);
+    return (
+      fromExtension === "any" ||
+      OFFICE_EXTENSIONS.includes(
+        fromExtension.replace(/^file-/, "").toLowerCase(),
+      )
+    );
   }
   return OFFICE_ENGINE_ENDPOINTS.includes(endpoint);
+};
+
+/** Stored choices may be JSON booleans or multipart strings; absent or invalid values inherit the server setting. */
+export const parseOfficeEngineChoice = (
+  value: unknown,
+): boolean | undefined => {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
 };
 
 /**

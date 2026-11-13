@@ -8,6 +8,7 @@ import {
 } from "@editor/services/paygErrorInterceptor";
 import { redirectToLogin } from "@editor/auth/redirectToLogin";
 import { getBrowserId } from "@editor/utils/browserIdentifier";
+import { installInMemoryUploads } from "@editor/utils/inMemoryUpload";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -92,6 +93,8 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   },
 );
+
+installInMemoryUploads(apiClient);
 
 // Endpoints whose 401s must never trigger the hard redirect to /login. Prefix
 // matching covers the whole public surface (/api/v1/config/* and /api/v1/info/*

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -19,8 +22,12 @@ public class PosterPdfRequest extends PDFFile {
             allowableValues = {"A4", "Letter", "A3", "A5", "Legal", "Tabloid"})
     private String pageSize = "A4";
 
+    @Min(value = 1, message = "xFactor must be at least 1")
+    @Max(value = 10, message = "xFactor must not exceed 10")
     private int xFactor = 2;
 
+    @Min(value = 1, message = "yFactor must be at least 1")
+    @Max(value = 10, message = "yFactor must not exceed 10")
     private int yFactor = 2;
 
     @Schema(

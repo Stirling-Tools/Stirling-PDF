@@ -1,0 +1,541 @@
+import { MantineProvider } from "@mantine/core";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
+import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type {
+  InnerTagsControl,
+  TextLanguageControl,
+  UntaggedLinksControl,
+} from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
+import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+
+const KEY = "pdfTextEditor.inspector.accessibility";
+const LANGUAGE_KEY = "pdfTextEditor.inspector.language";
+const NO_INNER: InnerTagsControl = {
+  tags: [],
+  active: null,
+  onSelect: () => {},
+  onSet: () => {},
+  newTagTypes: null,
+  onTagSelection: () => {},
+  onSetLanguage: () => {},
+  onLanguageSelection: null,
+  onSetLinkDescription: () => {},
+};
+
+function tagShown(tag: TextTag): HTMLElement {
+  render(
+    <MantineProvider env="test">
+      <TextAccessibilitySection
+        tag={tag}
+        onSetTag={vi.fn()}
+        inner={NO_INNER}
+        language={null}
+        otherPages={null}
+        untaggedLinks={null}
+      />
+    </MantineProvider>,
+  );
+  return screen.getByTestId("pdf-editor-text-tag");
+}
+
+const tagged = (role: string): TextTag => ({
+  kind: "tagged",
+  block: structureRole(role),
+  cannotRetag: "not-text",
+  canBeArtifact: false,
+});
+
+describe("TextAccessibilitySection", () => {
+  it("names a type by its name alone", () => {
+    expect(tagShown(tagged("H2"))).toHaveTextContent(
+      new RegExp(`^${KEY}.tagName.headingLevel$`),
+    );
+  });
+
+  it("shows a type with no plain-language name as the type", () => {
+    expect(tagShown(tagged("Warichu"))).toHaveTextContent(/^Warichu$/);
+  });
+
+  it("marks a custom role as custom", () => {
+    expect(tagShown(tagged("Callout"))).toHaveTextContent(`${KEY}.customTag`);
+  });
+
+  it.each([
+    [
+      { kind: "artifact", furniture: null, taggable: false } as const,
+      "artifactText",
+    ],
+    [
+      { kind: "artifact", furniture: "PageNum", taggable: false } as const,
+      "furniture.pageNumber",
+    ],
+    [
+      { kind: "untagged", documentTagged: true, taggable: false } as const,
+      "untaggedBadge",
+    ],
+    [
+      { kind: "untagged", documentTagged: false, taggable: false } as const,
+      "untaggedDocument",
+    ],
+    [{ kind: "unknown" } as const, "unknownTag"],
+    [
+      { kind: "mixed", settable: false, canBeArtifact: false } as const,
+      "mixedTags",
+    ],
+  ])("explains text with no element (%o)", (tag, message) => {
+    expect(tagShown(tag)).toHaveTextContent(`${KEY}.${message}`);
+  });
+
+  it("offers a picker where the text's block can be retagged", () => {
+    const onRetag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
+          onSetTag={onRetag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.tagName.paragraph`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.code`));
+    expect(onRetag).toHaveBeenCalledWith("Code");
+  });
+
+  it("offers making the text decorative", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "untagged",
+            documentTagged: true,
+            taggable: true,
+          }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.artifactText`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: null });
+  });
+
+  it("offers marking the text as page furniture", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "untagged", documentTagged: true, taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.furniture.footer`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Footer" });
+  });
+
+  it("shows decorative text as decorative, and offers it a type again", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: null, taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.artifactText`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
+    expect(onSetTag).toHaveBeenCalledWith("P");
+  });
+
+  it("shows page furniture by its kind, and offers it another", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Header", taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.furniture.header`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.furniture.watermark`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Watermark" });
+  });
+
+  it("does not offer decorative where the text cannot become an artifact", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: false,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    expect(
+      screen.getByRole("option", { name: `${KEY}.artifactText` }),
+    ).toHaveAttribute("data-combobox-disabled", "true");
+  });
+
+  it("offers giving matching text on other pages the artifact's kind", () => {
+    const onApply = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Footer", taggable: true }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={{ pages: 3, onApply }}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByTestId("pdf-editor-text-tag-other-pages"));
+    expect(onApply).toHaveBeenCalled();
+  });
+
+  it("offers a picker for runs tagged differently, set on all of them", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "mixed", settable: true, canBeArtifact: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveAttribute("placeholder", `${KEY}.mixedTags`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
+    expect(onSetTag).toHaveBeenCalledWith("P");
+  });
+
+  it("shows a tag the picker does not offer in its place", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("Callout"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    expect(
+      screen.getByRole("textbox", { name: `${KEY}.tagLabel` }),
+    ).toHaveAttribute("placeholder", `${KEY}.customTag`);
+  });
+
+  it("numbers the tags inside the text and selects one when clicked", () => {
+    const inner = innerControl();
+    renderSection(inner);
+    const rows = screen.getAllByTestId("pdf-editor-inner-tag");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "1Umsatzerlöse",
+      "2the appendix",
+    ]);
+    fireEvent.click(within(rows[1]).getByRole("button"));
+    expect(inner.onSelect).toHaveBeenCalledWith(1);
+    expect(screen.queryByTestId("pdf-editor-inner-tag-picker")).toBeNull();
+  });
+
+  it("changes or removes the selected tag", () => {
+    const inner = innerControl({ active: 0 });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", {
+      name: `${KEY}.innerTagLabel`,
+    });
+    expect(input).toHaveValue(`${KEY}.tagName.span`);
+    fireEvent.click(input);
+    fireEvent.click(within(listboxOf(input)).getByText(`${KEY}.tagName.code`));
+    expect(inner.onSet).toHaveBeenCalledWith(0, "Code");
+    fireEvent.click(screen.getByTestId("pdf-editor-inner-tag-remove"));
+    expect(inner.onSet).toHaveBeenCalledWith(0, null);
+  });
+
+  it("offers no change to a tag that cannot take one", () => {
+    renderSection(innerControl({ active: 1 }));
+    expect(
+      screen.getByRole("textbox", { name: `${KEY}.innerTagLabel` }),
+    ).toBeDisabled();
+    expect(screen.queryByTestId("pdf-editor-inner-tag-remove")).toBeNull();
+  });
+
+  it("tags characters selected inside the text", () => {
+    const inner = innerControl({ newTagTypes: ["Span", "Code"] });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", { name: `${KEY}.selectedText` });
+    fireEvent.click(input);
+    fireEvent.click(within(listboxOf(input)).getByText(`${KEY}.tagName.code`));
+    expect(inner.onTagSelection).toHaveBeenCalledWith("Code");
+  });
+
+  it("disables adding a tag the selected characters cannot take", () => {
+    renderSection(innerControl({ newTagTypes: [] }));
+    expect(
+      screen.getByRole("textbox", { name: `${KEY}.selectedText` }),
+    ).toBeDisabled();
+  });
+
+  it("shows the language the text inherits, muted, and sets one of its own", () => {
+    const language = languageControl("en-IE", null);
+    renderSection(innerControl(), language);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()en-IE\)?$/);
+    expect(isMuted(input)).toBe(true);
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "fr"));
+    expect(language.onSet).toHaveBeenCalledWith("fr");
+  });
+
+  it("mutes a language set the same as the one inherited", () => {
+    renderSection(innerControl(), languageControl("en-IE", "en-IE"));
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(isMuted(input)).toBe(true);
+    expect(clearButtonOf(input)).toBeNull();
+  });
+
+  it("clears the text's own language", () => {
+    const language = languageControl("en", "fr");
+    renderSection(innerControl(), language);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()fr\)?$/);
+    expect(isMuted(input)).toBe(false);
+    fireEvent.click(clearButtonOf(input)!);
+    expect(language.onSet).toHaveBeenCalledWith(null);
+  });
+
+  it("shows only the language for several selected runs", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={null}
+          onSetTag={vi.fn()}
+          inner={innerControl()}
+          language={{ language: undefined, onSet: vi.fn() }}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.queryByTestId("pdf-editor-text-tag")).toBeNull();
+    expect(screen.queryByTestId("pdf-editor-inner-tags")).toBeNull();
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.label`,
+    });
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("placeholder", `${LANGUAGE_KEY}.mixed`);
+  });
+
+  it("sets the language of the selected tag", () => {
+    const inner = innerControl({ active: 0 });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.innerLabel`,
+    });
+    expect((input as HTMLInputElement).value).toMatch(/(^|\()de\)?$/);
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "ga"));
+    expect(inner.onSetLanguage).toHaveBeenCalledWith(0, "ga");
+  });
+
+  it("marks characters selected inside the text as another language", () => {
+    const inner = innerControl({
+      newTagTypes: ["Span"],
+      onLanguageSelection: vi.fn(),
+    });
+    renderSection(inner);
+    const input = screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.selectedText`,
+    });
+    fireEvent.click(input);
+    fireEvent.click(optionFor(input, "fr"));
+    expect(inner.onLanguageSelection).toHaveBeenCalledWith("fr");
+  });
+});
+
+describe("TextAccessibilitySection links", () => {
+  it("edits the description of the link a tag holds", () => {
+    const inner = innerControl({ active: 1 });
+    renderSection(inner);
+    const field = screen.getByTestId("pdf-editor-inner-tag-link-description");
+    expect(field).toHaveValue("The appendix");
+    fireEvent.change(field, { target: { value: "Appendix B" } });
+    expect(inner.onSetLinkDescription).toHaveBeenCalledWith(1, "Appendix B");
+  });
+
+  it("shows no link description for a tag holding no link", () => {
+    renderSection(innerControl({ active: 0 }));
+    expect(
+      screen.queryByTestId("pdf-editor-inner-tag-link-description"),
+    ).toBeNull();
+  });
+
+  it("offers tagging the links over the text", () => {
+    const onTag = vi.fn();
+    renderSection(innerControl(), null, { count: 2, onTag });
+    fireEvent.click(screen.getByTestId("pdf-editor-tag-links"));
+    expect(onTag).toHaveBeenCalled();
+  });
+});
+
+function languageControl(
+  inherited: string | null,
+  own: string | null,
+): TextLanguageControl & { onSet: ReturnType<typeof vi.fn> } {
+  return { language: { own, inherited }, onSet: vi.fn() };
+}
+
+function innerControl(
+  overrides: Partial<InnerTagsControl> = {},
+): InnerTagsControl {
+  return {
+    tags: [
+      {
+        key: "1",
+        text: "Umsatzerlöse",
+        start: 4,
+        end: 9,
+        role: structureRole("Span"),
+        types: ["Span", "Code"],
+        removable: true,
+        language: { own: "de", inherited: "en" },
+        languageEditable: true,
+        link: null,
+      },
+      {
+        key: "2",
+        text: " the\nappendix ",
+        start: 12,
+        end: 20,
+        role: structureRole("Link"),
+        types: [],
+        removable: false,
+        language: { own: null, inherited: "en" },
+        languageEditable: true,
+        link: {
+          annotations: [20],
+          description: "The appendix",
+          editable: true,
+        },
+      },
+    ],
+    active: null,
+    onSelect: vi.fn(),
+    onSet: vi.fn(),
+    newTagTypes: null,
+    onTagSelection: vi.fn(),
+    onSetLanguage: vi.fn(),
+    onLanguageSelection: null,
+    onSetLinkDescription: vi.fn(),
+    ...overrides,
+  };
+}
+
+function renderSection(
+  inner: InnerTagsControl,
+  language: TextLanguageControl | null = null,
+  untaggedLinks: UntaggedLinksControl | null = null,
+) {
+  render(
+    <MantineProvider env="test">
+      <TextAccessibilitySection
+        tag={{
+          kind: "tagged",
+          block: structureRole("P"),
+          cannotRetag: null,
+          canBeArtifact: true,
+        }}
+        onSetTag={vi.fn()}
+        inner={inner}
+        language={language}
+        otherPages={null}
+        untaggedLinks={untaggedLinks}
+      />
+    </MantineProvider>,
+  );
+}
+
+function isMuted(input: HTMLElement): boolean {
+  return input.closest('[style*="--c-text-muted"]') !== null;
+}
+
+function clearButtonOf(input: HTMLElement): HTMLElement | null {
+  return input.closest(".mantine-Input-wrapper")!.querySelector("button");
+}
+
+/** A language picker's option for `tag`: "Name (tag)", or the tag alone where the locale has no name. */
+function optionFor(input: HTMLElement, tag: string): HTMLElement {
+  return within(listboxOf(input)).getByRole("option", {
+    name: new RegExp(`(^|\\()${tag}\\)?$`),
+  });
+}
+
+/** The options of a picker: every picker's are in the document at once. */
+function listboxOf(input: HTMLElement): HTMLElement {
+  return document.getElementById(input.getAttribute("aria-controls")!)!;
+}

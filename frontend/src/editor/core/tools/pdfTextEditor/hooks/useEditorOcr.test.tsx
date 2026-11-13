@@ -55,6 +55,9 @@ function makeDoc(encrypted = false): EditorDocument {
     module: { FPDF_GetSecurityHandlerRevision: () => (encrypted ? 6 : -1) },
     pageCount: 0,
     loadedPages: () => [],
+    documentLanguage: () => null,
+    languagesInUse: () => [],
+    onArtifactKinds: () => () => {},
     dispose: vi.fn(),
   } as unknown as EditorDocument;
 }

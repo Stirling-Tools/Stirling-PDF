@@ -15,6 +15,7 @@ import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
+import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -73,6 +74,17 @@ export function SelectionInspector({
         />
       )}
       {hasImageSelection && <ImageSection controller={controller} />}
+      {ACCESSIBILITY_EDITING &&
+        (controller.textTag || controller.textLanguage) && (
+          <TextAccessibilitySection
+            tag={controller.textTag}
+            onSetTag={controller.onSetTextTag}
+            inner={controller.innerTextTags}
+            language={controller.textLanguage}
+            otherPages={controller.textOtherPages}
+            untaggedLinks={controller.textUntaggedLinks}
+          />
+        )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
         <ImageAccessibilitySection
           accessibility={controller.imageAccessibility}

@@ -27,8 +27,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -122,11 +120,16 @@ public class StampController {
                     "error.invalid.filepath", "Invalid PDF file path: " + pdfFileName);
         }
 
-        String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
+        String stampType = resolveStampType(request.getStampType(), stampImage);
+        if ("text".equalsIgnoreCase(stampType) && (stampText == null || stampText.isBlank())) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.text.required",
+                    "Stamp text must be provided when stamp type is 'text'");
+        }
         if ("image".equalsIgnoreCase(stampType)) {
-            if (stampImage == null) {
+            if ((stampImage == null || stampImage.isEmpty())) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.stamp.image.required",
                         "Stamp image file must be provided when stamp type is 'image'");
@@ -166,6 +169,9 @@ public class StampController {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
             List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            // CJK fonts are several MB, so load once per document rather than per page.
+            PDFont stampFont =
+                    "text".equalsIgnoreCase(stampType) ? loadStampFont(document, alphabet) : null;
 
             for (int pageIndex : pageNumbers) {
                 int zeroBasedIndex = pageIndex - 1;
@@ -210,7 +216,7 @@ public class StampController {
                                 rotation,
                                 position,
                                 fontSize,
-                                alphabet,
+                                stampFont,
                                 overrideX,
                                 overrideY,
                                 margin,
@@ -248,8 +254,45 @@ public class StampController {
             // Return the stamped PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
+        }
+    }
+
+    private static String resolveStampType(String stampType, MultipartFile stampImage) {
+        if (stampType == null || stampType.isBlank()) {
+            return stampImage != null && !stampImage.isEmpty() ? "image" : "text";
+        }
+        if (!"text".equalsIgnoreCase(stampType)
+                && !"image".equalsIgnoreCase(stampType)
+                && !"qr".equalsIgnoreCase(stampType)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.stamp.type.invalid",
+                    "Invalid stampType ''{0}'': must be ''text'', ''image'' or ''qr''",
+                    stampType);
+        }
+        return stampType;
+    }
+
+    private PDFont loadStampFont(PDDocument document, String alphabet) throws IOException {
+        String resourceDir =
+                switch (alphabet) {
+                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+                    case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
+                    case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
+                    case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
+                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+                    default -> "static/fonts/NotoSans-Regular.ttf";
+                };
+        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
+        try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
+            File tempFile = tempFileWrapper.getFile();
+            try (InputStream is = classPathResource.getInputStream();
+                    FileOutputStream os = new FileOutputStream(tempFile)) {
+                IOUtils.copy(is, os);
+            }
+            return PDType0Font.load(document, tempFile);
         }
     }
 
@@ -261,7 +304,7 @@ public class StampController {
             float rotation,
             int position, // 1-9 positioning logic
             float fontSize,
-            String alphabet,
+            PDFont font,
             float overrideX, // X override
             float overrideY, // Y override
             float margin,
@@ -269,32 +312,6 @@ public class StampController {
             int currentPageNumber,
             String filename)
             throws IOException {
-        String resourceDir;
-        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir =
-                switch (alphabet) {
-                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/Meiryo.ttf";
-                    case "korean" -> "static/fonts/malgun.ttf";
-                    case "chinese" -> "static/fonts/SimSun.ttf";
-                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-                    case "roman" -> "static/fonts/NotoSans-Regular.ttf";
-                    default -> "static/fonts/NotoSans-Regular.ttf";
-                };
-
-        ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
-
-        // Use TempFile with try-with-resources for automatic cleanup
-        try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
-            File tempFile = tempFileWrapper.getFile();
-            try (InputStream is = classPathResource.getInputStream();
-                    FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
-                font = PDType0Font.load(document, tempFile);
-            }
-        }
-
         Color redactColor;
         try {
             if (!colorString.startsWith("#")) {
@@ -511,6 +528,12 @@ public class StampController {
 
         // Load the stamp image
         BufferedImage image = ImageIO.read(stampImage.getInputStream());
+        if (image == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
+                    "stampImage",
+                    "must be a supported image");
+        }
 
         // Compute width based on original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();

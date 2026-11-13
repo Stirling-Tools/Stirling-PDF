@@ -1,19 +1,25 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -29,7 +35,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.PostHogService;
-import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -85,20 +91,23 @@ public class PipelineController {
 
         postHogService.captureEvent("pipeline_api_event", properties);
 
+        List<Resource> inputFiles = null;
+        PipelineResult result = null;
         try {
-            List<Resource> inputFiles = processor.generateInputFiles(files);
+            inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return null;
             }
-            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+            result = processor.runPipelineAgainstFiles(inputFiles, config);
             List<Resource> outputFiles = result.getOutputFiles();
             if (outputFiles != null && outputFiles.size() == 1) {
                 // If there is only one file, return it directly — stream without int-overflow
                 Resource singleFile = outputFiles.get(0);
                 TempFile singleTempFile = new TempFile(tempFileManager, ".out");
                 try {
-                    try (InputStream is = singleFile.getInputStream()) {
-                        is.transferTo(Files.newOutputStream(singleTempFile.getPath()));
+                    try (InputStream is = singleFile.getInputStream();
+                            OutputStream os = Files.newOutputStream(singleTempFile.getPath())) {
+                        is.transferTo(os);
                     }
                     log.info("Returning single file response...");
                     return WebResponseUtils.fileToWebResponse(
@@ -115,22 +124,12 @@ public class PipelineController {
             // Multiple files: stream into a zip TempFile
             TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
             try {
-                Map<String, Integer> filenameCount = new HashMap<>();
+                Set<String> usedNames = new HashSet<>();
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                     for (Resource file : outputFiles) {
-                        String originalFilename = file.getFilename();
-                        String filename = originalFilename;
-                        if (filenameCount.containsKey(originalFilename)) {
-                            int count = filenameCount.get(originalFilename);
-                            filename =
-                                    GeneralUtils.generateFilename(
-                                            originalFilename, "(" + count + ")");
-                            filenameCount.put(originalFilename, count + 1);
-                        } else {
-                            filenameCount.put(originalFilename, 1);
-                        }
-                        zipOut.putNextEntry(new ZipEntry(filename));
+                        zipOut.putNextEntry(
+                                new ZipEntry(uniqueEntryName(file.getFilename(), usedNames)));
                         try (InputStream is = file.getInputStream()) {
                             is.transferTo(zipOut);
                         }
@@ -143,9 +142,32 @@ public class PipelineController {
                 zipTempFile.close();
                 throw e;
             }
+        } catch (PipelineLimits.LimitExceededException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("Error handling data: ", e);
             return null;
+        } finally {
+            // The response is a copy, so the uploads and step outputs are not needed any longer
+            if (result != null) {
+                result.close();
+            }
+            processor.deleteInputFiles(inputFiles);
         }
+    }
+
+    /**
+     * The entry's own name, or "name (n).ext" in the same folder once an earlier entry has it.
+     * Checked against every emitted name, since an output can already be called "name (1).ext".
+     */
+    private static String uniqueEntryName(String filename, Set<String> usedNames) {
+        String stem = FilenameUtils.removeExtension(filename);
+        String extension = FilenameUtils.getExtension(filename);
+        String dotExtension = extension.isEmpty() ? "" : "." + extension;
+        String candidate = filename;
+        for (int n = 1; !usedNames.add(candidate); n++) {
+            candidate = stem + " (" + n + ")" + dotExtension;
+        }
+        return candidate;
     }
 }

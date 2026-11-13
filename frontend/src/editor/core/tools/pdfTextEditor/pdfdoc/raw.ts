@@ -708,6 +708,11 @@ export function referencedObject(text: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
+/** A reference to object `num`, at the generation the file has it. */
+export function indirectRef(pdf: RawPdf, num: number): string {
+  return `${num} ${pdf.generationOf(num)} R`;
+}
+
 export function arrayItems(text: string): ValueSpan[] | null {
   if (text[0] !== "[") return null;
   const items: ValueSpan[] = [];
@@ -735,8 +740,34 @@ interface Entry {
 }
 
 function findEntry(body: string, key: string): Entry | null {
+  let found: Entry | null = null;
+  visitEntries(body, (name, entry) => {
+    if (name === key) found = entry;
+    return found !== null;
+  });
+  return found;
+}
+
+/** The keys of the outermost dictionary in `body`, without their slashes; null when there is none. */
+export function dictKeys(body: string): string[] | null {
+  const keys: string[] = [];
+  const read = visitEntries(body, (name) => {
+    keys.push(name);
+    return false;
+  });
+  return read ? keys : null;
+}
+
+/**
+ * Visit the entries of the outermost dictionary in `body` until `visit`
+ * returns true. False when `body` has no dictionary.
+ */
+function visitEntries(
+  body: string,
+  visit: (key: string, entry: Entry) => boolean,
+): boolean {
   const open = body.indexOf("<<");
-  if (open < 0) return null;
+  if (open < 0) return false;
   let i = open + 2;
   let depth = 1;
   while (i < body.length) {
@@ -757,7 +788,7 @@ function findEntry(body: string, key: string): Entry | null {
     if (ch === ">" && body[i + 1] === ">") {
       depth -= 1;
       i += 2;
-      if (depth === 0) return null;
+      if (depth === 0) return true;
       continue;
     }
     if (ch === "[" || ch === "]") {
@@ -768,15 +799,16 @@ function findEntry(body: string, key: string): Entry | null {
       const nameEnd = scanNameEnd(body, i + 1);
       const start = skipWhitespace(body, nameEnd);
       const end = scanValueEnd(body, start);
-      if (body.slice(i + 1, nameEnd) === key)
-        return { keyStart: i, start, end };
+      if (visit(body.slice(i + 1, nameEnd), { keyStart: i, start, end })) {
+        return true;
+      }
       // Past the value too: in `/S /P /P 9 0 R` the value /P is not the key.
       i = end;
       continue;
     }
     i += 1;
   }
-  return null;
+  return true;
 }
 
 function skipWhitespace(text: string, at: number): number {

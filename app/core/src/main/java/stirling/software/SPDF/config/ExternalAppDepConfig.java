@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
@@ -96,16 +97,33 @@ public class ExternalAppDepConfig {
                                                 return null;
                                             })
                             .toList();
+            // Python / OpenCV probes chain several processes, so overlap them with the rest.
+            Future<?> python = pool.submit(this::checkPythonAndOpenCV);
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
+            if (!awaitPythonCheck(python)) {
+                return;
+            }
 
-            // Python / OpenCV special handling
-            checkPythonAndOpenCV();
+            disableCalibreUnlessConfined();
 
             dependenciesChecked = true;
         } finally {
             endpointConfiguration.logDisabledEndpointsSummary();
             pool.shutdown();
         }
+    }
+
+    private void disableCalibreUnlessConfined() {
+        if (!endpointConfiguration.isGroupEnabled("Calibre")
+                || ProcessExecutor.isCalibreSandboxUsable(List.of(calibrePath, "--version"))) {
+            return;
+        }
+        endpointConfiguration.disableGroup(
+                "Calibre", EndpointConfiguration.DisableReason.DEPENDENCY);
+        log.warn(
+                "Calibre cannot be confined on this host - Disabling group: Calibre (Affected"
+                        + " features: {})",
+                String.join(", ", getAffectedFeatures("Calibre")));
     }
 
     private void checkDependencyAndDisableGroup(String command) {
@@ -153,7 +171,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("WeasyPrint {} meets minimum {}", installed, required);
+                            log.debug("WeasyPrint {} meets minimum {}", installed, required);
                         }
                     },
                     () ->
@@ -182,7 +200,7 @@ public class ExternalAppDepConfig {
                                     required,
                                     String.join(", ", affectedGroups));
                         } else {
-                            log.info("qpdf {} meets minimum {}", installed, required);
+                            log.debug("qpdf {} meets minimum {}", installed, required);
                         }
                     },
                     () -> log.warn("qpdf version could not be determined ({} --version)", command));
@@ -281,6 +299,19 @@ public class ExternalAppDepConfig {
         }
     }
 
+    private boolean awaitPythonCheck(Future<?> python) {
+        try {
+            python.get();
+        } catch (InterruptedException e) {
+            python.cancel(true);
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (ExecutionException e) {
+            log.warn("Python/OpenCV dependency check failed", e.getCause());
+        }
+        return true;
+    }
+
     private void invokeAllWithTimeout(List<Callable<Void>> tasks, Duration timeout) {
         try {
             List<Future<Void>> futures =
@@ -298,8 +329,9 @@ public class ExternalAppDepConfig {
 
     private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
         ProcessBuilder pb = new ProcessBuilder(cmd);
+        Process p = null;
         try {
-            Process p = pb.start();
+            p = pb.start();
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
@@ -310,7 +342,10 @@ public class ExternalAppDepConfig {
             int ec = p.exitValue();
             return new ProbeResult(ec, out, err);
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException) {
+                p.destroyForcibly();
+                Thread.currentThread().interrupt();
+            }
             return new ProbeResult(127, "", String.valueOf(e.getMessage()));
         }
     }

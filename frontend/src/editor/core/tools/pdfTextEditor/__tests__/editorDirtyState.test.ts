@@ -20,6 +20,9 @@ function makeDoc(): EditorDocument {
   return {
     pageCount: 0,
     loadedPages: () => [],
+    documentLanguage: () => null,
+    languagesInUse: () => [],
+    onArtifactKinds: () => () => {},
     dispose: () => {},
   } as unknown as EditorDocument;
 }
