@@ -28,6 +28,24 @@ async function closeIntoLibrary(page: Page, name: string): Promise<void> {
   await expect(row(page, name)).not.toHaveClass(IN_WORKBENCH);
 }
 
+// Browser multi-download policies differ, so record what Save hands the
+// browser rather than whether the browser accepts every file.
+async function recordDownloads(page: Page): Promise<() => Promise<string[]>> {
+  await page.evaluate(() => {
+    const names: string[] = [];
+    Reflect.set(window, "__downloadNames", names);
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+      if (this.download) names.push(this.download);
+      click.call(this);
+    };
+  });
+  return () =>
+    page.evaluate(() =>
+      [...(Reflect.get(window, "__downloadNames") as string[])].sort(),
+    );
+}
+
 const reopenStored: Record<string, (page: Page) => Promise<void>> = {
   "its sidebar row": (page) =>
     row(page, STORED).locator(".file-sidebar-file-name").click(),
@@ -57,14 +75,9 @@ for (const [via, reopen] of Object.entries(reopenStored)) {
     await expect(row(page, UPLOADED)).toHaveClass(IN_WORKBENCH);
 
     await switchView(page, "Active Files");
-    const downloaded: string[] = [];
-    page.on("download", (download) =>
-      downloaded.push(download.suggestedFilename()),
-    );
+    const downloads = await recordDownloads(page);
     await page.getByRole("button", { name: /^Download (All|Files)$/ }).click();
 
-    await expect
-      .poll(() => [...downloaded].sort())
-      .toEqual([UPLOADED, STORED].sort());
+    await expect.poll(downloads).toEqual([UPLOADED, STORED].sort());
   });
 }

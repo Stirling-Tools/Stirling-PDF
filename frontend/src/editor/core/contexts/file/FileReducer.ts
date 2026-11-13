@@ -275,6 +275,22 @@ export function fileContextReducer(
       };
     }
 
+    case "ADD_SELECTED_FILES": {
+      const { fileIds } = action.payload;
+      const selectedFileIds = Array.from(
+        new Set([...state.ui.selectedFileIds, ...fileIds]),
+      );
+      if (selectedFileIds.length === state.ui.selectedFileIds.length)
+        return state;
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          selectedFileIds,
+        },
+      };
+    }
+
     case "SET_SELECTED_PAGES": {
       const { pageNumbers } = action.payload;
       return {

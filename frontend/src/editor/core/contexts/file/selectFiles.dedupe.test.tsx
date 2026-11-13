@@ -12,8 +12,8 @@ import type {
 } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
-// A file already in the workbench comes back from the add, so selecting what
-// was added must not list it twice.
+// Selection updates can land in one React batch, so each add must merge in the
+// reducer instead of replacing selections read from an earlier render.
 
 vi.mock("@editor/services/fileStorage", async () => {
   const { createStirlingFile } = await import("@editor/types/fileContext");
@@ -35,13 +35,18 @@ vi.mock("@editor/utils/thumbnailUtils", () => ({
   generateThumbnailPairWithMetadata: () => new Promise(() => {}),
 }));
 
-const STUB = {
-  id: "a" as FileId,
-  name: "a.pdf",
-  type: "application/pdf",
-  size: 8,
-  lastModified: 0,
-} as StirlingFileStub;
+function stub(id: string): StirlingFileStub {
+  return {
+    id: id as FileId,
+    name: `${id}.pdf`,
+    type: "application/pdf",
+    size: 8,
+    lastModified: 0,
+  } as StirlingFileStub;
+}
+
+const FIRST = stub("a");
+const SECOND = stub("b");
 
 let actions: FileContextActions | null = null;
 let selectedFileIds: FileId[] = [];
@@ -53,7 +58,7 @@ function Controller() {
 }
 
 describe("selecting added files", () => {
-  it("lists a file that was already open once", async () => {
+  it("merges back-to-back additions and lists an open file once", async () => {
     render(
       <MantineProvider>
         <FileContextProvider enableUrlSync={false}>
@@ -63,13 +68,16 @@ describe("selecting added files", () => {
     );
 
     await act(async () => {
-      await actions?.addStirlingFileStubs([STUB], { selectFiles: true });
+      await Promise.all([
+        actions?.addStirlingFileStubs([FIRST], { selectFiles: true }),
+        actions?.addStirlingFileStubs([SECOND], { selectFiles: true }),
+      ]);
     });
-    expect(selectedFileIds).toEqual([STUB.id]);
+    expect(selectedFileIds).toEqual([FIRST.id, SECOND.id]);
 
     await act(async () => {
-      await actions?.addStirlingFileStubs([STUB], { selectFiles: true });
+      await actions?.addStirlingFileStubs([FIRST], { selectFiles: true });
     });
-    expect(selectedFileIds).toEqual([STUB.id]);
+    expect(selectedFileIds).toEqual([FIRST.id, SECOND.id]);
   });
 });
