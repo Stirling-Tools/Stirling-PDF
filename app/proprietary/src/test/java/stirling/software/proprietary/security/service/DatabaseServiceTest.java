@@ -269,4 +269,101 @@ class DatabaseServiceTest {
         boolean result = databaseService.importDatabaseFromUI(script);
         assertThat(result).isTrue();
     }
+
+    @Test
+    void validateSqlContentAcceptsVeryLongStringLiteral() throws IOException {
+        String longValue = "{\"k\":\"" + "x".repeat(500_000) + "\",\"q\":\"it''s FILE_READ(\"}";
+        Path script = tempDir.resolve("long-literal.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + longValue
+                        + "');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentAcceptsSemicolonsAndCommentMarkersInsideStrings() throws IOException {
+        Path script = tempDir.resolve("punctuated-literal.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + "WHEREAS; the parties -- agree /* that */ it''s fine; FILE_READ(x)"
+                        + "');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentAcceptsQuotedNamesAndOtherH2Syntax() throws IOException {
+        Path script = tempDir.resolve("h2-syntax.sql");
+        Files.writeString(
+                script,
+                "// it's an H2 line comment; with a semicolon\n"
+                        + "CREATE CACHED TABLE \"PUBLIC\".\"O'Brien\"(\"a;b\" INT, \"c\"\"d\" INT);\n"
+                        + "CREATE TABLE A$$B(ID INT);\n"
+                        + "INSERT INTO \"PUBLIC\".\"O'Brien\" VALUES(1, 2);\n"
+                        + "INSERT INTO A$$B VALUES(1);\n"
+                        + "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, $$it's; fine$$);\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
+
+    @Test
+    void validateSqlContentRejectsStatementsH2ScriptDoesNotWrite() throws IOException {
+        for (String statement : List.of("SELECT 1;\n", "SET MODE MySQL;\n")) {
+            Path script = tempDir.resolve("unexpected-statement.sql");
+            Files.writeString(script, statement);
+
+            assertThatThrownBy(
+                            () ->
+                                    ReflectionTestUtils.invokeMethod(
+                                            databaseService, "validateSqlContent", script))
+                    .as(statement)
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    void validateSqlContentRejectsDeniedCodeAfterVeryLongStringLiteral() throws IOException {
+        Path script = tempDir.resolve("long-literal-then-alias.sql");
+        Files.writeString(
+                script,
+                "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, '"
+                        + "x".repeat(500_000)
+                        + "');\n"
+                        + "CREATE ALIAS EXEC FOR \"java.lang.Runtime.exec\";\n");
+
+        assertThatThrownBy(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        databaseService, "validateSqlContent", script))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validateSqlContentRejectsTableEngineClause() throws IOException {
+        Path script = tempDir.resolve("table-engine.sql");
+        Files.writeString(
+                script,
+                "CREATE CACHED TABLE \"PUBLIC\".\"T\"(\"ID\" INT) ENGINE \"org.h2.mvstore.db.MVTableEngine\";\n");
+
+        assertThatThrownBy(
+                        () ->
+                                ReflectionTestUtils.invokeMethod(
+                                        databaseService, "validateSqlContent", script))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validateSqlContentAcceptsEngineInsideStringsAndNames() throws IOException {
+        Path script = tempDir.resolve("engine-in-data.sql");
+        Files.writeString(
+                script,
+                "CREATE CACHED TABLE \"PUBLIC\".\"ENGINE\"(\"ENGINE\" INT);\n"
+                        + "INSERT INTO \"PUBLIC\".\"AUDIT_EVENTS\"(\"ID\", \"DATA\") VALUES(1, 'engine');\n");
+
+        ReflectionTestUtils.invokeMethod(databaseService, "validateSqlContent", script);
+    }
 }
