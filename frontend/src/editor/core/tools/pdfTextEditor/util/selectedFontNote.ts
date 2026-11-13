@@ -18,6 +18,10 @@ import {
   isDeviceFontId,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  fontCompletionFor,
+  type FontCompletionSource,
+} from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 
 const MAX_LISTED_GLYPHS = 6;
 const PDF_FONT_FALLBACK = "Helvetica";
@@ -26,10 +30,13 @@ export type SelectedFontNote =
   | { kind: "scanned" }
   | { kind: "embeddedUnknown" }
   | { kind: "gap"; name: string; glyphs: string; fallback: string }
-  | { kind: "deviceUnknown"; name: string; fallback: string };
+  | { kind: "deviceUnknown"; name: string; fallback: string }
+  | { kind: "completed"; name: string; source: FontCompletionSource };
 
 interface SelectedRuns {
   fontIds: Set<string>;
+  /** Those of `fontIds` the document embeds only in part. */
+  subsetFontIds: Set<string>;
   text: string;
   scanned: number;
 }
@@ -40,16 +47,18 @@ function collectSelectedRuns(
 ): SelectedRuns {
   const picked = new Set(runIds);
   const fontIds = new Set<string>();
+  const subsetFontIds = new Set<string>();
   let text = "";
   let scanned = 0;
   for (const page of pages)
     for (const run of page.runs)
       if (picked.has(run.id)) {
         fontIds.add(run.fontId);
+        if (run.fontSubset) subsetFontIds.add(run.fontId);
         text += run.text;
         if (run.renderMode === RENDER_MODE_INVISIBLE) scanned++;
       }
-  return { fontIds, text, scanned };
+  return { fontIds, subsetFontIds, text, scanned };
 }
 
 function standardFallbackName(family: string): string {
@@ -81,6 +90,16 @@ function deviceFontNote(family: string, text: string): SelectedFontNote | null {
   };
 }
 
+function completedNote(fontIds: Iterable<string>): SelectedFontNote | null {
+  const found = [...fontIds].map(fontCompletionFor);
+  const first = found[0];
+  if (!first || found.some((c) => c?.family !== first.family)) return null;
+  const source = found.every((c) => c?.source === "original")
+    ? "original"
+    : "closest";
+  return { kind: "completed", name: first.family, source };
+}
+
 // analyzePageFonts merges same-named fonts, device faces included, so read each selected font's own coverage.
 function selectedCoverage(
   fontIds: Set<string>,
@@ -99,14 +118,20 @@ function selectedCoverage(
 function documentFontNote(
   pages: PageSnapshot[],
   fontIds: Set<string>,
+  allSubset: boolean,
 ): SelectedFontNote | null {
   const fonts = analyzePageFonts(pages).filter((f) =>
     Array.from(fontIds).some((id) => id.endsWith(f.name)),
   );
-  if (fonts.length !== 1) return null;
-  const font = fonts[0];
-  const coverage = selectedCoverage(fontIds, font.status);
-  const gaps = coverage.missing;
+  const font = fonts.length === 1 ? fonts[0] : null;
+  const coverage = font ? selectedCoverage(fontIds, font.status) : null;
+  const gaps = coverage?.missing ?? [];
+  const complete = !!font && (font.status === "standard" || !!coverage?.known);
+  // A subset says so itself, whatever the page-wide coverage scan concludes.
+  const mayLack = allSubset || (!!font && (gaps.length > 0 || !complete));
+  const completed = mayLack ? completedNote(fontIds) : null;
+  if (completed) return completed;
+  if (!font) return null;
   if (gaps.length > 0) {
     return {
       kind: "gap",
@@ -115,8 +140,7 @@ function documentFontNote(
       fallback: PDF_FONT_FALLBACK,
     };
   }
-  if (font.status === "standard" || coverage.known) return null;
-  return { kind: "embeddedUnknown" };
+  return complete ? null : { kind: "embeddedUnknown" };
 }
 
 export function selectedFontNote(
@@ -124,7 +148,10 @@ export function selectedFontNote(
   runIds: string[],
 ): SelectedFontNote | null {
   if (runIds.length === 0) return null;
-  const { fontIds, text, scanned } = collectSelectedRuns(pages, runIds);
+  const { fontIds, subsetFontIds, text, scanned } = collectSelectedRuns(
+    pages,
+    runIds,
+  );
   if (fontIds.size === 0) return null;
   if (scanned === runIds.length) return { kind: "scanned" };
   const ids = [...fontIds];
@@ -133,5 +160,5 @@ export function selectedFontNote(
     return families.length === 1 ? deviceFontNote(families[0], text) : null;
   }
   if (ids.some(isDeviceFontId)) return null;
-  return documentFontNote(pages, fontIds);
+  return documentFontNote(pages, fontIds, subsetFontIds.size === fontIds.size);
 }
