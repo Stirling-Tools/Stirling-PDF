@@ -3,6 +3,7 @@ pub mod backend;
 pub mod connection;
 pub mod default_app;
 pub mod file_drop;
+pub mod file_lock;
 pub mod files;
 pub mod local_proxy;
 pub mod platform;

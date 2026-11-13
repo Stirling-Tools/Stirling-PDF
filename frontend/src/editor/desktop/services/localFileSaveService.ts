@@ -3,6 +3,7 @@ import type {
   MultiFileSaveResult,
 } from "@editor-core/services/localFileSaveService";
 import i18n from "i18next";
+import { invoke } from "@tauri-apps/api/core";
 import { beginSelfWrite, endSelfWrite } from "@editor/services/diskFileSync";
 export type { SaveResult, MultiFileSaveResult };
 import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
@@ -23,9 +24,13 @@ export async function saveToLocalPath(
   beginSelfWrite(filePath);
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
-    const arrayBuffer = await data.arrayBuffer();
+    const bytes = new Uint8Array(await data.arrayBuffer());
     assertFilesNotBlocked();
-    await writeFile(filePath, new Uint8Array(arrayBuffer));
+    // An open file is held locked (file_lock.rs), which refuses a plain write.
+    const wroteThroughLock = await invoke<boolean>("write_locked_file", bytes, {
+      headers: { path: encodeURIComponent(filePath) },
+    });
+    if (!wroteThroughLock) await writeFile(filePath, bytes);
     return { success: true };
   } catch (error) {
     endSelfWrite(filePath);

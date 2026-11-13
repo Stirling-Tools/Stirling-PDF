@@ -9,6 +9,7 @@ static OPENED_FILES: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
 // Add an opened file path
 pub fn add_opened_file(file_path: String) {
+    crate::commands::file_lock::lock_launch_file(&file_path);
     let mut opened_files = OPENED_FILES.lock().unwrap();
     opened_files.push(file_path.clone());
     add_log(format!("📂 File stored for later retrieval: {}", file_path));
