@@ -4,6 +4,7 @@ import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/use
 import { setClosestFont } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 import { matchableSample } from "@editor/tools/pdfTextEditor/util/matchableSample";
 import { rankFacesForDrawnText } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { fitInSlices } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import {
   loadScriptScanFaces,
   scanScriptsOf,
@@ -47,7 +48,7 @@ vi.mock("@editor/tools/pdfTextEditor/commands/scanTextEdit", () => ({
 }));
 
 vi.mock("@editor/tools/pdfTextEditor/commands/scanFitSlices", () => ({
-  fitInSlices: <T>(fit: () => T) => Promise.resolve(fit()),
+  fitInSlices: vi.fn(),
 }));
 
 vi.mock(
@@ -97,6 +98,40 @@ function setup(pageCount: number) {
   };
 }
 
+function setupWithFonts(fontIds: string[]) {
+  const doc = {
+    module: {},
+    loadedPages: () => [{ index: 0, runs: [] }],
+  } as unknown as EditorDocument;
+  const store = { document: doc } as unknown as EditorStore;
+  const pagesFor = (ids: string[]) =>
+    [
+      {
+        pageIndex: 0,
+        runs: ids.map((fontId) => ({ id: fontId, fontId, text: "Invoice" })),
+      },
+    ] as unknown as EditorViewState["pages"];
+  const view = renderHook(
+    ({ pages }) =>
+      useDocumentFontCompletion(
+        store,
+        { pages } as EditorViewState,
+        { runIds: [] } as never,
+        null,
+      ),
+    { initialProps: { pages: pagesFor(fontIds) } },
+  );
+  return {
+    showFonts: (ids: string[]) => view.rerender({ pages: pagesFor(ids) }),
+  };
+}
+
+function deferred() {
+  let resolve: () => void = () => {};
+  const promise = new Promise<void>((r) => (resolve = r));
+  return { promise, resolve };
+}
+
 function sampleWith(text: string) {
   return {
     page: { index: 0 },
@@ -110,6 +145,8 @@ beforeEach(() => {
   vi.mocked(rankFacesForDrawnText).mockReset();
   vi.mocked(setClosestFont).mockReset();
   vi.mocked(loadScriptScanFaces).mockClear();
+  vi.mocked(fitInSlices).mockReset();
+  vi.mocked(fitInSlices).mockImplementation(async (fit) => fit());
   vi.mocked(rankFacesForDrawnText).mockReturnValue([
     { style: { family: "Noto Sans JP" } },
   ] as never);
@@ -157,5 +194,40 @@ describe("useDocumentFontCompletion", () => {
     expect(loadScriptScanFaces).toHaveBeenCalledWith(scanScriptsOf(text));
     expect(scanScriptsOf(text).length).toBeGreaterThan(0);
     expect(loadedBeforeRanking).toBe(true);
+  });
+
+  test("matches a font again when a matcher stopped before ranking lets it go", async () => {
+    vi.mocked(matchableSample).mockReturnValue(sampleWith("Invoice total"));
+    const held = deferred();
+    vi.mocked(loadScriptScanFaces).mockImplementationOnce(() => held.promise);
+    const { showFonts } = setupWithFonts([FONT]);
+    await waitFor(() => expect(loadScriptScanFaces).toHaveBeenCalled());
+    showFonts([FONT, "F2"]);
+    await waitFor(() =>
+      expect(setClosestFont).toHaveBeenCalledWith("F2", "Noto Sans JP"),
+    );
+    held.resolve();
+    await waitFor(() =>
+      expect(setClosestFont).toHaveBeenCalledWith(FONT, "Noto Sans JP"),
+    );
+  });
+
+  test("matches a font again when a matcher stopped mid-ranking lets it go", async () => {
+    vi.mocked(matchableSample).mockReturnValue(sampleWith("Invoice total"));
+    const held = deferred();
+    vi.mocked(fitInSlices).mockImplementationOnce(async (fit, live) => {
+      await held.promise;
+      return live() ? fit() : null;
+    });
+    const { showFonts } = setupWithFonts([FONT]);
+    await waitFor(() => expect(fitInSlices).toHaveBeenCalled());
+    showFonts([FONT, "F2"]);
+    await waitFor(() =>
+      expect(setClosestFont).toHaveBeenCalledWith("F2", "Noto Sans JP"),
+    );
+    held.resolve();
+    await waitFor(() =>
+      expect(setClosestFont).toHaveBeenCalledWith(FONT, "Noto Sans JP"),
+    );
   });
 });

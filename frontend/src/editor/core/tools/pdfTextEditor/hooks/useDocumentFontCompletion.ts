@@ -123,6 +123,12 @@ export function useDocumentFontCompletion(
       return fontIds.find(wanted) ?? null;
     };
 
+    // Cut off part-way: the matcher that replaced this one may already have passed the font by.
+    const release = (fontId: string) => {
+      tried.delete(fontId);
+      wakeMatching.current();
+    };
+
     const matchClosest = async () => {
       if (running) {
         wokenWhileRunning = true;
@@ -146,7 +152,7 @@ export function useDocumentFontCompletion(
             () => undefined,
           );
           if (!live()) {
-            tried.delete(fontId);
+            release(fontId);
             break;
           }
           const ranked = await fitInSlices(
@@ -156,8 +162,7 @@ export function useDocumentFontCompletion(
             console.warn("[pdf-editor] no closest font found", err);
             return [];
           });
-          // Cut off part-way, so the next pass may try this font again.
-          if (!ranked) tried.delete(fontId);
+          if (!ranked) release(fontId);
           else if (ranked[0]) setClosestFont(fontId, ranked[0].style.family);
         }
       } finally {
