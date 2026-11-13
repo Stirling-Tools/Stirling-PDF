@@ -451,7 +451,6 @@ The frontend is organized with a clear separation of concerns:
 - **Internationalization**:
   - Backend: `messages_*.properties` files
   - Frontend: JSON files in `frontend/public/locales/` (converted from .properties)
-  - Conversion Script: `scripts/convert_properties_to_json.py`
 
 ### Configuration Modes
 - **Ultra-lite**: Basic PDF operations only
