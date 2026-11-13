@@ -44,6 +44,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -291,7 +292,7 @@ class ExtractImagesControllerTest {
     }
 
     @Test
-    void extractImages_emptyPdf_returnsZip() throws IOException {
+    void extractImages_emptyPdf_refusesInsteadOfEmptyZip() throws IOException {
         MockMultipartFile file = createEmptyPdf();
         PDFExtractImagesRequest request = new PDFExtractImagesRequest();
         request.setFileInput(file);
@@ -299,12 +300,12 @@ class ExtractImagesControllerTest {
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        File zip = createTempFile(".zip");
+        when(tempFileManager.createTempFile(anyString())).thenReturn(zip);
 
-        var response = controller.extractImages(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThatThrownBy(() -> controller.extractImages(request))
+                .isInstanceOf(NothingToExtractException.class);
+        verify(tempFileManager).deleteTempFile(zip);
     }
 
     @Test

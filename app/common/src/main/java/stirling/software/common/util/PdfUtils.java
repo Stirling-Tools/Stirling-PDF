@@ -186,6 +186,21 @@ public class PdfUtils {
         return false;
     }
 
+    /** Whether the 1-based pages hold images but no extractable text, as an un-OCR'd scan does. */
+    public boolean looksImageOnly(PDDocument document, List<Integer> pages) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        boolean anyImage = false;
+        for (int page : pages) {
+            stripper.setStartPage(page);
+            stripper.setEndPage(page);
+            if (!stripper.getText(document).isBlank()) {
+                return false;
+            }
+            anyImage = anyImage || hasImagesOnPage(document.getPage(page - 1));
+        }
+        return anyImage;
+    }
+
     /** Whether the page draws an image XObject, directly or through forms; decodes no image. */
     public boolean hasImagesOnPage(PDPage page) throws IOException {
         return containsImage(

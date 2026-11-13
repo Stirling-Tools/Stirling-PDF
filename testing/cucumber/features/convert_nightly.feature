@@ -14,12 +14,24 @@ Feature: Heavy conversion endpoints
         And the response file should have extension ".xlsx"
 
 
-    @pdf-to-xlsx @positive
-    Scenario: A PDF with no tables converts without producing a spreadsheet
+    @pdf-to-xlsx @negative
+    Scenario: A PDF with no tables is refused instead of returning an empty spreadsheet
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages with random text
         When I send the API request to the endpoint "/api/v1/convert/pdf/xlsx"
-        Then the response status code should be 204
+        Then the response status code should be 422
+        And the response JSON field "errorCode" should equal "E088"
+        And the response JSON error should contain "No tables were found"
+
+
+    @pdf-to-xlsx @negative
+    Scenario: A scanned PDF with no text layer is told to run OCR first
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 images of size 100x100 on 2 pages
+        When I send the API request to the endpoint "/api/v1/convert/pdf/xlsx"
+        Then the response status code should be 422
+        And the response JSON field "errorCode" should equal "E090"
+        And the response JSON error should contain "Run OCR"
 
 
     @vector @negative
