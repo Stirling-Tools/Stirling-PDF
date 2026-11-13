@@ -1553,6 +1553,8 @@ export class EditTextCommand implements Command {
     });
     run.bounds = { ...snap.bounds };
     run.matrix = { ...run.matrix, e: snap.matrixE };
+  }
+
   repaintArea(doc: EditorDocument): PageRepaintArea | null {
     const run = doc.page(this.pageIndex).findRun(this.runId);
     // Turned text is typed along its own slant, out of its upright box.
