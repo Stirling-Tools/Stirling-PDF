@@ -112,9 +112,9 @@ describe("italicCapability answers", () => {
     const before = italicCapability("pdf:4242:Calibri", true, STENCIL);
     expect(before.family).toBeNull();
     expect(italicCapability("pdf:4242:Calibri", true, STENCIL)).toBe(before);
-    expect(italicCapability("pdf:4242:Calibri", true, CALIBRI).family).toBe(
-      "Calibri Italic",
-    );
+    const found = italicCapability("pdf:4242:Calibri", true, CALIBRI);
+    expect(found.family).toBe("Calibri Italic");
+    expect(italicCapability("pdf:4242:Calibri", true, CALIBRI)).toBe(found);
   });
 });
 
