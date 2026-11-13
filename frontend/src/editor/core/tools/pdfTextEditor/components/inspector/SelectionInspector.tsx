@@ -14,6 +14,7 @@ import type { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/use
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import { FormFieldAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/FormFieldAccessibilitySection";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 
@@ -60,6 +61,7 @@ export function SelectionInspector({
         runCount={runCount}
         imageCount={imageCount}
         shapeCount={shapeCount}
+        formField={selection.formFieldId !== null}
         fontNote={hasRunSelection ? fontNote : null}
       />
       {runCount + imageCount > 0 && (
@@ -94,6 +96,13 @@ export function SelectionInspector({
           onNext={controller.onSelectNextImageToReview}
         />
       )}
+      {ACCESSIBILITY_EDITING && controller.formFieldAccessibility && (
+        <FormFieldAccessibilitySection
+          accessibility={controller.formFieldAccessibility}
+          onTag={controller.onTagFormField}
+          onSetDescription={controller.onSetFormFieldDescription}
+        />
+      )}
     </Stack>
   );
 }
@@ -103,17 +112,22 @@ function SelectionHeader({
   runCount,
   imageCount,
   shapeCount,
+  formField,
   fontNote,
 }: {
   runCount: number;
   imageCount: number;
   shapeCount: number;
+  /** A form field is only ever selected alone. */
+  formField: boolean;
   fontNote: string | null;
 }) {
   const { t } = useTranslation();
   const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
   let title: string;
-  if (kinds > 1) {
+  if (formField) {
+    title = t("pdfTextEditor.inspector.formField", "Form field");
+  } else if (kinds > 1) {
     title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
       count: runCount + imageCount + shapeCount,
     });

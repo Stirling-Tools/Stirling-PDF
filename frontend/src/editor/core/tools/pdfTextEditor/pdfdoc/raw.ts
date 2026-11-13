@@ -790,6 +790,10 @@ function visitEntries(
       i += 2;
       continue;
     }
+    if (ch === "<") {
+      i = skipHexString(body, i);
+      continue;
+    }
     if (ch === ">" && body[i + 1] === ">") {
       depth -= 1;
       i += 2;
@@ -834,6 +838,12 @@ function scanNameEnd(text: string, at: number): number {
   return i;
 }
 
+/** Past the `>` closing the hex string at `at`, which would otherwise read as half of a dictionary's `>>`. */
+function skipHexString(text: string, at: number): number {
+  const close = text.indexOf(">", at);
+  return close < 0 ? text.length : close + 1;
+}
+
 function skipLiteralString(text: string, at: number): number {
   let i = at + 1;
   let depth = 1;
@@ -869,6 +879,10 @@ function scanValueEnd(text: string, at: number): number {
         i += 2;
         continue;
       }
+      if (text[i] === "<") {
+        i = skipHexString(text, i);
+        continue;
+      }
       if (text[i] === ">" && text[i + 1] === ">") {
         depth -= 1;
         i += 2;
@@ -879,10 +893,7 @@ function scanValueEnd(text: string, at: number): number {
     }
     return i;
   }
-  if (text[i] === "<") {
-    const close = text.indexOf(">", i);
-    return close < 0 ? text.length : close + 1;
-  }
+  if (text[i] === "<") return skipHexString(text, i);
   if (text[i] === "[") {
     let depth = 0;
     while (i < text.length) {

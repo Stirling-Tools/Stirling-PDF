@@ -13,6 +13,12 @@ import process from "node:process";
 // annotations are one the Link holds through an OBJR, with /Contents, and one
 // over "Atlas" that no element holds and that has no /Contents.
 //
+// Page 3 is a sign-off form with no heading, so the document's outline stays
+// as pages 1 and 2 give it. "Reviewed by:" has a field a Form holds through an
+// OBJR, with a /TU; "Department:" has a field no element holds and with no /TU,
+// labelled on its left; "Approved for release" has a checkbox likewise
+// untagged and unnamed, labelled on its right.
+//
 // Run with: npx tsx generate-tagged-sample.mts
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -300,6 +306,64 @@ function wordSpan(
   return { left, right: left + font.pdf.widthOfTextAtSize(word, size) };
 }
 
+/** The widget `page` lists last in its /Annots. */
+function lastAnnotation(page: PDFPage): PDFRef {
+  const annots = page.node.lookup(PDFName.of("Annots"), PDFArray);
+  return annots.get(annots.size() - 1) as PDFRef;
+}
+
+/**
+ * Page 3: labelled form fields, made after pages 1 and 2 are done so their
+ * object numbers do not move.
+ */
+function addSignOffPage(
+  doc: PDFDocument,
+  tree: StructureBuilder,
+  document: PDFRef,
+  regular: Font,
+): void {
+  const ctx = doc.context;
+  const form = doc.getForm();
+  const third = doc.addPage([612, 792]);
+  third.node.setFontDictionary(PDFName.of(regular.name), regular.pdf.ref);
+  const content = tree.page(third);
+  const paragraph = (x: number, y: number, text: string) =>
+    content.mark("P", tree.element("P", document, third), [
+      show(regular, 12, x, y, text),
+    ]);
+  const fieldX = 160;
+  const textField = { width: 240, height: 20, font: regular.pdf };
+
+  paragraph(72, 712, "Please complete this section before filing the report.");
+
+  paragraph(72, 660, "Reviewed by:");
+  const reviewer = form.createTextField("reviewer");
+  reviewer.acroField.dict.set(PDFName.of("TU"), PDFString.of("Reviewer name"));
+  reviewer.addToPage(third, { x: fieldX, y: 654, ...textField });
+  tree.holdAnnotation(
+    tree.element("Form", document, third),
+    third,
+    lastAnnotation(third),
+  );
+
+  paragraph(72, 624, "Department:");
+  form
+    .createTextField("department")
+    .addToPage(third, { x: fieldX, y: 618, ...textField });
+
+  form.createCheckBox("approved").addToPage(third, {
+    x: 72,
+    y: 570,
+    width: 14,
+    height: 14,
+  });
+  paragraph(94, 573, "Approved for release");
+
+  content.artifact("/Type /Pagination", [show(regular, 10, 300, 40, "Page 3")]);
+  content.writeTo(ctx, third);
+  third.node.set(PDFName.of("Tabs"), PDFName.of("S"));
+}
+
 async function main() {
   const doc = await PDFDocument.create();
   const ctx = doc.context;
@@ -550,6 +614,8 @@ async function main() {
   );
   second.node.set(PDFName.of("Tabs"), PDFName.of("S"));
 
+  addSignOffPage(doc, tree, document, regular);
+
   tree.finish(document);
 
   doc.catalog.set(PDFName.of("StructTreeRoot"), tree.rootRef);
@@ -557,7 +623,9 @@ async function main() {
   doc.catalog.set(PDFName.of("Lang"), PDFString.of("en-US"));
   doc.setTitle("Quarterly report");
 
-  const bytes = await doc.save();
+  // addToPage drew each field's appearance in the page's own font; refreshing
+  // them here would embed a second Helvetica for nothing.
+  const bytes = await doc.save({ updateFieldAppearances: false });
   const out = join(__dirname, "tagged-sample.pdf");
   writeFileSync(out, bytes);
   console.log(`wrote ${out} (${bytes.length} bytes)`);

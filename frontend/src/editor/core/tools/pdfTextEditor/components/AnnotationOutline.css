@@ -9,9 +9,18 @@
     background-color 120ms ease;
 }
 
+.pdf-editor-annotation-outline--selectable {
+  cursor: pointer;
+}
+
+.pdf-editor-annotation-outline--selected,
 .pdf-editor-annotation-outline:hover {
   border-color: color-mix(in srgb, var(--c-primary) 90%, transparent);
   background: color-mix(in srgb, var(--c-primary) 8%, transparent);
+}
+
+.pdf-editor-annotation-outline--selected {
+  border-style: solid;
 }
 
 @media (prefers-reduced-motion: reduce) {

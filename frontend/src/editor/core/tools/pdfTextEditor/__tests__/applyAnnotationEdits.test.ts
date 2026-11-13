@@ -240,6 +240,172 @@ describe("applyAnnotationEdits", () => {
     ).toEqual(["another element holds it"]);
   });
 
+  describe("widgets", () => {
+    // Widget 24 is its own field; widget 25 is a kid of field 27.
+    const WIDGETS: Record<number, string> = {
+      3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /StructParents 0 /Annots [20 0 R 24 0 R 25 0 R] >>",
+    };
+    const widgetObjects = (
+      overrides: Record<number, string> = {},
+      extra: FixtureObject[] = [],
+    ) =>
+      objects({ ...WIDGETS, ...overrides }, [
+        ...extra,
+        {
+          num: 24,
+          body: "<< /Type /Annot /Subtype /Widget /FT /Tx /T (name) /Rect [0 50 50 60] >>",
+        },
+        {
+          num: 25,
+          body: "<< /Type /Annot /Subtype /Widget /Parent 27 0 R /Rect [0 70 50 80] >>",
+        },
+        { num: 27, body: "<< /FT /Btn /T (choice) /Kids [25 0 R] >>" },
+      ]);
+    const kids = (pdf: RawPdf, num: number) =>
+      pdf.valueSpan(pdf.objectBody(num)!, "K")!.text;
+    const refs = (array: string) =>
+      [...array.matchAll(/(\d+) 0 R/g)].map((m) => Number(m[1]));
+    const tooltip = (pdf: RawPdf, num: number) => {
+      const span = pdf.valueSpan(pdf.objectBody(num)!, "TU");
+      return span && decodeTextString(span.text);
+    };
+
+    test("gives a widget a new Form holding only it, after the block its content is in", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, newForm: { after: 1 } }],
+        widgetObjects(),
+      );
+
+      const [paragraph, form] = refs(kids(pdf, 9));
+      expect(paragraph).toBe(10);
+      const body = pdf.objectBody(form)!;
+      expect(pdf.dictName(body, "S")).toBe("Form");
+      expect(pdf.dictRef(body, "P")).toBe(9);
+      expect(pdf.dictRef(body, "Pg")).toBe(3);
+      expect(kids(pdf, form)).toBe("[<< /Type /OBJR /Obj 24 0 R /Pg 3 0 R >>]");
+      expect(pdf.dictInt(pdf.objectBody(24)!, "StructParent")).toBe(1);
+      expect(entry(pdf, 1)).toBe(`${form} 0 R`);
+      expect(pdf.dictName(pdf.objectBody(3)!, "Tabs")).toBe("S");
+    });
+
+    test("reads Forms placed after the same content in the order of their edits", async () => {
+      const pdf = await apply(
+        [
+          { pageIndex: 0, annotation: 24, newForm: { after: 0 } },
+          { pageIndex: 0, annotation: 25, newForm: { after: 0 } },
+        ],
+        widgetObjects(),
+      );
+      const [, first, second] = refs(kids(pdf, 9));
+      expect(kids(pdf, first)).toContain("/Obj 24 0 R");
+      expect(kids(pdf, second)).toContain("/Obj 25 0 R");
+    });
+
+    test("reads a Form placed after no content before the page's first", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, newForm: { after: null } }],
+        widgetObjects(),
+      );
+      const [form, paragraph] = refs(kids(pdf, 9));
+      expect(paragraph).toBe(10);
+      expect(kids(pdf, form)).toContain("/Obj 24 0 R");
+    });
+
+    test("adds a Form to a structure root with several kids, keeping it in the ParentTree too", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, newForm: { after: null } }],
+        widgetObjects(
+          {
+            3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /Annots [24 0 R] >>",
+            7: "<< /Type /StructTreeRoot /K [9 0 R 12 0 R] /ParentTree << /Nums [0 [10 0 R 11 0 R]] >> /ParentTreeNextKey 1 >>",
+          },
+          [
+            {
+              num: 12,
+              body: "<< /Type /StructElem /S /Sect /P 7 0 R /K [] >>",
+            },
+          ],
+        ),
+      );
+      const [, , form] = refs(kids(pdf, 7));
+      expect(kids(pdf, form)).toContain("/Obj 24 0 R");
+      expect(pdf.dictRef(pdf.objectBody(form)!, "P")).toBe(7);
+      const key = pdf.dictInt(pdf.objectBody(24)!, "StructParent")!;
+      expect(entry(pdf, key)).toBe(`${form} 0 R`);
+    });
+
+    test("gives a file with no structure tree one to hold the Form", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, newForm: { after: null } }],
+        widgetObjects({
+          1: "<< /Type /Catalog /Pages 2 0 R >>",
+          3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R /Annots [24 0 R] >>",
+        }),
+      );
+      const treeRoot = pdf.dictRef(pdf.objectBody(1)!, "StructTreeRoot")!;
+      const [top] = refs(kids(pdf, treeRoot));
+      const [form] = refs(kids(pdf, top));
+      expect(pdf.dictName(pdf.objectBody(form)!, "S")).toBe("Form");
+      const key = pdf.dictInt(pdf.objectBody(24)!, "StructParent")!;
+      expect(pdf.numberTreeEntry(treeRoot, "ParentTree", key)?.span.text).toBe(
+        `${form} 0 R`,
+      );
+    });
+
+    test("sets /TU on a widget that is its own field", async () => {
+      const pdf = await apply(
+        [{ pageIndex: 0, annotation: 24, tooltip: "Full name" }],
+        widgetObjects(),
+      );
+      expect(tooltip(pdf, 24)).toBe("Full name");
+    });
+
+    test("sets and removes /TU on the field a widget belongs to", async () => {
+      const set = await apply(
+        [{ pageIndex: 0, annotation: 25, tooltip: "Delivery option" }],
+        widgetObjects(),
+      );
+      expect(tooltip(set, 27)).toBe("Delivery option");
+      expect(tooltip(set, 25)).toBeNull();
+
+      const removed = await apply(
+        [{ pageIndex: 0, annotation: 25, tooltip: null }],
+        widgetObjects({
+          27: "<< /FT /Btn /T (choice) /TU (Old) /Kids [25 0 R] >>",
+        }),
+      );
+      expect(tooltip(removed, 27)).toBeNull();
+    });
+
+    test("refuses a Form or /TU for an annotation that is not a widget", async () => {
+      expect(
+        await failure(
+          [
+            { pageIndex: 0, annotation: 20, newForm: { after: null } },
+            { pageIndex: 0, annotation: 20, tooltip: "x" },
+          ],
+          widgetObjects(),
+        ),
+      ).toEqual(["it is not a widget", "it is not a widget"]);
+    });
+
+    test("refuses a widget a second element", async () => {
+      expect(
+        await failure(
+          [
+            { pageIndex: 0, annotation: 24, newForm: { after: null } },
+            { pageIndex: 0, annotation: 24, newForm: { after: 0 } },
+            { pageIndex: 0, annotation: 25, mcid: 0, newForm: { after: 0 } },
+          ],
+          widgetObjects(),
+        ),
+      ).toEqual([
+        "an element already holds it",
+        "it cannot be given two elements",
+      ]);
+    });
+  });
+
   test("refuses to give an annotation to an element in a file with no structure tree", async () => {
     expect(
       await failure(
