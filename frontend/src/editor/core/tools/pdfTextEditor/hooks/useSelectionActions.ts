@@ -183,7 +183,10 @@ export function useSelectionActions(store: EditorStore) {
       await dispatchAfterScanFit(fit, () => {
         const live = liveRuns(store);
         return changes
-          .filter((change) => live.has(change.runId))
+          .filter((change) => {
+            const run = live.get(change.runId);
+            return !!run && !run.locked;
+          })
           .map(
             (change) =>
               new SetFontFamilyCommand({

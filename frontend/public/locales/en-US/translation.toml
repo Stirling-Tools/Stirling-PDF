@@ -7557,6 +7557,7 @@ widget = "Form field - not page text, so it can't be edited here"
 [pdfTextEditor.commands]
 edit = "Edit"
 markTagged = "Mark as fully tagged"
+matchScanFont = "Match scanned text to {{face}}"
 mergeRuns_one = "Merge {{count}} run into a paragraph"
 mergeRuns_other = "Merge {{count}} runs into a paragraph"
 setColour = "Set colour on {{run}}"

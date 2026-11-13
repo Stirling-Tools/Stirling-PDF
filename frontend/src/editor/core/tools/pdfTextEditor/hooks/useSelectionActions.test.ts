@@ -188,6 +188,17 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
   });
 
+  it("leaves a run locked while its font change was waiting", async () => {
+    const runs = [run("a", "base14:Helvetica")];
+    const { store, dispatch } = fakeStore(runs, ["a"]);
+
+    const change = actionsFor(store).changeFontFamily("Times-Roman");
+    runs[0].locked = true;
+    expect(await change).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([]);
+  });
+
   it("leaves the text alone when a server font cannot be downloaded", async () => {
     serveFaces(async () => {
       throw new Error("gone");

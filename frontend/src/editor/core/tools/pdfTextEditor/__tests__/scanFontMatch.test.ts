@@ -32,6 +32,7 @@ import {
   isScanRun,
   scanBlockMisaligned,
   scanBlockOffInk,
+  scanDrawnFont,
   prefitScanRun,
   renderScanEdit,
   scanDrawnSize,
@@ -644,6 +645,27 @@ describe("editing sideways scanned text", () => {
   );
 });
 
+describe("the font a scanned block is drawn in", () => {
+  test(
+    "is the family the user picked, even before the block is fitted",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        state.override = { ...state.override, family: "Courier" };
+        expect(scanDrawnFont(doc, run)?.family).toBe("Courier");
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+});
+
 describe("wrapping scanned text to a width", () => {
   test(
     "moves the overflow to a new line and still draws the edit",
@@ -664,6 +686,51 @@ describe("wrapping scanned text to a width", () => {
         expect(wrapped.replace(/\n/g, " ")).toBe(run.text);
         expect(renderScanEdit(doc, page, run, state, wrapped)).toBe(true);
         expect(run.text).toBe(wrapped);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "measures at the size the user picked",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const full = words[words.length - 1].right - words[0].x;
+        state.override = { ...state.override, fontSize: 24 };
+        const wrapped = wrapScanText(doc, page, run, full * 1.2)!;
+        expect(wrapped.split("\n").length).toBeGreaterThan(1);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
+    "does not wrap onto text further down the page",
+    { timeout: 120_000 },
+    async () => {
+      const { doc, page } = await buildScan(
+        SENTENCES.map((text) => ({ family: "Carlito", text, size: 12 })),
+        { dpi: 200, blur: 0.5, noise: 6 },
+      );
+      try {
+        const run = page.runs.filter(isScanRun)[0];
+        const state = scanEditOf(doc, run)!;
+        const words = state.lines[0].words;
+        const full = words[words.length - 1].right - words[0].x;
+        expect(
+          wrapScanText(doc, page, run, full * 0.6)!.split("\n").length,
+        ).toBeGreaterThan(1);
+        expect(wrapScanText(doc, page, run, full * 0.25)).toBe(run.text);
       } finally {
         doc.dispose();
       }
@@ -1247,6 +1314,46 @@ describe("edits that need no font, and text no font can draw", () => {
   );
 
   test(
+    "keeps the pixels of every word one undrawable replacement stands for",
+    { timeout: 120_000 },
+    async () => {
+      _setBundledScanFacesForTests([]);
+      const { doc, page } = await buildScan(
+        [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
+        SCAN,
+      );
+      try {
+        const run = page.runs.find(isScanRun)!;
+        const state = scanEditOf(doc, run)!;
+        const line = state.lines[0];
+        const jane = line.words.find((w) => w.text.trim() === "Jane")!;
+        const is = line.words.find((w) => w.text.trim() === "is")!;
+        const band = {
+          x: jane.x - 1,
+          y: line.baseline - 3,
+          width: is.right - jane.x + 2,
+          height: 13,
+        };
+        const before = renderLuma(doc.module, page, band, 0)!.data;
+        renderScanEdit(
+          doc,
+          page,
+          run,
+          state,
+          run.text.replace("Jane Example", "Иван"),
+        );
+        const after = renderLuma(doc.module, page, band, 0)!.data;
+        let changed = 0;
+        for (let i = 0; i < before.length; i++)
+          if (Math.abs(before[i] - after[i]) > 40) changed++;
+        expect(changed).toBeLessThan(10);
+      } finally {
+        doc.dispose();
+      }
+    },
+  );
+
+  test(
     "draws typing in a face that covers it when the scan is too faint to fit one",
     { timeout: 120_000 },
     async () => {
@@ -1459,6 +1566,36 @@ describe("scanned text whose OCR layer sits off the scanned words", () => {
         false,
       );
       expect(state.created.length).toBe(before);
+    } finally {
+      doc.dispose();
+    }
+  });
+
+  test("leaves the picked font unapplied when the block cannot be redrawn", async () => {
+    const { doc, page } = await scan(-14);
+    try {
+      const run = page.runs.find(isScanRun)!;
+      const state = scanEditOf(doc, run)!;
+      const before = state.override;
+      new SetScanStyleCommand({
+        pageIndex: 0,
+        runId: run.id,
+        choice: {
+          face: COURIER,
+          style: {
+            family: COURIER.family,
+            fontSize: 12,
+            stretch: 1,
+            ink: { r: 0, g: 0, b: 0, a: 255 },
+            weight: 0,
+            hollow: 0,
+            softness: 0,
+          },
+          score: 1,
+        },
+      }).apply(doc);
+      expect(state.override).toBe(before);
+      expect(preferredScanFace(doc)).toBeNull();
     } finally {
       doc.dispose();
     }

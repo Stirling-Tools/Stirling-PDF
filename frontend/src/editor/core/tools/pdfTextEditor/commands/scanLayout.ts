@@ -27,8 +27,12 @@ export interface LayoutInput {
   space: number;
   /** How wide a kept word's ink is. */
   wordWidth: (w: LayoutWord) => number;
-  /** How wide typed text draws, in the style of the word it replaces. */
-  textWidth: (text: string, anchor: LayoutWord | null) => number;
+  /** How wide typed text draws, in the style of the word it replaces; `replaced` lists every scanned word it stands for, `anchor` first. */
+  textWidth: (
+    text: string,
+    anchor: LayoutWord | null,
+    replaced: LayoutWord[],
+  ) => number;
   /** Redraw every word as text (a restyle), instead of keeping the scan. */
   redraw: boolean;
 }
@@ -51,6 +55,8 @@ export interface TypedText {
   anchor: LayoutWord | null;
   /** True when it starts exactly where `anchor` did. */
   atAnchor: boolean;
+  /** Every scanned word it replaces, `anchor` first. */
+  replaced: LayoutWord[];
 }
 
 export interface Layout {
@@ -160,9 +166,10 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     const line = pending.line;
     // A line starts where it always did, so deleting its first word pulls
     // the rest left rather than leaving a hole.
+    const scannedLead = anchor && anchor.line === line ? (anchor.lead ?? 0) : 0;
     const x =
       (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
-      pending.lead * input.space;
+      Math.max(0, pending.lead - scannedLead) * input.space;
     const text = pending.text;
     layout.typed.push({
       text,
@@ -172,8 +179,9 @@ export function layoutScanEdit(input: LayoutInput): Layout {
       anchor,
       atAnchor:
         !!anchor && anchor.line === line && Math.abs(x - anchor.x) < 0.5,
+      replaced: dels,
     });
-    const end = x + input.textWidth(text, anchor);
+    const end = x + input.textWidth(text, anchor, dels);
     pen = () => end;
     prev = anchor;
     lastKept = null;

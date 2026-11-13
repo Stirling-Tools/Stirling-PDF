@@ -1,4 +1,4 @@
-import { scanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { scanFaceCssFamily } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -105,20 +105,6 @@ function cssFontFamilyFor(fontId: string): string {
 function ownFaceFor(fontId: string): string {
   const m = /^pdf:(\d+):/.exec(fontId);
   return m ? `"${embeddedFaceFamily(Number(m[1]))}", ` : "";
-}
-
-// The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
-function cssFontFamilyForScan(family: string): string {
-  const face = scanFaces().find(
-    (f) => f.family === family || f.bold === family,
-  );
-  const server = serverFontCssFamily(family);
-  const named = `${server ? `"${server}", ` : ""}"${family}", `;
-  if (face?.kind === "serif")
-    return `${named}"Liberation Serif", "Times New Roman", Times, serif`;
-  if (face?.kind === "mono")
-    return `${named}"Liberation Mono", "Courier New", Courier, monospace`;
-  return `${named}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
 }
 
 function cssWeightFor(fontId: string): number {
@@ -469,8 +455,9 @@ export function TextRunOverlay({
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
   const faceName = run.scanFamily ?? run.fontId;
+  // The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
   const fontFamily = run.scanFamily
-    ? cssFontFamilyForScan(run.scanFamily)
+    ? scanFaceCssFamily(run.scanFamily)
     : cssFontFamilyFor(run.fontId);
   const fontWeight = cssWeightFor(faceName);
   const fontStyle = cssStyleFor(faceName);

@@ -75,7 +75,7 @@ export async function retryLocalFonts(): Promise<LocalFont[] | null> {
 export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
   if (!isLocalFontAccessSupported() || resolved) return resolved;
   if ((await localFontPermission()) !== "granted") return null;
-  return listLocalFonts();
+  return retryLocalFonts();
 }
 
 /**

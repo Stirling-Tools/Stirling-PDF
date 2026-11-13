@@ -163,10 +163,10 @@ function groupPartitionIntoLines(
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
   static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): LineGroupInfo[] {
-    // Partition by form-xobject container BEFORE grouping.
-    const partitions = new Map<number, TextRun[]>();
+    // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
+    const partitions = new Map<string, TextRun[]>();
     for (const run of page.runs) {
-      const key = run.containerPtr || 0;
+      const key = `${run.containerPtr || 0}:${run.renderMode === RENDER_MODE_INVISIBLE}`;
       const list = partitions.get(key);
       if (list) list.push(run);
       else partitions.set(key, [run]);

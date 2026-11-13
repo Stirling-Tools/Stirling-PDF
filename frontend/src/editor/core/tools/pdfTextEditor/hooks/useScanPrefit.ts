@@ -199,4 +199,8 @@ export function useScanPrefit(
     // Not awaited: installed fonts can take seconds to read; bundled faces suffice to start and later arrivals re-rank.
     void loadDeviceScanFacesIfAllowed().catch(() => undefined);
   }, [hasScannedText, scriptKey]);
+
+  useEffect(() => {
+    resume.current();
+  }, [state.pages]);
 }
