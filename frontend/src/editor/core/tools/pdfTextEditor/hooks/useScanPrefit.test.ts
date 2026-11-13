@@ -101,6 +101,11 @@ function setup(
       for (const l of [...nearListeners]) l();
     },
     draw: (i: number) => unshown.delete(i),
+    loadRuns: (i: number, ids: string[]) => {
+      pages[i].ids = ids;
+      for (const id of ids) runs.set(id, { id });
+      view.rerender({ state: stateOf("Invoice") });
+    },
   };
 }
 
@@ -175,6 +180,18 @@ describe("background scan font fitting", () => {
     draw(0);
     await vi.advanceTimersByTimeAsync(1000);
     expect(order).toEqual(["a"]);
+  });
+
+  test("fits the runs of a page that loads after fitting went idle", async () => {
+    const { loadRuns } = setup([
+      { ids: ["a"], near: true },
+      { ids: [], near: true },
+    ]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(order).toEqual(["a"]);
+    loadRuns(1, ["b"]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(order).toEqual(["a", "b"]);
   });
 
   test("skips a run that cannot be fitted and finishes the rest", async () => {

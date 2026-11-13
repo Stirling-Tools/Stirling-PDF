@@ -1,8 +1,27 @@
-import { describe, expect, test } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, test, vi } from "vitest";
+
+vi.mock(
+  "@editor/tools/pdfTextEditor/commands/scanTextEdit",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    scanEditOf: () => null,
+    scanBlockUndrawable: () => false,
+    scanBlockOffInk: () => false,
+    rerankScanStyles: () => [],
+  }),
+);
 import {
   APPROXIMATE_MATCH_SCORE,
   isApproximateMatch,
+  useScanFontMatch,
 } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type {
   RankedStyle,
   ScanStyle,
@@ -46,5 +65,56 @@ describe("approximate scan font matches", () => {
   test("does not flag the only font that can draw the script", () => {
     const only = [ranked(HELVETICA, 0.57)];
     expect(isApproximateMatch(only, only[0])).toBe(false);
+  });
+});
+
+function fakeDocument(pageCount: number) {
+  const pages = Array.from({ length: pageCount }, (_, i) => ({
+    index: i,
+    findRun: (id: string) =>
+      id === `r${i}`
+        ? { id, text: "Invoice", renderMode: RENDER_MODE_INVISIBLE }
+        : undefined,
+  }));
+  return {
+    page: (i: number) => {
+      if (!pages[i]) throw new Error(`no page ${i}`);
+      return pages[i];
+    },
+  };
+}
+
+const viewOf = (pageCount: number) =>
+  ({
+    pages: Array.from({ length: pageCount }, (_, pageIndex) => ({
+      pageIndex,
+      runs: [
+        {
+          id: `r${pageIndex}`,
+          text: "Invoice",
+          renderMode: RENDER_MODE_INVISIBLE,
+        },
+      ],
+    })),
+  }) as unknown as EditorViewState;
+
+describe("the scan font picker", () => {
+  test("closes when another document replaces the one it was opened on", () => {
+    const store = { document: fakeDocument(3), dispatch: () => {} };
+    const selected = { runIds: ["r2"] } as unknown as SelectionState;
+    const view = renderHook(
+      ({ state, selection }) =>
+        useScanFontMatch(store as unknown as EditorStore, state, selection),
+      { initialProps: { state: viewOf(3), selection: selected } },
+    );
+    act(() => view.result.current!.show());
+    expect(view.result.current?.open).toBe(true);
+
+    store.document = fakeDocument(1);
+    view.rerender({
+      state: viewOf(1),
+      selection: { runIds: [] } as unknown as SelectionState,
+    });
+    expect(view.result.current).toBeNull();
   });
 });

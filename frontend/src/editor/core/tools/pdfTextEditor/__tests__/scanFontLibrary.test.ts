@@ -19,6 +19,7 @@ import {
   loadDeviceScanFaces,
   loadScriptScanFaces,
   _resetScanFacesForTests,
+  scanFaceCssFamily,
   scanFaces,
   scanFacesGeneration,
   scanScriptsOf,
@@ -173,6 +174,47 @@ describe("bundled scan faces", () => {
     expect(downloads("DejaVuSans.ttf")).toBe(1);
   });
 
+  it("lets the page draw the app's own copy, its bold cut under the regular family", async () => {
+    const added: Array<[string, string]> = [];
+    vi.stubGlobal(
+      "FontFace",
+      class {
+        constructor(
+          readonly family: string,
+          _bytes: ArrayBuffer,
+          readonly descriptors: { weight: string },
+        ) {}
+        load() {
+          return Promise.resolve(this);
+        }
+      },
+    );
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: {
+        add: (f: { family: string; descriptors: { weight: string } }) =>
+          added.push([f.family, f.descriptors.weight]),
+      },
+    });
+    try {
+      get.mockRejectedValue(new Error("not found"));
+      await loadBundledScanFaces();
+      await vi.waitFor(() =>
+        expect(added).toEqual(
+          expect.arrayContaining([
+            ["Carlito", "400"],
+            ["Carlito", "700"],
+          ]),
+        ),
+      );
+      expect(scanFaceCssFamily("Carlito Bold")).toMatch(
+        /^"Carlito Bold", "Carlito", /,
+      );
+    } finally {
+      Reflect.deleteProperty(document, "fonts");
+    }
+  });
+
   it("loads the font bytes again after the server font list was reset", async () => {
     serve();
     await loadBundledScanFaces();
@@ -186,7 +228,35 @@ describe("bundled scan faces", () => {
   });
 });
 
+describe("bundled scan faces across a server reset", () => {
+  it("keeps the faces of the load that started after the reset", async () => {
+    jarFetch.mockImplementation(
+      async () => new Response(null, { status: 404 }),
+    );
+    let answer: (value: { data: unknown }) => void = () => {};
+    get.mockImplementationOnce(
+      () => new Promise((resolve) => (answer = resolve)),
+    );
+    const first = loadBundledScanFaces();
+    forgetServerFontList();
+    serve();
+    await loadBundledScanFaces();
+    answer({ data: manifest(ALL_FAMILIES) });
+    await first;
+    expect(labels()).toEqual(
+      expect.arrayContaining(BUNDLED_SCAN_FONTS.map((spec) => spec.label)),
+    );
+  });
+});
+
 describe("script scan faces", () => {
+  it("loads a Chinese font for Japanese text when the server has no Japanese one", async () => {
+    serve(ALL_FAMILIES.filter((family) => family !== "Noto Sans JP"));
+    await loadScriptScanFaces(scanScriptsOf("請求書 お支払い"));
+
+    expect(labels()).toContain("Noto Sans SC");
+  });
+
   it("loads the server's Japanese font once for Japanese text", async () => {
     serve();
     await loadScriptScanFaces(scanScriptsOf("請求書 お支払い ください"));
@@ -316,6 +386,27 @@ describe("device scan faces", () => {
     stubDeviceFonts([
       { family: "Georgia", style: "Regular", file: "DejaVuSerif.ttf" },
     ]);
+    expect(await loadDeviceScanFaces()).toBe(1);
+  });
+
+  it("reads a family again after reading its file failed", async () => {
+    let failing = true;
+    (window as unknown as { queryLocalFonts: unknown }).queryLocalFonts =
+      async () => [
+        {
+          family: "Georgia",
+          style: "Regular",
+          fullName: "Georgia Regular",
+          postscriptName: "Georgia-Regular",
+          blob: async () => {
+            if (failing) throw new Error("busy");
+            return { arrayBuffer: async () => bytesOf("DejaVuSerif.ttf") };
+          },
+        },
+      ];
+    expect(await loadDeviceScanFaces()).toBe(0);
+
+    failing = false;
     expect(await loadDeviceScanFaces()).toBe(1);
   });
 

@@ -131,7 +131,7 @@ export async function localFontPermission(): Promise<LocalFontPermission> {
 export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
   if (!isLocalFontAccessSupported() || resolved) return resolved;
   if ((await localFontPermission()) !== "granted") return null;
-  return listLocalFonts();
+  return retryLocalFonts();
 }
 
 export function watchLocalFontPermission(
