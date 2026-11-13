@@ -22,7 +22,11 @@ pub fn system_provisioning_dir() -> Option<PathBuf> {
         let program_data = std::env::var("PROGRAMDATA").ok()?;
         Some(PathBuf::from(program_data).join("Stirling-PDF"))
     } else if cfg!(target_os = "macos") {
-        Some(PathBuf::from("/Library").join("Application Support").join("Stirling-PDF"))
+        Some(
+            PathBuf::from("/Library")
+                .join("Application Support")
+                .join("Stirling-PDF"),
+        )
     } else if cfg!(target_os = "linux") {
         Some(PathBuf::from("/etc").join("stirling-pdf"))
     } else {

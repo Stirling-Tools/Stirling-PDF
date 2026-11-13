@@ -184,6 +184,7 @@ export function loadDeviceFontInto(
       m.pdfium.wasmExports.free(ptr);
       return 0;
     }
+    doc.recordEmbeddedFontFile(bytes);
     doc.registerOwnedFont(
       new FontRef({
         id,

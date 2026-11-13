@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
@@ -14,6 +18,10 @@ import org.verapdf.pdfa.PDFAValidator;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.results.TestAssertion;
 import org.verapdf.pdfa.results.ValidationResult;
+import org.verapdf.pdfa.validation.profiles.Reference;
+import org.verapdf.pdfa.validation.profiles.Rule;
+import org.verapdf.pdfa.validation.profiles.RuleId;
+import org.verapdf.pdfa.validation.profiles.ValidationProfile;
 
 import jakarta.annotation.PostConstruct;
 
@@ -34,6 +42,15 @@ public class PdfUaValidationService {
     /** Plain-English text and remediability for the clauses users actually hit. */
     private static final Map<String, ClauseInfo> CLAUSES = buildClauseTable();
 
+    /**
+     * Failures kept per rule, the sample pages come from; totals stay exact. -1 would keep 10,000
+     * in all, letting the first rules checked crowd out the rest.
+     */
+    private static final int MAX_FAILURES_KEPT_PER_RULE = 100;
+
+    /** veraPDF locations name a page as {@code pages[n]}, zero-based, in the object context. */
+    private static final Pattern PAGE_IN_CONTEXT = Pattern.compile("pages\\[(\\d+)\\]");
+
     record ClauseInfo(String message, boolean autoFixable) {}
 
     @PostConstruct
@@ -51,7 +68,10 @@ public class PdfUaValidationService {
                 Foundries.defaultInstance()
                         .createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
 
-            PDFAValidator validator = Foundries.defaultInstance().createValidator(flavour, false);
+            PDFAValidator validator =
+                    Foundries.defaultInstance()
+                            .createValidator(
+                                    flavour, MAX_FAILURES_KEPT_PER_RULE, false, true, false);
             ValidationResult result = validator.validate(parser);
             return toResult(profile, result);
 
@@ -61,7 +81,8 @@ public class PdfUaValidationService {
             issue.setMessage("Validation could not run: " + e.getMessage());
             issue.setSeverity("error");
             issue.setClause("n/a");
-            return new UaValidationResult(profile.displayName(), false, List.of(issue), 0);
+            return new UaValidationResult(
+                    profile.displayName(), false, List.of(issue), 0, 0, 0, issue.getMessage());
         }
     }
 
@@ -101,6 +122,9 @@ public class PdfUaValidationService {
      */
     private static UaValidationResult toResult(PdfUaProfile profile, ValidationResult result) {
         Map<String, AccessibilityIssue> grouped = new LinkedHashMap<>();
+        Map<String, Set<Integer>> pagesByKey = new LinkedHashMap<>();
+        Map<String, RuleId> ruleIdByKey = new LinkedHashMap<>();
+        ValidationProfile validationProfile = result.getValidationProfile();
         int total = 0;
 
         for (TestAssertion assertion : result.getTestAssertions()) {
@@ -112,6 +136,9 @@ public class PdfUaValidationService {
                     assertion.getRuleId() != null ? assertion.getRuleId().getClause() : "unknown";
             int test = assertion.getRuleId() != null ? assertion.getRuleId().getTestNumber() : 0;
             String key = clause + "-" + test;
+            if (assertion.getRuleId() != null) {
+                ruleIdByKey.putIfAbsent(key, assertion.getRuleId());
+            }
 
             AccessibilityIssue issue =
                     grouped.computeIfAbsent(
@@ -127,17 +154,96 @@ public class PdfUaValidationService {
                                 created.setTechnicalMessage(assertion.getMessage());
                                 created.setAutoFixable(info != null && info.autoFixable());
                                 created.setSpecification(profile.displayName());
+                                created.setErrorMessage(assertion.getErrorMessage());
+                                describeRule(created, validationProfile, assertion);
                                 return created;
                             });
             issue.setOccurrences(issue.getOccurrences() + 1);
             if (issue.getLocation() == null && assertion.getLocation() != null) {
                 issue.setLocation(assertion.getLocation().toString());
             }
+            Integer page = pageOf(assertion);
+            if (page != null) {
+                pagesByKey.computeIfAbsent(key, k -> new TreeSet<>()).add(page);
+            }
         }
+        pagesByKey.forEach((key, pages) -> grouped.get(key).setPages(List.copyOf(pages)));
+        total = applyFullFailureCounts(grouped, ruleIdByKey, result.getFailedChecks(), total);
 
         List<AccessibilityIssue> issues = new ArrayList<>(grouped.values());
+        int rulesInProfile = validationProfile != null ? validationProfile.getRules().size() : 0;
         return new UaValidationResult(
-                profile.displayName(), result.isCompliant() && total == 0, issues, total);
+                profile.displayName(),
+                result.isCompliant() && total == 0,
+                issues,
+                total,
+                result.getTotalAssertions(),
+                rulesInProfile,
+                null);
+    }
+
+    /**
+     * Swaps logged counts for veraPDF's per-rule totals and marks capped page lists incomplete,
+     * since it logs at most 100 assertions per rule. Returns the corrected total.
+     */
+    static int applyFullFailureCounts(
+            Map<String, AccessibilityIssue> grouped,
+            Map<String, RuleId> ruleIdByKey,
+            Map<RuleId, Integer> failedChecks,
+            int loggedTotal) {
+        if (failedChecks == null || failedChecks.isEmpty()) {
+            return loggedTotal;
+        }
+        int total = 0;
+        for (Map.Entry<String, AccessibilityIssue> entry : grouped.entrySet()) {
+            AccessibilityIssue issue = entry.getValue();
+            RuleId ruleId = ruleIdByKey.get(entry.getKey());
+            Integer count = ruleId == null ? null : failedChecks.get(ruleId);
+            if (count != null && count > issue.getOccurrences()) {
+                issue.setOccurrences(count);
+                issue.setPagesComplete(false);
+            }
+            total += issue.getOccurrences();
+        }
+        return total;
+    }
+
+    private static void describeRule(
+            AccessibilityIssue issue,
+            ValidationProfile validationProfile,
+            TestAssertion assertion) {
+        if (validationProfile == null || assertion.getRuleId() == null) {
+            return;
+        }
+        Rule rule = validationProfile.getRuleByRuleId(assertion.getRuleId());
+        if (rule == null) {
+            return;
+        }
+        issue.setTags(rule.getTagsSet() != null ? List.copyOf(rule.getTagsSet()) : List.of());
+        issue.setObject(rule.getObject());
+        issue.setTest(rule.getTest());
+        if (rule.getReferences() != null) {
+            issue.setReferences(
+                    rule.getReferences().stream()
+                            .map(PdfUaValidationService::formatReference)
+                            .toList());
+        }
+    }
+
+    private static String formatReference(Reference reference) {
+        String clause = reference.getClause();
+        return clause == null || clause.isBlank()
+                ? reference.getSpecification()
+                : reference.getSpecification() + " " + clause;
+    }
+
+    /** One-based page of an assertion, or null for a document-level one. */
+    static Integer pageOf(TestAssertion assertion) {
+        if (assertion.getLocation() == null || assertion.getLocation().getContext() == null) {
+            return null;
+        }
+        Matcher matcher = PAGE_IN_CONTEXT.matcher(assertion.getLocation().getContext());
+        return matcher.find() ? Integer.parseInt(matcher.group(1)) + 1 : null;
     }
 
     /**

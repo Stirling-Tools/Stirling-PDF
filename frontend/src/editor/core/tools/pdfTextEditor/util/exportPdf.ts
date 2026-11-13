@@ -1,6 +1,10 @@
 import i18n from "i18next";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
+  AnnotationEditError,
+  applyAnnotationEdits,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
+import {
   StructureEditError,
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
@@ -12,6 +16,7 @@ import { nameArtifactKinds } from "@editor/tools/pdfTextEditor/pdfdoc/passes/nam
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
+import { subsetEmbeddedFonts } from "@editor/tools/pdfTextEditor/pdfdoc/passes/subsetEmbeddedFonts";
 import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { writesArtifactKinds } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
@@ -19,15 +24,10 @@ import {
   assertSavedPdf,
 } from "@editor/tools/pdfTextEditor/util/savedBytes";
 
-/** Serialize the editor document to a Blob plus the download filename. */
-export async function exportToBlob(
-  doc: EditorDocument,
-  sourceName?: string | null,
-): Promise<{
-  blob: Blob;
-  filename: string;
-}> {
+/** Serialize the editor document to a Blob. */
+export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   const structureEdits = doc.structureEdits();
+  const annotationEdits = doc.annotationEdits();
   const documentLanguage = doc.documentLanguageEdit();
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
@@ -40,13 +40,11 @@ export async function exportToBlob(
     // ones by up to 35% - for no edit at all.
     if (
       structureEdits.length === 0 &&
+      annotationEdits.length === 0 &&
       documentLanguage === undefined &&
       !doc.markedTaggedChanged()
     ) {
-      return {
-        blob: pdfBlob(doc.openedBytes),
-        filename: exportName(sourceName),
-      };
+      return pdfBlob(doc.openedBytes);
     }
     bytes = doc.openedBytes;
   } else {
@@ -64,6 +62,13 @@ export async function exportToBlob(
     bytes = await applyStructureEdits(bytes, structureEdits);
   } catch (err) {
     if (!(err instanceof StructureEditError)) throw err;
+    throw accessibilitySaveFailed(err);
+  }
+  // After the structure edits, which add the elements links are given to.
+  try {
+    bytes = await applyAnnotationEdits(bytes, annotationEdits);
+  } catch (err) {
+    if (!(err instanceof AnnotationEditError)) throw err;
     throw accessibilitySaveFailed(err);
   }
   if (documentLanguage !== undefined) {
@@ -104,7 +109,7 @@ export async function exportToBlob(
   assertSavedPdf(bytes);
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
-  return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+  return pdfBlob(bytes);
 }
 
 function pagesWritingArtifactKinds(doc: EditorDocument): number[] {
@@ -139,6 +144,15 @@ async function serializeEdits(
   // so reading first always yielded an empty list and silently skipped the
   // shading repair on the first save after an edit.
   let bytes = PdfiumSave.serialize(doc, { incremental });
+  // First, while the file is still exactly what PDFium wrote. Skipped for an
+  // incremental save, whose earlier bytes a signature covers.
+  if (!incremental) {
+    bytes = await subsetEmbeddedFonts(
+      bytes,
+      doc.embeddedFontFiles(),
+      doc.openedBytes,
+    );
+  }
   const regenerated = doc.regeneratedPages();
 
   if (regenerated.length > 0 && doc.openedBytes.length > 0) {
@@ -181,13 +195,6 @@ function pdfBlob(bytes: Uint8Array): Blob {
   return new Blob([bytes as unknown as ArrayBuffer], {
     type: "application/pdf",
   });
-}
-
-// Derive from the opened file's name so downloads don't all collide on
-// a generic "edited.pdf".
-function exportName(sourceName?: string | null): string {
-  const base = (sourceName ?? "").replace(/\.pdf$/i, "").trim();
-  return base ? `${base}_edited.pdf` : "edited.pdf";
 }
 
 /**
