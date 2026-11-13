@@ -526,7 +526,7 @@ const EmbedPdfViewerContent = ({
   // Get current file from FileContext
   const selectors = useFileSelectors();
   const { actions } = useFileActions();
-  const { files: activeFiles } = useAllFiles();
+  const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const activeFilesRef = useRef(activeFiles);
   activeFilesRef.current = activeFiles;
   const activeFileIds = activeFiles.map((f) => f.fileId);
@@ -701,11 +701,11 @@ const EmbedPdfViewerContent = ({
       return `preview-${previewFile.name}|${previewFile.size}|${previewFile.lastModified}`;
     }
     if (currentFile && isStirlingFile(currentFile)) {
-      const stub = selectors.getStirlingFileStub(currentFile.fileId);
+      const stub = activeFileStubs.find(({ id }) => id === currentFile.fileId);
       return stub?.originalFileId ?? stub?.id ?? currentFile.fileId;
     }
     return currentFileId;
-  }, [previewFile, currentFile, currentFileId, selectors]);
+  }, [previewFile, currentFile, currentFileId, activeFileStubs]);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
