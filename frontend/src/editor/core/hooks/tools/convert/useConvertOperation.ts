@@ -673,7 +673,11 @@ export const useConvertOperation = (parameters?: ConvertParameters) => {
   const operation = useToolOperation<ConvertParameters>({
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
-    getErrorMessage: (error) => {
+    getErrorMessage: async (error) => {
+      const serverReason = await serverErrorReason(error);
+      if (serverReason) {
+        return serverReason;
+      }
       const err = error as {
         response?: { data?: unknown };
         message?: string;
