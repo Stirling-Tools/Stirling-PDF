@@ -1,8 +1,8 @@
-import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import {useTranslation} from "react-i18next";
+import {TooltipContent} from "@editor/types/tips";
 
 export const useMergeTips = (): TooltipContent => {
-  const { t } = useTranslation();
+  const {t} = useTranslation();
 
   return {
     header: {
@@ -27,6 +27,16 @@ export const useMergeTips = (): TooltipContent => {
         description: t(
           "merge.generateTableOfContents.tooltip.description",
           "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers.",
+        ),
+      },
+      {
+        title: t(
+          "merge.generateTableOfContentsPage.tooltip.title",
+          "Generate Table of Contents Page",
+        ),
+        description: t(
+          "merge.generateTableOfContentsPage.tooltip.description",
+          "Automatically creates a table of contents page with links to each individual document within the merged PDF.",
         ),
       },
     ],

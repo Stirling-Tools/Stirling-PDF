@@ -6391,6 +6391,13 @@ label = "Remove digital signature in the merged file?"
 description = "Digital signatures will be invalidated when merging files. Check this to remove them from the final merged PDF."
 title = "Remove Digital Signature"
 
+[merge.generateTableOfContentsPage]
+label = "Generate table of contents page in the merged file?"
+
+[merge.generateTableOfContentsPage.tooltip]
+description = "Automatically creates a table of contents page with links to each individual document within the merged PDF."
+title = "Generate Table of Contents Page"
+
 [merge.settings]
 title = "Settings"
 

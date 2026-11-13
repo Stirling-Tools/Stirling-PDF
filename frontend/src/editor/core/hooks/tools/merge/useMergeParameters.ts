@@ -7,11 +7,13 @@ import {
 export interface MergeParameters extends BaseParameters {
   removeDigitalSignature: boolean;
   generateTableOfContents: boolean;
+  generateTableOfContentsPage: boolean;
 }
 
 export const defaultParameters: MergeParameters = {
   removeDigitalSignature: false,
   generateTableOfContents: false,
+  generateTableOfContentsPage: false,
 };
 
 export type MergeParametersHook = BaseParametersHook<MergeParameters>;

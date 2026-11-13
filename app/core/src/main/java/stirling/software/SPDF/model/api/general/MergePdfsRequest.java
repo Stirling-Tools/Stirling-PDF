@@ -42,6 +42,13 @@ public class MergePdfsRequest extends MultiplePDFFiles {
 
     @Schema(
             description =
+                    "Flag indicating whether to generate a table of contents page for the merged PDF. If true, the table of contents page will be generated as the first page of the document.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean generateTocPage = false;
+
+    @Schema(
+            description =
                     "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String clientFileIds;
