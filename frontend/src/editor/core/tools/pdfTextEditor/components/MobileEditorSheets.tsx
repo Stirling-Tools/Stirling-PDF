@@ -1,4 +1,4 @@
-import { useEffect, type ComponentProps } from "react";
+import { memo, useEffect, type ComponentProps } from "react";
 import { Drawer } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
@@ -19,7 +19,9 @@ const SHEET_STYLES = {
   header: { paddingBottom: "0.5rem" },
 } as const;
 
-export function MobileEditorSheets(props: Omit<SidebarProps, "initialTab">) {
+export const MobileEditorSheets = memo(function MobileEditorSheets(
+  props: Omit<SidebarProps, "initialTab">,
+) {
   const { t } = useTranslation();
   const { store, state, selection } = props;
   const controller = useToolbarController(store, state, selection);
@@ -74,4 +76,4 @@ export function MobileEditorSheets(props: Omit<SidebarProps, "initialTab">) {
       </Drawer>
     </>
   );
-}
+});
