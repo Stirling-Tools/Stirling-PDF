@@ -2,12 +2,11 @@ name: Rust Lint
 
 # Reusable workflow called from build.yml when desktop / Rust sources change.
 #
-# The task behind it is `desktop:lint`, so swapping Clippy for another linter
-# does not rename the job. Clippy only analyses the `cfg` branches for the host
-# it runs on, and the Tauri crate carries Linux-, macOS- and Windows-only
-# modules. The matrix therefore runs on all three so every platform branch is
-# linted where it actually compiles, including the Windows-only thumbnail
-# handler crate.
+# Formatting is platform-independent, so rustfmt runs once on Linux. Clippy
+# only analyses the `cfg` branches for the host it runs on, and the Tauri crate
+# carries Linux-, macOS- and Windows-only modules. The matrix therefore runs on
+# all three so every platform branch is linted where it actually compiles,
+# including the Windows-only thumbnail handler crate.
 on:
   workflow_call:
 
@@ -47,7 +46,7 @@ jobs:
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
-          components: clippy
+          components: clippy, rustfmt
 
       # Registry + compiled dependencies; a cold Clippy run rebuilds the whole
       # Tauri graph, which is what dominates this job.
@@ -66,6 +65,10 @@ jobs:
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
         with:
           version: 3.54.0
+
+      - name: Check Rust formatting
+        if: runner.os == 'Linux'
+        run: task desktop:format:check
 
       - name: Run desktop lint
         run: task desktop:lint
