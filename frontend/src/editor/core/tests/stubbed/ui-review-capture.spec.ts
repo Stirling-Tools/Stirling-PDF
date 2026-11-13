@@ -301,33 +301,32 @@ async function openFormDetectionSettings(page: Page) {
       json: { username: "admin", email: "admin@example.com", isAdmin: true },
     }),
   );
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
   const configBtn = page.locator('[data-testid="config-button"]').first();
   await expect(configBtn).toBeVisible({ timeout: 15_000 });
   await configBtn.click();
-  const dialog = page.locator(".mantine-Modal-content").first();
+  await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+  const dialog = page.locator(".settings-page");
   await expect(dialog).toBeVisible({ timeout: 5_000 });
-  await dialog.getByText("Features", { exact: true }).first().click();
+  await expect(page).toHaveURL(/\/settings\/general(?:[?#].*)?$/);
+  await dialog.locator('[data-tour="admin-adminGeneral-nav"]').first().click();
+  await expect(page).toHaveURL(/\/settings\/adminGeneral(?:[?#].*)?$/);
   await expect(dialog.getByText(/AI Form Detection/i).first()).toBeVisible({
     timeout: 5_000,
   });
-  // The form-detection card is the Paper containing the title text.
-  const card = dialog
-    .locator("div")
-    .filter({ has: page.getByText(/AI Form Detection/i) });
+  const card = dialog.locator("section.settings-card:has(#adminFormDetection)");
   return { dialog, card };
 }
 
-/** Screenshot the settings card (ancestor Paper of the section title). */
+/** Capture the form-detection settings card after its content settles. */
 async function shootCard(
   page: Page,
   dialog: ReturnType<Page["locator"]>,
   name: string,
 ) {
-  const paper = dialog
-    .locator(".mantine-Paper-root")
-    .filter({ hasText: "AI Form Detection" })
-    .last();
+  const paper = dialog.locator(
+    "section.settings-card:has(#adminFormDetection)",
+  );
   await paper.scrollIntoViewIfNeeded();
   await settle(page);
   await paper.screenshot({ path: shot(name) });

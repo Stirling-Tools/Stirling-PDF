@@ -27,7 +27,17 @@ vi.mock("@editor/hooks/useConnectedServer", () => ({
 }));
 vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("@editor/components/shared/quickNav/QuickNavRailContainer", () => ({
-  QuickNavRailContainer: ({ groups }: { groups: QuickNavEntry[][] }) => (
+  QuickNavRailContainer: ({
+    groups,
+    onOpenAccount,
+    onOpenAccountShortcut,
+    resolveAccountMenu,
+  }: {
+    groups: QuickNavEntry[][];
+    onOpenAccount: () => void;
+    onOpenAccountShortcut: (to: string) => void;
+    resolveAccountMenu: () => QuickNavHostActions["accountMenu"];
+  }) => (
     <>
       {groups.flat().map((entry) => (
         <button
@@ -38,6 +48,13 @@ vi.mock("@editor/components/shared/quickNav/QuickNavRailContainer", () => ({
           {entry.label}
         </button>
       ))}
+      <button onClick={onOpenAccount}>Open settings</button>
+      <button onClick={() => onOpenAccountShortcut("/settings/about")}>
+        Open account shortcut
+      </button>
+      <button onClick={() => resolveAccountMenu()?.signOut?.()}>
+        Sign out
+      </button>
     </>
   ),
 }));
@@ -119,6 +136,56 @@ it("does not leave a pending request when navigation is declined", () => {
     "/settings/general",
   );
   expect(consumeProcessingFolderCreationRequest()).toBe(false);
+});
+
+it.each(["/settings/adminGeneral", "/compress-pdf"])(
+  "guards account menu navigation from %s against unsaved changes",
+  (path) => {
+    let allowNavigation = false;
+    const requestNavigation = vi.fn((go: () => void) => {
+      if (allowNavigation) go();
+    });
+    setup(path, { requestNavigation });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open account shortcut" }),
+    );
+    expect(requestNavigation).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("Current path")).toHaveTextContent(path);
+    fireEvent.click(screen.getByRole("button", { name: "Open settings" }));
+    expect(requestNavigation).toHaveBeenCalledTimes(2);
+    expect(screen.getByLabelText("Current path")).toHaveTextContent(path);
+
+    allowNavigation = true;
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open account shortcut" }),
+    );
+    expect(screen.getByLabelText("Current path")).toHaveTextContent(
+      "/settings/about",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Open settings" }));
+    expect(screen.getByLabelText("Current path")).toHaveTextContent(
+      /^\/settings$/,
+    );
+  },
+);
+
+it("guards account menu sign-out against unsaved changes", () => {
+  let allowNavigation = false;
+  const requestNavigation = vi.fn((go: () => void) => {
+    if (allowNavigation) go();
+  });
+  const signOut = vi.fn();
+  setup("/settings/adminGeneral", {
+    requestNavigation,
+    accountMenu: { shortcuts: [], signOut },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  expect(requestNavigation).toHaveBeenCalledOnce();
+  expect(signOut).not.toHaveBeenCalled();
+
+  allowNavigation = true;
+  fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+  expect(signOut).toHaveBeenCalledOnce();
 });
 
 it("omits folder processing in builds without the feature", () => {

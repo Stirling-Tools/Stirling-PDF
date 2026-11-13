@@ -1,0 +1,46 @@
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@editor/auth/UseSession";
+import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
+import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
+
+/** SaaS: users and billing, which a guest has none of; Settings opens on the account. */
+export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
+  const { t } = useTranslation();
+  const { user, isAnonymous } = useAuth();
+  // Not from useAuth: the Supabase session carries no permission flags.
+  const { granted: portalAccess } = usePortalAccessState();
+
+  if (!user || isAnonymous) {
+    return [];
+  }
+
+  return [
+    {
+      id: "users",
+      label: t("portal.nav.users", "Users"),
+      icon: "users",
+      to: "/settings/users",
+    },
+    // Usage & Billing replaces Plan in settings for processor members.
+    HAS_PORTAL && portalAccess
+      ? {
+          id: "billing",
+          label: t("portal.nav.usage", "Usage & Billing"),
+          icon: "credit-card",
+          to: "/settings/billing",
+        }
+      : {
+          id: "plan",
+          label: t("config.plan", "Plan"),
+          icon: "credit-card",
+          to: "/settings/plan",
+        },
+    {
+      id: "api-keys",
+      label: t("settings.developer.apiKeys", "API Keys"),
+      icon: "key",
+      to: "/settings/api-keys",
+    },
+  ];
+}

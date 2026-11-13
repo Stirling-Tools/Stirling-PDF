@@ -11679,6 +11679,13 @@ processor = "Processor"
 reader = "Reader"
 signInToUse = "Sign in to use this"
 
+[quickNav.accountMenu]
+localMode = "Local mode"
+server = "Server settings"
+settings = "Settings"
+signedOut = "Not signed in"
+signIn = "Sign in"
+
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 

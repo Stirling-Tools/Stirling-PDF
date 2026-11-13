@@ -194,9 +194,11 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
         return route.fulfill({ status: 403, json: {} });
       });
       await page.goto(path);
-      await expect(
-        page.getByRole("button", { name: "colleague — Account", exact: true }),
-      ).toBeVisible();
+      const avatar = page.getByRole("button", {
+        name: "colleague - Account",
+        exact: true,
+      });
+      await expect(avatar).toBeVisible();
       await page.evaluate(() =>
         window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
       );
@@ -211,6 +213,14 @@ for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
       ).toHaveCount(0);
       await expect(
         page.getByRole("button", { name: "Usage & Billing", exact: true }),
+      ).toHaveCount(0);
+      // The avatar menu must not offer billing to non-owners either.
+      await avatar.click();
+      await expect(
+        page.getByRole("menuitem", { name: "Settings", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("menuitem", { name: "Usage & Billing", exact: true }),
       ).toHaveCount(0);
       expect(linkRequests).toBe(0);
     });
@@ -348,10 +358,10 @@ for (const connectionState of [
     }
     if (linked) {
       await page
-        .getByRole("button", { name: "owner — Account", exact: true })
+        .getByRole("button", { name: "owner - Account", exact: true })
         .click();
       await page
-        .getByRole("button", { name: "Usage & Billing", exact: true })
+        .getByRole("menuitem", { name: "Usage & Billing", exact: true })
         .click();
       await expect(
         page.getByRole("button", { name: "Sign in again", exact: true }),

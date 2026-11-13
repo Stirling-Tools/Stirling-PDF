@@ -1,8 +1,35 @@
 import type { SigningMenuItem } from "@editor/utils/signingItems";
+import type { IconName } from "@editor/ui/Icon";
 
 export interface QuickNavIdentity {
   displayName: string;
   profilePictureUrl: string | null;
+}
+
+/** One row of the avatar menu: a settings page worth reaching in one click. */
+export interface QuickNavAccountShortcut {
+  id: string;
+  label: string;
+  icon: IconName;
+  /** A `/settings/{section}` path, optionally with a `#anchor`. */
+  to: string;
+}
+
+export interface QuickNavAccountAction {
+  id: string;
+  label: string;
+  icon: IconName;
+  onSelect: () => void;
+}
+
+export type QuickNavAccountHeader = "local" | "signedOut";
+
+export interface QuickNavAccountMenu {
+  shortcuts: QuickNavAccountShortcut[];
+  /** Absent when there is no session to end (no login, or a guest). */
+  signOut?: () => void;
+  header?: QuickNavAccountHeader;
+  actions?: QuickNavAccountAction[];
 }
 
 /** The last resolved account data, retained across view changes. */
