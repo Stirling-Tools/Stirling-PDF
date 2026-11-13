@@ -100,14 +100,15 @@ export function EditorSidebar({
     [editorDocument],
   );
   const imageSelected = controller.imageAccessibility !== null;
+  const artifactTextSelected = controller.textTag?.kind === "artifact";
   // Counts and Next cover only pages already read, which is just the first few
-  // until the rest scroll into view.
+  // until the rest scroll into view; so do an artifact's matches on other pages.
   useEffect(() => {
-    if (!reviewingAccessibility || (tab !== "document" && !imageSelected)) {
-      return;
-    }
+    const reviewing =
+      reviewingAccessibility && (tab === "document" || imageSelected);
+    if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
     return readAllPagesInBackground(store);
-  }, [reviewingAccessibility, tab, imageSelected, store]);
+  }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
   const setMarkedTagged = useCallback(
     (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
     [store],

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { ScrollArea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import ToolPicker from "@editor/components/tools/ToolPicker";
 import SearchResults from "@editor/components/tools/SearchResults";
 import ToolRenderer from "@editor/components/tools/ToolRenderer";
+import { ToolPanelFooterTarget } from "@editor/components/tools/ToolPanelFooter";
 import ToolSearch from "@editor/components/tools/toolPicker/ToolSearch";
 import { ToolPanelViewerBar } from "@editor/components/tools/ToolPanelViewerBar";
 import { openSuperSearch } from "@editor/components/shared/superSearch/openSuperSearch";
@@ -16,12 +18,13 @@ interface ToolPanelProps {
   allToolsView: boolean;
   /** Trigger to enter the all-tools view (from the "View all tools" button). */
   onShowAllTools: () => void;
-  /**
-   * Tool-selection handler injected by {@code RightSidebar} so the click can
-   * be wrapped in a View Transition (the tool card morphs into the header
-   * pill). Falls back to the workflow context's handler when not provided.
-   */
+  /** Tool-selection handler; falls back to the workflow context's handler. */
   onToolSelect?: (id: ToolId) => void;
+  /**
+   * Which view to render, overriding the workflow context. RightSidebar renders
+   * both while the tool view slides over the picker or off it.
+   */
+  view?: "toolPicker" | "toolContent";
   /** Whether to render the compact (favourites + recommended only) view. */
   compact?: boolean;
   /**
@@ -39,6 +42,7 @@ export default function ToolPanel({
   onToolSelect,
   compact: compactProp,
   showSearch = false,
+  view,
 }: ToolPanelProps) {
   const { t } = useTranslation();
   const {
@@ -52,11 +56,12 @@ export default function ToolPanel({
     setPreviewFile,
   } = useToolWorkflow();
   const selectTool = onToolSelect ?? handleToolSelect;
+  const [footer, setFooter] = useState<HTMLDivElement | null>(null);
 
   // Only offer the filter over the list itself; once a tool is open the panel
   // belongs to that tool. Deriving the results branch from the same flag keeps
   // the input and what it filters from drifting apart.
-  const onPicker = leftPanelView === "toolPicker";
+  const onPicker = (view ?? leftPanelView) === "toolPicker";
   const panelSearch = showSearch && onPicker;
   const searching = searchQuery.trim().length > 0;
 
@@ -84,7 +89,7 @@ export default function ToolPanel({
             searchQuery={searchQuery}
           />
         </div>
-      ) : leftPanelView === "toolPicker" ? (
+      ) : onPicker ? (
         <div className="flex-1 flex flex-col overflow-auto">
           <ToolPicker
             selectedToolKey={selectedToolKey}
@@ -116,19 +121,24 @@ export default function ToolPanel({
           />
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <ScrollArea h="100%">
-            {selectedToolKey ? (
-              <ToolRenderer
-                selectedToolKey={selectedToolKey}
-                onPreviewFile={setPreviewFile}
-              />
-            ) : (
-              <div className="tool-panel__placeholder">
-                {t("toolPanel.placeholder", "Choose a tool to get started")}
-              </div>
-            )}
-          </ScrollArea>
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ScrollArea h="100%">
+              {selectedToolKey ? (
+                <ToolPanelFooterTarget value={footer}>
+                  <ToolRenderer
+                    selectedToolKey={selectedToolKey}
+                    onPreviewFile={setPreviewFile}
+                  />
+                </ToolPanelFooterTarget>
+              ) : (
+                <div className="tool-panel__placeholder">
+                  {t("toolPanel.placeholder", "Choose a tool to get started")}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+          <div ref={setFooter} className="tool-panel__footer" />
         </div>
       )}
     </>

@@ -1,3 +1,4 @@
+import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -555,7 +556,7 @@ function readObjText(
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.reflowText, len);
     m.FPDFTextObj_GetText(ptr, textPage, buf, len);
-    return readUtf16(m, buf, len);
+    return drawnText(readUtf16(m, buf, len));
   } catch {
     return "";
   }

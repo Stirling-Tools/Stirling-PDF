@@ -12,11 +12,10 @@ import {
   readDeviceFace,
 } from "@editor/tools/pdfTextEditor/util/localFontSource";
 
-/** A face's style axes as its font file declares them; a source that can read them sets them so style names in any language never decide bold or italic. */
 export interface FaceAxes {
-  weight: number;
   bold: boolean;
   italic: boolean;
+  weight: number | null;
 }
 
 export interface LocalFont {
@@ -24,6 +23,7 @@ export interface LocalFont {
   fullName: string;
   style: string;
   postscriptName: string;
+  /** Style axes the font source states outright; absent for device faces, whose axes are read from the style name. */
   axes?: FaceAxes;
 }
 
@@ -241,21 +241,16 @@ export function faceStyleFlags(font: LocalFont): {
   };
 }
 
-const REGULAR_WEIGHT = 400;
-
 function scoreFace(
   font: LocalFont,
   wantBold: boolean,
   wantItalic: boolean,
 ): number {
+  if (font.axes) return scoreStatedAxes(font.axes, wantBold, wantItalic);
   const style = faceStyleText(font);
-  const { bold, italic } = font.axes ?? {
-    bold: /bold|black|heavy|semib|demi/.test(style),
-    italic: /italic|oblique/.test(style),
-  };
-  const plain = font.axes
-    ? font.axes.weight === REGULAR_WEIGHT && !italic
-    : /^(regular|book|normal|roman)?$/.test(style);
+  const bold = /bold|black|heavy|semib|demi/.test(style);
+  const italic = /italic|oblique/.test(style);
+  const plain = /^(regular|book|normal|roman)?$/.test(style);
   let score = 0;
   if (bold === wantBold) score += 4;
   if (italic === wantItalic) score += 4;
@@ -263,6 +258,19 @@ function scoreFace(
   // Tie-break towards the plainer cut: "Light Condensed" also matches an
   // upright non-bold request, but "Regular" is what the user meant.
   return score - Math.min(style.length, 32) / 100;
+}
+
+function scoreStatedAxes(
+  axes: FaceAxes,
+  wantBold: boolean,
+  wantItalic: boolean,
+): number {
+  let score = 0;
+  if (axes.bold === wantBold) score += 4;
+  if (axes.italic === wantItalic) score += 4;
+  const target = wantBold ? 700 : 400;
+  const weight = axes.weight ?? (axes.bold ? 700 : 400);
+  return score - Math.min(Math.abs(weight - target), 900) / 1000;
 }
 
 // The installed face best answering a family name, or null. An exact family

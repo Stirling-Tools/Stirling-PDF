@@ -75,7 +75,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-save-risk-confirm").click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("encrypted_edited.pdf");
+    expect(download.suggestedFilename()).toBe("encrypted.pdf");
     const savedPath = test.info().outputPath("encrypted_edited.pdf");
     await download.saveAs(savedPath);
     const source = await readPdfProtection(

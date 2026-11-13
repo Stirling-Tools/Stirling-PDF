@@ -8,6 +8,7 @@ import {
 } from "@editor/contexts/file/fileActions";
 import {
   createStirlingFile,
+  StirlingFile,
   StirlingFileStub,
 } from "@editor/types/fileContext";
 import { FileId } from "@editor/types/file";
@@ -59,10 +60,16 @@ export interface TrackSaveHook {
   progress: TrackSaveProgress | null;
   /**
    * Writes changed tracks back as a new version of their own file: all of them,
-   * or only those in `trackIds`. Resolves to each versioned file's old id mapped
-   * to its new one, or null if nothing was saved.
+   * or only those in `trackIds`. Resolves to each versioned file's old id, and
+   * each materialised split's track id, mapped to the saved file, or null if
+   * nothing was saved.
    */
-  save: (trackIds?: FileId[]) => Promise<Map<FileId, FileId> | null>;
+  save: (trackIds?: FileId[]) => Promise<Map<FileId, SavedVersion> | null>;
+}
+
+export interface SavedVersion {
+  file: StirlingFile;
+  stub?: StirlingFileStub;
 }
 
 interface BuiltTrack {
@@ -146,7 +153,7 @@ export function useTrackSave(
         // Version each file-backed track in place (a new version of its own
         // file). One at a time so each lands in its own slot rather than clumping
         // at the top of the file list.
-        const versioned = new Map<FileId, FileId>();
+        const versioned = new Map<FileId, SavedVersion>();
         for (const entry of built) {
           if (entry.inputFileId == null) continue;
           const processedFile = await generateProcessedFileMetadata(entry.file);
@@ -157,13 +164,14 @@ export function useTrackSave(
             processedFile?.thumbnailUrl,
             processedFile,
           );
+          const file = createStirlingFile(entry.file, outputStub.id);
           await actions.consumeFiles(
             [entry.inputFileId],
-            [createStirlingFile(entry.file, outputStub.id)],
+            [file],
             [outputStub],
             { silent: true },
           );
-          versioned.set(entry.inputFileId, outputStub.id);
+          versioned.set(entry.inputFileId, { stub: outputStub, file });
           onVersionedRef.current?.(entry.inputFileId, outputStub.id);
         }
 
@@ -172,6 +180,7 @@ export function useTrackSave(
         // workspace, via sync) as their own tracks.
         const splitEntries = built.filter((entry) => entry.inputFileId == null);
         const materializedIds = new Map<FileId, FileId>();
+        const saved = new Map<FileId, SavedVersion>(versioned);
         if (splitEntries.length > 0) {
           const added = await actions.addFiles(
             splitEntries.map((entry) => entry.file),
@@ -181,7 +190,9 @@ export function useTrackSave(
           // new file lines up with the split track it was built from.
           splitEntries.forEach((entry, index) => {
             const file = added[index];
-            if (file) materializedIds.set(entry.trackId, file.fileId);
+            if (!file) return;
+            materializedIds.set(entry.trackId, file.fileId);
+            saved.set(entry.trackId, { file });
           });
         }
 
@@ -199,7 +210,9 @@ export function useTrackSave(
           const emptiedSet = new Set(emptied);
           const order = workspace.order.flatMap((id) => {
             if (emptiedSet.has(id)) return [];
-            return [versioned.get(id) ?? materializedIds.get(id) ?? id];
+            return [
+              versioned.get(id)?.file.fileId ?? materializedIds.get(id) ?? id,
+            ];
           });
           // Each new split file should sit right after its source in the open-
           // file list (the source may itself have been versioned to a new id).
@@ -208,7 +221,9 @@ export function useTrackSave(
               const source = workspace.tracks[trackId]?.splitFromFileId;
               return {
                 fileId,
-                afterFileId: source ? (versioned.get(source) ?? source) : null,
+                afterFileId: source
+                  ? (versioned.get(source)?.file.fileId ?? source)
+                  : null,
               };
             },
           );
@@ -219,7 +234,7 @@ export function useTrackSave(
           });
         }
 
-        return versioned;
+        return saved;
       } catch (error) {
         if (cancellation.signal.aborted) return null;
         if (error instanceof PolicyBlockedError) {

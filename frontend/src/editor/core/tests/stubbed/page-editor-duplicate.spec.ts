@@ -4,6 +4,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import {
   uploadFiles,
   dismissTourTooltip,
+  switchView,
 } from "@editor/tests/helpers/ui-helpers";
 
 /**
@@ -33,17 +34,6 @@ function tile(
   index: number,
 ) {
   return track(page, name).locator("[data-page-id]").nth(index);
-}
-
-async function switchView(
-  page: import("@playwright/test").Page,
-  label: string,
-) {
-  await page
-    .locator('[data-tour="view-switcher"]')
-    .first()
-    .locator(".mantine-SegmentedControl-label", { hasText: label })
-    .click();
 }
 
 /** Intrinsic rotations as the editor shows them, in track order. */

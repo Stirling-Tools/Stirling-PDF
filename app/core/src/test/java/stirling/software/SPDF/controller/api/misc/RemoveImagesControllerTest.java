@@ -368,7 +368,7 @@ class RemoveImagesControllerTest {
     class Filenames {
 
         @Test
-        @DisplayName("appends _images_removed.pdf suffix to the original name")
+        @DisplayName("keeps the original name")
         void appendsSuffix() throws IOException {
             byte[] bytes = pdfWithImagesBytes(1);
             MockMultipartFile file = multipart("report.pdf", bytes);
@@ -389,8 +389,7 @@ class RemoveImagesControllerTest {
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
                                         any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.eq(
-                                                "report_images_removed.pdf")));
+                                        org.mockito.ArgumentMatchers.eq("report.pdf")));
             }
         }
 

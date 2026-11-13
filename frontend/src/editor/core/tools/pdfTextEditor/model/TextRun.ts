@@ -1,4 +1,5 @@
 import type { ScanEditState } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { furnitureOf } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import {
   ARTIFACT_TAG,
   innermostMcid,
@@ -214,8 +215,9 @@ export class TextRun {
       locked: this.locked || undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
       mcid: innermostMcid(this.tagMarks) ?? undefined,
-      artifact:
-        this.tagMarks.some((tag) => tag.name === ARTIFACT_TAG) || undefined,
+      artifact: artifactMark(this.tagMarks) !== undefined || undefined,
+      furniture:
+        furnitureOf(artifactMark(this.tagMarks)?.artifact) ?? undefined,
       inForm: this.containerPtr !== 0 || undefined,
     };
   }
@@ -234,4 +236,9 @@ export class TextRun {
       ? this.paragraphLineSlots.map((s) => s.matrixE)
       : undefined;
   }
+}
+
+/** The innermost artifact mark: the one that says what the content is. */
+function artifactMark(tags: readonly TagMark[]): TagMark | undefined {
+  return tags.filter((tag) => tag.name === ARTIFACT_TAG).at(-1);
 }

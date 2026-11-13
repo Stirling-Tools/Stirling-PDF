@@ -82,7 +82,7 @@ def _report(*contradictions: Contradiction) -> ContradictionReport:
 def runtime_with_stub_docs(runtime: AppRuntime) -> AppRuntime:
     """Runtime with a non-network DocumentService backed by stub embedder + ephemeral store."""
     stub = DocumentService(
-        embedder=StubEmbedder(),  # type: ignore[arg-type]
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
         store=SqliteVecStore.ephemeral(),
         default_top_k=runtime.settings.rag_default_top_k,
     )
@@ -129,7 +129,7 @@ async def test_localiser_prompt_escapes_verdict_tag_injection(
 
         return _R()
 
-    agent._contradiction_localiser.run = _capture  # type: ignore[method-assign]
+    agent._contradiction_localiser.run = _capture  # pyrefly: ignore [bad-assignment]
     await agent._build_contradiction_comments_payload("the prompt", report)
 
     assert len(captured_prompts) == 1
@@ -232,7 +232,7 @@ async def test_contradiction_intent_emits_add_comments_plan(
     assert step.tool == ToolEndpoint.ADD_COMMENTS
     # The orchestrator step's ``parameters`` field is a discriminated
     # union of every tool's params; narrow to the concrete shape we
-    # know we just produced so pyright doesn't see ``.comments`` as
+    # know we just produced so pyrefly doesn't see ``.comments`` as
     # an attribute lookup against an unrelated CbrToPdfParams (etc.).
     assert isinstance(step.parameters, AddCommentsParams)
     serialised = step.parameters.comments
