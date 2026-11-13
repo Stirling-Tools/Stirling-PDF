@@ -1,6 +1,6 @@
-/** Contract of the shared document-bytes cache: one read per live Blob (or per
- * identical File wrapper), concurrent callers share it, a failed read is
- * retryable, and `releaseDocumentBytes` drops the entry. Each Blob's
+/** Contract of the shared document-bytes cache: one read per live Blob,
+ * concurrent callers share it, files that merely look alike do not, a failed
+ * read is retryable, and `releaseDocumentBytes` drops the entry. Each Blob's
  * `arrayBuffer` is stubbed with the bytes it stands for, so the assertions do
  * not depend on the global jsdom Blob mock. */
 import { describe, expect, it, vi } from "vitest";
@@ -45,26 +45,43 @@ describe("documentBytesCache", () => {
     expect(a).toBe(b);
   });
 
-  it("shares one read across File wrappers with identical metadata", async () => {
-    const first = makeFile("wrapped-once.pdf", [1, 2, 3]);
-    const second = makeFile("wrapped-once.pdf", [1, 2, 3]);
+  it("does not share bytes between files whose metadata matches", async () => {
+    const first = makeFile("same-metadata.pdf", [1, 2, 3]);
+    const second = makeFile("same-metadata.pdf", [4, 5, 6]);
     const firstSpy = vi
       .spyOn(first, "arrayBuffer")
       .mockResolvedValue(bytesOf([1, 2, 3]));
     const secondSpy = vi
       .spyOn(second, "arrayBuffer")
-      .mockResolvedValue(bytesOf([1, 2, 3]));
+      .mockResolvedValue(bytesOf([4, 5, 6]));
+
+    const a = await getDocumentBytes(first);
+    const b = await getDocumentBytes(second);
+
+    expect(firstSpy).toHaveBeenCalledTimes(1);
+    expect(secondSpy).toHaveBeenCalledTimes(1);
+    expect(b).not.toBe(a);
+    expect(Array.from(new Uint8Array(a))).toEqual([1, 2, 3]);
+    expect(Array.from(new Uint8Array(b))).toEqual([4, 5, 6]);
+  });
+
+  it("does not share an in-flight read between files whose metadata matches", async () => {
+    const first = makeFile("racing-metadata.pdf", [1, 2, 3]);
+    const second = makeFile("racing-metadata.pdf", [4, 5, 6]);
+    vi.spyOn(first, "arrayBuffer").mockResolvedValue(bytesOf([1, 2, 3]));
+    vi.spyOn(second, "arrayBuffer").mockResolvedValue(bytesOf([4, 5, 6]));
 
     const [a, b] = await Promise.all([
       getDocumentBytes(first),
       getDocumentBytes(second),
     ]);
 
-    expect(a).toBe(b);
-    expect(firstSpy.mock.calls.length + secondSpy.mock.calls.length).toBe(1);
+    expect(b).not.toBe(a);
+    expect(Array.from(new Uint8Array(a))).toEqual([1, 2, 3]);
+    expect(Array.from(new Uint8Array(b))).toEqual([4, 5, 6]);
   });
 
-  it("re-reads when a File's metadata changes", async () => {
+  it("re-reads when a File is wrapped again after an edit", async () => {
     const original = makeFile("mtime.pdf", [1, 2, 3], 1000);
     const edited = makeFile("mtime.pdf", [4, 5, 6], 2000);
     vi.spyOn(original, "arrayBuffer").mockResolvedValue(bytesOf([1, 2, 3]));
