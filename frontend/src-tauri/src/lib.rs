@@ -2,127 +2,91 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_window_state::StateFlags;
 
-mod utils;
 pub mod commands;
-mod state;
 mod directory_drop;
+mod state;
+mod utils;
 
-use commands::{
-    add_opened_file,
-    cleanup_backend,
-    clear_auth_token,
-    clear_opened_files,
-    clear_refresh_token,
-    clear_user_info,
-    file_disk_state,
-    forward_files_to_window,
-    is_default_pdf_handler,
-    get_auth_token,
-    get_backend_port,
-    get_connection_config,
-    get_opened_files,
-    open_files_in_new_window,
-    open_in_new_window,
-    pop_opened_files,
-    pop_window_file_ids,
-    release_window_watches,
-    unwatch_disk_paths,
-    watch_disk_paths,
-    get_refresh_token,
-    get_user_info,
-    is_first_launch,
-    login,
-    proxy_local_pdf_request,
-    reset_setup_completion,
-    save_auth_token,
-    save_refresh_token,
-    save_user_info,
-    set_connection_mode,
-    set_as_default_pdf_handler,
-    get_desktop_os,
-    get_update_mode,
-    print_pdf_file_native,
-    set_update_mode,
-    start_backend,
-    start_oauth_login,
-    can_install_updates,
-    check_for_update,
-    download_and_install_update,
-    get_app_version,
-    restart_app,
-    target_window_label,
-    build_main_window,
-    MAIN_WINDOW_LABEL,
-};
 use commands::connection::apply_provisioning_if_present;
+use commands::{
+    add_opened_file, build_main_window, can_install_updates, check_for_update, cleanup_backend,
+    clear_auth_token, clear_opened_files, clear_refresh_token, clear_user_info,
+    download_and_install_update, file_disk_state, forward_files_to_window, get_app_version,
+    get_auth_token, get_backend_port, get_connection_config, get_desktop_os, get_opened_files,
+    get_refresh_token, get_update_mode, get_user_info, is_default_pdf_handler, is_first_launch,
+    login, open_files_in_new_window, open_in_new_window, pop_opened_files, pop_window_file_ids,
+    print_pdf_file_native, proxy_local_pdf_request, release_window_watches, reset_setup_completion,
+    restart_app, save_auth_token, save_refresh_token, save_user_info, set_as_default_pdf_handler,
+    set_connection_mode, set_update_mode, start_backend, start_oauth_login, target_window_label,
+    unwatch_disk_paths, watch_disk_paths, MAIN_WINDOW_LABEL,
+};
 use state::connection_state::AppConnectionState;
-use utils::{add_log, get_tauri_logs};
 use tauri_plugin_deep_link::DeepLinkExt;
+use utils::{add_log, get_tauri_logs};
 
 fn dispatch_deep_link(app: &AppHandle, url: &str) {
-  add_log(format!("🔗 Dispatching deep link: {}", url));
-  let _ = app.emit("deep-link", url.to_string());
+    add_log(format!("🔗 Dispatching deep link: {}", url));
+    let _ = app.emit("deep-link", url.to_string());
 
-  if let Some(window) = app.get_webview_window("main") {
-    let _ = window.set_focus();
-    let _ = window.unminimize();
-  }
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
+        let _ = window.unminimize();
+    }
 }
 
 // Extract existing file paths from CLI args (skips the executable name).
 fn parse_launch_files(args: &[String]) -> Vec<String> {
-  args
-    .iter()
-    .skip(1)
-    .filter(|arg| std::path::Path::new(arg).exists())
-    .cloned()
-    .collect()
+    args.iter()
+        .skip(1)
+        .filter(|arg| std::path::Path::new(arg).exists())
+        .cloned()
+        .collect()
 }
 
 const ONEDRIVE_PICKER_HOST_SUFFIXES: &[&str] = &[
-  ".sharepoint.com",
-  ".sharepoint.us",
-  ".sharepoint-mil.us",
-  ".sharepoint.de",
-  ".sharepoint.cn",
+    ".sharepoint.com",
+    ".sharepoint.us",
+    ".sharepoint-mil.us",
+    ".sharepoint.de",
+    ".sharepoint.cn",
 ];
 
 fn is_onedrive_picker_url(url: &tauri::Url) -> bool {
-  if url.scheme() != "https" {
-    return false;
-  }
-  match url.host_str() {
-    Some("onedrive.live.com") => true,
-    Some(host) => ONEDRIVE_PICKER_HOST_SUFFIXES
-      .iter()
-      .any(|suffix| host.ends_with(suffix)),
-    None => false,
-  }
+    if url.scheme() != "https" {
+        return false;
+    }
+    match url.host_str() {
+        Some("onedrive.live.com") => true,
+        Some(host) => ONEDRIVE_PICKER_HOST_SUFFIXES
+            .iter()
+            .any(|suffix| host.ends_with(suffix)),
+        None => false,
+    }
 }
 
 // URLs the webview is allowed to show: the bundled app and dev server only.
 // Anything else (file://, https://...) must never replace the app UI.
 fn is_app_url(url: &tauri::Url) -> bool {
-  match url.scheme() {
-    "tauri" | "about" | "blob" | "data" => true,
-    "http" | "https" => matches!(
-      url.host_str(),
-      Some("tauri.localhost") | Some("localhost") | Some("127.0.0.1")
-    ),
-    _ => false,
-  }
+    match url.scheme() {
+        "tauri" | "about" | "blob" | "data" => true,
+        "http" | "https" => matches!(
+            url.host_str(),
+            Some("tauri.localhost") | Some("localhost") | Some("127.0.0.1")
+        ),
+        _ => false,
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
-  // Wayland stacks (blank window, app dying on tool switch). Opt out unless overridden.
-  #[cfg(target_os = "linux")]
-  if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
-    std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-  }
+    // WebKitGTK's DMA-BUF renderer crashes the web process on NVIDIA and some
+    // Wayland stacks (blank window, app dying on tool switch). Opt out unless overridden.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
 
-  tauri::Builder::default()
+    tauri::Builder::default()
     .plugin(
       // Dropping a file outside a dropzone makes WebKit navigate the webview to
       // that file, killing the app UI and its close handler (window becomes
@@ -378,56 +342,62 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-  use super::{is_app_url, is_onedrive_picker_url};
+    use super::{is_app_url, is_onedrive_picker_url};
 
-  fn picker(raw: &str) -> bool {
-    is_onedrive_picker_url(&tauri::Url::parse(raw).expect("valid url"))
-  }
+    fn picker(raw: &str) -> bool {
+        is_onedrive_picker_url(&tauri::Url::parse(raw).expect("valid url"))
+    }
 
-  #[test]
-  fn allows_the_onedrive_picker_iframe() {
-    assert!(picker("https://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx?x=1"));
-    assert!(picker("https://contoso.sharepoint.us/_layouts/15/FilePicker.aspx"));
-    assert!(picker("https://onedrive.live.com/picker"));
-  }
+    #[test]
+    fn allows_the_onedrive_picker_iframe() {
+        assert!(picker(
+            "https://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx?x=1"
+        ));
+        assert!(picker(
+            "https://contoso.sharepoint.us/_layouts/15/FilePicker.aspx"
+        ));
+        assert!(picker("https://onedrive.live.com/picker"));
+    }
 
-  #[test]
-  fn picker_allowance_is_https_microsoft_hosts_only() {
-    assert!(!picker("http://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx"));
-    assert!(!picker("https://contoso.sharepoint.com.evil.test/"));
-    assert!(!picker("https://evilsharepoint.com/"));
-    assert!(!picker("https://onedrive.live.com.evil.test/"));
-    assert!(!picker("file:///Users/me/report.pdf"));
-  }
+    #[test]
+    fn picker_allowance_is_https_microsoft_hosts_only() {
+        assert!(!picker(
+            "http://contoso-my.sharepoint.com/_layouts/15/FilePicker.aspx"
+        ));
+        assert!(!picker("https://contoso.sharepoint.com.evil.test/"));
+        assert!(!picker("https://evilsharepoint.com/"));
+        assert!(!picker("https://onedrive.live.com.evil.test/"));
+        assert!(!picker("file:///Users/me/report.pdf"));
+    }
 
-  fn allows(raw: &str) -> bool {
-    is_app_url(&tauri::Url::parse(raw).expect("valid url"))
-  }
+    fn allows(raw: &str) -> bool {
+        is_app_url(&tauri::Url::parse(raw).expect("valid url"))
+    }
 
-  #[test]
-  fn allows_bundled_app_and_dev_server() {
-    assert!(allows("tauri://localhost/index.html"));
-    assert!(allows("http://tauri.localhost/"));
-    assert!(allows("http://localhost:5173/"));
-    assert!(allows("http://127.0.0.1:8080/api"));
-    assert!(allows("about:blank"));
-    assert!(allows("blob:http://localhost:5173/abc"));
-    assert!(allows("data:text/html,hi"));
-  }
+    #[test]
+    fn allows_bundled_app_and_dev_server() {
+        assert!(allows("tauri://localhost/index.html"));
+        assert!(allows("http://tauri.localhost/"));
+        assert!(allows("http://localhost:5173/"));
+        assert!(allows("http://127.0.0.1:8080/api"));
+        assert!(allows("about:blank"));
+        assert!(allows("blob:http://localhost:5173/abc"));
+        assert!(allows("data:text/html,hi"));
+    }
 
-  #[test]
-  fn blocks_dropped_files() {
-    // The #6872 lockup: webview navigating to a dropped PDF.
-    assert!(!allows("file:///C:/Users/me/report.pdf"));
-    assert!(!allows("file:///home/me/report.pdf"));
-  }
+    #[test]
+    fn blocks_dropped_files() {
+        // The #6872 lockup: webview navigating to a dropped PDF.
+        assert!(!allows("file:///C:/Users/me/report.pdf"));
+        assert!(!allows("file:///home/me/report.pdf"));
+    }
 
-  #[test]
-  fn blocks_remote_origins() {
-    assert!(!allows("https://example.com/"));
-    assert!(!allows("http://evil.test/"));
-    // Look-alike hosts must not slip past the allowlist.
-    assert!(!allows("https://localhost.evil.test/"));
-    assert!(!allows("https://nottauri.localhost.evil.test/"));
-  }
+    #[test]
+    fn blocks_remote_origins() {
+        assert!(!allows("https://example.com/"));
+        assert!(!allows("http://evil.test/"));
+        // Look-alike hosts must not slip past the allowlist.
+        assert!(!allows("https://localhost.evil.test/"));
+        assert!(!allows("https://nottauri.localhost.evil.test/"));
+    }
 }
