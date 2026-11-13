@@ -207,7 +207,9 @@ describe("useNotificationActions", () => {
   it("opens the failed tool on the failed document alone, in the viewer", async () => {
     await registry().OPEN_IN_TOOL?.run(context());
 
-    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
+    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub], {
+      selectFiles: true,
+    });
     expect(setActiveFileId).toHaveBeenCalledWith("f-1");
     // The viewer scopes the tool to this one file. Any other view would hand it the whole
     // workbench, so a retry on one failed document would re-run across every open file.
@@ -278,7 +280,9 @@ describe("useNotificationActions", () => {
     await registry().VIEW_FILE?.run(context());
 
     // Selecting alone shows nothing: the workbench holds neither the file nor the viewer yet.
-    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub]);
+    expect(addStirlingFileStubs).toHaveBeenCalledWith([h.stub], {
+      selectFiles: true,
+    });
     expect(setActiveFileId).toHaveBeenCalledWith("f-1");
     expect(setWorkbench).toHaveBeenCalledWith("viewer");
   });
