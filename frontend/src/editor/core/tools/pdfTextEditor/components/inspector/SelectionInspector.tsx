@@ -82,6 +82,7 @@ export function SelectionInspector({
             inner={controller.innerTextTags}
             language={controller.textLanguage}
             otherPages={controller.textOtherPages}
+            untaggedLinks={controller.textUntaggedLinks}
           />
         )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (

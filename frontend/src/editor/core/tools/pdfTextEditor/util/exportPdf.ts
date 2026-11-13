@@ -1,6 +1,10 @@
 import i18n from "i18next";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
+  AnnotationEditError,
+  applyAnnotationEdits,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
+import {
   StructureEditError,
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
@@ -22,6 +26,7 @@ import {
 /** Serialize the editor document to a Blob. */
 export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
   const structureEdits = doc.structureEdits();
+  const annotationEdits = doc.annotationEdits();
   const documentLanguage = doc.documentLanguageEdit();
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
@@ -34,6 +39,7 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
     // ones by up to 35% - for no edit at all.
     if (
       structureEdits.length === 0 &&
+      annotationEdits.length === 0 &&
       documentLanguage === undefined &&
       !doc.markedTaggedChanged()
     ) {
@@ -55,6 +61,13 @@ export async function exportToBlob(doc: EditorDocument): Promise<Blob> {
     bytes = await applyStructureEdits(bytes, structureEdits);
   } catch (err) {
     if (!(err instanceof StructureEditError)) throw err;
+    throw accessibilitySaveFailed(err);
+  }
+  // After the structure edits, which add the elements links are given to.
+  try {
+    bytes = await applyAnnotationEdits(bytes, annotationEdits);
+  } catch (err) {
+    if (!(err instanceof AnnotationEditError)) throw err;
     throw accessibilitySaveFailed(err);
   }
   if (documentLanguage !== undefined) {
