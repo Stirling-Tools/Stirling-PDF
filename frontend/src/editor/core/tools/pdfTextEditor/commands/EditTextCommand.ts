@@ -1,5 +1,9 @@
 import i18n from "i18next";
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
+  RolledBackError,
+  type Command,
+} from "@editor/tools/pdfTextEditor/commands/Command";
 import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
@@ -16,6 +20,7 @@ import {
   everyCharIn,
   inkFromRun,
   measureObjSpanPt,
+  moveObjectLeftEdgeTo,
   removeMemberPtrs,
   rotationFromMatrix,
   warmOnPageAdvances,
@@ -29,6 +34,7 @@ import {
   planModifiesWhitespace,
   planParagraphEdit,
   planPartialEdit,
+  revertPartialEditPlan,
   setObjText,
   type ParagraphEditPlan,
   type PartialEditPlan,
@@ -109,6 +115,32 @@ interface RunModelSnapshot {
   pdfiumObjPtr: number;
 }
 
+// A later step's undo redraws what this edit inserted as new objects, which `inserted` cannot name.
+function withGained(
+  m: WrappedPdfiumModule,
+  page: Page,
+  run: TextRun,
+  inserted: readonly number[],
+  before: RunModelSnapshot | null,
+  removed: ReadonlySet<number>,
+): number[] {
+  if (!before) return [...inserted];
+  const kept = new Set(
+    collectMemberPtrs(before).filter((ptr) => ptr && !removed.has(ptr)),
+  );
+  const onPage = new Set(
+    Array.from({ length: m.FPDFPage_CountObjects(page.pagePtr) }, (_, i) =>
+      m.FPDFPage_GetObject(page.pagePtr, i),
+    ),
+  );
+  if (![...kept].every((ptr) => onPage.has(ptr))) return [...inserted];
+  const containers = collectContainersByPtr(run);
+  const gained = collectMemberPtrs(run).filter(
+    (ptr) => ptr && !kept.has(ptr) && !containers.get(ptr),
+  );
+  return [...new Set([...inserted, ...gained])];
+}
+
 // True when a partial-edit plan only ADDED objects (no original object was
 // freed via removePtrs, none mutated in place via a "modify" op).
 function planIsPureInsert(plan: PartialEditPlan): boolean {
@@ -141,6 +173,8 @@ export class EditTextCommand implements Command {
   private prevText: string | null = null;
   /** `prevText`'s tags, read from the run's objects on the first apply. */
   private prevTags: TextTags | null = null;
+  private readonly nextTagsOverride: TextTags | null;
+  private readonly nextFont: { ptr: number; id: string } | null;
 
   private overlaid = false;
   private prevObjPtr = 0;
@@ -169,6 +203,8 @@ export class EditTextCommand implements Command {
   private prevMergedFromPtrs: number[] = [];
   private prevMergedFromTexts: string[] = [];
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
+  /** The font each pre-edit sub-run was drawn in (parallel to its ptrs). */
+  private prevMergedFromFonts: number[] = [];
   /** Set when the apply path took the paragraph-aware partial shortcut. */
   private paragraphPlan: ParagraphEditPlan | null = null;
   private paragraphInsertedPtrs: number[] = [];
@@ -193,10 +229,18 @@ export class EditTextCommand implements Command {
     prev: RunModelSnapshot;
   } | null = null;
 
-  constructor(opts: { pageIndex: number; runId: string; nextText: string }) {
+  constructor(opts: {
+    pageIndex: number;
+    runId: string;
+    nextText: string;
+    nextTags?: TextTags | null;
+    nextFont?: { ptr: number; id: string } | null;
+  }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextText = opts.nextText;
+    this.nextTagsOverride = opts.nextTags ?? null;
+    this.nextFont = opts.nextFont ?? null;
   }
 
   apply(doc: EditorDocument): void {
@@ -224,14 +268,16 @@ export class EditTextCommand implements Command {
     }
 
     this.prevTags ??= readRunTags(doc, page, run);
-    const nextTags = editedTags(
-      doc,
-      this.pageIndex,
-      this.prevTags,
-      this.prevText,
-      this.nextText,
-      run.tagMarks,
-    );
+    const nextTags =
+      this.nextTagsOverride ??
+      editedTags(
+        doc,
+        this.pageIndex,
+        this.prevTags,
+        this.prevText,
+        this.nextText,
+        run.tagMarks,
+      );
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
     // Invisible OCR text over a scan: rewrite the whole run visibly so the
@@ -360,6 +406,9 @@ export class EditTextCommand implements Command {
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
         this.prevMergedFromTexts = [...run.mergedFromTexts];
         this.prevMergedFromBounds = run.mergedFromBounds.map((b) => ({ ...b }));
+        this.prevMergedFromFonts = run.mergedFromPtrs.map((ptr) =>
+          safeGetFont(doc.module, ptr),
+        );
         this.editSnapshot = snapshotRunModel(run);
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
@@ -467,10 +516,11 @@ export class EditTextCommand implements Command {
         ? run.mergedFromTexts
         : borrowPtrs.map(() => run.text);
     const originalFontPtr =
-      canReuseFont && !scanText
+      this.nextFont?.ptr ||
+      (canReuseFont && !scanText
         ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
-        : 0;
+        : 0);
 
     this.revertLines = snapshotRevertLines(
       run,
@@ -605,6 +655,7 @@ export class EditTextCommand implements Command {
         run.fontSubset = false;
       } else {
         // Borrow path: the new objects use the borrowed font handle.
+        if (this.nextFont) run.fontId = this.nextFont.id;
         run.fontSubset = false;
       }
       run.paragraphMemberPtrs = lineAnchorPtrs;
@@ -830,7 +881,14 @@ export class EditTextCommand implements Command {
     // Partial-edit fast path revert: the removed sub-objects are gone from
     // PDFium permanently.
     if (this.partialPlan) {
-      for (const ptr of this.partialInsertedPtrs) {
+      for (const ptr of withGained(
+        m,
+        page,
+        run,
+        this.partialInsertedPtrs,
+        this.editSnapshot,
+        new Set(this.partialPlan.removePtrs.map((r) => r.ptr)),
+      )) {
         if (!ptr) continue;
         try {
           m.FPDFPage_RemoveObject(page.pagePtr, ptr);
@@ -863,6 +921,33 @@ export class EditTextCommand implements Command {
       }
       const revertFallback = fallbackFamilyFor(this.prevFontId ?? run.fontId);
       const removed = new Set(this.partialPlan.removePtrs.map((r) => r.ptr));
+      const snap = this.editSnapshot;
+      const replacements =
+        snap && run.containerPtr === 0
+          ? revertPartialEditPlan(
+              doc,
+              page,
+              run,
+              this.partialPlan,
+              {
+                fonts: this.prevMergedFromFonts,
+                charStarts: snap.mergedFromCharStarts,
+                baselineY: snap.matrixF,
+                fontSubset: snap.fontSubset,
+              },
+              (start, end) => this.prevTagsOf(run, start, end),
+              revertFallback,
+            )
+          : null;
+      if (snap && replacements) {
+        restoreRunModelReplacing(run, snap, replacements);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.partialPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       this.rebuildAsOverlayModel(
         doc,
         page,
@@ -1359,6 +1444,8 @@ export class EditTextCommand implements Command {
           });
           slotLive.push(...ptrs);
         } else if (sr.ptr) {
+          // Move what the edit shifted back beside the redrawn pieces.
+          if (run.containerPtr === 0) moveObjectLeftEdgeTo(m, sr.ptr, sr.x);
           slotLive.push(sr.ptr);
         }
       }
@@ -1384,6 +1471,73 @@ export class EditTextCommand implements Command {
     return i18n.t("pdfTextEditor.commands.typeInto", "Type into {{run}}", {
       run: this.runId,
     });
+  }
+
+  /** Undo or redo a burst as one edit: each step's undo names objects a later step replaced. */
+  moveGroup(
+    doc: EditorDocument,
+    group: readonly Command[],
+    phase: "apply" | "revert",
+  ): boolean {
+    if (group.length < 2) return false;
+    const edits: EditTextCommand[] = [];
+    for (const cmd of group) {
+      if (
+        !(cmd instanceof EditTextCommand) ||
+        cmd.pageIndex !== this.pageIndex ||
+        cmd.runId !== this.runId ||
+        cmd.scanEdited
+      )
+        return false;
+      edits.push(cmd);
+    }
+    const first = edits[0].prevText;
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    if (first === null || !run || isScanRun(run)) return false;
+    const { prevFontPtr, prevFontId } = edits[0];
+    // A later step may have redrawn the run in a fallback; undo goes back to the face the burst started from.
+    const firstFont =
+      edits[0].overlaid && prevFontPtr && prevFontId
+        ? { ptr: prevFontPtr, id: prevFontId }
+        : null;
+    const move = new EditTextCommand({
+      pageIndex: this.pageIndex,
+      runId: this.runId,
+      nextText: phase === "revert" ? first : this.nextText,
+      nextTags: phase === "revert" ? edits[0].prevTags : null,
+      nextFont: phase === "revert" ? firstFont : null,
+    });
+    try {
+      move.apply(doc);
+      if (phase === "revert") edits[0].restoreLayout(doc, run);
+    } catch (err) {
+      try {
+        move.revert(doc);
+      } catch {
+        throw err;
+      }
+      throw new RolledBackError(err);
+    }
+    return true;
+  }
+
+  // The move plans from the burst's shifted pieces; a piece starting where one of this edit's did goes back there, and the pieces after it with it.
+  private restoreLayout(doc: EditorDocument, run: TextRun): void {
+    const snap = this.editSnapshot;
+    if (!snap || run.containerPtr !== 0 || run.text !== snap.text) return;
+    let shift = 0;
+    run.mergedFromBounds = run.mergedFromBounds.map((bounds, i) => {
+      const was = snap.mergedFromCharStarts.indexOf(
+        run.mergedFromCharStarts[i],
+      );
+      const x = snap.mergedFromBounds[was]?.x;
+      if (x !== undefined) shift = x - bounds.x;
+      const ptr = run.mergedFromPtrs[i];
+      if (ptr && shift) moveObjectLeftEdgeTo(doc.module, ptr, bounds.x + shift);
+      return { x: bounds.x + shift, right: bounds.right + shift };
+    });
+    run.bounds = { ...snap.bounds };
+    run.matrix = { ...run.matrix, e: snap.matrixE };
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */
@@ -1809,6 +1963,22 @@ function restoreRunModel(run: TextRun, snap: RunModelSnapshot): void {
   run.fontId = snap.fontId;
   run.fontSubset = snap.fontSubset;
   run.pdfiumObjPtr = snap.pdfiumObjPtr;
+}
+
+function restoreRunModelReplacing(
+  run: TextRun,
+  snap: RunModelSnapshot,
+  replacements: Map<number, number>,
+): void {
+  const swapped = (list: number[]) =>
+    list.map((ptr) => replacements.get(ptr) ?? ptr);
+  restoreRunModel(run, snap);
+  run.mergedFromPtrs = swapped(run.mergedFromPtrs);
+  run.paragraphLeafPtrs = swapped(run.paragraphLeafPtrs);
+  run.paragraphMemberPtrs = swapped(run.paragraphMemberPtrs);
+  for (const slot of run.paragraphLineSlots)
+    slot.mergedFromPtrs = swapped(slot.mergedFromPtrs);
+  run.pdfiumObjPtr = replacements.get(run.pdfiumObjPtr) ?? run.pdfiumObjPtr;
 }
 
 /** LCS over lines: maps next-line index -> matched prev-line index. */

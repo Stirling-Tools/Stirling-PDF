@@ -16,6 +16,12 @@ export interface Command {
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
   supersedes?(adjacent: Command): boolean;
+  /** Undo or redo a merged group in one move, on its last command; false steps through it instead. */
+  moveGroup?(
+    doc: EditorDocument,
+    group: readonly Command[],
+    phase: "apply" | "revert",
+  ): boolean;
 }
 
 export class RolledBackError extends Error {

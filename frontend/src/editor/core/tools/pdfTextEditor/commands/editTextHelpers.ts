@@ -40,6 +40,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -192,7 +193,15 @@ export function sanitizeForBase14(text: string): string {
 }
 
 /** Every PDFium pointer that backs a run. */
-export function collectMemberPtrs(run: TextRun): number[] {
+export function collectMemberPtrs(
+  run: Pick<
+    TextRun,
+    | "paragraphLeafPtrs"
+    | "paragraphMemberPtrs"
+    | "mergedFromPtrs"
+    | "pdfiumObjPtr"
+  >,
+): number[] {
   if (run.paragraphLeafPtrs.length > 0) return run.paragraphLeafPtrs;
   if (run.paragraphMemberPtrs.length > 0) return run.paragraphMemberPtrs;
   if (run.mergedFromPtrs.length > 0) return run.mergedFromPtrs;
@@ -1309,6 +1318,22 @@ export function measureObjBoundsPt(
     top = Math.max(top, m.pdfium.getValue(buf + 12, "float"));
   }
   return right > left ? { left, bottom, right, top } : null;
+}
+
+const LEFT_EDGE_TOLERANCE_PT = 0.02;
+
+/** Shift an object sideways so its inked left edge sits at `x`; one with no ink (a space) is left be. */
+export function moveObjectLeftEdgeTo(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  x: number,
+): void {
+  const span = measureObjSpanPt(m, [ptr]);
+  if (!span) return;
+  const dx = x - span.left;
+  if (Math.abs(dx) > LEFT_EDGE_TOLERANCE_PT) {
+    transformObject(m, ptr, 1, 0, 0, 1, dx, 0);
+  }
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
