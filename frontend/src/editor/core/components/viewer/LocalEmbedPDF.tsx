@@ -26,7 +26,10 @@ import {
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
+import {
+  RenderLayer,
+  RenderPluginPackage,
+} from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
@@ -409,6 +412,8 @@ const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
   sepia: "sepia(0.7) brightness(0.85)",
 };
 
+const PAGE_PREVIEW_MAX_EDGE = 1024;
+
 interface PageLayerProps {
   documentId: string;
   pageIndex: number;
@@ -457,6 +462,49 @@ function PageTiles({
       }}
     >
       <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+    </div>
+  );
+}
+
+/** Low-resolution page bitmap under the tiles, painted before the first tile. */
+function PagePreview({
+  documentId,
+  pageIndex,
+  renderMode,
+}: PageLayerProps & { renderMode: PdfRenderMode }) {
+  const documentState = useDocumentState(documentId);
+  const page = documentState?.document?.pages?.[pageIndex];
+  if (!page) return null;
+  const longestEdge = Math.max(page.size.width, page.size.height);
+  const scale =
+    Number.isFinite(longestEdge) && longestEdge > 0
+      ? Math.min(1, PAGE_PREVIEW_MAX_EDGE / longestEdge)
+      : 1;
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        transition: "filter 0.25s ease",
+        filter: PDF_RENDER_FILTERS[renderMode],
+      }}
+    >
+      <RenderLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        scale={scale}
+        dpr={1}
+        className="pdf-page-preview"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      />
     </div>
   );
 }
@@ -637,6 +685,11 @@ function PageLayers({
   const { isAnnotationMode } = useViewer();
   return (
     <>
+      <PagePreview
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+      />
       <PageTiles
         documentId={documentId}
         pageIndex={pageIndex}
@@ -1344,7 +1397,10 @@ export function LocalEmbedPDF({
       createPluginRegistration(SpreadPluginPackage, {
         defaultSpreadMode: SpreadMode.None,
       }),
-      createPluginRegistration(ScrollPluginPackage),
+      createPluginRegistration(ScrollPluginPackage, {
+        // Keep pages either side mounted so their previews are ready.
+        defaultBufferSize: 4,
+      }),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         // The overlay owns appearances in every mode, so access changes never rebuild the registry.

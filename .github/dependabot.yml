@@ -68,8 +68,8 @@ updates:
       default-days: 7
     rebase-strategy: "auto"
     groups:
-      # An @embedpdf/engines bump fails the build until the local font patch is
-      # re-checked: see the upgrade steps in frontend/scripts/embedpdfFontFallbackPatch.mts.
+      # An @embedpdf/engines bump fails the build until the local engine patches
+      # are re-checked: see the upgrade steps in frontend/scripts/embedpdfEnginesPatch.mts.
       embedpdf:
         patterns:
           - "@embedpdf/*"
