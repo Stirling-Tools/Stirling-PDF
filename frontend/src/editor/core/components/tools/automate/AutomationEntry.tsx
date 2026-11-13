@@ -13,6 +13,7 @@ interface AutomationEntryProps {
   title?: string;
   /** Optional description for tooltip */
   description?: string;
+  subtitle?: string;
   /** MUI Icon component for the badge */
   badgeIcon?: IconName;
   /** Array of tool operation names in the workflow */
@@ -42,6 +43,7 @@ interface AutomationEntryProps {
 export default function AutomationEntry({
   title,
   description,
+  subtitle,
   badgeIcon,
   operations,
   onClick,
@@ -77,7 +79,21 @@ export default function AutomationEntry({
     if (!description && operations.length === 0) return null;
 
     const toolChain = operations.map((op, index) => (
-      <React.Fragment key={`${op}-${index}`}>
+      <span
+        key={`${op}-${index}`}
+        data-testid="automation-chain-step"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {index > 0 && (
+          <Text component="span" size="sm" mx={4}>
+            →
+          </Text>
+        )}
         <Text
           component="span"
           size="sm"
@@ -93,16 +109,11 @@ export default function AutomationEntry({
         >
           {getToolDisplayName(op)}
         </Text>
-        {index < operations.length - 1 && (
-          <Text component="span" size="sm" mx={4}>
-            →
-          </Text>
-        )}
-      </React.Fragment>
+      </span>
     ));
 
     return (
-      <div style={{ minWidth: "400px", width: "auto" }}>
+      <div>
         {description && (
           <Text
             size="sm"
@@ -117,6 +128,7 @@ export default function AutomationEntry({
             style={{
               display: "flex",
               alignItems: "center",
+              flexWrap: "wrap",
               gap: "4px",
               whiteSpace: "nowrap",
             }}
@@ -144,10 +156,31 @@ export default function AutomationEntry({
           flexDirection: "column",
           alignItems: "flex-start",
           flex: 1,
-          overflow: "visible",
+          minWidth: 0,
+          overflow: subtitle ? "hidden" : "visible",
         }}
       >
-        {title ? (
+        {title && subtitle ? (
+          <>
+            <Text
+              size="sm"
+              lineClamp={2}
+              w="100%"
+              style={{ textAlign: "left" }}
+            >
+              {title}
+            </Text>
+            <Text
+              size="xs"
+              c="dimmed"
+              truncate="end"
+              w="100%"
+              style={{ textAlign: "left" }}
+            >
+              {subtitle}
+            </Text>
+          </>
+        ) : title ? (
           // Custom automation with title
           <Text size="sm" style={{ textAlign: "left" }}>
             {title}
