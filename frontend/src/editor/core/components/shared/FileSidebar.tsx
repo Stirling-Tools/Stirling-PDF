@@ -872,10 +872,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
-    // "Clear recents" spares anything filed in a folder, and any disk-linked file
-    // whose edits aren't saved back yet: the library holds the only copy of them.
-    // It closes whatever else is open, and only removes the library's own copies:
-    // cloud files stay on the server and nothing on disk is touched.
+    // Kept: foldered files, which the user filed deliberately, and disk-linked
+    // files whose edits haven't been written back to disk yet.
     const clearableStubs = useMemo(
       () =>
         allFileStubs.filter(

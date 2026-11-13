@@ -309,7 +309,7 @@
   background: transparent;
 }
 
-/* Sits over the count and swaps with it on hover, so counts stay aligned
+/* Sits over the count and swaps with it on hover or focus, so counts stay aligned
    across groups whether or not a group has an action. */
 .file-sidebar-group-action {
   position: absolute;
