@@ -13,6 +13,7 @@ import {
 import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { fallbackFamilyFor } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { embeddedFontProgram } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   listLocalFonts,
   registerFontBytes,
@@ -162,6 +163,37 @@ describe("resolveOriginalFonts", () => {
       family: "Liberation Sans Bold",
       source: "original",
     });
+  });
+
+  it("finds a cut no bold or italic flag can name, and draws with that cut", async () => {
+    await install([
+      face(
+        "Liberation Sans",
+        "Regular",
+        "LiberationSans",
+        "LiberationSans-Regular.ttf",
+      ),
+      face(
+        "Liberation Sans",
+        "Light",
+        "LiberationSans-Light",
+        "DejaVuSans.ttf",
+      ),
+    ]);
+    const light = await fontFile("DejaVuSans.ttf");
+    vi.mocked(embeddedFontProgram).mockReturnValue(light);
+    const id = "pdf:18:Liberation Sans";
+
+    await resolveOriginalFonts(
+      documentNaming("EAAAAA+LiberationSans-Light"),
+      [id],
+      stillOpen,
+    );
+
+    const completion = fontCompletionFor(id);
+    expect(completion?.source).toBe("original");
+    expect(getExternalFontBytes(completion!.family)).toEqual(light);
+    expect(fontNameRefused(id)).toBe(false);
   });
 
   it("trusts the name when the embedded font cannot be read", async () => {

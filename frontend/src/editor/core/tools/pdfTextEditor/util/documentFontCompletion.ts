@@ -120,9 +120,13 @@ function requestForPostScriptName(
     : undefined;
   if (!face) return null;
   const { bold, italic } = faceStyleFlags(face);
-  return [face.family, bold ? "Bold" : "", italic ? "Italic" : ""]
+  const flagged = [face.family, bold ? "Bold" : "", italic ? "Italic" : ""]
     .filter(Boolean)
     .join(" ");
+  if (pickLocalFontFace(fonts, flagged) === face) return flagged;
+  return pickLocalFontFace(fonts, face.fullName) === face
+    ? face.fullName
+    : null;
 }
 
 function candidateRequests(
