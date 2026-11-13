@@ -1,9 +1,10 @@
 import React from "react";
-import { Text, Badge } from "@mantine/core";
+import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@editor/components/tools/toolPicker/FavoriteStar";
+import ToolStatusBadges from "@editor/components/tools/shared/ToolStatusBadges";
 import {
   ToolRegistryEntry,
   getSubcategoryColor,
@@ -82,11 +83,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({
       <span className="tool-panel__fullscreen-list-body">
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Text className="tool-panel__fullscreen-name">{tool.name}</Text>
-          {tool.versionStatus === "alpha" && (
-            <Badge size="xs" variant="light" color="orange">
-              {t("toolPanel.alpha", "Alpha")}
-            </Badge>
-          )}
+          <ToolStatusBadges toolId={id} tool={tool} />
         </div>
       </span>
       {!disabled && (
