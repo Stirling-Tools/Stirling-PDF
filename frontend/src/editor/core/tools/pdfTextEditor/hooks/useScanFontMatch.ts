@@ -172,7 +172,10 @@ export function useScanFontMatch(
   const [loadingDevice, setLoadingDevice] = useState(false);
   const [permission, setPermission] =
     useState<LocalFontPermission>("unsupported");
-  const [picking, setPicking] = useState<ScanRunRef | null>(null);
+  const [opened, setPicking] = useState<
+    (ScanRunRef & { doc: EditorDocument | null }) | null
+  >(null);
+  const picking = opened && opened.doc === store.document ? opened : null;
 
   const loadDevice = useCallback(() => {
     setLoadingDevice(true);
@@ -206,7 +209,7 @@ export function useScanFontMatch(
     let undrawable: boolean | null = null;
     const attempt = () => {
       const doc = store.document;
-      if (!doc) return;
+      if (!doc || doc !== picking.doc) return;
       const page = doc.page(picking.pageIndex);
       const run = page.findRun(picking.runId);
       undrawable ??= !!run && scanBlockUndrawable(doc, run);
@@ -309,7 +312,7 @@ export function useScanFontMatch(
     typedFromScan: !!targetRun?.run.scanEdit?.typedFromScan,
     show: () => {
       setRanked(null);
-      setPicking(selected);
+      setPicking(selected && { ...selected, doc: store.document });
     },
     close: () => setPicking(null),
     deviceFonts: {

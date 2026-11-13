@@ -92,6 +92,14 @@ describe("building the atlas from the scan's letters", () => {
     expect(composeText(accentOnly, "on", 0)).not.toBeNull();
   });
 
+  test("leaves out a word with right-to-left letters, whose ink runs the other way", () => {
+    const atlas = buildGlyphAtlas(
+      [proportional("nonce"), proportional("mאב")],
+      DESCENT,
+    )!;
+    expect([...atlas.glyphs.keys()].sort()).toEqual(["c", "e", "n", "o"]);
+  });
+
   test("keeps both words intact across a gap that is not a whole pixel", () => {
     const atlas = buildGlyphAtlas([proportional("noun")], DESCENT)!;
     const composed = composeText(atlas, "no un", 9.4)!;

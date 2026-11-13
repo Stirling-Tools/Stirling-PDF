@@ -1,6 +1,9 @@
+import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
+  renderScanEdit,
+  scanEditOf,
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -27,15 +30,16 @@ export class SetScanStyleCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run) return;
-    const prevPreferred = preferredScanFace(doc);
-    this.prev = setScanOverride(doc, page, run, (o) => ({
-      ...o,
-      family: undefined,
-      style: this.choice.style,
-    }));
-    if (!this.prev) return;
-    this.prevPreferred = prevPreferred;
+    const state = run ? scanEditOf(doc, run) : null;
+    if (!run || !state) return;
+    const prev = state.override;
+    state.override = { ...prev, family: undefined, style: this.choice.style };
+    if (!renderScanEdit(doc, page, run, state, run.text)) {
+      state.override = prev;
+      return;
+    }
+    this.prev = prev;
+    this.prevPreferred = preferredScanFace(doc);
     setPreferredScanFace(doc, this.choice.face.label);
   }
 
@@ -50,6 +54,10 @@ export class SetScanStyleCommand implements Command {
   }
 
   describe(): string {
-    return `Match scanned text to ${this.choice.face.label}`;
+    return i18n.t(
+      "pdfTextEditor.commands.matchScanFont",
+      "Match scanned text to {{face}}",
+      { face: this.choice.face.label },
+    );
   }
 }

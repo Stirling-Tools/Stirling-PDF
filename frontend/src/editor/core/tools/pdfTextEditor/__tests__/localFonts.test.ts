@@ -182,6 +182,17 @@ describe("listLocalFontsIfGranted", () => {
     expect(fonts?.map((f) => f.family)).toEqual(["Acme"]);
   });
 
+  it("lists the fonts once access is granted after an earlier query failed", async () => {
+    setQuery(vi.fn<QueryStub>().mockRejectedValue(new Error("dismissed")));
+    await expect(listLocalFonts()).resolves.toBeNull();
+    setPermission("granted");
+    setQuery(
+      vi.fn<QueryStub>().mockResolvedValue([face("Acme", "Regular", "Acme")]),
+    );
+    const fonts = await listLocalFontsIfGranted();
+    expect(fonts?.map((f) => f.family)).toEqual(["Acme"]);
+  });
+
   it("never asks when access would have to be requested", async () => {
     setPermission("prompt");
     const query = vi.fn<QueryStub>().mockResolvedValue([]);

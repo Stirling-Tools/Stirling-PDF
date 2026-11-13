@@ -13,6 +13,7 @@ import {
 import {
   loadServerFontBytes,
   loadServerFonts,
+  serverFontCssFamily,
   serverFontsGeneration,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
@@ -360,6 +361,23 @@ export function scanFaces(): Face[] {
   return [...BASE14_FACES, ...bundled, ...scriptFaces, ...device];
 }
 
+/** CSS `font-family` list that draws a scan face by its family or bold name; give a bold name weight 700, as the regular family's CSS face carries the bold cut. */
+export function scanFaceCssFamily(family: string): string {
+  const face = scanFaces().find(
+    (f) => f.family === family || f.bold === family,
+  );
+  const names = [family, face?.family ?? family].flatMap((name) => {
+    const server = serverFontCssFamily(name);
+    return server ? [server, name] : [name];
+  });
+  const named = [...new Set(names)].map((name) => `"${name}", `).join("");
+  if (face?.kind === "serif")
+    return `${named}"Liberation Serif", "Times New Roman", Times, serif`;
+  if (face?.kind === "mono")
+    return `${named}"Liberation Mono", "Courier New", Courier, monospace`;
+  return `${named}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+}
+
 function hasFaceFor(family: string): boolean {
   const key = normaliseName(family);
   return scanFaces().some((face) => normaliseName(face.family) === key);
@@ -418,17 +436,42 @@ async function loadFace(
   return faceFromBytes(spec, regular, boldBytes) ?? "unusable";
 }
 
-async function loadJarFontBytes(
+const cssFacesAdded = new Set<string>();
+
+async function addCssFace(
   family: string,
-  file: string,
+  bytes: Uint8Array,
+  bold: boolean,
+): Promise<void> {
+  const key = `${family}|${bold}`;
+  if (cssFacesAdded.has(key) || typeof FontFace === "undefined") return;
+  const fonts = typeof document === "undefined" ? undefined : document.fonts;
+  if (!fonts) return;
+  cssFacesAdded.add(key);
+  try {
+    const face = new FontFace(family, bytes.slice().buffer, {
+      weight: bold ? "700" : "400",
+    });
+    await face.load();
+    fonts.add(face);
+  } catch {
+    cssFacesAdded.delete(key);
+  }
+}
+
+async function loadJarFontBytes(
+  spec: BundledScanFont,
+  family: string,
 ): Promise<Uint8Array | null> {
   const base = getFontBaseUrl();
   if (!base) return null;
+  const bold = family !== spec.family;
   try {
-    const res = await fetch(`${base}/${file}`);
+    const res = await fetch(`${base}/${spec.files[bold ? 1 : 0]}`);
     const bytes = res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
     if (!bytes || bytes.length === 0) return null;
     registerFontBytes(family, bytes);
+    void addCssFace(spec.family, bytes, bold);
     return bytes;
   } catch {
     return null;
@@ -437,8 +480,7 @@ async function loadJarFontBytes(
 
 function bundledFontBytes(spec: BundledScanFont): FontBytesLoader {
   return async (family) =>
-    (await loadServerFontBytes(family)) ??
-    loadJarFontBytes(family, spec.files[family === spec.family ? 0 : 1]);
+    (await loadServerFontBytes(family)) ?? loadJarFontBytes(spec, family);
 }
 
 function isFace(face: Face | "unusable" | null): face is Face {
@@ -460,6 +502,7 @@ export function loadBundledScanFaces(): Promise<void> {
   forgetFacesOfResetServer();
   if (bundledJob) return bundledJob;
   let job: Promise<void> | null = null;
+  const started = serverFontsGeneration();
   job = (async () => {
     const faces = await Promise.all(
       BUNDLED_SCAN_FONTS.map((spec) =>
@@ -474,8 +517,9 @@ export function loadBundledScanFaces(): Promise<void> {
         ),
       ),
     );
+    if (bundledJob !== job || started !== serverFontsGeneration()) return;
     bundled = faces.filter(isFace);
-    if (faces.includes(null) && bundledJob === job) bundledJob = null;
+    if (faces.includes(null)) bundledJob = null;
     notify();
   })();
   bundledJob = job;
@@ -533,21 +577,29 @@ export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
   const wanted = SCRIPTS.filter((s) => scripts.includes(s.script));
   const jobs = wanted.map((script) => {
     neededScripts.add(script.script);
-    if (wanted.some((other) => other.script === script.servedBy))
-      return undefined;
-    let job = scriptJobs.get(script.script);
-    if (!job) {
-      job = loadServerScript(script)
-        .catch(() => false)
-        .then((settled) => {
-          if (!settled && scriptJobs.get(script.script) === job)
-            scriptJobs.delete(script.script);
-        });
-      scriptJobs.set(script.script, job);
-    }
-    return job;
+    const server = wanted.find((other) => other.script === script.servedBy);
+    if (!server) return scriptJob(script);
+    return scriptJob(server).then(() =>
+      scriptFaces.some((face) => script.server.test(face.family))
+        ? undefined
+        : scriptJob(script),
+    );
   });
   return Promise.all(jobs).then(() => undefined);
+}
+
+function scriptJob(script: ScriptFonts): Promise<void> {
+  let job = scriptJobs.get(script.script);
+  if (!job) {
+    job = loadServerScript(script)
+      .catch(() => false)
+      .then((settled) => {
+        if (!settled && scriptJobs.get(script.script) === job)
+          scriptJobs.delete(script.script);
+      });
+    scriptJobs.set(script.script, job);
+  }
+  return job;
 }
 
 export function _setBundledScanFacesForTests(faces: Face[]): void {
@@ -568,15 +620,17 @@ export function _resetScanFacesForTests(): void {
   deviceFamiliesRead.clear();
   bundledJob = null;
   deviceJob = null;
+  cssFacesAdded.clear();
   notify();
 }
 
-async function deviceFace(family: string): Promise<Face | null> {
+// Null when reading the installed file failed, which a later read may not.
+async function deviceFace(family: string): Promise<Face | "unusable" | null> {
   const fonts = loadedLocalFonts();
   if (!fonts) return null;
   const regularFace = pickLocalFontFace(fonts, family);
   if (!regularFace || regularFace.family.toLowerCase() !== family.toLowerCase())
-    return null;
+    return "unusable";
   const bold = `${family} Bold`;
   const boldFace = pickLocalFontFace(fonts, bold);
   const face = await loadFace(
@@ -584,7 +638,7 @@ async function deviceFace(family: string): Promise<Face | null> {
     loadLocalFontBytes,
     !!boldFace && faceStyleFlags(boldFace).bold,
   );
-  return isFace(face) ? face : null;
+  return face;
 }
 
 function sameOutlines(a: Face, b: Face): boolean {
@@ -598,10 +652,14 @@ async function readDeviceFaces(
 ): Promise<Face[]> {
   const faces = [...known];
   for (const family of families) {
-    if (serverFamiliesTaken.has(normaliseName(family)) || hasFaceFor(family))
+    if (serverFamiliesTaken.has(normaliseName(family)) || hasFaceFor(family)) {
+      deviceFamiliesRead.add(family);
       continue;
+    }
     const face = await deviceFace(family);
-    if (face && !faces.some((other) => sameOutlines(other, face)))
+    if (face === null) continue;
+    deviceFamiliesRead.add(family);
+    if (isFace(face) && !faces.some((other) => sameOutlines(other, face)))
       faces.push(face);
   }
   return faces;
@@ -629,9 +687,7 @@ export function loadDeviceScanFaces(): Promise<number> {
       if (deviceJob === job) deviceJob = null;
       return device.length;
     }
-    const families = unreadDeviceFamilies();
-    for (const family of families) deviceFamiliesRead.add(family);
-    device = await readDeviceFaces(families, device);
+    device = await readDeviceFaces(unreadDeviceFamilies(), device);
     deviceRead = true;
     notify();
     return device.length;

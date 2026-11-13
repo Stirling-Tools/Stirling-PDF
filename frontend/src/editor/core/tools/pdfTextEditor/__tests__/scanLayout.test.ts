@@ -57,6 +57,38 @@ describe("layoutScanEdit", () => {
     expect(l.kept.every((k) => !k.moved)).toBe(true);
   });
 
+  it("draws a replaced word where it was when the scan already had its spaces", () => {
+    const lines = block("NORTH HARBOUR CO");
+    lines[0].words[1].lead = 2;
+    lines[0].words[1].x += 8;
+    const l = run(lines, "NORTH   BAY CO");
+    expect(l.typed).toEqual([
+      expect.objectContaining({ text: "BAY", x: lines[0].words[1].x }),
+    ]);
+  });
+
+  it("starts a replaced first word where the scan's indented line starts", () => {
+    const lines = block("NORTH HARBOUR");
+    lines[0].words[0].lead = 2;
+    const l = run(lines, "  SOUTH HARBOUR");
+    expect(l.typed).toEqual([
+      expect.objectContaining({ text: "SOUTH", x: lines[0].words[0].x }),
+    ]);
+  });
+
+  it("keeps every word a typed word replaces", () => {
+    const l = run(block("NORTH HARBOUR CO"), "NORTH BAY");
+    expect(l.typed).toEqual([
+      expect.objectContaining({
+        text: "BAY",
+        replaced: [
+          expect.objectContaining({ text: "HARBOUR" }),
+          expect.objectContaining({ text: "CO" }),
+        ],
+      }),
+    ]);
+  });
+
   it("measures no word on a line the edit left alone", () => {
     const measured: string[] = [];
     run(block("NORTH HARBOUR CO", "TEL 123"), "NORTH HARBOUR CO\nFAX 123", {

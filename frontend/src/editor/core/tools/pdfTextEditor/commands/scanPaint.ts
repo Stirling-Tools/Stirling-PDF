@@ -5,7 +5,10 @@ import {
   type PageRect,
 } from "@editor/tools/pdfTextEditor/types";
 import { BLACK, WHITE } from "@editor/tools/pdfTextEditor/model/Color";
-import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  applyTagMarks,
+  type TagMark,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { capturePatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
@@ -206,6 +209,8 @@ export function drawInFont(
     return;
   }
   const ptrs = placeText(doc, page, placement);
+  // The OCR words this replaces leave the page, so the drawn copy carries their tags.
+  applyTagMarks(doc.module, doc.docPtr, ptrs, canvas.tagMarks);
   keepClear(doc.module, ptrs, limit);
   canvas.created.push(...ptrs);
   canvas.textPtrs.push(...ptrs);

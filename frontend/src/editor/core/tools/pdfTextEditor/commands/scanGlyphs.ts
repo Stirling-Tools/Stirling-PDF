@@ -132,6 +132,10 @@ function evenPitch(steps: number[]): number | null {
   return onPitch.length >= steps.length * ON_PITCH ? pitch : null;
 }
 
+// Spans run left to right in ink order, so a word holding right-to-left letters would pair letters with the wrong ink.
+const RIGHT_TO_LEFT =
+  /[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}]/u;
+
 export function buildGlyphAtlas(
   words: ScannedWord[],
   descent: number,
@@ -140,7 +144,8 @@ export function buildGlyphAtlas(
     (w) =>
       w.spans.length > 0 &&
       w.spans.length === [...w.text].length &&
-      w.height > 0,
+      w.height > 0 &&
+      !RIGHT_TO_LEFT.test(w.text),
   );
   if (usable.length === 0) return null;
   const scale = usable[0].scale;

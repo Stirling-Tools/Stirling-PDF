@@ -1024,6 +1024,12 @@ function renderUprightScanEdit(
     inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x;
   const shows = (t: string, anchor: LayoutWord | null) =>
     !!composed(t) || styleCovers(styleOf(anchor), t);
+  // Text no face can show keeps the scanned words it replaces, so it spans them.
+  const keptWidth = (anchor: LayoutWord, replaced: LayoutWord[]) => {
+    const last =
+      replaced.filter((w) => w.line === anchor.line).at(-1) ?? anchor;
+    return last.x + inkWidth(last) - anchor.x;
+  };
 
   const plan = onOriginalScan(doc, page, state, () => {
     const lines = state.lines.map((l, li) => ({
@@ -1054,8 +1060,8 @@ function renderUprightScanEdit(
       pitch,
       space,
       wordWidth: inkWidth,
-      textWidth: (t, anchor) => {
-        if (!shows(t, anchor)) return anchor ? inkWidth(anchor) : 0;
+      textWidth: (t, anchor, replaced) => {
+        if (!shows(t, anchor)) return anchor ? keptWidth(anchor, replaced) : 0;
         const glyphs = composed(t);
         const a = atlas();
         if (glyphs && a) return (glyphs.inkRight - glyphs.inkLeft) / a.scale;
@@ -1108,9 +1114,7 @@ function renderUprightScanEdit(
   });
   if (!plan) return false;
   const { layout, kept, moving, unshown } = plan;
-  const keptScan = new Set(
-    [...unshown].flatMap((t) => (t.anchor ? [t.anchor] : [])),
-  );
+  const keptScan = new Set([...unshown].flatMap((t) => t.replaced));
 
   for (const p of state.created) removeAndDestroyObject(m, page.pagePtr, p);
   state.created = [];
@@ -1340,17 +1344,23 @@ export function wrapScanText(
 ): string | null {
   const state = scanEditOf(doc, run);
   if (!state || state.lines.length === 0) return null;
-  const style =
-    state.override.style ?? drawnBlockStyle(doc, state) ?? fallbackStyle(state);
+  const style = withOverride(
+    state.override,
+    state.override.style ?? drawnBlockStyle(doc, state) ?? fallbackStyle(state),
+  );
   const width = (line: string) =>
     spanOf(doc, page, line, style.family, style.fontSize) * style.stretch;
   const fits = (line: string) => line === "" || width(line) <= maxWidthPt;
-  const lineCount = run.text.split("\n").length;
-  const wrapped = rewrapLines(
-    run.text,
-    fits,
-    roomBelow(page, run, state, linePitch(state, style), lineCount),
-  );
+  const grown = rewrapLines(run.text, fits, true);
+  const wrapped = roomBelow(
+    page,
+    run,
+    state,
+    linePitch(state, style),
+    grown.split("\n").length,
+  )
+    ? grown
+    : rewrapLines(run.text, fits, false);
   // All or nothing: without room for the last line's overflow the text would just stick out on another line.
   const settled = wrapped
     .split("\n")
@@ -1365,10 +1375,11 @@ function roomBelow(
   pitch: number,
   lineCount: number,
 ): boolean {
+  const added = lineCount - state.lines.length;
+  if (added <= 0) return true;
   // Lines of a turned block are not in the page space other runs are in.
   if (state.frame) return false;
   const last = state.lines[state.lines.length - 1];
-  const added = Math.max(0, lineCount - state.lines.length) + 1;
   const bottom = last.baseline - added * pitch - last.height * 0.35;
   const top = last.baseline - last.height * 0.35;
   const left = Math.min(...state.lines.map((l) => l.words[0]?.x ?? Infinity));
@@ -1590,10 +1601,12 @@ export function scanDrawnFont(
 ): ScanDrawnFont | null {
   const state = run.scanEdit;
   if (!state || state.typedFromScan) return null;
-  const style = state.override.style ?? drawnBlockStyle(doc, state);
-  if (!style) return null;
+  const family =
+    state.override.family ??
+    (state.override.style ?? drawnBlockStyle(doc, state))?.family;
+  if (!family) return null;
   const face = scanFaces().find(
-    (f) => f.family === style.family || f.bold === style.family,
+    (f) => f.family === family || f.bold === family,
   );
-  return { family: style.family, label: face?.label ?? style.family };
+  return { family, label: face?.label ?? family };
 }
