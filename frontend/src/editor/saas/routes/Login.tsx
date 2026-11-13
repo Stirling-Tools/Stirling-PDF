@@ -21,6 +21,7 @@ import {
   takePendingDestination,
 } from "@editor/services/pendingDestination";
 import { Icon } from "@editor/ui/Icon";
+import { leadsToTeam } from "@editor/routes/authShared/nextPath";
 
 // Import login components
 import ErrorMessage from "@editor/auth/ui/ErrorMessage";
@@ -72,10 +73,17 @@ export default function Login() {
     }
   }, []);
 
+  const buyingTeam = leadsToTeam(nextPath);
+
   /** On to where the visitor was heading, which is then no longer remembered. */
   const continueToNext = () => {
     clearPendingDestination();
     navigate(nextPath ?? "/", { replace: true });
+  };
+
+  const leaveTeamCheckout = () => {
+    clearPendingDestination();
+    navigate("/", { replace: true });
   };
 
   useEffect(() => {
@@ -309,6 +317,12 @@ export default function Login() {
         />
       </div>
 
+      {buyingTeam && (
+        <h1 className="auth-team-heading">
+          {t("login.buyTeamTitle", "Sign in to buy Stirling Team")}
+        </h1>
+      )}
+
       <ErrorMessage error={error} />
 
       {/* OAuth + magic link group — single flex column so gap is uniform */}
@@ -450,25 +464,45 @@ export default function Login() {
       </div>
 
       {/* Skip — small + muted, at the very bottom */}
-      <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
-        <Button
-          variant="tertiary"
-          onClick={handleAnonymousSignIn}
-          disabled={isSigningIn}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "0.8125rem",
-            fontWeight: 500,
-            color: "var(--c-text-subtle)",
-          }}
-        >
-          {isSigningIn
-            ? t("login.signingIn", "Signing in...")
-            : `${t("signup.skip", "Skip")} →`}
-        </Button>
-      </div>
+      {!buyingTeam && (
+        <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+          <Button
+            variant="tertiary"
+            onClick={handleAnonymousSignIn}
+            disabled={isSigningIn}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "var(--c-text-subtle)",
+            }}
+          >
+            {isSigningIn
+              ? t("login.signingIn", "Signing in...")
+              : `${t("signup.skip", "Skip")} →`}
+          </Button>
+        </div>
+      )}
+      {buyingTeam && session && isAnonymous && (
+        <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
+          <Button
+            variant="tertiary"
+            onClick={leaveTeamCheckout}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              color: "var(--c-text-subtle)",
+            }}
+          >
+            {`← ${t("login.backToStirling", "Back to Stirling")}`}
+          </Button>
+        </div>
+      )}
     </AuthLayout>
   );
 }

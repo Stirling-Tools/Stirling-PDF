@@ -65,6 +65,14 @@
   width: auto;
 }
 
+.auth-team-heading {
+  margin: -1rem 0 1.5rem;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
 /* ── Page entrance animation ────────────────────────────────────────── */
 @keyframes authFadeUp {
   from {

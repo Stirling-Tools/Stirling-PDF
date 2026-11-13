@@ -46,6 +46,7 @@ function mount(entry: string) {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/enterprise" element={<div>Enterprise page</div>} />
+            <Route path="/" element={<div>Editor</div>} />
           </Routes>
         </MemoryRouter>
       </TestQueryProvider>
@@ -77,6 +78,73 @@ describe("SaaS login with a guest session", () => {
     fireEvent.click(screen.getByRole("button", { name: /skip/i }));
     expect(signInAnonymously).not.toHaveBeenCalled();
     expect(screen.getByText("Enterprise page")).toBeInTheDocument();
+  });
+
+  it("offers a guest heading to /team no way to skip, since a guest cannot buy Team", () => {
+    mount("/login?next=%2Fteam");
+    expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers no skip when `next` reaches /team with a trailing slash", () => {
+    mount("/login?next=%2Fteam%2F");
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers a signed-out visitor heading to /team no way to skip either", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam%3Futm_campaign%3Dnov");
+    expect(
+      screen.queryByRole("button", { name: /skip/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps skip on a plain sign-in", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login");
+    expect(screen.getByRole("button", { name: /skip/i })).toBeInTheDocument();
+  });
+
+  it("tells a visitor heading to /team that this sign-in is for buying Team", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam");
+    expect(
+      screen.getByRole("heading", { name: "login.buyTeamTitle" }),
+    ).toBeInTheDocument();
+  });
+
+  it("gives a plain sign-in no Team heading and no way back", () => {
+    mount("/login");
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /login.backToStirling/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("lets a guest on the Team sign-in go back to the editor as the same guest", () => {
+    mount("/login?next=%2Fteam");
+    fireEvent.click(
+      screen.getByRole("button", { name: /login.backToStirling/ }),
+    );
+    expect(screen.getByText("Editor")).toBeInTheDocument();
+    expect(destination.clearPendingDestination).toHaveBeenCalled();
+    expect(signInAnonymously).not.toHaveBeenCalled();
+  });
+
+  it("offers a signed-out visitor on the Team sign-in no way back, since there is no guest to return to", () => {
+    auth.session = null;
+    auth.isAnonymous = false;
+    mount("/login?next=%2Fteam");
+    expect(
+      screen.queryByRole("button", { name: /login.backToStirling/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("leaves no remembered destination behind once it has sent them on", () => {
