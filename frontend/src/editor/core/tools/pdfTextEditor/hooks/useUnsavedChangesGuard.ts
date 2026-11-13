@@ -1,5 +1,8 @@
-import { startTransition, useEffect } from "react";
-import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { startTransition, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@editor/contexts/NavigationContext";
 
 // Guard unsaved edits on BOTH exit routes.
 //
@@ -19,6 +22,13 @@ export function useUnsavedChangesGuard(
     registerUnsavedChangesChecker,
     unregisterUnsavedChangesChecker,
   } = actions;
+  const { hasUnsavedChanges } = useNavigationState();
+  const flagCaughtUpRef = useRef(false);
+
+  useLayoutEffect(() => {
+    if (!dirty) flagCaughtUpRef.current = false;
+    else if (hasUnsavedChanges) flagCaughtUpRef.current = true;
+  }, [dirty, hasUnsavedChanges]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -31,7 +41,8 @@ export function useUnsavedChangesGuard(
   }, [dirty]);
 
   useEffect(() => {
-    registerUnsavedChangesChecker(isDirty);
+    // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
+    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
     return () => unregisterUnsavedChangesChecker();
   }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
 

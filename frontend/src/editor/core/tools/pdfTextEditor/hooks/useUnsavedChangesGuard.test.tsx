@@ -73,6 +73,16 @@ describe("useUnsavedChangesGuard", () => {
     expect(leave).toHaveBeenCalledTimes(1);
   });
 
+  it("lets navigation through once the user discards the edits", () => {
+    renderEditor();
+    act(() => setDirty(true));
+    expect(navigation.hasUnsavedChanges).toBe(true);
+    act(() => navigation.setHasUnsavedChanges(false));
+    const leave = vi.fn();
+    act(() => navigation.requestNavigation(leave));
+    expect(leave).toHaveBeenCalledTimes(1);
+  });
+
   it("stops holding navigation back once the editor closes", () => {
     renderEditor();
     act(() => setDirty(true));
