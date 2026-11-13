@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -19,6 +20,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
@@ -163,6 +165,13 @@ public class FontEmbeddingService {
     }
 
     private static boolean hasFormFields(PDDocument document) throws IOException {
+        // Invisible signature fields can be listed in the AcroForm without any page widget.
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm(null);
+        COSArray fields =
+                acroForm == null ? null : acroForm.getCOSObject().getCOSArray(COSName.FIELDS);
+        if (fields != null && fields.size() > 0) {
+            return true;
+        }
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
                 if (annotation instanceof PDAnnotationWidget) {
