@@ -4,7 +4,7 @@ import {
   PdfiumImage,
 } from "@editor/services/pdfiumDocBuilder";
 import type { TFunction } from "i18next";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
 
 interface StartPageParams {
   doc: PdfiumDocument;
