@@ -2,7 +2,14 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -573,14 +580,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     insertPastedText,
   });
 
-  const canGroup = selection.runIds.length >= 2;
-  const canUngroup = (() => {
-    if (selection.runIds.length !== 1) return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphLineCount ?? 0) > 1;
-  })();
   const loadDiskFile = useCallback(
     (file: File, password?: string) => {
       const loading = load(file, password);
@@ -711,29 +710,62 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     store.clearPasswordPrompt();
   }, [store, cancelAutoLoad]);
 
+  const onSetGroupingMode = useCallback(
+    (mode: GroupingMode) => store.setGroupingMode(mode),
+    [store],
+  );
+  const onSetWidthMode = useCallback(
+    (m: WidthMode) => store.setWidthMode(m),
+    [store],
+  );
+  const onSetShowRulers = useCallback(
+    (show: boolean) => store.setShowRulers(show),
+    [store],
+  );
+  const runOcr = ocr.runOcr;
+  const onRunOcr = useCallback(() => {
+    if (!savingRef.current && !applying) void runOcr();
+  }, [applying, runOcr]);
+  const removePassword = useCallback(() => {
+    if (!sourceFileId) return;
+    setSelectedFiles([sourceFileId]);
+    handleToolSelect("removePassword");
+  }, [sourceFileId, setSelectedFiles, handleToolSelect]);
+  const onOpenFind = useCallback(() => {
+    if (store.toggleFindOpen()) pinWorkbench();
+  }, [store, pinWorkbench]);
+  const onShowHelp = useCallback(() => store.setHelpOpen(true), [store]);
+  const cancelSaveRisk = useCallback(() => setSaveRisks(null), []);
+  const cancelPendingOpen = useCallback(() => setPendingOpen(null), []);
+
+  // Deferred so the typed letter is drawn before the panel, which a burst of typing outdates.
+  const panel = useDeferredValue(
+    useMemo(() => ({ state, selection }), [state, selection]),
+  );
+  const canUngroup = useMemo(() => {
+    const ids = panel.selection.runIds;
+    if (ids.length !== 1) return false;
+    const run = panel.state.pages
+      .flatMap((p) => p.runs)
+      .find((r) => r.id === ids[0]);
+    return !!run && (run.paragraphLineCount ?? 0) > 1;
+  }, [panel]);
   const sidebarProps = {
     store,
-    state,
-    selection,
-    canGroup,
+    state: panel.state,
+    selection: panel.selection,
+    canGroup: panel.selection.runIds.length >= 2,
     canUngroup,
     onGroup: handleMergeSelection,
     onUngroup: handleUngroupSelection,
-    onSetGroupingMode: (mode: GroupingMode) => store.setGroupingMode(mode),
-    onSetWidthMode: (m: WidthMode) => store.setWidthMode(m),
-    onSetShowRulers: (show: boolean) => store.setShowRulers(show),
-    onRunOcr: () => {
-      if (!savingRef.current && !applying) void ocr.runOcr();
-    },
+    onSetGroupingMode,
+    onSetWidthMode,
+    onSetShowRulers,
+    onRunOcr,
     ocrRunning: ocr.running,
-    ocrAvailable: state.loading && !ocr.running ? null : ocr.available,
+    ocrAvailable: panel.state.loading && !ocr.running ? null : ocr.available,
     ocrBlockedReason: ocr.blockedReason,
-    onRemovePassword: sourceFileId
-      ? () => {
-          setSelectedFiles([sourceFileId]);
-          handleToolSelect("removePassword");
-        }
-      : undefined,
+    onRemovePassword: sourceFileId ? removePassword : undefined,
   };
 
   return (
@@ -768,7 +800,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       <SaveRiskModal
         risks={saveRisks}
         onConfirm={handleConfirmSaveRisk}
-        onCancel={() => setSaveRisks(null)}
+        onCancel={cancelSaveRisk}
       />
       <PasswordPromptModal
         prompt={state.passwordPrompt}
@@ -779,7 +811,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       <DiscardChangesModal
         incomingFileName={pendingOpen?.file.name ?? null}
         onConfirm={confirmPendingOpen}
-        onCancel={() => setPendingOpen(null)}
+        onCancel={cancelPendingOpen}
       />
       {isMobile ? (
         <>
@@ -808,15 +840,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           onPickFile={onPickWorkbenchFile}
           onSave={handleSave}
           onDownload={handleDownload}
-          onOpenFind={() => {
-            if (store.getState().findOpen) {
-              store.setFindOpen(false);
-              return;
-            }
-            pinWorkbench();
-            store.setFindOpen(true);
-          }}
-          onShowHelp={() => store.setHelpOpen(true)}
+          onOpenFind={onOpenFind}
+          onShowHelp={onShowHelp}
         />
       )}
     </Stack>

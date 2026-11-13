@@ -219,6 +219,10 @@ export class EditorStore {
     this.patch({ mode });
   }
 
+  toggleMode(mode: InteractionMode): void {
+    this.setMode(this.state.mode === mode ? "select" : mode);
+  }
+
   setWidthMode(widthMode: WidthMode): void {
     this.patch({ widthMode });
   }
@@ -230,6 +234,12 @@ export class EditorStore {
   setFindOpen(findOpen: boolean): void {
     if (this.state.findOpen === findOpen) return;
     this.patch({ findOpen });
+  }
+
+  /** Returns whether find is now open. */
+  toggleFindOpen(): boolean {
+    this.setFindOpen(!this.state.findOpen);
+    return this.state.findOpen;
   }
 
   setHelpOpen(helpOpen: boolean): void {

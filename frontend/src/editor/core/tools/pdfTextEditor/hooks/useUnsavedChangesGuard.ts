@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { startTransition, useEffect } from "react";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 
 // Guard unsaved edits on BOTH exit routes.
@@ -23,7 +23,8 @@ export function useUnsavedChangesGuard(dirty: boolean): void {
   }, [dirty]);
 
   useEffect(() => {
-    setHasUnsavedChanges(dirty);
+    // The flag re-renders most of the app; urgent, it holds the first typed letter off screen.
+    startTransition(() => setHasUnsavedChanges(dirty));
     // Clear on unmount so a stale flag cannot block navigation after the
     // editor is gone.
     return () => setHasUnsavedChanges(false);
