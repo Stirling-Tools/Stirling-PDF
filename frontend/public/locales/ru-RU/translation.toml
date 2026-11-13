@@ -1328,6 +1328,10 @@ label = "Каталоги отслеживаемых папок"
 description = "Язык по умолчанию для новых пользователей (например, en_US, es_ES)"
 label = "Локаль по умолчанию"
 
+[admin.settings.general.enableFeedback]
+description = "Let users send feedback to the Stirling team"
+label = "Enable Feedback"
+
 [admin.settings.general.fileUploadLimit]
 description = "Максимальный размер загружаемого файла (например, 100MB, 1GB)"
 label = "Лимит загрузки файлов"
@@ -2969,6 +2973,7 @@ loadError = "Не удалось загрузить пользователей"
 noTeam = "Без команды"
 noUsers = "Другие пользователи не найдены."
 placeholder = "Выберите пользователей..."
+signInRequired = "Sign in to request signatures from other people."
 you = "{{name}} (Вы)"
 
 [certSign.device]
@@ -3056,7 +3061,6 @@ ssoManaged = "Ваша учётная запись управляется ваш
 title = "Изменить учетные данные"
 
 [changeMetadata]
-filenamePrefix = "метаданные"
 submit = "Изменить"
 tags = "редактировать,изменить,обновить,метаданные,свойства,свойства документа,автор,заголовок,тема,ключевые слова,создатель,производитель,информация,информация о документе,свойства файла"
 
@@ -3265,6 +3269,248 @@ not_found = "Не удалось найти запрашиваемую инфо�
 processing = "Обработка ({{outcome}})..."
 unsupported_capability = "Неподдерживаемая возможность: {{capability}}"
 usage_limit_reached = "Вы достигли лимита использования. Проверьте варианты плана, чтобы продолжить."
+
+[checkAccessibility]
+aboutRow = "About {{label}}"
+checking = "Checking..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Download accessibility report"
+fileFailed = "failed"
+pickFile = "Show results for"
+submit = "Check accessibility"
+
+[checkAccessibility.category]
+altText = "Alternative text"
+fonts = "Fonts"
+language = "Language"
+links = "Links & annotations"
+metadata = "Metadata & settings"
+structure = "Tags & structure"
+
+[checkAccessibility.categoryTip]
+altText = "Images need a short text description for screen readers to read out instead."
+fonts = "Fonts need to be in the file, with every character linked to real text, so the text can be read aloud and copied."
+language = "Screen readers need to know the document's language to pronounce it correctly."
+links = "Links, comments and form fields need tags and descriptions, and a tab order that follows the page."
+metadata = "The title, PDF/UA declaration and other settings that assistive technology reads from the file."
+structure = "Tags tell screen readers what each part of a page is, such as a heading, list or table, and the order to read it in."
+
+[checkAccessibility.checks]
+label = "{{passed}} of {{total}} checks passed"
+
+[checkAccessibility.error]
+download = "The accessibility report could not be created. Try again."
+fileTitle = "This file could not be checked"
+partial = "Some files could not be checked."
+
+[checkAccessibility.facts]
+declares = "Declares PDF/UA"
+displaysTitle = "Shows its title"
+fonts = "Fonts embedded"
+language = "Declares a language"
+notEncrypted = "Not encrypted"
+tagged = "Tagged"
+title = "Has a title"
+
+[checkAccessibility.factTip]
+declares = "The file's metadata says it follows PDF/UA."
+displaysTitle = "PDF readers show the title, not the file name, when the file opens."
+fonts = "Every font the text uses is included in the file."
+language = "The file says which language its text is in."
+notEncrypted = "The file isn't encrypted. Encryption can stop assistive technology reading it."
+tagged = "The file has tags describing its structure. Without them, screen readers only get plain text."
+title = "The file has a title in its metadata."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} image needs a description (page {{pages}})"
+summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Applies to"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Details"
+instances_one = "{{count}} instance"
+instances_other = "{{count}} instances"
+onPages_one = "Page {{pages}}"
+onPages_other = "Pages {{pages}}"
+onPagesPartial_one = "Page {{pages}} (list may be incomplete)"
+onPagesPartial_other = "Pages {{pages}} (list may be incomplete)"
+pages = "Pages"
+pagesPartialValue = "{{pages}} (only the first occurrences record a page, so this list may be incomplete)"
+requirement = "Requirement"
+rule = "Rule"
+standard = "Standard"
+where = "Where"
+
+[checkAccessibility.manual]
+clearAll = "Clear all"
+done = "Done"
+inProgress = "In progress"
+markAllDone = "Mark all as done"
+tip = "Things only a person can judge, such as reading order and whether image descriptions make sense. Tick each one once you've checked it, and your ticks go into the downloaded report."
+title = "Manual checks"
+
+[checkAccessibility.objects]
+annotation = "An annotation"
+bookmark = "A bookmark"
+character = "A character in a font"
+contentPiece = "A piece of page content"
+document = "The document"
+drawing = "A drawing"
+figure = "A figure"
+file = "The file itself"
+font = "A font"
+form = "The form"
+formField = "A form field"
+link = "A link"
+markedContent = "Marked page content"
+metadata = "The document metadata"
+page = "A page"
+properties = "The document properties"
+tag = "A {{name}} tag"
+tagTree = "The tag tree"
+textPiece = "A piece of text"
+translatedMetadata = "A metadata entry with translations"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (continued)"
+footer = "Checked with Stirling PDF"
+page = "Page {{n}}"
+title = "Accessibility report"
+
+[checkAccessibility.result]
+fail = "Fail"
+failSummary = "Screen readers may not be able to read all of this document."
+partial = "Partial"
+partialSummary = "Screen readers can read this document, but some checks fail."
+pass = "Pass"
+passSummary = "Passes every automated PDF/UA check."
+
+[checkAccessibility.rules]
+annotationLanguage = "Comment or link text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+annotationNoDescription = "A comment, link or drawing has no text description, so screen readers have nothing to announce."
+annotationNotTagged = "A comment or drawing isn't tagged as an annotation, so screen readers can't reach it in reading order."
+artifactInsideTagged = "Something marked as decoration sits inside tagged content, so it is both read and skipped."
+bookmarkLanguage = "The bookmarks don't have a language set, so screen readers don't know which language to read them in. Set the document's language to fix this."
+conformancePrefix = "The PDF/UA declaration in the metadata uses the wrong prefix, so PDF readers may not recognise it."
+contentLanguage = "The text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+customTagNotMapped = "A tag uses a custom name that isn't linked to a standard tag, so screen readers don't know what it is."
+figureNoAlt = "An image is tagged as a figure but has no description, so screen reader users won't know what it shows."
+fontMissingGlyphs = "An included font is missing some of the characters the document uses."
+fontNotEmbedded = "A font isn't included in the file, so the text may look different, or be read differently, on another computer."
+formFieldNotTagged = "A form field isn't tagged as part of a form, so screen readers may not find it."
+genericHeading = "A heading uses the H tag, which has no level. PDF/UA-2 needs H1 to H6 so screen reader users can tell how headings nest."
+glyphWidths = "A font's character widths in the file don't match the font itself, so text may be spaced wrongly."
+headingSkipped = "Heading levels skip a step, for example from Heading 1 straight to Heading 3, which makes moving between headings confusing."
+linkNoDescription = "A link has no description, so screen readers can only read out its address, or nothing."
+linkNotTagged = "A link isn't tagged as a link, so screen readers won't announce it as one."
+metadataLanguage = "The metadata, such as the title, doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+noConformanceClaim = "The file doesn't say it follows PDF/UA. Its metadata needs a PDF/UA identification entry."
+noDocumentTag = "The tags need a single Document tag at the top, with everything else inside it."
+noLanguage = "The document doesn't say which language it is in, so screen readers may read it in the wrong language."
+noMetadataStream = "The file has no XMP metadata, which is where PDF/UA keeps the document's title and conformance details."
+noTags = "The file has no tags at all, so screen readers can't tell headings, paragraphs, lists or tables apart, or read them in the right order."
+notdefGlyph = "The text uses a \"missing character\" placeholder, which shows as a blank or a box and can't be read aloud."
+noteTag = "The file uses the Note tag, which PDF/UA-2 replaces with FENote for footnotes and endnotes."
+noTitle = "The document has no title in its metadata."
+notMarkedTagged = "The file isn't flagged as tagged, so assistive technology may ignore the tags it has."
+notPdf2Tags = "PDF/UA-2 needs the tags a PDF 2.0 file uses. These look like PDF 1.7 tags, which usually means the file was tagged for PDF/UA-1."
+noUnicode = "Some characters can't be turned into readable text, so screen readers and copy and paste may get them wrong."
+replacementTextLanguage = "Some replacement text doesn't have a language set, so screen readers don't know which language to read it in. Set the document's language to fix this."
+standardTagRemapped = "A standard tag is linked to a custom tag, so screen readers lose its meaning."
+symbolicEncoding = "A symbol font carries an encoding it shouldn't, so its characters may come out as the wrong letters."
+tabOrder = "A page with links or comments doesn't set its tab order to follow the document, so keyboard users may jump around the page."
+taggedInsideArtifact = "Tagged content sits inside something marked as decoration, so screen readers may skip it."
+titleNotDisplayed = "PDF readers will show the file name instead of the document's title. The file needs its \"display document title\" setting turned on."
+untaggedContent = "Something on the page is neither tagged as content nor marked as decoration, so screen readers can't tell whether to read it. This is often a background image, header, footer or page number."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "No language for comments or links"
+annotationNoDescription = "Comment, link or drawing without a description"
+annotationNotTagged = "Comment or drawing not tagged"
+artifactInsideTagged = "Decoration inside tagged content"
+bookmarkLanguage = "No language for bookmarks"
+conformancePrefix = "PDF/UA declaration written incorrectly"
+contentLanguage = "No language for text"
+customTagNotMapped = "Custom tag with no standard meaning"
+figureNoAlt = "Image without a description"
+fontMissingGlyphs = "Font missing characters"
+fontNotEmbedded = "Font not embedded"
+formFieldNotTagged = "Form field not tagged"
+genericHeading = "Heading without a level"
+glyphWidths = "Font character widths don't match"
+headingSkipped = "Heading level skipped"
+linkNoDescription = "Link without a description"
+linkNotTagged = "Link not tagged"
+metadataLanguage = "No language for metadata"
+noConformanceClaim = "Doesn't declare PDF/UA"
+noDocumentTag = "Tags don't start with a Document tag"
+noLanguage = "No document language"
+noMetadataStream = "No XMP metadata"
+noTags = "No tags"
+notdefGlyph = "Missing-character placeholder used"
+noteTag = "Uses the Note tag"
+noTitle = "No document title"
+notMarkedTagged = "Not flagged as tagged"
+notPdf2Tags = "Tags aren't PDF 2.0 tags"
+noUnicode = "Characters that can't be read as text"
+replacementTextLanguage = "No language for replacement text"
+standardTagRemapped = "Standard tag turned into a custom one"
+symbolicEncoding = "Symbol font has the wrong encoding"
+tabOrder = "Tab order doesn't follow the document"
+taggedInsideArtifact = "Tagged content hidden as decoration"
+titleNotDisplayed = "Title isn't shown when opened"
+untaggedContent = "Content that isn't tagged"
+
+[checkAccessibility.score]
+issues_one = "{{count}} issue"
+issues_other = "{{count}} issues"
+noIssues = "No issues found"
+subtitle_one = "{{profile}} - {{count}} page"
+subtitle_other = "{{profile}} - {{count}} pages"
+
+[checkAccessibility.sections]
+breakdown = "Breakdown"
+
+[checkAccessibility.status]
+checking = "Checking {{current}} of {{total}}..."
+complete = "Check complete"
+
+[checkAccessibility.steps]
+results = "Results"
+standard = "Standard"
+
+[checkAccessibility.tooltip.header]
+title = "Which standard to check"
+
+[checkAccessibility.tooltip.ua1]
+text = "The first version of PDF/UA, published in 2012 as ISO 14289-1, for PDF 1.7 files."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "The newer version, published in 2024 as ISO 14289-2, for PDF 2.0 files. A PDF 1.7 file checked against it fails the rules that only apply to PDF 2.0."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Annotation {{n}}"
+bookmarks = "Bookmarks"
+character = "A character in {{font}}"
+contentItem = "Content item {{n}}"
+drawingStep = "Drawing step {{n}}"
+embeddedGraphic = "Embedded graphic"
+font = "Font {{name}}"
+metadata = "Document metadata"
+page = "Page {{n}}"
+piece = "Piece {{n}}"
+tag = "{{tag}} tag"
+tagTree = "Tag tree"
+wholeDocument = "Whole document"
+
+[checkAccessibility.where.properties]
+author = "Author"
+description = "Description"
+pdfUaPart = "PDF/UA part"
+title = "Title"
 
 [classification.families]
 correspondence = "Корреспонденция"
@@ -4046,6 +4292,30 @@ failed = "Не удалось обновить ваш вход. Попробуй
 lead = "Этот сервер уже связан с вашей учётной записью. Обновите вход, чтобы вернуться к оплате и использованию на вашем сервере."
 title = "Обновите вход на ваш сервер"
 
+[connectedAccounts]
+connect = "Connect"
+connectAnother = "Connect another"
+connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
+disconnect = "Disconnect"
+google = "Google Drive"
+intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
+microsoft = "Microsoft (OneDrive & SharePoint)"
+needsReconnect = "Stirling can no longer reach this account, so pipelines using it are paused."
+none = "Your administrator hasn't turned on connected accounts."
+personal = "Personal account"
+popupBlocked = "Your browser blocked the sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Sign in again"
+work = "Work account"
+
+[connectedAccounts.disconnectConfirm]
+body = "Sources and pipelines that use this account will stop until you connect it again."
+confirm = "Disconnect"
+title = "Disconnect {{account}}?"
+
+[connectedAccounts.status]
+connected = "Connected"
+needsSignIn = "Needs sign-in"
+
 [convert]
 autoRotate = "Автоповорот"
 autoRotateDescription = "Автоматически поворачивать изображения для лучшего соответствия странице PDF"
@@ -4648,6 +4918,17 @@ title = "Настройки"
 [extractPages.tooltip]
 description = "Извлекает выбранные страницы в новый PDF, сохраняя порядок."
 
+[feedback.page]
+open = "Send feedback"
+sendMore = "Send more feedback"
+sent = "Thanks for your feedback"
+title = "Help us improve Stirling"
+unavailable = "Feedback is unavailable"
+
+[feedback.tag]
+dismiss = "Hide the feedback button"
+label = "Feedback"
+
 [fileCard]
 openInFileEditor = "Открыть в редакторе файлов"
 viewInViewer = "Открыть в просмотрщике"
@@ -4657,7 +4938,6 @@ closeFile = "Закрыть файл"
 
 [fileEditor]
 closedFile = "Закрыт {{name}}"
-couldNotSave = "Не удалось сохранить {{name}}"
 filesReordered_one = "Порядок файлов изменен"
 filesReordered_other = "Порядок {{count}} файлов изменен"
 loadedFromStorage_one = "Загружен {{count}} файл из хранилища"
@@ -5672,6 +5952,11 @@ title = "Изменить метаданные"
 desc = "Изменение ограничений и разрешений документа"
 tags = "разрешения,ограничения,права,контроль доступа,разрешить,запретить,печать,копирование,редактирование,изменить разрешения,настройки безопасности,права пользователя"
 title = "Изменить разрешения"
+
+[home.checkAccessibility]
+desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
+title = "Check PDF accessibility"
 
 [home.classify]
 desc = "Определить тип документа и добавить к нему тег."
@@ -7110,6 +7395,7 @@ resetsTomorrow = "Сброс завтра"
 thisPeriod = "Этот расчетный период"
 
 [payment]
+annually = "Annually"
 billingPeriod = "Расчетный период"
 cancelTeamChange = "Оставить текущий план"
 canCloseWindow = "Теперь можно закрыть это окно."
@@ -7157,11 +7443,14 @@ title = "Изменить план Team"
 
 [payment.capacityStage]
 adjustmentNote = "Stripe покажет точную сумму, любые пропорциональные начисления и дату следующего платежа перед подтверждением. Сохраненный способ оплаты будет использован, если доступен."
+billingLabel = "Billing"
 continue = "Перейти к оплате"
 currencyAtCheckout = "Stripe подтверждает итоговую сумму и валюту платежа при оформлении заказа."
+custom = "Custom"
 customLabel = "Количество пользователей"
 dueToday = "К оплате сегодня"
 enterpriseQuote = "Получить корпоративное предложение"
+enterUsers = "Enter a number of users."
 estimatedTotal = "Предварительная сумма"
 lineItem = "Team · {{price}}{{period}} за {{block}} пользователей"
 minimumForCurrentUsers = "У вас {{users}} пользователей, поэтому план должен покрывать как минимум {{minimum}}."
@@ -7173,12 +7462,16 @@ overCapacityConsequence = "Существующие учетные записи 
 overCapacityTitle = "На вашем сервере больше пользователей, чем покрывает ваш план"
 perMonth = "/мес."
 perYear = "/год"
+planName = "Stirling Team"
 reductionNote = "Меньшая вместимость начнется при следующем продлении. До этого вы можете использовать текущий лимит. Существующие пользователи остаются; новые пользователи будут заблокированы, если на момент вступления изменения в силу вы превысите вместимость."
 renewalNote = "Продление за {{total}}{{period}}. Отменить можно в любое время в Usage & Billing."
 reviewChange = "Проверить изменение в Stripe"
-roundsTo = "округляется до {{users}}"
+roundsUp = "Rounds up to {{users}} users."
+selfServeLimit = "Up to {{users}} users here."
 subheading = "Покрывает всех, кого вы приглашаете, блоками по {{users}} пользователей."
 subheadingAdd = "Сегодня ваш план покрывает {{current}} пользователей. Выберите новый итог."
+talkToEnterprise = "For more, talk to us about Enterprise."
+usersCovered = "users covered"
 usersLabel = "Пользователи"
 userTotal = "{{users}} пользователей"
 
@@ -7261,12 +7554,16 @@ widget = "Поле формы — не текст страницы, поэтом
 
 [pdfTextEditor.commands]
 edit = "Редактировать"
+markTagged = "Mark as fully tagged"
 mergeRuns_one = "Объединить {{count}} фрагмент в абзац"
 mergeRuns_other = "Объединить {{count}} фрагментов в абзац"
 setColour = "Установить цвет для {{run}}"
 setOutline = "Установить контур для {{run}}"
+tagLink = "Tag link"
+tagPageContent = "Auto-tag page"
 typeInto = "Ввести в {{run}}"
 ungroupParagraph = "Разгруппировать абзац {{run}}"
+unmarkTagged = "Mark as not fully tagged"
 wrap = "Перенести {{run}}"
 
 [pdfTextEditor.discard]
@@ -7418,9 +7715,17 @@ y = "Y"
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Добавить тег"
+applyToOtherPages_one = "Apply to {{count}} other page"
+applyToOtherPages_other = "Apply to {{count}} other pages"
+artifactGroup = "Skipped by screen readers"
 artifactText = "Декоративное"
 cannotChange = "Специальные возможности этого изображения нельзя изменить."
+cannotDescribeLink = "This link's description can't be changed."
 cannotRetag = "Тег этого текста нельзя изменить."
+cannotSetDecorative = "This can't be marked or unmarked as decorative."
+cannotTagLink = "This link can't be tagged."
+cannotTagPage = "This page's content can't be tagged."
+contentGroup = "Content"
 customTag = "{{role}} (пользовательский тег)"
 decorativeInfo = "Программы чтения с экрана пропускают декоративные изображения. Используйте это для рамок, фонов и других изображений, не несущих информации."
 decorativeLabel = "Декоративное изображение"
@@ -7430,22 +7735,40 @@ encrypted = "Теги нельзя редактировать в зашифро�
 heading = "Специальные возможности"
 innerTagLabel = "Тег {{number}}"
 innerTags = "Теги в этом тексте"
+linkDescription = "Link description"
+markedTagged = "Document is fully tagged"
+markedTaggedHint = "Tells PDF readers to use the accessibility tags. Tick it once everything is tagged."
+markedWithUntagged = "Some content has no tags, so screen readers may skip it."
 missingDescriptions = "Отсутствуют описания"
 mixedContent = "Рисунок содержит другой контент"
+mixedTags = "Mixed"
 needsDescriptionBadge = "Нет описания"
 nextImage = "Следующее изображение"
 notFigure = "Размечено как часть текста"
 removeTag = "Удалить тег"
 saveFailed = "Не удалось сохранить изменения специальных возможностей, поэтому файл не был сохранен. Отмените их и повторите попытку."
 selectedText = "Выбранный текст"
+tagging = "Tagging pages"
 tagLabel = "Тег"
+tagLinks_one = "Tag link"
+tagLinks_other = "Tag {{count}} links"
+tagUntagged = "Auto-tag document"
+tagUntaggedHint = "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards."
 unknownTag = "Невозможно прочитать здесь"
+unmarkedWithTags = "Some PDF viewers will use the tags anyway and may skip content without them."
 unreadable = "Теги этого файла нельзя редактировать"
 untaggableImages = "Здесь нельзя добавить тег"
 untaggedBadge = "Без тегов"
 untaggedDocument = "В документе нет тегов"
 untaggedImage = "Здесь нельзя добавить тег"
 untaggedImages = "Изображения без тегов"
+untaggedPages = "Pages to tag"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Footer"
+header = "Header"
+pageNumber = "Page number"
+watermark = "Watermark"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Заголовок без текста"
@@ -7504,6 +7827,23 @@ tableHead = "Верхняя часть таблицы"
 tableHeader = "Заголовок таблицы"
 tableRow = "Строка таблицы"
 title = "Заголовок"
+
+[pdfTextEditor.inspector.language]
+allLanguages = "All languages"
+cannotSetDocument = "This document's language can't be changed."
+cannotSetText = "This text's language can't be changed."
+documentHint = "The language screen readers use unless a part of the text sets its own."
+documentLabel = "Language"
+documentLocked = "An encrypted document's language can't be changed here."
+inDocument = "In this document"
+innerLabel = "Tag {{number}} language"
+label = "Language"
+missing = "No language set. Screen readers will guess, and may read the whole document in the wrong voice."
+mixed = "Mixed"
+noMatch = "No matching language. Type its code instead, such as mt or en-IE."
+placeholder = "Select language"
+selectedText = "Selected text language"
+textHint = "Screen readers switch voice and pronunciation to this language."
 
 [pdfTextEditor.mobile]
 actions = "Действия редактора"
@@ -7935,8 +8275,6 @@ triggerImport = "Запускается при импорте"
 [policies.enforcement]
 applying = "Применение {{names}}"
 applyingProgress = "Применение {{names}} ({{done}} из {{total}})"
-exportFailureBody = "Не удалось применить политики безопасности. Файлы экспортированы как есть."
-exportFailureTitle = "Экспортировано без применения политики"
 failureBody = "Некоторые политики не удалось применить к {{failures}} из {{total}} файл(ов)."
 failureTitle = "Экспортировано без полного применения политики"
 printPolicyAppliedBody = "Этот PDF был обновлён в соответствии с политикой. Проверьте изменения и распечатайте снова."
@@ -8787,6 +9125,19 @@ baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
 description = "Публикуйте сообщение в пространстве Google Chat, когда выполняется политика."
 label = "Google Chat"
 
+[portal.connections.types.googleworkspace]
+description = "A service account that reads and writes Google Drive for the organisation."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Paste the service account's JSON key from Google Cloud. It is encrypted and never shown again."
+label = "Service account key (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "Optional. With domain-wide delegation, the user whose Drive this acts as (a dedicated bot user keeps working when people leave). Blank reaches only shared drives and folders shared with the service account."
+label = "Act as user"
+placeholder = "stirling-bot@contoso.com"
+
 [portal.connections.types.jira]
 baseUrlPlaceholder = "https://your-site.atlassian.net"
 description = "Прикрепляйте обработанные документы к задаче Jira."
@@ -8795,6 +9146,17 @@ label = "Jira"
 [portal.connections.types.mailgun]
 description = "Отправляйте документ или уведомление по Email, когда выполняется политика."
 label = "Mailgun"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Needs Microsoft Graph application permissions with admin consent."
+label = "Application (client) ID"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Directory (tenant) ID"
+placeholder = "contoso.onmicrosoft.com or tenant GUID"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
@@ -8829,6 +9191,15 @@ label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
 label = "Пароль приложения"
+
+[portal.connections.types.onedrive]
+description = "Read from and write to one user's OneDrive for Business."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Whose OneDrive this connection reaches. The app registration needs the Files.ReadWrite.All application permission."
+label = "OneDrive owner"
+placeholder = "finance@contoso.com"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8894,6 +9265,18 @@ helperText = "Оставьте пустым, если вместо этого в
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Необязательно. Вставьте OpenSSH private key для аутентификации с ключом вместо пароля."
 label = "Закрытый ключ"
+
+[portal.connections.types.sharepoint]
+description = "Read from and write to a SharePoint site's document library."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "Optional. Leave blank for the site's default Documents library."
+label = "Document library"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
 
 [portal.connections.types.slack]
 description = "Публикуйте сообщение в Slack, когда политика обрабатывает документ."
@@ -9142,6 +9525,130 @@ status = "Статус"
 time = "Время"
 user = "Пользователь"
 
+[portal.enterprise]
+backTo = "Back to {{stage}}"
+brandTag = "Enterprise"
+callInfo = "A 15-minute call. Bring your questions on pricing, deployment or security, or plan your rollout together."
+callTitle = "Talk to a solutions engineer"
+deployment = "Deployment"
+footer = "Questions about Stirling Enterprise?"
+home = "Go to Stirling"
+member = "Your team leader runs the Enterprise deal. Once it starts, you can follow its progress here."
+memberDeal = "Your team leader runs this deal. You can follow its progress here."
+quotePanel = "Your quote"
+signIn = "Sign in"
+signInToStart = "Sign in to start your trial"
+stage = "Stage {{current}} of {{total}}"
+stagesLabel = "Progress"
+
+[portal.enterprise.connect]
+ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
+unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
+
+[portal.enterprise.landing]
+lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
+tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
+tickCompliance = "SCIM, data residency and uptime SLAs"
+tickDeploy = "Run it on Stirling Cloud, your own servers, or fully air-gapped"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Offline licence docs"
+point1 = "Activated with a licence file that works offline, not a key checked online"
+point2 = "Installs like self-hosted, from an image you bring across"
+point3 = "Sign-in stays inside your network"
+tagline = "Self-hosted on a network with no internet access."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud docs"
+point1 = "Your team signs in at stirling.com/app"
+point2 = "Runs on AWS, with stored files encrypted at rest"
+point3 = "Single sign-on through your own identity provider needs self-hosting"
+tagline = "Hosted for you, with nothing to install."
+
+[portal.enterprise.options.selfhost]
+more = "Self-hosting docs"
+point1 = "Install with Docker, or the Helm chart on Kubernetes"
+point2 = "Documents are processed on your own infrastructure"
+point3 = "OAuth2, OIDC or SAML single sign-on"
+tagline = "On your own servers, on-premises or in your own cloud."
+
+[portal.enterprise.review]
+back = "Return to {{stage}}"
+company = "Company"
+completed = "Completed"
+extensions = "Extensions used"
+paid = "Paid. Your invoice stays available here."
+people = "People"
+started = "Started"
+trialEnds = "Trial end date"
+trialTitle = "Your trial"
+version = "Version"
+viewInvoice = "View invoice"
+
+[portal.enterprise.setup]
+copied = "Copied"
+copy = "Copy"
+markDone = "Mark “{{step}}” done"
+progress = "{{done}} of {{total}} done"
+subtitle = "Make the most of your trial by trying it the way you'll run it."
+subtitleLive = "The steps to finish before you roll out to everyone."
+title = "Get set up"
+titleLive = "Go-live checklist"
+
+[portal.enterprise.setup.firstDocument]
+body = "Upload a PDF your team works with and try the tools you'd use day to day, such as redact, compress or OCR."
+title = "Run your first document"
+
+[portal.enterprise.setup.getApp]
+body = "Install the desktop app for Windows, Mac or Linux and sign in with the account you just made, or use it straight from your browser."
+title = "Get Stirling"
+
+[portal.enterprise.setup.install]
+body = "Run this on your server. It starts Stirling with your licence applied, and the image includes OCR and office conversion. For larger teams, use Kubernetes."
+title = "Install and start Stirling"
+
+[portal.enterprise.setup.invite]
+body = "Bring in the people who'll use it, so the trial reflects real work."
+title = "Invite your team"
+
+[portal.enterprise.setup.licence]
+body = "Open <code>http://your-server:8080/settings/adminPlan</code>, where your Enterprise licence should show as active. Installed another way? Add the key under <code>premium.key</code> in <code>settings.yml</code> and restart."
+title = "Check your licence is active"
+
+[portal.enterprise.setup.links]
+browser = "Use it in your browser"
+docker = "Docker guide"
+download = "Download the app"
+downloadForTeam = "Get the app for your team"
+downloading = "Downloading..."
+downloadLicence = "Download licence file"
+invite = "Invite teammates"
+kubernetes = "Kubernetes guide"
+licence = "Licence activation"
+ocr = "OCR languages"
+openApp = "Open Stirling"
+samlGuide = "SAML guide"
+ssoGuide = "SSO guide"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Pull the full image on a connected machine, carry it and the licence file across, then load and start it. The full image adds the fonts an offline server can't download."
+title = "Bring Stirling across and start it"
+
+[portal.enterprise.setup.offlineLicence]
+body = "An air-gapped server can't reach our licence service, so it checks this signed file instead. Keep it with the image you carry across."
+title = "Download your offline licence"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Create accounts at <code>/settings/people</code>, or point Stirling at your internal identity provider so sign-in never leaves your network."
+bodySelfHosted = "Create accounts at <code>/settings/people</code>, or connect your identity provider so your team signs in with their work accounts. They use Stirling in the browser at your server's address, or in the desktop app pointed at it."
+title = "Add your people"
+
+[portal.enterprise.setup.signIn]
+body = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>. You'll be asked to choose a new password straight away."
+bodyAirgap = "Open <code>http://your-server:8080</code> and sign in with <code>admin</code> / <code>stirling</code>, choose a new password, then check <code>/settings/adminPlan</code> shows your licence as active."
+title = "Sign in as the admin"
+
 [portal.errorBoundary]
 description = "В этом представлении произошла непредвиденная ошибка. Попробуйте еще раз или выберите другой раздел на боковой панели."
 retry = "Попробовать еще раз"
@@ -9293,6 +9800,7 @@ title = "Нечего проверять"
 [portal.home.download]
 back = "Назад"
 body = "Скачайте настольное приложение или самостоятельно разместите сервер."
+bodyDesktop = "Download the desktop app, then sign in with your Stirling account."
 done = "Готово"
 guide = "Открыть руководство {{name}}"
 openInBrowser = "Открыть в браузере вместо этого"
@@ -10442,7 +10950,6 @@ cloud = "Drive · Box · S3"
 email = "Прием email"
 
 [portal.procurement]
-subtitle = "Проведите оценку, заключение договора и подключение вашей команды. Каждый документ в одном месте."
 title = "Закупка"
 
 [portal.procurement.agreement]
@@ -10460,7 +10967,6 @@ loadError = "Не удалось загрузить соглашение. Поп
 loading = "Загрузка соглашения..."
 ref = "Ref {{ref}} · {{version}}"
 requestChanges = "Запросить изменения"
-scrollHint = "Прокрутите для просмотра"
 signatory = "Имя подписанта"
 signatoryPlaceholder = "Полное имя"
 signatoryTitle = "Должность подписанта"
@@ -10468,27 +10974,37 @@ signatoryTitlePlaceholder = "например, General Counsel"
 signError = "Не удалось записать вашу подпись. Попробуйте еще раз."
 
 [portal.procurement.builder]
+addonOneTime = "{{amount}} one-time"
+addonPerYear = "+{{amount}}/yr"
 addons = "Дополнения"
 addressLine1 = "Адрес, строка 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "Адрес, строка 2"
 addressLine2Placeholder = "Офис, этаж, здание"
 back = "Назад"
+belowMinimum = "This quote is below the minimum size for an Enterprise deal."
 businessName = "Название компании"
 businessNamePlaceholder = "Ваша компания"
 city = "Город"
 cityPlaceholder = "San Francisco"
 completeRequired = "Заполните обязательные поля (помечены *) и укажите действительный email перед созданием предложения."
+conflict = "This deal has changed since you opened it. Close the builder and reload the page to see where it stands."
 contactEmail = "Контактный email"
 contactEmailPlaceholder = "jane@acme.com"
 contactName = "Имя контактного лица"
 contactNamePlaceholder = "Jane Doe"
 continue = "Продолжить"
 done = "Готово"
+editUsage = "Edit usage"
 eula = "Я прочитал(а) и принимаю Stirling Enterprise EULA. Он регулирует соглашение, созданное на основе этого предложения."
 generate = "Сформировать предложение"
 indemnification = "Расширенная защита IP"
 indemnificationSub = "Расширяет нашу защиту IP на патентные претензии. Базовое возмещение по авторским правам, товарным знакам и коммерческой тайне включено бесплатно."
+minimum = "Enterprise requires a minimum yearly spend of {{min}}."
+minimumBelow = "This quote comes to {{annual}} a year. If you expect to use more, raise your estimated usage; otherwise the Team plan is likely a better fit."
+minimumNear = "Enterprise requires a minimum yearly spend of {{min}}. Raise your estimated usage to reach it, or talk it through with us."
+minimumNearTitle = "You're {{gap}} a year short of Enterprise."
+paperBrand = "Stirling PDF"
 paperEyebrow = "Enterprise предложение"
 paperFor = "Подготовлено для"
 pdfSize = "Размер PDF"
@@ -10506,9 +11022,13 @@ posture_regulated = "Регулируемый"
 posture_regulatedSub = "Каждая категория — Compliance, Retention, Ingestion"
 qbr = "Ежеквартальные бизнес-обзоры"
 qbrSub = "Ваш инженер по решениям каждый квартал анализирует использование и roadmap"
+raiseUsage = "Raise estimated usage"
 region = "Штат / регион"
 regionPlaceholder = "California"
-running = "{{annual}} / год · {{years}}-летний {{tcv}}"
+runningLabel = "Estimated price"
+runningLabelIssued = "Quoted price"
+runningOneYear = "{{annual}} a year"
+runningTotal = "{{tcv}} total over {{years}} years"
 s1Sub = "Ваша команда и PDF, которые вы планируете обрабатывать каждый год."
 s1Title = "Сколько вы будете обрабатывать?"
 s2Sub = "Более длительные сроки снижают тариф; уровень обслуживания определяет поддержку."
@@ -10547,6 +11067,19 @@ volumePlaceholder = "например, 1 000 000"
 years_one = "{{count}} год"
 years_other = "{{count}} лет"
 
+[portal.procurement.builder.line]
+deployment = "{{deployment}} deployment"
+indemnification = "IP indemnification"
+multiYear_one = "{{count}}-year commitment"
+multiYear_other = "{{count}}-year commitment"
+qbr = "Quarterly business reviews"
+seats_one = "{{users}} agreed user + SSO / RBAC / audit"
+seats_other = "{{users}} agreed users + SSO / RBAC / audit"
+seatsUnset = "Users + SSO / RBAC / audit"
+support = "Dedicated SE / CSM"
+training = "Onboarding & training"
+usage = "PDF processing — {{volume}} PDFs/yr at {{rate}}/PDF ({{posture}} automation)"
+
 [portal.procurement.documents]
 agreement = "Корпоративное соглашение"
 agreementSub = "MSA, Order Form и DPA в одной подписи."
@@ -10557,6 +11090,8 @@ invoice = "Счет"
 invoiceSub = "Ваш первый счет за подписку."
 laterInvoice = "Доступно после принятия"
 laterQuote = "Доступно после выпуска вашего предложения"
+laterSigning = "Available once the agreement is signed"
+laterTitle = "Later in your deal"
 quote = "Предложение"
 quoteSub = "Ваше детализированное enterprise предложение."
 sla = "Приложение SLA"
@@ -10573,15 +11108,12 @@ title = "Что-то пошло не так"
 [portal.procurement.hero]
 barAria = "Этап {{current}} из {{total}}"
 ctaAgreement = "Проверить и подписать соглашение"
-ctaExploring = "Настроить пробный период"
 ctaQuote = "Проверить ваше предложение"
 ctaReviewQuote = "Просмотреть предложение"
 ctaTrial = "Собрать ваше предложение"
-documents = "Документы"
 eyebrow = "Корпоративный"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Пригласить коллег"
-licenseKey = "Лицензионный ключ"
 liveSub = "Ваша организация подготовлена, и ваша лицензия активна."
 liveTitle = "Вы работаете в Stirling Enterprise"
 next = "Далее: {{stage}}"
@@ -10630,19 +11162,15 @@ downloadError = "Пока не удалось создать офлайн-фай
 downloadOffline = "Скачать офлайн-лицензию (.lic)"
 hint = "Вставьте этот ключ в self-hosted экземпляр, чтобы активировать его, или сохраните для своих записей. Храните его в безопасности."
 label = "Ваш лицензионный ключ"
-subtitle = "Активируйте self-hosted экземпляр с помощью этого ключа или сохраните его для учета."
-title = "Ваш лицензионный ключ"
 trialFileHint = "Это ваш файл пробной лицензии. После заключения соглашения вернитесь и скачайте его снова — в отличие от онлайн-лицензионного ключа, файл .lic не обновляется сам."
 
 [portal.procurement.link]
 cta = "Привязать аккаунт"
 description = "Закупка работает через ваш привязанный аккаунт Stirling: так мы предоставляем пробный период, рассчитываем предложение и запускаем биллинг. Привяжите аккаунт, чтобы начать."
-eyebrow = "Корпоративный"
 title = "Привяжите аккаунт, чтобы начать"
 
 [portal.procurement.live]
 description = "Ваша подписка активна, и лицензия выдана. Ваша команда подготовлена, биллинг начался."
-eyebrow = "Запущено"
 title = "Stirling Enterprise уже работает у вас"
 
 [portal.procurement.milestone]
@@ -10650,16 +11178,14 @@ downloadError = "Пока не удалось скачать PDF с предло
 
 [portal.procurement.payment]
 description = "Ваше предложение принято, и лицензия уже активна — ваша команда может начать сразу. Оплатите первый счёт, когда будете готовы; оплатить или скачать его можно здесь, email не нужен."
-downloadAgreement = "Скачать подписанное соглашение"
 downloadInvoice = "Скачать счёт"
-eyebrow = "Оплата"
-title = "Подписка создана"
 viewInvoice = "Посмотреть и оплатить счёт"
 
 [portal.procurement.review]
 acceptCta = "Принять предложение"
 annual = "Годовая плата (1-й год)"
 downloadCta = "Скачать предложение"
+oneTime = "one-time"
 poNumber = "Заказ на покупку: {{po}}"
 renewal = "Продление по {{amount}}/год после срока (+{{pct}}% CPI)"
 tcv = "Срок {{years}} лет, полная предоплата: {{tcv}}"
@@ -10705,11 +11231,18 @@ workEmailPlaceholder = "you@company.com"
 [portal.procurement.trial]
 body = "Продление добавляет 7 дней и уведомляет вашего инженера по решениям."
 bodyMaxed = "Вы использовали все продления — обратитесь к вашему инженеру по решениям, если нужно больше времени."
-cancel = "Отменить пробный период"
 extend = "Продлить на 7 дней"
 maxed = "Лимит исчерпан"
 subtitle = "Ваш бесплатный пробный период действует до {{date}}. Карта не требуется."
 title = "Пробный период Enterprise"
+
+[portal.procurement.validation]
+confirm = "Confirm you're authorized to sign for the organization."
+email = "Enter a valid email address."
+eula = "Agree to the EULA to continue."
+required = "This field is required."
+seats = "Enter how many people will trial it."
+volume = "Enter how many PDFs you expect to process a year."
 
 [portal.review]
 subtitle = "Все из запусков ваших политик и редакторов вашей команды, что требует вашего внимания."
@@ -10735,6 +11268,7 @@ subtitle = "Многоразовые входные подключения, ко
 title = "Источники"
 
 [portal.sources.actions]
+connectDestination = "Connect destination"
 connectSource = "Подключить источник"
 
 [portal.sources.builder]
@@ -10748,6 +11282,8 @@ chooseOutputHint = "Выберите, куда отправлять обрабо
 comingSoon = "Скоро"
 comingSoonHeading = "Скоро"
 create = "Создать источник"
+createDestination = "Create destination"
+createDestinationTitle = "Add a destination"
 createTitle = "Подключить источник"
 delete = "Удалить"
 editTitle = "Редактировать источник"
@@ -10757,6 +11293,41 @@ save = "Сохранить изменения"
 description = "Автоматизации папок могут использовать только папки, разрешенные администратором. Добавьте ее в настройках доступа к папкам, затем попробуйте снова."
 openSettings = "Настройки доступа к папкам"
 title = "Эта папка не разрешена"
+
+[portal.sources.cloudFields.account]
+connect = "Connect your account"
+connectAnother = "Connect another account"
+connectFailed = "The account couldn't be connected. Try again, or ask your administrator to check the app registration."
+label = "Account"
+placeholder = "Choose an account"
+reconnect = "sign in again"
+unavailable = "Connecting your own account is turned off on this server. Choose an organisation connection instead."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Personal accounts are turned off on this server."
+helperText = "Your account reaches what you can open and needs no admin. An organisation connection keeps working when people leave, and only reaches what an admin set up."
+label = "Sign in as"
+
+[portal.sources.cloudFields.authMode.options]
+account = "My account"
+organisation = "Organisation connection"
+
+[portal.sources.cloudFields.connection]
+helperText = "Set up by an administrator under Integrations. Shared by every location that uses it."
+label = "Organisation connection"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Paste the folder's link, or type a path from the top of My Drive. Leave empty for the top of My Drive. The folder must already exist."
+placeholder = "Folder link, or Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "A folder in your OneDrive, or paste a folder link (Copy link in OneDrive). Leave empty for the top of the OneDrive. The folder must already exist."
+placeholder = "Scans/Inbox, or a folder link"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "With your account, paste the folder's link (Copy link in SharePoint). With an organisation connection, a folder inside its library; leave empty for the library root. The folder must already exist."
+organisationPlaceholder = "Folder link, or Scans/Inbox"
+placeholder = "Folder link"
 
 [portal.sources.delete]
 body = "Удалить «{{name}}»? Это действие нельзя отменить. Политики, которые ссылаются на него, нужно будет обновить."
@@ -10821,6 +11392,7 @@ label = "Входящие Email"
 [portal.sources.types.folder]
 description = "Отслеживать новые документы в каталоге на сервере."
 label = "Папка"
+outputDescription = "Save results to a directory on the server."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Абсолютный путь к папке для отслеживания новых файлов."
@@ -10859,6 +11431,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Получайте документы из общих папок Google Drive."
 label = "Google Drive"
+outputDescription = "Save results to a Google Drive folder."
 
 [portal.sources.types.network]
 description = "Отслеживайте сетевой ресурс SMB на наличие новых документов."
@@ -10867,10 +11440,12 @@ label = "Сетевой диск"
 [portal.sources.types.onedrive]
 description = "Отслеживайте папки OneDrive на наличие новых документов."
 label = "OneDrive"
+outputDescription = "Save results to a OneDrive folder."
 
 [portal.sources.types.s3]
 description = "Получайте документы из Amazon S3 или S3-совместимого bucket."
 label = "Amazon S3"
+outputDescription = "Save results to an Amazon S3 or S3-compatible bucket."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Сохраненное подключение с bucket и учетными данными. Используется совместно каждым источником и выходом конвейера, который его применяет."
@@ -10896,6 +11471,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "Получайте документы из библиотек документов SharePoint."
 label = "SharePoint"
+outputDescription = "Save results to a SharePoint document library folder."
 
 [portal.sources.types.unknown]
 label = "Источник"
@@ -11074,6 +11650,14 @@ waiting = "В очереди ..."
 name = "Google Drive"
 scope = "Импорт файлов"
 
+[provider.googledrive.accountScope]
+description = "drive reaches every file (Google must verify a public app for it); drive.file only files people pick or Stirling creates"
+label = "Drive access"
+
+[provider.googledrive.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
 [provider.googledrive.apiKey]
 description = "Ключ Google API для Google Picker API из Google Cloud Console"
 label = "API-ключ"
@@ -11086,6 +11670,10 @@ label = "ID приложения"
 description = "Google OAuth 2.0 Client ID из Google Cloud Console"
 label = "ID клиента"
 
+[provider.googledrive.clientSecret]
+description = "Lets people connect their Google account for their pipelines. Add the redirect URI below as an authorised redirect URI of the OAuth client."
+label = "Client secret"
+
 [provider.googledrive.enabled]
 description = "Разрешить пользователям импортировать файлы напрямую из Google Drive"
 label = "Включить селектор файлов Google Drive"
@@ -11093,6 +11681,38 @@ label = "Включить селектор файлов Google Drive"
 [provider.googledrive.errors]
 notConfigured = "Google Drive не настроен"
 pickerFailed = "Не удалось открыть средство выбора Google Drive"
+
+[provider.googledrive.redirectUri]
+description = "Add this as an authorised redirect URI of the OAuth client in Google Cloud Console."
+label = "Redirect URI"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive & SharePoint)"
+scope = "Files & pipelines"
+
+[provider.microsoft.allowAccountConnections]
+description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
+label = "Let people connect their own account"
+
+[provider.microsoft.clientId]
+description = "From one Microsoft Entra app registration."
+label = "Application (client) ID"
+
+[provider.microsoft.clientSecret]
+description = "Needed for connected accounts. Stays on the server."
+label = "Client secret"
+
+[provider.microsoft.enabled]
+description = "Let people use OneDrive and SharePoint in pipelines"
+label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.redirectUri]
+description = "Add this as a Web redirect URI on the Entra app registration."
+label = "Redirect URI"
+
+[provider.microsoft.tenant]
+description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
+label = "Directory (tenant) ID"
 
 [provider.oauth2.generic]
 name = "Универсальный OAuth2"
@@ -11811,6 +12431,13 @@ title = "Очистить PDF"
 [sanitizePdf]
 tags = "очистка,безопасность,защита,удаление угроз"
 
+[saveFile.menu]
+more = "More save options"
+saveCopy = "Save a copy..."
+
+[saveFile.toolbar]
+mixed = "Save all"
+
 [scalePages]
 tags = "изменить размер,настроить,масштабировать,размер страницы,изменить размер страницы,масштабировать страницу,изменить размер,настроить размер,увеличить,уменьшить страницу,подогнать по странице,A4,letter size"
 title = "Настройка масштаба страницы"
@@ -11905,6 +12532,162 @@ showTools = "Показать недоступные инструменты ▾"
 title = "Ваш сервер Stirling-PDF недоступен"
 toolNotAvailableLocally = "Ваш сервер Stirling-PDF офлайн, и \"{{endpoint}}\" недоступен в локальном бэкенде."
 
+[serverSetup]
+back = "Back"
+collapse = "Hide {{setting}} settings"
+configured = "Configured"
+continue = "Continue"
+dialogLabel = "Server setup"
+expand = "Show {{setting}} settings"
+finishSetup = "Finish setup"
+loadErrorSubtitle = "Setup needs the server's current settings to start."
+loadErrorTitle = "Couldn't load your settings"
+off = "Off"
+on = "On"
+save = "Save"
+stepCount = "{{current}} of {{total}}"
+
+[serverSetup.account]
+failed = "Couldn't save your details. Check the server is reachable and try again."
+save = "Save and continue"
+signIn = "Sign in"
+signInAgainSubtitle = "Sign in again with your new username and password to carry on."
+signInAgainTitle = "Your details are saved"
+subtitle = "Choose how you'll sign in from now on."
+title = "Set up your account"
+updating = "Updating"
+updatingSubtitle = "One moment."
+updatingTitle = "Updating your details"
+username = "Username"
+usernameHelp = "What you'll sign in with. An email address works too."
+
+[serverSetup.addresses]
+backendUrl = "Server address"
+backendUrlHelp = "Where sign-in providers send people back. Usually the same as the web address."
+frontendUrl = "Web address"
+frontendUrlHelp = "Where people open Stirling PDF. Used in emails, share links and QR codes."
+subtitle = "How people and sign-in providers reach this server."
+title = "Addresses"
+
+[serverSetup.ai]
+apiKey = "API key"
+apiKeyHelp = "Leave empty to use the key the AI engine already has."
+baseUrl = "Base URL"
+engineUrl = "AI engine address"
+fastModel = "Fast model"
+label = "Self-hosted AI"
+provider = "Model provider"
+providerCustom = "OpenAI-compatible"
+smartModel = "Full model"
+stirling = "Stirling AI"
+subtitle = "Document questions, automated edits and AI agents."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Accept and continue"
+acceptFinish = "Accept and finish"
+changeLater = "You can change this at any time in {{path}}."
+decline = "Decline and continue"
+declineFinish = "Decline and finish"
+learnMore = "What we collect"
+note = "Share usage data from this server with us to help us improve Stirling PDF. We never collect files or their contents."
+title = "Server analytics"
+
+[serverSetup.documents]
+label = "Document questions"
+model = "Embedding model"
+provider = "Embedding provider"
+providerHelp = "Turns document text into the search index that answers questions."
+
+[serverSetup.email]
+from = "From address"
+host = "SMTP host"
+label = "Send email"
+password = "Password"
+port = "Port"
+subtitle = "For invites, signing requests and shares."
+title = "Email"
+username = "Username"
+
+[serverSetup.error]
+email = "Enter an email address"
+issuerUnreachable = "Couldn't reach this issuer. Check the address, and that this server can reach it."
+passwordIncorrect = "Incorrect password"
+passwordLength = "Use at least 8 characters"
+passwordMismatch = "Passwords don't match"
+passwordRejected = "The server didn't accept this password. Try another."
+passwordUnchanged = "Choose a password different from the current one"
+port = "Enter a port from 1 to 65535"
+providerName = "Use letters, numbers, dashes or underscores only"
+required = "Required"
+url = "Enter a full address, starting with http:// or https://"
+username = "Use 3 to 50 letters, numbers or . _ + - @, or an email address"
+usernameTaken = "That username is taken"
+
+[serverSetup.files]
+sharing = "File sharing"
+sharingOffWarning = "With sharing off, existing share links stop working."
+storage = "Store files"
+storageOffWarning = "With storage off, files people saved on the server can no longer be opened."
+subtitle = "Manage file storage and sharing."
+title = "Files"
+
+[serverSetup.finish]
+errorNote = "Check the server is reachable and that you're still signed in as an admin."
+errorSubtitle = "Nothing was restarted."
+errorTitle = "Couldn't save your settings"
+manualSubtitle = "This server can't restart itself. Restart its container or service to apply them."
+manualTitle = "Settings saved"
+restartFailedSubtitle = "The server didn't restart. Restart its container or service to apply them."
+restartingSubtitle = "This page reloads when it's back, usually within a minute."
+restartingTitle = "Restarting your server"
+retry = "Try again"
+saving = "Saving"
+savingSubtitle = "One moment."
+savingTitle = "Saving your settings"
+
+[serverSetup.language]
+auto = "Match each browser"
+label = "Default language"
+subtitle = "What new visitors see first."
+title = "Language"
+
+[serverSetup.mcp]
+label = "MCP server"
+
+[serverSetup.password]
+confirm = "Confirm new password"
+current = "Current password"
+new = "New password"
+
+[serverSetup.signIn]
+clientId = "Client ID"
+clientSecret = "Client secret"
+issuer = "Issuer URL"
+label = "Sign in with"
+oidc = "Other OpenID Connect"
+password = "Username and password"
+providerName = "Provider name"
+providerNameHelp = "Shown on the sign-in button, for example okta or entra."
+redirectNote = "Add this redirect URI in your provider:"
+subtitle = "How your team signs in."
+title = "Sign-in"
+
+[serverSetup.signingIn]
+button = "Signing in"
+title = "Signing in with default credentials"
+
+[serverSetup.start]
+custom = "Custom"
+quick = "Quick start"
+setupLabel = "Setup"
+subtitle = "Set it up for your team in a few steps."
+title = "Your server is up"
+
+[serverSetup.summary]
+subtitle = "Check the essentials. Everything else keeps its default."
+title = "Quick start"
+
 [session]
 expired = "Ваша сессия истекла. Пожалуйста, обновите страницу и попробуйте снова."
 
@@ -11939,6 +12722,10 @@ mcp = "MCP Server"
 privacy = "Конфиденциальность"
 storageSharing = "Хранение файлов и общий доступ"
 systemSettings = "Системные настройки"
+
+[settings.connectedAccounts]
+description = "Your own OneDrive, SharePoint and Google Drive, for your pipelines."
+title = "Connected accounts"
 
 [settings.connectedInstances]
 confirmBody = "Это отзывает доступ экземпляра к вашей команде в Stirling Cloud. Это не удаляет локальные файлы и не удаляет уже записанное использование. Чтобы подключиться снова, выполните исходные шаги подключения на экземпляре."
@@ -11992,6 +12779,13 @@ selfhosted = "Самохостинг"
 apiKeys = "Ключи API"
 apiKeysDescription = "Личные ключи для вызова Stirling API из скриптов и интеграций."
 title = "Разработчик"
+
+[settings.feedback]
+label = "Feedback"
+
+[settings.feedback.send]
+description = "Report a problem or suggest an improvement to the Stirling team."
+label = "Send feedback"
 
 [settings.general]
 autoUnzip = "Автораспаковка ответов API"
@@ -12058,6 +12852,7 @@ checkForUpdates = "Проверить обновления"
 currentBackendVersion = "Текущая версия Backend"
 currentFrontendVersion = "Текущая версия Frontend"
 description = "Проверка обновлений и сведения о версии"
+descriptionManaged = "View version information"
 latestVersion = "Последняя версия"
 managedByAdmin = "Управляется администратором"
 modeAuto = "Устанавливать обновления автоматически"
@@ -12135,15 +12930,24 @@ title = "Юридические документы"
 backendDescription = "Лицензии backend-зависимостей, включённых в этот сервер."
 backendLabel = "Лицензии Backend"
 backendTitle = "Лицензии сторонних компонентов Backend"
+clearSearch = "Clear search"
 empty = "Зависимости не найдены."
 frontendDescription = "Лицензии frontend-зависимостей, включённых в release build."
 frontendLabel = "Лицензии Frontend"
 frontendTitle = "Лицензии сторонних компонентов Frontend"
 license = "Лицензия"
+licenseAbout = "About"
+licenseAboutCompound = "About {{short}}"
+licenseAboutTitle = "About {{short}}"
 listDescription = "Список отображается прямо в UI из release bundle или backend endpoint."
 listTitle = "Включённые зависимости"
 loadError = "Не удалось загрузить лицензии сторонних компонентов"
 module = "Модуль"
+noMatch = "No matching dependencies."
+searchPlaceholder = "Search dependencies"
+showingCount = "{{count}} dependencies"
+showingCount_one = "{{count}} dependency"
+showingCount_other = "{{count}} dependencies"
 version = "Версия"
 
 [settings.licensingAnalytics]
@@ -12293,6 +13097,7 @@ emptyEmail = "Введите email"
 emptyPassword = "Введите пароль"
 emptyUsername = "Введите имя пользователя"
 oauthFailed = "Сбой входа через OAuth. Повторите попытку."
+openResetFailed = "Could not open your browser to reset your password."
 
 [setup.saas]
 title = "Вход в Stirling"
@@ -13248,6 +14053,11 @@ pending = "В ожидании"
 remove = "Удалить"
 roleColumn = "Роль"
 title = "Участники команды"
+
+[teamWelcome]
+invite = "Invite people"
+message = "Invite your team so they can start working with you."
+title = "Your Team plan is active."
 
 [textAlign]
 center = "По центру"
