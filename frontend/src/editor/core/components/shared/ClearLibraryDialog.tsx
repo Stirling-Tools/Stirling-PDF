@@ -8,8 +8,6 @@ interface ClearLibraryDialogProps {
   opened: boolean;
   /** Files the clear will remove. */
   clearCount: number;
-  /** Files it leaves alone: filed in a folder, or with unsaved disk edits. */
-  keptCount: number;
   onClose: () => void;
   /** Perform the clear; may throw to surface an error. */
   onConfirm: () => Promise<void>;
@@ -18,7 +16,6 @@ interface ClearLibraryDialogProps {
 export function ClearLibraryDialog({
   opened,
   clearCount,
-  keptCount,
   onClose,
   onConfirm,
 }: ClearLibraryDialogProps) {
@@ -43,7 +40,7 @@ export function ClearLibraryDialog({
       setError(
         err instanceof Error
           ? err.message
-          : t("fileSidebar.clearLibrary.error", "Could not clear. Try again."),
+          : t("fileSidebar.clearRecents.error", "Could not clear. Try again."),
       );
     } finally {
       setSubmitting(false);
@@ -54,27 +51,18 @@ export function ClearLibraryDialog({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("fileSidebar.clearLibrary.title", "Clear PDF library?")}
+      title={t("fileSidebar.clearRecents.title", "Clear recents?")}
       centered
       size="md"
     >
       <Stack gap="md">
         <Text size="sm">
           {t(
-            "fileSidebar.clearLibrary.body",
-            "Remove {{count}} file(s) from your library? This clears them from Stirling PDF only, not from your computer or the cloud.",
+            "fileSidebar.clearRecents.body",
+            "Clear {{count}} file(s) from recents?",
             { count: clearCount },
           )}
         </Text>
-        {keptCount > 0 && (
-          <Text size="sm" c="dimmed">
-            {t(
-              "fileSidebar.clearLibrary.kept",
-              "Files in folders and files with unsaved changes are kept ({{kept}}).",
-              { kept: keptCount },
-            )}
-          </Text>
-        )}
 
         {error && (
           <Alert
@@ -97,7 +85,7 @@ export function ClearLibraryDialog({
             onClick={handleConfirm}
             data-testid="file-sidebar-clear-library-confirm"
           >
-            {t("fileSidebar.clearLibrary.confirm", "Clear library")}
+            {t("fileSidebar.clearRecents.confirm", "Clear recents")}
           </Button>
         </Group>
       </Stack>

@@ -1508,7 +1508,7 @@ test.describe("Files page", () => {
     });
   });
 
-  test.describe("Clear library", () => {
+  test.describe("Clear recents", () => {
     test.use({ autoGoto: false });
 
     test("clears loose and open files, keeps foldered and unsaved ones, never touches the cloud", async ({
@@ -1558,8 +1558,7 @@ test.describe("Files page", () => {
         .hover();
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
-      await expect(dialog).toContainText("Remove 3 files from your library?");
-      await expect(dialog).toContainText("(2)");
+      await expect(dialog).toContainText("Clear 3 files from recents?");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
       await expect(rows).toHaveCount(2);

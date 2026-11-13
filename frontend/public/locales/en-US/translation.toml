@@ -4805,14 +4805,13 @@ uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
 
-[fileSidebar.clearLibrary]
-body_one = "Remove 1 file from your library? This clears it from Stirling PDF only, not from your computer or the cloud."
-body_other = "Remove {{count}} files from your library? This clears them from Stirling PDF only, not from your computer or the cloud."
-button = "Clear library"
-confirm = "Clear library"
+[fileSidebar.clearRecents]
+body_one = "Clear 1 file from recents?"
+body_other = "Clear {{count}} files from recents?"
+button = "Clear recents"
+confirm = "Clear recents"
 error = "Could not clear. Try again."
-kept = "Files in folders and files with unsaved changes are kept ({{kept}})."
-title = "Clear PDF library?"
+title = "Clear recents?"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"

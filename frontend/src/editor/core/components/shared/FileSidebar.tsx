@@ -214,8 +214,8 @@ function ClearLibraryButton({
       variant="quiet"
       className={`file-sidebar-section-btn${className ? ` ${className}` : ""}`}
       onClick={onClick}
-      title={t("fileSidebar.clearLibrary.button", "Clear library")}
-      aria-label={t("fileSidebar.clearLibrary.button", "Clear library")}
+      title={t("fileSidebar.clearRecents.button", "Clear recents")}
+      aria-label={t("fileSidebar.clearRecents.button", "Clear recents")}
       data-testid="file-sidebar-clear-library"
     >
       <Icon name="trash" size={"1rem"} />
@@ -872,7 +872,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
-    // "Clear library" spares anything filed in a folder, and any disk-linked file
+    // "Clear recents" spares anything filed in a folder, and any disk-linked file
     // whose edits aren't saved back yet: the library holds the only copy of them.
     // It closes whatever else is open, and only removes the library's own copies:
     // cloud files stay on the server and nothing on disk is touched.
@@ -1302,7 +1302,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <ClearLibraryDialog
           opened={clearLibraryOpen}
           clearCount={clearableStubs.length}
-          keptCount={allFileStubs.length - clearableStubs.length}
           onClose={() => setClearLibraryOpen(false)}
           onConfirm={handleConfirmClearLibrary}
         />
