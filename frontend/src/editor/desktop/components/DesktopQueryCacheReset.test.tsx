@@ -32,6 +32,13 @@ vi.mock("@editor/services/selfHostedServerMonitor", () => ({
   },
 }));
 
+const { forgetServerFontList } = vi.hoisted(() => ({
+  forgetServerFontList: vi.fn(),
+}));
+vi.mock("@editor/tools/pdfTextEditor/util/serverFonts", () => ({
+  forgetServerFontList,
+}));
+
 function renderWithConsumer(queryFn: () => Promise<string>) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -57,6 +64,21 @@ describe("DesktopQueryCacheReset", () => {
   beforeEach(() => {
     modeListeners.clear();
     serverListeners.clear();
+    forgetServerFontList.mockClear();
+  });
+
+  it("forgets the editor's server font list when the backend changes", async () => {
+    const queryFn = vi.fn<() => Promise<string>>().mockResolvedValue("x");
+
+    renderWithConsumer(queryFn);
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(1));
+    expect(forgetServerFontList).not.toHaveBeenCalled();
+
+    modeListeners.forEach((l) => l({ mode: "selfhosted" }));
+    expect(forgetServerFontList).toHaveBeenCalledTimes(1);
+
+    serverListeners.forEach((l) => l({ status: "offline" }));
+    expect(forgetServerFontList).toHaveBeenCalledTimes(2);
   });
 
   it("refetches a mounted query when the connection mode changes", async () => {

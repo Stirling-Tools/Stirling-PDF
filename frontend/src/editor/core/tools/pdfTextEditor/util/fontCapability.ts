@@ -2,17 +2,21 @@ import {
   familyOf,
   flipItalic,
   isItalicFamily,
+  nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import {
   faceStyleFlags,
-  getLocalFontBytes,
-  loadLocalFontBytes,
-  loadedLocalFonts,
+  knownFamilyOf,
   pickLocalFontFace,
-  splitRequested,
+  resolveRequested,
   type LocalFont,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  getExternalFontBytes,
+  loadExternalFontBytes,
+  loadedExternalFonts,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
 
 // Whether a style change is actually possible for a run's face, and in which
 // family. The toolbar asks before offering the control: replacing a document's
@@ -31,10 +35,12 @@ const NONE: StyleCapability = { family: null, source: null };
 
 /** Families {@link warmDocumentDeviceFonts} has already looked up this session. */
 const attempted = new Set<string>();
+let attemptedAgainst: LocalFont[] | null = null;
 
 /** Test hook: forget which document families have been matched. */
 export function resetDocumentFontMatchCache(): void {
   attempted.clear();
+  attemptedAgainst = null;
 }
 
 /** The installed face for `family` in the requested style, or null. */
@@ -43,7 +49,7 @@ function deviceFaceFor(
   family: string,
   italic: boolean,
 ): string | null {
-  const req = splitRequested(family);
+  const req = resolveRequested(fonts, family);
   if (!req.family) return null;
   const wanted = [req.family, req.bold ? "Bold" : "", italic ? "Italic" : ""]
     .filter(Boolean)
@@ -57,31 +63,32 @@ function deviceFaceFor(
   return wanted;
 }
 
-/**
- * Which family gives `fontId` its italic cut (or its upright one back).
- *
- * base-14 flips in place. Anything else - an embedded or subset face - needs a
- * device font of the same family that genuinely carries the style, which only
- * exists once the user has loaded their device fonts.
- */
+/** Base-14 flips in place unless an external family of that name exists; others need a real face. */
 export function italicCapability(
   fontId: string,
   italic: boolean,
-  fonts: LocalFont[] | null = loadedLocalFonts(),
+  fonts: LocalFont[] | null = loadedExternalFonts(),
 ): StyleCapability {
   const family = familyOf(fontId);
   if (!family) return NONE;
   const flipped = flipItalic(family, italic);
-  if (flipped) return { family: flipped, source: "base14" };
+  if (flipped && !hasExternalFamily(fonts, family)) {
+    return { family: flipped, source: "base14" };
+  }
   if (!fonts || fonts.length === 0) return NONE;
   const device = deviceFaceFor(fonts, family, italic);
   return device ? { family: device, source: "device" } : NONE;
 }
 
+function hasExternalFamily(fonts: LocalFont[] | null, family: string): boolean {
+  if (!fonts || nearestStandardFont(family) === family) return false;
+  return knownFamilyOf(fonts, family) !== null;
+}
+
 /** Whether every one of these runs can be flipped to the other italic state. */
 export function canToggleItalic(
   fontIds: string[],
-  fonts: LocalFont[] | null = loadedLocalFonts(),
+  fonts: LocalFont[] | null = loadedExternalFonts(),
 ): boolean {
   if (fontIds.length === 0) return false;
   // Deduped: each miss costs a linear scan of every installed face, and a
@@ -104,9 +111,7 @@ export function canToggleItalic(
  */
 export function fallbackFamilyFor(fontId: string): string {
   const family = familyOf(fontId);
-  // Readiness IS the opt-in: bytes only exist for a family the user has loaded
-  // their device fonts for.
-  if (family && getLocalFontBytes(family)) return family;
+  if (family && getExternalFontBytes(family)) return family;
   return helveticaVariantFor(fontId);
 }
 
@@ -117,7 +122,7 @@ export function fallbackFamilyFor(fontId: string): string {
  * prefix is how {@link fallbackFamilyFor} recognises a face worth keeping.
  */
 export function fallbackFontIdFor(family: string): string {
-  return `${getLocalFontBytes(family) ? "device" : "base14"}:${family}`;
+  return `${getExternalFontBytes(family) ? "device" : "base14"}:${family}`;
 }
 
 /**
@@ -130,23 +135,27 @@ export function fallbackFontIdFor(family: string): string {
 export async function warmDocumentDeviceFonts(
   fontIds: Iterable<string>,
 ): Promise<string[]> {
-  const fonts = loadedLocalFonts();
+  const fonts = loadedExternalFonts();
   if (!fonts || fonts.length === 0) return [];
+  if (fonts !== attemptedAgainst) {
+    attempted.clear();
+    attemptedAgainst = fonts;
+  }
   const wanted = new Set<string>();
   for (const id of fontIds) {
     const family = familyOf(id);
     // base-14 renders everywhere already; nothing to complete.
-    if (!family || flipItalic(family, false)) continue;
+    if (!family || nearestStandardFont(family) === family) continue;
     // Every edit re-runs this over the whole page model, and scanning a few
     // thousand installed faces per keystroke is not free.
     if (attempted.has(family)) continue;
     attempted.add(family);
-    if (getLocalFontBytes(family)) continue;
+    if (getExternalFontBytes(family)) continue;
     if (pickLocalFontFace(fonts, family)) wanted.add(family);
   }
   const matched: string[] = [];
   for (const family of wanted) {
-    if (await loadLocalFontBytes(family)) matched.push(family);
+    if (await loadExternalFontBytes(family)) matched.push(family);
   }
   return matched;
 }
