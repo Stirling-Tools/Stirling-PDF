@@ -95,6 +95,7 @@ export class UngroupParagraphCommand implements Command {
         renderMode: rep.renderMode,
       });
       r.containerPtr = containers[i] ?? 0;
+      r.documentFont = rep.documentFont && { ...rep.documentFont };
       // Each line keeps its own object's tags: lines grouped into one paragraph
       // can belong to different structure elements, such as list items.
       if (!r.containerPtr) {
