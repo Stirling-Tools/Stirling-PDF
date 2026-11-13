@@ -473,7 +473,9 @@ export class RawPdf {
     const start = this.bodyOffset(num);
     const body = start < 0 ? null : this.objectBody(num);
     if (body === null) return null;
-    const kw = /\bstream\b/.exec(body)?.index ?? -1;
+    const valueEnd = scanValueEnd(body, skipWhitespace(body, 0));
+    const keyword = /^\s*stream\b/.exec(body.slice(valueEnd));
+    const kw = keyword ? valueEnd + keyword[0].length - "stream".length : -1;
     if (kw < 0) {
       const end = start + body.length;
       return { start, dictEnd: end, stream: null, end };

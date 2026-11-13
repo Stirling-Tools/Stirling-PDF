@@ -9,6 +9,7 @@ import {
   streamObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import {
+  buildClassicPdf,
   buildXrefStreamPdf,
   singleContentPdf,
   streamBody,
@@ -163,6 +164,29 @@ describe("replaceObjects", () => {
     expect(reparsed.objectBody(5)).toContain("/Helvetica");
     expect(toLatin1(out)).not.toContain("/Prev");
     expect(out.length).toBeGreaterThan(pdf.bytes.length);
+  });
+
+  it("replaces only the object whose dictionary holds a (stream) string", async () => {
+    const pdf = (await RawPdf.parse(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [] /Count 0 >>" },
+          { num: 3, body: "<< /Title (stream) >>" },
+          { num: 4, body: streamBody("", "data") },
+          { num: 5, body: "<< /Kept true >>" },
+        ],
+        1,
+      ),
+    ))!;
+
+    const reparsed = (await RawPdf.parse(
+      replaceObjects(pdf, [{ num: 3, body: plainObject("<< /Title (x) >>") }])!,
+    ))!;
+
+    expect(reparsed.objectBody(3)).toContain("(x)");
+    expect(toLatin1((await reparsed.streamData(4))!)).toBe("data");
+    expect(reparsed.objectBody(5)).toContain("/Kept true");
   });
 
   it("declines a file with more than one cross-reference section", async () => {

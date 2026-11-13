@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { deflateSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { subsetEmbeddedFonts } from "@editor/tools/pdfTextEditor/pdfdoc/passes/subsetEmbeddedFonts";
@@ -351,6 +352,19 @@ describe("subsetEmbeddedFonts", () => {
     expect(reread.valueSpan(descriptor, "CIDSet")).toBeNull();
     expect(reread.dictName(descriptor, "FontName")).toMatch(
       /^[A-Z]{6}\+Carlito$/,
+    );
+  });
+
+  test("still subsets when an object stream's predictor rows are too wide to allocate", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const packed = String.fromCharCode(...deflateSync(Buffer.from("1 0 ")));
+    const pdf = pdfWithFont(font, {
+      content: "BT /F1 12 Tf <0001> Tj ET",
+      extra: `<< /Type /ObjStm /N 1 /First 4 /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns 99999999999999999 >> /Length ${packed.length} >>\nstream\n${packed}\nendstream`,
+    });
+
+    expect((await subsetEmbeddedFonts(pdf, [font])).length).toBeLessThan(
+      pdf.length / 5,
     );
   });
 
