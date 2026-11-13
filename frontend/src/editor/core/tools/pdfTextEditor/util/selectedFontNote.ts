@@ -91,7 +91,10 @@ function completedNote(fontIds: Iterable<string>): SelectedFontNote | null {
   const found = [...fontIds].map(fontCompletionFor);
   const first = found[0];
   if (!first || found.some((c) => c?.family !== first.family)) return null;
-  return { kind: "completed", name: first.family, source: first.source };
+  const source = found.every((c) => c?.source === "original")
+    ? "original"
+    : "closest";
+  return { kind: "completed", name: first.family, source };
 }
 
 function documentFontNote(

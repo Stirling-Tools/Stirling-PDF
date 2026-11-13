@@ -2,8 +2,29 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, originals } = vi.hoisted(() => ({
+  get: vi.fn(),
+  originals: new Map<string, string>(),
+}));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+vi.mock(
+  "@editor/tools/pdfTextEditor/util/documentFontCompletion",
+  async (importOriginal) => {
+    const real =
+      await importOriginal<
+        typeof import("@editor/tools/pdfTextEditor/util/documentFontCompletion")
+      >();
+    return {
+      ...real,
+      fontCompletionFor: (fontId: string) => {
+        const family = originals.get(fontId);
+        return family
+          ? { family, source: "original" as const }
+          : real.fontCompletionFor(fontId);
+      },
+    };
+  },
+);
 
 import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
 import {
@@ -159,6 +180,26 @@ describe("selectedFontNote", () => {
     });
     resetFontCompletions();
     expect(selectedFontNote(pages, ["a"])).toEqual({ kind: "embeddedUnknown" });
+  });
+
+  it("claims the same font only when every selected font is completed by it", () => {
+    const pages = page([
+      { ...run("a", "pdf:42:Acme Sans", "Hi"), fontSubset: true },
+      { ...run("b", "pdf:43:Acme Sans Bold", "Hi"), fontSubset: true },
+    ]);
+    originals.set("pdf:42:Acme Sans", "Times-Roman");
+    setClosestFont("pdf:43:Acme Sans Bold", "Times-Roman");
+
+    try {
+      expect(selectedFontNote(pages, ["a", "b"])).toEqual({
+        kind: "completed",
+        name: "Times-Roman",
+        source: "closest",
+      });
+    } finally {
+      originals.clear();
+      resetFontCompletions();
+    }
   });
 
   it("says nothing for a selection mixing device and document fonts", () => {
