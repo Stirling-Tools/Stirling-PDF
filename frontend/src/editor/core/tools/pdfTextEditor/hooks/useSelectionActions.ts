@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -113,11 +113,15 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
+  const latestFontRequest = useRef(0);
   const changeFontFamily = useCallback(
     async (family: string) => {
+      const request = ++latestFontRequest.current;
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
       if (!isDocumentFontId(family)) await ensureDeviceFontReady(family);
+      // A font picked while these bytes loaded wins; applying this one now would undo it.
+      if (request !== latestFontRequest.current) return;
       dispatchPerRun(
         (run) =>
           new SetFontFamilyCommand({
@@ -131,6 +135,7 @@ export function useSelectionActions(store: EditorStore) {
   );
 
   const toggleItalic = useCallback(async () => {
+    const request = ++latestFontRequest.current;
     const fonts = loadedLocalFonts();
     const targets: Array<{
       pageIndex: number;
@@ -158,6 +163,7 @@ export function useSelectionActions(store: EditorStore) {
     for (const target of targets) {
       if (target.device) await ensureDeviceFontReady(target.family);
     }
+    if (request !== latestFontRequest.current) return;
     const cmds = targets.map(
       (target) =>
         new SetFontFamilyCommand({

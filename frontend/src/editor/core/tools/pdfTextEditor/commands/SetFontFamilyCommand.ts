@@ -10,6 +10,7 @@ import {
   collectMemberPtrs,
   emitRunLines,
   planLineOrigins,
+  removeAndDestroyObject,
   removeMemberPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
@@ -162,8 +163,14 @@ export class SetFontFamilyCommand implements Command {
       created.push(...line.ptrs);
     }
 
-    if (created.length === 0) {
-      // Nothing emitted (e.g. all-whitespace dropped) - restore and bail.
+    // A restore drawn only in fallback faces did not put the run back in its font.
+    const restoreFont = documentFontHandle(this.nextFamily);
+    const notRestored =
+      restoring &&
+      !created.some((ptr) => m.FPDFTextObj_GetFont(ptr) === restoreFont);
+    if (created.length === 0 || notRestored) {
+      // Nothing usable emitted (e.g. all-whitespace dropped) - restore and bail.
+      for (const ptr of created) removeAndDestroyObject(m, page.pagePtr, ptr);
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
       // Neutralise the command: it still lands in history, and a revert with

@@ -69,4 +69,20 @@ describe("useSelectionActions font changes", () => {
     expect(ensureDeviceFontReady).toHaveBeenCalledWith("Acme Sans");
     expect(dispatchedChanges(dispatch)).toEqual(["a:Acme Sans"]);
   });
+
+  it("drops a font still loading once a later font change has been made", async () => {
+    let finishLoading: (ready: boolean) => void = () => {};
+    ensureDeviceFontReady.mockImplementationOnce(
+      () => new Promise<boolean>((resolve) => (finishLoading = resolve)),
+    );
+    const { store, dispatch } = fakeStore("device:Acme Sans");
+    const actions = renderHook(() => useSelectionActions(store)).result.current;
+
+    const pending = actions.changeFontFamily("Slow Serif");
+    await actions.changeFontFamily("pdf:7:Garamond");
+    finishLoading(true);
+    await pending;
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:7:Garamond"]);
+  });
 });
