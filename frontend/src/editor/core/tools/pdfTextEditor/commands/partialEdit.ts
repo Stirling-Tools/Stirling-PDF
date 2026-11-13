@@ -22,19 +22,53 @@ import {
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  setCharcodesOn,
+  tryResolveCharcodes,
+} from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
-/** Set the text of an EXISTING PDFium text object, preserving its font. */
+/**
+ * Set the text of an EXISTING PDFium text object, preserving its font.
+ *
+ * With `ctx`, the text is written as the font's exact charcodes when every
+ * character resolves through its ToUnicode mapping. FPDFText_SetText leaves
+ * the encoding to PDFium's own reverse lookup, which guesses for subset fonts
+ * and can draw a different glyph; it is the fallback for fonts the exact
+ * lookup can't read.
+ */
 export function setObjText(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   ptr: number,
   text: string,
+  ctx?: { pagePtr: number; docPtr: number },
 ): void {
   if (!ptr) return;
+  if (ctx && text.length > 0) {
+    const font = objFontPtr(m, ptr);
+    const resolved = font
+      ? tryResolveCharcodes(
+          font,
+          text,
+          { module: m, pagePtr: ctx.pagePtr, docPtr: ctx.docPtr },
+          true,
+        )
+      : null;
+    const r = resolved?.result;
+    const cpLen = [...text].length;
+    if (
+      r &&
+      r.coverage === cpLen &&
+      r.charcodes.length === cpLen &&
+      setCharcodesOn(m, ptr, r.charcodes)
+    ) {
+      return;
+    }
+  }
   const buf = writeUtf16(m, text);
   try {
     m.FPDFText_SetText(ptr, buf);
@@ -743,7 +777,10 @@ export function applyPartialEditPlan(
       // can reuse the same embedded font via the charcode path.
       const modFontPtr = objFontPtr(m, ptr);
       const modTags = readTagMarks(m, ptr);
-      setObjText(m, ptr, modText);
+      setObjText(m, ptr, modText, {
+        pagePtr: page.pagePtr,
+        docPtr: doc.docPtr,
+      });
       if (Math.abs(offset) > 0.05) {
         try {
           transformObject(m, ptr, 1, 0, 0, 1, offset, 0);

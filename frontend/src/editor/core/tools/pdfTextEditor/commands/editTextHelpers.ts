@@ -888,10 +888,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       setTextOn(m, ptr, text);
       return null;
     }
-    // allowContentStreamFallback: if the active resolver misses, reuse the
-    // on-page glyph via the client-side content-stream resolver.
-    const allowGuessFallback =
-      !!opts.originalFontSubset && [...text].length === 1;
+    // The ToUnicode fallback only returns codes the font really maps, so it is
+    // safe for any text length.
     const resolved = tryResolveCharcodes(
       opts.originalFontPtr,
       text,
@@ -900,7 +898,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         pagePtr: opts.page.pagePtr,
         docPtr: opts.doc.docPtr,
       },
-      allowGuessFallback,
+      true,
     );
     if (!resolved) {
       emitCharcodeEvent({
