@@ -122,13 +122,13 @@ search-path = [
 # Disallow `type: ignore` comments to encourage accurate error codes to be used in ignore comments
 # Pyrefly won't flag `type: ignore [wrong-code]`, but it will flag `pyrefly: ignore [wrong-code]`
 enabled-ignores = ["pyrefly"]
-min-severity = "warn"  # TODO: Change settings below to `warn` - https://github.com/facebook/pyrefly/issues/3370
+min-severity = "warn"
 
 [tool.pyrefly.errors]
-deprecated = "error"
-implicit-any = "error"
-redundant-cast = "error"
-unused-ignore = "error"
+deprecated = "warn"
+implicit-any = "warn"
+redundant-cast = "warn"
+unused-ignore = "warn"
 # TODO: Add equivalents to:
 #  - reportImportCycles
 #  - reportUnusedImport

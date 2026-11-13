@@ -676,7 +676,7 @@ def test_many_stores_open_the_same_file_without_locking_out(tmp_path: Path) -> N
 
     db_path = tmp_path / "rag.db"
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
-        stores = list(pool.map(lambda _: SqliteVecStore(db_path), range(8)))
+        stores = list(pool.map(SqliteVecStore, [db_path] * 8))
 
     assert len(stores) == 8
     mode = stores[0]._conn.execute("PRAGMA journal_mode").fetchone()[0]
