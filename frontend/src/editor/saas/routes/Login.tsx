@@ -270,11 +270,13 @@ export default function Login() {
           "[Login] Anonymous sign in successful, refreshing session...",
         );
 
-        // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
 
         // A guest session does not count as signed in here, so nothing else moves them on.
-        continueToNext();
+        const remembered = takePendingDestination();
+        navigate(nextPath ?? remembered ?? (await resolveLandingPath()), {
+          replace: true,
+        });
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);

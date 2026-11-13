@@ -56,6 +56,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
             // The frontend needs state to bind the SaaS response to the initiating browser.
             boolean accountLinkCallback =
                     requestURI.equals(request.getContextPath() + "/account-link/callback");
+            // Share links carry ?action=download|open for the share page to run once.
+            boolean shareLink = requestURI.startsWith(request.getContextPath() + "/share/");
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
@@ -65,7 +67,9 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     continue;
                 }
                 String key = keyValuePair[0];
-                if (ALLOWED_PARAMS.contains(key) || (accountLinkCallback && "state".equals(key))) {
+                if (ALLOWED_PARAMS.contains(key)
+                        || (accountLinkCallback && "state".equals(key))
+                        || (shareLink && "action".equals(key))) {
                     allowedParameters.put(key, keyValuePair.length == 2 ? keyValuePair[1] : null);
                 }
             }

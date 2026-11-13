@@ -1484,7 +1484,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;

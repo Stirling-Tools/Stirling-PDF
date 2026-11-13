@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
   Badge,
@@ -40,10 +40,17 @@ export default function ShareLinkPage() {
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [status, setStatus] = useState<ShareLinkStatus>("loading");
   const [metadata, setMetadata] = useState<ShareLinkMetadata | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  // ?action=download|open (e.g. from a chat app's result card) runs that button once.
+  const [autoActionDone, setAutoActionDone] = useState(false);
+  const autoAction = useMemo(
+    () => new URLSearchParams(location.search).get("action"),
+    [location.search],
+  );
 
   const normalizedToken = useMemo(() => (token || "").trim(), [token]);
   const shareRole = (metadata?.accessRole ?? "viewer").toLowerCase();
@@ -85,11 +92,39 @@ export default function ShareLinkPage() {
   }, [loadMetadata]);
 
   const handleLogin = useCallback(() => {
-    navigate("/login", {
+    // In the query as well as state: the SaaS login page only reads ?from=.
+    const back = `/share/${normalizedToken}${location.search}`;
+    navigate(`/login?from=${encodeURIComponent(back)}`, {
       replace: true,
-      state: { from: { pathname: `/share/${normalizedToken}` } },
+      state: {
+        from: {
+          pathname: `/share/${normalizedToken}`,
+          search: location.search,
+        },
+      },
     });
-  }, [navigate, normalizedToken]);
+  }, [location.search, navigate, normalizedToken]);
+
+  const clearActionParam = useCallback(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("action")) return;
+    params.delete("action");
+    const search = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : "",
+        hash: location.hash,
+      },
+      { replace: true, state: location.state },
+    );
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+  ]);
 
   const handleDownload = useCallback(async () => {
     if (!normalizedToken || !canDownload) return;
@@ -104,10 +139,12 @@ export default function ShareLinkPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      clearActionParam();
     } catch (error: unknown) {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -128,7 +165,7 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [canDownload, normalizedToken, t]);
+  }, [canDownload, clearActionParam, normalizedToken, t]);
 
   const handleOpen = useCallback(async () => {
     if (!normalizedToken || !canOpen) return;
@@ -148,6 +185,7 @@ export default function ShareLinkPage() {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -165,12 +203,43 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [actions, canOpen, metadata, navActions, navigate, normalizedToken, t]);
+  }, [
+    actions,
+    canOpen,
+    clearActionParam,
+    metadata,
+    navActions,
+    navigate,
+    normalizedToken,
+    t,
+  ]);
+
+  // Signed out: go straight to the normal sign-in page; it returns here afterwards.
+  useEffect(() => {
+    if (status === "login") handleLogin();
+  }, [handleLogin, status]);
+
+  useEffect(() => {
+    if (status !== "ready" || autoActionDone) return;
+    if (autoAction === "download" && canDownload) {
+      setAutoActionDone(true);
+      void handleDownload();
+    } else if (autoAction === "open" && canOpen) {
+      setAutoActionDone(true);
+      void handleOpen();
+    }
+  }, [
+    autoAction,
+    autoActionDone,
+    canDownload,
+    canOpen,
+    handleDownload,
+    handleOpen,
+    status,
+  ]);
 
   const title =
     metadata?.fileName || t("storageShare.titleDefault", "Shared file");
-  const ownerLabel =
-    metadata?.owner || t("storageShare.ownerUnknown", "Unknown");
 
   return (
     <div style={{ minHeight: "100%", padding: "2.5rem 1.5rem" }}>
@@ -213,10 +282,12 @@ export default function ShareLinkPage() {
               <Text size="lg" fw={600} className={privateContentClassName}>
                 {title}
               </Text>
-              <Text size="sm" c="dimmed">
-                {t("storageShare.ownerLabel", "Owner")}:{" "}
-                <PrivateContent>{ownerLabel}</PrivateContent>
-              </Text>
+              {metadata?.owner && (
+                <Text size="sm" c="dimmed">
+                  {t("storageShare.ownerLabel", "Owner")}:{" "}
+                  <PrivateContent>{metadata.owner}</PrivateContent>
+                </Text>
+              )}
               {metadata?.createdAt && (
                 <Text size="sm" c="dimmed">
                   {t("storageShare.createdAt", "Created")}{" "}

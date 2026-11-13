@@ -10,10 +10,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -124,6 +126,73 @@ class JobExecutorServiceTest {
 
         // Verify task manager was called
         verify(taskManager).createTask(jobIdCaptor.capture());
+    }
+
+    @Test
+    void shouldReturnSynchronousRedirectUnchanged() {
+        ResponseEntity<?> rejection =
+                ResponseEntity.status(HttpStatus.SEE_OTHER)
+                        .location(URI.create("/url-to-pdf?error=error.endpointDisabled"))
+                        .build();
+
+        assertSame(rejection, jobExecutorService.runJobGeneric(false, () -> rejection));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = HttpStatus.class,
+            names = {"SEE_OTHER", "BAD_REQUEST", "SERVICE_UNAVAILABLE"})
+    void shouldRecordBodylessHttpRejectionsAsJobErrors(HttpStatus status) {
+        URI location = URI.create("/url-to-pdf?error=error.endpointDisabled");
+        ResponseEntity<?> rejection = ResponseEntity.status(status).location(location).build();
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<?> queuedWork = invocation.getArgument(2);
+                            queuedWork.get();
+                            return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+                        });
+
+        jobExecutorService.runJobGeneric(true, () -> rejection, 5000, true, 80);
+
+        verify(taskManager)
+                .setError(
+                        anyString(),
+                        eq("Job rejected with HTTP status " + status.value() + " at " + location));
+        verify(taskManager, never()).setResult(anyString(), any());
+        verify(taskManager, never()).setComplete(anyString());
+    }
+
+    @Test
+    void shouldRecordHttpRejectionsWithABodyAsJobErrors() {
+        ResponseEntity<?> rejection =
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "bad input"));
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<?> queuedWork = invocation.getArgument(2);
+                            queuedWork.get();
+                            return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+                        });
+
+        jobExecutorService.runJobGeneric(true, () -> rejection, 5000, true, 80);
+
+        verify(taskManager).setError(anyString(), eq("Job rejected with HTTP status 400"));
+        verify(taskManager, never()).setResult(anyString(), any());
+        verify(taskManager, never()).setComplete(anyString());
+    }
+
+    @Test
+    void shouldKeepBodylessSuccessfulJobsSuccessful() {
+        ResponseEntity<?> success = ResponseEntity.noContent().build();
+
+        jobExecutorService.runJobGeneric(true, () -> success);
+
+        verify(taskManager, timeout(5000)).setComplete(anyString());
+        verify(taskManager).setResult(anyString(), org.mockito.ArgumentMatchers.isNull());
+        verify(taskManager, never()).setError(anyString(), anyString());
     }
 
     @Test

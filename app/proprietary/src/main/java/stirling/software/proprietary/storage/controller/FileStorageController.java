@@ -227,23 +227,27 @@ public class FileStorageController {
             throw new ResponseStatusException(status, message);
         }
         StoredFile file = share.getFile();
-        User currentUser = fileStorageService.requireAuthenticatedUser();
+        ShareLinkMetadataResponse.ShareLinkMetadataResponseBuilder response =
+                ShareLinkMetadataResponse.builder()
+                        .shareToken(share.getShareToken())
+                        .fileName(file.getOriginalFilename())
+                        .accessRole(
+                                share.getAccessRole() != null
+                                        ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
+                                        : null)
+                        .createdAt(share.getCreatedAt())
+                        .expiresAt(share.getExpiresAt());
+        if (!isAuthenticated(authentication)) {
+            return response.build();
+        }
+        User owner = file.getOwner();
         boolean ownedByCurrentUser =
-                currentUser != null
-                        && file.getOwner() != null
-                        && currentUser.getId().equals(file.getOwner().getId());
-        return ShareLinkMetadataResponse.builder()
-                .shareToken(share.getShareToken())
-                .fileId(file.getId())
-                .fileName(file.getOriginalFilename())
-                .owner(file.getOwner() != null ? file.getOwner().getUsername() : null)
+                owner != null
+                        && authentication.getPrincipal() instanceof User currentUser
+                        && owner.getId().equals(currentUser.getId());
+        return response.fileId(file.getId())
+                .owner(owner != null ? owner.getUsername() : null)
                 .ownedByCurrentUser(ownedByCurrentUser)
-                .accessRole(
-                        share.getAccessRole() != null
-                                ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
-                                : null)
-                .createdAt(share.getCreatedAt())
-                .expiresAt(share.getExpiresAt())
                 .build();
     }
 

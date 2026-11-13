@@ -110,7 +110,7 @@ class ConfigControllerMoreTest {
 
             assertThat(body).containsEntry("storageEnabled", expectedStorage);
             assertThat(body).containsEntry("storageGroupSigningEnabled", expectedSigning);
-            assertThat(body).containsEntry("storageSharingEnabled", false);
+            assertThat(body).containsEntry("storageSharingEnabled", expectedStorage);
         }
 
         @Test
