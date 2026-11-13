@@ -99,6 +99,39 @@ describe("LineGrouper inter-run space synthesis", () => {
     ]);
   });
 
+  it("reads a condensed font's narrow word gaps as spaces", () => {
+    const impactSpace = () => 0.176;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "that", width: 18, gapAfter: 1.91 },
+          { text: "we", width: 12.7, gapAfter: 1.92 },
+          { text: "want", width: 22 },
+        ],
+        11,
+      ),
+      impactSpace,
+    );
+    expect(text).toBe("that we want");
+  });
+
+  it("keeps a condensed font's letter spacing out of the words", () => {
+    const impactSpace = () => 0.176;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "w", width: 6, gapAfter: 0.6 },
+          { text: "a", width: 5, gapAfter: 0.6 },
+          { text: "n", width: 5, gapAfter: 0.6 },
+          { text: "t", width: 3 },
+        ],
+        11,
+      ),
+      impactSpace,
+    );
+    expect(text).toBe("want");
+  });
+
   it("still splits two 18pt columns a wide gutter apart", () => {
     const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
     page.setRuns(
