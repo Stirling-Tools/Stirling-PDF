@@ -1,6 +1,7 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { scanFrameFor } from "@editor/tools/pdfTextEditor/commands/scanFrame";
 import {
   captureScanEdit,
   isScanRun,
@@ -29,7 +30,10 @@ export function matchableSample(
       if (letters >= MIN_MATCHABLE_LETTERS) runs.push({ page, run, letters });
     }
   runs.sort((a, b) => b.letters - a.letters);
-  for (const { page, run } of runs.slice(0, MAX_RUNS_CAPTURED)) {
+  const upright = runs.filter(
+    ({ page, run }) => !scanFrameFor(page, run.matrix, run.bounds),
+  );
+  for (const { page, run } of upright.slice(0, MAX_RUNS_CAPTURED)) {
     const captured = captureScanEdit(doc.module, run, page);
     if (captured && !captured.frame) return { page, captured, text: run.text };
   }
