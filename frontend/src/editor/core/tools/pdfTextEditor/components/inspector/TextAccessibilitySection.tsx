@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack } from "@mantine/core";
+import { Box, Group, Stack, Textarea } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -32,6 +32,7 @@ import type {
   InnerTagsControl,
   OtherPagesControl,
   TextLanguageControl,
+  UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
@@ -40,9 +41,9 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 /**
  * What the selected text is tagged as and the language it is read in, with
  * pickers to change them: retagging its block, giving untagged text an
- * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, and
- * pickers for characters selected in it. With several runs selected, the tag
- * they share and their language.
+ * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, a
+ * way to tag the links over it, and pickers for characters selected in it.
+ * With several runs selected, the tag they share and their language.
  */
 export function TextAccessibilitySection({
   tag,
@@ -50,12 +51,14 @@ export function TextAccessibilitySection({
   inner,
   language,
   otherPages,
+  untaggedLinks,
 }: {
   tag: TextTag | null;
   onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
   otherPages: OtherPagesControl | null;
+  untaggedLinks: UntaggedLinksControl | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -70,6 +73,7 @@ export function TextAccessibilitySection({
         {tag && (
           <>
             <InnerTagList inner={inner} />
+            {untaggedLinks && <TagLinksButton control={untaggedLinks} />}
             <NewTagPicker inner={inner} />
             <NewLanguagePicker inner={inner} />
           </>
@@ -200,6 +204,26 @@ function OtherPagesButton({ control }: { control: OtherPagesControl }) {
   );
 }
 
+function TagLinksButton({ control }: { control: UntaggedLinksControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="link" size={20} />}
+      onClick={control.onTag}
+      data-testid="pdf-editor-tag-links"
+    >
+      {t("pdfTextEditor.inspector.accessibility.tagLinks", "Tag link", {
+        count: control.count,
+      })}
+    </Button>
+  );
+}
+
 /** The language the selected text's blocks are read in; "Mixed" when they differ. */
 function TextLanguageField({ control }: { control: TextLanguageControl }) {
   const { t } = useTranslation();
@@ -253,6 +277,9 @@ function InnerTagList({ inner }: { inner: InnerTagsControl }) {
             onSelect={() => inner.onSelect(index)}
             onSet={(type) => inner.onSet(index, type)}
             onSetLanguage={(lang) => inner.onSetLanguage(index, lang)}
+            onSetLinkDescription={(description) =>
+              inner.onSetLinkDescription(index, description)
+            }
           />
         ))}
       </Stack>
@@ -267,6 +294,7 @@ function InnerTagRow({
   onSelect,
   onSet,
   onSetLanguage,
+  onSetLinkDescription,
 }: {
   number: number;
   innerTag: InnerTag;
@@ -274,6 +302,7 @@ function InnerTagRow({
   onSelect: () => void;
   onSet: (type: StructureType | null) => void;
   onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
 }) {
   const text = innerTag.text.replace(/\s+/g, " ").trim();
   return (
@@ -298,6 +327,7 @@ function InnerTagRow({
           innerTag={innerTag}
           onSet={onSet}
           onSetLanguage={onSetLanguage}
+          onSetLinkDescription={onSetLinkDescription}
         />
       )}
     </div>
@@ -309,11 +339,13 @@ function InnerTagControls({
   innerTag,
   onSet,
   onSetLanguage,
+  onSetLinkDescription,
 }: {
   number: number;
   innerTag: InnerTag;
   onSet: (type: StructureType | null) => void;
   onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
 }) {
   const { t } = useTranslation();
   const removeLabel = t(
@@ -366,6 +398,23 @@ function InnerTagControls({
         testId="pdf-editor-inner-tag-language-picker"
         disabled={!innerTag.languageEditable}
       />
+      {innerTag.link && (
+        <Textarea
+          label={t(
+            "pdfTextEditor.inspector.accessibility.linkDescription",
+            "Link description",
+          )}
+          value={innerTag.link.description ?? ""}
+          className={privateContentClassName}
+          onChange={(e) => onSetLinkDescription(e.currentTarget.value)}
+          disabled={!innerTag.link.editable}
+          autosize
+          minRows={1}
+          maxRows={4}
+          size="xs"
+          data-testid="pdf-editor-inner-tag-link-description"
+        />
+      )}
     </Stack>
   );
 }

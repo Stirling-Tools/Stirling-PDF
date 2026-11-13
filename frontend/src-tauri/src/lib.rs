@@ -158,6 +158,11 @@ pub fn run() {
     }))
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
+      // Drag-and-drop behaviour differs between WebView2 releases.
+      match tauri::webview_version() {
+        Ok(version) => add_log(format!("🌐 WebView version {}", version)),
+        Err(err) => add_log(format!("⚠️ Could not read the WebView version: {}", err)),
+      }
 
       if let Err(err) = apply_provisioning_if_present(app.handle()) {
         add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
@@ -235,6 +240,7 @@ pub fn run() {
       get_opened_files,
       commands::file_drop::resolve_dropped_file_paths,
       commands::file_drop::install_drag_capture,
+      commands::file_drop::log_drop_diagnostic,
       pop_opened_files,
       clear_opened_files,
       file_disk_state,

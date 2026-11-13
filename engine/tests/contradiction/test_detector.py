@@ -238,7 +238,7 @@ async def test_canonicaliser_batches_oversized_subject_lists(runtime: AppRuntime
         seen: list[str] = re.findall(r"subj-\d+", prompt)
         return _stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw=s, canonical=s) for s in seen]))
 
-    detector._subject_canonicaliser.run = _stub  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = _stub  # pyrefly: ignore [bad-assignment]
 
     mapping = await detector._canonicalise_subjects(subjects)
 
@@ -269,7 +269,7 @@ async def test_canonicaliser_batch_conflict_resolved_by_lex_min(runtime: AppRunt
     # Force two batches by setting a tiny batch size for the call. We do
     # that by monkey-patching the setting on this detector instance only.
     object.__setattr__(detector._settings, "contradiction_canonicaliser_batch_size", 1)
-    detector._subject_canonicaliser.run = _stub  # type: ignore[method-assign]
+    detector._subject_canonicaliser.run = _stub  # pyrefly: ignore [bad-assignment]
 
     mapping = await detector._canonicalise_subjects(["x", "y"])
     # Smaller canonical (lexicographically) wins.
@@ -659,7 +659,7 @@ async def test_oversized_bucket_windows_translate_indices_globally(runtime: AppR
             )
         raise AssertionError(f"unexpected detector window #{window_count}")
 
-    detector._pair_detector.run = _stub_detector  # type: ignore[method-assign]
+    detector._pair_detector.run = _stub_detector  # pyrefly: ignore [bad-assignment]
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
 
     report = await detector.detect([file_a], principals=PRINCIPALS)
@@ -787,7 +787,7 @@ async def test_multi_file_pages_dont_collide_in_validation(runtime: AppRuntime) 
             return [chunk_b]
         return []
 
-    detector._mapper.map_pages = _map_pages  # type: ignore[method-assign]
+    detector._mapper.map_pages = _map_pages  # pyrefly: ignore [bad-assignment]
     detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(

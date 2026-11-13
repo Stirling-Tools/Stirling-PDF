@@ -16,6 +16,7 @@ import {
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import { TagPageContentCommand } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { readObjTexts } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
@@ -111,6 +112,31 @@ function cutPdf(): Uint8Array {
         body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 3 >>",
       },
       { num: 12, body: "<< /Nums [0 [8 0 R 9 0 R 10 0 R 11 0 R]] >>" },
+    ],
+    1,
+  );
+}
+
+/** A page with no structure tree, drawing each of `lines` a line apart. */
+function untaggedPdf(...lines: string[]): Uint8Array {
+  const content = lines
+    .map((line, i) => `BT /F1 12 Tf 72 ${700 - i * 30} Td (${line}) Tj ET\n`)
+    .join("");
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      { num: 4, body: streamBody("", content) },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
     ],
     1,
   );
@@ -242,7 +268,7 @@ function runTexts(doc: EditorDocument, pageIndex = 0): string[] {
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
-  const { blob } = await exportToBlob(doc, "cut.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 
@@ -324,6 +350,13 @@ function kidsOf(pdf: RawPdf, num: number): string[] {
     const ref = referencedObject(kid);
     return ref === null ? kid : `/${pdf.dictName(pdf.objectBody(ref)!, "S")}`;
   });
+}
+
+/** The object number of the saved file's top structure element. */
+function documentElement(pdf: RawPdf): number {
+  const catalog = pdf.objectBody(pdf.rootNum)!;
+  const root = pdf.objectBody(pdf.dictRef(catalog, "StructTreeRoot")!)!;
+  return pdf.dictRef(root, "K")!;
 }
 
 /** The child element of `num` with /S `type`. */
@@ -709,6 +742,79 @@ describe("a block cut from part of a run", () => {
     expect(innerTags(doc, runWith(doc, "Sales rose").snapshot())).toMatchObject(
       [{ text: "every", role: { type: "Span" } }],
     );
+  });
+});
+
+describe("tagging part of the text of an element the session added", () => {
+  async function taggedPage(...lines: string[]) {
+    const doc = await open(untaggedPdf(...lines));
+    const history = new HistoryStack();
+    history.execute(new TagPageContentCommand({ pageIndex: 0 }), doc);
+    return { doc, history };
+  }
+
+  test("saves a Span among the added paragraph's kids", async () => {
+    const { doc, history } = await taggedPage("Read the guide for more.");
+    tagRange(doc, history, "guide", "Span");
+
+    const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
+    const [paragraph] = kidsOf(pdf, documentElement(pdf));
+    expect(paragraph).toBe("/P");
+    const p = kidNamed(pdf, documentElement(pdf), "P");
+    expect(kidsOf(pdf, p)).toEqual([
+      expect.any(String),
+      "/Span",
+      expect.any(String),
+    ]);
+    expect(kidsOf(pdf, kidNamed(pdf, p, "Span"))).toHaveLength(1);
+  });
+
+  test("keeps an added paragraph whose text was all cut out, in its place", async () => {
+    const { doc, history } = await taggedPage(
+      "Opening line.",
+      "stirlingpdf.com",
+      "Closing line.",
+    );
+    tagRange(doc, history, "stirlingpdf.com", "Span");
+
+    const bytes = await savedBytes(doc);
+    const pdf = (await RawPdf.parse(bytes))!;
+    const top = documentElement(pdf);
+    expect(kidsOf(pdf, top)).toEqual(["/P", "/P", "/P"]);
+    const [first, middle, last] = elementKids(pdf, pdf.objectBody(top)!)!.map(
+      (kid) => referencedObject(kid)!,
+    );
+    expect(kidsOf(pdf, middle)).toEqual(["/Span"]);
+    const texts = textByMcid(await open(bytes));
+    const textOf = (num: number) =>
+      texts.get(Number(kidsOf(pdf, num)[0]))?.trim();
+    expect(textOf(first)).toBe("Opening line.");
+    expect(textOf(kidNamed(pdf, middle, "Span"))).toBe("stirlingpdf.com");
+    expect(textOf(last)).toBe("Closing line.");
+  });
+
+  test("splits a heading out of an added paragraph", async () => {
+    const { doc, history } = await taggedPage("Outlook Growth will slow.");
+    tagRange(doc, history, "Outlook", "H2");
+
+    expect(await savedHeadings(doc)).toEqual(["H2"]);
+    const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
+    expect(kidsOf(pdf, documentElement(pdf))).toEqual(["/H2", "/P"]);
+  });
+
+  test("saves a cut from the text an earlier cut left before it", async () => {
+    const { doc, history } = await taggedPage("Read the guide for more.");
+    tagRange(doc, history, "guide", "Span");
+    tagRange(doc, history, "Read", "Span");
+
+    const pdf = (await RawPdf.parse(await savedBytes(doc)))!;
+    const p = kidNamed(pdf, documentElement(pdf), "P");
+    expect(kidsOf(pdf, p)).toEqual([
+      "/Span",
+      expect.any(String),
+      "/Span",
+      expect.any(String),
+    ]);
   });
 });
 
