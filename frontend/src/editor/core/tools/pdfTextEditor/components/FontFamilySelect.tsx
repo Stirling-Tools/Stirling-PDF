@@ -1,16 +1,24 @@
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
 import type { ComboboxData, ComboboxItemGroup } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { alert } from "@editor/components/toast";
+import { useServerFontsGroupLabel } from "@editor/tools/pdfTextEditor/hooks/useServerFontsGroupLabel";
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   familyOptions,
   isLocalFontAccessSupported,
-  listLocalFonts,
+  listLocalFontsIfGranted,
   loadedLocalFonts,
+  retryLocalFonts,
   subscribeLocalFonts,
   type FontFamilyOption,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -37,6 +45,10 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
   serverFontFailed: [
     "pdfTextEditor.fontPicker.serverFontFailed",
     "That server font could not be downloaded. The text was left unchanged.",
+  ],
+  embeddingForbidden: [
+    "pdfTextEditor.fontPicker.embeddingForbidden",
+    "This font's licence does not allow embedding it in a PDF. The text was left unchanged.",
   ],
   embedFailed: [
     "pdfTextEditor.fontPicker.embedFailed",
@@ -74,6 +86,7 @@ export function FontFamilySelect({
   const [applying, setApplying] = useState(false);
   const [notice, setNotice] = useState<DeviceFontNotice | null>(null);
   const supported = useMemo(() => isLocalFontAccessSupported(), []);
+  const serverGroupLabel = useServerFontsGroupLabel();
   // Read the fonts from the module, not local state: switching files remounts
   // the toolbar, and the grant the user already gave must survive that.
   const localFonts = useSyncExternalStore(
@@ -106,7 +119,7 @@ export function FontFamilySelect({
     setLoading(true);
     setNotice(null);
     try {
-      const fonts = await listLocalFonts();
+      const fonts = await retryLocalFonts();
       // deviceFamilies recomputes off the store, so only the empty outcomes
       // need reporting here.
       if (!fonts) setNotice("unavailable");
@@ -115,6 +128,11 @@ export function FontFamilySelect({
       setLoading(false);
     }
   }, []);
+
+  // Already allowed, so listing cannot prompt: skip the button.
+  useEffect(() => {
+    if (supported && !loadedLocalFonts()) void listLocalFontsIfGranted();
+  }, [supported]);
 
   const isKnown = useCallback(
     (family: string) =>
@@ -160,7 +178,7 @@ export function FontFamilySelect({
     });
     if (serverOptions.length > 0) {
       groups.push({
-        group: t("pdfTextEditor.fontPicker.serverGroup", "Server fonts"),
+        group: serverGroupLabel,
         items: serverOptions,
       });
     }
@@ -171,7 +189,14 @@ export function FontFamilySelect({
       });
     }
     return groups;
-  }, [serverOptions, deviceOptions, documentFamily, scanned, t]);
+  }, [
+    serverOptions,
+    deviceOptions,
+    documentFamily,
+    scanned,
+    serverGroupLabel,
+    t,
+  ]);
 
   const pickFailureText = useCallback(
     (failure: FontPickFailure): string => {

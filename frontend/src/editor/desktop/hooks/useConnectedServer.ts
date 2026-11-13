@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { authService } from "@editor/services/authService";
-import {
-  connectionModeService,
-  type ConnectionMode,
-} from "@editor/services/connectionModeService";
+import type { ConnectionMode } from "@editor/services/connectionModeService";
+import { useConnectionMode } from "@editor/hooks/useConnectionMode";
 
 function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";
@@ -13,9 +11,7 @@ function isServerMode(mode: ConnectionMode | null): boolean {
  *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
 export function useConnectedServer(): boolean {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isServer, setIsServer] = useState(() =>
-    isServerMode(connectionModeService.getCachedMode()),
-  );
+  const isServer = isServerMode(useConnectionMode());
 
   useEffect(
     () =>
@@ -32,23 +28,6 @@ export function useConnectedServer(): boolean {
       }),
     [],
   );
-
-  useEffect(() => {
-    let current = true;
-    void connectionModeService.getCurrentMode().then((mode) => {
-      if (current) setIsServer(isServerMode(mode));
-    });
-    const unsubscribe = connectionModeService.subscribeToModeChanges(
-      (config) => {
-        current = false;
-        setIsServer(isServerMode(config.mode));
-      },
-    );
-    return () => {
-      current = false;
-      unsubscribe();
-    };
-  }, []);
 
   return isAuthenticated && isServer;
 }
