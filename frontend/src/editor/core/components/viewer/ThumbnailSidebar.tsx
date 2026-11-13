@@ -13,6 +13,73 @@ interface ThumbnailSidebarProps {
   activeFileId?: string | null;
 }
 
+function PageThumbnail({
+  thumbnail,
+  pageNumber,
+}: {
+  thumbnail: string | undefined;
+  pageNumber: number;
+}) {
+  const { t } = useTranslation();
+  if (thumbnail && thumbnail !== "error") {
+    return (
+      <PrivateContent>
+        <img
+          src={thumbnail}
+          alt={t("viewer.thumbnails.thumbnailAlt", "Page {{page}} thumbnail", {
+            page: pageNumber,
+          })}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            borderRadius: "4px",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            border: "1px solid var(--c-border-subtle)",
+          }}
+        />
+      </PrivateContent>
+    );
+  }
+  if (thumbnail === "error") {
+    return (
+      <div
+        style={{
+          width: "11.5rem",
+          height: "15rem",
+          backgroundColor: "var(--color-red-50)",
+          border: "1px solid var(--color-red-200)",
+          borderRadius: "4px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--color-red-500)",
+          fontSize: "12px",
+        }}
+      >
+        {t("viewer.thumbnails.failed", "Failed")}
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{
+        width: "11.5rem",
+        height: "15rem",
+        backgroundColor: "var(--c-surface-sunken)",
+        border: "1px solid var(--c-border-subtle)",
+        borderRadius: "4px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "var(--c-text-subtle)",
+        fontSize: "12px",
+      }}
+    >
+      {t("loading", "Loading...")}
+    </div>
+  );
+}
+
 export function ThumbnailSidebar({
   visible,
   onToggle,
@@ -246,61 +313,10 @@ export function ThumbnailSidebar({
                         }
                       }}
                     >
-                      {/* Thumbnail Image */}
-                      {thumbnails[pageIndex] &&
-                      thumbnails[pageIndex] !== "error" ? (
-                        <PrivateContent>
-                          <img
-                            src={thumbnails[pageIndex]}
-                            alt={t(
-                              "viewer.thumbnails.thumbnailAlt",
-                              "Page {{page}} thumbnail",
-                              { page: pageIndex + 1 },
-                            )}
-                            style={{
-                              maxWidth: "100%",
-                              height: "auto",
-                              borderRadius: "4px",
-                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                              border: "1px solid var(--c-border-subtle)",
-                            }}
-                          />
-                        </PrivateContent>
-                      ) : thumbnails[pageIndex] === "error" ? (
-                        <div
-                          style={{
-                            width: "11.5rem",
-                            height: "15rem",
-                            backgroundColor: "var(--color-red-50)",
-                            border: "1px solid var(--color-red-200)",
-                            borderRadius: "4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "var(--color-red-500)",
-                            fontSize: "12px",
-                          }}
-                        >
-                          {t("viewer.thumbnails.failed", "Failed")}
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            width: "11.5rem",
-                            height: "15rem",
-                            backgroundColor: "var(--c-surface-sunken)",
-                            border: "1px solid var(--c-border-subtle)",
-                            borderRadius: "4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "var(--c-text-subtle)",
-                            fontSize: "12px",
-                          }}
-                        >
-                          {t("loading", "Loading...")}
-                        </div>
-                      )}
+                      <PageThumbnail
+                        thumbnail={thumbnails[pageIndex]}
+                        pageNumber={pageIndex + 1}
+                      />
 
                       {/* Page Number */}
                       <div

@@ -7,7 +7,7 @@
 
 import { execFileSync } from "child_process";
 import { appendFileSync, existsSync, readFileSync } from "fs";
-import { isAbsolute, join, relative } from "path";
+import { relative, resolve } from "path";
 import type { JSONReport, JSONReportSuite } from "@playwright/test/reporter";
 
 interface FlakyTest {
@@ -99,11 +99,7 @@ function collectFlaky(
     const titles = depth > 0 && suite.title ? [...trail, suite.title] : trail;
     for (const spec of suite.specs ?? []) {
       if ((spec.tests ?? []).some((t) => t.status === "flaky")) {
-        const abs = spec.file
-          ? isAbsolute(spec.file)
-            ? spec.file
-            : join(rootDir, spec.file)
-          : "";
+        const abs = spec.file ? resolve(rootDir, spec.file) : "";
         const rel = abs ? relative(workspace, abs) : "";
         flaky.push({
           // Drop the path from the annotation if it escapes the workspace, so
