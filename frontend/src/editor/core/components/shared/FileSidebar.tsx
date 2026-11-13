@@ -47,6 +47,7 @@ import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServe
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { ClearLibraryDialog } from "@editor/components/shared/ClearLibraryDialog";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -200,6 +201,28 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
+function ClearLibraryButton({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ActionIcon
+      variant="quiet"
+      className={`file-sidebar-section-btn${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      title={t("fileSidebar.clearRecents.button", "Clear recents")}
+      aria-label={t("fileSidebar.clearRecents.button", "Clear recents")}
+      data-testid="file-sidebar-clear-library"
+    >
+      <Icon name="trash" size={"1rem"} />
+    </ActionIcon>
+  );
+}
+
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
@@ -207,6 +230,8 @@ interface LibraryHeaderProps {
   onGoogleDrive: () => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
+  /** Set only for a flat list; a grouped list carries it on its Recent group. */
+  onClearLibrary?: () => void;
 }
 
 function LibraryHeader({
@@ -216,6 +241,7 @@ function LibraryHeader({
   onGoogleDrive,
   onAddFiles,
   onOpenFilesPage,
+  onClearLibrary,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -250,6 +276,7 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
+      {onClearLibrary && <ClearLibraryButton onClick={onClearLibrary} />}
       {isGoogleDriveEnabled && (
         <ActionIcon
           variant="quiet"
@@ -313,31 +340,44 @@ interface FileGroupProps {
   isOpen: boolean;
   onToggle: () => void;
   renderFileRow: RenderFileRow;
+  /** A control beside the header; the header is itself a button, so it can't nest. */
+  action?: React.ReactNode;
 }
 
-function FileGroup({ group, isOpen, onToggle, renderFileRow }: FileGroupProps) {
+function FileGroup({
+  group,
+  isOpen,
+  onToggle,
+  renderFileRow,
+  action,
+}: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
-      <Button
-        variant="quiet"
-        fullWidth
-        justify="between"
-        className="file-sidebar-group-header"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        leftSection={
-          <FileGroupSymbol
-            icon={group.icon}
-            color={group.color}
-            isOpen={isOpen}
-          />
-        }
-        rightSection={
-          <span className="file-sidebar-group-count">{group.stubs.length}</span>
-        }
-      >
-        <span className="file-sidebar-group-label">{group.label}</span>
-      </Button>
+      <div className="file-sidebar-group-header-row">
+        <Button
+          variant="quiet"
+          fullWidth
+          justify="between"
+          className="file-sidebar-group-header"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          leftSection={
+            <FileGroupSymbol
+              icon={group.icon}
+              color={group.color}
+              isOpen={isOpen}
+            />
+          }
+          rightSection={
+            <span className="file-sidebar-group-count">
+              {group.stubs.length}
+            </span>
+          }
+        >
+          <span className="file-sidebar-group-label">{group.label}</span>
+        </Button>
+        {action}
+      </div>
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -353,6 +393,8 @@ interface GroupedFileListProps {
   renderFileRow: RenderFileRow;
   total: number;
   onViewAll: () => void;
+  /** Absent when nothing is clearable, which hides the button. */
+  onClearLibrary?: () => void;
 }
 
 function GroupedFileList({
@@ -362,6 +404,7 @@ function GroupedFileList({
   renderFileRow,
   total,
   onViewAll,
+  onClearLibrary,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -375,6 +418,14 @@ function GroupedFileList({
             isOpen={isOpen}
             onToggle={() => onGroupOpenChange(group.id, !isOpen)}
             renderFileRow={renderFileRow}
+            action={
+              group.id === "recent" && onClearLibrary ? (
+                <ClearLibraryButton
+                  onClick={onClearLibrary}
+                  className="file-sidebar-group-action"
+                />
+              ) : undefined
+            }
           />
         );
       })}
@@ -474,6 +525,7 @@ function FileLibrarySection({
         onGoogleDrive={onGoogleDrive}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
+        onClearLibrary={list.groups ? undefined : list.onClearLibrary}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />
@@ -559,6 +611,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
       null,
     );
+    const [clearLibraryOpen, setClearLibraryOpen] = useState(false);
     const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
       null,
     );
@@ -828,6 +881,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
+    // "Clear recents" spares anything filed in a folder, and any disk-linked file
+    // whose edits aren't saved back yet: the library holds the only copy of them.
+    // It closes whatever else is open, and only removes the library's own copies:
+    // cloud files stay on the server and nothing on disk is touched.
+    const clearableStubs = useMemo(
+      () =>
+        allFileStubs.filter(
+          (s) => s.folderId == null && !(s.isDirty && s.localFilePath),
+        ),
+      [allFileStubs],
+    );
+    const handleConfirmClearLibrary = useCallback(async () => {
+      const ids = clearableStubs.map((s) => s.id);
+      const orphans = await fileStorage.orphanedAncestorIds(ids);
+      await fileActions.removeFiles([...ids, ...orphans], true);
+      await refreshStubs();
+    }, [clearableStubs, fileActions, refreshStubs]);
+
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
       (id: string, open: boolean) =>
@@ -1213,6 +1284,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   onGoogleDrive={handleGoogleDriveClick}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
+                  onClearLibrary={
+                    clearableStubs.length > 0
+                      ? () => requestNavigation(() => setClearLibraryOpen(true))
+                      : undefined
+                  }
                 />
               )}
             </div>
@@ -1245,6 +1321,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           files={deleteTarget ? [deleteTarget] : []}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
+        />
+
+        <ClearLibraryDialog
+          opened={clearLibraryOpen}
+          clearCount={clearableStubs.length}
+          onClose={() => setClearLibraryOpen(false)}
+          onConfirm={handleConfirmClearLibrary}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

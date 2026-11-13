@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { readFileSync } from "node:fs";
 import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@editor/services/indexedDBManager";
+import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
 
 /** Stubbed coverage for the /files page UI invariants. */
 
@@ -12,6 +13,9 @@ interface SeedFile {
   folderId?: string;
   versionNumber?: number;
   toolHistory?: Array<{ toolId: string; timestamp: number }>;
+  /** Desktop disk link; with isDirty, edits not yet saved back to disk. */
+  localFilePath?: string;
+  isDirty?: boolean;
 }
 
 /** Seed IDB + register the cloud entries with the server stub. */
@@ -127,6 +131,8 @@ async function seedFiles(
             remoteSharedViaLink: false,
             remoteHasShareLinks: false,
             remoteShareToken: null,
+            localFilePath: f.localFilePath,
+            isDirty: f.isDirty,
           });
         }
         tx.oncomplete = () => db.close();
@@ -1499,6 +1505,70 @@ test.describe("Files page", () => {
         .poll(async () => cards.first().textContent(), { timeout: 5_000 })
         .not.toBe(firstBefore);
       expect(await cards.count()).toBeLessThan(COUNT / 2);
+    });
+  });
+
+  test.describe("Clear recents", () => {
+    test.use({ autoGoto: false });
+
+    test("clears loose and open files, keeps foldered and unsaved ones, never touches the cloud", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "loose", name: "loose.pdf", remoteStorageId: null },
+          { id: "cloudy", name: "cloudy.pdf", remoteStorageId: 7 },
+          {
+            id: "filed",
+            name: "filed.pdf",
+            remoteStorageId: null,
+            folderId: "vf-1",
+          },
+          {
+            id: "dirty",
+            name: "dirty.pdf",
+            remoteStorageId: null,
+            localFilePath: "C:/docs/dirty.pdf",
+            isDirty: true,
+          },
+        ],
+        [{ id: "vf-1", name: "Kept" }],
+      );
+      const serverDeletes: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "DELETE" && req.url().includes("/api/v1/storage"))
+          serverDeletes.push(req.url());
+      });
+
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(4, { timeout: 10_000 });
+      // An upload lands open in the workbench; the clear closes it too.
+      await uploadFiles(
+        page,
+        `${import.meta.dirname}/../test-fixtures/sample.pdf`,
+      );
+      await expect(rows).toHaveCount(5);
+
+      // The grouped sidebar shows it on the Recent header, revealed on hover.
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-library").click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toContainText("Clear 3 files from recents?");
+      await page.getByTestId("file-sidebar-clear-library-confirm").click();
+
+      await expect(rows).toHaveCount(2);
+      await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
+      await expect(rows.filter({ hasText: "dirty.pdf" })).toHaveCount(1);
+      // Only kept files are left, so there is nothing more to clear.
+      await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
+        0,
+      );
+      expect(serverDeletes).toEqual([]);
     });
   });
 });
