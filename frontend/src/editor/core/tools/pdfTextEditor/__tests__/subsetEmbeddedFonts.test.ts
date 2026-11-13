@@ -172,6 +172,15 @@ describe("subsetTrueType", () => {
     expect(glyph(subset, base).length).toBeGreaterThan(0);
   });
 
+  test("keeps a font whole when its licence forbids subsetting", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const os2 = table(font, "OS/2")!;
+    const fsType = new DataView(os2.buffer, os2.byteOffset + 8, 2);
+    fsType.setUint16(0, fsType.getUint16(0) | 0x0100);
+
+    expect(subsetTrueType(font, gidsOf(font, "Hello"))).toBeNull();
+  });
+
   test("declines a file that is not a TrueType font", () => {
     expect(subsetTrueType(new Uint8Array([1, 2, 3, 4]), [1])).toBeNull();
   });

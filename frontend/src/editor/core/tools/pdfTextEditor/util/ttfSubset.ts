@@ -53,6 +53,8 @@ const PLATFORM_UNICODE = 0;
 const UNICODE_FULL_REPERTOIRE = 4;
 const PLATFORM_WINDOWS = 3;
 const WINDOWS_UCS4 = 10;
+const OS2_FS_TYPE = 8;
+const FS_TYPE_NO_SUBSETTING = 0x0100;
 
 interface GlyphTables {
   glyf: Uint8Array;
@@ -245,7 +247,12 @@ function withoutGlyphNames(post: Uint8Array): Uint8Array | null {
   return header;
 }
 
-/** The font with only usedGlyphs drawn, at their ids; null when it is not one TrueType face. */
+function forbidsSubsetting(dv: DataView, os2: SfntTable | undefined): boolean {
+  if (!os2 || os2.length < OS2_FS_TYPE + 2) return false;
+  return (dv.getUint16(os2.offset + OS2_FS_TYPE) & FS_TYPE_NO_SUBSETTING) !== 0;
+}
+
+/** The font with only usedGlyphs drawn, at their ids; null when it is not one TrueType face or its OS/2 fsType forbids subsetting. */
 export function subsetTrueType(
   font: Uint8Array,
   usedGlyphs: Iterable<number>,
@@ -254,6 +261,7 @@ export function subsetTrueType(
     const dv = new DataView(font.buffer, font.byteOffset, font.byteLength);
     const tables = readTables(dv);
     if (!tables || REQUIRED_TABLES.some((tag) => !tables.has(tag))) return null;
+    if (forbidsSubsetting(dv, tables.get("OS/2"))) return null;
     const head = tables.get("head")!;
     const maxp = tables.get("maxp")!;
     const glyf = tables.get("glyf")!;
