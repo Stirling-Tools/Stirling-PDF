@@ -43,7 +43,7 @@ function view(live: Page, document: EditorDocument) {
     <MantineProvider env="test">
       <PageView
         document={document}
-        store={{} as EditorStore}
+        store={{ setPageNearViewport: () => {} } as unknown as EditorStore}
         page={snapshot(live)}
         scale={1}
         widthMode="grow"
