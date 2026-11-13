@@ -28,6 +28,8 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.service.ocr.NativeTesseractService;
+import stirling.software.SPDF.service.ocr.OcrLanguageInstaller;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -46,6 +48,8 @@ class OCRControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private NativeTesseractService nativeTesseract;
+    @Mock private OcrLanguageInstaller languageInstaller;
 
     private TempFileManager tempFileManager;
     private ApplicationProperties applicationProperties;
@@ -70,7 +74,9 @@ class OCRControllerTest {
                         pdfDocumentFactory,
                         tempFileManager,
                         endpointConfiguration,
-                        runtimePathConfig);
+                        runtimePathConfig,
+                        nativeTesseract,
+                        languageInstaller);
     }
 
     /** Build a minimal request with sensible defaults the caller can override. */
