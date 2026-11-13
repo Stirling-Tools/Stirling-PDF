@@ -33,6 +33,8 @@ let fetchedAt = 0;
 let generation = 0;
 let faceByFont = new Map<LocalFont, ServerFontFace>();
 const listeners = new Set<() => void>();
+const bytesListeners = new Set<() => void>();
+let bytesVersion = 0;
 const bytesByFaceId = new Map<string, Uint8Array>();
 const faceIdByName = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
@@ -93,14 +95,16 @@ function publish(families: ServerFontFamily[]): LocalFont[] {
     }
   }
   faceByFont = byFont;
-  forgetFaceBindings(new Set([...byFont.values()].map((face) => face.id)));
   resolved = fonts;
+  forgetFaceBindings(new Set([...byFont.values()].map((face) => face.id)));
   notifyListeners();
   return fonts;
 }
 
 function forgetFaceBindings(listed: Set<string>): void {
-  faceIdByName.clear();
+  for (const [name, id] of faceIdByName) {
+    if (serverFaceFor(name)?.id !== id) faceIdByName.delete(name);
+  }
   bytesPending.clear();
   for (const id of bytesByFaceId.keys()) {
     if (!listed.has(id)) bytesByFaceId.delete(id);
@@ -109,6 +113,11 @@ function forgetFaceBindings(listed: Set<string>): void {
 
 function notifyListeners(): void {
   for (const listener of [...listeners]) listener();
+}
+
+function notifyBytesChanged(): void {
+  bytesVersion++;
+  for (const listener of [...bytesListeners]) listener();
 }
 
 async function fetchManifest(): Promise<ServerFontFamily[] | null> {
@@ -173,6 +182,7 @@ export function forgetServerFontList(): void {
   for (const css of cssFacesRegistered.values()) fonts?.delete(css);
   cssFacesRegistered.clear();
   notifyListeners();
+  notifyBytesChanged();
 }
 
 export function loadedServerFonts(): LocalFont[] | null {
@@ -182,6 +192,16 @@ export function loadedServerFonts(): LocalFont[] | null {
 export function subscribeServerFonts(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+/** Fires when a requested name gains or loses readable face bytes, which {@link subscribeServerFonts} does not report. */
+export function subscribeServerFontBytes(listener: () => void): () => void {
+  bytesListeners.add(listener);
+  return () => bytesListeners.delete(listener);
+}
+
+export function serverFontBytesVersion(): number {
+  return bytesVersion;
 }
 
 export function serverFaceFor(requested: string): ServerFontFace | null {
@@ -293,8 +313,10 @@ export async function loadServerFontBytes(
     if (!bytes || started !== generation) return null;
     await registerCssFace(face, bytes);
     if (started !== generation) return null;
-    if (serverFaceFor(requested)?.id === face.id)
+    if (serverFaceFor(requested)?.id === face.id) {
       faceIdByName.set(key, face.id);
+      notifyBytesChanged();
+    }
     return bytes;
   });
 }

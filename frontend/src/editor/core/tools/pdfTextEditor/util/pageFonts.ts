@@ -48,7 +48,7 @@ export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
 }
 
 /** a-zA-Z0-9 coverage for a font, from the loader-primed cache (no WASM). */
-function coverageFor(fontId: string, status: FontStatus): GlyphCoverage {
+export function coverageFor(fontId: string, status: FontStatus): GlyphCoverage {
   // Base-14 fonts carry the whole standard set - always full, no cmap needed.
   if (status === "standard") return { known: true, missing: [] };
   if (isDeviceFontId(fontId)) {

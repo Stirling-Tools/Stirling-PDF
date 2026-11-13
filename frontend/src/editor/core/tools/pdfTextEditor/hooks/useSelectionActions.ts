@@ -65,10 +65,10 @@ async function fontPickFailure(
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
-function liveRunIds(store: EditorStore): Set<string> {
+function editableRunIds(store: EditorStore): Set<string> {
   const ids = new Set<string>();
   for (const page of store.document?.loadedPages() ?? []) {
-    for (const run of page.runs) ids.add(run.id);
+    for (const run of page.runs) if (!run.locked) ids.add(run.id);
   }
   return ids;
 }
@@ -167,10 +167,10 @@ export function useSelectionActions(store: EditorStore) {
   const dispatchFamilyChanges = useCallback(
     (doc: EditorDocument | null, changes: FamilyChange[]) => {
       if (store.document !== doc) return;
-      const live = liveRunIds(store);
+      const editable = editableRunIds(store);
       dispatchAll(
         changes
-          .filter((change) => live.has(change.runId))
+          .filter((change) => editable.has(change.runId))
           .map(
             (change) =>
               new SetFontFamilyCommand({
@@ -240,7 +240,10 @@ export function useSelectionActions(store: EditorStore) {
     for (const target of targets) {
       if (
         target.device &&
-        (await prepareExternalFont(target.family)) === "serverDownloadFailed"
+        ((await prepareExternalFont(target.family)) ===
+          "serverDownloadFailed" ||
+          !doc ||
+          !tryEmbedDeviceFont(doc, target.family))
       )
         continue;
       ready.push(target);

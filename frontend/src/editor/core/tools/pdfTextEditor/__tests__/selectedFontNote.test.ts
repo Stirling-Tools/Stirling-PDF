@@ -143,6 +143,15 @@ describe("selectedFontNote", () => {
     ).toEqual({ kind: "embeddedUnknown" });
   });
 
+  it("judges a document font by its own coverage, not a device face of the same name", () => {
+    const pages = page([
+      run("a", "device:DejaVu Serif Bold", "Hi"),
+      run("b", "pdf:0:DejaVu Serif Bold", "Hi"),
+    ]);
+
+    expect(selectedFontNote(pages, ["b"])).toEqual({ kind: "embeddedUnknown" });
+  });
+
   it("says nothing for a selection mixing device and document fonts", () => {
     const pages = page([
       run("a", "device:Acme Sans", "Hi"),

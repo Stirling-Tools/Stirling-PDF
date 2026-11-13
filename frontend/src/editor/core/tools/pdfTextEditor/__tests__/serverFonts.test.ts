@@ -511,6 +511,39 @@ describe("server fonts", () => {
     unsubscribe();
   });
 
+  it("keeps a loaded face readable when a refresh adds another family", async () => {
+    let now = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    serveManifestAndFaces();
+    expect((await loadServerFontBytes("Acme Sans"))?.[0]).toBe(1);
+
+    get.mockImplementation(async (url: string) => {
+      if (url === SERVER_FONTS_URL) {
+        return {
+          data: {
+            families: [
+              ...MANIFEST.families,
+              {
+                family: "Beta Serif",
+                faces: [face("5".repeat(64), "Regular", false, false)],
+              },
+            ],
+          },
+        };
+      }
+      return { data: bytesFor(url.slice(SERVER_FONTS_URL.length + 1)) };
+    });
+    const listener = vi.fn();
+    const unsubscribe = subscribeServerFonts(listener);
+    now += SERVER_FONTS_REFRESH_MS;
+    loadServerFonts();
+    await vi.waitFor(() => expect(listener).toHaveBeenCalledTimes(1));
+
+    expect(getServerFontBytes("Acme Sans")?.[0]).toBe(1);
+    expect(getExternalFontBytes("Acme Sans")?.[0]).toBe(1);
+    unsubscribe();
+  });
+
   it("reads bold and italic from the server, not from the style name", async () => {
     get.mockResolvedValue({
       data: {

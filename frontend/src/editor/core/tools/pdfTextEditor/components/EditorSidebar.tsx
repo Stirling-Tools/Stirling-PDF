@@ -10,7 +10,7 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
+import { useSelectedFontNote } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -239,41 +239,6 @@ function NothingSelected(props: ScanHintProps) {
       </Stack>
     </Center>
   );
-}
-
-function useSelectedFontNote(
-  state: EditorViewState,
-  selection: SelectionState,
-): string | null {
-  const { t } = useTranslation();
-  return useMemo(() => {
-    const note = selectedFontNote(state.pages, selection.runIds);
-    if (!note) return null;
-    switch (note.kind) {
-      case "scanned":
-        return t(
-          "pdfTextEditor.inspector.scannedText",
-          "Scanned text · changed words are covered and redrawn in a matching font.",
-        );
-      case "embeddedUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontEmbedded",
-          "Embedded font · a character it lacks falls back to Helvetica.",
-        );
-      case "deviceUnknown":
-        return t(
-          "pdfTextEditor.inspector.fontUnknownCoverage",
-          "{{name}} · a character it lacks falls back to {{fallback}}.",
-          { name: note.name, fallback: note.fallback },
-        );
-      case "gap":
-        return t(
-          "pdfTextEditor.inspector.fontGap",
-          "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}.",
-          { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
-        );
-    }
-  }, [state.pages, selection.runIds, t]);
 }
 
 function EmptySidebar({

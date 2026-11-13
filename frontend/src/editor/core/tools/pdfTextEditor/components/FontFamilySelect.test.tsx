@@ -127,6 +127,28 @@ describe("font picker server fonts", () => {
     );
   });
 
+  it("lists a family named like another family's bold cut once", async () => {
+    get.mockImplementation(async (url: string) => {
+      if (url !== SERVER_FONTS_URL) throw new Error(`unexpected ${url}`);
+      return {
+        data: {
+          families: [
+            ...MANIFEST.families,
+            {
+              family: "Acme Sans Bold",
+              faces: [{ ...MANIFEST.families[0].faces[0], id: "3".repeat(64) }],
+            },
+          ],
+        },
+      };
+    });
+    const input = renderPicker(async () => null);
+
+    fireEvent.click(input);
+
+    expect(await screen.findAllByText("Acme Sans Bold")).toHaveLength(1);
+  });
+
   it("raises nothing when the font applies", async () => {
     const onChange = vi.fn(async () => null);
     const input = renderPicker(onChange);
