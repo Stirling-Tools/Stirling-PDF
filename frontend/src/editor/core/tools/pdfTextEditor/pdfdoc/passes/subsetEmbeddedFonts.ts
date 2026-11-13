@@ -18,6 +18,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import { stringBytes } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import { subsetTrueType } from "@editor/tools/pdfTextEditor/util/ttfSubset";
+import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 
 // A subset this close to the original is not worth rewriting the file for.
 const WORTHWHILE_RATIO = 0.9;
@@ -40,6 +41,8 @@ interface FontUsers {
   cidFonts: number[];
   type0: number[];
 }
+
+const SPACE = 0x20;
 
 function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false;
@@ -354,6 +357,9 @@ export async function subsetEmbeddedFonts(
     const users = fontUsers(pdf, dicts, fileNum);
     if (!users) continue;
     const used = usedGlyphs(streams, resourceNames(dicts, users.type0));
+    // Words drawn one per object never show a space, but readers still need its width to tell the words apart.
+    const space = parseTrueTypeCmap(file)?.get(SPACE);
+    if (space) used.add(space);
     const subset = subsetTrueType(file, used);
     if (!subset || subset.length > file.length * WORTHWHILE_RATIO) continue;
     replacements.push(

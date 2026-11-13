@@ -221,6 +221,21 @@ describe("subsetEmbeddedFonts", () => {
     expect(reread.objectBody(10)!.trim()).toBe("null");
   });
 
+  test("keeps the space's width when words are drawn without one", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const [space] = gidsOf(font, " ");
+    const pdf = pdfWithFont(font, {
+      content: `BT /F1 12 Tf <${hex(gidsOf(font, "we"))}> Tj 20 0 Td <${hex(gidsOf(font, "want"))}> Tj ET`,
+    });
+
+    const out = await subsetEmbeddedFonts(pdf, [font]);
+
+    const reread = (await RawPdf.parse(out))!;
+    const widths = reread.valueSpan(reread.objectBody(6)!, "W")!.text;
+    expect(widths).toContain(`${space} [${500 + space}]`);
+    expect(parseTrueTypeCmap(await fontFileIn(out))!.get(0x20)).toBe(space);
+  });
+
   test("counts only the text shown in the embedded font", async () => {
     const font = new Uint8Array(await readFile(FONT));
     const [h] = gidsOf(font, "H");
