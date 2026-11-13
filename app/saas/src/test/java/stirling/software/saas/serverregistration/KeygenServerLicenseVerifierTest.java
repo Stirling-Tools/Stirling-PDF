@@ -1,0 +1,479 @@
+package stirling.software.saas.serverregistration;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.Signature;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HexFormat;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.sun.net.httpserver.HttpServer;
+
+import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+
+class KeygenServerLicenseVerifierTest {
+    private static final UUID ACCOUNT = UUID.randomUUID();
+    private static final UUID PRODUCT = UUID.randomUUID();
+    private static final UUID LICENSE = UUID.randomUUID();
+    private static final Instant NOW = Instant.parse("2026-10-16T12:00:00Z");
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final HttpClient http = mock(HttpClient.class);
+    private KeyPair signingKey;
+    private KeygenServerLicenseVerifier verifier;
+    private KeygenConfigurationProperties keygen;
+    private ServerRegistrationCloudProperties properties;
+
+    @BeforeEach
+    void setup() throws Exception {
+        signingKey = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
+        keygen = new KeygenConfigurationProperties();
+        keygen.setAccountId(ACCOUNT.toString());
+        keygen.setApiToken("test-token");
+        properties = new ServerRegistrationCloudProperties();
+        properties.setServerProductIds(Set.of(PRODUCT.toString()));
+        byte[] encoded = signingKey.getPublic().getEncoded();
+        properties.setLicensePublicKey(
+                HexFormat.of()
+                        .formatHex(
+                                Arrays.copyOfRange(encoded, encoded.length - 32, encoded.length)));
+        verifier =
+                new KeygenServerLicenseVerifier(
+                        keygen, properties, mapper, http, Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    @Test
+    void rawKeyNeedsLiveValidationAndRetainsUnlimitedSentinel() throws Exception {
+        respond(200, liveBody());
+        var result = verifier.verify("test-license-secret", "machine");
+        assertThat(result.id()).isEqualTo(LICENSE);
+        assertThat(result.userLimit()).isZero();
+        assertThat(result.toString()).doesNotContain("test-license-secret");
+        var request = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http).sendAsync(request.capture(), any());
+        assertThat(request.getValue().uri().getPath()).endsWith("/licenses/actions/validate-key");
+    }
+
+    @Test
+    void signedFileStillRequiresLiveValidationOfTheSameLicense() throws Exception {
+        respond(200, liveBody());
+        assertThat(
+                        verifier.verify(
+                                        certificate(
+                                                NOW.minusSeconds(1),
+                                                NOW.plusSeconds(60),
+                                                signingKey),
+                                        "machine")
+                                .id())
+                .isEqualTo(LICENSE);
+        var request = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http).sendAsync(request.capture(), any());
+        assertThat(request.getValue().uri().getPath())
+                .endsWith("/licenses/" + LICENSE + "/actions/validate");
+    }
+
+    @Test
+    void perpetualSignedFileStillRequiresLiveValidation() throws Exception {
+        String proof = certificate(NOW.minusSeconds(1), null, signingKey);
+        respond(200, liveBody());
+        assertThat(verifier.verify(proof, "machine").id()).isEqualTo(LICENSE);
+        ObjectNode revoked = liveBody();
+        ((ObjectNode) revoked.path("meta")).put("valid", false);
+        respond(200, revoked);
+        assertThatThrownBy(() -> verifier.verify(proof, "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+        verify(http, times(2)).sendAsync(any(), any());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "not-hex", "abcd"})
+    void missingOrMalformedSigningKeyFailsAtStartup(String publicKey) {
+        properties.setLicensePublicKey(publicKey);
+        assertThatIllegalStateException()
+                .isThrownBy(
+                        () ->
+                                new KeygenServerLicenseVerifier(
+                                        keygen,
+                                        properties,
+                                        mapper,
+                                        http,
+                                        Clock.fixed(NOW, ZoneOffset.UTC)))
+                .withMessageContaining("license public key");
+        verifyNoInteractions(http);
+    }
+
+    @Test
+    void forgedExpiredOrFutureCertificatesNeverReachKeygen() throws Exception {
+        String forged =
+                certificate(
+                        NOW.minusSeconds(1),
+                        NOW.plusSeconds(60),
+                        KeyPairGenerator.getInstance("Ed25519").generateKeyPair());
+        String expired = certificate(NOW.minusSeconds(60), NOW, signingKey);
+        String future = certificate(NOW.plusSeconds(1), NOW.plusSeconds(60), signingKey);
+        for (String proof : new String[] {forged, expired, future}) {
+            assertThatThrownBy(() -> verifier.verify(proof, "machine"))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+        }
+        verifyNoInteractions(http);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "invalid",
+                "untypedValidity",
+                "wrongPlan",
+                "wrongProduct",
+                "wrongAccount",
+                "enterprise",
+                "missingTier",
+                "suspended",
+                "changedKey"
+            })
+    void activeStatusAloneCannotAuthorizeRegistration(String problem) throws Exception {
+        ObjectNode body = liveBody();
+        ObjectNode attributes = (ObjectNode) body.at("/data/attributes");
+        ObjectNode metadata = (ObjectNode) attributes.path("metadata");
+        switch (problem) {
+            case "invalid" -> ((ObjectNode) body.path("meta")).put("valid", false);
+            case "untypedValidity" -> ((ObjectNode) body.path("meta")).put("valid", "true");
+            case "wrongPlan" -> metadata.put("planType", "enterprise");
+            case "wrongProduct" ->
+                    ((ObjectNode) body.at("/data/relationships/product/data"))
+                            .put("id", UUID.randomUUID().toString());
+            case "wrongAccount" ->
+                    ((ObjectNode) body.at("/data/relationships/account/data"))
+                            .put("id", UUID.randomUUID().toString());
+            case "enterprise" -> metadata.put("isEnterprise", true);
+            case "missingTier" -> metadata.remove("isEnterprise");
+            case "suspended" -> attributes.put("suspended", true);
+            case "changedKey" -> attributes.put("key", "different-key");
+            default -> throw new AssertionError(problem);
+        }
+        respond(200, body);
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED))
+                .hasMessageNotContaining("test-license-secret");
+    }
+
+    @Test
+    void mismatchedSignedLicenseIdIsRejected() throws Exception {
+        ObjectNode body = liveBody();
+        ((ObjectNode) body.path("data")).put("id", UUID.randomUUID().toString());
+        respond(200, body);
+        String proof = certificate(NOW.minusSeconds(1), NOW.plusSeconds(60), signingKey);
+        assertThatThrownBy(() -> verifier.verify(proof, "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {429, 500, 503})
+    void upstreamOutageFailsClosedWithoutAnEntitlementDecision(int status) throws Exception {
+        respond(status, liveBody());
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e ->
+                                assertThat(e.getStatusCode())
+                                        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    }
+
+    @Test
+    @Timeout(20)
+    @SuppressWarnings("unchecked")
+    void deadlineCancelsKeygenResponseThatStallsAfterHeaders() throws Exception {
+        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        var headersSent = new CountDownLatch(1);
+        server.createContext(
+                "/",
+                exchange -> {
+                    exchange.getRequestBody().readAllBytes();
+                    exchange.sendResponseHeaders(200, 100);
+                    exchange.getResponseBody().write('{');
+                    exchange.getResponseBody().flush();
+                    headersSent.countDown();
+                });
+        server.start();
+        try (var realHttp = HttpClient.newHttpClient()) {
+            keygen.setApiBase("http://127.0.0.1:" + server.getAddress().getPort());
+            var pending = new AtomicReference<CompletableFuture<HttpResponse<String>>>();
+            when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                    .thenAnswer(
+                            call -> {
+                                var future =
+                                        realHttp.sendAsync(
+                                                call.getArgument(0),
+                                                HttpResponse.BodyHandlers.ofString());
+                                pending.set(future);
+                                return future;
+                            });
+            assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e ->
+                                    assertThat(e.getStatusCode())
+                                            .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+            assertThat(headersSent.getCount()).isZero();
+            assertThatThrownBy(() -> pending.get().get(1, TimeUnit.SECONDS))
+                    .isInstanceOfAny(CancellationException.class, ExecutionException.class)
+                    .satisfies(
+                            failure ->
+                                    assertThat(
+                                                    failure instanceof CancellationException
+                                                            ? failure
+                                                            : failure.getCause())
+                                            .isInstanceOf(CancellationException.class));
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void slugResolvesCanonicalAccountAndStillRejectsForeignLicenses() throws Exception {
+        useSlug();
+        HttpResponse<String> accountResponse = mock(HttpResponse.class);
+        when(accountResponse.statusCode()).thenReturn(200);
+        when(accountResponse.body())
+                .thenReturn(
+                        mapper.writeValueAsString(
+                                Map.of(
+                                        "data",
+                                        Map.of(
+                                                "type",
+                                                "accounts",
+                                                "id",
+                                                ACCOUNT,
+                                                "attributes",
+                                                Map.of("slug", "stirling-test")))));
+        HttpResponse<String> licenseResponse = mock(HttpResponse.class);
+        when(licenseResponse.statusCode()).thenReturn(200);
+        when(licenseResponse.body()).thenReturn(mapper.writeValueAsString(liveBody()));
+        when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(
+                        CompletableFuture.completedFuture(accountResponse),
+                        CompletableFuture.completedFuture(licenseResponse));
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/relationships/account/data"))
+                .put("id", UUID.randomUUID().toString());
+        when(licenseResponse.body()).thenReturn(mapper.writeValueAsString(body));
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http, times(4)).sendAsync(requests.capture(), any());
+        assertThat(requests.getAllValues().getFirst().method()).isEqualTo("GET");
+        assertThat(requests.getAllValues().getFirst().uri().getPath())
+                .isEqualTo("/v1/accounts/stirling-test");
+        assertThat(requests.getAllValues().subList(1, 4))
+                .allSatisfy(
+                        request ->
+                                assertThat(request.uri().getPath())
+                                        .endsWith("/stirling-test/licenses/actions/validate-key"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 500, 200})
+    void failedOrMalformedSlugResolutionFailsClosedAndCanRetry(int status) throws Exception {
+        useSlug();
+        respond(status, liveBody());
+        for (int attempt = 0; attempt < 2; attempt++) {
+            assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                    .isInstanceOfSatisfying(
+                            ResponseStatusException.class,
+                            e ->
+                                    assertThat(e.getStatusCode())
+                                            .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+        }
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(http, times(2)).sendAsync(requests.capture(), any());
+        assertThat(requests.getAllValues())
+                .allSatisfy(request -> assertThat(request.method()).isEqualTo("GET"));
+    }
+
+    @Test
+    void explicitServerPlanMetadataIsAccepted() throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes/metadata")).put("planType", "server");
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").id()).isEqualTo(LICENSE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{\"isEnterprise\":false,\"users\":100}",
+                "{\"isEnterprise\":\" FALSE \",\"users\":\" 100 \"}",
+                "{\"planType\":\" Server \",\"users\":\"100\"}",
+                "{\"plan_type\":\"SERVER\",\"users\":100}",
+                "{\"isEnterprise\":null,\"plan_type\":\"server\",\"users\":100}",
+                "{\"isEnterprise\":false,\"planType\":\" \",\"users\":100}",
+                "{\"planType\":\"server\",\"plan_type\":\"SERVER\",\"users\":100,\"custom\":true}"
+            })
+    void manualServerMetadataAcceptsKnownAliasesAndFormatting(String metadata) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes")).set("metadata", mapper.readTree(metadata));
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").userLimit()).isEqualTo(100);
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "null",
+                "-1",
+                "2147483648",
+                "\"unlimited\"",
+                "\"invalid\"",
+                "1.5",
+                "true",
+                "{}"
+            })
+    void unparseableAllowanceIsUnknownRatherThanUnlimited(String limit) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes/metadata")).set("users", mapper.readTree(limit));
+        respond(200, body);
+        assertThat(verifier.verify("test-license-secret", "machine").userLimit()).isNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{}",
+                "{\"isEnterprise\":true,\"plan_type\":\"server\"}",
+                "{\"isEnterprise\":\" TRUE \",\"planType\":\"server\"}",
+                "{\"isEnterprise\":false,\"plan_type\":\" Enterprise \"}",
+                "{\"planType\":\"server\",\"plan_type\":\"enterprise\"}",
+                "{\"isEnterprise\":\"unknown\",\"planType\":\"server\"}",
+                "{\"isEnterprise\":false,\"planType\":\"team\"}",
+                "{\"isEnterprise\":false,\"plan_type\":42}"
+            })
+    void conflictingOrUnknownTierNeverRegistersAsServer(String metadata) throws Exception {
+        var body = liveBody();
+        ((ObjectNode) body.at("/data/attributes")).set("metadata", mapper.readTree(metadata));
+        respond(200, body);
+        assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+    }
+
+    private void useSlug() {
+        keygen.setAccountId("stirling-test");
+        verifier =
+                new KeygenServerLicenseVerifier(
+                        keygen, properties, mapper, http, Clock.fixed(NOW, ZoneOffset.UTC));
+    }
+
+    private ObjectNode liveBody() {
+        return (ObjectNode)
+                mapper.valueToTree(
+                        Map.of(
+                                "meta",
+                                Map.of("valid", true),
+                                "data",
+                                Map.of(
+                                        "id",
+                                        LICENSE,
+                                        "type",
+                                        "licenses",
+                                        "attributes",
+                                        Map.of(
+                                                "key",
+                                                "test-license-secret",
+                                                "status",
+                                                "ACTIVE",
+                                                "suspended",
+                                                false,
+                                                "metadata",
+                                                Map.of("isEnterprise", false, "users", 0)),
+                                        "relationships",
+                                        Map.of(
+                                                "account",
+                                                Map.of("data", Map.of("id", ACCOUNT)),
+                                                "product",
+                                                Map.of("data", Map.of("id", PRODUCT))))));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void respond(int status, ObjectNode body) throws Exception {
+        HttpResponse<String> response = mock(HttpResponse.class);
+        when(response.statusCode()).thenReturn(status);
+        when(response.body()).thenReturn(mapper.writeValueAsString(body));
+        when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+    }
+
+    private String certificate(Instant issued, Instant expiry, KeyPair key) throws Exception {
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("issued", issued.toString());
+        meta.put("expiry", expiry == null ? null : expiry.toString());
+        byte[] snapshot =
+                mapper.writeValueAsBytes(
+                        Map.of("meta", meta, "data", Map.of("type", "licenses", "id", LICENSE)));
+        String enc = Base64.getEncoder().encodeToString(snapshot);
+        Signature signature = Signature.getInstance("Ed25519");
+        signature.initSign(key.getPrivate());
+        signature.update(("license/" + enc).getBytes(StandardCharsets.UTF_8));
+        String envelope =
+                Base64.getEncoder()
+                        .encodeToString(
+                                mapper.writeValueAsBytes(
+                                        Map.of(
+                                                "alg",
+                                                "base64+ed25519",
+                                                "enc",
+                                                enc,
+                                                "sig",
+                                                Base64.getEncoder()
+                                                        .encodeToString(signature.sign()))));
+        return "-----BEGIN LICENSE FILE-----\n" + envelope + "\n-----END LICENSE FILE-----";
+    }
+}

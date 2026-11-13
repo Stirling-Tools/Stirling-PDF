@@ -1,0 +1,292 @@
+package stirling.software.saas.serverregistration;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.HexFormat;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import stirling.software.proprietary.serverregistration.RegistrationHttpTransport;
+import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
+/**
+ * Verifies proof and live validity without activating machines, renewing licenses or changing
+ * capacity.
+ */
+@Service
+@Profile("saas")
+@ConditionalOnProperty(name = "stirling.server-registration.enabled", havingValue = "true")
+public class KeygenServerLicenseVerifier {
+    private static final String BEGIN = "-----BEGIN LICENSE FILE-----";
+    private static final String END = "-----END LICENSE FILE-----";
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private final KeygenConfigurationProperties keygen;
+    private final ServerRegistrationCloudProperties properties;
+    private final ObjectMapper mapper;
+    private final HttpClient http;
+    private final Clock clock;
+    private final java.security.PublicKey licensePublicKey;
+    private volatile UUID canonicalAccountId;
+
+    @Autowired
+    public KeygenServerLicenseVerifier(
+            KeygenConfigurationProperties keygen,
+            ServerRegistrationCloudProperties properties,
+            ObjectMapper mapper) {
+        this(
+                keygen,
+                properties,
+                mapper,
+                HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(10))
+                        .followRedirects(HttpClient.Redirect.NEVER)
+                        .build(),
+                Clock.systemUTC());
+    }
+
+    KeygenServerLicenseVerifier(
+            KeygenConfigurationProperties keygen,
+            ServerRegistrationCloudProperties properties,
+            ObjectMapper mapper,
+            HttpClient http,
+            Clock clock) {
+        this.keygen = keygen;
+        this.properties = properties;
+        this.mapper = mapper;
+        this.http = http;
+        this.clock = clock;
+        if (keygen.getAccountId() == null
+                || keygen.getAccountId().isBlank()
+                || keygen.getApiToken() == null
+                || keygen.getApiToken().isBlank()
+                || properties.getServerProductIds().isEmpty()) {
+            throw new IllegalStateException(
+                    "Server registration needs Keygen credentials and an explicit Server product allowlist");
+        }
+        try {
+            canonicalAccountId = UUID.fromString(keygen.getAccountId());
+        } catch (IllegalArgumentException ignored) {
+            // Slugs need a live account lookup; startup must not depend on Keygen availability.
+        }
+        try {
+            byte[] rawKey = HexFormat.of().parseHex(properties.getLicensePublicKey());
+            if (rawKey.length != 32) throw new IllegalArgumentException();
+            byte[] encodedKey = new byte[44];
+            System.arraycopy(
+                    HexFormat.of().parseHex("302a300506032b6570032100"), 0, encodedKey, 0, 12);
+            System.arraycopy(rawKey, 0, encodedKey, 12, 32);
+            licensePublicKey =
+                    KeyFactory.getInstance("Ed25519")
+                            .generatePublic(new X509EncodedKeySpec(encodedKey));
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Server registration needs the account's 32-byte Ed25519 license public key in hexadecimal");
+        }
+    }
+
+    /**
+     * Raw key is transient purchase-lookup material and must never be logged or copied into
+     * registration storage.
+     */
+    public record VerifiedLicense(UUID id, String key, Integer userLimit) {
+        @Override
+        public String toString() {
+            return "VerifiedLicense[id=" + id + ", key=REDACTED]";
+        }
+    }
+
+    /**
+     * A signed file proves possession; live validation is still mandatory for revocation and
+     * expiry.
+     */
+    public VerifiedLicense verify(String proof, String fingerprint) {
+        try {
+            boolean certificate = proof.strip().startsWith(BEGIN);
+            UUID certificateId = certificate ? certificateId(proof.strip()) : null;
+            UUID expectedAccountId = accountId();
+            Map<String, Object> scope = Map.of("fingerprint", fingerprint);
+            Map<String, Object> meta =
+                    certificate ? Map.of("scope", scope) : Map.of("key", proof, "scope", scope);
+            String endpoint =
+                    certificate
+                            ? "/licenses/" + certificateId + "/actions/validate"
+                            : "/licenses/actions/validate-key";
+            HttpRequest request =
+                    request(endpoint)
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            mapper.writeValueAsString(Map.of("meta", meta))))
+                            .build();
+            HttpResponse<String> response =
+                    RegistrationHttpTransport.send(http, request, REQUEST_TIMEOUT);
+            if (response.statusCode() == 429 || response.statusCode() >= 500) {
+                throw unavailable();
+            }
+            if (response.statusCode() != 200) throw denied();
+            JsonNode body = mapper.readTree(response.body());
+            JsonNode valid = body.path("meta").path("valid");
+            if (!valid.isBoolean() || !valid.asBoolean()) throw denied();
+            JsonNode license = body.path("data");
+            UUID id = UUID.fromString(license.path("id").asText());
+            JsonNode attrs = license.path("attributes");
+            JsonNode metadata = attrs.path("metadata");
+            String product = license.at("/relationships/product/data/id").asText();
+            String account = license.at("/relationships/account/data/id").asText();
+            String key = attrs.path("key").asText("");
+            if (!"licenses".equals(license.path("type").asText())
+                    || !expectedAccountId.equals(UUID.fromString(account))
+                    || !properties.getServerProductIds().contains(product)
+                    || attrs.path("suspended").asBoolean(false)
+                    || key.isBlank()
+                    || (certificate && !id.equals(certificateId))
+                    || (!certificate
+                            && !MessageDigest.isEqual(
+                                    key.getBytes(StandardCharsets.UTF_8),
+                                    proof.getBytes(StandardCharsets.UTF_8)))) {
+                throw denied();
+            }
+            requireServerMetadata(metadata);
+            return new VerifiedLicense(id, key, userLimit(metadata.path("users")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw unavailable();
+        } catch (IOException e) {
+            throw unavailable();
+        } catch (Exception e) {
+            throw denied();
+        }
+    }
+
+    private void requireServerMetadata(JsonNode metadata) {
+        boolean server = false;
+        JsonNode enterprise = metadata.path("isEnterprise");
+        if (!enterprise.isMissingNode() && !enterprise.isNull()) {
+            if (!(enterprise.isBoolean() && !enterprise.asBoolean())
+                    && !(enterprise.isString()
+                            && "false".equalsIgnoreCase(enterprise.asText().strip()))) {
+                throw denied();
+            }
+            server = true;
+        }
+        for (String field : new String[] {"planType", "plan_type"}) {
+            JsonNode plan = metadata.path(field);
+            if (plan.isMissingNode()
+                    || plan.isNull()
+                    || (plan.isString() && plan.asText().isBlank())) continue;
+            if (!plan.isString() || !"server".equalsIgnoreCase(plan.asText().strip()))
+                throw denied();
+            server = true;
+        }
+        if (!server) throw denied();
+    }
+
+    private Integer userLimit(JsonNode limit) {
+        // Allowance metadata is observational; unknown must not become the unlimited sentinel.
+        if (limit.isIntegralNumber() && limit.canConvertToInt()) {
+            return limit.asInt() >= 0 ? limit.asInt() : null;
+        }
+        if (limit.isString()) {
+            try {
+                int value = Integer.parseInt(limit.asText().strip());
+                return value >= 0 ? value : null;
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private UUID certificateId(String proof) throws Exception {
+        if (!proof.endsWith(END)) throw denied();
+        String envelope =
+                proof.substring(BEGIN.length(), proof.length() - END.length())
+                        .replaceAll("\\s", "");
+        JsonNode signed = mapper.readTree(Base64.getDecoder().decode(envelope));
+        if (!"base64+ed25519".equals(signed.path("alg").asText())) throw denied();
+        String encoded = signed.path("enc").asText();
+        Signature signature = Signature.getInstance("Ed25519");
+        signature.initVerify(licensePublicKey);
+        signature.update(("license/" + encoded).getBytes(StandardCharsets.UTF_8));
+        if (!signature.verify(Base64.getDecoder().decode(signed.path("sig").asText())))
+            throw denied();
+        JsonNode snapshot = mapper.readTree(Base64.getDecoder().decode(encoded));
+        Instant issued = Instant.parse(snapshot.path("meta").path("issued").asText());
+        JsonNode expiry = snapshot.path("meta").path("expiry");
+        Instant now = clock.instant();
+        if (issued.isAfter(now)
+                || (!expiry.isNull() && !Instant.parse(expiry.asText()).isAfter(now)))
+            throw denied();
+        if (!"licenses".equals(snapshot.path("data").path("type").asText())) throw denied();
+        return UUID.fromString(snapshot.path("data").path("id").asText());
+    }
+
+    private UUID accountId() throws IOException, InterruptedException {
+        UUID cached = canonicalAccountId;
+        if (cached != null) return cached;
+        HttpResponse<String> response =
+                RegistrationHttpTransport.send(http, request("").GET().build(), REQUEST_TIMEOUT);
+        if (response.statusCode() != 200) throw unavailable();
+        try {
+            JsonNode account = mapper.readTree(response.body()).path("data");
+            if (!"accounts".equals(account.path("type").asText())
+                    || !keygen.getAccountId()
+                            .equals(account.path("attributes").path("slug").asText())) {
+                throw unavailable();
+            }
+            UUID resolved = UUID.fromString(account.path("id").asText());
+            canonicalAccountId = resolved;
+            return resolved;
+        } catch (RuntimeException e) {
+            throw unavailable();
+        }
+    }
+
+    private HttpRequest.Builder request(String endpoint) {
+        URI uri =
+                URI.create(
+                        keygen.getApiBase().replaceAll("/+$", "")
+                                + "/accounts/"
+                                + URLEncoder.encode(keygen.getAccountId(), StandardCharsets.UTF_8)
+                                + endpoint);
+        return HttpRequest.newBuilder(uri)
+                .timeout(REQUEST_TIMEOUT)
+                .header("Authorization", "Bearer " + keygen.getApiToken())
+                .header("Content-Type", "application/vnd.api+json")
+                .header("Accept", "application/vnd.api+json");
+    }
+
+    private static ResponseStatusException denied() {
+        return new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "Server license proof rejected");
+    }
+
+    private static ResponseStatusException unavailable() {
+        return new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE, "License validation unavailable");
+    }
+}
