@@ -36,6 +36,15 @@ export interface ValueSpan {
   text: string;
 }
 
+export interface ObjectExtent {
+  start: number;
+  /** Offset of the `stream` keyword, or the object's end when it has no stream. */
+  dictEnd: number;
+  stream: { start: number; end: number } | null;
+  /** Offset of `endobj`, -1 when none follows the stream. */
+  end: number;
+}
+
 export interface NumberTreeEntry {
   /** The object whose body holds the value. */
   objNum: number;
@@ -459,15 +468,17 @@ export class RawPdf {
     return null;
   }
 
-  /** Decoded stream payload for an object, or null when unsupported. */
-  async streamData(num: number): Promise<Uint8Array | null> {
-    const entry = this.objects.get(num);
-    if (!entry || entry.offset === undefined) return null;
-    const body = this.objectBody(num);
+  /** Where a top-level object's dictionary, stream payload and `endobj` sit in `src`; null when it has no offset. */
+  objectExtent(num: number): ObjectExtent | null {
+    const start = this.bodyOffset(num);
+    const body = start < 0 ? null : this.objectBody(num);
     if (body === null) return null;
-    const kw = body.indexOf("stream");
-    if (kw < 0) return null;
-    let dataStart = entry.offset + kw + "stream".length;
+    const kw = /\bstream\b/.exec(body)?.index ?? -1;
+    if (kw < 0) {
+      const end = start + body.length;
+      return { start, dictEnd: end, stream: null, end };
+    }
+    let dataStart = start + kw + "stream".length;
     if (this.src[dataStart] === "\r") dataStart += 1;
     if (this.src[dataStart] === "\n") dataStart += 1;
 
@@ -484,7 +495,10 @@ export class RawPdf {
     // A wrong /Length is common enough in the wild that trusting it blindly
     // truncates real content; verify against the endstream keyword.
     const marker = this.src.indexOf("endstream", dataStart);
-    if (dataEnd < 0 || marker < 0 || dataEnd > marker) {
+    const confirmed =
+      dataEnd >= 0 &&
+      /^\s*endstream/.test(this.src.slice(dataEnd, dataEnd + 16));
+    if (!confirmed && (dataEnd < 0 || marker < 0 || dataEnd > marker)) {
       dataEnd = marker < 0 ? this.bytes.length : marker;
       while (
         dataEnd > dataStart &&
@@ -493,7 +507,20 @@ export class RawPdf {
         dataEnd -= 1;
       }
     }
-    let data = this.bytes.subarray(dataStart, dataEnd);
+    return {
+      start,
+      dictEnd: start + kw,
+      stream: { start: dataStart, end: dataEnd },
+      end: this.src.indexOf("endobj", dataEnd),
+    };
+  }
+
+  /** Decoded stream payload for an object, or null when unsupported. */
+  async streamData(num: number): Promise<Uint8Array | null> {
+    const extent = this.objectExtent(num);
+    const body = this.objectBody(num);
+    if (!extent?.stream || body === null) return null;
+    let data = this.bytes.subarray(extent.stream.start, extent.stream.end);
 
     const filters = this.filterNames(body);
     if (filters === null) return null;

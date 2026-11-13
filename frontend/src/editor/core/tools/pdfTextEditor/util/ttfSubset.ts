@@ -1,14 +1,14 @@
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import {
+  assembleSfnt,
+  pad4,
+  readTableDirectory,
+  type SfntTable,
+} from "@editor/tools/pdfTextEditor/util/sfnt";
 
-/**
- * Cut a TrueType font down to the glyphs a document uses, WITHOUT renumbering
- * them. Text in a PDF addresses these fonts by glyph id, so every kept glyph
- * must stay at its id: unused glyphs become empty outlines rather than being
- * removed.
- */
+/** Subset a TrueType font without renumbering: PDF text addresses glyphs by id, so unused ones empty. */
 
-// What a PDF viewer needs to draw the font, plus the tables that identify it.
-// Layout, bitmap and signature tables are dropped: a PDF never consults them.
+// Tables a PDF viewer reads to draw and identify the font; layout and bitmap tables are dropped.
 const KEPT_TABLES = new Set([
   "head",
   "hhea",
@@ -33,44 +33,43 @@ const ARGS_ARE_WORDS = 0x0001;
 const HAS_SCALE = 0x0008;
 const HAS_XY_SCALE = 0x0040;
 const HAS_TWO_BY_TWO = 0x0080;
-const CHECKSUM_MAGIC = 0xb1b0afba;
-const HEAD_CHECKSUM_ADJUSTMENT = 8;
+const HEAD_MIN_LENGTH = 54;
 const HEAD_LOCA_FORMAT = 50;
+const MAXP_MIN_LENGTH = 6;
 const MAXP_NUM_GLYPHS = 4;
 const HHEA_NUM_H_METRICS = 34;
+const LONG_METRIC_SIZE = 4;
+const BEARING_SIZE = 2;
+const GLYPH_HEADER_SIZE = 10;
 const POST_HEADER = 32;
 const POST_NO_GLYPH_NAMES = 0x00030000;
 const SHORT_LOCA_LIMIT = 0x1fffe;
+const CMAP_HEADER_SIZE = 4;
+const CMAP_ENCODING_RECORD_SIZE = 8;
+const CMAP_FORMAT_12 = 12;
+const FORMAT_12_HEADER_SIZE = 16;
+const FORMAT_12_GROUP_SIZE = 12;
+const PLATFORM_UNICODE = 0;
+const UNICODE_FULL_REPERTOIRE = 4;
+const PLATFORM_WINDOWS = 3;
+const WINDOWS_UCS4 = 10;
 
-interface Table {
-  offset: number;
-  length: number;
+interface GlyphTables {
+  glyf: Uint8Array;
+  loca: Uint8Array;
 }
 
-function readTables(dv: DataView): Map<string, Table> | null {
-  if (dv.byteLength < 12 || dv.getUint32(0) === TTC_TAG) return null;
-  const count = dv.getUint16(4);
-  const tables = new Map<string, Table>();
-  for (let i = 0; i < count; i++) {
-    const rec = 12 + i * 16;
-    if (rec + 16 > dv.byteLength) return null;
-    const tag = String.fromCharCode(
-      dv.getUint8(rec),
-      dv.getUint8(rec + 1),
-      dv.getUint8(rec + 2),
-      dv.getUint8(rec + 3),
-    );
-    const offset = dv.getUint32(rec + 8);
-    const length = dv.getUint32(rec + 12);
+function readTables(dv: DataView): Map<string, SfntTable> | null {
+  const tables = readTableDirectory(dv);
+  if (!tables || dv.getUint32(0) === TTC_TAG) return null;
+  for (const { offset, length } of tables.values())
     if (offset + length > dv.byteLength) return null;
-    tables.set(tag, { offset, length });
-  }
   return tables;
 }
 
 function readLoca(
   dv: DataView,
-  loca: Table,
+  loca: SfntTable,
   long: boolean,
   numGlyphs: number,
 ): number[] | null {
@@ -86,9 +85,9 @@ function readLoca(
 
 // A composite glyph draws other glyphs by id, so they must be kept with it.
 function componentsOf(dv: DataView, start: number, end: number): number[] {
-  if (end - start < 10 || dv.getInt16(start) >= 0) return [];
+  if (end - start < GLYPH_HEADER_SIZE || dv.getInt16(start) >= 0) return [];
   const out: number[] = [];
-  let at = start + 10;
+  let at = start + GLYPH_HEADER_SIZE;
   while (at + 4 <= end) {
     const flags = dv.getUint16(at);
     out.push(dv.getUint16(at + 2));
@@ -103,7 +102,7 @@ function componentsOf(dv: DataView, start: number, end: number): number[] {
 
 function closeOverComponents(
   dv: DataView,
-  glyf: Table,
+  glyf: SfntTable,
   loca: number[],
   wanted: Iterable<number>,
 ): Set<number> | null {
@@ -132,8 +131,7 @@ function closeOverComponents(
   return kept;
 }
 
-// A cmap left pointing at emptied glyphs would let an editor type characters
-// that then draw as nothing, so it is rebuilt to cover only the kept glyphs.
+// Rebuild the cmap for kept glyphs only, or editors could type characters that draw nothing.
 function buildCmap(
   mapping: Map<number, number>,
   kept: Set<number>,
@@ -150,22 +148,22 @@ function buildCmap(
       groups.push([cp, cp, gid]);
     }
   }
-  const header = 4 + 2 * 8;
-  const subtable = 16 + groups.length * 12;
+  const header = CMAP_HEADER_SIZE + 2 * CMAP_ENCODING_RECORD_SIZE;
+  const subtable = FORMAT_12_HEADER_SIZE + groups.length * FORMAT_12_GROUP_SIZE;
   const out = new Uint8Array(header + subtable);
   const dv = new DataView(out.buffer);
   dv.setUint16(2, 2);
-  dv.setUint16(4, 0); // Unicode platform, full repertoire
-  dv.setUint16(6, 4);
+  dv.setUint16(4, PLATFORM_UNICODE);
+  dv.setUint16(6, UNICODE_FULL_REPERTOIRE);
   dv.setUint32(8, header);
-  dv.setUint16(12, 3); // Windows platform, UCS-4
-  dv.setUint16(14, 10);
+  dv.setUint16(12, PLATFORM_WINDOWS);
+  dv.setUint16(14, WINDOWS_UCS4);
   dv.setUint32(16, header);
-  dv.setUint16(header, 12);
+  dv.setUint16(header, CMAP_FORMAT_12);
   dv.setUint32(header + 4, subtable);
   dv.setUint32(header + 12, groups.length);
   groups.forEach(([start, end, gid], i) => {
-    const at = header + 16 + i * 12;
+    const at = header + FORMAT_12_HEADER_SIZE + i * FORMAT_12_GROUP_SIZE;
     dv.setUint32(at, start);
     dv.setUint32(at + 4, end);
     dv.setUint32(at + 8, gid);
@@ -173,85 +171,81 @@ function buildCmap(
   return out;
 }
 
-// hmtx holds a full metric for the first `numberOfHMetrics` glyphs and only a
-// side bearing for the rest; both runs are cut to the new glyph count.
+// hmtx has full metrics for numberOfHMetrics glyphs then bearings only; both are cut to the new count.
 function truncatedMetrics(
   hhea: Uint8Array,
   hmtx: Uint8Array,
   glyphCount: number,
-): Uint8Array | null {
+): { hmtx: Uint8Array; numberOfHMetrics: number } | null {
   if (hhea.length < HHEA_NUM_H_METRICS + 2) return null;
-  const view = new DataView(hhea.buffer, hhea.byteOffset, hhea.byteLength);
-  const full = view.getUint16(HHEA_NUM_H_METRICS);
+  const full = new DataView(
+    hhea.buffer,
+    hhea.byteOffset,
+    hhea.byteLength,
+  ).getUint16(HHEA_NUM_H_METRICS);
   const keptFull = Math.min(full, glyphCount);
   const bearings = glyphCount - keptFull;
-  if (full === 0 || hmtx.length < full * 4 + bearings * 2) return null;
-  const out = new Uint8Array(keptFull * 4 + bearings * 2);
-  out.set(hmtx.subarray(0, keptFull * 4));
-  out.set(hmtx.subarray(full * 4, full * 4 + bearings * 2), keptFull * 4);
-  view.setUint16(HHEA_NUM_H_METRICS, keptFull);
-  return out;
-}
-
-function pad4(n: number): number {
-  return (n + 3) & ~3;
-}
-
-function checksum(bytes: Uint8Array): number {
-  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let sum = 0;
-  const whole = bytes.length & ~3;
-  for (let i = 0; i < whole; i += 4) sum = (sum + dv.getUint32(i)) >>> 0;
-  let tail = 0;
-  for (let i = whole; i < bytes.length; i++)
-    tail |= bytes[i] << (24 - (i - whole) * 8);
-  return (sum + (tail >>> 0)) >>> 0;
-}
-
-function assemble(
-  sfntVersion: number,
-  tables: Map<string, Uint8Array>,
-): Uint8Array {
-  const tags = [...tables.keys()].sort();
-  const count = tags.length;
-  const entrySelector = Math.floor(Math.log2(count));
-  const searchRange = 2 ** entrySelector * 16;
-  const directory = 12 + count * 16;
-  let size = directory;
-  for (const tag of tags) size += pad4(tables.get(tag)!.length);
-  const out = new Uint8Array(size);
-  const dv = new DataView(out.buffer);
-  dv.setUint32(0, sfntVersion);
-  dv.setUint16(4, count);
-  dv.setUint16(6, searchRange);
-  dv.setUint16(8, entrySelector);
-  dv.setUint16(10, count * 16 - searchRange);
-  let at = directory;
-  let headAt = -1;
-  tags.forEach((tag, i) => {
-    const data = tables.get(tag)!;
-    const rec = 12 + i * 16;
-    for (let k = 0; k < 4; k++) out[rec + k] = tag.charCodeAt(k);
-    dv.setUint32(rec + 4, checksum(data));
-    dv.setUint32(rec + 8, at);
-    dv.setUint32(rec + 12, data.length);
-    out.set(data, at);
-    if (tag === "head") headAt = at;
-    at += pad4(data.length);
-  });
-  dv.setUint32(
-    headAt + HEAD_CHECKSUM_ADJUSTMENT,
-    (CHECKSUM_MAGIC - checksum(out)) >>> 0,
+  const fullSize = full * LONG_METRIC_SIZE;
+  const keptSize = keptFull * LONG_METRIC_SIZE;
+  if (full === 0 || hmtx.length < fullSize + bearings * BEARING_SIZE)
+    return null;
+  const out = new Uint8Array(keptSize + bearings * BEARING_SIZE);
+  out.set(hmtx.subarray(0, keptSize));
+  out.set(
+    hmtx.subarray(fullSize, fullSize + bearings * BEARING_SIZE),
+    keptSize,
   );
-  return out;
+  return { hmtx: out, numberOfHMetrics: keptFull };
 }
 
-/**
- * The font with only `usedGlyphs` (and the glyphs they are built from) still
- * drawn, each at its original glyph id. Null when the font is not a single
- * TrueType-outline face this can rewrite safely; the caller then keeps the
- * font whole.
- */
+function rebuildGlyf(
+  font: Uint8Array,
+  glyf: SfntTable,
+  loca: number[],
+  kept: Set<number>,
+  glyphCount: number,
+  long: boolean,
+): GlyphTables | null {
+  const newLoca: number[] = [0];
+  const pieces: Uint8Array[] = [];
+  let size = 0;
+  for (let gid = 0; gid < glyphCount; gid++) {
+    if (kept.has(gid) && loca[gid + 1] > loca[gid]) {
+      const data = font.subarray(
+        glyf.offset + loca[gid],
+        glyf.offset + loca[gid + 1],
+      );
+      const padded = new Uint8Array(pad4(data.length));
+      padded.set(data);
+      pieces.push(padded);
+      size += padded.length;
+    }
+    newLoca.push(size);
+  }
+  if (!long && size > SHORT_LOCA_LIMIT) return null;
+  const newGlyf = new Uint8Array(size);
+  let at = 0;
+  for (const piece of pieces) {
+    newGlyf.set(piece, at);
+    at += piece.length;
+  }
+  const locaBytes = new Uint8Array(newLoca.length * (long ? 4 : 2));
+  const locaView = new DataView(locaBytes.buffer);
+  newLoca.forEach((offset, i) => {
+    if (long) locaView.setUint32(i * 4, offset);
+    else locaView.setUint16(i * 2, offset / 2);
+  });
+  return { glyf: newGlyf, loca: locaBytes };
+}
+
+function withoutGlyphNames(post: Uint8Array): Uint8Array | null {
+  if (post.length < POST_HEADER) return null;
+  const header = post.slice(0, POST_HEADER);
+  new DataView(header.buffer).setUint32(0, POST_NO_GLYPH_NAMES);
+  return header;
+}
+
+/** The font with only usedGlyphs drawn, at their ids; null when it is not one TrueType face. */
 export function subsetTrueType(
   font: Uint8Array,
   usedGlyphs: Iterable<number>,
@@ -261,81 +255,47 @@ export function subsetTrueType(
     const tables = readTables(dv);
     if (!tables || REQUIRED_TABLES.some((tag) => !tables.has(tag))) return null;
     const head = tables.get("head")!;
+    const maxp = tables.get("maxp")!;
     const glyf = tables.get("glyf")!;
-    if (head.length < 54 || tables.get("maxp")!.length < 6) return null;
+    if (head.length < HEAD_MIN_LENGTH || maxp.length < MAXP_MIN_LENGTH)
+      return null;
     const long = dv.getInt16(head.offset + HEAD_LOCA_FORMAT) !== 0;
-    const numGlyphs = dv.getUint16(
-      tables.get("maxp")!.offset + MAXP_NUM_GLYPHS,
-    );
+    const numGlyphs = dv.getUint16(maxp.offset + MAXP_NUM_GLYPHS);
     const loca = readLoca(dv, tables.get("loca")!, long, numGlyphs);
     const mapping = parseTrueTypeCmap(font);
     if (!loca || !mapping) return null;
     const kept = closeOverComponents(dv, glyf, loca, usedGlyphs);
     if (!kept) return null;
 
-    // Glyph ids past the last kept one address nothing, so the per-glyph tables
-    // stop there instead of carrying an entry for every glyph the font had.
+    // Per-glyph tables stop at the last kept glyph id.
     const glyphCount = Math.max(...kept) + 1;
-    const newLoca: number[] = [0];
-    const pieces: Uint8Array[] = [];
-    let size = 0;
-    for (let gid = 0; gid < glyphCount; gid++) {
-      if (kept.has(gid) && loca[gid + 1] > loca[gid]) {
-        const data = font.subarray(
-          glyf.offset + loca[gid],
-          glyf.offset + loca[gid + 1],
-        );
-        const padded = new Uint8Array(pad4(data.length));
-        padded.set(data);
-        pieces.push(padded);
-        size += padded.length;
-      }
-      newLoca.push(size);
-    }
-    if (!long && size > SHORT_LOCA_LIMIT) return null;
-    const newGlyf = new Uint8Array(size);
-    let at = 0;
-    for (const piece of pieces) {
-      newGlyf.set(piece, at);
-      at += piece.length;
-    }
-    const locaBytes = new Uint8Array(newLoca.length * (long ? 4 : 2));
-    const locaView = new DataView(locaBytes.buffer);
-    newLoca.forEach((offset, i) => {
-      if (long) locaView.setUint32(i * 4, offset);
-      else locaView.setUint16(i * 2, offset / 2);
-    });
+    const glyphs = rebuildGlyf(font, glyf, loca, kept, glyphCount, long);
+    if (!glyphs) return null;
 
     const out = new Map<string, Uint8Array>();
     for (const [tag, table] of tables) {
       if (!KEPT_TABLES.has(tag)) continue;
       out.set(tag, font.slice(table.offset, table.offset + table.length));
     }
-    out.set("glyf", newGlyf);
-    out.set("loca", locaBytes);
+    out.set("glyf", glyphs.glyf);
+    out.set("loca", glyphs.loca);
     out.set("cmap", buildCmap(mapping, kept));
-    const hmtx = truncatedMetrics(
-      out.get("hhea")!,
-      out.get("hmtx")!,
-      glyphCount,
+    const hhea = out.get("hhea")!;
+    const metrics = truncatedMetrics(hhea, out.get("hmtx")!, glyphCount);
+    if (!metrics) return null;
+    out.set("hmtx", metrics.hmtx);
+    new DataView(hhea.buffer).setUint16(
+      HHEA_NUM_H_METRICS,
+      metrics.numberOfHMetrics,
     );
-    if (!hmtx) return null;
-    out.set("hmtx", hmtx);
     new DataView(out.get("maxp")!.buffer).setUint16(
       MAXP_NUM_GLYPHS,
       glyphCount,
     );
     const post = out.get("post");
-    if (post && post.length >= POST_HEADER) {
-      const header = post.slice(0, POST_HEADER);
-      new DataView(header.buffer).setUint32(0, POST_NO_GLYPH_NAMES);
-      out.set("post", header);
-    }
-    new DataView(out.get("head")!.buffer).setUint32(
-      HEAD_CHECKSUM_ADJUSTMENT,
-      0,
-    );
-    return assemble(dv.getUint32(0), out);
+    const namelessPost = post && withoutGlyphNames(post);
+    if (namelessPost) out.set("post", namelessPost);
+    return assembleSfnt(dv.getUint32(0), out);
   } catch {
     return null;
   }

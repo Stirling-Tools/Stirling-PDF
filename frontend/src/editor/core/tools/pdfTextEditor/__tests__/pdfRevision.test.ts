@@ -5,6 +5,7 @@ import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   appendRevision,
   plainObject,
+  replaceObjects,
   streamObject,
 } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
 import {
@@ -146,5 +147,46 @@ describe("appendRevision", () => {
     const original = singleContentPdf();
     const pdf = await RawPdf.parse(original);
     expect(appendRevision(pdf as RawPdf, [])).toBe(original);
+  });
+});
+
+describe("replaceObjects", () => {
+  it("rewrites objects in place and shifts the offsets after them", async () => {
+    const pdf = (await RawPdf.parse(singleContentPdf()))!;
+    const longer = "BT /F1 12 Tf (a much longer line of text) Tj ET";
+    const out = replaceObjects(pdf, [
+      { num: 4, body: streamObject("<< >>", fromLatin1(longer)) },
+    ])!;
+
+    const reparsed = (await RawPdf.parse(out))!;
+    expect(toLatin1((await reparsed.pageContent(3))!)).toContain(longer);
+    expect(reparsed.objectBody(5)).toContain("/Helvetica");
+    expect(toLatin1(out)).not.toContain("/Prev");
+    expect(out.length).toBeGreaterThan(pdf.bytes.length);
+  });
+
+  it("declines a file with more than one cross-reference section", async () => {
+    const pdf = (await RawPdf.parse(singleContentPdf()))!;
+    const updated = (await RawPdf.parse(
+      appendRevision(pdf, [{ num: 6, body: plainObject("<< >>") }])!,
+    ))!;
+    expect(
+      replaceObjects(updated, [{ num: 1, body: plainObject("<< >>") }]),
+    ).toBeNull();
+  });
+
+  it("declines a cross-reference stream", async () => {
+    const pdf = (await RawPdf.parse(
+      buildXrefStreamPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [] /Count 0 >>" },
+        ],
+        1,
+      ),
+    ))!;
+    expect(
+      replaceObjects(pdf, [{ num: 2, body: plainObject("<< >>") }]),
+    ).toBeNull();
   });
 });

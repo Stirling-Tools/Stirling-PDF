@@ -62,6 +62,7 @@ interface PdfOptions {
   /** The page's /Font entry, in place of the inline `<< /F1 5 0 R >>`. */
   fonts?: string;
   info?: string;
+  descriptorEntries?: string;
   /** Body of an object 11 added after the others. */
   extra?: string;
 }
@@ -84,7 +85,7 @@ function pdfWithFont(font: Uint8Array, options: PdfOptions): Uint8Array {
       `<< /Type /Font /Subtype /${options.cidSubtype ?? "CIDFontType2"} /BaseFont /Carlito /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 7 0 R /CIDToGIDMap /Identity /W 10 0 R >>`,
     ),
     latin1(
-      "<< /Type /FontDescriptor /FontName /Carlito /Flags 4 /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 900 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 8 0 R >>",
+      `<< /Type /FontDescriptor /FontName /Carlito /Flags 4 /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 900 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 8 0 R${options.descriptorEntries ?? ""} >>`,
     ),
     (() => {
       const headPart = latin1(
@@ -324,6 +325,25 @@ describe("subsetEmbeddedFonts", () => {
       );
     },
   );
+
+  test("drops the CIDSet that still lists the emptied glyphs", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const pdf = pdfWithFont(font, {
+      content: "BT /F1 12 Tf <0001> Tj ET",
+      descriptorEntries: " /CIDSet 11 0 R",
+      extra: "<< /Length 2 >>\nstream\n\u00ff\u00ff\nendstream",
+    });
+
+    const reread = (await RawPdf.parse(
+      await subsetEmbeddedFonts(pdf, [font]),
+    ))!;
+
+    const descriptor = reread.objectBody(7)!;
+    expect(reread.valueSpan(descriptor, "CIDSet")).toBeNull();
+    expect(reread.dictName(descriptor, "FontName")).toMatch(
+      /^[A-Z]{6}\+Carlito$/,
+    );
+  });
 
   test("leaves the file alone when a page holds an inline image", async () => {
     const font = new Uint8Array(await readFile(FONT));
