@@ -30,7 +30,7 @@ export function registerEmbeddedFace(
   if (typeof document === "undefined" || typeof FontFace === "undefined") {
     return;
   }
-  const bytes = readFontData(m, fontPtr);
+  const bytes = embeddedFontProgram(m, fontPtr);
   if (!bytes || bytes.length === 0) return;
   if (faceBytesHeld + bytes.length > MAX_TOTAL_FACE_BYTES) return;
   const held = bytes.length;
@@ -91,8 +91,8 @@ function isLoadableFaceHeader(head: Uint8Array): boolean {
   );
 }
 
-/** Copy a font's face bytes out of the WASM heap. */
-function readFontData(
+/** The font file a document font embeds, copied out of the WASM heap; null when PDFium has none to give. */
+export function embeddedFontProgram(
   m: WrappedPdfiumModule,
   fontPtr: number,
 ): Uint8Array<ArrayBuffer> | null {

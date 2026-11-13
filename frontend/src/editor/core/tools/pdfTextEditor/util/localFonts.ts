@@ -360,7 +360,12 @@ export function pickLocalFontFace(
   fonts: LocalFont[],
   requested: string,
 ): LocalFont | null {
-  return pickRequestedFace(fonts, resolveRequested(fonts, requested));
+  const name = normaliseName(requested);
+  return (
+    pickRequestedFace(fonts, resolveRequested(fonts, requested)) ??
+    fonts.find((font) => normaliseName(font.fullName) === name) ??
+    null
+  );
 }
 
 export function pickRequestedFace(
