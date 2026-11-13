@@ -20,6 +20,8 @@ import {
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
+  base14FontId,
+  deviceFontId,
   documentFontHandle,
   isDocumentFontId,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
@@ -29,9 +31,7 @@ import {
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
-// Re-emit a run's text in another family: PDFium has no SetFont accessor.
-// Device fonts embed when pre-warmed, else the nearest standard face. A
-// `nextFamily` that is the run's own document fontId puts it back in that font.
+// Device fonts embed when pre-warmed; a document fontId as nextFamily restores that font.
 export class SetFontFamilyCommand implements Command {
   readonly type = "set-font-family";
   private readonly pageIndex: number;
@@ -183,7 +183,9 @@ export class SetFontFamilyCommand implements Command {
       run.fontSubset = documentFont?.subset ?? false;
       run.documentFont = null;
     } else {
-      run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
+      run.fontId = embedded
+        ? deviceFontId(this.nextFamily)
+        : base14FontId(this.nextFamily);
       run.fontSubset = false;
     }
     // Reset ALL model bookkeeping to the freshly-emitted objects so later

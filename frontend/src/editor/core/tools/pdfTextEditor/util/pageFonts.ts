@@ -3,6 +3,8 @@ import { getCachedFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/Cmap
 import {
   documentFontHandle,
   familyOf,
+  isBase14FontId,
+  isDeviceFontId,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { deviceFontCoverage } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 
@@ -43,10 +45,6 @@ export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
   for (const cp of ALNUM_CODEPOINTS)
     if (!cmap.has(cp)) out.push(String.fromCodePoint(cp));
   return out;
-}
-
-export function isDeviceFontId(fontId: string): boolean {
-  return fontId.startsWith("device:");
 }
 
 /** a-zA-Z0-9 coverage for a font, from the loader-primed cache (no WASM). */
@@ -132,7 +130,7 @@ export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
       const name = stripSubsetTag(familyOf(run.fontId)) || "Unknown font";
       let status: FontStatus;
       if (
-        run.fontId.startsWith("base14:") ||
+        isBase14FontId(run.fontId) ||
         (!isDeviceFontId(run.fontId) && isStandard14(run.fontId))
       ) {
         status = "standard";

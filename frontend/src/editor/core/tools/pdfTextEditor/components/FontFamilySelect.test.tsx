@@ -10,7 +10,7 @@ import { FontFamilySelect } from "@editor/tools/pdfTextEditor/components/FontFam
 import type { FontPickFailure } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import {
   SERVER_FONTS_URL,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 
 const MANIFEST = {
@@ -59,7 +59,7 @@ describe("font picker server fonts", () => {
     Element.prototype.scrollIntoView = vi.fn();
     get.mockReset();
     alert.mockReset();
-    resetServerFontsCache();
+    forgetServerFontList();
     get.mockImplementation(async (url: string) => {
       if (url === SERVER_FONTS_URL) return { data: MANIFEST };
       throw new Error(`unexpected ${url}`);

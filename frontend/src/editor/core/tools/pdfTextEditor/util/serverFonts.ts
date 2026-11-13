@@ -10,12 +10,8 @@ export const SERVER_FONTS_URL = "/api/v1/ui-data/editor-fonts";
 export interface ServerFontFace {
   id: string;
   style: string;
-  bold: boolean;
   italic: boolean;
-  weight: number;
   postscriptName: string;
-  format: string;
-  size: number;
 }
 
 interface ServerFontFamily {
@@ -25,6 +21,7 @@ interface ServerFontFamily {
 
 const FONT_ID = /^[0-9a-f]{64}$/;
 export const SERVER_FONTS_REFRESH_MS = 30_000;
+const FACE_DOWNLOAD_ATTEMPTS = 2;
 
 let resolved: LocalFont[] | null = null;
 let manifestPending: Promise<LocalFont[] | null> | null = null;
@@ -47,13 +44,9 @@ function readFace(value: unknown): ServerFontFace | null {
   return {
     id: face.id,
     style: typeof face.style === "string" ? face.style.trim() : "",
-    bold: face.bold === true,
     italic: face.italic === true,
-    weight: typeof face.weight === "number" ? face.weight : 400,
     postscriptName:
       typeof face.postscriptName === "string" ? face.postscriptName : "",
-    format: typeof face.format === "string" ? face.format : "ttf",
-    size: typeof face.size === "number" ? face.size : 0,
   };
 }
 
@@ -147,7 +140,7 @@ function documentFonts(): FontFaceSet | null {
   return (document as Document & { fonts?: FontFaceSet }).fonts ?? null;
 }
 
-function clearServerFontState(): void {
+export function forgetServerFontList(): void {
   generation++;
   resolved = null;
   manifestPending = null;
@@ -162,10 +155,6 @@ function clearServerFontState(): void {
   const fonts = documentFonts();
   for (const css of cssFacesRegistered.values()) fonts?.delete(css);
   cssFacesRegistered.clear();
-}
-
-export function forgetServerFontList(): void {
-  clearServerFontState();
   notifyListeners();
 }
 
@@ -224,7 +213,7 @@ function fetchFaceBytes(id: string): Promise<Uint8Array | null> {
 
 async function downloadFace(id: string): Promise<Uint8Array | null> {
   const started = generation;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < FACE_DOWNLOAD_ATTEMPTS; attempt++) {
     try {
       const res = await apiClient.get<ArrayBuffer>(
         `${SERVER_FONTS_URL}/${id}`,
@@ -290,8 +279,4 @@ export async function loadServerFontBytes(
     faceIdByName.set(key, face.id);
     return bytes;
   });
-}
-
-export function resetServerFontsCache(): void {
-  clearServerFontState();
 }

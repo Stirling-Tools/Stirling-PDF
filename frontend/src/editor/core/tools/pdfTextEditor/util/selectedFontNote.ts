@@ -1,12 +1,18 @@
-import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import {
+  RENDER_MODE_INVISIBLE,
+  type PageSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
 import {
   analyzePageFonts,
-  isDeviceFontId,
   missingAlnumFromCmap,
 } from "@editor/tools/pdfTextEditor/util/pageFonts";
-import { deviceFontCoverage } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  deviceFontCoverage,
+  visibleCodePoints,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   familyOf,
+  isDeviceFontId,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 
@@ -38,7 +44,7 @@ function collectSelectedRuns(
       if (picked.has(run.id)) {
         fontIds.add(run.fontId);
         text += run.text;
-        if (run.renderMode === 3) scanned++;
+        if (run.renderMode === RENDER_MODE_INVISIBLE) scanned++;
       }
   return { fontIds, text, scanned };
 }
@@ -52,11 +58,8 @@ function missingFromCoverage(
   text: string,
 ): string[] {
   const missing = new Set<string>();
-  for (const ch of text) {
-    if (/\s/.test(ch)) continue;
-    const cp = ch.codePointAt(0);
-    if (cp !== undefined && !coverage.has(cp)) missing.add(ch);
-  }
+  for (const cp of visibleCodePoints(text))
+    if (!coverage.has(cp)) missing.add(String.fromCodePoint(cp));
   for (const ch of missingAlnumFromCmap(coverage)) missing.add(ch);
   return [...missing];
 }

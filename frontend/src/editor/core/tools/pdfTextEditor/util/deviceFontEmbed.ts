@@ -97,7 +97,7 @@ function coverageOf(
   return coverageByFamily.get(key) ?? null;
 }
 
-function visibleCodePoints(text: string): number[] {
+export function visibleCodePoints(text: string): number[] {
   const out: number[] = [];
   for (const ch of text) {
     if (/\s/.test(ch)) continue;
@@ -107,8 +107,7 @@ function visibleCodePoints(text: string): number[] {
   return out;
 }
 
-// True if the face covers every non-whitespace code point. Fails open, leaving
-// the width self-check as the backstop.
+// Whether the face covers every visible code point; fails open to the width self-check.
 function deviceFontCovers(
   family: string,
   bytes: Uint8Array,

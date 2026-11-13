@@ -401,8 +401,7 @@ export function useToolbarController(
     [store],
   );
 
-  // Null until the device fonts or the server's font list load, and it must
-  // re-render when they do - the italic control's availability is derived from it.
+  // Null until device or server fonts load; re-render then, as italic availability derives from it.
   const externalFonts = useSyncExternalStore(
     subscribeExternalFonts,
     loadedExternalFonts,

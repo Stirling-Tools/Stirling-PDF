@@ -3,6 +3,8 @@
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 
+export const RENDER_MODE_INVISIBLE = 3;
+
 export interface RGBA {
   r: number; // 0..255
   g: number;
@@ -241,10 +243,7 @@ export interface TextRange {
 
 export interface ToolbarState {
   fontFamily: string | null;
-  /**
-   * The PDF's own font every selected run can be put back to, as a fontId.
-   * Null when none was changed away from one, or they came from different fonts.
-   */
+  /** The document fontId every selected run can be restored to, or null. */
   documentFontId: string | null;
   fontSize: number | null;
   fill: RGBA | null;

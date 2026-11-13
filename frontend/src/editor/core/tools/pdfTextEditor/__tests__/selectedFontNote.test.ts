@@ -9,7 +9,7 @@ import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontN
 import {
   SERVER_FONTS_URL,
   loadServerFontBytes,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
@@ -82,7 +82,7 @@ function page(runs: ReturnType<typeof run>[]): PageSnapshot[] {
 
 describe("selectedFontNote", () => {
   beforeAll(async () => {
-    resetServerFontsCache();
+    forgetServerFontList();
     resetDeviceFontEmbedCache();
     get.mockImplementation(async (url: string) => {
       if (url === SERVER_FONTS_URL) return { data: MANIFEST };
