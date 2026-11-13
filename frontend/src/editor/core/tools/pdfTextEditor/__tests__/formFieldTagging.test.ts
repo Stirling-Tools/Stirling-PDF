@@ -157,7 +157,7 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
 }
 
 async function saved(doc: EditorDocument): Promise<RawPdf> {
-  const { blob } = await exportToBlob(doc, "form.pdf");
+  const blob = await exportToBlob(doc);
   return (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
 }
 
