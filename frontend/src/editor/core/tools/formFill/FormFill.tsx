@@ -22,6 +22,7 @@ import { createToolSteps } from "@editor/components/tools/shared/ToolStep";
 import { UnsavedChangesDialog } from "@editor/components/shared/UnsavedChangesDialog";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { Button } from "@editor/ui/Button";
+import { Modal } from "@editor/ui/Modal";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
@@ -49,6 +50,15 @@ import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
 } from "@editor/tools/formFill/formApi";
+import {
+  buildXfdf,
+  FormDataParseError,
+  FormDataTooLargeError,
+  MAX_FORM_DATA_BYTES,
+  parseFormDataFile,
+  reconcileImportedValues,
+  type FormDataParseErrorCode,
+} from "@editor/utils/formDataExchange";
 import type { FormMode } from "@editor/tools/formFill/types";
 import { FormFieldCreatePanel } from "@editor/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@editor/tools/formFill/FormFieldModifyPanel";
@@ -67,6 +77,34 @@ interface ModeTabDef {
   label: string;
   icon: React.ReactNode;
 }
+
+/** Locale key and English fallback per parse-failure code. */
+const IMPORT_ERROR_KEYS: Record<FormDataParseErrorCode, [string, string]> = {
+  invalidXml: [
+    "formFill.importInvalidXml",
+    "File is not valid XML: {{detail}}",
+  ],
+  xfdfDoctype: [
+    "formFill.importXfdfDoctype",
+    "XFDF must not declare a DOCTYPE.",
+  ],
+  notXfdf: [
+    "formFill.importNotXfdf",
+    "Not an XFDF file: expected an <xfdf> root element.",
+  ],
+  notFdf: [
+    "formFill.importNotFdf",
+    "Not an FDF file: no /FDF dictionary found.",
+  ],
+  fdfNoFields: [
+    "formFill.importFdfNoFields",
+    "FDF file has no /Fields array - there is no form data to import.",
+  ],
+  unrecognised: [
+    "formFill.importUnrecognised",
+    "Unrecognised form data file. Expected XFDF (<xfdf> XML) or FDF (%FDF-).",
+  ],
+};
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
@@ -145,6 +183,21 @@ const FormFill = (_props: BaseToolProps) => {
   const [flatten, setFlatten] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<{
+    message: string;
+    anyApplied: boolean;
+  } | null>(null);
+  const [pendingImport, setPendingImport] = useState<{
+    applied: Record<string, string>;
+    summary: { message: string; anyApplied: boolean };
+    replaced: string[];
+  } | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const importedValuesRef = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    importedValuesRef.current = {};
+  }, [formState.fields]);
 
   const flattenChanged = flatten;
 
@@ -237,6 +290,141 @@ const FormFill = (_props: BaseToolProps) => {
     }
   }, [currentFile, allValues]);
 
+  /**
+   * Export as XFDF - the interchange format Acrobat's "Import Data" reads, so
+   * a form filled here can be handed back to an Acrobat-based process.
+   */
+  const handleExportXfdf = useCallback(() => {
+    setExtracting(true);
+    try {
+      const multiSelectFields = formState.fields
+        .filter((field) => field.multiSelect)
+        .map((field) => field.name);
+      const xfdf = buildXfdf(allValues, {
+        pdfHref: currentFile instanceof File ? currentFile.name : undefined,
+        multiSelectFields,
+      });
+      const blob = new Blob([xfdf], { type: "application/vnd.adobe.xfdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `form-data-${new Date().getTime()}.xfdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
+    } finally {
+      setExtracting(false);
+    }
+  }, [allValues, currentFile, formState.fields]);
+
+  const formatNameList = useCallback(
+    (names: string[]) => {
+      const NAME_LIMIT = 5;
+      return names.length > NAME_LIMIT
+        ? t("formFill.importSkippedNames", "{{names}} and {{rest}} more", {
+            names: names.slice(0, NAME_LIMIT).join(", "),
+            rest: names.length - NAME_LIMIT,
+          })
+        : names.join(", ");
+    },
+    [t],
+  );
+
+  const applyImport = useCallback(
+    (
+      applied: Record<string, string>,
+      summary: { message: string; anyApplied: boolean },
+    ) => {
+      for (const [name, value] of Object.entries(applied)) {
+        setValue(name, value);
+      }
+      Object.assign(importedValuesRef.current, applied);
+      setImportSummary(summary);
+    },
+    [setValue],
+  );
+
+  /**
+   * Import an Acrobat XFDF/FDF export into the open form. Values for fields
+   * this document doesn't have are reported rather than silently dropped.
+   */
+  const handleImportFormData = useCallback(
+    async (file: File) => {
+      setSaveError(null);
+      setImportSummary(null);
+      try {
+        const { values, format } = await parseFormDataFile(file);
+        const { applied, unmatched } = reconcileImportedValues(
+          values,
+          formState.fields.map((field) => field.name),
+        );
+        // Two sentences, not one: each count needs its own plural form, so
+        // "Imported 1 field" can sit next to "3 fields are not in this PDF".
+        const imported = t(
+          "formFill.importSuccess",
+          "Imported {{count}} field(s) from {{format}}",
+          { count: Object.keys(applied).length, format: format.toUpperCase() },
+        );
+        const skipped =
+          unmatched.length > 0
+            ? t(
+                "formFill.importSkipped",
+                "{{count}} field(s) are not in this PDF: {{names}}",
+                { count: unmatched.length, names: formatNameList(unmatched) },
+              )
+            : "";
+        const summary = {
+          message: [imported, skipped].filter(Boolean).join(". "),
+          anyApplied: Object.keys(applied).length > 0,
+        };
+        const replaced = formState.fields
+          .filter((field) => {
+            if (!(field.name in applied)) return false;
+            const current = allValues[field.name] ?? "";
+            return (
+              current !== (field.value ?? "") &&
+              current !== importedValuesRef.current[field.name] &&
+              current !== applied[field.name]
+            );
+          })
+          .map((field) => field.label || field.name);
+        if (replaced.length > 0) {
+          setPendingImport({ applied, summary, replaced });
+          return;
+        }
+        applyImport(applied, summary);
+      } catch (err) {
+        console.error("[FormFill] Form data import failed:", err);
+        if (err instanceof FormDataTooLargeError) {
+          setSaveError(
+            t(
+              "formFill.importTooLarge",
+              "That file is too large to import. Form data files must be under {{limit}} MB.",
+              { limit: Math.round(MAX_FORM_DATA_BYTES / (1024 * 1024)) },
+            ),
+          );
+          return;
+        }
+        if (err instanceof FormDataParseError) {
+          const [key, fallback] = IMPORT_ERROR_KEYS[err.code];
+          setSaveError(t(key, fallback, { detail: err.detail ?? "" }));
+          return;
+        }
+        setSaveError(
+          err instanceof Error
+            ? err.message
+            : t("formFill.importError", "Failed to import form data"),
+        );
+      }
+    },
+    [formState.fields, allValues, applyImport, formatNameList, t],
+  );
+
+  const confirmPendingImport = useCallback(() => {
+    if (!pendingImport) return;
+    applyImport(pendingImport.applied, pendingImport.summary);
+    setPendingImport(null);
+  }, [pendingImport, applyImport]);
+
   const handleExtractXlsx = useCallback(async () => {
     if (!currentFile) return;
     setExtracting(true);
@@ -294,6 +482,7 @@ const FormFill = (_props: BaseToolProps) => {
     savingRef.current = true;
     setSaving(true);
     setSaveError(null);
+    setImportSummary(null);
     try {
       assertFilesNotBlocked();
       if (mode === "fill") {
@@ -338,6 +527,7 @@ const FormFill = (_props: BaseToolProps) => {
       discardDesign();
     }
     setSaveError(null);
+    setImportSummary(null);
   }, [mode, discardValues, discardDesign]);
 
   useEffect(() => {
@@ -373,6 +563,7 @@ const FormFill = (_props: BaseToolProps) => {
         return;
       }
       setSaveError(null);
+      setImportSummary(null);
       setMode(next);
     },
     [
@@ -528,6 +719,35 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root} inert={saving}>
+      <Modal
+        open={pendingImport !== null}
+        onClose={() => setPendingImport(null)}
+        title={t(
+          "formFill.importReplaceTitle",
+          "Replace {{count}} value(s) you entered?",
+          { count: pendingImport?.replaced.length ?? 0 },
+        )}
+        width="sm"
+        footer={
+          <>
+            <Button variant="tertiary" onClick={() => setPendingImport(null)}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button onClick={confirmPendingImport}>
+              {t("formFill.importReplace", "Replace")}
+            </Button>
+          </>
+        }
+      >
+        <Text size="sm" c="var(--c-text-muted)">
+          {t(
+            "formFill.importReplaceBody",
+            "The imported file has different values for: {{names}}",
+            { names: formatNameList(pendingImport?.replaced ?? []) },
+          )}
+        </Text>
+      </Modal>
+
       <UnsavedChangesDialog
         opened={pendingMode !== null}
         saving={saving}
@@ -562,6 +782,25 @@ const FormFill = (_props: BaseToolProps) => {
       {saveError && (
         <Alert color="red" variant="light" p="xs" radius="sm">
           <Text size="xs">{saveError}</Text>
+        </Alert>
+      )}
+      {importSummary && (
+        <Alert
+          icon={
+            importSummary.anyApplied ? undefined : (
+              <Icon name="triangle-alert" size={16} />
+            )
+          }
+          color={importSummary.anyApplied ? "blue" : "yellow"}
+          variant="light"
+          p="xs"
+          radius="sm"
+          withCloseButton
+          closeButtonLabel={t("common.close", "Close")}
+          onClose={() => setImportSummary(null)}
+          data-testid="form-import-summary"
+        >
+          <Text size="xs">{importSummary.message}</Text>
         </Alert>
       )}
       {mode !== "fill" && formState.loading && (
@@ -704,36 +943,69 @@ const FormFill = (_props: BaseToolProps) => {
                     </Tooltip>
                   </div>
 
+                  <div className={styles.importRow}>
+                    <Tooltip
+                      label={t(
+                        "formFill.importTooltip",
+                        "Import values from an Acrobat XFDF or FDF export",
+                      )}
+                      withArrow
+                      position="left"
+                    >
+                      <Button
+                        variant="secondary"
+                        leftSection={<Icon name="upload" size={14} />}
+                        onClick={() => importInputRef.current?.click()}
+                        size="sm"
+                      >
+                        {t("formFill.importData", "Import form data")}
+                      </Button>
+                    </Tooltip>
+
+                    <input
+                      ref={importInputRef}
+                      type="file"
+                      accept=".xfdf,.fdf,application/vnd.adobe.xfdf,application/vnd.fdf"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.currentTarget.files?.[0];
+                        // Clear first so re-picking the same file re-fires.
+                        e.currentTarget.value = "";
+                        if (file) void handleImportFormData(file);
+                      }}
+                    />
+                  </div>
+
+                  <Text size="xs" c="dimmed" className={styles.exportLabel}>
+                    {t("formFill.exportAs", "Export data as")}
+                  </Text>
                   <div className={styles.secondaryActions}>
-                    <Button
-                      variant="secondary"
-                      leftSection={<Icon name="download" size={14} />}
-                      loading={extracting}
-                      onClick={handleExtractJson}
-                      size="sm"
-                    >
-                      JSON
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<Icon name="download" size={14} />}
-                      loading={extracting}
-                      onClick={handleExtractCsv}
-                      size="sm"
-                    >
-                      CSV
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<Icon name="download" size={14} />}
-                      loading={extracting}
-                      onClick={handleExtractXlsx}
-                      size="sm"
-                    >
-                      XLSX
-                    </Button>
+                    {(
+                      [
+                        ["XFDF", handleExportXfdf],
+                        ["JSON", handleExtractJson],
+                        ["CSV", handleExtractCsv],
+                        ["XLSX", handleExtractXlsx],
+                      ] as const
+                    ).map(([label, onClick]) => (
+                      <Button
+                        key={label}
+                        variant="secondary"
+                        leftSection={<Icon name="download" size={14} />}
+                        loading={extracting}
+                        onClick={() => void onClick()}
+                        size="sm"
+                        aria-label={t(
+                          "formFill.exportAsFormat",
+                          "Export as {{format}}",
+                          {
+                            format: label,
+                          },
+                        )}
+                      >
+                        {label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
 

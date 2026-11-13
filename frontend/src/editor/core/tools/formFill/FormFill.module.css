@@ -128,15 +128,23 @@
 }
 
 .secondaryActions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.375rem;
-  align-items: center;
 }
 
-.secondaryActions > button {
+/* Import is an input action, not one of the export formats, so it gets its
+   own full-width row. */
+.importRow {
+  display: flex;
+}
+
+.importRow > button {
   flex: 1;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+}
+
+.exportLabel {
+  margin-top: 0.125rem;
 }
 
 .fieldList {
