@@ -1,6 +1,7 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   SAME_BLOCK,
+  sameTextLayer,
   type BlockKey,
 } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import type {
@@ -294,7 +295,14 @@ function groupColumnLines(
 
     const sameBlock = blockKey(prev) === blockKey(line);
 
-    if (sameFont && sameColor && lineHeightOk && leftOk && sameBlock) {
+    if (
+      sameFont &&
+      sameColor &&
+      lineHeightOk &&
+      leftOk &&
+      sameBlock &&
+      sameTextLayer(prev, line)
+    ) {
       current.members.push(line);
       currentDeltas.push(baselineDelta);
       if (line.bounds.x < currentLeftEdge) currentLeftEdge = line.bounds.x;
