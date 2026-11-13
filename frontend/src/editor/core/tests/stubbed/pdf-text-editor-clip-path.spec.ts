@@ -27,17 +27,32 @@ test.describe("PDF text editor - clip paths follow their object", () => {
     await page.evaluate(() => {
       /* eslint-disable @typescript-eslint/no-explicit-any */
       const w = window as any;
-      const m = (w.__editor_store.doc ?? w.__editor_store.document).module;
-      w.__clipProbe = [] as Array<{ kind: string; args: number[] }>;
+      const doc = w.__editor_store.doc ?? w.__editor_store.document;
+      const m = doc.module;
+      const livePages = new Set(
+        doc.loadedPages().map((p: { pagePtr: number }) => p.pagePtr),
+      );
+      const offPage = new Set<number>();
+      const calls: Array<{ kind: string; obj: number; args: number[] }> = [];
+      w.__clipProbe = () =>
+        calls
+          .filter((c) => !offPage.has(c.obj))
+          .map(({ kind, args }) => ({ kind, args }));
       const realObj = m.FPDFPageObj_Transform.bind(m);
       const realClip = m.FPDFPageObj_TransformClipPath.bind(m);
+      const realInsert = m.FPDFPage_InsertObject.bind(m);
       m.FPDFPageObj_Transform = (...args: number[]) => {
-        w.__clipProbe.push({ kind: "object", args: args.slice(1) });
+        calls.push({ kind: "object", obj: args[0], args: args.slice(1) });
         return realObj(...args);
       };
       m.FPDFPageObj_TransformClipPath = (...args: number[]) => {
-        w.__clipProbe.push({ kind: "clip", args: args.slice(1) });
+        calls.push({ kind: "clip", obj: args[0], args: args.slice(1) });
         return realClip(...args);
+      };
+      // Background font matching draws trial text on scratch pages through the same module.
+      m.FPDFPage_InsertObject = (pagePtr: number, obj: number) => {
+        if (!livePages.has(pagePtr)) offPage.add(obj);
+        return realInsert(pagePtr, obj);
       };
       /* eslint-enable @typescript-eslint/no-explicit-any */
     });
@@ -62,13 +77,12 @@ test.describe("PDF text editor - clip paths follow their object", () => {
     });
 
     const read = () =>
-      page.evaluate(
-        () =>
-          (
-            window as unknown as {
-              __clipProbe: Array<{ kind: string; args: number[] }>;
-            }
-          ).__clipProbe,
+      page.evaluate(() =>
+        (
+          window as unknown as {
+            __clipProbe: () => Array<{ kind: string; args: number[] }>;
+          }
+        ).__clipProbe(),
       );
 
     const afterMove = await read();
