@@ -2,10 +2,17 @@ import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import type { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
-import type { PageRuleSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageRect,
+  PageRuleSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
+
+// A bitmap more bounded edits behind than this is drawn whole.
+const MAX_TRACKED_REPAINTS = 64;
 
 /** Wraps one PDFium page pointer. */
 export class Page {
@@ -48,6 +55,8 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
+  // Consecutive bounded edits, oldest first: each changed nothing outside its area.
+  private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 
   constructor(opts: {
     index: number;
@@ -104,6 +113,24 @@ export class Page {
   markDirty(): void {
     this.dirty = true;
     this.revision += 1;
+  }
+
+  /** Revisions `from` to `to` changed nothing outside raw-space `area`; any later unnoted revision voids it. */
+  noteRepaintArea(from: number, to: number, area: PageRect): void {
+    if (this.repaints.at(-1)?.to !== from) this.repaints = [];
+    this.repaints.push({ from, to, area: { ...area } });
+    if (this.repaints.length > MAX_TRACKED_REPAINTS) this.repaints.shift();
+  }
+
+  /** What to redraw over a bitmap painted at revision `painted`, or null to draw the whole page. */
+  repaintAreaSince(painted: number): PageRect | null {
+    if (this.repaints.at(-1)?.to !== this.revision) return null;
+    const first = this.repaints.findIndex((r) => r.to > painted);
+    if (first < 0 || this.repaints[first].from > painted) return null;
+    return this.repaints
+      .slice(first)
+      .map((r) => r.area)
+      .reduce(unionRect);
   }
 
   /** Bump the snapshot revision WITHOUT marking the page dirty. */
