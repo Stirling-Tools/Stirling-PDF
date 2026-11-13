@@ -11,6 +11,9 @@ import type {
   PageRuleSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
+// A bitmap more bounded edits behind than this is drawn whole.
+const MAX_TRACKED_REPAINTS = 64;
+
 /** Wraps one PDFium page pointer. */
 export class Page {
   readonly index: number;
@@ -52,10 +55,8 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
-  // Everything revisions `repaintFrom` to `repaintTo` changed lies inside this.
-  private repaintArea: PageRect | null = null;
-  private repaintFrom = -1;
-  private repaintTo = -1;
+  // Consecutive bounded edits, oldest first: each changed nothing outside its area.
+  private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 
   constructor(opts: {
     index: number;
@@ -116,20 +117,20 @@ export class Page {
 
   /** Revisions `from` to `to` changed nothing outside raw-space `area`; any later unnoted revision voids it. */
   noteRepaintArea(from: number, to: number, area: PageRect): void {
-    if (this.repaintArea && this.repaintTo === from) {
-      this.repaintArea = unionRect(this.repaintArea, area);
-    } else {
-      this.repaintArea = { ...area };
-      this.repaintFrom = from;
-    }
-    this.repaintTo = to;
+    if (this.repaints.at(-1)?.to !== from) this.repaints = [];
+    this.repaints.push({ from, to, area: { ...area } });
+    if (this.repaints.length > MAX_TRACKED_REPAINTS) this.repaints.shift();
   }
 
   /** What to redraw over a bitmap painted at revision `painted`, or null to draw the whole page. */
   repaintAreaSince(painted: number): PageRect | null {
-    if (!this.repaintArea || this.revision !== this.repaintTo) return null;
-    if (painted < this.repaintFrom || painted >= this.repaintTo) return null;
-    return this.repaintArea;
+    if (this.repaints.at(-1)?.to !== this.revision) return null;
+    const first = this.repaints.findIndex((r) => r.to > painted);
+    if (first < 0 || this.repaints[first].from > painted) return null;
+    return this.repaints
+      .slice(first)
+      .map((r) => r.area)
+      .reduce(unionRect);
   }
 
   /** Bump the snapshot revision WITHOUT marking the page dirty. */

@@ -661,6 +661,15 @@ export class EditTextCommand implements Command {
       const right = Math.max(run.bounds.x + run.bounds.width, span.right);
       run.bounds = { ...run.bounds, x: left, width: Math.max(0, right - left) };
     }
+    const addedLines = outputLines.length - this.prevText.split(/\r?\n/).length;
+    if (addedLines > 0 && !rotationFromMatrix(run.matrix)) {
+      const drop = addedLines * lineHeight;
+      run.bounds = {
+        ...run.bounds,
+        y: run.bounds.y - drop,
+        height: run.bounds.height + drop,
+      };
+    }
     run.text = this.nextText;
     run.dirty = true;
     page.markDirty();

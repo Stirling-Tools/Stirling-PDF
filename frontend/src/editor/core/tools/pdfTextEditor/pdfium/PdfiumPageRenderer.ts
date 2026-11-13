@@ -1,5 +1,6 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { transformRectAABB } from "@editor/tools/pdfTextEditor/model/affine";
 import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 
 // A display ratio above this buys no visible sharpness for a PDF preview and
@@ -58,6 +59,33 @@ export class PdfiumPageRenderer {
       width,
       height,
     });
+  }
+
+  /** The bitmap pixels {@link render} at `scale` draws raw page-space `raw` into, or null when none. */
+  static pixelsCovering(
+    page: Page,
+    scale: number,
+    raw: PageRect,
+  ): PageRect | null {
+    const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+    const shown = transformRectAABB(page.display, raw);
+    const kx = full.width / page.width;
+    const ky = full.height / page.height;
+    const left = Math.max(0, Math.floor(shown.x * kx) - 1);
+    const top = Math.max(
+      0,
+      Math.floor((page.height - shown.y - shown.height) * ky) - 1,
+    );
+    const right = Math.min(
+      full.width,
+      Math.ceil((shown.x + shown.width) * kx) + 1,
+    );
+    const bottom = Math.min(
+      full.height,
+      Math.ceil((page.height - shown.y) * ky) + 1,
+    );
+    if (right <= left || bottom <= top) return null;
+    return { x: left, y: top, width: right - left, height: bottom - top };
   }
 
   /** The pixels {@link render} would draw inside `area` (bitmap pixels, top-left origin), drawing nothing else. */

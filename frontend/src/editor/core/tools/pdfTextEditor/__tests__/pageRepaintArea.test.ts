@@ -37,6 +37,18 @@ describe("Page repaint area", () => {
     expect(p.repaintAreaSince(start)).toEqual(box(10, 5, 50, 15));
   });
 
+  it("leaves out edits the bitmap already shows", () => {
+    const p = page();
+    const start = p.revision;
+    p.markDirty();
+    p.noteRepaintArea(start, p.revision, box(0, 0, 10, 10));
+    const painted = p.revision;
+    p.markDirty();
+    p.noteRepaintArea(painted, p.revision, box(500, 700, 10, 10));
+
+    expect(p.repaintAreaSince(painted)).toEqual(box(500, 700, 10, 10));
+  });
+
   it("asks for the whole page after a change nobody bounded", () => {
     const p = page();
     const from = p.revision;

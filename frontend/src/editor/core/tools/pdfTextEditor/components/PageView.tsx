@@ -10,7 +10,6 @@ import type {
   PageSnapshot,
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
-import { transformRectAABB } from "@editor/tools/pdfTextEditor/model/affine";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -229,6 +228,7 @@ export const PageView = memo(function PageView({
           const ctx = canvas.getContext("2d");
           if (ctx) ctx.putImageData(image, 0, 0);
           setRendering(false);
+          setRenderError(null);
           paintedRevisionRef.current = revision;
           setPaintedRevision(revision);
           if (firstRenderedDocRef.current !== document) {
@@ -265,6 +265,7 @@ export const PageView = memo(function PageView({
         .then((image) => {
           if (cancelled || !canvasRef.current) return;
           canvas.getContext("2d")?.putImageData(image, area.x, area.y);
+          setRenderError(null);
           paintedRevisionRef.current = revision;
           setPaintedRevision(revision);
           settleTimer = window.setTimeout(
@@ -518,22 +519,5 @@ function changedPixels(
   const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
   if (canvas.width !== full.width || canvas.height !== full.height) return null;
   const raw = page.repaintAreaSince(painted);
-  if (!raw) return null;
-  const shown = transformRectAABB(page.display, raw);
-  const k = full.width / page.width;
-  const left = Math.max(0, Math.floor(shown.x * k) - 1);
-  const top = Math.max(
-    0,
-    Math.floor((page.height - shown.y - shown.height) * k) - 1,
-  );
-  const right = Math.min(
-    full.width,
-    Math.ceil((shown.x + shown.width) * k) + 1,
-  );
-  const bottom = Math.min(
-    full.height,
-    Math.ceil((page.height - shown.y) * k) + 1,
-  );
-  if (right <= left || bottom <= top) return null;
-  return { x: left, y: top, width: right - left, height: bottom - top };
+  return raw && PdfiumPageRenderer.pixelsCovering(page, scale, raw);
 }
