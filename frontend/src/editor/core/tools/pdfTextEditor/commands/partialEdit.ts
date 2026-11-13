@@ -10,6 +10,8 @@ import {
   inkFromRun,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
+  moveObjectLeftEdgeTo,
+  removeAndDestroyObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   fallbackFamilyFor,
@@ -636,17 +638,13 @@ export function applyPartialEditPlan(
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
     if (!ptr) continue;
-    let removed = false;
     if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
       try {
-        removed = !!formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
+        formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
       } catch {
         /* best-effort */
       }
-    }
-    // Text typed into a run inside a form XObject is drawn on the page, so a
-    // run's pieces can live in either place.
-    if (!removed) {
+    } else {
       try {
         m.FPDFPage_RemoveObject(page.pagePtr, ptr);
       } catch {
@@ -1029,6 +1027,73 @@ export function applyPartialEditPlan(
     newBoundsX: firstX,
     newBoundsWidth: lastEnd - firstX,
   };
+}
+
+/** The pre-edit state of a partial edit's sub-runs that its plan does not hold. */
+export interface PartialEditRevertState {
+  /** Font each sub-run was drawn in, parallel to `plan.prevMergedFromPtrs`. */
+  fonts: number[];
+  charStarts: number[];
+  baselineY: number;
+  fontSubset: boolean;
+}
+
+/** Inverse of applyPartialEditPlan once its inserts are gone: maps each removed sub-run to its redrawn object, or null with the page untouched. */
+export function revertPartialEditPlan(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  plan: PartialEditPlan,
+  prev: PartialEditRevertState,
+  tagsOf: (start: number, end: number) => TextTags,
+  fallbackFamily: string,
+): Map<number, number> | null {
+  const m = doc.module;
+  const ptrs = plan.prevMergedFromPtrs;
+  const removed = new Set(plan.removePtrs.map((r) => r.ptr));
+  // A font handle dies with its last object, so reuse it only while a kept object holds it.
+  const liveFonts = new Set(
+    ptrs.flatMap((ptr, i) => (ptr && !removed.has(ptr) ? [prev.fonts[i]] : [])),
+  );
+  const replacements = new Map<number, number>();
+  const discard = (extra: number[]): null => {
+    for (const ptr of [...replacements.values(), ...extra]) {
+      removeAndDestroyObject(m, page.pagePtr, ptr);
+    }
+    return null;
+  };
+  for (let i = 0; i < ptrs.length; i++) {
+    const ptr = ptrs[i];
+    if (!removed.has(ptr)) continue;
+    const text = plan.prevMergedFromTexts[i] ?? "";
+    const bounds = plan.prevMergedFromBounds[i];
+    if (!text || !bounds) return discard([]);
+    const start = prev.charStarts[i] ?? 0;
+    const font = prev.fonts[i] ?? 0;
+    const emitted = emitTextLine({
+      doc,
+      page,
+      text,
+      x: bounds.x,
+      y: prev.baselineY,
+      fontSize: run.fontSize,
+      fill: run.fill,
+      ...inkFromRun(run),
+      tags: tagsOf(start, start + text.length),
+      originalFontPtr: liveFonts.has(font) ? font : 0,
+      originalFontSubset: prev.fontSubset,
+      charSpacingPt: run.charSpacingPt,
+      fallbackFamily,
+    });
+    if (emitted.length !== 1 || !emitted[0]) return discard(emitted);
+    replacements.set(ptr, emitted[0]);
+  }
+  for (let i = 0; i < ptrs.length; i++) {
+    const live = replacements.get(ptrs[i]) ?? ptrs[i];
+    const bounds = plan.prevMergedFromBounds[i];
+    if (live && bounds) moveObjectLeftEdgeTo(m, live, bounds.x);
+  }
+  return replacements;
 }
 
 /** Paragraph-aware partial edit. */

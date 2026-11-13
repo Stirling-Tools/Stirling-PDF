@@ -21,6 +21,7 @@ const SAMPLE = path.join(
   "../../../tests/test-fixtures/paragraph-sample.pdf",
 );
 const HEADING = "Heading in a bigger size";
+const FPDF_PAGEOBJ_TEXT = 1;
 
 const opened: EditorDocument[] = [];
 
@@ -56,10 +57,10 @@ async function open(): Promise<EditorDocument> {
   return doc;
 }
 
-// What the page draws on the heading's line, left to right: the model's text
-// can be right while objects from an undone edit are still painted.
+// The heading line as drawn: the model can be right while undone objects still paint.
 function piecesOnHeadingLine(
   doc: EditorDocument,
+  headingId: string,
 ): Array<{ left: number; text: string }> {
   const m = doc.module;
   const pagePtr = doc.page(0).pagePtr;
@@ -71,7 +72,7 @@ function piecesOnHeadingLine(
   try {
     for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
       const obj = m.FPDFPage_GetObject(pagePtr, i);
-      if (m.FPDFPageObj_GetType(obj) !== 1) continue;
+      if (m.FPDFPageObj_GetType(obj) !== FPDF_PAGEOBJ_TEXT) continue;
       if (!m.FPDFPageObj_GetBounds(obj, box, box + 4, box + 8, box + 12))
         continue;
       const bottom = m.pdfium.getValue(box + 4, "float");
@@ -90,18 +91,20 @@ function piecesOnHeadingLine(
   return pieces.sort((a, b) => a.left - b.left);
 }
 
-function drawnOnHeadingLine(doc: EditorDocument): string {
-  return piecesOnHeadingLine(doc)
+function drawnOnHeadingLine(doc: EditorDocument, headingId: string): string {
+  return piecesOnHeadingLine(doc, headingId)
     .map((p) => p.text)
     .join("")
     .replace(/\s+/g, "");
 }
 
-let headingId = "";
-
-// Each edit runs straight after the last, inside the history's merge window,
-// as quick edits at different places on one line do.
-function burst(doc: EditorDocument, history: HistoryStack, texts: string[]) {
+// Edits back to back, inside the history's merge window.
+function burst(
+  doc: EditorDocument,
+  history: HistoryStack,
+  headingId: string,
+  texts: string[],
+) {
   for (const nextText of texts)
     history.execute(
       new EditTextCommand({ pageIndex: 0, runId: headingId, nextText }),
@@ -125,35 +128,59 @@ describe("undoing a burst of edits to one line", () => {
   test("leaves nothing typed on the page, and redo draws it once", async () => {
     const doc = await open();
     const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
-    headingId = run.id;
+    const headingId = run.id;
     const history = new HistoryStack();
 
-    burst(doc, history, steps);
+    burst(doc, history, headingId, steps);
     expect(history.size().undo).toBe(1);
-    expect(drawnOnHeadingLine(doc)).toBe(squashed(final));
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(final));
 
     history.undo(doc);
     expect(run.text).toBe(HEADING);
-    expect(drawnOnHeadingLine(doc)).toBe(squashed(HEADING));
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(HEADING));
 
     history.redo(doc);
     expect(run.text).toBe(final);
-    expect(drawnOnHeadingLine(doc)).toBe(squashed(final));
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(final));
 
     history.undo(doc);
-    expect(drawnOnHeadingLine(doc)).toBe(squashed(HEADING));
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(HEADING));
   });
 
   test("puts the line back where it started", async () => {
     const doc = await open();
     const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
-    headingId = run.id;
-    const left = piecesOnHeadingLine(doc)[0].left;
+    const headingId = run.id;
+    const left = piecesOnHeadingLine(doc, headingId)[0].left;
     const history = new HistoryStack();
 
-    burst(doc, history, steps);
+    burst(doc, history, headingId, steps);
     history.undo(doc);
 
-    expect(piecesOnHeadingLine(doc)[0].left).toBeCloseTo(left, 0);
+    expect(piecesOnHeadingLine(doc, headingId)[0].left).toBeCloseTo(left, 0);
+  });
+});
+
+describe("undoing one edit that removed a piece of the line", () => {
+  test.each([
+    ["deleting", HEADING],
+    ["replacing", `${HEADING} Wj9`],
+  ])("puts back the piece after %s it", async (_change, nextText) => {
+    const doc = await open();
+    const run = doc.page(0).runs.find((r) => r.text === HEADING)!;
+    const headingId = run.id;
+    const left = piecesOnHeadingLine(doc, headingId)[0].left;
+    const edit = (text: string) =>
+      new EditTextCommand({ pageIndex: 0, runId: headingId, nextText: text });
+    edit(`${HEADING} Zq7`).apply(doc);
+    const pieces = [...run.mergedFromTexts];
+    const change = edit(nextText);
+
+    change.apply(doc);
+    change.revert(doc);
+
+    expect(run.mergedFromTexts).toEqual(pieces);
+    expect(drawnOnHeadingLine(doc, headingId)).toBe(squashed(`${HEADING} Zq7`));
+    expect(piecesOnHeadingLine(doc, headingId)[0].left).toBeCloseTo(left, 0);
   });
 });
