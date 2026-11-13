@@ -214,6 +214,29 @@ interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
 
+/** Detach a text object from its form XObject or, as text typed into a form run is drawn there, the page; false if neither held it. */
+export function removeTextObject(
+  m: WrappedPdfiumModule,
+  page: Page,
+  ptr: number,
+  containerPtr: number,
+): boolean {
+  const formMod = m as unknown as FormRemovalModule;
+  if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
+    try {
+      if (formMod.FPDFFormObj_RemoveObject(containerPtr, ptr)) return true;
+    } catch {
+      /* fall back to the page */
+    }
+  }
+  try {
+    const removed = m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    return !containerPtr || !!removed;
+  } catch {
+    return false;
+  }
+}
+
 /** Best-effort removal of every pointer in `ptrs`. */
 export function removeMemberPtrs(
   m: WrappedPdfiumModule,
@@ -223,7 +246,6 @@ export function removeMemberPtrs(
   fallbackContainerPtr: number,
 ): boolean {
   if (ptrs.length === 0) return false;
-  const formMod = m as unknown as FormRemovalModule;
   let allOk = true;
   for (const ptr of ptrs) {
     if (!ptr) {
@@ -231,22 +253,7 @@ export function removeMemberPtrs(
       continue;
     }
     const container = containerByPtr.get(ptr) ?? fallbackContainerPtr;
-    let ok: boolean;
-    if (container && formMod.FPDFFormObj_RemoveObject) {
-      try {
-        ok = !!formMod.FPDFFormObj_RemoveObject(container, ptr);
-      } catch {
-        ok = false;
-      }
-    } else {
-      try {
-        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
-        ok = true;
-      } catch {
-        ok = false;
-      }
-    }
-    if (!ok) allOk = false;
+    if (!removeTextObject(m, page, ptr, container)) allOk = false;
   }
   return allOk;
 }
