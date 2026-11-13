@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -21,14 +22,25 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.client.RestOperations;
 
 import stirling.software.common.model.ApplicationProperties;
 
@@ -153,6 +165,143 @@ class CustomOAuth2UserServiceDebugLoggingTest {
         assertThat(appender.list)
                 .as("no claim dump when useAsUsername itself is invalid")
                 .noneMatch(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"));
+    }
+
+    @Test
+    void whenUserInfoLacksPreferredUsername_entraIdLoginResolvesFromIdToken() throws Exception {
+        ApplicationProperties.Security.OAUTH2 props = oauthProps("preferred_username", false);
+        CustomOAuth2UserService service =
+                new CustomOAuth2UserService(props, userService, loginAttemptService);
+
+        Map<String, Object> idClaims = new HashMap<>();
+        idClaims.put(IdTokenClaimNames.SUB, "abc-123");
+        idClaims.put(IdTokenClaimNames.ISS, "https://login.microsoftonline.com/tenant/v2.0");
+        idClaims.put(IdTokenClaimNames.AUD, Collections.singletonList("client-id"));
+        idClaims.put(IdTokenClaimNames.IAT, Instant.now());
+        idClaims.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(3600));
+        idClaims.put("preferred_username", "jane@entra.example.com");
+
+        Map<String, Object> userInfoClaims = new HashMap<>();
+        userInfoClaims.put(IdTokenClaimNames.SUB, "abc-123");
+        userInfoClaims.put("name", "Jane Doe");
+
+        ClientRegistration registration =
+                ClientRegistration.withRegistrationId("entra")
+                        .clientId("client-id")
+                        .clientSecret("client-secret")
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .redirectUri("https://app.example.com/login/oauth2/code/entra")
+                        .authorizationUri(
+                                "https://login.microsoftonline.com/tenant/oauth2/v2.0/authorize")
+                        .tokenUri("https://login.microsoftonline.com/tenant/oauth2/v2.0/token")
+                        .jwkSetUri("https://login.microsoftonline.com/tenant/discovery/v2.0/keys")
+                        .userInfoUri("https://graph.microsoft.com/oidc/userinfo")
+                        .userNameAttributeName("sub")
+                        .build();
+
+        OAuth2AccessToken accessToken =
+                new OAuth2AccessToken(
+                        OAuth2AccessToken.TokenType.BEARER,
+                        "access-token",
+                        Instant.now(),
+                        Instant.now().plusSeconds(3600));
+        OidcIdToken idToken =
+                new OidcIdToken("token", Instant.now(), Instant.now().plusSeconds(3600), idClaims);
+        OidcUserRequest request = new OidcUserRequest(registration, accessToken, idToken);
+
+        Field f = CustomOAuth2UserService.class.getDeclaredField("delegate");
+        f.setAccessible(true);
+        OidcUserService delegate = (OidcUserService) f.get(service);
+
+        @SuppressWarnings("unchecked")
+        OAuth2UserService<OAuth2UserRequest, OAuth2User> innerOauth2UserService =
+                mock(OAuth2UserService.class);
+        when(innerOauth2UserService.loadUser(any()))
+                .thenAnswer(
+                        invocation -> {
+                            OAuth2UserRequest req = invocation.getArgument(0);
+                            String userNameAttr =
+                                    req.getClientRegistration()
+                                            .getProviderDetails()
+                                            .getUserInfoEndpoint()
+                                            .getUserNameAttributeName();
+                            return new DefaultOAuth2User(
+                                    Collections.emptyList(), userInfoClaims, userNameAttr);
+                        });
+        delegate.setOauth2UserService(innerOauth2UserService);
+
+        OidcUser loaded = service.loadUser(request);
+
+        assertThat(loaded).isNotNull();
+        assertThat(loaded.getName()).isEqualTo("jane@entra.example.com");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void whenFailureDumpReceivesEmptyUserInfoClaims_logsNotRetrievedWithoutCrashing()
+            throws Exception {
+        ApplicationProperties.Security.OAUTH2 props = oauthProps("email", true);
+
+        RestOperations restOperations = mock(RestOperations.class);
+        when(restOperations.exchange(
+                        any(RequestEntity.class), any(ParameterizedTypeReference.class)))
+                .thenReturn(ResponseEntity.ok(Collections.emptyMap()));
+
+        DefaultOAuth2UserService fetcher = new DefaultOAuth2UserService();
+        fetcher.setRestOperations(restOperations);
+
+        CustomOAuth2UserService service =
+                new CustomOAuth2UserService(props, userService, loginAttemptService) {
+                    @Override
+                    DefaultOAuth2UserService newUserInfoFetcher() {
+                        return fetcher;
+                    }
+                };
+
+        OidcUserService delegateMock = mock(OidcUserService.class);
+        when(delegateMock.loadUser(any()))
+                .thenThrow(new IllegalArgumentException("simulated load failure"));
+        Field f = CustomOAuth2UserService.class.getDeclaredField("delegate");
+        f.setAccessible(true);
+        f.set(service, delegateMock);
+
+        ClientRegistration registration =
+                ClientRegistration.withRegistrationId("demarest")
+                        .clientId("client-id")
+                        .clientSecret("client-secret")
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .redirectUri("https://app.example.com/login/oauth2/code/demarest")
+                        .authorizationUri("https://sts.example.com/adfs/oauth2/authorize")
+                        .tokenUri("https://sts.example.com/adfs/oauth2/token")
+                        .userInfoUri("https://sts.example.com/adfs/userinfo")
+                        .userNameAttributeName("sub")
+                        .build();
+
+        OAuth2AccessToken accessToken =
+                new OAuth2AccessToken(
+                        OAuth2AccessToken.TokenType.BEARER,
+                        "token",
+                        Instant.now(),
+                        Instant.now().plusSeconds(3600));
+        Map<String, Object> idClaims = baseClaims();
+        OidcIdToken idToken =
+                new OidcIdToken("token", Instant.now(), Instant.now().plusSeconds(3600), idClaims);
+        OidcUserRequest request = new OidcUserRequest(registration, accessToken, idToken);
+
+        OAuth2AuthenticationException thrown =
+                assertThrows(OAuth2AuthenticationException.class, () -> service.loadUser(request));
+        assertThat(thrown.getCause()).isInstanceOf(IllegalArgumentException.class);
+        assertThat(thrown.getCause().getMessage()).isEqualTo("simulated load failure");
+
+        List<ILoggingEvent> dumps =
+                appender.list.stream()
+                        .filter(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"))
+                        .toList();
+        assertThat(dumps).as("expected debug dump to be emitted").isNotEmpty();
+
+        String combined =
+                String.join("\n", dumps.stream().map(ILoggingEvent::getFormattedMessage).toList());
+        assertThat(combined).contains("-- UserInfo endpoint: not retrieved --");
     }
 
     // ---------- helpers ----------
