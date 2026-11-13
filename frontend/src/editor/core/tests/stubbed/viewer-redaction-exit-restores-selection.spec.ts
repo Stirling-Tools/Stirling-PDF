@@ -173,7 +173,9 @@ test("redacting from the text selection menu queues a pending redaction", async 
   });
 });
 
-test("saving redactions keeps the live document mounted", async ({ page }) => {
+test("applying redactions saves them and keeps the live document mounted", async ({
+  page,
+}) => {
   test.setTimeout(180_000);
   const firstPage = await loadViewer(page);
 
@@ -200,12 +202,13 @@ test("saving redactions keeps the live document mounted", async ({ page }) => {
   await expect(redactInMenu).toBeVisible({ timeout: 5_000 });
   await redactInMenu.click();
 
-  const save = page.getByRole("button", { name: "Save Changes" }).first();
-  await expect(save).toBeEnabled({ timeout: 15_000 });
-  await expect(page.getByText(/Apply Redactions/).first()).toBeVisible({
-    timeout: 10_000,
-  });
-  await save.click();
+  const apply = page.getByRole("button", { name: /Apply Redactions/ }).first();
+  await expect(apply).toBeVisible({ timeout: 15_000 });
+  // Applying owns the save now: the panel must not offer a second one.
+  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
+    0,
+  );
+  await apply.click();
 
   // The committed save clears the pending set and keeps the redacted live
   // document: the same page nodes stay mounted, so the view cannot move.
