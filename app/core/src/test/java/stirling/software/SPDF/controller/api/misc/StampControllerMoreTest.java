@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -256,6 +257,26 @@ class StampControllerMoreTest {
             req.setAlphabet(alphabet);
             req.setStampText(stampText);
             assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("keeps periods and umlauts in the default alphabet instead of '?'")
+        void romanStampKeepsPunctuationAndUmlauts() throws Exception {
+            String stampText =
+                    "Reproduktion eines digitalisierten Originals. "
+                            + "Die Reproduktion stimmt mit dem Original überein.";
+            AddStampRequest req = baseRequest(pdfFile(1));
+            req.setAlphabet("roman");
+            req.setStampText(stampText);
+
+            ResponseEntity<Resource> response = stampController.addStamp(req);
+
+            try (InputStream is = response.getBody().getInputStream();
+                    PDDocument result = Loader.loadPDF(is.readAllBytes())) {
+                String extracted = new PDFTextStripper().getText(result);
+                assertThat(extracted).contains("Originals. Die").contains("überein.");
+                assertThat(extracted).doesNotContain("?");
+            }
         }
     }
 
