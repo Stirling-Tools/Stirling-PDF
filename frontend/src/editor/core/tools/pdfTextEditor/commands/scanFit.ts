@@ -1,3 +1,5 @@
+import { median } from "@editor/tools/pdfTextEditor/util/median";
+import { luma } from "@editor/tools/pdfTextEditor/model/Color";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
@@ -11,7 +13,6 @@ import {
   fitScale,
   isEvenlySpaced,
   matchScan,
-  median,
   rememberForFit,
   softnessOf,
   spanOf,
@@ -86,9 +87,7 @@ const HOLLOW_FIT = Math.log(1.5);
 export const inkTop = (s: SpanInk) =>
   s.ink.body.y + s.ink.body.height - s.baseline;
 
-// Readers judge size by the lowercase, so mostly-lowercase text is sized by
-// its x-height; ascenders, overshoot and blur all read taller than the face.
-// OCR's letter case is unreliable, so the scan's own rows decide.
+// Mostly-lowercase text is sized by its x-height, as readers judge it; the scan's rows decide, since OCR's case is unreliable.
 export function sizeFor(face: Face, s: SpanInk): number {
   if (s.ink.xLine !== null && /[\p{Lu}\p{Ll}]/u.test(s.original))
     return (s.ink.xLine - s.baseline) / (face.xh / 1000);
@@ -167,8 +166,7 @@ function compare(
   );
 }
 
-// Render pixels per scanned pixel under `rect`. A low-res scan scaled up is
-// soft however sharp its pixel steps look, so this sets a floor on softness.
+// Render pixels per scanned pixel: an upscaled low-res scan is soft however sharp its steps look, so this floors the softness.
 function scanPixelSpan(
   doc: EditorDocument,
   page: Page,
@@ -215,7 +213,7 @@ function halfDensityXHeight(
   const img = renderLuma(doc.module, page, rect, 0, fitScale(s.ink));
   if (!img) return null;
   const { data, width, height } = img;
-  const paper = 0.299 * s.paper.r + 0.587 * s.paper.g + 0.114 * s.paper.b;
+  const paper = luma(s.paper.r, s.paper.g, s.paper.b);
   let darkest = paper;
   for (let i = 0; i < data.length; i++)
     if (data[i] < darkest) darkest = data[i];
@@ -395,8 +393,7 @@ function rankUncached(
   input: FitInput,
 ): RankedStyle[] {
   const { ref } = input;
-  // Typewriter evidence is sturdier than pixels on a blurry low-res scan, so
-  // it wins close calls.
+  // Typewriter evidence outlasts pixels on a blurry low-res scan, so it wins close calls.
   const typewriter =
     input.wordsLookMono() || isEvenlySpaced(ref.ink.glyphCenters, ref.original);
   const all = candidateFaces(ref.original);
@@ -438,8 +435,7 @@ function measureFaces(
   ref: SpanInk,
   faces: Face[],
 ): Candidate[] {
-  // Fit size for both weights before choosing one. Blur and overshoot can
-  // inflate glyph height enough to favour the wrong face at the initial size.
+  // Fit size for both weights first: blur and overshoot can inflate glyph height enough to favour the wrong face.
   const sizes = faces
     .flatMap((face) =>
       familiesOf(face).flatMap((family) =>
@@ -452,13 +448,11 @@ function measureFaces(
       score: compare(doc, page, ref, c, undefined, true).score,
     }));
   if (sizes.length === 0) return [];
-  // A scan pixel `span` render pixels wide blurs like a box of that width,
-  // which is a radius of (span - 1) / 2: one render pixel or less is crisp.
+  // A scan pixel `span` render pixels wide blurs like a box of radius (span - 1) / 2, so one render pixel or less is crisp.
   const floor = Math.round(
     Math.max(0, scanPixelSpan(doc, page, ref.ink.rect) - 1) / 2,
   );
-  // Compare the tuned faces at the scan's softness. Blurring both images
-  // gives the scan a second blur, which makes regular strokes look bold.
+  // Compare at the scan's softness without blurring the scan again: a second blur makes regular strokes look bold.
   const candidates: Candidate[] = faces
     .flatMap((face) =>
       familiesOf(face).map((family) =>
@@ -485,8 +479,7 @@ function measureFaces(
         strokeRatio: match.weight,
       };
     });
-  // Regular and bold can have almost the same blurred outlines. Settle close
-  // matches using stroke thickness, rather than rewarding blur as extra ink.
+  // Regular and bold blur to near-identical outlines, so close matches are settled on stroke thickness, not extra ink.
   return faces
     .map((face) => {
       const cuts = candidates.filter((c) => c.face === face);
@@ -510,9 +503,7 @@ function finishStyle(
   chosen: Candidate,
 ): ScanStyle {
   const { softness } = chosen;
-  // Blur thickens scanned strokes past any bold; add outline until the drawn
-  // strokes, softened the same way, are as thick as the scanned ones.
-  // Only past bold: on regular text blur alone would read as extra weight.
+  // Past bold only (on regular text blur alone reads as weight), outline the strokes until, softened alike, they match the scan's.
   const isBoldCut =
     chosen.family === chosen.face.bold &&
     chosen.face.bold !== chosen.face.family;

@@ -7,7 +7,7 @@ vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
 import {
   SERVER_FONTS_URL,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
@@ -18,7 +18,7 @@ import {
   loadBundledScanFaces,
   loadDeviceScanFaces,
   loadScriptScanFaces,
-  resetScanFaces,
+  _resetScanFacesForTests,
   scanFaces,
   scanFacesGeneration,
   scanScriptsOf,
@@ -107,9 +107,9 @@ beforeEach(() => {
   get.mockReset();
   jarFetch.mockClear();
   vi.stubGlobal("fetch", jarFetch);
-  resetServerFontsCache();
+  forgetServerFontList();
   resetLocalFontsCache();
-  resetScanFaces();
+  _resetScanFacesForTests();
 });
 
 afterEach(() => {

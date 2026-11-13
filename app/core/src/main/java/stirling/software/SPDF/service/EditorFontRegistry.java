@@ -46,7 +46,7 @@ public class EditorFontRegistry {
     static final String BUNDLED_FONTS = "classpath:static/fonts/*";
     static final long MAX_FONT_BYTES = 64L * 1024 * 1024;
     static final Duration RESCAN_INTERVAL = Duration.ofSeconds(30);
-    private static final int MAX_DEPTH = 4;
+    private static final int MAX_FONT_FOLDER_DEPTH = 4;
     private static final Pattern FONT_ID = Pattern.compile("[0-9a-f]{64}");
 
     public record EditorFontFace(
@@ -134,9 +134,13 @@ public class EditorFontRegistry {
 
     private static byte[] readBounded(Path path) throws IOException {
         try (InputStream in = Files.newInputStream(path)) {
-            byte[] bytes = in.readNBytes((int) MAX_FONT_BYTES + 1);
-            return bytes.length > MAX_FONT_BYTES ? null : bytes;
+            return readBounded(in);
         }
+    }
+
+    private static byte[] readBounded(InputStream in) throws IOException {
+        byte[] bytes = in.readNBytes((int) MAX_FONT_BYTES + 1);
+        return bytes.length > MAX_FONT_BYTES ? null : bytes;
     }
 
     private void refreshIfDue(boolean force) {
@@ -195,7 +199,7 @@ public class EditorFontRegistry {
             Files.walkFileTree(
                     realRoot,
                     EnumSet.noneOf(FileVisitOption.class),
-                    MAX_DEPTH,
+                    MAX_FONT_FOLDER_DEPTH,
                     new SimpleFileVisitor<>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
@@ -292,11 +296,9 @@ public class EditorFontRegistry {
                 continue;
             }
             try (InputStream in = resource.getInputStream()) {
-                byte[] bytes = in.readNBytes((int) MAX_FONT_BYTES + 1);
+                byte[] bytes = readBounded(in);
                 ReadFace read =
-                        bytes.length > MAX_FONT_BYTES
-                                ? null
-                                : EditorFontReader.read(bytes, format, filename);
+                        bytes == null ? null : EditorFontReader.read(bytes, format, filename);
                 if (read != null) {
                     faces.add(new BundledFace(read.family(), read.face(), resource));
                 }
@@ -313,7 +315,10 @@ public class EditorFontRegistry {
         Map<String, List<EditorFontFace>> grouped = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (ScanEntry entry : new TreeMap<>(scanned).values()) {
             IndexedFace face = entry.face();
-            if (face == null || customs.putIfAbsent(face.face().id(), face) != null) continue;
+            if (face == null || customs.containsKey(face.face().id())) {
+                continue;
+            }
+            customs.put(face.face().id(), face);
             grouped.computeIfAbsent(face.family(), k -> new ArrayList<>()).add(face.face());
         }
         Set<String> customFamilies = new HashSet<>();
@@ -321,15 +326,15 @@ public class EditorFontRegistry {
             customFamilies.add(family.toLowerCase(Locale.ROOT));
         }
         for (BundledFace face : bundled) {
-            if (customs.containsKey(face.face().id())
-                    || bundledFiles.putIfAbsent(
-                                    face.face().id(),
-                                    new FontFile(
-                                            face.resource(),
-                                            face.face().format(),
-                                            face.face().size()))
-                            != null
-                    || customFamilies.contains(face.family().toLowerCase(Locale.ROOT))) continue;
+            String id = face.face().id();
+            if (customs.containsKey(id) || bundledFiles.containsKey(id)) {
+                continue;
+            }
+            bundledFiles.put(
+                    id, new FontFile(face.resource(), face.face().format(), face.face().size()));
+            if (customFamilies.contains(face.family().toLowerCase(Locale.ROOT))) {
+                continue;
+            }
             grouped.computeIfAbsent(face.family(), k -> new ArrayList<>()).add(face.face());
         }
         List<EditorFontFamily> families = new ArrayList<>();

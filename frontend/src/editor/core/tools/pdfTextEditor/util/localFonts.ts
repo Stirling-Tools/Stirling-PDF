@@ -5,7 +5,10 @@ import {
   embeddingForbidden,
   fontFace,
 } from "@editor/tools/pdfTextEditor/util/fontCollection";
-import { localFontQuery } from "@editor/tools/pdfTextEditor/util/localFontSource";
+import {
+  localFontPermission,
+  localFontQuery,
+} from "@editor/tools/pdfTextEditor/util/localFontSource";
 
 export {
   localFontPermission,
@@ -18,6 +21,11 @@ export interface LocalFont {
   fullName: string;
   style: string;
   postscriptName: string;
+}
+
+export interface FontFamilyOption {
+  value: string;
+  label: string;
 }
 
 export interface LocalFontFamily {
@@ -93,6 +101,13 @@ export async function retryLocalFonts(): Promise<LocalFont[] | null> {
   return listLocalFonts();
 }
 
+/** Lists the device's fonts only when that cannot prompt: access was granted earlier. Resolves to what is already loaded, or null without access. */
+export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
+  if (!isLocalFontAccessSupported() || resolved) return resolved;
+  if ((await localFontPermission()) !== "granted") return null;
+  return listLocalFonts();
+}
+
 /**
  * The faces {@link listLocalFonts} has already resolved, or null.
  *
@@ -148,6 +163,29 @@ export function groupByFamily(fonts: LocalFont[]): LocalFontFamily[] {
   for (const entry of families) entry.styles.sort(compareNames);
   families.sort((a, b) => compareNames(a.family, b.family));
   return families;
+}
+
+/** Picker options per family, plus a Bold entry where an upright bold cut exists; `taken` names are left out. */
+export function familyOptions(
+  fonts: LocalFont[] | null,
+  taken: string[],
+): FontFamilyOption[] {
+  if (!fonts) return [];
+  const hidden = new Set(taken.map(normaliseName));
+  const withBold = new Set<string>();
+  for (const font of fonts) {
+    const flags = faceStyleFlags(font);
+    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
+  }
+  return groupByFamily(fonts).flatMap(({ family }) => {
+    const key = normaliseName(family);
+    if (hidden.has(key)) return [];
+    const options = [{ value: family, label: family }];
+    if (withBold.has(key)) {
+      options.push({ value: `${family} Bold`, label: `${family} Bold` });
+    }
+    return options;
+  });
 }
 
 /** Case/separator-insensitive key, so "Segoe-UI" and "Segoe UI" are one name. */

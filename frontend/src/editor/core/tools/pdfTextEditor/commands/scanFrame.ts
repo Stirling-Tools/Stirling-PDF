@@ -1,6 +1,7 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
+import { invertAffine } from "@editor/tools/pdfTextEditor/model/affine";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 export interface ScanFrame {
@@ -24,54 +25,6 @@ export function quarterTurns(matrix: Affine): number | null {
   const turns = Math.round(angle / (Math.PI / 2));
   if (Math.abs(angle - turns * (Math.PI / 2)) > SKEW_TOLERANCE) return null;
   return ((turns % 4) + 4) % 4;
-}
-
-export function invert(t: Affine): Affine {
-  const det = t.a * t.d - t.b * t.c;
-  return {
-    a: t.d / det,
-    b: -t.b / det,
-    c: -t.c / det,
-    d: t.a / det,
-    e: (t.c * t.f - t.d * t.e) / det,
-    f: (t.b * t.e - t.a * t.f) / det,
-  };
-}
-
-export function compose(outer: Affine, inner: Affine): Affine {
-  return {
-    a: outer.a * inner.a + outer.c * inner.b,
-    b: outer.b * inner.a + outer.d * inner.b,
-    c: outer.a * inner.c + outer.c * inner.d,
-    d: outer.b * inner.c + outer.d * inner.d,
-    e: outer.a * inner.e + outer.c * inner.f + outer.e,
-    f: outer.b * inner.e + outer.d * inner.f + outer.f,
-  };
-}
-
-export function applyPoint(
-  t: Affine,
-  x: number,
-  y: number,
-): { x: number; y: number } {
-  return { x: t.a * x + t.c * y + t.e, y: t.b * x + t.d * y + t.f };
-}
-
-export function applyRect(t: Affine, r: PageRect): PageRect {
-  const corners = [
-    applyPoint(t, r.x, r.y),
-    applyPoint(t, r.x + r.width, r.y),
-    applyPoint(t, r.x, r.y + r.height),
-    applyPoint(t, r.x + r.width, r.y + r.height),
-  ];
-  const xs = corners.map((p) => p.x);
-  const ys = corners.map((p) => p.y);
-  return {
-    x: Math.min(...xs),
-    y: Math.min(...ys),
-    width: Math.max(...xs) - Math.min(...xs),
-    height: Math.max(...ys) - Math.min(...ys),
-  };
 }
 
 export function applyVector(
@@ -103,7 +56,7 @@ export function scanFrameFor(
       page.display.cropHeight / 2 -
       (turn.b * cx + turn.d * cy),
   };
-  return { toUpright, fromUpright: invert(toUpright) };
+  return { toUpright, fromUpright: invertAffine(toUpright) };
 }
 
 export function moveAllObjects(

@@ -53,7 +53,7 @@ import { SetScanStyleCommand } from "@editor/tools/pdfTextEditor/commands/SetSca
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import {
   SERVER_FONTS_URL,
-  resetServerFontsCache,
+  forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   COURIER,
@@ -62,9 +62,9 @@ import {
   faceCovers,
   faceFromBytes,
   loadScriptScanFaces,
-  resetScanFaces,
+  _resetScanFacesForTests,
   scanScriptsOf,
-  setBundledScanFaces,
+  _setBundledScanFacesForTests,
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -106,11 +106,11 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  setBundledScanFaces(bundled);
+  _setBundledScanFacesForTests(bundled);
 });
 
 afterAll(() => {
-  resetScanFaces();
+  _resetScanFacesForTests();
   vi.unstubAllGlobals();
 });
 
@@ -920,8 +920,8 @@ describe("matching scanned text in other scripts", () => {
         );
       } finally {
         doc.dispose();
-        resetScanFaces();
-        resetServerFontsCache();
+        _resetScanFacesForTests();
+        forgetServerFontList();
       }
     },
   );
@@ -943,7 +943,7 @@ describe("matching scanned text in other scripts", () => {
         "Noto Sans JP",
         "NotoSansJP-Regular.ttf",
       );
-      setBundledScanFaces([...bundled, japanese!]);
+      _setBundledScanFacesForTests([...bundled, japanese!]);
       const lines: ScanLineSpec[] = [
         {
           family: "DejaVu Sans",
@@ -1036,7 +1036,7 @@ describe("matching scanned text in other scripts", () => {
         const run = page.runs.find(isScanRun)!;
         expect(await choicesFor(doc, page, run)).toEqual([]);
         expect(scanRunNeedsFit(doc, run)).toBe(false);
-        setBundledScanFaces([...bundled, japanese!]);
+        _setBundledScanFacesForTests([...bundled, japanese!]);
         expect(scanRunNeedsFit(doc, run)).toBe(true);
         const state = scanEditOf(doc, run)!;
         renderScanEdit(doc, page, run, state, run.text.replace("六月", "七月"));
@@ -1063,7 +1063,9 @@ describe("drawing typed words from the scan's own letters", () => {
     "looks more like the scan than the best-fitting font does",
     { timeout: 60_000 },
     async () => {
-      setBundledScanFaces(bundled.filter((f) => f.family !== spec.family));
+      _setBundledScanFacesForTests(
+        bundled.filter((f) => f.family !== spec.family),
+      );
       const { doc, page } = await buildScan([spec], SCAN);
       try {
         const run = page.runs.find(isScanRun)!;
@@ -1207,7 +1209,7 @@ describe("edits that need no font, and text no font can draw", () => {
     { timeout: 120_000 },
     async () => {
       resetDroppedBase14Chars();
-      setBundledScanFaces([]);
+      _setBundledScanFacesForTests([]);
       const { doc, page } = await buildScan(
         [{ family: "Carlito", text: SENTENCES[0], size: 12 }],
         SCAN,

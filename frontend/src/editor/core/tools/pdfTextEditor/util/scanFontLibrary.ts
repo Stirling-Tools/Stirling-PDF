@@ -20,6 +20,7 @@ import {
   type FontMetrics,
 } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { encodesInBase14 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { visibleCodePoints } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 
 type FaceSource = "base14" | "bundled" | "device";
 
@@ -286,15 +287,11 @@ const COVERAGE = 0.9;
 
 export function faceCovers(face: Face, text: string): boolean {
   const advances = face.metrics?.get(face.family)?.advances;
-  let total = 0;
-  let drawable = 0;
-  for (const ch of text) {
-    if (/\s/.test(ch)) continue;
-    const cp = ch.codePointAt(0)!;
-    total++;
-    if (advances ? advances.has(cp) : encodesInBase14(cp)) drawable++;
-  }
-  return drawable >= total * COVERAGE;
+  const codePoints = visibleCodePoints(text);
+  const drawable = codePoints.filter((cp) =>
+    advances ? advances.has(cp) : encodesInBase14(cp),
+  ).length;
+  return drawable >= codePoints.length * COVERAGE;
 }
 
 export function candidateFaces(text: string): Face[] {
@@ -344,6 +341,16 @@ export function subscribeScanFaces(listener: () => void): () => void {
 
 export function scanFacesGeneration(): number {
   return generation;
+}
+
+const generationAtRanking = new WeakMap<object, number>();
+
+export function noteRankedWithCurrentFaces(ranked: object): void {
+  generationAtRanking.set(ranked, generation);
+}
+
+export function rankedWithCurrentFaces(ranked: object): boolean {
+  return generationAtRanking.get(ranked) === generation;
 }
 
 export function scanFaces(): Face[] {
@@ -523,13 +530,13 @@ export function loadScriptScanFaces(scripts: readonly Script[]): Promise<void> {
   return Promise.all(jobs).then(() => undefined);
 }
 
-export function setBundledScanFaces(faces: Face[]): void {
+export function _setBundledScanFacesForTests(faces: Face[]): void {
   bundled = faces;
   bundledJob = Promise.resolve();
   notify();
 }
 
-export function resetScanFaces(): void {
+export function _resetScanFacesForTests(): void {
   bundled = [];
   scriptFaces = [];
   neededScripts.clear();
@@ -599,12 +606,7 @@ export function loadDeviceScanFaces(): Promise<number> {
   return job;
 }
 
-/**
- * Read this device's fonts for scan matching, but only when that cannot
- * prompt: access was granted earlier, or the build needs no permission. Lets
- * the automatic match consider installed fonts without the user opening the
- * picker. Resolves at once when access would have to be asked for.
- */
+/** Reads device fonts for scan matching only when that cannot prompt (granted earlier, or no permission needed); otherwise resolves at once. */
 export async function loadDeviceScanFacesIfAllowed(): Promise<void> {
   if ((await localFontPermission()) === "granted") await loadDeviceScanFaces();
 }

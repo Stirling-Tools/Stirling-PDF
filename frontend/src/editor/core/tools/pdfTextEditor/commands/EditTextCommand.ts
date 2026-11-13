@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
@@ -116,7 +117,6 @@ function planIsPureInsert(plan: PartialEditPlan): boolean {
   );
 }
 
-const RENDER_MODE_INVISIBLE = 3;
 const BLACK = { r: 0, g: 0, b: 0, a: 255 };
 // Cap height as a share of the em, near enough for the fallback faces.
 const CAP_HEIGHT_EM = 0.72;

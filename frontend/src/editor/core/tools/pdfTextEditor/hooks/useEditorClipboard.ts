@@ -1,8 +1,5 @@
 import { useEffect, useRef } from "react";
-import {
-  isFocusInContentEditable,
-  isModalOpen,
-} from "@editor/tools/pdfTextEditor/util/dom";
+import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
 
 export interface EditorClipboardCallbacks {
   /** True when any run or image is selected (images cut without carrying text). */
@@ -99,7 +96,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
       const intoSink =
         sink !== null && (e.target === sink || document.activeElement === sink);
       // A caret inside a run (or in Find/Replace/password) keeps native paste.
-      if (!intoSink && (isFocusInContentEditable() || isModalOpen())) return;
+      if (!intoSink && isFocusInContentEditable()) return;
       const text = e.clipboardData?.getData("text/plain");
       if (!text) return;
       e.preventDefault();
@@ -115,7 +112,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
         pastePlain = e.shiftKey;
         // A caret inside a run (or in Find/Replace/password) pastes natively
         // into that field - don't pull focus out from under it.
-        if (isFocusInContentEditable() || isModalOpen()) return;
+        if (isFocusInContentEditable()) return;
         flushPending();
         const restoreTo = document.activeElement as HTMLElement | null;
         const sink = ensureSink();
@@ -134,7 +131,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
       if (key !== "c" && key !== "x") return;
       // A caret inside a run (or in Find/Replace/password) keeps native
       // copy/cut over its own text.
-      if (isFocusInContentEditable() || isModalOpen()) return;
+      if (isFocusInContentEditable()) return;
       if (!ref.current.hasSelection()) return;
       flushPending();
       const text = ref.current.getSelectedText();

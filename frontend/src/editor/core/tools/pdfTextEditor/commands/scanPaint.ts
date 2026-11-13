@@ -1,6 +1,10 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import type { PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import {
+  RENDER_MODE_INVISIBLE,
+  type PageRect,
+} from "@editor/tools/pdfTextEditor/types";
+import { BLACK, WHITE } from "@editor/tools/pdfTextEditor/model/Color";
 import type { TagMark } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { capturePatch } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
@@ -28,9 +32,6 @@ import {
   type DecodedImage,
 } from "@editor/utils/pdfiumBitmapUtils";
 
-export const INVISIBLE = 3;
-const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
-const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };
 const MIN_WORD_GAP = 0.15;
 const MAX_SQUEEZE = 0.85;
 
@@ -94,25 +95,27 @@ export function invisibleText(
     fill: BLACK,
     originalFontPtr: font.originalFontPtr,
     fallbackFamily: font.family,
-    renderMode: INVISIBLE,
+    renderMode: RENDER_MODE_INVISIBLE,
     tags: uniformTags(canvas.tagMarks),
   });
   opaqueStroke(m, ptrs);
-  fitToSpan(m, ptrs, span);
+  scaleToSpan(m, ptrs, () => span);
   return ptrs;
 }
 
-function fitToSpan(
+// Stretch drawn text along x so its measured span becomes `target(span)`; null leaves it alone.
+function scaleToSpan(
   m: EditorDocument["module"],
   ptrs: number[],
-  target: Span,
+  target: (drawn: Span) => Span | null,
 ): void {
-  const span = measureObjSpanPt(m, ptrs);
-  if (!span || span.right - span.left < 1e-3 || target.right <= target.left)
-    return;
-  const sx = (target.right - target.left) / (span.right - span.left);
+  const drawn = measureObjSpanPt(m, ptrs);
+  if (!drawn || drawn.right - drawn.left < 1e-3) return;
+  const to = target(drawn);
+  if (!to || to.right <= to.left) return;
+  const sx = (to.right - to.left) / (drawn.right - drawn.left);
   for (const p of ptrs)
-    transformObject(m, p, sx, 0, 0, 1, target.left - sx * span.left, 0);
+    transformObject(m, p, sx, 0, 0, 1, to.left - sx * drawn.left, 0);
 }
 
 export function emitSearchable(
@@ -214,16 +217,17 @@ function keepClear(
   limit: number,
 ): void {
   if (limit === Infinity) return;
-  const span = measureObjSpanPt(m, ptrs);
-  if (!span) return;
-  const scale = squeezeToFit(span.left, span.right, limit);
-  if (scale === 1) return;
-  for (const p of ptrs)
-    transformObject(m, p, scale, 0, 0, 1, span.left * (1 - scale), 0);
+  scaleToSpan(m, ptrs, (drawn) => {
+    const scale = squeezeToFit(drawn.left, drawn.right, limit);
+    if (scale === 1) return null;
+    return {
+      left: drawn.left,
+      right: drawn.left + (drawn.right - drawn.left) * scale,
+    };
+  });
 }
 
-// Crisp vector text on a blurry scan stands out, so blurry blocks get their
-// typed words as a picture softened to match.
+// Crisp vector text stands out on a blurry scan, so blurry blocks get typed words as a picture softened to match.
 function softenedCopy(
   canvas: Canvas,
   placement: Placement,

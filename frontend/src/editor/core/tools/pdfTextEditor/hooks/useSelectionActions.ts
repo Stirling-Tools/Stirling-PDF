@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
 import { ReplaceImageCommand } from "@editor/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
@@ -16,8 +16,8 @@ import {
   loadDeviceFontInto,
 } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
-  isDocumentFontId,
   isItalicFamily,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
@@ -29,11 +29,8 @@ import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/Composite
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import {
-  prefitInSlices,
-  scanRunsToFit,
-  type ScanFitTarget,
-} from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
+import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
@@ -50,10 +47,21 @@ export type FontPickFailure =
   | "embedFailed"
   | "noGlyphs";
 
-async function serverFontUnavailable(family: string): Promise<boolean> {
-  return (
-    !(await ensureDeviceFontReady(family)) && serverFaceFor(family) !== null
-  );
+type ExternalFontLoad = "loaded" | "serverDownloadFailed" | "unavailable";
+
+interface FamilyChange {
+  pageIndex: number;
+  runId: string;
+  family: string;
+}
+
+async function prepareExternalFont(family: string): Promise<ExternalFontLoad> {
+  if (await ensureDeviceFontReady(family)) return "loaded";
+  return serverFaceFor(family) ? "serverDownloadFailed" : "unavailable";
+}
+
+function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
+  return loadDeviceFontInto(doc, family) !== 0;
 }
 
 // A family the server also supplies is embedded from the server's bytes, so a
@@ -69,7 +77,8 @@ async function fontPickFailure(
   text: string,
 ): Promise<FontPickFailure | null> {
   if (nearestStandardFont(family) === family) return null;
-  if (await serverFontUnavailable(family)) return "serverFontFailed";
+  if ((await prepareExternalFont(family)) === "serverDownloadFailed")
+    return "serverFontFailed";
   if (localEmbeddingForbidden(family)) return "embeddingForbidden";
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
@@ -84,7 +93,8 @@ function liveRuns(store: EditorStore): Map<string, TextRun> {
 
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
-  const [fittingScan, setFittingScan] = useState(false);
+  const { busy: fittingScan, dispatch: dispatchAfterScanFit } =
+    useDispatchAfterScanFit(store);
   const forEachSelectedRun = useCallback(
     (visit: (run: SelectedRun, page: Page) => void) => {
       const sel = store.selection.value;
@@ -100,37 +110,6 @@ export function useSelectionActions(store: EditorStore) {
       }
     },
     [store],
-  );
-
-  // One command per run, dispatched as ONE undo step - same reason
-  // `deleteSelection` groups its deletes. Select-all now reaches the whole
-  // document, so a per-run dispatch left the user hundreds of undos behind and
-  // the first Ctrl+Z looked like the restyle had only covered part of the file.
-  const dispatchAll = useCallback(
-    (cmds: Command[]) => {
-      if (cmds.length === 1) store.dispatch(cmds[0]);
-      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-    },
-    [store],
-  );
-
-  const dispatchAfterScanFit = useCallback(
-    async (targets: ScanFitTarget[], build: () => Command[]) => {
-      const doc = store.document;
-      if (!doc) return;
-      const unfitted = scanRunsToFit(doc, targets);
-      if (unfitted.length > 0) {
-        setFittingScan(true);
-        try {
-          await prefitInSlices(doc, unfitted);
-        } finally {
-          setFittingScan(false);
-        }
-        if (store.document !== doc) return;
-      }
-      dispatchAll(build());
-    },
-    [store, dispatchAll],
   );
 
   const dispatchPerRun = useCallback(
@@ -199,29 +178,44 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
+  const dispatchFamilyChanges = useCallback(
+    async (
+      doc: EditorDocument | null,
+      changes: FamilyChange[],
+      fit: ScanFitTarget[],
+    ) => {
+      if (store.document !== doc) return;
+      await dispatchAfterScanFit(fit, () => {
+        const live = liveRuns(store);
+        return changes
+          .filter((change) => live.has(change.runId))
+          .map(
+            (change) =>
+              new SetFontFamilyCommand({
+                pageIndex: change.pageIndex,
+                runId: change.runId,
+                nextFamily: change.family,
+              }),
+          );
+      });
+    },
+    [store, dispatchAfterScanFit],
+  );
+
   const changeFontFamily = useCallback(
     async (family: string): Promise<FontPickFailure | null> => {
       const doc = store.document;
       const targets: SelectedRun[] = [];
-      const pages: Page[] = [];
+      const fit: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
         targets.push(run);
-        pages.push(page);
+        fit.push({ page, run: run as TextRun });
       });
-      // Going back to the PDF's own font needs no bytes: it is still in the file.
-      if (isDocumentFontId(family)) {
-        dispatchAll(
-          targets.map(
-            (run) =>
-              new SetFontFamilyCommand({
-                pageIndex: run.pageIndex,
-                runId: run.id,
-                nextFamily: family,
-              }),
-          ),
-        );
-        return null;
-      }
+      const changes = targets.map((run) => ({
+        pageIndex: run.pageIndex,
+        runId: run.id,
+        family,
+      }));
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
       const failure = await fontPickFailure(
@@ -230,45 +224,25 @@ export function useSelectionActions(store: EditorStore) {
       );
       if (failure) return failure;
       if (store.document !== doc) return null;
-      // The command falls back to a standard face when the font will not
-      // embed, which would change the text to a font the user never picked.
+      // Refuse here, as the command would fall back to a standard face the user never picked.
       if (
         doc &&
         nearestStandardFont(family) !== family &&
-        !loadDeviceFontInto(doc, family)
+        !tryEmbedDeviceFont(doc, family)
       )
         return "embedFailed";
-      await dispatchAfterScanFit(
-        targets.map((run, i) => ({ page: pages[i], run: run as TextRun })),
-        () => {
-          const live = liveRuns(store);
-          return targets
-            .filter((run) => live.has(run.id))
-            .map(
-              (run) =>
-                new SetFontFamilyCommand({
-                  pageIndex: run.pageIndex,
-                  runId: run.id,
-                  nextFamily: family,
-                }),
-            );
-        },
-      );
+      await dispatchFamilyChanges(doc, changes, fit);
       return null;
     },
-    [store, forEachSelectedRun, dispatchAfterScanFit],
+    [store, forEachSelectedRun, dispatchFamilyChanges],
   );
 
   const toggleItalic = useCallback(async () => {
     const doc = store.document;
     const fonts = loadedExternalFonts();
-    const targets: Array<{
-      pageIndex: number;
-      runId: string;
-      family: string;
-      device: boolean;
-      fit: ScanFitTarget;
-    }> = [];
+    const targets: Array<
+      FamilyChange & { device: boolean; fit: ScanFitTarget }
+    > = [];
     forEachSelectedRun((run, page) => {
       const cap = italicCapability(
         run.fontId,
@@ -287,31 +261,22 @@ export function useSelectionActions(store: EditorStore) {
       });
     });
     // Embedding is async and Command.apply is not, so warm the bytes first.
-    const ready: typeof targets = [];
+    const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
     for (const target of targets) {
-      if (target.device && (await serverFontUnavailable(target.family)))
+      if (
+        target.device &&
+        (await prepareExternalFont(target.family)) === "serverDownloadFailed"
+      )
         continue;
       if (target.device && localEmbeddingForbidden(target.family)) continue;
       ready.push(target);
     }
-    if (store.document !== doc) return;
-    await dispatchAfterScanFit(
+    await dispatchFamilyChanges(
+      doc,
+      ready,
       ready.map((target) => target.fit),
-      () => {
-        const live = liveRuns(store);
-        return ready
-          .filter((target) => live.has(target.runId))
-          .map(
-            (target) =>
-              new SetFontFamilyCommand({
-                pageIndex: target.pageIndex,
-                runId: target.runId,
-                nextFamily: target.family,
-              }),
-          );
-      },
     );
-  }, [store, forEachSelectedRun, dispatchAfterScanFit]);
+  }, [store, forEachSelectedRun, dispatchFamilyChanges]);
 
   const deleteSelection = useCallback(() => {
     const sel = store.selection.value;

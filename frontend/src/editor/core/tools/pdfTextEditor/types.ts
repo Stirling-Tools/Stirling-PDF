@@ -3,6 +3,8 @@
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 
+export const RENDER_MODE_INVISIBLE = 3;
+
 export interface RGBA {
   r: number; // 0..255
   g: number;
@@ -59,12 +61,7 @@ export interface TextRunSnapshot {
   fill: RGBA;
   /** True if PDFium says the source PDF subsetted this run's font */
   fontSubset: boolean;
-  /** The PDF's own font the run was in before its family was changed. */
-  documentFontId?: string;
-  /**
-   * For scanned text, the family its ink is matched to or redrawn in. The
-   * run's `fontId` there is only the invisible OCR layer's font.
-   */
+  /** For scanned text, the family its ink is matched to or redrawn in; `fontId` there is only the OCR layer's font. */
   scanFamily?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
@@ -246,11 +243,6 @@ export interface TextRange {
 
 export interface ToolbarState {
   fontFamily: string | null;
-  /**
-   * The PDF's own font every selected run can be put back to, as a fontId.
-   * Null when none was changed away from one, or they came from different fonts.
-   */
-  documentFontId: string | null;
   fontSize: number | null;
   fill: RGBA | null;
   bold: boolean;

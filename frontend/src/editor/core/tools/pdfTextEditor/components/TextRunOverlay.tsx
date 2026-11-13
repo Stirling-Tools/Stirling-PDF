@@ -1,10 +1,11 @@
 import { scanFaces } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  TextRange,
-  TextRunSnapshot,
-  WidthMode,
+import {
+  RENDER_MODE_INVISIBLE,
+  type TextRange,
+  type TextRunSnapshot,
+  type WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
@@ -16,7 +17,10 @@ import {
   embeddedFaceFamily,
   onEmbeddedFaceLoaded,
 } from "@editor/tools/pdfTextEditor/util/embeddedFace";
-import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isDeviceFontId,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   fitTextToWidth,
   NO_FIT,
@@ -53,8 +57,6 @@ import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWr
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
-const RENDER_MODE_INVISIBLE = 3;
-
 const SETTLE_MS = 400;
 
 const STALL_MS = 250;
@@ -84,7 +86,7 @@ function cssFontFamilyFor(fontId: string): string {
   // the overlay measuring and drawing what the page renders; without it
   // nearestStandardFont collapses it to Helvetica and every advance the
   // overlay predicts is a different font's.
-  if (fontId.startsWith("device:")) {
+  if (isDeviceFontId(fontId)) {
     const server = serverFontCssFamily(family);
     const served = server ? `"${server}", ` : "";
     return `${served}"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
@@ -105,9 +107,7 @@ function ownFaceFor(fontId: string): string {
   return m ? `"${embeddedFaceFamily(Number(m[1]))}", ` : "";
 }
 
-// For scanned text the page shows the scan's own lettering, which the matched
-// face approximates and the invisible OCR layer's font does not. The caret is
-// placed by this font's letter widths, so it has to be the matched one.
+// The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
 function cssFontFamilyForScan(family: string): string {
   const face = scanFaces().find(
     (f) => f.family === family || f.bold === family,

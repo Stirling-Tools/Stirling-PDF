@@ -34,6 +34,9 @@ final class EditorFontReader {
     private static final int MAC_STYLE_ITALIC = 0x0002;
     private static final int NAME_TYPOGRAPHIC_FAMILY = 16;
     private static final int NAME_TYPOGRAPHIC_SUBFAMILY = 17;
+    private static final int WEIGHT_REGULAR = 400;
+    private static final int WEIGHT_SEMIBOLD = 600;
+    private static final int WEIGHT_BOLD = 700;
 
     private static final List<String> UNSUPPORTED_EXTENSIONS =
             List.of(".ttc", ".otc", ".woff", ".woff2");
@@ -76,11 +79,15 @@ final class EditorFontReader {
             int macStyle = header == null ? 0 : header.getMacStyle();
             int fsSelection = os2 == null ? 0 : os2.getFsSelection();
             int weightClass = os2 == null ? 0 : os2.getWeightClass();
-            boolean bold =
-                    weightClass > 0
-                            ? weightClass >= 600
-                            : (macStyle & MAC_STYLE_BOLD) != 0
-                                    || (fsSelection & FS_SELECTION_BOLD) != 0;
+            boolean bold;
+            int weight;
+            if (weightClass > 0) {
+                bold = weightClass >= WEIGHT_SEMIBOLD;
+                weight = weightClass;
+            } else {
+                bold = (macStyle & MAC_STYLE_BOLD) != 0 || (fsSelection & FS_SELECTION_BOLD) != 0;
+                weight = bold ? WEIGHT_BOLD : WEIGHT_REGULAR;
+            }
             boolean italic =
                     (fsSelection & (FS_SELECTION_ITALIC | FS_SELECTION_OBLIQUE)) != 0
                             || (macStyle & MAC_STYLE_ITALIC) != 0;
@@ -93,7 +100,7 @@ final class EditorFontReader {
                                     "Regular"),
                             bold,
                             italic,
-                            weightClass > 0 ? weightClass : bold ? 700 : 400,
+                            weight,
                             firstNonBlank(naming.getPostScriptName(), ""),
                             format,
                             bytes.length);
