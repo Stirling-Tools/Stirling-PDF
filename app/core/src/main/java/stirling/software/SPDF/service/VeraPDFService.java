@@ -369,8 +369,8 @@ public class VeraPDFService {
     }
 
     private static boolean isOversized(COSStream packet) {
-        try {
-            return XmpUtils.readPacket(packet).length > XmpUtils.MAX_XMP_BYTES;
+        try (InputStream in = packet.createInputStream()) {
+            return in.readNBytes(XmpUtils.MAX_XMP_BYTES + 1).length > XmpUtils.MAX_XMP_BYTES;
         } catch (IOException e) {
             return false;
         }

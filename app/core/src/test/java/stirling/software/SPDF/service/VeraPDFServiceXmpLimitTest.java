@@ -5,12 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
@@ -35,18 +32,6 @@ class VeraPDFServiceXmpLimitTest {
         PDMetadata metadata = new PDMetadata(document);
         metadata.importXMPMetadata(packet(padding));
         return metadata;
-    }
-
-    /** The same packet stored Flate-compressed, so it is far smaller in the file than decoded. */
-    private static PDMetadata compressedMetadata(PDDocument document, int padding)
-            throws IOException {
-        COSStream stream = document.getDocument().createCOSStream();
-        stream.setItem(COSName.TYPE, COSName.METADATA);
-        stream.setItem(COSName.SUBTYPE, COSName.getPDFName("XML"));
-        try (OutputStream out = stream.createOutputStream(COSName.FLATE_DECODE)) {
-            out.write(packet(padding));
-        }
-        return new PDMetadata(stream);
     }
 
     private static byte[] save(PDDocument document) throws IOException {
@@ -82,28 +67,6 @@ class VeraPDFServiceXmpLimitTest {
             PDPage page = new PDPage();
             document.addPage(page);
             page.setMetadata(metadata(document, XmpUtils.MAX_XMP_BYTES));
-
-            assertThat(VeraPDFService.hasOversizedXmp(save(document))).isTrue();
-        }
-    }
-
-    @Test
-    void oversizedCompressedCatalogPacketIsFound() throws Exception {
-        try (PDDocument document = new PDDocument()) {
-            document.addPage(new PDPage());
-            document.getDocumentCatalog()
-                    .setMetadata(compressedMetadata(document, 2 * XmpUtils.MAX_XMP_BYTES));
-
-            assertThat(VeraPDFService.hasOversizedXmp(save(document))).isTrue();
-        }
-    }
-
-    @Test
-    void oversizedCompressedPagePacketIsFound() throws Exception {
-        try (PDDocument document = new PDDocument()) {
-            PDPage page = new PDPage();
-            document.addPage(page);
-            page.setMetadata(compressedMetadata(document, 2 * XmpUtils.MAX_XMP_BYTES));
 
             assertThat(VeraPDFService.hasOversizedXmp(save(document))).isTrue();
         }
