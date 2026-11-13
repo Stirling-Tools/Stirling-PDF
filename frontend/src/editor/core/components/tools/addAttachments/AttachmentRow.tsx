@@ -95,6 +95,8 @@ export const AttachmentRow = memo(function AttachmentRow({
 
   return (
     <Group
+      data-testid="attachment-row"
+      data-kind={kind}
       gap="sm"
       wrap="nowrap"
       px="sm"
@@ -145,6 +147,7 @@ export const AttachmentRow = memo(function AttachmentRow({
             value={editingName}
             className={privateContentClassName}
             onChange={(e) => setEditingName(e.currentTarget.value)}
+            onFocus={(e) => e.currentTarget.select()}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 handleCommitRename();
@@ -176,62 +179,60 @@ export const AttachmentRow = memo(function AttachmentRow({
         </Group>
       ) : (
         <Stack gap={2} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-          <Group
-            gap={6}
-            wrap="nowrap"
-            style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
-          >
-            <Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-              <Tooltip
-                label={<PrivateContent>{tooltipLabel}</PrivateContent>}
-                openDelay={400}
-              >
-                <Text
-                  size="sm"
-                  fw={500}
-                  c={isDeleted ? "dimmed" : undefined}
-                  truncate="end"
-                  className={privateContentClassName}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textDecoration: isDeleted ? "line-through" : undefined,
-                  }}
-                >
-                  {filename}
-                </Text>
-              </Tooltip>
-            </Box>
-
-            {badgeText && (
-              <Badge
-                size="xs"
-                variant="light"
-                color={getBadgeColor()}
+          <Box style={{ minWidth: 0, overflow: "hidden" }}>
+            <Tooltip
+              label={<PrivateContent>{tooltipLabel}</PrivateContent>}
+              openDelay={400}
+            >
+              <Text
+                size="sm"
+                fw={500}
+                c={isDeleted ? "dimmed" : undefined}
+                truncate="end"
+                className={privateContentClassName}
                 style={{
-                  flexShrink: 0,
-                  fontSize: "0.68rem",
-                  letterSpacing: "0.03em",
-                  padding: "0 6px",
-                  height: 18,
+                  display: "block",
+                  width: "100%",
+                  textDecoration: isDeleted ? "line-through" : undefined,
                 }}
               >
-                {badgeText}
-              </Badge>
-            )}
-          </Group>
+                {filename}
+              </Text>
+            </Tooltip>
+          </Box>
 
-          {size !== undefined && (
-            <Text
-              size="xs"
-              c="dimmed"
-              style={{
-                fontVariantNumeric: "tabular-nums",
-                lineHeight: 1.2,
-              }}
-            >
-              {formatFileSize(size)}
-            </Text>
+          {(size !== undefined || badgeText) && (
+            <Group gap={4} wrap="nowrap">
+              {size !== undefined && (
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  style={{
+                    fontVariantNumeric: "tabular-nums",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {formatFileSize(size)}
+                </Text>
+              )}
+              {badgeText && (
+                <Badge
+                  size="xs"
+                  variant="light"
+                  color={getBadgeColor()}
+                  style={{
+                    flexShrink: 0,
+                    fontSize: "0.62rem",
+                    letterSpacing: "0.02em",
+                    padding: "0 4px",
+                    height: 16,
+                  }}
+                >
+                  {badgeText}
+                </Badge>
+              )}
+            </Group>
           )}
         </Stack>
       )}
