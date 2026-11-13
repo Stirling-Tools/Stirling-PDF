@@ -97,12 +97,22 @@ describe("documentBytesCache", () => {
       .mockImplementation(() => Promise.resolve(bytesOf([7, 8, 9])));
 
     const first = await getDocumentBytes(file);
-    releaseDocumentBytes(file);
+    await releaseDocumentBytes(file);
     const second = await getDocumentBytes(file);
 
     expect(spy).toHaveBeenCalledTimes(2);
     expect(Array.from(new Uint8Array(second))).toEqual([7, 8, 9]);
     expect(second).not.toBe(first);
+  });
+
+  it("release without a prior read touches no Blob and never rejects", async () => {
+    const file = makeFile("released.pdf", [7, 8, 9]);
+    const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    const slice = vi.spyOn(file, "slice");
+
+    await expect(releaseDocumentBytes(file)).resolves.toBeUndefined();
+    expect(arrayBuffer).not.toHaveBeenCalled();
+    expect(slice).not.toHaveBeenCalled();
   });
 
   it("does not cache a failed read, so a retry re-reads", async () => {
@@ -116,5 +126,107 @@ describe("documentBytesCache", () => {
     const buffer = await getDocumentBytes(blob);
     expect(buffer.byteLength).toBe(1);
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries the fingerprint read after a failed one", async () => {
+    const file = makeFile("flaky.pdf", [1, 2, 3]);
+    let sliceCalls = 0;
+    vi.spyOn(file, "slice").mockImplementation(() => {
+      sliceCalls += 1;
+      const failing = sliceCalls === 1;
+      return {
+        size: 3,
+        arrayBuffer: async () => {
+          if (failing) throw new Error("NotReadableError");
+          return bytesOf([1, 2, 3]);
+        },
+      } as unknown as Blob;
+    });
+    vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytesOf([1, 2, 3]));
+
+    await expect(getDocumentBytes(file)).rejects.toThrow("NotReadableError");
+    const buffer = await getDocumentBytes(file);
+    expect(Array.from(new Uint8Array(buffer))).toEqual([1, 2, 3]);
+  });
+
+  it("does not share bytes across identical metadata with different content", async () => {
+    const bytesA = new Uint8Array([1, 2, 3, 4]);
+    const bytesB = new Uint8Array([9, 8, 7, 6]);
+    const stubSlices = (file: File, bytes: Uint8Array) => {
+      vi.spyOn(file, "slice").mockImplementation(
+        (start?: number, end?: number) => {
+          const part = bytes.slice(start ?? 0, end ?? bytes.length);
+          return {
+            size: part.length,
+            arrayBuffer: async () =>
+              part.buffer.slice(
+                part.byteOffset,
+                part.byteOffset + part.byteLength,
+              ),
+          } as unknown as Blob;
+        },
+      );
+      return file;
+    };
+    const first = stubSlices(makeFile("same.pdf", [1, 2, 3, 4]), bytesA);
+    const second = stubSlices(makeFile("same.pdf", [9, 8, 7, 6]), bytesB);
+    const firstSpy = vi
+      .spyOn(first, "arrayBuffer")
+      .mockResolvedValue(bytesA.buffer);
+    const secondSpy = vi
+      .spyOn(second, "arrayBuffer")
+      .mockResolvedValue(bytesB.buffer);
+
+    const a = await getDocumentBytes(first);
+    const b = await getDocumentBytes(second);
+
+    expect(firstSpy).toHaveBeenCalledTimes(1);
+    expect(secondSpy).toHaveBeenCalledTimes(1);
+    expect(a).not.toBe(b);
+  });
+
+  // The edge windows cover the middle only while the file is at most two
+  // windows long; a fingerprint check must not alias large files to each
+  // other once it stops seeing their middle bytes.
+  it("keeps large Files identity-keyed so middle differences never alias", async () => {
+    const size = 2 * 64 * 1024 + 64;
+    const middle = 64 * 1024 + 32;
+    const make = (middleByte: number) => {
+      const bytes = new Uint8Array(size).fill(7);
+      bytes[middle] = middleByte;
+      const file = new File([bytes], "large.pdf", {
+        type: "application/pdf",
+        lastModified: 1000,
+      });
+      vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytes.buffer);
+      return { file, bytes };
+    };
+    const first = make(7);
+    const second = make(9);
+
+    const a = await getDocumentBytes(first.file);
+    const b = await getDocumentBytes(second.file);
+
+    expect(a).not.toBe(b);
+    expect(new Uint8Array(a)[middle]).toBe(7);
+    expect(new Uint8Array(b)[middle]).toBe(9);
+  });
+
+  it("still shares wrappers whose edge windows tile the whole file", async () => {
+    const size = 2 * 64 * 1024;
+    const bytes = new Uint8Array(size).fill(5);
+    const make = () => {
+      const file = new File([bytes], "tiled.pdf", {
+        type: "application/pdf",
+        lastModified: 1000,
+      });
+      vi.spyOn(file, "arrayBuffer").mockResolvedValue(bytes.buffer);
+      return file;
+    };
+
+    const a = await getDocumentBytes(make());
+    const b = await getDocumentBytes(make());
+
+    expect(b).toBe(a);
   });
 });
