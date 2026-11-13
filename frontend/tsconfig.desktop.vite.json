@@ -13,9 +13,15 @@
         "./src/editor/cloud/portal/*",
         "./src/editor/proprietary/portal/*",
         "./src/editor/core/portal/*",
+        "./src/processor/desktop/*",
         "./src/processor/proprietary/*"
       ],
-      "@processor/*": ["./src/processor/proprietary/*"],
+      "@processor/*": [
+        "./src/processor/desktop/*",
+        "./src/processor/proprietary/*"
+      ],
+      "@processor-proprietary/*": ["./src/processor/proprietary/*"],
+      "@processor-cloud/*": ["./src/processor/cloud/*"],
       "@editor-cloud/*": ["./src/editor/cloud/*"],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
       "@editor-core/*": ["./src/editor/core/*"]
@@ -30,6 +36,7 @@
     "src/editor/cloud/**/*.spec.ts*",
     "src/editor/saas",
     "src/processor/saas",
+    "src/processor/cloud/**/*.test.ts*",
     "src/processor/proprietary/**/*.test.ts*",
     "src/processor/proprietary/**/*.spec.ts*"
   ]

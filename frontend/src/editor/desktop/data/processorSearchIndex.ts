@@ -1,10 +1,12 @@
-/**
- * Desktop inherits proprietary's app but must NOT ship the portal (see the
- * admin-route seam) — shadow the index back to core's empty list so the super
- * search never offers Processor destinations that don't exist on desktop.
- */
-export type { ProcessorSearchEntry } from "@editor-core/data/processorSearchIndex";
-export {
-  PROCESSOR_SEARCH_INDEX,
-  isPortalEntityScopeAccessible,
-} from "@editor-core/data/processorSearchIndex";
+import { isPortalEntityScopeAccessible as isAccessibleOnServer } from "@editor-proprietary/data/processorSearchIndex";
+
+export type { ProcessorSearchEntry } from "@editor-proprietary/data/processorSearchIndex";
+export { PROCESSOR_SEARCH_INDEX } from "@editor-proprietary/data/processorSearchIndex";
+
+/** The Processor's entity search without the Users lane: desktop settings carry no roster to open a member in. */
+export function isPortalEntityScopeAccessible(
+  scopeId: string,
+  isAdmin: boolean,
+): boolean {
+  return scopeId !== "portal-users" && isAccessibleOnServer(scopeId, isAdmin);
+}

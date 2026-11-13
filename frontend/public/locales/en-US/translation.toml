@@ -15,6 +15,7 @@ confirmCloseCancel = "Cancel"
 confirmCloseConfirm = "Close File"
 confirmCloseDiscard = "Discard changes and close"
 confirmCloseMessage = "Are you sure you want to close this file?"
+confirmCloseOpenEditor = "Open in the editor"
 confirmCloseSave = "Save and close"
 confirmCloseSaveFailed_one = "Saved with errors. {{count}} file could not be saved."
 confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
@@ -12856,6 +12857,7 @@ sidebar = "Sidebar"
 
 [settings.general.startupView]
 automate = "Automate"
+processor = "Processor"
 read = "Reader"
 tools = "Tools"
 
