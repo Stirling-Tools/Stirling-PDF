@@ -93,8 +93,7 @@ public class RearrangePagesPDFController {
             FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }
@@ -178,6 +177,20 @@ public class RearrangePagesPDFController {
         return newPageOrder;
     }
 
+    private List<Integer> oddEvenMerge(int totalPages) {
+        // Inverse of oddEvenSplit: interleave the second half of the document
+        // back between the first half (0, half, 1, half+1, ...).
+        List<Integer> newPageOrder = new ArrayList<>();
+        int half = (totalPages + 1) / 2;
+        for (int i = 0; i < half; i++) {
+            newPageOrder.add(i);
+            if (i + half < totalPages) {
+                newPageOrder.add(i + half);
+            }
+        }
+        return newPageOrder;
+    }
+
     private List<Integer> duplicate(int totalPages, String pageOrder) {
         List<Integer> newPageOrder = new ArrayList<>();
         int duplicateCount;
@@ -239,6 +252,7 @@ public class RearrangePagesPDFController {
             case BOOKLET_SORT -> bookletSort(totalPages);
             case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
             case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
+            case ODD_EVEN_MERGE -> oddEvenMerge(totalPages);
             case REMOVE_FIRST -> removeFirst(totalPages);
             case REMOVE_LAST -> removeLast(totalPages);
             case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
@@ -325,8 +339,7 @@ public class RearrangePagesPDFController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                         tempFileManager);
             }
         } catch (IOException e) {

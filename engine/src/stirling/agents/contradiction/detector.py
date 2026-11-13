@@ -109,7 +109,7 @@ class _SubjectMapping(BaseModel):
 class _SummaryStats(BaseModel):
     """Stats handed to the summary LLM. Typed (rather than a raw dict
     JSON-dumped at the call site) so the prompt payload's shape lives
-    in one place and pyright can catch field-name typos.
+    in one place and pyrefly can catch field-name typos.
     """
 
     pages_examined: int = Field(ge=0)

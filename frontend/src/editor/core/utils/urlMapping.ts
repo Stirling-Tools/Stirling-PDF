@@ -86,6 +86,8 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   // Metadata and info
   "/change-metadata": "changeMetadata",
   "/get-pdf-info": "getPdfInfo",
+  "/check-accessibility": "checkAccessibility",
+  "/accessibility-report": "checkAccessibility",
   "/add-attachments": "addAttachments",
   "/create-portfolio": "createPortfolio",
 

@@ -102,6 +102,11 @@ export class TagTextRangeCommand implements Command {
     return this.movedTo;
   }
 
+  /** The MCID the cut text carries, chosen on first apply; null before then. */
+  get cutMcid(): number | null {
+    return this.mcids?.cut ?? null;
+  }
+
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const undo: Array<() => void> = [];

@@ -10,7 +10,7 @@ import {
   drawThumbnailImage,
   drawThumbnailPlaceholder,
 } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
 import { formatFileSize } from "@editor/hooks/tools/validateSignature/utils/pdfText";
 
 interface DrawSummarySectionOptions {

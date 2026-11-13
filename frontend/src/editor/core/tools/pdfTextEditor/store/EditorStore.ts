@@ -318,6 +318,9 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.doc = doc;
+    doc.onArtifactKinds(() => {
+      if (this.doc === doc) this.resnapshot();
+    });
     this.history.clear();
     this.savedTop = null;
     this.bakedDirty = false;
@@ -635,6 +638,8 @@ export class EditorStore {
   // once `PdfiumTextReader` finishes for a page.
   publishPages(pages: PageSnapshot[]): void {
     this.patch({ pages });
+    // A page whose artifact kinds were read after its snapshot was taken.
+    this.resnapshot();
   }
 
   /** Document-level dirty bit. */

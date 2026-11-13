@@ -152,8 +152,8 @@ export function useProcurement(): ProcurementController {
     try {
       await fn();
       queryClient.setQueryData(snapshotKey, await fetchSnapshot());
+      // The wallet is left to the page, which refreshes its server-side cache first.
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: qk.wallet(true) }),
         queryClient.invalidateQueries({ queryKey: qk.teamMy() }),
         queryClient.invalidateQueries({ queryKey: ["portal", "users"] }),
       ]);

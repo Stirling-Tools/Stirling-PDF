@@ -1,3 +1,7 @@
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import type {
   ParagraphLineSlot,
@@ -472,7 +476,7 @@ function buildOnPageAdvMap(
   try {
     const count = mod.FPDFText_CountChars(tp);
     for (let i = 0; i < count; i++) {
-      const u = mod.FPDFText_GetUnicode(tp, i);
+      const u = drawnCodePoint(mod.FPDFText_GetUnicode(tp, i));
       if (!u) continue;
       const obj = mod.FPDFText_GetTextObject(tp, i);
       if (!obj) continue;
@@ -1165,7 +1169,7 @@ export function readObjTexts(
         }
         const buf = scratchPtr(m, SCRATCH.editRunText, len);
         mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-        out[i] = readUtf16(m, buf, len);
+        out[i] = drawnText(readUtf16(m, buf, len));
       } catch {
         out[i] = null;
       }
@@ -1200,7 +1204,7 @@ function readBackTextObj(
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.editObjText, len);
     mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-    return readUtf16(m, buf, len);
+    return drawnText(readUtf16(m, buf, len));
   } catch {
     return null;
   } finally {

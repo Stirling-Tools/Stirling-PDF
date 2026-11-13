@@ -720,8 +720,7 @@ public class ScannerEffectController {
 
                     return WebResponseUtils.pdfDocToWebResponse(
                             outputDocument,
-                            GeneralUtils.generateFilename(
-                                    file.getOriginalFilename(), "_scanner_effect.pdf"),
+                            GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"),
                             tempFileManager);
                 }
             }

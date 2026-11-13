@@ -52,7 +52,8 @@ type WorksWith = "sources" | "policies" | "pipelines";
 
 /** What a vendor plugs into, derived from the catalogues rather than declared. */
 function worksWith(type: CreatableConnectionType): WorksWith[] {
-  if (type.id === "s3") return ["sources", "pipelines"];
+  if (["s3", "onedrive", "sharepoint", "googleworkspace"].includes(type.id))
+    return ["sources", "pipelines"];
   if (type.kind === "custom") return ["policies", "pipelines"];
   const hasStep = STEP_OPERATIONS.some((op) => op.connectionTypeId === type.id);
   // Catalogue operations surface in both the policy step and pipeline pickers.
@@ -67,6 +68,10 @@ function connectionDetail(connection: IntegrationConfig): string {
       return String(config.bucket ?? "");
     case "PURVIEW":
       return String(config.tenantId ?? "");
+    case "MICROSOFT_365":
+      return String(config.user ?? config.siteUrl ?? "");
+    case "GOOGLE_WORKSPACE":
+      return String(config.subject ?? "");
     default:
       return String(config.baseUrl ?? "");
   }
