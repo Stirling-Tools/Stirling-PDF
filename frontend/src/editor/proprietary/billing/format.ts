@@ -325,7 +325,11 @@ export function meterState(
   limit: number,
 ): { state: MeterState; pct: number } {
   const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
-  const state: MeterState =
-    pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-  return { state, pct };
+  return { state: meterBand(pct), pct };
+}
+
+function meterBand(pct: number): MeterState {
+  if (pct >= 100) return "DEGRADED";
+  if (pct >= 80) return "WARNED";
+  return "FULL";
 }

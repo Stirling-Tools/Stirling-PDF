@@ -1,5 +1,23 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { TeamHolding } from "@editor/billing/types";
+
+function reportStatus(
+  t: TFunction,
+  live: boolean,
+  reportedAt: string | null,
+): string {
+  if (live) return t("portal.billing.seats.live", "Live user count");
+  if (reportedAt) {
+    return t("portal.billing.seats.lastReported", "Reported {{date}}", {
+      date: new Date(reportedAt).toLocaleString(),
+    });
+  }
+  return t(
+    "portal.billing.seats.awaitingSync",
+    "Waiting for its daily sync; not yet included in the fleet total.",
+  );
+}
 
 /** Shows report freshness; only this deployment can substitute a live local count. */
 export function SeatBreakdown({
@@ -48,22 +66,7 @@ export function SeatBreakdown({
                   : count.toLocaleString()}
               </strong>
             </div>
-            <small>
-              {live
-                ? t("portal.billing.seats.live", "Live user count")
-                : deployment.reportedAt
-                  ? t(
-                      "portal.billing.seats.lastReported",
-                      "Reported {{date}}",
-                      {
-                        date: new Date(deployment.reportedAt).toLocaleString(),
-                      },
-                    )
-                  : t(
-                      "portal.billing.seats.awaitingSync",
-                      "Waiting for its daily sync; not yet included in the fleet total.",
-                    )}
-            </small>
+            <small>{reportStatus(t, live, deployment.reportedAt)}</small>
           </div>
         );
       })}
