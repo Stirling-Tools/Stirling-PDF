@@ -124,25 +124,39 @@ export function useSelectionActions(store: EditorStore) {
     last: 0,
     latestByRun: new Map<string, number>(),
   });
-  const claimFontChange = useCallback((runIds: string[]) => {
-    const requests = fontRequests.current;
-    const request = ++requests.last;
-    for (const runId of runIds) requests.latestByRun.set(runId, request);
-    return (runId: string) => requests.latestByRun.get(runId) === request;
-  }, []);
+  const claimFontChange = useCallback(
+    (runIds: string[]) => {
+      const requests = fontRequests.current;
+      const request = ++requests.last;
+      const doc = store.document;
+      for (const runId of runIds) requests.latestByRun.set(runId, request);
+      return () => {
+        // Run ids repeat across documents, so a change outliving its document would hit unrelated text.
+        if (!doc || store.document !== doc) return () => false;
+        const editable = new Set<string>();
+        for (const page of doc.loadedPages()) {
+          for (const run of page.runs) if (!run.locked) editable.add(run.id);
+        }
+        return (runId: string) =>
+          editable.has(runId) && requests.latestByRun.get(runId) === request;
+      };
+    },
+    [store],
+  );
 
   const changeFontFamily = useCallback(
     async (family: string) => {
       const runs: SelectedRun[] = [];
       forEachSelectedRun((run) => runs.push(run));
-      const isLatest = claimFontChange(runs.map((run) => run.id));
+      const stillApplies = claimFontChange(runs.map((run) => run.id));
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
       if (!isDocumentFontId(family)) await ensureDeviceFontReady(family);
       // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
+      const applies = stillApplies();
       dispatchAsOneStep(
         runs
-          .filter((run) => isLatest(run.id))
+          .filter((run) => applies(run.id))
           .map(
             (run) =>
               new SetFontFamilyCommand({
@@ -180,14 +194,15 @@ export function useSelectionActions(store: EditorStore) {
         device: cap.source === "device",
       });
     });
-    const isLatest = claimFontChange(targets.map((target) => target.runId));
+    const stillApplies = claimFontChange(targets.map((target) => target.runId));
     // Embedding is async and Command.apply is not, so warm the bytes first.
     for (const target of targets) {
       if (target.device) await ensureDeviceFontReady(target.family);
     }
+    const applies = stillApplies();
     dispatchAsOneStep(
       targets
-        .filter((target) => isLatest(target.runId))
+        .filter((target) => applies(target.runId))
         .map(
           (target) =>
             new SetFontFamilyCommand({

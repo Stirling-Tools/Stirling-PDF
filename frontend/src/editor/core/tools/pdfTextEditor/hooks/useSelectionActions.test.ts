@@ -43,7 +43,11 @@ function fakeStore(fontId: string, runIds: string[] = ["a"]) {
     document: { loadedPages: () => [{ runs }] },
   } as unknown as EditorStore;
   const select = (id: string) => (selection.value = { runIds: [id] });
-  return { store, dispatch, select };
+  const openOtherDocument = () =>
+    Object.assign(store, {
+      document: { loadedPages: () => [{ runs: runs.map((r) => ({ ...r })) }] },
+    });
+  return { store, dispatch, select, runs, openOtherDocument };
 }
 
 function holdFontLoad(): (ready: boolean) => void {
@@ -135,5 +139,50 @@ describe("useSelectionActions font changes", () => {
       "b:pdf:7:Garamond",
       "a:device:Acme Sans Italic",
     ]);
+  });
+
+  it.each([
+    [
+      "font",
+      (a: ReturnType<typeof useSelectionActions>) =>
+        a.changeFontFamily("Slow Serif"),
+    ],
+    ["italic", (a: ReturnType<typeof useSelectionActions>) => a.toggleItalic()],
+  ])(
+    "drops a %s still loading once another document is opened",
+    async (_, change) => {
+      const finishLoading = holdFontLoad();
+      const { store, dispatch, openOtherDocument } =
+        fakeStore("device:Acme Sans");
+      const actions = renderHook(() => useSelectionActions(store)).result
+        .current;
+
+      const pending = change(actions);
+      openOtherDocument();
+      finishLoading(true);
+      await pending;
+
+      expect(dispatch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [
+      "font",
+      (a: ReturnType<typeof useSelectionActions>) =>
+        a.changeFontFamily("Slow Serif"),
+    ],
+    ["italic", (a: ReturnType<typeof useSelectionActions>) => a.toggleItalic()],
+  ])("leaves text locked while a %s loads unchanged", async (_, change) => {
+    const finishLoading = holdFontLoad();
+    const { store, dispatch, runs } = fakeStore("device:Acme Sans");
+    const actions = renderHook(() => useSelectionActions(store)).result.current;
+
+    const pending = change(actions);
+    runs[0].locked = true;
+    finishLoading(true);
+    await pending;
+
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
