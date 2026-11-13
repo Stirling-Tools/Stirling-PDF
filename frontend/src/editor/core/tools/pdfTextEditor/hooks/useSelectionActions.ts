@@ -254,7 +254,10 @@ export function useSelectionActions(store: EditorStore) {
     for (const target of targets) {
       if (
         target.device &&
-        (await prepareExternalFont(target.family)) === "serverDownloadFailed"
+        ((await prepareExternalFont(target.family)) ===
+          "serverDownloadFailed" ||
+          !doc ||
+          !tryEmbedDeviceFont(doc, target.family))
       )
         continue;
       ready.push(target);
