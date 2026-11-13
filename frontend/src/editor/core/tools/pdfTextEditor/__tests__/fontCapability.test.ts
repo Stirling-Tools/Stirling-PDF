@@ -13,6 +13,7 @@ import {
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { assembleSfnt } from "@editor/tools/pdfTextEditor/util/sfnt";
 
 // The editor used to answer "make this italic" for ANY font by swapping the run
 // wholesale to Helvetica-Oblique. For a document set in Calibri that is not
@@ -58,7 +59,9 @@ function stubQueryLocalFonts(fonts: LocalFont[] | null): void {
     fonts.map((font) => ({
       ...font,
       blob: async () => ({
-        arrayBuffer: async () => new Uint8Array([1]).buffer,
+        arrayBuffer: async () =>
+          assembleSfnt(0x00010000, new Map([["glyf", new Uint8Array(4)]]))
+            .buffer,
       }),
     })),
   );

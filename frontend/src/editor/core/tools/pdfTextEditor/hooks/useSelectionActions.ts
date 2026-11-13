@@ -12,7 +12,6 @@ import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFont
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import {
   deviceFontDrawsAnyOf,
-  ensureDeviceFontReady,
   loadDeviceFontInto,
 } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -22,7 +21,10 @@ import {
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
-import { loadedExternalFonts } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import {
+  loadedExternalFonts,
+  loadExternalFont,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
 import { serverFaceFor } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -40,9 +42,11 @@ interface SelectedRun {
   fill: { r: number; g: number; b: number; a: number };
 }
 
-export type FontPickFailure = "serverFontFailed" | "embedFailed" | "noGlyphs";
-
-type ExternalFontLoad = "loaded" | "serverDownloadFailed" | "unavailable";
+export type FontPickFailure =
+  | "serverFontFailed"
+  | "embeddingForbidden"
+  | "embedFailed"
+  | "noGlyphs";
 
 interface FamilyChange {
   pageIndex: number;
@@ -50,9 +54,14 @@ interface FamilyChange {
   family: string;
 }
 
-async function prepareExternalFont(family: string): Promise<ExternalFontLoad> {
-  if (await ensureDeviceFontReady(family)) return "loaded";
-  return serverFaceFor(family) ? "serverDownloadFailed" : "unavailable";
+/** Loads the family's bytes; the failure that must stop the pick, or null to go on. */
+async function prepareExternalFont(
+  family: string,
+): Promise<FontPickFailure | null> {
+  const load = await loadExternalFont(family);
+  if ("bytes" in load) return null;
+  if (serverFaceFor(family)) return "serverFontFailed";
+  return load.refused === "licence" ? "embeddingForbidden" : null;
 }
 
 function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
@@ -64,8 +73,8 @@ async function fontPickFailure(
   text: string,
 ): Promise<FontPickFailure | null> {
   if (nearestStandardFont(family) === family) return null;
-  if ((await prepareExternalFont(family)) === "serverDownloadFailed")
-    return "serverFontFailed";
+  const refusal = await prepareExternalFont(family);
+  if (refusal) return refusal;
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
@@ -252,14 +261,10 @@ export function useSelectionActions(store: EditorStore) {
     // Embedding is async and Command.apply is not, so warm the bytes first.
     const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
     for (const target of targets) {
-      if (
-        target.device &&
-        ((await prepareExternalFont(target.family)) ===
-          "serverDownloadFailed" ||
-          !doc ||
-          !tryEmbedDeviceFont(doc, target.family))
-      )
-        continue;
+      if (target.device) {
+        if (await prepareExternalFont(target.family)) continue;
+        if (!doc || !tryEmbedDeviceFont(doc, target.family)) continue;
+      }
       ready.push(target);
     }
     await dispatchFamilyChanges(
