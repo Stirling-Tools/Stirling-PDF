@@ -10,7 +10,8 @@
       ],
       "@processor/*": ["./src/processor/proprietary/*"],
       "@editor-proprietary/*": ["./src/editor/proprietary/*"],
-      "@editor-core/*": ["./src/editor/core/*"]
+      "@editor-core/*": ["./src/editor/core/*"],
+      "@editor-test/*": ["./src/editor/test/*"]
     }
   },
   "exclude": [

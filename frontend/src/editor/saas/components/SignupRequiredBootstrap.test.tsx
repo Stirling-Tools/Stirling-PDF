@@ -28,6 +28,7 @@ vi.mock("@editor/contexts/QuickNavHostContext", () => ({
     portalAccess: false,
     actions: { current: {} },
   }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
 vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("@editor/components/chat/ChatContext", () => ({
@@ -66,6 +67,7 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback = key, options?: { count?: number }) =>
       fallback.replace("{{count}}", String(options?.count ?? "")),
   }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
 
 function Destination() {

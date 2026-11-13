@@ -507,6 +507,7 @@ export function PdfViewerToolbar({
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
             </Menu.Item>
             <Menu.Item
+              aria-label={t("viewer.fitWidth", "Fit to width")}
               leftSection={<Icon name="arrow-left-right" size={18} />}
               rightSection={isFitWidthActive && <Icon name="check" size={16} />}
               aria-current={isFitWidthActive || undefined}
@@ -515,6 +516,7 @@ export function PdfViewerToolbar({
               {t("viewer.fitWidth", "Fit to width")}
             </Menu.Item>
             <Menu.Item
+              aria-label={t("viewer.fitPage", "Fit to page")}
               leftSection={<Icon name="scan" size={18} />}
               rightSection={isFitPageActive && <Icon name="check" size={16} />}
               aria-current={isFitPageActive || undefined}
