@@ -6356,6 +6356,18 @@ updatePassword = "Update password"
 useMagicLink = "Use magic link instead"
 username = "Username"
 
+[login.ssoError]
+autoCreateDisabled = "No account exists for this user and automatic account creation is disabled. Contact your administrator."
+badCredentials = "Your sign-in details were not accepted. Try again."
+locked = "This account is locked after too many failed sign-in attempts. Contact your administrator."
+maxUsersReached = "The maximum number of users for this license has been reached."
+oauthRequiresLicense = "OAuth sign-in requires a license. Contact your administrator."
+registrationBlocked = "Registration of new users is blocked. Contact your administrator."
+samlRequiresLicense = "SAML sign-in requires an Enterprise license. Contact your administrator."
+userAlreadyExists = "An account with this username already uses password sign-in. Sign in with your password instead."
+userAlreadyExistsSsoOnly = "An account with this username already uses password sign-in, so it can't be used with single sign-on. Contact your administrator."
+userDisabled = "This account has been disabled. Contact your administrator."
+
 [margin]
 large = "Large"
 medium = "Medium"

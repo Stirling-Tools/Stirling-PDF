@@ -639,6 +639,95 @@ describe("Login", () => {
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
+  it.each([
+    ["oAuth2AutoCreateDisabled", /automatic account creation is disabled/i],
+    ["oAuth2AdminBlockedUser", /registration of new users is blocked/i],
+    ["maxUsersReached", /maximum number of users/i],
+    ["userIsDisabled", /this account has been disabled/i],
+    ["saml2RequiresLicense", /saml sign-in requires an enterprise license/i],
+    ["oAuth2RequiresLicense", /oauth sign-in requires a license/i],
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
+    ["__proto__", "__proto__"],
+    ["constructor", "constructor"],
+    ["toString", "toString"],
+    ["hasOwnProperty", "hasOwnProperty"],
+    ["unexpected_provider_error", "unexpected_provider_error"],
+  ])("should display the SSO error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?errorOAuth=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["locked", /locked after too many failed sign-in attempts/i],
+    ["badCredentials", /sign-in details were not accepted/i],
+    ["access_denied", "access_denied"],
+    ["__proto__", "__proto__"],
+  ])("should display the login error %s", async (code, message) => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={[`/login?error=${code}`]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "all",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "normal",
+      /already uses password sign-in\. Sign in with your password instead/i,
+    ],
+    [
+      "oauth2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+    [
+      "saml2",
+      /can't be used with single sign-on\. Contact your administrator/i,
+    ],
+  ])(
+    "should explain userAlreadyExistsWeb for login method %s",
+    async (loginMethod, message) => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { enableLogin: true, loginMethod, providerList: {} },
+      });
+
+      await act(async () => {
+        render(
+          <TestWrapper>
+            <MemoryRouter
+              initialEntries={["/login?errorOAuth=userAlreadyExistsWeb"]}
+            >
+              <Login />
+            </MemoryRouter>
+          </TestWrapper>,
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(message)).toBeInTheDocument();
+      });
+    },
+  );
+
   it("should display account created success message", async () => {
     await act(async () => {
       render(

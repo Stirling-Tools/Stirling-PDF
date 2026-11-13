@@ -135,17 +135,17 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 try {
-                    // Block new users only if: blockRegistration is true OR autoCreateUser is false
-                    if (!userExists
-                            && (saml2Properties.getBlockRegistration()
-                                    || !saml2Properties.getAutoCreateUser())) {
-                        log.debug(
-                                "Registration blocked for new user '{}' (blockRegistration: {}, autoCreateUser: {})",
-                                username,
-                                saml2Properties.getBlockRegistration(),
-                                saml2Properties.getAutoCreateUser());
+                    if (!userExists && saml2Properties.getBlockRegistration()) {
+                        log.debug("Registration blocked for new user '{}'", username);
                         String origin = resolveOrigin();
                         response.sendRedirect(origin + "/login?errorOAuth=oAuth2AdminBlockedUser");
+                        return;
+                    }
+                    if (!userExists && !saml2Properties.getAutoCreateUser()) {
+                        log.debug("Auto-create disabled for new user '{}'", username);
+                        String origin = resolveOrigin();
+                        response.sendRedirect(
+                                origin + "/login?errorOAuth=oAuth2AutoCreateDisabled");
                         return;
                     }
                     if (!userExists && licenseSettingsService.wouldExceedLimit(1)) {

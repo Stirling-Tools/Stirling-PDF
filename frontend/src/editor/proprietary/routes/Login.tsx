@@ -111,39 +111,6 @@ export default function Login() {
   >("idle");
   const autoLoginErrorRecorded = useRef(false);
 
-  const errorFromState = (location.state as { error?: string } | null)?.error;
-  const errorFromQuery = useMemo(() => {
-    if (!searchParams) {
-      return null;
-    }
-    const errorParamKeys = [
-      "error",
-      "error_description",
-      "error_code",
-      "sso_error",
-      "oauth_error",
-      "saml_error",
-      "login_error",
-    ];
-    for (const key of errorParamKeys) {
-      const value = searchParams.get(key);
-      if (value) {
-        return value;
-      }
-    }
-    for (const [key, value] of searchParams.entries()) {
-      if (key.toLowerCase().includes("error")) {
-        return value || "Single sign-on failed. Please try again.";
-      }
-    }
-    return null;
-  }, [searchParams]);
-
-  const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
-  // /login?all is how a local admin reaches the password form when SSO
-  // auto-login would otherwise redirect straight to the provider.
-  const skipSsoAutoLogin = searchParams.has("all");
-
   // Shared login state + sign-in handlers + provider fetch. Editor-specific
   // behaviour (auto-login, redirects, first-time setup) is layered on here.
   const login = useSpringLogin({
@@ -176,6 +143,88 @@ export default function Login() {
       }
     },
   });
+
+  const errorFromState = (location.state as { error?: string } | null)?.error;
+  const errorFromQuery = useMemo(() => {
+    if (!searchParams) {
+      return null;
+    }
+    const ssoErrorMessages: Record<string, string> = {
+      oAuth2AutoCreateDisabled: t(
+        "login.ssoError.autoCreateDisabled",
+        "No account exists for this user and automatic account creation is disabled. Contact your administrator.",
+      ),
+      oAuth2AdminBlockedUser: t(
+        "login.ssoError.registrationBlocked",
+        "Registration of new users is blocked. Contact your administrator.",
+      ),
+      userAlreadyExistsWeb: login.isUserPassAllowed
+        ? t(
+            "login.ssoError.userAlreadyExists",
+            "An account with this username already uses password sign-in. Sign in with your password instead.",
+          )
+        : t(
+            "login.ssoError.userAlreadyExistsSsoOnly",
+            "An account with this username already uses password sign-in, so it can't be used with single sign-on. Contact your administrator.",
+          ),
+      maxUsersReached: t(
+        "login.ssoError.maxUsersReached",
+        "The maximum number of users for this license has been reached.",
+      ),
+      userIsDisabled: t(
+        "login.ssoError.userDisabled",
+        "This account has been disabled. Contact your administrator.",
+      ),
+      saml2RequiresLicense: t(
+        "login.ssoError.samlRequiresLicense",
+        "SAML sign-in requires an Enterprise license. Contact your administrator.",
+      ),
+      oAuth2RequiresLicense: t(
+        "login.ssoError.oauthRequiresLicense",
+        "OAuth sign-in requires a license. Contact your administrator.",
+      ),
+      locked: t(
+        "login.ssoError.locked",
+        "This account is locked after too many failed sign-in attempts. Contact your administrator.",
+      ),
+      badCredentials: t(
+        "login.ssoError.badCredentials",
+        "Your sign-in details were not accepted. Try again.",
+      ),
+    };
+    const describeError = (code: string) =>
+      Object.hasOwn(ssoErrorMessages, code) ? ssoErrorMessages[code] : code;
+    const ssoErrorCode = searchParams.get("errorOAuth");
+    if (ssoErrorCode) {
+      return describeError(ssoErrorCode);
+    }
+    const errorParamKeys = [
+      "error",
+      "error_description",
+      "error_code",
+      "sso_error",
+      "oauth_error",
+      "saml_error",
+      "login_error",
+    ];
+    for (const key of errorParamKeys) {
+      const value = searchParams.get(key);
+      if (value) {
+        return describeError(value);
+      }
+    }
+    for (const [key, value] of searchParams.entries()) {
+      if (key.toLowerCase().includes("error")) {
+        return value || "Single sign-on failed. Please try again.";
+      }
+    }
+    return null;
+  }, [searchParams, t, login.isUserPassAllowed]);
+
+  const hasSsoLoginError = Boolean(errorFromState || errorFromQuery);
+  // /login?all is how a local admin reaches the password form when SSO
+  // auto-login would otherwise redirect straight to the provider.
+  const skipSsoAutoLogin = searchParams.has("all");
 
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
