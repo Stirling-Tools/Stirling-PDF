@@ -88,6 +88,22 @@ export interface BaseFileMetadata {
   remoteHasShareLinks?: boolean; // True when owner has shared this file
   remoteHasUserShares?: boolean; // True when owner has invited specific users
   remoteShareToken?: string; // Share token when file is from a share link
+  cloudOrigin?: CloudOrigin;
+}
+
+export interface CloudOrigin {
+  provider: "onedrive";
+  accountId: number;
+  driveId: string;
+  itemId: string;
+  parentId: string | null;
+  name: string;
+  eTag: string | null;
+  webUrl: string | null;
+  /** Stirling created this item (a copy or a folder save), so Save may update it. */
+  stirlingCopy?: boolean;
+  /** The file version last read from or saved to OneDrive. */
+  savedFileId?: string;
 }
 
 /**

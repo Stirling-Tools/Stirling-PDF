@@ -25,6 +25,7 @@ import tools.jackson.databind.JsonNode;
 @RequiredArgsConstructor
 public class GoogleOAuthClient implements CloudOAuthClient {
 
+    private static final String SCOPE_PREFIX = "https://www.googleapis.com/auth/";
     private static final HttpClient HTTP =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
@@ -47,7 +48,7 @@ public class GoogleOAuthClient implements CloudOAuthClient {
         query.put("client_id", app().getClientId());
         query.put("response_type", "code");
         query.put("redirect_uri", redirectUri);
-        query.put("scope", "openid email profile " + driveScope());
+        query.put("scope", consentScopes());
         query.put("access_type", "offline");
         query.put("prompt", "consent");
         query.put("include_granted_scopes", "true");
@@ -85,12 +86,12 @@ public class GoogleOAuthClient implements CloudOAuthClient {
 
     @Override
     public OAuthTokens refresh(String refreshToken, List<String> scopes) throws IOException {
-        return OAuthHttp.tokens(
-                OAuthHttp.postTokenRequest(
-                        endpoints.tokenUrl(),
-                        OAuthHttp.refreshGrant(
-                                app().getClientId(), app().getClientSecret(), refreshToken)),
-                null);
+        Map<String, String> grant =
+                OAuthHttp.refreshGrant(app().getClientId(), app().getClientSecret(), refreshToken);
+        if (scopes != null && !scopes.isEmpty()) {
+            grant.put("scope", String.join(" ", scopes));
+        }
+        return OAuthHttp.tokens(OAuthHttp.postTokenRequest(endpoints.tokenUrl(), grant), null);
     }
 
     @Override
@@ -113,12 +114,34 @@ public class GoogleOAuthClient implements CloudOAuthClient {
     }
 
     String driveScope() {
-        String scope = app().validAccountScope();
+        return SCOPE_PREFIX + accountScope(app());
+    }
+
+    /**
+     * Scope for tokens handed to the browser picker, which only lists and downloads files. A
+     * refresh can only ask for scopes granted at consent, so {@link #consentScopes()} must request
+     * this one too.
+     *
+     * @throws IllegalStateException when {@code accountScope} is not a Drive scope
+     */
+    static String browserScope(ApplicationProperties.Premium.ProFeatures.GoogleDrive app) {
+        return SCOPE_PREFIX
+                + ("drive.file".equals(accountScope(app)) ? "drive.file" : "drive.readonly");
+    }
+
+    String consentScopes() {
+        String drive = driveScope();
+        String browser = browserScope(app());
+        return "openid email profile " + (drive.equals(browser) ? drive : drive + " " + browser);
+    }
+
+    private static String accountScope(ApplicationProperties.Premium.ProFeatures.GoogleDrive app) {
+        String scope = app.validAccountScope();
         if (scope == null) {
             throw new IllegalStateException(
                     "googleDrive.accountScope must be drive, drive.file or drive.readonly");
         }
-        return "https://www.googleapis.com/auth/" + scope;
+        return scope;
     }
 
     private ApplicationProperties.Premium.ProFeatures.GoogleDrive app() {

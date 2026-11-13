@@ -12,8 +12,10 @@ import {
   NumberInput,
   TagsInput,
   Anchor,
+  List,
 } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import EditableSecretField from "@editor/components/shared/EditableSecretField";
 import {
@@ -274,9 +276,28 @@ export default function ProviderCard({
           <Group gap="sm" style={{ flex: 1, minWidth: 0 }}>
             {renderProviderIcon()}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={600} size="sm">
-                {provider.name}
-              </Text>
+              <Group gap={4} wrap="nowrap">
+                <Text fw={600} size="sm">
+                  {provider.name}
+                </Text>
+                {provider.setupSteps && (
+                  <InfoTooltip
+                    label={
+                      <List type="ordered" size="xs" spacing={4}>
+                        {provider.setupSteps.map((step) => (
+                          <List.Item key={step}>{step}</List.Item>
+                        ))}
+                      </List>
+                    }
+                    ariaLabel={t(
+                      "admin.settings.connections.setupSteps",
+                      "How to set up {{name}}",
+                      { name: provider.name },
+                    )}
+                    position="right"
+                  />
+                )}
+              </Group>
               <Text size="xs" c="dimmed" truncate>
                 {provider.scope}
               </Text>

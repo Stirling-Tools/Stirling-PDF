@@ -209,7 +209,11 @@ public class ConnectedAccountService {
             try {
                 tokens = client.refresh(account.getRefreshToken(), scopes);
             } catch (OAuthException e) {
-                if (e.isRevoked()) {
+                // Signing in again cannot grant a scope the app was never given, and the
+                // account still works for the scopes it was connected with.
+                boolean extraScopeRefused =
+                        scopes != null && !scopes.isEmpty() && e.isConsentRequired();
+                if (e.isRevoked() && !extraScopeRefused) {
                     account.setStatus(ConnectedAccount.STATUS_NEEDS_RECONNECT);
                     account.setLastError(e.getMessage());
                     accounts.save(account);

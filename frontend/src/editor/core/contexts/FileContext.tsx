@@ -1094,6 +1094,7 @@ function FileContextInner({
         filesRef,
         dispatchWithUnlock,
         indexedDB,
+        outputFileIds.map((id) => stateRef.current.files.byId[id]),
       );
     },
     [indexedDB, dispatchWithUnlock],

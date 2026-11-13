@@ -83,6 +83,11 @@ export default function WorkbenchBarMobileActions({
               onClick={item.onClick}
             >
               {item.label}
+              {item.description && (
+                <span className="workbench-bar-menu-hint">
+                  {item.description}
+                </span>
+              )}
             </Menu.Item>
           ))}
         {showFileActions && (

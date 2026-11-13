@@ -31,6 +31,7 @@ import { fileStorage } from "@editor/services/fileStorage";
 import { zipFileService } from "@editor/services/zipFileService";
 import { FileAnalyzer } from "@editor/services/fileAnalyzer";
 import { trackPdfUploaded } from "@editor/services/analytics";
+import { cloudOriginOf } from "@editor/services/cloudOrigin";
 import {
   reportBulkAddProgress,
   clearBulkAddProgress,
@@ -550,6 +551,9 @@ export async function addFiles(
       }
 
       Object.assign(fileStub, await sourceLinkForNewFile(file));
+      const cloudOrigin = cloudOriginOf(file);
+      if (cloudOrigin)
+        fileStub.cloudOrigin = { ...cloudOrigin, savedFileId: fileId };
 
       // Store insertion position if provided
       if (options.insertAfterPageId !== undefined) {
@@ -745,6 +749,22 @@ export async function consumeFiles(
   return outputStirlingFileStubs.map((stub) => stub.id);
 }
 
+export function withLatestCloudOrigins(
+  inputs: StirlingFileStub[],
+  outputs: readonly (StirlingFileStub | undefined)[],
+): StirlingFileStub[] {
+  return inputs.map((input) => {
+    const origin = input.cloudOrigin;
+    if (!origin) return input;
+    const latest = outputs.find(
+      (output) =>
+        output?.cloudOrigin?.driveId === origin.driveId &&
+        output.cloudOrigin.itemId === origin.itemId,
+    )?.cloudOrigin;
+    return latest ? { ...input, cloudOrigin: latest } : input;
+  });
+}
+
 /**
 /**
  * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
@@ -764,6 +784,7 @@ export async function undoConsumeFiles(
     deleteFile: (fileId: FileId) => Promise<void>;
     bumpRevision?: () => void;
   } | null,
+  outputStirlingFileStubs: readonly (StirlingFileStub | undefined)[] = [],
 ): Promise<void> {
   if (DEBUG)
     console.log(
@@ -791,9 +812,10 @@ export async function undoConsumeFiles(
     });
 
     // Mark restored files dirty if they have a local path (they now differ from disk).
-    const stubsWithDirtyMarked = inputStirlingFileStubs.map((stub) =>
-      stub.localFilePath ? { ...stub, isDirty: true } : stub,
-    );
+    const stubsWithDirtyMarked = withLatestCloudOrigins(
+      inputStirlingFileStubs,
+      outputStirlingFileStubs,
+    ).map((stub) => (stub.localFilePath ? { ...stub, isDirty: true } : stub));
 
     // Dispatch with filesRef and state.files.ids now in sync.
     dispatch({
@@ -829,6 +851,7 @@ export async function undoConsumeFiles(
           .updateFileMetadata(stub.id, {
             isLeaf: true,
             ...(stub.isDirty ? { isDirty: true } : {}),
+            ...(stub.cloudOrigin ? { cloudOrigin: stub.cloudOrigin } : {}),
           })
           .catch((error) => {
             console.warn(

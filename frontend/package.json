@@ -7,6 +7,7 @@
   "proxy": "http://localhost:8080",
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^2.0.2",
+    "@azure/msal-browser": "^5.24.0",
     "@cantoo/pdf-lib": "^2.8.2",
     "@dnd-kit/core": "^6.3.1",
     "@embedpdf/core": "^2.15.1",

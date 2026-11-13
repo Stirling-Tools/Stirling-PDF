@@ -43,6 +43,7 @@ public final class FakeGraphServer implements AutoCloseable {
     public final AtomicInteger tokenRequests = new AtomicInteger();
     public final AtomicInteger throttleNext = new AtomicInteger();
     public final Set<String> revokedRefreshTokens = ConcurrentHashMap.newKeySet();
+    public final Set<String> unconsentedScopes = ConcurrentHashMap.newKeySet();
     public final List<Map<String, String>> tokenForms = new CopyOnWriteArrayList<>();
     private final AtomicInteger refreshSerial = new AtomicInteger();
     private final AtomicInteger accessSerial = new AtomicInteger();
@@ -171,6 +172,16 @@ public final class FakeGraphServer implements AutoCloseable {
                         400,
                         "{\"error\":\"invalid_grant\",\"error_description\":\"AADSTS700082: The"
                                 + " refresh token has expired.\\nTrace ID: 1\"}");
+                return;
+            }
+            String scope = form.getOrDefault("scope", "");
+            if (unconsentedScopes.stream().anyMatch(scope::contains)) {
+                json(
+                        exchange,
+                        400,
+                        "{\"error\":\"invalid_grant\",\"suberror\":\"consent_required\","
+                                + "\"error_description\":\"AADSTS65001: The user or"
+                                + " administrator has not consented to use the application.\"}");
                 return;
             }
             json(exchange, 200, userTokens(false));

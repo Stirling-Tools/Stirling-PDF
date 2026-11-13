@@ -10,6 +10,7 @@ import { useFileActions } from "@editor/contexts/file/fileHooks";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { useIndexedDBRevision } from "@editor/contexts/IndexedDBContext";
 import { VersionTimeline } from "@editor/components/filesPage/VersionTimeline";
+import { withLatestCloudOrigins } from "@editor/contexts/file/fileActions";
 
 interface VersionHistoryModalProps {
   opened: boolean;
@@ -72,15 +73,29 @@ export function VersionHistoryModal({
 
   const handleAddToWorkspace = useCallback(
     (ids: FileId[]) => {
-      const stubs = ids
-        .map((id) => stubById(id))
-        .filter((s): s is StirlingFileStub => Boolean(s));
+      const newestFirst = [...chain].sort(
+        (a, b) => (b.versionNumber ?? 1) - (a.versionNumber ?? 1),
+      );
+      const stubs = withLatestCloudOrigins(
+        ids
+          .map((id) => stubById(id))
+          .filter((s): s is StirlingFileStub => Boolean(s)),
+        newestFirst,
+      );
       if (stubs.length === 0) return;
+      for (const stub of stubs)
+        if (
+          stub.cloudOrigin &&
+          stub.cloudOrigin !== stubById(stub.id)?.cloudOrigin
+        )
+          void fileStorage.updateFileMetadata(stub.id, {
+            cloudOrigin: stub.cloudOrigin,
+          });
       void fileActions.addStirlingFileStubs(stubs, { selectFiles: true });
       navActions.setWorkbench("fileEditor");
       onClose();
     },
-    [stubById, fileActions, navActions, onClose],
+    [chain, stubById, fileActions, navActions, onClose],
   );
 
   const handleRemove = useCallback(
