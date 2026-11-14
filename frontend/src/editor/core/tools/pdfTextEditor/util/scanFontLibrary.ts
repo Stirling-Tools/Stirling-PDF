@@ -24,6 +24,7 @@ import {
   type FontMetrics,
 } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { encodesInBase14 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import { visibleCodePoints } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 
 type FaceSource = "base14" | "bundled" | "device";
@@ -321,6 +322,47 @@ export function scanScriptsOf(text: string): Script[] {
   return SCRIPTS.filter((s) => s.chars.test(text)).map((s) => s.script);
 }
 
+function scriptFaceCovering(codePoint: number): Face | undefined {
+  return scriptFaces.find(
+    (face) =>
+      face.metrics?.get(face.family)?.advances.has(codePoint) &&
+      getExternalFontBytes(face.family) !== null,
+  );
+}
+
+/** A loaded script face whose embeddable bytes draw every visible character of `text`, or null. */
+export function scriptFaceFamilyFor(text: string): string | null {
+  const codePoints = visibleCodePoints(text);
+  if (codePoints.length === 0) return null;
+  const face = scriptFaceCovering(codePoints[0]);
+  return face &&
+    codePoints.every((cp) => face.metrics?.get(face.family)?.advances.has(cp))
+    ? face.family
+    : null;
+}
+
+/** True when every visible character of `text` has a loaded script face to draw it. */
+export function scriptFacesCover(text: string): boolean {
+  return visibleCodePoints(text).every((cp) => !!scriptFaceCovering(cp));
+}
+
+let undrawnText = "";
+
+/** Record text an emit had to drop for want of a font of its script, and start loading that script's fonts. */
+export function noteUndrawnScriptText(text: string): void {
+  const scripts = scanScriptsOf(text);
+  if (scripts.length === 0) return;
+  undrawnText += text;
+  void loadScriptScanFaces(scripts).catch(() => undefined);
+}
+
+/** The text recorded by {@link noteUndrawnScriptText} since the last take. */
+export function takeUndrawnScriptText(): string {
+  const text = undrawnText;
+  undrawnText = "";
+  return text;
+}
+
 let bundled: Face[] = [];
 let scriptFaces: Face[] = [];
 const neededScripts = new Set<Script>();
@@ -613,6 +655,7 @@ export function _setBundledScanFacesForTests(faces: Face[]): void {
 }
 
 export function _resetScanFacesForTests(): void {
+  undrawnText = "";
   bundled = [];
   scriptFaces = [];
   neededScripts.clear();

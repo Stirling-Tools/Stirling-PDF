@@ -15,6 +15,8 @@ import {
 import {
   charcodesResolveFully,
   collectContainersByPtr,
+  contentIndices,
+  restoreContentOrder,
   collectMemberPtrs,
   emitFillRect,
   emitTextLine,
@@ -33,7 +35,9 @@ import {
   bestFontPtrForText,
   applyParagraphEditPlan,
   applyPartialEditPlan,
-  planModifiesWhitespace,
+  planModifiesUndrawableWhitespace,
+  piecesFromObjects,
+  sourceFontSpans,
   planParagraphEdit,
   planPartialEdit,
   revertPartialEditPlan,
@@ -51,6 +55,10 @@ import type {
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import {
+  readMatrix,
+  writeMatrix,
+} from "@editor/tools/pdfTextEditor/commands/textPieces";
 import {
   SCRATCH,
   scratchPtr,
@@ -221,6 +229,8 @@ export class EditTextCommand implements Command {
   // Full pre-edit model snapshot, captured by the partial / paragraph-partial
   // apply paths.
   private editSnapshot: RunModelSnapshot | null = null;
+  // The run's own objects before a partial apply, with where each sat; null when one lives in a form and cannot be put back.
+  private originalObjects: OriginalObjects | null = null;
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
     /** Matched lines translated to a new baseline (reversed on revert). */
@@ -321,6 +331,20 @@ export class EditTextCommand implements Command {
         this.paragraphPlan = paraPlan;
         this.prevParagraphSlots = paraPlan.prevSlots;
         this.editSnapshot = snapshotRunModel(run);
+        this.originalObjects = captureOriginalObjects(
+          doc.module,
+          run,
+          paraPlan.prevSlots.flatMap((slot) => slot.mergedFromPtrs),
+          paraPlan.perSlot.flatMap((entry) =>
+            entry.plan
+              ? entry.plan.removePtrs
+              : paraPlan.prevSlots[entry.slotIdx].mergedFromPtrs.map((ptr) => ({
+                  ptr,
+                  containerPtr: -1,
+                })),
+          ),
+          page.pagePtr,
+        );
         const result = applyParagraphEditPlan(
           doc,
           page,
@@ -417,9 +441,15 @@ export class EditTextCommand implements Command {
       keepsFont
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
-      // An in-place "modify" op that re-SetTexts whitespace paints „ on an
-      // embedded subset font with no space glyph.
-      if (partial && !planModifiesWhitespace(partial)) {
+      if (
+        partial &&
+        !planModifiesUndrawableWhitespace(
+          doc.module,
+          partial,
+          page.pagePtr,
+          doc.docPtr,
+        )
+      ) {
         this.partialPlan = partial;
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
         this.prevMergedFromTexts = [...run.mergedFromTexts];
@@ -428,6 +458,13 @@ export class EditTextCommand implements Command {
           safeGetFont(doc.module, ptr),
         );
         this.editSnapshot = snapshotRunModel(run);
+        this.originalObjects = captureOriginalObjects(
+          doc.module,
+          run,
+          run.mergedFromPtrs,
+          partial.removePtrs,
+          page.pagePtr,
+        );
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
@@ -539,6 +576,26 @@ export class EditTextCommand implements Command {
         ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
         : 0);
+    // Read before the source objects go: a one-line run mixing bold and regular keeps each word's face.
+    const fontSpans =
+      !this.nextFont &&
+      !scanText &&
+      !/\n/.test(this.prevText ?? "") &&
+      !/\n/.test(this.nextText)
+        ? sourceFontSpans(
+            m,
+            run.mergedFromPtrs.length > 0
+              ? run
+              : (piecesFromObjects(
+                  m,
+                  page.pagePtr,
+                  run.paragraphLeafPtrs,
+                  this.prevText ?? "",
+                ) ?? run),
+            this.prevText ?? "",
+            this.nextText,
+          )
+        : undefined;
 
     this.revertLines = snapshotRevertLines(
       run,
@@ -627,6 +684,7 @@ export class EditTextCommand implements Command {
       originalFontPtr,
       originalFontSubset: run.fontSubset,
       fallbackFamily,
+      fontSpansByLine: fontSpans ? [fontSpans] : undefined,
     });
     for (const line of emitted) {
       // Empty lines keep a placeholder slot; a FAILED emit is dropped entirely.
@@ -668,10 +726,11 @@ export class EditTextCommand implements Command {
     if (lineAnchorPtrs.length > 0) {
       this.newTextPtr = lineAnchorPtrs[0];
       run.pdfiumObjPtr = lineAnchorPtrs[0];
-      if (originalFontPtr === 0) {
+      // A line kept in its own pieces' faces is still the document's font, not a base-14 one to SetText over.
+      if (originalFontPtr === 0 && !fontSpans) {
         run.fontId = fallbackFontIdFor(fallbackFamily);
         run.fontSubset = false;
-      } else {
+      } else if (originalFontPtr !== 0) {
         // Borrow path: the new objects use the borrowed font handle.
         if (this.nextFont) run.fontId = this.nextFont.id;
         run.fontSubset = false;
@@ -748,6 +807,22 @@ export class EditTextCommand implements Command {
     return this.prevTags
       ? sliceTags(this.prevTags, start, end)
       : uniformTags(run.tagMarks);
+  }
+
+  // Removed objects are only detached, never destroyed, so the originals return with their own fonts and glyphs, which a re-emit cannot rebuild for a Type 3 or subset face.
+  private putOriginalObjectsBack(m: WrappedPdfiumModule, page: Page): boolean {
+    const originals = this.originalObjects;
+    this.originalObjects = null;
+    if (!originals) return false;
+    for (const ptr of originals.detached)
+      m.FPDFPage_InsertObject(page.pagePtr, ptr);
+    for (const [ptr, matrix] of originals.matrices) writeMatrix(m, ptr, matrix);
+    restoreContentOrder(
+      m,
+      page.pagePtr,
+      [...originals.order].map(([ptr, index]) => ({ ptr, index })),
+    );
+    return true;
   }
 
   // Exactly one revert strategy member may be set per apply. Enforced only by
@@ -838,6 +913,25 @@ export class EditTextCommand implements Command {
         }
       }
       this.paragraphInsertedPtrs = [];
+      if (this.editSnapshot && this.putOriginalObjectsBack(m, page)) {
+        for (const entry of this.paragraphPlan.perSlot) {
+          const prevSlot = this.prevParagraphSlots[entry.slotIdx];
+          for (const op of entry.plan?.ops ?? [])
+            if (op.type === "modify" && op.subRunIdx !== undefined)
+              setObjText(
+                m,
+                prevSlot.mergedFromPtrs[op.subRunIdx],
+                prevSlot.mergedFromTexts[op.subRunIdx] ?? "",
+              );
+        }
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.paragraphPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       // Pure-insert edit (no original object freed/mutated): every original
       // object is still alive, so restore the exact pre-edit model.
       const pureInsert = this.paragraphPlan.perSlot.every(
@@ -937,7 +1031,7 @@ export class EditTextCommand implements Command {
       }
       // No original objects were destroyed: restore the EXACT pre-edit model so
       // undo keeps the original embedded fonts AND redo re-engages the.
-      if (this.partialPlan.removePtrs.length === 0 && this.editSnapshot) {
+      if (this.editSnapshot && this.putOriginalObjectsBack(m, page)) {
         restoreRunModel(run, this.editSnapshot);
         run.text = this.prevText;
         run.dirty = true;
@@ -2006,6 +2100,41 @@ function snapshotRunModel(run: TextRun): RunModelSnapshot {
     fontId: run.fontId,
     fontSubset: run.fontSubset,
     pdfiumObjPtr: run.pdfiumObjPtr,
+  };
+}
+
+interface OriginalObjects {
+  detached: number[];
+  matrices: Map<number, Float32Array>;
+  order: Map<number, number>;
+}
+
+function captureOriginalObjects(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+  ptrs: readonly number[],
+  removed: ReadonlyArray<{ ptr: number; containerPtr: number }>,
+  pagePtr: number,
+): OriginalObjects | null {
+  if (run.containerPtr !== 0) return null;
+  const inForm = new Set(
+    run.paragraphLeafPtrs.filter((_, i) => run.paragraphLeafContainers[i]),
+  );
+  if (
+    removed.some(({ ptr, containerPtr }) => containerPtr > 0 || inForm.has(ptr))
+  )
+    return null;
+  const matrices = new Map<number, Float32Array>();
+  for (const ptr of ptrs) {
+    if (!ptr) continue;
+    const matrix = readMatrix(m, ptr);
+    if (!matrix) return null;
+    matrices.set(ptr, matrix);
+  }
+  return {
+    detached: [...new Set(removed.map(({ ptr }) => ptr).filter(Boolean))],
+    matrices,
+    order: contentIndices(m, pagePtr, matrices.keys()),
   };
 }
 

@@ -14,6 +14,7 @@ import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/Font
 import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
+  forgetDroppedChars,
   resetCharCoverageCache,
   resetDroppedBase14Chars,
   resetOnPageAdvCache,
@@ -39,6 +40,12 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import {
+  loadScriptScanFaces,
+  scanScriptsOf,
+  scriptFacesCover,
+  takeUndrawnScriptText,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -455,6 +462,7 @@ export class EditorStore {
     if (!this.doc) return;
     const before = cmd.repaintArea?.(this.doc) ?? null;
     const fromRevision = before ? this.doc.page(before.pageIndex).revision : -1;
+    takeUndrawnScriptText();
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
@@ -465,6 +473,28 @@ export class EditorStore {
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
+    const undrawn = takeUndrawnScriptText();
+    if (undrawn) void this.redrawOnceScriptFontsLoad(cmd, undrawn);
+  }
+
+  /** Redraw `cmd` and every step after it once fonts for `undrawn`'s scripts are in, so typed text its emit dropped appears. */
+  private async redrawOnceScriptFontsLoad(
+    cmd: Command,
+    undrawn: string,
+  ): Promise<void> {
+    const doc = this.doc;
+    await loadScriptScanFaces(scanScriptsOf(undrawn)).catch(() => undefined);
+    if (this.doc !== doc || !doc || this.state.loading) return;
+    if (!scriptFacesCover(undrawn)) return;
+    try {
+      if (!this.history.replayFrom(cmd, doc)) return;
+    } catch (err) {
+      this.recoverFromBrokenStep(err);
+      return;
+    }
+    forgetDroppedChars(undrawn);
+    this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
   }
 
   private schedulePositionRefresh(): void {

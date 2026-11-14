@@ -5,8 +5,13 @@ import type {
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
+  charcodesResolveFully,
+  contentIndices,
   cssFontSpecFor,
+  restoreContentOrder,
   emitTextLine,
+  readObjTexts,
+  type FontSpan,
   inkFromRun,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
@@ -504,7 +509,10 @@ export function planPartialEdit(
   const bToA = new Map<number, number>();
   for (const { aIdx, bIdx } of alignment) bToA.set(bIdx, aIdx);
 
-  // INTERIOR-INSERT GUARD. Single-char sub-runs have no interior.
+  // A piece typed into mid-word keeps no contiguous stretch of its letters, so
+  // SetText cannot patch it: redraw that piece whole, in its own place, and
+  // leave the rest of the line's objects untouched.
+  const replacedSubRuns = new Set<number>();
   {
     const keptMin = new Map<number, number>();
     const keptMax = new Map<number, number>();
@@ -519,7 +527,18 @@ export function planPartialEdit(
       keptCnt.set(sr, (keptCnt.get(sr) ?? 0) + 1);
     }
     for (const [sr, cnt] of keptCnt) {
-      if (keptMax.get(sr)! - keptMin.get(sr)! + 1 !== cnt) return null;
+      if (keptMax.get(sr)! - keptMin.get(sr)! + 1 !== cnt)
+        replacedSubRuns.add(sr);
+    }
+    for (const { aIdx, bIdx } of alignment) {
+      if (!replacedSubRuns.has(charToSubRun[aIdx])) continue;
+      keptA.delete(aIdx);
+      keptB.delete(bIdx);
+    }
+    for (const sr of replacedSubRuns) {
+      subRunStatus[sr] = "all-deleted";
+      mixedSubRuns.delete(sr);
+      mixedSurviving.delete(sr);
     }
   }
 
@@ -567,6 +586,15 @@ export function planPartialEdit(
       }
       lastEmittedBIdx = b;
     } else {
+      const replaced = charToSubRun[bToA.get(b) ?? -1];
+      if (
+        insertAnchorSubRun === undefined &&
+        replaced !== undefined &&
+        replacedSubRuns.has(replaced)
+      ) {
+        if (insertBuf.length > 0) flushInsert();
+        insertAnchorSubRun = replaced;
+      }
       if (insertBuf.length === 0) {
         insertStartBIdx = b;
         // Whitespace chars skipped since the last real glyph are ghost
@@ -712,6 +740,12 @@ export function applyPartialEditPlan(
   const m = doc.module;
   const emitY = baselineY ?? run.matrix.f;
   const startX = defaultX ?? run.bounds.x;
+  const lineStart =
+    run.containerPtr === 0
+      ? Math.min(
+          ...contentIndices(m, page.pagePtr, plan.prevMergedFromPtrs).values(),
+        )
+      : Infinity;
   // Removals run before the walk below: it re-emits from the surviving
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
@@ -830,9 +864,16 @@ export function applyPartialEditPlan(
       hasInk: boolean;
     },
   ): number => {
-    // Anchored (mixed-replacement): delta vs original sub-run width.
-    if (origBounds) return insert.width - (origBounds.right - origBounds.x);
     const op = plan.ops[opIndex];
+    // Anchored (mixed-replacement): delta vs original sub-run width.
+    if (origBounds)
+      return (
+        insert.width -
+        (origBounds.right - origBounds.x) -
+        whitespaceAdvancePt(
+          trailingSpaces(plan.prevMergedFromTexts[op.anchorSubRunIdx!] ?? ""),
+        )
+      );
     const following = nextSurvivorOp[opIndex];
     if (beforeBounds) {
       // Spaces typed before the next word belong to no object, so add their width.
@@ -995,11 +1036,21 @@ export function applyPartialEditPlan(
         (op.leadingGhostCount ?? 0) * Math.max(1, run.fontSize) * 0.25;
       const anchorX = insertAnchorX(origBounds, beforeBounds, leadingGap);
 
+      // A redrawn piece keeps its own face (bold, italic, a symbol font) for every
+      // word it can draw, and a fallback of its style for the rest.
+      const ownFont =
+        anchorIdx !== undefined
+          ? objFontPtr(m, plan.prevMergedFromPtrs[anchorIdx])
+          : 0;
       // Borrow the font from a survivor that actually contains the inserted
       // chars, so the new glyph reuses that exact embedded font.
-      const borrowedFontPtr = allInsertCharsAreSafe
-        ? borrowFontForChars(m, plan, insertText)
-        : 0;
+      const borrowedFontPtr =
+        ownFont ||
+        (allInsertCharsAreSafe ? borrowFontForChars(m, plan, insertText) : 0);
+      const insertFallback = ownFont
+        ? fallbackFamilyFor(`pdf:${ownFont}:${baseFontName(m, ownFont)}`)
+        : fallbackFamily;
+      const emittedTexts: string[] = [];
 
       // Try the borrowed source font first; measure the result and fall back to
       // Helvetica if the rendered width is sub-threshold.
@@ -1016,7 +1067,8 @@ export function applyPartialEditPlan(
         originalFontPtr: borrowedFontPtr,
         originalFontSubset: run.fontSubset,
         charSpacingPt: run.charSpacingPt,
-        fallbackFamily,
+        fallbackFamily: insertFallback,
+        outTexts: emittedTexts,
       });
       let realRightEdge = anchorX;
       for (const ptr of ptrs) {
@@ -1046,6 +1098,7 @@ export function applyPartialEditPlan(
             /* best-effort */
           }
         }
+        emittedTexts.length = 0;
         ptrs = emitTextLine({
           doc,
           page,
@@ -1058,7 +1111,8 @@ export function applyPartialEditPlan(
           tags: insertTags,
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
-          fallbackFamily,
+          fallbackFamily: insertFallback,
+          outTexts: emittedTexts,
         });
         realRightEdge = anchorX;
         for (const ptr of ptrs) {
@@ -1067,37 +1121,32 @@ export function applyPartialEditPlan(
         }
         measuredWidth = realRightEdge - anchorX;
       }
-      // Add the advance width of whitespace chars so the offset that shifts
-      // following kept sub-runs accounts for inserted spaces.
-      const whitespaceLen = insertText.length - nonWhitespaceLen;
-      measuredWidth += whitespaceAdvancePt(" ".repeat(whitespaceLen));
-      // Map emitted ptrs back to text. emitTextLine emits one ptr per
-      // whitespace-separated WORD on the normal path.
-      const insertWords: Array<{ text: string; start: number }> = [];
-      {
-        const wordRe = /\S+/g;
-        let wm: RegExpExecArray | null;
-        while ((wm = wordRe.exec(insertText)) !== null) {
-          insertWords.push({ text: wm[0], start: wm.index });
+      if (origBounds && ptrs.length > 0) {
+        const pieceText = plan.prevMergedFromTexts[anchorIdx!] ?? "";
+        const firstInk = objBoundsLR(m, ptrs[0], anchorX).x;
+        const drift = anchorX - firstInk;
+        // Same first glyph, so the redrawn piece starts where the old one did instead of creeping a side bearing per keystroke.
+        if (pieceText[0] === insertText[0] && Math.abs(drift) > 0.05) {
+          for (const ptr of ptrs) transformObject(m, ptr, 1, 0, 0, 1, drift, 0);
+          realRightEdge += drift;
+          measuredWidth = realRightEdge - anchorX;
         }
       }
-      if (ptrs.length === insertWords.length) {
-        for (let i = 0; i < ptrs.length; i++) {
-          const word = insertWords[i];
-          if (!word) {
-            try {
-              m.FPDFPage_RemoveObject(page.pagePtr, ptrs[i]);
-            } catch {
-              /* best-effort */
-            }
-            continue;
-          }
-          const bnds = objBoundsLR(m, ptrs[i], anchorX);
-          newMergedFromPtrs.push(ptrs[i]);
-          newMergedFromTexts.push(word.text);
+      // The emitted ink already spans spaces between words; only whitespace past the last glyph is missing.
+      measuredWidth += whitespaceAdvancePt(
+        nonWhitespaceLen === 0 ? insertText : trailingSpaces(insertText),
+      );
+      // Map each emitted ptr to the text it actually carries: a word the font
+      // could not draw is dropped, so counting words would shift every later one.
+      const placed = placeEmittedTexts(insertText, ptrs, emittedTexts);
+      if (placed) {
+        for (const { ptr, text, start } of placed) {
+          const bnds = objBoundsLR(m, ptr, anchorX);
+          newMergedFromPtrs.push(ptr);
+          newMergedFromTexts.push(text);
           newMergedFromBounds.push({ x: bnds.x, right: bnds.right });
-          newMergedFromCharStarts.push(op.startBIdx + word.start);
-          insertedPtrs.push(ptrs[i]);
+          newMergedFromCharStarts.push(op.startBIdx + start);
+          insertedPtrs.push(ptr);
         }
       } else {
         // Per-char (or mismatched) emit: slice the insert text across ptrs.
@@ -1140,6 +1189,12 @@ export function applyPartialEditPlan(
     }
   }
 
+  if (Number.isFinite(lineStart))
+    restoreContentOrder(
+      m,
+      page.pagePtr,
+      newMergedFromPtrs.map((ptr, i) => ({ ptr, index: lineStart + i })),
+    );
   page.markNeedsGenerate();
 
   if (newMergedFromBounds.length > 0) {
@@ -1232,6 +1287,7 @@ export interface ParagraphEditPlan {
   perSlot: Array<{
     slotIdx: number;
     plan: PartialEditPlan | null;
+    prevLine: string;
     nextLine: string;
   }>;
   /** Per-VISUAL-line next text, parallel to `run.paragraphLineSlots`. */
@@ -1247,11 +1303,149 @@ function countChar(s: string, ch: string): number {
   return n;
 }
 
-/** True when a plan would SetText whitespace in place via a "modify" op. */
-export function planModifiesWhitespace(plan: PartialEditPlan): boolean {
-  return plan.ops.some(
-    (op) => op.type === "modify" && !!op.text && /\s/.test(op.text),
-  );
+/** Each ptr with the stretch of `text` it carries, found in order; null when the emit's texts cannot all be placed. */
+function placeEmittedTexts(
+  text: string,
+  ptrs: number[],
+  emittedTexts: string[],
+): Array<{ ptr: number; text: string; start: number }> | null {
+  if (emittedTexts.length !== ptrs.length) return null;
+  const out: Array<{ ptr: number; text: string; start: number }> = [];
+  let cursor = 0;
+  for (let i = 0; i < ptrs.length; i++) {
+    const carried = emittedTexts[i].trim();
+    if (!carried) continue;
+    const start = text.indexOf(carried, cursor);
+    if (start < 0) return null;
+    out.push({ ptr: ptrs[i], text: carried, start });
+    cursor = start + carried.length;
+  }
+  return out;
+}
+
+/** The pieces `ptrs` draw of `line`, found in order by their own text; null when one cannot be placed. */
+export function piecesFromObjects(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+  ptrs: number[],
+  line: string,
+): Pick<
+  ParagraphLineSlot,
+  "mergedFromPtrs" | "mergedFromTexts" | "mergedFromCharStarts"
+> | null {
+  const texts = readObjTexts(m, pagePtr, ptrs);
+  const starts: number[] = [];
+  const kept: string[] = [];
+  let cursor = 0;
+  for (const raw of texts) {
+    const text = raw?.trim() ?? "";
+    const at = text ? line.indexOf(text, cursor) : -1;
+    if (at < 0) return null;
+    starts.push(at);
+    kept.push(text);
+    cursor = at + text.length;
+  }
+  return {
+    mergedFromPtrs: ptrs,
+    mergedFromTexts: kept,
+    mergedFromCharStarts: starts,
+  };
+}
+
+/**
+ * The font each stretch of `nextLine` came from, when the line held more than one: characters
+ * outside the edited middle keep their piece's font, and typed ones take the font of the
+ * word they were typed into. Undefined for a single-font line.
+ */
+export function sourceFontSpans(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pieces: Pick<
+    ParagraphLineSlot,
+    "mergedFromPtrs" | "mergedFromTexts" | "mergedFromCharStarts"
+  >,
+  prevLine: string,
+  nextLine: string,
+): FontSpan[] | undefined {
+  const fontAt = new Array<number>(prevLine.length).fill(0);
+  pieces.mergedFromPtrs.forEach((ptr, i) => {
+    const start = pieces.mergedFromCharStarts[i];
+    const end = start + (pieces.mergedFromTexts[i]?.length ?? 0);
+    const font = objFontPtr(m, ptr);
+    for (let c = Math.max(0, start); c < Math.min(end, prevLine.length); c++)
+      fontAt[c] = font;
+  });
+  for (let c = 1; c < fontAt.length; c++) fontAt[c] ||= fontAt[c - 1];
+  for (let c = fontAt.length - 2; c >= 0; c--) fontAt[c] ||= fontAt[c + 1];
+  if (new Set(fontAt.filter(Boolean)).size < 2) return undefined;
+
+  let prefix = 0;
+  while (
+    prefix < prevLine.length &&
+    prefix < nextLine.length &&
+    prevLine[prefix] === nextLine[prefix]
+  )
+    prefix++;
+  let suffix = 0;
+  while (
+    suffix < prevLine.length - prefix &&
+    suffix < nextLine.length - prefix &&
+    prevLine[prevLine.length - 1 - suffix] ===
+      nextLine[nextLine.length - 1 - suffix]
+  )
+    suffix++;
+  const typedEnd = nextLine.length - suffix;
+  const after = fontAt[prevLine.length - suffix] ?? 0;
+  const fonts: number[] = [];
+  for (let j = 0; j < nextLine.length; j++) {
+    if (j < prefix) fonts.push(fontAt[j]);
+    else if (j >= typedEnd)
+      fonts.push(fontAt[j - nextLine.length + prevLine.length]);
+    else if (j > 0 && !/\s/.test(nextLine[j - 1])) fonts.push(fonts[j - 1]);
+    else fonts.push(after || fonts[j - 1] || 0);
+  }
+  const spans: FontSpan[] = [];
+  for (let j = 0; j < fonts.length; j++) {
+    const last = spans[spans.length - 1];
+    if (last && (fonts[j] === 0 || fonts[j] === last.fontPtr)) last.end = j + 1;
+    else
+      spans.push({
+        end: j + 1,
+        fontPtr: fonts[j],
+        fallbackFamily: fallbackFamilyFor(
+          `pdf:${fonts[j]}:${baseFontName(m, fonts[j])}`,
+        ),
+      });
+  }
+  return spans.length > 1 ? spans : undefined;
+}
+
+// /BaseFont keeps the style suffix ("LiberationSans-Bold") that the name table's family drops.
+function baseFontName(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  fontPtr: number,
+): string {
+  if (!fontPtr) return "";
+  const len = m.FPDFFont_GetBaseFontName(fontPtr, 0, 0);
+  if (len <= 1) return "";
+  const buf = scratchPtr(m, SCRATCH.partialFontName, len);
+  m.FPDFFont_GetBaseFontName(fontPtr, buf, len);
+  return m.pdfium.UTF8ToString(buf).replace(/^[A-Z]{6}\+/, "");
+}
+
+/** True when a plan's in-place "modify" op would SetText whitespace its own piece's font cannot encode, which paints „ on a subset with no space glyph. */
+export function planModifiesUndrawableWhitespace(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  plan: PartialEditPlan,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  return plan.ops.some((op) => {
+    if (op.type !== "modify" || !op.text || !/\s/.test(op.text)) return false;
+    if (op.subRunIdx === undefined) return true;
+    const font = objFontPtr(m, plan.prevMergedFromPtrs[op.subRunIdx]);
+    const whitespace = [...new Set(op.text.match(/\s/g))].join("");
+    return !charcodesResolveFully(m, font, whitespace, pagePtr, docPtr);
+  });
 }
 
 /** Read a text object's own font handle (0 when unavailable). */
@@ -1417,11 +1611,7 @@ export function planParagraphEdit(
   const hit = slots[hitSlot];
   nextLines[hitSlot] = nextText.slice(hit.startChar, hit.endChar + delta);
 
-  const perSlot: Array<{
-    slotIdx: number;
-    plan: PartialEditPlan | null;
-    nextLine: string;
-  }> = [];
+  const perSlot: ParagraphEditPlan["perSlot"] = [];
 
   const prevLine = prevLines[hitSlot];
   const nextLine = nextLines[hitSlot];
@@ -1429,17 +1619,20 @@ export function planParagraphEdit(
   // A slot with no sub-run objects can't be partially edited (e.g. an empty
   // line the user just typed the first character into).
   if (hit.mergedFromPtrs.length === 0) {
-    perSlot.push({ slotIdx: hitSlot, plan: null, nextLine });
+    perSlot.push({ slotIdx: hitSlot, plan: null, prevLine, nextLine });
   } else {
     // Build a synthetic mini-TextRun view of the slot so the existing
     // planPartialEdit / applyPartialEditPlan code can operate on it.
     const slotView = makeSlotView(run, hit, prevLine);
-    let plan = planPartialEdit(slotView, prevLine, nextLine);
-    // An in-place "modify" op re-SetTexts a sub-run's surviving chars.
-    if (plan && planModifiesWhitespace(plan)) plan = null;
+    const plan = planPartialEdit(slotView, prevLine, nextLine);
     // Per-line LCS couldn't model the change - re-emit just this line
     // rather than failing the whole paragraph to the overlay re-emit.
-    perSlot.push({ slotIdx: hitSlot, plan: plan ?? null, nextLine });
+    perSlot.push({
+      slotIdx: hitSlot,
+      plan: plan ?? null,
+      prevLine,
+      nextLine,
+    });
   }
 
   return {
@@ -1472,11 +1665,15 @@ export function applyParagraphEditPlan(
   );
   const planBySlot = new Map<
     number,
-    { plan: PartialEditPlan | null; nextLine: string }
+    { plan: PartialEditPlan | null; prevLine: string; nextLine: string }
   >();
   for (const entry of paraPlan.perSlot) {
+    const undrawable =
+      entry.plan &&
+      planModifiesUndrawableWhitespace(m, entry.plan, page.pagePtr, doc.docPtr);
     planBySlot.set(entry.slotIdx, {
-      plan: entry.plan,
+      plan: undrawable ? null : entry.plan,
+      prevLine: entry.prevLine,
       nextLine: entry.nextLine,
     });
   }
@@ -1519,6 +1716,7 @@ export function applyParagraphEditPlan(
         // in Helvetica while the paragraph around it keeps the document's own
         // face. Its SIBLING lines carry exactly the face it should inherit.
         siblingFontPtrForText(m, newSlots, i, slot.fontId, lineText);
+      const fontSpans = sourceFontSpans(m, slot, planEntry.prevLine, lineText);
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
         try {
@@ -1545,6 +1743,7 @@ export function applyParagraphEditPlan(
           originalFontSubset: slot.fontSubset,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
+          fontSpans,
         });
         const built = buildSlotMerged(m, ptrs, lineText, leftX, emittedTexts);
         slot.mergedFromPtrs = built.ptrs;
