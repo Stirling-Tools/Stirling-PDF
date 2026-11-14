@@ -973,6 +973,39 @@ function scanGlyphSource(
   };
 }
 
+// Visible text of other runs on the block's lines, such as words typed into an earlier save of this scan.
+function drawnTextOnLines(
+  page: Page,
+  run: TextRun,
+  lines: Array<{ baseline: number }>,
+  state: ScanEditState,
+): Array<{ line: number; x: number; right: number }> {
+  const out: Array<{ line: number; x: number; right: number }> = [];
+  for (const other of page.runs) {
+    if (other === run || isScanRun(other) || other.text.trim() === "") continue;
+    const slots = other.paragraphLineSlots.length
+      ? other.paragraphLineSlots
+      : [
+          {
+            baselineY: other.matrix.f,
+            mergedFromBounds: [
+              { x: other.bounds.x, right: other.bounds.x + other.bounds.width },
+            ],
+          },
+        ];
+    for (const slot of slots) {
+      const line = lines.findIndex(
+        (l, li) =>
+          Math.abs(l.baseline - slot.baselineY) <= state.lines[li].height * 0.5,
+      );
+      if (line < 0) continue;
+      for (const b of slot.mergedFromBounds)
+        out.push({ line, x: b.x, right: b.right });
+    }
+  }
+  return out;
+}
+
 function renderUprightScanEdit(
   doc: EditorDocument,
   page: Page,
@@ -1059,6 +1092,7 @@ function renderUprightScanEdit(
       text,
       pitch,
       space,
+      obstacles: state.frame ? [] : drawnTextOnLines(page, run, lines, state),
       wordWidth: inkWidth,
       textWidth: (t, anchor, replaced) => {
         if (!shows(t, anchor)) return anchor ? keptWidth(anchor, replaced) : 0;
