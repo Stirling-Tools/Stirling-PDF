@@ -216,6 +216,7 @@ export class TextRun {
       paragraphSlotCount: this.paragraphLineSlots.length || undefined,
       paragraphBaselines: this.lineBaselines(),
       paragraphLineLefts: this.lineLefts(),
+      paragraphLineRights: this.lineRights(),
       locked: this.locked || undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
       mcid: innermostMcid(this.tagMarks) ?? undefined,
@@ -239,6 +240,18 @@ export class TextRun {
     return this.paragraphLineSlots.length > 0
       ? this.paragraphLineSlots.map((s) => s.matrixE)
       : undefined;
+  }
+
+  private lineRights(): number[] | undefined {
+    const slots = this.paragraphLineSlots;
+    if (
+      slots.length === 0 ||
+      slots.some((s) => s.mergedFromBounds.length === 0)
+    )
+      return undefined;
+    return slots.map((s) =>
+      Math.max(...s.mergedFromBounds.map((b) => b.right)),
+    );
   }
 }
 

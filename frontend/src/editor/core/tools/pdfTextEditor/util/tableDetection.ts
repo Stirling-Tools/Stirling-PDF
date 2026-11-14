@@ -31,6 +31,14 @@ const RULE_COVERAGE = 0.5;
 const RULE_EDGE_MARGIN_PT = 12;
 /** A gap this many times the table's usual row gap ends the table. */
 const ROW_GAP_TOLERANCE = 2;
+// Turned text (a running watermark, a rotated axis label) has a box that says nothing about rows and columns.
+const TURNED_TEXT_RATIO = 0.02;
+// A column whose typical line is a sentence is running text; two of them side by side are a page of columns, not a table. Descriptive tables run to about 32 characters a line, article columns from about 37.
+const PROSE_LINE_CHARS = 35;
+const PROSE_COLUMNS_MAX = 1;
+// Text a table's own cells leave out but that sits inside its area means the "grid" is page layout around other text.
+const INTRUDER_SHARE = 0.15;
+const INTRUDER_MIN_CHARS = 6;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -42,6 +50,7 @@ export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
 
 interface Cand {
   run: TextRunSnapshot;
+  text: string;
   left: number;
   right: number;
   cx: number;
@@ -63,6 +72,7 @@ interface Row {
 function toCandidates(run: TextRunSnapshot): Cand[] {
   if (run.locked) return [];
   if (!run.text || run.text.trim().length === 0) return [];
+  if (isTurned(run)) return [];
   const { x, y, width, height } = run.bounds;
   if (width <= 0 || height <= 0) return [];
   const lines = run.paragraphLineCount ?? 1;
@@ -70,6 +80,7 @@ function toCandidates(run: TextRunSnapshot): Cand[] {
     return [
       {
         run,
+        text: run.text,
         left: x,
         right: x + width,
         cx: x + width / 2,
@@ -82,11 +93,13 @@ function toCandidates(run: TextRunSnapshot): Cand[] {
 }
 
 // Split a multi-line run using the per-line geometry PDFium gave us. Baselines
-// and lefts are exact; only each line's width is estimated, from its share of
-// the longest line's character count.
+// and lefts are exact, and so are rights where the run carries them; otherwise
+// a line's width is estimated from its share of the longest line's characters.
 function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
   const baselines = run.paragraphBaselines;
   const lefts = run.paragraphLineLefts;
+  const rights =
+    run.paragraphLineRights?.length === lines ? run.paragraphLineRights : null;
   const texts = run.text.split("\n");
   // Without real baselines the line boxes would be guesswork, and a wrong row
   // band is worse than no candidate.
@@ -105,10 +118,14 @@ function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
   for (let i = 0; i < lines; i++) {
     if (lengths[i] === 0) continue;
     const left = lefts?.[i] ?? x;
-    const w = Math.max(1, (width * lengths[i]) / maxLen);
+    const w =
+      rights !== null && rights[i] > left
+        ? rights[i] - left
+        : Math.max(1, (width * lengths[i]) / maxLen);
     const bottom = baselines[i] - descent;
     out.push({
       run,
+      text: texts[i],
       left,
       right: left + w,
       cx: left + w / 2,
@@ -117,6 +134,16 @@ function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
     });
   }
   return out;
+}
+
+function isTurned(run: TextRunSnapshot): boolean {
+  const { a, b, c, d } = run.matrix;
+  return (
+    Math.abs(b) > TURNED_TEXT_RATIO * Math.abs(a) ||
+    Math.abs(c) > TURNED_TEXT_RATIO * Math.abs(d) ||
+    a <= 0 ||
+    d <= 0
+  );
 }
 
 // Cluster candidates into rows by vertical-centre proximity, top-down.
@@ -769,6 +796,12 @@ function buildTable(
     (r) => new Set(r.cands.map((c) => edgeIndex(colEdges, c.cx))).size >= 2,
   ).length;
   if (rowsWithMultipleCols < 2) return null;
+  const columns = Array.from({ length: cols }, (): Cand[] => []);
+  for (const c of block.flatMap((row) => row.cands))
+    columns[edgeIndex(colEdges, c.cx)].push(c);
+  // Rows the page rules apart are a table however long their cells run.
+  if (!snappedRows.drawn && proseColumns(columns) > PROSE_COLUMNS_MAX)
+    return null;
 
   const bounds: PageRect = {
     x: colEdges[0],
@@ -801,6 +834,35 @@ function buildTable(
     columnStyles: [],
     headerStyle: null,
   };
+}
+
+function proseColumns(columns: Cand[][]): number {
+  return columns.filter(
+    (column) =>
+      column.length >= 2 &&
+      median(column.map((c) => c.text.trim().length)) >= PROSE_LINE_CHARS,
+  ).length;
+}
+
+// Characters of upright page text the table leaves out of its cells yet covers.
+function intrudingChars(table: TableSnapshot, runs: TextRunSnapshot[]): number {
+  const own = new Set(table.cells.flatMap((cell) => cell.runIds));
+  const b = table.bounds;
+  let chars = 0;
+  for (const run of runs) {
+    if (own.has(run.id) || run.locked || isTurned(run)) continue;
+    const r = run.bounds;
+    const area = r.width * r.height;
+    if (area <= 0) continue;
+    const inside =
+      Math.max(0, Math.min(r.x + r.width, b.x + b.width) - Math.max(r.x, b.x)) *
+      Math.max(
+        0,
+        Math.min(r.y + r.height, b.y + b.height) - Math.max(r.y, b.y),
+      );
+    if (inside > 0.5 * area) chars += run.text.replace(/\s+/g, "").length;
+  }
+  return chars;
 }
 
 /** Recognize tables on one page from its text-run snapshots. */
@@ -883,7 +945,17 @@ export function detectTables(
       rules,
       Math.max(4, medHeight * 1.5),
     );
-    if (table) tables.push(table);
+    if (!table) continue;
+    const cellChars = block
+      .flatMap((row) => row.cands)
+      .reduce((sum, c) => sum + c.text.replace(/\s+/g, "").length, 0);
+    const intruding = intrudingChars(table, runs);
+    if (
+      intruding >= INTRUDER_MIN_CHARS &&
+      intruding >= INTRUDER_SHARE * cellChars
+    )
+      continue;
+    tables.push(table);
   }
   return tables;
 }
