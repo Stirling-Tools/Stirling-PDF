@@ -676,6 +676,21 @@ describe("detectTables - layouts that only look like a grid", () => {
     expect(detectTables(runs, 0)).toEqual([]);
   });
 
+  it("does not build a table out of an upright watermark tiled over body text", () => {
+    const grey = { fill: { r: 200, g: 200, b: 200, a: 255 } };
+    const tiles = grid([60, 250, 440], 720, 110, [
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+      ["CONFIDENTIAL", "CONFIDENTIAL", "CONFIDENTIAL"],
+    ]).map((r) => ({ ...r, ...grey, bounds: { ...r.bounds, width: 110 } }));
+    const body = Array.from({ length: 24 }, (_, i) =>
+      run(50, 726 - i * 14, 500, SENTENCES[i % SENTENCES.length]),
+    );
+
+    expect(detectTables([...body, ...tiles], 0)).toEqual([]);
+  });
+
   it("keeps a table a watermark runs across", () => {
     const table = grid([50, 200, 350], 700, 20, [
       ["Item", "Qty", "Price"],

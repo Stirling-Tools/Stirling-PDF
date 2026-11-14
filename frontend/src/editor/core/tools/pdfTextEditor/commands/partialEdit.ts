@@ -717,9 +717,15 @@ function borrowFontForChars(
 }
 
 // The font a redrawn piece was first drawn in. A word typed against it can push the whole piece into a fallback face; once the typed letters move away, the words that font draws go back to it.
-const sourceFonts = new WeakMap<EditorDocument, Map<number, number>>();
+// Keyed by object pointer, which PDFium reuses once an object is destroyed, so an entry holds only while the object still draws in the font it was recorded with.
+const sourceFonts = new WeakMap<
+  EditorDocument,
+  Map<number, { source: number; drawn: number }>
+>();
 
-function sourceFontsOf(doc: EditorDocument): Map<number, number> {
+function sourceFontsOf(
+  doc: EditorDocument,
+): Map<number, { source: number; drawn: number }> {
   let fonts = sourceFonts.get(doc);
   if (!fonts) {
     fonts = new Map();
@@ -729,7 +735,9 @@ function sourceFontsOf(doc: EditorDocument): Map<number, number> {
 }
 
 function sourceFontOf(doc: EditorDocument, ptr: number): number {
-  return sourceFontsOf(doc).get(ptr) ?? objFontPtr(doc.module, ptr);
+  const drawn = objFontPtr(doc.module, ptr);
+  const entry = sourceFontsOf(doc).get(ptr);
+  return entry && entry.drawn === drawn ? entry.source : drawn;
 }
 
 export interface PartialEditApplyResult {
@@ -1140,8 +1148,6 @@ export function applyPartialEditPlan(
         fallbackFamily: insertFallback,
         outTexts: emittedTexts,
       });
-      if (ownFont)
-        for (const ptr of ptrs) if (ptr) sourceFontsOf(doc).set(ptr, ownFont);
       let realRightEdge = anchorX;
       for (const ptr of ptrs) {
         const r = measureObjRightEdgePt(m, ptr);
@@ -1193,6 +1199,13 @@ export function applyPartialEditPlan(
         }
         measuredWidth = realRightEdge - anchorX;
       }
+      if (ownFont)
+        for (const ptr of ptrs)
+          if (ptr)
+            sourceFontsOf(doc).set(ptr, {
+              source: ownFont,
+              drawn: objFontPtr(m, ptr),
+            });
       if (origBounds && ptrs.length > 0) {
         const pieceText = plan.prevMergedFromTexts[anchorIdx!] ?? "";
         const firstInk = objBoundsLR(m, ptrs[0], anchorX).x;
@@ -1261,12 +1274,13 @@ export function applyPartialEditPlan(
     }
   }
 
-  if (Number.isFinite(lineStart))
-    restoreContentOrder(
-      m,
-      page.pagePtr,
-      newMergedFromPtrs.map((ptr, i) => ({ ptr, index: lineStart + i })),
-    );
+  placeInsertedPieces(
+    m,
+    page.pagePtr,
+    newMergedFromPtrs,
+    new Set(insertedPtrs),
+    lineStart,
+  );
   page.markNeedsGenerate();
 
   if (newMergedFromBounds.length > 0) {
@@ -1373,6 +1387,40 @@ function countChar(s: string, ch: string): number {
   let n = 0;
   for (let i = 0; i < s.length; i++) if (s[i] === ch) n++;
   return n;
+}
+
+// Pieces that stayed keep their place, so a fill or underline drawn between them still paints under its word; only the new pieces move, to just after the line piece before them. Pieces inside a form are not page objects and are left alone.
+function placeInsertedPieces(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+  pieces: readonly number[],
+  inserted: ReadonlySet<number>,
+  lineStart: number,
+): void {
+  for (let i = 0; i < pieces.length; i++) {
+    const ptr = pieces[i];
+    if (!inserted.has(ptr)) continue;
+    const at = contentIndices(m, pagePtr, pieces);
+    const here = at.get(ptr);
+    if (here === undefined) continue;
+    const before = pieces
+      .slice(0, i)
+      .reverse()
+      .find((p) => at.has(p));
+    const after = pieces
+      .slice(i + 1)
+      .find((p) => at.has(p) && !inserted.has(p));
+    const target =
+      before !== undefined
+        ? at.get(before)! + (at.get(before)! < here ? 1 : 0)
+        : after !== undefined
+          ? at.get(after)! - (at.get(after)! < here ? 0 : 1)
+          : Number.isFinite(lineStart)
+            ? Math.min(lineStart, here)
+            : here;
+    if (target !== here)
+      restoreContentOrder(m, pagePtr, [{ ptr, index: target }]);
+  }
 }
 
 /** Each ptr with the stretch of `text` it carries, found in order; null when the emit's texts cannot all be placed. */
