@@ -163,6 +163,7 @@ const charCoverage = new Map<number, Map<string, boolean>>();
 /** Doc-scoped reset: PDFium reuses font pointers across documents. */
 export function resetCharCoverageCache(): void {
   charCoverage.clear();
+  glyphOutlines.clear();
 }
 
 // True when the emit path will map EVERY char in this font. Same condition
