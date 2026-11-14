@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.13.*"
 
 [[package]]
@@ -348,7 +348,7 @@ wheels = [
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.64.0"
+version = "0.91.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
@@ -359,10 +359,11 @@ dependencies = [
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/d2/86c94a2836ed42231653a7ddaefa0a5bc23418167a876bba7376c96b3a35/datamodel_code_generator-0.64.0.tar.gz", hash = "sha256:9c592900a00b20e416494273c22435f5a9aef6ea8c7b9190747522a60497a1cb", size = 1316440, upload-time = "2026-06-14T17:24:50.528Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/41/34d267bec58937ecb2b55756cefe34d0d9edf25bf61b7a4a85b6dc732179/datamodel_code_generator-0.91.0.tar.gz", hash = "sha256:3e178da790d1e58b3b6573377a3c9394b38719ecf132e295575236dcf3ac34b5", size = 9237024, upload-time = "2026-11-07T17:01:59.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/94/71338e2f0146ac10747a5537b3a1e45256e66b7c229869eb0ee787111b41/datamodel_code_generator-0.64.0-py3-none-any.whl", hash = "sha256:b7cd8bd41a312aa997aec6150670bad781847c5b674f17e4d70e78208a0fb990", size = 374698, upload-time = "2026-06-14T17:24:48.809Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/5e/5cf23bfe490991004ea3e17d3fb21b98c89c600ae7d6e20e5e5577da7d3f/datamodel_code_generator-0.91.0-py3-none-any.whl", hash = "sha256:e14fb21cb180c1d8a44c3c5c964d4a3c10f9faaf953defb2a6103fb23b8e4273", size = 2363661, upload-time = "2026-11-07T17:01:57.494Z" },
 ]
 
 [package.optional-dependencies]
@@ -414,6 +415,7 @@ wheels = [
 name = "engine"
 version = "0.1.0"
 source = { editable = "." }
+default-groups = []
 
 [package.dev-dependencies]
 cucumber = [
@@ -503,7 +505,7 @@ engine = [
 ]
 engine-dev = [
     { name = "anyio", specifier = ">=4.14.2" },
-    { name = "datamodel-code-generator", extras = ["ruff"], specifier = "==0.64.0" },
+    { name = "datamodel-code-generator", extras = ["ruff"], specifier = "==0.91.0" },
     { name = "pyrefly", specifier = "==1.4.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "referencing", specifier = ">=0.37.0" },
