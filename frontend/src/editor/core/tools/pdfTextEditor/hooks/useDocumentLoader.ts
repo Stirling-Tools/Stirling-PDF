@@ -80,13 +80,10 @@ export function useDocumentLoader(store: EditorStore) {
         store.setProgress(null);
         // The first page's bitmap is what the user waits for; reading text first would queue it behind every eager page.
         await firstPagePainted(store);
-        let sliceStart = performance.now();
         let any = false;
         for (let i = 0; i < Math.min(EAGER_PAGE_LIMIT, total); i++) {
-          if (performance.now() - sliceStart > BACKGROUND_SLICE_MS) {
-            await yieldToBrowser();
-            sliceStart = performance.now();
-          }
+          // One page per task: the paint that resolved the wait is still finishing in this one.
+          await yieldToBrowser();
           if (!store.isCurrentLoad(token)) return;
           any = readPage(store, doc, i) || any;
         }
