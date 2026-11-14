@@ -9,8 +9,11 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -20,8 +23,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -509,7 +511,23 @@ public class CertSignController {
                 PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
                 float height = bbox.getHeight();
                 form.setBBox(bbox);
-                PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+
+                X509Certificate cert = (X509Certificate) getCertificateChain()[0];
+                X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
+                RDN[] rdns = x500Name.getRDNs(BCStyle.CN);
+                String name =
+                        (rdns != null && rdns.length > 0)
+                                ? IETFUtils.valueToString(rdns[0].getFirst().getValue())
+                                : signature.getName();
+                if (name == null) {
+                    name = "";
+                }
+
+                String date =
+                        signature.getSignDate() != null
+                                ? signature.getSignDate().getTime().toString()
+                                : Calendar.getInstance().getTime().toString();
+                String reason = signature.getReason();
 
                 // from PDVisualSigBuilder.createAppearanceDictionary()
                 PDAppearanceDictionary appearance = new PDAppearanceDictionary();
@@ -532,31 +550,20 @@ public class CertSignController {
                         cs.restoreGraphicsState();
                     }
 
-                    // show text
                     float fontSize = 10;
                     float leading = fontSize * 1.5f;
                     cs.beginText();
-                    cs.setFont(font, fontSize);
                     cs.setNonStrokingColor(Color.black);
                     cs.newLineAtOffset(fontSize, height - leading);
                     cs.setLeading(leading);
 
-                    X509Certificate cert = (X509Certificate) getCertificateChain()[0];
-
-                    // https://stackoverflow.com/questions/2914521/
-                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
-
-                    String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
-
-                    cs.showText("Signed by " + name);
+                    Map<String, PDFont> fontCache = new HashMap<>();
+                    renderText(cs, doc, fontCache, fontSize, "Signed by " + name);
                     cs.newLine();
-                    cs.showText(date);
+                    renderText(cs, doc, fontCache, fontSize, date);
                     if (StringUtils.isNotBlank(reason)) {
                         cs.newLine();
-                        cs.showText(reason);
+                        renderText(cs, doc, fontCache, fontSize, reason);
                     }
 
                     cs.endText();
@@ -566,6 +573,143 @@ public class CertSignController {
                 doc.save(baos);
                 return new ByteArrayInputStream(baos.toByteArray());
             }
+        }
+
+        private record TextRun(String fontResource, String text) {}
+
+        private static List<TextRun> splitIntoRuns(String text) {
+            List<TextRun> runs = new ArrayList<>();
+            if (text == null || text.isEmpty()) {
+                return runs;
+            }
+            String currentFont = null;
+            StringBuilder currentSegment = new StringBuilder();
+
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                String font = resolveFontResourceForCodePoint(codePoint);
+                if (Character.isWhitespace(codePoint) && currentFont != null) {
+                    currentSegment.appendCodePoint(codePoint);
+                } else if (currentFont == null) {
+                    currentFont = font;
+                    currentSegment.appendCodePoint(codePoint);
+                } else if (currentFont.equals(font)) {
+                    currentSegment.appendCodePoint(codePoint);
+                } else {
+                    runs.add(new TextRun(currentFont, currentSegment.toString()));
+                    currentFont = font;
+                    currentSegment.setLength(0);
+                    currentSegment.appendCodePoint(codePoint);
+                }
+                i += Character.charCount(codePoint);
+            }
+            if (!currentSegment.isEmpty()) {
+                runs.add(new TextRun(currentFont, currentSegment.toString()));
+            }
+            return runs;
+        }
+
+        private static String resolveFontResourceForCodePoint(int codePoint) {
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
+            if (block == null) {
+                return "static/fonts/NotoSans-Bold.ttf";
+            }
+            if (block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                    || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                    || block == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                    || block == Character.UnicodeBlock.ENCLOSED_CJK_LETTERS_AND_MONTHS) {
+                return "static/fonts/NotoSansSC-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.HIRAGANA
+                    || block == Character.UnicodeBlock.KATAKANA
+                    || block == Character.UnicodeBlock.KATAKANA_PHONETIC_EXTENSIONS) {
+                return "static/fonts/NotoSansJP-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.HANGUL_SYLLABLES
+                    || block == Character.UnicodeBlock.HANGUL_JAMO
+                    || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO) {
+                return "static/fonts/NotoSansKR-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.ARABIC
+                    || block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_A
+                    || block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_B
+                    || block == Character.UnicodeBlock.ARABIC_SUPPLEMENT) {
+                return "static/fonts/NotoSansArabic-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.DEVANAGARI
+                    || block == Character.UnicodeBlock.DEVANAGARI_EXTENDED) {
+                return "static/fonts/NotoSansDevanagari-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.THAI) {
+                return "static/fonts/NotoSansThai-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.HEBREW) {
+                return "static/fonts/NotoSansHebrew-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.MALAYALAM) {
+                return "static/fonts/NotoSansMalayalam-Regular.ttf";
+            }
+            if (block == Character.UnicodeBlock.TIBETAN) {
+                return "static/fonts/NotoSerifTibetan-Regular.ttf";
+            }
+            return "static/fonts/NotoSans-Bold.ttf";
+        }
+
+        private static PDFont getOrLoadFont(
+                PDDocument doc, Map<String, PDFont> cache, String resourcePath) throws IOException {
+            PDFont font = cache.get(resourcePath);
+            if (font == null) {
+                try (InputStream fontStream =
+                        new ClassPathResource(resourcePath).getInputStream()) {
+                    font = PDType0Font.load(doc, fontStream);
+                    cache.put(resourcePath, font);
+                }
+            }
+            return font;
+        }
+
+        private static void renderText(
+                PDPageContentStream cs,
+                PDDocument doc,
+                Map<String, PDFont> fontCache,
+                float fontSize,
+                String text)
+                throws IOException {
+            if (text == null || text.isEmpty()) {
+                return;
+            }
+            List<TextRun> runs = splitIntoRuns(text);
+            for (TextRun run : runs) {
+                PDFont font = getOrLoadFont(doc, fontCache, run.fontResource());
+                cs.setFont(font, fontSize);
+                cs.showText(sanitizeForFont(font, run.text()));
+            }
+        }
+
+        private static String sanitizeForFont(PDFont font, String text) {
+            if (text == null) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < text.length(); ) {
+                int codePoint = text.codePointAt(i);
+                String ch = new String(Character.toChars(codePoint));
+                try {
+                    font.encode(ch);
+                    sb.append(ch);
+                } catch (Exception e) {
+                    try {
+                        font.encode("?");
+                        sb.append('?');
+                    } catch (Exception ignored) {
+                        // Character cannot be encoded and replacement glyph unavailable.
+                    }
+                }
+                i += Character.charCount(codePoint);
+            }
+            return sb.toString();
         }
     }
 }
