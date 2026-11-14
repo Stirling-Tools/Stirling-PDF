@@ -1,3 +1,4 @@
+import { isMostlyRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
@@ -302,6 +303,30 @@ function groupBaselineBands(
   }
 }
 
+/** Each line's font by the most of its letters, so one odd piece at its start does not stand for the whole line. */
+export function lineFontIds(
+  groups: readonly LineGroupInfo[],
+): Map<TextRun, string> {
+  const out = new Map<TextRun, string>();
+  for (const { representative, members } of groups) {
+    const fontOf = new Map(members.map((m) => [m.pdfiumObjPtr, m.fontId]));
+    const letters = new Map<string, number>();
+    representative.mergedFromPtrs.forEach((ptr, i) => {
+      const fontId = fontOf.get(ptr) ?? representative.fontId;
+      const count = (representative.mergedFromTexts[i] ?? "").replace(
+        /\s+/g,
+        "",
+      ).length;
+      letters.set(fontId, (letters.get(fontId) ?? 0) + count);
+    });
+    let best = representative.fontId;
+    for (const [fontId, count] of letters)
+      if (count > (letters.get(best) ?? 0)) best = fontId;
+    out.set(representative, best);
+  }
+  return out;
+}
+
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
   static apply(
@@ -370,9 +395,9 @@ export class LineGrouper {
       }));
       // When the typesetter emitted a cursor jump instead of a literal space
       // character, the two runs end up with content like ["Hello".
-      const parts: string[] = [memberTexts[0]];
-      const memberCharStarts: number[] = [0];
-      let cumulativeLen = memberTexts[0].length;
+      const rtl = isMostlyRtl(memberTexts.join(""));
+      // Gaps between neighbours, in drawn order.
+      const gaps: string[] = [];
       const minGap = minWordGapRatio(fontSpaceEm(group.members, spaceAdvance));
       const spaceUnitRatio = lineSpaceUnitRatio(
         group.members,
@@ -380,28 +405,37 @@ export class LineGrouper {
         minGap,
       );
       for (let i = 1; i < group.members.length; i++) {
-        const prev = group.members[i - 1];
-        const cur = group.members[i];
-        const prevTail = memberTexts[i - 1].slice(-1);
-        const curHead = memberTexts[i].slice(0, 1);
         const extraSpaces = spacesForGap(
-          junctionGapRatio(prev, cur),
+          junctionGapRatio(group.members[i - 1], group.members[i]),
           spaceUnitRatio,
           minGap,
         );
-        const prevEndsInSpace = /\s/.test(prevTail);
-        const curStartsWithSpace = /\s/.test(curHead);
+        // A right-to-left piece's trailing space is drawn on its left.
+        const [left, right] = rtl
+          ? [memberTexts[i], memberTexts[i - 1]]
+          : [memberTexts[i - 1], memberTexts[i]];
         const alreadyHave =
-          (prevEndsInSpace ? 1 : 0) + (curStartsWithSpace ? 1 : 0);
-        const toInsert = Math.max(0, extraSpaces - alreadyHave);
-        if (toInsert > 0) {
-          parts.push(" ".repeat(toInsert));
-          cumulativeLen += toInsert;
+          (/\s/.test(left.slice(-1)) ? 1 : 0) +
+          (/\s/.test(right.slice(0, 1)) ? 1 : 0);
+        gaps.push(" ".repeat(Math.max(0, extraSpaces - alreadyHave)));
+      }
+      // A right-to-left line reads from its rightmost piece; each piece already holds its own text in reading order.
+      const reading = rtl
+        ? group.members.map((_, i) => group.members.length - 1 - i)
+        : group.members.map((_, i) => i);
+      const parts: string[] = [];
+      const memberCharStarts: number[] = [];
+      let cumulativeLen = 0;
+      reading.forEach((member, k) => {
+        if (k > 0) {
+          const gap = gaps[Math.min(member, reading[k - 1])];
+          parts.push(gap);
+          cumulativeLen += gap.length;
         }
         memberCharStarts.push(cumulativeLen);
-        parts.push(memberTexts[i]);
-        cumulativeLen += memberTexts[i].length;
-      }
+        parts.push(memberTexts[member]);
+        cumulativeLen += memberTexts[member].length;
+      });
       const joined = parts.join("");
       const last = group.members[group.members.length - 1];
       const left = Math.min(
@@ -417,11 +451,13 @@ export class LineGrouper {
       };
       // Per-sub-run texts + bounds so EditTextCommand's pure-deletion
       // optimization can map joined-text chars back to their source.
-      group.representative.mergedFromTexts = memberTexts;
-      group.representative.mergedFromBounds = memberBounds;
+      group.representative.mergedFromTexts = reading.map((i) => memberTexts[i]);
+      group.representative.mergedFromBounds = reading.map(
+        (i) => memberBounds[i],
+      );
       group.representative.mergedFromCharStarts = memberCharStarts;
-      group.representative.mergedFromPtrs = group.members.map(
-        (m) => m.pdfiumObjPtr,
+      group.representative.mergedFromPtrs = reading.map(
+        (i) => group.members[i].pdfiumObjPtr,
       );
     }
 

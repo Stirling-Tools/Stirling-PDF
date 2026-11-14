@@ -33,38 +33,42 @@ const SAMPLE = path.join(
   import.meta.dirname,
   "../../../tests/test-fixtures/mixed-style-sample.pdf",
 );
-const JP_FACE_ID = "1".padStart(64, "0");
 const FPDF_PAGEOBJ_TEXT = 1;
 
-let wasm: Buffer;
+let wasm: Buffer<ArrayBuffer>;
 const stores: EditorStore[] = [];
 
-function serveJapanese(): void {
+const SERVED = [
+  ["Noto Sans JP", "NotoSansJP-Regular.ttf"],
+  ["Noto Sans Arabic", "NotoSansArabic-Regular.ttf"],
+] as const;
+const faceId = (i: number) => (i + 1).toString(16).padStart(64, "0");
+
+function serveScriptFonts(): void {
   get.mockImplementation(async (url: string) => {
     if (url === SERVER_FONTS_URL)
       return {
         data: {
-          families: [
-            {
-              family: "Noto Sans JP",
-              faces: [
-                {
-                  id: JP_FACE_ID,
-                  style: "Regular",
-                  bold: false,
-                  italic: false,
-                  weight: 400,
-                  postscriptName: "NotoSansJP-Regular",
-                },
-              ],
-            },
-          ],
+          families: SERVED.map(([family, file], i) => ({
+            family,
+            faces: [
+              {
+                id: faceId(i),
+                style: "Regular",
+                bold: false,
+                italic: false,
+                weight: 400,
+                postscriptName: file.replace(".ttf", ""),
+              },
+            ],
+          })),
         },
       };
-    if (url.endsWith(JP_FACE_ID))
+    const served = SERVED.findIndex((_, i) => url.endsWith(faceId(i)));
+    if (served >= 0)
       return {
         data: new Uint8Array(
-          readFileSync(path.join(FONT_DIR, "NotoSansJP-Regular.ttf")),
+          readFileSync(path.join(FONT_DIR, SERVED[served][1])),
         ).buffer,
       };
     throw new Error("unavailable");
@@ -151,7 +155,7 @@ function typeAtEnd(store: EditorStore, needle: string, add: string): string {
 
 describe("typing text of a script no loaded font draws", () => {
   test("draws it in a served font of that script once the font arrives", async () => {
-    serveJapanese();
+    serveScriptFonts();
     const store = await storeWithSample();
     const doc = store.document!;
 
@@ -164,7 +168,7 @@ describe("typing text of a script no loaded font draws", () => {
   });
 
   test("leaves the rest of the paragraph in its own faces and symbols when it redraws", async () => {
-    serveJapanese();
+    serveScriptFonts();
     const store = await storeWithSample();
     const doc = store.document!;
     const run = doc.page(0).runs.find((r) => r.text.includes("Ratio"))!;
@@ -188,8 +192,26 @@ describe("typing text of a script no loaded font draws", () => {
       expect(after).toContain(`${kept}@LiberationSans`);
   });
 
+  test("draws typed Arabic in a served Arabic font, reading back as typed", async () => {
+    serveScriptFonts();
+    const store = await storeWithSample();
+    const doc = store.document!;
+
+    typeAtEnd(store, "Note:", " سلام");
+
+    await vi.waitFor(() =>
+      expect(
+        drawnTexts(doc).some((t) => t.endsWith("@NotoSansArabic-Regular")),
+      ).toBe(true),
+    );
+    const arabic = drawnTexts(doc).find((t) =>
+      t.endsWith("@NotoSansArabic-Regular"),
+    )!;
+    expect(arabic.split("@")[0].normalize("NFKC")).toBe("سلام");
+  });
+
   test("keeps the edit one undo step after redrawing it", async () => {
-    serveJapanese();
+    serveScriptFonts();
     const store = await storeWithSample();
     const doc = store.document!;
 

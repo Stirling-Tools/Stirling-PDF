@@ -11,6 +11,7 @@ import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDoc
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   LineGrouper,
+  lineFontIds,
   type BlockKey,
 } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
@@ -182,10 +183,11 @@ function groupAndMeasure(
   // LineGrouper always runs (merges per-glyph/per-word source objects into
   // one line).
   const blockKey = structureBlockKey(doc, page.index);
-  LineGrouper.apply(page, blockKey, (run) =>
+  const lines = LineGrouper.apply(page, blockKey, (run) =>
     fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
   );
-  if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
+  if (mode === "auto")
+    ParagraphGrouper.apply(page, blockKey, lineFontIds(lines));
   // One walk feeds both: each was reading the same characters with its
   // own WASM round-trips, doubling the cost of every page read.
   const geometry = collectCharGeometry(doc.module, page, textPagePtr);

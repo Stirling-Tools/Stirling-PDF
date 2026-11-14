@@ -1,3 +1,4 @@
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   SAME_BLOCK,
@@ -22,6 +23,9 @@ const COLUMN_BASELINE_FRAC = 0.6;
 const COLUMN_MIN_GAP_PT = 24;
 // Left-edge clustering tolerance when splitting runs into columns.
 const COLUMN_LEFT_TOLERANCE = 14;
+// A table cell reads as a few words; a line of running text is longer than this.
+const CELL_MAX_WORDS = 3;
+const CELL_MAX_CHARS = 24;
 
 export interface ParagraphInfo {
   representative: TextRun;
@@ -30,10 +34,15 @@ export interface ParagraphInfo {
 
 export class ParagraphGrouper {
   /** `blockKey` must be the one LineGrouper grouped the page's lines by. */
-  static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): ParagraphInfo[] {
+  static apply(
+    page: Page,
+    blockKey: BlockKey = SAME_BLOCK,
+    lineFonts: ReadonlyMap<TextRun, string> = new Map(),
+  ): ParagraphInfo[] {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
 
+    const cells = tableCells(allLines);
     // Columns first: a reading-order sort across the whole page interleaves
     // side-by-side columns into one bogus paragraph.
     for (const column of segmentColumns(allLines)) {
@@ -42,7 +51,20 @@ export class ParagraphGrouper {
         if (Math.abs(yDiff) > 0.5) return yDiff;
         return a.bounds.x - b.bounds.x;
       });
-      groupColumnLines(sorted, blockKey, paragraphs);
+      // Each text layer on its own: a word typed over a scanned line sits between that line and the next, and would end their paragraph.
+      const grouped: ParagraphInfo[] = [];
+      for (const invisible of [false, true]) {
+        const layer = sorted.filter(
+          (line) => (line.renderMode === RENDER_MODE_INVISIBLE) === invisible,
+        );
+        if (layer.length > 0)
+          groupColumnLines(layer, blockKey, grouped, cells, lineFonts);
+      }
+      const order = new Map(sorted.map((line, i) => [line, i]));
+      grouped.sort(
+        (a, b) => order.get(a.representative)! - order.get(b.representative)!,
+      );
+      paragraphs.push(...grouped);
     }
 
     // Fold member bounds + text into the representative and drop the member
@@ -195,8 +217,12 @@ export function buildLineSlotsFromDescriptors(
 
 // A run's visual font identity for grouping: family + rounded size.
 // `run.fontId` is `pdf:<fontHandlePtr>:<family>`.
-function fontKey(run: TextRun): string {
-  const family = run.fontId.slice(run.fontId.lastIndexOf(":") + 1);
+function fontKey(
+  run: TextRun,
+  lineFonts: ReadonlyMap<TextRun, string>,
+): string {
+  const fontId = lineFonts.get(run) ?? run.fontId;
+  const family = fontId.slice(fontId.lastIndexOf(":") + 1);
   return `${family}@${Math.round(run.fontSize)}`;
 }
 
@@ -256,6 +282,8 @@ function groupColumnLines(
   sorted: TextRun[],
   blockKey: BlockKey,
   out: ParagraphInfo[],
+  cells: ReadonlySet<TextRun>,
+  lineFonts: ReadonlyMap<TextRun, string>,
 ): void {
   let current: ParagraphInfo | null = null;
   let currentDeltas: number[] = [];
@@ -270,7 +298,7 @@ function groupColumnLines(
       continue;
     }
     const prev = current.members[current.members.length - 1];
-    const sameFont = fontKey(prev) === fontKey(line);
+    const sameFont = fontKey(prev, lineFonts) === fontKey(line, lineFonts);
     const sameColor =
       prev.fill.r === line.fill.r &&
       prev.fill.g === line.fill.g &&
@@ -294,6 +322,8 @@ function groupColumnLines(
       deltaFromLeft <= MARGIN_INDENT_RIGHT;
 
     const sameBlock = blockKey(prev) === blockKey(line);
+    // Stacked cells of a table are rows, each its own box, not one paragraph per column.
+    const tableRows = cells.has(prev) && cells.has(line);
 
     if (
       sameFont &&
@@ -301,6 +331,7 @@ function groupColumnLines(
       lineHeightOk &&
       leftOk &&
       sameBlock &&
+      !tableRows &&
       sameTextLayer(prev, line)
     ) {
       current.members.push(line);
@@ -313,6 +344,48 @@ function groupColumnLines(
       currentLeftEdge = line.bounds.x;
     }
   }
+}
+
+function isShortCell(line: TextRun): boolean {
+  const text = line.text.trim();
+  return (
+    text.length > 0 &&
+    text.length <= CELL_MAX_CHARS &&
+    text.split(/\s+/).length <= CELL_MAX_WORDS
+  );
+}
+
+// Short lines side by side on one baseline, three or more of them or one a number: the cells of a table row. Two short lines alone could be narrow columns of running text.
+function tableCells(lines: readonly TextRun[]): Set<TextRun> {
+  const short = lines
+    .filter(isShortCell)
+    .sort((a, b) => b.matrix.f - a.matrix.f);
+  const cells = new Set<TextRun>();
+  for (let i = 0; i < short.length;) {
+    const row = [short[i]];
+    let j = i + 1;
+    while (
+      j < short.length &&
+      short[i].matrix.f - short[j].matrix.f <=
+        COLUMN_BASELINE_FRAC * Math.min(short[i].fontSize, short[j].fontSize)
+    )
+      row.push(short[j++]);
+    i = j;
+    const apart = row.filter((cell) =>
+      row.some(
+        (other) =>
+          other !== cell &&
+          Math.abs(other.bounds.x - cell.bounds.x) >= COLUMN_MIN_GAP_PT,
+      ),
+    );
+    if (apart.length >= 3 || (apart.length >= 2 && apart.some(isNumberCell)))
+      for (const cell of apart) cells.add(cell);
+  }
+  return cells;
+}
+
+function isNumberCell(line: TextRun): boolean {
+  return /^[-+(]?[$€£¥]?\d[\d.,\s%]*\)?$/.test(line.text.trim());
 }
 
 function computeMedianLineHeight(members: TextRun[]): number {

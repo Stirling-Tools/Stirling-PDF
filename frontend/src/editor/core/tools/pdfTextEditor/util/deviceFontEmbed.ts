@@ -174,6 +174,17 @@ function recordEmit(doc: EditorDocument, family: string): void {
 
 // Embed `family` into `doc` once and return its font handle, or 0. Freed with
 // the document, along with its backing WASM buffer.
+/** The family a device font this document loaded was read from, or null for any other font. */
+export function deviceFamilyOf(
+  doc: EditorDocument,
+  fontPtr: number,
+): string | null {
+  const font = fontPtr ? doc.ownedFontAt(fontPtr) : undefined;
+  return font?.id.startsWith(DEVICE_FONT_ID_PREFIX)
+    ? font.descriptor.family
+    : null;
+}
+
 export function loadDeviceFontInto(
   doc: EditorDocument,
   family: string,

@@ -252,7 +252,7 @@ const SCRIPTS: ScriptFonts[] = [
   },
   {
     script: "arabic",
-    chars: /[\u0600-\u06ff\u0750-\u077f]/,
+    chars: /[\u0600-\u06ff\u0750-\u077f\ufb50-\ufdff\ufe70-\ufeff]/,
     server: /Arabic/i,
     device: ["Noto Naskh Arabic", "Geeza Pro", "Segoe UI"],
   },

@@ -20,6 +20,15 @@ import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
+  hasRtl,
+  isRtlBase,
+  visualOrder,
+} from "@editor/tools/pdfTextEditor/util/bidi";
+import {
+  needsArabicShaping,
+  shapeArabic,
+} from "@editor/tools/pdfTextEditor/util/arabicShaping";
+import {
   noteUndrawnScriptText,
   scriptFaceFamilyFor,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
@@ -199,6 +208,43 @@ export function charcodesResolveFully(
   return true;
 }
 
+const glyphOutlines = new Map<number, Map<string, boolean>>();
+
+/**
+ * True when `fontPtr` has an outline for some of `text`'s letters but not all:
+ * a subset font maps the rest to a code it holds no glyph for, so they draw blank.
+ * A font PDFium cannot read outlines from at all is not judged.
+ */
+export function lacksGlyphsFor(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  text: string,
+): boolean {
+  if (!fontPtr) return false;
+  let perFont = glyphOutlines.get(fontPtr);
+  if (!perFont) {
+    perFont = new Map();
+    glyphOutlines.set(fontPtr, perFont);
+  }
+  let drawn = false;
+  let blank = false;
+  // Control and private-use codes reach a glyph by the font's own code, never by Unicode.
+  for (const ch of new Set(text.replace(/[\s\p{C}]+/gu, ""))) {
+    let has = perFont.get(ch);
+    if (has === undefined) {
+      try {
+        has = !!m.FPDFFont_GetGlyphPath(fontPtr, ch.codePointAt(0)!, 12);
+      } catch {
+        has = false;
+      }
+      perFont.set(ch, has);
+    }
+    if (has) drawn = true;
+    else blank = true;
+  }
+  return drawn && blank;
+}
+
 /** Strip characters a base-14 (WinAnsi) font cannot render. */
 export function sanitizeForBase14(text: string): string {
   let out = "";
@@ -336,6 +382,12 @@ interface CreatedTextOptions {
   outTexts?: string[];
   /** Stretches of `text` to draw in fonts of their own, each ending at `end`; a re-emitted line keeps each word's bold or italic face. */
   fontSpans?: readonly FontSpan[];
+  /** Set when `text` is already in the order its glyphs are drawn, left to right. */
+  drawnInOrder?: boolean;
+  /** Draw `text` as one object, spaces included, instead of one per word. */
+  oneObject?: boolean;
+  /** Draw in `originalFontPtr` only the words whose every character it provably maps; the others take the fallback. */
+  originalFontForCoveredWords?: boolean;
 }
 
 export interface FontSpan {
@@ -754,6 +806,7 @@ export function rotateObjectAbout(
 }
 
 export function emitTextLine(opts: CreatedTextOptions): number[] {
+  if (!opts.drawnInOrder && hasRtl(opts.text)) return emitInVisualOrder(opts);
   if (opts.fontSpans && opts.fontSpans.length > 1)
     return emitFontSpans(opts, opts.fontSpans);
   const spans = taggedSpans(opts.tags, opts.text.length);
@@ -780,8 +833,14 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return ptrs;
   };
 
-  // Emit ONE word at (x, y) and return its pointer (0 on failure).
-  const emitWord = (text: string, x: number): number => {
+  // Letters the page already draws in the font are proof it has them, where a charcode resolver can come up empty.
+  const fontDraws = (font: number, text: string): boolean =>
+    charcodesResolveFully(m, font, text, opts.page.pagePtr, opts.doc.docPtr) ||
+    [...text].every(
+      (ch) => onPageAdvanceEm(m, opts.page.pagePtr, font, ch) !== null,
+    );
+
+  const emitBase14 = (text: string, x: number): number => {
     // base-14 can only render WinAnsi; drop the rest so PDFium never emits
     // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
@@ -795,59 +854,61 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         ? 0
         : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, substitute, size);
     };
-    const emitBase14 = (): number => {
-      // A pre-warmed device font emits with its REAL face. Standard names skip
-      // this and a cold cache returns 0, so existing emits are unchanged.
-      if (nearestStandardFont(family) !== family) {
-        const dp = emitDeviceFontTextObject(
-          opts.doc,
-          opts.page,
-          family,
-          text,
-          size,
-          opts.fill,
-          x,
-          opts.y,
-        );
-        if (dp) return dp;
-      }
-      // Some chars are outside base-14's WinAnsi range.
-      if ([...text].length > [...base14Text].length) {
-        const fp = emitFallbackTextObject(
-          opts.doc,
-          opts.page,
-          text,
-          size,
-          opts.fill,
-          x,
-          opts.y,
-        );
-        if (fp) return fp;
-        const scriptFamily = scriptFaceFamilyFor(text);
-        const sp = scriptFamily
-          ? emitDeviceFontTextObject(
-              opts.doc,
-              opts.page,
-              scriptFamily,
-              text,
-              size,
-              opts.fill,
-              x,
-              opts.y,
-            )
-          : 0;
-        if (sp) return sp;
-        // Nothing loaded draws these chars, so the base-14 emit below drops them until their script's fonts arrive.
-        if (!measuring) noteUndrawnScriptText(text);
-        recordDroppedChars(text, base14Text);
-      }
-      if (base14Text.length === 0) return 0; // nothing representable - drop
-      const p = newBase14();
-      if (!p) return 0;
-      setTextOn(m, p, base14Text);
-      applyFillAndPos(m, opts.page, p, opts.fill, x, opts.y);
-      return p;
-    };
+    // A pre-warmed device font emits with its REAL face. Standard names skip
+    // this and a cold cache returns 0, so existing emits are unchanged.
+    if (nearestStandardFont(family) !== family) {
+      const dp = emitDeviceFontTextObject(
+        opts.doc,
+        opts.page,
+        family,
+        text,
+        size,
+        opts.fill,
+        x,
+        opts.y,
+      );
+      if (dp) return dp;
+    }
+    // Some chars are outside base-14's WinAnsi range.
+    if ([...text].length > [...base14Text].length) {
+      const fp = emitFallbackTextObject(
+        opts.doc,
+        opts.page,
+        text,
+        size,
+        opts.fill,
+        x,
+        opts.y,
+      );
+      if (fp) return fp;
+      const scriptFamily = scriptFaceFamilyFor(text);
+      const sp = scriptFamily
+        ? emitDeviceFontTextObject(
+            opts.doc,
+            opts.page,
+            scriptFamily,
+            text,
+            size,
+            opts.fill,
+            x,
+            opts.y,
+          )
+        : 0;
+      if (sp) return sp;
+      // Nothing loaded draws these chars, so the base-14 emit below drops them until their script's fonts arrive.
+      if (!measuring) noteUndrawnScriptText(text);
+      recordDroppedChars(text, base14Text);
+    }
+    if (base14Text.length === 0) return 0; // nothing representable - drop
+    const p = newBase14();
+    if (!p) return 0;
+    setTextOn(m, p, base14Text);
+    applyFillAndPos(m, opts.page, p, opts.fill, x, opts.y);
+    return p;
+  };
+
+  // Emit ONE word at (x, y) and return its pointer (0 on failure).
+  const emitWord = (text: string, x: number): number => {
     if (!canReuse) {
       // Still record the attempt: this is the only signal that an edit fell
       // back instead of reusing the source face.
@@ -864,15 +925,20 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
             : "no source font available (Helvetica fresh emit)",
         outcome: "no-font",
       });
-      return emitBase14();
+      return emitBase14(text, x);
     }
 
+    if (
+      opts.originalFontForCoveredWords &&
+      !fontDraws(opts.originalFontPtr, text.replace(/\s+/g, ""))
+    )
+      return emitBase14(text, x);
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
       size,
     );
-    if (!ptr) return emitBase14();
+    if (!ptr) return emitBase14(text, x);
     // Reuse path: resolve real font charcodes so the embedded subset font
     // renders the chars; falls back to SetText internally.
     const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
@@ -885,8 +951,16 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     if (visible > 0 && right - x < minExpected) {
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return (
-        (strategyUsed !== null && emitWithSetText(text, x)) || emitBase14()
+        (strategyUsed !== null && emitWithSetText(text, x)) ||
+        emitBase14(text, x)
       );
+    }
+    if (
+      strategyUsed === null &&
+      lacksGlyphsFor(m, opts.originalFontPtr, text)
+    ) {
+      removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+      return emitBase14(text, x);
     }
     // Read-back validation for a source-font SetText.
     if (strategyUsed === null) {
@@ -901,10 +975,14 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       if (!allProven) {
         const got = readBackTextObj(m, opts.page.pagePtr, ptr);
         if (got !== null) {
-          const norm = (s: string) => s.replace(/\s+/g, "");
+          // Readers return right-to-left text in reading order, not the drawn order written here.
+          const norm = (s: string) =>
+            hasRtl(s)
+              ? [...s.replace(/\s+/g, "")].sort().join("")
+              : s.replace(/\s+/g, "");
           if (norm(got) !== norm(text)) {
             removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-            return emitBase14();
+            return emitBase14(text, x);
           }
           if (opts.originalFontPtr) {
             for (const c of visibleChars) {
@@ -938,15 +1016,28 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         const ratio = (right - x) / expected;
         if (ratio < 0.6 || ratio > 1.7) {
           removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-          return emitWithSetText(text, x) || emitBase14();
+          return emitWithSetText(text, x) || emitBase14(text, x);
         }
+      }
+      // With no advance to compare, the width says nothing; the font's own mapping still tells a wrong code from a right one.
+      if ([...text.trim()].length === 1 && !readsBackAs(ptr, text)) {
+        removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+        return emitWithSetText(text, x) || emitBase14(text, x);
       }
     }
     return ptr;
   };
 
+  // A guessed code that reads back as another character drew that character. A font that reads back nothing has no mapping to judge by.
+  function readsBackAs(ptr: number, text: string): boolean {
+    const got = readBackTextObj(m, opts.page.pagePtr, ptr);
+    if (got === null || got.trim() === "") return true;
+    return got.trim() === text.trim();
+  }
+
   // A wrong charcode guess says nothing about the font's own text mapping, which draws every longer word.
   function emitWithSetText(text: string, x: number): number {
+    if (lacksGlyphsFor(m, opts.originalFontPtr, text)) return 0;
     const ptr = m2.FPDFPageObj_CreateTextObj!(
       opts.doc.docPtr,
       opts.originalFontPtr,
@@ -957,9 +1048,11 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
     const visible = text.replace(/\s+/g, "");
     const got = readBackTextObj(m, opts.page.pagePtr, ptr);
+    const sameChars = (a: string, b: string) =>
+      [...a].sort().join("") === [...b].sort().join("");
     if (
       got !== null &&
-      got.replace(/\s+/g, "") === visible &&
+      sameChars(got.replace(/\s+/g, ""), visible) &&
       measureObjRightEdgePt(m, ptr) - x >= visible.length * size * 0.15
     )
       return ptr;
@@ -1091,8 +1184,15 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   ) {
     const ptrs: number[] = [];
     let cursor = opts.x;
+    // One face for the whole word: letters the source font has would otherwise keep it while the rest fall back.
+    const wholeWordFallback =
+      !!opts.originalFontForCoveredWords &&
+      canReuse &&
+      !fontDraws(opts.originalFontPtr, opts.text);
     for (const ch of opts.text) {
-      const ptr = emitWord(ch, cursor);
+      const ptr = wholeWordFallback
+        ? emitBase14(ch, cursor)
+        : emitWord(ch, cursor);
       if (ptr) {
         ptrs.push(ptr);
         opts.outTexts?.push(ch);
@@ -1110,7 +1210,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   }
 
   // Fast path: no whitespace at all → one text object holds the whole word.
-  if (!hasAnyWhitespace) {
+  // A turned line stays one object too: words drawn apart along a turned baseline read back as separate lines.
+  if (!hasAnyWhitespace || opts.oneObject || opts.rotation) {
     const ptr = emitWord(opts.text, opts.x);
     if (ptr) opts.outTexts?.push(opts.text);
     return withRotation(ptr ? [ptr] : []);
@@ -1157,6 +1258,159 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
+}
+
+// A reader reverses the letters of each right-to-left object but orders a left-to-right line's objects by position, so each right-to-left run inside one is drawn as a single object, spaces and all.
+function emitDirectionRuns(
+  opts: CreatedTextOptions,
+  rightToLeft: readonly boolean[],
+): number[] {
+  const m = opts.doc.module;
+  const size = Math.max(4, opts.fontSize);
+  const family = opts.fallbackFamily ?? "Helvetica";
+  const spacing = opts.charSpacingPt ?? 0;
+  const ptrs: number[] = [];
+  let x = opts.x;
+  let start = 0;
+  while (start < opts.text.length) {
+    let end = start + 1;
+    while (end < opts.text.length && rightToLeft[end] === rightToLeft[start])
+      end++;
+    const text = opts.text.slice(start, end);
+    const ink = text.trimEnd();
+    const texts: string[] = [];
+    const spans = sliceFontSpans(opts.fontSpans, start, end);
+    const font = spans[0]?.fontPtr || opts.originalFontPtr;
+    // A font with no space glyph cannot hold the run whole; its words stay apart.
+    const whole =
+      rightToLeft[start] &&
+      (!font ||
+        charcodesResolveFully(
+          m,
+          font,
+          " ",
+          opts.page.pagePtr,
+          opts.doc.docPtr,
+        ));
+    const own = ink.trim()
+      ? emitTextLine({
+          ...opts,
+          text,
+          x,
+          rotation: undefined,
+          oneObject: whole,
+          fontSpans: spans.length > 1 ? spans : undefined,
+          originalFontPtr: font,
+          fallbackFamily: spans[0]?.fallbackFamily ?? opts.fallbackFamily,
+          outTexts: texts,
+        })
+      : [];
+    opts.outTexts?.push(...texts);
+    ptrs.push(...own);
+    const drawnEnd =
+      own.length > 0
+        ? drawnEndPt(m, own, texts, size)
+        : x + measureAdvancePt(ink, family, size);
+    const trailing = text.slice(ink.length);
+    x =
+      Math.max(x, drawnEnd) +
+      (trailing
+        ? measureAdvancePt(trailing, family, size) + spacing * trailing.length
+        : 0);
+    start = end;
+  }
+  const rot = opts.rotation;
+  if (rot)
+    for (const ptr of ptrs)
+      rotateObjectAbout(m, ptr, opts.x, opts.y, rot.cos, rot.sin);
+  return ptrs;
+}
+
+function sliceFontSpans(
+  spans: readonly FontSpan[] | undefined,
+  start: number,
+  end: number,
+): FontSpan[] {
+  const out: FontSpan[] = [];
+  let from = 0;
+  for (const span of spans ?? []) {
+    if (span.end > start && from < end)
+      out.push({ ...span, end: Math.min(span.end, end) - start });
+    from = span.end;
+  }
+  return out;
+}
+
+// Each drawn position takes the font of the character it shows.
+function visualFontSpans(
+  spans: readonly FontSpan[] | undefined,
+  order: readonly number[],
+): FontSpan[] | undefined {
+  if (!spans || spans.length < 2) return undefined;
+  const spanAt = (index: number) =>
+    spans.find((span) => index < span.end) ?? spans[spans.length - 1];
+  const out: Array<FontSpan & { source: FontSpan }> = [];
+  order.forEach((index, drawn) => {
+    const source = spanAt(index);
+    const last = out[out.length - 1];
+    if (last && last.source === source) last.end = drawn + 1;
+    else out.push({ ...source, end: drawn + 1, source });
+  });
+  return out.map(({ end, fontPtr, fallbackFamily }) => ({
+    end,
+    fontPtr,
+    fallbackFamily,
+  }));
+}
+
+// Glyphs are drawn left to right in content order, so right-to-left text goes in reordered; each object still reports the logical stretch it shows.
+function emitInVisualOrder(opts: CreatedTextOptions): number[] {
+  const shaped = needsArabicShaping(opts.text) ? shapeArabic(opts.text) : null;
+  const rtlBase = isRtlBase(opts.text);
+  const { visual, order, rightToLeft } = visualOrder(
+    shaped?.text ?? opts.text,
+    rtlBase,
+  );
+  const starts = order.map((i) => (shaped ? shaped.source[i] : i));
+  const ends = order.map((i) => (shaped ? shaped.sourceEnd[i] : i + 1));
+  const drawn: string[] = [];
+  const fontSpans = visualFontSpans(opts.fontSpans, starts);
+  const drawnOpts: CreatedTextOptions = {
+    ...opts,
+    text: visual,
+    drawnInOrder: true,
+    fontSpans,
+    tags: uniformTags(taggedSpans(opts.tags, opts.text.length)[0]?.tags ?? []),
+    outTexts: drawn,
+  };
+  const ptrs = rtlBase
+    ? emitTextLine(drawnOpts)
+    : emitDirectionRuns(drawnOpts, rightToLeft);
+  const shown: Array<{ ptr: number; text: string; start: number }> = [];
+  let cursor = 0;
+  ptrs.forEach((ptr, i) => {
+    const text = drawn[i] ?? "";
+    const at = visual.indexOf(text, cursor);
+    if (at < 0 || !text) {
+      shown.push({ ptr, text, start: Infinity });
+      return;
+    }
+    const start = Math.min(...starts.slice(at, at + text.length));
+    const end = Math.max(...ends.slice(at, at + text.length));
+    shown.push({ ptr, text: opts.text.slice(start, end), start });
+    cursor = at + text.length;
+  });
+  // A reader reverses each right-to-left object's letters but, in a left-to-right line, takes the objects in content order.
+  if (!rtlBase) {
+    shown.sort((a, b) => a.start - b.start);
+    const m = opts.doc.module;
+    for (const { ptr } of shown) {
+      m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+      m.FPDFPage_InsertObject(opts.page.pagePtr, ptr);
+    }
+  }
+  opts.outTexts?.push(...shown.map(({ text }) => text));
+  return shown.map(({ ptr }) => ptr);
 }
 
 /**
@@ -1319,22 +1573,30 @@ function readBackTextObj(
   pagePtr: number,
   objPtr: number,
 ): string | null {
+  return objectTexts(m, pagePtr, [objPtr])?.[0] ?? null;
+}
+
+/** What each object reads as, through one text page; null when the module cannot read text. */
+export function objectTexts(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  ptrs: readonly number[],
+): string[] | null {
   const mod = m as unknown as TextObjReadModule;
-  if (
-    !mod.FPDFText_LoadPage ||
-    !mod.FPDFTextObj_GetText ||
-    !mod.FPDFText_ClosePage
-  ) {
+  const getText = mod.FPDFTextObj_GetText;
+  if (!mod.FPDFText_LoadPage || !getText || !mod.FPDFText_ClosePage) {
     return null;
   }
   const tp = mod.FPDFText_LoadPage(pagePtr);
   if (!tp) return null;
   try {
-    const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
-    if (len <= 2) return "";
-    const buf = scratchPtr(m, SCRATCH.editObjText, len);
-    mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-    return drawnText(readUtf16(m, buf, len));
+    return ptrs.map((objPtr) => {
+      const len = getText(objPtr, tp, 0, 0);
+      if (len <= 2) return "";
+      const buf = scratchPtr(m, SCRATCH.editObjText, len);
+      getText(objPtr, tp, buf, len);
+      return drawnText(readUtf16(m, buf, len));
+    });
   } catch {
     return null;
   } finally {
@@ -1652,6 +1914,7 @@ export function emitRunLines(opts: {
   originalFontPtr: number;
   fallbackFamily: string;
   originalFontSubset?: boolean;
+  originalFontForCoveredWords?: boolean;
   /** Per output line, the source fonts to keep within it. */
   fontSpansByLine?: ReadonlyArray<readonly FontSpan[] | undefined>;
 }): EmittedLine[] {
@@ -1678,6 +1941,7 @@ export function emitRunLines(opts: {
       ...inkFromRun(opts.run),
       originalFontPtr: opts.originalFontPtr,
       originalFontSubset: opts.originalFontSubset,
+      originalFontForCoveredWords: opts.originalFontForCoveredWords,
       charSpacingPt: opts.run.charSpacingPt,
       fallbackFamily: opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
@@ -1685,7 +1949,16 @@ export function emitRunLines(opts: {
       tags,
       fontSpans: opts.fontSpansByLine?.[i],
     });
-    out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
+    // A right-to-left line keeps its right edge, where it starts.
+    const ink =
+      !rot && isRtlBase(text) ? measureObjSpanPt(opts.doc.module, ptrs) : null;
+    const shift = ink
+      ? opts.run.bounds.x + opts.run.bounds.width - ink.right
+      : 0;
+    if (ptrs.length > 0 && Number.isFinite(shift) && Math.abs(shift) > 0.05)
+      for (const ptr of ptrs)
+        transformObject(opts.doc.module, ptr, 1, 0, 0, 1, shift, 0);
+    out.push({ ptrs, text, texts, x: origin.x + shift, y: origin.y });
   }
   return out;
 }
