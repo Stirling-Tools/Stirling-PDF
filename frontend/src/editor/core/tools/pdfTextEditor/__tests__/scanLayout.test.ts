@@ -156,6 +156,16 @@ describe("layoutScanEdit", () => {
     expect(l.kept.every((k) => !k.moved)).toBe(true);
   });
 
+  it("typing at the end of a line draws past text already drawn there", () => {
+    const lines = block("TRADING CO");
+    const coEnd = lines[0].words[1].x + 10;
+    const earlier = { line: 0, x: coEnd + 4, right: coEnd + 4 + 15 };
+    const l = run(lines, "TRADING CO LTD", { obstacles: [earlier] });
+    expect(l.typed).toEqual([
+      expect.objectContaining({ text: "LTD", x: earlier.right + 4 }),
+    ]);
+  });
+
   it("a restyle redraws every word as text", () => {
     const l = run(block("NORTH CO", "TEL 1"), "NORTH CO\nTEL 1", {
       redraw: true,

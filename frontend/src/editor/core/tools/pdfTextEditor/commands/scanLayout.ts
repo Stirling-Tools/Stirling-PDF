@@ -35,6 +35,8 @@ export interface LayoutInput {
   ) => number;
   /** Redraw every word as text (a restyle), instead of keeping the scan. */
   redraw: boolean;
+  /** Text already drawn on a line that is not part of this block, which typed text must not land on. */
+  obstacles?: Array<{ line: number; x: number; right: number }>;
 }
 
 export interface PlacedWord {
@@ -167,10 +169,14 @@ export function layoutScanEdit(input: LayoutInput): Layout {
     // A line starts where it always did, so deleting its first word pulls
     // the rest left rather than leaving a hole.
     const scannedLead = anchor && anchor.line === line ? (anchor.lead ?? 0) : 0;
-    const x =
-      (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
-      Math.max(0, pending.lead - scannedLead) * input.space;
     const text = pending.text;
+    const width = input.textWidth(text, anchor, dels);
+    const x = clearOfObstacles(
+      line,
+      (pen === null ? lineStart(line) : pen() + gap(prev, anchor)) +
+        Math.max(0, pending.lead - scannedLead) * input.space,
+      width,
+    );
     layout.typed.push({
       text,
       x,
@@ -181,12 +187,20 @@ export function layoutScanEdit(input: LayoutInput): Layout {
         !!anchor && anchor.line === line && Math.abs(x - anchor.x) < 0.5,
       replaced: dels,
     });
-    const end = x + input.textWidth(text, anchor, dels);
+    const end = x + width;
     pen = () => end;
     prev = anchor;
     lastKept = null;
     dels = [];
     pending = null;
+  };
+
+  const clearOfObstacles = (line: number, x: number, width: number) => {
+    let at = x;
+    for (const o of [...(input.obstacles ?? [])].sort((a, b) => a.x - b.x))
+      if (o.line === line && o.right > at && o.x < at + width)
+        at = o.right + input.space;
+    return at;
   };
 
   const flowStart = (w: LayoutWord, line: number): number => {
