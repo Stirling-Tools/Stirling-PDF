@@ -884,3 +884,13 @@
     column-width: 14rem;
   }
 }
+
+/* Holds whatever a tool pins with ToolPanelFooter; takes no space while empty. */
+.tool-panel__footer {
+  flex-shrink: 0;
+  background: var(--c-surface);
+}
+
+.tool-panel__footer:empty {
+  display: none;
+}

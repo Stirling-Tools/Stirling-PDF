@@ -3,7 +3,7 @@ import {
   PdfiumPage,
   PdfiumImage,
 } from "@editor/services/pdfiumDocBuilder";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
 
 export const drawThumbnailPlaceholder = (
   page: PdfiumPage,

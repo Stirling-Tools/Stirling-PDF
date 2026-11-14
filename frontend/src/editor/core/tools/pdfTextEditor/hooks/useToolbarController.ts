@@ -531,6 +531,7 @@ export function useToolbarController(
     innerTextTags: textA11y.inner,
     textLanguage: textA11y.language,
     textOtherPages: textA11y.otherPages,
+    textUntaggedLinks: textA11y.untaggedLinks,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

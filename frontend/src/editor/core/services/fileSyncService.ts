@@ -13,6 +13,7 @@ import { StirlingFileStub, StirlingFile } from "@editor/types/fileContext";
 import { FileId } from "@editor/types/fileContext";
 import { FolderId, parseFolderId } from "@editor/types/folder";
 import { virtualFolderStorage } from "@editor/services/virtualFolderStorage";
+import { importShareBundle } from "@editor/services/shareBundleImportService";
 import {
   isZipBundle,
   loadShareBundleEntries,
@@ -402,14 +403,19 @@ export async function reconcileServerFiles(
 
 /**
  * Download bytes for any server-only stubs (id starts with "server-") and
- * ingest them into IDB. Returns a stub list where the server-only entries
- * are replaced with proper local stubs that point to the freshly-cached
- * IDB rows. Local stubs are passed through untouched.
+ * ingest them into IDB. Returns local stubs for every current file produced
+ * by the inputs, plus the number of source stubs that materialized. Local
+ * stubs are passed through untouched.
  *
  * Pass `addFiles` (from FileContext.addFilesWithOptions) and
  * `updateStub` (from FileContext.updateStirlingFileStub) so this util
  * stays React-free; the caller provides the wiring.
  */
+export interface MaterializedServerStubsResult {
+  stubs: StirlingFileStub[];
+  successfulSourceCount: number;
+}
+
 export async function materializeServerStubs(
   stubs: StirlingFileStub[],
   helpers: {
@@ -425,8 +431,9 @@ export async function materializeServerStubs(
     ) => Promise<StirlingFile[]>;
     updateStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
   },
-): Promise<StirlingFileStub[]> {
+): Promise<MaterializedServerStubsResult> {
   const out: StirlingFileStub[] = [];
+  let successfulSourceCount = 0;
   // Collect per-stub failures so we can surface ONE summarized toast at the
   // end instead of N popups (or worse, silently dropping files from the grid
   // with zero user signal as the previous code did).
@@ -442,6 +449,7 @@ export async function materializeServerStubs(
       typeof stub.remoteShareToken === "string";
     if (!isServerStub && !isSharedStub) {
       out.push(stub);
+      successfulSourceCount += 1;
       continue;
     }
     try {
@@ -481,20 +489,6 @@ export async function materializeServerStubs(
       const bundle = isZipBundle(contentType, filename)
         ? await loadShareBundleEntries(blob).catch(() => null)
         : null;
-      const files: File[] = bundle
-        ? bundle.files
-        : [new File([blob], filename, { type: contentType || blob.type })];
-
-      const ingested = await helpers.addFiles(files, {
-        selectFiles: false,
-        autoUnzip: false,
-        skipAutoUnzip: true,
-        allowDuplicates: true,
-        skipUploadTracking: true,
-      });
-      if (ingested.length === 0) continue;
-      const primary = ingested[ingested.length - 1];
-      const newId = primary.fileId;
       const remoteUpdates = {
         // The ingest above made a new local file, which starts in no folder. Without
         // carrying membership across, materialising a file to open it moves it to the
@@ -509,9 +503,65 @@ export async function materializeServerStubs(
         remoteHasShareLinks: stub.remoteHasShareLinks,
         remoteShareToken: isSharedStub ? stub.remoteShareToken : undefined,
       };
-      helpers.updateStub(newId, remoteUpdates);
-      await fileStorage.updateFileMetadata(newId, remoteUpdates);
-      out.push({ ...stub, ...remoteUpdates, id: newId, originalFileId: newId });
+
+      if (bundle) {
+        const currentFiles = await importShareBundle(
+          bundle,
+          {
+            addFiles: (files) =>
+              helpers.addFiles(files, {
+                selectFiles: false,
+                autoUnzip: false,
+                skipAutoUnzip: true,
+                allowDuplicates: true,
+                skipUploadTracking: true,
+              }),
+            updateStub: helpers.updateStub,
+          },
+          remoteUpdates,
+        );
+        if (currentFiles.length === 0) continue;
+        for (const { file, updates } of currentFiles) {
+          out.push({
+            ...stub,
+            id: file.fileId,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            lastModified: file.lastModified,
+            quickKey: file.quickKey,
+            ...updates,
+          });
+        }
+      } else {
+        const ingested = await helpers.addFiles(
+          [new File([blob], filename, { type: contentType || blob.type })],
+          {
+            selectFiles: false,
+            autoUnzip: false,
+            skipAutoUnzip: true,
+            allowDuplicates: true,
+            skipUploadTracking: true,
+          },
+        );
+        if (ingested.length === 0) continue;
+        const primary = ingested[ingested.length - 1];
+        const newId = primary.fileId;
+        helpers.updateStub(newId, remoteUpdates);
+        await fileStorage.updateFileMetadata(newId, remoteUpdates);
+        out.push({
+          ...stub,
+          ...remoteUpdates,
+          id: newId,
+          name: primary.name,
+          type: primary.type,
+          size: primary.size,
+          lastModified: primary.lastModified,
+          quickKey: primary.quickKey,
+          originalFileId: newId,
+        });
+      }
+      successfulSourceCount += 1;
     } catch (err) {
       console.warn("[fileSyncService] failed to materialize server stub", err);
       const status = (err as { response?: { status?: number } })?.response
@@ -538,7 +588,10 @@ export async function materializeServerStubs(
       bodyText = i18n.t(
         "fileSync.openFailed.singleWithStatus",
         `Couldn't open "{{name}}" (HTTP {{status}}).`,
-        { name: first.name, status: first.status },
+        {
+          name: first.name,
+          status: first.status,
+        },
       );
     } else {
       bodyText = i18n.t(
@@ -559,5 +612,5 @@ export async function materializeServerStubs(
       durationMs: 5000,
     });
   }
-  return out;
+  return { stubs: out, successfulSourceCount };
 }
