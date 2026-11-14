@@ -52,7 +52,11 @@ import {
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
-import { releaseScratch } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import {
+  releaseScratch,
+  SCRATCH,
+  scratchPtr,
+} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 // Lifetime-managed PDFium document wrapper for the PDF text editor. - Opens a
 // raw PDFium document pointer from bytes.
@@ -202,6 +206,21 @@ export class EditorDocument {
     } catch {
       /* best-effort: the page still renders without the form layer */
     }
+  }
+
+  /** The page's display size in points, read without opening (parsing) the page. */
+  pageSize(index: number): { width: number; height: number } {
+    const cached = this.pageCache.get(index);
+    if (cached) return { width: cached.width, height: cached.height };
+    const out = scratchPtr(this.module, SCRATCH.pageSize, 8);
+    if (!this.module.FPDF_GetPageSizeByIndexF(this.docPtr, index, out)) {
+      const page = this.page(index);
+      return { width: page.width, height: page.height };
+    }
+    return {
+      width: this.module.pdfium.getValue(out, "float"),
+      height: this.module.pdfium.getValue(out + 4, "float"),
+    };
   }
 
   page(index: number): Page {
