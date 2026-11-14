@@ -71,6 +71,8 @@ services:
     environment:
       # Basic settings
       DOCKER_ENABLE_SECURITY: "true"
+      # A fresh server signs in as the default admin and hides the SSO buttons.
+      SYSTEM_SETUPCOMPLETED: "true"
       SECURITY_ENABLELOGIN: "true"
       SECURITY_LOGINMETHOD: "${SECURITY_LOGINMETHOD:-all}"
       SYSTEM_DEFAULTLOCALE: en-US

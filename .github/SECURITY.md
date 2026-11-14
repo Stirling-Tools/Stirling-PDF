@@ -29,7 +29,9 @@ When reporting a vulnerability, please provide:
 
 ### Response Time
 
-We aim to acknowledge receipt of your vulnerability report within 48 hours
+We are currently receiving a high volume of security reports, many of them AI-assisted, and each one is reviewed by hand. Because of this, acknowledging a report can take 1-2 weeks or longer. Critical issues are prioritised.
+
+Reports that include a working proof of concept against the latest version are triaged first. Reports we cannot reproduce may be closed without further investigation.
 
 ### Process
 

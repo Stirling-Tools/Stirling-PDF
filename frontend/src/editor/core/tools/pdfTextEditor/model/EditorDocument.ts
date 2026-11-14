@@ -7,19 +7,35 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
+  givenMcids,
   isInlineType,
+  type AddedElement,
+  type CutElement,
   type ReadOnlyReason,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   effectiveLanguage,
   type TextLanguage,
 } from "@editor/tools/pdfTextEditor/model/languageTag";
+import type { AnnotationEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyAnnotationEdits";
 import type { StructureEdit } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import {
   readPageStructure,
   readString,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
-import { carriedMcids } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  artifactMarkRefs,
+  carriedMcids,
+  forgetArtifactKinds,
+  forgetArtifactMarks,
+  registerArtifactKinds,
+  type ArtifactMarkRef,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  readFileArtifactKinds,
+  refreshArtifactTags,
+} from "@editor/tools/pdfTextEditor/model/fileArtifactKinds";
+import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
   readFileStructure,
   type FileStructure,
@@ -44,6 +60,8 @@ import { releaseScratch } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 // full copy of the file alive for the session.
 const MAX_RETAINED_BYTES = 64 * 1024 * 1024;
 const EMPTY = new Uint8Array(0);
+/** How long the file stays parsed after the last artifact kind read, for the pages read next. */
+const RAW_PDF_GRACE_MS = 10_000;
 
 export class EditorDocument {
   readonly module: WrappedPdfiumModule;
@@ -75,6 +93,7 @@ export class EditorDocument {
   private readonly fileStructure: FileStructure | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
+  private readonly embeddedFonts: Uint8Array[] = [];
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
   // this layer, so without it such fields are invisible in the editor while
@@ -83,6 +102,21 @@ export class EditorDocument {
   private formEnvPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
+  /** By page index, as each page is first read: the artifact marks whose kinds only the file names. */
+  private readonly artifactMarks = new Map<number, ArtifactMarkRef[]>();
+  private readonly artifactKindReads = new Map<number, Promise<boolean>>();
+  private readonly artifactKindListeners = new Set<
+    (pageIndex: number) => void
+  >();
+  /**
+   * The opened bytes parsed, shared by the artifact kind reads in flight and
+   * dropped soon after the last: it holds a second copy of the file.
+   */
+  private raw: {
+    pdf: Promise<RawPdf | null>;
+    reads: number;
+    release?: ReturnType<typeof setTimeout>;
+  } | null = null;
 
   private constructor(
     module: WrappedPdfiumModule,
@@ -193,6 +227,91 @@ export class EditorDocument {
   }
 
   /**
+   * Note the page's artifact marks whose kinds only the file names, and
+   * start reading those kinds. Must run as the page is first read, before
+   * any edit and before any of its marks is read: PdfiumTextReader.populate
+   * calls it.
+   */
+  claimArtifactMarks(pageIndex: number): void {
+    if (this.artifactMarks.has(pageIndex)) return;
+    const refs = artifactMarkRefs(this.module, this.page(pageIndex).pagePtr);
+    forgetArtifactMarks(
+      this.module,
+      refs.map((ref) => ref.ptr),
+    );
+    this.artifactMarks.set(pageIndex, refs);
+    if (refs.length > 0) void this.loadArtifactKinds(pageIndex);
+  }
+
+  /**
+   * Resolves once the kinds the file names for the page's artifacts are
+   * read: true when they were, the page's runs then carrying them and each
+   * onArtifactKinds listener told. Never rejects.
+   */
+  loadArtifactKinds(pageIndex: number): Promise<boolean> {
+    this.claimArtifactMarks(pageIndex);
+    let read = this.artifactKindReads.get(pageIndex);
+    if (!read) {
+      read = this.readArtifactKinds(pageIndex).catch(() => false);
+      this.artifactKindReads.set(pageIndex, read);
+    }
+    return read;
+  }
+
+  /** Hear of each page whose artifact kinds have been read. Returns the unsubscribe. */
+  onArtifactKinds(listener: (pageIndex: number) => void): () => void {
+    this.artifactKindListeners.add(listener);
+    return () => this.artifactKindListeners.delete(listener);
+  }
+
+  private async readArtifactKinds(pageIndex: number): Promise<boolean> {
+    const refs = this.artifactMarks.get(pageIndex) ?? [];
+    if (refs.length === 0 || this.openedBytes.length === 0) return false;
+    const kinds = await this.withRawPdf((pdf) => {
+      const pageNum = pdf.encrypted ? null : pdf.pageNumberAt(pageIndex);
+      return pageNum === null
+        ? Promise.resolve(null)
+        : readFileArtifactKinds(pdf, pageNum, refs);
+    });
+    if (!kinds || this._disposed) return false;
+    const page = this.page(pageIndex);
+    // Only marks still on the page: one an edit freed meanwhile may be
+    // another page's by now.
+    const live = new Set(
+      artifactMarkRefs(this.module, page.pagePtr).map((ref) => ref.ptr),
+    );
+    registerArtifactKinds(
+      this.module,
+      this,
+      new Map([...kinds].filter(([ptr]) => live.has(ptr))),
+    );
+    refreshArtifactTags(this.module, page);
+    page.bumpRevision();
+    for (const listener of this.artifactKindListeners) listener(pageIndex);
+    return true;
+  }
+
+  private async withRawPdf<T>(
+    read: (pdf: RawPdf) => Promise<T | null>,
+  ): Promise<T | null> {
+    this.raw ??= { pdf: RawPdf.parse(this.openedBytes), reads: 0 };
+    const raw = this.raw;
+    clearTimeout(raw.release);
+    raw.reads += 1;
+    try {
+      const pdf = await raw.pdf;
+      return pdf ? await read(pdf) : null;
+    } finally {
+      raw.reads -= 1;
+      if (raw.reads === 0 && !this._disposed) {
+        raw.release = setTimeout(() => {
+          if (this.raw === raw) this.raw = null;
+        }, RAW_PDF_GRACE_MS);
+      }
+    }
+  }
+
+  /**
    * The page's structure elements and their unsaved edits.
    */
   structure(pageIndex: number): PageStructure {
@@ -213,28 +332,36 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    if (!page) return new PageStructure([], null, 0);
+    const links = this.fileStructure.links.get(pageIndex) ?? [];
+    const retaggedAs = (key: string) => this.retaggedAs(key);
+    if (!page) return new PageStructure([], null, 0, retaggedAs, links);
     if (page.slotCount === null) return new PageStructure([], "unreadable");
-    return new PageStructure(page.elements, null, page.slotCount, (key) =>
-      this.retaggedAs(key),
+    return new PageStructure(
+      page.elements,
+      null,
+      page.slotCount,
+      retaggedAs,
+      links,
     );
   }
 
   /**
-   * The headings in reading order, the session's retags and added elements
-   * applied. Null when the file's structure tree could not be read, which
-   * leaves nothing to check them against.
+   * The headings in reading order, the session's retags, decorative marks
+   * and added elements applied. Null when the file's structure tree could not
+   * be read, which leaves nothing to check them against.
    */
   headings(): DocumentHeading[] | null {
     if (!this.fileStructure) return null;
-    const blocks: OutlineBlock[] = this.fileStructure.blocks.map(
-      ({ key, type, pageIndex, mcids }) => ({
+    const blocks: OutlineBlock[] = this.fileStructure.blocks
+      .filter(
+        ({ pageIndex, mcids }) => !this.markedDecorative(pageIndex, mcids),
+      )
+      .map(({ key, type, pageIndex, mcids }) => ({
         key,
         type: this.retaggedAs(key) ?? type,
         pageIndex,
         mcids,
-      }),
-    );
+      }));
     for (const [pageIndex, structure] of this.structureCache) {
       for (const edit of this.addedElementEdits(pageIndex, structure)) {
         const { type, after } = edit.newElement!;
@@ -256,6 +383,12 @@ export class EditorDocument {
         ? [{ type, pageIndex, mcids, ...(partOf && { partOf }) }]
         : [],
     );
+  }
+
+  /** True when the session marked the block owning `mcids` decorative. */
+  private markedDecorative(pageIndex: number | null, mcids: number[]): boolean {
+    if (pageIndex === null || mcids.length === 0) return false;
+    return this.structureCache.get(pageIndex)?.decorative(mcids[0]) ?? false;
   }
 
   /** The type the session has retagged block `key` as; null when it has not. */
@@ -534,9 +667,28 @@ export class EditorDocument {
   }
 
   /**
+   * Every unsaved change to a link annotation, in the form the save pass
+   * takes. A link whose holder's text is no longer on the page is left
+   * unheld, as the save drops a session element with no text (cutEdits,
+   * addedElementEdits).
+   */
+  annotationEdits(): AnnotationEdit[] {
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => {
+      const page = this.pageCache.get(pageIndex);
+      const carried = page && carriedMcids(this.module, page.pagePtr);
+      return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
+        const held = mcid !== undefined && (!carried || carried.has(mcid));
+        if (!held && edit.contents === undefined) return [];
+        return [{ pageIndex, ...edit, ...(held && { mcid }) }];
+      });
+    });
+  }
+
+  /**
    * The page's added elements, each after the added element it reads after,
-   * so it finds that already in the tree. An element whose content was
-   * deleted is left out: there is nothing left for it to tag.
+   * so it finds that already in the tree. Text cut from an element stands
+   * for it, which keeps one whose text was all cut out. An element whose
+   * content was deleted is left out: there is nothing left for it to tag.
    */
   private addedElementEdits(
     pageIndex: number,
@@ -548,17 +700,25 @@ export class EditorDocument {
     );
     if (!page || added.size === 0) return [];
     const content = taggedContentInReadingOrder(page);
-    const carried = new Set(content.map(({ mcid }) => mcid));
+    // The save writes a cut from an added element after every added element,
+    // so content is placed beside the element its text was cut from.
+    const owners = addedOwners(added, structure.cutElements());
+    const ownerOf = (mcid: number) => owners.get(mcid) ?? mcid;
+    const present = new Set(content.map(({ mcid }) => ownerOf(mcid)));
     const edits = new Map<number, StructureEdit>();
     for (const item of content) {
-      const element = added.get(item.mcid);
+      const element = added.get(ownerOf(item.mcid));
       if (!element) continue;
-      added.delete(item.mcid);
+      added.delete(element.mcid);
       const { follows } = element;
+      const preceding = () => {
+        const mcid = precedingTaggedMcid(page, item);
+        return mcid === null ? null : ownerOf(mcid);
+      };
       const after =
-        follows === null || (follows !== undefined && carried.has(follows))
+        follows === null || (follows !== undefined && present.has(follows))
           ? follows
-          : precedingTaggedMcid(page, item);
+          : preceding();
       edits.set(element.mcid, {
         pageIndex,
         mcid: element.mcid,
@@ -600,6 +760,19 @@ export class EditorDocument {
         },
       ];
     });
+  }
+
+  /**
+   * Note a font file handed to PDFium for embedding in this document. PDFium
+   * writes such a font whole; the save uses these to find and subset them.
+   */
+  recordEmbeddedFontFile(bytes: Uint8Array): void {
+    this.embeddedFonts.push(bytes);
+  }
+
+  /** The exact font files embedded into this document during the session. */
+  embeddedFontFiles(): readonly Uint8Array[] {
+    return this.embeddedFonts;
   }
 
   registerOwnedFont(font: FontRef): void {
@@ -651,6 +824,10 @@ export class EditorDocument {
       font.dispose();
     }
     this.ownedFonts.clear();
+    clearTimeout(this.raw?.release);
+    this.raw = null;
+    this.artifactKindListeners.clear();
+    forgetArtifactKinds(this.module, this);
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
   }
@@ -759,6 +936,25 @@ function insertionPoint(
     (block) => block.pageIndex !== null && block.pageIndex >= pageIndex,
   );
   return next >= 0 ? next : blocks.length;
+}
+
+/**
+ * The added element each cut's text was taken from, through cuts from cuts,
+ * by the cut's MCID and those it gave the text it was cut from. Cuts from
+ * the file's elements are left out.
+ */
+function addedOwners(
+  added: ReadonlyMap<number, AddedElement>,
+  cuts: readonly CutElement[],
+): Map<number, number> {
+  const owners = new Map<number, number>();
+  for (const { mcid, cut } of cuts) {
+    const from = cut.from[0];
+    const owner = added.has(from) ? from : owners.get(from);
+    if (owner === undefined) continue;
+    for (const part of [mcid, ...givenMcids(cut)]) owners.set(part, owner);
+  }
+  return owners;
 }
 
 /**

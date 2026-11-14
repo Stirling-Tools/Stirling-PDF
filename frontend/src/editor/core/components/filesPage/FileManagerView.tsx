@@ -660,11 +660,12 @@ export default function FileManagerView() {
         );
 
         // Server-only stubs have no bytes in IDB; download + ingest first.
-        const materialized = await materializeServerStubs(toOpen, {
-          addFiles: fileActions.addFilesWithOptions,
-          updateStub: fileActions.updateStirlingFileStub,
-        });
-        if (materialized.length !== toOpen.length) {
+        const { stubs: materialized, successfulSourceCount } =
+          await materializeServerStubs(toOpen, {
+            addFiles: fileActions.addFilesWithOptions,
+            updateStub: fileActions.updateStirlingFileStub,
+          });
+        if (successfulSourceCount !== toOpen.length) {
           // Refresh successful imports even when another file fails.
           await refresh();
           return;
@@ -672,7 +673,7 @@ export default function FileManagerView() {
 
         if (materialized.length > 0) {
           await fileActions.addStirlingFileStubs(materialized, {
-            selectFiles: false,
+            selectFiles: true,
           });
         }
 
@@ -896,11 +897,11 @@ export default function FileManagerView() {
   /** Cloud-only rows hold no bytes; pull them local before acting on them. */
   const localCopyOf = useCallback(
     async (file: StirlingFileStub): Promise<StirlingFileStub | null> => {
-      const [materialized] = await materializeServerStubs([file], {
+      const { stubs } = await materializeServerStubs([file], {
         addFiles: fileActions.addFilesWithOptions,
         updateStub: fileActions.updateStirlingFileStub,
       });
-      return materialized ?? null;
+      return stubs[0] ?? null;
     },
     [fileActions],
   );

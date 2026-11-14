@@ -88,15 +88,15 @@ The engine is a Python reasoning service for Stirling: it plans and interprets w
 
 #### Python Commands
 All engine commands run from the repo root using Task:
-- `task engine:check` — run all checks (typecheck + lint + format-check + test)
-- `task engine:fix` — auto-fix lint + formatting
-- `task engine:install` — install Python dependencies via uv
-- `task engine:dev` — start FastAPI with hot reload (localhost:5001)
-- `task engine:test` — run pytest
-- `task engine:lint` — run ruff linting
-- `task engine:typecheck` — run pyright
-- `task engine:format` — format code with ruff
-- `task engine:tool-models` — generate `tool_models.py` from the Java OpenAPI spec
+- `task engine:check` — run all checks
+- `task engine:fix` — auto-fix code issues
+- `task engine:install` — install Python dependencies
+- `task engine:dev` — start server in dev mode
+- `task engine:test` — run the tests
+- `task engine:lint` — run linters
+- `task engine:typecheck` — run type checkers
+- `task engine:format` — run formatters
+- `task engine:tool-models` — generate tool models from the Java OpenAPI spec
 
 The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `task engine:install`.
 
@@ -507,6 +507,7 @@ Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes f
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
   - **Frontend**: Uses IndexedDB for client-side file storage and caching (with thumbnails)
 - **Security**: When `DOCKER_ENABLE_SECURITY=false`, security-related classes are excluded from compilation
+- **Fail Closed**: When a credential, owner, team or scope is missing or can't be resolved, refuse or use the narrowest option (the caller's own identity or personal scope). Never substitute a broader principal's credentials (the server's, an admin's or a service account's), treat an unknown caller as trusted, or widen scope. Open access (login disabled, desktop local mode, SaaS guests, share links) must come from explicit configuration or identity, never from a null or a failed request
 - **Import Paths**: ALWAYS use `@editor/*` for imports - never use `@editor-core/*` or `@editor-proprietary/*` unless explicitly wrapping/extending a lower layer
 - **FileContext**: All file operations MUST go through FileContext - never bypass with direct File handling
 - **Memory Management**: Manual cleanup required for PDF.js documents and blob URLs - don't remove cleanup code

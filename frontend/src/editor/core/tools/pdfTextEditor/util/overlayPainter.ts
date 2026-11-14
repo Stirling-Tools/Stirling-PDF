@@ -172,6 +172,10 @@ export function paintPlainText(el: HTMLElement, text: string): void {
   el.innerText = text;
 }
 
+function isLineBreak(node: Node): node is HTMLElement {
+  return node instanceof HTMLElement && node.tagName === "BR";
+}
+
 /**
  * Lines held by one painted line block.
  *
@@ -193,7 +197,7 @@ function blockLines(element: HTMLElement): string[] {
       lines[lines.length - 1] += node.textContent ?? "";
       return;
     }
-    if (node instanceof HTMLElement && node.tagName === "BR") {
+    if (isLineBreak(node)) {
       lines.push("");
       return;
     }
@@ -224,7 +228,7 @@ export function readOverlayText(element: HTMLElement): string {
       continue;
     }
     if (!(node instanceof HTMLElement)) continue;
-    if (node.tagName === "BR") {
+    if (isLineBreak(node)) {
       lines.push("");
       lastWasTrailingBr = true;
       continue;
@@ -300,6 +304,8 @@ function plainOffset(
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
+  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops.
+  host.appendChild(document.createTextNode(""));
   const chars = readOverlayText(host).length;
   // A caret parked on the container BETWEEN two line children sits at the
   // start of the next line - one past the end of the truncated text. Past the
@@ -308,8 +314,11 @@ function plainOffset(
     const idx = Math.min(offset, el.childNodes.length);
     const children = Array.from(el.childNodes);
     const isLineChild = (n: Node) =>
-      n instanceof HTMLElement && n.tagName !== "BR";
+      n instanceof HTMLElement && !isLineBreak(n);
+    // A <br> just before the caret already opened that line in the truncated text.
+    const afterBreak = idx > 0 && isLineBreak(children[idx - 1]);
     if (
+      !afterBreak &&
       children.slice(0, idx).some(isLineChild) &&
       children.slice(idx).some(isLineChild)
     ) {
@@ -407,43 +416,88 @@ export function plainDomRange(el: HTMLElement, range: TextRange): Range | null {
   return out;
 }
 
-/** Where character `offset` of the run's model text falls in the overlay's DOM. */
-function domPosition(
-  el: HTMLElement,
-  offset: number,
-): { node: Node; offset: number } {
-  const target = Math.max(0, offset);
+interface DomPoint {
+  node: Node;
+  offset: number;
+}
 
-  const blocks = lineBlocks(el);
-  let scope: HTMLElement = el;
-  let remaining = target;
-  if (blocks.length > 0) {
-    scope = blocks[blocks.length - 1];
-    remaining = (scope.textContent ?? "").length;
-    let before = 0;
-    for (const block of blocks) {
-      const length = (block.textContent ?? "").length;
-      if (target <= before + length) {
-        scope = block;
-        remaining = target - before;
-        break;
-      }
-      before += length + 1;
-    }
-  }
+interface DomCursor {
+  target: number;
+  seen: number;
+  end: DomPoint;
+}
 
-  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
-  let seen = 0;
-  let node = walker.nextNode();
-  while (node) {
-    const length = (node.nodeValue ?? "").length;
-    if (seen + length >= remaining) {
-      return { node, offset: remaining - seen };
+/** Where character `offset` of the run's model text falls in the overlay's DOM, counted as readOverlayText counts. */
+function domPosition(el: HTMLElement, offset: number): DomPoint {
+  const cursor: DomCursor = {
+    target: Math.max(0, offset),
+    seen: 0,
+    end: { node: el, offset: 0 },
+  };
+  const children = Array.from(el.childNodes);
+  const lastContent = children
+    .filter((n) => n.nodeType === Node.TEXT_NODE || n instanceof HTMLElement)
+    .pop();
+  let sawBlock = false;
+  for (const node of children) {
+    let hit: DomPoint | null = null;
+    if (node.nodeType === Node.TEXT_NODE) {
+      hit = passText(cursor, node);
+    } else if (isLineBreak(node)) {
+      if (node === lastContent) break;
+      hit = passLineBreak(cursor, node);
+    } else if (node instanceof HTMLElement) {
+      hit = passBlock(cursor, node, sawBlock || cursor.seen > 0);
+      sawBlock = true;
     }
-    seen += length;
-    node = walker.nextNode();
+    if (hit) return hit;
   }
-  return { node: scope, offset: 0 };
+  return cursor.end;
+}
+
+function passText(cursor: DomCursor, node: Node): DomPoint | null {
+  const length = (node.nodeValue ?? "").length;
+  if (cursor.target <= cursor.seen + length) {
+    return { node, offset: cursor.target - cursor.seen };
+  }
+  cursor.seen += length;
+  cursor.end = { node, offset: length };
+  return null;
+}
+
+function passLineBreak(cursor: DomCursor, br: HTMLElement): DomPoint | null {
+  const parent = br.parentNode;
+  if (!parent) return null;
+  const index = Array.prototype.indexOf.call(parent.childNodes, br);
+  if (cursor.seen === cursor.target) return { node: parent, offset: index };
+  cursor.seen += 1;
+  cursor.end = { node: parent, offset: index + 1 };
+  return null;
+}
+
+function passBlock(
+  cursor: DomCursor,
+  block: HTMLElement,
+  startsLine: boolean,
+): DomPoint | null {
+  if (startsLine) {
+    if (cursor.seen === cursor.target) return cursor.end;
+    cursor.seen += 1;
+  }
+  cursor.end = { node: block, offset: 0 };
+  if ((block.textContent ?? "") === "") return null;
+  return passInline(cursor, block);
+}
+
+function passInline(cursor: DomCursor, parent: Node): DomPoint | null {
+  for (const node of Array.from(parent.childNodes)) {
+    let hit: DomPoint | null = null;
+    if (node.nodeType === Node.TEXT_NODE) hit = passText(cursor, node);
+    else if (isLineBreak(node)) hit = passLineBreak(cursor, node);
+    else hit = passInline(cursor, node);
+    if (hit) return hit;
+  }
+  return null;
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {

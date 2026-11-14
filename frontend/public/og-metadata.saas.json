@@ -236,6 +236,11 @@
       "title": "PDF Info and Metadata Viewer - Stirling PDF",
       "description": "Grabs any and all information possible on PDFs"
     },
+    "checkAccessibility": {
+      "image": "/og_images/home.png",
+      "title": "Check PDF accessibility - Stirling PDF",
+      "description": "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+    },
     "validateSignature": {
       "image": "/og_images/validate-pdf-signature.png",
       "title": "Validate PDF Signature - Stirling PDF",
@@ -469,6 +474,12 @@
     "/settings/api-keys": {
       "image": "/og_images/home.png",
       "title": "API Keys Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/settings/connectedAccounts": {
+      "image": "/og_images/home.png",
+      "title": "Connected Accounts Settings - Stirling PDF",
       "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
@@ -825,6 +836,7 @@
     "/change-metadata": "changeMetadata",
     "/overlay-pdfs": "overlayPdfs",
     "/get-pdf-info": "getPdfInfo",
+    "/check-accessibility": "checkAccessibility",
     "/validate-signature": "validateSignature",
     "/timestamp-pdf": "timestampPdf",
     "/replace-color": "replaceColor",
@@ -871,6 +883,7 @@
     "/auto-size-split-pdf": "split",
     "/annotations": "annotate",
     "/replace-color-pdf": "replaceColor",
+    "/accessibility-report": "checkAccessibility",
     "/show-js": "showJS",
     "/pdf-organizer": "reorganizePages",
     "/multi-page-layout": "pageLayout",
@@ -918,6 +931,7 @@
     "/settings/requests": "/settings/requests",
     "/settings/developer": "/settings/developer",
     "/settings/api-keys": "/settings/api-keys",
+    "/settings/connectedAccounts": "/settings/connectedAccounts",
     "/settings/hotkeys": "/settings/hotkeys",
     "/settings/adminGeneral": "/settings/adminGeneral",
     "/settings/adminSecurity": "/settings/adminSecurity",
@@ -972,6 +986,7 @@
     "/add-watermark": "/watermark",
     "/auto-split-pdf": "/split",
     "/auto-size-split-pdf": "/split",
+    "/accessibility-report": "/check-accessibility",
     "/pdf-organizer": "/reorganize-pages",
     "/multi-page-layout": "/page-layout",
     "/extract-page": "/extract-pages",

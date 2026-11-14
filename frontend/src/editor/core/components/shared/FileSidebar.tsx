@@ -540,6 +540,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [ingestsInFlight, setIngestsInFlight] = useState(0);
+    const trackIngest = useCallback(async (ingest: () => Promise<void>) => {
+      setIngestsInFlight((n) => n + 1);
+      try {
+        await ingest();
+      } finally {
+        setIngestsInFlight((n) => n - 1);
+      }
+    }, []);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);
@@ -830,17 +839,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       if (!isGoogleDriveEnabled) return;
       const files = await openGoogleDrivePicker({ multiple: true });
       if (files.length === 0) return;
-      if (onPickGoogleDriveFiles) {
-        await onPickGoogleDriveFiles(files);
-        return;
-      }
-      await addFiles(files);
-      if (!staysOnAdd) {
-        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-      }
+      await trackIngest(async () => {
+        if (onPickGoogleDriveFiles) {
+          await onPickGoogleDriveFiles(files);
+          return;
+        }
+        await addFiles(files);
+        if (!staysOnAdd) {
+          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
+        }
+      });
     }, [
       isGoogleDriveEnabled,
       openGoogleDrivePicker,
+      trackIngest,
       addFiles,
       navActions,
       staysOnAdd,
@@ -891,14 +903,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             navActions.setWorkbench("fileEditor");
           }
 
-          await fileActions.addStirlingFileStubs([stub]);
+          await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
 
-          if (staysOnAdd) {
-            fileActions.setSelectedFiles([
-              ...state.ui.selectedFileIds,
-              stub.id,
-            ]);
-          } else {
+          if (!staysOnAdd) {
             if (workbenchCount === 0) {
               navActions.setWorkbench("viewer");
             } else {
@@ -912,7 +919,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         lostFileIds,
         t,
         state.files.ids,
-        state.ui.selectedFileIds,
         fileActions,
         navActions,
         currentWorkbench,
@@ -952,7 +958,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
               navActions.setWorkbench("fileEditor");
             }
-            await fileActions.addStirlingFileStubs([stub]);
+            await fileActions.addStirlingFileStubs([stub], {
+              selectFiles: true,
+            });
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
@@ -984,9 +992,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const ingestFiles = useCallback(
       async (files: File[]) => {
         if (files.length === 0) return;
-        if (onUploadFiles) {
-          await onUploadFiles(files);
-        } else {
+        await trackIngest(async () => {
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+            return;
+          }
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
@@ -995,9 +1005,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
-        }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onUploadFiles,
+        currentWorkbench,
+      ],
     );
 
     const handleNativeFilePick = useCallback(
@@ -1174,7 +1191,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
-            <div className="file-sidebar-scroll">
+            <div
+              className="file-sidebar-scroll"
+              aria-busy={ingestsInFlight > 0}
+            >
               {currentWorkbench === "myFiles" ? (
                 <FolderTreeSection />
               ) : (

@@ -6,7 +6,8 @@ import {
 import type { TFunction } from "i18next";
 import { SignatureValidationReportEntry } from "@editor/types/validateSignature";
 import { REPORT_PDF_FILENAME } from "@editor/hooks/tools/validateSignature/utils/signatureUtils";
-import { colorPalette } from "@editor/hooks/tools/validateSignature/utils/pdfPalette";
+import { colorPalette } from "@editor/services/reportPdf/reportPalette";
+import { LETTER_PAGE } from "@editor/services/reportPdf/ReportWriter";
 import {
   startReportPage,
   createThumbnailLoader,
@@ -16,8 +17,8 @@ import { drawCenteredMessage } from "@editor/hooks/tools/validateSignature/outpu
 import { drawSummarySection } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/SummarySection";
 import { drawSignatureSection } from "@editor/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection";
 
-const PAGE_WIDTH = 612;
-const PAGE_HEIGHT = 792;
+const PAGE_WIDTH = LETTER_PAGE.width;
+const PAGE_HEIGHT = LETTER_PAGE.height;
 const MARGIN_X = 52;
 const MARGIN_Y = 22;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
