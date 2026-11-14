@@ -429,7 +429,7 @@ export function readMatrix(
   );
 }
 
-function writeMatrix(
+export function writeMatrix(
   m: WrappedPdfiumModule,
   objPtr: number,
   matrix: Float32Array,

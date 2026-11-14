@@ -19,6 +19,10 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  noteUndrawnScriptText,
+  scriptFaceFamilyFor,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   advanceWidth,
@@ -27,6 +31,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { applyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
+  sliceTags,
   taggedSpans,
   uniformTags,
   type TaggedSpan,
@@ -102,6 +107,11 @@ export function resetDroppedBase14Chars(): void {
 /** Test-only alias for {@link resetDroppedBase14Chars}. */
 export function _clearDroppedBase14CharsForTests(): void {
   resetDroppedBase14Chars();
+}
+
+/** Stop warning about `chars` once something draws them. */
+export function forgetDroppedChars(chars: string): void {
+  for (const ch of chars) droppedBase14Chars.delete(ch);
 }
 
 export function recordUndrawableChars(chars: string): void {
@@ -324,6 +334,15 @@ interface CreatedTextOptions {
   // so callers that must map pointers back onto the source string cannot guess
   // it - and reading it back costs a full page text extraction per line.
   outTexts?: string[];
+  /** Stretches of `text` to draw in fonts of their own, each ending at `end`; a re-emitted line keeps each word's bold or italic face. */
+  fontSpans?: readonly FontSpan[];
+}
+
+export interface FontSpan {
+  end: number;
+  fontPtr: number;
+  /** The base-14 or completion family for characters `fontPtr` cannot draw. */
+  fallbackFamily?: string;
 }
 
 interface CreateTextObjModule {
@@ -735,6 +754,8 @@ export function rotateObjectAbout(
 }
 
 export function emitTextLine(opts: CreatedTextOptions): number[] {
+  if (opts.fontSpans && opts.fontSpans.length > 1)
+    return emitFontSpans(opts, opts.fontSpans);
   const spans = taggedSpans(opts.tags, opts.text.length);
   if (spans.length > 1) return emitTaggedSpans(opts, spans);
   const tagMarks = spans[0]?.tags ?? [];
@@ -802,8 +823,22 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           opts.y,
         );
         if (fp) return fp;
-        // The bundled Noto fallback couldn't render the non-Latin chars either,
-        // so the base-14 emit below drops them.
+        const scriptFamily = scriptFaceFamilyFor(text);
+        const sp = scriptFamily
+          ? emitDeviceFontTextObject(
+              opts.doc,
+              opts.page,
+              scriptFamily,
+              text,
+              size,
+              opts.fill,
+              x,
+              opts.y,
+            )
+          : 0;
+        if (sp) return sp;
+        // Nothing loaded draws these chars, so the base-14 emit below drops them until their script's fonts arrive.
+        if (!measuring) noteUndrawnScriptText(text);
         recordDroppedChars(text, base14Text);
       }
       if (base14Text.length === 0) return 0; // nothing representable - drop
@@ -848,9 +883,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // per visible char means the reused font produced .notdef / 0-width.
     const minExpected = visible * size * 0.15;
     if (visible > 0 && right - x < minExpected) {
-      // Discard the .notdef object and free it (we re-emit in base-14 next).
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-      return emitBase14();
+      return (
+        (strategyUsed !== null && emitWithSetText(text, x)) || emitBase14()
+      );
     }
     // Read-back validation for a source-font SetText.
     if (strategyUsed === null) {
@@ -901,14 +937,35 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       if (known > 0 && expected > 0) {
         const ratio = (right - x) / expected;
         if (ratio < 0.6 || ratio > 1.7) {
-          // Wrong-glyph guess: discard + free, then re-emit in base-14.
           removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-          return emitBase14();
+          return emitWithSetText(text, x) || emitBase14();
         }
       }
     }
     return ptr;
   };
+
+  // A wrong charcode guess says nothing about the font's own text mapping, which draws every longer word.
+  function emitWithSetText(text: string, x: number): number {
+    const ptr = m2.FPDFPageObj_CreateTextObj!(
+      opts.doc.docPtr,
+      opts.originalFontPtr,
+      size,
+    );
+    if (!ptr) return 0;
+    setTextOn(m, ptr, text);
+    applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    const visible = text.replace(/\s+/g, "");
+    const got = readBackTextObj(m, opts.page.pagePtr, ptr);
+    if (
+      got !== null &&
+      got.replace(/\s+/g, "") === visible &&
+      measureObjRightEdgePt(m, ptr) - x >= visible.length * size * 0.15
+    )
+      return ptr;
+    removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+    return 0;
+  }
 
   // Try-charcodes wrapper: when we're reusing a source font AND the active
   // charcode strategy can resolve EVERY char in the chunk.
@@ -1080,13 +1137,11 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         x: cursor,
         rotation: undefined,
         tags: uniformTags(tagMarks),
-        outTexts: opts.outTexts ? chunkTexts : undefined,
+        outTexts: chunkTexts,
       });
       if (wordPtrs.length === 0) continue;
       if (opts.outTexts) opts.outTexts.push(...chunkTexts);
-      let rightEdge = 0;
-      for (const p of wordPtrs)
-        rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
+      const rightEdge = drawnEndPt(m, wordPtrs, chunkTexts, size);
       // Only trust the measured edge when it advanced by a believable amount:
       // a face PDFium can't measure reports a near-zero ink box and would put
       // the next word on top of this one.
@@ -1108,6 +1163,54 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
  * Draw each span of `opts.text` with its own tags, one after another along
  * the line.
  */
+function emitFontSpans(
+  opts: CreatedTextOptions,
+  spans: readonly FontSpan[],
+): number[] {
+  const m = opts.doc.module;
+  const size = Math.max(4, opts.fontSize);
+  const family = opts.fallbackFamily ?? "Helvetica";
+  const spacing = opts.charSpacingPt ?? 0;
+  const ptrs: number[] = [];
+  let cursor = opts.x;
+  let start = 0;
+  for (const span of spans) {
+    const { end, fontPtr } = span;
+    const text = opts.text.slice(start, end);
+    const texts: string[] = [];
+    const own = emitTextLine({
+      ...opts,
+      text,
+      x: cursor,
+      rotation: undefined,
+      fontSpans: undefined,
+      originalFontPtr: fontPtr || opts.originalFontPtr,
+      fallbackFamily: span.fallbackFamily ?? opts.fallbackFamily,
+      tags: sliceTags(opts.tags, start, end),
+      outTexts: texts,
+    });
+    opts.outTexts?.push(...texts);
+    ptrs.push(...own);
+    // Advanced as emitTaggedSpans advances, so splitting a line by font does not move its words.
+    const ink = text.trimEnd();
+    const gap = text.slice(ink.length);
+    const right = Math.max(cursor, drawnEndPt(m, own, texts, size));
+    const metric = measureAdvancePt(ink, family, size);
+    cursor += right - cursor >= metric * 0.35 ? right - cursor : metric;
+    cursor += gap
+      ? measureAdvancePt(gap, family, size) + spacing * (gap.length + 1)
+      : spacing;
+    start = end;
+  }
+  const rot = opts.rotation;
+  if (rot) {
+    for (const ptr of ptrs) {
+      rotateObjectAbout(m, ptr, opts.x, opts.y, rot.cos, rot.sin);
+    }
+  }
+  return ptrs;
+}
+
 function emitTaggedSpans(
   opts: CreatedTextOptions,
   spans: readonly TaggedSpan[],
@@ -1127,7 +1230,7 @@ function emitTaggedSpans(
       x: cursor,
       rotation: undefined,
       tags: uniformTags(tags),
-      outTexts: opts.outTexts ? texts : undefined,
+      outTexts: texts,
     });
     opts.outTexts?.push(...texts);
     ptrs.push(...own);
@@ -1135,10 +1238,7 @@ function emitTaggedSpans(
     // line by tags does not move its words.
     const ink = text.trimEnd();
     const gap = text.slice(ink.length);
-    const right = Math.max(
-      cursor,
-      ...own.map((ptr) => measureObjRightEdgePt(m, ptr)),
-    );
+    const right = Math.max(cursor, drawnEndPt(m, own, texts, size));
     const metric = measureAdvancePt(ink, family, size);
     cursor += right - cursor >= metric * 0.35 ? right - cursor : metric;
     cursor += gap
@@ -1244,6 +1344,101 @@ function readBackTextObj(
       /* best-effort */
     }
   }
+}
+
+/** Sum of the drawn font's advances for `text` at `size`, or null when the font cannot map one of its chars. */
+function glyphAdvancePt(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+  text: string,
+  size: number,
+): number | null {
+  const fontPtr = m.FPDFTextObj_GetFont(objPtr);
+  if (!fontPtr) return null;
+  const widthPtr = scratchPtr(m, SCRATCH.emitGlyphWidth, 4);
+  let total = 0;
+  for (const ch of text) {
+    if (!m.FPDFFont_GetGlyphWidth(fontPtr, ch.codePointAt(0)!, size, widthPtr))
+      return null;
+    const width = m.pdfium.getValue(widthPtr, "float");
+    if (!(width > 0)) return null;
+    total += width;
+  }
+  return total;
+}
+
+/**
+ * Where the next text drawn after `ptrs` should start: each object's origin plus
+ * its font's advances, or its ink edge when the font cannot say. Ink alone stops
+ * short of the last glyph's advance and pulls every later word in by its side
+ * bearing.
+ */
+function drawnEndPt(
+  m: WrappedPdfiumModule,
+  ptrs: readonly number[],
+  texts: readonly string[],
+  size: number,
+): number {
+  const matrix = scratchPtr(m, SCRATCH.emitMatrix, 24);
+  let end = 0;
+  for (const [i, ptr] of ptrs.entries()) {
+    const ink = measureObjRightEdgePt(m, ptr);
+    let right = ink;
+    const text = texts.length === ptrs.length ? texts[i].trimEnd() : "";
+    const glyphs = text ? glyphAdvancePt(m, ptr, text, size) : null;
+    if (glyphs !== null && m.FPDFPageObj_GetMatrix(ptr, matrix)) {
+      const scale = m.pdfium.getValue(matrix, "float");
+      const fromGlyphs =
+        m.pdfium.getValue(matrix + 16, "float") + glyphs * scale;
+      if (fromGlyphs >= ink - 0.5 && fromGlyphs <= ink + size * 0.5)
+        right = fromGlyphs;
+    }
+    end = Math.max(end, right);
+  }
+  return end;
+}
+
+interface InsertAtModule {
+  FPDFPage_InsertObjectAtIndex?: (
+    page: number,
+    obj: number,
+    index: number,
+  ) => boolean;
+}
+
+/** Each of `ptrs` found at page level with its index in the page's content order. */
+export function contentIndices(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  ptrs: Iterable<number>,
+): Map<number, number> {
+  const wanted = new Set(ptrs);
+  const found = new Map<number, number>();
+  const count = m.FPDFPage_CountObjects(pagePtr);
+  for (let i = 0; i < count && found.size < wanted.size; i++) {
+    const ptr = m.FPDFPage_GetObject(pagePtr, i);
+    if (wanted.has(ptr)) found.set(ptr, i);
+  }
+  return found;
+}
+
+/**
+ * Put each page-level object back at its index in content order. Text
+ * extraction, search and screen readers follow that order, so an edited line
+ * whose objects were appended would otherwise read at the end of the page.
+ * `placed` must hold every object that moved; anything else keeps its place.
+ */
+export function restoreContentOrder(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  placed: ReadonlyArray<{ ptr: number; index: number }>,
+): void {
+  const insertAt = (m as unknown as InsertAtModule)
+    .FPDFPage_InsertObjectAtIndex;
+  if (!insertAt || placed.length === 0) return;
+  for (const { ptr } of placed) m.FPDFPage_RemoveObject(pagePtr, ptr);
+  for (const { ptr, index } of [...placed].sort((a, b) => a.index - b.index))
+    if (!insertAt(pagePtr, ptr, index)) m.FPDFPage_InsertObject(pagePtr, ptr);
 }
 
 export function measureObjRightEdgePt(
@@ -1457,6 +1652,8 @@ export function emitRunLines(opts: {
   originalFontPtr: number;
   fallbackFamily: string;
   originalFontSubset?: boolean;
+  /** Per output line, the source fonts to keep within it. */
+  fontSpansByLine?: ReadonlyArray<readonly FontSpan[] | undefined>;
 }): EmittedLine[] {
   const rot = rotationFromMatrix(opts.run.matrix);
   const out: EmittedLine[] = [];
@@ -1486,6 +1683,7 @@ export function emitRunLines(opts: {
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
       tags,
+      fontSpans: opts.fontSpansByLine?.[i],
     });
     out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }

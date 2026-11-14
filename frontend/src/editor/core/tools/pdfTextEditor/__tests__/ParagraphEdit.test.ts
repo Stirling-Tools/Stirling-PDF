@@ -122,16 +122,29 @@ describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
 });
 
 describe("planPartialEdit interior-insert guard (single word object)", () => {
-  it("bails when an inserted char splits a multi-char object's kept chars", () => {
+  // The word's object is removed and its new text drawn as ONE insert in its
+  // place, so no SetText can scramble the letters around the typed one.
+  const redrawsWhole = (prev: string, next: string) => {
+    const run = makeSingleSubRun(prev);
+    const plan = planPartialEdit(run, prev, next);
+    expect(plan?.removePtrs.map((r) => r.ptr)).toEqual([run.mergedFromPtrs[0]]);
+    expect(plan?.ops).toEqual([
+      expect.objectContaining({
+        type: "insert",
+        text: next,
+        anchorSubRunIdx: 0,
+      }),
+    ]);
+  };
+
+  it("redraws a word whole when an inserted char splits its kept chars", () => {
     // "world" is ONE object; inserting "a" mid-word ("world"->"worald") leaves
     // the survivors at non-contiguous new-text positions (0,1,2,4,5).
-    const run = makeSingleSubRun("world");
-    expect(planPartialEdit(run, "world", "worald")).toBeNull();
+    redrawsWhole("world", "worald");
   });
 
-  it("bails on a mid-word char replace (delete+insert interior)", () => {
-    const run = makeSingleSubRun("world");
-    expect(planPartialEdit(run, "world", "worXd")).toBeNull();
+  it("redraws a word whole on a mid-word char replace (delete+insert interior)", () => {
+    redrawsWhole("world", "worXd");
   });
 
   it("keeps the surgical path for a boundary delete (survivors contiguous)", () => {
@@ -199,18 +212,19 @@ describe("planParagraphEdit slot-range line mapping", () => {
     expect(planParagraphEdit(run, run.text, "Zaaa bbb EXTRA")).toBeNull();
   });
 
-  it("forces a fresh word-split re-emit when a mid-line edit would SetText whitespace (the „ bug)", () => {
+  it("redraws a line whose one sub-run would SetText whitespace mid-line, never SetTexting it (the „ bug)", () => {
     // A whole line as ONE sub-run carrying spaces (LaTeX one-object-per-line).
     const run = makeParagraph(["aaa bbb ccc", "ddd eee"], ["\n"]);
     const prev = run.text; // "aaa bbb ccc\nddd eee"
     const next = "aaa Xbb ccc\nddd eee"; // replace one char mid-line-0
     const plan = planParagraphEdit(run, prev, next);
-    expect(plan).not.toBeNull();
     const entry = plan?.perSlot.find((p) => p.slotIdx === 0);
-    expect(entry).toBeDefined();
-    // null plan => the apply step fresh-emits this line (word-split), avoiding „.
-    expect(entry?.plan).toBeNull();
     expect(entry?.nextLine).toBe("aaa Xbb ccc");
+    // A fresh emit word-splits the line, so whitespace never goes through SetText.
+    expect(entry?.plan?.ops.some((op) => op.type === "modify")).toBe(false);
+    expect(entry?.plan?.ops).toEqual([
+      expect.objectContaining({ type: "insert", text: "aaa Xbb ccc" }),
+    ]);
   });
 
   it("keeps the in-place modify fast path for a boundary edit on a single-word sub-run", () => {
@@ -226,19 +240,22 @@ describe("planParagraphEdit slot-range line mapping", () => {
     expect(entry?.plan).not.toBeNull();
   });
 
-  it("re-emits a mid-word char replace instead of scrambling it (interior-insert guard)", () => {
+  it("redraws a mid-word char replace whole instead of scrambling it (interior-insert guard)", () => {
     // Replacing a char in the MIDDLE of a single word object ("world"->"worXd")
     // deletes 'l' and inserts 'X' between the surviving 'r' and 'd'.
     const run = makeParagraph(["hello", "world"], ["\n"]);
     const prev = run.text; // "hello\nworld"
     const next = "hello\nworXd";
     const plan = planParagraphEdit(run, prev, next);
-    expect(plan).not.toBeNull();
     const entry = plan?.perSlot.find((p) => p.slotIdx === 1);
-    expect(entry).toBeDefined();
-    // null slot plan => the apply step fresh-emits this line (correct order).
-    expect(entry?.plan).toBeNull();
     expect(entry?.nextLine).toBe("worXd");
+    expect(entry?.plan?.ops).toEqual([
+      expect.objectContaining({
+        type: "insert",
+        text: "worXd",
+        anchorSubRunIdx: 0,
+      }),
+    ]);
   });
 
   it("handles an all-hard-break paragraph (initial-load shape) too", () => {

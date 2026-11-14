@@ -147,6 +147,29 @@ export class HistoryStack {
     return cmd;
   }
 
+  /**
+   * Undo back past the step holding `cmd`, then redo up again, so every step
+   * from it on is drawn with what the document can draw now. False, changing
+   * nothing, when `cmd` is not in an applied step.
+   */
+  replayFrom(cmd: Command, doc: EditorDocument): boolean {
+    const index = this.undoStack.findIndex(
+      (step) =>
+        step === cmd ||
+        (step instanceof CompositeCommand && step.includes(cmd)),
+    );
+    if (index < 0) return false;
+    const steps = this.undoStack.length - index;
+    // A burst still being typed keeps joining its step across the redraw.
+    const coalesceKey = this.lastCoalesceKey;
+    const executedAt = this.lastExecuteAt;
+    for (let i = 0; i < steps; i++) this.undo(doc);
+    for (let i = 0; i < steps; i++) this.redo(doc);
+    this.lastCoalesceKey = coalesceKey;
+    this.lastExecuteAt = executedAt;
+    return true;
+  }
+
   clear(): void {
     this.undoStack.length = 0;
     this.redoStack.length = 0;

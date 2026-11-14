@@ -166,7 +166,81 @@ function meanLetterAdvancePt(runs: TextRun[]): number {
   return letters > 0 ? width / letters : 0;
 }
 
+// A superscript or subscript is set this much smaller than its line, within this many of the line's ems of its baseline, and this close to a neighbour.
+const SCRIPT_MAX_SIZE_RATIO = 0.85;
+const SCRIPT_MAX_BASELINE_EM = 0.5;
+const SCRIPT_MAX_GAP_EM = 0.25;
+
+function lineFontSize(group: LineGroupInfo): number {
+  return Math.max(...group.members.map((member) => member.fontSize));
+}
+
+function touchesHorizontally(
+  script: TextRun,
+  member: TextRun,
+  slack: number,
+): boolean {
+  const scriptRight = script.bounds.x + script.bounds.width;
+  const memberRight = member.bounds.x + member.bounds.width;
+  return (
+    Math.abs(script.bounds.x - memberRight) <= slack ||
+    Math.abs(member.bounds.x - scriptRight) <= slack
+  );
+}
+
+// The line a raised or lowered script belongs to, which the baseline band misses because the script sits off it.
+function scriptHost(
+  script: LineGroupInfo,
+  lines: readonly LineGroupInfo[],
+): LineGroupInfo | null {
+  const size = lineFontSize(script);
+  const baseline = script.representative.matrix.f;
+  for (const line of lines) {
+    if (line === script) continue;
+    const lineSize = lineFontSize(line);
+    if (size > lineSize * SCRIPT_MAX_SIZE_RATIO) continue;
+    const em = Math.max(lineSize, 4);
+    if (
+      Math.abs(baseline - line.representative.matrix.f) >
+      SCRIPT_MAX_BASELINE_EM * em
+    )
+      continue;
+    const slack = SCRIPT_MAX_GAP_EM * em;
+    if (
+      script.members.every((member) =>
+        line.members.some((host) => touchesHorizontally(member, host, slack)),
+      )
+    )
+      return line;
+  }
+  return null;
+}
+
+function attachScripts(lines: LineGroupInfo[]): void {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const script = lines[i];
+    if (script.members.length > 2) continue;
+    const host = scriptHost(script, lines);
+    if (!host) continue;
+    host.members.push(...script.members);
+    host.members.sort((a, b) => a.bounds.x - b.bounds.x);
+    lines.splice(i, 1);
+  }
+}
+
 function groupPartitionIntoLines(
+  runs: TextRun[],
+  blockKey: BlockKey,
+  spaceAdvance: SpaceAdvance,
+  out: LineGroupInfo[],
+): void {
+  const lines: LineGroupInfo[] = [];
+  groupBaselineBands(runs, blockKey, spaceAdvance, lines);
+  attachScripts(lines);
+  out.push(...lines);
+}
+
+function groupBaselineBands(
   runs: TextRun[],
   blockKey: BlockKey,
   spaceAdvance: SpaceAdvance,
@@ -330,7 +404,10 @@ export class LineGrouper {
       }
       const joined = parts.join("");
       const last = group.members[group.members.length - 1];
-      const left = group.representative.bounds.x;
+      const left = Math.min(
+        group.representative.bounds.x,
+        group.members[0].bounds.x,
+      );
       const right = last.bounds.x + last.bounds.width;
       group.representative.text = joined;
       group.representative.bounds = {

@@ -19,6 +19,10 @@ export class CompositeCommand implements Command {
     this.commands.push(cmd);
   }
 
+  includes(cmd: Command): boolean {
+    return this.commands.includes(cmd);
+  }
+
   /** The most recent child - used to derive the group's coalesce key. */
   get last(): Command {
     return this.commands[this.commands.length - 1];
