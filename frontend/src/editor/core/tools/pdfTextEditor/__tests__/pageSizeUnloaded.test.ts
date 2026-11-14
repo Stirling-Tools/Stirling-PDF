@@ -96,3 +96,33 @@ describe("reading a page published before it was opened", () => {
     }
   });
 });
+
+describe("publishing pages no one has opened", () => {
+  test("leaves them unopened", async () => {
+    const doc = await open("multi-page-sample.pdf");
+    const store = new EditorStore();
+    try {
+      await store.setDocument(doc);
+      store.publishPages(
+        Array.from({ length: doc.pageCount }, (_, i) => {
+          const { width, height } = doc.pageSize(i);
+          return {
+            pageIndex: i,
+            width,
+            height,
+            dirty: false,
+            revision: 0,
+            runs: [],
+            images: [],
+            shapes: [],
+            display: DisplayTransform.identity(width, height).toData(),
+          };
+        }),
+      );
+
+      expect(doc.loadedPages()).toEqual([]);
+    } finally {
+      store.dispose();
+    }
+  });
+});
