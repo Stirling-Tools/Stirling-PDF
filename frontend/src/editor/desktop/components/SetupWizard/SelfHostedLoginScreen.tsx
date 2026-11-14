@@ -9,6 +9,7 @@ import { DesktopOAuthButtons } from "@editor/components/SetupWizard/DesktopOAuth
 import { UserInfo } from "@editor/services/authService";
 import { SSOProviderConfig } from "@editor/services/connectionModeService";
 import "@editor/auth/ui/auth.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SelfHostedLoginScreenProps {
   serverUrl: string;
@@ -99,7 +100,7 @@ export const SelfHostedLoginScreen: React.FC<SelfHostedLoginScreenProps> = ({
 
       <Text size="sm" mb="md">
         {t("setup.login.connectingTo", "Connecting to:")}{" "}
-        <Text span fw="500">
+        <Text span fw="500" className={privateContentClassName}>
           {serverUrl}
         </Text>
       </Text>

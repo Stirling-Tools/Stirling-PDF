@@ -9,9 +9,11 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
@@ -494,7 +497,16 @@ public class AttachmentService implements AttachmentServiceInterface {
             PDNameTreeNode<PDComplexFileSpecification> node,
             Map<String, PDComplexFileSpecification> collector)
             throws IOException {
-        if (node == null) {
+        collectEmbeddedFiles(node, collector, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    // A node can be listed in several /Kids arrays or be its own ancestor; visit each one once
+    private void collectEmbeddedFiles(
+            PDNameTreeNode<PDComplexFileSpecification> node,
+            Map<String, PDComplexFileSpecification> collector,
+            Set<COSDictionary> visited)
+            throws IOException {
+        if (node == null || !visited.add(node.getCOSObject())) {
             return;
         }
 
@@ -506,7 +518,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         List<PDNameTreeNode<PDComplexFileSpecification>> kids = node.getKids();
         if (kids != null) {
             for (PDNameTreeNode<PDComplexFileSpecification> kid : kids) {
-                collectEmbeddedFiles(kid, collector);
+                collectEmbeddedFiles(kid, collector, visited);
             }
         }
     }

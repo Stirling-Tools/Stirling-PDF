@@ -39,7 +39,7 @@ jobs:
       pr_ref: ${{ steps.resolve.outputs.ref }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -121,7 +121,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -190,7 +190,7 @@ jobs:
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -320,6 +320,8 @@ jobs:
                 STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"
                 # Browser connection state belongs to the origin advertised in the preview link.
                 SYSTEM_FRONTENDURL: "http://${NEW_VPS_HOST}:${V2_PORT}"
+                # Previews are throwaway demos; the first-run setup wizard would greet every reviewer.
+                SYSTEM_SETUPCOMPLETED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
@@ -518,7 +520,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 

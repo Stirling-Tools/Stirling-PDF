@@ -9,6 +9,7 @@ import type {
   SaveScope,
 } from "@editor/components/tools/sign/createSignature/types";
 import styles from "@editor/components/tools/sign/createSignature/SaveSignatureOptions.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface SaveOptionsState {
   enabled: boolean;
@@ -95,6 +96,7 @@ export function SaveSignatureOptions({
             <FormField label={t("sign.wallet.create.name", "Name")}>
               <Input
                 value={value.label ?? defaultLabel}
+                className={privateContentClassName}
                 onChange={(event) =>
                   update({ label: event.currentTarget.value })
                 }

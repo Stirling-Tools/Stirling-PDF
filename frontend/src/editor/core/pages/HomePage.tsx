@@ -43,7 +43,6 @@ import {
 } from "@editor/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import { READER_PATH } from "@editor/routes/readerRoute";
-import { HomePageExtensions } from "@editor/components/home/HomePageExtensions";
 import { PolicyAutoRunController } from "@editor/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@editor/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@editor/components/shared/quickNav/QuickNavHostBridge";
@@ -695,7 +694,6 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
-      <HomePageExtensions />
       {processingFolderCreation.dialog}
       {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge

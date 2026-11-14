@@ -20,6 +20,7 @@ dependencies {
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.eclipse.jetty.compression:jetty-compression-server'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
     implementation ('org.telegram:telegrambots:6.9.7.1') {
@@ -50,6 +51,7 @@ dependencies {
     implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-pdfa:$officeConvertVersion"
 
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"

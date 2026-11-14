@@ -1,0 +1,40 @@
+/* One line of xs text, matching the heading outline's rows. The negative
+   margin lets the hover background extend past the text without indenting it. */
+.pdf-editor-inner-tag__entry {
+  display: flex;
+  gap: 0.5rem;
+  width: calc(100% + 0.5rem);
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  line-height: var(--mantine-line-height-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pdf-editor-inner-tag__entry:hover {
+  background: var(--c-hover);
+}
+
+.pdf-editor-inner-tag__entry[aria-pressed="true"] {
+  background: var(--c-active);
+}
+
+.pdf-editor-inner-tag__number {
+  flex-shrink: 0;
+  min-width: 1ch;
+  color: var(--c-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pdf-editor-inner-tag__text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

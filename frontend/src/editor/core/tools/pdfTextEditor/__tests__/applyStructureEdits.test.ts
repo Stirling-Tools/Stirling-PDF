@@ -11,6 +11,7 @@ import {
   applyStructureEdits,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
+import { readFileStructure } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
   buildClassicPdf,
   buildXrefStreamPdf,
@@ -410,7 +411,7 @@ describe("applyStructureEdits: adding figures", () => {
     mcid,
     alt,
     decorative: false,
-    newFigure: { after },
+    newElement: { type: "Figure" as const, after },
   });
   const documentKids = async (bytes: Uint8Array) =>
     (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
@@ -489,5 +490,286 @@ describe("applyStructureEdits: adding figures", () => {
       "the page's content does not carry its MCID",
       "another element owns its MCID",
     ]);
+  });
+});
+
+describe("applyStructureEdits: blocks", () => {
+  // Document 9 holds a P (10) whose text is all in a Span (13), then a list
+  // (14) of one item (15). The page also draws MCID 2, which no element owns.
+  function blocksPdf(): Uint8Array {
+    return buildClassicPdf(
+      objects("<< /Nums [0 [13 0 R 15 0 R]] >>")
+        .map((obj) => {
+          switch (obj.num) {
+            case 5:
+              return {
+                num: 5,
+                body: streamBody(
+                  "",
+                  "/Span <</MCID 0>> BDC 0 0 10 10 re f EMC /LI <</MCID 1>> BDC 0 0 5 5 re f EMC " +
+                    "/P <</MCID 2>> BDC 0 0 2 2 re f EMC",
+                ),
+              };
+            case 9:
+              return {
+                num: 9,
+                body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 14 0 R] >>",
+              };
+            case 10:
+              return {
+                num: 10,
+                body: "<< /Type /StructElem /S /P /P 9 0 R /K 13 0 R >>",
+              };
+            default:
+              return obj;
+          }
+        })
+        .concat([
+          {
+            num: 13,
+            body: "<< /Type /StructElem /S /Span /P 10 0 R /Pg 3 0 R /K 0 >>",
+          },
+          {
+            num: 14,
+            body: "<< /Type /StructElem /S /L /P 9 0 R /K 15 0 R >>",
+          },
+          {
+            num: 15,
+            body: "<< /Type /StructElem /S /LI /P 14 0 R /Pg 3 0 R /K 1 >>",
+          },
+        ]),
+      1,
+    );
+  }
+  const added = (after: number) => ({
+    pageIndex: 0,
+    mcid: 2,
+    decorative: false,
+    newElement: { type: "P" as const, after },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("retags the paragraph a Span's text sits in", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [
+      { pageIndex: 0, mcid: 0, type: "H2", decorative: false },
+    ]);
+    expect(await elementBody(out, 10)).toContain("/S /H2");
+    expect(await elementBody(out, 13)).toContain("/S /Span");
+  });
+
+  test("places an element after the paragraph, not inside it beside the Span", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(0)]);
+    expect(await documentKids(out)).toBe("10 0 R 16 0 R 14 0 R");
+  });
+
+  test("places an element after a list, not among its items", async () => {
+    const out = await applyStructureEdits(blocksPdf(), [added(1)]);
+    expect(await documentKids(out)).toBe("10 0 R 14 0 R 16 0 R");
+  });
+});
+
+describe("applyStructureEdits: cutting", () => {
+  // Document 9 holds P 10, whose kids are MCID 0, Link 13 (MCID 2) and MCID
+  // 1. The page also carries MCIDs 3 and 4, which the editor gave the text
+  // it cut out of MCID 0 and the text after that cut.
+  function cutPdf(): Uint8Array {
+    return buildClassicPdf(
+      objects("<< /Nums [0 [10 0 R 10 0 R 13 0 R]] >>")
+        .map((obj) => {
+          switch (obj.num) {
+            case 5:
+              return {
+                num: 5,
+                body: streamBody(
+                  "",
+                  "/P <</MCID 0>> BDC 0 0 1 1 re f EMC /H2 <</MCID 3>> BDC 0 0 2 2 re f EMC " +
+                    "/P <</MCID 4>> BDC 0 0 3 3 re f EMC /Link <</MCID 2>> BDC 0 0 4 4 re f EMC " +
+                    "/P <</MCID 1>> BDC 0 0 5 5 re f EMC",
+                ),
+              };
+            case 9:
+              return {
+                num: 9,
+                body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R] >>",
+              };
+            case 10:
+              return {
+                num: 10,
+                body: "<< /Type /StructElem /S /P /P 9 0 R /Pg 3 0 R /K [0 13 0 R 1] >>",
+              };
+            default:
+              return obj;
+          }
+        })
+        .concat([
+          {
+            num: 13,
+            body: "<< /Type /StructElem /S /Link /P 10 0 R /Pg 3 0 R /K 2 >>",
+          },
+        ]),
+      1,
+    );
+  }
+  const cut = (type: "H2" | "Span") => ({
+    pageIndex: 0,
+    mcid: 3,
+    alt: null,
+    decorative: false,
+    cut: { type, from: [0], before: 0, after: 4 },
+  });
+  const kids = async (bytes: Uint8Array, num: number) =>
+    (await elementBody(bytes, num)).match(/\/K \[([^\]]*)\]/)![1];
+
+  test("puts an inline element among the kids, between the parts it was cut from", async () => {
+    const out = await applyStructureEdits(cutPdf(), [cut("Span")]);
+    expect(await kids(out, 10)).toBe("0 14 0 R 4 13 0 R 1");
+    expect(await elementBody(out, 14)).toContain("/S /Span /P 10 0 R");
+  });
+
+  test("splits the element around a block, moving the kids after it to a new one", async () => {
+    const out = await applyStructureEdits(cutPdf(), [cut("H2")]);
+    expect(await kids(out, 9)).toBe("10 0 R 14 0 R 15 0 R");
+    expect(await kids(out, 10)).toBe("0");
+    expect(await elementBody(out, 14)).toContain("/S /H2 /P 9 0 R");
+    expect(await kids(out, 15)).toBe("4 13 0 R 1");
+    expect(await elementBody(out, 13)).toContain("/P 15 0 R");
+
+    const pdf = (await RawPdf.parse(out))!;
+    const slots = pdf.parentTreeArray(7, 0)!.items!.map((item) => item.text);
+    expect(slots).toEqual(["10 0 R", "15 0 R", "13 0 R", "14 0 R", "15 0 R"]);
+  });
+
+  test("refuses a cut from MCIDs that are not consecutive kids", async () => {
+    await expect(
+      applyStructureEdits(cutPdf(), [
+        { ...cut("Span"), cut: { ...cut("Span").cut, from: [0, 1] } },
+      ]),
+    ).rejects.toThrow(StructureEditError);
+  });
+});
+
+describe("applyStructureEdits: no structure yet", () => {
+  const paragraph = (pageIndex: number, mcid = 0) => ({
+    pageIndex,
+    mcid,
+    decorative: false,
+    newElement: { type: "P" as const, after: null },
+  });
+  const documentKids = async (bytes: Uint8Array) =>
+    (await elementBody(bytes, 9)).match(/\/K \[([^\]]*)\]/)![1];
+
+  // objects() with page 2 (object 4) dropping its /StructParents and the
+  // ParentTree its entry, its content now marking MCID 0 with no element.
+  function untaggedSecondPage(parentTree = "<< /Nums [0 [10 0 R 11 0 R]] >>") {
+    return objects(parentTree)
+      .filter((obj) => obj.num !== 12)
+      .map((obj) => {
+        if (obj.num === 4) {
+          return { ...obj, body: obj.body.replace(" /StructParents 1", "") };
+        }
+        if (obj.num === 7) {
+          return { ...obj, body: obj.body.replace("/ParentTreeNextKey 2", "") };
+        }
+        if (obj.num === 9) {
+          return {
+            ...obj,
+            body: "<< /Type /StructElem /S /Document /P 7 0 R /K [10 0 R 11 0 R] >>",
+          };
+        }
+        return obj;
+      });
+  }
+
+  test("creates the tree, a Document element and the page's ParentTree array in an untagged file", async () => {
+    const untagged = buildClassicPdf(
+      objects()
+        .filter((obj) => obj.num < 7)
+        .map((obj) => ({
+          ...obj,
+          body:
+            obj.num === 1
+              ? "<< /Type /Catalog /Pages 2 0 R >>"
+              : obj.body.replace(/ \/StructParents \d/, ""),
+        })),
+      1,
+    );
+    const out = await applyStructureEdits(untagged, [paragraph(1)]);
+
+    const pdf = (await RawPdf.parse(out))!;
+    const catalog = pdf.objectBody(1)!;
+    expect(catalog).not.toContain("/MarkInfo");
+    const root = pdf.objectBody(pdf.dictRef(catalog, "StructTreeRoot")!)!;
+    expect(root).toContain("/ParentTreeNextKey 1");
+    const document = pdf.objectBody(pdf.dictRef(root, "K")!)!;
+    expect(document).toContain("/S /Document");
+    expect(pdf.dictInt(pdf.objectBody(3)!, "StructParents")).toBeNull();
+    expect(pdf.dictInt(pdf.objectBody(4)!, "StructParents")).toBe(0);
+
+    const structure = await readFileStructure(out);
+    expect(structure!.pages.get(1)!.elements.map((el) => el.type)).toEqual([
+      "P",
+    ]);
+    expect(structure!.blocks.map((block) => block.type)).toEqual([
+      "Document",
+      "P",
+    ]);
+  });
+
+  test("gives a page with no /StructParents the next free ParentTree key", async () => {
+    const out = await applyStructureEdits(
+      buildClassicPdf(untaggedSecondPage(), 1),
+      [paragraph(1)],
+    );
+    const pdf = (await RawPdf.parse(out))!;
+    expect(pdf.dictInt(pdf.objectBody(4)!, "StructParents")).toBe(1);
+    const root = pdf.objectBody(7)!;
+    expect(root).toContain("/ParentTreeNextKey 2");
+    expect(root).toMatch(/\/Nums \[0 \[10 0 R 11 0 R\] 1 \d+ 0 R\]/);
+    expect(await documentKids(out)).toMatch(/^10 0 R 11 0 R \d+ 0 R$/);
+  });
+
+  test("adds a leaf for the new page to a ParentTree with kids", async () => {
+    const tree = [
+      ...untaggedSecondPage("20 0 R"),
+      { num: 20, body: "<< /Kids [21 0 R] >>" },
+      { num: 21, body: "<< /Limits [0 0] /Nums [0 [10 0 R 11 0 R]] >>" },
+    ];
+    const out = await applyStructureEdits(buildClassicPdf(tree, 1), [
+      paragraph(1),
+    ]);
+    const pdf = (await RawPdf.parse(out))!;
+    const kids = pdf.objectBody(20)!.match(/\/Kids \[([^\]]*)\]/)![1];
+    const leaf = pdf.objectBody(Number(kids.split(" ")[3]))!;
+    expect(leaf).toMatch(/\/Limits \[1 1\] \/Nums \[1 \d+ 0 R\]/);
+    const structure = await readFileStructure(out);
+    expect(structure!.pages.get(1)!.elements.map((el) => el.type)).toEqual([
+      "P",
+    ]);
+  });
+
+  test("leaves /MarkInfo as the file has it", async () => {
+    const unmarked = untaggedSecondPage().map((obj) =>
+      obj.num === 1
+        ? {
+            ...obj,
+            body: obj.body.replace("/Marked true", "/Marked false"),
+          }
+        : obj,
+    );
+    const out = await applyStructureEdits(buildClassicPdf(unmarked, 1), [
+      paragraph(1),
+    ]);
+    expect(await elementBody(out, 1)).toContain(
+      "/MarkInfo << /Marked false >>",
+    );
+  });
+
+  test("leaves the file's structure alone when every page already has its own", async () => {
+    const bytes = buildClassicPdf(objects(), 1);
+    const out = await applyStructureEdits(bytes, [
+      { pageIndex: 1, mcid: 0, alt: "x", decorative: false },
+    ]);
+    expect(await elementBody(out, 1)).toBe(await elementBody(bytes, 1));
   });
 });

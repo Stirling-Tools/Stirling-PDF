@@ -13,6 +13,10 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.apache.poi.poifs.filesystem.DirectoryEntry;
+import org.apache.poi.poifs.filesystem.DocumentEntry;
+import org.apache.poi.poifs.filesystem.Entry;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.simplejavamail.api.email.AttachmentResource;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.email.Recipient;
@@ -34,6 +38,11 @@ public class EmlParser {
     // Configuration constants
     private final int DEFAULT_MAX_ATTACHMENT_MB = 10;
     private final long MAX_SIZE_ESTIMATION_BYTES = 500L * 1024 * 1024; // 500MB
+    private final int MAX_ATTACHMENTS = ZipBombGuard.MAX_ENTRIES;
+    final int MAX_FILENAME_LENGTH = 255;
+    private final int MAX_EXTENSION_LENGTH = 16; // including the dot
+    private final int MAX_MSG_PROPERTY_STREAM_BYTES = 64 * 1024;
+    private final String MSG_PROPERTY_STREAM_PREFIX = "__properties_version1.0";
 
     // Message constants
     private final String NO_CONTENT_MESSAGE = "Email content could not be parsed";
@@ -55,6 +64,7 @@ public class EmlParser {
             Email email;
             if (isMsgFile) {
                 try {
+                    validateMsgStreamSizes(emlBytes);
                     email = EmailConverter.outlookMsgToEmail(input);
                 } catch (Exception e) {
                     // OLE2 magic bytes match but parsing failed - might be DOC/XLS/other OLE2 file
@@ -77,6 +87,39 @@ public class EmlParser {
                             "Failed to parse EML file with Simple Java Mail: %s", e.getMessage()),
                     e);
         }
+    }
+
+    /**
+     * Rejects a compound file whose directory declares more stream data than the file holds, or
+     * whose property streams are larger than a message needs. The MSG parser reads both in full, so
+     * the check runs first.
+     */
+    private void validateMsgStreamSizes(byte[] msgBytes) throws IOException {
+        try (POIFSFileSystem fileSystem = new POIFSFileSystem(new ByteArrayInputStream(msgBytes))) {
+            if (sumStreamSizes(fileSystem.getRoot()) > msgBytes.length) {
+                throw new IOException("MSG streams add up to more data than the file contains");
+            }
+        }
+    }
+
+    private long sumStreamSizes(DirectoryEntry directory) throws IOException {
+        long total = 0;
+        for (Entry entry : directory) {
+            if (entry instanceof DirectoryEntry child) {
+                total += sumStreamSizes(child);
+            } else if (entry instanceof DocumentEntry stream) {
+                int size = stream.getSize();
+                if (size < 0) {
+                    throw new IOException("MSG stream has a negative size");
+                }
+                if (size > MAX_MSG_PROPERTY_STREAM_BYTES
+                        && stream.getName().startsWith(MSG_PROPERTY_STREAM_PREFIX)) {
+                    throw new IOException("MSG property stream is too large");
+                }
+                total += size;
+            }
+        }
+        return total;
     }
 
     private EmailContent buildEmailContent(
@@ -112,6 +155,20 @@ public class EmlParser {
             content.setTextBody(NO_CONTENT_MESSAGE);
         }
 
+        // Embedding is capped like the archive readers; listing alone is not. Counted before
+        // mapping so a rejected message reads nothing.
+        if (request != null && request.isIncludeAttachments()) {
+            int resourceCount =
+                    countResources(email.getEmbeddedImages())
+                            + countResources(email.getAttachments());
+            if (resourceCount > MAX_ATTACHMENTS) {
+                throw new IOException(
+                        "Email contains more than the maximum allowed "
+                                + MAX_ATTACHMENTS
+                                + " attachments");
+            }
+        }
+
         List<EmailAttachment> attachments = new ArrayList<>();
         attachments.addAll(mapResources(email.getEmbeddedImages(), request, true));
         attachments.addAll(mapResources(email.getAttachments(), request, false));
@@ -119,6 +176,19 @@ public class EmlParser {
         content.setAttachmentCount(attachments.size());
 
         return content;
+    }
+
+    private int countResources(List<AttachmentResource> resources) {
+        if (resources == null) {
+            return 0;
+        }
+        int count = 0;
+        for (AttachmentResource resource : resources) {
+            if (resource != null) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private List<EmailAttachment> mapResources(
@@ -456,5 +526,30 @@ public class EmlParser {
                 this.sizeBytes = data.length;
             }
         }
+
+        /**
+         * Names over {@code MAX_FILENAME_LENGTH} UTF-16 units are shortened, keeping an extension
+         * of up to {@code MAX_EXTENSION_LENGTH} characters and never splitting a surrogate pair, so
+         * every consumer sees the same bounded name.
+         */
+        public void setFilename(String filename) {
+            this.filename = limitFilenameLength(filename);
+        }
+    }
+
+    static String limitFilenameLength(String filename) {
+        if (filename == null || filename.length() <= MAX_FILENAME_LENGTH) {
+            return filename;
+        }
+        String extension = "";
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot > 0 && filename.length() - lastDot <= MAX_EXTENSION_LENGTH) {
+            extension = filename.substring(lastDot);
+        }
+        int keep = MAX_FILENAME_LENGTH - extension.length();
+        if (Character.isHighSurrogate(filename.charAt(keep - 1))) {
+            keep--;
+        }
+        return filename.substring(0, keep) + extension;
     }
 }

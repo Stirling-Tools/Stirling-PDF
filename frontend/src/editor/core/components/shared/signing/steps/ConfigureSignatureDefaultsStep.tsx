@@ -5,6 +5,7 @@ import { Icon } from "@editor/ui/Icon";
 import SignatureSettingsInput, {
   SignatureSettings,
 } from "@editor/components/tools/certSign/SignatureSettingsInput";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface ConfigureSignatureDefaultsStepProps {
   settings: SignatureSettings;
@@ -54,7 +55,7 @@ export const ConfigureSignatureDefaultsStep: React.FC<
                   "Reason:",
                 )}
               </strong>{" "}
-              {settings.reason}
+              <PrivateContent>{settings.reason}</PrivateContent>
             </Text>
           )}
           {settings.showSignature && settings.location && (
@@ -65,7 +66,7 @@ export const ConfigureSignatureDefaultsStep: React.FC<
                   "Location:",
                 )}
               </strong>{" "}
-              {settings.location}
+              <PrivateContent>{settings.location}</PrivateContent>
             </Text>
           )}
         </Stack>

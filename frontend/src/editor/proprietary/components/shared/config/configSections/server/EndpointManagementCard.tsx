@@ -51,6 +51,7 @@ const commonEndpoints = [
   "pdf-to-markdown",
   "pdf-to-pdfa",
   "pdf-to-presentation",
+  "pdf-to-rtf",
   "pdf-to-single-page",
   "pdf-to-text",
   "pdf-to-word",

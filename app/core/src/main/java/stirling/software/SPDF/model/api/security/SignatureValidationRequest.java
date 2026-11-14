@@ -14,7 +14,9 @@ import stirling.software.common.model.api.PDFFile;
 public class SignatureValidationRequest extends PDFFile {
 
     @Schema(
-            description = "(Optional) file to compare PDF cert signatures against x.509 format",
+            description =
+                    "Optional X.509 certificate (PEM or DER). If given, only signatures"
+                            + " chaining to it are trusted.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private MultipartFile certFile;
 }

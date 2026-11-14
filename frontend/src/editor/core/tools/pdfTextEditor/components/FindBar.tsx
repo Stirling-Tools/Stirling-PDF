@@ -14,12 +14,13 @@ import type {
   MatchOptions,
   TextMatch,
 } from "@editor/tools/pdfTextEditor/util/textMatching";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   PageSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface FindBarProps {
   store: EditorStore;
@@ -63,11 +64,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   }, []);
 
   // Opening Find is a document-wide request, so pull in every page that lazy
-  // loading has not read yet. Yield first: the read is synchronous, and on a
-  // long document it would otherwise block before the bar has painted.
+  // loading has not read yet.
   useEffect(() => {
-    const id = setTimeout(() => ensureAllPagesRead(store), 0);
-    return () => clearTimeout(id);
+    return readAllPagesInBackground(store);
   }, [store]);
 
   const options: MatchOptions = useMemo(
@@ -243,6 +242,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         <TextInput
           ref={inputRef}
           value={query}
+          className={privateContentClassName}
           onChange={(e) => setQuery(e.currentTarget.value)}
           placeholder={t("pdfTextEditor.find.findPlaceholder", "Find")}
           aria-label={t("pdfTextEditor.find.findPlaceholder", "Find")}
@@ -322,6 +322,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
 
         <TextInput
           value={replace}
+          className={privateContentClassName}
           onChange={(e) => setReplace(e.currentTarget.value)}
           placeholder={t(
             "pdfTextEditor.find.replacePlaceholder",

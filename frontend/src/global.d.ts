@@ -45,12 +45,15 @@ declare module "axios" {
     accountLinkBlockContext?: import("@editor/services/accountLinkBlock").AccountLinkBlockContext;
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
+    /** Backend endpoint key for desktop routing, when the URL serves more than one. */
+    endpointName?: string;
   }
 
   export interface InternalAxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
+    endpointName?: string;
   }
 }
 

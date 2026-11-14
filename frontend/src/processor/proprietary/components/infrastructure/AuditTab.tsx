@@ -78,12 +78,14 @@ export function AuditTab() {
     column.mono({
       key: "actor",
       header: t("portal.infrastructure.audit.columns.actor"),
+      privateContent: true,
       sortable: true,
       get: (e) => e.actor,
     }),
     column.text({
       key: "target",
       header: t("portal.infrastructure.audit.columns.target"),
+      privateContent: true,
       sortable: true,
       get: (e) => e.target,
     }),

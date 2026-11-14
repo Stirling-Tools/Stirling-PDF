@@ -313,8 +313,9 @@ function compressStaticCopyPlugin(): PluginOption {
 function prerenderOgPlugin(options: {
   isSaas: boolean;
   precompress: boolean;
+  canonicalOrigin: string;
 }): PluginOption {
-  const { isSaas, precompress } = options;
+  const { isSaas, precompress, canonicalOrigin } = options;
   // SaaS (stirling.com) prerenders the marketing cards from a dedicated
   // manifest; every other flavour uses the tool-registry manifest.
   const manifestFile = isSaas
@@ -327,7 +328,6 @@ function prerenderOgPlugin(options: {
       const { prerenderOg, buildSitemap, resolveDeployBases } =
         // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
         await import("./scripts/og-prerender.mjs");
-      const canonicalOrigin = process.env.VITE_OG_BASE_URL || "";
       const deployOrigin = process.env.CF_PAGES_URL || "";
       // Absolute deploy base for nested routes' <base href> (matches vite `base`).
       const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
@@ -358,22 +358,18 @@ function prerenderOgPlugin(options: {
         return;
       }
       const distDir = path.resolve(__dirname, "dist");
-      // The crawlable landing body only pays for itself where a crawler can
-      // reach the page; self-hosted and desktop builds just get the flash.
-      const injectLanding = Boolean(ogBase);
       const count = await prerenderOg({
         distDir,
         manifest,
         ogBase,
         canonicalBase,
         baseHref,
-        injectLanding,
       });
       console.log(
         `[prerender-og] wrote ${count} prerendered route pages` +
           (ogBase
-            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
-            : " (root-relative URLs, no landing body)"),
+            ? ` (absolute URLs, base=${ogBase})`
+            : " (root-relative URLs)"),
       );
 
       // prerenderOg rewrote index.html, so the bundler's siblings for the
@@ -621,11 +617,6 @@ export default defineConfig(async ({ mode, command }) => {
       viteStaticCopy({
         targets: [
           {
-            // Copy jscanify vendor files to dist
-            src: "public/vendor/jscanify/*",
-            dest: "vendor/jscanify",
-          },
-          {
             // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
             // when rendering PDFs inside workers where the default DOM fetch paths
             // aren't available.
@@ -662,6 +653,7 @@ export default defineConfig(async ({ mode, command }) => {
       prerenderOgPlugin({
         isSaas: effectiveMode === "saas",
         precompress: effectiveMode !== "desktop",
+        canonicalOrigin: env.VITE_OG_BASE_URL || "",
       }),
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,

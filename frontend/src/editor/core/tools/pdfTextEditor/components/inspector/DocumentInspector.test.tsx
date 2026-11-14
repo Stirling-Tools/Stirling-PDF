@@ -1,10 +1,28 @@
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
+import type { DocumentLanguageControl } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
 import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
+function renderInspector(
+  imageReview: ImageReview | null,
+  onNext = vi.fn(),
+  documentLanguage: DocumentLanguageControl | null = null,
+  {
+    untaggedPages = 0,
+    onTagUntagged = vi.fn(),
+    markedTagged = false,
+    onSetMarkedTagged = vi.fn(),
+    hasTags = false,
+  }: {
+    untaggedPages?: number;
+    onTagUntagged?: () => void;
+    markedTagged?: boolean | null;
+    onSetMarkedTagged?: (marked: boolean) => void;
+    hasTags?: boolean;
+  } = {},
+) {
   render(
     <MantineProvider env="test">
       <DocumentInspector
@@ -17,6 +35,14 @@ function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
         onSetShowRulers={vi.fn()}
         imageReview={imageReview}
         onSelectNextImageToReview={onNext}
+        untaggedPages={untaggedPages}
+        onTagUntaggedContent={onTagUntagged}
+        markedTagged={markedTagged}
+        onSetMarkedTagged={onSetMarkedTagged}
+        hasTags={hasTags}
+        headingOutline={null}
+        onSelectHeading={vi.fn()}
+        documentLanguage={documentLanguage}
       />
     </MantineProvider>,
   );
@@ -26,6 +52,10 @@ function renderInspector(imageReview: ImageReview | null, onNext = vi.fn()) {
 const KEY = "pdfTextEditor.inspector.accessibility";
 const SUMMARY = "pdf-editor-document-accessibility-summary";
 const NEXT = "pdf-editor-document-accessibility-next";
+const TAG_UNTAGGED = "pdf-editor-document-accessibility-tag-untagged";
+const MARKED = "pdf-editor-document-accessibility-marked";
+const MARKED_WARNING = "pdf-editor-document-accessibility-marked-warning";
+const NOTHING_TO_REVIEW = { needsDescription: 0, untagged: 0, untaggable: 0 };
 
 describe("DocumentInspector accessibility review", () => {
   it("counts images missing descriptions and untagged ones, and moves to the next", () => {
@@ -66,6 +96,116 @@ describe("DocumentInspector accessibility review", () => {
     renderInspector(null);
     expect(
       screen.queryByTestId("pdf-editor-document-accessibility"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("counts pages with untagged content and tags them", () => {
+    const onTagUntagged = vi.fn();
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
+      untaggedPages: 3,
+      onTagUntagged,
+    });
+    expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
+      `${KEY}.untaggedPages3`,
+    );
+    fireEvent.click(screen.getByTestId(TAG_UNTAGGED));
+    expect(onTagUntagged).toHaveBeenCalledOnce();
+  });
+
+  it("offers no tagging once every page is tagged", () => {
+    renderInspector(NOTHING_TO_REVIEW);
+    expect(screen.queryByTestId(TAG_UNTAGGED)).not.toBeInTheDocument();
+  });
+
+  it("ticks the fully-tagged box to mark the document", () => {
+    const onSetMarkedTagged = vi.fn();
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { onSetMarkedTagged });
+    const box = screen.getByTestId(MARKED);
+    expect(box).not.toBeChecked();
+    fireEvent.click(box);
+    expect(onSetMarkedTagged).toHaveBeenCalledWith(true);
+  });
+
+  it("leaves the box out when the file's flag can't be changed", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: null });
+    expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
+  });
+
+  it("warns when marked tagged while content is untagged", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
+      markedTagged: true,
+      untaggedPages: 2,
+    });
+    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
+      `${KEY}.markedWithUntagged`,
+    );
+  });
+
+  it("warns when tags exist but the document isn't marked tagged", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { hasTags: true });
+    expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
+      `${KEY}.unmarkedWithTags`,
+    );
+  });
+
+  it("shows no warning when the flag matches the tags", () => {
+    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: true });
+    expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
+  });
+});
+
+describe("DocumentInspector language", () => {
+  const LANGUAGE_KEY = "pdfTextEditor.inspector.language";
+  const MISSING = "pdf-editor-document-language-missing";
+  const language = (
+    lang: string | null,
+    editable = true,
+  ): DocumentLanguageControl => ({
+    language: lang,
+    editable,
+    onSet: vi.fn(),
+  });
+
+  function picker(): HTMLInputElement {
+    return screen.getByRole("textbox", {
+      name: `${LANGUAGE_KEY}.documentLabel`,
+    });
+  }
+
+  it("flags a document with no language and sets one", () => {
+    const control = language(null);
+    renderInspector(null, vi.fn(), control);
+    expect(screen.getByTestId(MISSING)).toBeVisible();
+    expect(picker()).toHaveValue("");
+    expect(picker()).toHaveAttribute(
+      "placeholder",
+      `${LANGUAGE_KEY}.placeholder`,
+    );
+    fireEvent.click(picker());
+    const options = document.getElementById(
+      picker().getAttribute("aria-controls")!,
+    )!;
+    fireEvent.click(
+      within(options).getByRole("option", { name: /(^|\()en-IE\)?$/ }),
+    );
+    expect(control.onSet).toHaveBeenCalledWith("en-IE");
+  });
+
+  it("shows the document's language without flagging it", () => {
+    renderInspector(null, vi.fn(), language("fr"));
+    expect(picker().value).toMatch(/(^|\()fr\)?$/);
+    expect(screen.queryByTestId(MISSING)).not.toBeInTheDocument();
+  });
+
+  it("disables the picker where the language can't be saved", () => {
+    renderInspector(null, vi.fn(), language("fr", false));
+    expect(picker()).toBeDisabled();
+  });
+
+  it("leaves the language out when it can't be edited here", () => {
+    renderInspector(null);
+    expect(
+      screen.queryByTestId("pdf-editor-document-language-picker"),
     ).not.toBeInTheDocument();
   });
 });

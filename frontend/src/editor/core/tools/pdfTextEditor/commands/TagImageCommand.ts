@@ -6,6 +6,7 @@ import {
 import { descriptionCoalesceKey } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   ARTIFACT_TAG,
   addTagMark,
@@ -17,7 +18,8 @@ import {
   type RetaggableTag,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
-const FIGURE_TAG = "Figure";
+// Marked-content tags conventionally name the structure type they mark.
+const FIGURE_TAG: StructureType = "Figure";
 
 /**
  * Tag an image as a new Figure, or as an artifact, where retaggableTag allows.
@@ -110,7 +112,7 @@ function retag(
   }
   if (from.kind === "figure") {
     marked(removeTagMark(m, objPtr, FIGURE_TAG));
-    structure.removeFigure(from.mcid);
+    structure.removeElement(from.mcid);
   }
   image.mcid = null;
   image.artifact = false;
@@ -124,7 +126,7 @@ function retag(
     marked(
       addTagMark(m, doc.docPtr, objPtr, { name: FIGURE_TAG, mcid: to.mcid }),
     );
-    structure.addFigure(to.mcid);
+    structure.addElement(to.mcid, FIGURE_TAG);
     if (to.alt !== null) structure.setAlt(to.mcid, to.alt);
     image.mcid = to.mcid;
   }

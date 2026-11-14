@@ -350,7 +350,7 @@ public class GeneralUtils {
      * @param host the hostname to resolve
      * @return {@code true} if the host should be considered unsafe
      */
-    private boolean isDisallowedNetworkLocation(String host) {
+    public boolean isDisallowedNetworkLocation(String host) {
         // Resolution is delegated to the JVM/OS resolver which already applies system
         // configured query limits and timeouts. We only need the resolved addresses here so
         // that we can enforce the MAX_DNS_ADDRESSES limit and perform the sensitive range
@@ -813,6 +813,101 @@ public class GeneralUtils {
             text = sb.toString();
         }
         return text;
+    }
+
+    /**
+     * Rejects malformed selections (negatives, text, backwards ranges, only commas) and ones that
+     * match no page at all; numbers outside the document are fine while something else matches, as
+     * batches mix sizes. A range may start at 0, which the parser reads as page 1.
+     */
+    public void requireValidPageSelection(String selection, int totalPages) {
+        checkPageSelection(selection, totalPages, true);
+    }
+
+    /**
+     * Rejects only malformed selections, including one made only of commas; one that matches no
+     * page is allowed, for callers such as filters where a short file simply has nothing to match.
+     */
+    public void requireWellFormedPageSelection(String selection, int totalPages) {
+        checkPageSelection(selection, totalPages, false);
+    }
+
+    private void checkPageSelection(String selection, int totalPages, boolean requireMatch) {
+        if (selection == null || selection.isBlank()) {
+            return;
+        }
+        List<String> malformed = new ArrayList<>();
+        List<String> outOfRange = new ArrayList<>();
+        boolean matchesAPage = false;
+        boolean hasToken = false;
+        for (String raw : selection.split(",")) {
+            String token = raw.trim();
+            if (token.isEmpty()) {
+                continue;
+            }
+            hasToken = true;
+            if ("all".equalsIgnoreCase(token)) {
+                matchesAPage = matchesAPage || totalPages > 0;
+                continue;
+            }
+            if (token.contains("n") && isNFunction(token)) {
+                if (totalPages > 0 && !evaluateNFunc(token, totalPages).isEmpty()) {
+                    matchesAPage = true;
+                } else {
+                    outOfRange.add(token);
+                }
+                continue;
+            }
+            switch (classifyPageToken(token, totalPages)) {
+                case IN_RANGE -> matchesAPage = true;
+                case OUT_OF_RANGE -> outOfRange.add(token);
+                case MALFORMED -> malformed.add(token);
+            }
+        }
+        List<String> invalid = hasToken ? malformed : List.of(selection);
+        if (requireMatch && invalid.isEmpty() && !matchesAPage) {
+            invalid = outOfRange.isEmpty() ? List.of(selection) : outOfRange;
+        }
+        if (!invalid.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Invalid page selection '"
+                            + String.join(",", invalid)
+                            + "': pages are numbered 1 to "
+                            + totalPages
+                            + ".");
+        }
+    }
+
+    private enum PageToken {
+        IN_RANGE,
+        OUT_OF_RANGE,
+        MALFORMED
+    }
+
+    private static PageToken classifyPageToken(String token, int totalPages) {
+        try {
+            if (token.matches("\\d+")) {
+                int page = Integer.parseInt(token);
+                return page >= 1 && page <= totalPages
+                        ? PageToken.IN_RANGE
+                        : PageToken.OUT_OF_RANGE;
+            }
+            if (token.matches("\\d+\\s*-\\s*\\d*")) {
+                String[] range = token.split("-", -1);
+                int start = Math.max(1, Integer.parseInt(range[0].trim()));
+                int end =
+                        range[1].isBlank()
+                                ? Math.max(start, totalPages)
+                                : Integer.parseInt(range[1].trim());
+                if (end < start) {
+                    return PageToken.MALFORMED;
+                }
+                return start <= totalPages ? PageToken.IN_RANGE : PageToken.OUT_OF_RANGE;
+            }
+        } catch (NumberFormatException e) {
+            return PageToken.MALFORMED;
+        }
+        return PageToken.MALFORMED;
     }
 
     private List<Integer> handlePart(String part, int totalPages, int offset) {

@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -262,6 +266,33 @@ class SplitPdfBySectionsControllerTest {
         setupFactory();
 
         assertThrows(Exception.class, () -> controller.splitPdf(request));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @DisplayName("Should reject divisions that would produce more than 100000 pages")
+    void shouldRejectTooManyOutputPages(boolean merge) throws Exception {
+        // 39 pages x 51 x 51 sections = 101,439
+        byte[] pdfBytes = createPdf(39);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
+        request.setFileInput(file);
+        request.setHorizontalDivisions(50);
+        request.setVerticalDivisions(50);
+        request.setMerge(merge);
+        request.setPageNumbers("all");
+
+        setupFactory();
+
+        IllegalArgumentException e =
+                assertThrows(IllegalArgumentException.class, () -> controller.splitPdf(request));
+        assertThat(e.getMessage()).contains("100000");
+        verify(pdfDocumentFactory, never()).createNewDocument();
+        verify(pdfDocumentFactory, never())
+                .createNewDocumentBasedOnOldDocument(any(PDDocument.class));
     }
 
     @Test

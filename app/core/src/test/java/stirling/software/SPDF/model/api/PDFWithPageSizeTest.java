@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 class PDFWithPageSizeTest {
 
     @Test
-    @DisplayName("orientation defaults to PORTRAIT, pageSize null")
+    @DisplayName("orientation defaults to PORTRAIT, pageSize to KEEP")
     void defaults() {
         PDFWithPageSize req = new PDFWithPageSize();
         assertThat(req.getOrientation()).isEqualTo("PORTRAIT");
-        assertThat(req.getPageSize()).isNull();
+        assertThat(req.getPageSize()).isEqualTo("KEEP");
     }
 
     @Test

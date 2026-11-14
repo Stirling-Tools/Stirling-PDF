@@ -212,11 +212,11 @@ pub struct CanInstallResult {
 pub fn can_install_updates() -> CanInstallResult {
     #[cfg(not(target_os = "windows"))]
     {
-        return CanInstallResult {
+        CanInstallResult {
             can_install: true,
             reason: None,
             install_dir: None,
-        };
+        }
     }
 
     #[cfg(target_os = "windows")]

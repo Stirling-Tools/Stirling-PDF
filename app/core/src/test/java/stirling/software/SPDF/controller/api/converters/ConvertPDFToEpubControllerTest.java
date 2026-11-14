@@ -40,6 +40,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.OutputFormat;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest.TargetDevice;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -65,11 +66,18 @@ class ConvertPDFToEpubControllerTest {
 
     @Mock private TempFileManager tempFileManager;
     @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock private RuntimePathConfig runtimePathConfig;
+
+    private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
+
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertPDFToEpubController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient().when(runtimePathConfig.getCalibrePath()).thenReturn(CALIBRE_PATH);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -142,17 +150,19 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
-                    .thenReturn("novel_convertedToEPUB.epub");
+            gu.when(() -> GeneralUtils.generateFilename("novel.pdf", ".epub"))
+                    .thenReturn("novel.epub");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals(13, command.size());
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals(17, command.size());
+            assertEquals(CALIBRE_PATH, command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
+            assertEquals("0", command.get(command.indexOf("--pdf-header-skip") + 1));
+            assertEquals("0", command.get(command.indexOf("--pdf-footer-skip") + 1));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
@@ -165,9 +175,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains(TargetDevice.TABLET_PHONE_IMAGES.getCalibreProfile()));
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
-            assertEquals(
-                    "novel_convertedToEPUB.epub",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("novel.epub", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
@@ -234,8 +242,8 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
-                    .thenReturn("story_convertedToEPUB.epub");
+            gu.when(() -> GeneralUtils.generateFilename("story.pdf", ".epub"))
+                    .thenReturn("story.epub");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
@@ -243,7 +251,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains("--output-profile"));
             assertTrue(command.contains(TargetDevice.KINDLE_EINK_TEXT.getCalibreProfile()));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
             assertTrue(command.contains("--filter-css"));
             assertTrue(
                     command.contains(
@@ -251,9 +259,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.size() >= 11);
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
-            assertEquals(
-                    "story_convertedToEPUB.epub",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("story.epub", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
         } finally {
             deleteIfExists(workingDir);
@@ -319,16 +325,16 @@ class ConvertPDFToEpubControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
-                    .thenReturn("book_convertedToAZW3.azw3");
+            gu.when(() -> GeneralUtils.generateFilename("book.pdf", ".azw3"))
+                    .thenReturn("book.azw3");
             ResponseEntity<Resource> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals("ebook-convert", command.get(0));
+            assertEquals(CALIBRE_PATH, command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
             assertTrue(command.contains("--pdf-engine"));
-            assertTrue(command.contains("pdftohtml"));
+            assertTrue(command.contains("calibre"));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
@@ -339,9 +345,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     MediaType.valueOf("application/vnd.amazon.ebook"),
                     response.getHeaders().getContentType());
-            assertEquals(
-                    "book_convertedToAZW3.azw3",
-                    response.getHeaders().getContentDisposition().getFilename());
+            assertEquals("book.azw3", response.getHeaders().getContentDisposition().getFilename());
             assertEquals("azw3", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);

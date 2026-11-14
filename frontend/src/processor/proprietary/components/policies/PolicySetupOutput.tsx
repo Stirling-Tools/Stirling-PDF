@@ -12,6 +12,7 @@ import { fetchSources } from "@processor/api/sources";
 import { errorMessage } from "@processor/api/http";
 import { qk } from "@processor/queries/keys";
 import { usePolicySetupIngestion } from "@processor/components/policies/usePolicySetupIngestion";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props extends PolicySetupConfigProps {
   folderName?: string;
@@ -90,7 +91,12 @@ export function PolicySetupOutput({
           "Processed files are saved in this folder. Corpus exports keep the original PDF.",
         )}
       >
-        <Input inputSize="sm" value={folderName} readOnly />
+        <Input
+          inputSize="sm"
+          value={folderName}
+          className={privateContentClassName}
+          readOnly
+        />
       </FormField>
     ) : (
       <>

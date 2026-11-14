@@ -199,3 +199,30 @@ describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
     ).resolves.toBe(true);
   });
 });
+
+describe("operationRouter — URL shared by two endpoint keys", () => {
+  const url = "/api/v1/convert/pdf/text";
+
+  test("routes by the caller's endpoint key, not the first key for the URL", async () => {
+    const supportedLocally = vi.mocked(
+      endpointAvailabilityService.isEndpointSupportedLocally,
+    );
+    supportedLocally.mockImplementation(async (name) => name !== "pdf-to-rtf");
+    try {
+      await expect(operationRouter.getBaseUrl(url)).resolves.toBe(
+        "http://localhost:62994",
+      );
+      await expect(operationRouter.getBaseUrl(url, "pdf-to-rtf")).resolves.toBe(
+        SAAS_URL,
+      );
+      await expect(
+        operationRouter.shouldSkipBackendReadyCheck(url, "pdf-to-rtf"),
+      ).resolves.toBe(true);
+      await expect(
+        operationRouter.shouldSkipBackendReadyCheck(url),
+      ).resolves.toBe(false);
+    } finally {
+      supportedLocally.mockResolvedValue(true);
+    }
+  });
+});

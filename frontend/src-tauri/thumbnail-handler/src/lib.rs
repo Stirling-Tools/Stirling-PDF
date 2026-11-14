@@ -215,7 +215,7 @@ fn bytes_to_random_access_stream(bytes: &[u8]) -> windows::core::Result<IRandomA
     // Seek back to beginning
     mem_stream.Seek(0)?;
 
-    Ok(mem_stream.cast()?)
+    mem_stream.cast()
 }
 
 // ---------------------------------------------------------------------------

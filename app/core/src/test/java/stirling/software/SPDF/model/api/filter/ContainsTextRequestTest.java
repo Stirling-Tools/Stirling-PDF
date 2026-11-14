@@ -26,7 +26,7 @@ class ContainsTextRequestTest {
             ContainsTextRequest req = new ContainsTextRequest();
 
             assertThat(req.getText()).isNull();
-            assertThat(req.getPageNumbers()).isNull();
+            assertThat(req.getPageNumbers()).isEqualTo("all");
         }
     }
 

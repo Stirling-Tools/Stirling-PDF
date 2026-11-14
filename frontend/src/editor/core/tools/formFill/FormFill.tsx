@@ -55,6 +55,7 @@ import { FormFieldModifyPanel } from "@editor/tools/formFill/FormFieldModifyPane
 import { assertFilesNotBlocked } from "@editor/services/policyFileGuard";
 import { dispatchFormApply } from "@editor/tools/formFill/formFillEvents";
 import { useFormAutoMode } from "@editor/tools/formFill/useFormAutoMode";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import styles from "@editor/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -790,7 +791,7 @@ const FormFill = (_props: BaseToolProps) => {
                           ref={isFieldActive ? activeFieldRef : undefined}
                           className={`${styles.fieldCard} ${
                             isFieldActive ? styles.fieldCardActive : ""
-                          } ${hasError ? styles.fieldCardError : ""}`}
+                          } ${hasError ? styles.fieldCardError : ""} ${privateContentClassName}`}
                           onClick={() =>
                             handleFieldClick(field.name, pageIndex)
                           }

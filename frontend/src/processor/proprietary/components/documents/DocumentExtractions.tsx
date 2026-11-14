@@ -34,6 +34,7 @@ export function DocumentExtractions({
     column.mono({
       key: "value",
       header: t("portal.documents.extractions.columns.value"),
+      privateContent: true,
       get: (e) => e.value,
     }),
     column.badge({

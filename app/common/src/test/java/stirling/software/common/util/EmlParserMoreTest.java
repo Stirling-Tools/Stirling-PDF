@@ -3,11 +3,18 @@ package stirling.software.common.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.util.LittleEndian;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -190,6 +197,164 @@ class EmlParserMoreTest {
     }
 
     @Nested
+    @DisplayName("attachment filename length")
+    class FilenameLengthTests {
+
+        @Test
+        @DisplayName("a long name is shortened and keeps a short extension")
+        void longNameKeepsExtension() {
+            EmailAttachment att = new EmailAttachment();
+            att.setFilename("a".repeat(400) + ".pdf");
+            assertThat(att.getFilename()).hasSize(255).endsWith(".pdf");
+        }
+
+        @Test
+        @DisplayName("a long extension is not preserved")
+        void longExtensionDropped() {
+            EmailAttachment att = new EmailAttachment();
+            att.setFilename("a".repeat(300) + "." + "b".repeat(40));
+            assertThat(att.getFilename()).hasSize(255).doesNotContain(".");
+        }
+
+        @Test
+        @DisplayName("shortening never splits a surrogate pair")
+        void surrogatePairKept() {
+            EmailAttachment att = new EmailAttachment();
+            att.setFilename("\uD83D\uDE00".repeat(200));
+            String name = att.getFilename();
+            assertThat(name.length()).isLessThanOrEqualTo(255);
+            assertThat(Character.isHighSurrogate(name.charAt(name.length() - 1))).isFalse();
+        }
+
+        @Test
+        @DisplayName("short names and null pass through unchanged")
+        void shortNameUnchanged() {
+            EmailAttachment att = new EmailAttachment();
+            att.setFilename("notes.txt");
+            assertThat(att.getFilename()).isEqualTo("notes.txt");
+            att.setFilename(null);
+            assertThat(att.getFilename()).isNull();
+        }
+
+        @Test
+        @DisplayName("a long name in a Content-Disposition header is shortened on parse")
+        void parsedNameShortened() throws Exception {
+            EmailContent content =
+                    EmlParser.extractEmailContent(
+                            eml(
+                                    multipartWithAttachment(
+                                            "----b9", "body", "n".repeat(600) + ".txt", "x")),
+                            requestWithAttachments(10),
+                            null);
+            assertThat(content.getAttachments().get(0).getFilename()).hasSize(255).endsWith(".txt");
+        }
+    }
+
+    @Nested
+    @DisplayName("extractEmailContent - MSG files")
+    class MsgTests {
+
+        private static final int DIRECTORY_ENTRY_SIZE = 128;
+        private static final int ENTRY_NAME_LENGTH_OFFSET = 64;
+        private static final int ENTRY_START_SECTOR_OFFSET = 116;
+        private static final int ENTRY_SIZE_OFFSET = 120;
+
+        private static byte[] compoundFile(Map<String, Integer> streamSizes) throws Exception {
+            try (POIFSFileSystem fs = new POIFSFileSystem();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                for (Map.Entry<String, Integer> e : streamSizes.entrySet()) {
+                    fs.getRoot()
+                            .createDocument(
+                                    e.getKey(), new ByteArrayInputStream(new byte[e.getValue()]));
+                }
+                fs.writeFilesystem(out);
+                return out.toByteArray();
+            }
+        }
+
+        /** Offset of the named directory entry; the directory fits in one sector. */
+        private static int directoryEntryOffset(byte[] file, String name) {
+            int sectorSize = 1 << LittleEndian.getShort(file, 30);
+            int directoryStartSector = LittleEndian.getInt(file, 48);
+            int base = sectorSize + directoryStartSector * sectorSize;
+            for (int i = 0; i < sectorSize / DIRECTORY_ENTRY_SIZE; i++) {
+                int offset = base + i * DIRECTORY_ENTRY_SIZE;
+                int nameBytes = LittleEndian.getShort(file, offset + ENTRY_NAME_LENGTH_OFFSET);
+                if (nameBytes < 2) continue;
+                String entryName =
+                        new String(file, offset, nameBytes - 2, StandardCharsets.UTF_16LE);
+                if (entryName.equals(name)) return offset;
+            }
+            throw new IllegalStateException("no directory entry named " + name);
+        }
+
+        private static Map<String, Integer> streams(String n1, int s1, String n2, int s2) {
+            Map<String, Integer> m = new LinkedHashMap<>();
+            m.put(n1, s1);
+            m.put(n2, s2);
+            return m;
+        }
+
+        @Test
+        @DisplayName("a well-formed MSG parses")
+        void wellFormedMsgParses() throws Exception {
+            byte[] msg;
+            try (InputStream in = getClass().getResourceAsStream("/eml/example.msg")) {
+                assertThat(in).isNotNull();
+                msg = in.readAllBytes();
+            }
+            EmailContent content = EmlParser.extractEmailContent(msg, null, null);
+            assertThat(content).isNotNull();
+            assertThat(content.getSubject()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("two directory entries pointing at the same data are rejected")
+        void sharedStreamDataRejected() throws Exception {
+            byte[] file =
+                    compoundFile(
+                            streams("__substg1.0_37010102", 100_000, "__substg1.0_3707001F", 10));
+            int big = directoryEntryOffset(file, "__substg1.0_37010102");
+            int small = directoryEntryOffset(file, "__substg1.0_3707001F");
+            System.arraycopy(
+                    file,
+                    big + ENTRY_START_SECTOR_OFFSET,
+                    file,
+                    small + ENTRY_START_SECTOR_OFFSET,
+                    8);
+
+            assertThatThrownBy(() -> EmlParser.extractEmailContent(file, null, null))
+                    .isInstanceOf(java.io.IOException.class)
+                    .hasMessageContaining("more data than the file contains");
+        }
+
+        @Test
+        @DisplayName("a negative stream size is rejected")
+        void negativeStreamSizeRejected() throws Exception {
+            byte[] file =
+                    compoundFile(
+                            streams("__substg1.0_37010102", 5_000, "__substg1.0_3707001F", 10));
+            int small = directoryEntryOffset(file, "__substg1.0_3707001F");
+            LittleEndian.putInt(file, small + ENTRY_SIZE_OFFSET, -1);
+
+            assertThatThrownBy(() -> EmlParser.extractEmailContent(file, null, null))
+                    .isInstanceOf(java.io.IOException.class);
+        }
+
+        @Test
+        @DisplayName("an oversized property stream is rejected")
+        void oversizedPropertyStreamRejected() throws Exception {
+            byte[] file =
+                    compoundFile(
+                            streams("__properties_version1.0", 70_000, "__substg1.0_3707001F", 10));
+
+            assertThatThrownBy(() -> EmlParser.extractEmailContent(file, null, null))
+                    .isInstanceOf(java.io.IOException.class)
+                    .hasMessageContaining("property stream");
+        }
+    }
+
+    @Nested
     @DisplayName("extractEmailContent - failure paths")
     class FailureTests {
 
@@ -217,6 +382,35 @@ class EmlParserMoreTest {
             };
             assertThatThrownBy(() -> EmlParser.extractEmailContent(fakeMsg, null, null))
                     .isInstanceOf(java.io.IOException.class);
+        }
+
+        @Test
+        @DisplayName("more attachments than allowed raises an IOException only when embedding")
+        void tooManyAttachments() throws Exception {
+            StringBuilder content =
+                    new StringBuilder(
+                            "From: a@example.com\nTo: b@example.com\nSubject: Many\n"
+                                    + "Content-Type: multipart/mixed; boundary=\"b\"\n\n"
+                                    + "--b\nContent-Type: text/plain\n\nbody\n");
+            for (int i = 0; i <= ZipBombGuard.MAX_ENTRIES; i++) {
+                content.append("--b\nContent-Disposition: attachment; filename=f")
+                        .append(i)
+                        .append(".txt\n\nx\n");
+            }
+            content.append("--b--\n");
+            byte[] message = eml(content.toString());
+
+            assertThatThrownBy(
+                            () ->
+                                    EmlParser.extractEmailContent(
+                                            message, requestWithAttachments(10), null))
+                    .isInstanceOf(java.io.IOException.class)
+                    .hasMessageContaining("attachments");
+
+            EmlToPdfRequest listingOnly = new EmlToPdfRequest();
+            listingOnly.setIncludeAttachments(false);
+            EmailContent listed = EmlParser.extractEmailContent(message, listingOnly, null);
+            assertThat(listed.getAttachmentCount()).isEqualTo(ZipBombGuard.MAX_ENTRIES + 1);
         }
     }
 

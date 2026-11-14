@@ -30,6 +30,8 @@ import { ProfilePictureCropper } from "@editor/components/shared/config/ProfileP
 import { updateProfilePictureMetadata } from "@editor/services/avatarSyncService";
 import { deleteCurrentAccount } from "@editor/services/accountDeletion";
 import { alert as showToast } from "@editor/components/toast";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface OverviewProps {
   onLogoutClick: () => void;
@@ -384,7 +386,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                 }}
               >
                 {t("config.account.overview.signedInAs", "Signed in as")}:{" "}
-                {user.email}
+                <PrivateContent>{user.email}</PrivateContent>
               </p>
             )}
           </div>
@@ -437,6 +439,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               src={profilePictureUrl || undefined}
               name={displayName}
               size="xl"
+              className={privateContentClassName}
             />
             <div
               style={{
@@ -474,6 +477,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               src={profilePictureUrl || undefined}
               name={displayName}
               size="xl"
+              className={privateContentClassName}
             />
             <div
               style={{
@@ -619,6 +623,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className={privateContentClassName}
                   style={{ flex: 1 }}
                 />
                 <PasswordInput
@@ -693,7 +698,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               "This action is permanent and cannot be undone. All your data will be deleted.",
             )}
           </Text>
-          <Text size="sm" fw={500} mb="xs">
+          <Text size="sm" fw={500} mb="xs" className={privateContentClassName}>
             {t(
               "config.account.overview.enterEmailConfirm",
               "To confirm deletion, please type your email address ({{email}}) below:",
@@ -704,6 +709,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             placeholder={user?.email || ""}
             value={confirmEmail}
             onChange={(e) => setConfirmEmail(e.target.value)}
+            className={privateContentClassName}
             mb="md"
           />
           <Group justify="flex-end" gap="sm">

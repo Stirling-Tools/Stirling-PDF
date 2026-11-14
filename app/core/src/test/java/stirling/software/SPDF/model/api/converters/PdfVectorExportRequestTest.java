@@ -14,12 +14,12 @@ class PdfVectorExportRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("outputFormat defaults to eps and prepress to null")
+        @DisplayName("outputFormat defaults to eps and prepress to false")
         void defaultValues() {
             PdfVectorExportRequest req = new PdfVectorExportRequest();
 
             assertThat(req.getOutputFormat()).isEqualTo("eps");
-            assertThat(req.getPrepress()).isNull();
+            assertThat(req.getPrepress()).isFalse();
         }
     }
 

@@ -13,6 +13,8 @@ import {
 } from "@editor/components/viewer/layerUtils";
 
 import type { LayerInfo } from "@editor/components/viewer/layerUtils";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 export type { LayerInfo };
 
 interface LayerSidebarProps {
@@ -267,12 +269,14 @@ export function LayerSidebar({
           )}
 
           <Tooltip
-            label={layer.name}
+            label={<PrivateContent>{layer.name}</PrivateContent>}
             position="left"
             withinPortal
             disabled={layer.name.length < 20}
           >
-            <span className="layer-item__label">{layer.name}</span>
+            <span className={`layer-item__label ${privateContentClassName}`}>
+              {layer.name}
+            </span>
           </Tooltip>
         </div>
 

@@ -1,0 +1,29 @@
+/* One line of xs text, so rows keep the stat rows' rhythm. The negative
+   margin lets the hover background extend past the text without indenting it. */
+.pdf-editor-heading-outline__entry {
+  display: block;
+  width: calc(100% + 0.5rem);
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  line-height: var(--mantine-line-height-xs);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.pdf-editor-heading-outline__entry:hover:not(:disabled) {
+  background: var(--c-hover);
+}
+
+.pdf-editor-heading-outline__entry:disabled {
+  color: var(--c-text-muted);
+  cursor: default;
+}

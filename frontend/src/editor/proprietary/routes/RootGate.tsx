@@ -18,9 +18,9 @@ interface Decision {
  *
  * Wraps the app rather than being a route of its own, which buys two things:
  * - The editor never boots just to be redirected away from. Mounting the
- *   decision inside the app booted IndexedDB, the file context, onboarding and
- *   the license fetch on the way to the processor, then tore it all down - the
- *   visible "editor flashes, then jumps" glitch.
+ *   decision inside the app booted IndexedDB, the file context and onboarding
+ *   on the way to the processor, then tore it all down - the visible "editor
+ *   flashes, then jumps" glitch.
  * - Every other path shares one element position with the app, so navigating
  *   away from "/" is a plain render, not a remount.
  *
@@ -34,9 +34,8 @@ interface Decision {
  * own destination (see resolveLandingPath) rather than bouncing through here,
  * so signing in never tears the app back down.
  *
- * Context-free by necessity, since it sits above the providers: apiClient
- * resolves its own auth token, and the opt-in arrives on the same
- * `/api/v1/auth/me` response. Builds with no processor (core, desktop) use the
+ * Context-free: apiClient resolves its own auth token, and the opt-in arrives
+ * on the same `/api/v1/auth/me` response. Builds with no processor (core, desktop) use the
  * pass-through override.
  */
 export function RootGate({ children }: { children: ReactNode }) {

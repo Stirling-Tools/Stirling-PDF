@@ -93,6 +93,8 @@ import {
 import { clearFilesPageReturnRoute } from "@editor/components/filesPage/filesPageReturnRoute";
 import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
 import "@editor/components/filesPage/FilesPage.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export default function FileManagerView() {
   const { t } = useTranslation();
@@ -1143,7 +1145,9 @@ export default function FileManagerView() {
             gap: "0.5rem",
           }}
         >
-          <span>{folders.error}</span>
+          <PrivateContent>
+            <span>{folders.error}</span>
+          </PrivateContent>
           <ActionIcon
             size="sm"
             variant="tertiary"
@@ -1681,7 +1685,7 @@ function Breadcrumbs() {
                   key={entry.id ?? "root"}
                   onClick={() => openFolder(entry.id)}
                 >
-                  {entry.name}
+                  <PrivateContent>{entry.name}</PrivateContent>
                 </Menu.Item>
               ))}
             </Menu.Dropdown>
@@ -1700,7 +1704,7 @@ function Breadcrumbs() {
           <React.Fragment key={entry.id ?? "root"}>
             <button
               type="button"
-              className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
+              className={`files-page-breadcrumb${isLast ? " is-current" : ""} ${privateContentClassName}`}
               title={entry.name}
               onClick={() => openFolder(entry.id)}
               {...dropHandlers(entry.id)}

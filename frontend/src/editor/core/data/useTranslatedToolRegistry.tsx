@@ -1192,6 +1192,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "pdf-to-word",
           "pdf-to-presentation",
           "pdf-to-text",
+          "pdf-to-rtf",
           "pdf-to-html",
           "pdf-to-xml",
           "html-to-pdf",
