@@ -240,13 +240,14 @@ export class EditTextCommand implements Command {
     moves: Array<{ ptr: number; dy: number }>;
     /** Fresh objects emitted for new/changed lines (removed on revert). */
     createdPtrs: number[];
-    /** Deleted lines, re-emitted as fallback on revert. */
+    /** Deleted lines: put back as they were when they lived on the page itself, else re-emitted as fallback on revert. */
     removed: Array<{
       text: string;
       tags: TextTags;
       x: number;
       y: number;
       fontSize: number;
+      detached: Array<{ ptr: number; index: number }> | null;
     }>;
     prev: RunModelSnapshot;
   } | null = null;
@@ -862,6 +863,15 @@ export class EditTextCommand implements Command {
     return true;
   }
 
+  /** True when revert puts back the very objects apply took off the page. */
+  private revertsExactly(): boolean {
+    return (
+      this.originalObjects !== null ||
+      (this.lineEdit !== null &&
+        this.lineEdit.removed.every((rem) => rem.detached !== null))
+    );
+  }
+
   // Exactly one revert strategy member may be set per apply. Enforced only by
   // guard ordering, so fail fast in dev if two paths ran or a member leaked.
   private assertSingleRevertPath(): void {
@@ -908,9 +918,16 @@ export class EditTextCommand implements Command {
         }
       }
       restoreRunModel(run, this.lineEdit.prev);
-      if (this.lineEdit.removed.length > 0) {
+      const putBack = this.lineEdit.removed.flatMap(
+        (rem) => rem.detached ?? [],
+      );
+      for (const { ptr } of putBack) m.FPDFPage_InsertObject(page.pagePtr, ptr);
+      if (putBack.length > 0) restoreContentOrder(m, page.pagePtr, putBack);
+      const lost = this.lineEdit.removed.filter((rem) => !rem.detached);
+      this.revertedExactly = lost.length === 0;
+      if (lost.length > 0) {
         const fallbackFamily = fallbackFamilyFor(this.prevFontId ?? run.fontId);
-        for (const rem of this.lineEdit.removed) {
+        for (const rem of lost) {
           const ptrs = emitTextLine({
             doc,
             page,
@@ -1395,9 +1412,22 @@ export class EditTextCommand implements Command {
     }
 
     // Remove objects of any prev line no next line reused.
+    const dropped = slots.filter((_, j) => !usedPrev.has(j));
+    // Read before any is removed, so every index is a position in the same content.
+    const order = contentIndices(
+      m,
+      page.pagePtr,
+      dropped.flatMap((src) => src.mergedFromPtrs.filter(Boolean)),
+    );
     for (let j = 0; j < slots.length; j++) {
       if (usedPrev.has(j)) continue;
       const src = slots[j];
+      const ptrs = src.mergedFromPtrs.filter(Boolean);
+      const onPage =
+        !src.containerPtr &&
+        !run.containerPtr &&
+        ptrs.length > 0 &&
+        ptrs.every((ptr) => order.has(ptr));
       if (prevLines[j]) {
         this.lineEdit.removed.push({
           text: prevLines[j],
@@ -1405,6 +1435,9 @@ export class EditTextCommand implements Command {
           x: src.mergedFromBounds[0]?.x ?? src.matrixE,
           y: src.baselineY,
           fontSize: src.fontSize,
+          detached: onPage
+            ? ptrs.map((ptr) => ({ ptr, index: order.get(ptr)! }))
+            : null,
         });
       }
       for (const ptr of src.mergedFromPtrs) {
@@ -1662,7 +1695,7 @@ export class EditTextCommand implements Command {
     // Every step puts back exactly the objects the step before it drew, so stepping through keeps each piece's own font and glyphs.
     if (
       phase === "revert"
-        ? edits.every((edit) => edit.originalObjects !== null)
+        ? edits.every((edit) => edit.revertsExactly())
         : edits.every((edit) => edit.revertedExactly)
     )
       return false;
