@@ -648,3 +648,88 @@ describe("detectTables", () => {
     expect(banded![1].cands).toHaveLength(1);
   });
 });
+
+describe("detectTables - layouts that only look like a grid", () => {
+  const SENTENCES = [
+    "The committee reviewed every submission before",
+    "the deadline and returned its findings to the",
+    "board, which approved the budget for the year",
+    "after a short discussion of the revised targets",
+    "and the schedule proposed by the finance team.",
+    "Members asked for a summary of the main risks.",
+  ];
+  const ruleAt = (y: number) => ({
+    x: 40,
+    y: y - 0.25,
+    width: 560,
+    height: 0.5,
+  });
+
+  it("does not build a table out of a running watermark", () => {
+    const turned = { a: 0.7, b: 0.7, c: -0.7, d: 0.7 };
+    const runs = grid([50, 200, 350], 700, 40, [
+      ["DRAFT", "DRAFT", "DRAFT"],
+      ["DRAFT", "DRAFT", "DRAFT"],
+      ["DRAFT", "DRAFT", "DRAFT"],
+    ]).map((r) => ({ ...r, matrix: { ...r.matrix, ...turned } }));
+
+    expect(detectTables(runs, 0)).toEqual([]);
+  });
+
+  it("keeps a table a watermark runs across", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const watermark = run(40, 640, 400, "CONFIDENTIAL", {
+      bounds: { x: 40, y: 640, width: 400, height: 90 },
+      matrix: { a: 30, b: 20, c: -20, d: 30, e: 40, f: 640 },
+    });
+
+    expect(detectTables([...table, watermark], 0)).toHaveLength(1);
+  });
+
+  it("does not take a grid that other page text runs through", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const paragraph = run(
+      40,
+      655,
+      380,
+      "Body text set across the same area as the grid\nand reading straight through it\nline after line",
+      {
+        bounds: { x: 40, y: 655, width: 380, height: 60 },
+        paragraphLineCount: 3,
+      },
+    );
+
+    expect(detectTables([...table, paragraph], 0)).toEqual([]);
+  });
+
+  it("does not treat two columns of running text as a table", () => {
+    const runs = grid(
+      [50, 320],
+      700,
+      16,
+      SENTENCES.map((line, i) => [line, SENTENCES[(i + 3) % 6]]),
+    ).map((r) => ({ ...r, bounds: { ...r.bounds, width: 240 } }));
+
+    expect(detectTables(runs, 0)).toEqual([]);
+  });
+
+  it("keeps a table of long descriptions whose rows the page rules apart", () => {
+    const runs = grid(
+      [50, 320],
+      700,
+      20,
+      SENTENCES.map((line, i) => [line, SENTENCES[(i + 3) % 6]]),
+    ).map((r) => ({ ...r, bounds: { ...r.bounds, width: 240 } }));
+    const rules = [716, ...SENTENCES.map((_, i) => 696 - i * 20)].map(ruleAt);
+
+    expect(detectTables(runs, 0, {}, rules)).toHaveLength(1);
+  });
+});

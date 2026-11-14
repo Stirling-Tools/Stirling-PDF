@@ -83,6 +83,8 @@ export interface TextRunSnapshot {
   paragraphSlotCount?: number;
   paragraphBaselines?: number[];
   paragraphLineLefts?: number[];
+  /** Each line's right ink edge, parallel to paragraphLineLefts. */
+  paragraphLineRights?: number[];
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
