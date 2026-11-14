@@ -29,7 +29,7 @@ const mod = (
   ...extra,
 });
 
-export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
+function ShortcutList() {
   const { t } = useTranslation();
   const SHORTCUTS: Section[] = [
     {
@@ -197,6 +197,44 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
   ];
 
   return (
+    <Stack gap="lg">
+      {SHORTCUTS.map((section) => (
+        <section key={section.heading}>
+          <h3 className="pdf-editor-help__section-title">{section.heading}</h3>
+          <div className="pdf-editor-help__card">
+            {section.items.map((item) => (
+              <div
+                className="pdf-editor-help__row"
+                key={`${section.heading}-${item.description}`}
+              >
+                <Text className="pdf-editor-help__label">
+                  {item.description}
+                </Text>
+                <span className="pdf-editor-help__keys">
+                  {item.bindings.map((binding, index) => (
+                    <Fragment key={`${binding.code}-${index}`}>
+                      {index > 0 && (
+                        <span className="pdf-editor-help__or" aria-hidden>
+                          /
+                        </span>
+                      )}
+                      <HotkeyDisplay binding={binding} />
+                    </Fragment>
+                  ))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </Stack>
+  );
+}
+
+export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
+  const { t } = useTranslation();
+
+  return (
     <Modal
       opened={opened}
       onClose={onClose}
@@ -204,39 +242,7 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       size="lg"
       data-testid="pdf-editor-help-overlay"
     >
-      <Stack gap="lg">
-        {SHORTCUTS.map((section) => (
-          <section key={section.heading}>
-            <h3 className="pdf-editor-help__section-title">
-              {section.heading}
-            </h3>
-            <div className="pdf-editor-help__card">
-              {section.items.map((item) => (
-                <div
-                  className="pdf-editor-help__row"
-                  key={`${section.heading}-${item.description}`}
-                >
-                  <Text className="pdf-editor-help__label">
-                    {item.description}
-                  </Text>
-                  <span className="pdf-editor-help__keys">
-                    {item.bindings.map((binding, index) => (
-                      <Fragment key={`${binding.code}-${index}`}>
-                        {index > 0 && (
-                          <span className="pdf-editor-help__or" aria-hidden>
-                            /
-                          </span>
-                        )}
-                        <HotkeyDisplay binding={binding} />
-                      </Fragment>
-                    ))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </Stack>
+      <ShortcutList />
     </Modal>
   );
 }
