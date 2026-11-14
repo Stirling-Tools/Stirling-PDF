@@ -6,8 +6,12 @@ export interface EditorSession {
   fileId: FileId | null;
   save: () => void;
   download: () => void;
-  pickFile: (file: File) => void;
   pickImage: () => void;
+  /**
+   * Brings a page on screen, for hosts that mount only the pages near the
+   * viewport. Null where every page is mounted and can be scrolled to directly.
+   */
+  revealPage: ((pageIndex: number) => void) | null;
 }
 
 let current: EditorSession | null = null;
@@ -28,6 +32,11 @@ function subscribe(listener: () => void): () => void {
 }
 
 function getSnapshot(): EditorSession | null {
+  return current;
+}
+
+/** The session as it stands, for event handlers outside React's render. */
+export function currentEditorSession(): EditorSession | null {
   return current;
 }
 

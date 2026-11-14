@@ -2,7 +2,7 @@ import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
-import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
+import { EditorFileLabel } from "@editor/tools/pdfTextEditor/components/EditorFileLabel";
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
@@ -29,12 +29,7 @@ export function MobileEditorTopBar({ controller, hasDocument, dirty }: Props) {
     >
       <div className="pdf-editor-mtopbar__file">
         {session?.fileName ? (
-          <EditorFileSwitcher
-            currentFileId={session.fileId}
-            currentFileName={session.fileName}
-            dirty={dirty}
-            onPick={session.pickFile}
-          />
+          <EditorFileLabel fileName={session.fileName} dirty={dirty} />
         ) : (
           <Text size="sm" c="dimmed" px={6}>
             {t("pdfTextEditor.sidebar.noFile", "No file loaded")}

@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 /**
@@ -234,11 +235,7 @@ function scanRunCoverage(p: Page, idx: number) {
 }
 
 async function openEditor(p: Page, file: string) {
-  await p.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(p.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await p.locator('[data-testid="pdf-editor-file-input"]').setInputFiles(file);
+  await openInTextEditor(p, file);
   await expect(p.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -901,9 +898,7 @@ test.describe("PDF text editor - multi-page rendering (pixel evidence)", () => {
     const initial = await liveBitmaps(page);
     expect(initial.pageCount, "first document page count").toBe(TOTAL_PAGES);
 
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 60_000,
     });

@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import {
@@ -225,13 +226,7 @@ function tv(a: number[], b: number[]): number {
 const rel = (a: number, b: number) => Math.abs(a - b) / Math.max(b, 1);
 
 async function openEditor(page: Page, file: string, pageIdx = 0) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(FIX(file));
+  await openInTextEditor(page, FIX(file));
   await expect(page.getByTestId(`pdf-editor-page-${pageIdx}`)).toBeVisible({
     timeout: 60_000,
   });
@@ -315,7 +310,7 @@ async function saveAndReopen(page: Page, pageIdx = 0): Promise<number> {
   await settled(page, pageIdx);
   await stashCurrentDocument(page);
   await stampCanvases(page);
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "round-trip.pdf",
     mimeType: "application/pdf",
     buffer,
@@ -799,7 +794,7 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
       timeout: 30_000,
     });
     await stashCurrentDocument(page);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "cold-start.pdf",
       mimeType: "application/pdf",
       buffer,

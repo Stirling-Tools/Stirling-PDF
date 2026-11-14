@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 interface MarqueeSelectorProps {
   store: EditorStore;
+  /** The element holding the pages; a drag may start anywhere inside it. */
+  rootSelector?: string;
 }
 
 interface MarqueeRect {
@@ -33,7 +36,10 @@ const OWN_GESTURE_SELECTOR = [
  * over text, to override line/paragraph auto-grouping when it gets the
  * structure wrong.
  */
-export function MarqueeSelector({ store }: MarqueeSelectorProps) {
+export function MarqueeSelector({
+  store,
+  rootSelector = '[data-testid="pdf-editor-pages"]',
+}: MarqueeSelectorProps) {
   const [rect, setRect] = useState<MarqueeRect | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const liveRectRef = useRef<MarqueeRect | null>(null);
@@ -47,7 +53,7 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
     function onPointerDown(e: PointerEvent) {
       if (e.button !== 0) return;
       const target = e.target as HTMLElement | null;
-      if (!target?.closest('[data-testid="pdf-editor-pages"]')) return;
+      if (!target?.closest(rootSelector)) return;
       const forced = (e.ctrlKey || e.metaKey) && e.shiftKey;
       if (forced) {
         e.preventDefault();
@@ -80,9 +86,9 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       if (!origin) return;
       document.body.style.userSelect = "";
       if (!r || (r.width < 3 && r.height < 3)) return;
-      const runIds = collectIdsInRect(r, "pdf-editor-run-");
-      const imageIds = collectIdsInRect(r, "pdf-editor-image-");
-      const shapeIds = collectIdsInRect(r, "pdf-editor-shape-");
+      const runIds = collectIdsInRect(r, rootSelector, "pdf-editor-run-");
+      const imageIds = collectIdsInRect(r, rootSelector, "pdf-editor-image-");
+      const shapeIds = collectIdsInRect(r, rootSelector, "pdf-editor-shape-");
       // A rectangle that caught nothing leaves the selection alone rather than
       // silently wiping it.
       if (runIds.length + imageIds.length + shapeIds.length === 0) return;
@@ -111,10 +117,12 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       window.removeEventListener("pointercancel", onPointerCancel);
       document.body.style.userSelect = "";
     };
-  }, [store]);
+  }, [store, rootSelector]);
 
   if (!rect) return null;
-  return (
+  // Portalled: the rect is in viewport coordinates, and a host with `contain`
+  // or a transform would otherwise re-anchor and clip a fixed element.
+  return createPortal(
     <div
       data-testid="pdf-editor-marquee"
       style={{
@@ -128,12 +136,17 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
         pointerEvents: "none",
         zIndex: 300,
       }}
-    />
+    />,
+    document.body,
   );
 }
 
-function collectIdsInRect(rect: MarqueeRect, testIdPrefix: string): string[] {
-  const pages = document.querySelector('[data-testid="pdf-editor-pages"]');
+function collectIdsInRect(
+  rect: MarqueeRect,
+  rootSelector: string,
+  testIdPrefix: string,
+): string[] {
+  const pages = document.querySelector(rootSelector);
   if (!pages) return [];
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;

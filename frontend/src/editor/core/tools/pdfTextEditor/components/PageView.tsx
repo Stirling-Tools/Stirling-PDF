@@ -34,6 +34,11 @@ interface PageViewProps {
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
+  /**
+   * Fill a host page box (a viewer page) instead of laying out its own, and
+   * stay transparent until painted so the host's own render shows through.
+   */
+  embedded?: boolean;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
   showRulers?: boolean;
@@ -103,6 +108,7 @@ export const PageView = memo(function PageView({
   store,
   page,
   scale,
+  embedded = false,
   widthMode,
   showRulers,
   selectedRunIds,
@@ -262,17 +268,21 @@ export const PageView = memo(function PageView({
 
   return (
     <Box
-      pos="relative"
-      mx="auto"
-      mb="lg"
+      pos={embedded ? "absolute" : "relative"}
+      mx={embedded ? undefined : "auto"}
+      mb={embedded ? undefined : "lg"}
       ref={containerRef}
       className={privateContentClassName}
-      style={{
-        width: raster.width,
-        height: raster.height,
-        boxShadow: "0 0 4px rgba(0,0,0,0.2)",
-        background: "#fff",
-      }}
+      style={
+        embedded
+          ? { inset: 0 }
+          : {
+              width: raster.width,
+              height: raster.height,
+              boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+              background: "#fff",
+            }
+      }
       data-testid={`pdf-editor-page-${page.pageIndex}`}
       onClick={(e) => {
         if (!onPageClick) return;
@@ -298,7 +308,7 @@ export const PageView = memo(function PageView({
           height: raster.height,
         }}
       />
-      {!nearViewport && (
+      {!nearViewport && !embedded && (
         <Box
           pos="absolute"
           top={0}
@@ -322,7 +332,7 @@ export const PageView = memo(function PageView({
           })}
         </Box>
       )}
-      {rendering && nearViewport && (
+      {rendering && nearViewport && !embedded && (
         <Box pos="absolute" top={8} right={8} style={{ pointerEvents: "none" }}>
           <Loader size="xs" />
         </Box>

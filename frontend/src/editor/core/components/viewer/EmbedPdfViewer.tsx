@@ -76,6 +76,7 @@ import { ScaleCalibrationDialog } from "@editor/components/viewer/ScaleCalibrati
 import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
 import { alert } from "@editor/components/toast";
 import { useDamagedFileRepair } from "@editor/contexts/DamagedFileRepairContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ const EmbedPdfViewerContent = ({
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  const registeredPageTool = useViewerPageTool();
 
   const {
     isThumbnailSidebarVisible,
@@ -161,6 +163,7 @@ const EmbedPdfViewerContent = ({
     getSpreadState,
     getZoomState,
     registerImmediateZoomUpdate,
+    registerImmediateRotationUpdate,
     getRotationState,
     zoomRestorePendingRef,
     notifyZoomRestoreSettled,
@@ -569,6 +572,25 @@ const EmbedPdfViewerContent = ({
   // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
   const isFormFillToolActive = (selectedTool as string) === "formFill";
 
+  const pageTool = previewFile ? null : registeredPageTool;
+  const pageToolActive = pageTool != null;
+
+  // A page tool draws in the page's own orientation, so a view rotation would
+  // leave its layers off the page content.
+  useEffect(() => {
+    if (!pageToolActive) return;
+    const straighten = (rotation: number) => {
+      if (rotation !== 0) rotationActions.setRotation(0);
+    };
+    straighten(getRotationState().rotation);
+    return registerImmediateRotationUpdate(straighten);
+  }, [
+    pageToolActive,
+    rotationActions,
+    getRotationState,
+    registerImmediateRotationUpdate,
+  ]);
+
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
@@ -816,6 +838,7 @@ const EmbedPdfViewerContent = ({
                 return;
               case "a":
               case "A":
+                if (pageToolActive) return;
                 // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
                 event.preventDefault();
                 {
@@ -846,8 +869,8 @@ const EmbedPdfViewerContent = ({
 
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
-      // but not the active focus target.
-      if (!isViewerHovered) return;
+      // but not the active focus target. A page tool binds its own.
+      if (!isViewerHovered || pageToolActive) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -931,6 +954,7 @@ const EmbedPdfViewerContent = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    pageToolActive,
     isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
@@ -1412,6 +1436,15 @@ const EmbedPdfViewerContent = ({
   // Register navigation warning handlers so the global modal can call our save/discard logic
   useEffect(() => {
     if (previewFile || isFormFillToolActive) return;
+    // The guard holds one set of handlers: while a page tool owns the pages,
+    // its discard is the one that matters.
+    if (pageTool) {
+      const discard = pageTool.onDiscard;
+      registerNavigationWarningHandlers({
+        onDiscardAndContinue: async () => discard?.(),
+      });
+      return () => unregisterNavigationWarningHandlers();
+    }
 
     registerNavigationWarningHandlers({
       onApplyAndContinue: async () => {
@@ -1434,6 +1467,7 @@ const EmbedPdfViewerContent = ({
   }, [
     previewFile,
     isFormFillToolActive,
+    pageTool,
     applyChanges,
     discardAndSaveApplied,
     registerNavigationWarningHandlers,
@@ -1924,9 +1958,11 @@ const EmbedPdfViewerContent = ({
           {currentFile && isStirlingFile(currentFile) && (
             <PdfProtectionStatus key={currentFile.fileId} file={currentFile} />
           )}
+          {pageTool && <pageTool.Toolbar />}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
+            data-viewer-pages
             style={{
               position: "relative",
               flex: 1,
@@ -1975,6 +2011,11 @@ const EmbedPdfViewerContent = ({
                 shouldEnableFormFill && !!pdfAccess && !pdfAccess.encrypted
               }
               formEditingActive={isFormFillToolActive}
+              pageLayer={
+                pageTool && pageTool.fileId === currentFileStableId
+                  ? pageTool.PageLayer
+                  : null
+              }
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}

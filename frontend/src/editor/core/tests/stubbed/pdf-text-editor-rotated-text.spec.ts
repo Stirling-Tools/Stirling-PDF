@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -32,13 +33,7 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
   const errs: string[] = [];
   page.on("pageerror", (e) => errs.push(e.message));
 
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 20_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(ROTATED);
+  await openInTextEditor(page, ROTATED);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -83,7 +78,7 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];
   for await (const c of stream) chunks.push(c as Buffer);
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "round-trip.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.concat(chunks),
@@ -107,13 +102,7 @@ test("inserting text on a /Rotate 90 page lands upright (counter-rotated)", asyn
   page: Page;
 }) => {
   test.setTimeout(90_000);
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 20_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(ROTATE90);
+  await openInTextEditor(page, ROTATE90);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });

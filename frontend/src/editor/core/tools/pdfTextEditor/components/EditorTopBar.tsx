@@ -1,9 +1,8 @@
 import { useRef } from "react";
 import { Icon } from "@editor/ui/Icon";
-import { Group, Menu, Popover, Text, Tooltip } from "@mantine/core";
+import { Group, Menu, Popover, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
 import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { ObjectGroup } from "@editor/tools/pdfTextEditor/components/toolbar/ObjectGroup";
 import {
@@ -70,20 +69,18 @@ export function EditorTopBar({
       data-compact={compact ? "true" : "false"}
       ref={barRef}
     >
-      <div className="pdf-editor-topbar__lead">
-        {session?.fileName ? (
-          <EditorFileSwitcher
-            currentFileId={session.fileId}
-            currentFileName={session.fileName}
-            dirty={dirty}
-            onPick={session.pickFile}
+      {/* The viewer's own bar names the file; this only flags unsaved edits. */}
+      {dirty && (
+        <div className="pdf-editor-topbar__lead">
+          <span
+            className="pdf-editor-topbar__dirty"
+            data-testid="pdf-editor-dirty-dot"
+            role="status"
+            aria-label={t("pdfTextEditor.unsaved", "(unsaved)")}
+            title={t("pdfTextEditor.unsaved", "(unsaved)")}
           />
-        ) : (
-          <Text size="xs" c="dimmed" px={6}>
-            {t("pdfTextEditor.sidebar.noFile", "No file loaded")}
-          </Text>
-        )}
-      </div>
+        </div>
+      )}
 
       {hasDocument && (
         <div className="pdf-editor-topbar__band">

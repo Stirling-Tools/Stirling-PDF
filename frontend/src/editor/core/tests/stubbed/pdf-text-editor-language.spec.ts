@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 
@@ -33,13 +34,7 @@ const RUN = (needle: string) =>
   ) ?? null;
 
 async function openFixture(page: Page) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(FIXTURE);
+  await openInTextEditor(page, FIXTURE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -59,9 +54,7 @@ async function saveAndReopen(page: Page) {
     const w = window as unknown as EditorWindow;
     w.__prev_document = w.__editor_store.document;
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(saved);
+  await openInTextEditor(page, saved);
   await page.waitForFunction(
     () => {
       const w = window as unknown as EditorWindow;

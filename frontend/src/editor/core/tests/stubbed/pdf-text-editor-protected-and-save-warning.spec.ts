@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { readFile, writeFile } from "node:fs/promises";
@@ -26,9 +27,7 @@ async function gotoEditor(page: Page): Promise<void> {
 }
 
 async function upload(page: Page, file: string): Promise<void> {
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
 }
 
 test.describe("PDF text editor - encrypted PDF password prompt", () => {

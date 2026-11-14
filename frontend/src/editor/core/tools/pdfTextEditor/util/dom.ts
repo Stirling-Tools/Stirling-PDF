@@ -1,3 +1,5 @@
+import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+
 /** True when focus is in a typing surface (contenteditable, input, etc). */
 export function isFocusInContentEditable(): boolean {
   const el = document.activeElement as HTMLElement | null;
@@ -61,4 +63,13 @@ export function pageElements(): HTMLElement[] {
   return Array.from(
     document.querySelectorAll<HTMLElement>('[data-testid^="pdf-editor-page-"]'),
   ).filter((el) => /^pdf-editor-page-\d+$/.test(el.dataset.testid ?? ""));
+}
+
+/**
+ * Scrolls `el` into view, or, when its page is not mounted, asks the host to
+ * bring that page on screen.
+ */
+export function revealOnPage(el: Element | null, pageIndex: number): void {
+  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  else currentEditorSession()?.revealPage?.(pageIndex);
 }

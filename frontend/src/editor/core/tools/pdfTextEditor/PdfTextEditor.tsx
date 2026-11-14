@@ -2,7 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@editor/services/policyFileGuard";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -20,6 +20,7 @@ import type { FileId } from "@editor/types/file";
 import type { ToolId } from "@editor/types/toolId";
 import type { BaseToolProps } from "@editor/types/tool";
 import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
+import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
 import { setEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useIsMobile } from "@editor/hooks/useIsMobile";
@@ -44,6 +45,9 @@ import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSide
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
 import { PageStage } from "@editor/tools/pdfTextEditor/components/PageStage";
+import { ViewerEditLayer } from "@editor/tools/pdfTextEditor/components/ViewerEditLayer";
+import { ViewerEditToolbar } from "@editor/tools/pdfTextEditor/components/ViewerEditToolbar";
+import { useRegisterViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
@@ -62,7 +66,6 @@ import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallb
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
-  SelectionState,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
@@ -75,15 +78,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const isMobile = useIsMobile();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
-  const { getZoomState } = useViewer();
+  const { getZoomState, setActiveFileId, scrollActions } = useViewer();
   const viewerZoomRef = useRef(getZoomState);
   viewerZoomRef.current = getZoomState;
 
-  const [selection, setSelection] = useState<SelectionState>(
-    store.selection.value,
-  );
+  const selection = useEditorSelection(store);
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
-  const pendingDiskFileRef = useRef<File | null>(null);
   const mountedRef = useRef(false);
   useEffect(() => {
     mountedRef.current = true;
@@ -91,9 +91,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       mountedRef.current = false;
     };
   }, []);
-  // Set only when the document came from the workbench; a drag-dropped
-  // file has no fileId and can only be downloaded. Mirrored into state so the
-  // sidebar's file switcher can mark which workbench file is open.
+  // The workbench file being edited; save writes back to it. Mirrored into
+  // state so the viewer can tell which file's pages are editable.
   const sourceFileIdRef = useRef<FileId | null>(null);
   const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
   const setSourceFile = useCallback((id: FileId | null) => {
@@ -108,17 +107,19 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [applying, setApplying] = useState(false);
 
   useEditorTestGlobal(store);
-  useUnsavedChangesGuard(state.dirty);
+  // Dropping the document discards its edits; the file is then reopened fresh.
+  const discardEdits = useCallback(() => store.clearDocument(), [store]);
+  useUnsavedChangesGuard(state.dirty, isMobile ? discardEdits : null);
   const pinWorkbench = useWorkbenchPin({
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
     label: t("pdfTextEditor.workbenchLabel", "Editor"),
     icon: <Icon name="file-text" size={20} />,
     component: PageStage,
-    takeOverScreen: isMobile,
+    inViewer: !isMobile,
   });
-  // Uploading flips the workbench to Active Files, so landing a document has to
-  // pin the canvas back. useAutoLoadFile only fires for a genuine file change.
+  // Opening a file can leave the workbench on Active Files, so landing a
+  // document pins the editing surface back.
   const handleFileChosen = useCallback(
     (name: string, fileId?: FileId) => {
       setOpenedFileName(name);
@@ -135,12 +136,32 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [pinWorkbench, setSourceFile, store],
   );
   const {
-    openFile: openWorkbenchFile,
     adopt: adoptFile,
     cancel: cancelAutoLoad,
+    pendingSwitch,
+    confirmSwitch,
+    cancelSwitch,
   } = useAutoLoadFile(load, handleFileChosen, sourceFileId, applying, state);
 
-  useEffect(() => store.selection.subscribe(setSelection), [store]);
+  // The active file is the one being edited, including the new one a save
+  // writes in place of the original.
+  useEffect(() => {
+    if (sourceFileId) setActiveFileId(sourceFileId);
+  }, [sourceFileId, setActiveFileId]);
+  useRegisterViewerPageTool(
+    useMemo(
+      () =>
+        isMobile
+          ? null
+          : {
+              fileId: sourceFileId,
+              PageLayer: ViewerEditLayer,
+              Toolbar: ViewerEditToolbar,
+              onDiscard: discardEdits,
+            },
+      [isMobile, sourceFileId, discardEdits],
+    ),
+  );
 
   // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
   // dropping the glyphs.
@@ -428,27 +449,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
-      // Find the visible page (Ctrl+End behaves the same way).
-      const stage = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-stage"]',
-      );
-      const stageRect = stage?.getBoundingClientRect();
-      const stageCentreY = stageRect ? stageRect.top + stageRect.height / 2 : 0;
-      let pageIndex = 0;
-      let bestDist = Infinity;
-      for (const p of doc.loadedPages()) {
-        const el = document.querySelector<HTMLElement>(
-          `[data-testid="pdf-editor-page-${p.index}"]`,
-        );
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        const centre = r.top + r.height / 2;
-        const dist = Math.abs(centre - stageCentreY);
-        if (dist < bestDist) {
-          bestDist = dist;
-          pageIndex = p.index;
-        }
-      }
+      const pageIndex = visiblePageNumber();
       const page = doc.page(pageIndex);
       // Position roughly at the page centre, biased toward the upper third so
       // multi-line paste has room to flow downward.
@@ -581,94 +582,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .find((r) => r.id === selection.runIds[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   })();
-  const loadDiskFile = useCallback(
-    (file: File, password?: string) => {
-      const loading = load(file, password);
-      const token = store.currentLoadToken;
-      void loading
-        .then(async () => {
-          if (!mountedRef.current || !store.isCurrentLoad(token)) return null;
-          const opened = store.getState();
-          if (!opened.hasDocument || opened.error || opened.passwordPrompt)
-            return null;
-          return addFiles([file], {
-            selectFiles: false,
-          });
-        })
-        .then((added) => {
-          if (!mountedRef.current || !store.isCurrentLoad(token)) return;
-          const stored = added?.[0];
-          if (!stored) return;
-          pendingDiskFileRef.current = null;
-          adoptFile(stored);
-          setSelectedFiles([stored.fileId]);
-          handleFileChosen(stored.name, stored.fileId);
-        })
-        .catch((error: unknown) => {
-          if (mountedRef.current && store.isCurrentLoad(token))
-            store.setError(
-              error instanceof Error ? error.message : String(error),
-            );
-        });
-    },
-    [store, addFiles, adoptFile, handleFileChosen, load, setSelectedFiles],
-  );
-
-  const openDocument = useCallback(
-    (file: File, fromDisk: boolean) => {
-      pendingDiskFileRef.current = fromDisk ? file : null;
-      if (!fromDisk) {
-        const fileId = (file as File & { fileId?: FileId }).fileId;
-        if (fileId != null) setSelectedFiles([fileId]);
-        openWorkbenchFile(file);
-        return;
-      }
-      setOpenedFileName(file.name);
-      adoptFile(file);
-      setSourceFile(null);
-      // Password-protected files join the library only after unlocking, so its
-      // own upload flow does not ask for the password a second time.
-      loadDiskFile(file);
-    },
-    [
-      adoptFile,
-      loadDiskFile,
-      openWorkbenchFile,
-      setSelectedFiles,
-      setSourceFile,
-    ],
-  );
-
-  const [pendingOpen, setPendingOpen] = useState<{
-    file: File;
-    fromDisk: boolean;
-  } | null>(null);
-
-  const requestOpen = useCallback(
-    (file: File, fromDisk: boolean) => {
-      if (store.getState().dirty) {
-        setPendingOpen({ file, fromDisk });
-        return;
-      }
-      openDocument(file, fromDisk);
-    },
-    [openDocument, store],
-  );
-
-  const onPickPdf = useCallback(
-    (file: File) => requestOpen(file, true),
-    [requestOpen],
-  );
-  const onPickWorkbenchFile = useCallback(
-    (file: File) => requestOpen(file, false),
-    [requestOpen],
-  );
-  const confirmPendingOpen = useCallback(() => {
-    const pending = pendingOpen;
-    setPendingOpen(null);
-    if (pending) openDocument(pending.file, pending.fromDisk);
-  }, [openDocument, pendingOpen]);
-
   const openImagePicker = useCallback(() => {
     document
       .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
@@ -681,33 +594,34 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       fileId: sourceFileId,
       save: handleSave,
       download: handleDownload,
-      pickFile: onPickWorkbenchFile,
       pickImage: openImagePicker,
+      // The viewer mounts only the pages near the viewport.
+      revealPage: isMobile
+        ? null
+        : (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
     });
     return () => setEditorSession(null);
   }, [
+    isMobile,
+    scrollActions,
     openedFileName,
     sourceFileId,
     handleSave,
     handleDownload,
-    onPickWorkbenchFile,
     openImagePicker,
   ]);
 
   const handleSubmitPassword = useCallback(
     (password: string) => {
       const file = store.pendingPasswordFile;
-      if (!file) return;
-      if (pendingDiskFileRef.current === file) loadDiskFile(file, password);
-      else void load(file, password);
+      if (file) void load(file, password);
     },
-    [store, load, loadDiskFile],
+    [store, load],
   );
 
   const handleCancelPassword = useCallback(() => {
     const file = store.pendingPasswordFile;
     if (file) cancelAutoLoad(file);
-    pendingDiskFileRef.current = null;
     store.clearPasswordPrompt();
   }, [store, cancelAutoLoad]);
 
@@ -748,19 +662,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           <Stack gap="xs">
             <Text size="sm">{state.error}</Text>
             <PermissionsPasswordButton
-              file={
-                pendingDiskFileRef.current ??
-                (sourceFileId ? selectors.getFile(sourceFileId) : null)
-              }
-              onVerified={(file) => {
-                if (pendingDiskFileRef.current === file) loadDiskFile(file);
-                else void load(file);
-              }}
+              file={sourceFileId ? selectors.getFile(sourceFileId) : null}
+              onVerified={(file) => void load(file)}
             />
           </Stack>
         </Alert>
       )}
-      <EditorFileInputs onPickPdf={onPickPdf} onPickImage={handleInsertImage} />
+      <EditorFileInputs onPickImage={handleInsertImage} />
       <HelpOverlay
         opened={state.helpOpen}
         onClose={() => store.setHelpOpen(false)}
@@ -777,9 +685,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         onCancel={handleCancelPassword}
       />
       <DiscardChangesModal
-        incomingFileName={pendingOpen?.file.name ?? null}
-        onConfirm={confirmPendingOpen}
-        onCancel={() => setPendingOpen(null)}
+        incomingFileName={pendingSwitch?.name ?? null}
+        onConfirm={confirmSwitch}
+        onCancel={cancelSwitch}
       />
       {isMobile ? (
         <>
@@ -802,10 +710,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       {state.hasDocument && (
         <EditorPanelActions
           compact={isMobile}
-          openedFileName={openedFileName}
-          dirty={state.dirty}
-          currentFileId={sourceFileId}
-          onPickFile={onPickWorkbenchFile}
           onSave={handleSave}
           onDownload={handleDownload}
           onOpenFind={() => {
