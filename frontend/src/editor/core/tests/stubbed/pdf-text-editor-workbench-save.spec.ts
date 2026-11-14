@@ -102,7 +102,7 @@ test.describe("PDF text editor - standardised save", () => {
       ["ZZFIRST", "v2"],
       ["ZZSECOND", "v3"],
     ]) {
-      await workbenchTab(page, /^Editor$/).click();
+      await workbenchTab(page, /^Viewer$/).click();
       await editFirstRun(page, text);
       await page.getByTestId("pdf-editor-save").click();
       await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden({
