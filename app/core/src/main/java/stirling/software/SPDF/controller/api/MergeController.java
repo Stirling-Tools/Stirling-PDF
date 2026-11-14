@@ -298,7 +298,8 @@ public class MergeController {
 
             int tocOffset = 0;
             if (generateTocPage) {
-                File tocDocument = generateToc(toFileWithPageCount(files));
+                File tocDocument = generateToc(toFileWithPageCount(files, inputPaths));
+                filesToDelete.add(tocDocument);
                 inputPaths.addFirst(tocDocument.toPath());
                 tocOffset = 1;
             }
@@ -392,16 +393,12 @@ public class MergeController {
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
 
-    private MultipartFileWithPdfPageCount[] toFileWithPageCount(MultipartFile[] files)
-            throws IOException {
+    private MultipartFileWithPdfPageCount[] toFileWithPageCount(
+            MultipartFile[] files, List<Path> inputPaths) {
         List<MultipartFileWithPdfPageCount> result = new ArrayList<>(files.length);
-        for (MultipartFile file : files) {
-            try (PdfDocument pdf =
-                    PdfDocument.open(tempFileManager.convertMultipartFileToFile(file))) {
-                result.add(new MultipartFileWithPdfPageCount(file, pdf.pageCount()));
-            } catch (IOException e) {
-                log.error("Unable to open file as PDF: {}", e.getMessage());
-                throw e;
+        for (int i = 0; i < files.length; i++) {
+            try (PdfDocument pdf = PdfDocument.open(inputPaths.get(i))) {
+                result.add(new MultipartFileWithPdfPageCount(files[i], pdf.pageCount()));
             }
         }
         return result.toArray(MultipartFileWithPdfPageCount[]::new);
@@ -431,6 +428,9 @@ public class MergeController {
 
                 Files.write(tocPage.toPath(), baos.toByteArray());
             }
+        } catch (IOException | RuntimeException e) {
+            tempFileManager.deleteTempFile(tocPage);
+            throw e;
         }
 
         return tocPage;
@@ -481,19 +481,22 @@ public class MergeController {
                                 / 1000
                                 * contentFontSize;
 
+                float spaceWidth = contentFont.getStringWidth(space) / 1000 * contentFontSize;
+                float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
+                float numberMargin = dotWidth * 2;
+
                 String entryName =
                         fitTextToWidth(
                                 replaceUnsupportedCharacters(
                                         contentFont, getTocTitle(multipartFile, i)),
                                 contentFont,
                                 contentFontSize,
-                                target - tocContentPadding,
+                                target
+                                        - tocContentPadding
+                                        - pageCountWidth
+                                        - spaceWidth
+                                        - numberMargin,
                                 true);
-
-                float spaceWidth = contentFont.getStringWidth(space) / 1000 * contentFontSize;
-
-                float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
-                float numberMargin = dotWidth * 2;
 
                 float end = target - pageCountWidth - spaceWidth - numberMargin;
                 float start =
