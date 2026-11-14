@@ -186,8 +186,13 @@ function groupAndMeasure(
   const lines = LineGrouper.apply(page, blockKey, (run) =>
     fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
   );
-  if (mode === "auto")
-    ParagraphGrouper.apply(page, blockKey, lineFontIds(lines));
+  if (mode === "auto") {
+    const faces = new Map<string, string | null>();
+    ParagraphGrouper.apply(page, blockKey, lineFontIds(lines), (fontId) => {
+      if (!faces.has(fontId)) faces.set(fontId, faceNameOf(doc.module, fontId));
+      return faces.get(fontId)!;
+    });
+  }
   // One walk feeds both: each was reading the same characters with its
   // own WASM round-trips, doubling the cost of every page read.
   const geometry = collectCharGeometry(doc.module, page, textPagePtr);
@@ -943,6 +948,14 @@ function readFontNameVia(
   const buf = scratchPtr(m, SCRATCH.readerReadTextB, len);
   getName(fontPtr, buf, len);
   return m.pdfium.UTF8ToString(buf);
+}
+
+/** The face's /BaseFont without its subset tag ("Georgia-Bold"), or null when the font has none. */
+function faceNameOf(m: WrappedPdfiumModule, fontId: string): string | null {
+  const ptr = Number(/^pdf:(\d+)/.exec(fontId)?.[1]);
+  if (!ptr) return null;
+  const name = readFontNameVia(m, ptr, m.FPDFFont_GetBaseFontName);
+  return name == null ? null : SUBSET_TAG_RE.test(name) ? name.slice(7) : name;
 }
 
 function readFontFamily(

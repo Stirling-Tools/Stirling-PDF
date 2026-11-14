@@ -272,14 +272,21 @@ function groupBaselineBands(
     // The gap cap must scale with font size: an inter-word space in a 50pt
     // heading is ~15-25pt, which a flat 12pt cap would treat as a line break.
     const spaceEm = fontSpaceEm([prev], spaceAdvance);
-    const maxGap = Math.max(
-      ABS_MAX_GAP_PT,
-      0.5 * Math.max(ref.fontSize, 4),
-      MAX_JOIN_SPACES *
-        (spaceEm === null
-          ? meanLetterAdvancePt(current.members)
-          : spaceEm * prev.fontSize),
-    );
+    const spacePt =
+      spaceEm === null
+        ? meanLetterAdvancePt(current.members)
+        : spaceEm * prev.fontSize;
+    // Spaces the text itself holds at the junction are drawn as part of the gap, not a column break.
+    const literalSpaces =
+      (/\s+$/.exec(prev.text)?.[0].length ?? 0) +
+      (/^\s+/.exec(run.text)?.[0].length ?? 0);
+    const maxGap =
+      Math.max(
+        ABS_MAX_GAP_PT,
+        0.5 * Math.max(ref.fontSize, 4),
+        MAX_JOIN_SPACES * spacePt,
+      ) +
+      literalSpaces * spacePt;
     // A leading bullet is indented from its item by more than an inter-word
     // space; let the item attach across that wider indent.
     const effMaxGap = isBulletLead(prev)
@@ -303,14 +310,15 @@ function groupBaselineBands(
   }
 }
 
-/** Each line's font by the most of its letters, so one odd piece at its start does not stand for the whole line. */
+/** Each line's fonts, as the share of its letters each draws, so one odd piece at its start does not stand for the whole line. */
 export function lineFontIds(
   groups: readonly LineGroupInfo[],
-): Map<TextRun, string> {
-  const out = new Map<TextRun, string>();
+): Map<TextRun, Map<string, number>> {
+  const out = new Map<TextRun, Map<string, number>>();
   for (const { representative, members } of groups) {
     const fontOf = new Map(members.map((m) => [m.pdfiumObjPtr, m.fontId]));
     const letters = new Map<string, number>();
+    let total = 0;
     representative.mergedFromPtrs.forEach((ptr, i) => {
       const fontId = fontOf.get(ptr) ?? representative.fontId;
       const count = (representative.mergedFromTexts[i] ?? "").replace(
@@ -318,11 +326,11 @@ export function lineFontIds(
         "",
       ).length;
       letters.set(fontId, (letters.get(fontId) ?? 0) + count);
+      total += count;
     });
-    let best = representative.fontId;
     for (const [fontId, count] of letters)
-      if (count > (letters.get(best) ?? 0)) best = fontId;
-    out.set(representative, best);
+      letters.set(fontId, total > 0 ? count / total : 1);
+    out.set(representative, letters);
   }
   return out;
 }
@@ -415,8 +423,8 @@ export class LineGrouper {
           ? [memberTexts[i], memberTexts[i - 1]]
           : [memberTexts[i - 1], memberTexts[i]];
         const alreadyHave =
-          (/\s/.test(left.slice(-1)) ? 1 : 0) +
-          (/\s/.test(right.slice(0, 1)) ? 1 : 0);
+          (/\s*$/.exec(left)?.[0].length ?? 0) +
+          (/^\s*/.exec(right)?.[0].length ?? 0);
         gaps.push(" ".repeat(Math.max(0, extraSpaces - alreadyHave)));
       }
       // A right-to-left line reads from its rightmost piece; each piece already holds its own text in reading order.

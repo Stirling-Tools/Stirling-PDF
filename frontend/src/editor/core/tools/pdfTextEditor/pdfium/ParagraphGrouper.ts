@@ -37,7 +37,8 @@ export class ParagraphGrouper {
   static apply(
     page: Page,
     blockKey: BlockKey = SAME_BLOCK,
-    lineFonts: ReadonlyMap<TextRun, string> = new Map(),
+    lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>> = new Map(),
+    faceOf: (fontId: string) => string | null = () => null,
   ): ParagraphInfo[] {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
@@ -58,7 +59,7 @@ export class ParagraphGrouper {
           (line) => (line.renderMode === RENDER_MODE_INVISIBLE) === invisible,
         );
         if (layer.length > 0)
-          groupColumnLines(layer, blockKey, grouped, cells, lineFonts);
+          groupColumnLines(layer, blockKey, grouped, cells, lineFonts, faceOf);
       }
       const order = new Map(sorted.map((line, i) => [line, i]));
       grouped.sort(
@@ -217,13 +218,43 @@ export function buildLineSlotsFromDescriptors(
 
 // A run's visual font identity for grouping: family + rounded size.
 // `run.fontId` is `pdf:<fontHandlePtr>:<family>`.
+// A face's own name tells regular from bold where a name-table family does not.
 function fontKey(
-  run: TextRun,
-  lineFonts: ReadonlyMap<TextRun, string>,
+  fontId: string,
+  fontSize: number,
+  faceOf: (fontId: string) => string | null,
 ): string {
-  const fontId = lineFonts.get(run) ?? run.fontId;
-  const family = fontId.slice(fontId.lastIndexOf(":") + 1);
-  return `${family}@${Math.round(run.fontSize)}`;
+  const face = faceOf(fontId) ?? fontId.slice(fontId.lastIndexOf(":") + 1);
+  return `${face}@${Math.round(fontSize)}`;
+}
+
+// Typed words drawn in a fallback can outnumber a line's own letters; the line still belongs with a neighbour whose font draws a good share of both.
+const SHARED_FONT_MIN_SHARE = 0.25;
+
+function lineFontKeys(
+  run: TextRun,
+  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
+  faceOf: (fontId: string) => string | null,
+): Set<string> {
+  const shares = lineFonts.get(run);
+  if (!shares || shares.size === 0)
+    return new Set([fontKey(run.fontId, run.fontSize, faceOf)]);
+  const most = Math.max(...shares.values());
+  return new Set(
+    [...shares]
+      .filter(([, share]) => share >= SHARED_FONT_MIN_SHARE || share === most)
+      .map(([fontId]) => fontKey(fontId, run.fontSize, faceOf)),
+  );
+}
+
+function shareAFont(
+  a: TextRun,
+  b: TextRun,
+  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
+  faceOf: (fontId: string) => string | null,
+): boolean {
+  const theirs = lineFontKeys(b, lineFonts, faceOf);
+  return [...lineFontKeys(a, lineFonts, faceOf)].some((key) => theirs.has(key));
 }
 
 /** Split a page's line-runs into columns. */
@@ -283,7 +314,8 @@ function groupColumnLines(
   blockKey: BlockKey,
   out: ParagraphInfo[],
   cells: ReadonlySet<TextRun>,
-  lineFonts: ReadonlyMap<TextRun, string>,
+  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
+  faceOf: (fontId: string) => string | null,
 ): void {
   let current: ParagraphInfo | null = null;
   let currentDeltas: number[] = [];
@@ -298,7 +330,7 @@ function groupColumnLines(
       continue;
     }
     const prev = current.members[current.members.length - 1];
-    const sameFont = fontKey(prev, lineFonts) === fontKey(line, lineFonts);
+    const sameFont = shareAFont(prev, line, lineFonts, faceOf);
     const sameColor =
       prev.fill.r === line.fill.r &&
       prev.fill.g === line.fill.g &&
