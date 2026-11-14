@@ -784,6 +784,12 @@ export class EditorDocument {
     return this.ownedFonts.get(id);
   }
 
+  ownedFontAt(pointer: number): FontRef | undefined {
+    for (const font of this.ownedFonts.values())
+      if (font.pointer === pointer) return font;
+    return undefined;
+  }
+
   /** Iterate loaded pages without forcing more page loads. */
   loadedPages(): Page[] {
     return Array.from(this.pageCache.values());

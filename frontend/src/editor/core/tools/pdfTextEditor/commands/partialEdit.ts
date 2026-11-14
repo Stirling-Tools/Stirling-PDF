@@ -6,6 +6,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   charcodesResolveFully,
+  collectContainersByPtr,
   contentIndices,
   cssFontSpecFor,
   restoreContentOrder,
@@ -30,7 +31,9 @@ import {
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { deviceFamilyOf } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   SCRATCH,
   scratchPtr,
@@ -713,6 +716,22 @@ function borrowFontForChars(
   return borrowFontFromSurvivor(m, plan);
 }
 
+// The font a redrawn piece was first drawn in. A word typed against it can push the whole piece into a fallback face; once the typed letters move away, the words that font draws go back to it.
+const sourceFonts = new WeakMap<EditorDocument, Map<number, number>>();
+
+function sourceFontsOf(doc: EditorDocument): Map<number, number> {
+  let fonts = sourceFonts.get(doc);
+  if (!fonts) {
+    fonts = new Map();
+    sourceFonts.set(doc, fonts);
+  }
+  return fonts;
+}
+
+function sourceFontOf(doc: EditorDocument, ptr: number): number {
+  return sourceFontsOf(doc).get(ptr) ?? objFontPtr(doc.module, ptr);
+}
+
 export interface PartialEditApplyResult {
   newMergedFromPtrs: number[];
   newMergedFromTexts: string[];
@@ -740,6 +759,47 @@ export function applyPartialEditPlan(
   const m = doc.module;
   const emitY = baselineY ?? run.matrix.f;
   const startX = defaultX ?? run.bounds.x;
+  const containerOf = collectContainersByPtr(run);
+  // An object inside a form XObject moves in the form's own space, which the form's matrix scales away from the page's.
+  const shiftAlongPage = (ptr: number, dx: number): void => {
+    const container = containerOf.get(ptr) ?? run.containerPtr;
+    const form = container ? readMatrix(m, container) : null;
+    const det = form ? form[0] * form[3] - form[1] * form[2] : 1;
+    if (!form || Math.abs(det) < 1e-9)
+      transformObject(m, ptr, 1, 0, 0, 1, dx, 0);
+    else
+      transformObject(
+        m,
+        ptr,
+        1,
+        0,
+        0,
+        1,
+        (form[3] * dx) / det,
+        (-form[1] * dx) / det,
+      );
+  };
+  // Letters typed onto a word take that word's face, so it is not drawn half in one font and half in another.
+  const wordNeighbourFont = (text: string, beforeIdx?: number): number => {
+    const last = newMergedFromTexts.length - 1;
+    const touching =
+      last >= 0 && /\S$/.test(newMergedFromTexts[last]) && /^\S/.test(text)
+        ? newMergedFromPtrs[last]
+        : beforeIdx !== undefined &&
+            /\S$/.test(text) &&
+            /^\S/.test(plan.prevMergedFromTexts[beforeIdx] ?? "")
+          ? plan.prevMergedFromPtrs[beforeIdx]
+          : 0;
+    return touching ? objFontPtr(m, touching) : 0;
+  };
+  const drawsAll = (font: number, text: string): boolean =>
+    charcodesResolveFully(
+      m,
+      font,
+      text.replace(/\s+/g, ""),
+      page.pagePtr,
+      doc.docPtr,
+    );
   const lineStart =
     run.containerPtr === 0
       ? Math.min(
@@ -904,7 +964,7 @@ export function applyPartialEditPlan(
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       if (Math.abs(offset) > 0.05) {
         try {
-          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
+          shiftAlongPage(ptr, offset);
         } catch {
           /* best-effort */
         }
@@ -935,7 +995,7 @@ export function applyPartialEditPlan(
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
-          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
+          shiftAlongPage(ptr, offset);
         } catch {
           /* best-effort */
         }
@@ -1040,15 +1100,25 @@ export function applyPartialEditPlan(
       // word it can draw, and a fallback of its style for the rest.
       const ownFont =
         anchorIdx !== undefined
-          ? objFontPtr(m, plan.prevMergedFromPtrs[anchorIdx])
+          ? sourceFontOf(doc, plan.prevMergedFromPtrs[anchorIdx])
           : 0;
       // Borrow the font from a survivor that actually contains the inserted
       // chars, so the new glyph reuses that exact embedded font.
+      const neighbourFont = ownFont
+        ? 0
+        : wordNeighbourFont(insertText, beforeIdx);
+      const neighbourDraws =
+        neighbourFont !== 0 && drawsAll(neighbourFont, insertText);
       const borrowedFontPtr =
         ownFont ||
-        (allInsertCharsAreSafe ? borrowFontForChars(m, plan, insertText) : 0);
-      const insertFallback = ownFont
-        ? fallbackFamilyFor(`pdf:${ownFont}:${baseFontName(m, ownFont)}`)
+        (neighbourDraws ? neighbourFont : 0) ||
+        (!neighbourFont && allInsertCharsAreSafe
+          ? borrowFontForChars(m, plan, insertText)
+          : 0);
+      const faceFont = ownFont || neighbourFont;
+      const insertFallback = faceFont
+        ? (deviceFamilyOf(doc, faceFont) ??
+          fallbackFamilyFor(`pdf:${faceFont}:${baseFontName(m, faceFont)}`))
         : fallbackFamily;
       const emittedTexts: string[] = [];
 
@@ -1070,6 +1140,8 @@ export function applyPartialEditPlan(
         fallbackFamily: insertFallback,
         outTexts: emittedTexts,
       });
+      if (ownFont)
+        for (const ptr of ptrs) if (ptr) sourceFontsOf(doc).set(ptr, ownFont);
       let realRightEdge = anchorX;
       for (const ptr of ptrs) {
         const r = measureObjRightEdgePt(m, ptr);
@@ -1365,6 +1437,7 @@ export function sourceFontSpans(
   >,
   prevLine: string,
   nextLine: string,
+  covers?: (fontPtr: number, text: string) => boolean,
 ): FontSpan[] | undefined {
   const fontAt = new Array<number>(prevLine.length).fill(0);
   pieces.mergedFromPtrs.forEach((ptr, i) => {
@@ -1396,12 +1469,27 @@ export function sourceFontSpans(
   const typedEnd = nextLine.length - suffix;
   const after = fontAt[prevLine.length - suffix] ?? 0;
   const fonts: number[] = [];
+  // A new word takes the font after it, else the nearest of the line's fonts that can draw it.
+  const typedWordFont = (j: number): number => {
+    let before = 0;
+    for (let k = j - 1; k >= 0 && !before; k--)
+      if (!/\s/.test(nextLine[k])) before = fonts[k];
+    const word = /^\S*/.exec(nextLine.slice(j))?.[0] ?? "";
+    const candidates = [
+      ...new Set([after, before, fonts[j - 1] ?? 0, ...fontAt]),
+    ].filter(Boolean);
+    return (
+      (covers && word && candidates.find((font) => covers(font, word))) ||
+      candidates[0] ||
+      0
+    );
+  };
   for (let j = 0; j < nextLine.length; j++) {
     if (j < prefix) fonts.push(fontAt[j]);
     else if (j >= typedEnd)
       fonts.push(fontAt[j - nextLine.length + prevLine.length]);
     else if (j > 0 && !/\s/.test(nextLine[j - 1])) fonts.push(fonts[j - 1]);
-    else fonts.push(after || fonts[j - 1] || 0);
+    else fonts.push(typedWordFont(j) || 0);
   }
   const spans: FontSpan[] = [];
   for (let j = 0; j < fonts.length; j++) {
@@ -1716,7 +1804,14 @@ export function applyParagraphEditPlan(
         // in Helvetica while the paragraph around it keeps the document's own
         // face. Its SIBLING lines carry exactly the face it should inherit.
         siblingFontPtrForText(m, newSlots, i, slot.fontId, lineText);
-      const fontSpans = sourceFontSpans(m, slot, planEntry.prevLine, lineText);
+      const fontSpans = sourceFontSpans(
+        m,
+        slot,
+        planEntry.prevLine,
+        lineText,
+        (font, text) =>
+          charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
+      );
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
         try {

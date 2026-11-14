@@ -14,6 +14,7 @@ import {
 } from "@editor/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   charcodesResolveFully,
+  objectTexts,
   collectContainersByPtr,
   contentIndices,
   restoreContentOrder,
@@ -59,6 +60,7 @@ import {
   readMatrix,
   writeMatrix,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
+import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import {
   SCRATCH,
   scratchPtr,
@@ -231,6 +233,7 @@ export class EditTextCommand implements Command {
   private editSnapshot: RunModelSnapshot | null = null;
   // The run's own objects before a partial apply, with where each sat; null when one lives in a form and cannot be put back.
   private originalObjects: OriginalObjects | null = null;
+  private revertedExactly = false;
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
     /** Matched lines translated to a new baseline (reversed on revert). */
@@ -266,6 +269,8 @@ export class EditTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    this.originalObjects = null;
+    this.revertedExactly = false;
     if (this.prevText === null) this.prevText = run.text;
     if (!this.startFont && run.containerPtr === 0 && run.pdfiumObjPtr) {
       const ptr = safeGetFont(doc.module, run.pdfiumObjPtr);
@@ -311,6 +316,8 @@ export class EditTextCommand implements Command {
     const isRotated = !!rotationFromMatrix(run.matrix);
     // Only the full re-emit below can switch the run to a given face.
     const keepsFont = this.nextFont === null;
+    // The partial paths shift pieces rightward from where they were; only the full re-emit lays out right-to-left text.
+    const leftToRight = !hasRtl(this.prevText ?? "") && !hasRtl(this.nextText);
 
     // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep per-line
     // sub-run data in `paragraphLineSlots`.
@@ -320,7 +327,8 @@ export class EditTextCommand implements Command {
       run.paragraphLineSlots.length > 1 &&
       !isRotated &&
       !scanText &&
-      keepsFont
+      keepsFont &&
+      leftToRight
     ) {
       const paraPlan = planParagraphEdit(
         run,
@@ -393,7 +401,8 @@ export class EditTextCommand implements Command {
       run.paragraphLineSlots.length >= 1 &&
       !isRotated &&
       !scanText &&
-      keepsFont
+      keepsFont &&
+      leftToRight
     ) {
       const prevLines = this.prevText.split(/\r?\n/);
       const nextLines = this.nextText.split(/\r?\n/);
@@ -438,7 +447,8 @@ export class EditTextCommand implements Command {
       !/\r?\n/.test(this.nextText) &&
       !isRotated &&
       !scanText &&
-      keepsFont
+      keepsFont &&
+      leftToRight
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       if (
@@ -566,16 +576,28 @@ export class EditTextCommand implements Command {
         ));
     // Borrow the font of the member sharing the most chars with the new text.
     const borrowPtrs = collectMemberPtrs(run);
+    // A full re-emit leaves the run's piece texts out of step with its objects, so each is read off the page.
     const borrowTexts =
       run.mergedFromTexts.length === borrowPtrs.length
         ? run.mergedFromTexts
-        : borrowPtrs.map(() => run.text);
+        : (objectTexts(m, page.pagePtr, borrowPtrs) ??
+          borrowPtrs.map(() => run.text));
+    // A font that cannot draw every new character still draws the words it can.
+    const coveredWordsOnly =
+      !this.nextFont &&
+      !canReuseFont &&
+      !scanText &&
+      run.containerPtr === 0 &&
+      candidateFontPtr !== 0;
     const originalFontPtr =
       this.nextFont?.ptr ||
       (canReuseFont && !scanText
         ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
-        : 0);
+        : coveredWordsOnly
+          ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
+            candidateFontPtr
+          : 0);
     // Read before the source objects go: a one-line run mixing bold and regular keeps each word's face.
     const fontSpans =
       !this.nextFont &&
@@ -594,6 +616,8 @@ export class EditTextCommand implements Command {
                 ) ?? run),
             this.prevText ?? "",
             this.nextText,
+            (font, text) =>
+              charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
           )
         : undefined;
 
@@ -620,6 +644,17 @@ export class EditTextCommand implements Command {
 
     const memberPtrs = collectMemberPtrs(run);
     const containers = collectContainersByPtr(run);
+    this.editSnapshot = snapshotRunModel(run);
+    this.originalObjects = captureOriginalObjects(
+      m,
+      run,
+      memberPtrs,
+      memberPtrs.map((ptr) => ({
+        ptr,
+        containerPtr: containers.get(ptr) ?? run.containerPtr,
+      })),
+      page.pagePtr,
+    );
     const allRemoved = removeMemberPtrs(
       m,
       page,
@@ -683,6 +718,7 @@ export class EditTextCommand implements Command {
       origins: planLineOrigins(run, outputLines.length, lineHeight),
       originalFontPtr,
       originalFontSubset: run.fontSubset,
+      originalFontForCoveredWords: coveredWordsOnly,
       fallbackFamily,
       fontSpansByLine: fontSpans ? [fontSpans] : undefined,
     });
@@ -814,6 +850,7 @@ export class EditTextCommand implements Command {
     const originals = this.originalObjects;
     this.originalObjects = null;
     if (!originals) return false;
+    this.revertedExactly = true;
     for (const ptr of originals.detached)
       m.FPDFPage_InsertObject(page.pagePtr, ptr);
     for (const [ptr, matrix] of originals.matrices) writeMatrix(m, ptr, matrix);
@@ -1142,6 +1179,16 @@ export class EditTextCommand implements Command {
       } catch {
         /* best-effort - the ptr may already be gone */
       }
+    }
+
+    if (this.editSnapshot && this.putOriginalObjectsBack(m, page)) {
+      restoreRunModel(run, this.editSnapshot);
+      run.text = this.prevText;
+      run.dirty = true;
+      this.overlaid = false;
+      page.markDirty();
+      page.markNeedsGenerate();
+      return;
     }
 
     // PDFium has no insert-into-form-xobject API, so the truly-original
@@ -1612,6 +1659,13 @@ export class EditTextCommand implements Command {
         return false;
       edits.push(cmd);
     }
+    // Every step puts back exactly the objects the step before it drew, so stepping through keeps each piece's own font and glyphs.
+    if (
+      phase === "revert"
+        ? edits.every((edit) => edit.originalObjects !== null)
+        : edits.every((edit) => edit.revertedExactly)
+    )
+      return false;
     const first = edits[0].prevText;
     const run = doc.page(this.pageIndex).findRun(this.runId);
     if (first === null || !run || isScanRun(run)) return false;
