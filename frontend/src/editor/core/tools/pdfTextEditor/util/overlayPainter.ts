@@ -187,6 +187,26 @@ export function paintPlainText(el: HTMLElement, text: string): void {
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
+  return flowLines(element);
+}
+
+// Merging two lines with Backspace leaves the lower one as an inline span on the upper one's line, not a line of its own.
+const BLOCK_TAGS =
+  /^(DIV|P|LI|UL|OL|H[1-6]|BLOCKQUOTE|PRE|TABLE|TR|SECTION|ARTICLE)$/;
+
+function isLineElement(node: HTMLElement): boolean {
+  return node.hasAttribute(LINE_ATTR) || BLOCK_TAGS.test(node.tagName);
+}
+
+function endsWithBreak(node: Node): boolean {
+  let last: Node | null = node.lastChild;
+  while (last && last.nodeType !== Node.TEXT_NODE && last.lastChild)
+    last = last.lastChild;
+  return last instanceof HTMLElement && last.tagName === "BR";
+}
+
+/** The text under `element`, split at every <br>. */
+function flowLines(element: HTMLElement): string[] {
   const lines: string[] = [""];
   const walk = (node: Node): void => {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -227,6 +247,13 @@ export function readOverlayText(element: HTMLElement): string {
     if (node.tagName === "BR") {
       lines.push("");
       lastWasTrailingBr = true;
+      continue;
+    }
+    if (!isLineElement(node)) {
+      const [first, ...rest] = flowLines(node);
+      lines[lines.length - 1] += first;
+      lines.push(...rest);
+      lastWasTrailingBr = rest.length > 0 && endsWithBreak(node);
       continue;
     }
     // Block children carry whole lines, so the seed is not one of them.
@@ -443,45 +470,60 @@ export function plainDomRange(el: HTMLElement, range: TextRange): Range | null {
   return out;
 }
 
-/** Where character `offset` of the run's model text falls in the overlay's DOM. */
+/**
+ * Where character `offset` of the run's model text falls in the overlay's DOM.
+ * Walks the DOM as readOverlayText reads it, so the two cannot disagree: a
+ * child element is a line of its own, a <br> is a line break wherever it sits.
+ */
 function domPosition(
   el: HTMLElement,
   offset: number,
 ): { node: Node; offset: number } {
   const target = Math.max(0, offset);
-
-  const blocks = lineBlocks(el);
-  let scope: HTMLElement = el;
-  let remaining = target;
-  if (blocks.length > 0) {
-    scope = blocks[blocks.length - 1];
-    remaining = (scope.textContent ?? "").length;
-    let before = 0;
-    for (const block of blocks) {
-      const length = (block.textContent ?? "").length;
-      if (target <= before + length) {
-        scope = block;
-        remaining = target - before;
-        break;
-      }
-      before += length + 1;
-    }
-  } else {
-    return plainTextPosition(el, target);
-  }
-
-  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+  const children = Array.from(el.childNodes);
   let seen = 0;
-  let node = walker.nextNode();
-  while (node) {
-    const length = (node.nodeValue ?? "").length;
-    if (seen + length >= remaining) {
-      return { node, offset: remaining - seen };
+  let started = false;
+  let last: { node: Node; offset: number } = { node: el, offset: 0 };
+  for (const [index, node] of children.entries()) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const length = (node.nodeValue ?? "").length;
+      if (seen + length >= target) return { node, offset: target - seen };
+      seen += length;
+      started = true;
+      last = { node, offset: length };
+      continue;
     }
+    if (!(node instanceof HTMLElement)) continue;
+    if (node.tagName === "BR") {
+      if (seen === target) return { node: el, offset: index };
+      seen += 1;
+      started = true;
+      last = { node: el, offset: index + 1 };
+      continue;
+    }
+    if (!isLineElement(node)) {
+      const flowed = flowPosition(node, target, seen);
+      if (flowed.at) return flowed.at;
+      seen = flowed.seen;
+      started = true;
+      if (flowed.last) last = flowed.last;
+      continue;
+    }
+    if (started) {
+      if (seen === target) return last;
+      seen += 1;
+    }
+    started = true;
+    const length =
+      (node.textContent ?? "") === "" ? 0 : blockLines(node).join("\n").length;
+    if (target <= seen + length)
+      return length === 0
+        ? { node, offset: 0 }
+        : plainTextPosition(node, target - seen);
     seen += length;
-    node = walker.nextNode();
+    last = plainTextPosition(node, length);
   }
-  return { node: scope, offset: 0 };
+  return last;
 }
 
 // Plain text holds its line breaks as <br>, each one character of the model text.
@@ -489,16 +531,30 @@ function plainTextPosition(
   el: HTMLElement,
   target: number,
 ): { node: Node; offset: number } {
+  const flowed = flowPosition(el, target, 0);
+  return flowed.at ?? flowed.last ?? { node: el, offset: 0 };
+}
+
+function flowPosition(
+  root: Node,
+  target: number,
+  from: number,
+): {
+  at: { node: Node; offset: number } | null;
+  seen: number;
+  last: { node: Node; offset: number } | null;
+} {
   const walker = document.createTreeWalker(
-    el,
+    root,
     NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
   );
-  let seen = 0;
-  let last: { node: Node; offset: number } = { node: el, offset: 0 };
+  let seen = from;
+  let last: { node: Node; offset: number } | null = null;
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node.nodeType === Node.TEXT_NODE) {
       const length = (node.nodeValue ?? "").length;
-      if (seen + length >= target) return { node, offset: target - seen };
+      if (seen + length >= target)
+        return { at: { node, offset: target - seen }, seen, last };
       seen += length;
       last = { node, offset: length };
       continue;
@@ -506,11 +562,12 @@ function plainTextPosition(
     if (!(node instanceof HTMLElement) || node.tagName !== "BR") continue;
     const parent = node.parentNode!;
     const index = Array.prototype.indexOf.call(parent.childNodes, node);
-    if (seen === target) return { node: parent, offset: index };
+    if (seen === target)
+      return { at: { node: parent, offset: index }, seen, last };
     seen += 1;
     last = { node: parent, offset: index + 1 };
   }
-  return last;
+  return { at: null, seen, last };
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {

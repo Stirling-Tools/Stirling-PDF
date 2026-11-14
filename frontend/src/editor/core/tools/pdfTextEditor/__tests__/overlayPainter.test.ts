@@ -175,6 +175,34 @@ describe("caret offsets", () => {
     }
   });
 
+  it("round-trips every offset after a break typed inside a painted line", () => {
+    const el = host();
+    paintLines(el, [line("First item"), line("Second item")], OPTS);
+    // Chrome puts the break inside the token span the caret was in.
+    el.children[0].childNodes[1].appendChild(document.createElement("br"));
+    const model = "First \nitem\nSecond item";
+    expect(readOverlayText(el)).toBe(model);
+    for (let offset = 0; offset <= model.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
+  it("reads a line Backspace merged up as part of the line above", () => {
+    const el = host();
+    const merged = document.createElement("span");
+    merged.textContent = "bullet item";
+    const next = document.createElement("div");
+    next.textContent = "• Second item";
+    el.replaceChildren("• First ", merged, next);
+    const model = "• First bullet item\n• Second item";
+    expect(readOverlayText(el)).toBe(model);
+    for (let offset = 0; offset <= model.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
   it("clamps past the end instead of throwing", () => {
     const el = host();
     paintLines(el, [line("abc")], OPTS);
