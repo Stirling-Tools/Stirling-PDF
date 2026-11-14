@@ -317,6 +317,11 @@ export class RawPdf {
     return this.objects.get(num)?.offset ?? -1;
   }
 
+  /** The numbers of every object the file's index holds, ascending. */
+  objectNumbers(): number[] {
+    return [...this.objects.keys()].filter((n) => n > 0).sort((x, y) => x - y);
+  }
+
   /** `/Key 12 0 R` -> 12. */
   dictRef(body: string, key: string): number | null {
     const span = this.valueSpan(body, key);

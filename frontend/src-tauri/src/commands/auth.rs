@@ -1,13 +1,13 @@
-use keyring::{Entry};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use keyring::Entry;
+use rand::distr::Alphanumeric;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_store::StoreExt;
 use tiny_http::{Response, Server};
-use sha2::{Sha256, Digest};
-use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use rand::RngExt;
-use rand::distr::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
@@ -31,12 +31,15 @@ fn get_keyring_entry() -> Result<Entry, String> {
     if std::env::var("STIRLING_PDF_TEST_FORCE_AUTH_KEYRING_FAIL").is_ok() {
         return Err("Forced keyring failure for tests".to_string());
     }
-    log::debug!("Creating keyring entry with service='{}' username='{}'", KEYRING_SERVICE, KEYRING_TOKEN_KEY);
-    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY)
-        .map_err(|e| {
-            log::error!("Failed to create keyring entry: {}", e);
-            format!("Failed to access keyring: {}", e)
-        })?;
+    log::debug!(
+        "Creating keyring entry with service='{}' username='{}'",
+        KEYRING_SERVICE,
+        KEYRING_TOKEN_KEY
+    );
+    let entry = Entry::new(KEYRING_SERVICE, KEYRING_TOKEN_KEY).map_err(|e| {
+        log::error!("Failed to create keyring entry: {}", e);
+        format!("Failed to access keyring: {}", e)
+    })?;
     log::debug!("Keyring entry created successfully");
     Ok(entry)
 }
@@ -97,16 +100,24 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
                         return Ok(());
                     }
                     _ => {
-                        log::info!("Keyring did not persist auth token - using Tauri Store fallback");
+                        log::info!(
+                            "Keyring did not persist auth token - using Tauri Store fallback"
+                        );
                     }
                 }
             }
             Err(e) => {
-                log::info!("Keyring set failed for auth token: {} - using Tauri Store fallback", e);
+                log::info!(
+                    "Keyring set failed for auth token: {} - using Tauri Store fallback",
+                    e
+                );
             }
         },
         Err(e) => {
-            log::info!("Keyring entry unavailable for auth token: {} - using Tauri Store fallback", e);
+            log::info!(
+                "Keyring entry unavailable for auth token: {} - using Tauri Store fallback",
+                e
+            );
         }
     }
 
@@ -117,8 +128,7 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
 
     store.set(
         AUTH_TOKEN_STORE_KEY,
-        serde_json::to_value(trimmed)
-            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+        serde_json::to_value(trimmed).map_err(|e| format!("Failed to serialize token: {}", e))?,
     );
 
     store
@@ -140,11 +150,17 @@ pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, Str
                 log::debug!("No auth token in keyring, trying Tauri Store");
             }
             Err(e) => {
-                log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
+                log::warn!(
+                    "Keyring error reading auth token: {} - trying Tauri Store",
+                    e
+                );
             }
         },
         Err(e) => {
-            log::warn!("Keyring entry unavailable for auth token: {} - trying Tauri Store", e);
+            log::warn!(
+                "Keyring entry unavailable for auth token: {} - trying Tauri Store",
+                e
+            );
         }
     }
 
@@ -195,7 +211,10 @@ pub async fn clear_auth_token(app_handle: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: String) -> Result<(), String> {
+pub async fn save_refresh_token<R: Runtime>(
+    app_handle: AppHandle<R>,
+    token: String,
+) -> Result<(), String> {
     log::info!("Saving refresh token - trying keyring first");
 
     match try_save_refresh_token_to_keyring(&token) {
@@ -214,7 +233,10 @@ pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: Str
             log::info!("Keyring did not persist refresh token - using Tauri Store fallback");
         }
         Err(e) => {
-            log::info!("Keyring error for refresh token: {} - using Tauri Store fallback", e);
+            log::info!(
+                "Keyring error for refresh token: {} - using Tauri Store fallback",
+                e
+            );
         }
     }
 
@@ -225,8 +247,7 @@ pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: Str
 
     store.set(
         REFRESH_TOKEN_STORE_KEY,
-        serde_json::to_value(&token)
-            .map_err(|e| format!("Failed to serialize token: {}", e))?,
+        serde_json::to_value(&token).map_err(|e| format!("Failed to serialize token: {}", e))?,
     );
 
     store
@@ -238,7 +259,9 @@ pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: Str
 }
 
 #[tauri::command]
-pub async fn get_refresh_token<R: Runtime>(app_handle: AppHandle<R>) -> Result<Option<String>, String> {
+pub async fn get_refresh_token<R: Runtime>(
+    app_handle: AppHandle<R>,
+) -> Result<Option<String>, String> {
     // Try keyring first (production / unrestricted environments). Any failure -
     // including entry creation - falls through to the Tauri Store fallback below.
     match get_refresh_token_keyring_entry() {
@@ -251,11 +274,17 @@ pub async fn get_refresh_token<R: Runtime>(app_handle: AppHandle<R>) -> Result<O
                 log::debug!("No refresh token in keyring, trying Tauri Store");
             }
             Err(e) => {
-                log::warn!("Keyring error reading refresh token: {} - trying Tauri Store", e);
+                log::warn!(
+                    "Keyring error reading refresh token: {} - trying Tauri Store",
+                    e
+                );
             }
         },
         Err(e) => {
-            log::warn!("Keyring entry unavailable for refresh token: {} - trying Tauri Store", e);
+            log::warn!(
+                "Keyring entry unavailable for refresh token: {} - trying Tauri Store",
+                e
+            );
         }
     }
 
@@ -441,7 +470,10 @@ pub async fn login(
 
     if is_supabase {
         // Supabase authentication flow
-        let login_url = format!("{}/auth/v1/token?grant_type=password", server_url.trim_end_matches('/'));
+        let login_url = format!(
+            "{}/auth/v1/token?grant_type=password",
+            server_url.trim_end_matches('/')
+        );
 
         let request_body = serde_json::json!({
             "email": username,
@@ -484,7 +516,11 @@ pub async fn login(
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            log::error!("Supabase login failed with status {}: {}", status, error_text);
+            log::error!(
+                "Supabase login failed with status {}: {}",
+                status,
+                error_text
+            );
 
             return Err(if status.as_u16() == 400 || status.as_u16() == 401 {
                 "Invalid username or password".to_string()
@@ -502,7 +538,9 @@ pub async fn login(
             .map_err(|e| format!("Failed to parse Supabase response: {}", e))?;
 
         let email = login_response.user.email.clone();
-        let username = login_response.user.user_metadata
+        let username = login_response
+            .user
+            .user_metadata
             .as_ref()
             .and_then(|m| m.full_name.clone())
             .or_else(|| email.clone())
@@ -579,7 +617,11 @@ pub async fn login(
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            log::error!("Spring Boot login failed with status {}: {}", status, error_text);
+            log::error!(
+                "Spring Boot login failed with status {}: {}",
+                status,
+                error_text
+            );
 
             if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(&error_text) {
                 let error_code = error_json
@@ -649,13 +691,20 @@ pub async fn start_oauth_login(
     success_html: String,
     error_html: String,
 ) -> Result<OAuthCallbackResult, String> {
-    log::info!("Starting OAuth login for provider: {} with auth server: {}", provider, auth_server_url);
+    log::info!(
+        "Starting OAuth login for provider: {} with auth server: {}",
+        provider,
+        auth_server_url
+    );
 
     // Generate PKCE code_verifier and code_challenge
     let code_verifier = generate_code_verifier();
     let code_challenge = generate_code_challenge(&code_verifier);
 
-    log::debug!("PKCE code_verifier generated: {} chars", code_verifier.len());
+    log::debug!(
+        "PKCE code_verifier generated: {} chars",
+        code_verifier.len()
+    );
     log::debug!("PKCE code_challenge: {}", code_challenge);
 
     // Use port 0 to let OS assign an available port (avoids port reuse issues)
@@ -667,7 +716,9 @@ pub async fn start_oauth_login(
         tiny_http::ListenAddr::IP(addr) => addr.port(),
         #[cfg(unix)]
         tiny_http::ListenAddr::Unix(_) => {
-            return Err("OAuth callback server bound to Unix socket instead of TCP port".to_string())
+            return Err(
+                "OAuth callback server bound to Unix socket instead of TCP port".to_string(),
+            )
         }
     };
 
@@ -704,7 +755,8 @@ pub async fn start_oauth_login(
         log::info!("Waiting for OAuth callback...");
 
         // Wait for callback (with timeout)
-        for _ in 0..120 { // 2 minute timeout
+        for _ in 0..120 {
+            // 2 minute timeout
             if let Ok(Some(request)) = server.recv_timeout(std::time::Duration::from_secs(1)) {
                 let url_str = format!("http://127.0.0.1{}", request.url());
                 log::debug!("Received OAuth callback: {}", url_str);
@@ -726,8 +778,16 @@ pub async fn start_oauth_login(
                 };
 
                 let response = Response::from_string(html_response)
-                    .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap())
-                    .with_header(tiny_http::Header::from_bytes(&b"Connection"[..], &b"close"[..]).unwrap());
+                    .with_header(
+                        tiny_http::Header::from_bytes(
+                            &b"Content-Type"[..],
+                            &b"text/html; charset=utf-8"[..],
+                        )
+                        .unwrap(),
+                    )
+                    .with_header(
+                        tiny_http::Header::from_bytes(&b"Connection"[..], &b"close"[..]).unwrap(),
+                    );
 
                 let _ = request.respond(response);
 
@@ -740,18 +800,29 @@ pub async fn start_oauth_login(
     });
 
     // Wait for server thread to complete
-    server_handle.join()
+    server_handle
+        .join()
         .map_err(|_| "OAuth callback server thread panicked".to_string())?;
 
     // Get result
-    let callback_data = result.lock().unwrap().take()
+    let callback_data = result
+        .lock()
+        .unwrap()
+        .take()
         .ok_or_else(|| "OAuth callback timeout - no response received".to_string())?;
 
     // Handle the callback data - exchange authorization code for tokens
     match callback_data? {
         OAuthCallbackData::Code { code, redirect_uri } => {
             log::info!("OAuth completed with authorization code flow, exchanging code...");
-            exchange_code_for_token(&auth_server_url, &code, &redirect_uri, &code_verifier, &supabase_key).await
+            exchange_code_for_token(
+                &auth_server_url,
+                &code,
+                &redirect_uri,
+                &code_verifier,
+                &supabase_key,
+            )
+            .await
         }
     }
 }
@@ -789,7 +860,10 @@ async fn exchange_code_for_token(
             format!("Failed to create HTTP client: {}", e)
         })?;
     // grant_type goes in query string, not body!
-    let token_url = format!("{}/auth/v1/token?grant_type=pkce", auth_server_url.trim_end_matches('/'));
+    let token_url = format!(
+        "{}/auth/v1/token?grant_type=pkce",
+        auth_server_url.trim_end_matches('/')
+    );
 
     // Body should be JSON with auth_code and code_verifier
     let body = serde_json::json!({
@@ -833,7 +907,11 @@ async fn exchange_code_for_token(
             .text()
             .await
             .unwrap_or_else(|_| "Unknown error".to_string());
-        log::error!("Token exchange failed with status {}: {}", status, error_text);
+        log::error!(
+            "Token exchange failed with status {}: {}",
+            status,
+            error_text
+        );
         return Err(format!("Token exchange failed: {}", error_text));
     }
 
@@ -856,9 +934,7 @@ async fn exchange_code_for_token(
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
-    let expires_in = token_response
-        .get("expires_in")
-        .and_then(|v| v.as_i64());
+    let expires_in = token_response.get("expires_in").and_then(|v| v.as_i64());
 
     Ok(OAuthCallbackResult {
         access_token,
@@ -869,8 +945,8 @@ async fn exchange_code_for_token(
 
 fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
     // Parse URL to extract authorization code or error
-    let parsed_url = url::Url::parse(url_str)
-        .map_err(|e| format!("Failed to parse callback URL: {}", e))?;
+    let parsed_url =
+        url::Url::parse(url_str).map_err(|e| format!("Failed to parse callback URL: {}", e))?;
 
     // Check for OAuth error first (error responses take precedence)
     let mut error = None;
@@ -889,7 +965,10 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
     // If OAuth provider returned an error, fail immediately
     if let Some(error_code) = error {
         let error_msg = if let Some(description) = error_description {
-            format!("OAuth authentication failed: {} - {}", error_code, description)
+            format!(
+                "OAuth authentication failed: {} - {}",
+                error_code, description
+            )
         } else {
             format!("OAuth authentication failed: {}", error_code)
         };
@@ -903,14 +982,16 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
 
         // Reconstruct the redirect_uri (without query params) for token exchange
         let redirect_uri = if let Some(port) = parsed_url.port() {
-            format!("{}://{}:{}{}",
+            format!(
+                "{}://{}:{}{}",
                 parsed_url.scheme(),
                 parsed_url.host_str().unwrap_or("127.0.0.1"),
                 port,
                 parsed_url.path()
             )
         } else {
-            format!("{}://{}{}",
+            format!(
+                "{}://{}{}",
                 parsed_url.scheme(),
                 parsed_url.host_str().unwrap_or("127.0.0.1"),
                 parsed_url.path()

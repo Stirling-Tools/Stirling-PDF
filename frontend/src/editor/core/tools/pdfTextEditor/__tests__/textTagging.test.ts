@@ -78,7 +78,7 @@ function shownTag(doc: EditorDocument, fragment: string) {
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
-  const { blob } = await exportToBlob(doc, "sample.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 

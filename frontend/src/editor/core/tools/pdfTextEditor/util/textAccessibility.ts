@@ -200,6 +200,16 @@ export interface InnerTag extends InnerOptions {
   language: TextLanguage;
   /** False when the save cannot write the page's tags. */
   languageEditable: boolean;
+  /** The link annotations it holds, and their description; null when it holds none. */
+  link: InnerTagLink | null;
+}
+
+export interface InnerTagLink {
+  annotations: number[];
+  /** The first annotation's /Contents, as the session has it. */
+  description: string | null;
+  /** False when the save cannot write the page's tags. */
+  editable: boolean;
 }
 
 /** The run's inner tags in reading order, as the session has them. */
@@ -219,7 +229,16 @@ export function innerTags(
       const options = structure.innerOptions(element.key);
       const text = run.text.slice(start, end);
       const language = doc.innerLanguage(run.pageIndex, run.mcid!, element.key);
-      const languageEditable = structure.readOnly === null;
+      const editable = structure.readOnly === null;
+      const annotations = structure.linksHeldBy(element.key);
+      const link =
+        annotations.length > 0
+          ? {
+              annotations,
+              description: structure.linkContents(annotations[0]),
+              editable,
+            }
+          : null;
       return [
         {
           key: element.key,
@@ -228,7 +247,8 @@ export function innerTags(
           end,
           role,
           language,
-          languageEditable,
+          languageEditable: editable,
+          link,
           ...options,
         },
       ];
