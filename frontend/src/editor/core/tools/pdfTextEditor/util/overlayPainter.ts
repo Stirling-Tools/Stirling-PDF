@@ -300,7 +300,8 @@ function plainOffset(
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
-  const chars = readOverlayText(host).length;
+  let chars = readOverlayText(host).length;
+  if (endsOnBreak(host) && !atEnd(el, node, offset)) chars += 1;
   // A caret parked on the container BETWEEN two line children sits at the
   // start of the next line - one past the end of the truncated text. Past the
   // last line child it belongs at that line's end, not on a fresh one.
@@ -317,6 +318,21 @@ function plainOffset(
     }
   }
   return chars;
+}
+
+// readOverlayText drops a final <br> as the browser's filler, which it only is
+// when nothing follows it in the real overlay.
+function endsOnBreak(host: HTMLElement): boolean {
+  const last = host.lastChild;
+  return last instanceof HTMLElement && last.tagName === "BR";
+}
+
+function atEnd(el: HTMLElement, node: Node, offset: number): boolean {
+  const rest = document.createRange();
+  rest.setStart(node, offset);
+  rest.setEnd(el, el.childNodes.length);
+  const after = rest.cloneContents();
+  return (after.textContent ?? "") === "" && after.querySelector("br") === null;
 }
 
 /**
@@ -450,6 +466,8 @@ function domPosition(
       }
       before += length + 1;
     }
+  } else {
+    return plainTextPosition(el, target);
   }
 
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
@@ -464,6 +482,35 @@ function domPosition(
     node = walker.nextNode();
   }
   return { node: scope, offset: 0 };
+}
+
+// Plain text holds its line breaks as <br>, each one character of the model text.
+function plainTextPosition(
+  el: HTMLElement,
+  target: number,
+): { node: Node; offset: number } {
+  const walker = document.createTreeWalker(
+    el,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+  );
+  let seen = 0;
+  let last: { node: Node; offset: number } = { node: el, offset: 0 };
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const length = (node.nodeValue ?? "").length;
+      if (seen + length >= target) return { node, offset: target - seen };
+      seen += length;
+      last = { node, offset: length };
+      continue;
+    }
+    if (!(node instanceof HTMLElement) || node.tagName !== "BR") continue;
+    const parent = node.parentNode!;
+    const index = Array.prototype.indexOf.call(parent.childNodes, node);
+    if (seen === target) return { node: parent, offset: index };
+    seen += 1;
+    last = { node: parent, offset: index + 1 };
+  }
+  return last;
 }
 
 function setCollapsed(selection: Selection, node: Node, offset: number): void {
