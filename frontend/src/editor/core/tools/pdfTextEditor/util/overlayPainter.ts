@@ -191,6 +191,26 @@ function isLineBreak(node: Node): node is HTMLElement {
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
+  return flowLines(element);
+}
+
+// Merging two lines with Backspace leaves the lower one as an inline span on the upper one's line, not a line of its own.
+const BLOCK_TAGS =
+  /^(DIV|P|LI|UL|OL|H[1-6]|BLOCKQUOTE|PRE|TABLE|TR|SECTION|ARTICLE)$/;
+
+function isLineElement(node: HTMLElement): boolean {
+  return node.hasAttribute(LINE_ATTR) || BLOCK_TAGS.test(node.tagName);
+}
+
+function endsWithBreak(node: Node): boolean {
+  let last: Node | null = node.lastChild;
+  while (last && last.nodeType !== Node.TEXT_NODE && last.lastChild)
+    last = last.lastChild;
+  return last instanceof HTMLElement && last.tagName === "BR";
+}
+
+/** The text under `element`, split at every <br>. */
+function flowLines(element: HTMLElement): string[] {
   const lines: string[] = [""];
   const walk = (node: Node): void => {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -231,6 +251,13 @@ export function readOverlayText(element: HTMLElement): string {
     if (isLineBreak(node)) {
       lines.push("");
       lastWasTrailingBr = true;
+      continue;
+    }
+    if (!isLineElement(node)) {
+      const [first, ...rest] = flowLines(node);
+      lines[lines.length - 1] += first;
+      lines.push(...rest);
+      lastWasTrailingBr = rest.length > 0 && endsWithBreak(node);
       continue;
     }
     // Block children carry whole lines, so the seed is not one of them.
@@ -466,6 +493,8 @@ function domPosition(el: HTMLElement, offset: number): DomPoint {
     } else if (isLineBreak(node)) {
       if (node === lastContent) break;
       hit = passLineBreak(cursor, node);
+    } else if (node instanceof HTMLElement && !isLineElement(node)) {
+      hit = passInline(cursor, node);
     } else if (node instanceof HTMLElement) {
       hit = passBlock(cursor, node, sawBlock || cursor.seen > 0);
       sawBlock = true;
