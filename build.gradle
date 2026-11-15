@@ -43,7 +43,7 @@ ext {
     jsoupVersion = "1.23.2"
     jackson2Version = "2.22.3"
     bucket4jVersion = "8.20.0"
-    archunitVersion = "1.5.0"
+    archunitVersion = "1.5.1"
     batikVersion = "1.19"
     jpdfiumVersion = "1.3.0"
     jwtVersion = "0.13.0"
