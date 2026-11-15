@@ -575,31 +575,6 @@ const EmbedPdfViewerContent = ({
   const pageTool = previewFile ? null : registeredPageTool;
   const pageToolActive = pageTool != null;
 
-  // A page tool draws in the page's own orientation, so a view rotation would
-  // leave its layers off the page content. The rotation comes back when the
-  // tool closes.
-  const heldRotationRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!pageToolActive) return;
-    heldRotationRef.current ??= getRotationState().rotation;
-    const straighten = (rotation: number) => {
-      if (rotation !== 0) rotationActions.setRotation(0);
-    };
-    straighten(getRotationState().rotation);
-    return registerImmediateRotationUpdate(straighten);
-  }, [
-    pageToolActive,
-    rotationActions,
-    getRotationState,
-    registerImmediateRotationUpdate,
-  ]);
-  useEffect(() => {
-    if (pageToolActive) return;
-    const held = heldRotationRef.current;
-    heldRotationRef.current = null;
-    if (held) rotationActions.setRotation(held);
-  }, [pageToolActive, rotationActions]);
-
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
@@ -737,6 +712,39 @@ const EmbedPdfViewerContent = ({
     }
     return currentFileId;
   }, [previewFile, currentFile, currentFileId, selectors]);
+
+  // A page tool draws in the page's own orientation, so a view rotation would
+  // leave its layers off the page content. The rotation comes back when the
+  // tool closes, if the same document is still open.
+  const heldRotationRef = useRef<{ rootId: string | null; rotation: number }>(
+    null,
+  );
+  useEffect(() => {
+    if (!pageToolActive) return;
+    heldRotationRef.current ??= {
+      rootId: currentFileRootId ?? null,
+      rotation: getRotationState().rotation,
+    };
+    const straighten = (rotation: number) => {
+      if (rotation !== 0) rotationActions.setRotation(0);
+    };
+    straighten(getRotationState().rotation);
+    return registerImmediateRotationUpdate(straighten);
+  }, [
+    pageToolActive,
+    currentFileRootId,
+    rotationActions,
+    getRotationState,
+    registerImmediateRotationUpdate,
+  ]);
+  useEffect(() => {
+    if (pageToolActive) return;
+    const held = heldRotationRef.current;
+    heldRotationRef.current = null;
+    if (held?.rotation && held.rootId === (currentFileRootId ?? null)) {
+      rotationActions.setRotation(held.rotation);
+    }
+  }, [pageToolActive, currentFileRootId, rotationActions]);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {

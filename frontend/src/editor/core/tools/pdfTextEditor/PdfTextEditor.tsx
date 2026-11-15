@@ -132,11 +132,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   // document pins the viewer back.
   const handleFileChosen = useCallback(
     (name: string, fileId?: FileId) => {
+      // The old document goes first: if the new file fails to open, a save
+      // must not write the old one over it.
+      store.clearDocument();
       setOpenedFileName(name);
       setSourceFile(fileId ?? null);
       pinWorkbench();
     },
-    [pinWorkbench, setOpenedFileName, setSourceFile],
+    [store, pinWorkbench, setOpenedFileName, setSourceFile],
   );
   const {
     adopt: adoptFile,
@@ -593,7 +596,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEffect(() => {
     setEditorSession({
       fileName: openedFileName,
-      fileId: sourceFileId,
       save: handleSave,
       download: handleDownload,
       pickImage: openImagePicker,
@@ -604,7 +606,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, [
     scrollActions,
     openedFileName,
-    sourceFileId,
     handleSave,
     handleDownload,
     openImagePicker,
