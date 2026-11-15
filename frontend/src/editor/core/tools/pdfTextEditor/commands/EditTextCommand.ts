@@ -1283,10 +1283,11 @@ export class EditTextCommand implements Command {
     const topBaseline = slots[0]?.baselineY ?? run.matrix.f;
     const leftX = slots[0]?.matrixE ?? run.matrix.e;
     const fallbackFamily = fallbackFamilyFor(this.prevFontId ?? run.fontId);
-    // Re-emitted lines keep the run's embedded face. Joining two lines with
-    // Delete/Backspace only REMOVES characters, so every glyph the joined line
-    // needs already rendered in this font; emitting at base-14 turned the whole
-    // line a different typeface. Read before the loop starts mutating.
+    // Re-emitted lines keep the run's embedded face for the words it draws:
+    // emitting at base-14 turned the whole line a different typeface. Letters
+    // typed earlier may have fallen back because the subset lacks them, and
+    // the subset still maps their codes with no outline, so those words keep
+    // the fallback. Read before the loop starts mutating.
     const memberPtrs = collectMemberPtrs(run);
     const memberTexts =
       run.mergedFromTexts.length === memberPtrs.length
@@ -1384,6 +1385,7 @@ export class EditTextCommand implements Command {
           tags: sliceTags(nextTags, cursor, cursor + text.length),
           originalFontPtr: reuseFontPtr,
           originalFontSubset: run.fontSubset,
+          originalFontForCoveredWords: reuseFontPtr !== 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
