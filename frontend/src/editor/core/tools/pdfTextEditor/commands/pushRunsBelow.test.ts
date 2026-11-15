@@ -70,6 +70,14 @@ describe("runsPushedBelow", () => {
     ).toEqual(["footnote"]);
   });
 
+  it("moves nothing when a wide line would land on the next column's text", () => {
+    const wide = run("wide", 50, 484, 600);
+    const nextColumn = run("next column", 420, 460, 200);
+    expect(
+      runsPushedBelow(page([edited(), wide, nextColumn]), edited(), 500).runIds,
+    ).toEqual([]);
+  });
+
   it("moves nothing when a table cell is in the way", () => {
     const next = run("next", 50, 484, 300);
     expect(

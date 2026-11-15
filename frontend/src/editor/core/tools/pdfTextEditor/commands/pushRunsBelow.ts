@@ -1,5 +1,6 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
@@ -68,7 +69,38 @@ export function runsPushedBelow(
     pushed.push(run.id);
     limit = Math.min(limit, run.bounds.y - drop);
   }
+  if (landsOnStillText(page, edited, pushed, drop)) return none;
   return { runIds: pushed, dy: -drop };
+}
+
+function boxesMeet(a: PageRect, b: PageRect): boolean {
+  return (
+    a.x < b.x + b.width - SLACK_PT &&
+    a.x + a.width > b.x + SLACK_PT &&
+    a.y < b.y + b.height - SLACK_PT &&
+    a.y + a.height > b.y + SLACK_PT
+  );
+}
+
+// A moved line wider than the edited text can reach text in the next column, which stays put.
+function landsOnStillText(
+  page: Page,
+  edited: TextRun,
+  pushed: string[],
+  drop: number,
+): boolean {
+  const moving = new Set(pushed);
+  const still = page.runs.filter((r) => r !== edited && !moving.has(r.id));
+  return page.runs
+    .filter((r) => moving.has(r.id))
+    .some((run) => {
+      const lands = { ...run.bounds, y: run.bounds.y - drop };
+      return still.some(
+        (other) =>
+          boxesMeet(lands, other.bounds) &&
+          !boxesMeet(run.bounds, other.bounds),
+      );
+    });
 }
 
 // How far each edited run has pushed the runs below it, net of undo: only that much is pulled back when its lines go.
