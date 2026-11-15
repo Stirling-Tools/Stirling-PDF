@@ -39,7 +39,7 @@ export function visiblePageNumber(): number {
 }
 
 /** All real page surfaces in DOM order, skipping placeholders/error tiles. */
-export function pageElements(): HTMLElement[] {
+function pageElements(): HTMLElement[] {
   return Array.from(
     document.querySelectorAll<HTMLElement>('[data-testid^="pdf-editor-page-"]'),
   ).filter((el) => /^pdf-editor-page-\d+$/.test(el.dataset.testid ?? ""));
