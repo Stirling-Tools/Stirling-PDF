@@ -80,6 +80,8 @@ import {
   uniformTags,
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import { runsPushedBelow } from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
 
 interface RevertLine {
   text: string;
@@ -252,21 +254,63 @@ export class EditTextCommand implements Command {
     prev: RunModelSnapshot;
   } | null = null;
 
+  private readonly pushesBelow: boolean;
+  // The runs below that this edit's added lines moved down, chosen on the first apply so a redo moves the same ones.
+  private pushes: MoveTextRunCommand[] | null = null;
+
   constructor(opts: {
     pageIndex: number;
     runId: string;
     nextText: string;
     nextTags?: TextTags | null;
     nextFont?: { ptr: number; id: string } | null;
+    pushesBelow?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextText = opts.nextText;
     this.nextTagsOverride = opts.nextTags ?? null;
     this.nextFont = opts.nextFont ?? null;
+    this.pushesBelow = opts.pushesBelow ?? true;
   }
 
   apply(doc: EditorDocument): void {
+    const page = doc.page(this.pageIndex);
+    const run = page.findRun(this.runId);
+    const oldBottom = run?.bounds.y ?? 0;
+    const linesBefore = run ? lineCount(run.text) : 0;
+    this.applyEdit(doc);
+    if (this.pushes === null) {
+      const grew =
+        this.pushesBelow &&
+        !this.scanEdited &&
+        run !== undefined &&
+        lineCount(this.nextText) > linesBefore;
+      const { runIds, dy } = grew
+        ? runsPushedBelow(page, run, oldBottom)
+        : { runIds: [], dy: 0 };
+      this.pushes = runIds.map(
+        (runId) =>
+          new MoveTextRunCommand({
+            pageIndex: this.pageIndex,
+            runId,
+            dx: 0,
+            dy,
+          }),
+      );
+    }
+    this.redoPushes(doc);
+  }
+
+  private redoPushes(doc: EditorDocument): void {
+    for (const push of this.pushes ?? []) push.apply(doc);
+  }
+
+  private undoPushes(doc: EditorDocument): void {
+    for (const push of [...(this.pushes ?? [])].reverse()) push.revert(doc);
+  }
+
+  private applyEdit(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
@@ -888,6 +932,11 @@ export class EditTextCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    this.undoPushes(doc);
+    this.revertEdit(doc);
+  }
+
+  private revertEdit(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || this.prevText === null) return;
@@ -1717,18 +1766,23 @@ export class EditTextCommand implements Command {
       nextText: phase === "revert" ? first : this.nextText,
       nextTags: phase === "revert" ? edits[0].prevTags : null,
       nextFont: phase === "revert" ? firstFont : null,
+      pushesBelow: false,
     });
+    const reversed = [...edits].reverse();
+    if (phase === "revert") for (const edit of reversed) edit.undoPushes(doc);
     try {
       move.apply(doc);
       if (phase === "revert") edits[0].restoreLayout(doc, run);
     } catch (err) {
       try {
         move.revert(doc);
+        if (phase === "revert") for (const edit of edits) edit.redoPushes(doc);
       } catch {
         throw err;
       }
       throw new RolledBackError(err);
     }
+    if (phase === "apply") for (const edit of edits) edit.redoPushes(doc);
     return true;
   }
 
@@ -1752,6 +1806,7 @@ export class EditTextCommand implements Command {
   }
 
   repaintArea(doc: EditorDocument): PageRepaintArea | null {
+    if (this.pushes?.length) return null;
     const run = doc.page(this.pageIndex).findRun(this.runId);
     // Turned text is typed along its own slant, out of its upright box.
     if (
@@ -1825,6 +1880,10 @@ export class EditTextCommand implements Command {
     if (previous.resultText !== this.prevText) return false;
     return previous.isLineBreakOnlyInsertion();
   }
+}
+
+function lineCount(text: string): number {
+  return text.split(/\r?\n/).length;
 }
 
 // The text `next` adds to `prev` when the change is a pure insertion at a
