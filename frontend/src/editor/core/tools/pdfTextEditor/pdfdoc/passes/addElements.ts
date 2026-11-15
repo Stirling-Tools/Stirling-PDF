@@ -33,6 +33,12 @@ export interface NewElement {
    * content when null or unowned (see StructureNodes.placementSibling).
    */
   after: number | null;
+  /**
+   * True when text was cut out of it, which cutElements writes once it is in
+   * the tree. The cut may have taken all of it, so its MCID need not be on
+   * the page.
+   */
+  cutFrom?: boolean;
 }
 
 interface Placement {
@@ -73,7 +79,8 @@ export async function addElements(
     }
     if (!sites.has(pageNum)) sites.set(pageNum, pageSites(pdf, pageNum));
     const read = await sites.get(pageNum)!;
-    if (!read?.sites.some((site) => site.mcid === element.mcid)) {
+    const carried = read?.sites.some((site) => site.mcid === element.mcid);
+    if (!carried && !element.cutFrom) {
       failed.set(index, "the page's content does not carry its MCID");
       continue;
     }

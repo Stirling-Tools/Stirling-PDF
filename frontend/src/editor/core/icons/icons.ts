@@ -383,6 +383,7 @@ import SinglePage from "@editor/icons/svg/stirling/single-page.svg?react";
 import StirlingMark from "@editor/icons/svg/stirling/stirling-mark.svg?react";
 import StirlingMarkThinking from "@editor/icons/svg/stirling/stirling-mark-thinking.svg?react";
 import StirlingTile from "@editor/icons/svg/stirling/stirling-tile.svg?react";
+import UniversalAccess from "@editor/icons/svg/stirling/universal-access.svg?react";
 import UsersPlus from "@editor/icons/svg/stirling/users-plus.svg?react";
 import Watermark from "@editor/icons/svg/stirling/watermark.svg?react";
 
@@ -816,6 +817,7 @@ export const ICONS = {
   "stirling-mark": { Component: StirlingMark, kind: "brand" },
   "stirling-mark-thinking": { Component: StirlingMarkThinking, kind: "brand" },
   "stirling-tile": { Component: StirlingTile, kind: "brand" },
+  "universal-access": { Component: UniversalAccess, kind: "stirling" },
   "users-plus": { Component: UsersPlus, kind: "stirling" },
   watermark: { Component: Watermark, kind: "stirling" },
   apple: { Component: Apple, kind: "brand" },
