@@ -4,7 +4,7 @@ import { Alert, Group, Modal, Stack, Text } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
 
-interface ClearLibraryDialogProps {
+interface ClearRecentsDialogProps {
   opened: boolean;
   /** Files the clear will remove. */
   clearCount: number;
@@ -15,13 +15,13 @@ interface ClearLibraryDialogProps {
   onConfirm: (skipOpen: boolean) => Promise<void>;
 }
 
-export function ClearLibraryDialog({
+export function ClearRecentsDialog({
   opened,
   clearCount,
   openCount,
   onClose,
   onConfirm,
-}: ClearLibraryDialogProps) {
+}: ClearRecentsDialogProps) {
   const { t } = useTranslation();
   // Which choice is running, so only that button spins.
   const [submitting, setSubmitting] = useState<"all" | "skipOpen" | null>(null);
@@ -104,7 +104,7 @@ export function ClearLibraryDialog({
               loading={submitting === "skipOpen"}
               disabled={submitting === "all"}
               onClick={() => void runClear(true)}
-              data-testid="file-sidebar-clear-library-skip-open"
+              data-testid="file-sidebar-clear-recents-skip-open"
             >
               {t("fileSidebar.clearRecents.skipOpen", "Skip open files")}
             </Button>
@@ -114,7 +114,7 @@ export function ClearLibraryDialog({
             loading={submitting === "all"}
             disabled={submitting === "skipOpen"}
             onClick={() => void runClear(false)}
-            data-testid="file-sidebar-clear-library-confirm"
+            data-testid="file-sidebar-clear-recents-confirm"
           >
             {t("fileSidebar.clearRecents.confirm", "Clear recents")}
           </Button>

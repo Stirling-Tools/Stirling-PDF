@@ -16,7 +16,7 @@ async function openClearDialog(page: Page): Promise<void> {
   await page
     .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
     .hover();
-  await page.getByTestId("file-sidebar-clear-library").click();
+  await page.getByTestId("file-sidebar-clear-recents").click();
   await expect(dialog(page)).toBeVisible();
 }
 
@@ -30,7 +30,7 @@ async function openInViewer(page: Page): Promise<void> {
 }
 
 async function confirmClear(page: Page): Promise<void> {
-  await page.getByTestId("file-sidebar-clear-library-confirm").click();
+  await page.getByTestId("file-sidebar-clear-recents-confirm").click();
 }
 
 test("a failed storage delete shows the error and clears nothing", async ({

@@ -47,7 +47,7 @@ import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServe
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
-import { ClearLibraryDialog } from "@editor/components/shared/ClearLibraryDialog";
+import { ClearRecentsDialog } from "@editor/components/shared/ClearRecentsDialog";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -201,7 +201,7 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
-function ClearLibraryButton({
+function ClearRecentsButton({
   onClick,
   className,
 }: {
@@ -216,7 +216,7 @@ function ClearLibraryButton({
       onClick={onClick}
       title={t("fileSidebar.clearRecents.button", "Clear recents")}
       aria-label={t("fileSidebar.clearRecents.button", "Clear recents")}
-      data-testid="file-sidebar-clear-library"
+      data-testid="file-sidebar-clear-recents"
     >
       <Icon name="trash" size={"1rem"} />
     </ActionIcon>
@@ -231,7 +231,7 @@ interface LibraryHeaderProps {
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
   /** Set only for a flat list; a grouped list carries it on its Recent group. */
-  onClearLibrary?: () => void;
+  onClearRecents?: () => void;
 }
 
 function LibraryHeader({
@@ -241,7 +241,7 @@ function LibraryHeader({
   onGoogleDrive,
   onAddFiles,
   onOpenFilesPage,
-  onClearLibrary,
+  onClearRecents,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -276,7 +276,7 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
-      {onClearLibrary && <ClearLibraryButton onClick={onClearLibrary} />}
+      {onClearRecents && <ClearRecentsButton onClick={onClearRecents} />}
       {isGoogleDriveEnabled && (
         <ActionIcon
           variant="quiet"
@@ -394,7 +394,7 @@ interface GroupedFileListProps {
   total: number;
   onViewAll: () => void;
   /** Absent when nothing is clearable, which hides the button. */
-  onClearLibrary?: () => void;
+  onClearRecents?: () => void;
 }
 
 function GroupedFileList({
@@ -404,7 +404,7 @@ function GroupedFileList({
   renderFileRow,
   total,
   onViewAll,
-  onClearLibrary,
+  onClearRecents,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -419,9 +419,9 @@ function GroupedFileList({
             onToggle={() => onGroupOpenChange(group.id, !isOpen)}
             renderFileRow={renderFileRow}
             action={
-              group.id === "recent" && onClearLibrary ? (
-                <ClearLibraryButton
-                  onClick={onClearLibrary}
+              group.id === "recent" && onClearRecents ? (
+                <ClearRecentsButton
+                  onClick={onClearRecents}
                   className="file-sidebar-group-action"
                 />
               ) : undefined
@@ -525,7 +525,7 @@ function FileLibrarySection({
         onGoogleDrive={onGoogleDrive}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
-        onClearLibrary={list.groups ? undefined : list.onClearLibrary}
+        onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />
@@ -895,7 +895,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         (clearTargets ?? []).filter((s) => open.has(s.id)).map((s) => s.id),
       );
     }, [clearTargets, state.files.ids]);
-    const handleConfirmClearLibrary = useCallback(
+    const handleConfirmClearRecents = useCallback(
       async (skipOpen: boolean) => {
         const ids = (clearTargets ?? [])
           .map((s) => s.id)
@@ -906,8 +906,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // has to see it before any file is closed.
         await indexedDB.deleteMultiple(doomed);
         await fileActions.removeFiles(doomed, true);
-        // The dialog's warning covers unsaved changes on a cleared file, so none
-        // are left to prompt about on the next navigation.
+        // A cleared file's unsaved changes went with it; left set, the flag would
+        // prompt about them on the next navigation.
         if (activeFileId && doomed.includes(activeFileId as FileId)) {
           navActions.setHasUnsavedChanges(false);
         }
@@ -1309,7 +1309,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   onGoogleDrive={handleGoogleDriveClick}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
-                  onClearLibrary={
+                  onClearRecents={
                     clearableStubs.length > 0
                       ? () => setClearTargets(clearableStubs)
                       : undefined
@@ -1348,12 +1348,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onConfirm={handleConfirmSidebarDelete}
         />
 
-        <ClearLibraryDialog
+        <ClearRecentsDialog
           opened={clearTargets !== null}
           clearCount={clearTargets?.length ?? 0}
           openCount={openClearTargetIds.size}
           onClose={() => setClearTargets(null)}
-          onConfirm={handleConfirmClearLibrary}
+          onConfirm={handleConfirmClearRecents}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

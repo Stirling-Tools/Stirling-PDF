@@ -1566,17 +1566,17 @@ test.describe("Files page", () => {
       await page
         .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
         .hover();
-      await page.getByTestId("file-sidebar-clear-library").click();
+      await page.getByTestId("file-sidebar-clear-recents").click();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toContainText("Clear 5 files from recents?");
       await expect(dialog).toContainText("This can't be undone.");
       await expect(dialog).toContainText("1 of them is open in the workbench.");
-      await page.getByTestId("file-sidebar-clear-library-confirm").click();
+      await page.getByTestId("file-sidebar-clear-recents-confirm").click();
 
       await expect(rows).toHaveCount(1);
       await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
       // Only kept files are left, so there is nothing more to clear.
-      await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
+      await expect(page.getByTestId("file-sidebar-clear-recents")).toHaveCount(
         0,
       );
       expect(serverDeletes).toEqual([]);
@@ -1601,11 +1601,11 @@ test.describe("Files page", () => {
       await page
         .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
         .hover();
-      await page.getByTestId("file-sidebar-clear-library").click();
+      await page.getByTestId("file-sidebar-clear-recents").click();
       await expect(page.getByRole("dialog")).toContainText(
         "1 of them is open in the workbench.",
       );
-      await page.getByTestId("file-sidebar-clear-library-skip-open").click();
+      await page.getByTestId("file-sidebar-clear-recents-skip-open").click();
 
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await expect(rows).toHaveCount(1);
