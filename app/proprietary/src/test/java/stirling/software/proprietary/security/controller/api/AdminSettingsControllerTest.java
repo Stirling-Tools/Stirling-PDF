@@ -31,6 +31,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.security.service.IssuerDiscoveryProbe;
 import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.databind.ObjectMapper;
@@ -44,6 +45,7 @@ class AdminSettingsControllerTest {
     private ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
     private AiEngineConfigSync aiEngineConfigSync;
+    private IssuerDiscoveryProbe issuerDiscoveryProbe;
 
     private AdminSettingsController controller;
 
@@ -53,12 +55,14 @@ class AdminSettingsControllerTest {
         objectMapper = JsonMapper.builder().build();
         applicationContext = org.mockito.Mockito.mock(ApplicationContext.class);
         aiEngineConfigSync = org.mockito.Mockito.mock(AiEngineConfigSync.class);
+        issuerDiscoveryProbe = org.mockito.Mockito.mock(IssuerDiscoveryProbe.class);
         controller =
                 new AdminSettingsController(
                         applicationProperties,
                         objectMapper,
                         applicationContext,
-                        aiEngineConfigSync);
+                        aiEngineConfigSync,
+                        issuerDiscoveryProbe);
         clearPendingChanges();
     }
 
@@ -727,6 +731,59 @@ class AdminSettingsControllerTest {
                 assertThat(response.getBody().get("error").toString())
                         .contains("Restart helper not found");
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /setup-complete")
+    class CompleteSetup {
+
+        @Test
+        @DisplayName("persists the flag and applies it without a restart")
+        void marksComplete() {
+            applicationProperties.getSystem().setSetupCompleted(false);
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response = controller.completeSetup();
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).containsEntry("persisted", true);
+                assertThat(applicationProperties.getSystem().isSetupCompleted()).isTrue();
+                mocked.verify(() -> GeneralUtils.saveKeyToSettings("system.setupCompleted", true));
+            }
+        }
+
+        @Test
+        @DisplayName("applies the flag in memory even when the settings file cannot be written")
+        void saveFails() {
+            applicationProperties.getSystem().setSetupCompleted(false);
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                mocked.when(() -> GeneralUtils.saveKeyToSettings("system.setupCompleted", true))
+                        .thenThrow(new IOException("read-only file system"));
+
+                ResponseEntity<Map<String, Object>> response = controller.completeSetup();
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).containsEntry("persisted", false);
+                assertThat(applicationProperties.getSystem().isSetupCompleted()).isTrue();
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /check-issuer")
+    class CheckIssuer {
+
+        @Test
+        @DisplayName("reports whether the issuer answers discovery")
+        void reportsReachability() {
+            org.mockito.Mockito.when(
+                            issuerDiscoveryProbe.answersDiscovery("https://id.example.com"))
+                    .thenReturn(true);
+
+            ResponseEntity<Map<String, Object>> response =
+                    controller.checkIssuer(Map.of("issuer", "https://id.example.com"));
+
+            assertThat(response.getBody()).containsEntry("reachable", true);
         }
     }
 }

@@ -1237,7 +1237,7 @@ class PdfToXmlParams(ApiModel):
 
 class CustomMode(StrEnum):
     """
-    Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
+    Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
     """
 
     custom = "CUSTOM"
@@ -1246,6 +1246,7 @@ class CustomMode(StrEnum):
     booklet_sort = "BOOKLET_SORT"
     side_stitch_booklet_sort = "SIDE_STITCH_BOOKLET_SORT"
     odd_even_split = "ODD_EVEN_SPLIT"
+    odd_even_merge = "ODD_EVEN_MERGE"
     remove_first = "REMOVE_FIRST"
     remove_last = "REMOVE_LAST"
     remove_first_and_last = "REMOVE_FIRST_AND_LAST"
@@ -1259,7 +1260,7 @@ class RearrangePagesParams(ApiModel):
 
     custom_mode: CustomMode | None = Field(
         None,
-        description="Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).",
+        description="Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).",
     )
     page_numbers: str = Field(
         "all",

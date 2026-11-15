@@ -379,8 +379,7 @@ public class MergeController {
         }
 
         String firstFilename = files.length > 0 ? files[0].getOriginalFilename() : null;
-        String mergedFileName =
-                GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
+        String mergedFileName = GeneralUtils.generateFilename(firstFilename, "_merged.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
