@@ -45,6 +45,8 @@ const MIN_FONT_SPACE_EM = 0.05;
 const MAX_FONT_SPACE_EM = 1;
 // Ink bounds add side bearings to a space, so one space in a wide font can read as up to this many of its advance.
 const MAX_JOIN_SPACES = 1.5;
+// Runs whose space widths differ by more than this share are in different fonts, and no one width counts every gap.
+const SAME_SPACE_TOLERANCE = 0.15;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
   return gapRatio(
@@ -74,13 +76,16 @@ function fontSpaceEm(
   spaceAdvance: SpaceAdvance,
 ): number | null {
   let narrowest: number | null = null;
+  let widest: number | null = null;
   for (const member of members) {
     const em = spaceAdvance(member);
     if (em === null || em < MIN_FONT_SPACE_EM || em >= MAX_FONT_SPACE_EM)
       continue;
     if (narrowest === null || em < narrowest) narrowest = em;
+    if (widest === null || em > widest) widest = em;
   }
-  return narrowest;
+  if (narrowest === null || widest === null) return null;
+  return widest - narrowest > SAME_SPACE_TOLERANCE * widest ? null : narrowest;
 }
 
 function minWordGapRatio(spaceEm: number | null): number {
@@ -104,10 +109,7 @@ function lineSpaceUnitRatio(
   // Two unequal gaps cannot tell one space from several: the narrower may itself be a double space.
   if (wordGaps.length === 2) {
     const em = fontSpaceEm(members, spaceAdvance);
-    if (em !== null) {
-      const fontUnit = clampSpaceUnit(em);
-      if (wordGaps[1] - wordGaps[0] >= fontUnit) return fontUnit;
-    }
+    if (em !== null && wordGaps[1] - wordGaps[0] >= em) return em;
   }
   return clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]);
 }

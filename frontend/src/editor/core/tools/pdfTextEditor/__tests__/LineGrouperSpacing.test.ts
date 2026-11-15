@@ -293,6 +293,37 @@ describe("LineGrouper inter-run space synthesis", () => {
     expect(text).toBe("The quick brown");
   });
 
+  it("counts two and three spaces at exact multiples of a narrow font space", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "One", width: 18, gapAfter: 5.56 },
+          { text: "two", width: 17, gapAfter: 8.34 },
+          { text: "three", width: 24 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("One  two   three");
+  });
+
+  it("keeps the gap-based count when the runs' fonts disagree on the space width", () => {
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Alpha", width: 26, gapAfter: 6 },
+          { text: "beta", width: 20, gapAfter: 12 },
+          { text: "Gamma", width: 30 },
+        ],
+        10,
+      ),
+      (run) => (run.text === "Gamma" ? 0.278 : 0.6),
+    );
+    expect(text).toBe("Alpha beta  Gamma");
+  });
+
   it("keeps the gap-based count when the font reports no usable space width", () => {
     const text = joinLine(
       lineOf(
