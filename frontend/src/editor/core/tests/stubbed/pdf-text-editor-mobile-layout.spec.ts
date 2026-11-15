@@ -2,11 +2,20 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Locator, Page } from "@playwright/test";
 import fs from "fs";
+import { PDFDocument } from "@cantoo/pdf-lib";
 import path from "path";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
+);
+const SIGNED_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/signed-sample.pdf",
+);
+const MANY_PAGES_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/many-pages-sample.pdf",
 );
 
 test.use({
@@ -14,7 +23,11 @@ test.use({
   hasTouch: true,
 });
 
-async function openEditor(page: Page, fileName?: string): Promise<void> {
+async function openEditor(
+  page: Page,
+  fileName?: string,
+  file: string = SAMPLE_PDF,
+): Promise<void> {
   await page.addInitScript(() => {
     localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
   });
@@ -31,9 +44,9 @@ async function openEditor(page: Page, fileName?: string): Promise<void> {
       ? {
           name: fileName,
           mimeType: "application/pdf",
-          buffer: fs.readFileSync(SAMPLE_PDF),
+          buffer: fs.readFileSync(file),
         }
-      : SAMPLE_PDF,
+      : file,
   );
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
@@ -234,6 +247,59 @@ test.describe("PDF text editor - phone layout", () => {
     await expect(page.getByTestId("pdf-editor-discard-modal")).toHaveCount(0);
   });
 
+  test("find scrolls to a match on a page not yet mounted", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openEditor(page, undefined, MANY_PAGES_PDF);
+    await expect(page.locator('[data-page-index="7"]')).toHaveCount(0);
+
+    await page.getByTestId("pdf-editor-open-find").tap();
+    // The bar's arrival shortens the page area, and the viewer's refit for
+    // that re-anchors the scroll; typing a few frames later is what a person
+    // does.
+    await page.waitForTimeout(500);
+    await page.getByTestId("pdf-editor-find-input").fill("Page 8 line 2");
+    await expect(page.getByTestId("pdf-editor-find-count")).toContainText(
+      /1 of 1/,
+    );
+    await page.getByTestId("pdf-editor-find-input").press("Enter");
+    await expect(page.getByTestId("pdf-editor-page-7")).toBeInViewport({
+      timeout: 15_000,
+    });
+  });
+
+  test("a file the editor refuses leaves the viewer its page bar", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(120_000);
+    // An unlocked signed PDF is viewable but kept out of the editor.
+    const pdf = await PDFDocument.load(fs.readFileSync(SIGNED_PDF));
+    pdf.encrypt({ userPassword: "pw", ownerPassword: "pw" });
+    const signedProtected = testInfo.outputPath("signed-protected.pdf");
+    fs.writeFileSync(signedProtected, await pdf.save());
+
+    await page.addInitScript(() => {
+      localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
+    });
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Add Files" }).first().click();
+    await (await chooser).setFiles(signedProtected);
+    await page.getByLabel("Password to open", { exact: true }).fill("pw");
+    await page.getByRole("button", { name: "Open PDF", exact: true }).click();
+    await page.getByRole("tab", { name: "Workspace" }).tap();
+
+    await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-mobile-actionbar")).toHaveCount(
+      0,
+    );
+    await expect(page.locator(".pdf-viewer-toolbar-dock")).toBeVisible();
+  });
+
   test("closing the editor gives the viewer its own controls back", async ({
     page,
   }) => {
@@ -255,30 +321,33 @@ test.describe("PDF text editor - phone layout", () => {
 
 test.describe("PDF text editor - phone entry", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
-  test("opening the editor on a file already in the viewer fits it to width", async ({
+  test("opening the editor on a file already in the viewer keeps its zoom", async ({
     page,
   }) => {
     test.setTimeout(120_000);
-    await page.addInitScript(() => {
-      localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
-    });
-    await page.goto("/compress", { waitUntil: "domcontentloaded" });
-    const chooser = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Add Files" }).first().click();
-    await (await chooser).setFiles(SAMPLE_PDF);
+    await openEditor(page);
+    await page.getByRole("tab", { name: "Tools" }).tap();
+    await page.getByRole("button", { name: "Back to all tools" }).tap();
     await page.getByRole("tab", { name: "Workspace" }).tap();
+    await expect(page.locator(".pdf-viewer-toolbar-dock")).toBeVisible();
     const viewerPage = page.locator('[data-page-index="0"]').first();
-    await expect(viewerPage).toBeVisible({ timeout: 60_000 });
-    const viewed = (await viewerPage.boundingBox())?.width ?? 0;
+    // A zoom chosen in the viewer carries into editing.
+    await page
+      .locator(".pdf-viewer-toolbar-dock")
+      .getByRole("button", { name: "More" })
+      .tap();
+    await page.getByRole("menuitem", { name: /Zoom In/i }).tap();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    const zoomed = (await viewerPage.boundingBox())?.width ?? 0;
 
     await page.getByTestId("viewer-edit-text").first().tap();
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 60_000,
-    });
-    await expect.poll(() => fillsWidth(page)).toBe(true);
+    const editing = page.getByTestId("pdf-editor-page-0");
+    await expect(editing).toBeVisible({ timeout: 60_000 });
+    await page.waitForTimeout(500);
     expect(
-      (await page.getByTestId("pdf-editor-page-0").boundingBox())?.width,
-    ).toBeGreaterThanOrEqual(viewed - 1);
+      Math.abs(((await editing.boundingBox())?.width ?? 0) - zoomed),
+    ).toBeLessThanOrEqual(2);
   });
 });
 

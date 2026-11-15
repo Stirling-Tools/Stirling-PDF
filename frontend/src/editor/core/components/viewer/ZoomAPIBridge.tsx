@@ -85,7 +85,8 @@ function ZoomAPIBridgeInner({
     (activeId ? fileStubs.find((s) => s.id === activeId) : undefined) ??
     fileStubs[0];
   const activeFileRootId = activeStub?.originalFileId || activeStub?.id;
-  // A page tool's content is only usable at full width on a small screen.
+  // A document opened into a page tool on a small screen starts at full
+  // width, where its content is large enough to work on.
   const isMobile = useIsMobile();
   const pageToolActive = useViewerPageTool() != null;
   const fitForPageTool = isMobile && pageToolActive;
@@ -323,17 +324,6 @@ function ZoomAPIBridgeInner({
     explicitFitRef,
     fitForPageTool,
   ]);
-
-  // A page tool opened on a document already zoomed refits it once; the user's
-  // zoom from then on is left alone.
-  const fitForPageToolRef = useRef(fitForPageTool);
-  useEffect(() => {
-    const opened = fitForPageTool && !fitForPageToolRef.current;
-    fitForPageToolRef.current = fitForPageTool;
-    if (!opened || !hasSetInitialZoom.current) return;
-    explicitFitRef.current = true;
-    requestFitWidth();
-  }, [fitForPageTool, requestFitWidth, explicitFitRef]);
 
   // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes
   const zoomSubscriptionRef = useRef<(() => void) | null>(null);

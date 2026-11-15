@@ -157,11 +157,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         fileId: sourceFileId,
         PageLayer: ViewerEditLayer,
         Toolbar: ViewerEditToolbar,
-        // Small screens trade the viewer's page bar for the editing actions.
-        BottomBar: isMobile ? ViewerEditActionBar : undefined,
+        // Small screens trade the viewer's page bar for the editing actions,
+        // once there is a document to act on.
+        BottomBar:
+          isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
         onDiscard: discardEdits,
       }),
-      [isMobile, sourceFileId, discardEdits],
+      [isMobile, state.hasDocument, sourceFileId, discardEdits],
     ),
   );
 
@@ -596,13 +598,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       download: handleDownload,
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
-      revealPage: isMobile
-        ? null
-        : (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
+      revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
     });
     return () => setEditorSession(null);
   }, [
-    isMobile,
     scrollActions,
     openedFileName,
     sourceFileId,
