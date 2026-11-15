@@ -264,7 +264,9 @@ const FileEditor = ({
           );
 
           if (result.success && result.extractedStubs.length > 0) {
-            await fileActions.addStirlingFileStubs(result.extractedStubs);
+            await fileActions.addStirlingFileStubs(result.extractedStubs, {
+              selectFiles: true,
+            });
 
             removeFiles([fileId], false);
 

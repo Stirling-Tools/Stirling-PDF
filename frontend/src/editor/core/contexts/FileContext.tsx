@@ -478,11 +478,11 @@ function FileContextInner({
   }, []);
 
   const selectFiles = (stirlingFiles: StirlingFile[]) => {
-    const currentSelection = stateRef.current.ui.selectedFileIds;
-    const newFileIds = stirlingFiles.map((stirlingFile) => stirlingFile.fileId);
     dispatch({
-      type: "SET_SELECTED_FILES",
-      payload: { fileIds: [...currentSelection, ...newFileIds] },
+      type: "ADD_SELECTED_FILES",
+      payload: {
+        fileIds: stirlingFiles.map((stirlingFile) => stirlingFile.fileId),
+      },
     });
   };
 
