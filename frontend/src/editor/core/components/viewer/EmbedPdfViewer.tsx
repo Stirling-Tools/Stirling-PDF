@@ -2071,6 +2071,7 @@ const EmbedPdfViewerContent = ({
               onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />
           </Box>
+          {pageTool?.BottomBar && <pageTool.BottomBar />}
           <ScaleCalibrationDialog
             opened={!!scaleCalibrationMeasurement}
             measurement={scaleCalibrationMeasurement}
@@ -2082,7 +2083,7 @@ const EmbedPdfViewerContent = ({
       )}
 
       {/* Bottom Toolbar Overlay */}
-      {effectiveFile && (
+      {effectiveFile && !pageTool?.BottomBar && (
         <div
           className="pdf-viewer-toolbar-dock"
           style={{

@@ -108,6 +108,14 @@ export function useAutoLoadFile(
     // Restarting a pending open would reset its password prompt.
     if (editor.loading || editor.passwordPrompt) return;
 
+    // The open document's own file, met again by a hook that remounted.
+    if (
+      editor.hasDocument &&
+      currentFileId != null &&
+      (target as WorkbenchFile).fileId === currentFileId
+    ) {
+      lastKeyRef.current = key;
+    }
     if (lastKeyRef.current === key) {
       if (editor.hasDocument) {
         setPendingSwitch(null);

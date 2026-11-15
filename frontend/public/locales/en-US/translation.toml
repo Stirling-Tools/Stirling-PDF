@@ -7547,7 +7547,6 @@ saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotation text - not page text, so it can't be edited here"
@@ -7929,13 +7928,6 @@ auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
 
-[pdfTextEditor.stage]
-choosePrompt = "Choose a PDF from your files to start editing."
-loadingDocument = "Loading document"
-loadingProgress = "Loading progress"
-noDocument = "No document loaded."
-renderingPreview = "Rendering preview"
-
 [pdfTextEditor.table]
 addColumn = "Add column"
 addRow = "Add row"
@@ -8019,13 +8011,6 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
-
-[pdfTextEditor.zoom]
-fit = "Fit"
-fitToWidth = "Fit to width"
-in = "Zoom in"
-out = "Zoom out"
-reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"

@@ -3,6 +3,9 @@ import { useEditorStoreView } from "@editor/tools/pdfTextEditor/hooks/useEditorS
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
+import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
+import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { FindBar } from "@editor/tools/pdfTextEditor/components/FindBar";
 import { MarqueeSelector } from "@editor/tools/pdfTextEditor/components/MarqueeSelector";
 
@@ -15,6 +18,7 @@ export function ViewerEditToolbar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
   const controller = useToolbarController(store, state, selection);
+  const isMobile = useIsMobile();
 
   // A plain press on the bare viewer around the pages clears the selection,
   // as one on bare page does. Shift extends, and Ctrl/Cmd+Shift starts the
@@ -33,26 +37,34 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      <EditorTopBar
-        controller={controller}
-        hasDocument={state.hasDocument}
-        dirty={state.dirty}
-        addTextArmed={state.mode === "addText"}
-        addTableArmed={state.mode === "addTable"}
-        onToggleAddTable={() =>
-          store.setMode(
-            store.getState().mode === "addTable" ? "select" : "addTable",
-          )
-        }
-        onToggleAddText={() =>
-          store.setMode(
-            store.getState().mode === "addText" ? "select" : "addText",
-          )
-        }
-        findOpen={state.findOpen}
-        onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
-        onShowHelp={() => store.setHelpOpen(true)}
-      />
+      {isMobile ? (
+        <MobileEditorTopBar
+          controller={controller}
+          hasDocument={state.hasDocument}
+          dirty={state.dirty}
+        />
+      ) : (
+        <EditorTopBar
+          controller={controller}
+          hasDocument={state.hasDocument}
+          dirty={state.dirty}
+          addTextArmed={state.mode === "addText"}
+          addTableArmed={state.mode === "addTable"}
+          onToggleAddTable={() =>
+            store.setMode(
+              store.getState().mode === "addTable" ? "select" : "addTable",
+            )
+          }
+          onToggleAddText={() =>
+            store.setMode(
+              store.getState().mode === "addText" ? "select" : "addText",
+            )
+          }
+          findOpen={state.findOpen}
+          onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
+          onShowHelp={() => store.setHelpOpen(true)}
+        />
+      )}
       {state.findOpen && state.hasDocument && (
         <FindBar
           store={store}
@@ -62,5 +74,22 @@ export function ViewerEditToolbar() {
       )}
       <MarqueeSelector store={store} rootSelector="[data-viewer-pages]" />
     </>
+  );
+}
+
+/** The editing actions a small screen shows below the pages. */
+export function ViewerEditActionBar() {
+  const { store, state } = useEditorStoreView();
+  const selection = useEditorSelection(store);
+  const controller = useToolbarController(store, state, selection);
+  if (!state.hasDocument) return null;
+  return (
+    <MobileActionBar
+      store={store}
+      controller={controller}
+      addTextArmed={state.mode === "addText"}
+      addTableArmed={state.mode === "addTable"}
+      findOpen={state.findOpen}
+    />
   );
 }

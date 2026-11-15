@@ -8,22 +8,9 @@ import { useNavigationActions } from "@editor/contexts/NavigationContext";
 // this hook let the editor drop every edit silently. NavigationContext is the
 // app's own in-app guard - it is what PageEditor uses - and it drives
 // NavigationWarningModal.
-//
-// `onDiscard` runs when the user discards there. It must leave the editor clean:
-// the guard then lets the navigation through, and an editor still dirty would
-// ask again when it follows the move to another file. Pass null where a host
-// registers the guard's handlers on the editor's behalf, as the viewer does:
-// the guard holds one set, and the last to register wins.
-export function useUnsavedChangesGuard(
-  dirty: boolean,
-  onDiscard: (() => void) | null,
-): void {
+export function useUnsavedChangesGuard(dirty: boolean): void {
   const { actions } = useNavigationActions();
-  const {
-    setHasUnsavedChanges,
-    registerNavigationWarningHandlers,
-    unregisterNavigationWarningHandlers,
-  } = actions;
+  const setHasUnsavedChanges = actions.setHasUnsavedChanges;
 
   useEffect(() => {
     if (!dirty) return;
@@ -41,18 +28,4 @@ export function useUnsavedChangesGuard(
     // editor is gone.
     return () => setHasUnsavedChanges(false);
   }, [dirty, setHasUnsavedChanges]);
-
-  // Save is not offered there: a save can stop at its risk prompt, and the
-  // guard would navigate on regardless.
-  useEffect(() => {
-    if (!onDiscard) return;
-    registerNavigationWarningHandlers({
-      onDiscardAndContinue: async () => onDiscard(),
-    });
-    return () => unregisterNavigationWarningHandlers();
-  }, [
-    onDiscard,
-    registerNavigationWarningHandlers,
-    unregisterNavigationWarningHandlers,
-  ]);
 }

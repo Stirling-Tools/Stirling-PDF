@@ -5,7 +5,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@editor/ui/Icon";
 import { downloadFile } from "@editor/services/downloadService";
 import { assertPdfSessionEditable } from "@editor/services/pdfSessionUnlock";
 import {
@@ -44,9 +43,11 @@ import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/Edito
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
-import { PageStage } from "@editor/tools/pdfTextEditor/components/PageStage";
 import { ViewerEditLayer } from "@editor/tools/pdfTextEditor/components/ViewerEditLayer";
-import { ViewerEditToolbar } from "@editor/tools/pdfTextEditor/components/ViewerEditToolbar";
+import {
+  ViewerEditActionBar,
+  ViewerEditToolbar,
+} from "@editor/tools/pdfTextEditor/components/ViewerEditToolbar";
 import { useRegisterViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -56,7 +57,6 @@ import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRuns
 import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { assertEditorOcrAllowed } from "@editor/tools/pdfTextEditor/util/ocrProtection";
-import { clampRenderScale } from "@editor/tools/pdfTextEditor/util/fitToWidth";
 import {
   detectSaveRisks,
   hasSaveRisks,
@@ -69,8 +69,6 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
-const WORKBENCH_ID = "custom:pdfTextEditor" as const;
-const WORKBENCH_VIEW_ID = "pdfTextEditorWorkbench";
 const INSERTED_IMAGE_RATIO = 0.4;
 
 export default function PdfTextEditor(_props: BaseToolProps) {
@@ -78,12 +76,25 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const isMobile = useIsMobile();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
-  const { getZoomState, setActiveFileId, scrollActions } = useViewer();
-  const viewerZoomRef = useRef(getZoomState);
-  viewerZoomRef.current = getZoomState;
+  const { setActiveFileId, scrollActions } = useViewer();
 
   const selection = useEditorSelection(store);
-  const [openedFileName, setOpenedFileName] = useState<string | null>(null);
+  // A remount over a document still open carries on with its file.
+  const [initialSource] = useState(() =>
+    store.getState().hasDocument
+      ? store.source
+      : { fileId: null, fileName: null },
+  );
+  const [openedFileName, setOpenedFileNameState] = useState(
+    initialSource.fileName,
+  );
+  const setOpenedFileName = useCallback(
+    (name: string | null) => {
+      store.source = { ...store.source, fileName: name };
+      setOpenedFileNameState(name);
+    },
+    [store],
+  );
   const mountedRef = useRef(false);
   useEffect(() => {
     mountedRef.current = true;
@@ -93,12 +104,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, []);
   // The workbench file being edited; save writes back to it. Mirrored into
   // state so the viewer can tell which file's pages are editable.
-  const sourceFileIdRef = useRef<FileId | null>(null);
-  const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
-  const setSourceFile = useCallback((id: FileId | null) => {
-    sourceFileIdRef.current = id;
-    setSourceFileId(id);
-  }, []);
+  const sourceFileIdRef = useRef<FileId | null>(initialSource.fileId);
+  const [sourceFileId, setSourceFileId] = useState<FileId | null>(
+    initialSource.fileId,
+  );
+  const setSourceFile = useCallback(
+    (id: FileId | null) => {
+      store.source = { ...store.source, fileId: id };
+      sourceFileIdRef.current = id;
+      setSourceFileId(id);
+    },
+    [store],
+  );
   const { addFiles, consumeFiles, selectors } = useFileContext();
   const { setSelectedFiles } = useFileSelection();
   const { handleToolSelect } = useToolWorkflowActions();
@@ -109,31 +126,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEditorTestGlobal(store);
   // Dropping the document discards its edits; the file is then reopened fresh.
   const discardEdits = useCallback(() => store.clearDocument(), [store]);
-  useUnsavedChangesGuard(state.dirty, isMobile ? discardEdits : null);
-  const pinWorkbench = useWorkbenchPin({
-    workbenchId: WORKBENCH_ID,
-    workbenchViewId: WORKBENCH_VIEW_ID,
-    label: t("pdfTextEditor.workbenchLabel", "Editor"),
-    icon: <Icon name="file-text" size={20} />,
-    component: PageStage,
-    inViewer: !isMobile,
-  });
+  useUnsavedChangesGuard(state.dirty);
+  const pinWorkbench = useWorkbenchPin();
   // Opening a file can leave the workbench on Active Files, so landing a
-  // document pins the editing surface back.
+  // document pins the viewer back.
   const handleFileChosen = useCallback(
     (name: string, fileId?: FileId) => {
       setOpenedFileName(name);
       setSourceFile(fileId ?? null);
-      // A workbench file opens at the zoom the viewer showed it at. The
-      // viewer's fallback state carries no level, so a viewer that never
-      // opened a document leaves the editor's own default alone.
-      const viewerZoom = viewerZoomRef.current();
-      if (fileId && viewerZoom.level !== undefined) {
-        store.setRenderScale(clampRenderScale(viewerZoom.currentZoom));
-      }
       pinWorkbench();
     },
-    [pinWorkbench, setSourceFile, store],
+    [pinWorkbench, setOpenedFileName, setSourceFile],
   );
   const {
     adopt: adoptFile,
@@ -150,15 +153,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, [sourceFileId, setActiveFileId]);
   useRegisterViewerPageTool(
     useMemo(
-      () =>
-        isMobile
-          ? null
-          : {
-              fileId: sourceFileId,
-              PageLayer: ViewerEditLayer,
-              Toolbar: ViewerEditToolbar,
-              onDiscard: discardEdits,
-            },
+      () => ({
+        fileId: sourceFileId,
+        PageLayer: ViewerEditLayer,
+        Toolbar: ViewerEditToolbar,
+        // Small screens trade the viewer's page bar for the editing actions.
+        BottomBar: isMobile ? ViewerEditActionBar : undefined,
+        onDiscard: discardEdits,
+      }),
       [isMobile, sourceFileId, discardEdits],
     ),
   );
@@ -254,7 +256,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       await loading;
       if (mountedRef.current && store.isCurrentLoad(token)) pinWorkbench();
     },
-    [applyToWorkbench, load, pinWorkbench, store],
+    [applyToWorkbench, load, pinWorkbench, setOpenedFileName, store],
   );
   const ocr = useEditorOcr({
     store,

@@ -22,6 +22,8 @@ import {
 } from "@editor/utils/viewerZoom";
 import { getFirstPageAspectRatioFromStub } from "@editor/utils/pageMetadata";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
+import { useIsMobile } from "@editor/hooks/useIsMobile";
 import {
   preferencesService,
   type ViewerZoomSetting,
@@ -83,6 +85,10 @@ function ZoomAPIBridgeInner({
     (activeId ? fileStubs.find((s) => s.id === activeId) : undefined) ??
     fileStubs[0];
   const activeFileRootId = activeStub?.originalFileId || activeStub?.id;
+  // A page tool's content is only usable at full width on a small screen.
+  const isMobile = useIsMobile();
+  const pageToolActive = useViewerPageTool() != null;
+  const fitForPageTool = isMobile && pageToolActive;
 
   const hasSetInitialZoom = useRef(
     !!activeFileRootId && activeFileRootId === lastAutoZoomedRootIdRef.current,
@@ -245,6 +251,11 @@ function ZoomAPIBridgeInner({
         return;
       }
 
+      if (fitForPageTool) {
+        applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        return;
+      }
+
       // Check user preference for default viewer zoom
       const zoomPref: ViewerZoomSetting =
         preferencesService.getPreference("defaultViewerZoom");
@@ -310,7 +321,19 @@ function ZoomAPIBridgeInner({
     spreadMode,
     triggerImmediateZoomUpdate,
     explicitFitRef,
+    fitForPageTool,
   ]);
+
+  // A page tool opened on a document already zoomed refits it once; the user's
+  // zoom from then on is left alone.
+  const fitForPageToolRef = useRef(fitForPageTool);
+  useEffect(() => {
+    const opened = fitForPageTool && !fitForPageToolRef.current;
+    fitForPageToolRef.current = fitForPageTool;
+    if (!opened || !hasSetInitialZoom.current) return;
+    explicitFitRef.current = true;
+    requestFitWidth();
+  }, [fitForPageTool, requestFitWidth, explicitFitRef]);
 
   // Subscribe to zoom changes - use ref to avoid re-subscribing when zoom reference changes
   const zoomSubscriptionRef = useRef<(() => void) | null>(null);

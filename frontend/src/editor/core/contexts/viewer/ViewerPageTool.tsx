@@ -36,6 +36,8 @@ export interface ViewerPageTool {
   PageLayer: ComponentType<ViewerPageLayerProps>;
   /** Docked above the pages. */
   Toolbar: ComponentType;
+  /** Docked below the pages, in place of the viewer's page and zoom bar. */
+  BottomBar?: ComponentType;
   /**
    * Drops the tool's unsaved work when the user discards it at the app's
    * unsaved-changes prompt, which then lets the navigation through.
