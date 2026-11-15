@@ -450,6 +450,27 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:7:Garamond"]);
   });
 
+  it("drops a font still loading once the runs were rebuilt under the same ids", async () => {
+    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
+    serveFaces(
+      () =>
+        new Promise((resolve) => {
+          finishDownload = resolve;
+        }),
+    );
+    await loadServerFonts();
+    const runs = [run("a", "base14:Helvetica")];
+    const { store, dispatch } = fakeStore(runs, ["a"]);
+
+    const picked = actionsFor(store).changeFontFamily("Acme Sans");
+    await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+    runs[0] = { ...runs[0], text: "Hello\nworld" };
+    finishDownload(fontBytes());
+
+    expect(await picked).toBeNull();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it("still applies a font still loading for text a later change did not touch", async () => {
     let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
     serveFaces(

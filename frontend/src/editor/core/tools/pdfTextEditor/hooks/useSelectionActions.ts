@@ -179,17 +179,21 @@ export function useSelectionActions(store: EditorStore) {
     latestByRun: new Map<string, number>(),
   });
   const claimFontChange = useCallback(
-    (runIds: string[]) => {
+    (runs: SelectedRun[]) => {
       const requests = fontRequests.current;
       const request = ++requests.last;
       const doc = store.document;
-      for (const runId of runIds) requests.latestByRun.set(runId, request);
+      const claimed = new Map(runs.map((run) => [run.id, run]));
+      for (const run of runs) requests.latestByRun.set(run.id, request);
       return () => {
         // Run ids repeat across documents, so a change outliving its document would hit unrelated text.
         if (!doc || store.document !== doc) return () => false;
+        // Regrouping rebuilds the runs under the same ids, so only the run object that was picked still means the same text.
         const editable = new Set<string>();
         for (const page of doc.loadedPages()) {
-          for (const run of page.runs) if (!run.locked) editable.add(run.id);
+          for (const run of page.runs)
+            if (!run.locked && claimed.get(run.id) === run)
+              editable.add(run.id);
         }
         return (runId: string) =>
           editable.has(runId) && requests.latestByRun.get(runId) === request;
@@ -231,7 +235,7 @@ export function useSelectionActions(store: EditorStore) {
         targets.push(run);
         fit.push({ page, run: run as TextRun });
       });
-      const stillApplies = claimFontChange(targets.map((run) => run.id));
+      const stillApplies = claimFontChange(targets);
       const changes = targets.map((run) => ({
         pageIndex: run.pageIndex,
         runId: run.id,
@@ -283,7 +287,9 @@ export function useSelectionActions(store: EditorStore) {
         fit: { page, run: run as TextRun },
       });
     });
-    const stillApplies = claimFontChange(targets.map((target) => target.runId));
+    const stillApplies = claimFontChange(
+      targets.map((target) => target.fit.run),
+    );
     // Embedding is async and Command.apply is not, so warm the bytes first.
     const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
     for (const target of targets) {
