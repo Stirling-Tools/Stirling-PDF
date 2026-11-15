@@ -164,6 +164,8 @@ jobs:
           exit 1
       - name: Boot Stirling-PDF (frontend baked in, OAuth env)
         env:
+          # A fresh server signs in as the default admin and hides the SSO buttons.
+          SYSTEM_SETUPCOMPLETED: "true"
           SECURITY_ENABLELOGIN: "true"
           SECURITY_LOGINMETHOD: "all"
           SECURITY_OAUTH2_ENABLED: "true"
@@ -231,6 +233,8 @@ jobs:
           echo "✓ SAML certs prepared"
       - name: Boot Stirling-PDF (frontend baked in, SAML env)
         env:
+          # A fresh server signs in as the default admin and hides the SSO buttons.
+          SYSTEM_SETUPCOMPLETED: "true"
           SECURITY_ENABLELOGIN: "true"
           SECURITY_LOGINMETHOD: "all"
           SECURITY_SAML2_ENABLED: "true"

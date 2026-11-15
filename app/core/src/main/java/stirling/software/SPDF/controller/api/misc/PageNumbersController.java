@@ -193,9 +193,7 @@ public class PageNumbersController {
             }
 
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(
-                            file.getOriginalFilename(), "_page_numbers_added.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"));
         }
     }
 }
