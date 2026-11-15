@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
@@ -43,8 +44,8 @@ interface PageViewProps {
   selectedRunIds: string[];
   selectedImageIds: string[];
   selectedShapeIds: string[];
-  /** Run id currently highlighted by the find-bar (yellow). */
-  highlightedRunId?: string | null;
+  /** The find-bar occurrence on show. */
+  findMatch?: FindMatch | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
   onSelectImage: (imageId: string) => void;
   onSelectShape: (shapeId: string, extend: boolean) => void;
@@ -111,7 +112,7 @@ export const PageView = memo(function PageView({
   selectedRunIds,
   selectedImageIds,
   selectedShapeIds,
-  highlightedRunId,
+  findMatch,
   onSelectRun,
   onSelectImage,
   onSelectShape,
@@ -475,7 +476,7 @@ export const PageView = memo(function PageView({
             widthMode={widthMode}
             pageRevision={paintedRevision}
             selected={selectedRunIds.includes(run.id)}
-            highlighted={highlightedRunId === run.id}
+            findRange={findMatch?.runId === run.id ? findMatch.range : null}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
             onTextRangeChange={

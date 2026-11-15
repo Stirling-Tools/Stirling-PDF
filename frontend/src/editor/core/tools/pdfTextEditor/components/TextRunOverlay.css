@@ -27,3 +27,8 @@
 ::highlight(pdf-editor-text-range) {
   background-color: color-mix(in srgb, var(--c-primary) 28%, transparent);
 }
+
+/* Must stay in sync with FIND_MATCH_HIGHLIGHT in overlayPainter.ts. */
+::highlight(pdf-editor-find-match) {
+  background-color: color-mix(in srgb, var(--c-highlight) 60%, transparent);
+}

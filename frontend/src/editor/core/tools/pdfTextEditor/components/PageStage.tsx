@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import {
   Box,
   Center,
@@ -59,7 +60,7 @@ export function PageStage() {
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
   );
-  const [highlightedRunId, setHighlightedRunId] = useState<string | null>(
+  const [findMatch, setFindMatch] = useState<FindMatch | null>(
     store.selection.highlight.get(),
   );
   const [draggingFile, setDraggingFile] = useState(false);
@@ -70,10 +71,7 @@ export function PageStage() {
   const pageHandlers = useMemo(() => pageViewHandlers(store), [store]);
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
-  useEffect(
-    () => store.selection.highlight.subscribe(setHighlightedRunId),
-    [store],
-  );
+  useEffect(() => store.selection.highlight.subscribe(setFindMatch), [store]);
 
   // Ctrl/Cmd+wheel zooms the document.
   useEffect(() => {
@@ -355,7 +353,7 @@ export function PageStage() {
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
                     selectedShapeIds={selection.shapeIds}
-                    highlightedRunId={highlightedRunId}
+                    findMatch={findMatch}
                     selectedTextRange={selection.textRange}
                     {...pageHandlers}
                   />

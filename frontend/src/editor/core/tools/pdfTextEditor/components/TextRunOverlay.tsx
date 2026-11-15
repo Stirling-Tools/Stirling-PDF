@@ -36,6 +36,8 @@ import {
   normalizeContainerCaret,
   type PaintLine,
   paintLines,
+  FIND_MATCH_HIGHLIGHT,
+  canHighlightTextRanges,
   highlightTextRange,
   paintPlainText,
   plainDomRange,
@@ -314,8 +316,8 @@ interface TextRunOverlayProps {
   /** "grow": box widens to the right. "wrap": locked width, wraps down. */
   widthMode: WidthMode;
   selected: boolean;
-  /** True when this run is the active find-match (yellow highlight). */
-  highlighted?: boolean;
+  /** The find-bar occurrence inside this run, painted as a highlight. */
+  findRange?: TextRange | null;
   pageRevision?: number;
   onSelect: (shiftKey: boolean) => void;
   onEdit: (nextText: string) => void;
@@ -374,7 +376,7 @@ export function TextRunOverlay({
   scale,
   widthMode,
   selected,
-  highlighted,
+  findRange,
   pageRevision,
   onSelect,
   onEdit,
@@ -680,6 +682,13 @@ export function TextRunOverlay({
     const range = plainDomRange(el, textRange);
     return range ? highlightTextRange(range) : undefined;
   }, [focused, textRange, run.text, freshExact, font, fontSizePx, faceEpoch]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!findRange || !el) return;
+    const range = plainDomRange(el, findRange);
+    return range ? highlightTextRange(range, FIND_MATCH_HIGHLIGHT) : undefined;
+  }, [findRange, run.text, freshExact, font, fontSizePx, faceEpoch]);
 
   const anchor = transform.apply(run.matrix.e, run.matrix.f);
   const flowLeft = anchor.x * scale;
@@ -1127,8 +1136,8 @@ export function TextRunOverlay({
             : undefined,
         backgroundColor: showsGlyphs
           ? (maskColor ?? contrastingMaskFor(run.fill))
-          : highlighted
-            ? "rgba(255,217,0,0.45)"
+          : findRange && !canHighlightTextRanges()
+            ? "color-mix(in srgb, var(--c-highlight) 45%, transparent)"
             : selected
               ? "rgba(44,123,229,0.10)"
               : hovered

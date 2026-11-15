@@ -429,19 +429,27 @@ export function repaintKeepingSelection(
 }
 
 const TEXT_RANGE_HIGHLIGHT = "pdf-editor-text-range";
+export const FIND_MATCH_HIGHLIGHT = "pdf-editor-find-match";
 
 /**
- * Paint `range` as selected text, through the CSS Custom Highlight API, until
- * the returned cleanup runs. One range at a time: a later call replaces it.
- * Does nothing where the browser lacks the API.
+ * Paint `range` through the CSS Custom Highlight API, as selected text unless
+ * another highlight `name` is given, until the returned cleanup runs. One range
+ * per name: a later call replaces it. Does nothing where the browser lacks the API.
  */
-export function highlightTextRange(range: Range): () => void {
-  if (typeof CSS === "undefined" || !("highlights" in CSS)) return () => {};
+export function canHighlightTextRanges(): boolean {
+  return typeof CSS !== "undefined" && "highlights" in CSS;
+}
+
+export function highlightTextRange(
+  range: Range,
+  name: string = TEXT_RANGE_HIGHLIGHT,
+): () => void {
+  if (!canHighlightTextRanges()) return () => {};
   const highlight = new Highlight(range);
-  CSS.highlights.set(TEXT_RANGE_HIGHLIGHT, highlight);
+  CSS.highlights.set(name, highlight);
   return () => {
-    if (CSS.highlights.get(TEXT_RANGE_HIGHLIGHT) === highlight) {
-      CSS.highlights.delete(TEXT_RANGE_HIGHLIGHT);
+    if (CSS.highlights.get(name) === highlight) {
+      CSS.highlights.delete(name);
     }
   };
 }
