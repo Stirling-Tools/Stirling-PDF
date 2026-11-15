@@ -1,3 +1,10 @@
+// In-memory patch combining font fallback and zero-copy raster transfer for @embedpdf/engines.
+//
+// Upgrade steps when bumping @embedpdf/engines:
+// 1. Follow frontend/scripts/embedpdfFontFallbackPatch.mts for the font fallback patch.
+// 2. Re-check every `from` anchor in RASTER_EDITS against the new dist files.
+// 3. Update EXPECTED_VERSION, bump PATCH_REVISION so Vite discards its prebundle cache,
+//    and update the hashed dist filenames in frontend/scripts/embedpdfEnginesPatch.test.ts.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { Plugin as EsbuildPlugin } from "esbuild";
