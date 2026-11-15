@@ -420,7 +420,8 @@ public class MergeController {
                                         Math.min((i + 1) * ENTRIES_PER_TOC_PAGE, files.length)),
                                 document,
                                 totalPages,
-                                i == 0);
+                                i == 0,
+                                i * ENTRIES_PER_TOC_PAGE);
             }
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -440,7 +441,8 @@ public class MergeController {
             MultipartFileWithPdfPageCount[] files,
             PDDocument document,
             int startPage,
-            boolean generateTitle)
+            boolean generateTitle,
+            int indexOffset)
             throws IOException {
         PDPage blankPage = new PDPage(PDRectangle.A4);
         float pageWidth = PDRectangle.A4.getWidth();
@@ -488,7 +490,7 @@ public class MergeController {
                 String entryName =
                         fitTextToWidth(
                                 replaceUnsupportedCharacters(
-                                        contentFont, getTocTitle(multipartFile, i)),
+                                        contentFont, getTocTitle(multipartFile, indexOffset + i)),
                                 contentFont,
                                 contentFontSize,
                                 target
