@@ -11,6 +11,20 @@ qpdf --encrypt annotation-test annotation-test 256 -- annotations_out_of_order.p
 qpdf --encrypt annotation-test annotation-test 256 -- link-annotations-sample.pdf encrypted-links.pdf
 ```
 
+## Encrypted portfolio fixture
+
+`portfolio-aes-empty-password.pdf` is a one-page portfolio with two attached text
+files (`first.txt`, `second.txt`), AES-128 encrypted with an empty user password
+and `owner` as the owner password - the shape Acrobat Sign exports. It is what
+`portfolioMembers.test.ts` reads to check that members of a portfolio are listed
+without asking for a password. Regenerate it with:
+
+```sh
+# portfolio.pdf: a page plus two attached files and a /Collection, e.g. made with
+# pdf-lib's PDFDocument.attach() and doc.catalog.set(PDFName.of("Collection"), ...)
+qpdf --encrypt "" owner 128 --use-aes=y -- portfolio.pdf portfolio-aes-empty-password.pdf
+```
+
 ## Required Test Files
 
 To run the full test suite, please add the following test files to this directory:
