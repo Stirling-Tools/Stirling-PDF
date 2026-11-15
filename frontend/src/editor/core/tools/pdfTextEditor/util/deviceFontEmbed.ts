@@ -185,12 +185,13 @@ export function deviceFamilyOf(
     : null;
 }
 
-// The bytes of each family a document embedded, by family name: the font list's own keys change when it reloads.
+// The bytes of each family a document embedded, by family name. A family keeps the face it was first embedded in for the
+// document's life: a server switch can offer a different face under the same name, and a redo must draw what was drawn.
 const embeddedBytes = new WeakMap<EditorDocument, Map<string, Uint8Array>>();
 
 function faceBytes(doc: EditorDocument, family: string): Uint8Array | null {
   return (
-    getExternalFontBytes(family) ?? embeddedBytes.get(doc)?.get(family) ?? null
+    embeddedBytes.get(doc)?.get(family) ?? getExternalFontBytes(family) ?? null
   );
 }
 
@@ -199,22 +200,20 @@ export function loadDeviceFontInto(
   family: string,
 ): number {
   const id = deviceFontIdFor(family);
-  const existing = doc.ownedFont(id);
+  const existing =
+    doc.ownedFont(id) ??
+    doc.findOwnedFont(
+      (font) =>
+        font.id.startsWith(DEVICE_FONT_ID_PREFIX) &&
+        font.descriptor.family === family,
+    );
   if (existing) return existing.pointer;
   const refused = refusedFor(doc);
   // A refusal is permanent for this document; retrying would re-malloc the
   // whole font file on every keystroke.
   if (refused.has(id)) return 0;
   const bytes = getExternalFontBytes(family);
-  // The font list reloads when the server changes, which renames every face; a redo still needs the face it drew in.
-  if (!bytes || bytes.length === 0)
-    return (
-      doc.findOwnedFont(
-        (font) =>
-          font.id.startsWith(DEVICE_FONT_ID_PREFIX) &&
-          font.descriptor.family === family,
-      )?.pointer ?? 0
-    );
+  if (!bytes || bytes.length === 0) return 0;
 
   const m = doc.module;
   const mod = m as unknown as DeviceFontModule;

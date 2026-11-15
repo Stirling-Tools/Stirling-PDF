@@ -38,12 +38,14 @@ const faceId = (i: number) => (i + 1).toString(16).padStart(64, "0");
 const opened: EditorDocument[] = [];
 let wasm: Buffer<ArrayBuffer>;
 
+let served: ReadonlyArray<readonly [string, string]> = SERVED;
+
 function serveFonts(): void {
   get.mockImplementation(async (url: string) => {
     if (url === SERVER_FONTS_URL)
       return {
         data: {
-          families: SERVED.map(([family, file], i) => ({
+          families: served.map(([family, file], i) => ({
             family,
             faces: [
               {
@@ -58,11 +60,11 @@ function serveFonts(): void {
           })),
         },
       };
-    const served = SERVED.findIndex((_, i) => url.endsWith(faceId(i)));
-    if (served >= 0)
+    const index = served.findIndex((_, i) => url.endsWith(faceId(i)));
+    if (index >= 0)
       return {
         data: new Uint8Array(
-          readFileSync(path.join(FONT_DIR, SERVED[served][1])),
+          readFileSync(path.join(FONT_DIR, served[index][1])),
         ).buffer,
       };
     throw new Error("unavailable");
@@ -76,6 +78,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  served = SERVED;
   get.mockReset();
   forgetServerFontList();
   vi.stubGlobal(
@@ -152,6 +155,26 @@ test("redo keeps a served font after the server's font list is reloaded", async 
 
   cmd.revert(doc);
   forgetServerFontList();
+  cmd.apply(doc);
+
+  expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
+});
+
+test("redo keeps the face a font change drew in after another server offers a different one", async () => {
+  const doc = await open("subset-font-sample.pdf");
+  const run = doc.page(0).runs[0];
+  const cmd = new SetFontFamilyCommand({
+    pageIndex: 0,
+    runId: run.id,
+    nextFamily: "Liberation Serif",
+  });
+  cmd.apply(doc);
+  cmd.revert(doc);
+
+  served = [["Liberation Serif", "LiberationSerif-Bold.ttf"]];
+  forgetServerFontList();
+  await loadServerFonts();
+  await loadExternalFontBytes("Liberation Serif");
   cmd.apply(doc);
 
   expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
