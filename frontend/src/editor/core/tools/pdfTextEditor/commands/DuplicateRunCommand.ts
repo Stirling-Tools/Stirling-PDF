@@ -7,6 +7,10 @@ import {
   fallbackFontIdFor,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import { sanitizeForBase14 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
 // user can quickly stamp the same text elsewhere on the page.
@@ -34,35 +38,11 @@ export class DuplicateRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const src = page.findRun(this.runId);
     if (!src) return;
-    const m = doc.module;
-    const fallback = fallbackFamilyFor(src.fontId);
-    const newPtr = m.FPDFPageObj_NewTextObj(
-      doc.docPtr,
-      fallback,
-      Math.max(4, src.fontSize),
-    );
-    if (!newPtr) return;
-    // Base-14 renders only WinAnsi: drop other code points rather than persist them as U+00FF tofu.
-    const textPtr = writeUtf16(
-      m,
-      sanitizeForBase14(src.text.replace(/\r?\n/g, " ")),
-    );
-    try {
-      m.FPDFText_SetText(newPtr, textPtr);
-    } finally {
-      m.pdfium.wasmExports.free(textPtr);
-    }
-    m.FPDFPageObj_SetFillColor(
-      newPtr,
-      src.fill.r,
-      src.fill.g,
-      src.fill.b,
-      src.fill.a,
-    );
     const newX = src.matrix.e + OFFSET;
     const newY = src.matrix.f - OFFSET;
-    m.FPDFPageObj_Transform(newPtr, 1, 0, 0, 1, newX, newY);
-    m.FPDFPage_InsertObject(page.pagePtr, newPtr);
+    const drawn = drawCopy(doc, page, src, newX, newY);
+    if (!drawn) return;
+    const { ptr: newPtr, family } = drawn;
     const id = `p${page.index}-dup-${page.runs.length}-${newPtr}`;
     const clone = new TextRun({
       id,
@@ -76,7 +56,7 @@ export class DuplicateRunCommand implements Command {
       },
       matrix: { a: 1, b: 0, c: 0, d: 1, e: newX, f: newY },
       text: src.text,
-      fontId: fallbackFontIdFor(fallback),
+      fontId: fallbackFontIdFor(family),
       fontSize: src.fontSize,
       fill: { ...src.fill },
       fontSubset: false,
@@ -96,4 +76,54 @@ export class DuplicateRunCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
   }
+}
+
+// A standard font is created by name; any other family has to be loaded into the document first.
+function drawCopy(
+  doc: EditorDocument,
+  page: Page,
+  src: TextRun,
+  x: number,
+  y: number,
+): { ptr: number; family: string } | null {
+  const m = doc.module;
+  const size = Math.max(4, src.fontSize);
+  const text = src.text.replace(/\r?\n/g, " ");
+  const wanted = fallbackFamilyFor(src.fontId);
+  if (nearestStandardFont(wanted) !== wanted) {
+    const ptr = emitDeviceFontTextObject(
+      doc,
+      page,
+      wanted,
+      text,
+      size,
+      src.fill,
+      x,
+      y,
+    );
+    if (ptr) return { ptr, family: wanted };
+  }
+  const family =
+    nearestStandardFont(wanted) === wanted
+      ? wanted
+      : helveticaVariantFor(src.fontId);
+  const ptr = m.FPDFPageObj_NewTextObj(doc.docPtr, family, size);
+  if (!ptr) return null;
+  // Base-14 renders only WinAnsi: drop other code points rather than persist them as U+00FF tofu.
+  const textPtr = writeUtf16(m, sanitizeForBase14(text));
+  try {
+    m.FPDFText_SetText(ptr, textPtr);
+  } finally {
+    m.pdfium.wasmExports.free(textPtr);
+  }
+  m.FPDFPageObj_SetFillColor(
+    ptr,
+    src.fill.r,
+    src.fill.g,
+    src.fill.b,
+    src.fill.a,
+  );
+  m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, x, y);
+  m.FPDFPage_InsertObject(page.pagePtr, ptr);
+  return { ptr, family };
 }

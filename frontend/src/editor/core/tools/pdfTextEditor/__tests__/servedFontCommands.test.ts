@@ -1,0 +1,158 @@
+// @vitest-environment node
+import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import path from "node:path";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  test,
+  vi,
+} from "vitest";
+
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+
+import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { setClosestFont } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import { loadExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import {
+  SERVER_FONTS_URL,
+  forgetServerFontList,
+  loadServerFonts,
+} from "@editor/tools/pdfTextEditor/util/serverFonts";
+import { FONT_DIR } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
+
+const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
+const SERVED = [
+  ["Liberation Sans", "LiberationSans-Regular.ttf"],
+  ["Liberation Serif", "LiberationSerif-Regular.ttf"],
+] as const;
+const faceId = (i: number) => (i + 1).toString(16).padStart(64, "0");
+const opened: EditorDocument[] = [];
+let wasm: Buffer<ArrayBuffer>;
+
+function serveFonts(): void {
+  get.mockImplementation(async (url: string) => {
+    if (url === SERVER_FONTS_URL)
+      return {
+        data: {
+          families: SERVED.map(([family, file], i) => ({
+            family,
+            faces: [
+              {
+                id: faceId(i),
+                style: "Regular",
+                bold: false,
+                italic: false,
+                weight: 400,
+                postscriptName: file.replace(".ttf", ""),
+              },
+            ],
+          })),
+        },
+      };
+    const served = SERVED.findIndex((_, i) => url.endsWith(faceId(i)));
+    if (served >= 0)
+      return {
+        data: new Uint8Array(
+          readFileSync(path.join(FONT_DIR, SERVED[served][1])),
+        ).buffer,
+      };
+    throw new Error("unavailable");
+  });
+}
+
+beforeAll(async () => {
+  wasm = await readFile(
+    createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
+  );
+});
+
+beforeEach(async () => {
+  get.mockReset();
+  forgetServerFontList();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      String(url).endsWith(".wasm")
+        ? new Response(wasm, {
+            headers: { "Content-Type": "application/wasm" },
+          })
+        : new Response(null, { status: 404 }),
+    ),
+  );
+  serveFonts();
+  await loadServerFonts();
+  for (const [family] of SERVED) await loadExternalFontBytes(family);
+});
+
+afterEach(() => {
+  for (const doc of opened.splice(0)) doc.dispose();
+  forgetServerFontList();
+});
+
+afterAll(() => vi.unstubAllGlobals());
+
+async function open(name: string): Promise<EditorDocument> {
+  const doc = await EditorDocument.open(
+    new Uint8Array(await readFile(path.join(FIXTURES, name))),
+  );
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(0));
+  return doc;
+}
+
+function fontNameOf(doc: EditorDocument, ptr: number): string {
+  const m = doc.module;
+  const name = m.pdfium.wasmExports.malloc(256);
+  try {
+    m.FPDFFont_GetBaseFontName(m.FPDFTextObj_GetFont(ptr), name, 256);
+    return m.pdfium.UTF8ToString(name).replace(/^[A-Z]{6}\+/, "");
+  } finally {
+    m.pdfium.wasmExports.free(name);
+  }
+}
+
+test("duplicates a line whose missing letters come from a served lookalike", async () => {
+  const doc = await open("subset-font-sample.pdf");
+  const page = doc.page(0);
+  const run = page.runs[0];
+  setClosestFont(run.fontId, "Liberation Sans");
+  const before = page.runs.length;
+
+  const cmd = new DuplicateRunCommand({ pageIndex: 0, runId: run.id });
+  cmd.apply(doc);
+
+  expect(page.runs).toHaveLength(before + 1);
+  const copy = page.findRun(cmd.insertedRunId!)!;
+  expect(copy.text).toBe(run.text);
+  expect(fontNameOf(doc, copy.pdfiumObjPtr)).toBe("LiberationSans");
+
+  cmd.revert(doc);
+  expect(page.runs).toHaveLength(before);
+});
+
+test("redo keeps a served font after the server's font list is reloaded", async () => {
+  const doc = await open("subset-font-sample.pdf");
+  const run = doc.page(0).runs[0];
+  const cmd = new SetFontFamilyCommand({
+    pageIndex: 0,
+    runId: run.id,
+    nextFamily: "Liberation Serif",
+  });
+  cmd.apply(doc);
+  expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
+
+  cmd.revert(doc);
+  forgetServerFontList();
+  cmd.apply(doc);
+
+  expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
+});

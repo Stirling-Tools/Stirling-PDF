@@ -781,6 +781,11 @@ export class EditorDocument {
     return this.ownedFonts.get(id);
   }
 
+  findOwnedFont(matches: (font: FontRef) => boolean): FontRef | undefined {
+    for (const font of this.ownedFonts.values()) if (matches(font)) return font;
+    return undefined;
+  }
+
   ownedFontAt(pointer: number): FontRef | undefined {
     for (const font of this.ownedFonts.values())
       if (font.pointer === pointer) return font;
