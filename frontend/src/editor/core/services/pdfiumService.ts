@@ -1811,8 +1811,8 @@ export async function extractPageTextItemsForReadAloudFromDoc(
   } finally {
     m.pdfium.wasmExports.free(bboxMem);
     m.pdfium.wasmExports.free(rectMem);
-    if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
-    if (pagePtr != null) m.FPDF_ClosePage(pagePtr);
+    if (textPagePtr) m.FPDFText_ClosePage(textPagePtr);
+    if (pagePtr) m.FPDF_ClosePage(pagePtr);
   }
 }
 
