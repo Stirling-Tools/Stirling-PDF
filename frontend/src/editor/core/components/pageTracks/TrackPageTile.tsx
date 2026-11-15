@@ -147,6 +147,7 @@ function TrackPageTileImpl({
 
   const stop = (event: React.MouseEvent) => event.stopPropagation();
   const quarterTurn = page.rotation === 90 || page.rotation === 270;
+  const multiSelected = selected && hasMultiSelection;
 
   const hoverActions = useMemo<HoverAction[]>(
     () => [
@@ -162,7 +163,9 @@ function TrackPageTileImpl({
       {
         id: "rotate-left",
         icon: <Icon name="rotate-ccw" size={16} />,
-        label: t("pageTracks.rotateLeft", "Rotate left"),
+        label: multiSelected
+          ? t("pageTracks.rotateSelectedLeft", "Rotate selected pages left")
+          : t("pageTracks.rotateLeft", "Rotate left"),
         onClick: (event) => {
           event.stopPropagation();
           onRotatePage(page.id, -90);
@@ -171,7 +174,9 @@ function TrackPageTileImpl({
       {
         id: "rotate-right",
         icon: <Icon name="rotate-cw" size={16} />,
-        label: t("pageTracks.rotateRight", "Rotate right"),
+        label: multiSelected
+          ? t("pageTracks.rotateSelectedRight", "Rotate selected pages right")
+          : t("pageTracks.rotateRight", "Rotate right"),
         onClick: (event) => {
           event.stopPropagation();
           onRotatePage(page.id, 90);
@@ -180,10 +185,9 @@ function TrackPageTileImpl({
       {
         id: "duplicate",
         icon: <Icon name="copy-plus" size={16} />,
-        label:
-          selected && hasMultiSelection
-            ? t("pageTracks.duplicateSelected", "Duplicate selected pages")
-            : t("pageTracks.duplicate.page", "Duplicate page"),
+        label: multiSelected
+          ? t("pageTracks.duplicateSelected", "Duplicate selected pages")
+          : t("pageTracks.duplicate.page", "Duplicate page"),
         onClick: (event) => {
           event.stopPropagation();
           onDuplicatePage(page.id);
@@ -192,10 +196,9 @@ function TrackPageTileImpl({
       {
         id: "delete",
         icon: <Icon name="trash" size={16} />,
-        label:
-          selected && hasMultiSelection
-            ? t("pageTracks.deleteSelected", "Delete selected pages")
-            : t("pageTracks.delete.page", "Delete page"),
+        label: multiSelected
+          ? t("pageTracks.deleteSelected", "Delete selected pages")
+          : t("pageTracks.delete.page", "Delete page"),
         color: "var(--c-danger)",
         onClick: (event) => {
           event.stopPropagation();
@@ -210,8 +213,7 @@ function TrackPageTileImpl({
       onDeletePage,
       onDuplicatePage,
       page.id,
-      selected,
-      hasMultiSelection,
+      multiSelected,
     ],
   );
 
