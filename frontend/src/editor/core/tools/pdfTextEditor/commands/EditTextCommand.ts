@@ -236,6 +236,8 @@ export class EditTextCommand implements Command {
   // The run's own objects before a partial apply, with where each sat; null when one lives in a form and cannot be put back.
   private originalObjects: OriginalObjects | null = null;
   private revertedExactly = false;
+  // Where each of the run's objects inside a form sat before a partial edit moved it; the form's own scale defeats the page-space move back.
+  private formObjectMatrices = new Map<number, Float32Array>();
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
     /** Matched lines translated to a new baseline (reversed on revert). */
@@ -520,6 +522,7 @@ export class EditTextCommand implements Command {
           partial.removePtrs,
           page.pagePtr,
         );
+        this.formObjectMatrices = formObjectMatrices(doc.module, run);
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
@@ -1195,6 +1198,8 @@ export class EditTextCommand implements Command {
         ],
         revertFallback,
       );
+      for (const [ptr, matrix] of this.formObjectMatrices)
+        if (!removed.has(ptr)) writeMatrix(m, ptr, matrix);
       run.text = this.prevText;
       run.dirty = true;
       this.partialPlan = null;
@@ -2285,6 +2290,18 @@ function captureOriginalObjects(
     matrices,
     order: contentIndices(m, pagePtr, matrices.keys()),
   };
+}
+
+function formObjectMatrices(
+  m: WrappedPdfiumModule,
+  run: TextRun,
+): Map<number, Float32Array> {
+  const matrices = new Map<number, Float32Array>();
+  for (const [ptr, container] of collectContainersByPtr(run)) {
+    const matrix = container && ptr ? readMatrix(m, ptr) : null;
+    if (matrix) matrices.set(ptr, matrix);
+  }
+  return matrices;
 }
 
 function restoreRunModel(run: TextRun, snap: RunModelSnapshot): void {

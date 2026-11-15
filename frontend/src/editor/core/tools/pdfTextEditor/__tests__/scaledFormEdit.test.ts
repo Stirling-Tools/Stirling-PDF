@@ -120,4 +120,24 @@ describe("typing before text drawn inside a scaled form", () => {
     expect(after).toBeGreaterThan(typedRight);
     expect(after - before).toBeGreaterThan(typedRight - before);
   });
+
+  test("undo puts it back where it was", async () => {
+    const doc = await EditorDocument.open(scaledFormPdf());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
+    const label = run.mergedFromPtrs[0];
+    const before = leftEdge(doc, label);
+    const edit = new EditTextCommand({
+      pageIndex: 0,
+      runId: run.id,
+      nextText: "Xk " + run.text,
+    });
+
+    edit.apply(doc);
+    edit.revert(doc);
+
+    expect(leftEdge(doc, label)).toBeCloseTo(before, 3);
+    expect(run.text).toBe("Open Source");
+  });
 });
