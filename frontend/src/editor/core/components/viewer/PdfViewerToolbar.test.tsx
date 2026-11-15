@@ -178,4 +178,18 @@ describe("PdfViewerToolbar fit controls", () => {
     expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledTimes(1);
     expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(120);
   });
+
+  it("ignores Enter while IME composition is active", () => {
+    viewer.scroll.totalPages = 10;
+    renderToolbar();
+    const input = screen.getByRole("textbox");
+
+    fireEvent.change(input, { target: { value: "5" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(viewer.value.scrollActions.scrollToPage).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(input, { key: "Enter", isComposing: false });
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledTimes(1);
+    expect(viewer.value.scrollActions.scrollToPage).toHaveBeenCalledWith(5);
+  });
 });

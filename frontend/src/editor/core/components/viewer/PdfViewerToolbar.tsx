@@ -150,7 +150,7 @@ export function PdfViewerToolbar({
   // Commit on Enter or blur so typing "120" scrolls once.
   const commitPageInput = () => {
     const page = Number(pageInput);
-    if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+    if (Number.isInteger(page) && page >= 1 && page <= scrollState.totalPages) {
       // Enter already committed; don't scroll again on the following blur.
       if (page !== committedPageRef.current) {
         committedPageRef.current = page;
@@ -256,6 +256,7 @@ export function PdfViewerToolbar({
         onBlur={commitPageInput}
         min={1}
         max={scrollState.totalPages}
+        allowDecimal={false}
         hideControls
         size="xs"
         styles={{
