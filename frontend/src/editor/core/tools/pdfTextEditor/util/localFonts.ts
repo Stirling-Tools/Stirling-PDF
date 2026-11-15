@@ -1,7 +1,16 @@
-// Local Font Access API wrapper. Chromium-only and permission-gated, so every
-// entry point degrades to null instead of throwing.
+// The fonts installed on this device; the source may be missing or refuse, so every entry point degrades instead of throwing.
 
 import { fontFace } from "@editor/tools/pdfTextEditor/util/fontCollection";
+import {
+  embeddingForbidden,
+  hasTrueTypeOutlines,
+} from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import {
+  hasDeviceFontSource,
+  listDeviceFaces,
+  localFontPermission,
+  readDeviceFace,
+} from "@editor/tools/pdfTextEditor/util/localFontSource";
 
 export interface FaceAxes {
   bold: boolean;
@@ -28,62 +37,18 @@ export interface LocalFontFamily {
   styles: string[];
 }
 
-type QueryLocalFonts = () => Promise<unknown[]>;
-
-function localFontQuery(): QueryLocalFonts | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { queryLocalFonts?: QueryLocalFonts };
-  if (typeof w.queryLocalFonts !== "function") return null;
-  // Bound: Chrome throws "Illegal invocation" when the method is detached.
-  return w.queryLocalFonts.bind(w);
-}
-
 /** Feature detection only - never prompts and has no side effects. */
 export function isLocalFontAccessSupported(): boolean {
-  return localFontQuery() !== null;
+  return hasDeviceFontSource();
 }
 
-function readString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function toLocalFont(face: unknown): LocalFont | null {
-  if (!face || typeof face !== "object") return null;
-  const data = face as Record<string, unknown>;
-  const family = readString(data.family);
-  if (!family) return null;
-  return {
-    family,
-    fullName: readString(data.fullName) || family,
-    style: readString(data.style),
-    postscriptName: readString(data.postscriptName),
-  };
-}
-
-// The raw `FontData` each mapped face came from: only it exposes `.blob()`,
-// and `LocalFont` stays a plain data shape.
-interface FaceEntry {
-  font: LocalFont;
-  source: unknown;
-}
-
-let faceEntries: FaceEntry[] = [];
 let resolved: LocalFont[] | null = null;
 const listeners = new Set<() => void>();
 
 async function queryOnce(): Promise<LocalFont[] | null> {
-  const query = localFontQuery();
-  if (!query) return null;
+  if (!hasDeviceFontSource()) return null;
   try {
-    const faces = await query();
-    if (!Array.isArray(faces)) return null;
-    const entries: FaceEntry[] = [];
-    for (const face of faces) {
-      const font = toLocalFont(face);
-      if (font) entries.push({ font, source: face });
-    }
-    faceEntries = entries;
-    resolved = entries.map((entry) => entry.font);
+    resolved = await listDeviceFaces();
     for (const listener of [...listeners]) listener();
     return resolved;
   } catch {
@@ -106,52 +71,11 @@ export async function retryLocalFonts(): Promise<LocalFont[] | null> {
   return listLocalFonts();
 }
 
-export type LocalFontPermission =
-  | "granted"
-  | "prompt"
-  | "denied"
-  | "unsupported";
-
-async function permissionStatus(): Promise<PermissionStatus | null> {
-  try {
-    return await navigator.permissions.query({
-      name: "local-fonts" as PermissionName,
-    });
-  } catch {
-    return null;
-  }
-}
-
-export async function localFontPermission(): Promise<LocalFontPermission> {
-  if (!isLocalFontAccessSupported()) return "unsupported";
-  return (await permissionStatus())?.state ?? "prompt";
-}
-
 /** Lists the device's fonts only when that cannot prompt: access was granted earlier. Resolves to what is already loaded, or null without access. */
 export async function listLocalFontsIfGranted(): Promise<LocalFont[] | null> {
   if (!isLocalFontAccessSupported() || resolved) return resolved;
   if ((await localFontPermission()) !== "granted") return null;
   return retryLocalFonts();
-}
-
-export function watchLocalFontPermission(
-  listener: (permission: LocalFontPermission) => void,
-): () => void {
-  if (!isLocalFontAccessSupported()) return () => {};
-  let status: PermissionStatus | null = null;
-  let stopped = false;
-  const onChange = () => {
-    if (status) listener(status.state);
-  };
-  void permissionStatus().then((s) => {
-    if (stopped || !s) return;
-    status = s;
-    s.addEventListener("change", onChange);
-  });
-  return () => {
-    stopped = true;
-    status?.removeEventListener("change", onChange);
-  };
 }
 
 /**
@@ -175,7 +99,6 @@ export function subscribeLocalFonts(listener: () => void): () => void {
 /** Drops the memoised result. Exists for tests. */
 export function resetLocalFontsCache(): void {
   pending = null;
-  faceEntries = [];
   resolved = null;
   bytesByFamily.clear();
   faceKeyByFamily.clear();
@@ -332,10 +255,11 @@ function scoreFace(
   const style = faceStyleText(font);
   const bold = /bold|black|heavy|semib|demi/.test(style);
   const italic = /italic|oblique/.test(style);
+  const plain = /^(regular|book|normal|roman)?$/.test(style);
   let score = 0;
   if (bold === wantBold) score += 4;
   if (italic === wantItalic) score += 4;
-  if (/^(regular|book|normal|roman)?$/.test(style)) score += 2;
+  if (plain) score += 2;
   // Tie-break towards the plainer cut: "Light Condensed" also matches an
   // upright non-bold request, but "Regular" is what the user meant.
   return score - Math.min(style.length, 32) / 100;
@@ -381,33 +305,16 @@ export function pickRequestedFace(
   return best;
 }
 
-interface BlobSource {
-  blob?: () => Promise<unknown>;
-}
+/** A device face's bytes, or why there are none: its licence forbids embedding, or it is missing, unreadable or not TrueType. */
+export type LocalFontLoad =
+  | { bytes: Uint8Array }
+  | { refused: "licence" | "unavailable" };
 
-interface BlobBytes {
-  arrayBuffer?: () => Promise<ArrayBuffer>;
-}
-
-async function readFaceBytes(source: unknown): Promise<Uint8Array | null> {
-  if (!source || typeof source !== "object") return null;
-  const read = (source as BlobSource).blob;
-  if (typeof read !== "function") return null;
-  try {
-    const blob = await read.call(source);
-    if (!blob || typeof blob !== "object") return null;
-    const toBuffer = (blob as BlobBytes).arrayBuffer;
-    if (typeof toBuffer !== "function") return null;
-    const bytes = new Uint8Array(await toBuffer.call(blob));
-    return bytes.length > 0 ? bytes : null;
-  } catch {
-    return null;
-  }
-}
+const UNAVAILABLE: LocalFontLoad = { refused: "unavailable" };
 
 const bytesByFamily = new Map<string, Uint8Array>();
 const faceKeyByFamily = new Map<string, string>();
-const bytesPending = new Map<string, Promise<Uint8Array | null>>();
+const bytesPending = new Map<string, Promise<LocalFontLoad>>();
 
 export function registerFontBytes(family: string, bytes: Uint8Array): void {
   const key = normaliseName(family);
@@ -424,31 +331,30 @@ export function getLocalFaceKey(family: string): string | null {
   return faceKeyByFamily.get(normaliseName(family)) ?? null;
 }
 
-// The font file bytes behind a family name, cached for the session. Null when
-// unsupported, denied, unmatched, or unreadable - never throws.
-export async function loadLocalFontBytes(
-  family: string,
-): Promise<Uint8Array | null> {
+async function readFamily(family: string): Promise<LocalFontLoad> {
+  const fonts = await listLocalFonts();
+  const picked = fonts ? pickLocalFontFace(fonts, family) : null;
+  if (!picked) return UNAVAILABLE;
+  const file = await readDeviceFace(picked);
+  const bytes = file ? fontFace(file, picked.postscriptName) : null;
+  if (!bytes) return UNAVAILABLE;
+  if (embeddingForbidden(bytes)) return { refused: "licence" };
+  if (!hasTrueTypeOutlines(bytes)) return UNAVAILABLE;
   const key = normaliseName(family);
-  if (!key) return null;
+  bytesByFamily.set(key, bytes);
+  faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);
+  return { bytes };
+}
+
+/** The font file behind a family name, cached for the session. Never throws. */
+export async function loadLocalFont(family: string): Promise<LocalFontLoad> {
+  const key = normaliseName(family);
+  if (!key) return UNAVAILABLE;
   const cached = bytesByFamily.get(key);
-  if (cached) return cached;
+  if (cached) return { bytes: cached };
   const inFlight = bytesPending.get(key);
   if (inFlight) return inFlight;
-  const job = (async (): Promise<Uint8Array | null> => {
-    const fonts = await listLocalFonts();
-    if (!fonts) return null;
-    const picked = pickLocalFontFace(fonts, family);
-    if (!picked) return null;
-    const entry = faceEntries.find((candidate) => candidate.font === picked);
-    const file = entry ? await readFaceBytes(entry.source) : null;
-    const bytes = file ? fontFace(file, picked.postscriptName) : null;
-    if (bytes) {
-      bytesByFamily.set(key, bytes);
-      faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);
-    }
-    return bytes;
-  })();
+  const job = readFamily(family);
   bytesPending.set(key, job);
   try {
     return await job;
@@ -457,4 +363,12 @@ export async function loadLocalFontBytes(
     // this family for the rest of the session.
     bytesPending.delete(key);
   }
+}
+
+/** {@link loadLocalFont}'s bytes, or null whatever the reason. */
+export async function loadLocalFontBytes(
+  family: string,
+): Promise<Uint8Array | null> {
+  const load = await loadLocalFont(family);
+  return "bytes" in load ? load.bytes : null;
 }

@@ -17,6 +17,7 @@ import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { assembleSfnt } from "@editor/tools/pdfTextEditor/util/sfnt";
 
 type QueryStub = () => Promise<unknown[]>;
 
@@ -61,8 +62,11 @@ function plainFont(family: string, style: string): LocalFont {
   };
 }
 
-/** Not a real font file: parseTrueTypeCmap gives up, so coverage fails open. */
-const FAKE_FONT_BYTES = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+/** TrueType outlines but no cmap, so coverage fails open. */
+const FAKE_FONT_BYTES = assembleSfnt(
+  0x00010000,
+  new Map([["glyf", new Uint8Array(4)]]),
+);
 
 interface FakeModuleOptions {
   loadFont?: (

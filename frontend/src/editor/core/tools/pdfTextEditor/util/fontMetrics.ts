@@ -15,9 +15,7 @@ export interface FontMetrics {
   tops: Map<number, number>;
   kind: FaceKind;
   weight: number;
-  restricted: boolean;
   variableWeight: number | null;
-  cff: boolean;
   outlines: string;
 }
 
@@ -46,6 +44,37 @@ function defaultWeight(
     return max >= 100 ? dv.getInt32(axis + 8) / 65536 : null;
   }
   return null;
+}
+
+const FS_TYPE_OFFSET = 8;
+const FS_TYPE_USAGE_MASK = 0x000f;
+const FS_TYPE_RESTRICTED = 0x0002;
+const FS_TYPE_BITMAP_ONLY = 0x0200;
+
+function tablesOf(bytes: Uint8Array): {
+  dv: DataView;
+  tables: Map<string, SfntTable> | null;
+} {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  return { dv, tables: readTableDirectory(dv) };
+}
+
+/** Whether one face's OS/2 fsType forbids embedding it (Restricted Licence, or bitmap-only); no readable OS/2 means no restriction. Must match EditorFontReader on the server. */
+export function embeddingForbidden(bytes: Uint8Array): boolean {
+  const { dv, tables } = tablesOf(bytes);
+  const os2 = tables?.get("OS/2");
+  if (!os2 || os2.offset + FS_TYPE_OFFSET + 2 > dv.byteLength) return false;
+  const fsType = dv.getUint16(os2.offset + FS_TYPE_OFFSET);
+  return (
+    (fsType & FS_TYPE_USAGE_MASK) === FS_TYPE_RESTRICTED ||
+    (fsType & FS_TYPE_BITMAP_ONLY) !== 0
+  );
+}
+
+/** Whether one face has TrueType outlines: the editor embeds device fonts as TrueType, and a CFF face saves as a broken font resource. */
+export function hasTrueTypeOutlines(bytes: Uint8Array): boolean {
+  const { tables } = tablesOf(bytes);
+  return !!tables?.has("glyf") && !tables.has("CFF ") && !tables.has("CFF2");
 }
 
 const parsed = new WeakMap<Uint8Array, FontMetrics | null>();
@@ -90,14 +119,12 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
 
     const os2 = t.get("OS/2");
     let weight = 400;
-    let restricted = false;
     let os2Xh = 0;
     let os2Cap = 0;
     let panose: number[] | null = null;
     if (os2 && os2.length >= 78) {
       const version = dv.getUint16(os2.offset);
       weight = dv.getUint16(os2.offset + 4);
-      restricted = (dv.getUint16(os2.offset + 8) & 0x000f) === 0x0002;
       panose = Array.from({ length: 10 }, (_, i) =>
         dv.getUint8(os2.offset + 32 + i),
       );
@@ -120,9 +147,7 @@ function readFontMetrics(bytes: Uint8Array): FontMetrics | null {
       tops,
       kind: kindOf(fixedPitch, panose),
       weight,
-      restricted,
       variableWeight: defaultWeight(dv, t.get("fvar")),
-      cff: t.has("CFF ") || t.has("CFF2"),
       outlines: outlinesKey(bytes, t.get("glyf")),
     };
   } catch {

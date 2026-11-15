@@ -37,7 +37,7 @@ import {
   localFontPermission,
   watchLocalFontPermission,
   type LocalFontPermission,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+} from "@editor/tools/pdfTextEditor/util/localFontSource";
 import {
   deviceFontsCouldCover,
   deviceScanFaceCount,

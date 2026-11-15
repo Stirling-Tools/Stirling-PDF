@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { get, alert } = vi.hoisted(() => ({ get: vi.fn(), alert: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
@@ -12,6 +12,7 @@ import {
   SERVER_FONTS_URL,
   forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
+import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
 
 const MANIFEST = {
   families: [
@@ -197,5 +198,45 @@ describe("font picker server fonts", () => {
       "placeholder",
       "pdfTextEditor.fontPicker.scannedText",
     );
+  });
+});
+
+describe("font picker device fonts", () => {
+  beforeEach(() => {
+    resetLocalFontsCache();
+    Object.defineProperty(navigator, "permissions", {
+      configurable: true,
+      value: { query: vi.fn().mockResolvedValue({ state: "granted" }) },
+    });
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, "permissions");
+    delete (window as unknown as { queryLocalFonts?: unknown }).queryLocalFonts;
+  });
+
+  it("lists the device fonts from the button after the automatic listing failed", async () => {
+    const queryLocalFonts = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("busy"))
+      .mockResolvedValue([
+        { family: "Acme Serif", style: "Regular", postscriptName: "AcmeSerif" },
+      ]);
+    (window as unknown as { queryLocalFonts: unknown }).queryLocalFonts =
+      queryLocalFonts;
+    renderPicker(async () => null);
+    await waitFor(() => expect(queryLocalFonts).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByTestId("pdf-editor-use-device-fonts"));
+
+    await waitFor(() => expect(queryLocalFonts).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("pdf-editor-use-device-fonts"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByTestId("pdf-editor-device-fonts-notice"),
+    ).not.toBeInTheDocument();
   });
 });
