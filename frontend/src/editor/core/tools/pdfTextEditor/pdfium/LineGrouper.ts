@@ -1,6 +1,7 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -18,6 +19,9 @@ export type BlockKey = (run: TextRun) => string;
 
 export const SAME_BLOCK: BlockKey = () => "";
 
+export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
+  (a.renderMode === RENDER_MODE_INVISIBLE) ===
+  (b.renderMode === RENDER_MODE_INVISIBLE);
 /** The advance of a space in the run's font, in ems, or null when the font cannot say. */
 export type SpaceAdvance = (run: TextRun) => number | null;
 
@@ -179,7 +183,7 @@ function groupPartitionIntoLines(
     const sameBlock =
       isBulletLead(run) || block === null || blockKey(run) === block;
 
-    if (sameLine && close && sameBlock) {
+    if (sameLine && close && sameBlock && sameTextLayer(prev, run)) {
       current.members.push(run);
     } else {
       current = { representative: run, members: [run] };
@@ -195,10 +199,10 @@ export class LineGrouper {
     blockKey: BlockKey = SAME_BLOCK,
     spaceAdvance: SpaceAdvance = NO_SPACE_ADVANCE,
   ): LineGroupInfo[] {
-    // Partition by form-xobject container BEFORE grouping.
-    const partitions = new Map<number, TextRun[]>();
+    // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
+    const partitions = new Map<string, TextRun[]>();
     for (const run of page.runs) {
-      const key = run.containerPtr || 0;
+      const key = `${run.containerPtr || 0}:${run.renderMode === RENDER_MODE_INVISIBLE}`;
       const list = partitions.get(key);
       if (list) list.push(run);
       else partitions.set(key, [run]);

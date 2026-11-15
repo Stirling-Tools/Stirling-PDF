@@ -235,7 +235,7 @@ export function _clearFontNameCacheForTests(): void {
 
 // Read a font's /BaseFont name, the identity used to tell WHICH face a handle
 // points at when two fonts on the page render the same char.
-function readFontName(
+export function readFontName(
   m: ResolverContext["module"],
   fontPtr: number,
 ): string | undefined {

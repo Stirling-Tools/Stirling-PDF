@@ -22,6 +22,7 @@ export interface Command {
   // Optional - when true, a matching `coalesceKey` merges this command into the
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
+  supersedes?(adjacent: Command): boolean;
   /** Undo or redo a merged group in one move, on its last command; false steps through it instead. */
   moveGroup?(
     doc: EditorDocument,

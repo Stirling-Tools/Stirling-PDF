@@ -21,6 +21,8 @@ import {
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
+  base14FontId,
+  deviceFontId,
   documentFontHandle,
   isDocumentFontId,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
@@ -190,7 +192,9 @@ export class SetFontFamilyCommand implements Command {
       run.fontSubset = documentFont?.subset ?? false;
       run.documentFont = null;
     } else {
-      run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
+      run.fontId = embedded
+        ? deviceFontId(this.nextFamily)
+        : base14FontId(this.nextFamily);
       run.fontSubset = false;
     }
     // Reset ALL model bookkeeping to the freshly-emitted objects so later

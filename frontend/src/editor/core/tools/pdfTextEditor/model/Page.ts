@@ -55,6 +55,7 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
+  shownInViewer: boolean;
   // Consecutive bounded edits, oldest first: each changed nothing outside its area.
   private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 
@@ -84,6 +85,7 @@ export class Page {
     this.fills = [];
     this.needsGenerateContent = false;
     this.regenerated = false;
+    this.shownInViewer = false;
   }
 
   setRuns(runs: TextRun[]): void {

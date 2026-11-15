@@ -268,7 +268,7 @@ function runTexts(doc: EditorDocument, pageIndex = 0): string[] {
 }
 
 async function savedBytes(doc: EditorDocument): Promise<Uint8Array> {
-  const { blob } = await exportToBlob(doc, "cut.pdf");
+  const blob = await exportToBlob(doc);
   return new Uint8Array(await blob.arrayBuffer());
 }
 

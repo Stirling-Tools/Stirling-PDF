@@ -9,6 +9,11 @@ export function isItalicFamily(fontId: string): boolean {
   return /italic|oblique/i.test(fontId);
 }
 
+/** Subset fonts carry a 6-letter "ABCDEF+" tag; strip it for display. */
+export function stripSubsetTag(name: string): string {
+  return name.replace(/^[A-Z]{6}\+/, "");
+}
+
 /** Strip any `prefix:` qualifier that `PdfiumTextReader` adds to font ids. */
 export function familyOf(fontId: string): string {
   const idx = fontId.lastIndexOf(":");
@@ -25,6 +30,26 @@ export function documentFontHandle(fontId: string): number {
   if (!isDocumentFontId(fontId)) return 0;
   const n = Number(fontId.split(":")[1]);
   return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+const DEVICE_FONT_PREFIX = "device:";
+const BASE14_FONT_PREFIX = "base14:";
+
+/** Whether a fontId names an installed or server font embedded by the editor. */
+export function isDeviceFontId(fontId: string): boolean {
+  return fontId.startsWith(DEVICE_FONT_PREFIX);
+}
+
+export function isBase14FontId(fontId: string): boolean {
+  return fontId.startsWith(BASE14_FONT_PREFIX);
+}
+
+export function deviceFontId(family: string): string {
+  return `${DEVICE_FONT_PREFIX}${family}`;
+}
+
+export function base14FontId(family: string): string {
+  return `${BASE14_FONT_PREFIX}${family}`;
 }
 
 type Base14Root = "Helvetica" | "Times" | "Courier";
