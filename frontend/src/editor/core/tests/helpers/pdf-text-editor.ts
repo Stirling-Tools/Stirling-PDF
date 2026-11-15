@@ -100,8 +100,18 @@ export async function showInTextEditor(
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  const name = typeof file === "string" ? path.basename(file) : file.name;
   await page.getByTestId("file-input").setInputFiles(file);
+  await viewInTextEditor(
+    page,
+    typeof file === "string" ? path.basename(file) : file.name,
+  );
+}
+
+/** Shows an uploaded file in the viewer by its sidebar row's eye button. */
+export async function viewInTextEditor(
+  page: Page,
+  name: string,
+): Promise<void> {
   const row = page
     .locator(".file-sidebar-file-item")
     .filter({ hasText: name })

@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import {
@@ -424,7 +427,7 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
     test.setTimeout(180_000);
     const page0Loaded = await openEditor(page, "many-pages-sample.pdf");
 
-    await page.getByTestId("pdf-editor-page-5").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 5);
     const page5Loaded = await settled(page, 5);
     const runs5 = await runsOn(page, 5);
     expect(runs5.length, "page index 5 has no runs").toBeGreaterThan(0);
@@ -442,11 +445,11 @@ test.describe("PDF text editor - save round-trip fidelity (pixels)", () => {
 
     // Scroll back before saving: page 0 is virtualised away while page 6 is on
     // screen, and the round-trip is measured on both.
-    await page.getByTestId("pdf-editor-page-0").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 0);
     await settled(page, 0);
     await saveAndReopen(page, 0);
     const page0After = await settled(page, 0);
-    await page.getByTestId("pdf-editor-page-5").scrollIntoViewIfNeeded();
+    await scrollToEditorPage(page, 5);
     const page5After = await settled(page, 5);
 
     expect(
