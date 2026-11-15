@@ -28,6 +28,7 @@ import {
   type StirlingFileStub,
 } from "@editor/types/fileContext";
 import type { ToolOperation } from "@editor/types/file";
+import { uploadSafeFormData } from "@editor/utils/inMemoryUpload";
 
 export enum ChatRole {
   USER = "user",
@@ -589,7 +590,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
-            body: formData,
+            body: await uploadSafeFormData(formData),
             headers: await getAuthHeaders(),
             credentials: "include",
             signal: controller.signal,

@@ -46,7 +46,7 @@ jobs:
 
             const { owner, repo } = context.repo;
             const pr = context.payload.pull_request;
-            const LOCALE_FILE = /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/;
+            const LOCALE_FILE = /^frontend\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/;
             const REFERENCE_FILE = "frontend/public/locales/en-US/translation.toml";
 
             const files = await github.paginate(github.rest.pulls.listFiles, {

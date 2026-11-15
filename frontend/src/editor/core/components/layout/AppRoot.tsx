@@ -5,6 +5,7 @@ import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
 import { stripBasePath } from "@editor/constants/app";
 import { DOCS_PATH, HAS_DOCS } from "@editor/routes/docsRoute";
 import { StartupPrompts } from "@editor/components/startup/StartupPrompts";
+import { useServerSetupPending } from "@editor/components/startup/ServerSetupGate";
 import { usePdfEngineWarmUp } from "@editor/hooks/usePdfEngineWarmUp";
 
 // Their own chunks: the settings tree (admin sections, account, licence flows)
@@ -38,10 +39,13 @@ function AppContent() {
 /** The editor's authenticated or login-disabled routes, including catch-all entries. */
 export function AppRoot() {
   usePdfEngineWarmUp();
+  // Unmounted, not just covered: under setup's overlay the editor could still
+  // take keyboard focus and be used before the default password is replaced.
+  const setupPending = useServerSetupPending();
   return (
     <>
       <StartupPrompts />
-      <AppContent />
+      {!setupPending && <AppContent />}
     </>
   );
 }
