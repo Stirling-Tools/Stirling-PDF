@@ -4849,6 +4849,9 @@ body_other = "Clear {{count}} files from recents? This can't be undone."
 button = "Clear recents"
 confirm = "Clear recents"
 error = "Could not clear. Try again."
+openNote_one = "1 of them is open in the workbench."
+openNote_other = "{{count}} of them are open in the workbench."
+skipOpen = "Skip open files"
 title = "Clear recents?"
 
 [fileSidebar.fileItem]

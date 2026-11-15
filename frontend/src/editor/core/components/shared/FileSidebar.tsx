@@ -889,28 +889,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       () => allFileStubs.filter((s) => s.folderId == null),
       [allFileStubs],
     );
-    const handleConfirmClearLibrary = useCallback(async () => {
-      const ids = (clearTargets ?? []).map((s) => s.id);
-      const orphans = await fileStorage.orphanedAncestorIds(ids);
-      const doomed = [...ids, ...orphans];
-      // Storage goes first: removeFiles only logs a failed delete, and the dialog
-      // has to see it before any file is closed.
-      await indexedDB.deleteMultiple(doomed);
-      await fileActions.removeFiles(doomed, true);
-      // The dialog's warning covers unsaved changes on a cleared file, so none
-      // are left to prompt about on the next navigation.
-      if (activeFileId && doomed.includes(activeFileId as FileId)) {
-        navActions.setHasUnsavedChanges(false);
-      }
-      await refreshStubs();
-    }, [
-      clearTargets,
-      indexedDB,
-      fileActions,
-      refreshStubs,
-      activeFileId,
-      navActions,
-    ]);
+    const openClearTargetIds = useMemo(() => {
+      const open = new Set(state.files.ids.map(String));
+      return new Set(
+        (clearTargets ?? []).filter((s) => open.has(s.id)).map((s) => s.id),
+      );
+    }, [clearTargets, state.files.ids]);
+    const handleConfirmClearLibrary = useCallback(
+      async (skipOpen: boolean) => {
+        const ids = (clearTargets ?? [])
+          .map((s) => s.id)
+          .filter((id) => !skipOpen || !openClearTargetIds.has(id));
+        const orphans = await fileStorage.orphanedAncestorIds(ids);
+        const doomed = [...ids, ...orphans];
+        // Storage goes first: removeFiles only logs a failed delete, and the dialog
+        // has to see it before any file is closed.
+        await indexedDB.deleteMultiple(doomed);
+        await fileActions.removeFiles(doomed, true);
+        // The dialog's warning covers unsaved changes on a cleared file, so none
+        // are left to prompt about on the next navigation.
+        if (activeFileId && doomed.includes(activeFileId as FileId)) {
+          navActions.setHasUnsavedChanges(false);
+        }
+        await refreshStubs();
+      },
+      [
+        clearTargets,
+        openClearTargetIds,
+        indexedDB,
+        fileActions,
+        refreshStubs,
+        activeFileId,
+        navActions,
+      ],
+    );
 
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -1339,6 +1351,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <ClearLibraryDialog
           opened={clearTargets !== null}
           clearCount={clearTargets?.length ?? 0}
+          openCount={openClearTargetIds.size}
           onClose={() => setClearTargets(null)}
           onConfirm={handleConfirmClearLibrary}
         />

@@ -1570,6 +1570,7 @@ test.describe("Files page", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog).toContainText("Clear 5 files from recents?");
       await expect(dialog).toContainText("This can't be undone.");
+      await expect(dialog).toContainText("1 of them is open in the workbench.");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
       await expect(rows).toHaveCount(1);
@@ -1579,6 +1580,36 @@ test.describe("Files page", () => {
         0,
       );
       expect(serverDeletes).toEqual([]);
+    });
+
+    test("Skip open files clears the rest and leaves open files alone", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "loose", name: "loose.pdf", remoteStorageId: null },
+      ]);
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(1, { timeout: 10_000 });
+      await uploadFiles(
+        page,
+        `${import.meta.dirname}/../test-fixtures/sample.pdf`,
+      );
+      await expect(rows).toHaveCount(2);
+
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-library").click();
+      await expect(page.getByRole("dialog")).toContainText(
+        "1 of them is open in the workbench.",
+      );
+      await page.getByTestId("file-sidebar-clear-library-skip-open").click();
+
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(rows).toHaveCount(1);
+      await expect(rows.first()).toContainText("sample.pdf");
     });
   });
 });

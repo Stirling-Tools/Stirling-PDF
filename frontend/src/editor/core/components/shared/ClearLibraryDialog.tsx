@@ -8,33 +8,37 @@ interface ClearLibraryDialogProps {
   opened: boolean;
   /** Files the clear will remove. */
   clearCount: number;
+  /** How many of those are open in the workbench. */
+  openCount: number;
   onClose: () => void;
-  /** Perform the clear; may throw to surface an error. */
-  onConfirm: () => Promise<void>;
+  /** Perform the clear, leaving open files alone if asked; may throw to surface an error. */
+  onConfirm: (skipOpen: boolean) => Promise<void>;
 }
 
 export function ClearLibraryDialog({
   opened,
   clearCount,
+  openCount,
   onClose,
   onConfirm,
 }: ClearLibraryDialogProps) {
   const { t } = useTranslation();
-  const [submitting, setSubmitting] = useState(false);
+  // Which choice is running, so only that button spins.
+  const [submitting, setSubmitting] = useState<"all" | "skipOpen" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (opened) {
-      setSubmitting(false);
+      setSubmitting(null);
       setError(null);
     }
   }, [opened]);
 
-  const runClear = async () => {
-    setSubmitting(true);
+  const runClear = async (skipOpen: boolean) => {
+    setSubmitting(skipOpen ? "skipOpen" : "all");
     setError(null);
     try {
-      await onConfirm();
+      await onConfirm(skipOpen);
       onClose();
     } catch (err) {
       console.error("Failed to clear recents:", err);
@@ -42,7 +46,7 @@ export function ClearLibraryDialog({
         t("fileSidebar.clearRecents.error", "Could not clear. Try again."),
       );
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
     }
   };
 
@@ -63,6 +67,15 @@ export function ClearLibraryDialog({
             { count: clearCount },
           )}
         </Text>
+        {openCount > 0 && (
+          <Text size="sm">
+            {t(
+              "fileSidebar.clearRecents.openNote",
+              "{{count}} of them are open in the workbench.",
+              { count: openCount },
+            )}
+          </Text>
+        )}
 
         {error && (
           <Alert
@@ -76,13 +89,31 @@ export function ClearLibraryDialog({
         )}
 
         <Group justify="flex-end">
-          <Button variant="secondary" onClick={onClose} disabled={submitting}>
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={submitting !== null}
+          >
             {t("filesPage.cancel", "Cancel")}
           </Button>
+          {/* Skipping every file would clear nothing, so the choice is only
+              offered when some files aren't open. */}
+          {openCount > 0 && openCount < clearCount && (
+            <Button
+              variant="secondary"
+              loading={submitting === "skipOpen"}
+              disabled={submitting === "all"}
+              onClick={() => void runClear(true)}
+              data-testid="file-sidebar-clear-library-skip-open"
+            >
+              {t("fileSidebar.clearRecents.skipOpen", "Skip open files")}
+            </Button>
+          )}
           <Button
             accent="danger"
-            loading={submitting}
-            onClick={() => void runClear()}
+            loading={submitting === "all"}
+            disabled={submitting === "skipOpen"}
+            onClick={() => void runClear(false)}
             data-testid="file-sidebar-clear-library-confirm"
           >
             {t("fileSidebar.clearRecents.confirm", "Clear recents")}
