@@ -114,8 +114,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
 
     function onPlainKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === "?" || e.key === "F1") {
-        if (isFocusInContentEditable()) return;
+      // "?" is a character that types into text; F1 types nothing, so it opens the help from anywhere.
+      if (e.key === "F1" || (e.key === "?" && !isFocusInContentEditable())) {
         e.preventDefault();
         onToggleHelp();
         return;

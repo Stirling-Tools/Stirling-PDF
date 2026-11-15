@@ -76,3 +76,27 @@ describe("editor shortcuts behind a dialog", () => {
     expect(cbs.onDelete).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("help while editing text", () => {
+  // jsdom has no isContentEditable; the editor treats a focused text field the same way.
+  function focusText(): HTMLTextAreaElement {
+    const field = document.createElement("textarea");
+    document.body.append(field);
+    field.focus();
+    return field;
+  }
+
+  test("F1 opens the help with the caret in a line of text", () => {
+    const cbs = setup();
+    focusText();
+    press("F1");
+    expect(cbs.onToggleHelp).toHaveBeenCalledTimes(1);
+  });
+
+  test("? still types into the line instead of opening the help", () => {
+    const cbs = setup();
+    focusText();
+    press("?");
+    expect(cbs.onToggleHelp).not.toHaveBeenCalled();
+  });
+});
