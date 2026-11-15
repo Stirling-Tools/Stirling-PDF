@@ -84,15 +84,6 @@ const NO_POLICIES: never[] = [];
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
 const BULK_ADD_INDICATOR_MIN = 8;
 
-/** Edits that exist only here: not yet written back to the linked disk file, or
- *  newer than the uploaded cloud copy. */
-function hasUnsyncedEdits(stub: StirlingFileStub): boolean {
-  if (stub.isDirty && stub.localFilePath) return true;
-  if (typeof stub.remoteStorageId !== "number") return false;
-  const localUpdatedAt = stub.createdAt ?? stub.lastModified ?? 0;
-  return (stub.remoteStorageUpdatedAt ?? 0) < localUpdatedAt;
-}
-
 export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
@@ -893,11 +884,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
-    // Kept: foldered files, which the user filed deliberately, and files whose
-    // edits would be lost with them.
+    // Foldered files are kept: the user filed them deliberately.
     const clearableStubs = useMemo(
-      () =>
-        allFileStubs.filter((s) => s.folderId == null && !hasUnsyncedEdits(s)),
+      () => allFileStubs.filter((s) => s.folderId == null),
       [allFileStubs],
     );
     const handleConfirmClearLibrary = useCallback(async () => {
@@ -908,8 +897,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       // has to see it before any file is closed.
       await indexedDB.deleteMultiple(doomed);
       await fileActions.removeFiles(doomed, true);
+      // The dialog's warning covers unsaved changes on a cleared file, so none
+      // are left to prompt about on the next navigation.
+      if (activeFileId && doomed.includes(activeFileId as FileId)) {
+        navActions.setHasUnsavedChanges(false);
+      }
       await refreshStubs();
-    }, [clearTargets, indexedDB, fileActions, refreshStubs]);
+    }, [
+      clearTargets,
+      indexedDB,
+      fileActions,
+      refreshStubs,
+      activeFileId,
+      navActions,
+    ]);
 
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -1340,7 +1341,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           clearCount={clearTargets?.length ?? 0}
           onClose={() => setClearTargets(null)}
           onConfirm={handleConfirmClearLibrary}
-          guard={requestNavigation}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}

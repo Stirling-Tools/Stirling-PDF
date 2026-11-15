@@ -1515,7 +1515,7 @@ test.describe("Files page", () => {
   test.describe("Clear recents", () => {
     test.use({ autoGoto: false });
 
-    test("clears loose and open files, keeps foldered and unsaved ones, never touches the cloud", async ({
+    test("clears everything outside folders, including open and unsaved files, and never touches the cloud", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -1568,14 +1568,12 @@ test.describe("Files page", () => {
         .hover();
       await page.getByTestId("file-sidebar-clear-library").click();
       const dialog = page.getByRole("dialog");
-      await expect(dialog).toContainText("Clear 3 files from recents?");
+      await expect(dialog).toContainText("Clear 5 files from recents?");
       await expect(dialog).toContainText("This can't be undone.");
       await page.getByTestId("file-sidebar-clear-library-confirm").click();
 
-      await expect(rows).toHaveCount(3);
+      await expect(rows).toHaveCount(1);
       await expect(rows.filter({ hasText: "filed.pdf" })).toHaveCount(1);
-      await expect(rows.filter({ hasText: "dirty.pdf" })).toHaveCount(1);
-      await expect(rows.filter({ hasText: "edited.pdf" })).toHaveCount(1);
       // Only kept files are left, so there is nothing more to clear.
       await expect(page.getByTestId("file-sidebar-clear-library")).toHaveCount(
         0,

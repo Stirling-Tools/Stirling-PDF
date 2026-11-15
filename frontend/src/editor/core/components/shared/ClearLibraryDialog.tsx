@@ -11,9 +11,6 @@ interface ClearLibraryDialogProps {
   onClose: () => void;
   /** Perform the clear; may throw to surface an error. */
   onConfirm: () => Promise<void>;
-  /** The unsaved-changes check, which may hold the confirm behind a save prompt;
-   *  cancelling that prompt leaves this dialog open with nothing cleared. */
-  guard: (run: () => void) => void;
 }
 
 export function ClearLibraryDialog({
@@ -21,7 +18,6 @@ export function ClearLibraryDialog({
   clearCount,
   onClose,
   onConfirm,
-  guard,
 }: ClearLibraryDialogProps) {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
@@ -86,7 +82,7 @@ export function ClearLibraryDialog({
           <Button
             accent="danger"
             loading={submitting}
-            onClick={() => guard(() => void runClear())}
+            onClick={() => void runClear()}
             data-testid="file-sidebar-clear-library-confirm"
           >
             {t("fileSidebar.clearRecents.confirm", "Clear recents")}
