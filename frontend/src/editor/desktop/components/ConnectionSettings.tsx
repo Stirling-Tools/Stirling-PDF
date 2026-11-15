@@ -9,6 +9,7 @@ import {
 import { authService, UserInfo } from "@editor/services/authService";
 import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
 import { useAuth } from "@editor/auth/UseSession";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -130,7 +131,15 @@ export const ConnectionSettings: React.FC = () => {
                   <Text size="sm" fw={500}>
                     {t("settings.connection.server", "Server")}
                   </Text>
-                  <Text size="sm" c="dimmed">
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                    className={
+                      config.mode === "saas"
+                        ? undefined
+                        : privateContentClassName
+                    }
+                  >
                     {config.mode === "saas"
                       ? "stirling.com"
                       : config.server_config.url}
@@ -142,7 +151,11 @@ export const ConnectionSettings: React.FC = () => {
                     <Text size="sm" fw={500}>
                       {t("settings.connection.user", "Logged in as")}
                     </Text>
-                    <Text size="sm" c="dimmed">
+                    <Text
+                      size="sm"
+                      c="dimmed"
+                      className={privateContentClassName}
+                    >
                       {userInfo.username}
                       {userInfo.email && ` (${userInfo.email})`}
                     </Text>

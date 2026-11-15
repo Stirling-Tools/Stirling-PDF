@@ -14,16 +14,14 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The owner password to be added to the PDF file (Restricts what can be done"
-                            + " with the document once it is opened)",
+                    "Password needed to change the prevent* restrictions. Must differ from"
+                            + " password for them to hold.",
             format = "password")
     @ToString.Exclude
     private String ownerPassword;
 
     @Schema(
-            description =
-                    "The password to be added to the PDF file (Restricts the opening of the"
-                            + " document itself.)",
+            description = "Password needed to open the PDF. Leave empty to only add restrictions.",
             format = "password")
     @ToString.Exclude
     private String password;
@@ -37,7 +35,9 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Change permissions while retaining existing passwords and encryption. A supplied ownerPassword replaces the permissions password.",
+                    "Change permissions on an encrypted source. Omitting or leaving ownerPassword"
+                            + " empty retains its passwords and encryption; supplying ownerPassword replaces"
+                            + " the permissions password while keeping the opening password and encryption key length.",
             defaultValue = "false")
     private boolean preserveExisting;
 

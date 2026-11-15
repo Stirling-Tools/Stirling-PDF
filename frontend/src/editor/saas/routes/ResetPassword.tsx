@@ -10,6 +10,7 @@ import { supabase } from "@editor/auth/supabase";
 import { absoluteWithBasePath } from "@editor/constants/app";
 import { useTranslation } from "@editor/hooks/useTranslation";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -215,7 +216,7 @@ export default function ResetPassword() {
                 placeholder={t("signup.enterPassword")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="auth-input"
+                className={`auth-input ${privateContentClassName}`}
               />
             </div>
             <div className="auth-field">
@@ -230,7 +231,7 @@ export default function ResetPassword() {
                 placeholder={t("signup.confirmPasswordPlaceholder")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="auth-input"
+                className={`auth-input ${privateContentClassName}`}
               />
             </div>
           </div>

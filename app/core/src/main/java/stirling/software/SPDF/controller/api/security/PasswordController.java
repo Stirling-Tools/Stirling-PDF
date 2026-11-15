@@ -139,8 +139,7 @@ public class PasswordController {
             }
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_password_removed.pdf"),
+                    GeneralUtils.generateFilename(fileInput.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         } catch (IOException e) {
             // Handle password errors specifically
@@ -231,10 +230,18 @@ public class PasswordController {
                             produces = ToolFormat.PDF,
                             arity = ToolArity.SISO))
     @Operation(
-            summary = "Add password to a PDF file",
+            summary = "Add a password and permission restrictions to a PDF",
             description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file. sourcePassword authenticates an existing protected source; preserveExisting changes permissions while retaining existing credentials. Omitting these options preserves the existing add-password behaviour.")
+                    "password sets an optional opening password; omit or leave it empty for"
+                            + " owner-only protection with ownerPassword. For new protection, prevent*"
+                            + " restrictions require a nonempty ownerPassword different from password."
+                            + " sourcePassword opens an already protected file. With preserveExisting=true"
+                            + " on an encrypted file, omitting or leaving ownerPassword empty retains"
+                            + " the existing passwords and changes permissions; supplying ownerPassword"
+                            + " replaces the permissions password while retaining the opening password."
+                            + " Replacement requires the existing opening password in password or"
+                            + " sourcePassword. When sourcePassword is a distinct permissions password,"
+                            + " password must contain the source's existing opening password.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         boolean explicitProtection =
@@ -264,8 +271,7 @@ public class PasswordController {
                     return WebResponseUtils.pdfDocToWebResponse(
                             document,
                             GeneralUtils.generateFilename(
-                                    request.getFileInput().getOriginalFilename(),
-                                    "_permissions.pdf"),
+                                    request.getFileInput().getOriginalFilename(), ".pdf"),
                             tempFileManager);
                 }
                 String reader = request.getPassword() == null ? "" : request.getPassword();
@@ -318,10 +324,8 @@ public class PasswordController {
             protection.setPreferAES(document.getEncryption().getVersion() >= 4);
         }
         document.protect(protection);
-        String suffix =
-                owner.isEmpty() && reader.isEmpty() ? "_permissions.pdf" : "_passworded.pdf";
         String filename =
-                GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), suffix);
+                GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), ".pdf");
         if (!validate || permissions.isOwnerPermission()) {
             return WebResponseUtils.pdfDocToWebResponse(document, filename, tempFileManager);
         }

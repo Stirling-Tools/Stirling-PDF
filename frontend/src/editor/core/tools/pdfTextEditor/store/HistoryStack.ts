@@ -101,6 +101,14 @@ export class HistoryStack {
     this.redoStack.length = 0;
   }
 
+  /** Push a command the caller already applied, as its own undo step. */
+  record(cmd: Command): void {
+    this.undoStack.push(cmd);
+    if (this.undoStack.length > this.limit) this.undoStack.shift();
+    this.lastCoalesceKey = null;
+    this.redoStack.length = 0;
+  }
+
   undo(doc: EditorDocument): Command | null {
     const cmd = this.undoStack.pop();
     if (!cmd) return null;

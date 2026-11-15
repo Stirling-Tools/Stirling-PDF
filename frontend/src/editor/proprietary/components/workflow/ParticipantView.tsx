@@ -15,6 +15,9 @@ import {
 import { Button } from "@editor/ui/Button";
 import { useParticipantSession } from "@editor/hooks/workflow/useParticipantSession";
 import { Icon } from "@editor/ui/Icon";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { uploadSafeFormData } from "@editor/utils/inMemoryUpload";
 interface ParticipantViewProps {
   token: string;
 }
@@ -83,7 +86,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           "/api/v1/workflow/participant/validate-certificate",
           {
             method: "POST",
-            body: formData,
+            body: await uploadSafeFormData(formData),
           },
         );
         const data = await res.json();
@@ -303,10 +306,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         <Stack gap="sm">
           <Group justify="space-between">
             <div>
-              <Text fw={500} size="lg">
+              <Text fw={500} size="lg" className={privateContentClassName}>
                 {session.documentName}
               </Text>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c="dimmed" className={privateContentClassName}>
                 {t("workflow.participant.from", "From: {{name}}", {
                   name: session.ownerUsername,
                 })}
@@ -321,7 +324,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               color="blue"
               variant="light"
             >
-              <Text size="sm">{session.message}</Text>
+              <Text size="sm" className={privateContentClassName}>
+                {session.message}
+              </Text>
             </Alert>
           )}
 
@@ -396,6 +401,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                     "Select certificate file",
                   )}
                   value={certFile}
+                  className={privateContentClassName}
                   onChange={setCertFile}
                   accept=".p12,.pfx,.jks"
                   size="sm"
@@ -448,9 +454,11 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                           },
                         )
                       : ""}
-                    {certValidation.subjectName
-                      ? ` · ${certValidation.subjectName}`
-                      : ""}
+                    {certValidation.subjectName && (
+                      <PrivateContent>
+                        {` · ${certValidation.subjectName}`}
+                      </PrivateContent>
+                    )}
                   </Text>
                 )}
                 {certValidation.status === "error" && (
@@ -476,6 +484,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 "e.g., San Francisco, CA",
               )}
               value={location}
+              className={privateContentClassName}
               onChange={(e) => setLocation(e.currentTarget.value)}
               size="sm"
             />
@@ -487,6 +496,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 "e.g., Document approval",
               )}
               value={reason}
+              className={privateContentClassName}
               onChange={(e) => setReason(e.currentTarget.value)}
               size="sm"
             />

@@ -11,6 +11,7 @@ import { uploadHistoryChain } from "@editor/services/serverStorageUpload";
 import { fileStorage } from "@editor/services/fileStorage";
 import { useFileActions } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 interface UploadToServerModalProps {
   opened: boolean;
@@ -102,7 +103,8 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
           )}
         </Text>
         <Text size="sm" c="dimmed">
-          {t("storageUpload.fileLabel", "File")}: {file.name}
+          {t("storageUpload.fileLabel", "File")}:{" "}
+          <PrivateContent>{file.name}</PrivateContent>
         </Text>
         <Text size="xs" c="dimmed">
           {t(

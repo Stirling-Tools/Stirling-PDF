@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -25,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -55,6 +58,8 @@ public class ConvertMarkdownToPdf {
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
+    private final OfficeConversionService officeConversionService;
+    private final OfficeToPdfService officeToPdfService;
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
@@ -73,7 +78,10 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
                             + " input, converts it to HTML, and then to PDF format.")
-    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<Resource> markdownToPdf(
+            @ModelAttribute GeneralFile generalFile,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
@@ -96,6 +104,8 @@ public class ConvertMarkdownToPdf {
                     "error.fileFormatRequired", "File must be in {0} format", ".md or .zip");
         }
 
+        boolean officeConvert =
+                officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
         byte[] pdfBytes;
         String outputFilename;
 
@@ -140,15 +150,7 @@ public class ConvertMarkdownToPdf {
                 // Create a new ZIP with HTML + images for WeasyPrint
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
 
-                // Use FileToPdf which already supports ZIP files with images
-                pdfBytes =
-                        FileToPdf.convertHtmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(),
-                                null,
-                                htmlZipBytes,
-                                "package.zip",
-                                tempFileManager,
-                                customHtmlSanitizer);
+                pdfBytes = convertHtml(htmlZipBytes, true, officeConvert);
 
                 outputFilename =
                         GeneralUtils.generateFilename(
@@ -161,13 +163,7 @@ public class ConvertMarkdownToPdf {
                     renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
 
             pdfBytes =
-                    FileToPdf.convertHtmlToPdf(
-                            runtimePathConfig.getWeasyPrintPath(),
-                            null,
-                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                            "converted.html",
-                            tempFileManager,
-                            customHtmlSanitizer);
+                    convertHtml(htmlContent.getBytes(StandardCharsets.UTF_8), false, officeConvert);
 
             outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         }
@@ -182,6 +178,20 @@ public class ConvertMarkdownToPdf {
             throw e;
         }
         return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+    }
+
+    private byte[] convertHtml(byte[] html, boolean packaged, boolean officeConvert)
+            throws Exception {
+        if (officeConvert) {
+            return officeToPdfService.convertHtml(html, packaged);
+        }
+        return FileToPdf.convertHtmlToPdf(
+                runtimePathConfig.getWeasyPrintPath(),
+                null,
+                html,
+                packaged ? "package.zip" : "converted.html",
+                tempFileManager,
+                customHtmlSanitizer);
     }
 
     static String renderHtml(String markdown) {

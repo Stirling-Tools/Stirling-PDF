@@ -22,6 +22,7 @@ import type {
   TypedSignatureSource,
 } from "@editor/components/tools/sign/createSignature/types";
 import styles from "@editor/components/tools/sign/createSignature/TypeSignaturePanel.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 const RENDER_FONT_SIZE = 120;
 
@@ -117,6 +118,7 @@ export const TypeSignaturePanel = forwardRef<
         <FormField label={t("sign.wallet.type.name", "Your name")}>
           <Input
             value={name}
+            className={privateContentClassName}
             onChange={(event) => setName(event.currentTarget.value)}
             placeholder={t(
               "sign.wallet.type.namePlaceholder",
@@ -129,6 +131,7 @@ export const TypeSignaturePanel = forwardRef<
         <FormField label={t("sign.wallet.type.initials", "Initials")}>
           <Input
             value={initials}
+            className={privateContentClassName}
             onChange={(event) => setInitialsOverride(event.currentTarget.value)}
             maxLength={6}
           />

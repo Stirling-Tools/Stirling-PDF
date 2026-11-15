@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Modal } from "@editor/ui/Modal";
 import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface DeleteSignatureModalProps {
   name: string;
@@ -49,7 +50,7 @@ export function DeleteSignatureModal({
       width="sm"
       footer={footer}
     >
-      <p className={styles.dialogBody}>
+      <p className={`${styles.dialogBody} ${privateContentClassName}`}>
         {t(
           "sign.wallet.delete.body",
           '"{{name}}" is removed from your signatures. Documents you already signed keep it.',

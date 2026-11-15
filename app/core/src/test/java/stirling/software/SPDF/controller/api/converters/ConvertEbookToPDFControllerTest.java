@@ -72,6 +72,9 @@ class ConvertEbookToPDFControllerTest {
 
     private static final String CALIBRE_PATH = "/opt/calibre/ebook-convert";
 
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+
     @InjectMocks private ConvertEbookToPDFController controller;
 
     @BeforeEach
@@ -158,8 +161,8 @@ class ConvertEbookToPDFControllerTest {
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
-            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
-                    .thenReturn("ebook_convertedToPDF.pdf");
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
+                    .thenReturn("ebook.pdf");
 
             ResponseEntity<Resource> response = controller.convertEbookToPdf(request);
 
@@ -265,8 +268,8 @@ class ConvertEbookToPDFControllerTest {
                                 return execResult;
                             });
 
-            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
-                    .thenReturn("ebook_convertedToPDF.pdf");
+            gu.when(() -> GeneralUtils.generateFilename("ebook.epub", ".pdf"))
+                    .thenReturn("ebook.pdf");
             byte[] optimizedBytes = "optimized".getBytes(StandardCharsets.UTF_8);
             gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
                     .thenReturn(optimizedBytes);

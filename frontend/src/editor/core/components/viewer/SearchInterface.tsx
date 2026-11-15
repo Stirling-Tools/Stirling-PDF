@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { ViewerContext } from "@editor/contexts/ViewerContext";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SearchInterfaceProps {
   visible: boolean;
@@ -223,6 +224,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           ref={inputRef}
           placeholder={t("search.placeholder", "Enter search term...")}
           value={searchQuery}
+          className={privateContentClassName}
           onChange={(e) => {
             const newValue = e.currentTarget.value;
             setSearchQuery(newValue);

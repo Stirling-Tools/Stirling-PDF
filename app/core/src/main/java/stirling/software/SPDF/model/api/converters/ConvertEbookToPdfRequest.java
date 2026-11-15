@@ -11,6 +11,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ConvertEbookToPdfRequest {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description =
                     "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2,"

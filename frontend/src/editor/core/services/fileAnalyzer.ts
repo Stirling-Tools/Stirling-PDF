@@ -80,9 +80,10 @@ export class FileAnalyzer {
       };
     }
 
-    const m = await getPdfiumModule();
+    let m: Awaited<ReturnType<typeof getPdfiumModule>> | null = null;
     let docPtr: number | null = null;
     try {
+      m = await getPdfiumModule();
       const arrayBuffer = await file.arrayBuffer();
       docPtr = await openRawDocumentSafe(arrayBuffer, "");
       const pageCount = await getRawPageCount(docPtr);
@@ -100,7 +101,7 @@ export class FileAnalyzer {
         isCorrupted: !isEncrypted,
       };
     } finally {
-      if (docPtr != null) {
+      if (m && docPtr) {
         closeDocAndFreeBuffer(m, docPtr);
       }
     }

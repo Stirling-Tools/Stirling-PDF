@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import type { FileState } from "@editor/types/file";
 import { formatFileSize } from "@editor/utils/fileUtils";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface SelectDocumentStepProps {
   selectedFiles: FileState[];
@@ -54,7 +55,12 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
                 style={{ color: "var(--mantine-color-red-6)" }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Text size="sm" fw={600} truncate>
+                <Text
+                  size="sm"
+                  fw={600}
+                  truncate
+                  className={privateContentClassName}
+                >
                   {selectedFile?.name}
                 </Text>
                 {selectedFile?.size && (

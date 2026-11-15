@@ -12,6 +12,9 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class ConvertPdfToEpubRequest extends PDFFile {
 
+    @Schema(description = "Use Stirling Office Convert; when omitted, follow the server setting")
+    private Boolean useStirlingOfficeConvert;
+
     @Schema(
             description = "Detect headings that look like chapters and insert EPUB page breaks.",
             allowableValues = {"true", "false"},

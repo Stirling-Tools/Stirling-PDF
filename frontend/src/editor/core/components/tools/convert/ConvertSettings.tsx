@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -9,6 +10,7 @@ import {
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
   usesOfficeEngine,
+  getEndpointName,
 } from "@editor/utils/convertUtils";
 import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
@@ -69,6 +71,12 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
+  const endpointName = getEndpointName(
+    parameters.fromExtension,
+    parameters.toExtension,
+  );
+  const serverDefault = useOfficeConversionDefault(endpointName);
+  const officeConvert = parameters.useStirlingOfficeConvert ?? serverDefault;
   const { preferences } = usePreferences();
   const localProcessingOnly = useLocalProcessingOnly();
   const hideUnavailableConversions =
@@ -392,10 +400,11 @@ const ConvertSettings = ({
         )}
 
       {/* Web to PDF options */}
-      {(isWebFormat(parameters.fromExtension) &&
+      {!officeConvert &&
+      ((isWebFormat(parameters.fromExtension) &&
         parameters.toExtension === "pdf") ||
-      (parameters.isSmartDetection &&
-        parameters.smartDetectionType === "web") ? (
+        (parameters.isSmartDetection &&
+          parameters.smartDetectionType === "web")) ? (
         <>
           <Divider />
           <ConvertFromWebSettings
@@ -527,17 +536,21 @@ const ConvertSettings = ({
           </>
         )}
 
-      {/* Stirling Office Convert or LibreOffice */}
-      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) &&
+      !(
+        ["eml", "msg"].includes(parameters.fromExtension) &&
+        parameters.emailOptions.downloadHtml
+      ) ? (
         <>
           <Divider />
           <ConvertOfficeEngineSettings
+            endpointName={endpointName}
             parameters={parameters}
             onParameterChange={onParameterChange}
             disabled={disabled}
           />
         </>
-      )}
+      ) : null}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

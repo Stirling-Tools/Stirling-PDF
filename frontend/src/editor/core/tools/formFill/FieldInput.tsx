@@ -18,6 +18,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useFieldValue } from "@editor/tools/formFill/FormFillContext";
 import type { FormField } from "@editor/tools/formFill/types";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+
+// Dropdowns portal out of the field container, and their options are the PDF's.
+const PRIVATE_DROPDOWN = { classNames: { dropdown: privateContentClassName } };
 
 function FieldInputInner({
   field,
@@ -101,6 +105,7 @@ function FieldInputInner({
           disabled={field.readOnly}
           aria-label={field.label || field.name}
           aria-required={field.required}
+          comboboxProps={PRIVATE_DROPDOWN}
           styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );
@@ -124,6 +129,7 @@ function FieldInputInner({
             disabled={field.readOnly}
             aria-label={field.label || field.name}
             aria-required={field.required}
+            comboboxProps={PRIVATE_DROPDOWN}
             styles={{ input: { fontSize: "0.8125rem" } }}
           />
         );
@@ -140,6 +146,7 @@ function FieldInputInner({
           disabled={field.readOnly}
           aria-label={field.label || field.name}
           aria-required={field.required}
+          comboboxProps={PRIVATE_DROPDOWN}
           styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );

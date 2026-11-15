@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The host owns the query so it survives switching between list and grid views. */
 export function FilenameSearch({
@@ -56,6 +57,7 @@ export function FilenameSearch({
       >
         <TextInput
           ref={inputRef}
+          className={privateContentClassName}
           data-autofocus
           size="sm"
           value={value}

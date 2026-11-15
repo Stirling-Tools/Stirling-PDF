@@ -4,6 +4,8 @@ import { Icon } from "@editor/ui/Icon";
 import { Button } from "@editor/ui/Button";
 import { useAllFiles } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface Props {
   /** Workbench file the editor currently holds, when it came from one. */
@@ -26,7 +28,11 @@ export function EditorFileSwitcher({
   const label = (
     <span className="pdf-editor-topbar__file">
       <Icon name="file-text" size={20} style={{ flexShrink: 0 }} />
-      <span className="pdf-editor-topbar__filename">{currentFileName}</span>
+      <span
+        className={`pdf-editor-topbar__filename ${privateContentClassName}`}
+      >
+        {currentFileName}
+      </span>
       {dirty && (
         <span
           className="pdf-editor-topbar__dirty"
@@ -39,7 +45,7 @@ export function EditorFileSwitcher({
 
   if (pdfs.length < 2) {
     return (
-      <Tooltip label={currentFileName}>
+      <Tooltip label={<PrivateContent>{currentFileName}</PrivateContent>}>
         <Text
           size="xs"
           c="dimmed"
@@ -63,6 +69,7 @@ export function EditorFileSwitcher({
           rightSection={<Icon name="chevron-down" size={20} />}
           data-testid="pdf-editor-file-switcher"
           title={currentFileName}
+          className={privateContentClassName}
         >
           <span data-testid="pdf-editor-filename">{label}</span>
         </Button>
@@ -92,7 +99,7 @@ export function EditorFileSwitcher({
                 onPick(file);
               }}
             >
-              {file.name}
+              <PrivateContent>{file.name}</PrivateContent>
             </Menu.Item>
           );
         })}

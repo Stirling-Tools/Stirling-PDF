@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 interface DiskConflictModalProps {
   opened: boolean;
@@ -37,7 +38,7 @@ export function DiskConflictModal({
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="md">
-        <Text fw={600} ta="center">
+        <Text fw={600} ta="center" className={privateContentClassName}>
           {fileName}
         </Text>
         <Text c="dimmed">
