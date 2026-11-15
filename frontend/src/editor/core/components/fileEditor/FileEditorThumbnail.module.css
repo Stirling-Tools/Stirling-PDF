@@ -265,7 +265,7 @@
 }
 
 .versionBadgeThumb {
-  background: var(--mantine-color-blue-6);
+  background: var(--c-primary-hover);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 10px;
