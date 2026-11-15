@@ -1,7 +1,6 @@
 package stirling.software.common.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
@@ -297,6 +296,7 @@ class JobControllerTest {
         when(jobQueue.isJobQueued(jobId)).thenReturn(true);
         when(jobQueue.getJobPosition(jobId)).thenReturn(2);
         when(jobQueue.cancelJob(jobId)).thenReturn(true);
+        when(taskManager.getJobResult(jobId)).thenReturn(new JobResult());
 
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
@@ -311,7 +311,7 @@ class JobControllerTest {
         assertEquals(2, responseBody.get("queuePosition"));
 
         verify(jobQueue).cancelJob(jobId);
-        verify(taskManager, never()).setError(anyString(), anyString());
+        verify(taskManager).setError(jobId, "Job was cancelled by user");
     }
 
     @Test

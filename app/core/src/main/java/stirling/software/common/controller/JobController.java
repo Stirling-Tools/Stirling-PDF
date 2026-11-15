@@ -185,13 +185,13 @@ public class JobController {
             log.info("Cancelled queued job: {} (was at position {})", jobId, queuePosition);
         }
 
-        if (!cancelled) {
-            JobResult result = taskManager.getJobResult(jobId);
-            if (result != null && !result.isComplete()) {
-                taskManager.setError(jobId, "Job was cancelled by user");
-                cancelled = true;
-                log.info("Marked job as cancelled in TaskManager: {}", jobId);
-            }
+        // Also for a job just removed from the queue: a task left incomplete is later swept
+        // without deleting its input copies.
+        JobResult result = taskManager.getJobResult(jobId);
+        if (result != null && !result.isComplete()) {
+            taskManager.setError(jobId, "Job was cancelled by user");
+            cancelled = true;
+            log.info("Marked job as cancelled in TaskManager: {}", jobId);
         }
 
         if (cancelled) {
@@ -204,7 +204,6 @@ public class JobController {
                             "queuePosition",
                             queuePosition >= 0 ? queuePosition : "n/a"));
         } else {
-            JobResult result = taskManager.getJobResult(jobId);
             if (result == null) {
                 return ResponseEntity.notFound().build();
             } else if (result.isComplete()) {
