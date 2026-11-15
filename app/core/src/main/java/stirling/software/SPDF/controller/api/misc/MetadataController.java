@@ -189,7 +189,7 @@ public class MetadataController {
                     document,
                     GeneralUtils.removeExtension(
                                     Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
-                            + "_metadata.pdf",
+                            + ".pdf",
                     tempFileManager);
         }
     }

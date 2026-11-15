@@ -17,6 +17,10 @@ export interface FormFieldProps {
    * instead of taking up permanent space under the control like `helperText`.
    */
   info?: ReactNode;
+  /** Puts the (i) before the label instead of after it. */
+  infoBeforeLabel?: boolean;
+  /** For a field shown over a layer above the default tooltip layer. */
+  infoZIndex?: number;
   /** Error string. Causes the control + helper region to swap to the error tone. */
   error?: ReactNode;
   required?: boolean;
@@ -39,6 +43,8 @@ export function FormField({
   label,
   helperText,
   info,
+  infoBeforeLabel = false,
+  infoZIndex,
   error,
   required,
   children,
@@ -66,6 +72,9 @@ export function FormField({
     >
       {(label || info) && (
         <div className="sui-field__label-row">
+          {info && infoBeforeLabel && (
+            <InfoTooltip label={info} zIndex={infoZIndex} />
+          )}
           {label && (
             <label htmlFor={controlId} className="sui-field__label">
               {label}
@@ -77,7 +86,9 @@ export function FormField({
               )}
             </label>
           )}
-          {info && <InfoTooltip label={info} />}
+          {info && !infoBeforeLabel && (
+            <InfoTooltip label={info} zIndex={infoZIndex} />
+          )}
         </div>
       )}
       <div className="sui-field__control">{child}</div>

@@ -43,7 +43,7 @@ export function useOpenWindowFiles() {
       }
 
       // Download + ingest any server-only stubs first; local stubs pass through.
-      const materialized = await materializeServerStubs(stubs, {
+      const { stubs: materialized } = await materializeServerStubs(stubs, {
         addFiles: actions.addFilesWithOptions,
         updateStub: actions.updateStirlingFileStub,
       });
