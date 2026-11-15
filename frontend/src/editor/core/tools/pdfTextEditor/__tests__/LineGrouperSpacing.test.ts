@@ -2,7 +2,10 @@
 import { describe, it, expect } from "vitest";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import {
+  LineGrouper,
+  type SpaceAdvance,
+} from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
 
 let ptr = 5000;
 function mkRun(opts: {
@@ -40,11 +43,11 @@ function lineOf(
   return runs;
 }
 
-function joinLine(runs: TextRun[]): string {
+function joinLine(runs: TextRun[], spaceAdvance?: SpaceAdvance): string {
   const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
   page.setRuns(runs);
   page.loaded = true;
-  const groups = LineGrouper.apply(page);
+  const groups = LineGrouper.apply(page, undefined, spaceAdvance);
   expect(groups.length, "runs formed a single line group").toBe(1);
   return groups[0].representative.text;
 }
@@ -167,5 +170,52 @@ describe("LineGrouper inter-run space synthesis", () => {
       ),
     );
     expect(text).toBe("Water");
+  });
+
+  it("counts spaces by the font's space width when two gaps are all the line has", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "documents ", width: 50, gapAfter: 5.9 },
+          { text: "A ", width: 6.6, gapAfter: 9.4 },
+          { text: "B", width: 5.7 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("documents  A   B");
+  });
+
+  it("keeps two equal justified gaps as ONE space each when the font space is narrower", () => {
+    const helveticaSpace = () => 0.278;
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "The", width: 16, gapAfter: 7.4 },
+          { text: "quick", width: 25, gapAfter: 7.4 },
+          { text: "brown", width: 29 },
+        ],
+        10,
+      ),
+      helveticaSpace,
+    );
+    expect(text).toBe("The quick brown");
+  });
+
+  it("keeps the gap-based count when the font reports no usable space width", () => {
+    const text = joinLine(
+      lineOf(
+        [
+          { text: "Item", width: 20, gapAfter: 3.4 },
+          { text: "one", width: 17, gapAfter: 6.6 },
+          { text: "two", width: 18 },
+        ],
+        10,
+      ),
+      () => 0,
+    );
+    expect(text).toBe("Item one  two");
   });
 });

@@ -78,6 +78,7 @@ export const SCRATCH = {
   readerReadTextA: key(),
   readerReadTextB: key(),
   readerSize: key(),
+  readerSpaceWidth: key(),
   reflowText: key(),
   charcodes: key(),
   tagName: key(),
