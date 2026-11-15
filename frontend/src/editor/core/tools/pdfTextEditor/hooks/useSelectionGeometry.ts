@@ -29,6 +29,31 @@ export interface SelectionGeometry {
  * Only meaningful for a single object - the fields would have to invent a
  * value for a mixed selection, so the panel shows a hint instead.
  */
+// The panel may draw a deferred snapshot, so setters read bounds from the store when they run.
+function liveRunBounds(
+  store: EditorStore,
+  runId: string,
+  fallback: PageRect,
+): PageRect {
+  for (const page of store.getState().pages) {
+    const run = page.runs.find((r) => r.id === runId);
+    if (run) return run.bounds;
+  }
+  return fallback;
+}
+
+function liveImageBounds(
+  store: EditorStore,
+  imageId: string,
+  fallback: PageRect,
+): PageRect {
+  for (const page of store.getState().pages) {
+    const img = page.images.find((i) => i.id === imageId);
+    if (img) return img.bounds;
+  }
+  return fallback;
+}
+
 export function useSelectionGeometry(
   store: EditorStore,
   state: EditorViewState,
@@ -59,7 +84,7 @@ export function useSelectionGeometry(
                 new MoveTextRunCommand({
                   pageIndex,
                   runId,
-                  dx: next - bounds.x,
+                  dx: next - liveRunBounds(store, runId, bounds).x,
                   dy: 0,
                 }),
               ),
@@ -69,7 +94,7 @@ export function useSelectionGeometry(
                   pageIndex,
                   runId,
                   dx: 0,
-                  dy: next - bounds.y,
+                  dy: next - liveRunBounds(store, runId, bounds).y,
                 }),
               ),
             // Narrowing a run is exactly the wrap gesture, so it reuses the
@@ -100,7 +125,10 @@ export function useSelectionGeometry(
             new SetImageTransformCommand({
               pageIndex,
               imageId,
-              nextBounds: { ...bounds, ...patch },
+              nextBounds: {
+                ...liveImageBounds(store, imageId, bounds),
+                ...patch,
+              },
             }),
           );
         return {

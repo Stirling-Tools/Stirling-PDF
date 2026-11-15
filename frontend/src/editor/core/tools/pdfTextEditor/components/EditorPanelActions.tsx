@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Box, Group, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,7 @@ interface Props {
   onShowHelp: () => void;
 }
 
-export function EditorPanelActions({
+export const EditorPanelActions = memo(function EditorPanelActions({
   compact,
   openedFileName,
   dirty,
@@ -125,4 +126,4 @@ export function EditorPanelActions({
       </Group>
     </Box>
   );
-}
+});

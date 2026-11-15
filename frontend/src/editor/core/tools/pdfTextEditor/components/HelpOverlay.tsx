@@ -1,6 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
 import { isMacLike, type HotkeyBinding } from "@editor/utils/hotkeys";
 import "@editor/tools/pdfTextEditor/components/HelpOverlay.css";
@@ -29,9 +30,8 @@ const mod = (
   ...extra,
 });
 
-export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
-  const { t } = useTranslation();
-  const SHORTCUTS: Section[] = [
+function shortcutSections(t: TFunction): Section[] {
+  return [
     {
       heading: t("pdfTextEditor.help.editing.heading", "Editing"),
       items: [
@@ -195,6 +195,12 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       ],
     },
   ];
+}
+
+export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
+  const { t } = useTranslation();
+  // The editor re-renders this on every keystroke, open or not.
+  const sections = useMemo(() => shortcutSections(t), [t]);
 
   return (
     <Modal
@@ -205,7 +211,7 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       data-testid="pdf-editor-help-overlay"
     >
       <Stack gap="lg">
-        {SHORTCUTS.map((section) => (
+        {sections.map((section) => (
           <section key={section.heading}>
             <h3 className="pdf-editor-help__section-title">
               {section.heading}
