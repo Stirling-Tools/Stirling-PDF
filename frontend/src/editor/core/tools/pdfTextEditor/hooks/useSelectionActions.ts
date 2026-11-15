@@ -82,7 +82,9 @@ async function fontPickFailure(
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
 }
 
+/** Null when the family is ready to draw, or when `doc` is no longer the open document, which callers check for themselves. */
 async function prepareFamily(
+  store: EditorStore,
   doc: EditorStore["document"],
   family: string,
   text: string,
@@ -91,9 +93,10 @@ async function prepareFamily(
   // A no-op for the built-in families.
   const failure = await fontPickFailure(family, text);
   if (failure) return failure;
+  // Another document may have opened during the download; this one's PDFium handle is then gone.
+  if (!doc || store.document !== doc) return null;
   // Refuse here, as the command would fall back to a standard face the user never picked.
   if (
-    doc &&
     nearestStandardFont(family) !== family &&
     !tryEmbedDeviceFont(doc, family)
   )
@@ -270,6 +273,7 @@ export function useSelectionActions(store: EditorStore) {
       }));
       if (!isDocumentFontId(family)) {
         const failure = await prepareFamily(
+          store,
           doc,
           family,
           changes.map((change) => change.text).join(""),
@@ -285,7 +289,7 @@ export function useSelectionActions(store: EditorStore) {
             .map((c) => c.text)
             .join("");
           // A styled cut that will not load is not worth refusing the family the user picked.
-          if (await prepareFamily(doc, face, text)) {
+          if (await prepareFamily(store, doc, face, text)) {
             for (const change of changes)
               if (change.family === face) change.family = family;
           }
@@ -329,7 +333,8 @@ export function useSelectionActions(store: EditorStore) {
     for (const target of targets) {
       if (target.device) {
         if (await prepareExternalFont(target.family)) continue;
-        if (!doc || !tryEmbedDeviceFont(doc, target.family)) continue;
+        if (!doc || store.document !== doc) return;
+        if (!tryEmbedDeviceFont(doc, target.family)) continue;
       }
       ready.push(target);
     }

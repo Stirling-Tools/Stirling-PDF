@@ -99,6 +99,8 @@ function fakeStore(
       loadedPages: () => [{ runs }],
       docPtr: 1,
       ownedFont: (id: string) => owned.get(id),
+      findOwnedFont: (matches: (font: { id: string }) => boolean) =>
+        [...owned.values()].find(matches),
       registerOwnedFont: (font: { id: string }) => owned.set(font.id, font),
       recordEmbeddedFontFile: () => {},
       module: {
@@ -307,6 +309,8 @@ describe("useSelectionActions font changes", () => {
       ["a"],
     );
 
+    const closed = vi.spyOn(store.document!.module, "FPDFText_LoadFont");
+
     const picked = actionsFor(store).changeFontFamily("Acme Sans");
     openAnotherDocument();
     await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2));
@@ -314,6 +318,7 @@ describe("useSelectionActions font changes", () => {
 
     expect(await picked).toBeNull();
     expect(dispatch).not.toHaveBeenCalled();
+    expect(closed).not.toHaveBeenCalled();
   });
 
   it("skips runs removed during the download and records nothing when none remain", async () => {
