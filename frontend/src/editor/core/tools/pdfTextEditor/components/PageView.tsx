@@ -3,8 +3,10 @@ import { Box, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
+  PageRect,
   PageSnapshot,
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
@@ -157,6 +159,8 @@ export const PageView = memo(function PageView({
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [rendering, setRendering] = useState(false);
   const [paintedRevision, setPaintedRevision] = useState(-1);
+  // Read by the render effect, which must not re-run when it changes.
+  const paintedRevisionRef = useRef(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
   // True when this page is within ~one viewport of the visible area.
@@ -211,43 +215,77 @@ export const PageView = memo(function PageView({
       return;
     }
     let cancelled = false;
+    let settleTimer = 0;
     if (!canvas) return;
-    setRendering(true);
-    setRenderError(null);
-    PdfiumPageRenderer.render(
-      document,
-      document.page(page.pageIndex),
+    const live = document.page(page.pageIndex);
+    const revision = page.revision;
+    const paintFull = () => {
+      PdfiumPageRenderer.render(document, live, deviceScale)
+        .then((image) => {
+          if (cancelled || !canvasRef.current) return;
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) ctx.putImageData(image, 0, 0);
+          setRendering(false);
+          setRenderError(null);
+          paintedRevisionRef.current = revision;
+          setPaintedRevision(revision);
+          if (firstRenderedDocRef.current !== document) {
+            firstRenderedDocRef.current = document;
+            onFirstRendered?.(page.pageIndex);
+          }
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          const msg =
+            err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+          console.warn(
+            `[pdf-editor] page ${page.pageIndex} render failed`,
+            err,
+          );
+          setRendering(false);
+          setRenderError(msg);
+          // Flip the first-rendered flag on error too, or the loading overlay never dismisses.
+          if (firstRenderedDocRef.current !== document) {
+            firstRenderedDocRef.current = document;
+            onFirstRendered?.(page.pageIndex);
+          }
+        });
+    };
+    const area = changedPixels(
+      live,
       deviceScale,
-    )
-      .then((image) => {
-        if (cancelled || !canvasRef.current) return;
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) ctx.putImageData(image, 0, 0);
-        setRendering(false);
-        setPaintedRevision(page.revision);
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const msg =
-          err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        console.warn(`[pdf-editor] page ${page.pageIndex} render failed`, err);
-        setRendering(false);
-        setRenderError(msg);
-        // Flip the first-rendered flag on error too, so the loading
-        // overlay dismisses instead of leaving the user on a spinner.
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-      });
+      canvas,
+      paintedRevisionRef.current,
+    );
+    if (area) {
+      // Redrawing the whole page, scan image and all, is most of what a keystroke costs.
+      PdfiumPageRenderer.renderArea(document, live, deviceScale, area)
+        .then((image) => {
+          if (cancelled || !canvasRef.current) return;
+          canvas.getContext("2d")?.putImageData(image, area.x, area.y);
+          setRenderError(null);
+          paintedRevisionRef.current = revision;
+          setPaintedRevision(revision);
+          settleTimer = window.setTimeout(
+            paintFull,
+            FULL_REDRAW_AFTER_TYPING_MS,
+          );
+        })
+        .catch(() => {
+          if (cancelled) return;
+          paintedRevisionRef.current = -1;
+          setRetryToken((n) => n + 1);
+        });
+    } else {
+      setRendering(true);
+      setRenderError(null);
+      paintFull();
+    }
     return () => {
       cancelled = true;
+      window.clearTimeout(settleTimer);
     };
   }, [
     nearViewport,
@@ -467,3 +505,19 @@ export const PageView = memo(function PageView({
     </Box>
   );
 });
+
+// Long enough a typing pause to draw the page whole, repairing anything a partial redraw missed.
+const FULL_REDRAW_AFTER_TYPING_MS = 400;
+
+// The canvas pixels to redraw over a bitmap painted at revision `painted`, or null to draw the whole page.
+function changedPixels(
+  page: Page,
+  scale: number,
+  canvas: HTMLCanvasElement,
+  painted: number,
+): PageRect | null {
+  const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+  if (canvas.width !== full.width || canvas.height !== full.height) return null;
+  const raw = page.repaintAreaSince(painted);
+  return raw && PdfiumPageRenderer.pixelsCovering(page, scale, raw);
+}

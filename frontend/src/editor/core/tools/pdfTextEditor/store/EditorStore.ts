@@ -19,7 +19,11 @@ import {
   resetOnPageAdvCache,
   resetPerCharBranchPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type {
+  Command,
+  PageRepaintArea,
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
 import { AdoptTableCommand } from "@editor/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
@@ -419,12 +423,15 @@ export class EditorStore {
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
+    const before = cmd.repaintArea?.(this.doc) ?? null;
+    const fromRevision = before ? this.doc.page(before.pageIndex).revision : -1;
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
       this.recoverFromBrokenStep(err);
       return;
     }
+    if (before) noteRepaintArea(this.doc, cmd, before, fromRevision);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
     this.schedulePositionRefresh();
@@ -663,4 +670,21 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     this.listeners.clear();
   }
+}
+
+function noteRepaintArea(
+  doc: EditorDocument,
+  cmd: Command,
+  before: PageRepaintArea,
+  fromRevision: number,
+): void {
+  const after = cmd.repaintArea?.(doc);
+  if (!after || after.pageIndex !== before.pageIndex) return;
+  const page = doc.page(after.pageIndex);
+  if (page.revision === fromRevision) return;
+  page.noteRepaintArea(
+    fromRevision,
+    page.revision,
+    unionRect(before.area, after.area),
+  );
 }
