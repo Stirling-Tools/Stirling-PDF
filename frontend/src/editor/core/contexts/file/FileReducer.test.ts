@@ -340,3 +340,35 @@ describe("fileContextReducer — REMOVE_FILES", () => {
     expect(next.ui.selectedFileIds).toEqual([]);
   });
 });
+
+describe("fileContextReducer — ADD_SELECTED_FILES", () => {
+  it("merges new selections without duplicating existing ones", () => {
+    const start = {
+      ...stateWith([stub("a"), stub("b")]),
+      ui: {
+        ...initialFileContextState.ui,
+        selectedFileIds: ["a" as FileId],
+      },
+    };
+    const next = fileContextReducer(start, {
+      type: "ADD_SELECTED_FILES",
+      payload: { fileIds: ["a" as FileId, "b" as FileId, "b" as FileId] },
+    });
+    expect(next.ui.selectedFileIds).toEqual(["a", "b"]);
+  });
+
+  it("does not let existing duplicates mask a new selection", () => {
+    const start = {
+      ...stateWith([stub("a"), stub("b")]),
+      ui: {
+        ...initialFileContextState.ui,
+        selectedFileIds: ["a" as FileId, "a" as FileId],
+      },
+    };
+    const next = fileContextReducer(start, {
+      type: "ADD_SELECTED_FILES",
+      payload: { fileIds: ["b" as FileId] },
+    });
+    expect(next.ui.selectedFileIds).toEqual(["a", "b"]);
+  });
+});

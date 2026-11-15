@@ -4,11 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,9 +30,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.verapdf.pdfa.flavours.PDFAFlavour;
+import org.verapdf.pdfa.results.TestAssertion;
+import org.verapdf.pdfa.results.ValidationResults;
+import org.verapdf.pdfa.validation.profiles.Profiles;
+import org.verapdf.pdfa.validation.profiles.RuleId;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.proprietary.model.api.ua.AccessibilityIssue;
 import stirling.software.proprietary.model.api.ua.AccessibilityReport;
 import stirling.software.proprietary.model.api.ua.PdfUaConversionOutcome;
 import stirling.software.proprietary.model.api.ua.UaValidationResult;
@@ -73,6 +83,38 @@ class PdfUaServicesTest {
             document.save(out);
             return out.toByteArray();
         }
+    }
+
+    private static byte[] textOnEveryPage(int pages) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            for (int i = 0; i < pages; i++) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+                try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
+                    cs.beginText();
+                    cs.setFont(font, 12);
+                    cs.newLineAtOffset(50, 700);
+                    cs.showText("Page " + (i + 1));
+                    cs.endText();
+                }
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static TestAssertion assertionAt(String context) {
+        return ValidationResults.assertionFromValues(
+                0,
+                Profiles.defaultRuleId(),
+                TestAssertion.Status.FAILED,
+                "",
+                ValidationResults.locationFromValues("PDDocument", context),
+                context,
+                null,
+                List.of());
     }
 
     private static byte[] manyPages(int pages) throws IOException {
@@ -122,6 +164,69 @@ class PdfUaServicesTest {
                     validation.validate("not a pdf".getBytes(), PdfUaProfile.UA1);
             assertFalse(result.compliant());
             assertFalse(result.issues().isEmpty());
+            assertNotNull(result.validationError(), "a failed run must say it did not validate");
+        }
+
+        @Test
+        @DisplayName("a run that completes carries no validation error")
+        void completedRunHasNoValidationError() throws Exception {
+            UaValidationResult result = validation.validate(unembeddedFontPdf(), PdfUaProfile.UA1);
+            assertNull(result.validationError());
+        }
+
+        @Test
+        @DisplayName("past the kept-failure cap, counts stay exact and pages become a sample")
+        void countsEveryFailureBeyondTheCap() throws Exception {
+            UaValidationResult result = validation.validate(textOnEveryPage(150), PdfUaProfile.UA1);
+            AccessibilityIssue perPage =
+                    result.issues().stream()
+                            .filter(issue -> issue.getOccurrences() >= 150)
+                            .findFirst()
+                            .orElseThrow(() -> new AssertionError("no rule failed on every page"));
+            assertTrue(perPage.getPages().size() <= 100, "pages come from the kept failures");
+            assertFalse(perPage.isPagesComplete(), "a sampled page list must say so");
+            assertEquals(
+                    result.totalFailures(),
+                    result.issues().stream().mapToInt(AccessibilityIssue::getOccurrences).sum());
+        }
+
+        @Test
+        @DisplayName("a page in the object context is reported one-based")
+        void pageOfReadsTheContext() {
+            assertEquals(
+                    3,
+                    PdfUaValidationService.pageOf(
+                            assertionAt(
+                                    "root/document[0]/pages[2](7 0 obj PDPage)/contentStream[0]")));
+            assertNull(
+                    PdfUaValidationService.pageOf(
+                            assertionAt(
+                                    "root/document[0]/StructTreeRoot[0](3 0 obj PDStructTreeRoot)")));
+        }
+
+        @Test
+        @DisplayName("veraPDF's own per-rule totals replace the capped logged counts")
+        void fullCountsReplaceLoggedCounts() {
+            RuleId capped =
+                    Profiles.ruleIdFromValues(PDFAFlavour.Specification.ISO_14289_1, "7.1", 3);
+            AccessibilityIssue cappedIssue = new AccessibilityIssue();
+            cappedIssue.setOccurrences(100);
+            AccessibilityIssue unlisted = new AccessibilityIssue();
+            unlisted.setOccurrences(4);
+            Map<String, AccessibilityIssue> grouped = new LinkedHashMap<>();
+            grouped.put("7.1-3", cappedIssue);
+            grouped.put("n/a-0", unlisted);
+
+            int total =
+                    PdfUaValidationService.applyFullFailureCounts(
+                            grouped, Map.of("7.1-3", capped), Map.of(capped, 250), 104);
+
+            assertEquals(250, cappedIssue.getOccurrences());
+            assertFalse(cappedIssue.isPagesComplete());
+            assertEquals(
+                    4, unlisted.getOccurrences(), "a rule veraPDF did not total keeps its count");
+            assertTrue(unlisted.isPagesComplete());
+            assertEquals(254, total);
         }
 
         @Test
@@ -137,6 +242,20 @@ class PdfUaServicesTest {
     @Nested
     @DisplayName("auditing")
     class Auditing {
+
+        @Test
+        @DisplayName("a file the validator cannot read is reported as unchecked")
+        void unreadableFileIsUnchecked() throws Exception {
+            AccessibilityReport report = audit.audit("not a pdf".getBytes(), PdfUaProfile.UA1);
+            assertNotNull(report.getValidationError());
+            assertFalse(report.isPassesAutomatedChecks());
+        }
+
+        @Test
+        @DisplayName("a validated file has no validation error")
+        void validatedFileHasNoError() throws Exception {
+            assertNull(audit.audit(unembeddedFontPdf(), PdfUaProfile.UA1).getValidationError());
+        }
 
         @Test
         @DisplayName("reports the document facts that drive most failures")
