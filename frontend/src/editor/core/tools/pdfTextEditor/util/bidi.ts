@@ -30,6 +30,8 @@ const MIRRORED: Record<string, string> = {
 
 type Kind = "L" | "R" | "EN" | "AN" | "N";
 
+const COMBINING_MARK = /\p{M}/u;
+
 function kindOf(ch: string): Kind {
   if (ARABIC_NUMBER.test(ch)) return "AN";
   if (EUROPEAN_NUMBER.test(ch)) return "EN";
@@ -42,6 +44,29 @@ function kindOf(ch: string): Kind {
 /** True when `text` holds any right-to-left character. */
 export function hasRtl(text: string): boolean {
   return RTL.test(text);
+}
+
+/**
+ * `text` with each run of combining marks moved back after the right-to-left
+ * letter it sits on. A PDF draws a letter and then its marks; a reader reversing
+ * that visual order code point by code point puts the marks first (UAX #9 L3).
+ */
+export function marksAfterLetters(text: string): string {
+  if (!hasRtl(text)) return text;
+  const chars = [...text];
+  for (let i = 0; i < chars.length; i++) {
+    if (!COMBINING_MARK.test(chars[i])) continue;
+    let end = i;
+    while (end < chars.length && COMBINING_MARK.test(chars[end])) end++;
+    if (
+      end < chars.length &&
+      RTL.test(chars[end]) &&
+      !COMBINING_MARK.test(chars[end])
+    )
+      chars.splice(i, end - i + 1, ...chars.slice(i, end + 1).reverse());
+    i = end;
+  }
+  return chars.join("");
 }
 
 /** True when `text` has more right-to-left letters than left-to-right ones. */
@@ -130,6 +155,16 @@ export function visualOrder(
       order.splice(i, end - i, ...order.slice(i, end).reverse());
       i = end - 1;
     }
+  }
+  // L3: reversal left each right-to-left letter's marks ahead of it; a PDF draws the letter first.
+  for (let i = 0; i < order.length; i++) {
+    if (levels[order[i]] % 2 === 0 || !COMBINING_MARK.test(chars[order[i]]))
+      continue;
+    let end = i;
+    while (end < order.length && COMBINING_MARK.test(chars[order[end]])) end++;
+    if (end < order.length && order[end] < order[i])
+      order.splice(i, end - i + 1, ...order.slice(i, end + 1).reverse());
+    i = end;
   }
   const visual = order
     .map((i) =>

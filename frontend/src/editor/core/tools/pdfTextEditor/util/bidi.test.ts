@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   hasRtl,
   isRtlBase,
+  marksAfterLetters,
   visualOrder,
 } from "@editor/tools/pdfTextEditor/util/bidi";
 
@@ -48,5 +49,29 @@ describe("direction", () => {
   test("finds right-to-left characters", () => {
     expect(hasRtl("hello")).toBe(false);
     expect(hasRtl("مرحبا")).toBe(true);
+  });
+});
+
+describe("combining marks on right-to-left letters", () => {
+  const reversed = (text: string) => [...text].reverse().join("");
+
+  test.each([
+    ["שָׁלוֹם", "ם" + "ו\u05b9" + "ל" + "ש\u05b8\u05c1"],
+    ["يُولَدُ", "د\u064f" + "ل\u064e" + "و" + "ي\u064f"],
+  ])("draws %j with each letter ahead of its marks", (logical, drawn) => {
+    expect(visualOrder(logical).visual).toBe(drawn);
+  });
+
+  test.each(["שָׁלוֹם עוֹלָם", "يُولَدُ جَمِيعُ النَّاسِ"])(
+    "reads %j back from the order it was drawn in",
+    (logical) => {
+      const read = reversed(visualOrder(logical).visual);
+      expect(marksAfterLetters(read)).toBe(logical);
+    },
+  );
+
+  test("leaves marks on left-to-right letters alone", () => {
+    const text = "cafe\u0301 שלום";
+    expect(marksAfterLetters(text)).toBe(text);
   });
 });
