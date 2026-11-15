@@ -576,9 +576,12 @@ const EmbedPdfViewerContent = ({
   const pageToolActive = pageTool != null;
 
   // A page tool draws in the page's own orientation, so a view rotation would
-  // leave its layers off the page content.
+  // leave its layers off the page content. The rotation comes back when the
+  // tool closes.
+  const heldRotationRef = useRef<number | null>(null);
   useEffect(() => {
     if (!pageToolActive) return;
+    heldRotationRef.current ??= getRotationState().rotation;
     const straighten = (rotation: number) => {
       if (rotation !== 0) rotationActions.setRotation(0);
     };
@@ -590,6 +593,12 @@ const EmbedPdfViewerContent = ({
     getRotationState,
     registerImmediateRotationUpdate,
   ]);
+  useEffect(() => {
+    if (pageToolActive) return;
+    const held = heldRotationRef.current;
+    heldRotationRef.current = null;
+    if (held) rotationActions.setRotation(held);
+  }, [pageToolActive, rotationActions]);
 
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
