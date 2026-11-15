@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -18,6 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
 
 import stirling.software.common.model.ApplicationProperties;
 
@@ -111,9 +116,50 @@ class CorsPreflightIntegrationTest {
     }
 
     @Test
-    @DisplayName("error responses stay readable by cross-origin clients")
+    @DisplayName("error dispatch from an API request stays readable by cross-origin clients")
     void errorDispatchReturnsCorsHeaders() throws Exception {
-        mockMvc.perform(get("/error").header("Origin", DESKTOP_ORIGIN))
+        mockMvc.perform(
+                        get("/error")
+                                .header("Origin", DESKTOP_ORIGIN)
+                                .with(
+                                        req -> {
+                                            req.setDispatcherType(DispatcherType.ERROR);
+                                            req.setAttribute(
+                                                    RequestDispatcher.ERROR_REQUEST_URI,
+                                                    "/api/v1/cors-probe");
+                                            return req;
+                                        }))
                 .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "/mcp",
+                "/mcp/messages",
+                "/.well-known/oauth-protected-resource",
+                "/.well-known/oauth-protected-resource/mcp",
+                "/logout"
+            })
+    @DisplayName("preflight to MCP, OAuth metadata, and logout paths returns CORS headers")
+    void preflightOnMcpOauthMetadataAndLogoutReturnsCorsHeaders(String path) throws Exception {
+        mockMvc.perform(
+                        options(path)
+                                .header("Origin", DESKTOP_ORIGIN)
+                                .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", DESKTOP_ORIGIN))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/oauth2/authorization/github", "/login/oauth2/code/github"})
+    @DisplayName("preflight to browser OAuth login and callback paths omits CORS headers")
+    void preflightOnBrowserOAuthFlowsOmitsCorsHeaders(String path) throws Exception {
+        mockMvc.perform(
+                        options(path)
+                                .header("Origin", ORIGIN)
+                                .header("Access-Control-Request-Method", "GET"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 }
