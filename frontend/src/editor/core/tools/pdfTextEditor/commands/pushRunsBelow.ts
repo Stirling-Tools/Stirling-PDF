@@ -70,3 +70,29 @@ export function runsPushedBelow(
   }
   return { runIds: pushed, dy: -drop };
 }
+
+// How far each edited run has pushed the runs below it, net of undo: only that much is pulled back when its lines go.
+const pushedBelow = new WeakMap<TextRun, Map<string, number>>();
+
+export function notePush(edited: TextRun, runId: string, dy: number): void {
+  let pushed = pushedBelow.get(edited);
+  if (!pushed) pushedBelow.set(edited, (pushed = new Map()));
+  const total = (pushed.get(runId) ?? 0) + dy;
+  if (Math.abs(total) < 0.01) pushed.delete(runId);
+  else pushed.set(runId, total);
+}
+
+/**
+ * The runs `edited` pushed down that its shrinking by `rise` points lets back
+ * up, each by no more than it was pushed, so nothing rises above where the
+ * document put it.
+ */
+export function runsPulledBack(
+  edited: TextRun,
+  rise: number,
+): Array<{ runId: string; dy: number }> {
+  if (rise <= 0.5) return [];
+  return [...(pushedBelow.get(edited) ?? [])]
+    .filter(([, total]) => total < 0)
+    .map(([runId, total]) => ({ runId, dy: Math.min(rise, -total) }));
+}

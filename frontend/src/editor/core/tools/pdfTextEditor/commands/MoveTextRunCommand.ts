@@ -11,9 +11,9 @@ import {
 export class MoveTextRunCommand implements Command {
   readonly type = "move-text-run";
   private readonly pageIndex: number;
-  private readonly runId: string;
+  readonly runId: string;
   private readonly dx: number;
-  private readonly dy: number;
+  readonly dy: number;
   private appliedPtrs: number[];
   /** Set when the run was scanned text, moved by redrawing it. */
   private scanPrev: ScanOverride | null = null;

@@ -132,6 +132,52 @@ test.each([
   },
 );
 
+test.each([
+  ["in one burst", false],
+  ["as separate steps", true],
+])(
+  "deleting the added lines brings the paragraph back up, %s",
+  async (_case, separate) => {
+    const { doc, heading, bodyInk, startTop } = await open();
+    const history = new HistoryStack();
+
+    type(doc, history, heading.id, [TWO_BREAKS]);
+    const pushedTop = bodyInk();
+    if (separate) history.breakCoalescing();
+    type(doc, history, heading.id, ["Heading in\na bigger size", HEADING]);
+    expect(bodyInk()).toBeCloseTo(startTop, 3);
+
+    history.undo(doc);
+    if (separate) expect(bodyInk()).toBeCloseTo(pushedTop, 3);
+    else expect(bodyInk()).toBeCloseTo(startTop, 3);
+    history.redo(doc);
+    expect(bodyInk()).toBeCloseTo(startTop, 3);
+  },
+);
+
+test("joining the document's own lines leaves the text below where it is", async () => {
+  const doc = await EditorDocument.open(
+    new Uint8Array(
+      await readFile(
+        path.join(
+          import.meta.dirname,
+          "../../../tests/test-fixtures/mixed-style-sample.pdf",
+        ),
+      ),
+    ),
+  );
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(0));
+  const [paragraph, ...rest] = doc.page(0).runs;
+  const below = rest.map((run) => run.bounds.y);
+
+  type(doc, new HistoryStack(), paragraph.id, [
+    paragraph.text.replace("\n", " "),
+  ]);
+
+  expect(rest.map((run) => run.bounds.y)).toEqual(below);
+});
+
 test("moves nothing when the paragraph below is locked", async () => {
   const { doc, heading, body, bodyInk, startTop } = await open();
   body.locked = true;

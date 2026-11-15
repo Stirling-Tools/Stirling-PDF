@@ -81,7 +81,11 @@ import {
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { runsPushedBelow } from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
+import {
+  notePush,
+  runsPulledBack,
+  runsPushedBelow,
+} from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
 
 interface RevertLine {
   text: string;
@@ -279,37 +283,57 @@ export class EditTextCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
+    const deciding =
+      this.pushes === null &&
+      this.pushesBelow &&
+      run !== undefined &&
+      !isScanRun(run);
+    const lines = run ? lineCount(this.nextText) - lineCount(run.text) : 0;
     const oldBottom = run?.bounds.y ?? 0;
-    const linesBefore = run ? lineCount(run.text) : 0;
+    const oldInkBottom = deciding && lines < 0 ? inkBottom(doc, run) : null;
     this.applyEdit(doc);
     if (this.pushes === null) {
-      const grew =
-        this.pushesBelow &&
-        !this.scanEdited &&
-        run !== undefined &&
-        lineCount(this.nextText) > linesBefore;
-      const { runIds, dy } = grew
-        ? runsPushedBelow(page, run, oldBottom)
-        : { runIds: [], dy: 0 };
-      this.pushes = runIds.map(
-        (runId) =>
-          new MoveTextRunCommand({
-            pageIndex: this.pageIndex,
-            runId,
-            dx: 0,
-            dy,
-          }),
-      );
+      if (!deciding || this.scanEdited || lines === 0) this.pushes = [];
+      else if (lines > 0) {
+        const { runIds, dy } = runsPushedBelow(page, run, oldBottom);
+        this.pushes = runIds.map((runId) => this.moveBelow(runId, dy));
+      } else {
+        const newInkBottom = inkBottom(doc, run);
+        const rise =
+          oldInkBottom !== null && newInkBottom !== null
+            ? newInkBottom - oldInkBottom
+            : 0;
+        this.pushes = runsPulledBack(run, rise).map(({ runId, dy }) =>
+          this.moveBelow(runId, dy),
+        );
+      }
     }
     this.redoPushes(doc);
   }
 
+  private moveBelow(runId: string, dy: number): MoveTextRunCommand {
+    return new MoveTextRunCommand({
+      pageIndex: this.pageIndex,
+      runId,
+      dx: 0,
+      dy,
+    });
+  }
+
   private redoPushes(doc: EditorDocument): void {
-    for (const push of this.pushes ?? []) push.apply(doc);
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    for (const push of this.pushes ?? []) {
+      push.apply(doc);
+      if (run) notePush(run, push.runId, push.dy);
+    }
   }
 
   private undoPushes(doc: EditorDocument): void {
-    for (const push of [...(this.pushes ?? [])].reverse()) push.revert(doc);
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    for (const push of [...(this.pushes ?? [])].reverse()) {
+      push.revert(doc);
+      if (run) notePush(run, push.runId, -push.dy);
+    }
   }
 
   private applyEdit(doc: EditorDocument): void {
@@ -1885,6 +1909,10 @@ export class EditTextCommand implements Command {
     if (previous.resultText !== this.prevText) return false;
     return previous.isLineBreakOnlyInsertion();
   }
+}
+
+function inkBottom(doc: EditorDocument, run: TextRun): number | null {
+  return measureObjBoundsPt(doc.module, collectMemberPtrs(run))?.bottom ?? null;
 }
 
 function lineCount(text: string): number {
