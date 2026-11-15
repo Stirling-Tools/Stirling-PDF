@@ -72,7 +72,7 @@ export function ViewerEditToolbar() {
           onClose={() => store.setFindOpen(false)}
         />
       )}
-      <MarqueeSelector store={store} rootSelector="[data-viewer-pages]" />
+      <MarqueeSelector store={store} />
     </>
   );
 }

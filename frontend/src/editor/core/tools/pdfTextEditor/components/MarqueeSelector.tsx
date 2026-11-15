@@ -4,9 +4,10 @@ import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore"
 
 interface MarqueeSelectorProps {
   store: EditorStore;
-  /** The element holding the pages; a drag may start anywhere inside it. */
-  rootSelector?: string;
 }
+
+// The viewer's page column; a drag may start anywhere inside it.
+const PAGES_SELECTOR = "[data-viewer-pages]";
 
 interface MarqueeRect {
   left: number;
@@ -36,10 +37,7 @@ const OWN_GESTURE_SELECTOR = [
  * over text, to override line/paragraph auto-grouping when it gets the
  * structure wrong.
  */
-export function MarqueeSelector({
-  store,
-  rootSelector = '[data-testid="pdf-editor-pages"]',
-}: MarqueeSelectorProps) {
+export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   const [rect, setRect] = useState<MarqueeRect | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const liveRectRef = useRef<MarqueeRect | null>(null);
@@ -53,7 +51,7 @@ export function MarqueeSelector({
     function onPointerDown(e: PointerEvent) {
       if (e.button !== 0) return;
       const target = e.target as HTMLElement | null;
-      if (!target?.closest(rootSelector)) return;
+      if (!target?.closest(PAGES_SELECTOR)) return;
       const forced = (e.ctrlKey || e.metaKey) && e.shiftKey;
       if (forced) {
         e.preventDefault();
@@ -86,9 +84,9 @@ export function MarqueeSelector({
       if (!origin) return;
       document.body.style.userSelect = "";
       if (!r || (r.width < 3 && r.height < 3)) return;
-      const runIds = collectIdsInRect(r, rootSelector, "pdf-editor-run-");
-      const imageIds = collectIdsInRect(r, rootSelector, "pdf-editor-image-");
-      const shapeIds = collectIdsInRect(r, rootSelector, "pdf-editor-shape-");
+      const runIds = collectIdsInRect(r, "pdf-editor-run-");
+      const imageIds = collectIdsInRect(r, "pdf-editor-image-");
+      const shapeIds = collectIdsInRect(r, "pdf-editor-shape-");
       // A rectangle that caught nothing leaves the selection alone rather than
       // silently wiping it.
       if (runIds.length + imageIds.length + shapeIds.length === 0) return;
@@ -117,7 +115,7 @@ export function MarqueeSelector({
       window.removeEventListener("pointercancel", onPointerCancel);
       document.body.style.userSelect = "";
     };
-  }, [store, rootSelector]);
+  }, [store]);
 
   if (!rect) return null;
   // Portalled: the rect is in viewport coordinates, and a host with `contain`
@@ -141,12 +139,8 @@ export function MarqueeSelector({
   );
 }
 
-function collectIdsInRect(
-  rect: MarqueeRect,
-  rootSelector: string,
-  testIdPrefix: string,
-): string[] {
-  const pages = document.querySelector(rootSelector);
+function collectIdsInRect(rect: MarqueeRect, testIdPrefix: string): string[] {
+  const pages = document.querySelector(PAGES_SELECTOR);
   if (!pages) return [];
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;

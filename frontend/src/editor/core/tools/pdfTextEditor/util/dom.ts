@@ -18,27 +18,7 @@ export function isFocusInFormField(): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-// Find the page index whose midpoint is closest to the viewport's vertical
-// centre.
-export function findVisiblePageIndex(): number {
-  const pages = pageElements();
-  if (pages.length === 0) return 0;
-  const midY = window.innerHeight / 2;
-  let best = 0;
-  let bestDist = Number.POSITIVE_INFINITY;
-  pages.forEach((el, i) => {
-    const rect = el.getBoundingClientRect();
-    const dist = Math.abs(rect.top + rect.height / 2 - midY);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = i;
-    }
-  });
-  return best;
-}
-
-// The TRUE page index of the page nearest the viewport centre - unlike {@link
-// findVisiblePageIndex}, which returns a DOM-array position.
+// The page index of the page nearest the viewport centre.
 export function visiblePageNumber(): number {
   const pages = pageElements();
   if (pages.length === 0) return 0;
@@ -71,5 +51,5 @@ export function pageElements(): HTMLElement[] {
  */
 export function revealOnPage(el: Element | null, pageIndex: number): void {
   if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
-  else currentEditorSession()?.revealPage?.(pageIndex);
+  else currentEditorSession()?.revealPage(pageIndex);
 }

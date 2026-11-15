@@ -7861,7 +7861,6 @@ tapToPlace = "Tap the page where the text should go"
 unlock = "Unlock"
 
 [pdfTextEditor.pageView]
-pageNumber = "Page {{page}}"
 renderFailed = "Failed to render page"
 
 [pdfTextEditor.password]

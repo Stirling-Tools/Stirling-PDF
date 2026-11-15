@@ -122,7 +122,6 @@ function EditablePage({
 
   return (
     <PageView
-      embedded
       document={document}
       store={store}
       page={page}

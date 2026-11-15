@@ -1,17 +1,12 @@
 import { useSyncExternalStore } from "react";
-import type { FileId } from "@editor/types/file";
 
 export interface EditorSession {
   fileName: string | null;
-  fileId: FileId | null;
   save: () => void;
   download: () => void;
   pickImage: () => void;
-  /**
-   * Brings a page on screen, for hosts that mount only the pages near the
-   * viewport. Null where every page is mounted and can be scrolled to directly.
-   */
-  revealPage: ((pageIndex: number) => void) | null;
+  /** Brings a page on screen, mounted or not. */
+  revealPage: (pageIndex: number) => void;
 }
 
 let current: EditorSession | null = null;
