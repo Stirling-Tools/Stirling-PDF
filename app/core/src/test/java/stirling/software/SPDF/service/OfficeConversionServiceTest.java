@@ -2,10 +2,7 @@ package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,43 +20,19 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 class OfficeConversionServiceTest {
 
     @TempDir Path dir;
 
     private final ApplicationProperties properties = new ApplicationProperties();
-    private final EndpointConfiguration endpoints = mock(EndpointConfiguration.class);
     private OfficeConversionService service;
 
     @BeforeEach
     void setUp() {
-        service = new OfficeConversionService(properties, endpoints, null, null);
-    }
-
-    @ParameterizedTest(name = "legacy={0}, LibreOffice={1} -> Stirling Office Convert {2}")
-    @CsvSource({"false,true,true", "false,false,true", "true,true,false", "true,false,false"})
-    void onlyTheFlagSwitchesToStirlingOfficeConvert(
-            boolean legacy, boolean libreOffice, boolean expected) {
-        properties.getSystem().setStirlingOfficeConversion(!legacy);
-        when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(libreOffice);
-
-        assertThat(service.replacesLibreOffice()).isEqualTo(expected);
-    }
-
-    @Test
-    void aPerRequestChoiceOverridesTheSetting() {
-        assertThat(service.replacesLibreOffice(true)).isTrue();
-        assertThat(service.replacesLibreOffice(null)).isFalse();
-        properties.getSystem().setStirlingOfficeConversion(true);
-        assertThat(service.replacesLibreOffice(false)).isFalse();
-        assertThat(service.replacesLibreOffice(null)).isTrue();
+        service = new OfficeConversionService(properties, null, null);
     }
 
     @Test
@@ -104,10 +77,9 @@ class OfficeConversionServiceTest {
             word.write(out);
         }
         Path pdf = dir.resolve("out.pdf");
-        properties.getSystem().setStirlingOfficeConversion(true);
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
+        OfficeToPdfService toPdf = new OfficeToPdfService(properties, null);
 
-        assertThat(toPdf.handles("docx")).isTrue();
+        assertThat(OfficeToPdfService.handles("docx")).isTrue();
         toPdf.convert(docx, pdf);
 
         try (PDDocument result = Loader.loadPDF(pdf.toFile())) {
@@ -116,26 +88,10 @@ class OfficeConversionServiceTest {
     }
 
     @Test
-    void leavesUnknownFormatsAndLegacyToLibreOffice() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
-        assertThat(toPdf.handles("html")).isFalse();
-
-        properties.getSystem().setStirlingOfficeConversion(false);
-        when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(true);
-        assertThat(toPdf.handles("docx")).isFalse();
-    }
-
-    @Test
-    void fallsBackOnlyWhenLibreOfficeCanHelp() {
-        OfficeToPdfService toPdf = new OfficeToPdfService(service, properties, null);
-        when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(true);
-
-        assertThat(toPdf.canFallBack(new IOException("bad file"))).isTrue();
-        assertThat(toPdf.canFallBack(new IOException("wrapped", mock(OfficeToPdf.TimedOut.class))))
-                .isFalse();
-
-        when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(false);
-        assertThat(toPdf.canFallBack(new IOException("bad file"))).isFalse();
+    void recognisesOnlyFormatsTheConverterReads() {
+        assertThat(OfficeToPdfService.handles("wpd")).isFalse();
+        assertThat(OfficeToPdfService.handles("doc")).isTrue();
+        assertThat(OfficeToPdfService.handles("xls")).isTrue();
     }
 
     @Test

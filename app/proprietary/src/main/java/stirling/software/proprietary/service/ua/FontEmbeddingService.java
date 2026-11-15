@@ -1,15 +1,9 @@
 package stirling.software.proprietary.service.ua;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -17,19 +11,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.officeconvert.pdfa.FontEmbedder;
 
 /**
  * Embeds any font the document references but does not carry, as PDF/UA-1 clause 7.21 requires.
- * Ghostscript does the embedding and discards the structure tree, so this must run before tagging.
+ * Stirling Office Convert embeds in place, keeping form fields and the structure tree.
  */
 @Service
 @Slf4j
@@ -70,80 +60,28 @@ public class FontEmbeddingService {
      * to embed is a reportable shortfall, not a reason to abandon the conversion.
      */
     public Result embedFonts(byte[] pdfBytes) {
-        Set<String> missing;
-        boolean hasFormFields;
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            missing = findUnembeddedFonts(document);
-            hasFormFields = hasFormFields(document);
-        } catch (IOException e) {
-            return new Result(
-                    pdfBytes, false, Set.of(), "Could not inspect fonts: " + e.getMessage());
-        }
-        if (missing.isEmpty()) {
-            return new Result(pdfBytes, false, Set.of(), null);
-        }
-        if (hasFormFields) {
-            return new Result(
-                    pdfBytes,
-                    false,
-                    missing,
-                    "Font embedding was skipped because it would flatten the form fields. "
-                            + missing.size()
-                            + " font(s) remain unembedded.");
-        }
-        if (!isGhostscriptAvailable()) {
-            return new Result(
-                    pdfBytes,
-                    false,
-                    missing,
-                    "Ghostscript is not installed, so "
-                            + missing.size()
-                            + " unembedded font(s) could not be embedded. PDF/UA requires every font"
-                            + " to be embedded.");
-        }
-
-        Path workingDir = null;
-        try {
-            workingDir = Files.createTempDirectory("pdfua_fonts_");
-            Path input = workingDir.resolve("input.pdf");
-            Path output = workingDir.resolve("output.pdf");
-            Files.write(input, pdfBytes);
-
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command(input, output, workingDir));
-
-            if (result.getRc() != 0 || !Files.exists(output)) {
+            Set<String> missing = findUnembeddedFonts(document);
+            if (missing.isEmpty()) {
+                return new Result(pdfBytes, false, Set.of(), null);
+            }
+            FontEmbedder.Result result = FontEmbedder.embedMissing(document);
+            if (result.embedded().isEmpty()) {
                 return new Result(
                         pdfBytes,
                         false,
                         missing,
-                        "Font embedding failed with code " + result.getRc());
+                        missing.size()
+                                + " font(s) could not be embedded ("
+                                + String.join(", ", missing)
+                                + "). PDF/UA requires every font to be embedded.");
             }
-            byte[] embedded = Files.readAllBytes(output);
-
-            // Ghostscript can exit 0 having written a blank page, so keep the original rather than
-            // return an empty document.
-            if (!survived(pdfBytes, embedded)) {
-                log.warn("Ghostscript produced a degenerate document; keeping the original");
-                return new Result(
-                        pdfBytes,
-                        false,
-                        missing,
-                        "Font embedding was skipped because the embedder returned a document that"
-                                + " had lost content. "
-                                + missing.size()
-                                + " font(s) remain unembedded.");
-            }
-
-            // It can also exit 0 while simply leaving fonts unembedded.
-            Set<String> remaining;
-            try (PDDocument check = Loader.loadPDF(embedded)) {
-                remaining = findUnembeddedFonts(check);
-            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            Set<String> remaining = findUnembeddedFonts(document);
             if (!remaining.isEmpty()) {
                 return new Result(
-                        embedded,
+                        out.toByteArray(),
                         true,
                         remaining,
                         remaining.size()
@@ -152,165 +90,11 @@ public class FontEmbeddingService {
                                 + "). PDF/UA requires every font to be embedded.");
             }
             log.info("Embedded {} previously unembedded font(s)", missing.size());
-            return new Result(embedded, true, missing, null);
-
-        } catch (Exception e) {
-            log.warn("Font embedding failed: {}", e.getMessage());
-            return new Result(pdfBytes, false, missing, "Font embedding failed: " + e.getMessage());
-        } finally {
-            deleteQuietly(workingDir);
-        }
-    }
-
-    private static boolean hasFormFields(PDDocument document) throws IOException {
-        for (PDPage page : document.getPages()) {
-            for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation instanceof PDAnnotationWidget) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * True when the rewritten document still holds the original's content. A collapse in page count
-     * or content-stream size is the only signature of a failed rewrite the exit code hides.
-     */
-    private static boolean survived(byte[] original, byte[] rewritten) {
-        try (PDDocument before = Loader.loadPDF(original);
-                PDDocument after = Loader.loadPDF(rewritten)) {
-            if (after.getNumberOfPages() != before.getNumberOfPages()) {
-                return false;
-            }
-            if (lostText(before, after)) {
-                return false;
-            }
-            long beforeBytes = contentBytes(before);
-            long afterBytes = contentBytes(after);
-            if (beforeBytes == 0) {
-                return true;
-            }
-            return afterBytes * 20L >= beforeBytes;
-        } catch (IOException e) {
-            log.debug("Could not compare documents after embedding: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Fraction of the original's extracted text a rewrite must still carry. The embedder re-encodes
-     * text, so a few characters either way mean nothing; a tenth of the document going missing is
-     * content loss.
-     */
-    private static final double TEXT_RETENTION_FLOOR = 0.9;
-
-    /**
-     * True when the rewrite dropped a meaningful share of the document's text.
-     *
-     * <p>Content-stream bytes cannot answer this on their own: the embedder recompresses, so they
-     * move for reasons unrelated to the page keeping its content. An 80-page document measured here
-     * came back with each page truncated to its first half - 422070 characters down to 211230 -
-     * while its content streams stayed well inside the byte ratio below.
-     *
-     * <p>Growth is not loss: flattening an annotation into the page legitimately adds text. Only a
-     * shortfall fails.
-     */
-    private static boolean lostText(PDDocument before, PDDocument after) {
-        String textBefore = extractText(before);
-        String textAfter = extractText(after);
-        if (textBefore == null || textAfter == null || textBefore.isBlank()) {
-            return false;
-        }
-        return textAfter.length() < textBefore.length() * TEXT_RETENTION_FLOOR;
-    }
-
-    /** Extracted text, or null when the document cannot be read - never a partial read. */
-    private static String extractText(PDDocument document) {
-        try {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(false);
-            return stripper.getText(document);
+            return new Result(out.toByteArray(), true, missing, null);
         } catch (IOException | RuntimeException e) {
-            log.debug("Could not extract text while checking the rewrite: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    private static long contentBytes(PDDocument document) {
-        long total = 0;
-        for (PDPage page : document.getPages()) {
-            try (InputStream in = page.getContents()) {
-                if (in != null) {
-                    byte[] buffer = new byte[8192];
-                    int read;
-                    while ((read = in.read(buffer)) > 0) {
-                        total += read;
-                    }
-                }
-            } catch (IOException e) {
-                log.debug("Could not measure page content: {}", e.getMessage());
-            }
-        }
-        return total;
-    }
-
-    private static List<String> command(Path input, Path output, Path workingDir) {
-        List<String> command = new ArrayList<>();
-        command.add("gs");
-        command.add("--permit-file-read=" + workingDir.toAbsolutePath());
-        command.add("--permit-file-write=" + workingDir.toAbsolutePath());
-        command.add("-sDEVICE=pdfwrite");
-        command.add("-dEmbedAllFonts=true");
-        command.add("-dSubsetFonts=true");
-        command.add("-dCompressFonts=true");
-        command.add("-dNOSUBSTFONTS=false");
-        command.add("-dPDFSETTINGS=/prepress");
-        command.add("-dNOPAUSE");
-        command.add("-dBATCH");
-        command.add("-sOutputFile=" + output.toAbsolutePath());
-        command.add(input.toAbsolutePath().toString());
-        return command;
-    }
-
-    /** Cached after the first probe: availability does not change mid-process. */
-    private volatile Boolean ghostscriptAvailable;
-
-    private boolean isGhostscriptAvailable() {
-        Boolean cached = ghostscriptAvailable;
-        if (cached != null) {
-            return cached;
-        }
-        boolean available;
-        try {
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(List.of("gs", "--version"));
-            available = result.getRc() == 0;
-        } catch (Exception e) {
-            log.debug("Ghostscript availability check failed: {}", e.getMessage());
-            available = false;
-        }
-        ghostscriptAvailable = available;
-        return available;
-    }
-
-    private static void deleteQuietly(Path directory) {
-        if (directory == null) {
-            return;
-        }
-        try (Stream<Path> stream = Files.walk(directory)) {
-            stream.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            path -> {
-                                try {
-                                    Files.deleteIfExists(path);
-                                } catch (IOException e) {
-                                    log.debug("Could not delete {}", path);
-                                }
-                            });
-        } catch (IOException e) {
-            log.debug("Could not clean {}", directory);
+            log.warn("Font embedding failed: {}", e.getMessage());
+            return new Result(
+                    pdfBytes, false, Set.of(), "Font embedding failed: " + e.getMessage());
         }
     }
 

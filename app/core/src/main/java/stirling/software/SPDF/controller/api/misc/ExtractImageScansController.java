@@ -1,20 +1,18 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
@@ -39,15 +37,13 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.LimitedPDFRenderer;
-import stirling.software.common.util.ProcessExecutor;
-import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.photosplit.PhotoSplitter;
 
 @MiscApi
 @Slf4j
@@ -67,7 +63,7 @@ public class ExtractImageScansController {
             value = "/extract-image-scans",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @MultiFileResponse
-    // split_photos.py uses OpenCV imread, which cannot read the vector/PSD formats in IMAGE.
+    // Inputs are read with ImageIO, which cannot read the vector/PSD formats in IMAGE.
     @ToolIO(
             accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
             inputExtensions = {
@@ -82,116 +78,57 @@ public class ExtractImageScansController {
                     "Finds, crops and straightens each photo on every page or image."
                             + " Returns one PNG, or a zip when several are found.")
     public ResponseEntity<Resource> extractImageScans(
-            @ModelAttribute ExtractImageScansRequest request)
-            throws IOException, InterruptedException {
+            @ModelAttribute ExtractImageScansRequest request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
-        List<String> images = new ArrayList<>();
-
-        List<TempFile> tempImageFiles = new ArrayList<>();
-        TempFile tempInputFile = null;
-        List<Path> tempDirs = new ArrayList<>();
-
-        if (!CheckProgramInstall.isPythonAvailable()) {
-            throw ExceptionUtils.createIOException(
-                    "error.toolNotInstalled", "{0} is not installed", null, "Python");
-        }
-
-        String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
-        Path splitPhotosScript = GeneralUtils.extractScript("split_photos.py");
+        PhotoSplitter.Options options =
+                PhotoSplitter.Options.defaults()
+                        .angleThreshold(request.getAngleThreshold())
+                        .tolerance(request.getTolerance())
+                        .minArea(request.getMinArea())
+                        .minContourArea(request.getMinContourArea())
+                        .borderSize(request.getBorderSize());
+        List<byte[]> processedImageBytes = new ArrayList<>();
         TempFile finalOutput = null;
         boolean finalOutputOwnershipTransferred = false;
         try {
-            // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
-                // Load PDF document
                 try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                     PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
                     pdfRenderer.setSubsamplingAllowed(true);
-                    int pageCount = document.getNumberOfPages();
-                    images = new ArrayList<>();
-
-                    // Create images of all pages
-                    for (int i = 0; i < pageCount; i++) {
-                        // Create temp file to save the image
-                        TempFile tempImage = tempFileManager.createManagedTempFile(".png");
-                        tempImageFiles.add(tempImage);
-
-                        // Render image and save as temp file
-                        BufferedImage image;
-
-                        // maxDPI is a safety ceiling for user-supplied values, not a target
-                        int renderDpi = SCAN_RENDER_DPI;
-                        ApplicationProperties properties =
-                                ApplicationContextProvider.getBean(ApplicationProperties.class);
-                        if (properties != null && properties.getSystem() != null) {
-                            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
-                        }
-                        final int dpi = renderDpi;
+                    // maxDPI is a safety ceiling for user-supplied values, not a target
+                    int renderDpi = SCAN_RENDER_DPI;
+                    ApplicationProperties properties =
+                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    if (properties != null && properties.getSystem() != null) {
+                        renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
+                    }
+                    final int dpi = renderDpi;
+                    for (int i = 0; i < document.getNumberOfPages(); i++) {
                         final int pageIndex = i;
-
-                        image =
+                        BufferedImage page =
                                 ExceptionUtils.handleOomRendering(
                                         pageIndex + 1,
                                         dpi,
                                         () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
-                        ImageIO.write(image, "png", tempImage.getFile());
-
-                        // Add temp file path to images list
-                        images.add(tempImage.getAbsolutePath());
+                        addPhotos(page, options, processedImageBytes);
                     }
                 }
             } else {
-                tempInputFile = tempFileManager.createManagedTempFile("." + extension);
-                inputFile.transferTo(tempInputFile.getFile());
-                // Add input file path to images list
-                images.add(tempInputFile.getAbsolutePath());
-            }
-
-            List<byte[]> processedImageBytes = new ArrayList<>();
-
-            // Process each image
-            for (int i = 0; i < images.size(); i++) {
-
-                Path tempDir = Files.createTempDirectory("openCV_output");
-                tempDirs.add(tempDir);
-                List<String> command =
-                        new ArrayList<>(
-                                Arrays.asList(
-                                        pythonVersion,
-                                        splitPhotosScript.toAbsolutePath().toString(),
-                                        images.get(i),
-                                        tempDir.toString(),
-                                        "--angle_threshold",
-                                        String.valueOf(request.getAngleThreshold()),
-                                        "--tolerance",
-                                        String.valueOf(request.getTolerance()),
-                                        "--min_area",
-                                        String.valueOf(request.getMinArea()),
-                                        "--min_contour_area",
-                                        String.valueOf(request.getMinContourArea()),
-                                        "--border_size",
-                                        String.valueOf(request.getBorderSize())));
-
-                // Run CLI command
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
-
-                // Read the output photos in temp directory
-                List<Path> tempOutputFiles;
-                try (Stream<Path> listStream = Files.list(tempDir)) {
-                    tempOutputFiles = listStream.sorted().toList();
+                BufferedImage image;
+                try (InputStream in = inputFile.getInputStream()) {
+                    image = ImageIO.read(in);
                 }
-                for (Path tempOutputFile : tempOutputFiles) {
-                    byte[] imageBytes = Files.readAllBytes(tempOutputFile);
-                    processedImageBytes.add(imageBytes);
+                if (image == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.unsupportedImageFormat",
+                            "Unsupported image format: {0}",
+                            extension);
                 }
-                // Clean up the temporary directory
-                FileUtils.deleteDirectory(tempDir.toFile());
+                addPhotos(image, options, processedImageBytes);
             }
 
             // Create zip file if multiple images
@@ -243,21 +180,16 @@ public class ExtractImageScansController {
             if (finalOutput != null && !finalOutputOwnershipTransferred) {
                 finalOutput.close();
             }
-            // Cleanup logic for all temporary files and directories
-            tempImageFiles.forEach(TempFile::close);
+        }
+    }
 
-            if (tempInputFile != null) {
-                tempInputFile.close();
-            }
-
-            tempDirs.forEach(
-                    dir -> {
-                        try {
-                            FileUtils.deleteDirectory(dir.toFile());
-                        } catch (IOException e) {
-                            log.error("Failed to delete temporary directory: {}", dir, e);
-                        }
-                    });
+    private static void addPhotos(
+            BufferedImage scan, PhotoSplitter.Options options, List<byte[]> out)
+            throws IOException {
+        for (PhotoSplitter.Photo photo : PhotoSplitter.split(scan, options)) {
+            ByteArrayOutputStream png = new ByteArrayOutputStream();
+            ImageIO.write(photo.image(), "png", png);
+            out.add(png.toByteArray());
         }
     }
 }

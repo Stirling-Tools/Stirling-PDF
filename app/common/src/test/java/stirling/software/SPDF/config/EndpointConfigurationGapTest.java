@@ -315,20 +315,19 @@ class EndpointConfigurationGapTest {
         @DisplayName("single-dependency endpoint (no alternatives) disabled when its tool group is")
         void singleDependencyDisabled() {
             EndpointConfiguration config = buildDefault();
-            // pdf-to-epub depends on Calibre, no alternatives registered
-            assertTrue(config.isEndpointEnabled("pdf-to-epub"));
-            config.disableGroup("Calibre");
-            assertFalse(config.isEndpointEnabled("pdf-to-epub"));
+            // verify-pdf depends on veraPDF, no alternatives registered
+            assertTrue(config.isEndpointEnabled("verify-pdf"));
+            config.disableGroup("veraPDF");
+            assertFalse(config.isEndpointEnabled("verify-pdf"));
         }
 
         @Test
-        @DisplayName("both ebook conversions are disabled with the Calibre group")
-        void ebookConversionsFollowCalibre() {
+        @DisplayName("ebook conversions no longer depend on the Calibre group")
+        void ebookConversionsIgnoreCalibre() {
             EndpointConfiguration config = buildDefault();
-            assertTrue(config.isEndpointEnabled("ebook-to-pdf"));
             config.disableGroup("Calibre");
-            assertFalse(config.isEndpointEnabled("ebook-to-pdf"));
-            assertFalse(config.isEndpointEnabled("pdf-to-epub"));
+            assertTrue(config.isEndpointEnabled("ebook-to-pdf"));
+            assertTrue(config.isEndpointEnabled("pdf-to-epub"));
         }
     }
 

@@ -42,10 +42,8 @@ export interface AdvancedSettingsData {
   enableUrlToPDF?: boolean;
   tessdataDir?: string;
   disableSanitize?: boolean;
-  stirlingOfficeConversion?: boolean;
   tempFileManagement?: {
     baseTmpDir?: string;
-    libreofficeDir?: string;
     systemTempDir?: string;
     prefix?: string;
     maxAgeHours?: number;
@@ -55,24 +53,17 @@ export interface AdvancedSettingsData {
   };
   processExecutor?: {
     sessionLimit?: {
-      libreOfficeSessionLimit?: number;
-      pdfToHtmlSessionLimit?: number;
       qpdfSessionLimit?: number;
       tesseractSessionLimit?: number;
       pythonOpenCvSessionLimit?: number;
-      weasyPrintSessionLimit?: number;
       installAppSessionLimit?: number;
-      calibreSessionLimit?: number;
       ghostscriptSessionLimit?: number;
       ocrMyPdfSessionLimit?: number;
     };
     timeoutMinutes?: {
-      libreOfficetimeoutMinutes?: number;
-      pdfToHtmltimeoutMinutes?: number;
+      officeConvertTimeoutMinutes?: number;
       pythonOpenCvtimeoutMinutes?: number;
-      weasyPrinttimeoutMinutes?: number;
       installApptimeoutMinutes?: number;
-      calibretimeoutMinutes?: number;
       tesseractTimeoutMinutes?: number;
       qpdfTimeoutMinutes?: number;
       ghostscriptTimeoutMinutes?: number;

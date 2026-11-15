@@ -3,8 +3,8 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,11 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
-import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -51,11 +49,9 @@ class ConvertHtmlToPDFTest {
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
-    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
     @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertHtmlToPDF controller;
@@ -95,7 +91,7 @@ class ConvertHtmlToPDFTest {
     }
 
     @Test
-    void htmlToPdf_standardConverterPreservesZoom() throws Exception {
+    void htmlToPdf_validHtmlFile() throws Exception {
         byte[] htmlContent = "<html><body>Hello</body></html>".getBytes();
         byte[] pdfBytes = "pdf-content".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
@@ -104,29 +100,16 @@ class ConvertHtmlToPDFTest {
                 new MockMultipartFile("fileInput", "test.html", "text/html", htmlContent);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         request.setFileInput(file);
-        request.setUseStirlingOfficeConvert(false);
-        request.setZoom(1.5f);
-
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
         ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
-        try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
-                MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
+        try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<WebResponseUtils> wrMock =
                         Mockito.mockStatic(WebResponseUtils.class)) {
 
-            ftpMock.when(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            eq("/usr/bin/weasyprint"),
-                                            eq(request),
-                                            any(byte[].class),
-                                            eq("test.html"),
-                                            eq(tempFileManager),
-                                            eq(customHtmlSanitizer)))
+            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean()))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("test.html", ".pdf"))
@@ -141,7 +124,6 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(1.5f, request.getZoom());
         }
     }
 
@@ -155,27 +137,16 @@ class ConvertHtmlToPDFTest {
                 new MockMultipartFile("fileInput", "archive.zip", "application/zip", zipContent);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         request.setFileInput(file);
-
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
         ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
-        try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
-                MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
+        try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<WebResponseUtils> wrMock =
                         Mockito.mockStatic(WebResponseUtils.class)) {
 
-            ftpMock.when(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            eq("/usr/bin/weasyprint"),
-                                            eq(request),
-                                            any(byte[].class),
-                                            eq("archive.zip"),
-                                            eq(tempFileManager),
-                                            eq(customHtmlSanitizer)))
+            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean()))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("archive.zip", ".pdf"))

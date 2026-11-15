@@ -464,7 +464,6 @@ tools = [
     { name = "requests" },
     { name = "tomli-w" },
     { name = "tomlkit" },
-    { name = "unoserver" },
     { name = "urllib3" },
     { name = "weasyprint" },
 ]
@@ -523,7 +522,6 @@ tools = [
     { name = "requests", specifier = ">=2.34.2" },
     { name = "tomli-w", specifier = ">=1.2.0" },
     { name = "tomlkit", specifier = ">=0.15.2" },
-    { name = "unoserver", specifier = ">=3.7" },
     { name = "urllib3", specifier = ">=2.8.0" },
     { name = "weasyprint", specifier = ">=70.0" },
 ]
@@ -1615,15 +1613,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/92/ff/5a28bdfd8c3ebec42564ac7d0e54ca3db65044a9314a97f9564fa7a1e926/tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415", size = 198674, upload-time = "2026-07-10T08:50:37.887Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931", size = 348168, upload-time = "2026-07-10T08:50:36.46Z" },
-]
-
-[[package]]
-name = "unoserver"
-version = "3.7"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6e/7c/9250bf071eb9d0012998b774bbf5743a09c715ab5dfd50460c8ba09c2564/unoserver-3.7.tar.gz", hash = "sha256:b05f9578506ac7374ae1b314c3a79528636c542ac78220a9ce99110584ca424b", size = 115811, upload-time = "2026-06-10T13:34:23.785Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/1d/8cfa91f04d5865ed6d30e1375c22fed98694aafd6171b4979dd7f5f9b16d/unoserver-3.7-py3-none-any.whl", hash = "sha256:fc44e6808071c9d2957e705ecf1742cea8a582aa5d5cc23babf36bb332ec6e8e", size = 28559, upload-time = "2026-06-10T13:34:21.911Z" },
 ]
 
 [[package]]

@@ -15,7 +15,6 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
-  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;

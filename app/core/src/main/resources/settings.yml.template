@@ -198,7 +198,6 @@ system:
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
-  stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
   maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
@@ -244,15 +243,10 @@ system:
       watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
-      unoconvert: "" # Defaults to /opt/venv/bin/unoconvert
-      calibre: "" # Defaults to /usr/bin/ebook-convert
       ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
-      soffice: "" # Defaults to /usr/bin/soffice
   fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: "" # Defaults to java.io.tmpdir/stirling-pdf
-    libreofficeDir: "" # Defaults to tempFileManagement.baseTmpDir/libreoffice
     systemTempDir: "" # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
@@ -341,7 +335,7 @@ ui:
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
+  groupsToRemove: [] # list groups to disable (e.g. ['Ghostscript', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
@@ -361,37 +355,18 @@ AutomaticallyGenerated:
   appVersion: 0.35.0
 
 processExecutor:
-  autoUnoServer: true # true: use local pool based on libreOfficeSessionLimit; false: use unoServerEndpoints
-  unoServerEndpoints: [] # Used when autoUnoServer is false
-  # Example manual endpoints (uncomment to use):
-  # unoServerEndpoints:
-  #   - host: "127.0.0.1"
-  #     port: 2003
-  #     hostLocation: "auto"  # auto|local|remote (use "remote" for port-forwarded servers)
-  #     protocol: "http"       # http|https
-  #   - host: "remote-server.local"
-  #     port: 8080
-  #     hostLocation: "remote"
-  #     protocol: "https"
   sessionLimit: # Process executor instances limits
-    libreOfficeSessionLimit: 1 # Each additional uno server adds ~50MB idle RAM
-    pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
-    calibreSessionLimit: 1
     imageMagickSessionLimit: 4
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
-    libreOfficetimeoutMinutes: 30
-    pdfToHtmltimeoutMinutes: 20
+    officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
     pythonOpenCvtimeoutMinutes: 30
-    weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
-    calibretimeoutMinutes: 30
     imageMagickTimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30

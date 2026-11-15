@@ -641,18 +641,15 @@ description = "Maximum DPI for image processing (0 = unlimited)"
 label = "Maximum DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "Calibre"
 description = "Configure session limits and timeouts for each process executor"
 ghostscript = "Ghostscript"
 installApp = "Install App"
 label = "Process Executor Limits"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
-pythonOpenCv = "Python OpenCV"
+officeConvert = "Office conversion"
+pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "WeasyPrint"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "Maximum concurrent instances"
@@ -661,10 +658,6 @@ label = "Session Limit"
 [admin.settings.advanced.processExecutor.timeout]
 description = "Maximum execution time"
 label = "Timeout (minutes)"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert is in beta. It offers better conversions, faster and with less memory than LibreOffice."
-label = "Use new Stirling Office conversion"
 
 [admin.settings.advanced.tempFileManagement]
 description = "Configure temporary file storage and cleanup behavior"
@@ -682,11 +675,6 @@ label = "Cleanup Interval (minutes)"
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "Whether to clean broader system temp directory (use with caution)"
 label = "Cleanup System Temp"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "Directory for LibreOffice temp files (leave empty for default: baseTmpDir/libreoffice)"
-label = "LibreOffice Temp Directory"
-placeholder = "Default: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "Maximum age in hours before temp files are cleaned up"
@@ -1293,17 +1281,6 @@ label = "Default Producer"
 [admin.settings.general.customPaths]
 description = "Configure custom file system paths for pipeline processing and external tools"
 label = "Custom Paths"
-
-[admin.settings.general.customPaths.operations]
-label = "External Tool Paths"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "Path to LibreOffice unoconvert for document conversions (leave empty for default: /opt/venv/bin/unoconvert)"
-label = "Unoconvert Executable"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "Path to WeasyPrint executable for HTML to PDF conversion (leave empty for default: /opt/venv/bin/weasyprint)"
-label = "WeasyPrint Executable"
 
 [admin.settings.general.customPaths.pipeline]
 label = "Pipeline Directories"
@@ -4390,8 +4367,6 @@ selectSourceFormatFirst = "Choose a source format first"
 settings = "Settings"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
-stirlingOfficeConvert = "Use Stirling Office Convert (beta)"
-stirlingOfficeConvertDescription = "Better, faster conversions with less memory. Turn off to use the standard converter."
 strictMode = "Strict Mode"
 strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
 svgPdfOptions = "SVG to PDF Options"
@@ -4400,12 +4375,8 @@ svgVectorNote = "SVG files are rendered as vector graphics for crisp output at a
 tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Target format"
 title = "Convert"
-webOptions = "Web to PDF Options"
-zoomLevel = "Zoom Level"
 
 [convert.ebookOptions]
-embedAllFonts = "Embed all fonts"
-embedAllFontsDesc = "Embed all fonts from the eBook into the generated PDF"
 includePageNumbers = "Include page numbers"
 includePageNumbersDesc = "Add page numbers to the generated PDF"
 includeTableOfContents = "Include table of contents"

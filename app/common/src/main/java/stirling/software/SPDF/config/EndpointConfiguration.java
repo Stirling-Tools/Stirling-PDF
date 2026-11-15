@@ -149,7 +149,7 @@ public class EndpointConfiguration {
         for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
             String group = entry.getKey();
             if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
-                // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
+                // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, etc.)
                 if (!isToolGroup(group)) {
                     log.debug(
                             "isEndpointEnabled('{}') -> false (functional group '{}' disabled)",
@@ -468,39 +468,12 @@ public class EndpointConfiguration {
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
-        addEndpointToGroup("CLI", "extract-image-scans");
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
-        addEndpointToGroup("CLI", "file-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-word");
-        addEndpointToGroup("CLI", "pdf-to-presentation");
-        addEndpointToGroup("CLI", "pdf-to-html");
-        addEndpointToGroup("CLI", "pdf-to-xml");
         addEndpointToGroup("CLI", "ocr-pdf");
-        addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-rtf");
 
         // python
-        addEndpointToGroup("Python", "extract-image-scans");
-        addEndpointToGroup("Python", "html-to-pdf");
-        addEndpointToGroup("Python", "url-to-pdf");
-        addEndpointToGroup("Python", "file-to-pdf");
-
-        // openCV
-        addEndpointToGroup("OpenCV", "extract-image-scans");
-
-        // LibreOffice
-        addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("LibreOffice", "pdf-to-word");
-        addEndpointToGroup("LibreOffice", "pdf-to-presentation");
-        addEndpointToGroup("LibreOffice", "pdf-to-rtf");
-        addEndpointToGroup("LibreOffice", "pdf-to-html");
-        addEndpointToGroup("LibreOffice", "pdf-to-xml");
-        addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
-
-        // Unoconvert
-        addEndpointToGroup("Unoconvert", "file-to-pdf");
 
         // Java
         addEndpointToGroup("Java", "merge-pdfs");
@@ -565,6 +538,14 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-epub");
         addEndpointToGroup("Java", "ebook-to-pdf");
         addEndpointToGroup("Java", "eml-to-pdf");
+        addEndpointToGroup("Java", "extract-image-scans");
+        addEndpointToGroup("Java", "file-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-word");
+        addEndpointToGroup("Java", "pdf-to-presentation");
+        addEndpointToGroup("Java", "pdf-to-rtf");
+        addEndpointToGroup("Java", "pdf-to-html");
+        addEndpointToGroup("Java", "pdf-to-xml");
+        addEndpointToGroup("Java", "html-to-pdf");
         addEndpointToGroup("Java", "handleData");
         addEndpointToGroup("Java", "form-detection");
         addEndpointToGroup("rar", "pdf-to-cbr");
@@ -609,33 +590,11 @@ public class EndpointConfiguration {
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
 
-        // file-to-pdf has multiple implementations
-        addEndpointAlternative("file-to-pdf", "LibreOffice");
-        addEndpointAlternative("file-to-pdf", "Unoconvert");
-        // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
-        addEndpointAlternative("pdf-to-html", "LibreOffice");
-        addEndpointAlternative("pdf-to-html", "Pdftohtml");
-        addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
-
-        // Weasyprint dependent endpoints
-        addEndpointToGroup("Weasyprint", "html-to-pdf");
-        addEndpointToGroup("Weasyprint", "url-to-pdf");
-        addEndpointToGroup("Weasyprint", "markdown-to-pdf");
-        addEndpointToGroup("Weasyprint", "eml-to-pdf");
-
         // veraPDF dependent endpoints
         addEndpointToGroup("veraPDF", "verify-pdf");
         addEndpointToGroup("veraPDF", "pdf-to-ua");
         addEndpointToGroup("veraPDF", "accessibility-report");
         addEndpointToGroup("veraPDF", "validate-compliance");
-
-        // Pdftohtml dependent endpoints
-        addEndpointToGroup("Pdftohtml", "pdf-to-html");
-        addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
-
-        // Calibre dependent endpoints
-        addEndpointToGroup("Calibre", "pdf-to-epub");
-        addEndpointToGroup("Calibre", "ebook-to-pdf");
     }
 
     private void processEnvironmentConfigs() {
@@ -688,19 +647,13 @@ public class EndpointConfiguration {
         return "qpdf".equals(group)
                 || "OCRmyPDF".equals(group)
                 || "Ghostscript".equals(group)
-                || "LibreOffice".equals(group)
                 || "tesseract".equals(group)
                 || "CLI".equals(group)
                 || "Python".equals(group)
-                || "OpenCV".equals(group)
-                || "Unoconvert".equals(group)
                 || "Java".equals(group)
                 || "Javascript".equals(group)
-                || "Weasyprint".equals(group)
-                || "Pdftohtml".equals(group)
                 || "ImageMagick".equals(group)
                 || "rar".equals(group)
-                || "Calibre".equals(group)
                 || "FFmpeg".equals(group)
                 || "veraPDF".equals(group);
     }

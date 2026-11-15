@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -7,10 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 import {
   isImageFormat,
-  isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
-  usesOfficeEngine,
-  getEndpointName,
 } from "@editor/utils/convertUtils";
 import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
@@ -19,7 +15,6 @@ import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@editor/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@editor/components/tools/convert/ConvertFromImageSettings";
-import ConvertFromWebSettings from "@editor/components/tools/convert/ConvertFromWebSettings";
 import ConvertFromEmailSettings from "@editor/components/tools/convert/ConvertFromEmailSettings";
 import ConvertFromCbzSettings from "@editor/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@editor/components/tools/convert/ConvertToCbzSettings";
@@ -31,7 +26,6 @@ import ConvertToCbrSettings from "@editor/components/tools/convert/ConvertToCbrS
 import ConvertFromEbookSettings from "@editor/components/tools/convert/ConvertFromEbookSettings";
 import ConvertFromSvgSettings from "@editor/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@editor/components/tools/convert/ConvertToEpubSettings";
-import ConvertOfficeEngineSettings from "@editor/components/tools/convert/ConvertOfficeEngineSettings";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -71,12 +65,6 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const endpointName = getEndpointName(
-    parameters.fromExtension,
-    parameters.toExtension,
-  );
-  const serverDefault = useOfficeConversionDefault(endpointName);
-  const officeConvert = parameters.useStirlingOfficeConvert ?? serverDefault;
   const { preferences } = usePreferences();
   const localProcessingOnly = useLocalProcessingOnly();
   const hideUnavailableConversions =
@@ -227,7 +215,6 @@ const ConvertSettings = ({
       dpi: 150,
     });
     onParameterChange("ebookOptions", {
-      embedAllFonts: false,
       includeTableOfContents: false,
       includePageNumbers: false,
       optimizeForEbook: false,
@@ -399,22 +386,6 @@ const ConvertSettings = ({
           </>
         )}
 
-      {/* Web to PDF options */}
-      {!officeConvert &&
-      ((isWebFormat(parameters.fromExtension) &&
-        parameters.toExtension === "pdf") ||
-        (parameters.isSmartDetection &&
-          parameters.smartDetectionType === "web")) ? (
-        <>
-          <Divider />
-          <ConvertFromWebSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      ) : null}
-
       {/* Email to PDF options (EML and MSG formats) */}
       {(parameters.fromExtension === "eml" ||
         parameters.fromExtension === "msg") &&
@@ -535,22 +506,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
-      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) &&
-      !(
-        ["eml", "msg"].includes(parameters.fromExtension) &&
-        parameters.emailOptions.downloadHtml
-      ) ? (
-        <>
-          <Divider />
-          <ConvertOfficeEngineSettings
-            endpointName={endpointName}
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      ) : null}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

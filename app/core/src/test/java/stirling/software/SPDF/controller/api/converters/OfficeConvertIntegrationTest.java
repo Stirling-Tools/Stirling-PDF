@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -80,8 +79,8 @@ class OfficeConvertIntegrationTest {
     void setUp() {
         properties.getSystem().getTempFileManagement().setBaseTmpDir(dir.toString());
         tempFiles = new TempFileManager(new TempFileRegistry(), properties);
-        office = new OfficeConversionService(properties, endpoints, factory, tempFiles);
-        toPdf = new OfficeToPdfService(office, properties, tempFiles);
+        office = new OfficeConversionService(properties, factory, tempFiles);
+        toPdf = new OfficeToPdfService(properties, tempFiles);
     }
 
     @ParameterizedTest
@@ -109,29 +108,28 @@ class OfficeConvertIntegrationTest {
     }
 
     @Test
-    void htmlOutputRemainsAZipAndConvertsBackWithoutWeasyprint() throws Exception {
-        var controller = new ConvertPDFToHtml(tempFiles, office, null);
+    void htmlOutputRemainsAZipAndConvertsBack() throws Exception {
+        var controller = new ConvertPDFToHtml(tempFiles, office);
         PDFFile request = new PDFFile();
         request.setFileInput(uploadPdf());
-        byte[] zip = body(controller.processPdfToHTML(request, true));
+        byte[] zip = body(controller.processPdfToHTML(request));
         try (var in = new ZipInputStream(new ByteArrayInputStream(zip))) {
             assertThat(in.getNextEntry().getName()).isEqualTo("index.html");
             assertThat(new String(in.readAllBytes(), StandardCharsets.UTF_8)).contains(TEXT);
         }
         HTMLToPdfRequest html = new HTMLToPdfRequest();
         html.setFileInput(new MockMultipartFile("fileInput", "page.zip", "application/zip", zip));
-        html.setUseStirlingOfficeConvert(true);
-        var toHtml = new ConvertHtmlToPDF(factory, null, tempFiles, office, toPdf, null);
+        var toHtml = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
         assertPdfText(body(toHtml.HtmlToPdf(html)));
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void markdownConvertsInBothDirections(boolean packaged) throws Exception {
-        var toMarkdown = new ConvertPDFToMarkdown(tempFiles, null, office);
+        var toMarkdown = new ConvertPDFToMarkdown(office);
         PDFFile pdf = new PDFFile();
         pdf.setFileInput(uploadPdf());
-        byte[] markdown = toMarkdown.processPdfToMarkdown(pdf, true).getBody();
+        byte[] markdown = toMarkdown.processPdfToMarkdown(pdf).getBody();
         assertThat(new String(markdown, StandardCharsets.UTF_8)).contains(TEXT);
         GeneralFile request = new GeneralFile();
         request.setFileInput(
@@ -140,15 +138,13 @@ class OfficeConvertIntegrationTest {
                         packaged ? "notes.zip" : "notes.md",
                         "application/octet-stream",
                         packaged ? zip("index.md", markdown) : markdown));
-        var controller = new ConvertMarkdownToPdf(factory, null, tempFiles, office, toPdf, null);
-        assertPdfText(body(controller.markdownToPdf(request, true)));
+        var controller = new ConvertMarkdownToPdf(factory, tempFiles, toPdf);
+        assertPdfText(body(controller.markdownToPdf(request)));
     }
 
     @ParameterizedTest
-    @CsvSource({"html,true,", "zip,true,", "html,false,true", "zip,false,true"})
-    void officeHtmlIgnoresSavedZoomForExplicitAndServerDefaultChoices(
-            String format, boolean serverDefault, Boolean choice) throws Exception {
-        properties.getSystem().setStirlingOfficeConversion(serverDefault);
+    @ValueSource(strings = {"html", "zip"})
+    void officeHtmlIgnoresSavedZoom(String format) throws Exception {
         byte[] html =
                 ("<html><body><p>" + TEXT + "</p></body></html>").getBytes(StandardCharsets.UTF_8);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
@@ -158,9 +154,8 @@ class OfficeConvertIntegrationTest {
                         "page." + format,
                         "application/octet-stream",
                         format.equals("zip") ? zip("index.html", html) : html));
-        request.setUseStirlingOfficeConvert(choice);
         request.setZoom(1.5f);
-        var controller = new ConvertHtmlToPDF(factory, null, tempFiles, office, toPdf, null);
+        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
 
         assertPdfText(body(controller.HtmlToPdf(request)));
     }
@@ -171,13 +166,7 @@ class OfficeConvertIntegrationTest {
             throws Exception {
         var controller =
                 new ConvertEbookToPDFController(
-                        factory,
-                        tempFiles,
-                        endpoints,
-                        mock(OfficeDocumentSanitizer.class),
-                        null,
-                        office,
-                        toPdf);
+                        factory, tempFiles, endpoints, mock(OfficeDocumentSanitizer.class), toPdf);
         var mvc =
                 MockMvcBuilders.standaloneSetup(controller)
                         .setControllerAdvice(
@@ -200,8 +189,7 @@ class OfficeConvertIntegrationTest {
                                                     "fileInput",
                                                     "book.epub",
                                                     "application/epub+zip",
-                                                    new byte[] {1}))
-                                    .param("useStirlingOfficeConvert", "true"))
+                                                    new byte[] {1})))
                     .andExpect(status().isInternalServerError())
                     .andExpect(
                             jsonPath("$.detail")
@@ -214,17 +202,15 @@ class OfficeConvertIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"EPUB", "AZW3"})
-    void ebooksConvertInBothDirectionsWithoutCalibre(String format) throws Exception {
+    void ebooksConvertInBothDirections(String format) throws Exception {
         ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
         request.setFileInput(uploadPdf());
         request.setOutputFormat(ConvertPdfToEpubRequest.OutputFormat.valueOf(format));
-        request.setUseStirlingOfficeConvert(true);
         request.setDetectChapters(false);
         request.setTargetDevice(ConvertPdfToEpubRequest.TargetDevice.KINDLE_EINK_TEXT);
-        var writer = new ConvertPDFToEpubController(tempFiles, endpoints, null, office);
+        var writer = new ConvertPDFToEpubController(office);
         byte[] ebook = body(writer.convertPdfToEpub(request));
         ConvertEbookToPdfRequest read = new ConvertEbookToPdfRequest();
-        read.setUseStirlingOfficeConvert(true);
         read.setIncludePageNumbers(true);
         read.setIncludeTableOfContents(true);
         read.setFileInput(
@@ -235,17 +221,8 @@ class OfficeConvertIntegrationTest {
                         ebook));
         var reader =
                 new ConvertEbookToPDFController(
-                        factory,
-                        tempFiles,
-                        endpoints,
-                        mock(OfficeDocumentSanitizer.class),
-                        null,
-                        office,
-                        toPdf);
+                        factory, tempFiles, endpoints, mock(OfficeDocumentSanitizer.class), toPdf);
         assertPdfText(body(reader.convertEbookToPdf(read)));
-        read.setUseStirlingOfficeConvert(false);
-        assertThatThrownBy(() -> reader.convertEbookToPdf(read))
-                .isInstanceOf(IllegalStateException.class);
     }
 
     @ParameterizedTest
@@ -258,7 +235,6 @@ class OfficeConvertIntegrationTest {
         PdfToPdfARequest request = new PdfToPdfARequest();
         request.setOutputFormat(format);
         request.setStrict(true);
-        request.setUseStirlingOfficeConvert(true);
         request.setFileInput(uploadPdf());
         byte[] output = body(controller.pdfToPdfA(request));
         assertPdfText(output);
@@ -282,9 +258,7 @@ class OfficeConvertIntegrationTest {
                 new OfficeDocumentSanitizer(
                         mock(stirling.software.common.service.SsrfProtectionService.class),
                         properties);
-        var controller =
-                new ConvertOfficeController(
-                        factory, null, null, sanitizer, endpoints, tempFiles, office, toPdf);
+        var controller = new ConvertOfficeController(factory, sanitizer, tempFiles, toPdf);
         var mvc =
                 org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
                                 controller)
@@ -298,8 +272,7 @@ class OfficeConvertIntegrationTest {
                                                         "fileInput",
                                                         "source." + format,
                                                         "application/octet-stream",
-                                                        Files.readAllBytes(input)))
-                                        .param("useStirlingOfficeConvert", "true"))
+                                                        Files.readAllBytes(input))))
                         .andReturn()
                         .getResponse();
         assertThat(response.getStatus()).isEqualTo(200);
@@ -326,19 +299,12 @@ class OfficeConvertIntegrationTest {
             input = Files.readAllBytes(ebook);
         }
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
-        request.setUseStirlingOfficeConvert(true);
         request.setFileInput(
                 new MockMultipartFile(
                         "fileInput", "book." + format, "application/octet-stream", input));
         var controller =
                 new ConvertEbookToPDFController(
-                        factory,
-                        tempFiles,
-                        endpoints,
-                        mock(OfficeDocumentSanitizer.class),
-                        null,
-                        office,
-                        toPdf);
+                        factory, tempFiles, endpoints, mock(OfficeDocumentSanitizer.class), toPdf);
         assertPdfText(body(controller.convertEbookToPdf(request)));
     }
 
@@ -354,10 +320,9 @@ class OfficeConvertIntegrationTest {
         "text,rtf",
         "xml,xml"
     })
-    void existingPdfEndpointsBindThePerRequestChoice(String endpoint, String format)
-            throws Exception {
+    void existingPdfEndpointsConvertEveryFormat(String endpoint, String format) throws Exception {
         org.mockito.Mockito.when(endpoints.isEndpointEnabled("pdf-to-rtf")).thenReturn(true);
-        var controller = new ConvertPDFToOffice(factory, tempFiles, null, office, endpoints);
+        var controller = new ConvertPDFToOffice(factory, tempFiles, office, endpoints);
         var mvc =
                 org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
                                 controller)
@@ -367,8 +332,7 @@ class OfficeConvertIntegrationTest {
                                 org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                                         .multipart("/api/v1/convert/pdf/" + endpoint)
                                         .file(uploadPdf())
-                                        .param("outputFormat", format)
-                                        .param("useStirlingOfficeConvert", "true"))
+                                        .param("outputFormat", format))
                         .andReturn()
                         .getResponse();
         assertThat(response.getStatus()).isEqualTo(200);
@@ -416,7 +380,7 @@ class OfficeConvertIntegrationTest {
         request.setFileInput(
                 new MockMultipartFile("fileInput", "tables.pdf", "application/pdf", input));
         var controller = new ConvertPDFToExcelController(factory, tempFiles, office);
-        byte[] output = body(controller.pdfToExcel(request, true));
+        byte[] output = body(controller.pdfToExcel(request));
         StringBuilder cells = new StringBuilder();
         try (var workbook =
                 new org.apache.poi.xssf.usermodel.XSSFWorkbook(new ByteArrayInputStream(output))) {

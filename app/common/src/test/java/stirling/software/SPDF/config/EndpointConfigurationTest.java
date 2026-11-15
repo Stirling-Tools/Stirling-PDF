@@ -8,18 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import stirling.software.common.model.ApplicationProperties;
 
 class EndpointConfigurationTest {
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void officeEngineRemainsOptionalWhenStandardConvertersAreUnavailable(boolean officeConversion) {
+    @Test
+    void conversionsStayEnabledWithoutExternalConverters() {
         ApplicationProperties properties = new ApplicationProperties();
-        properties.getSystem().setStirlingOfficeConversion(officeConversion);
         EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
         List<String> standardConverters =
                 List.of("LibreOffice", "Unoconvert", "Weasyprint", "Pdftohtml", "Calibre");
@@ -40,12 +36,6 @@ class EndpointConfigurationTest {
                         "pdf-to-pdfa");
         for (String group : standardConverters) {
             endpoints.disableGroup(group);
-        }
-        for (String endpoint : conversions) {
-            assertFalse(endpoints.isEndpointEnabled(endpoint), endpoint);
-        }
-        for (String group : standardConverters) {
-            endpoints.enableGroup(group);
         }
         for (String endpoint : conversions) {
             assertTrue(endpoints.isEndpointEnabled(endpoint), endpoint);

@@ -13,6 +13,8 @@ bootRun {
 }
 dependencies {
     implementation project(':common')
+    // In-process font embedding for PDF/UA
+    implementation "com.stirling:stirling-office-convert-pdfa:$officeConvertVersion"
     api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'

@@ -1,40 +1,37 @@
 package stirling.software.SPDF.model.api.converters;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.common.pdf.PdfMarkdownExtractor;
-import stirling.software.common.util.TempFile;
-import stirling.software.jpdfium.PdfDocument;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.officeconvert.OfficeConvert;
 
 class ConvertPDFToMarkdownTest {
 
-    private MockMvc mockMvc(PdfMarkdownExtractor extractor) {
-        return MockMvcBuilders.standaloneSetup(
-                        new ConvertPDFToMarkdown(
-                                null,
-                                extractor,
-                                mock(stirling.software.SPDF.service.OfficeConversionService.class)))
+    private final OfficeConversionService office = mock(OfficeConversionService.class);
+
+    private MockMvc mockMvc() {
+        when(office.settings()).thenReturn(OfficeConvert.Settings.defaults());
+        return MockMvcBuilders.standaloneSetup(new ConvertPDFToMarkdown(office))
                 .setControllerAdvice(new GlobalErrorHandler())
                 .build();
     }
@@ -50,68 +47,38 @@ class ConvertPDFToMarkdownTest {
         }
     }
 
-    @Test
-    void pdfToMarkdownReturnsMarkdownBytes() throws Exception {
-        byte[] md = "# heading\n\ncontent\n".getBytes(StandardCharsets.UTF_8);
-        String expectedMd = "# heading\n\ncontent\n";
-
-        File tmpFile = File.createTempFile("test", ".pdf");
-        tmpFile.deleteOnExit();
-
-        try (MockedConstruction<TempFile> tempMock =
-                        Mockito.mockConstruction(
-                                TempFile.class,
-                                (mock, ctx) -> {
-                                    when(mock.getFile()).thenReturn(tmpFile);
-                                    when(mock.getPath()).thenReturn(tmpFile.toPath());
-                                });
-                MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class)) {
-
-            PdfMarkdownExtractor extractor = Mockito.mock(PdfMarkdownExtractor.class);
-            when(extractor.convert(any())).thenReturn(expectedMd);
-
-            PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
-            docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
-
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "input.pdf", "application/pdf", new byte[] {1, 2, 3});
-
-            mockMvc(extractor)
-                    .perform(multipart("/api/v1/convert/pdf/markdown").file(file))
-                    .andExpect(status().isOk())
-                    .andExpect(header().string("Content-Type", "text/markdown"))
-                    .andExpect(content().bytes(md));
-        }
+    private static MockMultipartFile pdf() {
+        return new MockMultipartFile(
+                "fileInput", "input.pdf", "application/pdf", new byte[] {1, 2, 3});
     }
 
     @Test
-    void pdfToMarkdownWhenServiceThrowsReturns500() throws Exception {
-        File tmpFile = File.createTempFile("test", ".pdf");
-        tmpFile.deleteOnExit();
+    void pdfToMarkdownReturnsMarkdownBytes() throws Exception {
+        byte[] md = "# heading\n\ncontent\n".getBytes(StandardCharsets.UTF_8);
+        MockMvc mvc = mockMvc();
+        when(office.convert(
+                        any(MultipartFile.class),
+                        eq("md"),
+                        eq(MediaType.valueOf("text/markdown")),
+                        any()))
+                .thenReturn(
+                        ResponseEntity.ok()
+                                .contentType(MediaType.valueOf("text/markdown"))
+                                .body(new ByteArrayResource(md)));
 
-        try (MockedConstruction<TempFile> tempMock =
-                        Mockito.mockConstruction(
-                                TempFile.class,
-                                (mock, ctx) -> {
-                                    when(mock.getFile()).thenReturn(tmpFile);
-                                    when(mock.getPath()).thenReturn(tmpFile.toPath());
-                                });
-                MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class)) {
+        mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(pdf()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/markdown"))
+                .andExpect(content().bytes(md));
+    }
 
-            PdfMarkdownExtractor extractor = Mockito.mock(PdfMarkdownExtractor.class);
-            when(extractor.convert(any())).thenThrow(new RuntimeException("boom"));
+    @Test
+    void pdfToMarkdownWhenConverterThrowsReturns500() throws Exception {
+        MockMvc mvc = mockMvc();
+        when(office.convert(any(MultipartFile.class), any(), any(), any()))
+                .thenThrow(new IOException("boom"));
 
-            PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
-            docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
-
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "x.pdf", "application/pdf", new byte[] {0x01});
-
-            mockMvc(extractor)
-                    .perform(multipart("/api/v1/convert/pdf/markdown").file(file))
-                    .andExpect(status().isInternalServerError());
-        }
+        mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(pdf()))
+                .andExpect(status().isInternalServerError());
     }
 }

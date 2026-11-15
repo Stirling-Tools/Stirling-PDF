@@ -166,7 +166,7 @@ jobs:
           curl --retry 90 --retry-delay 3 --retry-connrefused --retry-all-errors \
             -sf -H "X-API-KEY: $TEST_API_KEY" http://localhost:8080/api/v1/info/status
 
-      # Heavy LibreOffice/Calibre/Ghostscript conversions, excluded from the PR run.
+      # Heavy Office/Ghostscript conversions, excluded from the PR run.
       # Both tasks install the behave deps themselves, so there is no separate uv sync step.
       - name: Run @nightly scenarios
         run: task cucumber:nightly

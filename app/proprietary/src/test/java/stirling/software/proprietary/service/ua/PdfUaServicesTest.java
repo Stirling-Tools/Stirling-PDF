@@ -1,6 +1,5 @@
 package stirling.software.proprietary.service.ua;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -354,24 +353,33 @@ class PdfUaServicesTest {
         }
 
         @Test
-        @DisplayName("keeps a fillable form rather than flattening it to embed fonts")
+        @DisplayName("embeds fonts in a fillable form without flattening it")
         void keepsFormFieldsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(true));
+            assertFormKept(unembeddedFontForm(true), true);
         }
 
         @Test
-        @DisplayName("keeps widgets the AcroForm does not list rather than flattening them")
+        @DisplayName("embeds fonts without dropping widgets the AcroForm does not list")
         void keepsOrphanWidgetsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(false));
+            assertFormKept(unembeddedFontForm(false), false);
         }
 
-        private void assertFormKept(byte[] form) {
+        private void assertFormKept(byte[] form, boolean listed) throws IOException {
             FontEmbeddingService.Result result = fonts.embedFonts(form);
-            assertFalse(result.changed());
-            assertArrayEquals(form, result.pdfBytes());
-            assertTrue(result.fonts().contains("Helvetica"));
-            assertNotNull(result.warning());
-            assertTrue(result.warning().contains("form fields"));
+            if (result.changed()) {
+                assertFalse(fonts.hasUnembeddedFonts(result.pdfBytes()));
+            } else {
+                assertNotNull(result.warning());
+            }
+            try (PDDocument document = Loader.loadPDF(result.pdfBytes())) {
+                assertNotNull(document.getDocumentCatalog().getAcroForm());
+                if (listed) {
+                    assertNotNull(document.getDocumentCatalog().getAcroForm().getField("name"));
+                }
+                assertTrue(
+                        document.getPage(0).getAnnotations().stream()
+                                .anyMatch(PDAnnotationWidget.class::isInstance));
+            }
         }
     }
 
