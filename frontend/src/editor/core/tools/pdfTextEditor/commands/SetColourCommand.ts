@@ -41,19 +41,18 @@ export class SetColourCommand implements Command {
       this.scanPrev = scanPrev;
       return;
     }
-    if (this.prevFill === null) {
-      this.prevFill = { ...run.fill };
-      const m = doc.module;
-      const seen = new Set<number>();
-      this.prevMemberFills = [];
-      for (const ptr of collectMemberPtrs(run)) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        this.prevMemberFills.push({
-          ptr,
-          fill: readObjFill(m, ptr) ?? { ...run.fill },
-        });
-      }
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    this.prevFill = { ...run.fill };
+    const m = doc.module;
+    const seen = new Set<number>();
+    this.prevMemberFills = [];
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      this.prevMemberFills.push({
+        ptr,
+        fill: readObjFill(m, ptr) ?? { ...run.fill },
+      });
     }
     run.fill = { ...this.nextFill };
     run.dirty = true;

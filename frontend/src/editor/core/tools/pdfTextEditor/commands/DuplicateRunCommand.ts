@@ -43,7 +43,9 @@ export class DuplicateRunCommand implements Command {
     const drawn = drawCopy(doc, page, src, newX, newY);
     if (!drawn) return;
     const { ptr: newPtr, family } = drawn;
-    const id = `p${page.index}-dup-${page.runs.length}-${newPtr}`;
+    // Kept across redo: later steps that edit the copy find it by this id.
+    const id =
+      this.createdRunId ?? `p${page.index}-dup-${page.runs.length}-${newPtr}`;
     const clone = new TextRun({
       id,
       pageIndex: page.index,

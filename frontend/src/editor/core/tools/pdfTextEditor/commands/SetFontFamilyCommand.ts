@@ -41,7 +41,7 @@ export class SetFontFamilyCommand implements Command {
   private readonly nextFamily: string;
   /** Set when the run was scanned text, re-set by redrawing it. */
   private scanPrev: ScanOverride | null = null;
-  /** Full pre-edit model snapshot for revert. */
+  /** The run as this apply found it, for revert. */
   private prev: RunModelSnapshot | null;
   /** Original on-page member ptrs (re-inserted on revert). */
   private prevMemberPtrs: number[];
@@ -75,10 +75,9 @@ export class SetFontFamilyCommand implements Command {
     }
     const m = doc.module;
 
-    if (this.prev === null) {
-      this.prev = snapshotRun(run);
-      this.prevMemberPtrs = collectMemberPtrs(run).slice();
-    }
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    this.prev = snapshotRun(run);
+    this.prevMemberPtrs = collectMemberPtrs(run).slice();
 
     if (!restoring && !documentFont && isDocumentFontId(run.fontId)) {
       run.documentFont = { fontId: run.fontId, subset: run.fontSubset };
