@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 
 type Upload = string | { name: string; mimeType: string; buffer: Buffer };
 
-/** The standalone editor canvas's default scale, which most specs' pixel geometry assumes. */
+/** The zoom most specs' pixel geometry assumes. */
 const DEFAULT_ZOOM_PERCENT = 150;
 /** The viewer's zoom slider: 20% to 500% in steps of 5. */
 const SLIDER_MIN = 20;
@@ -84,8 +84,82 @@ export async function openInTextEditor(
   if (zoomPercent != null) await setViewerZoom(page, zoomPercent);
 }
 
-/** No-op where the slider is not shown: a phone's canvas, or a narrow viewer bar. */
-async function setViewerZoom(page: Page, percent: number): Promise<void> {
+/**
+ * Adds `file` to the workspace and shows it in the viewer, without waiting for
+ * the editor to open it: for files it refuses, or that ask for a password.
+ */
+export async function showInTextEditor(
+  page: Page,
+  file: Upload,
+): Promise<void> {
+  if (
+    !new URL(page.url(), "http://x").pathname.startsWith("/pdf-text-editor")
+  ) {
+    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+  }
+  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+    timeout: 30_000,
+  });
+  const name = typeof file === "string" ? path.basename(file) : file.name;
+  await page.getByTestId("file-input").setInputFiles(file);
+  const row = page
+    .locator(".file-sidebar-file-item")
+    .filter({ hasText: name })
+    .first();
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
+    await row.hover();
+    await row.locator(".file-sidebar-eye-btn").click();
+  }
+}
+
+/**
+ * Scrolls page `pageIndex` to the middle of the viewer. The viewer mounts only
+ * the pages near the viewport, so a far page is reached by scrolling toward it
+ * until it mounts.
+ */
+export async function scrollToEditorPage(
+  page: Page,
+  pageIndex: number,
+): Promise<void> {
+  await page.evaluate(async (target) => {
+    const indexOf = (el: HTMLElement) =>
+      /^pdf-editor-page-(\d+)$/.exec(el.dataset.testid ?? "");
+    for (let step = 0; step < 200; step++) {
+      const el = document.querySelector<HTMLElement>(
+        `[data-testid="pdf-editor-page-${target}"]`,
+      );
+      if (el) {
+        el.scrollIntoView({ block: "center" });
+        return;
+      }
+      const mounted = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          "[data-testid^='pdf-editor-page-']",
+        ),
+      ).filter((e) => indexOf(e) != null);
+      if (mounted.length === 0) throw new Error("no editor page is mounted");
+      let scroller = mounted[0].parentElement;
+      while (
+        scroller &&
+        !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)
+      ) {
+        scroller = scroller.parentElement;
+      }
+      if (!scroller) throw new Error("viewer scroll container not found");
+      const highest = Math.max(...mounted.map((e) => Number(indexOf(e)![1])));
+      scroller.scrollTop += (highest < target ? 1 : -1) * scroller.clientHeight;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    throw new Error(`page ${target} never mounted`);
+  }, pageIndex);
+}
+
+/** No-op where the slider is not shown: on a phone, or in a narrow viewer bar. */
+export async function setViewerZoom(
+  page: Page,
+  percent: number,
+): Promise<void> {
   const thumb = page
     .locator(".pdf-viewer-toolbar-zoom-slider [role=slider]")
     .first();
