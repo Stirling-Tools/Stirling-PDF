@@ -57,3 +57,28 @@ export function inSlice<T>(fit: () => T): T | typeof FIT_PAUSED {
     throw e;
   }
 }
+
+const visible = () =>
+  new Promise<void>((resolve) => {
+    const onChange = () => {
+      if (document.hidden) return;
+      document.removeEventListener("visibilitychange", onChange);
+      resolve();
+    };
+    document.addEventListener("visibilitychange", onChange);
+  });
+
+/** Runs `fit` slice by slice as {@link prefitInSlices} does, idle while the tab is hidden; null once `live` turns false. */
+export async function fitInSlices<T>(
+  fit: () => T,
+  live: () => boolean,
+): Promise<T | null> {
+  for (;;) {
+    await nextSlice();
+    if (document.hidden) await visible();
+    if (!live()) return null;
+    const result = inSlice(fit);
+    if (result !== FIT_PAUSED) return result;
+    await nextSlice();
+  }
+}

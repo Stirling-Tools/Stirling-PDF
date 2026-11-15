@@ -5,6 +5,7 @@ import {
   familyOf,
   isBase14FontId,
   isDeviceFontId,
+  stripSubsetTag,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { deviceFontCoverage } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 
@@ -81,11 +82,6 @@ const STANDARD_14 = [
 // Style suffixes a genuine base-14 family may carry once separators are stripped
 // (e.g. "Helvetica-BoldOblique", "ArialMT", "Times-Roman").
 const BASE14_STYLE_SUFFIX = /^(bold|italic|oblique|regular|roman|mt|ps)+$/;
-
-/** Subset fonts carry a 6-letter "ABCDEF+" tag; strip it for display. */
-function stripSubsetTag(name: string): string {
-  return name.replace(/^[A-Z]{6}\+/, "");
-}
 
 // Weight/width modifiers that mark a DIFFERENT font even when the name starts
 // with a base-14 root (e.g. "Arial Black", "Helvetica Neue Condensed").

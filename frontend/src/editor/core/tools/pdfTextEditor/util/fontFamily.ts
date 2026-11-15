@@ -9,6 +9,11 @@ export function isItalicFamily(fontId: string): boolean {
   return /italic|oblique/i.test(fontId);
 }
 
+/** Subset fonts carry a 6-letter "ABCDEF+" tag; strip it for display. */
+export function stripSubsetTag(name: string): string {
+  return name.replace(/^[A-Z]{6}\+/, "");
+}
+
 /** Strip any `prefix:` qualifier that `PdfiumTextReader` adds to font ids. */
 export function familyOf(fontId: string): string {
   const idx = fontId.lastIndexOf(":");

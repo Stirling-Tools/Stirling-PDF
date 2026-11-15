@@ -34,6 +34,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -48,6 +49,7 @@ function resetCharcodeCaches(): void {
   resetCharCoverageCache();
   // FontFaces are keyed by font pointer, which PDFium reuses across documents.
   resetEmbeddedFaces();
+  resetFontCompletions();
 }
 
 export type InteractionMode = "select" | "addText" | "addTable";

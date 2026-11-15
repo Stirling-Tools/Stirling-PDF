@@ -18,7 +18,7 @@ import {
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
-import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
 import {
   loadedExternalFonts,
   subscribeExternalFonts,
@@ -422,17 +422,7 @@ export function useToolbarController(
     if (hasTextSelection) void loadServerFonts();
   }, [hasTextSelection]);
 
-  const documentFontIds = useMemo(
-    () => [...new Set(state.pages.flatMap((p) => p.runs.map((r) => r.fontId)))],
-    [state.pages],
-  );
-
-  // Match the document's own families against the installed ones, so an edit
-  // that outgrows an embedded subset completes from the real face.
-  useEffect(() => {
-    if (!externalFonts) return;
-    void warmDocumentDeviceFonts(documentFontIds);
-  }, [externalFonts, documentFontIds]);
+  useDocumentFontCompletion(store, state, selection, externalFonts);
 
   const toolbarState = useMemo(
     () => deriveToolbarState(state.pages, selection, externalFonts),

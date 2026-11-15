@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { selectedFontNote } from "@editor/tools/pdfTextEditor/util/selectedFontNote";
+import { useFontCompletionsGeneration } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
 import {
   serverFontBytesVersion,
   subscribeServerFontBytes,
@@ -21,6 +22,7 @@ export function useSelectedFontNote(
     serverFontBytesVersion,
     serverFontBytesVersion,
   );
+  const completions = useFontCompletionsGeneration();
   return useMemo(() => {
     const note = selectedFontNote(state.pages, selection.runIds);
     if (!note) return null;
@@ -56,6 +58,18 @@ export function useSelectedFontNote(
           "{{name}} · a character it lacks falls back to {{fallback}}.",
           { name: note.name, fallback: note.fallback },
         );
+      case "completed":
+        return note.source === "original"
+          ? t(
+              "pdfTextEditor.inspector.fontCompletedOriginal",
+              "Embedded font · characters it lacks are drawn in {{name}}, the same font.",
+              { name: note.name },
+            )
+          : t(
+              "pdfTextEditor.inspector.fontCompletedClosest",
+              "Embedded font · characters it lacks are drawn in {{name}}, the closest match available.",
+              { name: note.name },
+            );
       case "gap":
         return t(
           "pdfTextEditor.inspector.fontGap",
@@ -63,5 +77,12 @@ export function useSelectedFontNote(
           { name: note.name, glyphs: note.glyphs, fallback: note.fallback },
         );
     }
-  }, [state.pages, selection.runIds, scanNote, fontBytesVersion, t]);
+  }, [
+    state.pages,
+    selection.runIds,
+    scanNote,
+    fontBytesVersion,
+    completions,
+    t,
+  ]);
 }

@@ -117,4 +117,100 @@ test.describe("PDF text editor - document font recognition", () => {
       `picking the recognised font rewrote ${before} to ${after}`,
     ).toBe(before);
   });
+
+  // Without the original installed, a character the subset lacks is drawn in the closest available face.
+  test("draws a character the subset lacks in the closest face, and names it", async ({
+    page,
+  }) => {
+    await openEditor(page, SUBSET_PDF);
+
+    const run = await embeddedRun(page);
+    expect(run).toBeTruthy();
+    await page.locator(`[data-testid="pdf-editor-run-${run!.id}"]`).click();
+
+    const note = page.getByText(/closest match available/);
+    await expect(
+      note,
+      "no lookalike was found for the embedded subset",
+    ).toBeVisible({ timeout: 30_000 });
+    const face = /drawn in (.+), the closest match/.exec(
+      (await note.textContent()) ?? "",
+    )?.[1];
+    expect(face, "the note did not name the face").toBeTruthy();
+
+    await page.keyboard.press("ControlOrMeta+ArrowRight");
+    await page.keyboard.type(" Q", { delay: 60 });
+    await page.keyboard.press("Escape");
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate((rid) => {
+            const w = window as unknown as {
+              __editor_store: {
+                state: {
+                  pages: { runs: { id: string; text: string }[] }[];
+                };
+              };
+            };
+            return w.__editor_store.state.pages
+              .flatMap((p) => p.runs)
+              .find((r) => r.id === rid)?.text;
+          }, run!.id),
+        { message: "the typed character was not kept" },
+      )
+      .toContain("Q");
+
+    const drawnIn = await page.evaluate(async () => {
+      const w = window as unknown as {
+        __editor_store: {
+          document: {
+            docPtr: number;
+            module: {
+              FPDF_GetPageCount: (doc: number) => number;
+              FPDF_LoadPage: (doc: number, index: number) => number;
+              FPDF_ClosePage: (page: number) => void;
+              FPDFPage_CountObjects: (page: number) => number;
+              FPDFPage_GetObject: (page: number, index: number) => number;
+              FPDFPageObj_GetType: (obj: number) => number;
+              FPDFTextObj_GetFont: (obj: number) => number;
+              FPDFFont_GetBaseFontName: (
+                font: number,
+                buffer: number,
+                length: number,
+              ) => number;
+              pdfium: {
+                wasmExports: {
+                  malloc: (size: number) => number;
+                  free: (at: number) => void;
+                };
+                UTF8ToString: (at: number) => string;
+              };
+            };
+            page: (index: number) => { pagePtr: number };
+          };
+        };
+      };
+      const doc = w.__editor_store.document;
+      const m = doc.module;
+      const pagePtr = doc.page(0).pagePtr;
+      const names = new Set<string>();
+      for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
+        const obj = m.FPDFPage_GetObject(pagePtr, i);
+        if (m.FPDFPageObj_GetType(obj) !== 1) continue;
+        const font = m.FPDFTextObj_GetFont(obj);
+        const length = m.FPDFFont_GetBaseFontName(font, 0, 0);
+        const buffer = m.pdfium.wasmExports.malloc(length);
+        m.FPDFFont_GetBaseFontName(font, buffer, length);
+        names.add(m.pdfium.UTF8ToString(buffer));
+        m.pdfium.wasmExports.free(buffer);
+      }
+      return [...names];
+    });
+    const squashed = (name: string) => name.replace(/[^a-z0-9]/gi, "");
+    expect(
+      drawnIn.map(squashed),
+      `the typed character was not drawn in ${face}`,
+    ).toContain(squashed(face!));
+  });
 });
