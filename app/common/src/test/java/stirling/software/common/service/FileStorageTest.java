@@ -94,7 +94,7 @@ class FileStorageTest {
         // Act
         MultipartFile result = fileStorage.retrieveFile(fileId);
 
-        // Assert: every read opens the stored content afresh
+        // Assert
         assertEquals(fileContent.length, result.getSize());
         for (int i = 0; i < 2; i++) {
             try (InputStream in = result.getInputStream()) {
