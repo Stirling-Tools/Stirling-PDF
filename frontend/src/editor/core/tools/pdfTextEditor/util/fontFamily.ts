@@ -79,6 +79,20 @@ const STANDARD_FONTS = new Set([
   "ZapfDingbats",
 ]);
 
+const WIN_ANSI_EXTRAS = new Set([
+  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017d, 0x017e, 0x0192, 0x02c6,
+  0x02dc, 0x2013, 0x2014, 0x2018, 0x2019, 0x201a, 0x201c, 0x201d, 0x201e,
+  0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039, 0x203a, 0x20ac, 0x2122,
+]);
+
+export function encodesInBase14(cp: number): boolean {
+  return (
+    (cp >= 0x20 && cp < 0x7f) ||
+    (cp >= 0xa0 && cp <= 0xff) ||
+    WIN_ANSI_EXTRAS.has(cp)
+  );
+}
+
 // The standard PDF font that best stands in for an arbitrary family: PDFium
 // can only build a text object for one of the 14, so approximate, don't drop.
 export function nearestStandardFont(family: string): string {
