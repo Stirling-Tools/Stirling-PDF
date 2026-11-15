@@ -91,4 +91,23 @@ describe("text typed into a form XObject run", () => {
     expect(run.text).toBe(SUBHEADING);
     expect(pageLevelText(doc)).not.toContain("Zq7");
   });
+
+  test("gives back its original box when an added line is undone", async () => {
+    const doc = await open();
+    const run = doc.page(0).runs.find((r) => r.text === SUBHEADING)!;
+    const before = { ...run.bounds };
+    const cmd = new EditTextCommand({
+      pageIndex: 0,
+      runId: run.id,
+      nextText: `${SUBHEADING}\nAdded line`,
+    });
+
+    cmd.apply(doc);
+    const live = doc.page(0).findRun(run.id)!;
+    expect(live.bounds.height).toBeGreaterThan(before.height);
+    cmd.revert(doc);
+
+    expect(live.text).toBe(SUBHEADING);
+    expect(live.bounds).toEqual(before);
+  });
 });

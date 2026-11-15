@@ -1257,6 +1257,7 @@ export class EditTextCommand implements Command {
     run.paragraphLeafPtrs = allRestoredPtrs;
     run.paragraphLeafContainers = allRestoredPtrs.map(() => 0);
     run.containerPtr = 0;
+    if (this.editSnapshot) run.bounds = { ...this.editSnapshot.bounds };
     run.dirty = true;
     this.overlaid = false;
     page.markDirty();
