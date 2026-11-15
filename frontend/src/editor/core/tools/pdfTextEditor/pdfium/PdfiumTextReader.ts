@@ -370,11 +370,18 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
       continue;
     }
-    // An edited scan's redrawn words are new objects at the end of the content, listed after lines that read later.
-    const ordered = run.scanEdit?.created.length
-      ? inReadingOrder(list, run.fontSize)
-      : list;
-    const aligned = alignToText(run.text, ordered);
+    // Text typed into a paragraph, and an edited scan's redrawn words, are new
+    // objects at the end of the page content, so the engine lists them after
+    // lines that read later. Content order stays first choice: reading order
+    // can misjudge lines set close together.
+    const aligned = run.scanEdit?.created.length
+      ? alignToText(run.text, inReadingOrder(list, run.fontSize))
+      : run.text.includes("\n")
+        ? betterAlignment(
+            alignToText(run.text, list),
+            alignToText(run.text, inReadingOrder(list, run.fontSize)),
+          )
+        : alignToText(run.text, list);
     if (!aligned) continue;
     // Same positions under a still-current key is a no-op capture; skipping it
     // keeps untouched runs' snapshots stable across the periodic tick.
@@ -416,12 +423,19 @@ export function inReadingOrder(
   return lines.flatMap((line) => line.sort((a, b) => a.x - b.x));
 }
 
+type Alignment = { starts: number[]; ends: number[]; placed: number };
+
+function betterAlignment(
+  a: Alignment | null,
+  b: Alignment | null,
+): Alignment | null {
+  if (!a || !b) return a ?? b;
+  return b.placed > a.placed ? b : a;
+}
+
 // Line up the engine's glyph list with the run's text - they are not
 // index-for-index, and anything unplaceable is left unknown, not guessed.
-function alignToText(
-  text: string,
-  glyphs: PlacedGlyph[],
-): { starts: number[]; ends: number[] } | null {
+function alignToText(text: string, glyphs: PlacedGlyph[]): Alignment | null {
   const starts = new Array<number>(text.length).fill(Number.NaN);
   const ends = new Array<number>(text.length).fill(Number.NaN);
   let g = 0;
@@ -456,7 +470,7 @@ function alignToText(
   // A capture that placed almost nothing is not worth trusting.
   const visible = [...text].filter((c) => !/\s/.test(c)).length;
   return placed >= Math.max(1, Math.floor(visible * 0.6))
-    ? { starts, ends }
+    ? { starts, ends, placed }
     : null;
 }
 
