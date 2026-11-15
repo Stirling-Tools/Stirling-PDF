@@ -4,6 +4,7 @@
  * object a marked-content sequence draws, so changing one object's marks
  * changes them all; a fresh object has marks of its own.
  */
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import { removeAndDestroyObject } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -100,7 +101,9 @@ export function charOrigins(
       const origins = found.get(objPtr);
       if (text === undefined || !origins) continue;
       if (m.FPDFText_IsGenerated(textPage, i) === 1) continue;
-      const char = String.fromCodePoint(m.FPDFText_GetUnicode(textPage, i));
+      const char = String.fromCodePoint(
+        drawnCodePoint(m.FPDFText_GetUnicode(textPage, i)),
+      );
       const at = nextMatch(text, read.get(objPtr) ?? 0, char);
       if (at === null) {
         found.delete(objPtr);
@@ -124,7 +127,11 @@ export function charOrigins(
 }
 
 /** Where `char` comes next in `text` from code unit `at`, past spaces; null when it does not. */
-function nextMatch(text: string, at: number, char: string): number | null {
+export function nextMatch(
+  text: string,
+  at: number,
+  char: string,
+): number | null {
   let unit = at;
   while (!text.startsWith(char, unit) && /\s/.test(text[unit] ?? "")) unit++;
   return text.startsWith(char, unit) ? unit : null;

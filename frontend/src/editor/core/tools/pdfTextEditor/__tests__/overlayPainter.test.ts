@@ -158,6 +158,50 @@ describe("caret offsets", () => {
     expect(plainCaretOffset(el)).toBe(5);
   });
 
+  it("round-trips every offset of plain text that spans lines", () => {
+    const el = host();
+    const text = "• First item\n• Second item\nthird";
+    // innerText's own <br>s, which jsdom does not produce for us.
+    el.innerHTML = "• First item<br>• Second item<br>third";
+    expect(readOverlayText(el)).toBe(text);
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
+  it.each([
+    ["consecutive breaks", "a<br><br>b", "a\n\nb"],
+    ["a trailing newline", "a<br><br>", "a\n"],
+    ["a trailing filler break", "a<br>", "a"],
+    ["a leading break", "<br>a", "\na"],
+    ["a break nested in a block", "<div>a<span>b<br>c</span></div>", "ab\nc"],
+    [
+      "a stray div after text",
+      "first<br>second<div>typed</div>",
+      "first\nsecond\ntyped",
+    ],
+    [
+      "stray divs around an empty one",
+      "<div>a</div><div><br></div><div>b</div>",
+      "a\n\nb",
+    ],
+    ["a break between two blocks", "<div>a</div><br><div>b</div>", "a\n\nb"],
+    [
+      "two breaks between two blocks",
+      "<div>a</div><br><br><div>b</div>",
+      "a\n\n\nb",
+    ],
+  ])("round-trips every offset through %s", (_shape, html, text) => {
+    const el = host();
+    el.innerHTML = html;
+    expect(readOverlayText(el)).toBe(text);
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      restoreCaretOffset(el, offset);
+      expect(plainCaretOffset(el)).toBe(offset);
+    }
+  });
+
   it("clamps past the end instead of throwing", () => {
     const el = host();
     paintLines(el, [line("abc")], OPTS);
