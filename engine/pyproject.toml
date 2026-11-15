@@ -19,7 +19,7 @@ engine = [
     # Explicit extras: the `pydantic-ai` meta-package pulls all 20 providers (~230MB).
     # No `voyageai` extra either; stirling.documents.voyage speaks its API directly.
     "pydantic-ai-slim[anthropic,openai]>=1.107.9,<2.0.0",
-    "pydantic-settings>=2.15.0",
+    "pydantic-settings>=2.16.2",
     "python-dotenv>=1.2.3",
     # Lets the image's init script read aiEngine.enabled from settings.yml before starting us.
     "pyyaml>=6.0.3",
