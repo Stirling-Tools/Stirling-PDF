@@ -8,8 +8,8 @@ dependencies {
 
     // Markdown -> HTML for rendering versioned legal documents (agreement) to PDF via the
     // shared FileToPdf/WeasyPrint path in :common. Same library the core Markdown-to-PDF tool uses.
-    implementation "org.commonmark:commonmark:$commonmarkVersion"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
+    implementation libs.commonmark
+    implementation libs.commonmark.ext.gfm.tables
 
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -18,5 +18,5 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-aspectj'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation libs.archunit.junit5
 }
