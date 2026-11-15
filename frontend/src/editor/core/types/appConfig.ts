@@ -22,6 +22,7 @@ export interface AppConfig {
   enableDesktopInstallSlide?: boolean;
   /** False strips the hidden novelty features - see useSecretClicks. */
   enableEasterEggs?: boolean;
+  enableFeedback?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   paygEnabled?: boolean;
@@ -54,6 +55,8 @@ export interface AppConfig {
   dependenciesReady?: boolean;
   error?: string;
   isNewServer?: boolean;
+  /** False until an admin finishes or skips first-run server setup. */
+  setupCompleted?: boolean;
   isNewUser?: boolean;
   /** Server tool-panel default; a stored user preference takes precedence. */
   defaultToolPanelMode?: "sidebar" | "fullscreen";
@@ -72,6 +75,8 @@ export interface AppConfig {
   googleDriveClientId?: string;
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
+  googleDriveAccountConnections?: boolean;
+  microsoftAccountConnections?: boolean;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];

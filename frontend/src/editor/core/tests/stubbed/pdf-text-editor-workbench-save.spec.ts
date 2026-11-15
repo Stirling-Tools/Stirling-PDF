@@ -26,31 +26,40 @@ async function openEditorWithSample(page: Page) {
 }
 
 /** Type into the first text run on page 0 so the document is genuinely dirty. */
-async function editFirstRun(page: Page) {
+async function editFirstRun(page: Page, text = "ZZSAVED") {
   const firstRun = page.locator('[data-testid^="pdf-editor-run-p0-"]').first();
   await expect(firstRun).toBeVisible({ timeout: 30_000 });
   const id = (await firstRun.getAttribute("data-testid")) ?? "";
-  await page.evaluate((testId) => {
-    const el = document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
-    if (!el) throw new Error("run not found");
-    el.focus();
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    const sel = window.getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    document.execCommand("insertText", false, "ZZSAVED");
-  }, id);
-  await expect(firstRun).toContainText("ZZSAVED");
+  await page.evaluate(
+    ([testId, inserted]) => {
+      const el = document.querySelector<HTMLElement>(
+        `[data-testid="${testId}"]`,
+      );
+      if (!el) throw new Error("run not found");
+      el.focus();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      document.execCommand("insertText", false, inserted);
+    },
+    [id, text],
+  );
+  await expect(firstRun).toContainText(text);
   await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
 }
 
 /** The workbench view switcher's "Active Files" tab (a Mantine radio label). */
 function activeFilesTab(page: Page) {
+  return workbenchTab(page, /^Active Files$/);
+}
+
+function workbenchTab(page: Page, name: RegExp) {
   return page
     .locator(".workbench-bar-views label")
-    .filter({ hasText: /^Active Files$/ })
+    .filter({ hasText: name })
     .first();
 }
 
@@ -142,6 +151,34 @@ test.describe("PDF text editor - standardised save", () => {
       card.getByTestId("file-version-badge"),
       "saving did not write the edit back to the workbench file",
     ).toHaveText("v2", { timeout: 30_000 });
+  });
+
+  test("every save lands on the same file under its own name", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await openEditorWithSample(page);
+    const cards = page.getByTestId("file-thumbnail");
+
+    for (const [text, version] of [
+      ["ZZFIRST", "v2"],
+      ["ZZSECOND", "v3"],
+    ]) {
+      await workbenchTab(page, /^Editor$/).click();
+      await editFirstRun(page, text);
+      await page.getByTestId("pdf-editor-save").click();
+      await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden({
+        timeout: 60_000,
+      });
+
+      await activeFilesTab(page).click();
+      await expect(cards).toHaveCount(1);
+      await expect(cards.first().getByTestId("file-version-badge")).toHaveText(
+        version,
+        { timeout: 30_000 },
+      );
+      await expect(cards.first()).toContainText("sample.pdf");
+    }
   });
 
   test("cancelling the download still keeps the saved edit", async ({

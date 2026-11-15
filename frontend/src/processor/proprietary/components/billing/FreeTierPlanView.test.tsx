@@ -178,7 +178,7 @@ describe("FreeTierPlanView", () => {
   });
 
   it.each(["Get an enterprise quote", "Explore Enterprise"])(
-    "retains the Enterprise request across linking from %s",
+    "opens the Enterprise page from %s, which handles connecting",
     async (button) => {
       fetchFreeTier.mockResolvedValue(BALANCE);
       renderView(undefined, undefined, "/settings/billing?source=sales");
@@ -189,11 +189,8 @@ describe("FreeTierPlanView", () => {
 
       fireEvent.click(screen.getByRole("button", { name: button }));
 
-      expect(openLinkModal).toHaveBeenCalledWith("link");
-      expect(screen.getByTestId("location")).toHaveTextContent(
-        "/settings/billing?source=sales&procurement=start",
-      );
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(openLinkModal).not.toHaveBeenCalled();
+      expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
     },
   );
 

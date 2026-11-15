@@ -26,6 +26,7 @@ import WorkbenchFloatingSearch from "@editor/components/shared/WorkbenchFloating
 import LandingPage from "@editor/components/shared/LandingPage";
 import DismissAllErrorsButton from "@editor/components/shared/DismissAllErrorsButton";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
+import { FeedbackTag } from "@editor/components/feedback/FeedbackTag";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
@@ -296,6 +297,7 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
+      <FeedbackTag />
     </Box>
   );
 }

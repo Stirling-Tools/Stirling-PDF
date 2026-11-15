@@ -17,10 +17,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -348,7 +350,7 @@ public class PipelineDirectoryProcessor {
         Path filePath = directory.resolve(originalFileName);
         int counter = 1;
         while (Files.exists(filePath)) {
-            String newName = appendSuffixToFileName(originalFileName, "(" + counter + ")");
+            String newName = appendSuffixToFileName(originalFileName, " (" + counter + ")");
             filePath = directory.resolve(newName);
             counter++;
         }
@@ -415,6 +417,7 @@ public class PipelineDirectoryProcessor {
 
     private void moveAndRenameFiles(List<Resource> resources, PipelineConfig config, Path dir)
             throws IOException {
+        Set<Path> written = new HashSet<>();
         for (Resource resource : resources) {
             String outputFileName = createOutputFileName(resource, config);
             Path outputPath = determineOutputPath(config, dir);
@@ -422,13 +425,26 @@ public class PipelineDirectoryProcessor {
                 Files.createDirectories(outputPath);
                 log.info("Created directory: {}", outputPath);
             }
-            Path outputFile = outputPath.resolve(outputFileName);
+            Path outputFile = unwrittenThisRun(outputPath, outputFileName, written);
             try (OutputStream os = new FileOutputStream(outputFile.toFile());
                     InputStream is = resource.getInputStream()) {
                 is.transferTo(os);
             }
             log.info("File moved and renamed to {}", outputFile);
         }
+    }
+
+    /**
+     * A second output of one run with the same name gets "name (n).ext" rather than overwriting the
+     * first, since the inputs are deleted afterwards. Files left by earlier runs are still
+     * replaced.
+     */
+    private Path unwrittenThisRun(Path directory, String fileName, Set<Path> written) {
+        Path candidate = directory.resolve(fileName);
+        for (int n = 1; !written.add(candidate); n++) {
+            candidate = directory.resolve(appendSuffixToFileName(fileName, " (" + n + ")"));
+        }
+        return candidate;
     }
 
     private String createOutputFileName(Resource resource, PipelineConfig config) {
