@@ -93,6 +93,19 @@ function computeItalicCapability(
   return device ? { family: device, source: "device" } : NONE;
 }
 
+/**
+ * The italic cut of a listed family, or the family itself when it has none.
+ * A standard font name is already an exact cut the user picked, so it is
+ * returned as is.
+ */
+export function italicCutOf(
+  family: string,
+  fonts: LocalFont[] | null = loadedExternalFonts(),
+): string {
+  if (nearestStandardFont(family) === family) return family;
+  return italicCapability(family, true, fonts).family ?? family;
+}
+
 function hasExternalFamily(fonts: LocalFont[] | null, family: string): boolean {
   if (!fonts || nearestStandardFont(family) === family) return false;
   return knownFamilyOf(fonts, family) !== null;

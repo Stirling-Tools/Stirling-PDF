@@ -188,6 +188,46 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
   });
 
+  it("applies the exact built-in cut picked, even on bold text", async () => {
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:TrebuchetMS-BoldItalic")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Times-Roman")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
+  });
+
+  it("keeps an italic run italic in a server family with an italic face", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:TrebuchetMS-Italic"), run("b", "base14:Helvetica")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Acme Sans Italic",
+      "b:Acme Sans",
+    ]);
+  });
+
+  it("leaves bold to the bold entries in the list", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:TrebuchetMS-Bold")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Acme Sans"]);
+  });
+
   it("leaves a run locked while its font change was waiting", async () => {
     const runs = [run("a", "base14:Helvetica")];
     const { store, dispatch } = fakeStore(runs, ["a"]);

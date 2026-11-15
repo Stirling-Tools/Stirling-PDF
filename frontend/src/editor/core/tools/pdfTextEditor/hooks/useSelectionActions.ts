@@ -21,7 +21,10 @@ import {
   isItalicFamily,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
-import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import {
+  italicCapability,
+  italicCutOf,
+} from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
   loadedExternalFonts,
   loadExternalFont,
@@ -77,6 +80,25 @@ async function fontPickFailure(
   const refusal = await prepareExternalFont(family);
   if (refusal) return refusal;
   return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
+}
+
+async function prepareFamily(
+  doc: EditorStore["document"],
+  family: string,
+  text: string,
+): Promise<FontPickFailure | null> {
+  // Embedding is async and Command.apply is not, so warm the bytes first.
+  // A no-op for the built-in families.
+  const failure = await fontPickFailure(family, text);
+  if (failure) return failure;
+  // Refuse here, as the command would fall back to a standard face the user never picked.
+  if (
+    doc &&
+    nearestStandardFont(family) !== family &&
+    !tryEmbedDeviceFont(doc, family)
+  )
+    return "embedFailed";
+  return null;
 }
 
 function liveRuns(store: EditorStore): Map<string, TextRun> {
@@ -239,24 +261,36 @@ export function useSelectionActions(store: EditorStore) {
       const changes = targets.map((run) => ({
         pageIndex: run.pageIndex,
         runId: run.id,
-        family,
+        // The list offers bold cuts as their own entries but italic only through its toggle.
+        family:
+          isDocumentFontId(family) || !isItalicFamily(run.fontId)
+            ? family
+            : italicCutOf(family),
+        text: run.text,
       }));
       if (!isDocumentFontId(family)) {
-        // Embedding is async and Command.apply is not, so warm the bytes first.
-        // A no-op for the built-in families.
-        const failure = await fontPickFailure(
+        const failure = await prepareFamily(
+          doc,
           family,
-          targets.map((run) => run.text).join(""),
+          changes.map((change) => change.text).join(""),
         );
         if (failure) return failure;
         if (store.document !== doc) return null;
-        // Refuse here, as the command would fall back to a standard face the user never picked.
-        if (
-          doc &&
-          nearestStandardFont(family) !== family &&
-          !tryEmbedDeviceFont(doc, family)
-        )
-          return "embedFailed";
+        const styled = new Set(
+          changes.map((c) => c.family).filter((f) => f !== family),
+        );
+        for (const face of styled) {
+          const text = changes
+            .filter((c) => c.family === face)
+            .map((c) => c.text)
+            .join("");
+          // A styled cut that will not load is not worth refusing the family the user picked.
+          if (await prepareFamily(doc, face, text)) {
+            for (const change of changes)
+              if (change.family === face) change.family = family;
+          }
+          if (store.document !== doc) return null;
+        }
       }
       await dispatchFamilyChanges(stillApplies, changes, fit);
       return null;
