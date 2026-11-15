@@ -142,14 +142,6 @@ public class SplitPdfByChaptersController {
             if (!allowDuplicates) {
                 bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
             }
-            for (Bookmark bookmark : bookmarks) {
-                log.info(
-                        "{}::::{} to {}",
-                        bookmark.getTitle(),
-                        bookmark.getStartPage(),
-                        bookmark.getEndPage());
-            }
-
             PdfMetadata metadata = null;
             boolean hasForm = false;
             if (includeMetadata) {

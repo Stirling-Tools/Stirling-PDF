@@ -155,7 +155,7 @@ class PageNumbersControllerTest {
 
             String disposition = response.getHeaders().getFirst("Content-Disposition");
             assertThat(disposition).isNotNull();
-            assertThat(disposition).contains("report_page_numbers_added.pdf");
+            assertThat(disposition).contains("report.pdf");
             assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         }
     }

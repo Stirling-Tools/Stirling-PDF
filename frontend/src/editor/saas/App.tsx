@@ -14,6 +14,8 @@ import Landing from "@editor/routes/Landing";
 import Login from "@editor/routes/Login";
 import { ResumePendingConnect } from "@editor/routes/ResumePendingConnect";
 import Signup from "@editor/routes/Signup";
+import { TeamRedirect } from "@editor/routes/TeamRedirect";
+import { TEAM_PATH } from "@editor/routes/teamPath";
 import AuthCallback from "@editor/routes/AuthCallback";
 import ResetPassword from "@editor/routes/ResetPassword";
 import OAuthConsent from "@editor/routes/OAuthConsent";
@@ -72,6 +74,7 @@ function MainRoutes() {
       <Route element={<NoAppChrome />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path={TEAM_PATH} element={<TeamRedirect />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/reset" element={<ResetPassword />} />
         <Route path="/oauth/consent" element={<OAuthConsent />} />

@@ -15,6 +15,8 @@ import { assertPdfSessionEditable } from "@editor/services/pdfSessionUnlock";
 import { readPdfiumAccess } from "@editor/utils/pdfiumAccess";
 
 const EAGER_PAGE_LIMIT = 5;
+/** Work this long before letting the browser paint. */
+const BACKGROUND_SLICE_MS = 50;
 
 /** Yield to the event loop so the React layer can paint progress. */
 const yieldToBrowser = () =>
@@ -149,17 +151,66 @@ export function ensureAllPagesRead(store: EditorStore): void {
   if (!doc) return;
   let any = false;
   for (const p of store.getState().pages) {
-    const page = doc.page(p.pageIndex);
-    if (page.loaded) continue;
-    try {
-      // Lazy reads must surface failures like the eager path, not throw out of the observer.
-      PdfiumTextReader.populate(doc, page, store.groupingMode);
-      any = true;
-    } catch (err) {
-      store.setError(err instanceof Error ? err.message : String(err));
-    }
+    any = readPage(store, doc, p.pageIndex) || any;
   }
-  if (!any) return;
+  if (any) publishAllPages(store);
+}
+
+/**
+ * ensureAllPagesRead without blocking: reads a slice at a time, yielding
+ * between slices, and publishes when done or cancelled. The returned function
+ * cancels; it is safe to call after the read has finished.
+ */
+export function readAllPagesInBackground(store: EditorStore): () => void {
+  let cancelled = false;
+  void (async () => {
+    const doc = store.document;
+    if (!doc) return;
+    const pending = store
+      .getState()
+      .pages.map((p) => p.pageIndex)
+      .filter((i) => !doc.page(i).loaded);
+    let any = false;
+    // Yield before the first slice so whatever asked for the read paints first.
+    let sliceStart = -Infinity;
+    for (const pageIndex of pending) {
+      if (performance.now() - sliceStart > BACKGROUND_SLICE_MS) {
+        await yieldToBrowser();
+        sliceStart = performance.now();
+      }
+      // A page read but never published would never get its overlays.
+      if (cancelled || store.document !== doc) break;
+      any = readPage(store, doc, pageIndex) || any;
+    }
+    if (any && store.document === doc) publishAllPages(store);
+  })();
+  return () => {
+    cancelled = true;
+  };
+}
+
+/** False when the page was already read or failed to read. */
+function readPage(
+  store: EditorStore,
+  doc: EditorDocument,
+  pageIndex: number,
+): boolean {
+  const page = doc.page(pageIndex);
+  if (page.loaded) return false;
+  try {
+    // Lazy reads must surface failures like the eager path, not throw out of the observer.
+    PdfiumTextReader.populate(doc, page, store.groupingMode);
+    return true;
+  } catch (err) {
+    store.setError(err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}
+
+/** Publish every page's snapshot as the document has it now. */
+export function publishAllPages(store: EditorStore): void {
+  const doc = store.document;
+  if (!doc) return;
   const next = store.getState().pages.map((p) => {
     const page = doc.page(p.pageIndex);
     return {

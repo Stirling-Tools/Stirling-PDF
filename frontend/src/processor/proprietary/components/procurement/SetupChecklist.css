@@ -1,0 +1,118 @@
+/* Headings use the Enterprise page's own (.ent__h2, .ent__h3), which this only adjusts. */
+.ent-setup__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ent-setup__steps {
+  display: flex;
+  flex-direction: column;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ent-setup__step {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.ent-setup__tick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--c-border-strong);
+  border-radius: 50%;
+  background: var(--c-bg-raised);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+
+.ent-setup__tick:hover:not(:disabled) {
+  border-color: var(--c-primary);
+}
+
+.ent-setup__tick:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.ent-setup__tick:disabled {
+  cursor: default;
+}
+
+.ent-setup__step[data-done] .ent-setup__tick {
+  border-color: var(--c-success);
+  background: var(--c-success);
+  color: var(--c-text-on-primary);
+}
+
+.ent-setup__step[data-done] .ent__h3 {
+  color: var(--c-text-muted);
+}
+
+.ent-setup__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ent-setup__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.ent-setup__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-decoration: none;
+}
+
+.ent-setup__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.ent-setup__inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+/* Copy sits in the corner so the command keeps the full width. */
+.ent-setup__code {
+  position: relative;
+  margin-top: 0.75rem;
+}
+
+.ent-setup__code pre {
+  margin: 0;
+  padding: 0.875rem 5rem 0.875rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.ent-setup__code > .sui-btn {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+}

@@ -58,7 +58,7 @@ export const HostedCheckoutSuccess: Story = {
 };
 
 export const TeamPurchase: Story = {
-  args: { combinedChoose: true },
+  args: { combinedChoose: true, onContactSales: () => {} },
 };
 
 export const TeamAdjustment: Story = {

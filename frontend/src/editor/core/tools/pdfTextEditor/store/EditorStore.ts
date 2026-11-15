@@ -300,6 +300,9 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.doc = doc;
+    doc.onArtifactKinds(() => {
+      if (this.doc === doc) this.resnapshot();
+    });
     this.history.clear();
     this.savedTop = null;
     this.bakedDirty = false;
@@ -405,6 +408,14 @@ export class EditorStore {
     this.resnapshot();
   }
 
+  /** Record a command the caller already applied as one undo step, re-snapshot, and notify. */
+  recordApplied(cmd: Command): void {
+    if (!this.doc) return;
+    this.history.record(cmd);
+    this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
+  }
+
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
@@ -499,8 +510,10 @@ export class EditorStore {
     });
   }
 
+  // Ignored while loading: a long operation is mid-way through the document,
+  // and an undo would revert under it.
   undo(): void {
-    if (!this.doc) return;
+    if (!this.doc || this.state.loading) return;
     try {
       this.history.undo(this.doc);
     } catch (err) {
@@ -512,7 +525,7 @@ export class EditorStore {
   }
 
   redo(): void {
-    if (!this.doc) return;
+    if (!this.doc || this.state.loading) return;
     try {
       this.history.redo(this.doc);
     } catch (err) {
@@ -607,6 +620,8 @@ export class EditorStore {
   // once `PdfiumTextReader` finishes for a page.
   publishPages(pages: PageSnapshot[]): void {
     this.patch({ pages });
+    // A page whose artifact kinds were read after its snapshot was taken.
+    this.resnapshot();
   }
 
   /** Document-level dirty bit. */

@@ -20,19 +20,12 @@ jobs:
     # Own environment: docker-publish is branch-locked to release/main,
     # which excludes the baseDockerImage/accessIssueFix branches this runs on.
     environment: docker-base-publish
-    if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
+    if: ${{ vars.CI_PROFILE != 'lite' && contains(fromJSON('["Frooodle", "jbrunton96", "ConnorYoh", "reecebrowne"]'), github.triggering_actor) }}
     runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
     steps:
-      - name: Verify authorized user
-        run: |
-          if [ "${{ github.actor }}" != "Frooodle" ]; then
-            echo "Error: Only Frooodle is authorized to run this workflow"
-            exit 1
-          fi
-
       - name: Set version
         id: version
         env:
@@ -48,7 +41,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Harden Runner
-        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
