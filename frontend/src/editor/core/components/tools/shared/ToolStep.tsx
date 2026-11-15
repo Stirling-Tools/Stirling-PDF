@@ -50,7 +50,7 @@ const renderTooltipTitle = (
 ) => {
   if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
-      <Flex align="center" gap="xs">
+      <Flex component="span" align="center" gap="xs">
         <Text component="span" fw={400} size="sm">
           {title}
         </Text>
