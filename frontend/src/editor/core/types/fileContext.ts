@@ -384,6 +384,7 @@ export type FileContextAction =
 
   // UI actions
   | { type: "SET_SELECTED_FILES"; payload: { fileIds: FileId[] } }
+  | { type: "ADD_SELECTED_FILES"; payload: { fileIds: FileId[] } }
   | { type: "SET_SELECTED_PAGES"; payload: { pageNumbers: number[] } }
   | { type: "CLEAR_SELECTIONS" }
   | {
