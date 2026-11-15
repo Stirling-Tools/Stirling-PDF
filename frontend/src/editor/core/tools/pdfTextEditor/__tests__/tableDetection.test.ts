@@ -626,6 +626,7 @@ describe("detectTables", () => {
     const cands = [
       {
         run: run(60, 700, 30, "A"),
+        text: "A",
         left: 60,
         right: 90,
         cx: 75,
@@ -634,6 +635,7 @@ describe("detectTables", () => {
       },
       {
         run: run(60, 680, 30, "B"),
+        text: "B",
         left: 60,
         right: 90,
         cx: 75,
