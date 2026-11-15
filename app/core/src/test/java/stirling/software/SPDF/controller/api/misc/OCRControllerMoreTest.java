@@ -268,7 +268,7 @@ class OCRControllerMoreTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getHeaders().getContentDisposition().getFilename())
-                        .endsWith("_OCR.zip");
+                        .isEqualTo("scan.zip");
             }
         }
 
