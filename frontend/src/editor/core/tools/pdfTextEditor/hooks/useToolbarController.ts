@@ -585,6 +585,7 @@ export function useToolbarController(
     textUntaggedLinks: textA11y.untaggedLinks,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
+    selectedRunIds: selection.runIds,
     hasImageSelection: selection.imageIds.length > 0,
     selectionCount:
       selection.runIds.length +

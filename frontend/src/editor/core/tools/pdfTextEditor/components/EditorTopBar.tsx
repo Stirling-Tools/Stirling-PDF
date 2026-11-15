@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { Group, Menu, Popover, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -14,9 +14,74 @@ import {
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@editor/tools/pdfTextEditor/hooks/useElementWidth";
 import { modShortcut } from "@editor/utils/hotkeys";
+import { offsetClearing } from "@editor/tools/pdfTextEditor/util/clearingOffset";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 const COMPACT_BELOW_PX = 900;
+const FORMAT_MENU_GAP = 8;
+
+function FormatMenu({ controller }: { controller: Controller }) {
+  const { t } = useTranslation();
+  const [offset, setOffset] = useState(FORMAT_MENU_GAP);
+  const targetRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { selectedRunIds } = controller;
+
+  // The dropdown hangs over the top of the page, where the line being formatted often sits.
+  const clearSelectedText = useCallback(() => {
+    requestAnimationFrame(() => {
+      const anchor = targetRef.current?.getBoundingClientRect();
+      const dropdown = dropdownRef.current?.getBoundingClientRect();
+      if (!anchor || !dropdown) return;
+      const selected = selectedRunIds.flatMap((id) => {
+        const el = document.querySelector(`[data-run-id="${CSS.escape(id)}"]`);
+        return el ? [el.getBoundingClientRect()] : [];
+      });
+      setOffset(
+        offsetClearing(
+          anchor.bottom,
+          {
+            left: anchor.left,
+            right: anchor.left + dropdown.width,
+            height: dropdown.height,
+          },
+          selected,
+          FORMAT_MENU_GAP,
+          window.innerHeight,
+        ),
+      );
+    });
+  }, [selectedRunIds]);
+
+  return (
+    <Popover
+      position="bottom-start"
+      withinPortal
+      shadow="md"
+      offset={offset}
+      onOpen={clearSelectedText}
+      onClose={() => setOffset(FORMAT_MENU_GAP)}
+    >
+      <Popover.Target>
+        <Button
+          ref={targetRef}
+          size="sm"
+          variant="tertiary"
+          accent="neutral"
+          aria-label={t("pdfTextEditor.toolbar.formatting", "Text formatting")}
+          data-testid="pdf-editor-format-menu"
+          style={NO_SHRINK}
+          leftSection={<Icon name="case-sensitive" size={20} />}
+        />
+      </Popover.Target>
+      <Popover.Dropdown ref={dropdownRef}>
+        <Group gap="xs" wrap="wrap" maw={320}>
+          <FormatGroup controller={controller} />
+        </Group>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
 
 interface EditorTopBarProps {
   controller: Controller;
@@ -266,27 +331,7 @@ export function EditorTopBar({
               <ObjectGroup controller={controller} />
               <ToolbarSeparator />
               {compact ? (
-                <Popover position="bottom-start" withinPortal shadow="md">
-                  <Popover.Target>
-                    <Button
-                      size="sm"
-                      variant="tertiary"
-                      accent="neutral"
-                      aria-label={t(
-                        "pdfTextEditor.toolbar.formatting",
-                        "Text formatting",
-                      )}
-                      data-testid="pdf-editor-format-menu"
-                      style={NO_SHRINK}
-                      leftSection={<Icon name="case-sensitive" size={20} />}
-                    />
-                  </Popover.Target>
-                  <Popover.Dropdown>
-                    <Group gap="xs" wrap="wrap" maw={320}>
-                      <FormatGroup controller={controller} />
-                    </Group>
-                  </Popover.Dropdown>
-                </Popover>
+                <FormatMenu controller={controller} />
               ) : (
                 <FormatGroup controller={controller} />
               )}
