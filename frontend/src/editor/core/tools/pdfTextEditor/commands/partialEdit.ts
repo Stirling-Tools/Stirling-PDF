@@ -12,6 +12,7 @@ import {
   measureObjRightEdgePt,
   moveObjectLeftEdgeTo,
   removeAndDestroyObject,
+  removeTextObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   fallbackFamilyFor,
@@ -684,10 +685,6 @@ function borrowFontForChars(
   return borrowFontFromSurvivor(m, plan);
 }
 
-interface FormRemovalModule {
-  FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
-}
-
 export interface PartialEditApplyResult {
   newMergedFromPtrs: number[];
   newMergedFromTexts: string[];
@@ -713,26 +710,12 @@ export function applyPartialEditPlan(
   defaultX?: number,
 ): PartialEditApplyResult {
   const m = doc.module;
-  const formMod = m as unknown as FormRemovalModule;
   const emitY = baselineY ?? run.matrix.f;
   const startX = defaultX ?? run.bounds.x;
   // Removals run before the walk below: it re-emits from the surviving
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
-    if (!ptr) continue;
-    if (containerPtr && formMod.FPDFFormObj_RemoveObject) {
-      try {
-        formMod.FPDFFormObj_RemoveObject(containerPtr, ptr);
-      } catch {
-        /* best-effort */
-      }
-    } else {
-      try {
-        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
-      } catch {
-        /* best-effort */
-      }
-    }
+    if (ptr) removeTextObject(m, page, ptr, containerPtr);
   }
 
   const fallbackFamily = fallbackFamilyFor(run.fontId);
