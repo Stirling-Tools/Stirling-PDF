@@ -1801,7 +1801,10 @@ export class EditTextCommand implements Command {
     if (phase === "revert") for (const edit of reversed) edit.undoPushes(doc);
     try {
       move.apply(doc);
-      if (phase === "revert") edits[0].restoreLayout(doc, run);
+      if (phase === "revert") {
+        edits[0].restoreLayout(doc, run);
+        edits[0].restoreFormObjects(doc, run);
+      }
     } catch (err) {
       try {
         move.revert(doc);
@@ -1832,6 +1835,12 @@ export class EditTextCommand implements Command {
     });
     run.bounds = { ...snap.bounds };
     run.matrix = { ...run.matrix, e: snap.matrixE };
+  }
+
+  private restoreFormObjects(doc: EditorDocument, run: TextRun): void {
+    const members = collectContainersByPtr(run);
+    for (const [ptr, matrix] of this.formObjectMatrices)
+      if (members.get(ptr)) writeMatrix(doc.module, ptr, matrix);
   }
 
   repaintArea(doc: EditorDocument): PageRepaintArea | null {

@@ -13,6 +13,7 @@ import {
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import {
   buildClassicPdf,
   streamBody,
@@ -136,6 +137,39 @@ describe("typing before text drawn inside a scaled form", () => {
 
     edit.apply(doc);
     edit.revert(doc);
+
+    expect(leftEdge(doc, label)).toBeCloseTo(before, 3);
+    expect(run.text).toBe("Open Source");
+  });
+
+  test("undo of a typing burst puts it back where it was, however often it is redone", async () => {
+    const doc = await EditorDocument.open(scaledFormPdf());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
+    const label = run.mergedFromPtrs[0];
+    const before = leftEdge(doc, label);
+    const history = new HistoryStack();
+    for (const prefix of ["X ", "XY "])
+      history.execute(
+        new EditTextCommand({
+          pageIndex: 0,
+          runId: run.id,
+          nextText: prefix + "Open Source",
+        }),
+        doc,
+      );
+    expect(history.size().undo).toBe(1);
+    history.undo(doc);
+    history.redo(doc);
+    const redone = leftEdge(doc, label);
+
+    for (let i = 0; i < 20; i++) {
+      history.undo(doc);
+      history.redo(doc);
+    }
+    expect(leftEdge(doc, label)).toBeCloseTo(redone, 3);
+    history.undo(doc);
 
     expect(leftEdge(doc, label)).toBeCloseTo(before, 3);
     expect(run.text).toBe("Open Source");
