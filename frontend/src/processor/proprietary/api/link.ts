@@ -35,6 +35,8 @@ export interface CloudPlan {
   periodEnd: string | null;
   licensedUsers: number | null;
   unsyncedUnits: number;
+  /** Free grant per period; null until the cloud sends it. */
+  freeAllowanceUnits: number | null;
 }
 
 /** Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage). */

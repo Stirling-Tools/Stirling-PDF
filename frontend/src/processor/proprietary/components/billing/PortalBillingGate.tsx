@@ -78,6 +78,10 @@ export function PortalBillingGate() {
   if (keyLinked)
     return (
       <CloudManagedPlanView
+        usersInUse={usersInUse}
+        userLimit={userLimit}
+        serverPlan={serverPlan}
+        serverPlanAction={serverPlanAction}
         licenseSection={<ServerLicenseSection onSaved={() => {}} />}
       />
     );

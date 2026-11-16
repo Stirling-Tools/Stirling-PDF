@@ -318,6 +318,8 @@ class AccountLinkClientTest {
         assertEquals(100L, e.periodCapUnits());
         assertEquals(EntitlementState.OK, e.state());
         assertEquals(10, e.automationStepLimit());
+        // An older cloud sends no free allowance; the server shows it as unknown, not zero.
+        assertNull(e.freeAllowanceUnits());
 
         HttpRequest sent = captor.getValue();
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
@@ -493,12 +495,17 @@ class AccountLinkClientTest {
 
     @Test
     void dailySeatHeartbeatParsesLocalAllowance() throws Exception {
-        var reply = response(200, "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17}");
+        var reply =
+                response(
+                        200,
+                        "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17,"
+                                + "\"freeAllowanceUnits\":500}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(reply);
         var result = client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
         assertNotNull(result);
         assertEquals(100, result.licensedUsers());
         assertEquals(17, result.fleetUserLimit());
+        assertEquals(500L, result.freeAllowanceUnits());
         var request = ArgumentCaptor.forClass(HttpRequest.class);
         org.mockito.Mockito.verify(httpClient)
                 .send(request.capture(), any(HttpResponse.BodyHandler.class));

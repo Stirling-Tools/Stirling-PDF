@@ -7,7 +7,10 @@ import {
   remainingMeter,
 } from "@editor/billing/format";
 import { MeterRow } from "@editor/billing/MeterRow";
-import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
+import {
+  estimatedBillWithPending,
+  pendingMeteredUnits,
+} from "@editor/billing/pendingUsage";
 import type { Wallet } from "@editor/billing/types";
 
 /** One tranche of the row's breakdown: a labelled figure over its own small bar. */
@@ -173,14 +176,36 @@ export function ProcessorPlanRow({
     ? estimatedBillWithPending(wallet, pendingUnits)
     : null;
   const capped = active && !wallet.noCap && wallet.capUsd != null;
+  // A server linked with a key is told its limit in credits, never in money.
+  const creditCap =
+    active && !wallet.noCap && wallet.capUsd == null
+      ? wallet.billableLimit
+      : null;
+  const creditsUsed =
+    wallet.billableUsed + pendingMeteredUnits(wallet, pendingUnits);
   // One conversion, in one place: the estimate is minor units, the limit is major.
   const spentMajor = spentMinor != null ? spentMinor / 100 : null;
   const spendPct =
-    capped && spentMajor != null
-      ? wallet.capUsd === 0
+    creditCap != null
+      ? creditCap === 0
         ? 100
-        : (spentMajor / (wallet.capUsd as number)) * 100
-      : 0;
+        : (creditsUsed / creditCap) * 100
+      : capped && spentMajor != null
+        ? wallet.capUsd === 0
+          ? 100
+          : (spentMajor / (wallet.capUsd as number)) * 100
+        : 0;
+  const creditsOfCap =
+    creditCap != null
+      ? t(
+          "portal.billing.processor.creditsOfCap",
+          "{{used}} of {{cap}} credits",
+          {
+            used: creditsUsed.toLocaleString(),
+            cap: creditCap.toLocaleString(),
+          },
+        )
+      : null;
 
   const remainingOf = (remaining: number, total: number) =>
     t("portal.billing.processor.remainingOf", "{{remaining}} of {{total}}", {
@@ -237,19 +262,21 @@ export function ProcessorPlanRow({
         key="paid"
         label={t("portal.billing.processor.paidUsed", "Paid metered usage")}
         value={
-          <>
-            {spentMinor == null
-              ? "—"
-              : formatMinor(spentMinor, wallet.currency)}
-            {capped
-              ? ` / ${formatMoneyMajor(wallet.capUsd as number, wallet.currency)}`
-              : ""}
-          </>
+          creditsOfCap ?? (
+            <>
+              {spentMinor == null
+                ? "—"
+                : formatMinor(spentMinor, wallet.currency)}
+              {capped
+                ? ` / ${formatMoneyMajor(wallet.capUsd as number, wallet.currency)}`
+                : ""}
+            </>
+          )
         }
-        pct={spentMinor == null ? null : spendPct}
-        showBar={capped}
+        pct={creditCap != null || spentMinor != null ? spendPct : null}
+        showBar={capped || creditCap != null}
         note={
-          capped
+          capped || creditCap != null
             ? undefined
             : t("portal.billing.processor.noSpendLimit", "No spend limit")
         }
@@ -360,6 +387,30 @@ export function ProcessorPlanRow({
       />
     );
   }
+
+  if (creditsOfCap != null)
+    return (
+      <MeterRow
+        name={name}
+        mid={t(
+          "portal.billing.processor.midCreditCap",
+          "{{credits}} metered this cycle",
+          { credits: creditsOfCap },
+        )}
+        details={details}
+        pct={spendPct}
+        tone={spendPct >= 90 ? "warn" : "paid"}
+        fact={t("portal.billing.processor.percentUsed", "{{pct}}%", {
+          pct: Math.round(spendPct).toLocaleString(),
+        })}
+        door={door}
+        onDoor={onDoor}
+        midTitle={t(
+          "portal.billing.processor.meteredCapTooltip",
+          "Pauses metered processing at your spend limit.",
+        )}
+      />
+    );
 
   const mid =
     spentMinor != null

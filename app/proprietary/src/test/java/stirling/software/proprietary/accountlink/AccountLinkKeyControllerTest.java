@@ -110,7 +110,8 @@ class AccountLinkKeyControllerTest {
                                         25,
                                         0,
                                         40,
-                                        null)));
+                                        null,
+                                        1000L)));
         when(localUsage.currentPeriodUnsynced())
                 .thenReturn(new LocalUsageService.LocalUsage(start, 3, 1, 1, 5));
 
@@ -122,6 +123,7 @@ class AccountLinkKeyControllerTest {
         assertThat(plan.periodCapUnits()).isEqualTo(500L);
         assertThat(plan.prepaidRemainingUnits()).isEqualTo(40);
         assertThat(plan.licensedUsers()).isEqualTo(25);
+        assertThat(plan.freeAllowanceUnits()).isEqualTo(1000L);
         assertThat(plan.state()).isEqualTo("OK");
         assertThat(plan.unsyncedUnits()).isEqualTo(5);
     }

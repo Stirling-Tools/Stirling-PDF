@@ -72,7 +72,8 @@ public class AccountLinkKeyController {
             LocalDateTime periodEnd,
             Integer licensedUsers,
             long unsyncedUnits,
-            EntitlementCache.ConnectionStatus connection) {}
+            EntitlementCache.ConnectionStatus connection,
+            Long freeAllowanceUnits) {}
 
     @PostMapping("/key")
     public ResponseEntity<?> redeemKey(@RequestBody(required = false) RedeemKeyRequest req) {
@@ -119,7 +120,8 @@ public class AccountLinkKeyController {
                                                 e.periodEnd(),
                                                 e.licensedUsers(),
                                                 unsynced,
-                                                connection))
+                                                connection,
+                                                e.freeAllowanceUnits()))
                         .orElseGet(
                                 () ->
                                         new CloudPlan(
@@ -134,7 +136,8 @@ public class AccountLinkKeyController {
                                                 null,
                                                 null,
                                                 0,
-                                                connection)));
+                                                connection,
+                                                null)));
     }
 
     private void syncAfterLink() {

@@ -527,6 +527,9 @@ public class AccountLinkClient {
                 root.path("prepaidRemainingUnits").asLong(0),
                 root.hasNonNull("fleetUserLimit")
                         ? Math.max(0, root.get("fleetUserLimit").asInt())
+                        : null,
+                root.hasNonNull("freeAllowanceUnits")
+                        ? Math.max(0L, root.get("freeAllowanceUnits").asLong())
                         : null);
     }
 
