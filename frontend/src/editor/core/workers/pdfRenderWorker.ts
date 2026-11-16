@@ -123,6 +123,9 @@ async function handle(
   switch (request.type) {
     case "init":
       wasm = { url: request.wasmUrl, module: request.wasmModule };
+      // Started here so a PDFium that cannot load fails the start, which sends
+      // rendering to the main thread, rather than every render after it.
+      await pdfium();
       return undefined;
     case "firstPage": {
       const m = await pdfium();
