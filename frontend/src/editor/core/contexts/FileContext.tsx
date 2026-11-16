@@ -1178,6 +1178,35 @@ function FileContextInner({
         // Don't clear IndexedDB automatically - only clear in-memory state
         // IndexedDB should only be cleared when explicitly requested by user
       },
+      clearRecentFiles: async (
+        fileIds: FileId[],
+        spare: ReadonlySet<string> = new Set(),
+      ) => {
+        // Re-read, since another tab may have filed a target into a folder or
+        // built a newer version on it. A file not stored yet stays a target.
+        const stored = new Map(
+          (await fileStorage.getAllStirlingFileStubs()).map((s) => [s.id, s]),
+        );
+        const targets = fileIds.filter((id) => {
+          const stub = stored.get(id);
+          return (
+            !spare.has(id) && stub?.folderId == null && stub?.isLeaf !== false
+          );
+        });
+        // A spared open file can be an older version no kept file needs.
+        const orphans = (await fileStorage.orphanedAncestorIds(targets)).filter(
+          (id) => !spare.has(id),
+        );
+        const doomed = [...targets, ...orphans];
+        if (indexedDB && enablePersistence) {
+          await indexedDB.deleteMultiple(doomed);
+        }
+        cancelPendingAdmissions(doomed);
+        forgetPdfAccess(doomed);
+        lifecycleManager.removeFiles(doomed, stateRef);
+        void reportFilesRemoved(doomed);
+        return doomed;
+      },
       clearAllData: async () => {
         for (const request of ownerRequests.current.values())
           request.resolve(false);
