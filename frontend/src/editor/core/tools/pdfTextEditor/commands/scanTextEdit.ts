@@ -1346,6 +1346,37 @@ function syncOriginalWords(
       }
     }),
   );
+  if (state.lifted.size > 0) bringWordsToPage(canvas, state);
+}
+
+// The reader groups lines within one form at a time, so OCR words left in the
+// scan's form beside words this edit drew on the page would read back as two
+// lines, and the paragraph as two runs, once the file is reopened.
+function bringWordsToPage(canvas: Canvas, state: ScanEditState): void {
+  const { doc, page } = canvas;
+  state.lines.forEach((line, li) =>
+    line.words.forEach((word, wi) => {
+      if (word.container === 0 || state.lifted.has(`${li}:${wi}`)) return;
+      removeMemberPtrs(
+        doc.module,
+        page,
+        [word.ptr, ...(word.extraPtrs ?? [])],
+        new Map([[word.ptr, word.container]]),
+        0,
+      );
+      const drawn = invisibleText(
+        canvas,
+        word.text.trimEnd() || word.text,
+        { left: word.x, right: word.right },
+        word.baseline,
+        word.fontSize,
+        { originalFontPtr: state.fontPtr, family: "Helvetica" },
+      );
+      word.ptr = drawn[0] ?? 0;
+      word.extraPtrs = drawn.slice(1);
+      word.container = 0;
+    }),
+  );
 }
 
 // Deleting the run takes its drawn text and OCR words; the covers stay, as the scan under them is the old text.

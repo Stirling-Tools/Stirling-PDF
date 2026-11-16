@@ -13,6 +13,7 @@ import {
 } from "vitest";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { resizeRunCommand } from "@editor/tools/pdfTextEditor/commands/resizeRun";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
   isScanRun,
   prefitScanRun,
@@ -174,5 +175,38 @@ test.each(EDITS)(
     expect(run.text).toBe(edited);
     store.redo();
     expect(run.text).toBe(widened);
+  },
+);
+
+test.each([
+  ["narrowing and widening", (text: string) => text],
+  [
+    "an Enter typed after a sentence",
+    (text: string) => text.replace("customer. ", "customer. \n"),
+  ],
+])(
+  "after %s, a saved scanned paragraph reopens as one run with the same lines",
+  { timeout: 180_000 },
+  async (_name, edit) => {
+    const { doc, store, run } = await fitted();
+    const width = run.bounds.width;
+    store.dispatch(resizeRunCommand(doc, 0, run.id, width * 0.6)!);
+    const edited = edit(run.text);
+    if (edited !== run.text)
+      store.dispatch(
+        new EditTextCommand({ pageIndex: 0, runId: run.id, nextText: edited }),
+      );
+    store.dispatch(resizeRunCommand(doc, 0, run.id, width * 1.5)!);
+    const lines = run.text.split("\n").map((line) => line.trim());
+
+    const saved = new Uint8Array(await (await exportToBlob(doc)).arrayBuffer());
+    const reopened = await openParagraph(saved);
+
+    expect(
+      reopened.page.runs.filter((r) => r.text.includes("agreement")),
+    ).toHaveLength(1);
+    expect(reopened.run.text.split("\n").map((line) => line.trim())).toEqual(
+      lines,
+    );
   },
 );
