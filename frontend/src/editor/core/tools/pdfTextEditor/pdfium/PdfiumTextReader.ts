@@ -1,3 +1,4 @@
+import { claimFormNodes } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import {
   readPageGlyphs,
   type PageGlyphs,
@@ -72,6 +73,7 @@ export class PdfiumTextReader {
   ): void {
     if (page.loaded) return;
     doc.claimArtifactMarks(page.index);
+    claimFormNodes(doc, page);
     const m = doc.module;
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);

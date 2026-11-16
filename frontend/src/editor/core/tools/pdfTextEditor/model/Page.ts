@@ -6,6 +6,7 @@ import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { TableModel } from "@editor/tools/pdfTextEditor/model/TableModel";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import type { FormNode } from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import type {
   PageRect,
   PageRuleSnapshot,
@@ -50,6 +51,12 @@ export class Page {
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
   shownInViewer: boolean;
+  /**
+   * The file's form XObjects behind the form objects drawn by the page itself,
+   * by object; set as the page is first read, and filled only on a page
+   * drawing one that cannot be lifted faithfully (see claimFormNodes).
+   */
+  formNodes: Map<number, FormNode> | null = null;
   // Consecutive bounded edits, oldest first: each changed nothing outside its area.
   private repaints: Array<{ from: number; to: number; area: PageRect }> = [];
 

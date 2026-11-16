@@ -12,11 +12,20 @@ import {
   MarkInfoError,
   applyMarked,
 } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
+import {
+  defineMissingGraphicsStates,
+  type ObjectOpacity,
+} from "@editor/tools/pdfTextEditor/pdfdoc/passes/defineMissingGraphicsStates";
 import { nameArtifactKinds } from "@editor/tools/pdfTextEditor/pdfdoc/passes/nameArtifactKinds";
 import { repairStructure } from "@editor/tools/pdfTextEditor/pdfdoc/passes/repairStructure";
 import { setDocumentLanguage } from "@editor/tools/pdfTextEditor/pdfdoc/passes/setDocumentLanguage";
 import { preserveShadings } from "@editor/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { subsetEmbeddedFonts } from "@editor/tools/pdfTextEditor/pdfdoc/passes/subsetEmbeddedFonts";
+import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
+import {
+  readObjFill,
+  readObjStroke,
+} from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import { PdfiumSave } from "@editor/tools/pdfTextEditor/pdfium/PdfiumSave";
 import { writesArtifactKinds } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
@@ -151,6 +160,9 @@ async function serializeEdits(
     );
   }
   const regenerated = doc.regeneratedPages();
+  bytes = await defineMissingGraphicsStates(bytes, regenerated, (index, at) =>
+    opacitiesAt(doc, index, at),
+  );
 
   if (regenerated.length > 0 && doc.openedBytes.length > 0) {
     try {
@@ -165,6 +177,31 @@ async function serializeEdits(
     }
   }
   return bytes;
+}
+
+// Within what PDFium's six significant digits leave of a transform.
+const MATRIX_SLACK = 1e-3;
+
+function opacitiesAt(
+  doc: EditorDocument,
+  pageIndex: number,
+  at: number[],
+): ObjectOpacity[] {
+  const m = doc.module;
+  const pagePtr = doc.page(pageIndex).pagePtr;
+  const out: ObjectOpacity[] = [];
+  for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++) {
+    const obj = m.FPDFPage_GetObject(pagePtr, i);
+    const matrix = obj ? readMatrix(m, obj) : null;
+    const same = matrix?.every(
+      (v, k) => Math.abs(v - at[k]) <= MATRIX_SLACK * Math.max(1, Math.abs(v)),
+    );
+    if (!same) continue;
+    const fill = readObjFill(m, obj);
+    const stroke = readObjStroke(m, obj);
+    if (fill && stroke) out.push({ fill: fill.a, stroke: stroke.a });
+  }
+  return out;
 }
 
 function pdfBlob(bytes: Uint8Array): Blob {

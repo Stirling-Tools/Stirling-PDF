@@ -13,6 +13,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/tableGeometry";
 import {
   absoluteFontScale,
+  assertTableLiftable,
   applyCellPlacement,
   captureCellPlacement,
   type CellPlacement,
@@ -69,6 +70,7 @@ export class ResizeTableCommand implements Command {
     const found = locateTable(doc, this.tableId);
     if (!found) return;
     const { page, model } = found;
+    assertTableLiftable(doc, page, model);
     this.before = {
       colEdges: [...model.colEdges],
       rowEdges: [...model.rowEdges],

@@ -7583,6 +7583,7 @@ title = "Drop a PDF to open"
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
+formLiftChangesDrawing = "Can't edit this: it is drawn as part of a group whose clipping or graphics settings the editor can't keep when it is changed."
 insertImage = "Could not insert the selected image."
 needsShaping = "The editor can't yet draw this script's joined letters and vowel signs correctly, so this change was not made."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."

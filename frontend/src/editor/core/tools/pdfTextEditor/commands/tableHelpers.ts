@@ -1,4 +1,7 @@
-import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import {
+  assertLiftable,
+  liftRunToPage,
+} from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -527,6 +530,22 @@ export function shiftRunBy(
 // its cell so content keeps its position within the cell rather than being
 // re-anchored. Used by every resize; reversible by calling it with the old
 // edges.
+/** Throws, before anything is changed, when a run in the table cannot be lifted out of its form (see assertLiftable). */
+export function assertTableLiftable(
+  doc: EditorDocument,
+  page: Page,
+  model: TableModel,
+): void {
+  const runs = model.cellRuns.flatMap((row, r) =>
+    row.flatMap((_id, c) => model.runsAt(r, c)),
+  );
+  assertLiftable(
+    doc,
+    page,
+    runs.map((id) => page.findRun(id)).filter((run) => run !== undefined),
+  );
+}
+
 export function setTableEdges(
   doc: EditorDocument,
   page: Page,

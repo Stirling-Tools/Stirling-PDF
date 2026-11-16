@@ -15,6 +15,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/tableGeometry";
 import {
   bandColorFor,
+  assertTableLiftable,
   paintRowFill,
   redrawGrid,
   removeObjects,
@@ -59,6 +60,7 @@ export class ModifyTableCommand implements Command {
     const found = locateTable(doc, this.tableId);
     if (!found) return;
     const { page, model } = found;
+    assertTableLiftable(doc, page, model);
     const isRow = this.op.endsWith("row");
     const count = isRow ? model.rows : model.cols;
     const adding = this.op.startsWith("add");

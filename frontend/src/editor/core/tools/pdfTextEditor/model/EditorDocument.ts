@@ -35,9 +35,13 @@ import {
   readFileArtifactKinds,
   refreshArtifactTags,
 } from "@editor/tools/pdfTextEditor/model/fileArtifactKinds";
+import {
+  formLiftHazards,
+  type FormNode,
+} from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
-  readFileStructure,
+  fileStructureOf,
   type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
@@ -91,6 +95,8 @@ export class EditorDocument {
   private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  /** See formLiftHazards; null when the file was not kept, so they are unknown. */
+  private readonly formHazards: Map<number, FormNode[]> | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private readonly _embeddedFontFiles: Uint8Array[] = [];
@@ -124,8 +130,10 @@ export class EditorDocument {
     docPtr: number,
     openedBytes: Uint8Array,
     fileStructure: FileStructure | null,
+    formHazards: Map<number, FormNode[]> | null,
   ) {
     this.module = module;
+    this.formHazards = formHazards;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
@@ -147,9 +155,23 @@ export class EditorDocument {
     // PDFium already holds its own heap copy, so retaining these doubles the
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
-    const fileStructure =
-      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
-    return new EditorDocument(module, docPtr, keep, fileStructure);
+    const raw =
+      keep.length > 0 ? await RawPdf.parse(keep).catch(() => null) : null;
+    const fileStructure = raw ? safely(() => fileStructureOf(raw)) : null;
+    const formHazards = raw
+      ? await formLiftHazards(raw).catch(() => null)
+      : null;
+    return new EditorDocument(module, docPtr, keep, fileStructure, formHazards);
+  }
+
+  /**
+   * The forms page `pageIndex` draws, in drawing order, when one of them
+   * would draw differently lifted onto the page (see formLiftHazards);
+   * "none" when none would, and "unknown" when the file was not kept.
+   */
+  formHazardsOn(pageIndex: number): FormNode[] | "none" | "unknown" {
+    if (!this.formHazards) return "unknown";
+    return this.formHazards.get(pageIndex) ?? "none";
   }
 
   /** Page indices whose content stream has been regenerated this session. */
@@ -803,6 +825,7 @@ export class EditorDocument {
       this.module.FPDF_CreateNewDocument(),
       EMPTY,
       null,
+      new Map(),
     );
     return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
   }
@@ -1025,4 +1048,12 @@ function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
     ordered.push(...chain.reverse());
   }
   return ordered;
+}
+
+function safely<T>(read: () => T): T | null {
+  try {
+    return read();
+  } catch {
+    return null;
+  }
 }

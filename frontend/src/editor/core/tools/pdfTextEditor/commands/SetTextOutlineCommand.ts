@@ -114,7 +114,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: member.stroke,
         strokeWidth: member.strokeWidth,
       });
-      if (!member.stroke) clearStroke(doc, member.ptr);
     }
     page.markNeedsGenerate();
   }
@@ -133,7 +132,6 @@ export class SetTextOutlineCommand implements Command {
         stroke: run.stroke,
         strokeWidth: run.strokeWidth,
       });
-      if (!run.stroke) clearStroke(doc, ptr);
     }
     doc.page(this.pageIndex).markNeedsGenerate();
   }
@@ -190,16 +188,5 @@ function readMemberInk(
     return { ptr, renderMode, stroke, strokeWidth };
   } catch {
     return { ptr, renderMode, stroke: null, strokeWidth: 0 };
-  }
-}
-
-/** A zero-width transparent stroke is how PDFium expresses "no outline". */
-function clearStroke(doc: EditorDocument, ptr: number): void {
-  const mod = doc.module as unknown as OutlineModule;
-  try {
-    mod.FPDFPageObj_SetStrokeWidth?.(ptr, 0);
-    mod.FPDFPageObj_SetStrokeColor?.(ptr, 0, 0, 0, 0);
-  } catch {
-    /* best-effort */
   }
 }

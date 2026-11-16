@@ -75,7 +75,12 @@ export async function readFileStructure(
   bytes: Uint8Array,
 ): Promise<FileStructure | null> {
   const pdf = await RawPdf.parse(bytes);
-  if (!pdf || pdf.encrypted) return null;
+  return pdf ? fileStructureOf(pdf) : null;
+}
+
+/** As readFileStructure, from a file already parsed. */
+export function fileStructureOf(pdf: RawPdf): FileStructure | null {
+  if (pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
   if (!catalog) return null;
   const treeRoot = pdf.dictRef(catalog, "StructTreeRoot");

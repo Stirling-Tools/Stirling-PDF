@@ -2010,6 +2010,9 @@ export function inkFromRun(run: {
   };
 }
 
+// Text render modes that paint a stroke (ISO 32000-1 9.3.6).
+const STROKING_MODES = new Set([1, 2, 5, 6]);
+
 /** Re-apply render mode and outline to freshly created text objects. */
 export function applyInkState(
   m: WrappedPdfiumModule,
@@ -2036,9 +2039,12 @@ export function applyInkState(
         );
         mod.FPDFPageObj_SetStrokeWidth?.(p, width);
       } else {
-        // A transparent zero-width stroke is how "no outline" is expressed.
+        // An opaque stroke on text that never strokes needs no graphics
+        // state; a transparent one does, and PDFium can save a page naming
+        // that state after dropping its definition.
+        const strokeAlpha = STROKING_MODES.has(mode) ? 0 : 255;
         mod.FPDFPageObj_SetStrokeWidth?.(p, 0);
-        mod.FPDFPageObj_SetStrokeColor?.(p, 0, 0, 0, 0);
+        mod.FPDFPageObj_SetStrokeColor?.(p, 0, 0, 0, strokeAlpha);
       }
     } catch {
       /* best-effort */
