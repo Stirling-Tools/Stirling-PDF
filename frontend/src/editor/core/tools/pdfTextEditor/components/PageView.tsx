@@ -68,14 +68,17 @@ interface PageViewProps {
     dx: number,
     dy: number,
   ) => void;
-  /** Wrap-mode reflow request; maxWidthPt in PDF points. */
-  /** False when the wrap was refused because its new lines had nowhere clear to go. */
+  /**
+   * Wrap-mode reflow request; maxWidthPt in PDF points. Returns the run's text
+   * after the wrap, or null when it was refused because its new lines had
+   * nowhere clear to go.
+   */
   onWrapRun?: (
     pageIndex: number,
     runId: string,
     maxWidthPt: number,
     keepClearBelow?: boolean,
-  ) => boolean | void;
+  ) => string | null | void;
   /** Right-edge drag to a new box width; widthPt in PDF points. */
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */

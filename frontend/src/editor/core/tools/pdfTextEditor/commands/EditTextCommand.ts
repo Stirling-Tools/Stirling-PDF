@@ -674,6 +674,21 @@ export class EditTextCommand implements Command {
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialDrewAll = droppedCharsSeen() === drops;
         this.partialInsertedPtrs = result.insertedPtrs;
+        // A reflow leaves a one-line run's objects in paragraphLeafPtrs too,
+        // and that list wins over mergedFromPtrs wherever the run's objects
+        // are collected: a letter left out of it is dropped by the next reflow.
+        if (run.paragraphLeafPtrs.length > 0) {
+          const containerOf = new Map(
+            run.paragraphLeafPtrs.map((ptr, i) => [
+              ptr,
+              run.paragraphLeafContainers[i] ?? run.containerPtr,
+            ]),
+          );
+          run.paragraphLeafPtrs = [...result.newMergedFromPtrs];
+          run.paragraphLeafContainers = result.newMergedFromPtrs.map(
+            (ptr) => containerOf.get(ptr) ?? run.containerPtr,
+          );
+        }
         run.mergedFromPtrs = result.newMergedFromPtrs;
         run.mergedFromTexts = result.newMergedFromTexts;
         run.mergedFromBounds = result.newMergedFromBounds;

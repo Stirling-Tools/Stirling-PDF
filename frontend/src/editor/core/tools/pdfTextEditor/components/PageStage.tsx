@@ -433,18 +433,18 @@ function pageViewHandlers(store: EditorStore) {
       runId: string,
       maxWidthPt: number,
       keepClearBelow?: boolean,
-    ): boolean => {
+    ): string | null | undefined => {
       const doc = store.document;
       const page = doc?.page(pageIndex);
       const run = page?.findRun(runId);
-      const wrapped =
-        doc && page && run ? wrapScanText(doc, page, run, maxWidthPt) : null;
+      if (!doc || !page || !run) return undefined;
+      const wrapped = wrapScanText(doc, page, run, maxWidthPt);
       if (wrapped !== null) {
-        if (wrapped !== run?.text)
+        if (wrapped !== run.text)
           store.dispatch(
             new EditTextCommand({ pageIndex, runId, nextText: wrapped }),
           );
-        return true;
+        return page.findRun(runId)?.text ?? wrapped;
       }
       const reflow = new ReflowWrapCommand({
         pageIndex,
@@ -453,7 +453,8 @@ function pageViewHandlers(store: EditorStore) {
         keepClearBelow,
       });
       store.dispatch(reflow);
-      return !reflow.refusedForSpaceBelow;
+      if (reflow.refusedForSpaceBelow) return null;
+      return page.findRun(runId)?.text ?? run.text;
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
       const doc = store.document;

@@ -46,13 +46,16 @@ import {
   canHighlightTextRanges,
   highlightTextRange,
   paintPlainText,
+  plainCaretOffset,
   plainDomRange,
   plainSelectionRange,
   readOverlayText,
   refitEditedTokens,
   refitTokens,
   repaintKeepingSelection,
+  restoreCaretOffset,
 } from "@editor/tools/pdfTextEditor/util/overlayPainter";
+import { offsetAcrossRewrap } from "@editor/tools/pdfTextEditor/util/wrapCaret";
 import {
   cssFontShorthand,
   measureFontMetrics,
@@ -67,12 +70,8 @@ const SETTLE_MS = 400;
 
 const STALL_MS = 250;
 
-// Idle time before a wrap-mode run re-wraps. This has to be longer than the gap
-// between keystrokes: a reflow physically moves the glyph objects, so one that
-// lands mid-burst drags the text - and the caret - out from under the user.
-// Measured at 180ms it fired 10 times across 70 typed characters and produced
-// 13 backward caret jumps. It only needs to beat the user clicking away.
-const LIVE_WRAP_MS = 700;
+/** Must stay in sync with `.pdf-editor-run` padding in TextRunOverlay.css. */
+const BOX_PADDING_PX = 2;
 
 // Un-measured keystrokes a run absorbs before the overlay takes over the
 // glyphs. One or two are re-rendered fast enough to leave the page's own ink
@@ -331,9 +330,13 @@ interface TextRunOverlayProps {
   /**
    * Fires when typed text overflows the box: past the locked width in Wrap,
    * past the page edge in Grow, which asks to keep clear of what lies below.
-   * Returns false when that wrap was refused.
+   * Runs synchronously and returns the run's text after the wrap, or null when
+   * the wrap was refused.
    */
-  onWrap?: (maxWidthPt: number, keepClearBelow?: boolean) => boolean | void;
+  onWrap?: (
+    maxWidthPt: number,
+    keepClearBelow?: boolean,
+  ) => string | null | void;
   /** Fires when the user drags the right edge to a new width, in PDF points. */
   onResize?: (widthPt: number) => void;
   /** Fires while the box has focus, as the characters selected inside it change. */
@@ -421,6 +424,29 @@ function caretBesideLines(
   if (!caret || !el.contains(caret.startContainer)) return null;
   caret.collapse(true);
   return caret;
+}
+
+/** The line of `text` holding character offset `offset`, and its index. */
+function lineAt(text: string, offset: number): { index: number; text: string } {
+  const lines = text.split("\n");
+  let start = 0;
+  for (let index = 0; index < lines.length; index += 1) {
+    const end = start + lines[index].length;
+    if (offset <= end) return { index, text: lines[index] };
+    start = end + 1;
+  }
+  return { index: lines.length - 1, text: lines[lines.length - 1] };
+}
+
+/** Where the collapsed caret inside `el` is drawn, or null without one. */
+function caretClientX(el: HTMLElement): number | null {
+  const selection = window.getSelection();
+  if (!selection?.rangeCount || !el.contains(selection.focusNode)) return null;
+  const caret = selection.getRangeAt(0).cloneRange();
+  caret.collapse(false);
+  const rects = caret.getClientRects();
+  const rect = rects.length > 0 ? rects[0] : caret.getBoundingClientRect();
+  return rect.width === 0 && rect.height === 0 && rect.x === 0 ? null : rect.x;
 }
 
 /** One editable HTML element per PDF text run. */
@@ -521,11 +547,16 @@ export function TextRunOverlay({
   const endResizeRef = useRef<(() => void) | null>(null);
   useEffect(() => () => endResizeRef.current?.(), []);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
-  // The edit count and widest line when focus arrived: Grow wraps only what is typed past the page edge, never a line the document already set wider.
-  const focusEditTickRef = useRef(0);
+  // The widest line when focus arrived: Grow wraps only what is typed past the page edge, never a line the document already set wider.
   const focusWidestRef = useRef(0);
   // Set when a Grow wrap was refused for want of room below: the box then grows past the page edge for the rest of this edit rather than draw over what is there.
   const [growBlocked, setGrowBlocked] = useState(false);
+  // Content width the typed text needs beyond the laid-out box, in CSS px,
+  // until the next wrap or focus change.
+  const [fitWidthPx, setFitWidthPx] = useState<number | null>(null);
+  const unwrappedLineRef = useRef<{ index: number; width: number } | null>(
+    null,
+  );
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
   const faceName = run.scanFamily ?? run.fontId;
@@ -807,7 +838,6 @@ export function TextRunOverlay({
   // The reflow lays text out along the page axis, so a turned run keeps growing.
   const growWraps = !wantWrap && !!onWrap && !runRotation && !growBlocked;
   const growWrapWidth = Math.max(pageCap, longestTokenWidth + fontSizePx);
-  const typedSinceFocus = focused && editTick > focusEditTickRef.current;
   const growOverflowWidth = Math.max(growWrapWidth, focusWidestRef.current);
   const maxOnPageWidth = wantWrap ? pageCap : Number.POSITIVE_INFINITY;
   const naturalWidth = wantWrap
@@ -835,7 +865,7 @@ export function TextRunOverlay({
   // underneath it.
   const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
   const grownWidth = exact ? exactWidth : flowWidth;
-  const width = wantWrap
+  const laidOutWidth = wantWrap
     ? wrapWidth
     : Math.max(
         growWraps
@@ -849,41 +879,81 @@ export function TextRunOverlay({
           : grownWidth,
         userWidthPx,
       );
+  const width =
+    fitWidthPx === null ? laidOutWidth : Math.max(laidOutWidth, fitWidthPx);
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
   const whiteSpace: "pre" | "pre-wrap" =
     !exact && wantWrap ? "pre-wrap" : "pre";
 
-  // Wrap AS THE USER TYPES, not only on blur. Deferring it meant the overflow
-  // sat invisible past the box edge until they clicked away - over a thousand
-  // pixels of it - and the caret only dropped onto the new line at that point.
-  // The reflow shares EditTextCommand's coalesce key and ignores the time
-  // window, so running it mid-burst does not fragment undo.
-  const wrapTarget = wantWrap ? wrapWidth : growWrapWidth;
-  const overflowAt = wantWrap ? wrapWidth : growOverflowWidth;
-  const liveWraps = wantWrap || (growWraps && typedSinceFocus);
-  useEffect(() => {
-    if (!liveWraps || !onWrap || !focused) return;
-    const el = ref.current;
-    if (!el || composingRef.current) return;
-    const widest = measureMaxLineWidth(readOverlayText(el), font);
-    if (widest <= overflowAt + 1) return;
-    const timer = window.setTimeout(() => {
-      if (wantWrap) onWrap(wrapTarget / scale);
-      else if (onWrap(wrapTarget / scale, true) === false) setGrowBlocked(true);
-    }, LIVE_WRAP_MS);
-    return () => window.clearTimeout(timer);
-  }, [
-    liveWraps,
-    onWrap,
-    focused,
-    editTick,
-    wrapTarget,
-    overflowAt,
-    font,
-    scale,
-  ]);
+  // Wrap AS THE USER TYPES, on the keystroke that crosses the edge, and paint
+  // the wrapped text into the box before the next key can arrive. The reflow
+  // turns a space into a line break in the model; a DOM still holding the space
+  // hands it back on the next keystroke's edit, so a wrap the box did not
+  // mirror at once was undone by every key typed after it. It shares
+  // EditTextCommand's coalesce key and ignores the time window, so running it
+  // mid-burst does not fragment undo.
+  function wrapTypedText(el: HTMLDivElement, text: string): boolean {
+    if (!onWrap || !(wantWrap || growWraps)) return false;
+    const longest = measureLongestTokenWidth(text, font) + fontSizePx;
+    const target = wantWrap
+      ? Math.max(Math.min(wrapLockWidth, pageCap), longest)
+      : Math.max(pageCap, longest);
+    const overflowAt = wantWrap
+      ? target
+      : Math.max(target, focusWidestRef.current);
+    // Only the line being typed on: the canvas can measure a line the document
+    // set a few points wider than the PDF draws it, and a reflow on every
+    // keystroke for a line the PDF says fits costs more the longer the burst.
+    const caret = plainCaretOffset(el);
+    const line = lineAt(text, caret ?? text.length);
+    // A space typed at the edge waits for the letter after it: wrapping on it
+    // would leave nothing on the new line for the caret to follow.
+    const width = measureMaxLineWidth(line.text.replace(/[ \t]+$/, ""), font);
+    if (width <= overflowAt) return false;
+    // A line the reflow left as it was is retried once it is half an em wider.
+    const unwrapped = unwrappedLineRef.current;
+    if (
+      unwrapped?.index === line.index &&
+      width < unwrapped.width + fontSizePx * 0.5
+    ) {
+      return false;
+    }
+    const wrapped = wantWrap
+      ? onWrap(target / scale)
+      : onWrap(target / scale, true);
+    if (wrapped === null) {
+      setGrowBlocked(true);
+      return false;
+    }
+    if (typeof wrapped !== "string" || wrapped === text) {
+      unwrappedLineRef.current = { index: line.index, width };
+      return false;
+    }
+    unwrappedLineRef.current = null;
+    paintPlainText(el, wrapped);
+    paintedSignatureRef.current = "";
+    if (caret !== null)
+      restoreCaretOffset(el, offsetAcrossRewrap(text, caret, wrapped));
+    setFitWidthPx(null);
+    return true;
+  }
+
+  // Widen the box to keep the caret in it when the line it is typing on did
+  // not wrap, such as one drawn as a single PDF object with no break to take.
+  // The box clips, so without this the text and the caret sit out of sight
+  // past its edge. Half an em is left clipped: the browser draws freshly
+  // typed letters up to that much wider than the PDF until the engine
+  // re-measures them, and the PDF wraps them on the next key.
+  function fitTypedText(el: HTMLDivElement): void {
+    const caretX = caretClientX(el);
+    if (caretX === null) return;
+    const box = el.getBoundingClientRect();
+    const contentLeft = box.left + BOX_PADDING_PX;
+    if (caretX <= box.right - BOX_PADDING_PX + fontSizePx * 0.5) return;
+    setFitWidthPx(Math.ceil(caretX - contentLeft) + 1);
+  }
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
@@ -1170,8 +1240,9 @@ export function TextRunOverlay({
         const el = e.currentTarget;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = readOverlayText(el);
-        focusEditTickRef.current = editTick;
         setGrowBlocked(false);
+        setFitWidthPx(null);
+        unwrappedLineRef.current = null;
         focusWidestRef.current = measureMaxLineWidth(
           focusTextRef.current,
           font,
@@ -1189,6 +1260,7 @@ export function TextRunOverlay({
       }}
       onBlur={(e) => {
         setTouched(false);
+        setFitWidthPx(null);
         setMaskColor(null);
         setFocused(false);
         // WebKit routes keystrokes to the SELECTION even when the element has
@@ -1243,7 +1315,9 @@ export function TextRunOverlay({
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
         const el = e.currentTarget;
-        onEdit(readOverlayText(el).replace(/\u00A0/g, " "));
+        const text = readOverlayText(el).replace(/\u00A0/g, " ");
+        onEdit(text);
+        if (!wrapTypedText(el, text)) fitTypedText(el);
       }}
       onInput={(e) => {
         setTouched(true);
@@ -1262,6 +1336,7 @@ export function TextRunOverlay({
         const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
+        if (!wrapTypedText(el, text)) fitTypedText(el);
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={leaveHover}
@@ -1335,7 +1410,10 @@ export function TextRunOverlay({
             : resizeWidthPx !== null
               ? "ew-resize"
               : undefined,
-        overflow: "hidden",
+        // Clip, never scroll: a box scrolled to keep the caret in view slides
+        // every glyph in it off the page's own. Typed text the box cannot
+        // wrap widens it instead (`fitWidthPx`).
+        overflow: "clip",
       }}
     />
   );

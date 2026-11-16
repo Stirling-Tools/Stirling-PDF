@@ -3,6 +3,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
+import {
+  plainCaretOffset,
+  readOverlayText,
+} from "@editor/tools/pdfTextEditor/util/overlayPainter";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type {
   TextRunSnapshot,
@@ -12,6 +16,24 @@ import type {
 const CHAR_PX = 6;
 const longest = (text: string) =>
   Math.max(...text.split(/\r?\n/).map((l) => l.length)) * CHAR_PX;
+
+// jsdom has no innerText setter, so the plain-text paint is spelled out with
+// the <br>s a browser would make of it.
+vi.mock(
+  "@editor/tools/pdfTextEditor/util/overlayPainter",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    paintPlainText: (el: HTMLElement, text: string) =>
+      el.replaceChildren(
+        ...text
+          .split("\n")
+          .flatMap((line, i) => [
+            ...(i > 0 ? [document.createElement("br")] : []),
+            document.createTextNode(line),
+          ]),
+      ),
+  }),
+);
 
 vi.mock(
   "@editor/tools/pdfTextEditor/util/textMetrics",
@@ -23,6 +45,10 @@ vi.mock(
       Math.max(0, ...text.split(/\s+/).map((w) => w.length)) * CHAR_PX,
   }),
 );
+
+// jsdom lays nothing out, so a range has no rects to read.
+Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
+Range.prototype.getBoundingClientRect = () => new DOMRect();
 
 const PAGE_WIDTH = 200;
 const LEFT = 40;
@@ -42,6 +68,32 @@ function run(text: string): TextRunSnapshot {
   };
 }
 
+/** Greedy word wrap at `widthPx`, turning the breaking space into a newline as the reflow does. */
+function wrapText(text: string, widthPx: number): string {
+  const perLine = Math.floor(widthPx / CHAR_PX);
+  return text
+    .split("\n")
+    .map((line) => {
+      const out: string[] = [];
+      let rest = line;
+      while (rest.length > perLine) {
+        const cut = rest.lastIndexOf(" ", perLine);
+        if (cut <= 0) break;
+        out.push(rest.slice(0, cut));
+        rest = rest.slice(cut + 1);
+      }
+      return [...out, rest].join("\n");
+    })
+    .join("\n");
+}
+
+type OnWrap = (
+  maxWidthPt: number,
+  keepClearBelow?: boolean,
+) => string | null | void;
+
+let editedTexts: string[] = [];
+
 function Harness({
   text,
   widthMode,
@@ -49,9 +101,13 @@ function Harness({
 }: {
   text: string;
   widthMode: WidthMode;
-  onWrap: (maxWidthPt: number, keepClearBelow?: boolean) => boolean | void;
+  onWrap: OnWrap;
 }) {
   const [current, setCurrent] = useState(text);
+  const edit = (next: string) => {
+    editedTexts.push(next);
+    setCurrent(next);
+  };
   return (
     <TextRunOverlay
       run={run(current)}
@@ -62,8 +118,12 @@ function Harness({
       widthMode={widthMode}
       selected={false}
       onSelect={() => {}}
-      onEdit={setCurrent}
-      onWrap={onWrap}
+      onEdit={edit}
+      onWrap={(width, keepClear) => {
+        const result = onWrap(width, keepClear);
+        if (typeof result === "string") setCurrent(result);
+        return result;
+      }}
     />
   );
 }
@@ -71,9 +131,14 @@ function Harness({
 function renderRun(
   text: string,
   widthMode: WidthMode = "grow",
-  wraps: boolean | void = undefined,
+  wraps: "refuse" | "wrap" | "ignore" = "ignore",
 ) {
-  const onWrap = vi.fn((_width: number, _keepClear?: boolean) => wraps);
+  editedTexts = [];
+  const onWrap = vi.fn((width: number, _keepClear?: boolean) => {
+    if (wraps === "refuse") return null;
+    if (wraps === "ignore") return undefined;
+    return wrapText(lastEdit(), width);
+  });
   render(
     <MantineProvider env="test">
       <Harness text={text} widthMode={widthMode} onWrap={onWrap} />
@@ -86,9 +151,27 @@ function renderRun(
   return { box, onWrap };
 }
 
+function lastEdit(): string {
+  return editedTexts[editedTexts.length - 1] ?? "";
+}
+
 function type(box: HTMLElement, text: string): void {
   act(() => {
     box.textContent = text;
+    window.getSelection()!.selectAllChildren(box);
+    window.getSelection()!.collapseToEnd();
+    fireEvent.input(box);
+  });
+}
+
+/** Insert `ch` at the caret, as a keystroke does, and fire its input. */
+function typeAtCaret(box: HTMLElement, ch: string): void {
+  act(() => {
+    const selection = window.getSelection()!;
+    const node = selection.focusNode as Text;
+    const offset = selection.focusOffset;
+    node.insertData(offset, ch);
+    selection.collapse(node, offset + ch.length);
     fireEvent.input(box);
   });
 }
@@ -147,9 +230,10 @@ describe("Grow mode at the page edge", () => {
     expect(parseFloat(box.style.width)).toBeGreaterThanOrEqual(longest(word));
   });
 
-  it("wraps on blur when the user leaves before the live wrap", () => {
+  it("wraps on blur whatever is still past the edge", () => {
     const { box, onWrap } = renderRun(SHORT);
     type(box, LONG);
+    onWrap.mockClear();
     fireEvent.blur(box);
     expect(onWrap).toHaveBeenCalledOnce();
     expect(onWrap.mock.calls[0][0]).toBeCloseTo(PAGE_CAP, 3);
@@ -165,7 +249,7 @@ describe("Grow mode at the page edge", () => {
   });
 
   it("grows past the edge instead when the wrap has nowhere clear to go", () => {
-    const { box, onWrap } = renderRun(SHORT, "grow", false);
+    const { box, onWrap } = renderRun(SHORT, "grow", "refuse");
     type(box, LONG);
     act(() => {
       vi.advanceTimersByTime(1000);
@@ -178,5 +262,79 @@ describe("Grow mode at the page edge", () => {
     });
     fireEvent.blur(box);
     expect(onWrap).toHaveBeenCalledOnce();
+  });
+});
+
+describe("Wrapping as the user types", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("wraps on the keystroke that crosses the page edge, without waiting", () => {
+    const { box, onWrap } = renderRun(SHORT);
+    type(box, LONG);
+    expect(onWrap).toHaveBeenCalledOnce();
+  });
+
+  it("draws the wrapped lines in the box at once, caret after the last letter typed", () => {
+    const { box } = renderRun(SHORT, "grow", "wrap");
+    type(box, LONG);
+    const wrapped = wrapText(LONG, PAGE_CAP);
+    expect(wrapped).toContain("\n");
+    expect(readOverlayText(box)).toBe(wrapped);
+    expect(plainCaretOffset(box)).toBe(wrapped.length);
+  });
+
+  it("keeps the break when typing goes on after it", () => {
+    const { box } = renderRun(SHORT, "grow", "wrap");
+    type(box, LONG);
+    const wrapped = wrapText(LONG, PAGE_CAP);
+    typeAtCaret(box, "s");
+    expect(lastEdit()).toBe(`${wrapped}s`);
+  });
+
+  it("wraps in Wrap mode on the crossing keystroke too", () => {
+    const { box, onWrap } = renderRun(SHORT, "wrap", "wrap");
+    type(box, `${SHORT} and some more`);
+    expect(onWrap).toHaveBeenCalledOnce();
+    expect(readOverlayText(box)).toContain("\n");
+  });
+
+  it("leaves a space typed at the edge for the letter after it", () => {
+    const fits = `${SHORT} ${"y".repeat(Math.floor(PAGE_CAP / CHAR_PX) - SHORT.length - 2)}`;
+    const { box, onWrap } = renderRun(SHORT);
+    type(box, `${fits}   `);
+    expect(onWrap).not.toHaveBeenCalled();
+    type(box, `${fits}   z`);
+    expect(onWrap).toHaveBeenCalledOnce();
+  });
+
+  it("asks only about the line being typed on", () => {
+    const { box, onWrap } = renderRun(SHORT, "wrap");
+    type(box, `${LONG}\nshort`);
+    expect(onWrap).not.toHaveBeenCalled();
+  });
+
+  it("does not ask again for a line the reflow left as it was until it grows", () => {
+    const { box, onWrap } = renderRun(SHORT);
+    type(box, LONG);
+    type(box, LONG);
+    expect(onWrap).toHaveBeenCalledOnce();
+    type(box, `${LONG}s`);
+    expect(onWrap).toHaveBeenCalledTimes(2);
+  });
+
+  it("waits for an IME composition to end before wrapping", () => {
+    const { box, onWrap } = renderRun(SHORT, "grow", "wrap");
+    act(() => {
+      box.focus();
+      fireEvent.compositionStart(box);
+    });
+    type(box, LONG);
+    expect(onWrap).not.toHaveBeenCalled();
+    act(() => {
+      fireEvent.compositionEnd(box);
+    });
+    expect(onWrap).toHaveBeenCalledOnce();
+    expect(readOverlayText(box)).toBe(wrapText(LONG, PAGE_CAP));
   });
 });
