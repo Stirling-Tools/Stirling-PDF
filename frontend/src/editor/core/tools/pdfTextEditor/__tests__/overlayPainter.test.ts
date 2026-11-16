@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isLinePainted,
   type PaintLine,
@@ -557,6 +557,20 @@ describe("selection ranges", () => {
     repaintKeepingSelection(el, false, () => paintPlainText(el, "Hello world"));
 
     expect(selection.rangeCount).toBe(0);
+  });
+
+  it("does not read the selection for a run that is not taking it back", () => {
+    const el = host();
+    paintLines(el, [line("Hello world")], OPTS);
+    const read = vi.spyOn(window, "getSelection");
+    const paint = vi.fn();
+    try {
+      repaintKeepingSelection(el, false, paint);
+      expect(paint).toHaveBeenCalledTimes(1);
+      expect(read).not.toHaveBeenCalled();
+    } finally {
+      read.mockRestore();
+    }
   });
 
   it("maps a range back onto the painted text it was read from", () => {

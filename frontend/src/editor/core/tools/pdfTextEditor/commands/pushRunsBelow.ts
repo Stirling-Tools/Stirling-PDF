@@ -115,6 +115,9 @@ function withRunsLandedOn(
 ): string[] | null {
   const moving = new Set(pushed);
   const chain = page.runs.filter((r) => moving.has(r.id));
+  const unmoved = new UnmovedRuns(
+    page.runs.filter((r) => r.id !== edited.id && !moving.has(r.id)),
+  );
   for (let i = 0; i < chain.length; i++) {
     const run = chain[i];
     // Everything the run passes over on its way down, not only where it stops: a drop of several lines can clear a line entirely.
@@ -123,14 +126,21 @@ function withRunsLandedOn(
       y: run.bounds.y - drop,
       height: run.bounds.height + drop,
     };
-    for (const other of page.runs) {
-      if (other.id === edited.id || moving.has(other.id)) continue;
+    const landed: number[] = [];
+    unmoved.within(run.bounds, swept, (other, order) => {
+      if (moving.has(other.id)) return true;
       // Lines set tighter than their boxes already share a little height; only more than that is a collision.
       const before = overlapDepth(run.bounds, other.bounds);
       // A run mostly inside the moving one's box sits among its lines, such as a word the document drew separately, and goes with them.
       const among = before > other.bounds.height * AMONG_LINES_SHARE;
       if (!among && overlapDepth(swept, other.bounds) <= before + SLACK_PT)
-        continue;
+        return false;
+      landed.push(order);
+      return true;
+    });
+    for (const order of landed.sort((a, b) => a - b)) {
+      const other = unmoved.runs[order];
+      if (moving.has(other.id)) continue;
       if (
         !canMove(page, other) ||
         other.bounds.y - drop < page.display.cropBottom
@@ -140,10 +150,91 @@ function withRunsLandedOn(
       chain.push(other);
     }
   }
-  return [
-    ...pushed,
-    ...chain.map((r) => r.id).filter((id) => !pushed.includes(id)),
-  ];
+  const seeds = new Set(pushed);
+  return [...pushed, ...chain.map((r) => r.id).filter((id) => !seeds.has(id))];
+}
+
+// Slack on the band query: the exact test runs on every candidate, so a wider band only costs a few extra comparisons.
+const BAND_MARGIN_PT = 1;
+
+/**
+ * The runs not yet moving, in page order, indexed by height so a moving run
+ * only meets the runs level with what it sweeps. Every collision needs the
+ * two boxes to share some height, so nothing outside that band can be landed
+ * on. A run whose box cannot be ordered (a negative, infinite or missing
+ * height) is offered to every query instead.
+ */
+class UnmovedRuns {
+  readonly runs: readonly TextRun[];
+  private readonly byBottom: number[];
+  private readonly next: Int32Array;
+  private readonly unordered: number[] = [];
+  private readonly tallest: number;
+
+  constructor(runs: readonly TextRun[]) {
+    this.runs = runs;
+    const ordered: number[] = [];
+    let tallest = 0;
+    runs.forEach((run, order) => {
+      const { y, height } = run.bounds;
+      if (Number.isFinite(y) && Number.isFinite(height) && height >= 0) {
+        ordered.push(order);
+        tallest = Math.max(tallest, height);
+      } else this.unordered.push(order);
+    });
+    this.byBottom = ordered.sort(
+      (a, b) => runs[a].bounds.y - runs[b].bounds.y || a - b,
+    );
+    this.tallest = tallest;
+    this.next = Int32Array.from(
+      { length: this.byBottom.length + 1 },
+      (_, i) => i,
+    );
+  }
+
+  /**
+   * Offers `visit` each run whose box can share height with `a` or `b`, by
+   * its index in `runs`. A run `visit` answers true for is not offered again.
+   */
+  within(
+    a: PageRect,
+    b: PageRect,
+    visit: (run: TextRun, order: number) => boolean,
+  ): void {
+    for (const order of this.unordered) visit(this.runs[order], order);
+    const edges = [a.y, a.y + a.height, b.y, b.y + b.height];
+    const low = Math.min(...edges) - this.tallest - BAND_MARGIN_PT;
+    const high = Math.max(...edges) + BAND_MARGIN_PT;
+    if (!(low <= high)) {
+      this.byBottom.forEach((order) => visit(this.runs[order], order));
+      return;
+    }
+    let lo = 0;
+    let hi = this.byBottom.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (this.runs[this.byBottom[mid]].bounds.y < low) lo = mid + 1;
+      else hi = mid;
+    }
+    for (let i = this.live(lo); i < this.byBottom.length;) {
+      const order = this.byBottom[i];
+      if (this.runs[order].bounds.y > high) break;
+      if (visit(this.runs[order], order)) this.next[i] = i + 1;
+      i = this.live(i + 1);
+    }
+  }
+
+  // The first slot at or after `i` still offered, skipping taken ones in amortised constant time.
+  private live(i: number): number {
+    let root = i;
+    while (this.next[root] !== root) root = this.next[root];
+    while (this.next[i] !== root) {
+      const after = this.next[i];
+      this.next[i] = root;
+      i = after;
+    }
+    return root;
+  }
 }
 
 /** One push: the runs an edit moved, how far, and the lines of the edited run it made room for. */

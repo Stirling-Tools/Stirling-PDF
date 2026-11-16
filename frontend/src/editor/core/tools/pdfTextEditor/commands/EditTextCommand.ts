@@ -20,6 +20,7 @@ import {
   contentIndices,
   restoreContentOrder,
   collectMemberPtrs,
+  droppedCharsSeen,
   emitFillRect,
   emitTextLine,
   everyCharIn,
@@ -238,6 +239,9 @@ export class EditTextCommand implements Command {
   /** Set when the apply path took the partial-edit (LCS) shortcut. */
   private partialPlan: PartialEditPlan | null = null;
   private partialInsertedPtrs: number[] = [];
+  private partialRedo: PartialRedo | null = null;
+  // A draw that left characters out is redrawn by a redo once their fonts arrive, so its objects are not kept for reuse.
+  private partialDrewAll = false;
   private prevMergedFromPtrs: number[] = [];
   private prevMergedFromTexts: string[] = [];
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
@@ -417,6 +421,8 @@ export class EditTextCommand implements Command {
         this.nextText,
         run.tagMarks,
       );
+
+    if (this.redoPartialEdit(doc, page, run)) return;
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
     // Invisible OCR text over a scan: rewrite the whole run visibly so the
@@ -605,7 +611,9 @@ export class EditTextCommand implements Command {
           partial.removePtrs,
           page.pagePtr,
         );
+        const drops = droppedCharsSeen();
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
+        this.partialDrewAll = droppedCharsSeen() === drops;
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
         run.mergedFromTexts = result.newMergedFromTexts;
@@ -1058,6 +1066,83 @@ export class EditTextCommand implements Command {
       : uniformTags(run.tagMarks);
   }
 
+  // Taken before the revert detaches what the apply drew, while those objects still sit where it put them.
+  private capturePartialRedo(
+    m: WrappedPdfiumModule,
+    page: Page,
+    run: TextRun,
+    inserted: readonly number[],
+  ): PartialRedo | null {
+    const plan = this.partialPlan;
+    const originals = this.originalObjects;
+    const before = this.editSnapshot;
+    if (!plan || !originals || !before || !this.partialDrewAll) return null;
+    const after = collectMemberPtrs(run).filter(Boolean);
+    const matrices = new Map<number, Float32Array>();
+    for (const ptr of after) {
+      const matrix = readMatrix(m, ptr);
+      if (!matrix) return null;
+      matrices.set(ptr, matrix);
+    }
+    const order = contentIndices(m, page.pagePtr, after);
+    if (order.size !== new Set(after).size) return null;
+    const kept = new Set(after);
+    return {
+      plan,
+      originals,
+      inserted: [...inserted],
+      detach: collectMemberPtrs(before).filter((ptr) => ptr && !kept.has(ptr)),
+      modified: plan.ops.flatMap((op) =>
+        op.type === "modify" &&
+        op.subRunIdx !== undefined &&
+        op.text !== undefined
+          ? [{ ptr: plan.prevMergedFromPtrs[op.subRunIdx], text: op.text }]
+          : [],
+      ),
+      matrices,
+      order,
+      model: snapshotRunModel(run),
+    };
+  }
+
+  // A redo puts back the very objects the apply drew, rather than drawing new ones: a later step of the burst holds them, and the replaced ones would be left detached with nothing to free them.
+  private redoPartialEdit(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+  ): boolean {
+    const redo = this.partialRedo;
+    this.partialRedo = null;
+    const before = this.editSnapshot;
+    if (!redo || !before || run.text !== this.prevText) return false;
+    const members = collectMemberPtrs(run);
+    const expected = collectMemberPtrs(before);
+    if (
+      members.length !== expected.length ||
+      members.some((ptr, i) => ptr !== expected[i])
+    )
+      return false;
+    const m = doc.module;
+    for (const ptr of redo.detach) m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    for (const { ptr, text } of redo.modified) setObjText(doc, page, ptr, text);
+    for (const ptr of redo.inserted) m.FPDFPage_InsertObject(page.pagePtr, ptr);
+    for (const [ptr, matrix] of redo.matrices) writeMatrix(m, ptr, matrix);
+    restoreContentOrder(
+      m,
+      page.pagePtr,
+      [...redo.order].map(([ptr, index]) => ({ ptr, index })),
+    );
+    restoreRunModel(run, redo.model);
+    this.partialPlan = redo.plan;
+    this.partialInsertedPtrs = redo.inserted;
+    this.originalObjects = redo.originals;
+    run.text = this.nextText;
+    run.dirty = true;
+    page.markDirty();
+    page.markNeedsGenerate();
+    return true;
+  }
+
   // Removed objects are only detached, never destroyed, so the originals return with their own fonts and glyphs, which a re-emit cannot rebuild for a Type 3 or subset face.
   private putOriginalObjectsBack(m: WrappedPdfiumModule, page: Page): boolean {
     const originals = this.originalObjects;
@@ -1289,14 +1374,16 @@ export class EditTextCommand implements Command {
     // Partial-edit fast path revert: the removed sub-objects are gone from
     // PDFium permanently.
     if (this.partialPlan) {
-      for (const ptr of withGained(
+      const inserted = withGained(
         m,
         page,
         run,
         this.partialInsertedPtrs,
         this.editSnapshot,
         new Set(this.partialPlan.removePtrs.map((r) => r.ptr)),
-      )) {
+      );
+      const redo = this.capturePartialRedo(m, page, run, inserted);
+      for (const ptr of inserted) {
         if (!ptr) continue;
         try {
           m.FPDFPage_RemoveObject(page.pagePtr, ptr);
@@ -1324,6 +1411,7 @@ export class EditTextCommand implements Command {
         run.text = this.prevText;
         run.dirty = true;
         this.partialPlan = null;
+        this.partialRedo = redo;
         page.markDirty();
         page.markNeedsGenerate();
         return;
@@ -2476,6 +2564,21 @@ interface OriginalObjects {
   detached: number[];
   matrices: Map<number, Float32Array>;
   order: Map<number, number>;
+}
+
+/** What a partial apply left on the page, so its redo can put the same objects back. */
+interface PartialRedo {
+  plan: PartialEditPlan;
+  originals: OriginalObjects;
+  /** Drawn by the apply; detached while undone. */
+  inserted: number[];
+  /** The run's objects before the apply that it took off the page. */
+  detach: number[];
+  /** Objects the apply kept but gave new text. */
+  modified: Array<{ ptr: number; text: string }>;
+  matrices: Map<number, Float32Array>;
+  order: Map<number, number>;
+  model: RunModelSnapshot;
 }
 
 function captureOriginalObjects(

@@ -13,10 +13,8 @@ import {
   resolveLang,
   useSpellcheckPreference,
 } from "@editor/tools/pdfTextEditor/util/spellcheck";
-import {
-  embeddedFaceFamily,
-  onEmbeddedFaceLoaded,
-} from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { embeddedFaceFamily } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { useFontEpoch } from "@editor/tools/pdfTextEditor/hooks/useFontEpoch";
 import {
   isDeviceFontId,
   nearestStandardFont,
@@ -52,7 +50,6 @@ import {
   measureFontMetrics,
   measureLongestTokenWidth,
   measureMaxLineWidth,
-  resetTextMetricsCache,
 } from "@editor/tools/pdfTextEditor/util/textMetrics";
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
@@ -429,7 +426,7 @@ export function TextRunOverlay({
   // run on a coloured page got a grey band. Sampled from the rendered bitmap
   // once per focus, so the read never lands in the typing path.
   const [maskColor, setMaskColor] = useState<string | null>(null);
-  const [faceEpoch, setFaceEpoch] = useState(0);
+  const faceEpoch = useFontEpoch();
   // True between compositionstart and compositionend (IME). While composing
   // onInput must not dispatch per-keystroke edits; we commit once on end.
   const composingRef = useRef(false);
@@ -536,24 +533,6 @@ export function TextRunOverlay({
   // text changes, and a token typed into needs them most right then.
   const heldAdvanceEmRef = useRef<Map<string, number> | null>(null);
   if (advanceEm) heldAdvanceEmRef.current = advanceEm;
-
-  useEffect(() => {
-    const bump = () => {
-      resetTextMetricsCache();
-      setFaceEpoch((n) => n + 1);
-    };
-    const unsubscribe = onEmbeddedFaceLoaded(bump);
-    let cancelled = false;
-    if (typeof document !== "undefined" && document.fonts) {
-      void document.fonts.ready.then(() => {
-        if (!cancelled) bump();
-      });
-    }
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     const el = ref.current;

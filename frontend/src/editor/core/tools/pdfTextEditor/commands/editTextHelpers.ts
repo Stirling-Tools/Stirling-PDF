@@ -171,14 +171,23 @@ export function droppedCharsOf(emit: () => void): string[] {
   return [...dropped];
 }
 
+let dropsSeen = 0;
+
+/** Rises whenever an emit leaves out a visible character, measuring or not: equal readings around a draw mean it drew every character. */
+export function droppedCharsSeen(): number {
+  return dropsSeen;
+}
+
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
 function recordDroppedChars(original: string, kept: string): void {
-  const into = droppedDuringEmit ?? (measuring ? null : droppedBase14Chars);
-  if (!into) return;
   const keptSet = new Set(kept);
-  for (const ch of original) {
-    if (!keptSet.has(ch) && ch.trim().length > 0) into.add(ch);
-  }
+  const lost = [...original].filter(
+    (ch) => !keptSet.has(ch) && ch.trim().length > 0,
+  );
+  if (lost.length === 0) return;
+  dropsSeen++;
+  const into = droppedDuringEmit ?? (measuring ? null : droppedBase14Chars);
+  for (const ch of lost) into?.add(ch);
 }
 
 /** True when every character in `text` is also present in `pool`. */

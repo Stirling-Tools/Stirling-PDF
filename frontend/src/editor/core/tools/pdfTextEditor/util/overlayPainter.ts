@@ -421,10 +421,14 @@ export function repaintKeepingSelection(
   restore: boolean,
   paint: () => void,
 ): void {
+  if (!restore) {
+    paint();
+    return;
+  }
+  // Reading the selection lays the page out, so a run that is not taking it back skips the read: a page of 5,000 runs painting in turn spent seconds re-laying itself out.
   const selected = plainSelectionRange(el);
   const caret = plainCaretOffset(el);
   paint();
-  if (!restore) return;
   const range = selected && plainDomRange(el, selected);
   const selection = window.getSelection();
   if (range && selection) {
