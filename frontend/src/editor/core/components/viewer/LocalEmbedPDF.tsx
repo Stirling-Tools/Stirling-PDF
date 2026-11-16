@@ -1728,6 +1728,7 @@ export function LocalEmbedPDF({
                   : undefined
             }
             disabled={
+              pendingDocument !== null ||
               (pdfAccess?.encrypted && !file) ||
               (signedPdfEditsBlocked(pdfAccess) && !file && !urlSource)
             }
