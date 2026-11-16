@@ -149,6 +149,10 @@ export class ReflowWrapCommand implements Command {
       m.FPDFText_ClosePage(textPage);
     }
     if (leaves.length === 0) return;
+    // The reflow lines objects up left to right and rebuilds the text in that
+    // order. A line that does not read in that order, such as right-to-left
+    // text or marks drawn apart from their letters, would come back scrambled.
+    if (!readsInObjectOrder(leaves, run.text)) return;
 
     const fontSize = run.fontSize > 0 ? run.fontSize : 12;
     const lineHeight =
@@ -470,6 +474,11 @@ function extractLeaves(
     return a.x - b.x;
   });
   return leaves;
+}
+
+function readsInObjectOrder(leaves: Leaf[], text: string): boolean {
+  const letters = (s: string): string => s.replace(/\s+/g, "");
+  return letters(leaves.map((leaf) => leaf.text).join("")) === letters(text);
 }
 
 /** The non-whitespace char counts at which `text` has a hard "\n" break. */
