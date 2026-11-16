@@ -41,19 +41,19 @@ class PdfUaRealCorpusTest {
     // caught by FontEmbeddingService, which keeps the original instead.
     private static final List<String> KNOWN_EMBED_TEXT_DIFFS = List.of("rotated-text-sample.pdf");
 
-    // Files PDFBox reads back in another order once tagged, measured 2026-11-16, with every
-    // character still there. The vowel marks are text objects of their own, and
-    // position-sorted extraction groups those differently inside marked content; a pair of
-    // brackets around right-to-left text comes back with its two halves swapped.
-    private static final List<String> KNOWN_ORDER_DIFFS =
-            List.of("rtl-marks-sample.pdf", "rtl-mixed-sample.pdf");
-
-    // Files whose tagged output reads back with one cluster changed, measured 2026-11-16: the
-    // vowel sign of a Devanagari cluster, drawn ahead of its consonant under an ActualText span,
-    // comes back as U+0000. Listed with the exact change, so any other difference still fails.
-    private static final java.util.Map<String, String[]> KNOWN_SUBSTITUTIONS =
+    // Files whose tagged output PDFBox reads back differently from the original, measured
+    // 2026-11-16, pinned to the exact text it reads so that any other change still fails. Vowel
+    // marks and brackets drawn as objects of their own in visual order come back in reading order
+    // once marked content groups them; a Devanagari vowel sign drawn ahead of its consonant under
+    // an ActualText span comes back as U+0000.
+    private static final java.util.Map<String, String> KNOWN_TAGGED_TEXT =
             java.util.Map.of(
-                    "shaped-line-sample.pdf", new String[] {"\u0928\u093F", "\u0000\u0928"});
+                    "rtl-marks-sample.pdf",
+                    "שָׁלוֹם עוֹלָם يوُلدَُ جَمِيعُ النَّاسِ",
+                    "rtl-mixed-sample.pdf",
+                    "ISO 50001 بلغ الاستهلاك (في الربع) 12,450.75 كيلوواط [بزيادة 3.5%] حسب تقرير استخدم برنامج LibreOffice Writer أو Word لفتح report-2026.docx الآن. הטלפון הוא 03-555-1234 (שלוחה 12), והמחיר 1,299.90 לפי Open Source סעיף 4. An English line quoting مرحبا بالعالم and שלום עולם then 1,234. ISO 50001 هو المعيار",
+                    "shaped-line-sample.pdf",
+                    "नमस्ते दु\u0000नया, 2024.");
 
     @BeforeAll
     static void setUp() {
@@ -183,15 +183,12 @@ class PdfUaRealCorpusTest {
         assertTrue(
                 textAfter != null, "the converted file could not be read back at all for " + name);
         String expected =
-                KNOWN_SUBSTITUTIONS.entrySet().stream()
+                KNOWN_TAGGED_TEXT.entrySet().stream()
                         .filter(known -> name.contains(known.getKey()))
-                        .map(known -> textBefore.replace(known.getValue()[0], known.getValue()[1]))
+                        .map(java.util.Map.Entry::getValue)
                         .findFirst()
                         .orElse(textBefore);
-        boolean preserved =
-                KNOWN_ORDER_DIFFS.stream().anyMatch(name::contains)
-                        ? sortedCharacters(expected).equals(sortedCharacters(textAfter))
-                        : expected.equals(textAfter);
+        boolean preserved = expected.equals(textAfter);
         assertTrue(
                 preserved,
                 "tagging changed extracted text for "
@@ -200,14 +197,6 @@ class PdfUaRealCorpusTest {
                         + preview(textBefore)
                         + "\n  after:  "
                         + preview(textAfter));
-    }
-
-    private static String sortedCharacters(String text) {
-        return text.codePoints()
-                .filter(cp -> !Character.isWhitespace(cp))
-                .sorted()
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString();
     }
 
     private static String abbreviate(String text) {
