@@ -115,6 +115,7 @@ import {
   canPrintPdf,
   pdfEditingLocked,
 } from "@editor/services/pdfPermissions";
+import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
@@ -1719,7 +1720,11 @@ export function LocalEmbedPDF({
             onPasswordRequired={onPasswordRequired}
           />
           <ExportAPIBridge
-            originalFile={pdfAccess?.encrypted ? file : undefined}
+            originalFile={
+              pdfAccess?.encrypted || signedPdfEditsBlocked(pdfAccess)
+                ? file
+                : undefined
+            }
             disabled={pdfAccess?.encrypted && !file}
           />
           <BookmarkAPIBridge />
