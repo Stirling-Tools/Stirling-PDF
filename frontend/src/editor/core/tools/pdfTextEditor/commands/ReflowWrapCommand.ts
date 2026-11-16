@@ -4,6 +4,9 @@ import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
+import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -17,6 +20,14 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import {
+  type PushRecord,
+  pushRecords,
+  runsPulledBack,
+  runsPushedBelow,
+  setPushRecords,
+} from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
 import {
   endsWithSpace,
   groupWords,
@@ -70,30 +81,50 @@ export class ReflowWrapCommand implements Command {
   private readonly runId: string;
   private readonly maxWidthPt: number;
   private readonly explicit: boolean;
+  private readonly keepClearBelow: boolean;
   private applied = false;
+  private refused = false;
   /** Per-object translation applied, so revert can undo it exactly. */
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
+  // The runs below the lines this reflow added or removed moved, chosen on the first apply so a redo moves the same ones.
+  private pushes: MoveTextRunCommand[] | null = null;
+  private pushRecords: {
+    before: readonly PushRecord[];
+    after: readonly PushRecord[];
+  } | null = null;
 
   /**
    * `explicit` marks a width the user set directly (resize handle, width
    * field): the paragraph re-lines even when nothing overflows, so widening
    * rejoins lines an earlier wrap broke, and it is its own undo step rather
    * than part of the typing burst.
+   *
+   * `keepClearBelow` leaves the run as it was when the lines the wrap adds
+   * would land on something the push cannot move out of the way: a line,
+   * fill, shape or image, or text that is locked, rotated, scanned, in a
+   * table or would leave the page. `refusedForSpaceBelow` then reads true.
    */
   constructor(opts: {
     pageIndex: number;
     runId: string;
     maxWidthPt: number;
     explicit?: boolean;
+    keepClearBelow?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.maxWidthPt = opts.maxWidthPt;
     this.explicit = opts.explicit ?? false;
+    this.keepClearBelow = opts.keepClearBelow ?? false;
+  }
+
+  get refusedForSpaceBelow(): boolean {
+    return this.refused;
   }
 
   apply(doc: EditorDocument): void {
+    if (this.refused) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || isScanRun(run)) return;
@@ -272,6 +303,82 @@ export class ReflowWrapCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
     this.applied = true;
+    const deciding = this.pushes === null;
+    if (deciding) this.decidePushes(page, run, this.prev);
+    for (const push of this.pushes ?? []) push.apply(doc);
+    if (this.pushRecords) setPushRecords(run, this.pushRecords.after);
+    if (deciding && this.keepClearBelow && this.landsOnUnmoved(page, run)) {
+      this.revert(doc);
+      this.pushes = [];
+      this.pushRecords = null;
+      this.refused = true;
+    }
+  }
+
+  // What the added lines now cover that was clear of the run before and did not move out of their way.
+  private landsOnUnmoved(page: Page, run: TextRun): boolean {
+    const prev = this.prev;
+    if (!prev) return false;
+    const added = {
+      x: run.bounds.x,
+      y: run.bounds.y,
+      width: run.bounds.width,
+      height: prev.bounds.y - run.bounds.y,
+    };
+    if (added.height <= 0) return false;
+    const covers = (r: PageRect) =>
+      overlaps(r, added) && !overlaps(r, prev.bounds);
+    // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
+    const slack = run.fontSize * TEXT_OVERLAP_EM;
+    const textBand = {
+      ...added,
+      y: added.y + slack,
+      height: added.height - slack,
+    };
+    const moved = new Set(this.pushes?.map((p) => p.runId) ?? []);
+    const textHit = page.runs.some(
+      (r) =>
+        r !== run &&
+        !moved.has(r.id) &&
+        textBand.height > 0 &&
+        overlaps(r.bounds, textBand) &&
+        !overlaps(r.bounds, prev.bounds),
+    );
+    return (
+      textHit ||
+      page.rules.some(covers) ||
+      page.fills.some(covers) ||
+      page.shapes.some((s) => covers(s.bounds)) ||
+      page.images.some((i) => covers(i.bounds))
+    );
+  }
+
+  // The same room-making EditTextCommand gives lines typed with Enter: lines a wrap adds cover the text below just the same.
+  private decidePushes(page: Page, run: TextRun, prev: RunSnapshot): void {
+    const lines = lineCount(run.text) - lineCount(prev.text);
+    const move = (runId: string, dy: number) =>
+      new MoveTextRunCommand({ pageIndex: this.pageIndex, runId, dx: 0, dy });
+    if (lines > 0) {
+      const { runIds, dy } = runsPushedBelow(
+        page,
+        run,
+        prev.bounds.y,
+        lines * run.paragraphLineHeight,
+      );
+      this.pushes = runIds.map((runId) => move(runId, dy));
+      if (runIds.length > 0)
+        this.pushRecords = {
+          before: pushRecords(run),
+          after: [
+            ...pushRecords(run),
+            { lineCount: lineCount(run.text), linesAdded: lines, runIds, dy },
+          ],
+        };
+    } else if (lines < 0) {
+      const { moves, records } = runsPulledBack(page, run, lineCount(run.text));
+      this.pushes = moves.map(({ runId, dy }) => move(runId, dy));
+      this.pushRecords = { before: pushRecords(run), after: records };
+    } else this.pushes = [];
   }
 
   revert(doc: EditorDocument): void {
@@ -279,6 +386,8 @@ export class ReflowWrapCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    for (const push of [...(this.pushes ?? [])].reverse()) push.revert(doc);
+    if (this.pushRecords) setPushRecords(run, this.pushRecords.before);
     const m = doc.module;
     for (let i = this.moves.length - 1; i >= 0; i--) {
       const mv = this.moves[i];
@@ -314,6 +423,12 @@ export class ReflowWrapCommand implements Command {
   coalesceIgnoresTimeWindow(): boolean {
     return true;
   }
+}
+
+const TEXT_OVERLAP_EM = 0.25;
+
+function lineCount(text: string): number {
+  return text.split(/\r?\n/).length;
 }
 
 /** Read every leaf object's ACTUAL geometry + text straight from PDFium. */

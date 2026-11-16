@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { editRecognizedTable } from "@editor/tests/helpers/recognizedTable";
 import type { Page } from "@playwright/test";
 import { mockAppApis } from "@editor/tests/helpers/api-stubs";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -102,10 +103,7 @@ test("merged cells retain their borders after a structural edit and export", asy
       ),
     );
   await waitForFirstPage(page);
-  await page
-    .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
-    .first()
-    .click();
+  await editRecognizedTable(page);
   const before = await page.evaluate(readMergedTable);
   expect({
     rows: before.rows,
@@ -148,10 +146,7 @@ test("merged cells retain their borders after a structural edit and export", asy
     contentType: "application/pdf",
   });
   const reopenedPage = await reopenExport(page, saved);
-  await reopenedPage
-    .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
-    .first()
-    .click();
+  await editRecognizedTable(reopenedPage);
   const reopened = await reopenedPage.evaluate(readMergedTable);
   expect({ rows: reopened.rows, cols: reopened.cols }).toEqual({
     rows: 8,
@@ -214,7 +209,7 @@ for (const file of [fixture, ...corpus]) {
       expect(errors).toEqual([]);
       return;
     }
-    await chips.first().click();
+    await editRecognizedTable(page);
     const before = await page.evaluate(() => {
       const store = (window as unknown as { __editor_store: EditorStore })
         .__editor_store;

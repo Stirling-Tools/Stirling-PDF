@@ -310,7 +310,7 @@ interface TextRunOverlayProps {
   /** Raw-PDF -> display (CropBox/rotation) transform. */
   transform: DisplayTransform;
   scale: number;
-  /** "grow": box widens to the right. "wrap": locked width, wraps down. */
+  /** "grow": box widens to the right up to the page edge, then wraps. "wrap": locked width, wraps down. */
   widthMode: WidthMode;
   selected: boolean;
   /** The find-bar occurrence inside this run, painted as a highlight. */
@@ -320,9 +320,12 @@ interface TextRunOverlayProps {
   onEdit: (nextText: string) => void;
   /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
   onMove?: (dx: number, dy: number) => void;
-  // Fires on blur in Wrap mode when the edited content overflows the locked box
-  // width.
-  onWrap?: (maxWidthPt: number) => void;
+  /**
+   * Fires when typed text overflows the box: past the locked width in Wrap,
+   * past the page edge in Grow, which asks to keep clear of what lies below.
+   * Returns false when that wrap was refused.
+   */
+  onWrap?: (maxWidthPt: number, keepClearBelow?: boolean) => boolean | void;
   /** Fires when the user drags the right edge to a new width, in PDF points. */
   onResize?: (widthPt: number) => void;
   /** Fires while the box has focus, as the characters selected inside it change. */
@@ -450,6 +453,11 @@ export function TextRunOverlay({
   const endResizeRef = useRef<(() => void) | null>(null);
   useEffect(() => () => endResizeRef.current?.(), []);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
+  // The edit count and widest line when focus arrived: Grow wraps only what is typed past the page edge, never a line the document already set wider.
+  const focusEditTickRef = useRef(0);
+  const focusWidestRef = useRef(0);
+  // Set when a Grow wrap was refused for want of room below: the box then grows past the page edge for the rest of this edit rather than draw over what is there.
+  const [growBlocked, setGrowBlocked] = useState(false);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
   const faceName = run.scanFamily ?? run.fontId;
@@ -708,17 +716,12 @@ export function TextRunOverlay({
     (run.wrapWidthPt ?? originalBoundsWidthRef.current) * scale,
     fontSizePx * MIN_WRAP_WIDTH_EM,
   );
-  // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
-  // Grow made the two modes indistinguishable for body text and contradicted
-  // the control's own hint ("Boxes widen to the right as you type (no
-  // wrapping)").
+  // The mode the user picked, and nothing else: wrapping a paragraph in Grow
+  // before it reaches the page edge makes the two modes indistinguishable.
   const wantWrap = wrapMode;
   const left = exact ? exact.leftPx : flowLeft;
-  // Wrap keeps the box on the page - that is the whole point of the mode, and
-  // its overflow goes onto new lines instead. Grow has nowhere to put the
-  // overflow, so capping it there just hides what the user is typing: it grew
-  // to the page edge and then clipped everything beyond, measured at 2944px of
-  // invisible text on a single-line run.
+  // Both modes keep typed text on the page: Wrap at its locked width, Grow once
+  // the box reaches the page edge.
   const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
   // Wrapping cannot break inside a word, so a box narrower than the longest one
   // hides its tail however the lines are broken - 707px of a held-down key
@@ -733,6 +736,11 @@ export function TextRunOverlay({
     Math.min(wrapLockWidth, pageCap),
     longestTokenWidth + fontSizePx,
   );
+  // The reflow lays text out along the page axis, so a turned run keeps growing.
+  const growWraps = !wantWrap && !!onWrap && !runRotation && !growBlocked;
+  const growWrapWidth = Math.max(pageCap, longestTokenWidth + fontSizePx);
+  const typedSinceFocus = focused && editTick > focusEditTickRef.current;
+  const growOverflowWidth = Math.max(growWrapWidth, focusWidestRef.current);
   const maxOnPageWidth = wantWrap ? pageCap : Number.POSITIVE_INFINITY;
   const naturalWidth = wantWrap
     ? wrapLockWidth
@@ -751,21 +759,28 @@ export function TextRunOverlay({
   const exactWidth = exact
     ? Math.max(exact.widthPx + fontSizePx * 0.5, measuredWidth + fontSizePx)
     : 0;
-  // Capped at the page edge: an editing box hanging off the page reads as
-  // broken, and the glyphs under it would be off-page anyway.
-  //
-  // A line longer than that is therefore clipped while it is being typed, and
-  // the reflow on blur brings it back onto the page. The alternative - letting
-  // the box wrap the line - is what put the overlay a full line out of register
-  // with the bitmap: the PDF draws each line as ONE text object at one pen
-  // origin and cannot wrap, so an overlay that wraps stops describing the page
+  // Grow stops at the page edge, or at the document's own width for a line it
+  // set wider than that, focused or not so the box keeps its size across a
+  // blur; the live reflow below moves the overflow onto new lines. The box
+  // itself never wraps: the PDF draws each line as ONE text object at one pen
+  // origin, so an overlay that wrapped by CSS would stop describing the page
   // underneath it.
-  // Wrap holds its width and pushes overflow onto new lines; widening to the
-  // page edge instead is Grow's job, and doing both makes the modes identical.
   const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
+  const grownWidth = exact ? exactWidth : flowWidth;
   const width = wantWrap
     ? wrapWidth
-    : Math.max(exact ? exactWidth : flowWidth, userWidthPx);
+    : Math.max(
+        growWraps
+          ? Math.min(
+              grownWidth,
+              Math.max(
+                growWrapWidth,
+                originalBoundsWidthRef.current * scale + fontSizePx,
+              ),
+            )
+          : grownWidth,
+        userWidthPx,
+      );
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
@@ -777,19 +792,30 @@ export function TextRunOverlay({
   // pixels of it - and the caret only dropped onto the new line at that point.
   // The reflow shares EditTextCommand's coalesce key and ignores the time
   // window, so running it mid-burst does not fragment undo.
-  const wrapTarget = wrapWidth;
+  const wrapTarget = wantWrap ? wrapWidth : growWrapWidth;
+  const overflowAt = wantWrap ? wrapWidth : growOverflowWidth;
+  const liveWraps = wantWrap || (growWraps && typedSinceFocus);
   useEffect(() => {
-    if (!wantWrap || !onWrap || !focused) return;
+    if (!liveWraps || !onWrap || !focused) return;
     const el = ref.current;
     if (!el || composingRef.current) return;
     const widest = measureMaxLineWidth(readOverlayText(el), font);
-    if (widest <= wrapTarget + 1) return;
-    const timer = window.setTimeout(
-      () => onWrap(wrapTarget / scale),
-      LIVE_WRAP_MS,
-    );
+    if (widest <= overflowAt + 1) return;
+    const timer = window.setTimeout(() => {
+      if (wantWrap) onWrap(wrapTarget / scale);
+      else if (onWrap(wrapTarget / scale, true) === false) setGrowBlocked(true);
+    }, LIVE_WRAP_MS);
     return () => window.clearTimeout(timer);
-  }, [wantWrap, onWrap, focused, editTick, wrapTarget, font, scale]);
+  }, [
+    liveWraps,
+    onWrap,
+    focused,
+    editTick,
+    wrapTarget,
+    overflowAt,
+    font,
+    scale,
+  ]);
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
@@ -966,6 +992,12 @@ export function TextRunOverlay({
         const el = e.currentTarget;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = readOverlayText(el);
+        focusEditTickRef.current = editTick;
+        setGrowBlocked(false);
+        focusWidestRef.current = measureMaxLineWidth(
+          focusTextRef.current,
+          font,
+        );
         const fromPointer = pointerFocusRef.current;
         pointerFocusRef.current = false;
         const sel = window.getSelection();
@@ -997,13 +1029,16 @@ export function TextRunOverlay({
             sel.removeAllRanges();
           }
         }
-        // Wrap mode: when the just-edited content overflows the locked box
-        // width.
-        if (!wantWrap || !onWrap) return;
+        if (!onWrap || !(wantWrap || growWraps)) return;
         const el = e.currentTarget;
         const domText = readOverlayText(el);
         if (domText === focusTextRef.current) return; // not edited
         const widest = measureMaxLineWidth(domText, font);
+        if (!wantWrap) {
+          if (widest > growOverflowWidth + 1)
+            onWrap(growWrapWidth / scale, true);
+          return;
+        }
         // Reflow to the box the user locked, NOT to `width` - with an exact
         // layout that is however wide the text grew, so nothing ever overflows.
         //
@@ -1049,8 +1084,6 @@ export function TextRunOverlay({
         const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
-        // No per-keystroke reflow: while focused, the box is CAPPED to the page
-        // and wraps via CSS, so the editing view is always on-page.
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {

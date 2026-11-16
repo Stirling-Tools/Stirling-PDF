@@ -69,7 +69,13 @@ interface PageViewProps {
     dy: number,
   ) => void;
   /** Wrap-mode reflow request; maxWidthPt in PDF points. */
-  onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
+  /** False when the wrap was refused because its new lines had nowhere clear to go. */
+  onWrapRun?: (
+    pageIndex: number,
+    runId: string,
+    maxWidthPt: number,
+    keepClearBelow?: boolean,
+  ) => boolean | void;
   /** Right-edge drag to a new box width; widthPt in PDF points. */
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
@@ -464,6 +470,7 @@ export const PageView = memo(function PageView({
           transform={transform}
           scale={cssScale}
           store={store}
+          selectedRunIds={selectedRunIds}
         />
         {page.runs.map((run) => (
           <TextRunOverlay
@@ -490,8 +497,8 @@ export const PageView = memo(function PageView({
                 : null
             }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            onWrap={(maxWidthPt, keepClearBelow) =>
+              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
             }
             onResize={
               onResizeRun && !isScanRun(run) && !run.textReadOnly

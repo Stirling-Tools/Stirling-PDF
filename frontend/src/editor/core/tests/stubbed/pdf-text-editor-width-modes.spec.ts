@@ -5,8 +5,9 @@ import { selectWrapWidthMode } from "@editor/tests/stubbed/widthModeHelpers";
 
 // The sidebar promises two distinct behaviours:
 //
-//   Grow - "Boxes widen to the right as you type (no wrapping)."
-//   Wrap - "Boxes keep their width; extra text wraps onto new lines."
+//   Grow - boxes widen as you type until they reach the page edge, then the
+//          overflow flows onto new lines.
+//   Wrap - boxes keep their width and flow onto new lines.
 //
 // Neither held. Measured on paragraph-sample.pdf before this spec existed:
 //
@@ -26,7 +27,8 @@ import { selectWrapWidthMode } from "@editor/tests/stubbed/widthModeHelpers";
 //
 // The rules this spec holds both modes to:
 //   * the box does not change size between blurring and re-focusing,
-//   * Grow widens to fit, clips nothing, and never adds a line,
+//   * Grow widens to fit, clips nothing, and stays on the page, wrapping only
+//     what is typed past the page edge,
 //   * Wrap keeps its width and moves the overflow onto new lines WHILE typing.
 //
 // Wrap's overflow used to stay hidden even after the model had wrapped, because
@@ -210,10 +212,17 @@ for (const which of ["single", "paragraph"] as const) {
         `${typed!.clipped}px of typed text is clipped out of sight`,
       ).toBeLessThanOrEqual(1);
       expect(typed!.caretInBox, "the caret left the box").not.toBe(false);
+      const pageRight = await page
+        .getByTestId("pdf-editor-page-0")
+        .evaluate((el) => el.getBoundingClientRect().right);
+      const boxRight = await page
+        .getByTestId(testId)
+        .evaluate((el) => el.getBoundingClientRect().right);
       expect(
-        typed!.modelLines,
-        "Grow must not wrap - the hint says 'no wrapping'",
-      ).toBe(before!.modelLines);
+        boxRight,
+        "Grow ran the box off the page instead of wrapping",
+      ).toBeLessThanOrEqual(pageRight + 1);
+      expect(typed!.modelLines).toBeGreaterThan(before!.modelLines);
     });
 
     test("Grow keeps the same size across blur and re-focus", async ({
