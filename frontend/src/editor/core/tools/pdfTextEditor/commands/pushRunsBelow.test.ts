@@ -59,6 +59,21 @@ describe("runsPushedBelow", () => {
     ).toEqual(["next"]);
   });
 
+  it("moves a line the new lines stop only just short of", () => {
+    // The edited run's new bottom is 470; a line topping out at 469.5 clears it by less than a tenth of an em.
+    const justBelow = run("just below", 50, 457.5, 300);
+    expect(
+      runsPushedBelow(page([edited(), justBelow]), edited(), 500).runIds,
+    ).toEqual(["just below"]);
+  });
+
+  it("leaves a line the new lines clear by a tenth of an em or more", () => {
+    const clear = run("clear", 50, 456, 300);
+    expect(
+      runsPushedBelow(page([edited(), clear]), edited(), 500).runIds,
+    ).toEqual([]);
+  });
+
   it("leaves text in another column alone", () => {
     const beside = run("beside", 400, 484, 150);
     expect(
@@ -66,20 +81,63 @@ describe("runsPushedBelow", () => {
     ).toEqual([]);
   });
 
-  it("does not reach into another column through a wide line it moves", () => {
-    const footnote = run("footnote", 50, 484, 600);
-    const otherColumn = run("other", 400, 468, 200);
+  it("leaves the column beside the edited text alone, down to a full-width line under both", () => {
+    const leftLine = run("left line", 50, 484, 300);
+    const rightLines = [
+      run("right 1", 400, 500, 200),
+      run("right 2", 400, 484, 200),
+      run("right 3", 400, 440, 200),
+    ];
+    const footnote = run("footnote", 50, 468, 600);
     expect(
-      runsPushedBelow(page([edited(), footnote, otherColumn]), edited(), 500)
-        .runIds,
-    ).toEqual(["footnote"]);
+      runsPushedBelow(
+        page([edited(), leftLine, ...rightLines, footnote]),
+        edited(),
+        500,
+      ).runIds,
+    ).toEqual(["left line", "footnote", "right 3"]);
   });
 
-  it("moves nothing when a wide line would land on the next column's text", () => {
-    const wide = run("wide", 50, 484, 600);
-    const nextColumn = run("next column", 420, 460, 200);
+  it("takes a line outside the edited width that a moved line comes down on", () => {
+    const wide = run("wide", 50, 484, 400);
+    const rightAligned = run("right aligned", 380, 466, 200);
     expect(
-      runsPushedBelow(page([edited(), wide, nextColumn]), edited(), 500).runIds,
+      runsPushedBelow(page([edited(), wide, rightAligned]), edited(), 500)
+        .runIds,
+    ).toEqual(["wide", "right aligned"]);
+  });
+
+  it("takes a line a moved line would pass right over", () => {
+    const wide = run("wide", 50, 484, 600);
+    const passed = run("passed over", 400, 468, 200);
+    expect(
+      runsPushedBelow(page([edited(), wide, passed]), edited(), 500).runIds,
+    ).toEqual(["wide", "passed over"]);
+  });
+
+  it("takes a piece drawn separately among the lines of a moved paragraph", () => {
+    const paragraph = run("paragraph", 50, 400, 500, 96);
+    const piece = run("piece", 420, 430, 100);
+    expect(
+      runsPushedBelow(page([edited(), paragraph, piece]), edited(), 500).runIds,
+    ).toEqual(["paragraph", "piece"]);
+  });
+
+  it("leaves a line beside a moved line where it is when nothing comes down on it", () => {
+    const narrow = run("narrow", 50, 484, 300);
+    const beside = run("beside", 400, 484, 200);
+    expect(
+      runsPushedBelow(page([edited(), narrow, beside]), edited(), 500).runIds,
+    ).toEqual(["narrow"]);
+  });
+
+  it("moves nothing when a line a moved line comes down on cannot move", () => {
+    const wide = run("wide", 50, 484, 400);
+    const rightAligned = run("right aligned", 380, 466, 200);
+    rightAligned.locked = true;
+    expect(
+      runsPushedBelow(page([edited(), wide, rightAligned]), edited(), 500)
+        .runIds,
     ).toEqual([]);
   });
 

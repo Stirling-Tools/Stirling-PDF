@@ -153,3 +153,56 @@ test.each(FILES)(
     }
   },
 );
+
+// How much of their height two runs share, where they share any width.
+function shared(a: TextRun, ay: number, b: TextRun): number {
+  if (
+    a.bounds.x >= b.bounds.x + b.bounds.width - 0.5 ||
+    a.bounds.x + a.bounds.width <= b.bounds.x + 0.5
+  )
+    return 0;
+  return Math.max(
+    0,
+    Math.min(ay + a.bounds.height, b.bounds.y + b.bounds.height) -
+      Math.max(ay, b.bounds.y),
+  );
+}
+
+test.each(FILES)(
+  "in %s, a line moved by Enter never comes down on a line that stayed, and nothing above the edited text moves",
+  async (file) => {
+    const count = (await open(file)).page(0).runs.filter(editable).length;
+    for (let index = 0; index < Math.min(count, 8); index++) {
+      const doc = await open(file);
+      const run = doc.page(0).runs.filter(editable)[index];
+      const original = run.text;
+      const history = new HistoryStack();
+      for (const breaks of [1, 2, 3]) {
+        const others = doc.page(0).runs.filter((r) => r !== run);
+        const was = new Map(others.map((r) => [r.id, r.bounds.y]));
+        const bottom = run.bounds.y;
+        type(doc, history, run, withBreaks(original, breaks));
+        const moved = others.filter(
+          (r) => Math.abs(r.bounds.y - was.get(r.id)!) > 0.3,
+        );
+        const stayed = others.filter((r) => !moved.includes(r));
+        const label = `${file} run ${index}, ${breaks} breaks`;
+        expect(
+          moved.filter((m) => was.get(m.id)! > bottom + 0.5).map((m) => m.text),
+          `${label}: moved from above the edited text`,
+        ).toEqual([]);
+        expect(
+          moved
+            .filter((m) =>
+              stayed.some(
+                (s) =>
+                  shared(m, m.bounds.y, s) > shared(m, was.get(m.id)!, s) + 0.5,
+              ),
+            )
+            .map((m) => m.text),
+          `${label}: came down on a line that stayed`,
+        ).toEqual([]);
+      }
+    }
+  },
+);

@@ -8,6 +8,9 @@ import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 const TOUCH_TOLERANCE_EM = 0.25;
 const SLACK_PT = 0.5;
 const BOX_ESTIMATE_EM = 0.5;
+// The room a line keeps under it, where the document gave it at least that: lines that only just clear each other read as touching.
+const CLEARANCE_EM = 0.1;
+const AMONG_LINES_SHARE = 0.5;
 
 const top = (run: TextRun) => run.bounds.y + run.bounds.height;
 
@@ -37,11 +40,14 @@ function canMove(page: Page, run: TextRun): boolean {
 /**
  * The runs below `edited` that its growth from `oldBottom` down to its current
  * bottom lands on, together with every run those then land on, all to move down
- * by the same amount. Only runs under the edited text's own width are
- * considered, so a wide line in the chain cannot drag a neighbouring column
- * with it. Empty when nothing would be covered, and also when any
- * run in that chain cannot move or would leave the page: moving only part of
- * a chain swaps one overlap for another.
+ * by the same amount. A run counts as landed on once less than a tenth of an em
+ * is left above it, unless the document set it closer than that to begin
+ * with. Directly under the edited text only runs sharing its
+ * width are taken, so the column beside it stays put; a moved line wider than
+ * that takes whatever it would itself come down on, such as a right-aligned
+ * line or the text under a heading that spans two columns. Empty when nothing
+ * would be covered, and also when any run in that chain cannot move or would
+ * leave the page: moving only part of a chain swaps one overlap for another.
  *
  * `addedHeight` is the height of the lines the edit added. The runs move by
  * that, so the distance from the last line to the text below stays what the
@@ -65,52 +71,79 @@ export function runsPushedBelow(
   const tolerance = edited.fontSize * TOUCH_TOLERANCE_EM;
   const left = edited.bounds.x;
   const right = edited.bounds.x + edited.bounds.width;
+  const clearance = edited.fontSize * CLEARANCE_EM;
+  // The lowest bottom of what has moved so far, and where that bottom was before it moved.
   let limit = edited.bounds.y;
+  let limitBefore = oldBottom;
   const below = page.runs
     .filter((r) => r !== edited && top(r) <= oldBottom + tolerance)
     .sort((a, b) => top(b) - top(a));
   const pushed: string[] = [];
   for (const run of below) {
     if (!overlapsSpan(run, left, right)) continue;
-    const alreadyOverlapping = Math.max(0, top(run) - oldBottom);
-    if (top(run) <= limit + alreadyOverlapping + SLACK_PT) break;
+    // Negative where the two already overlapped: that much is the document's layout, and stays.
+    const gapBefore = limitBefore - top(run);
+    if (top(run) <= limit - Math.min(clearance, gapBefore) + SLACK_PT) break;
     if (!canMove(page, run) || run.bounds.y - drop < page.display.cropBottom)
       return none;
     pushed.push(run.id);
-    limit = Math.min(limit, run.bounds.y - drop);
+    if (run.bounds.y - drop < limit) {
+      limit = run.bounds.y - drop;
+      limitBefore = run.bounds.y;
+    }
   }
-  if (landsOnStillText(page, edited, pushed, drop)) return none;
-  return { runIds: pushed, dy: -drop };
+  const runIds = withRunsLandedOn(page, edited, pushed, drop);
+  return runIds ? { runIds, dy: -drop } : none;
 }
 
-function boxesMeet(a: PageRect, b: PageRect): boolean {
-  return (
-    a.x < b.x + b.width - SLACK_PT &&
-    a.x + a.width > b.x + SLACK_PT &&
-    a.y < b.y + b.height - SLACK_PT &&
-    a.y + a.height > b.y + SLACK_PT
+// How much of their height two boxes share, where they share any width.
+function overlapDepth(a: PageRect, b: PageRect): number {
+  if (a.x >= b.x + b.width - SLACK_PT || a.x + a.width <= b.x + SLACK_PT)
+    return 0;
+  return Math.max(
+    0,
+    Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y),
   );
 }
 
-// A moved line wider than the edited text can reach text in the next column, which stays put.
-function landsOnStillText(
+// `pushed` plus every run outside the edited width that one of them comes down on, and so on down; null when one of those cannot move.
+function withRunsLandedOn(
   page: Page,
   edited: TextRun,
   pushed: string[],
   drop: number,
-): boolean {
+): string[] | null {
   const moving = new Set(pushed);
-  const still = page.runs.filter((r) => r !== edited && !moving.has(r.id));
-  return page.runs
-    .filter((r) => moving.has(r.id))
-    .some((run) => {
-      const lands = { ...run.bounds, y: run.bounds.y - drop };
-      return still.some(
-        (other) =>
-          boxesMeet(lands, other.bounds) &&
-          !boxesMeet(run.bounds, other.bounds),
-      );
-    });
+  const chain = page.runs.filter((r) => moving.has(r.id));
+  for (let i = 0; i < chain.length; i++) {
+    const run = chain[i];
+    // Everything the run passes over on its way down, not only where it stops: a drop of several lines can clear a line entirely.
+    const swept = {
+      ...run.bounds,
+      y: run.bounds.y - drop,
+      height: run.bounds.height + drop,
+    };
+    for (const other of page.runs) {
+      if (other.id === edited.id || moving.has(other.id)) continue;
+      // Lines set tighter than their boxes already share a little height; only more than that is a collision.
+      const before = overlapDepth(run.bounds, other.bounds);
+      // A run mostly inside the moving one's box sits among its lines, such as a word the document drew separately, and goes with them.
+      const among = before > other.bounds.height * AMONG_LINES_SHARE;
+      if (!among && overlapDepth(swept, other.bounds) <= before + SLACK_PT)
+        continue;
+      if (
+        !canMove(page, other) ||
+        other.bounds.y - drop < page.display.cropBottom
+      )
+        return null;
+      moving.add(other.id);
+      chain.push(other);
+    }
+  }
+  return [
+    ...pushed,
+    ...chain.map((r) => r.id).filter((id) => !pushed.includes(id)),
+  ];
 }
 
 /** One push: the runs an edit moved, how far, and the lines of the edited run it made room for. */
