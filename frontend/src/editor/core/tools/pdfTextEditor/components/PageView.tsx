@@ -166,6 +166,7 @@ export const PageView = memo(function PageView({
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
   const [rendering, setRendering] = useState(false);
+  const [gripLayer, setGripLayer] = useState<HTMLDivElement | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   // Read by the render effect, which must not re-run when it changes.
   const paintedRevisionRef = useRef(-1);
@@ -472,6 +473,9 @@ export const PageView = memo(function PageView({
           store={store}
           selectedRunIds={selectedRunIds}
         />
+        {/* Every run's move/width grips, after the objects beneath the text and
+            before all runs, so a grip never takes a click aimed at any run. */}
+        <div ref={setGripLayer} style={{ display: "contents" }} />
         {page.runs.map((run) => (
           <TextRunOverlay
             key={run.id}
@@ -482,6 +486,7 @@ export const PageView = memo(function PageView({
             scale={cssScale}
             widthMode={widthMode}
             pageRevision={paintedRevision}
+            gripLayer={gripLayer}
             selected={selectedRunIds.includes(run.id)}
             findRange={findMatch?.runId === run.id ? findMatch.range : null}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}

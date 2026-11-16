@@ -7907,6 +7907,7 @@ vertical = "Vertical ruler"
 [pdfTextEditor.run]
 lockedTitle = "Locked - use the Unlock button to edit"
 readOnlyOrderTitle = "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely"
+resizeHandle = "Drag to change the width; the text rewraps"
 
 [pdfTextEditor.saveRisk]
 cancel = "Cancel"

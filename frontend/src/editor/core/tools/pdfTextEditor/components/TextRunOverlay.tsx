@@ -1,5 +1,13 @@
 import { scanFaceCssFamily } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   RENDER_MODE_INVISIBLE,
@@ -332,39 +340,87 @@ interface TextRunOverlayProps {
   onTextRangeChange?: (range: TextRange | null) => void;
   /** The characters selected inside the box, highlighted while it has no focus. */
   textRange?: TextRange | null;
+  /**
+   * Where the move/width grips render: a layer in the same positioned parent
+   * as the box, painted beneath every run. Without it the box has no grips.
+   */
+  gripLayer?: HTMLElement | null;
 }
 
 /**
- * Which gesture the pointer is over: the frame, the right edge, or the text
- * interior. The right edge re-wraps the run to a new width; the rest of the
- * frame moves it.
+ * Which grip the pointer is over: the right edge re-wraps the run to a new
+ * width; the rest of the frame moves it.
  */
-type EdgeZone = "move" | "resize" | null;
+type EdgeZone = "move" | "resize";
 
-/** Grab band around the box, in CSS px. Matches the visible ring's reach. */
-const EDGE_PX = 7;
+/** How far the grip bands reach outside the box, and into it, in CSS px. */
+const GRIP_OUT_PX = 5;
+const GRIP_IN_PX = 1;
+
+const GRIP_BANDS: ReadonlyArray<{
+  side: "top" | "bottom" | "left" | "right";
+  style: CSSProperties;
+}> = [
+  {
+    side: "top",
+    style: {
+      left: -GRIP_OUT_PX,
+      right: -GRIP_OUT_PX,
+      top: -GRIP_OUT_PX,
+      height: GRIP_OUT_PX + GRIP_IN_PX,
+    },
+  },
+  {
+    side: "bottom",
+    style: {
+      left: -GRIP_OUT_PX,
+      right: -GRIP_OUT_PX,
+      bottom: -GRIP_OUT_PX,
+      height: GRIP_OUT_PX + GRIP_IN_PX,
+    },
+  },
+  {
+    side: "left",
+    style: {
+      left: -GRIP_OUT_PX,
+      top: 0,
+      bottom: 0,
+      width: GRIP_OUT_PX + GRIP_IN_PX,
+    },
+  },
+  {
+    side: "right",
+    style: {
+      right: -GRIP_OUT_PX,
+      top: 0,
+      bottom: 0,
+      width: GRIP_OUT_PX + GRIP_IN_PX,
+    },
+  },
+];
 
 /**
- * Classify a pointer position against the run's own box.
- *
- * The box is contentEditable, so handles cannot be child elements without
- * becoming editable content. Hit-testing the border band instead gives the
- * same affordance with no DOM inside the editable region.
+ * The caret for a click inside the box but above its first line or below its
+ * last, where the browser would otherwise put it at the end of the text.
  */
-function edgeZoneAt(
+function caretBesideLines(
   el: HTMLElement,
   clientX: number,
   clientY: number,
-  canResize: boolean,
-): EdgeZone {
-  const r = el.getBoundingClientRect();
-  const nearLeft = clientX - r.left <= EDGE_PX;
-  const nearRight = r.right - clientX <= EDGE_PX;
-  const nearTop = clientY - r.top <= EDGE_PX;
-  const nearBottom = r.bottom - clientY <= EDGE_PX;
-  if (canResize && nearRight && !nearTop && !nearBottom) return "resize";
-  if (nearTop || nearBottom || nearLeft || nearRight) return "move";
-  return null;
+): Range | null {
+  const text = document.createRange();
+  text.selectNodeContents(el);
+  const r = text.getBoundingClientRect();
+  if (r.height <= 2 || (clientY >= r.top && clientY <= r.bottom)) return null;
+  const y = Math.min(r.bottom - 1, Math.max(r.top + 1, clientY));
+  const position = document.caretPositionFromPoint?.(clientX, y);
+  const caret = position
+    ? document.createRange()
+    : (document.caretRangeFromPoint?.(clientX, y) ?? null);
+  if (position && caret) caret.setStart(position.offsetNode, position.offset);
+  if (!caret || !el.contains(caret.startContainer)) return null;
+  caret.collapse(true);
+  return caret;
 }
 
 /** One editable HTML element per PDF text run. */
@@ -385,6 +441,7 @@ export function TextRunOverlay({
   onResize,
   onTextRangeChange,
   textRange,
+  gripLayer,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -443,9 +500,20 @@ export function TextRunOverlay({
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // Which edge the pointer is over, so the cursor can advertise the gesture
-  // before the user commits to it. Null means the text interior.
-  const [edgeZone, setEdgeZone] = useState<EdgeZone>(null);
+  const [gripZone, setGripZone] = useState<EdgeZone | null>(null);
+  const gripsRef = useRef<HTMLDivElement | null>(null);
+  // The grips frame is a sibling, so it is sized from the box's rendered
+  // border box: the box grows with its text past the height it is given.
+  const [boxSize, setBoxSize] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() =>
+      setBoxSize({ w: el.offsetWidth, h: el.offsetHeight }),
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   // Live box width while the right edge is being dragged, in CSS px.
   const [resizeWidthPx, setResizeWidthPx] = useState<number | null>(null);
   // Detaches an in-flight resize's window listeners, so a cancelled or
@@ -862,6 +930,52 @@ export function TextRunOverlay({
     window.addEventListener("pointercancel", onPointerCancel);
   }
 
+  // Below the drag threshold nothing moved: from a grip that is a plain click
+  // (select); with Ctrl held it is the multi-select gesture it looks like.
+  function startMove(
+    originX: number,
+    originY: number,
+    viaGrip: boolean,
+    commit: (dx: number, dy: number) => void,
+  ) {
+    dragOriginRef.current = { x: originX, y: originY };
+    setDragging(true);
+    setDragOffset({ x: 0, y: 0 });
+    // Pointer events (mouse/pen/touch) with a global capture so the
+    // drag keeps tracking even if the cursor leaves the overlay.
+    const onPointerMove = (ev: PointerEvent) => {
+      const origin = dragOriginRef.current;
+      if (!origin) return;
+      setDragOffset({
+        x: ev.clientX - origin.x,
+        y: ev.clientY - origin.y,
+      });
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      setDragging(false);
+      setDragOffset(null);
+      const origin = dragOriginRef.current;
+      dragOriginRef.current = null;
+      if (!origin) return;
+      // Screen delta -> display-PDF delta, then invert the linear part of
+      // the CropBox/rotation transform to a raw-PDF delta.
+      const ddx = (ev.clientX - origin.x) / scale;
+      const ddy = -(ev.clientY - origin.y) / scale;
+      const v = transform.invertVector(ddx, ddy);
+      const dx = v.x;
+      const dy = v.y;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+        onSelect(!viaGrip);
+        return;
+      }
+      commit(dx, dy);
+    };
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  }
+
   const spellcheckLang = resolveLang(
     spellcheck,
     typeof document === "undefined" ? null : document.documentElement.lang,
@@ -869,7 +983,119 @@ export function TextRunOverlay({
 
   const pristine = !showsGlyphs;
 
-  return (
+  const boxTransform =
+    [
+      dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : "",
+      // Turn the box with the text. Placed before scaleX so the fit still
+      // stretches along the run's own axis rather than the page's.
+      runRotation ? `rotate(${runRotation.deg}deg)` : "",
+      fit.scaleX !== 1 ? `scaleX(${fit.scaleX})` : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
+  // Rotate about the text's own origin - the left end of its first
+  // baseline - which is the point the flow geometry positions. Otherwise
+  // scale from the run's own origin, never its centre.
+  const boxTransformOrigin = runRotation
+    ? `0 ${firstBaselineFromTop}px`
+    : fit.scaleX !== 1
+      ? "0 50%"
+      : undefined;
+
+  const isOwnElement = (target: EventTarget | null) =>
+    target instanceof Node &&
+    (!!ref.current?.contains(target) || !!gripsRef.current?.contains(target));
+  const leaveHover = (e: { relatedTarget: EventTarget | null }) => {
+    setGripZone(null);
+    if (!isOwnElement(e.relatedTarget)) setHovered(false);
+  };
+  const startGrip = (e: ReactPointerEvent<HTMLDivElement>, zone: EdgeZone) => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
+    e.stopPropagation();
+    e.preventDefault();
+    ref.current?.blur();
+    if (zone === "resize" && onResize) {
+      startResize(e.clientX, e.pointerId, onResize);
+    } else if (onMove) {
+      startMove(e.clientX, e.clientY, true, onMove);
+    }
+  };
+  const showGrips =
+    !run.locked &&
+    (!!onMove || canResize) &&
+    (hovered || selected || dragging || resizeWidthPx !== null);
+  const gripProps = (zone: EdgeZone) => ({
+    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => startGrip(e, zone),
+    onMouseEnter: () => {
+      setHovered(true);
+      setGripZone(zone);
+    },
+    onMouseLeave: leaveHover,
+  });
+  // Never a child of the box: inside the contentEditable the grips would
+  // become editable content.
+  const grips =
+    showGrips && gripLayer
+      ? createPortal(
+          <div
+            ref={gripsRef}
+            className="pdf-editor-run-grips"
+            data-testid={`pdf-editor-grips-${run.id}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              left,
+              top,
+              width: boxSize?.w ?? resizeWidthPx ?? width,
+              height: boxSize?.h ?? height,
+              transform: boxTransform,
+              transformOrigin: boxTransformOrigin,
+            }}
+          >
+            {GRIP_BANDS.map(({ side, style }) => {
+              const zone: EdgeZone =
+                side === "right" && canResize ? "resize" : "move";
+              if (zone === "move" && !onMove) return null;
+              return (
+                <div
+                  key={side}
+                  className="pdf-editor-run-grip"
+                  data-grip={zone}
+                  style={{
+                    ...style,
+                    cursor:
+                      zone === "resize"
+                        ? "ew-resize"
+                        : dragging
+                          ? "grabbing"
+                          : "grab",
+                  }}
+                  {...gripProps(zone)}
+                />
+              );
+            })}
+            {canResize && (
+              <div
+                className="pdf-editor-run-width-handle"
+                data-testid={`pdf-editor-width-handle-${run.id}`}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label={t(
+                  "pdfTextEditor.run.resizeHandle",
+                  "Drag to change the width; the text rewraps",
+                )}
+                title={t(
+                  "pdfTextEditor.run.resizeHandle",
+                  "Drag to change the width; the text rewraps",
+                )}
+                {...gripProps("resize")}
+              />
+            )}
+          </div>,
+          gripLayer,
+        )
+      : null;
+
+  const box = (
     <div
       ref={ref}
       data-testid={`pdf-editor-run-${run.id}`}
@@ -915,64 +1141,9 @@ export function TextRunOverlay({
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
-        const zone = edgeZoneAt(
-          e.currentTarget,
-          e.clientX,
-          e.clientY,
-          canResize,
-        );
-        if (zone === "resize" && onResize) {
-          e.preventDefault();
+        if ((e.ctrlKey || e.metaKey) && onMove) {
           e.currentTarget.blur();
-          startResize(e.clientX, e.pointerId, onResize);
-          return;
-        }
-
-        // Ctrl+drag still moves from anywhere inside, so existing muscle
-        // memory keeps working; grabbing the frame is the discoverable path.
-        if ((e.ctrlKey || e.metaKey || zone === "move") && onMove) {
-          const viaFrame = zone === "move" && !(e.ctrlKey || e.metaKey);
-          if (viaFrame) e.preventDefault();
-          dragOriginRef.current = { x: e.clientX, y: e.clientY };
-          setDragging(true);
-          setDragOffset({ x: 0, y: 0 });
-          e.currentTarget.blur();
-          // Pointer events (mouse/pen/touch) with a global capture so the
-          // drag keeps tracking even if the cursor leaves the overlay.
-          const onPointerMove = (ev: PointerEvent) => {
-            const origin = dragOriginRef.current;
-            if (!origin) return;
-            setDragOffset({
-              x: ev.clientX - origin.x,
-              y: ev.clientY - origin.y,
-            });
-          };
-          const onPointerUp = (ev: PointerEvent) => {
-            window.removeEventListener("pointermove", onPointerMove);
-            window.removeEventListener("pointerup", onPointerUp);
-            setDragging(false);
-            setDragOffset(null);
-            const origin = dragOriginRef.current;
-            dragOriginRef.current = null;
-            if (!origin) return;
-            // Screen delta -> display-PDF delta, then invert the linear part of
-            // the CropBox/rotation transform to a raw-PDF delta.
-            const ddx = (ev.clientX - origin.x) / scale;
-            const ddy = -(ev.clientY - origin.y) / scale;
-            const v = transform.invertVector(ddx, ddy);
-            const dx = v.x;
-            const dy = v.y;
-            // Below the drag threshold nothing moved. From the frame that is
-            // a plain click (select); with Ctrl held it is the multi-select
-            // gesture it looks like.
-            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-              onSelect(!viaFrame);
-              return;
-            }
-            onMove(dx, dy);
-          };
-          window.addEventListener("pointermove", onPointerMove);
-          window.addEventListener("pointerup", onPointerUp);
+          startMove(e.clientX, e.clientY, false, onMove);
           return;
         }
         // Shift-click EXTENDS the multi-object selection.
@@ -981,8 +1152,15 @@ export function TextRunOverlay({
           onSelect(true);
           return;
         }
+        const caret = caretBesideLines(e.currentTarget, e.clientX, e.clientY);
+        if (caret) e.preventDefault();
         pointerFocusRef.current = true;
         e.currentTarget.focus({ preventScroll: true });
+        if (caret) {
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(caret);
+        }
         onSelect(false);
       }}
       onFocus={(e) => {
@@ -1086,18 +1264,7 @@ export function TextRunOverlay({
         onEdit(text);
       }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setEdgeZone(null);
-      }}
-      onPointerMove={(e) => {
-        // Only while idle: mid-drag the cursor is owned by the gesture.
-        if (run.locked || dragging) return;
-        if (resizeWidthPx !== null) return;
-        setEdgeZone(
-          edgeZoneAt(e.currentTarget, e.clientX, e.clientY, canResize),
-        );
-      }}
+      onMouseLeave={leaveHover}
       style={{
         left,
         top,
@@ -1106,24 +1273,8 @@ export function TextRunOverlay({
         // Live Ctrl+drag preview: follow the cursor via transform, and
         // float above siblings + dim slightly so the move reads clearly.
         // Drag preview and the width fit both live here, so compose them.
-        transform:
-          [
-            dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : "",
-            // Turn the box with the text. Placed before scaleX so the fit still
-            // stretches along the run's own axis rather than the page's.
-            runRotation ? `rotate(${runRotation.deg}deg)` : "",
-            fit.scaleX !== 1 ? `scaleX(${fit.scaleX})` : "",
-          ]
-            .filter(Boolean)
-            .join(" ") || undefined,
-        // Rotate about the text's own origin - the left end of its first
-        // baseline - which is the point the flow geometry positions. Otherwise
-        // scale from the run's own origin, never its centre.
-        transformOrigin: runRotation
-          ? `0 ${firstBaselineFromTop}px`
-          : fit.scaleX !== 1
-            ? "0 50%"
-            : undefined,
+        transform: boxTransform,
+        transformOrigin: boxTransformOrigin,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
         // Only the opacity settle is animated.
@@ -1171,25 +1322,28 @@ export function TextRunOverlay({
           : dragging
             ? "2px solid #2c7be5"
             : selected
-              ? edgeZone || resizeWidthPx !== null
+              ? gripZone || resizeWidthPx !== null
                 ? "2px solid #2c7be5"
                 : "1px solid #2c7be5"
               : hovered
                 ? "1px dashed rgba(44,123,229,0.5)"
                 : "1px dashed transparent",
-        // The cursor is the affordance: the box advertises move/resize on the
-        // frame and keeps the I-beam over the text.
         cursor: run.locked
           ? "default"
           : dragging
             ? "grabbing"
-            : resizeWidthPx !== null || edgeZone === "resize"
+            : resizeWidthPx !== null
               ? "ew-resize"
-              : edgeZone === "move"
-                ? "grab"
-                : undefined,
+              : undefined,
         overflow: "hidden",
       }}
     />
+  );
+
+  return (
+    <>
+      {grips}
+      {box}
+    </>
   );
 }
