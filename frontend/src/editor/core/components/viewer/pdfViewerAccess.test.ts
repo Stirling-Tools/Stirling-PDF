@@ -86,6 +86,23 @@ describe("viewer permission readiness", () => {
     expect(read).not.toHaveBeenCalled();
   });
 
+  it("closes the document and records nothing when cancelled while signatures are read", async () => {
+    const file = new File(["PDF"], "signed.pdf");
+    const { engine, opened, close, raw, buffer } = viewer(file);
+    const signatures = PdfTaskHelper.create<{ contents: ArrayBuffer }[]>();
+    raw.getSignatures.mockReturnValue(signatures as never);
+    const task = engine.openDocumentBuffer({ id: "opened", content: buffer });
+    task.wait(
+      () => {},
+      () => {},
+    );
+    opened.resolve(document);
+    task.abort({ code: PdfErrorCode.Cancelled, message: "switched" });
+    signatures.resolve([{ contents: new ArrayBuffer(8) }]);
+    expect(close).toHaveBeenCalledOnce();
+    expect(getPdfAccess(file)).toBeUndefined();
+  });
+
   it("records whether an unencrypted PDF is signed from the document it opened", async () => {
     const file = new File(["PDF"], "signed.pdf");
     const read = vi.fn();
