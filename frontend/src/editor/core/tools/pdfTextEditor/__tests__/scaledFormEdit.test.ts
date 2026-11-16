@@ -374,3 +374,108 @@ describe("an image drawn inside a form", () => {
     expect(moved.bounds.width).toBeCloseTo(nextBounds.width, 1);
   });
 });
+
+// One form drawn twice on the first page and once on the second, holding two lines.
+function sharedFormPdf(): Uint8Array {
+  const draw = (y: number) =>
+    `q ${FORM_SCALE} 0 0 ${FORM_SCALE} ${FORM_X} ${y} cm /Fm1 Do Q\n`;
+  const page = (contents: number) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contents} 0 R ` +
+    "/Resources << /XObject << /Fm1 5 0 R >> >> >>";
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>" },
+      { num: 3, body: page(4) },
+      { num: 4, body: streamBody("", draw(700) + draw(400)) },
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Form /BBox [0 0 2000 400] " +
+            "/Resources << /Font << /F1 6 0 R >> >>",
+          "BT /F1 48 Tf 0 100 Td (Open Source) Tj ET\n" +
+            "BT /F1 48 Tf 0 -100 Td (Second label) Tj ET\n",
+        ),
+      },
+      {
+        num: 6,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      { num: 7, body: page(8) },
+      { num: 8, body: streamBody("", draw(700)) },
+    ],
+    1,
+  );
+}
+
+describe("a form drawn more than once", () => {
+  async function texts(doc: EditorDocument, pageIndex: number) {
+    const page = doc.page(pageIndex);
+    PdfiumTextReader.populate(doc, page);
+    return page.runs
+      .map((r) => `${r.text.trim()}@${Math.round(r.bounds.y)}`)
+      .sort();
+  }
+
+  test("keeps its text everywhere else when one copy is edited", async () => {
+    const doc = await EditorDocument.open(sharedFormPdf());
+    opened.push(doc);
+    const firstPage = await texts(doc, 0);
+    const secondPage = await texts(doc, 1);
+    const edited = doc
+      .page(0)
+      .runs.find((r) => r.text.includes("Open") && r.bounds.y > 600)!;
+
+    new SetColourCommand({
+      pageIndex: 0,
+      runId: edited.id,
+      nextFill: RED,
+    }).apply(doc);
+
+    const saved = await EditorDocument.open(
+      new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+    );
+    opened.push(saved);
+    expect(await texts(saved, 0)).toEqual(firstPage);
+    expect(await texts(saved, 1)).toEqual(secondPage);
+    const reds = saved.page(0).runs.filter((r) => r.fill.r === 220);
+    expect(reds.map((r) => r.text.trim())).toEqual(["Open Source"]);
+  });
+
+  test("leaves the other line of the edited copy in place and editable", async () => {
+    const doc = await EditorDocument.open(sharedFormPdf());
+    opened.push(doc);
+    const before = await texts(doc, 0);
+    const page = doc.page(0);
+    const first = page.runs.find(
+      (r) => r.text.includes("Open") && r.bounds.y > 600,
+    )!;
+    const second = page.runs.find(
+      (r) => r.text.includes("Second") && r.bounds.y > 600,
+    )!;
+
+    const was = `Second label@${Math.round(second.bounds.y)}`;
+
+    new SetColourCommand({
+      pageIndex: 0,
+      runId: first.id,
+      nextFill: RED,
+    }).apply(doc);
+    expect(second.containerPtr).toBe(0);
+    new MoveTextRunCommand({
+      pageIndex: 0,
+      runId: second.id,
+      dx: 0,
+      dy: -20,
+    }).apply(doc);
+
+    const saved = await EditorDocument.open(
+      new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+    );
+    opened.push(saved);
+    const moved = `Second label@${Math.round(second.bounds.y)}`;
+    expect(await texts(saved, 0)).toEqual(
+      before.map((line) => (line === was ? moved : line)).sort(),
+    );
+  });
+});
