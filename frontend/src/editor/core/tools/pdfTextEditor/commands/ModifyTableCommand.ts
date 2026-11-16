@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -371,7 +372,9 @@ export class ModifyTableCommand implements Command {
         if (!pred(r, c)) continue;
         for (const id of model.runsAt(r, c)) {
           const run = page.findRun(id);
-          if (run) shiftRunBy(doc.module, run, dx, dy);
+          if (!run) continue;
+          liftRunToPage(doc, page, run);
+          shiftRunBy(doc.module, run, dx, dy);
         }
       }
     }

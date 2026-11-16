@@ -27,7 +27,6 @@ function inTable(page: Page, runId: string): boolean {
 function canMove(page: Page, run: TextRun): boolean {
   return (
     !run.locked &&
-    run.containerPtr === 0 &&
     !rotationFromMatrix(run.matrix) &&
     !isScanRun(run) &&
     !inTable(page, run.id)

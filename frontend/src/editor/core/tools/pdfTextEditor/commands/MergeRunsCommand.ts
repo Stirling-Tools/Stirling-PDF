@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -58,6 +59,7 @@ export class MergeRunsCommand implements Command {
       .map((id) => page.findRun(id))
       .filter((r): r is TextRun => !!r);
     if (runs.length < 2) return;
+    for (const run of runs) liftRunToPage(doc, page, run);
 
     runs.sort((a, b) => b.matrix.f - a.matrix.f);
     const rep = runs[0];

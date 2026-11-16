@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
@@ -47,6 +48,7 @@ export class AlignParagraphLinesCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || !AlignParagraphLinesCommand.canAlign(run)) return;
+    liftRunToPage(doc, page, run);
 
     // Paragraph-wide left/right edge across every line.
     const extents = run.paragraphLineSlots.map((_, i) =>

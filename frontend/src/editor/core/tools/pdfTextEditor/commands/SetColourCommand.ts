@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -33,6 +34,7 @@ export class SetColourCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    liftRunToPage(doc, page, run);
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
       fill: { ...this.nextFill },

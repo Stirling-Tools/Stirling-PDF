@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import i18n from "i18next";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
@@ -240,8 +241,6 @@ export class EditTextCommand implements Command {
   // The run's own objects before a partial apply, with where each sat; null when one lives in a form and cannot be put back.
   private originalObjects: OriginalObjects | null = null;
   private revertedExactly = false;
-  // Where each of the run's objects inside a form sat before a partial edit moved it; the form's own scale defeats the page-space move back.
-  private formObjectMatrices = new Map<number, Float32Array>();
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
     /** Matched lines translated to a new baseline (reversed on revert). */
@@ -351,6 +350,7 @@ export class EditTextCommand implements Command {
     // No-op edit: a contentEditable insert can fire several `input` events for
     // one keystroke burst, re-dispatching the SAME final text.
     if (this.prevText === this.nextText) return;
+    liftRunToPage(doc, page, run);
 
     if (this.scanEdited || isScanRun(run)) {
       run.scanEdit ??= captureScanEdit(doc.module, run, page);
@@ -547,7 +547,6 @@ export class EditTextCommand implements Command {
           partial.removePtrs,
           page.pagePtr,
         );
-        this.formObjectMatrices = formObjectMatrices(doc.module, run);
         const result = applyPartialEditPlan(doc, page, run, partial, nextTags);
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
@@ -1223,8 +1222,6 @@ export class EditTextCommand implements Command {
         ],
         revertFallback,
       );
-      for (const [ptr, matrix] of this.formObjectMatrices)
-        if (!removed.has(ptr)) writeMatrix(m, ptr, matrix);
       run.text = this.prevText;
       run.dirty = true;
       this.partialPlan = null;
@@ -1802,10 +1799,7 @@ export class EditTextCommand implements Command {
     if (phase === "revert") for (const edit of reversed) edit.undoPushes(doc);
     try {
       move.apply(doc);
-      if (phase === "revert") {
-        edits[0].restoreLayout(doc, run);
-        edits[0].restoreFormObjects(doc, run);
-      }
+      if (phase === "revert") edits[0].restoreLayout(doc, run);
     } catch (err) {
       try {
         move.revert(doc);
@@ -1836,12 +1830,6 @@ export class EditTextCommand implements Command {
     });
     run.bounds = { ...snap.bounds };
     run.matrix = { ...run.matrix, e: snap.matrixE };
-  }
-
-  private restoreFormObjects(doc: EditorDocument, run: TextRun): void {
-    const members = collectContainersByPtr(run);
-    for (const [ptr, matrix] of this.formObjectMatrices)
-      if (members.get(ptr)) writeMatrix(doc.module, ptr, matrix);
   }
 
   repaintArea(doc: EditorDocument): PageRepaintArea | null {
@@ -2324,18 +2312,6 @@ function captureOriginalObjects(
     matrices,
     order: contentIndices(m, pagePtr, matrices.keys()),
   };
-}
-
-function formObjectMatrices(
-  m: WrappedPdfiumModule,
-  run: TextRun,
-): Map<number, Float32Array> {
-  const matrices = new Map<number, Float32Array>();
-  for (const [ptr, container] of collectContainersByPtr(run)) {
-    const matrix = container && ptr ? readMatrix(m, ptr) : null;
-    if (matrix) matrices.set(ptr, matrix);
-  }
-  return matrices;
 }
 
 function restoreRunModel(run: TextRun, snap: RunModelSnapshot): void {

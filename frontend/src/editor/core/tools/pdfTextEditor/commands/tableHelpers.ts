@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -539,7 +540,10 @@ export function setTableEdges(
   model.colEdges = [...colEdges];
   model.rowEdges = [...rowEdges];
   renormaliseFontBase(model);
-  for (const mv of moves) shiftRunBy(doc.module, mv.run, mv.dx, mv.dy);
+  for (const mv of moves) {
+    liftRunToPage(doc, page, mv.run);
+    shiftRunBy(doc.module, mv.run, mv.dx, mv.dy);
+  }
   redrawGrid(doc, page, model);
 }
 
@@ -657,6 +661,7 @@ export function applyCellPlacement(
     const targetBaseline =
       model.cellRect(spot.row, spot.col).y + spot.baseline * scale;
     const dy = targetBaseline - run.matrix.f;
+    liftRunToPage(doc, page, run);
     shiftRunBy(doc.module, run, dx, dy);
   }
 }

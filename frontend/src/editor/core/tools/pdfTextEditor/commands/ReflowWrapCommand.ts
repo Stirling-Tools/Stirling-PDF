@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -99,6 +100,7 @@ export class ReflowWrapCommand implements Command {
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.
     if (rotationFromMatrix(run.matrix)) return;
+    liftRunToPage(doc, page, run);
 
     const m = doc.module;
     // Geometry + text must reflect the latest edits, and FPDFTextObj_GetText

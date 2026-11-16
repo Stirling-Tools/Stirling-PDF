@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -35,6 +36,7 @@ export class MoveTextRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    liftRunToPage(doc, page, run);
     // Scanned words are pixels: cover them where they were, draw them anew.
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,

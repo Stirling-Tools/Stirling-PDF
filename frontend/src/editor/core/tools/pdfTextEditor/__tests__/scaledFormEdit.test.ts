@@ -10,6 +10,14 @@ import {
   test,
   vi,
 } from "vitest";
+import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
+import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
+import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
+import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
@@ -22,6 +30,7 @@ import {
 // The form draws at a quarter of its own scale, as design tools export labels.
 const FORM_SCALE = 0.25;
 const FORM_X = 72;
+const SAVED_X = 72.468;
 
 function scaledFormPdf(): Uint8Array {
   return buildClassicPdf(
@@ -93,14 +102,111 @@ function leftEdge(doc: EditorDocument, ptr: number): number {
   }
 }
 
-describe("typing before text drawn inside a scaled form", () => {
-  test("moves it along the page by the width of what was typed", async () => {
-    const doc = await EditorDocument.open(scaledFormPdf());
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(0));
-    const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
-    const label = run.mergedFromPtrs[0];
-    const before = FORM_X + leftEdge(doc, label) * FORM_SCALE;
+// The same label one form deeper: the page draws a half-scale form that draws the label's form at half scale again.
+function nestedFormPdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+          "/Resources << /XObject << /Fm0 7 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody("", `q 0.5 0 0 0.5 ${FORM_X} 700 cm /Fm0 Do Q\n`),
+      },
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Form /BBox [0 0 2000 400] " +
+            "/Resources << /Font << /F1 6 0 R >> >>",
+          "BT /F1 48 Tf 0 100 Td (Open Source) Tj ET\n",
+        ),
+      },
+      {
+        num: 6,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 7,
+        body: streamBody(
+          "/Type /XObject /Subtype /Form /BBox [0 0 4000 800] " +
+            "/Resources << /XObject << /Fm1 5 0 R >> >>",
+          "q 0.5 0 0 0.5 0 0 cm /Fm1 Do Q\n",
+        ),
+      },
+    ],
+    1,
+  );
+}
+
+async function openForm(bytes: Uint8Array = scaledFormPdf()) {
+  const doc = await EditorDocument.open(bytes);
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(0));
+  const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
+  return { doc, run };
+}
+
+async function saved(doc: EditorDocument) {
+  const { doc: reopened } = await openForm(
+    new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+  );
+  return reopened.page(0).runs;
+}
+
+const RED = { r: 220, g: 0, b: 0, a: 255 };
+
+describe("text drawn inside a form", () => {
+  test.each<
+    [
+      string,
+      (id: string) => Command,
+      (run: {
+        bounds: { x: number };
+        fill: { r: number };
+        fontSize: number;
+      }) => void,
+    ]
+  >([
+    [
+      "a move",
+      (runId) => new MoveTextRunCommand({ pageIndex: 0, runId, dx: 50, dy: 0 }),
+      (run) => expect(run.bounds.x).toBeCloseTo(SAVED_X + 50, 1),
+    ],
+    [
+      "a colour",
+      (runId) => new SetColourCommand({ pageIndex: 0, runId, nextFill: RED }),
+      (run) => {
+        expect(run.fill.r).toBe(220);
+        expect(run.bounds.x).toBeCloseTo(SAVED_X, 1);
+      },
+    ],
+    [
+      "a size",
+      (runId) => new SetFontSizeCommand({ pageIndex: 0, runId, nextSize: 24 }),
+      (run) => expect(run.fontSize).toBeCloseTo(24, 1),
+    ],
+  ])("keeps %s in the saved file", async (_edit, command, check) => {
+    const { doc, run } = await openForm();
+
+    command(run.id).apply(doc);
+
+    const [reopened, ...rest] = await saved(doc);
+    expect(rest).toHaveLength(0);
+    expect(reopened.text).toBe("Open Source");
+    check(reopened);
+  });
+
+  test.each([
+    ["a form", scaledFormPdf],
+    ["a form inside a form", nestedFormPdf],
+  ])("typed before it saves as one line, in %s", async (_case, pdf) => {
+    const { doc, run } = await openForm(pdf());
+    const left = run.bounds.x;
 
     new EditTextCommand({
       pageIndex: 0,
@@ -108,47 +214,52 @@ describe("typing before text drawn inside a scaled form", () => {
       nextText: "Xk " + run.text,
     }).apply(doc);
 
-    const typed = run.mergedFromPtrs.find((ptr) => ptr !== label)!;
-    const typedRight = (() => {
-      const m = doc.module;
-      const box = m.pdfium.wasmExports.malloc(16);
-      m.FPDFPageObj_GetBounds(typed, box, box + 4, box + 8, box + 12);
-      const right = m.pdfium.getValue(box + 8, "float");
-      m.pdfium.wasmExports.free(box);
-      return right;
-    })();
-    const after = FORM_X + leftEdge(doc, label) * FORM_SCALE;
-    expect(after).toBeGreaterThan(typedRight);
-    expect(after - before).toBeGreaterThan(typedRight - before);
+    const [reopened, ...rest] = await saved(doc);
+    expect(rest).toHaveLength(0);
+    expect(reopened.text).toBe("Xk Open Source");
+    expect(reopened.bounds.x).toBeCloseTo(left, 0);
   });
 
-  test("undo puts it back where it was", async () => {
-    const doc = await EditorDocument.open(scaledFormPdf());
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(0));
-    const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
-    const label = run.mergedFromPtrs[0];
-    const before = leftEdge(doc, label);
-    const edit = new EditTextCommand({
-      pageIndex: 0,
-      runId: run.id,
-      nextText: "Xk " + run.text,
-    });
+  test.each([
+    [
+      "typing",
+      (id: string) =>
+        new EditTextCommand({
+          pageIndex: 0,
+          runId: id,
+          nextText: "Xk Open Source",
+        }),
+    ],
+    [
+      "a delete",
+      (id: string) => new DeleteObjectCommand({ pageIndex: 0, runId: id }),
+    ],
+    [
+      "a move",
+      (id: string) =>
+        new MoveTextRunCommand({ pageIndex: 0, runId: id, dx: 50, dy: 0 }),
+    ],
+  ])(
+    "undo of %s puts it back where it was, on the page and in the saved file",
+    async (_edit, command) => {
+      const { doc, run } = await openForm();
+      const label = run.mergedFromPtrs[0] || run.pdfiumObjPtr;
+      const edit = command(run.id);
 
-    edit.apply(doc);
-    edit.revert(doc);
+      edit.apply(doc);
+      edit.revert(doc);
 
-    expect(leftEdge(doc, label)).toBeCloseTo(before, 3);
-    expect(run.text).toBe("Open Source");
-  });
+      expect(leftEdge(doc, label)).toBeCloseTo(SAVED_X, 1);
+      const [reopened, ...rest] = await saved(doc);
+      expect(rest).toHaveLength(0);
+      expect(reopened.text).toBe("Open Source");
+      expect(reopened.bounds.x).toBeCloseTo(SAVED_X, 1);
+    },
+  );
 
   test("undo of a typing burst puts it back where it was, however often it is redone", async () => {
-    const doc = await EditorDocument.open(scaledFormPdf());
-    opened.push(doc);
-    PdfiumTextReader.populate(doc, doc.page(0));
-    const run = doc.page(0).runs.find((r) => r.text.includes("Open"))!;
-    const label = run.mergedFromPtrs[0];
-    const before = leftEdge(doc, label);
+    const { doc, run } = await openForm();
+    const label = run.mergedFromPtrs[0] || run.pdfiumObjPtr;
     const history = new HistoryStack();
     for (const prefix of ["X ", "XY "])
       history.execute(
@@ -171,7 +282,95 @@ describe("typing before text drawn inside a scaled form", () => {
     expect(leftEdge(doc, label)).toBeCloseTo(redone, 3);
     history.undo(doc);
 
-    expect(leftEdge(doc, label)).toBeCloseTo(before, 3);
+    expect(leftEdge(doc, label)).toBeCloseTo(SAVED_X, 1);
     expect(run.text).toBe("Open Source");
+  });
+});
+
+// A red 100pt square drawn by a quarter-scale form.
+function formImagePdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+          "/Resources << /XObject << /Fm1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          `q ${FORM_SCALE} 0 0 ${FORM_SCALE} ${FORM_X} 500 cm /Fm1 Do Q\n`,
+        ),
+      },
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Form /BBox [0 0 2000 2000] " +
+            "/Resources << /XObject << /Im1 6 0 R >> >>",
+          "q 400 0 0 400 0 0 cm /Im1 Do Q\n",
+        ),
+      },
+      {
+        num: 6,
+        body: streamBody(
+          "/Type /XObject /Subtype /Image /Width 1 /Height 1 " +
+            "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /ASCIIHexDecode",
+          "FF0000>",
+        ),
+      },
+    ],
+    1,
+  );
+}
+
+describe("an image drawn inside a form", () => {
+  async function openImage(bytes: Uint8Array = formImagePdf()) {
+    const doc = await EditorDocument.open(bytes);
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    return { doc, images: doc.page(0).images };
+  }
+  async function savedImages(doc: EditorDocument) {
+    const { images } = await openImage(
+      new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+    );
+    return images;
+  }
+
+  test("is gone from the saved file once deleted, and back in place after undo", async () => {
+    const { doc, images } = await openImage();
+    const [image] = images;
+    const box = { ...image.bounds };
+    const remove = new DeleteImageCommand({ pageIndex: 0, imageId: image.id });
+
+    remove.apply(doc);
+    expect(await savedImages(doc)).toHaveLength(0);
+
+    remove.revert(doc);
+    const [back, ...rest] = await savedImages(doc);
+    expect(rest).toHaveLength(0);
+    expect(back.bounds.x).toBeCloseTo(box.x, 1);
+    expect(back.bounds.width).toBeCloseTo(box.width, 1);
+  });
+
+  test("keeps a move in the saved file", async () => {
+    const { doc, images } = await openImage();
+    const [image] = images;
+    const nextBounds = { ...image.bounds, x: image.bounds.x + 60 };
+
+    new SetImageTransformCommand({
+      pageIndex: 0,
+      imageId: image.id,
+      nextBounds,
+    }).apply(doc);
+
+    const [moved, ...rest] = await savedImages(doc);
+    expect(rest).toHaveLength(0);
+    expect(moved.bounds.x).toBeCloseTo(nextBounds.x, 1);
+    expect(moved.bounds.width).toBeCloseTo(nextBounds.width, 1);
   });
 });

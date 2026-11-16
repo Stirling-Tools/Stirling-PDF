@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
@@ -51,6 +52,8 @@ export class DeleteObjectCommand implements Command {
       page.setRuns(page.runs.filter((r) => r.id !== run.id));
       return;
     }
+    // Lifted first, so undo can put the objects back: nothing reinserts into a form.
+    liftRunToPage(doc, page, run);
     // Read on every apply: redoing an earlier step draws the run in new objects.
     this.snapshot = run.snapshot();
     this.removedRun = run;

@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -74,6 +75,7 @@ export class SetFontFamilyCommand implements Command {
       return;
     }
     const m = doc.module;
+    liftRunToPage(doc, page, run);
 
     // Read on every apply: redoing an earlier step draws the run in new objects.
     this.prev = snapshotRun(run);

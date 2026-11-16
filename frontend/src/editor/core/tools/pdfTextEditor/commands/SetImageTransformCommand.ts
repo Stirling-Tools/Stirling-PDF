@@ -1,3 +1,4 @@
+import { liftImageToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Affine, PageRect } from "@editor/tools/pdfTextEditor/types";
@@ -32,6 +33,7 @@ export class SetImageTransformCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
+    if (!liftImageToPage(doc, page, img)) return;
     let prevBounds = this.prevBounds;
     let prevMatrix = this.prevMatrix;
     if (prevBounds === null || prevMatrix === null) {

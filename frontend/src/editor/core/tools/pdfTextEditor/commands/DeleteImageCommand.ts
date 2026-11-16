@@ -1,3 +1,4 @@
+import { liftImageToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
@@ -25,6 +26,8 @@ export class DeleteImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img) return;
+    // An image the form keeps drawing must not vanish from the model alone: the saved file would still show it.
+    if (!liftImageToPage(doc, page, img)) return;
     if (this.snapshot === null) {
       this.snapshot = img.snapshot();
       this.cachedObjPtr = img.pdfiumObjPtr;
