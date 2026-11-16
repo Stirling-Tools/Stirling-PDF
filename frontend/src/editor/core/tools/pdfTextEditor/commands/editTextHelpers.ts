@@ -17,8 +17,16 @@ import {
   tryResolveCharcodes,
 } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import {
+  lettersWithoutGlyph,
+  ligatureCodes,
+  resetFontGlyphs,
+} from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
-import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  deviceFamilyOf,
+  emitDeviceFontTextObject,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   hasRtl,
   isRtlBase,
@@ -163,7 +171,7 @@ const charCoverage = new Map<number, Map<string, boolean>>();
 /** Doc-scoped reset: PDFium reuses font pointers across documents. */
 export function resetCharCoverageCache(): void {
   charCoverage.clear();
-  glyphOutlines.clear();
+  resetFontGlyphs();
 }
 
 // True when the emit path will map EVERY char in this font. Same condition
@@ -209,41 +217,13 @@ export function charcodesResolveFully(
   return true;
 }
 
-const glyphOutlines = new Map<number, Map<string, boolean>>();
-
-/**
- * True when `fontPtr` has an outline for some of `text`'s letters but not all:
- * a subset font maps the rest to a code it holds no glyph for, so they draw blank.
- * A font PDFium cannot read outlines from at all is not judged.
- */
+/** True when `fontPtr` has no glyph of its own for one of `text`'s letters, as {@link lettersWithoutGlyph} judges it. */
 export function lacksGlyphsFor(
   m: WrappedPdfiumModule,
   fontPtr: number,
   text: string,
 ): boolean {
-  if (!fontPtr) return false;
-  let perFont = glyphOutlines.get(fontPtr);
-  if (!perFont) {
-    perFont = new Map();
-    glyphOutlines.set(fontPtr, perFont);
-  }
-  let drawn = false;
-  let blank = false;
-  // Control and private-use codes reach a glyph by the font's own code, never by Unicode.
-  for (const ch of new Set(text.replace(/[\s\p{C}]+/gu, ""))) {
-    let has = perFont.get(ch);
-    if (has === undefined) {
-      try {
-        has = !!m.FPDFFont_GetGlyphPath(fontPtr, ch.codePointAt(0)!, 12);
-      } catch {
-        has = false;
-      }
-      perFont.set(ch, has);
-    }
-    if (has) drawn = true;
-    else blank = true;
-  }
-  return drawn && blank;
+  return lettersWithoutGlyph(m, fontPtr, text).length > 0;
 }
 
 /** Strip characters a base-14 (WinAnsi) font cannot render. */
@@ -958,7 +938,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     }
     if (
       strategyUsed === null &&
-      lacksGlyphsFor(m, opts.originalFontPtr, text)
+      lacksGlyphsFor(m, opts.originalFontPtr, text) &&
+      !setLigatureCodes(ptr, text)
     ) {
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return emitBase14(text, x);
@@ -1028,6 +1009,17 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     }
     return ptr;
   };
+
+  function setLigatureCodes(ptr: number, text: string): boolean {
+    const codes = ligatureCodes(
+      m,
+      opts.doc.docPtr,
+      opts.page.pagePtr,
+      opts.originalFontPtr,
+      text,
+    );
+    return codes !== null && setCharcodesOn(m, ptr, codes);
+  }
 
   // A guessed code that reads back as another character drew that character. A font that reads back nothing has no mapping to judge by.
   function readsBackAs(ptr: number, text: string): boolean {
@@ -1440,7 +1432,11 @@ function emitFontSpans(
       rotation: undefined,
       fontSpans: undefined,
       originalFontPtr: fontPtr || opts.originalFontPtr,
-      fallbackFamily: span.fallbackFamily ?? opts.fallbackFamily,
+      // A word already typed in a device face goes on in that family, which the name inside its embedded copy does not spell.
+      fallbackFamily:
+        deviceFamilyOf(opts.doc, fontPtr) ??
+        span.fallbackFamily ??
+        opts.fallbackFamily,
       tags: sliceTags(opts.tags, start, end),
       outTexts: texts,
     });

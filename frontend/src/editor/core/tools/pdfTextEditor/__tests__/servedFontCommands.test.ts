@@ -17,6 +17,7 @@ const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
@@ -145,6 +146,17 @@ test("duplicates a line whose missing letters come from a served lookalike", asy
 
   cmd.revert(doc);
   expect(page.runs).toHaveLength(before);
+});
+
+test("goes on drawing a typed word in its served lookalike as more of it is typed", async () => {
+  const doc = await open("mushroom-life.pdf");
+  const run = doc.page(0).runs.find((r) => r.text === "Spore Stage")!;
+  setClosestFont(run.fontId, "Liberation Serif");
+
+  for (const nextText of ["Z Stage", "Zq Stage"])
+    new EditTextCommand({ pageIndex: 0, runId: run.id, nextText }).apply(doc);
+
+  expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
 });
 
 test("redo keeps a served font after the server's font list is reloaded", async () => {

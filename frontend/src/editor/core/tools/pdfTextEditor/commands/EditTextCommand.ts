@@ -42,6 +42,7 @@ import {
   sourceFontSpans,
   planParagraphEdit,
   planPartialEdit,
+  redrawingUndrawableWhitespace,
   revertPartialEditPlan,
   setObjText,
   type ParagraphEditPlan,
@@ -427,11 +428,19 @@ export class EditTextCommand implements Command {
       keepsFont &&
       leftToRight
     ) {
-      const paraPlan = planParagraphEdit(
+      const planned = planParagraphEdit(
         run,
         this.prevText ?? "",
         this.nextText,
       );
+      const paraPlan =
+        planned &&
+        redrawingUndrawableWhitespace(
+          doc.module,
+          planned,
+          page.pagePtr,
+          doc.docPtr,
+        );
       if (paraPlan) {
         this.paragraphPlan = paraPlan;
         this.prevParagraphSlots = paraPlan.prevSlots;
@@ -1074,7 +1083,8 @@ export class EditTextCommand implements Command {
           for (const op of entry.plan?.ops ?? [])
             if (op.type === "modify" && op.subRunIdx !== undefined)
               setObjText(
-                m,
+                doc,
+                page,
                 prevSlot.mergedFromPtrs[op.subRunIdx],
                 prevSlot.mergedFromTexts[op.subRunIdx] ?? "",
               );
@@ -1112,7 +1122,8 @@ export class EditTextCommand implements Command {
           for (const op of entry.plan.ops) {
             if (op.type === "modify" && op.subRunIdx !== undefined) {
               setObjText(
-                m,
+                doc,
+                page,
                 prevSlot.mergedFromPtrs[op.subRunIdx],
                 prevSlot.mergedFromTexts[op.subRunIdx] ?? "",
               );
@@ -1178,7 +1189,8 @@ export class EditTextCommand implements Command {
       for (const op of this.partialPlan.ops) {
         if (op.type === "modify" && op.subRunIdx !== undefined) {
           setObjText(
-            m,
+            doc,
+            page,
             this.prevMergedFromPtrs[op.subRunIdx],
             this.prevMergedFromTexts[op.subRunIdx] ?? "",
           );

@@ -34,18 +34,30 @@ import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks"
 import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { deviceFamilyOf } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { setCharcodesOn } from "@editor/tools/pdfTextEditor/charcode/charcodeRegistry";
+import { ligatureCodes } from "@editor/tools/pdfTextEditor/charcode/fontGlyphs";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
-/** Set the text of an EXISTING PDFium text object, preserving its font. */
+/** Set the text of an EXISTING PDFium text object, preserving its font and any ligature its letters can only be drawn with. */
 export function setObjText(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  doc: EditorDocument,
+  page: Page,
   ptr: number,
   text: string,
 ): void {
   if (!ptr) return;
+  const m = doc.module;
+  const codes = ligatureCodes(
+    m,
+    doc.docPtr,
+    page.pagePtr,
+    objFontPtr(m, ptr),
+    text,
+  );
+  if (codes && setCharcodesOn(m, ptr, codes)) return;
   const buf = writeUtf16(m, text);
   try {
     m.FPDFText_SetText(ptr, buf);
@@ -1000,7 +1012,7 @@ export function applyPartialEditPlan(
       // can reuse the same embedded font via the charcode path.
       const modFontPtr = objFontPtr(m, ptr);
       const modTags = readTagMarks(m, ptr);
-      setObjText(m, ptr, modText);
+      setObjText(doc, page, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
           shiftAlongPage(ptr, offset);
@@ -1211,7 +1223,12 @@ export function applyPartialEditPlan(
         const firstInk = objBoundsLR(m, ptrs[0], anchorX).x;
         const drift = anchorX - firstInk;
         // Same first glyph, so the redrawn piece starts where the old one did instead of creeping a side bearing per keystroke.
-        if (pieceText[0] === insertText[0] && Math.abs(drift) > 0.05) {
+        // A piece that opens with a space starts at the space, not at its first ink, so there is no bearing to take back.
+        if (
+          pieceText[0] === insertText[0] &&
+          /\S/.test(insertText[0]) &&
+          Math.abs(drift) > 0.05
+        ) {
           for (const ptr of ptrs) transformObject(m, ptr, 1, 0, 0, 1, drift, 0);
           realRightEdge += drift;
           measuredWidth = realRightEdge - anchorX;
@@ -1584,6 +1601,27 @@ export function planModifiesUndrawableWhitespace(
   });
 }
 
+/**
+ * `plan` with each line that {@link planModifiesUndrawableWhitespace} holds for left to be redrawn whole.
+ * Settled before the edit is applied, because its undo puts back the objects the plan says were taken off.
+ */
+export function redrawingUndrawableWhitespace(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  plan: ParagraphEditPlan,
+  pagePtr: number,
+  docPtr: number,
+): ParagraphEditPlan {
+  return {
+    ...plan,
+    perSlot: plan.perSlot.map((entry) =>
+      entry.plan &&
+      planModifiesUndrawableWhitespace(m, entry.plan, pagePtr, docPtr)
+        ? { ...entry, plan: null }
+        : entry,
+    ),
+  };
+}
+
 /** Read a text object's own font handle (0 when unavailable). */
 function objFontPtr(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
@@ -1804,11 +1842,8 @@ export function applyParagraphEditPlan(
     { plan: PartialEditPlan | null; prevLine: string; nextLine: string }
   >();
   for (const entry of paraPlan.perSlot) {
-    const undrawable =
-      entry.plan &&
-      planModifiesUndrawableWhitespace(m, entry.plan, page.pagePtr, doc.docPtr);
     planBySlot.set(entry.slotIdx, {
-      plan: undrawable ? null : entry.plan,
+      plan: entry.plan,
       prevLine: entry.prevLine,
       nextLine: entry.nextLine,
     });

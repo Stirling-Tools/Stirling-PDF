@@ -14,6 +14,7 @@ interface TextPageModule {
   FPDFText_CountChars?: (textPage: number) => number;
   FPDFText_GetUnicode?: (textPage: number, idx: number) => number;
   FPDFText_GetTextObject?: (textPage: number, idx: number) => number;
+  FPDFText_IsGenerated?: (textPage: number, idx: number) => number;
 }
 
 interface FontReadModule {
@@ -95,6 +96,8 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
     // in a given font gets the next sequential CID starting at 1.
     const perFontNext = new Map<number, number>();
     for (let i = 0; i < count; i++) {
+      // A space the text page inferred from a gap is given the object before it, whose font drew no glyph for it.
+      if (tpMod.FPDFText_IsGenerated?.(textPage, i) === 1) continue;
       const unicode = drawnCodePoint(tpMod.FPDFText_GetUnicode(textPage, i));
       if (!unicode) continue;
       const obj = tpMod.FPDFText_GetTextObject(textPage, i);
