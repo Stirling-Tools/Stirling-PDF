@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.saml2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -126,10 +125,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                         isSsoUser,
                         isSAML2User);
 
-                if (userExists
-                        && hasPassword
-                        && !isSsoUser
-                        && saml2Properties.getAutoCreateUser()) {
+                if (userExists && hasPassword && !isSsoUser) {
                     log.debug(
                             "User {} exists with password but is not an SSO user, redirecting to logout",
                             username);
@@ -263,7 +259,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             return TauriOAuthUtils.defaultTauriCallbackPath(contextPath);
         }
         return extractRedirectPathFromCookie(request)
-                .filter(CustomSaml2AuthenticationSuccessHandler::isLocalRedirectPath)
+                .filter(TauriOAuthUtils::isLocalRedirectPath)
                 .orElseGet(() -> defaultCallbackPath(contextPath));
     }
 
@@ -294,23 +290,6 @@ public class CustomSaml2AuthenticationSuccessHandler
             return DEFAULT_CALLBACK_PATH;
         }
         return contextPath + DEFAULT_CALLBACK_PATH;
-    }
-
-    private static boolean isLocalRedirectPath(String path) {
-        try {
-            URI uri = URI.create(path);
-            String decoded = uri.getPath();
-            return !uri.isAbsolute()
-                    && uri.getRawAuthority() == null
-                    && uri.getRawFragment() == null
-                    && decoded != null
-                    && decoded.startsWith("/")
-                    && !decoded.startsWith("//")
-                    && !decoded.contains("\\")
-                    && decoded.chars().noneMatch(c -> c < 32 || c == 127);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {

@@ -186,15 +186,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 loginMethod = UserLoginType.STRINGUSER;
             }
 
-            // Retrieve all active sessions for the user
-            List<SessionInformation> sessionsInformations =
-                    sessionPersistentRegistry.getAllSessions(principal, false);
-
             // Check if the user exists, is disabled, or needs session invalidation
             if (username != null) {
                 log.debug("Validating user: {}", username);
-                boolean isUserExists = userService.usernameExistsIgnoreCase(username);
-                boolean isUserDisabled = userService.isUserDisabled(username);
+                // One read for both answers: the two helpers each loaded the same row, with its
+                // EAGER authorities and team, on every request.
+                Optional<User> existingUser = userService.findByUsernameIgnoreCase(username);
+                boolean isUserExists = existingUser.isPresent();
+                boolean isUserDisabled = existingUser.map(user -> !user.isEnabled()).orElse(false);
 
                 boolean notSsoLogin =
                         !UserLoginType.OAUTH2USER.equals(loginMethod)
@@ -222,6 +221,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 if (!isUserExists || isUserDisabled) {
                     log.info(
                             "Invalidating session for disabled or non-existent user: {}", username);
+                    // Only this branch reads the sessions, so the query stays off the happy path.
+                    List<SessionInformation> sessionsInformations =
+                            sessionPersistentRegistry.getAllSessions(principal, false);
                     for (SessionInformation sessionsInformation : sessionsInformations) {
                         sessionsInformation.expireNow();
                         sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());
@@ -300,17 +302,22 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // For API routes, only skip filter for these public endpoints
         String[] publicApiPatterns = {
-            contextPath + "/api/v1/info/status",
-            contextPath + "/api/v1/auth/login",
-            contextPath + "/api/v1/auth/refresh",
-            contextPath + "/api/v1/auth/me",
-            contextPath + "/api/v1/invite/validate",
-            contextPath + "/api/v1/invite/accept",
-            contextPath + "/api/v1/ui-data/footer-info"
+            "/api/v1/info/status",
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/invite/validate",
+            "/api/v1/invite/accept",
+            "/api/v1/ui-data/footer-info"
         };
 
+        String normalizedUri;
+        try {
+            normalizedUri = RequestUriUtils.normalizeUri(contextPath, uri);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
         for (String pattern : publicApiPatterns) {
-            if (uri.startsWith(pattern)) {
+            if (normalizedUri.startsWith(pattern)) {
                 return true;
             }
         }

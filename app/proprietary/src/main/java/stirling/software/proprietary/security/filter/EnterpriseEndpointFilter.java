@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.common.util.RequestUriUtils;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
@@ -29,17 +30,16 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (isPrometheusEndpointRequest(request) && !licenseService.isRunningProOrHigher()) {
-            // Allow only health checks to pass through for non-pro users
-            String uri = request.getRequestURI();
+        String trimmedUri;
+        try {
+            trimmedUri =
+                    RequestUriUtils.normalizeUri(request.getContextPath(), request.getRequestURI());
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
-            // Strip the context path
-            String contextPath = request.getContextPath();
-            String trimmedUri =
-                    (contextPath != null && uri.startsWith(contextPath))
-                            ? uri.substring(contextPath.length())
-                            : uri;
-
+        if (trimmedUri.contains("/actuator/") && !licenseService.isRunningProOrHigher()) {
             boolean isHealthCheck =
                     trimmedUri.startsWith("/actuator/health")
                             || "/health".equals(trimmedUri)
@@ -53,9 +53,5 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
-    }
-
-    private boolean isPrometheusEndpointRequest(HttpServletRequest request) {
-        return request.getRequestURI().contains("/actuator/");
     }
 }

@@ -388,7 +388,12 @@ class SanitizeControllerTest {
 
             SanitizePdfRequest request = new SanitizePdfRequest();
             request.setFileInput(pdfFile);
-            // All flags left null
+            request.setRemoveJavaScript(null);
+            request.setRemoveEmbeddedFiles(null);
+            request.setRemoveXMPMetadata(null);
+            request.setRemoveMetadata(null);
+            request.setRemoveLinks(null);
+            request.setRemoveFonts(null);
 
             when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));

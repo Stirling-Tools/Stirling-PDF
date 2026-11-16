@@ -85,6 +85,23 @@ class TempFileCleanupServiceMoreTest {
                 file, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
     }
 
+    /**
+     * Points java.io.tmpdir at a throwaway root so the sweep under test never touches the
+     * machine's.
+     */
+    private void withJvmTmpDir(Path root, Runnable action) {
+        String oldTmp = System.getProperty("java.io.tmpdir");
+        try {
+            Files.createDirectories(root);
+            System.setProperty("java.io.tmpdir", root.toString());
+            action.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.setProperty("java.io.tmpdir", oldTmp);
+        }
+    }
+
     @Nested
     @DisplayName("isContainerMode")
     class ContainerMode {
@@ -165,7 +182,7 @@ class TempFileCleanupServiceMoreTest {
             Path stale = Files.createFile(customTempDir.resolve("stirling-pdf-stale.tmp"));
             backdate(stale, 48L * 60 * 60 * 1000); // 48h old, beyond non-container 24h cutoff
 
-            cleanupService.init();
+            withJvmTmpDir(tempDir.resolve("jvm-tmp-cleanup"), cleanupService::init);
 
             assertThat(Files.exists(stale)).isFalse();
         }
@@ -252,6 +269,26 @@ class TempFileCleanupServiceMoreTest {
 
             assertThat(deleted).isGreaterThanOrEqualTo(1);
             assertThat(Files.exists(stale)).isFalse();
+        }
+
+        @Test
+        @DisplayName("does not touch JPDFium extraction dirs or their lock")
+        void skipsJpdfiumExtractionDirs() throws Exception {
+            when(tempFileManagement.isCleanupSystemTemp()).thenReturn(true);
+            when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
+            when(registry.contains(any(File.class))).thenReturn(false);
+
+            Path live = Files.createDirectories(systemTempDir.resolve("jpdfium-live"));
+            Files.writeString(live.resolve("jpdfium.dll"), "dll");
+            Path lock = Files.writeString(live.resolve(".lock"), "");
+            // Older than the five-minute empty-file rule that would delete it.
+            backdate(lock, 10L * 60 * 1000);
+
+            ReflectionTestUtils.invokeMethod(
+                    cleanupService, "cleanupUnregisteredFiles", true, true, 3600000L);
+
+            assertThat(Files.exists(lock)).isTrue();
+            assertThat(Files.exists(live.resolve("jpdfium.dll"))).isTrue();
         }
     }
 

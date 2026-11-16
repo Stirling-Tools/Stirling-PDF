@@ -56,6 +56,7 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
@@ -116,6 +117,7 @@ public class PaygWalletController {
     private final UserTeamResolver userTeamResolver;
     private final SaasTeamExtensionsRepository teamExtensionsRepository;
     private final FleetSeatService fleetSeats;
+    private final EnterpriseEntitlementService enterprise;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -129,8 +131,10 @@ public class PaygWalletController {
             PrepaidBundleService prepaidBundleService,
             UserTeamResolver userTeamResolver,
             SaasTeamExtensionsRepository teamExtensionsRepository,
-            FleetSeatService fleetSeats) {
+            FleetSeatService fleetSeats,
+            EnterpriseEntitlementService enterprise) {
         this.fleetSeats = fleetSeats;
+        this.enterprise = Objects.requireNonNull(enterprise);
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -267,8 +271,29 @@ public class PaygWalletController {
                                 : billing.includedPeriodStart().toLocalDate().toString(),
                         billing.includedPeriodEnd() == null
                                 ? null
-                                : billing.includedPeriodEnd().toLocalDate().toString());
+                                : billing.includedPeriodEnd().toLocalDate().toString(),
+                        enterpriseHolding(teamId));
         return ResponseEntity.ok(body);
+    }
+
+    private WalletSnapshotResponse.EnterpriseHolding enterpriseHolding(Long teamId) {
+        return enterprise
+                .findActive(teamId)
+                .map(
+                        ent -> {
+                            long used =
+                                    ledgerRepo.sumEnterprisePdfs(
+                                            teamId, ent.periodStart(), ent.periodEnd());
+                            return new WalletSnapshotResponse.EnterpriseHolding(
+                                    ent.status(),
+                                    ent.periodStart().toString() + "Z",
+                                    ent.periodEnd().toString() + "Z",
+                                    ent.accessUntil().toString() + "Z",
+                                    ent.agreedSeats(),
+                                    ent.annualVolume(),
+                                    used);
+                        })
+                .orElse(null);
     }
 
     /**
@@ -552,6 +577,7 @@ public class PaygWalletController {
                 0L,
                 null,
                 BILLING_MODE_PAYG,
+                null,
                 null,
                 null,
                 null);

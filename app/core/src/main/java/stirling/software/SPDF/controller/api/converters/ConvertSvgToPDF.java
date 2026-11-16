@@ -136,9 +136,11 @@ public class ConvertSvgToPDF {
         }
     }
 
+    /** Error bodies are plain text whatever the request negotiates. */
     private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.status(status)
+                .contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
                 .contentLength(body.length)
                 .body(new ByteArrayResource(body));
     }

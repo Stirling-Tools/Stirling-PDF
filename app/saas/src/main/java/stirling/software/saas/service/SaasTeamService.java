@@ -428,10 +428,9 @@ public class SaasTeamService {
                     || oldTeam.getId().equals(team.getId())) {
                 continue; // keep the durable home; skip the team being joined
             }
-            // Keep any team the user leads that still has other members: leaving it would orphan
-            // them (members, zero leaders). Solo/empty led teams and plain memberships still leave.
-            if (existingMembership.isLeader()
-                    && membershipRepository.countByTeamId(oldTeam.getId()) > 1) {
+            // A transferred team can be non-home and have only its successor left. Retain its
+            // owner even when it is unpaid: content and wallet value outlive subscriptions.
+            if (existingMembership.isLeader()) {
                 continue;
             }
             membershipRepository.delete(existingMembership);

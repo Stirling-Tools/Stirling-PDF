@@ -73,7 +73,6 @@ class ToolUsagePostgresConcurrencyTest {
     @BeforeEach
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
-        properties.getSystem().setEnableAnalytics(true);
         trackingService =
                 new ToolUsageTrackingService(
                         usageRepository, chainRepository, new ToolKeyRegistry(), properties);

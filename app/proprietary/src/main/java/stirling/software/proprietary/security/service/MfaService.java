@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.service;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,16 +68,11 @@ public class MfaService {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
-        // Clear existing values and flush the removals before inserting a new secret. This keeps
-        // the (user_id, setting_key) PK satisfied even when the persistence context re-inserts the
-        // same keys within a single transaction.
+        // Flush the removals before the re-insert below: Hibernate executes a collection's removals
+        // before its additions, so the (user_id, setting_key) primary key stays satisfied.
         settings.remove(MFA_SECRET_KEY);
         settings.remove(MFA_LAST_USED_STEP_KEY);
-        if (managedUser != null && managedUser.getId() != null) {
-            userRepository.deleteSettingsByUserIdAndKeys(
-                    managedUser.getId(), Arrays.asList(MFA_SECRET_KEY, MFA_LAST_USED_STEP_KEY));
-            userRepository.flush();
-        }
+        userRepository.flush();
         settings.put(MFA_SECRET_KEY, secret);
         persist(managedUser);
     }
@@ -194,7 +188,7 @@ public class MfaService {
         if (value == null) {
             value = "false";
         }
-        log.info("MFA required for user {}: {}", user.getUsername(), value);
+        log.debug("MFA required for user {}: {}", user.getUsername(), value);
         return Boolean.parseBoolean(value);
     }
 

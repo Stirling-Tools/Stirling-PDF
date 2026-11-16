@@ -141,29 +141,27 @@ public class ControllerAuditAspect {
         String previousSource = MDC.get("auditSource");
         String previousIp = MDC.get("auditIp");
 
-        // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
-        // propagation
-        // MDC.put is necessary for background threads to inherit audit context
-        String capturedPrincipal = previousPrincipal;
-        if (capturedPrincipal == null) {
-            capturedPrincipal = auditService.captureCurrentPrincipal();
-            MDC.put("auditPrincipal", capturedPrincipal);
-        }
-
-        String capturedOrigin = previousOrigin;
-        if (capturedOrigin == null) {
-            capturedOrigin = auditService.captureCurrentOrigin();
-            MDC.put("auditOrigin", capturedOrigin);
-        }
-
-        String capturedIp = previousIp;
-        if (capturedIp == null && req != null) {
-            capturedIp = auditService.extractClientIp(req);
-            if (capturedIp != null) {
-                MDC.put("auditIp", capturedIp);
-            }
-        }
         try {
+            String capturedPrincipal = previousPrincipal;
+            if (capturedPrincipal == null) {
+                capturedPrincipal = auditService.captureCurrentPrincipal();
+                MDC.put("auditPrincipal", capturedPrincipal);
+            }
+
+            String capturedOrigin = previousOrigin;
+            if (capturedOrigin == null) {
+                capturedOrigin = auditService.captureCurrentOrigin();
+                MDC.put("auditOrigin", capturedOrigin);
+            }
+
+            String capturedIp = previousIp;
+            if (capturedIp == null && req != null) {
+                capturedIp = auditService.extractClientIp(req);
+                if (capturedIp != null) {
+                    MDC.put("auditIp", capturedIp);
+                }
+            }
+
             // Avoid duplicate events for controller methods explicitly annotated with @Audited.
             // @Audited methods are audited by AuditAspect.
             if (auditedAnnotation != null) {

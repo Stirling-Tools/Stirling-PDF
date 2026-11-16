@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -36,11 +37,14 @@ class ConvertPDFToExcelControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -81,7 +85,7 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
 
             // tabula may or may not find tables in an empty page
             assertNotNull(response);

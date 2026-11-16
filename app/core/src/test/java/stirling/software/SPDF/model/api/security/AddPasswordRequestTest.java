@@ -15,20 +15,20 @@ class AddPasswordRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("keyLength defaults to 256 and permission flags are null")
+        @DisplayName("keyLength defaults to 256 and permission flags are false")
         void defaults() {
             AddPasswordRequest req = new AddPasswordRequest();
             assertThat(req.getKeyLength()).isEqualTo(256);
             assertThat(req.getOwnerPassword()).isNull();
             assertThat(req.getPassword()).isNull();
-            assertThat(req.getPreventAssembly()).isNull();
-            assertThat(req.getPreventExtractContent()).isNull();
-            assertThat(req.getPreventExtractForAccessibility()).isNull();
-            assertThat(req.getPreventFillInForm()).isNull();
-            assertThat(req.getPreventModify()).isNull();
-            assertThat(req.getPreventModifyAnnotations()).isNull();
-            assertThat(req.getPreventPrinting()).isNull();
-            assertThat(req.getPreventPrintingFaithful()).isNull();
+            assertThat(req.getPreventAssembly()).isFalse();
+            assertThat(req.getPreventExtractContent()).isFalse();
+            assertThat(req.getPreventExtractForAccessibility()).isFalse();
+            assertThat(req.getPreventFillInForm()).isFalse();
+            assertThat(req.getPreventModify()).isFalse();
+            assertThat(req.getPreventModifyAnnotations()).isFalse();
+            assertThat(req.getPreventPrinting()).isFalse();
+            assertThat(req.getPreventPrintingFaithful()).isFalse();
         }
     }
 
@@ -71,7 +71,7 @@ class AddPasswordRequestTest {
     }
 
     @Nested
-    @DisplayName("equals/hashCode/toString")
+    @DisplayName("equals/hashCode")
     class EqualityContract {
 
         @Test
@@ -101,14 +101,6 @@ class AddPasswordRequestTest {
         void notEqualToOthers() {
             AddPasswordRequest a = new AddPasswordRequest();
             assertThat(a).isNotEqualTo(null).isNotEqualTo("string");
-        }
-
-        @Test
-        @DisplayName("toString contains class name and a field value")
-        void toStringContent() {
-            AddPasswordRequest a = new AddPasswordRequest();
-            a.setPassword("secret");
-            assertThat(a.toString()).contains("AddPasswordRequest").contains("secret");
         }
     }
 }

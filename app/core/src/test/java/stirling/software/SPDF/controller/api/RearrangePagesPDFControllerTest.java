@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -49,6 +50,7 @@ class RearrangePagesPDFControllerTest {
                             File f =
                                     Files.createTempFile("test", inv.<String>getArgument(0))
                                             .toFile();
+                            f.deleteOnExit();
                             TempFile tf = mock(TempFile.class);
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
@@ -113,6 +115,55 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
+    void deletePages_outOfRangePageIsAnError() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(file);
+        request.setPageNumbers("99");
+
+        PDDocument mockDoc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
+        when(mockDoc.getNumberOfPages()).thenReturn(3);
+
+        IllegalArgumentException e =
+                assertThrows(IllegalArgumentException.class, () -> controller.deletePages(request));
+        assertTrue(e.getMessage().contains("99"));
+        verify(mockDoc, never()).removePage(anyInt());
+    }
+
+    @Test
+    void pageSelection_acceptsRealPagesAndRejectsTheRest() {
+        assertDoesNotThrow(
+                () ->
+                        stirling.software.common.util.GeneralUtils.requireValidPageSelection(
+                                "1,2-3,all,2n+1,2-, 1 - 3 ,1,5,0,0-2", 3));
+        // 5 alone matches nothing; "1,5" above is fine because page 1 exists.
+        for (String bad : List.of("0", "-1", "not-a-page", "99", "5-9", ",,", "3-2", "5")) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            stirling.software.common.util.GeneralUtils.requireValidPageSelection(
+                                    bad, 3),
+                    bad);
+        }
+    }
+
+    @Test
+    void deletePages_refusesToRemoveEveryPage() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(file);
+        // pageNumbers omitted: the shared default is "all".
+
+        PDDocument mockDoc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
+        when(mockDoc.getNumberOfPages()).thenReturn(3);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.deletePages(request));
+        verify(mockDoc, never()).removePage(anyInt());
+    }
+
+    @Test
     void testRearrangePages_ReverseOrder() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();
@@ -136,6 +187,25 @@ class RearrangePagesPDFControllerTest {
             assertSame(originals.get(2), mutatedSource.get(0));
             assertSame(originals.get(1), mutatedSource.get(1));
             assertSame(originals.get(0), mutatedSource.get(2));
+        }
+    }
+
+    @Test
+    void unknownCustomModeIsAClearErrorNamingTheModes() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("SHUFFLE");
+
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException error =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(error.getMessage().contains("REVERSE_ORDER"), error.getMessage());
         }
     }
 
@@ -264,6 +334,168 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
+    void testRearrangePages_OddEvenMerge_EvenPageCount() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            // Inverse of oddEvenSplit: [0, 2, 1, 3] for 4 pages
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(4, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(2), mutated.get(1));
+            assertSame(originals.get(1), mutated.get(2));
+            assertSame(originals.get(3), mutated.get(3));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_OddPageCount() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(5)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            // Inverse of oddEvenSplit: [0, 3, 1, 4, 2] for 5 pages
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(5, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(3), mutated.get(1));
+            assertSame(originals.get(1), mutated.get(2));
+            assertSame(originals.get(4), mutated.get(3));
+            assertSame(originals.get(2), mutated.get(4));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenSplitThenMerge_RestoresOrder() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest splitRequest = new RearrangePagesRequest();
+        splitRequest.setFileInput(file);
+        splitRequest.setPageNumbers("");
+        splitRequest.setCustomMode("ODD_EVEN_SPLIT");
+
+        // Give each page a distinct MediaBox width so pages are distinguishable after a
+        // save/reload round-trip (COSDictionary identity does not survive serialization).
+        try (PDDocument realDoc = new PDDocument()) {
+            for (int i = 0; i < 5; i++) {
+                PDPage page =
+                        new PDPage(
+                                new org.apache.pdfbox.pdmodel.common.PDRectangle(
+                                        100 + i * 10, 200));
+                realDoc.addPage(page);
+            }
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> splitResponse = controller.rearrangePages(splitRequest);
+            assertNotNull(splitResponse);
+            assertEquals(200, splitResponse.getStatusCode().value());
+
+            // The split output is a fresh PDF (the controller closed the source doc after
+            // saving). Feed those bytes back through a second merge request and verify the
+            // original page order is restored (undo guarantee).
+            byte[] splitBytes;
+            try (var in = splitResponse.getBody().getInputStream();
+                    var baos = new ByteArrayOutputStream()) {
+                in.transferTo(baos);
+                splitBytes = baos.toByteArray();
+            }
+
+            MockMultipartFile splitFile =
+                    new MockMultipartFile(
+                            "fileInput", "split.pdf", MediaType.APPLICATION_PDF_VALUE, splitBytes);
+            RearrangePagesRequest mergeRequest = new RearrangePagesRequest();
+            mergeRequest.setFileInput(splitFile);
+            mergeRequest.setPageNumbers("");
+            mergeRequest.setCustomMode("ODD_EVEN_MERGE");
+
+            try (PDDocument splitDoc = Loader.loadPDF(splitBytes)) {
+                when(pdfDocumentFactory.load(splitFile)).thenReturn(splitDoc);
+                ResponseEntity<Resource> mergeResponse = controller.rearrangePages(mergeRequest);
+                assertNotNull(mergeResponse);
+                assertEquals(200, mergeResponse.getStatusCode().value());
+
+                // Merge restores the original order: each page's width matches its position.
+                List<Float> widths = new ArrayList<>();
+                try (var in = mergeResponse.getBody().getInputStream();
+                        var baos = new ByteArrayOutputStream()) {
+                    in.transferTo(baos);
+                    try (PDDocument merged = Loader.loadPDF(baos.toByteArray())) {
+                        for (PDPage page : merged.getPages()) {
+                            widths.add(page.getMediaBox().getWidth());
+                        }
+                    }
+                }
+                assertEquals(List.of(100f, 110f, 120f, 130f, 140f), widths);
+            }
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_SinglePage() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(1)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(1, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_TwoPages() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(2)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(2, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(1), mutated.get(1));
+        }
+    }
+
+    @Test
     void testRearrangePages_CustomPageOrder() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();
@@ -308,6 +540,45 @@ class RearrangePagesPDFControllerTest {
             List<Object> savedPages = reloadAndSnapshot(response);
             assertEquals(6, savedPages.size());
             assertEquals(6, new HashSet<>(savedPages).size());
+        }
+    }
+
+    @Test
+    void testRearrangePages_DuplicateRejectsTooManyOutputPages() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        // Within the per-page limit (3 x 1000), but 1000 x 101 = 101,000 pages in total
+        request.setPageNumbers("101");
+        request.setCustomMode("DUPLICATE");
+
+        try (PDDocument realDoc = buildRealPdf(1000)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(e.getMessage().contains("100000"), e.getMessage());
+            assertEquals(1000, realDoc.getNumberOfPages());
+        }
+    }
+
+    @Test
+    void testRearrangePages_UnknownCustomModeIsRejected() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setCustomMode("NOT_A_MODE");
+
+        try (PDDocument realDoc = buildRealPdf(2)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.rearrangePages(request));
+            assertTrue(e.getMessage().contains("customMode"), e.getMessage());
         }
     }
 

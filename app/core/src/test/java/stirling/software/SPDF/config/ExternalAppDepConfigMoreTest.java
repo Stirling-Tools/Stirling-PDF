@@ -30,11 +30,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.util.ProcessExecutor;
 
 /**
  * Covers the process-probing paths of ExternalAppDepConfig by intercepting ProcessBuilder
@@ -236,6 +239,54 @@ class ExternalAppDepConfigMoreTest {
                 ec.setAccessible(true);
                 assertThat((int) ec.invoke(result)).isEqualTo(127);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("disableCalibreUnlessConfined")
+    class DisableCalibreUnlessConfined {
+
+        private void sandboxUsable(boolean usable) throws Exception {
+            try (MockedStatic<ProcessExecutor> executor =
+                    Mockito.mockStatic(ProcessExecutor.class)) {
+                executor.when(() -> ProcessExecutor.isCalibreSandboxUsable(any()))
+                        .thenReturn(usable);
+                invoke("disableCalibreUnlessConfined", new Class<?>[] {});
+            }
+        }
+
+        @Test
+        @DisplayName("disables Calibre when its sandbox cannot be applied")
+        void disablesWhenUnconfined() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+            sandboxUsable(false);
+
+            verify(endpointConfiguration)
+                    .disableGroup("Calibre", EndpointConfiguration.DisableReason.DEPENDENCY);
+        }
+
+        @Test
+        @DisplayName("keeps Calibre when its sandbox is active")
+        void keepsWhenConfined() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
+
+            sandboxUsable(true);
+
+            verify(endpointConfiguration, never()).disableGroup(anyString(), any());
+        }
+
+        @Test
+        @DisplayName("does not probe when Calibre is already disabled")
+        void skipsProbeWhenAlreadyDisabled() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(false);
+            try (MockedStatic<ProcessExecutor> executor =
+                    Mockito.mockStatic(ProcessExecutor.class)) {
+                invoke("disableCalibreUnlessConfined", new Class<?>[] {});
+
+                executor.verifyNoInteractions();
+            }
+            verify(endpointConfiguration, never()).disableGroup(anyString(), any());
         }
     }
 

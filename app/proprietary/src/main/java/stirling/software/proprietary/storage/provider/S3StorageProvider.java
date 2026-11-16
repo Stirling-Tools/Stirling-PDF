@@ -2,6 +2,7 @@ package stirling.software.proprietary.storage.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import stirling.software.proprietary.security.model.User;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -65,9 +68,16 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (file.getContentType() != null && !file.getContentType().isBlank()) {
             request.contentType(file.getContentType());
         }
-        try (InputStream inputStream = file.getInputStream()) {
+        // Reopen the upload per attempt: SDK retries cannot rewind a stream without mark/reset.
+        ContentStreamProvider content =
+                ContentStreamProvider.fromInputStreamSupplier(() -> openUploadStream(file));
+        try {
             s3Client.putObject(
-                    request.build(), RequestBody.fromInputStream(inputStream, file.getSize()));
+                    request.build(),
+                    RequestBody.fromContentProvider(
+                            content, file.getSize(), MediaType.APPLICATION_OCTET_STREAM_VALUE));
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
         } catch (SdkException e) {
             throw new IOException("Failed to upload object to S3", e);
         }
@@ -179,6 +189,14 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
             s3Client.close();
         } catch (Exception e) {
             log.warn("Error closing S3 client", e);
+        }
+    }
+
+    private static InputStream openUploadStream(MultipartFile file) {
+        try {
+            return file.getInputStream();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

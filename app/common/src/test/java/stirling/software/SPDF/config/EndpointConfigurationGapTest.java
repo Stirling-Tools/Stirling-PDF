@@ -320,6 +320,16 @@ class EndpointConfigurationGapTest {
             config.disableGroup("Calibre");
             assertFalse(config.isEndpointEnabled("pdf-to-epub"));
         }
+
+        @Test
+        @DisplayName("both ebook conversions are disabled with the Calibre group")
+        void ebookConversionsFollowCalibre() {
+            EndpointConfiguration config = buildDefault();
+            assertTrue(config.isEndpointEnabled("ebook-to-pdf"));
+            config.disableGroup("Calibre");
+            assertFalse(config.isEndpointEnabled("ebook-to-pdf"));
+            assertFalse(config.isEndpointEnabled("pdf-to-epub"));
+        }
     }
 
     @Nested

@@ -1,0 +1,102 @@
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast);
+}
+
+.choice:hover {
+  background: var(--c-hover);
+}
+
+.choiceSelected {
+  border-color: var(--c-primary-border);
+  background: var(--c-primary-subtle);
+}
+
+.choiceSelected:hover {
+  background: var(--c-primary-subtle);
+}
+
+.choice:has(.choiceInput:focus-visible) {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.choiceInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.choiceIcon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--c-text-muted);
+}
+
+.choiceText {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.choiceTitle {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--c-text);
+}
+
+.choiceDesc {
+  font-size: 0.875rem;
+  color: var(--c-text-muted);
+}
+
+.choiceDot {
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.choiceSelected .choiceDot {
+  border-color: var(--c-primary);
+}
+
+.choiceSelected .choiceDot::after {
+  content: "";
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+}
+
+/* 1.75rem is the vertical padding of .sui-code__pre in CodeBlock.css; keep the
+   two in sync or the longest command scrolls. */
+.command :global(.sui-code__pre) {
+  box-sizing: border-box;
+  height: calc(var(--command-lines) * 1lh + 1.75rem);
+}

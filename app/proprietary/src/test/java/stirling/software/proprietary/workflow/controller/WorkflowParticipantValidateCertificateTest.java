@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +38,7 @@ class WorkflowParticipantValidateCertificateTest {
     @Mock private WorkflowParticipantRepository participantRepository;
     @Mock private MetadataEncryptionService metadataEncryptionService;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private MockMvc mockMvc;
 
@@ -51,7 +53,8 @@ class WorkflowParticipantValidateCertificateTest {
                         participantRepository,
                         new ObjectMapper(),
                         metadataEncryptionService,
-                        certificateSubmissionValidator);
+                        certificateSubmissionValidator,
+                        eventPublisher);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

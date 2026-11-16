@@ -102,7 +102,18 @@ public record WalletSnapshotResponse(
         String billingMode,
         BigDecimal bundleRatePerCreditMinor,
         String includedPeriodStart,
-        String includedPeriodEnd) {
+        String includedPeriodEnd,
+        EnterpriseHolding enterprise) {
+
+    /** Agreement quantities and actual PDF inputs over its period; absent when access has ended. */
+    public record EnterpriseHolding(
+            String status,
+            String periodStart,
+            String periodEnd,
+            String accessUntil,
+            Integer agreedSeats,
+            Long annualVolume,
+            long pdfsUsed) {}
 
     // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
     // outside the spend cap):

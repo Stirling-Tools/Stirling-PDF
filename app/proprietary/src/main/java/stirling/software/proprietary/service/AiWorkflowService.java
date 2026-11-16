@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
@@ -31,6 +30,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
@@ -346,14 +346,14 @@ public class AiWorkflowService {
 
     private Resource toResource(MultipartFile file) throws IOException {
         TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
-        file.transferTo(tempFile.getPath());
-        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-        return new FileSystemResource(tempFile.getFile()) {
-            @Override
-            public String getFilename() {
-                return originalName;
-            }
-        };
+        try {
+            file.transferTo(tempFile.getPath());
+        } catch (IOException | RuntimeException e) {
+            tempFile.close();
+            throw e;
+        }
+        return new InternalApiClient.TempFileResource(
+                tempFile, Filenames.toSimpleFileName(file.getOriginalFilename()));
     }
 
     private void ingestFile(AiFile file, MultipartFile multipartFile) throws IOException {
@@ -403,14 +403,16 @@ public class AiWorkflowService {
             parameters = Map.of();
         }
 
+        List<Resource> inputFiles = List.of();
+        PolicyExecutionResult result = null;
         try {
-            List<Resource> inputFiles = toResources(filesById);
+            inputFiles = toResources(filesById);
             PipelineDefinition definition =
                     new PipelineDefinition(
                             null,
                             List.of(new PipelineStep(endpointPath, parameters)),
                             OutputSpec.inline());
-            PolicyExecutionResult result =
+            result =
                     policyExecutor.execute(
                             definition, PolicyInputs.of(inputFiles), stepProgress(listener));
             return new WorkflowState.Terminal(
@@ -434,6 +436,13 @@ public class AiWorkflowService {
             }
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
+        } finally {
+            // The response refers to stored copies, so the inputs and step outputs are not needed
+            // any longer
+            if (result != null) {
+                result.close();
+            }
+            deleteCopies(inputFiles);
         }
     }
 
@@ -511,11 +520,13 @@ public class AiWorkflowService {
             pipelineSteps.add(new PipelineStep(endpointPath, parameters));
         }
 
+        List<Resource> inputFiles = List.of();
+        PolicyExecutionResult result = null;
         try {
-            List<Resource> inputFiles = toResources(filesById);
+            inputFiles = toResources(filesById);
             PipelineDefinition definition =
                     new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
-            PolicyExecutionResult result =
+            result =
                     policyExecutor.execute(
                             definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
@@ -563,6 +574,13 @@ public class AiWorkflowService {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
+        } finally {
+            // The response refers to stored copies, so the inputs and step outputs are not needed
+            // any longer
+            if (result != null) {
+                result.close();
+            }
+            deleteCopies(inputFiles);
         }
     }
 
@@ -621,12 +639,28 @@ public class AiWorkflowService {
         };
     }
 
+    /**
+     * Copies the uploads to temp files; the caller passes them to {@link #deleteCopies} when done.
+     */
     private List<Resource> toResources(Map<String, MultipartFile> filesById) throws IOException {
         List<Resource> resources = new ArrayList<>();
-        for (MultipartFile file : filesById.values()) {
-            resources.add(toResource(file));
+        try {
+            for (MultipartFile file : filesById.values()) {
+                resources.add(toResource(file));
+            }
+        } catch (IOException | RuntimeException e) {
+            deleteCopies(resources);
+            throw e;
         }
         return resources;
+    }
+
+    private static void deleteCopies(List<Resource> copies) {
+        for (Resource copy : copies) {
+            if (copy instanceof InternalApiClient.TempFileResource tempFileResource) {
+                tempFileResource.getTempFile().close();
+            }
+        }
     }
 
     private AiWorkflowResponse buildCompletedResponse(

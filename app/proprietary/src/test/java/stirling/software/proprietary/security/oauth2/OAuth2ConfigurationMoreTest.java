@@ -110,6 +110,51 @@ class OAuth2ConfigurationMoreTest {
     }
 
     @Nested
+    @DisplayName("redirectBaseUrl")
+    class RedirectBaseUrl {
+
+        private String githubRedirectUri(String redirectBaseUrl) throws NoProviderFoundException {
+            ApplicationProperties props = enabledProps();
+            OAUTH2 oauth2 = props.getSecurity().getOauth2();
+            oauth2.getClient().getGithub().setClientId("gh-id");
+            oauth2.getClient().getGithub().setClientSecret("gh-secret");
+            oauth2.setRedirectBaseUrl(redirectBaseUrl);
+            return newConfig(props)
+                    .clientRegistrationRepository()
+                    .findByRegistrationId("github")
+                    .getRedirectUri();
+        }
+
+        @Test
+        @DisplayName("unset keeps the request-derived {baseUrl} template")
+        void unsetKeepsBaseUrlTemplate() throws NoProviderFoundException {
+            assertThat(githubRedirectUri(null)).isEqualTo("{baseUrl}/login/oauth2/code/github");
+            assertThat(githubRedirectUri("  ")).isEqualTo("{baseUrl}/login/oauth2/code/github");
+        }
+
+        @Test
+        @DisplayName("pins the callback to the configured public URL")
+        void pinsCallbackToPublicUrl() throws NoProviderFoundException {
+            assertThat(githubRedirectUri("https://pdf.example.com/"))
+                    .isEqualTo("https://pdf.example.com/login/oauth2/code/github");
+        }
+
+        @Test
+        @DisplayName("keeps a context path in the configured public URL")
+        void keepsContextPath() throws NoProviderFoundException {
+            assertThat(githubRedirectUri("https://example.com/pdf"))
+                    .isEqualTo("https://example.com/pdf/login/oauth2/code/github");
+        }
+
+        @Test
+        @DisplayName("ignores a value that is not an absolute http(s) URL")
+        void ignoresInvalidValue() throws NoProviderFoundException {
+            assertThat(githubRedirectUri("pdf.example.com"))
+                    .isEqualTo("{baseUrl}/login/oauth2/code/github");
+        }
+    }
+
+    @Nested
     @DisplayName("userAuthoritiesMapper")
     class AuthoritiesMapper {
 

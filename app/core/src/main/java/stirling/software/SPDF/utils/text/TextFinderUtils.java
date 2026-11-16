@@ -57,6 +57,14 @@ public class TextFinderUtils {
 
     public static List<Pattern> createOptimizedSearchPatterns(
             Set<String> searchTerms, boolean useRegex, boolean wholeWordSearch) {
+        return createOptimizedSearchPatterns(searchTerms, useRegex, wholeWordSearch, false);
+    }
+
+    public static List<Pattern> createOptimizedSearchPatterns(
+            Set<String> searchTerms,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            boolean caseSensitive) {
         List<Pattern> patterns = new ArrayList<>();
 
         for (String term : searchTerms) {
@@ -73,7 +81,8 @@ public class TextFinderUtils {
 
                 // Use PatternFactory for better performance with cached compilation
                 Pattern pattern =
-                        RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
+                        RegexPatternUtils.getInstance()
+                                .createSearchPattern(patternString, !caseSensitive);
                 patterns.add(pattern);
 
                 log.debug("Created search pattern: '{}' -> '{}'", term.trim(), patternString);

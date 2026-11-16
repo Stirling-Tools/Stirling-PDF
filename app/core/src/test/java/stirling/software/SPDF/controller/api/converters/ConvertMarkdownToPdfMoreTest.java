@@ -59,6 +59,9 @@ class ConvertMarkdownToPdfMoreTest {
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
+    @Mock private stirling.software.SPDF.service.OfficeConversionService officeConversionService;
+    @Mock private stirling.software.SPDF.service.OfficeToPdfService officeToPdfService;
+
     @InjectMocks private ConvertMarkdownToPdf controller;
 
     @BeforeEach
@@ -128,7 +131,7 @@ class ConvertMarkdownToPdfMoreTest {
                                                 any(TempFile.class), anyString()))
                         .thenReturn(cannedResponse());
 
-                ResponseEntity<Resource> response = controller.markdownToPdf(gf);
+                ResponseEntity<Resource> response = controller.markdownToPdf(gf, null);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 String html = new String(htmlBytes.getValue(), StandardCharsets.UTF_8);
@@ -155,7 +158,7 @@ class ConvertMarkdownToPdfMoreTest {
                                                 any(CustomHtmlSanitizer.class)))
                         .thenThrow(new java.io.IOException("weasyprint failed"));
 
-                assertThatThrownBy(() -> controller.markdownToPdf(gf))
+                assertThatThrownBy(() -> controller.markdownToPdf(gf, null))
                         .isInstanceOf(java.io.IOException.class);
             }
         }
@@ -206,7 +209,7 @@ class ConvertMarkdownToPdfMoreTest {
                                                 any(TempFile.class), anyString()))
                         .thenReturn(cannedResponse());
 
-                ResponseEntity<Resource> response = controller.markdownToPdf(gf);
+                ResponseEntity<Resource> response = controller.markdownToPdf(gf, null);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 ftp.verify(
@@ -230,7 +233,7 @@ class ConvertMarkdownToPdfMoreTest {
 
             GeneralFile gf = generalFileOf("bundle.zip", "application/zip", zip);
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
+            assertThatThrownBy(() -> controller.markdownToPdf(gf, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -245,7 +248,7 @@ class ConvertMarkdownToPdfMoreTest {
             GeneralFile gf = new GeneralFile();
             gf.setFileInput(null);
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
+            assertThatThrownBy(() -> controller.markdownToPdf(gf, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -254,7 +257,7 @@ class ConvertMarkdownToPdfMoreTest {
         void wrongExtension() {
             GeneralFile gf = generalFileOf("notes.txt", "text/plain", "hello".getBytes());
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
+            assertThatThrownBy(() -> controller.markdownToPdf(gf, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }

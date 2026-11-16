@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -30,6 +32,11 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 public class ProcessExecutor {
 
+    // A document can make a tool print without end, so each run logs a bounded amount of output
+    static final int MAX_LOGGED_LINES = 200;
+    static final int MAX_LOGGED_LINE_LENGTH = 1_000;
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}&&[^\\t]]");
+
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
@@ -39,6 +46,9 @@ public class ProcessExecutor {
     // own user under a policy read from the environment; bare installs launch it unchanged.
     private static volatile boolean libreOfficeSandboxed =
             Files.isExecutable(Path.of("/usr/local/lib/stirling/lo-sandbox"));
+
+    private static volatile CalibreSandboxPolicy.Mode calibreSandboxMode =
+            CalibreSandboxPolicy.configuredMode();
 
     // Made by the init script (create_office_profile_template in init-without-ocr.sh).
     private static final Path libreOfficeProfileTemplate = profileTemplateFromEnvironment();
@@ -185,7 +195,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
-                                case CFF_CONVERTER -> 5L;
+                                case CFF_CONVERTER -> 1L;
                                 case FFMPEG ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -203,6 +213,18 @@ public class ProcessExecutor {
 
     static void setLibreOfficeSandboxed(boolean sandboxed) {
         libreOfficeSandboxed = sandboxed;
+    }
+
+    static void setCalibreSandboxMode(CalibreSandboxPolicy.Mode mode) {
+        calibreSandboxMode = mode;
+    }
+
+    /**
+     * Runs {@code probeCommand}, normally Calibre's version check, through the Calibre sandbox,
+     * logs the outcome, and says whether the configured mode lets Calibre be offered on this host.
+     */
+    public static boolean isCalibreSandboxUsable(List<String> probeCommand) {
+        return CalibreSandboxPolicy.probeAtStartup(calibreSandboxMode, probeCommand);
     }
 
     private static Path profileTemplateFromEnvironment() {
@@ -321,6 +343,14 @@ public class ProcessExecutor {
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
             scrubEnvironment(processBuilder);
+            if (processType == Processes.CALIBRE) {
+                processBuilder.command(
+                        CalibreSandboxPolicy.confine(
+                                calibreSandboxMode,
+                                commandToRun,
+                                workingDirectory,
+                                processBuilder.environment()));
+            }
             if (processType == Processes.LIBRE_OFFICE && libreOfficeSandboxed) {
                 jobPolicy =
                         LibreOfficeSandboxPolicy.forCommand(commandToRun, libreOfficeWorkRoots)
@@ -350,6 +380,7 @@ public class ProcessExecutor {
             // Read the error stream and standard output stream concurrently
             List<String> errorLines = new ArrayList<>();
             List<String> outputLines = new ArrayList<>();
+            AtomicInteger offeredLines = new AtomicInteger();
 
             Thread errorReaderThread =
                     Thread.ofVirtual()
@@ -366,7 +397,7 @@ public class ProcessExecutor {
                                                                     errorReader, 5_000_000))
                                                     != null) {
                                                 errorLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -391,7 +422,7 @@ public class ProcessExecutor {
                                                                     outputReader, 5_000_000))
                                                     != null) {
                                                 outputLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                if (liveUpdates) logLiveLine(line, offeredLines);
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -454,17 +485,23 @@ public class ProcessExecutor {
             // Wait for the reader threads to finish
             errorReaderThread.join();
             outputReaderThread.join();
+            logUnloggedLiveLines(offeredLines.get());
+
+            if (processType == Processes.CALIBRE) {
+                return finishCalibreRun(exitCode, outputLines, errorLines, offeredLines);
+            }
 
             boolean isQpdf =
                     commandToRun != null
                             && !commandToRun.isEmpty()
                             && commandToRun.getFirst().contains("qpdf");
+            boolean qpdfWarnings = isQpdf && exitCode == 3;
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    log.info("Command output:\n{}", outputMessage);
+                    log.info("Command output:\n{}", forLog(outputLines, offeredLines));
                 }
             }
 
@@ -472,31 +509,27 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    log.warn("Command error output:\n{}", errorMessage);
+                    log.warn("Command error output:\n{}", forLog(errorLines, offeredLines));
                 }
-                if (exitCode != 0) {
-                    if (isQpdf && exitCode == 3) {
-                        log.warn("qpdf succeeded with warnings: {}", messages);
-                    } else {
-                        throw new IOException(
-                                "Command process failed with exit code "
-                                        + exitCode
-                                        + ". Error message: "
-                                        + errorMessage);
-                    }
-                }
-            }
-
-            if (exitCode != 0) {
-                if (isQpdf && exitCode == 3) {
-                    log.warn("qpdf succeeded with warnings: {}", messages);
-                } else {
+                if (exitCode != 0 && !qpdfWarnings) {
                     throw new IOException(
                             "Command process failed with exit code "
                                     + exitCode
-                                    + "\nLogs: "
-                                    + messages);
+                                    + ". Error message: "
+                                    + forLog(errorLines));
                 }
+            }
+
+            if (qpdfWarnings) {
+                log.warn(
+                        "qpdf succeeded with warnings: {}",
+                        forLog(allLines(outputLines, errorLines), offeredLines));
+            } else if (exitCode != 0) {
+                throw new IOException(
+                        "Command process failed with exit code "
+                                + exitCode
+                                + "\nLogs: "
+                                + forLog(allLines(outputLines, errorLines)));
             }
         } finally {
             if (ipcPipesBefore != null) {
@@ -511,6 +544,91 @@ public class ProcessExecutor {
             }
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    private void logLiveLine(String line, AtomicInteger seen) {
+        if (seen.incrementAndGet() > MAX_LOGGED_LINES) {
+            return;
+        }
+        if (processType == Processes.CALIBRE) {
+            log.debug("{}", forLog(line));
+        } else {
+            log.info("{}", forLog(line));
+        }
+    }
+
+    private void logUnloggedLiveLines(int seen) {
+        int unlogged = seen - MAX_LOGGED_LINES;
+        if (unlogged <= 0) {
+            return;
+        }
+        if (processType == Processes.CALIBRE) {
+            log.debug("{} more output lines were not logged", unlogged);
+        } else {
+            log.info("{} more output lines were not logged", unlogged);
+        }
+    }
+
+    private static List<String> allLines(List<String> outputLines, List<String> errorLines) {
+        List<String> lines = new ArrayList<>(outputLines);
+        lines.addAll(errorLines);
+        return lines;
+    }
+
+    /** Uses what is left of the run's {@link #MAX_LOGGED_LINES}, counted in {@code offered}. */
+    private static String forLog(List<String> lines, AtomicInteger offered) {
+        int left = MAX_LOGGED_LINES - offered.getAndAdd(lines.size());
+        return forLog(lines, Math.max(left, 0));
+    }
+
+    /** The first {@link #MAX_LOGGED_LINES} lines, each cut short and made printable. */
+    static String forLog(List<String> lines) {
+        return forLog(lines, MAX_LOGGED_LINES);
+    }
+
+    private static String forLog(List<String> lines, int allowance) {
+        StringBuilder text = new StringBuilder();
+        int shown = Math.min(lines.size(), allowance);
+        for (int i = 0; i < shown; i++) {
+            if (i > 0) {
+                text.append('\n');
+            }
+            text.append(forLog(lines.get(i)));
+        }
+        if (lines.size() > shown) {
+            if (shown > 0) {
+                text.append('\n');
+            }
+            text.append("... ").append(lines.size() - shown).append(" more lines");
+        }
+        return text.toString();
+    }
+
+    static String forLog(String line) {
+        boolean truncated = line.length() > MAX_LOGGED_LINE_LENGTH;
+        String head = truncated ? line.substring(0, MAX_LOGGED_LINE_LENGTH) : line;
+        String printable = CONTROL_CHARACTERS.matcher(head).replaceAll("?");
+        return truncated ? printable + "..." : printable;
+    }
+
+    private ProcessExecutorResult finishCalibreRun(
+            int exitCode,
+            List<String> outputLines,
+            List<String> errorLines,
+            AtomicInteger offeredLines)
+            throws IOException {
+        String output = String.join("\n", outputLines);
+        String errors = String.join("\n", errorLines);
+        if (!liveUpdates) {
+            log.debug("Calibre output:\n{}", forLog(outputLines, offeredLines));
+            log.debug("Calibre error output:\n{}", forLog(errorLines, offeredLines));
+        }
+        CalibreSandboxPolicy.checkLauncherOutcome(errorLines);
+        if (exitCode != 0) {
+            log.warn("Calibre exited with code {}; its output is logged at debug level", exitCode);
+            throw new IOException("Calibre conversion failed with exit code " + exitCode);
+        }
+        return new ProcessExecutorResult(exitCode, output + errors);
     }
 
     private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =

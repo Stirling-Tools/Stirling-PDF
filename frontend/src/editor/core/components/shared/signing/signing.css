@@ -1,0 +1,831 @@
+.sign-menu.sui-dd__menu {
+  width: min(400px, calc(100vw - 24px));
+  height: min(660px, calc(100dvh - 24px));
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.sign-menu.sign-menu--unavailable {
+  height: auto;
+}
+.sign-menu h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.sign-menu__personal {
+  flex-shrink: 0;
+  padding: 18px;
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
+}
+.sign-menu__tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sign-menu__tool {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sign-menu__tool svg {
+  margin-bottom: 4px;
+  color: var(--c-text-muted);
+}
+.sign-menu__tool strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__tool span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+.sign-menu button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sign-menu button:focus-visible,
+.sign-menu__results:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+.sign-menu__sessions {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.sign-menu__session-header {
+  flex-shrink: 0;
+  padding: 12px 18px 0;
+}
+.sign-menu__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sign-menu__icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+.sign-menu__request {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.sign-menu__tool:hover:not(:disabled),
+.sign-menu__request:hover:not(:disabled),
+.sign-menu__icon-button:hover:not(:disabled) {
+  background: var(--c-hover);
+}
+.sign-menu__filters {
+  flex-shrink: 0;
+  padding: 12px 18px 8px;
+}
+.sign-menu__tabs {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.sign-menu__tabs .sui-tabs__tab {
+  padding: 8px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sign-menu__hint {
+  margin: 10px 0 0;
+  color: var(--c-text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.sign-menu__sessions > .sign-menu__hint {
+  padding: 0 18px 18px;
+}
+.sign-menu__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 7px;
+  color: var(--c-text-muted);
+  background: var(--c-input-bg);
+}
+.sign-menu__search:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+.sign-menu__search input {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 12px;
+}
+.sign-menu__search input::placeholder {
+  color: var(--c-text-muted);
+}
+.sign-menu__results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 8px 10px;
+  scrollbar-gutter: stable;
+}
+.sign-menu__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sign-menu__session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sign-menu__session:hover {
+  background: var(--c-hover);
+}
+.sign-menu__session > svg {
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+}
+.sign-menu__session-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+}
+.sign-menu__session[data-unread="true"] .sign-menu__session-icon {
+  color: var(--c-accent-fg);
+  background: var(--c-primary-subtle);
+}
+.sign-menu__session-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.sign-menu__document {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__document-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.signing-activity-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--c-accent-fg);
+}
+.sign-menu__state {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.sign-menu__session[data-unread="true"] .sign-menu__state {
+  color: var(--c-accent-fg);
+}
+.sign-menu__meta {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sign-menu__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 20px;
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.sign-menu__empty strong {
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__trigger-badge {
+  position: absolute;
+  top: 2px;
+  right: 8px;
+  min-width: 16px;
+  border-radius: 10px;
+  padding: 1px 4px;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  background: var(--c-warning-solid);
+  color: var(--c-text-on-primary);
+}
+.signing-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--c-text);
+}
+.signing-workspace__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.signing-workspace__navigation {
+  min-width: 0;
+  flex: 1;
+}
+.signing-workspace__path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.signing-workspace__path > button,
+.signing-workspace__path > svg {
+  flex-shrink: 0;
+}
+.signing-workspace__path > svg {
+  color: var(--c-text-muted);
+}
+.signing-workspace__current {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.signing-workspace__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+.signing-workspace__body[hidden] {
+  display: none;
+}
+.signing-workspace__content {
+  min-width: 0;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+.signing-workspace__list-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.signing-workspace__search {
+  grid-column: 2;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+}
+.signing-workspace__list-action {
+  grid-column: 3;
+  justify-self: end;
+}
+.signing-workspace__table-controls {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  width: 100%;
+}
+.signing-workspace__table-controls > .sui-dtfb {
+  flex: 1 1 20rem;
+}
+.signing-workspace__table-controls .sui-dtfb__row {
+  justify-content: flex-end;
+}
+.signing-workspace__table-controls .sui-dtfb__trailing {
+  margin-inline-start: 0;
+}
+.signing-workspace__table-controls .sui-dtfb__active {
+  justify-content: flex-end;
+}
+.signing-workspace__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 72px 24px;
+  text-align: center;
+  color: var(--c-text-muted);
+}
+.signing-workspace__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 34%, 480px);
+  flex: 1;
+  min-height: 0;
+}
+.signing-workspace__preview {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.signing-workspace__panel {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.signing-workspace__create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 28px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+.signing-workspace__create > * {
+  min-width: 0;
+}
+.signing-workspace__create [hidden] {
+  display: none;
+}
+.signing-request__document {
+  display: flex;
+  flex-direction: column;
+}
+.signing-workspace__document-picker {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--c-border);
+}
+.signing-document-picker__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.signing-document-picker__heading h2 {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.signing-document-picker__files {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.signing-document-picker__files legend {
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.signing-document-picker__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  padding: clamp(24px, 4vw, 56px);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: 16px;
+  background: var(--c-bg);
+  text-align: center;
+}
+.signing-document-picker__empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: clamp(260px, calc(100dvh - 280px), 600px);
+}
+.signing-document-picker__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 104px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface);
+  color: var(--c-accent-fg);
+  box-shadow: var(--shadow-sm);
+}
+.signing-document-picker__empty h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.signing-document-picker__empty p {
+  max-width: 32ch;
+  margin: -8px 0 4px;
+  color: var(--c-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.signing-document-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 16px;
+  max-height: 520px;
+  align-items: start;
+  overflow-y: auto;
+  padding: 3px;
+}
+.signing-document-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.signing-document-card:hover {
+  background: var(--c-hover);
+}
+.signing-document-card:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+.signing-document-card:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+.signing-document-card input {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  z-index: 2;
+  accent-color: var(--c-primary);
+}
+.signing-document-card__preview {
+  height: auto;
+  aspect-ratio: 210 / 297;
+  max-width: 280px;
+  pointer-events: none;
+}
+.signing-document-picker__selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 12px;
+}
+.signing-document-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+  width: 100%;
+  aspect-ratio: 210 / 297;
+  max-width: 320px;
+}
+.signing-document-preview__page {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+.signing-document-card__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  text-align: center;
+}
+.signing-request,
+.signing-request__options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.signing-workspace__create[data-mobile] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  gap: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.signing-workspace__create[data-mobile] .signing-workspace__document-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.signing-request__steps ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.signing-request__steps button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.signing-request__steps button > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--c-border);
+  border-radius: 50%;
+}
+.signing-request__steps [aria-current="step"] {
+  color: var(--c-accent-fg);
+  font-weight: 600;
+}
+.signing-request__steps [aria-current="step"] > span {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+.signing-request__steps button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.signing-request__steps button:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+.signing-request__step-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+.signing-request__step-actions > :first-child:not(:last-child) {
+  flex-shrink: 0;
+}
+.signing-request__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.signing-request__heading h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.signing-request__selection-count {
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+.signing-request__calendar {
+  min-width: 0;
+  padding: 16px 20px;
+  margin: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+}
+.signing-request__calendar legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.signing-request__date-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  margin-bottom: 8px;
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+.signing-request__month,
+.signing-request__month-header {
+  width: 100%;
+  max-width: none;
+}
+.signing-request__month {
+  table-layout: fixed;
+}
+.signing-request__day {
+  width: 100%;
+}
+@media (min-width: 1100px) {
+  .signing-workspace__create {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 28px;
+    max-width: 1600px;
+  }
+  .signing-workspace__document-picker {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+    padding: 0 28px 0 0;
+    border-bottom: 0;
+    border-right: 1px solid var(--c-border);
+  }
+  .signing-document-picker__selected {
+    flex: 1;
+    min-height: 0;
+  }
+  .signing-document-preview {
+    flex: 1;
+    min-height: 0;
+    max-width: none;
+    aspect-ratio: auto;
+    contain: size;
+  }
+  .signing-document-picker__grid {
+    max-height: clamp(420px, calc(100dvh - 260px), 900px);
+  }
+}
+@media (max-width: 960px) {
+  .signing-workspace__list-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+  }
+  .signing-workspace__search {
+    grid-column: 1;
+  }
+  .signing-workspace__list-action {
+    grid-column: 2;
+  }
+}
+@media (max-width: 800px) {
+  .signing-workspace__table-controls .sui-dtfb__row,
+  .signing-workspace__table-controls .sui-dtfb__active {
+    justify-content: flex-start;
+  }
+  .signing-workspace__header {
+    padding: 8px 12px;
+  }
+  .signing-workspace__body {
+    padding: 16px;
+  }
+  .signing-workspace__detail {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .signing-workspace__preview {
+    flex: 0 0 55vh;
+  }
+  .signing-workspace__panel {
+    overflow: visible;
+    border-left: 0;
+    border-top: 1px solid var(--c-border);
+  }
+  .signing-workspace__create {
+    padding: 16px;
+  }
+  .signing-request__calendar {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .signing-workspace__list-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .signing-workspace__search {
+    grid-row: 2;
+  }
+  .signing-workspace__list-action {
+    grid-column: 1;
+  }
+}
+
+@media (max-height: 560px) {
+  .sign-menu__personal {
+    padding: 12px;
+  }
+  .sign-menu__tool {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px;
+  }
+  .sign-menu__tool svg {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .sign-menu__tool span,
+  .sign-menu__filters > .sign-menu__hint {
+    display: none;
+  }
+  .sign-menu__session-header {
+    padding: 8px 12px 0;
+  }
+  .sign-menu__heading {
+    margin-bottom: 6px;
+  }
+  .sign-menu__filters {
+    padding: 8px 12px;
+  }
+}

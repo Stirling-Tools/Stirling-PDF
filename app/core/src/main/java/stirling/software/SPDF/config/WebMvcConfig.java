@@ -1,19 +1,31 @@
 package stirling.software.SPDF.config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.EncodedResourceResolver;
+import org.springframework.web.servlet.resource.HttpResource;
+import org.springframework.web.servlet.resource.ResourceResolver;
+import org.springframework.web.servlet.resource.ResourceResolverChain;
+import org.springframework.web.util.UriUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +44,28 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private static final CacheControl NO_CACHE = CacheControl.noCache();
     private static final CacheControl IMMUTABLE_ONE_YEAR =
             CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable();
+    // For resources whose names are stable across releases (no content hash):
+    // a day of freshness so repeat opens are a cheap conditional request, plus
+    // stale-while-revalidate so a shared cache can still answer instantly.
+    private static final CacheControl STABLE_ONE_DAY =
+            CacheControl.maxAge(Duration.ofDays(1))
+                    .cachePublic()
+                    .staleWhileRevalidate(Duration.ofDays(7));
+    private static final List<String> BRANDING_FOLDERS =
+            List.of(
+                    "icons",
+                    "modern-logo",
+                    "pdfjs",
+                    "pdfium",
+                    "locales",
+                    "css",
+                    "js",
+                    "vendor",
+                    "samples",
+                    "og_images",
+                    "Login");
+    private static final String PRIVATE_FONTS_FOLDER = "fonts";
+    private static final int MAX_DECODE_PASSES = 4;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -53,7 +87,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 2. Vite fingerprinted assets (immutable)
         // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
@@ -61,18 +95,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
 
-        // 3. Media and fonts (immutable)
-        registry.addResourceHandler("/images/**", "/fonts/**")
-                .addResourceLocations(
-                        staticPath + "images/",
-                        "classpath:/static/images/",
-                        staticPath + "fonts/",
-                        "classpath:/static/fonts/")
-                .setCacheControl(IMMUTABLE_ONE_YEAR)
+        // 3. Media and fonts (stable names, revalidated)
+        // The fallback faces ship inside the JAR under names that never change,
+        // so a one-year immutable policy would strand a browser on one release's
+        // bytes. A day of freshness plus SWR keeps repeat opens cheap without
+        // pinning an update.
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(staticPath + "images/", "classpath:/static/images/")
+                .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
+        registry.addResourceHandler("/fonts/**")
+                .addResourceLocations("classpath:/static/fonts/")
+                .setCacheControl(STABLE_ONE_DAY)
+                .resourceChain(true)
+                .addResolver(new PreferredEncodingResourceResolver());
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
@@ -82,52 +121,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/android-chrome-*.png",
                         "/mstile-*.png",
                         "/safari-pinned-tab.svg",
-                        "/icons/**",
-                        "/modern-logo/**",
-                        "/3rdPartyLicenses.json",
-                        "/pdfjs/**",
-                        "/pdfjs-legacy/**",
-                        "/pdfium/**",
-                        "/locales/**",
-                        "/css/**",
-                        "/js/**",
-                        "/vendor/**",
-                        "/samples/**",
-                        "/og_images/**",
-                        "/Login/**")
-                .addResourceLocations(
-                        staticPath,
-                        "classpath:/static/",
-                        staticPath + "pdfjs/",
-                        "classpath:/static/pdfjs/",
-                        staticPath + "pdfjs-legacy/",
-                        "classpath:/static/pdfjs-legacy/",
-                        staticPath + "pdfium/",
-                        "classpath:/static/pdfium/",
-                        staticPath + "locales/",
-                        "classpath:/static/locales/",
-                        staticPath + "css/",
-                        "classpath:/static/css/",
-                        staticPath + "js/",
-                        "classpath:/static/js/",
-                        staticPath + "vendor/",
-                        "classpath:/static/vendor/",
-                        staticPath + "samples/",
-                        "classpath:/static/samples/",
-                        staticPath + "og_images/",
-                        "classpath:/static/og_images/",
-                        staticPath + "Login/",
-                        "classpath:/static/Login/",
-                        staticPath + "icons/",
-                        "classpath:/static/icons/",
-                        staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/")
-                .setCacheControl(
-                        CacheControl.maxAge(Duration.ofDays(1))
-                                .cachePublic()
-                                .staleWhileRevalidate(Duration.ofDays(7)))
+                        "/3rdPartyLicenses.json")
+                .addResourceLocations(staticPath, "classpath:/static/")
+                .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new PreferredEncodingResourceResolver());
+        for (String folder : BRANDING_FOLDERS) {
+            registry.addResourceHandler("/" + folder + "/**")
+                    .addResourceLocations(
+                            staticPath + folder + "/", "classpath:/static/" + folder + "/")
+                    .setCacheControl(STABLE_ONE_DAY)
+                    .resourceChain(true)
+                    .addResolver(new PreferredEncodingResourceResolver());
+        }
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
@@ -135,7 +141,205 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
                 .resourceChain(true)
-                .addResolver(new EncodedResourceResolver());
+                .addResolver(new BundledOnlyFolderResolver(PRIVATE_FONTS_FOLDER))
+                .addResolver(new PreferredEncodingResourceResolver());
+    }
+
+    /**
+     * Serves the smallest precompressed variant the client accepts, in server preference order
+     * (brotli before gzip). The framework resolver walks the client's Accept-Encoding in the order
+     * sent, and browsers list gzip before br, so the brotli siblings were never selected (Spring
+     * Framework #37210). This applies the preference upstream is adopting in #37213 by asking a
+     * single-coding resolver per coding; remove it when the pinned Spring version carries the fix.
+     * Quality factors do not reorder, matching the upstream behavior. The one exception is an
+     * explicit refusal (q=0, RFC 9110 section 12.5.3): a client that forbids a coding must get the
+     * next acceptable variant, never the forbidden bytes.
+     *
+     * <p>Hazard: the resource chain caches resolved resources under the accepted coding set and,
+     * like this resolver, ignores quality values, so a refusal is honored on the first resolve of
+     * that set and can be missed on a later request whose header reduces to the same set. Real
+     * browsers only ever list brotli and gzip as acceptable, so this needs a hand-crafted request
+     * to trigger.
+     */
+    static final class PreferredEncodingResourceResolver implements ResourceResolver {
+
+        private record Coding(String name, EncodedResourceResolver resolver) {}
+
+        private final List<Coding> codings;
+
+        PreferredEncodingResourceResolver() {
+            this.codings =
+                    Stream.of("br", "gzip")
+                            .map(
+                                    name -> {
+                                        EncodedResourceResolver resolver =
+                                                new EncodedResourceResolver();
+                                        resolver.setContentCodings(List.of(name));
+                                        return new Coding(name, resolver);
+                                    })
+                            .toList();
+        }
+
+        @Override
+        public Resource resolveResource(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            if (request != null) {
+                for (Coding coding : this.codings) {
+                    if (!accepts(request, coding.name())) {
+                        continue;
+                    }
+                    Resource resolved =
+                            coding.resolver()
+                                    .resolveResource(request, requestPath, locations, chain);
+                    if (isEncodedWith(resolved, coding.name())) {
+                        return resolved;
+                    }
+                }
+            }
+            return chain.resolveResource(request, requestPath, locations);
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, locations);
+        }
+
+        private static boolean accepts(HttpServletRequest request, String coding) {
+            String header = request.getHeader(HttpHeaders.ACCEPT_ENCODING);
+            if (header == null) {
+                return false;
+            }
+            for (String token : header.toLowerCase(Locale.ROOT).split(",")) {
+                String[] parts = token.split(";");
+                if (!parts[0].trim().equals(coding)) {
+                    continue;
+                }
+                // "br;q=0" lists the coding only to forbid it. A missing or
+                // unparseable qvalue keeps the historic lenient behavior.
+                boolean refused = false;
+                for (int i = 1; i < parts.length; i++) {
+                    String param = parts[i].trim();
+                    if (param.startsWith("q=")) {
+                        try {
+                            refused = Double.parseDouble(param.substring(2).trim()) == 0;
+                        } catch (NumberFormatException e) {
+                            // Invalid qvalue is not a refusal; stay lenient.
+                        }
+                        break;
+                    }
+                }
+                if (!refused) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean isEncodedWith(Resource resource, String coding) {
+            return resource instanceof HttpResource httpResource
+                    && coding.equals(
+                            httpResource
+                                    .getResponseHeaders()
+                                    .getFirst(HttpHeaders.CONTENT_ENCODING));
+        }
+    }
+
+    /**
+     * Restricts one top-level folder on the catch-all handler to classpath locations, so files an
+     * operator drops into the custom static directory under that name are never served publicly.
+     *
+     * <p>The folder is matched however the filesystem might resolve it: case-insensitively, after
+     * up to {@link #MAX_DECODE_PASSES} rounds of percent-decoding, with either separator, and with
+     * Windows stream suffixes and trailing dots or spaces stripped. A path that cannot be fully
+     * decoded is treated as targeting the folder.
+     *
+     * <p>Hazard: this is the only guard for spellings the {@code /fonts/**} handler does not match,
+     * so the two must name the same folder.
+     */
+    static final class BundledOnlyFolderResolver implements ResourceResolver {
+
+        private final String folder;
+
+        BundledOnlyFolderResolver(String folder) {
+            this.folder = folder.toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public Resource resolveResource(
+                HttpServletRequest request,
+                String requestPath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveResource(
+                    request, requestPath, allowedLocations(requestPath, locations));
+        }
+
+        @Override
+        public String resolveUrlPath(
+                String resourcePath,
+                List<? extends Resource> locations,
+                ResourceResolverChain chain) {
+            return chain.resolveUrlPath(resourcePath, allowedLocations(resourcePath, locations));
+        }
+
+        List<? extends Resource> allowedLocations(String path, List<? extends Resource> locations) {
+            if (!targetsFolder(path)) {
+                return locations;
+            }
+            return locations.stream()
+                    .filter(location -> location instanceof ClassPathResource)
+                    .toList();
+        }
+
+        boolean targetsFolder(String path) {
+            if (path == null) {
+                return false;
+            }
+            String decoded = fullyDecoded(path);
+            if (decoded == null) {
+                return true;
+            }
+            for (String segment : decoded.split("[/\\\\]")) {
+                String name = windowsName(segment);
+                if (!name.isEmpty()) {
+                    return name.toLowerCase(Locale.ROOT).equals(folder);
+                }
+            }
+            return false;
+        }
+
+        private static String fullyDecoded(String path) {
+            String current = path;
+            for (int pass = 0; pass < MAX_DECODE_PASSES; pass++) {
+                String next;
+                try {
+                    next = UriUtils.decode(current, StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
+                if (next.equals(current)) {
+                    return current;
+                }
+                current = next;
+            }
+            return null;
+        }
+
+        private static String windowsName(String segment) {
+            int stream = segment.indexOf(':');
+            String name = stream >= 0 ? segment.substring(0, stream) : segment;
+            int end = name.length();
+            while (end > 0 && (name.charAt(end - 1) == '.' || name.charAt(end - 1) == ' ')) {
+                end--;
+            }
+            return name.substring(0, end);
+        }
     }
 
     @Override

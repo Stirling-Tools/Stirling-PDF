@@ -212,6 +212,8 @@ public class McpSecurityConfig {
         if (!auth.getIssuerUri().isBlank()) {
             builder.authorizationServer(auth.getIssuerUri());
         }
+        // Spring defaults this to true, wrongly telling clients tokens must be mTLS-bound.
+        builder.tlsClientCertificateBoundAccessTokens(false);
         // Only advertise the granular tool scopes when we actually enforce them. When scopes are
         // disabled (e.g. the IdP only mints coarse tokens, like Supabase), advertising scopes the
         // authorization server can't issue makes spec-compliant clients request them and get
@@ -232,6 +234,10 @@ public class McpSecurityConfig {
                         "mcp.auth.issuer-uri is not configured");
             };
         }
+        return new LazyIssuerJwtDecoder(() -> buildIssuerDecoder(auth));
+    }
+
+    private NimbusJwtDecoder buildIssuerDecoder(ApplicationProperties.Mcp.Auth auth) {
         String jwksUri = auth.getJwksUri();
         NimbusJwtDecoder decoder =
                 jwksUri.isBlank()

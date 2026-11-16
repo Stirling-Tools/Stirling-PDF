@@ -24,6 +24,8 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.*;
 import stirling.software.proprietary.service.AuditService;
+import stirling.software.saas.accountlink.LinkedInstance;
+import stirling.software.saas.accountlink.LinkedInstanceRepository;
 
 @DataJpaTest(
         properties = {
@@ -40,12 +42,13 @@ class SaasOwnershipServiceTest {
     @Autowired TeamRepository teams;
     @Autowired TeamMembershipRepository memberships;
     @Autowired SaasTeamExtensionService extensions;
+    @Autowired LinkedInstanceRepository instances;
 
     private Team team;
 
     @BeforeEach
     void setup() {
-        reset(extensions);
+        reset(extensions, instances);
         memberships.deleteAll();
         users.deleteAll();
         teams.deleteAll();
@@ -100,6 +103,96 @@ class SaasOwnershipServiceTest {
                 memberships.findByTeamIdAndUserId(team.getId(), first.getId()).orElseThrow());
         ownership.transfer(team.getId(), second.getId(), second);
         assertEquals(1, memberships.countByTeamIdAndRole(team.getId(), TeamRole.LEADER));
+    }
+
+    @Test
+    void linkedTeamCannotTransferThroughCloudOrLegacyEntryPoint() {
+        User first = member("first", TeamRole.LEADER);
+        User target = member("successor", TeamRole.MEMBER);
+        when(instances.countByTeamIdAndRevokedAtIsNull(team.getId())).thenReturn(1L);
+        var error =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> ownership.transfer(team.getId(), target.getId(), first));
+        assertEquals(409, error.getStatusCode().value());
+        assertEquals("START_TRANSFER_FROM_INSTANCE", error.getReason());
+        assertTrue(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), first.getId())
+                        .orElseThrow()
+                        .isLeader());
+        assertFalse(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), target.getId())
+                        .orElseThrow()
+                        .isLeader());
+    }
+
+    @Test
+    void authenticatedInstanceCanTransferItsLinkedTeam() {
+        User first = member("first", TeamRole.LEADER);
+        User target = member("successor", TeamRole.MEMBER);
+        LinkedInstance instance = new LinkedInstance();
+        instance.setDeviceId("device");
+        instance.setTeamId(team.getId());
+        when(instances.findByDeviceIdAndRevokedAtIsNull("device"))
+                .thenReturn(Optional.of(instance));
+        ownership.transferFromInstance(team.getId(), target.getId(), first, instance);
+        assertFalse(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), first.getId())
+                        .orElseThrow()
+                        .isLeader());
+        assertTrue(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), target.getId())
+                        .orElseThrow()
+                        .isLeader());
+    }
+
+    @Test
+    void revokedOrDifferentTeamInstanceCannotAuthorizeTransfer() {
+        User first = member("first", TeamRole.LEADER);
+        User target = member("successor", TeamRole.MEMBER);
+        LinkedInstance instance = new LinkedInstance();
+        instance.setDeviceId("device");
+        instance.setTeamId(team.getId());
+        assertEquals(
+                "LINK_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        ownership.transferFromInstance(
+                                                team.getId(), target.getId(), first, instance))
+                        .getReason());
+        instance.setTeamId(-1L);
+        when(instances.findByDeviceIdAndRevokedAtIsNull("device"))
+                .thenReturn(Optional.of(instance));
+        assertEquals(
+                "LINK_CHANGED",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        ownership.transferFromInstance(
+                                                team.getId(), target.getId(), first, instance))
+                        .getReason());
+        assertTrue(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), first.getId())
+                        .orElseThrow()
+                        .isLeader());
+    }
+
+    @Test
+    void linkedOwnerlessTeamCanStillRecoverOwnership() {
+        User target = member("successor", TeamRole.MEMBER);
+        when(instances.countByTeamIdAndRevokedAtIsNull(team.getId())).thenReturn(1L);
+        ownership.transfer(team.getId(), target.getId(), target);
+        assertTrue(
+                memberships
+                        .findByTeamIdAndUserId(team.getId(), target.getId())
+                        .orElseThrow()
+                        .isLeader());
     }
 
     @Test
@@ -175,6 +268,11 @@ class SaasOwnershipServiceTest {
                 "stirling.software.proprietary.security.repository"
             })
     static class TestApp {
+        @Bean
+        LinkedInstanceRepository instances() {
+            return mock(LinkedInstanceRepository.class);
+        }
+
         @Bean
         SaasTeamExtensionService extensions() {
             return mock(SaasTeamExtensionService.class);

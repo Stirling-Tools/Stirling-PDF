@@ -11,9 +11,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -200,103 +197,6 @@ public class ExceptionUtils {
             throw new IllegalArgumentException(message);
         }
         return obj;
-    }
-
-    /**
-     * Validates that rendering a PDF page at the given DPI will not exceed safe memory limits. This
-     * should be called BEFORE attempting to render to prevent OOM/NegativeArraySizeException.
-     *
-     * <p>The validation checks if the resulting image dimensions would exceed:
-     *
-     * <ul>
-     *   <li>Java's maximum array size (Integer.MAX_VALUE)
-     *   <li>Practical memory limits (considering bytes per pixel)
-     * </ul>
-     *
-     * <p><strong>Usage Example:</strong>
-     *
-     * <pre>{@code
-     * PDPage page = document.getPage(pageIndex);
-     * ExceptionUtils.validateRenderingDimensions(page, pageIndex + 1, dpi);
-     * // Only render if validation passes
-     * BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi);
-     * }</pre>
-     *
-     * @param page the PDF page to validate
-     * @param pageNumber the page number (1-based, for error messages)
-     * @param dpi the DPI value to use for rendering
-     * @throws OutOfMemoryDpiException if the dimensions would be too large
-     */
-    public static void validateRenderingDimensions(PDPage page, int pageNumber, int dpi)
-            throws OutOfMemoryDpiException {
-        if (page == null) {
-            return; // Nothing to validate
-        }
-
-        PDRectangle mediaBox = page.getMediaBox();
-        if (mediaBox == null) {
-            return; // Cannot validate without dimensions
-        }
-
-        // Get page dimensions in points (1 point = 1/72 inch)
-        float widthInPoints = mediaBox.getWidth();
-        float heightInPoints = mediaBox.getHeight();
-
-        // Convert to pixels at the given DPI
-        // Formula: pixels = (points / 72) * dpi
-        long widthInPixels = Math.round((widthInPoints / 72.0) * dpi);
-        long heightInPixels = Math.round((heightInPoints / 72.0) * dpi);
-
-        // Check if dimensions exceed Integer.MAX_VALUE
-        if (widthInPixels > Integer.MAX_VALUE || heightInPixels > Integer.MAX_VALUE) {
-            log.warn(
-                    "Page {} dimensions too large: {}x{} pixels at {} DPI",
-                    pageNumber,
-                    widthInPixels,
-                    heightInPixels,
-                    dpi);
-            throw createOutOfMemoryDpiException(
-                    pageNumber,
-                    dpi,
-                    new IllegalArgumentException(
-                            "Dimension exceeds Integer.MAX_VALUE: "
-                                    + widthInPixels
-                                    + "x"
-                                    + heightInPixels));
-        }
-
-        // Check if total pixel count would exceed safe limits
-        // RGB images use 4 bytes per pixel (ARGB), but be conservative
-        long totalPixels = widthInPixels * heightInPixels;
-        long estimatedBytes = totalPixels * 4; // 4 bytes per pixel for ARGB
-
-        // Java array max size is Integer.MAX_VALUE elements
-        // For byte array: Integer.MAX_VALUE bytes
-        // For int array (image pixels): Integer.MAX_VALUE ints = Integer.MAX_VALUE * 4 bytes
-        if (totalPixels > Integer.MAX_VALUE) {
-            log.warn(
-                    "Page {} pixel count too large: {} pixels ({} MB) at {} DPI",
-                    pageNumber,
-                    totalPixels,
-                    estimatedBytes / (1024 * 1024),
-                    dpi);
-            throw createOutOfMemoryDpiException(
-                    pageNumber,
-                    dpi,
-                    new IllegalArgumentException(
-                            "Total pixel count exceeds safe limit: " + totalPixels));
-        }
-
-        // Additional safety check: warn about very large images (> 1GB estimated)
-        if (estimatedBytes > 1024L * 1024 * 1024) {
-            log.warn(
-                    "Page {} will create a very large image: {}x{} pixels (~{} MB) at {} DPI. This may cause memory issues.",
-                    pageNumber,
-                    widthInPixels,
-                    heightInPixels,
-                    estimatedBytes / (1024 * 1024),
-                    dpi);
-        }
     }
 
     /**
@@ -753,6 +653,29 @@ public class ExceptionUtils {
     }
 
     /**
+     * The redaction engine's own check failed on some pages, so its output is withheld.
+     *
+     * @param pages the 1-based page numbers, already joined for display
+     */
+    public static ToolFailedException createRedactionUnverifiedException(String pages) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIED, pages),
+                null,
+                ErrorCode.REDACTION_UNVERIFIED.getCode());
+    }
+
+    /**
+     * The redaction engine could not run or check its own result, and named no page, so its output
+     * is withheld.
+     */
+    public static ToolFailedException createRedactionUnverifiableException(Throwable cause) {
+        return new ToolFailedException(
+                getMessage(ErrorCode.REDACTION_UNVERIFIABLE),
+                cause,
+                ErrorCode.REDACTION_UNVERIFIABLE.getCode());
+    }
+
+    /**
      * A step refused its input on type alone, before running.
      *
      * @param actual the extension, never the filename: this message is persisted on a failure
@@ -784,6 +707,16 @@ public class ExceptionUtils {
                         ErrorCode.GHOSTSCRIPT_REQUIRED.getDefaultMessage(),
                         operation);
         return new ToolRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
+    }
+
+    public static ToolRequiredException createLibreOfficeRequiredException(String extension) {
+        requireNonNull(extension, "extension");
+        String message =
+                getMessage(
+                        ErrorCode.LIBREOFFICE_REQUIRED.getMessageKey(),
+                        ErrorCode.LIBREOFFICE_REQUIRED.getDefaultMessage(),
+                        extension);
+        return new ToolRequiredException(message, ErrorCode.LIBREOFFICE_REQUIRED.getCode());
     }
 
     public static ToolRequiredException createPythonRequiredForWebpException() {
@@ -1027,6 +960,42 @@ public class ExceptionUtils {
                         ErrorCode.NULL_ARGUMENT.getDefaultMessage(),
                         argumentName);
         return new IllegalArgumentException(message);
+    }
+
+    public static OutOfMemoryDpiException createPageImageTooLargeException(
+            int pageNumber, int dpi, long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(
+                        ErrorCode.PAGE_IMAGE_TOO_LARGE,
+                        pageNumber,
+                        dpi,
+                        megapixels,
+                        limitMegapixels),
+                null,
+                ErrorCode.PAGE_IMAGE_TOO_LARGE.getCode());
+    }
+
+    public static OutOfMemoryDpiException createCombinedImageTooLargeException(
+            long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(ErrorCode.COMBINED_IMAGE_TOO_LARGE, megapixels, limitMegapixels),
+                null,
+                ErrorCode.COMBINED_IMAGE_TOO_LARGE.getCode());
+    }
+
+    public static DecodedStreamTooLargeException createDecodedStreamTooLargeException(
+            long limitMegabytes) {
+        return new DecodedStreamTooLargeException(
+                getMessage(ErrorCode.DECODED_STREAM_TOO_LARGE, limitMegabytes),
+                ErrorCode.DECODED_STREAM_TOO_LARGE.getCode());
+    }
+
+    public static OutOfMemoryDpiException createEmbeddedImageTooLargeException(
+            long megapixels, long limitMegapixels) {
+        return new OutOfMemoryDpiException(
+                getMessage(ErrorCode.EMBEDDED_IMAGE_TOO_LARGE, megapixels, limitMegapixels),
+                null,
+                ErrorCode.EMBEDDED_IMAGE_TOO_LARGE.getCode());
     }
 
     /**
@@ -1296,6 +1265,10 @@ public class ExceptionUtils {
                 "E064",
                 "error.ghostscriptRequired",
                 "Ghostscript must be installed for {0}. Install Ghostscript and ensure it is available on the system PATH."),
+        LIBREOFFICE_REQUIRED(
+                "E082",
+                "error.libreOfficeRequired",
+                "LibreOffice is needed to convert .{0} files but is not available. Install LibreOffice and ensure it is on the system PATH, or ask an administrator to re-enable the LibreOffice tool group."),
 
         // Validation errors
         INVALID_ARGUMENT("E070", "error.invalidArgument", "Invalid argument ''{0}'': {1}"),
@@ -1313,6 +1286,18 @@ public class ExceptionUtils {
                 "error.pdfUnrepairable",
                 "This document is damaged in a way the repair tools cannot fix."),
 
+        // The redaction engine's post-redaction check did not pass on these pages.
+        REDACTION_UNVERIFIED(
+                "E077",
+                "error.redactionUnverified",
+                "Redaction could not be verified on page {0}, so no file was returned."),
+
+        // The redaction engine could not run or check its result; it reports no page for this.
+        REDACTION_UNVERIFIABLE(
+                "E083",
+                "error.redactionUnverifiable",
+                "Redaction could not be verified, so no file was returned."),
+
         // Raised before a step runs, by whoever knows both what the step accepts and what it was
         // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.
         STEP_INPUT_TYPE_REJECTED(
@@ -1325,7 +1310,23 @@ public class ExceptionUtils {
         OUT_OF_MEMORY_DPI(
                 "E081",
                 "error.outOfMemoryDpi",
-                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks.");
+                "Out of memory or image-too-large error while rendering PDF page {0} at {1} DPI. This can occur when the resulting image exceeds Java's array/memory limits (e.g., NegativeArraySizeException). Please use a lower DPI value (recommended: 150 or less) or process the document in smaller chunks."),
+        PAGE_IMAGE_TOO_LARGE(
+                "E084",
+                "error.pageImageTooLarge",
+                "Page {0} at {1} DPI needs a {2}-megapixel image, more than this server''s limit of {3} megapixels. Use a lower DPI."),
+        COMBINED_IMAGE_TOO_LARGE(
+                "E085",
+                "error.combinedImageTooLarge",
+                "Joining the pages into one image needs {0} megapixels, more than this server''s limit of {1} megapixels. Use a lower DPI or one image per page."),
+        EMBEDDED_IMAGE_TOO_LARGE(
+                "E086",
+                "error.embeddedImageTooLarge",
+                "An image in this document needs {0} megapixels, more than this server''s limit of {1} megapixels."),
+        DECODED_STREAM_TOO_LARGE(
+                "E087",
+                "error.decodedStreamTooLarge",
+                "Part of this document decompresses to more than this server''s limit of {0} MB.");
 
         private final String code;
         private final String messageKey;
@@ -1605,6 +1606,22 @@ public class ExceptionUtils {
     public static class EmlFormatException extends BaseValidationException {
         public EmlFormatException(String message, String errorCode) {
             super(message, errorCode);
+        }
+    }
+
+    /**
+     * A PDF stream decoded past {@code DecodedStreamLimit}. Unchecked on purpose: PDFBox catches an
+     * IOException from a content stream and draws the page blank, which would answer a refused
+     * decode with a successful, empty result.
+     */
+    public static class DecodedStreamTooLargeException extends RuntimeException
+            implements ErrorCodeProvider {
+        @Getter(onMethod_ = {@Override})
+        private final String errorCode;
+
+        public DecodedStreamTooLargeException(String message, String errorCode) {
+            super(message);
+            this.errorCode = errorCode;
         }
     }
 

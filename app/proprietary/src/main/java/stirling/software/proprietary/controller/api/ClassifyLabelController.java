@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -38,10 +39,13 @@ import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiFeatureGate;
+import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
@@ -106,12 +110,17 @@ public class ClassifyLabelController {
     // PDF in, the same PDF out with a verdict on it, so a chain can be checked across this step.
     @ToolIO(accepts = ToolFormat.PDF, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Classify a PDF and label its metadata",
+            summary =
+                    "Classify a PDF (invoice, receipt, contract...), store the labels in its"
+                            + " metadata and return them",
             description =
                     "Reads the first two and last two pages, classifies the document via the AI"
-                            + " engine, and stores the result in the StirlingPDFClassification"
-                            + " metadata field. A document that already carries a verdict is"
-                            + " passed through untouched unless reclassify=true.")
+                            + " engine against the built-in label set, and stores the result in"
+                            + " the StirlingPDFClassification metadata field. The label ids are"
+                            + " also returned in the X-Stirling-Tool-Report header, e.g."
+                            + " {\"labels\":[\"invoice\"]}. A document that already carries a"
+                            + " verdict is passed through untouched unless reclassify=true; its"
+                            + " stored labels are reported with alreadyClassified=true.")
     public ResponseEntity<Resource> classifyAndLabel(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam(value = "reclassify", defaultValue = "false") boolean reclassify)
@@ -125,7 +134,10 @@ public class ClassifyLabelController {
                 // that already carries a verdict has nothing new to learn. A pipeline can run this
                 // step over a mixed batch without paying for the ones already done.
                 log.debug("[classify-and-label] {} already classified; passing through", fileName);
-                return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
+                String report = storedVerdictReport(document);
+                return withReport(
+                        WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager),
+                        report);
             }
 
             List<EngineLabel> allowed = resolveAllowedLabels();
@@ -144,10 +156,13 @@ public class ClassifyLabelController {
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
 
-            pdfMetadataService.setClassificationMetadata(document, toMetadataValue(responseJson));
+            String verdict = toMetadataValue(responseJson);
+            pdfMetadataService.setClassificationMetadata(document, verdict);
             log.debug("[classify-and-label] labelled {} ({} window pages)", fileName, pages.size());
 
-            return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
+            return withReport(
+                    WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager),
+                    verdict);
         }
     }
 
@@ -168,6 +183,36 @@ public class ClassifyLabelController {
         }
         String existing = info.getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
         return existing != null && !existing.isBlank();
+    }
+
+    /** Echoes only known label ids: the stored value is whatever metadata the file arrived with. */
+    private String storedVerdictReport(PDDocument document) {
+        Set<String> known =
+                resolveAllowedLabels().stream().map(EngineLabel::id).collect(Collectors.toSet());
+        ObjectNode report = objectMapper.createObjectNode();
+        report.put("alreadyClassified", true);
+        ArrayNode labels = report.putArray("labels");
+        String stored =
+                document.getDocumentInformation()
+                        .getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
+        try {
+            for (JsonNode label : objectMapper.readTree(stored).path("labels")) {
+                if (label.isTextual() && known.contains(label.asString())) {
+                    labels.add(label.asString());
+                }
+            }
+        } catch (JacksonException e) {
+            log.debug("[classify-and-label] stored verdict is not JSON: {}", e.getMessage());
+        }
+        return objectMapper.writeValueAsString(report);
+    }
+
+    private static ResponseEntity<Resource> withReport(
+            ResponseEntity<Resource> response, String report) {
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
+                .header(AiToolResponseHeaders.TOOL_REPORT, report)
+                .body(response.getBody());
     }
 
     private List<AiPageText> extractWindow(PDDocument document) throws IOException {

@@ -31,7 +31,7 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                             + " final merged document.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "true")
-    private Boolean removeCertSign;
+    private Boolean removeCertSign = true;
 
     @Schema(
             description =

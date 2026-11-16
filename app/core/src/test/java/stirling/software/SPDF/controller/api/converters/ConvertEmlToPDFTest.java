@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,6 +31,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -57,6 +60,8 @@ class ConvertEmlToPDFTest {
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
+    @Mock private OfficeConversionService officeConversionService;
+    @Mock private OfficeToPdfService officeToPdfService;
 
     @InjectMocks private ConvertEmlToPDF controller;
 
@@ -235,14 +240,18 @@ class ConvertEmlToPDFTest {
                                             any(byte[].class),
                                             eq(request),
                                             eq(customHtmlSanitizer)))
-                    .thenThrow(new IOException("Parse error"));
+                    .thenThrow(new IOException("Parse error: <b>&</b>"));
 
             ResponseEntity<Resource> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertTrue(
-                    new String(drainBody(response), StandardCharsets.UTF_8)
-                            .contains("HTML conversion failed"));
+            assertEquals(
+                    new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8),
+                    response.getHeaders().getContentType());
+            String body = new String(drainBody(response), StandardCharsets.UTF_8);
+            assertTrue(body.contains("HTML conversion failed"));
+            assertTrue(body.contains("&lt;b&gt;&amp;&lt;/b&gt;"));
+            assertFalse(body.contains("<b>"));
         }
     }
 

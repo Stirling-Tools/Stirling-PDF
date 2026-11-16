@@ -19,4 +19,12 @@ public class OrgOwner {
     private String ownerUsername;
     private LocalDateTime assignedAt;
     private String assignedReason;
+    private Long handoverTargetId;
+    private String handoverTargetUsername;
+    private String handoverTargetEmail;
+    private String handoverCloudEmail;
+    private Long handoverCloudUserId;
+    private String handoverDeviceId;
+    private Long handoverTeamId;
+    private Long handoverLeaderId;
 }

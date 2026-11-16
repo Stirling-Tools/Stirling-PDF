@@ -26,6 +26,7 @@ import stirling.software.saas.payg.model.FeatureSet;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
 
 /**
  * Hot-path entitlement lookup. Returns the {@link EntitlementSnapshot} for a team: the billing
@@ -54,6 +55,7 @@ public class EntitlementService {
     private final WalletPolicyRepository walletPolicyRepository;
     private final PaygShadowChargeRepository shadowRepository;
     private final PrepaidBundleService prepaidBundleService;
+    private final EnterpriseEntitlementService enterprise;
 
     private final Cache<Long, EntitlementSnapshot> snapshotCache;
 
@@ -61,13 +63,15 @@ public class EntitlementService {
             TeamBillingService teamBillingService,
             WalletPolicyRepository walletPolicyRepository,
             PaygShadowChargeRepository shadowRepository,
-            PrepaidBundleService prepaidBundleService) {
+            PrepaidBundleService prepaidBundleService,
+            EnterpriseEntitlementService enterprise) {
         this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
         this.walletPolicyRepository =
                 Objects.requireNonNull(walletPolicyRepository, "walletPolicyRepository");
         this.shadowRepository = Objects.requireNonNull(shadowRepository, "shadowRepository");
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
+        this.enterprise = Objects.requireNonNull(enterprise, "enterprise");
         this.snapshotCache =
                 Caffeine.newBuilder()
                         .maximumSize(CACHE_MAX_SIZE)
@@ -85,6 +89,18 @@ public class EntitlementService {
      */
     public EntitlementSnapshot getSnapshot(Long teamId) {
         Objects.requireNonNull(teamId, "teamId");
+        if (enterprise.isActive(teamId)) {
+            TeamBillingContext billing = teamBillingService.forTeam(teamId);
+            return new EntitlementSnapshot(
+                    EntitlementState.FULL,
+                    FeatureSet.FULL,
+                    List.copyOf(CapEvaluator.gatesFor(FeatureSet.FULL)),
+                    0L,
+                    null,
+                    billing.periodStart(),
+                    billing.periodEnd(),
+                    billing.subscribed());
+        }
         return snapshotCache.get(teamId, this::computeSnapshot);
     }
 

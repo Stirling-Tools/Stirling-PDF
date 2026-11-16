@@ -117,7 +117,10 @@ class SupportingFileBillingTest {
                         mock(PaygMeterReportingService.class),
                         ledger,
                         mock(PrepaidBundleService.class),
-                        mock(TeamBillingService.class));
+                        mock(TeamBillingService.class),
+                        mock(
+                                stirling.software.saas.procurement.service
+                                        .EnterpriseEntitlementService.class));
     }
 
     @Test

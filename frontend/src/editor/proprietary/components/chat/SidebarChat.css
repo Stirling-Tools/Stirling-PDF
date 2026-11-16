@@ -1,0 +1,40 @@
+/* A row of the file sidebar's column. It grows by flex-grow against the rows
+   above, which transitions smoothly where a height to or from auto cannot; at
+   grow 0 its basis of 0 leaves it at its minimum, the composer alone. */
+.chat-dock {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 0;
+  gap: var(--nav-gutter);
+  border-top: 1px solid var(--c-border-subtle);
+  transition: flex-grow 280ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chat-dock:not([data-state="collapsed"]) {
+  flex-grow: 1;
+}
+
+.chat-dock .chat-panel {
+  transition: opacity 180ms ease-out;
+}
+
+.chat-dock[data-state="collapsed"] .chat-panel {
+  opacity: 0;
+}
+
+/* Ruled above by the dock and below once messages scroll, so it pads evenly to
+   sit centred between the two, unlike the library header it otherwise matches. */
+.chat-dock .chat-panel > .file-sidebar-section-header {
+  padding-block: 0.25rem;
+}
+
+.chat-dock__title {
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-dock,
+  .chat-dock .chat-panel {
+    transition: none;
+  }
+}

@@ -20,6 +20,8 @@ public class SignatureSubmissionRequest {
     private String password;
     private MultipartFile p12File;
     private MultipartFile jksFile;
+    private MultipartFile privateKeyFile;
+    private MultipartFile certFile;
     private Boolean showSignature;
     private Integer pageNumber;
     private String location;

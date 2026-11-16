@@ -1,5 +1,7 @@
 package stirling.software.proprietary.security.saml2;
 
+import static stirling.software.common.util.ValidationUtils.isStringEmpty;
+
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.UUID;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Configuration
 @Slf4j
@@ -99,14 +102,23 @@ public class Saml2Configuration {
             throw new IllegalStateException("Failed to load SAML2 SP credentials", e);
         }
 
-        // Get backend URL from configuration (for SAML endpoints)
-        String backendUrl = applicationProperties.getSystem().getBackendUrl();
-        if (backendUrl == null || backendUrl.isBlank()) {
+        String override = samlConf.getRedirectBaseUrl();
+        if (!isStringEmpty(override) && RedirectBaseUrl.parse(override).isEmpty()) {
+            log.error(
+                    "Ignoring security.saml2.redirectBaseUrl '{}': expected an absolute http(s) URL"
+                            + " such as https://pdf.example.com",
+                    override);
+        }
+        String backendUrl =
+                RedirectBaseUrl.overrideOr(
+                                override, applicationProperties.getSystem().getBackendUrl())
+                        .orElse(null);
+        if (backendUrl == null) {
             backendUrl = "{baseUrl}"; // Fallback to Spring's auto-resolution
             log.warn(
                     "system.backendUrl not configured - SAML metadata will use request-based URLs. Set system.backendUrl for production use.");
         } else {
-            log.info("Using configured backend URL for SAML: {}", backendUrl);
+            log.info("Using configured base URL for SAML: {}", backendUrl);
         }
 
         String entityId =

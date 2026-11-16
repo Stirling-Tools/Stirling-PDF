@@ -1,0 +1,45 @@
+import { useTranslation } from "react-i18next";
+
+/**
+ * File action terminology for web builds
+ * Desktop builds override this with different terminology
+ */
+export function useFileActionTerminology() {
+  const { t } = useTranslation();
+
+  return {
+    uploadFiles: t("fileUpload.uploadFiles", "Upload Files"),
+    uploadFile: t("fileUpload.uploadFile", "Upload File"),
+    upload: t("fileUpload.upload", "Upload"),
+    dropFilesHere: t(
+      "fileUpload.dropFilesHere",
+      "Drop files here or click the upload button",
+    ),
+    addFiles: t("landing.addFiles", "Add Files"),
+    mobileUpload: t("landing.mobileUpload", "Upload from Mobile"),
+    uploadFromComputer: t("landing.uploadFromComputer", "Upload from computer"),
+    download: t("download", "Download"),
+    downloadAll: t("workbenchBar.downloadAll", "Download All"),
+    downloadSelected: t("fileManager.downloadSelected", "Download Selected"),
+    downloadSelectedPages: t(
+      "pageTracks.downloadSelectedPages",
+      "Download selected pages",
+    ),
+    downloadEachPage: t(
+      "pageTracks.downloadEachPage",
+      "Download each page individually",
+    ),
+    downloadAsOneFile: t(
+      "pageTracks.downloadAsOneFile",
+      "Download as one file",
+    ),
+    downloadUnavailable: t(
+      "downloadUnavailable",
+      "Download unavailable for this item",
+    ),
+    noFilesInStorage: t(
+      "fileUpload.noFilesInStorage",
+      "No files available in storage. Upload some files first.",
+    ),
+  };
+}

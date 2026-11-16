@@ -58,6 +58,13 @@ public class PaygShadowCharge implements Serializable {
     @Column(name = "payg_units", nullable = false)
     private Integer paygUnits;
 
+    /** Fixed at job admission so a later plan change cannot bill or refund included work. */
+    @Column(
+            name = "enterprise_covered",
+            nullable = false,
+            columnDefinition = "boolean not null default false")
+    private boolean enterpriseCovered;
+
     /**
      * How many of {@link #paygUnits} were drawn from the team's free grant at charge time. The paid
      * (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores this

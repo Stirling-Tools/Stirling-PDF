@@ -54,6 +54,14 @@ public class ConnectState implements Serializable {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    /** Null on older handshakes, which cannot establish a new link. */
+    private Long ownerUserId;
+
+    private LocalDateTime ownerAssignedAt;
+
+    /** Only session confirmation is accepted for a reauth handshake. */
+    private Boolean reauth;
+
     public boolean isExpired(LocalDateTime now) {
         return expiresAt != null && expiresAt.isBefore(now);
     }

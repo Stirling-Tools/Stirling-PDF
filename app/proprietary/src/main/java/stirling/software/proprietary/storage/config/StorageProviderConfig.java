@@ -116,7 +116,7 @@ public class StorageProviderConfig {
                     "Storage encryption at rest is enabled, but audit events require an Enterprise"
                             + " licence: encrypt/decrypt, revocation and plaintext-export events"
                             + " will NOT be recorded on this licence tier. Encryption itself is"
-                            + " unaffected. See devGuide/STORAGE_ENCRYPTION_AT_REST.md");
+                            + " unaffected. See docs/developer/STORAGE_ENCRYPTION_AT_REST.md");
         }
     }
 

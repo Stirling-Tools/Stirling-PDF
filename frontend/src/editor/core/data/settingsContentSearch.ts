@@ -1,0 +1,204 @@
+import i18n from "i18next";
+import type { TFunction } from "i18next";
+
+/**
+ * Content-level settings search: matches a query against every translation
+ * string a settings section renders, so a term that appears anywhere on a
+ * settings page ("SMTP", "OCR", a field label…) finds that section without a
+ * curated keyword.
+ *
+ * Component-free (translation subtrees only) so the always-mounted super
+ * search can use it without pulling the lazy settings page into the main
+ * bundle.
+ */
+
+/**
+ * Translation subtrees whose strings appear on each settings section, for the
+ * sections where the nav key doesn't map 1:1 onto a toml prefix. Keys missing
+ * here fall back to the inferred `settings.<key>` / `admin.settings.<key>`
+ * prefix.
+ */
+const SECTION_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
+  general: ["settings.general", "settings.hotkeys", "account"],
+  users: ["settings.workspace", "settings.team", "users", "portal.users"],
+  "api-keys": ["settings.developer"],
+  connectionMode: ["settings.connection"],
+  planBilling: ["settings.planBilling"],
+  adminGeneral: [
+    "admin.settings.general",
+    "admin.settings.features",
+    "admin.settings.endpoints",
+    "admin.settings.storageSharing",
+    "admin.settings.folderAccess",
+  ],
+  adminAdvanced: ["admin.settings.advanced"],
+  adminDatabase: ["admin.settings.database"],
+  // One page now, so one entry: mapping four keys at the same subtree returned
+  // four byte-identical results for every AI query.
+  adminAi: ["admin.settings.ai"],
+  adminSecurity: ["admin.settings.security", "admin.settings.connections"],
+  adminConnections: [
+    "admin.settings.connections",
+    "admin.settings.mail",
+    "admin.settings.telegram",
+    "admin.settings.mcp",
+  ],
+  adminLegal: ["admin.settings.legal", "admin.settings.privacy"],
+  adminPlan: [
+    "settings.planBilling",
+    "admin.settings.premium",
+    "settings.licensingAnalytics",
+  ],
+  adminAudit: ["settings.licensingAnalytics"],
+  adminUsage: ["settings.licensingAnalytics"],
+};
+
+export const getTranslationPrefixesForNavKey = (key: string): string[] => {
+  const explicitPrefixes = SECTION_TRANSLATION_PREFIXES[key] ?? [];
+
+  const inferredPrefixes: string[] = [];
+
+  if (key.startsWith("admin")) {
+    const adminSuffix = key.replace(/^admin/, "");
+    const normalizedAdminSuffix =
+      adminSuffix.charAt(0).toLowerCase() + adminSuffix.slice(1);
+    inferredPrefixes.push(`admin.settings.${normalizedAdminSuffix}`);
+  } else {
+    inferredPrefixes.push(`settings.${key}`);
+  }
+
+  return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
+};
+
+const INTERPOLATION_PLACEHOLDER_PATTERN = /\{\{\s*[^}]+?\s*\}\}/;
+const INDEXED_TRANS_TAG_PATTERN = /<\/?\d+>/g;
+const SEARCHABLE_TEXT_PATTERN = /[\p{L}\p{N}]/u;
+
+/**
+ * Searchable text from one translation leaf.
+ *
+ * An unresolved `{{interpolation}}` placeholder stands in for a runtime value
+ * this index cannot supply. The leftover label ("Default:") is not a useful
+ * hit, so the whole string is omitted. Indexed `<0>` Trans tags are markup
+ * around words the user sees, so only the tags are removed. Null when nothing
+ * searchable remains.
+ */
+export const sanitizeSearchableTranslationString = (
+  value: string,
+): string | null => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (INTERPOLATION_PLACEHOLDER_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  if (!trimmed.match(INDEXED_TRANS_TAG_PATTERN)) {
+    return trimmed;
+  }
+
+  const sanitized = trimmed
+    .replace(INDEXED_TRANS_TAG_PATTERN, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return SEARCHABLE_TEXT_PATTERN.test(sanitized) ? sanitized : null;
+};
+
+export const flattenTranslationStrings = (value: unknown): string[] => {
+  if (typeof value === "string") {
+    const sanitized = sanitizeSearchableTranslationString(value);
+    return sanitized ? [sanitized] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(flattenTranslationStrings);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).flatMap(
+      flattenTranslationStrings,
+    );
+  }
+
+  return [];
+};
+
+/** Trims a matched string to a short snippet centred on the query hit. */
+export const buildMatchSnippet = (text: string, query: string): string => {
+  const normalizedText = text.toLocaleLowerCase();
+  const normalizedQuery = query.toLocaleLowerCase();
+  const matchIndex = normalizedText.indexOf(normalizedQuery);
+
+  if (matchIndex === -1) {
+    return text;
+  }
+
+  // Lowercasing can change string length in some locales (Turkish İ, ß), so
+  // indices computed on the copy only align with the original when the
+  // lengths match; otherwise snippet the copy itself.
+  const source = normalizedText.length === text.length ? text : normalizedText;
+
+  const maxLength = 84;
+  const contextPadding = 28;
+  const start = Math.max(0, matchIndex - contextPadding);
+  const end = Math.min(
+    source.length,
+    matchIndex + query.length + contextPadding,
+  );
+  const snippet = source.slice(start, end);
+
+  if (snippet.length <= maxLength) {
+    return `${start > 0 ? "…" : ""}${snippet}${end < source.length ? "…" : ""}`;
+  }
+
+  return `${start > 0 ? "…" : ""}${snippet.slice(0, maxLength)}${end < source.length ? "…" : ""}`;
+};
+
+// Flattening every subtree on each keystroke would be wasteful; sections'
+// content is static per language, so cache it and drop the cache on switch.
+const contentCache = new Map<string, string[]>();
+let contentCacheLanguage: string | undefined;
+
+// Locale files load over HTTP after boot, so content computed before the
+// bundle resolves is empty — without this, an early query would cache empty
+// content for the whole session. Cleared whenever a resource bundle lands.
+i18n.on("loaded", () => contentCache.clear());
+
+export function getSettingsSectionContent(key: string, t: TFunction): string[] {
+  if (contentCacheLanguage !== i18n.language) {
+    contentCache.clear();
+    contentCacheLanguage = i18n.language;
+  }
+  const cached = contentCache.get(key);
+  if (cached) return cached;
+
+  const content = getTranslationPrefixesForNavKey(key).flatMap((prefix) =>
+    flattenTranslationStrings(
+      t(prefix, { returnObjects: true, defaultValue: {} }),
+    ),
+  );
+  contentCache.set(key, content);
+  return content;
+}
+
+/**
+ * First content string of the section containing the query
+ * (case-insensitive), or null. Substring only — fuzzy matching across whole
+ * paragraphs of copy produces junk hits.
+ */
+export function findSettingsContentMatch(
+  key: string,
+  query: string,
+  t: TFunction,
+): string | null {
+  const normalizedQuery = query.toLocaleLowerCase();
+  return (
+    getSettingsSectionContent(key, t).find((text) =>
+      text.toLocaleLowerCase().includes(normalizedQuery),
+    ) ?? null
+  );
+}

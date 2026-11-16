@@ -43,6 +43,7 @@ import stirling.software.saas.payg.repository.ProcessingJobRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
+import stirling.software.saas.procurement.service.EnterpriseEntitlementService;
 
 /**
  * Orchestrates a tool call's open-process decision: look up the team's effective policy, resolve
@@ -73,6 +74,7 @@ public class JobChargeService {
     private final WalletLedgerRepository ledgerRepository;
     private final PrepaidBundleService prepaidBundleService;
     private final TeamBillingService teamBillingService;
+    private final EnterpriseEntitlementService enterprise;
 
     public JobChargeService(
             JobService jobService,
@@ -84,7 +86,8 @@ public class JobChargeService {
             PaygMeterReportingService meterReportingService,
             WalletLedgerRepository ledgerRepository,
             PrepaidBundleService prepaidBundleService,
-            TeamBillingService teamBillingService) {
+            TeamBillingService teamBillingService,
+            EnterpriseEntitlementService enterprise) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -98,6 +101,7 @@ public class JobChargeService {
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
         this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
+        this.enterprise = Objects.requireNonNull(enterprise, "enterprise");
     }
 
     /**
@@ -136,11 +140,13 @@ public class JobChargeService {
         int units = computeUnits(inputs, policy);
         job.setDocUnits(units);
 
-        FreeGrantDraw freeDraw = consumeFreeGrant(ctx, units);
+        boolean covered = enterprise.isActive(ctx.ownerTeamId());
+        FreeGrantDraw freeDraw =
+                covered ? new FreeGrantDraw(0, null) : consumeFreeGrant(ctx, units);
         int freeUsed = freeDraw.units();
         // Prepaid bundle is the tier between the free grant and the meter (free → prepaid →
         // metered); draw only what the free grant didn't cover.
-        int bundleUsed = drawBundle(ctx, units - freeUsed);
+        int bundleUsed = covered ? 0 : drawBundle(ctx, units - freeUsed);
         recordShadowRow(
                 ctx,
                 job.getId(),
@@ -148,7 +154,8 @@ public class JobChargeService {
                 units,
                 freeUsed,
                 bundleUsed,
-                freeDraw.periodStart());
+                freeDraw.periodStart(),
+                covered);
         // doc_count + fingerprint were set on the fresh job by JobService.openFresh; carry them
         // onto the ledger DEBIT so usage analytics query one table. Bundle-drawn units are netted
         // out of the ledger amount so they never count against the spend cap (they're prepaid, not
@@ -157,7 +164,7 @@ public class JobChargeService {
                 ctx,
                 job.getId(),
                 policy.getId(),
-                units,
+                covered ? 0 : units,
                 bundleUsed,
                 job.getDocCount(),
                 job.getDocumentFingerprint());
@@ -201,9 +208,11 @@ public class JobChargeService {
                         ctx.runId());
         ProcessingJob job = jobService.open(jobCtx, chargeUnits);
 
-        FreeGrantDraw freeDraw = consumeFreeGrant(ctx, chargeUnits);
+        boolean covered = enterprise.isActive(ctx.ownerTeamId());
+        FreeGrantDraw freeDraw =
+                covered ? new FreeGrantDraw(0, null) : consumeFreeGrant(ctx, chargeUnits);
         int freeUsed = freeDraw.units();
-        int bundleUsed = drawBundle(ctx, chargeUnits - freeUsed);
+        int bundleUsed = covered ? 0 : drawBundle(ctx, chargeUnits - freeUsed);
         recordShadowRow(
                 ctx,
                 job.getId(),
@@ -211,12 +220,13 @@ public class JobChargeService {
                 chargeUnits,
                 freeUsed,
                 bundleUsed,
-                freeDraw.periodStart());
+                freeDraw.periodStart(),
+                covered);
         recordLedgerDebit(
                 ctx,
                 job.getId(),
                 policy.getId(),
-                chargeUnits,
+                covered ? 0 : chargeUnits,
                 bundleUsed,
                 job.getDocCount(),
                 job.getDocumentFingerprint());
@@ -380,12 +390,14 @@ public class JobChargeService {
             int units,
             int freeUnitsConsumed,
             int bundleUnitsConsumed,
-            LocalDateTime includedPeriodStart) {
+            LocalDateTime includedPeriodStart,
+            boolean enterpriseCovered) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setTeamId(ctx.ownerTeamId());
         row.setJobId(jobId);
         row.setPolicyId(policyId);
         row.setPaygUnits(units);
+        row.setEnterpriseCovered(enterpriseCovered);
         // Free/prepaid/paid split fixed at charge time: metered = paygUnits - freeUnitsConsumed -
         // bundleUnitsConsumed. A refund restores each portion to its source (grant / pools).
         row.setFreeUnitsConsumed(freeUnitsConsumed);
@@ -442,7 +454,8 @@ public class JobChargeService {
                     refund.setBucket(LedgerBucket.CYCLE);
                     // Mirror the reduced DEBIT: prepaid units never entered the CYCLE spend, so the
                     // compensating credit is the metered portion only (paygUnits − bundle).
-                    refund.setAmountUnits(row.getPaygUnits() - bundleConsumed);
+                    refund.setAmountUnits(
+                            row.isEnterpriseCovered() ? 0 : row.getPaygUnits() - bundleConsumed);
                     refund.setReferenceType(ReferenceType.JOB);
                     refund.setReferenceId(jobId.toString());
                     refund.setPolicyId(row.getPolicyId());
@@ -551,7 +564,7 @@ public class JobChargeService {
             return;
         }
         PaygShadowCharge row = rowOpt.get();
-        if (row.getStatus() == ShadowChargeStatus.REFUNDED) {
+        if (row.getStatus() == ShadowChargeStatus.REFUNDED || row.isEnterpriseCovered()) {
             // Refunded rows are zero-net charges; do not emit a meter event.
             return;
         }

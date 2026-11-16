@@ -1,0 +1,382 @@
+import {
+  getPdfiumModule,
+  openRawDocumentSafe,
+  closeRawDocument,
+  saveRawDocument,
+  importPages,
+  setPageRotation,
+  degreesToPdfiumRotation,
+  addNewPage,
+} from "@editor/services/pdfiumService";
+import { downloadFileWithPolicy } from "@editor/services/exportWithPolicy";
+import { PDFDocument, PDFPage } from "@editor/types/pageEditor";
+
+// A4 dimensions in PDF points (72 dpi)
+const A4_WIDTH = 595.276;
+const A4_HEIGHT = 841.89;
+
+export interface ExportOptions {
+  selectedOnly?: boolean;
+  filename?: string;
+}
+
+export class PDFExportService {
+  /**
+   * Export PDF document with applied operations (single file source)
+   */
+  async exportPDF(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[] = [],
+    options: ExportOptions = {},
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { selectedOnly = false, filename } = options;
+
+    try {
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
+          : pdfDocument.pages;
+
+      if (pagesToExport.length === 0) {
+        throw new Error("No pages to export");
+      }
+
+      const originalPDFBytes = await pdfDocument.file.arrayBuffer();
+      const blob = await this.createSingleDocument(
+        originalPDFBytes,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
+
+      return { blob, filename: exportFilename };
+    } catch (error) {
+      console.error("PDF export error:", error);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
+    }
+  }
+
+  /**
+   * Export PDF document with applied operations (multi-file source)
+   */
+  async exportPDFMultiFile(
+    pdfDocument: PDFDocument,
+    sourceFiles: Map<string, File>,
+    selectedPageIds: string[] = [],
+    options: ExportOptions = {},
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { selectedOnly = false, filename } = options;
+
+    try {
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
+          : pdfDocument.pages;
+
+      if (pagesToExport.length === 0) {
+        throw new Error("No pages to export");
+      }
+
+      const blob = await this.createMultiSourceDocument(
+        sourceFiles,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
+
+      return { blob, filename: exportFilename };
+    } catch (error) {
+      console.error("Multi-file PDF export error:", error);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
+    }
+  }
+
+  /**
+   * Create a PDF document from multiple source files using PDFium WASM.
+   */
+  private async createMultiSourceDocument(
+    sourceFiles: Map<string, File>,
+    pages: PDFPage[],
+  ): Promise<Blob> {
+    const m = await getPdfiumModule();
+
+    // Create destination document
+    const destDocPtr = m.FPDF_CreateNewDocument();
+    if (!destDocPtr)
+      throw new Error("PDFium: failed to create destination document");
+
+    // Load all source documents once and cache them
+    const loadedDocs = new Map<string, number>();
+
+    try {
+      for (const [fileId, file] of sourceFiles) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const docPtr = await openRawDocumentSafe(arrayBuffer);
+          loadedDocs.set(fileId, docPtr);
+        } catch (error) {
+          console.warn(`Failed to load source file ${fileId}:`, error);
+        }
+      }
+
+      // A page that cannot be written is a hard error: dropping it silently
+      // loses data, and still advancing insertIdx would set every later page's
+      // rotation on the wrong index. insertIdx only moves once a page lands.
+      let insertIdx = 0;
+      for (const page of pages) {
+        if (page.isBlankPage || page.originalPageNumber === -1) {
+          await addNewPage(
+            destDocPtr,
+            insertIdx,
+            page.blankSize?.width ?? A4_WIDTH,
+            page.blankSize?.height ?? A4_HEIGHT,
+          );
+          // Set absolute rotation (incl. 0) so editor rotation wins over source.
+          await setPageRotation(
+            destDocPtr,
+            insertIdx,
+            degreesToPdfiumRotation(page.rotation),
+          );
+          insertIdx++;
+          continue;
+        }
+
+        const srcDocPtr = page.originalFileId
+          ? loadedDocs.get(page.originalFileId)
+          : undefined;
+        if (srcDocPtr == null) {
+          throw new Error(
+            `[PDFExport] no source document for page ${page.pageNumber} (fileId=${page.originalFileId})`,
+          );
+        }
+        const srcPageCount = m.FPDF_GetPageCount(srcDocPtr);
+        const sourcePageIndex = page.originalPageNumber - 1;
+        if (sourcePageIndex < 0 || sourcePageIndex >= srcPageCount) {
+          throw new Error(
+            `[PDFExport] page ${page.originalPageNumber} out of range for fileId=${page.originalFileId} (${srcPageCount} pages)`,
+          );
+        }
+
+        // Import the specific page (1-based page range for FPDF_ImportPages).
+        const pageRange = String(sourcePageIndex + 1);
+        const imported = await importPages(
+          destDocPtr,
+          srcDocPtr,
+          pageRange,
+          insertIdx,
+        );
+        if (!imported) {
+          throw new Error(
+            `[PDFExport] importPages failed for fileId=${page.originalFileId} pageRange=${pageRange}`,
+          );
+        }
+        // Set absolute rotation (incl. 0) so editor rotation wins over source.
+        await setPageRotation(
+          destDocPtr,
+          insertIdx,
+          degreesToPdfiumRotation(page.rotation),
+        );
+        insertIdx++;
+      }
+
+      // Save the assembled document
+      const resultBuf = await saveRawDocument(destDocPtr);
+      return new Blob([resultBuf], { type: "application/pdf" });
+    } finally {
+      // Cleanup all loaded source documents
+      for (const docPtr of loadedDocs.values()) {
+        await closeRawDocument(docPtr);
+      }
+      m.FPDF_CloseDocument(destDocPtr);
+    }
+  }
+
+  /**
+   * Create a single PDF document with all operations applied (single source) using PDFium.
+   */
+  private async createSingleDocument(
+    sourceData: ArrayBuffer,
+    pages: PDFPage[],
+  ): Promise<Blob> {
+    const m = await getPdfiumModule();
+
+    // Open source document
+    const srcDocPtr = await openRawDocumentSafe(sourceData);
+    const destDocPtr = m.FPDF_CreateNewDocument();
+    if (!destDocPtr) {
+      await closeRawDocument(srcDocPtr);
+      throw new Error("PDFium: failed to create destination document");
+    }
+
+    try {
+      const srcPageCount = m.FPDF_GetPageCount(srcDocPtr);
+      // A page that cannot be written is a hard error: dropping it silently
+      // loses data, and still advancing insertIdx would set every later page's
+      // rotation on the wrong index. insertIdx only moves once a page lands.
+      let insertIdx = 0;
+
+      for (const page of pages) {
+        if (page.isBlankPage || page.originalPageNumber === -1) {
+          await addNewPage(
+            destDocPtr,
+            insertIdx,
+            page.blankSize?.width ?? A4_WIDTH,
+            page.blankSize?.height ?? A4_HEIGHT,
+          );
+          // Set absolute rotation (incl. 0) so editor rotation wins over source.
+          await setPageRotation(
+            destDocPtr,
+            insertIdx,
+            degreesToPdfiumRotation(page.rotation),
+          );
+          insertIdx++;
+          continue;
+        }
+
+        const sourcePageIndex = page.originalPageNumber - 1;
+        if (sourcePageIndex < 0 || sourcePageIndex >= srcPageCount) {
+          throw new Error(
+            `[PDFExport] page ${page.originalPageNumber} out of range (${srcPageCount} pages)`,
+          );
+        }
+        const pageRange = String(sourcePageIndex + 1);
+        const imported = await importPages(
+          destDocPtr,
+          srcDocPtr,
+          pageRange,
+          insertIdx,
+        );
+        if (!imported) {
+          throw new Error(
+            `[PDFExport] importPages failed for page ${page.originalPageNumber} pageRange=${pageRange}`,
+          );
+        }
+        // Set absolute rotation (incl. 0) so editor rotation wins over source.
+        await setPageRotation(
+          destDocPtr,
+          insertIdx,
+          degreesToPdfiumRotation(page.rotation),
+        );
+        insertIdx++;
+      }
+
+      const resultBuf = await saveRawDocument(destDocPtr);
+      return new Blob([resultBuf], { type: "application/pdf" });
+    } finally {
+      await closeRawDocument(srcDocPtr);
+      m.FPDF_CloseDocument(destDocPtr);
+    }
+  }
+
+  /**
+   * Generate appropriate filename for export
+   */
+  private generateFilename(originalName: string): string {
+    const baseName = originalName.replace(/\.pdf$/i, "");
+    return `${baseName}.pdf`;
+  }
+
+  /**
+   * Download a single file, applying any export-triggered policy first.
+   */
+  downloadFile(blob: Blob, filename: string): void {
+    void downloadFileWithPolicy({ data: blob, filename });
+  }
+
+  /**
+   * Download multiple files as a ZIP
+   */
+  async downloadAsZip(blobs: Blob[], filenames: string[]): Promise<void> {
+    blobs.forEach((blob, index) => {
+      setTimeout(() => {
+        this.downloadFile(blob, filenames[index]);
+      }, index * 500);
+    });
+  }
+
+  /**
+   * Validate PDF operations before export
+   */
+  validateExport(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): string[] {
+    const errors: string[] = [];
+
+    if (selectedOnly && selectedPageIds.length === 0) {
+      errors.push("No pages selected for export");
+    }
+
+    if (pdfDocument.pages.length === 0) {
+      errors.push("No pages available to export");
+    }
+
+    const pagesToExport = selectedOnly
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+      : pdfDocument.pages;
+
+    if (pagesToExport.length === 0) {
+      errors.push("No valid pages to export after applying filters");
+    }
+
+    return errors;
+  }
+
+  /**
+   * Get export preview information
+   */
+  getExportInfo(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): {
+    pageCount: number;
+    splitCount: number;
+    estimatedSize: string;
+  } {
+    const pagesToExport = selectedOnly
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+      : pdfDocument.pages;
+
+    const splitCount = pagesToExport.reduce((count, page) => {
+      return count + (page.splitAfter ? 1 : 0);
+    }, 1);
+
+    const avgPageSize = pdfDocument.file.size / pdfDocument.totalPages;
+    const estimatedBytes = avgPageSize * pagesToExport.length;
+    const estimatedSize = this.formatFileSize(estimatedBytes);
+
+    return {
+      pageCount: pagesToExport.length,
+      splitCount,
+      estimatedSize,
+    };
+  }
+
+  /**
+   * Format file size for display
+   */
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+}
+
+// Export singleton instance
+export const pdfExportService = new PDFExportService();

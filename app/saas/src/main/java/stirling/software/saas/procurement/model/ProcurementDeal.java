@@ -19,11 +19,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A linked team's enterprise commercial journey (one per team). Stage mirrors the buyer journey the
- * portal renders (trial -&gt; quote -&gt; agreement -&gt; payment -&gt; live). The entitlement that
- * actually unlocks the product is the Keygen licence in {@code licenseRef}; the paid subscription,
- * once commercial, is mirrored in {@code billing_subscriptions} and referenced by {@code
- * subscriptionId}.
+ * One commercial journey per team. Trial and purchased-period dates govern SaaS access; the Keygen
+ * licence carries the same expiry for self-hosted use. The accepted quote retains the agreed users
+ * and annual PDF volume independently of enforced PAYG capacity.
  */
 @Entity
 @Table(name = "procurement_deal")
@@ -99,6 +97,10 @@ public class ProcurementDeal implements Serializable {
     @Column(name = "subscription_id", length = 255)
     private String subscriptionId;
 
+    /** Blocks cancelled-period replays without treating an unpaid cutoff as termination. */
+    @Column(name = "terminated_subscription_id", length = 255)
+    private String terminatedSubscriptionId;
+
     /**
      * The last Stripe invoice whose payment was applied to this deal. Distinguishes a redelivered
      * {@code invoice.paid} for a payment already handled from a genuine renewal, which has to
@@ -110,6 +112,16 @@ public class ProcurementDeal implements Serializable {
 
     @Column(name = "accepted_quote_id")
     private Long acceptedQuoteId;
+
+    @Column(name = "enterprise_period_start")
+    private LocalDateTime enterprisePeriodStart;
+
+    @Column(name = "enterprise_period_end")
+    private LocalDateTime enterprisePeriodEnd;
+
+    /** Access may end before the service period when an accepted invoice remains unpaid. */
+    @Column(name = "enterprise_access_until")
+    private LocalDateTime enterpriseAccessUntil;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

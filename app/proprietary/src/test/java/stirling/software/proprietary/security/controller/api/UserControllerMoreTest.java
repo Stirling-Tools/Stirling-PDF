@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
@@ -72,7 +73,8 @@ class UserControllerMoreTest {
                         teamMembershipService,
                         org.mockito.Mockito.mock(
                                 stirling.software.proprietary.service.OrgOwnerService.class),
-                        loginLandingService);
+                        loginLandingService,
+                        new MockEnvironment());
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -476,6 +478,25 @@ class UserControllerMoreTest {
                     .andExpect(jsonPath("$.successCount").value(1));
 
             verify(userService).saveUserCore(any());
+        }
+
+        @Test
+        @DisplayName("refuses an address the account writer would reject")
+        void rejectsAddressThatCannotBecomeAUsername() throws Exception {
+            applicationProperties.getMail().setEnableInvites(true);
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/inviteUsers")
+                                    .principal(auth("admin"))
+                                    .param("emails", "o'brien@example.com"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.failureCount").value(1))
+                    .andExpect(jsonPath("$.successCount").value(0))
+                    .andExpect(
+                            jsonPath("$.errors")
+                                    .value("o'brien@example.com: Invalid email format; "));
+
+            verify(userService, never()).saveUserCore(any());
         }
     }
 }

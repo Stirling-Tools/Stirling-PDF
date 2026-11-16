@@ -23,7 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.exception.JPDFiumException;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
 import stirling.software.jpdfium.redact.RedactResult;
@@ -32,8 +35,45 @@ import stirling.software.jpdfium.redact.RedactResult;
 @Slf4j
 class TextRedactionService {
 
+    /**
+     * Throws when JPDFium's post-redaction check did not pass on any page. JPDFium reports that
+     * page with -1 matches but still returns a document, which is not passed on to the caller.
+     */
+    static void requireVerified(List<RedactResult.PageResult> pageResults)
+            throws ToolFailedException {
+        String failedPages =
+                pageResults.stream()
+                        .filter(page -> page.matchesFound() < 0)
+                        .map(page -> String.valueOf(page.pageIndex() + 1))
+                        .collect(Collectors.joining(", "));
+        if (!failedPages.isEmpty()) {
+            throw ExceptionUtils.createRedactionUnverifiedException(failedPages);
+        }
+    }
+
+    /**
+     * Throws when JPDFium refused to vouch for its redaction. Callers fall back to a weaker
+     * redaction on any other failure, and doing so here would return text JPDFium could not prove
+     * was removed.
+     */
+    static void rejectUnverifiable(Exception e) throws ToolFailedException {
+        if (e instanceof JPDFiumException engineError
+                && (engineError.isRedactUnverifiable() || engineError.isRedactIncomplete())) {
+            throw ExceptionUtils.createRedactionUnverifiableException(e);
+        }
+    }
+
     Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
+        return findTextToRedact(document, listOfText, useRegex, wholeWordSearch, false);
+    }
+
+    Map<Integer, List<PDFText>> findTextToRedact(
+            PDDocument document,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearch,
+            boolean caseSensitive) {
 
         Set<String> terms =
                 Arrays.stream(listOfText)
@@ -46,7 +86,8 @@ class TextRedactionService {
         }
 
         List<Pattern> patterns =
-                TextFinderUtils.createOptimizedSearchPatterns(terms, useRegex, wholeWordSearch);
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        terms, useRegex, wholeWordSearch, caseSensitive);
 
         if (patterns.isEmpty()) {
             return new HashMap<>();
@@ -76,7 +117,8 @@ class TextRedactionService {
             Map<Integer, List<PDFText>> allFoundTextsByPage,
             String[] listOfText,
             boolean useRegex,
-            boolean wholeWordSearchBool) {
+            boolean wholeWordSearchBool)
+            throws ToolFailedException {
         if (allFoundTextsByPage == null || allFoundTextsByPage.isEmpty()) {
             return false;
         }
@@ -134,6 +176,7 @@ class TextRedactionService {
             }
 
             try {
+                requireVerified(result.pageResults());
                 result.save(tempOut.toPath());
             } finally {
                 if (result.document() != null) {
@@ -151,7 +194,10 @@ class TextRedactionService {
 
             log.info("JPDFium text replacement complete: {} total matches", result.totalMatches());
             return false;
+        } catch (ToolFailedException e) {
+            throw e;
         } catch (Exception e) {
+            rejectUnverifiable(e);
             log.warn(
                     "JPDFium native text replacement failed, falling back to box-only redaction mode: {}",
                     e.getMessage());

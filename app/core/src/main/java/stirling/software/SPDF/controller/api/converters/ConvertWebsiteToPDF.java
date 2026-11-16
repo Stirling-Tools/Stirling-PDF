@@ -138,6 +138,8 @@ public class ConvertWebsiteToPDF {
             command.add("--base-url");
             command.add(URL);
             command.add("--pdf-forms");
+            command.add("--allowed-protocols");
+            command.add("data,http,https");
             command.add(tempOutputFile.toString());
 
             ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)

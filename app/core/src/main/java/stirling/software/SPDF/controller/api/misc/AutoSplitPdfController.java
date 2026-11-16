@@ -47,6 +47,8 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
+import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -214,20 +216,12 @@ public class AutoSplitPdfController {
                 continue;
             }
             PDImageXObject imageObject = (PDImageXObject) page.getResources().getXObject(name);
-
-            BufferedImage image;
-            try {
-                image = imageObject.getImage();
-            } catch (OutOfMemoryError e) {
-                log.warn(
-                        "Skipping oversized embedded image '{}' ({}x{}) - out of memory",
-                        name.getName(),
-                        imageObject.getWidth(),
-                        imageObject.getHeight());
+            if (!ImageMemoryLimit.embeddedImageFits(imageObject)) {
+                log.warn("Skipping embedded image '{}': over the image limit", name.getName());
                 continue;
             }
 
-            String result = decodeQRCode(image);
+            String result = decodeQRCode(imageObject.getImage());
             if (result != null) {
                 return result;
             }
@@ -283,11 +277,13 @@ public class AutoSplitPdfController {
     @MultiFileResponse
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
-            summary = "Auto split PDF pages into separate documents",
+            summary = "Split a PDF at Stirling QR-code divider pages",
             description =
-                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip file"
-                            + " containing each separate PDF document.")
+                    "Splits at each divider page and returns a zip of the parts. Divider"
+                            + " pages are dropped except a divider on page 1, which is retained."
+                            + " duplexMode=true also drops each divider's back page, including"
+                            + " when the divider is retained. With no dividers you get one file; use split-pages or"
+                            + " split-by-size-or-count instead.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -305,7 +301,7 @@ public class AutoSplitPdfController {
             int totalPages = document.getNumberOfPages();
             log.info("PDF loaded, totalPages={}", totalPages);
 
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
 
             for (int page = 0; page < totalPages; ++page) {

@@ -23,13 +23,13 @@ class MergePdfsRequestTest {
     class Defaults {
 
         @Test
-        @DisplayName("sortType defaults to orderProvided, generateToc false, others null")
+        @DisplayName("sortType defaults to orderProvided, generateToc false, removeCertSign true")
         void defaultValues() {
             MergePdfsRequest req = new MergePdfsRequest();
 
             assertThat(req.getSortType()).isEqualTo("orderProvided");
             assertThat(req.isGenerateToc()).isFalse();
-            assertThat(req.getRemoveCertSign()).isNull();
+            assertThat(req.getRemoveCertSign()).isTrue();
             assertThat(req.getClientFileIds()).isNull();
             assertThat(req.getFileInput()).isNull();
         }

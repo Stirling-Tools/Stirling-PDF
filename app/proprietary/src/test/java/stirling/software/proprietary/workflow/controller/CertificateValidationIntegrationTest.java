@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -52,6 +53,7 @@ class CertificateValidationIntegrationTest {
     @Mock private WorkflowSessionService workflowSessionService;
     @Mock private WorkflowParticipantRepository participantRepository;
     @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     // Mock PdfSigningService so the test-sign step succeeds without a real PDF engine
     @Mock private PdfSigningService pdfSigningService;
@@ -72,7 +74,8 @@ class CertificateValidationIntegrationTest {
                         participantRepository,
                         new ObjectMapper(),
                         metadataEncryptionService,
-                        realValidator);
+                        realValidator,
+                        eventPublisher);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 

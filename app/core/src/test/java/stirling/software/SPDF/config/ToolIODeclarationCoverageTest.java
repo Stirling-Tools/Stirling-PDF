@@ -37,6 +37,15 @@ import stirling.software.common.service.ToolIOParameterDefaults;
  */
 class ToolIODeclarationCoverageTest {
 
+    @Test
+    void selectiveRemovalMayRetainAnOpeningPassword() {
+        var removal = spec("/api/v1/security/remove-password");
+        assertEquals(
+                ToolFormat.ANY,
+                removal.resolveOutput(Map.of("password", "", "ownerPassword", "owner")).format());
+        assertEquals(ToolFormat.PDF, removal.resolveOutput(Map.of("password", "reader")).format());
+    }
+
     /** The namespaces whose endpoints act on documents. */
     private static final List<String> TOOL_NAMESPACES =
             List.of(
@@ -56,12 +65,10 @@ class ToolIODeclarationCoverageTest {
      */
     private static final List<String> EXEMPT =
             List.of(
-                    // Interactive editing sessions: page fragments and cache handles, not
-                    // documents.
-                    "/api/v1/convert/pdf/text-editor",
-                    "/api/v1/convert/text-editor/pdf",
-                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
-                    "/api/v1/general/pdf-text-editor",
+                    // Interactive credential helpers, hidden from pipeline discovery; restoration
+                    // requires the original protected document as well as the working result.
+                    "/api/v1/security/restore-pdf-protection",
+                    "/api/v1/security/prepare-pdf-session",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",
@@ -216,33 +223,6 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
-    void vectorExportDeclaresEveryOutputFormat() {
-        // Every value the request permits must resolve to what it actually emits. "eps" is the
-        // default and is an image extension; the other three are not, and would otherwise fall
-        // through to IMAGE and pass a chain that fails at run time.
-        ToolIOSpec spec = spec("/api/v1/convert/pdf/vector");
-        assertEquals(ToolFormat.IMAGE, spec.resolveOutput(Map.of("outputFormat", "eps")).format());
-        assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "ps")).format());
-        assertEquals(ToolFormat.PCL, spec.resolveOutput(Map.of("outputFormat", "pcl")).format());
-        assertEquals(ToolFormat.XPS, spec.resolveOutput(Map.of("outputFormat", "xps")).format());
-        // The request pattern accepts any casing, so the declaration must too.
-        assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "PS")).format());
-    }
-
-    @Test
-    void everyVectorOutputFormatHasACase() {
-        // Guards the list above against a new allowableValue being added without a declaration.
-        Set<String> declared =
-                spec("/api/v1/convert/pdf/vector").cases().stream()
-                        .flatMap(rule -> rule.when().stream())
-                        .flatMap(when -> when.matches().stream())
-                        .collect(java.util.stream.Collectors.toSet());
-        assertEquals(Set.of("ps", "pcl", "xps"), declared);
-    }
-
-    @Test
     void anAbsentParameterResolvesToItsRequestModelDefault() {
         // A pipeline step often omits a parameter a case branches on. The default is read from the
         // request model, so the output resolves anyway instead of coming back uncertain.
@@ -269,23 +249,17 @@ class ToolIODeclarationCoverageTest {
     }
 
     @Test
-    void onlyRemovePasswordAcceptsAnEncryptedDocument() {
-        assertTrue(
-                spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
+    void passwordToolsAcceptEncryptedSources() {
         List<String> accepting =
                 DECLARED.entrySet().stream()
                         .filter(e -> e.getValue().acceptsFormat(ToolFormat.PDF_ENCRYPTED))
                         .map(Map.Entry::getKey)
-                        .filter(path -> !path.equals("/api/v1/security/remove-password"))
                         .filter(path -> !spec(path).accepts().contains(ToolFormat.ANY))
                         .sorted()
                         .toList();
-        assertTrue(
-                accepting.isEmpty(),
-                () ->
-                        "Only remove-password should accept an encrypted PDF. If one of these"
-                                + " genuinely handles encryption, say so in its @ToolIO:\n  "
-                                + String.join("\n  ", accepting));
+        assertEquals(
+                List.of("/api/v1/security/add-password", "/api/v1/security/remove-password"),
+                accepting);
     }
 
     private static ToolIOSpec spec(String path) {

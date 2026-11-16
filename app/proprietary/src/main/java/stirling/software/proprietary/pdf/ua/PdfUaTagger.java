@@ -2,12 +2,15 @@ package stirling.software.proprietary.pdf.ua;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -263,12 +266,16 @@ public class PdfUaTagger {
     private static final List<String> MEANINGFUL_TYPES =
             List.of("Table", "TH", "Formula", "L", "LI", "TOC", "Note");
 
-    private static Set<String> structureTypes(PDDocument document) {
+    static Set<String> structureTypes(PDDocument document) {
         Set<String> types = new HashSet<>();
         try {
             PDStructureTreeRoot root = document.getDocumentCatalog().getStructureTreeRoot();
             if (root != null) {
-                collectTypes(root.getKids(), types, 0);
+                collectTypes(
+                        root.getKids(),
+                        types,
+                        0,
+                        Collections.newSetFromMap(new IdentityHashMap<>()));
             }
         } catch (RuntimeException e) {
             log.debug("Could not read structure types: {}", e.getMessage());
@@ -276,16 +283,18 @@ public class PdfUaTagger {
         return types;
     }
 
-    private static void collectTypes(Object node, Set<String> types, int depth) {
+    private static void collectTypes(
+            Object node, Set<String> types, int depth, Set<COSDictionary> seen) {
         // Structure trees can be deep or, in damaged files, cyclic; cap rather than overflow.
+        // The depth cap bounds a path, not the number of paths, so each element is walked once.
         if (node == null || depth > 64) {
             return;
         }
         if (node instanceof List<?> list) {
-            list.forEach(child -> collectTypes(child, types, depth + 1));
-        } else if (node instanceof PDStructureElement element) {
+            list.forEach(child -> collectTypes(child, types, depth + 1, seen));
+        } else if (node instanceof PDStructureElement element && seen.add(element.getCOSObject())) {
             types.add(element.getStructureType());
-            collectTypes(element.getKids(), types, depth + 1);
+            collectTypes(element.getKids(), types, depth + 1, seen);
         }
     }
 
