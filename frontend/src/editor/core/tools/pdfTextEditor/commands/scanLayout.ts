@@ -283,6 +283,45 @@ export function rewrapLines(
   return chars.join("");
 }
 
+/** `text` with the breaks `soft` flags (one flag per line) pulled up while the line above still `fits`, swapping only spaces and line breaks so offsets hold. */
+export function joinSoftLines(
+  text: string,
+  soft: readonly boolean[],
+  fits: (line: string) => boolean,
+): string {
+  const chars = [...text];
+  if (chars.length !== text.length) return text;
+  const softAt = new Set<number>();
+  let line = 0;
+  chars.forEach((ch, i) => {
+    if (ch === "\n" && soft[++line]) softAt.add(i);
+  });
+  let start = 0;
+  while (start < chars.length) {
+    let end = chars.indexOf("\n", start);
+    if (end < 0) end = chars.length;
+    while (softAt.has(end)) {
+      const nextEnd = chars.indexOf("\n", end + 1);
+      const lineEnd = nextEnd < 0 ? chars.length : nextEnd;
+      let wordEnd = end + 1;
+      while (wordEnd < lineEnd && chars[wordEnd] === " ") wordEnd++;
+      if (wordEnd === lineEnd) break;
+      while (wordEnd < lineEnd && chars[wordEnd] !== " ") wordEnd++;
+      const joined = chars.slice(start, wordEnd).join("").replace("\n", " ");
+      if (!fits(joined.trim())) break;
+      chars[end] = " ";
+      softAt.delete(end);
+      if (wordEnd < lineEnd) {
+        chars[wordEnd] = "\n";
+        softAt.add(wordEnd);
+        end = wordEnd;
+      } else end = lineEnd;
+    }
+    start = end + 1;
+  }
+  return chars.join("");
+}
+
 // The last space on [start, end) with a word on both sides of it.
 function lastBreak(chars: string[], start: number, end: number): number {
   let at = end - 1;

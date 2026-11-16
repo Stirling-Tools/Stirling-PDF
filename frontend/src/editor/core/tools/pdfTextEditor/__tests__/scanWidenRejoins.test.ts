@@ -1,0 +1,135 @@
+// @vitest-environment node
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import path from "node:path";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  test,
+  vi,
+} from "vitest";
+import { resizeRunCommand } from "@editor/tools/pdfTextEditor/commands/resizeRun";
+import {
+  isScanRun,
+  prefitScanRun,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  _resetScanFacesForTests,
+  _setBundledScanFacesForTests,
+  type Face,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { readBundledFaces } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
+
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
+
+const FIXTURE = path.join(
+  import.meta.dirname,
+  "../../../tests/test-fixtures/scanned-ocr-paragraph.pdf",
+);
+
+class TestImageData {
+  constructor(
+    readonly data: Uint8ClampedArray,
+    readonly width: number,
+    readonly height: number,
+  ) {}
+}
+
+let bundled: Face[] = [];
+const stores: EditorStore[] = [];
+
+beforeAll(async () => {
+  const wasmBytes = await readFile(
+    createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
+  );
+  vi.stubGlobal("ImageData", TestImageData);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(wasmBytes, {
+          headers: { "Content-Type": "application/wasm" },
+        }),
+    ),
+  );
+  bundled = await readBundledFaces();
+});
+
+beforeEach(() => _setBundledScanFacesForTests(bundled));
+
+afterEach(() => {
+  for (const store of stores.splice(0)) store.dispose();
+});
+
+afterAll(() => {
+  _resetScanFacesForTests();
+  vi.unstubAllGlobals();
+});
+
+async function openParagraph(bytes: Uint8Array) {
+  const doc = await EditorDocument.open(bytes);
+  const store = new EditorStore();
+  stores.push(store);
+  await store.setDocument(doc);
+  const page = doc.page(0);
+  PdfiumTextReader.populate(doc, page);
+  const run = page.runs.find(
+    (r) => isScanRun(r) && r.text.startsWith("This agreement"),
+  )!;
+  return { doc, store, page, run };
+}
+
+async function fitted() {
+  const opened = await openParagraph(new Uint8Array(await readFile(FIXTURE)));
+  while (
+    !prefitScanRun(opened.doc, opened.page, opened.run, performance.now() + 50)
+  )
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  return opened;
+}
+
+test(
+  "widening a narrowed scanned paragraph back rejoins the lines the narrowing broke",
+  { timeout: 180_000 },
+  async () => {
+    const { doc, store, run } = await fitted();
+    const original = run.text;
+    const width = run.bounds.width;
+
+    store.dispatch(resizeRunCommand(doc, 0, run.id, width * 0.6)!);
+    expect(run.text.split("\n").length).toBeGreaterThan(
+      original.split("\n").length,
+    );
+    store.dispatch(resizeRunCommand(doc, 0, run.id, width + 1)!);
+
+    expect(run.text).toBe(original);
+  },
+);
+
+test(
+  "widening a scanned paragraph past its margin joins the lines the scan wrapped, as one undo step",
+  { timeout: 180_000 },
+  async () => {
+    const { doc, store, run } = await fitted();
+    const original = run.text;
+
+    store.dispatch(resizeRunCommand(doc, 0, run.id, run.bounds.width * 1.5)!);
+    const widened = run.text;
+    expect(widened.split("\n").length).toBeLessThan(
+      original.split("\n").length,
+    );
+    expect(widened.replace(/\s+/g, " ")).toBe(original.replace(/\s+/g, " "));
+
+    store.undo();
+    expect(run.text).toBe(original);
+    store.redo();
+    expect(run.text).toBe(widened);
+  },
+);

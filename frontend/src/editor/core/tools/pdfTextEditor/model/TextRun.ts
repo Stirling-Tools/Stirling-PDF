@@ -112,12 +112,15 @@ export class TextRun {
   scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
   paragraphLineSlots: ParagraphLineSlot[];
-  // Which visual lines start at a break the WRAP put there rather than one the
-  // user typed. run.text spells both as a newline - it has to, or the line
+  // Which visual lines start at a soft break: one a wrap put there, or one the
+  // document's producer wrapped at its margin, rather than a line the author or
+  // user ended. run.text spells both as a newline - it has to, or the line
   // count the painter and the box height read disagrees with the ink on the
-  // page - so the difference lives here. Without it a reflow re-reads its own
-  // soft breaks as forced ones and the paragraph can never re-flow again.
+  // page - so the difference lives here. Without it a reflow re-reads soft
+  // breaks as forced ones and widening the box can never rejoin them.
   paragraphSoftStarts: boolean[];
+  /** The text `paragraphSoftStarts` was indexed for; read them through `softStartsOf`, which maps them onto edits since. */
+  paragraphSoftStartsText: string;
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
@@ -179,6 +182,7 @@ export class TextRun {
     this.paragraphLeafContainers = [];
     this.paragraphLineSlots = [];
     this.paragraphSoftStarts = [];
+    this.paragraphSoftStartsText = init.text;
     this.coverRectPtr = 0;
     this.scanEdit = null;
     this.documentFont = null;

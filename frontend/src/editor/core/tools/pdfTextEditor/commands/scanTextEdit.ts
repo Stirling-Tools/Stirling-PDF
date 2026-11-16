@@ -33,7 +33,9 @@ import {
   lineRegion,
   type PlacedWord,
 } from "@editor/tools/pdfTextEditor/commands/scanOffInk";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import {
+  joinSoftLines,
   layoutScanEdit,
   rewrapLines,
   type LayoutWord,
@@ -1419,7 +1421,8 @@ export function wrapScanText(
   const width = (line: string) =>
     spanOf(doc, page, line, style.family, style.fontSize) * style.stretch;
   const fits = (line: string) => line === "" || width(line) <= maxWidthPt;
-  const grown = rewrapLines(run.text, fits, true);
+  const joined = joinSoftLines(run.text, softStartsOf(run), fits);
+  const grown = rewrapLines(joined, fits, true);
   const wrapped = roomBelow(
     page,
     run,
@@ -1428,7 +1431,7 @@ export function wrapScanText(
     grown.split("\n").length,
   )
     ? grown
-    : rewrapLines(run.text, fits, false);
+    : rewrapLines(joined, fits, false);
   // All or nothing: without room for the last line's overflow the text would just stick out on another line.
   const settled = wrapped
     .split("\n")

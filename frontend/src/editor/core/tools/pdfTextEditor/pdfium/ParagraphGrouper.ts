@@ -10,6 +10,7 @@ import type {
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { median } from "@editor/tools/pdfTextEditor/util/median";
+import { softLineStarts } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 
 /** Cluster consecutive `LineGroup` representatives into "paragraphs". */
 const MIN_LINE_FACTOR = 0.6;
@@ -42,6 +43,7 @@ export class ParagraphGrouper {
   ): ParagraphInfo[] {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
+    const softStarts = new Map<ParagraphInfo, boolean[]>();
 
     const cells = tableCells(allLines);
     // Columns first: a reading-order sort across the whole page interleaves
@@ -58,8 +60,11 @@ export class ParagraphGrouper {
         const layer = sorted.filter(
           (line) => (line.renderMode === RENDER_MODE_INVISIBLE) === invisible,
         );
-        if (layer.length > 0)
-          groupColumnLines(layer, blockKey, grouped, cells, lineFonts, faceOf);
+        if (layer.length === 0) continue;
+        const from = grouped.length;
+        groupColumnLines(layer, blockKey, grouped, cells, lineFonts, faceOf);
+        for (const para of grouped.slice(from))
+          softStarts.set(para, documentSoftStarts(para.members, layer));
       }
       const order = new Map(sorted.map((line, i) => [line, i]));
       grouped.sort(
@@ -71,6 +76,7 @@ export class ParagraphGrouper {
     // Fold member bounds + text into the representative and drop the member
     // runs from the page so the editor sees one overlay per paragraph.
     for (const para of paragraphs) {
+      para.representative.paragraphSoftStartsText = para.representative.text;
       if (para.members.length === 1) continue;
       const rep = para.representative;
 
@@ -120,6 +126,8 @@ export class ParagraphGrouper {
       rep.paragraphLeafPtrs = leafPtrs;
       rep.paragraphLeafContainers = leafContainers;
       rep.paragraphLineSlots = slots;
+      rep.paragraphSoftStarts = softStarts.get(para) ?? [];
+      rep.paragraphSoftStartsText = joinedText;
       rep.readingOrderUnsure = para.members.some(
         (member) => member.readingOrderUnsure,
       );
@@ -128,6 +136,27 @@ export class ParagraphGrouper {
     page.setRuns(paragraphs.map((p) => p.representative));
     return paragraphs;
   }
+}
+
+// The column's wrap margin is the furthest right that a line starting at or
+// left of the paragraph reaches: a short paragraph's own widest line is not a
+// margin, so the short lines of a list or an indented block read as ended.
+function documentSoftStarts(members: TextRun[], column: TextRun[]): boolean[] {
+  const lines = members.map((m) => ({
+    text: m.text,
+    left: m.bounds.x,
+    right: m.bounds.x + m.bounds.width,
+    fontSize: m.fontSize,
+  }));
+  if (lines.length < 2) return [];
+  const left = Math.min(...lines.map((l) => l.left));
+  const tolerance = Math.max(3, (members[0].fontSize || 12) * 0.6);
+  const margin = Math.max(
+    ...column
+      .filter((line) => line.bounds.x <= left + tolerance)
+      .map((line) => line.bounds.x + line.bounds.width),
+  );
+  return softLineStarts(lines, margin);
 }
 
 /** Build a `ParagraphLineSlot[]` from the paragraph's member runs. */

@@ -1,6 +1,7 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -67,6 +68,7 @@ interface RunSnapshot {
   paragraphLeafContainers: number[];
   paragraphLineSlots: ParagraphLineSlot[];
   paragraphSoftStarts: boolean[];
+  paragraphSoftStartsText: string;
   mergedFromPtrs: number[];
   mergedFromTexts: string[];
   mergedFromBounds: Array<{ x: number; right: number }>;
@@ -208,8 +210,7 @@ export class ReflowWrapCommand implements Command {
       if (carried) return Math.max(0, gap);
       return gap > 0 ? gap : spaceWidth;
     };
-    // Manual line breaks the user typed (Enter) live in run.text as "\n".
-    const hardBreaks = hardBreakNonWsCounts(run.text, run.paragraphSoftStarts);
+    const hardBreaks = hardBreakNonWsCounts(run.text, softStartsOf(run));
 
     this.prev = snapshotRun(run);
 
@@ -482,9 +483,9 @@ function hardBreakNonWsCounts(
   for (const ch of text) {
     if (ch === "\n") {
       lineIndex += 1;
-      // A break this command inserted to make the text fit is not the user's,
-      // so it must stay re-flowable. Reading it back as forced would freeze the
-      // paragraph at whatever width it happened to be wrapped to.
+      // A soft break is not the author's, so it must stay re-flowable. Reading
+      // it back as forced would freeze the paragraph at whatever width it
+      // happened to be wrapped to.
       if (!softStarts?.[lineIndex]) out.set(nonWs, (out.get(nonWs) ?? 0) + 1);
     } else if (!/\s/.test(ch)) nonWs += 1;
   }
@@ -617,6 +618,7 @@ function rebuildRunFromLines(
   } else {
     run.text = glyphDerived;
   }
+  run.paragraphSoftStartsText = run.text;
 
   const s0 = slots[0];
   if (s0) {
@@ -695,6 +697,7 @@ function snapshotRun(run: TextRun): RunSnapshot {
     paragraphLeafContainers: [...run.paragraphLeafContainers],
     paragraphLineSlots: run.paragraphLineSlots.map(cloneSlot),
     paragraphSoftStarts: [...run.paragraphSoftStarts],
+    paragraphSoftStartsText: run.paragraphSoftStartsText,
     mergedFromPtrs: [...run.mergedFromPtrs],
     mergedFromTexts: [...run.mergedFromTexts],
     mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -716,6 +719,7 @@ function restoreRun(run: TextRun, prev: RunSnapshot): void {
   run.paragraphLeafContainers = [...prev.paragraphLeafContainers];
   run.paragraphLineSlots = prev.paragraphLineSlots.map(cloneSlot);
   run.paragraphSoftStarts = [...prev.paragraphSoftStarts];
+  run.paragraphSoftStartsText = prev.paragraphSoftStartsText;
   run.mergedFromPtrs = [...prev.mergedFromPtrs];
   run.mergedFromTexts = [...prev.mergedFromTexts];
   run.mergedFromBounds = prev.mergedFromBounds.map((b) => ({ ...b }));
@@ -775,7 +779,8 @@ function resegmentByLines(
     }
     const start = posAtNonWsIndex(preReflowText, cumNw);
     const lastPos = posAtNonWsIndex(preReflowText, cumNw + nw - 1);
-    out.push(preReflowText.slice(start, lastPos + 1));
+    // A line that joined soft-broken lines spans their breaks.
+    out.push(preReflowText.slice(start, lastPos + 1).replace(/\n/g, " "));
     cumNw += nw;
   }
   return out;

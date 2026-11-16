@@ -1,6 +1,10 @@
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import {
+  RewrapTextCommand,
+  rewrapDrawnLines,
+} from "@editor/tools/pdfTextEditor/commands/rewrapDrawnLines";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   isScanRun,
@@ -44,6 +48,11 @@ export function resizeRunCommand(
       explicit: true,
     });
   }
+  const rewrapped = rewrapDrawnLines(doc, page, run, maxWidthPt);
+  if (rewrapped !== null)
+    return rewrapped === run.text
+      ? null
+      : new RewrapTextCommand(pageIndex, runId, rewrapped, maxWidthPt);
   return new ReflowWrapCommand({
     pageIndex,
     runId,
