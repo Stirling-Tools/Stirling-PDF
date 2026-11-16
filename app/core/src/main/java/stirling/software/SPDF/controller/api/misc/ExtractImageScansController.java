@@ -42,6 +42,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.LimitedPDFRenderer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -72,8 +73,8 @@ public class ExtractImageScansController {
     @ToolIO(
             accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
             inputExtensions = {
-                "pdf", "bmp", "dib", "gif", "jpeg", "jpg", "jpe", "jp2", "png", "webp", "avif",
-                "pbm", "pgm", "ppm", "pxm", "pnm", "pfm", "sr", "ras", "tiff", "tif", "hdr", "pic"
+                "pdf", "bmp", "dib", "gif", "jpeg", "jpg", "jpe", "jp2", "png", "webp", "pbm",
+                "pgm", "ppm", "pxm", "pnm", "pfm", "tiff", "tif"
             },
             produces = ToolFormat.IMAGE,
             arity = ToolArity.SIMO)
@@ -202,10 +203,23 @@ public class ExtractImageScansController {
             ImageReader reader = readers.getFirst();
             try {
                 reader.setInput(in, true, true);
+                requireDecodable(reader.getWidth(0), reader.getHeight(0));
                 return reader.read(0);
             } finally {
                 readers.forEach(ImageReader::dispose);
             }
+        }
+    }
+
+    private static void requireDecodable(long width, long height) {
+        long pixels = width * height;
+        long limit = ImageMemoryLimit.maxPixels();
+        if (pixels > limit) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.imageTooLarge",
+                    "The image has {0} pixels; the limit is {1}.",
+                    pixels,
+                    limit);
         }
     }
 

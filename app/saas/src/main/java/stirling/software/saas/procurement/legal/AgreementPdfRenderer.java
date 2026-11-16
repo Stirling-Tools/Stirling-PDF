@@ -24,8 +24,8 @@ import stirling.software.common.util.TempFileManager;
  * Office Convert), the same converter as the product's Markdown-to-PDF tool.
  *
  * <p>The signed PDF is a stored artifact, but it must never block signing: {@link #tryRender}
- * returns {@code null} if the conversion fails, so the signature is
- * still recorded and the buyer keeps the on-the-fly download.
+ * returns {@code null} if the conversion fails, so the signature is still recorded and the buyer
+ * keeps the on-the-fly download.
  */
 @Service
 @RequiredArgsConstructor

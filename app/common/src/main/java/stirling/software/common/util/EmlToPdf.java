@@ -61,7 +61,7 @@ public class EmlToPdf {
 
             return pdfBytes;
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             throw new IOException("Error converting EML to PDF", e);

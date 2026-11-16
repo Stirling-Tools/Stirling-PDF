@@ -661,7 +661,7 @@ class HtmlToPdfParams(ApiModel):
     This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML/ZIP Output:PDF Type:SISO
     """
 
-    zoom: float = Field(1, description="Scale applied to the page content, from 0.1 to 10. Default is '1'.")
+    zoom: float = Field(1, description="Scale applied to the page content, from 0.1 to 8. Default is '1'.")
 
 
 class ImageBox(ApiModel):

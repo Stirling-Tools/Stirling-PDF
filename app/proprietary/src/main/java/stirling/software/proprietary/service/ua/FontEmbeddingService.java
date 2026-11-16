@@ -76,9 +76,22 @@ public class FontEmbeddingService {
                                 + String.join(", ", missing)
                                 + "). PDF/UA requires every font to be embedded.");
             }
+            if (!result.incomplete().isEmpty()) {
+                return new Result(
+                        pdfBytes,
+                        false,
+                        missing,
+                        "Embedding "
+                                + String.join(", ", result.incomplete())
+                                + " would leave characters with no glyph, so the fonts were left"
+                                + " as they were. PDF/UA requires every font to be embedded.");
+            }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.save(out);
-            Set<String> remaining = findUnembeddedFonts(document);
+            Set<String> remaining;
+            try (PDDocument saved = Loader.loadPDF(out.toByteArray())) {
+                remaining = findUnembeddedFonts(saved);
+            }
             if (!remaining.isEmpty()) {
                 return new Result(
                         out.toByteArray(),

@@ -490,9 +490,7 @@ public class EndpointConfiguration {
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "repair");
-        addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "ocr-pdf");
-        addEndpointToGroup("CLI", "url-to-pdf");
 
         // python
 

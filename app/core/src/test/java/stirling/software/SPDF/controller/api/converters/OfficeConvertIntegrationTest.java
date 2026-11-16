@@ -183,7 +183,33 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(floats = {0.05f, 11f})
+    @ValueSource(floats = {2f, 8f})
+    void officeHtmlZoomOverridesAuthorPageSize(float zoom) throws Exception {
+        byte[] html =
+                ("<html><head><style>@page{size:210mm 297mm}</style></head><body><p>"
+                                + TEXT
+                                + "</p></body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+        HTMLToPdfRequest request = new HTMLToPdfRequest();
+        request.setFileInput(new MockMultipartFile("fileInput", "page.html", "text/html", html));
+        request.setZoom(zoom);
+        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
+
+        byte[] pdf = body(controller.HtmlToPdf(request));
+
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            assertThat(new PDFTextStripper().getText(document).replaceAll("\\s", ""))
+                    .contains(TEXT.replace(" ", ""));
+        }
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            var box = document.getPage(0).getMediaBox();
+            assertThat(box.getWidth()).isCloseTo(595.3f, within(1f));
+            assertThat(box.getHeight()).isCloseTo(841.9f, within(1f));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(floats = {0.05f, 9f})
     void officeHtmlRejectsZoomOutsideTheSupportedRange(float zoom) {
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         request.setFileInput(

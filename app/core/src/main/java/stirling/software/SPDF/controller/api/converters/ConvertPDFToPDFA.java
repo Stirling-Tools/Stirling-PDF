@@ -858,14 +858,27 @@ public class ConvertPDFToPDFA {
                     case 3 -> PdfALevel.A3B;
                     default -> throw new IllegalArgumentException("Unsupported PDF/A part");
                 };
-        PdfToPdfA.convert(
-                inputPath,
-                output,
-                PdfToPdfA.Options.defaults()
-                        .level(level)
-                        .timeout(officeConversionService.settings().timeout())
-                        .maxPages(maxConversionPages));
+        try {
+            PdfToPdfA.convert(
+                    inputPath,
+                    output,
+                    PdfToPdfA.Options.defaults()
+                            .level(level)
+                            .timeout(officeConversionService.settings().timeout())
+                            .maxPages(maxConversionPages));
+        } catch (IOException e) {
+            requirePageCountWithinLimit(inputPath);
+            throw e;
+        }
         return Files.readAllBytes(output);
+    }
+
+    private void requirePageCountWithinLimit(Path inputPath) {
+        try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
+            requireSanitizablePageCount(doc, maxConversionPages);
+        } catch (IOException unreadable) {
+            log.debug("Could not count pages after a failed PDF/A conversion", unreadable);
+        }
     }
 
     private ResponseEntity<Resource> handlePdfAConversion(

@@ -5,17 +5,34 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Locale;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitHeightDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitRectangleDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.util.Matrix;
 
 import stirling.software.common.util.ExceptionUtils;
@@ -23,12 +40,11 @@ import stirling.software.common.util.ExceptionUtils;
 final class HtmlPageZoom {
 
     static final float MIN_ZOOM = 0.1f;
-    static final float MAX_ZOOM = 10f;
+    static final float MAX_ZOOM = 8f;
 
     private static final float A4_WIDTH_MM = 210f;
     private static final float A4_HEIGHT_MM = 297f;
     private static final long MAX_PACKAGE_BYTES = 256L * 1024 * 1024;
-    private static final byte[] UTF8_BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     private HtmlPageZoom() {}
 
@@ -48,12 +64,9 @@ final class HtmlPageZoom {
     }
 
     static byte[] layOutPage(byte[] html, float zoom) {
-        byte[] style = pageStyle(zoom);
-        int bom = startsWithBom(html) ? UTF8_BOM.length : 0;
-        byte[] out = new byte[html.length + style.length];
-        System.arraycopy(html, 0, out, 0, bom);
-        System.arraycopy(style, 0, out, bom, style.length);
-        System.arraycopy(html, bom, out, bom + style.length, html.length - bom);
+        byte[] style = pageStyle(zoom).getBytes(bomCharset(html));
+        byte[] out = Arrays.copyOf(html, html.length + style.length);
+        System.arraycopy(style, 0, out, html.length, style.length);
         return out;
     }
 
@@ -81,6 +94,7 @@ final class HtmlPageZoom {
     }
 
     static void scaleToZoom(PDDocument document, float zoom) throws IOException {
+        Set<COSBase> scaledDestinations = Collections.newSetFromMap(new IdentityHashMap<>());
         for (PDPage page : document.getPages()) {
             try (PDPageContentStream content =
                     new PDPageContentStream(
@@ -95,8 +109,62 @@ final class HtmlPageZoom {
                 if (rectangle != null) {
                     annotation.setRectangle(scaled(rectangle, zoom));
                 }
+                if (annotation instanceof PDAnnotationLink link) {
+                    scaleDestination(link.getDestination(), zoom, scaledDestinations);
+                    scaleDestination(link.getAction(), zoom, scaledDestinations);
+                }
             }
         }
+        PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
+        if (outline != null) {
+            scaleOutline(outline.children(), zoom, scaledDestinations);
+        }
+    }
+
+    private static void scaleOutline(
+            Iterable<PDOutlineItem> items, float zoom, Set<COSBase> scaledDestinations)
+            throws IOException {
+        for (PDOutlineItem item : items) {
+            scaleDestination(item.getDestination(), zoom, scaledDestinations);
+            scaleDestination(item.getAction(), zoom, scaledDestinations);
+            scaleOutline(item.children(), zoom, scaledDestinations);
+        }
+    }
+
+    private static void scaleDestination(
+            PDAction action, float zoom, Set<COSBase> scaledDestinations) throws IOException {
+        if (action instanceof PDActionGoTo goTo) {
+            scaleDestination(goTo.getDestination(), zoom, scaledDestinations);
+        }
+    }
+
+    private static void scaleDestination(
+            PDDestination destination, float zoom, Set<COSBase> scaledDestinations) {
+        if (!(destination instanceof PDPageDestination pageDestination)
+                || !scaledDestinations.add(pageDestination.getCOSObject())) {
+            return;
+        }
+        switch (pageDestination) {
+            case PDPageXYZDestination xyz -> {
+                xyz.setLeft(scaled(xyz.getLeft(), zoom));
+                xyz.setTop(scaled(xyz.getTop(), zoom));
+            }
+            case PDPageFitWidthDestination fitWidth ->
+                    fitWidth.setTop(scaled(fitWidth.getTop(), zoom));
+            case PDPageFitHeightDestination fitHeight ->
+                    fitHeight.setLeft(scaled(fitHeight.getLeft(), zoom));
+            case PDPageFitRectangleDestination rectangle -> {
+                rectangle.setLeft(scaled(rectangle.getLeft(), zoom));
+                rectangle.setBottom(scaled(rectangle.getBottom(), zoom));
+                rectangle.setRight(scaled(rectangle.getRight(), zoom));
+                rectangle.setTop(scaled(rectangle.getTop(), zoom));
+            }
+            default -> {}
+        }
+    }
+
+    private static int scaled(int coordinate, float zoom) {
+        return coordinate == -1 ? -1 : Math.round(coordinate * zoom);
     }
 
     private static PDRectangle scaled(PDRectangle box, float zoom) {
@@ -107,20 +175,22 @@ final class HtmlPageZoom {
                 box.getHeight() * zoom);
     }
 
-    private static byte[] pageStyle(float zoom) {
+    private static String pageStyle(float zoom) {
         return String.format(
-                        Locale.ROOT,
-                        "<style>@page{size:%.3fmm %.3fmm}</style>",
-                        A4_WIDTH_MM / zoom,
-                        A4_HEIGHT_MM / zoom)
-                .getBytes(StandardCharsets.US_ASCII);
+                Locale.ROOT,
+                "<style>@page{size:%.3fmm %.3fmm}</style>",
+                A4_WIDTH_MM / zoom,
+                A4_HEIGHT_MM / zoom);
     }
 
-    private static boolean startsWithBom(byte[] html) {
-        return html.length >= UTF8_BOM.length
-                && html[0] == UTF8_BOM[0]
-                && html[1] == UTF8_BOM[1]
-                && html[2] == UTF8_BOM[2];
+    private static Charset bomCharset(byte[] html) {
+        if (html.length >= 2 && (html[0] & 0xFF) == 0xFF && (html[1] & 0xFF) == 0xFE) {
+            return StandardCharsets.UTF_16LE;
+        }
+        if (html.length >= 2 && (html[0] & 0xFF) == 0xFE && (html[1] & 0xFF) == 0xFF) {
+            return StandardCharsets.UTF_16BE;
+        }
+        return StandardCharsets.UTF_8;
     }
 
     private static boolean isHtml(String name) {

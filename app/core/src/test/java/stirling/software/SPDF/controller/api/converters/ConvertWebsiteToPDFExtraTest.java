@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import stirling.software.SPDF.service.OfficeToPdfService;
+import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFileManager;
@@ -32,6 +33,7 @@ class ConvertWebsiteToPDFExtraTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private OfficeToPdfService officeToPdfService;
     @Mock private TempFileManager tempFileManager;
+    @Mock private AppConfig appConfig;
 
     private ConvertWebsiteToPDF sut;
 
@@ -42,7 +44,8 @@ class ConvertWebsiteToPDFExtraTest {
                         pdfDocumentFactory,
                         officeToPdfService,
                         new ApplicationProperties(),
-                        tempFileManager);
+                        tempFileManager,
+                        appConfig);
     }
 
     private boolean containsDisallowed(String html) throws Exception {

@@ -146,12 +146,11 @@ public class ConvertEmlToPDF {
                         HttpStatus.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "Email to PDF conversion failed for {}: {}",
+                log.warn(
+                        "Email to PDF conversion rejected for {}: {}",
                         originalFilename,
-                        errorMessage,
-                        e);
-                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
+                        errorMessage);
+                return errorResponse(HttpStatus.BAD_REQUEST, errorMessage);
             } catch (IOException | RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(

@@ -25,6 +25,7 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
@@ -46,6 +47,17 @@ public class ConvertWebsiteToPDF {
     private final OfficeToPdfService officeToPdfService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
+    private final AppConfig appConfig;
+
+    private String contextPathPrefix() {
+        String contextPath = appConfig.getContextPath();
+        if (contextPath == null || contextPath.isBlank() || "/".equals(contextPath)) {
+            return "";
+        }
+        return contextPath.endsWith("/")
+                ? contextPath.substring(0, contextPath.length() - 1)
+                : contextPath;
+    }
 
     private static final Pattern FILE_SCHEME_PATTERN =
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
@@ -65,7 +77,8 @@ public class ConvertWebsiteToPDF {
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
         // Jobs run off the request thread, so there is no servlet context to build from.
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromPath("/url-to-pdf");
+        UriComponentsBuilder uriComponentsBuilder =
+                UriComponentsBuilder.fromPath(contextPathPrefix()).path("/url-to-pdf");
         URI location = null;
         HttpStatus status = HttpStatus.SEE_OTHER;
 
