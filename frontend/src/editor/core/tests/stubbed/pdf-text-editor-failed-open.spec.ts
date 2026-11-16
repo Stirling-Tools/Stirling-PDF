@@ -89,10 +89,12 @@ test.describe("PDF text editor - a file that does not open", () => {
   }) => {
     await page.goto("/editor");
     await page.getByTestId("file-input").setInputFiles(RESTRICTED);
+    // The upload opens the workbench's permission check, whose overlay takes
+    // the click until it closes; on a slow WebKit that outlasts the default.
     await page
       .getByRole("link", { name: "PDF Text Editor", exact: true })
       .first()
-      .click();
+      .click({ timeout: 60_000 });
     const banner = page.getByTestId("pdf-editor-error");
     await banner
       .getByRole("button", { name: "Enter permissions password" })

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "@editor/ui/Icon";
 import {
   ColorInput,
@@ -41,6 +41,11 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
     onChangeCase,
   } = controller;
   const [fillPickerOpen, setFillPickerOpen] = useState(false);
+  // What the colour field holds while it has focus. The toolbar can redraw a
+  // pick after the model has it, and that late value would replace the text
+  // the user is selecting or typing over.
+  const [fillDraft, setFillDraft] = useState<string | null>(null);
+  const fillFocusedRef = useRef(false);
   if (!hasRunSelection) return null;
 
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
@@ -108,9 +113,10 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
             transition: "width 120ms ease-out",
           },
         }}
-        value={fillHex}
+        value={fillDraft ?? fillHex}
         fixOnBlur={false}
         onChange={(next) => {
+          if (fillFocusedRef.current) setFillDraft(next);
           if (!next) return;
           const rgb = parseCssColor(next);
           if (!rgb) return;
@@ -127,9 +133,17 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
         onChangeEnd={() =>
           window.requestAnimationFrame(() => setFillPickerOpen(false))
         }
-        onFocus={() => setFillPickerOpen(true)}
+        onFocus={() => {
+          fillFocusedRef.current = true;
+          setFillDraft(fillHex);
+          setFillPickerOpen(true);
+        }}
         onClick={() => setFillPickerOpen(true)}
-        onBlur={() => setFillPickerOpen(false)}
+        onBlur={() => {
+          fillFocusedRef.current = false;
+          setFillDraft(null);
+          setFillPickerOpen(false);
+        }}
         onKeyDown={(event) => {
           if (event.key === "Escape" || event.key === "Enter") {
             setFillPickerOpen(false);

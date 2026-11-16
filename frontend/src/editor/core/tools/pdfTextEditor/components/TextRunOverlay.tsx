@@ -415,7 +415,16 @@ function caretBesideLines(
   text.selectNodeContents(el);
   const r = text.getBoundingClientRect();
   if (r.height <= 2 || (clientY >= r.top && clientY <= r.bottom)) return null;
-  const y = Math.min(r.bottom - 1, Math.max(r.top + 1, clientY));
+  const boxes = Array.from(text.getClientRects()).filter((b) => b.height > 2);
+  const line =
+    boxes.length === 0
+      ? r
+      : clientY < r.top
+        ? boxes.reduce((a, b) => (b.top < a.top ? b : a))
+        : boxes.reduce((a, b) => (b.bottom > a.bottom ? b : a));
+  // The middle of the nearest line: near the edge of its line box WebKit's
+  // hit test misses the glyphs and returns the end of the text.
+  const y = (line.top + line.bottom) / 2;
   const position = document.caretPositionFromPoint?.(clientX, y);
   const caret = position
     ? document.createRange()

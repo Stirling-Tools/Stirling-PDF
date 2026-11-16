@@ -93,6 +93,9 @@ function recordFrames(page: Page, testId: string): Promise<void> {
       inputs += 1;
       const n = inputs;
       requestAnimationFrame(() => {
+        // A key handled before this frame was drawn makes it that key's frame:
+        // the user never saw this one. Engines differ in how often that is.
+        if (n !== inputs) return;
         const selection = window.getSelection()!;
         const box = el.getBoundingClientRect();
         let caret: Frame["caret"] = null;
@@ -163,7 +166,9 @@ async function typeAndRecord(
     .poll(
       () =>
         page.evaluate(
-          () => (window as unknown as EditorWindow).__liveWrapFrames.length,
+          () =>
+            (window as unknown as EditorWindow).__liveWrapFrames.at(-1)
+              ?.inputs ?? 0,
         ),
       { timeout: 30_000 },
     )

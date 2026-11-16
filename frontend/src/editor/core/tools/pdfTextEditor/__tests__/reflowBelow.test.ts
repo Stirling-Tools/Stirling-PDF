@@ -247,7 +247,7 @@ test("joining the document's own lines leaves the text below where it is", async
   const below = rest.map((run) => run.bounds.y);
 
   type(doc, new HistoryStack(), paragraph.id, [
-    paragraph.text.replace("\n", " "),
+    paragraph.text.replaceAll("\n", " "),
   ]);
 
   expect(rest.map((run) => run.bounds.y)).toEqual(below);

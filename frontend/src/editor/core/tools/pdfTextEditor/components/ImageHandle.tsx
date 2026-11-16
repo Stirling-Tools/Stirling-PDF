@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import React from "react";
-import { Rnd } from "react-rnd";
+import { Rnd, type RndDragEvent } from "react-rnd";
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -47,6 +47,40 @@ function ImageGhost({
       style={{ position: "absolute", pointerEvents: "none", ...style }}
     />
   );
+}
+
+interface DragOrigin {
+  pointerX: number;
+  pointerY: number;
+  left: number;
+  top: number;
+  maxLeft: number;
+  maxTop: number;
+}
+
+function pointerOf(e: RndDragEvent): { x: number; y: number } | null {
+  if ("changedTouches" in e) {
+    const touch = e.changedTouches[0];
+    return touch ? { x: touch.clientX, y: touch.clientY } : null;
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
+// react-draggable adds each move to the position it last rendered, so moves
+// that arrive before React commits the one before them are lost and the box
+// trails the pointer. Firefox and WebKit deliver several per frame, so the
+// box is placed from the pointer's travel since the press instead.
+function draggedTo(
+  origin: DragOrigin | null,
+  e: RndDragEvent,
+): { x: number; y: number } | null {
+  const pointer = pointerOf(e);
+  if (!origin || !pointer) return null;
+  const clamp = (v: number, max: number) => Math.min(Math.max(v, 0), max);
+  return {
+    x: clamp(origin.left + pointer.x - origin.pointerX, origin.maxLeft),
+    y: clamp(origin.top + pointer.y - origin.pointerY, origin.maxTop),
+  };
 }
 
 interface ImageHandleProps {
@@ -98,6 +132,11 @@ export function ImageHandle({
   // from every resize event, so pressing or releasing it mid-drag applies.
   const [keepRatio, setKeepRatio] = useState(false);
   const [ghost, setGhost] = useState<ImagePixels | null>(null);
+  const dragOriginRef = useRef<DragOrigin | null>(null);
+  const [dragPosition, setDragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const liftedRef = useRef(false);
   const cancelledRef = useRef(false);
   const escapeRef = useRef<((e: KeyboardEvent) => void) | null>(null);
@@ -255,7 +294,7 @@ export function ImageHandle({
   return (
     <Rnd
       size={{ width, height }}
-      position={{ x: left, y: top }}
+      position={dragPosition ?? { x: left, y: top }}
       disableDragging={locked}
       enableResizing={
         !locked && (selected || hovered)
@@ -268,10 +307,27 @@ export function ImageHandle({
           : false
       }
       bounds="parent"
-      onDragStart={() => {
+      onDragStart={(e, data) => {
+        const pointer = pointerOf(e);
+        const parent = data.node.parentElement;
+        dragOriginRef.current =
+          pointer && parent
+            ? {
+                pointerX: pointer.x,
+                pointerY: pointer.y,
+                left,
+                top,
+                maxLeft: Math.max(0, parent.offsetWidth - width),
+                maxTop: Math.max(0, parent.offsetHeight - height),
+              }
+            : null;
         setDragging(true);
         startLift();
         onSelect();
+      }}
+      onDrag={(e) => {
+        const at = draggedTo(dragOriginRef.current, e);
+        if (at) setDragPosition(at);
       }}
       lockAspectRatio={keepRatio}
       onResizeStart={(e) => {
@@ -281,9 +337,12 @@ export function ImageHandle({
         onSelect();
       }}
       onResize={(e) => setKeepRatio(e.shiftKey)}
-      onDragStop={(_, data) => {
+      onDragStop={(e, data) => {
+        const at = draggedTo(dragOriginRef.current, e) ?? data;
+        dragOriginRef.current = null;
+        setDragPosition(null);
         setDragging(false);
-        const next = cssToPdfBounds(data.x, data.y, width, height);
+        const next = cssToPdfBounds(at.x, at.y, width, height);
         const moved =
           Math.abs(next.x - b.x) > 0.01 || Math.abs(next.y - b.y) > 0.01;
         finishGesture(moved ? next : null);

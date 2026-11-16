@@ -307,7 +307,7 @@ export function joinSoftLines(
       while (wordEnd < lineEnd && chars[wordEnd] === " ") wordEnd++;
       if (wordEnd === lineEnd) break;
       while (wordEnd < lineEnd && chars[wordEnd] !== " ") wordEnd++;
-      const joined = chars.slice(start, wordEnd).join("").replace("\n", " ");
+      const joined = chars.slice(start, wordEnd).join("").replaceAll("\n", " ");
       if (!fits(joined.trim())) break;
       chars[end] = " ";
       softAt.delete(end);
