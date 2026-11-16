@@ -1,5 +1,9 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import {
+  softStartsFor,
+  softStartsOf,
+} from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+import {
   needsShaping,
   needsShapingMessage,
 } from "@editor/tools/pdfTextEditor/util/complexShaping";
@@ -331,6 +335,9 @@ export class EditTextCommand implements Command {
     before: readonly PushRecord[];
     after: readonly PushRecord[];
   } | null = null;
+  // Which lines start at a wrap before and after this edit, so a later widening rejoins wraps and keeps typed breaks.
+  private softBefore: SoftStarts | null = null;
+  private softAfter: SoftStarts | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -364,6 +371,7 @@ export class EditTextCommand implements Command {
     if (shaped && typesUnshaped(run.text, this.nextText))
       throw new RolledBackError(new Error(needsShapingMessage()));
     const membersBefore = shaped ? memberTexts(doc, page, run) : null;
+    const softBefore = run ? softStartsNow(run) : null;
     this.applyEdit(doc);
     if (run && membersBefore && drewUnshaped(doc, page, run, membersBefore)) {
       this.revertEdit(doc);
@@ -406,6 +414,14 @@ export class EditTextCommand implements Command {
         this.pushes = moves.map(({ runId, dy }) => this.moveBelow(runId, dy));
         this.pushRecords = { before: pushRecords(run), after: records };
       }
+    }
+    if (run && softBefore) {
+      this.softBefore ??= softBefore;
+      this.softAfter ??= {
+        flags: softStartsFor(run.text, softBefore.text, softBefore.flags),
+        text: run.text,
+      };
+      setSoftStarts(run, this.softAfter);
     }
     this.redoPushes(doc);
   }
@@ -1262,6 +1278,8 @@ export class EditTextCommand implements Command {
   revert(doc: EditorDocument): void {
     this.undoPushes(doc);
     this.revertEdit(doc);
+    const run = doc.page(this.pageIndex).findRun(this.runId);
+    if (run && this.softBefore) setSoftStarts(run, this.softBefore);
   }
 
   private revertEdit(doc: EditorDocument): void {
@@ -2136,6 +2154,8 @@ export class EditTextCommand implements Command {
       throw new RolledBackError(err);
     }
     if (phase === "apply") for (const edit of edits) edit.redoPushes(doc);
+    const soft = phase === "revert" ? edits[0].softBefore : this.softAfter;
+    if (soft) setSoftStarts(run, soft);
     const after = new Set(collectMemberPtrs(run));
     // The replay command is thrown away, and with it the only record of the objects it took off the page.
     for (const ptr of replaced)
@@ -2784,4 +2804,18 @@ function patchSlotPtrsByBaseline(
   rebuilt.startChar = old.startChar;
   rebuilt.endChar = old.endChar;
   run.paragraphLineSlots[idx] = rebuilt;
+}
+
+interface SoftStarts {
+  flags: boolean[];
+  text: string;
+}
+
+function softStartsNow(run: TextRun): SoftStarts {
+  return { flags: softStartsOf(run), text: run.text };
+}
+
+function setSoftStarts(run: TextRun, soft: SoftStarts): void {
+  run.paragraphSoftStarts = [...soft.flags];
+  run.paragraphSoftStartsText = soft.text;
 }

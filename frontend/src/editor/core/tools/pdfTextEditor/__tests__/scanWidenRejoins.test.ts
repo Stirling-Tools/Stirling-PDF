@@ -11,6 +11,7 @@ import {
   test,
   vi,
 } from "vitest";
+import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { resizeRunCommand } from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import {
   isScanRun,
@@ -129,6 +130,48 @@ test(
 
     store.undo();
     expect(run.text).toBe(original);
+    store.redo();
+    expect(run.text).toBe(widened);
+  },
+);
+
+const EDITS: Array<[string, (text: string) => string]> = [
+  [
+    "an Enter typed after a sentence",
+    (text) => text.replace("customer. ", "customer. \n"),
+  ],
+  ["a typed word", (text) => text.replace("goods", "boxed goods")],
+  ["a deleted word", (text) => text.replace("goods ", "")],
+];
+
+test.each(EDITS)(
+  "after %s in a narrowed scanned paragraph, widening rejoins the wraps and keeps a typed break",
+  { timeout: 180_000 },
+  async (name, edit) => {
+    const { doc, store, run } = await fitted();
+    const width = run.bounds.width;
+
+    store.dispatch(resizeRunCommand(doc, 0, run.id, width * 0.6)!);
+    const narrowed = run.text;
+    const edited = edit(narrowed);
+    expect(edited).not.toBe(narrowed);
+    store.dispatch(
+      new EditTextCommand({ pageIndex: 0, runId: run.id, nextText: edited }),
+    );
+    const linesBefore = run.text.split("\n").length;
+
+    const widen = resizeRunCommand(doc, 0, run.id, width * 1.5);
+    expect(widen).not.toBeNull();
+    store.dispatch(widen!);
+    const widened = run.text;
+
+    expect(widened.split("\n").length).toBeLessThan(linesBefore);
+    expect(widened.replace(/\s+/g, " ")).toBe(edited.replace(/\s+/g, " "));
+    if (name.startsWith("an Enter"))
+      expect(widened).toMatch(/customer\.\s*\n\s*The supplier/);
+
+    store.undo();
+    expect(run.text).toBe(edited);
     store.redo();
     expect(run.text).toBe(widened);
   },

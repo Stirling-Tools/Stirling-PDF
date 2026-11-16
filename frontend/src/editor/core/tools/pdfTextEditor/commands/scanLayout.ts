@@ -311,7 +311,7 @@ export function joinSoftLines(
       if (!fits(joined.trim())) break;
       chars[end] = " ";
       softAt.delete(end);
-      if (wordEnd < lineEnd) {
+      if (chars.slice(wordEnd, lineEnd).some((ch) => ch !== " ")) {
         chars[wordEnd] = "\n";
         softAt.add(wordEnd);
         end = wordEnd;

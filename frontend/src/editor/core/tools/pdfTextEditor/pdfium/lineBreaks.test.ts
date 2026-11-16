@@ -68,6 +68,32 @@ describe("softStartsFor", () => {
     ).toEqual([false, true, false, false]);
   });
 
+  it("keeps an Enter typed next to a space hard, and a break that moved with a typed letter soft", () => {
+    expect(softStartsFor("one\n two three", "one two three", [])).toEqual([
+      false,
+      false,
+    ]);
+    expect(softStartsFor("one two\nthreex", "one two three", [])).toEqual([
+      false,
+      true,
+    ]);
+  });
+
+  it("keeps a rewrap's breaks soft and a typed break hard when both happened since", () => {
+    expect(
+      softStartsFor(
+        "one\ntwo three\nfour five\nsix",
+        "one two three four five six",
+        [false, false, false],
+      )
+        .map(String)
+        .join(),
+    ).toBe("false,true,true,true");
+    expect(
+      softStartsFor("one\ntwo three\n\nfour", "one two three four", []),
+    ).toEqual([false, true, true, false]);
+  });
+
   it("reads a break that replaced a space as a rewrap's", () => {
     expect(softStartsFor("one\ntwo three", "one two three", [])).toEqual([
       false,
@@ -84,5 +110,11 @@ describe("joinSoftLines", () => {
     const joined = joinSoftLines(text, [false, true, false], upTo(14));
     expect(joined).toBe("one two three\nfour\nfive six");
     expect(joined.length).toBe(text.length);
+  });
+
+  it("joins a whole line when only spaces follow its word", () => {
+    expect(
+      joinSoftLines("one\ntwo \nthree", [false, true, false], () => true),
+    ).toBe("one two \nthree");
   });
 });
