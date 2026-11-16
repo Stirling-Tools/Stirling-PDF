@@ -17,6 +17,7 @@ import { readUtf16 } from "@editor/services/pdfiumService";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import {
   SCRATCH,
   scratchPtr,
@@ -134,6 +135,10 @@ export class ReflowWrapCommand implements Command {
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.
     if (rotationFromMatrix(run.matrix)) return;
+    // An edit to one line of a wrapped run redraws the letters left on that
+    // line, which text that needs shaping refuses, so a wrap the user did not
+    // ask for would block every later edit to the line.
+    if (!this.explicit && needsShaping(run.text)) return;
     refuseRedrawOfReadOnlyText(run);
     liftRunToPage(doc, page, run);
 

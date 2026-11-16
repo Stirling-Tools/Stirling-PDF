@@ -28,6 +28,7 @@ function run(
       fieldReads++;
       return bounds;
     },
+    text: "x",
     matrix: { a: 1, b: extra.b ?? 0, c: 0, d: 1, e: bounds.x, f: bounds.y },
     fontSize: 12,
     locked: extra.locked ?? false,
@@ -82,6 +83,16 @@ function referencePushedBelow(
           0,
           Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y),
         );
+  const overlayBox = (r: TextRun): PageRect => {
+    const boxTop = r.matrix.f + 0.95 * r.fontSize;
+    const y = Math.min(r.bounds.y, boxTop - 1.45 * r.fontSize);
+    return {
+      x: r.bounds.x,
+      y,
+      width: r.bounds.width,
+      height: Math.max(top(r), boxTop) - y,
+    };
+  };
   const grown = oldBottom - edited.bounds.y;
   const none = { runIds: [], dy: 0 };
   if (grown <= 0.5 || !canMove(edited) || inTable(edited.id)) return none;
@@ -122,9 +133,16 @@ function referencePushedBelow(
       if (other.id === edited.id || moving.has(other.id)) continue;
       const before = depth(r.bounds, other.bounds);
       const among = before > other.bounds.height * 0.5;
-      if (!among && depth(swept, other.bounds) <= before + 0.5) continue;
-      if (!canMove(other) || other.bounds.y - drop < page.display.cropBottom)
-        return none;
+      const inkHit = among || !(depth(swept, other.bounds) <= before + 0.5);
+      const movable =
+        canMove(other) && !(other.bounds.y - drop < page.display.cropBottom);
+      if (!inkHit) {
+        const box = overlayBox(r);
+        const otherBox = overlayBox(other);
+        const sweptBox = { ...box, y: box.y - drop, height: box.height + drop };
+        if (depth(sweptBox, otherBox) <= depth(box, otherBox) + 0.5 || !movable)
+          continue;
+      } else if (!movable) return none;
       moving.add(other.id);
       chain.push(other);
     }

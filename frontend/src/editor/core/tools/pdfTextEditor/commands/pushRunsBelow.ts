@@ -106,7 +106,47 @@ function overlapDepth(a: PageRect, b: PageRect): number {
   );
 }
 
-// `pushed` plus every run outside the edited width that one of them comes down on, and so on down; null when one of those cannot move.
+function canMoveDown(page: Page, run: TextRun, drop: number): boolean {
+  return canMove(page, run) && !(run.bounds.y - drop < page.display.cropBottom);
+}
+
+// The overlay's line metrics, for fonts the page has not measured: CSS ascent and descent, and the line height it falls back to. Must stay in step with the flow box in TextRunOverlay.
+const BOX_ASCENT_EM = 0.95;
+const BOX_DESCENT_EM = 0.25;
+const BOX_LINE_HEIGHT_EM = 1.2;
+
+// Where the overlay draws `run`'s box: a line height per line from above the first baseline, a descender deeper than the last, and never less than its ink.
+function overlayBox(run: TextRun): PageRect {
+  const size = run.fontSize > 0 ? run.fontSize : 12;
+  const lineHeight =
+    run.paragraphLineHeight > 0
+      ? run.paragraphLineHeight
+      : size * BOX_LINE_HEIGHT_EM;
+  const metrics = (BOX_ASCENT_EM + BOX_DESCENT_EM) * size;
+  const boxTop =
+    run.matrix.f +
+    Math.max(0, (lineHeight - metrics) / 2) +
+    BOX_ASCENT_EM * size;
+  const boxBottom =
+    boxTop -
+    run.text.split(/\r?\n/).length * lineHeight -
+    BOX_DESCENT_EM * size;
+  const y = Math.min(run.bounds.y, boxBottom);
+  return {
+    x: run.bounds.x,
+    y,
+    width: run.bounds.width,
+    height: Math.max(top(run), boxTop) - y,
+  };
+}
+
+const lowered = (rect: PageRect, drop: number): PageRect => ({
+  ...rect,
+  y: rect.y - drop,
+  height: rect.height + drop,
+});
+
+// `pushed` plus every run outside the edited width that one of them comes down on, and so on down; null when one of those cannot move. A run only the moved run's overlay box comes down on, not its ink, is taken where it can move and left where it cannot.
 function withRunsLandedOn(
   page: Page,
   edited: TextRun,
@@ -121,31 +161,34 @@ function withRunsLandedOn(
   for (let i = 0; i < chain.length; i++) {
     const run = chain[i];
     // Everything the run passes over on its way down, not only where it stops: a drop of several lines can clear a line entirely.
-    const swept = {
-      ...run.bounds,
-      y: run.bounds.y - drop,
-      height: run.bounds.height + drop,
-    };
+    const swept = lowered(run.bounds, drop);
+    const box = overlayBox(run);
+    const sweptBox = lowered(box, drop);
     const landed: number[] = [];
-    unmoved.within(run.bounds, swept, (other, order) => {
+    unmoved.within(box, sweptBox, (other, order) => {
       if (moving.has(other.id)) return true;
       // Lines set tighter than their boxes already share a little height; only more than that is a collision.
       const before = overlapDepth(run.bounds, other.bounds);
       // A run mostly inside the moving one's box sits among its lines, such as a word the document drew separately, and goes with them.
       const among = before > other.bounds.height * AMONG_LINES_SHARE;
-      if (!among && overlapDepth(swept, other.bounds) <= before + SLACK_PT)
-        return false;
+      // Written as "not clear" so a box with no measurable height counts as landed on.
+      const inkHit =
+        among || !(overlapDepth(swept, other.bounds) <= before + SLACK_PT);
+      if (!inkHit) {
+        const otherBox = unmoved.boxes[order];
+        const boxHit = !(
+          overlapDepth(sweptBox, otherBox) <=
+          overlapDepth(box, otherBox) + SLACK_PT
+        );
+        if (!boxHit || !canMoveDown(page, other, drop)) return false;
+      }
       landed.push(order);
       return true;
     });
     for (const order of landed.sort((a, b) => a - b)) {
       const other = unmoved.runs[order];
       if (moving.has(other.id)) continue;
-      if (
-        !canMove(page, other) ||
-        other.bounds.y - drop < page.display.cropBottom
-      )
-        return null;
+      if (!canMoveDown(page, other, drop)) return null;
       moving.add(other.id);
       chain.push(other);
     }
@@ -166,6 +209,8 @@ const BAND_MARGIN_PT = 1;
  */
 class UnmovedRuns {
   readonly runs: readonly TextRun[];
+  /** Each run's overlay box, by its index in `runs`. */
+  readonly boxes: readonly PageRect[];
   private readonly byBottom: number[];
   private readonly next: Int32Array;
   private readonly unordered: number[] = [];
@@ -173,17 +218,20 @@ class UnmovedRuns {
 
   constructor(runs: readonly TextRun[]) {
     this.runs = runs;
+    this.boxes = runs.map(overlayBox);
     const ordered: number[] = [];
     let tallest = 0;
+    const orderable = ({ y, height }: PageRect) =>
+      Number.isFinite(y) && Number.isFinite(height) && height >= 0;
     runs.forEach((run, order) => {
-      const { y, height } = run.bounds;
-      if (Number.isFinite(y) && Number.isFinite(height) && height >= 0) {
+      const box = this.boxes[order];
+      if (orderable(run.bounds) && orderable(box)) {
         ordered.push(order);
-        tallest = Math.max(tallest, height);
+        tallest = Math.max(tallest, box.height);
       } else this.unordered.push(order);
     });
     this.byBottom = ordered.sort(
-      (a, b) => runs[a].bounds.y - runs[b].bounds.y || a - b,
+      (a, b) => this.boxes[a].y - this.boxes[b].y || a - b,
     );
     this.tallest = tallest;
     this.next = Int32Array.from(
@@ -213,12 +261,12 @@ class UnmovedRuns {
     let hi = this.byBottom.length;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (this.runs[this.byBottom[mid]].bounds.y < low) lo = mid + 1;
+      if (this.boxes[this.byBottom[mid]].y < low) lo = mid + 1;
       else hi = mid;
     }
     for (let i = this.live(lo); i < this.byBottom.length;) {
       const order = this.byBottom[i];
-      if (this.runs[order].bounds.y > high) break;
+      if (this.boxes[order].y > high) break;
       if (visit(this.runs[order], order)) this.next[i] = i + 1;
       i = this.live(i + 1);
     }

@@ -10,6 +10,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 function run(id: string, x: number, y: number, width: number, height = 12) {
   return {
     id,
+    text: "x",
     bounds: { x, y, width, height },
     matrix: { a: 1, b: 0, c: 0, d: 1, e: x, f: y },
     fontSize: 12,
@@ -121,6 +122,17 @@ describe("runsPushedBelow", () => {
     expect(
       runsPushedBelow(page([edited(), paragraph, piece]), edited(), 500).runIds,
     ).toEqual(["paragraph", "piece"]);
+  });
+
+  // The overlay draws a line's box a line height tall and a descender deeper
+  // than its ink, so ink that clears by under a point still puts the moved
+  // line's box over the one below, and the box on top takes the clicks.
+  it("takes a line whose box a moved line's box would come down on", () => {
+    const next = run("next", 50, 484, 300);
+    const list = run("list", 70, 440.3, 200);
+    expect(
+      runsPushedBelow(page([edited(), next, list]), edited(), 500).runIds,
+    ).toEqual(["next", "list"]);
   });
 
   it("leaves a line beside a moved line where it is when nothing comes down on it", () => {
