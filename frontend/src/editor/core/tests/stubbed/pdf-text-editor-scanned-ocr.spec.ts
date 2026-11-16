@@ -557,7 +557,7 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
 }) => {
   test.setTimeout(120_000);
   await openForm(page);
-  const addr = (await runs(page)).find((r) => r.text.startsWith("12-4"))!;
+  const addr = (await runs(page)).find((r) => r.text.includes("\n12-4"))!;
   await snap(page, "loaded");
 
   const loadedSig = await bitmapSig(page);
@@ -566,7 +566,7 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
   await settle(page, loadedSig);
   await snap(page, "split");
   const split = (await runs(page)).find((r) => r.id === addr.id)!;
-  expect(split.text.split("\n")).toHaveLength(3);
+  expect(split.text.split("\n")).toHaveLength(addr.text.split("\n").length + 1);
   // "EASTPORT" left the first line, and the TEL line now sits a row lower.
   expect(
     await diff(

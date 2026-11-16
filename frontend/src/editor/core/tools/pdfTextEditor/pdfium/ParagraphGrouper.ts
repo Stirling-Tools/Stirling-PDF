@@ -1,4 +1,7 @@
-import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
+import {
+  RENDER_MODE_INVISIBLE,
+  type PageRect,
+} from "@editor/tools/pdfTextEditor/types";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   SAME_BLOCK,
@@ -46,6 +49,7 @@ export class ParagraphGrouper {
     const softStarts = new Map<ParagraphInfo, boolean[]>();
 
     const cells = tableCells(allLines);
+    const scannedPairs = scannedLabelValueCells(allLines);
     // Columns first: a reading-order sort across the whole page interleaves
     // side-by-side columns into one bogus paragraph.
     for (const column of segmentColumns(allLines)) {
@@ -62,7 +66,16 @@ export class ParagraphGrouper {
         );
         if (layer.length === 0) continue;
         const from = grouped.length;
-        groupColumnLines(layer, blockKey, grouped, cells, lineFonts, faceOf);
+        groupColumnLines(
+          layer,
+          blockKey,
+          grouped,
+          cells,
+          scannedPairs,
+          page.rules,
+          lineFonts,
+          faceOf,
+        );
         for (const para of grouped.slice(from))
           softStarts.set(para, documentSoftStarts(para.members, layer));
       }
@@ -279,7 +292,7 @@ function lineFontKeys(
   );
 }
 
-// OCR estimates each line's size from its own glyph heights, so the lines of one paragraph come out a point or so apart (10.4 next to 8.5).
+// OCR estimates each line's height from its own letters, so the lines of one paragraph come out up to a fifth apart (10 next to 12).
 const OCR_SIZE_RATIO = 1.3;
 // A scan fed in a couple of degrees off square still reads as upright lines.
 const OCR_UPRIGHT_SLOPE = 0.05;
@@ -294,10 +307,56 @@ function isUprightOcr(run: TextRun): boolean {
   );
 }
 
+// OCR stretches each word sideways to fit the scan, and a run's size carries its first word's stretch, so one line of an address reads half the size of the next. The upright scale is not stretched.
+function ocrHeight(run: TextRun): number {
+  const { a, b, c, d } = run.matrix;
+  const across = Math.hypot(a, b);
+  return across > 0 ? (run.fontSize / across) * Math.hypot(c, d) : 0;
+}
+
+// A line's own width tells its size where the OCR height does not: renderers set that height anywhere from 0.7 to 1 of the letters' size.
+const OCR_AVERAGE_ADVANCE_EM = 0.5;
+const OCR_MIN_MEASURED_CHARS = 4;
+
+function ocrLineSize(run: TextRun): number {
+  const line = run.text.split("\n")[0].trim();
+  const measured =
+    line.length >= OCR_MIN_MEASURED_CHARS
+      ? run.bounds.width / (line.length * OCR_AVERAGE_ADVANCE_EM)
+      : 0;
+  return Math.max(ocrHeight(run), measured);
+}
+
 function sameOcrSize(a: TextRun, b: TextRun): boolean {
-  const big = Math.max(a.fontSize, b.fontSize);
-  const small = Math.min(a.fontSize, b.fontSize);
+  const big = Math.max(ocrHeight(a), ocrHeight(b));
+  const small = Math.min(ocrHeight(a), ocrHeight(b));
   return small > 0 && big / small <= OCR_SIZE_RATIO;
+}
+
+// Small scanned text set with a web page's loose leading sits further apart than its size allows, but a line that ran to the column's margin and carries on mid-sentence below is a wrapped paragraph whatever the leading.
+const OCR_WRAPPED_LINE_FACTOR = 2.6;
+const STARTS_MID_SENTENCE = /^\s*\p{Ll}/u;
+
+function continuesWrappedLine(
+  prev: TextRun,
+  line: TextRun,
+  column: readonly TextRun[],
+  size: number,
+): boolean {
+  if (!STARTS_MID_SENTENCE.test(line.text)) return false;
+  const tolerance = Math.max(3, size * 0.6);
+  const margin = Math.max(
+    ...column
+      .filter((other) => other.bounds.x <= prev.bounds.x + tolerance)
+      .map((other) => other.bounds.x + other.bounds.width),
+  );
+  const lines = [prev, line].map((run) => ({
+    text: run.text,
+    left: run.bounds.x,
+    right: run.bounds.x + run.bounds.width,
+    fontSize: size,
+  }));
+  return softLineStarts(lines, margin)[1];
 }
 
 function shareAFont(
@@ -382,6 +441,8 @@ function groupColumnLines(
   blockKey: BlockKey,
   out: ParagraphInfo[],
   cells: ReadonlySet<TextRun>,
+  scannedPairs: ReadonlySet<TextRun>,
+  rules: readonly PageRect[],
   lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
   faceOf: (fontId: string) => string | null,
 ): void {
@@ -407,9 +468,15 @@ function groupColumnLines(
 
     let lineHeightOk: boolean;
     if (currentDeltas.length === 0) {
+      const scanned = isUprightOcr(prev) && isUprightOcr(line);
+      const size = scanned ? ocrLineSize(line) : line.fontSize;
+      const maxFactor =
+        scanned && continuesWrappedLine(prev, line, sorted, size)
+          ? OCR_WRAPPED_LINE_FACTOR
+          : MAX_LINE_FACTOR;
       lineHeightOk =
-        baselineDelta >= MIN_LINE_FACTOR * line.fontSize &&
-        baselineDelta <= MAX_LINE_FACTOR * line.fontSize;
+        baselineDelta >= MIN_LINE_FACTOR * size &&
+        baselineDelta <= maxFactor * size;
     } else {
       const med = median(currentDeltas);
       const tol = MEDIAN_TOLERANCE * med;
@@ -423,7 +490,13 @@ function groupColumnLines(
 
     const sameBlock = blockKey(prev) === blockKey(line);
     // Stacked cells of a table are rows, each its own box, not one paragraph per column.
-    const tableRows = cells.has(prev) && cells.has(line);
+    const tableRows =
+      (cells.has(prev) && cells.has(line)) ||
+      (scannedPairs.has(line) &&
+        current.members.every((member) => scannedPairs.has(member))) ||
+      (isUprightOcr(prev) &&
+        isUprightOcr(line) &&
+        ruledApart(prev, line, rules));
 
     if (
       sameFont &&
@@ -446,6 +519,31 @@ function groupColumnLines(
   }
 }
 
+// A scanned table's borders are drawn, not read: a rule across both lines in the gap between them is a row border.
+function ruledApart(
+  above: TextRun,
+  below: TextRun,
+  rules: readonly PageRect[],
+): boolean {
+  const top = below.bounds.y + below.bounds.height;
+  const bottom = above.bounds.y;
+  const from = Math.max(above.bounds.x, below.bounds.x);
+  const to = Math.min(
+    above.bounds.x + above.bounds.width,
+    below.bounds.x + below.bounds.width,
+  );
+  return rules.some((rule) => {
+    const y = rule.y + rule.height / 2;
+    return (
+      rule.width > rule.height &&
+      y > top &&
+      y < bottom &&
+      rule.x <= from &&
+      rule.x + rule.width >= to
+    );
+  });
+}
+
 function isShortCell(line: TextRun): boolean {
   const text = line.text.trim();
   return (
@@ -457,10 +555,28 @@ function isShortCell(line: TextRun): boolean {
 
 // Short lines side by side on one baseline, three or more of them or one a number: the cells of a table row. Two short lines alone could be narrow columns of running text.
 function tableCells(lines: readonly TextRun[]): Set<TextRun> {
+  const cells = new Set<TextRun>();
+  for (const row of shortRows(lines))
+    if (row.length >= 3 || (row.length >= 2 && row.some(isNumberCell)))
+      for (const cell of row) cells.add(cell);
+  return cells;
+}
+
+// On a scan, two short lines on one baseline are more often a form's label and its value than narrow columns. They are cells only where every line above them in their block is one too: an address and a footer set side by side end in short lines of their own.
+function scannedLabelValueCells(lines: readonly TextRun[]): Set<TextRun> {
+  const cells = new Set<TextRun>();
+  for (const row of shortRows(lines))
+    if (row.length === 2 && row.every(isUprightOcr))
+      for (const cell of row) cells.add(cell);
+  return cells;
+}
+
+// Short lines grouped by baseline, keeping those set at least a column gap from another on theirs.
+function shortRows(lines: readonly TextRun[]): TextRun[][] {
   const short = lines
     .filter(isShortCell)
     .sort((a, b) => b.matrix.f - a.matrix.f);
-  const cells = new Set<TextRun>();
+  const rows: TextRun[][] = [];
   for (let i = 0; i < short.length;) {
     const row = [short[i]];
     let j = i + 1;
@@ -471,17 +587,17 @@ function tableCells(lines: readonly TextRun[]): Set<TextRun> {
     )
       row.push(short[j++]);
     i = j;
-    const apart = row.filter((cell) =>
-      row.some(
-        (other) =>
-          other !== cell &&
-          Math.abs(other.bounds.x - cell.bounds.x) >= COLUMN_MIN_GAP_PT,
+    rows.push(
+      row.filter((cell) =>
+        row.some(
+          (other) =>
+            other !== cell &&
+            Math.abs(other.bounds.x - cell.bounds.x) >= COLUMN_MIN_GAP_PT,
+        ),
       ),
     );
-    if (apart.length >= 3 || (apart.length >= 2 && apart.some(isNumberCell)))
-      for (const cell of apart) cells.add(cell);
   }
-  return cells;
+  return rows;
 }
 
 function isNumberCell(line: TextRun): boolean {
