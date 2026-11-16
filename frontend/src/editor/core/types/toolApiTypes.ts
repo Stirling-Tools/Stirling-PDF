@@ -991,16 +991,6 @@ export interface PdfToWordRequest {
    */
   outputFormat: "doc" | "docx" | "odt";
 }
-export interface PdfVectorExportRequest {
-  /**
-   * Target vector format extension
-   */
-  outputFormat?: "eps" | "ps" | "pcl" | "xps";
-  /**
-   * Apply Ghostscript prepress settings
-   */
-  prepress?: true | false;
-}
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;
   pin?: string;
@@ -1560,13 +1550,11 @@ export type ToolEndpoint =
   | "/api/v1/convert/pdf/presentation"
   | "/api/v1/convert/pdf/text"
   | "/api/v1/convert/pdf/ua"
-  | "/api/v1/convert/pdf/vector"
   | "/api/v1/convert/pdf/word"
   | "/api/v1/convert/pdf/xlsx"
   | "/api/v1/convert/pdf/xml"
   | "/api/v1/convert/svg/pdf"
   | "/api/v1/convert/url/pdf"
-  | "/api/v1/convert/vector/pdf"
   | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
@@ -1666,13 +1654,11 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/presentation": PdfToPresentationRequest;
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
   "/api/v1/convert/pdf/ua": PdfToPdfUaRequest;
-  "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
   "/api/v1/convert/pdf/xml": ConvertPdfXmlRequest;
   "/api/v1/convert/svg/pdf": SvgToPdfRequest;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
-  "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
   "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
@@ -1773,13 +1759,11 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/pdf/presentation",
   "/api/v1/convert/pdf/text",
   "/api/v1/convert/pdf/ua",
-  "/api/v1/convert/pdf/vector",
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
   "/api/v1/convert/pdf/xml",
   "/api/v1/convert/svg/pdf",
   "/api/v1/convert/url/pdf",
-  "/api/v1/convert/vector/pdf",
   "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",
