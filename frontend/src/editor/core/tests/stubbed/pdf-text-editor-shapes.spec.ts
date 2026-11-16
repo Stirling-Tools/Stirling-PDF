@@ -1,17 +1,58 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import {
+  buildClassicPdf,
+  streamBody,
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 /**
  * Vector shapes: what a delete or move leaves in the SAVED file, not just on
  * screen. PDFium does not write back a form XObject child's new position, so
  * a shape inside a form is not movable, and deleting one first puts its form's
- * contents onto the page; the sample keeps most of its shapes in one such form.
+ * contents onto the page. The sample's forms are transparency groups drawn at
+ * a page opacity that their own graphics states would replace once lifted, so
+ * deleting a shape in one is refused; the deletes that go through use a form
+ * drawn twice with nothing of its own but paths.
  */
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../../public/samples/Sample.pdf",
 );
+
+const INSTANCE_OFFSET = 200;
+
+const TWICE_DRAWN_FORM = {
+  name: "twice-drawn-form.pdf",
+  mimeType: "application/pdf",
+  buffer: Buffer.from(
+    buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 300] /Contents 4 0 R /Resources << /XObject << /Fm 5 0 R >> >> >>",
+        },
+        {
+          num: 4,
+          body: streamBody(
+            "",
+            `q 1 0 0 1 20 40 cm /Fm Do Q q 1 0 0 1 ${20 + INSTANCE_OFFSET} 40 cm /Fm Do Q`,
+          ),
+        },
+        {
+          num: 5,
+          body: streamBody(
+            "/Type /XObject /Subtype /Form /BBox [0 0 160 200]",
+            "0 0 1 rg 0 0 160 120 re f 1 0 0 rg 20 140 80 40 re f",
+          ),
+        },
+      ],
+      1,
+    ),
+  ),
+};
 
 interface Rect {
   x: number;
@@ -49,12 +90,12 @@ async function openPdf(page: Page, file: PdfFile): Promise<void> {
   await page.waitForTimeout(1500);
 }
 
-async function openSample(page: Page): Promise<void> {
+async function openSample(page: Page, file: PdfFile = SAMPLE): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await openPdf(page, SAMPLE);
+  await openPdf(page, file);
 }
 
 async function saveAndReopen(page: Page): Promise<void> {
@@ -144,6 +185,11 @@ async function dragBy(
   await page.waitForTimeout(500);
 }
 
+/** The shift from a shape in the fixture's first form instance to the same shape in its second. */
+function otherInstanceDx(shape: ShapeInfo): number {
+  return shape.bounds.x < INSTANCE_OFFSET ? INSTANCE_OFFSET : -INSTANCE_OFFSET;
+}
+
 async function largestGrouped(page: Page): Promise<ShapeInfo> {
   const all = await shapes(page);
   const grouped = all.filter((s) => s.grouped && isUnique(all, s));
@@ -171,26 +217,33 @@ async function grabbable(
 }
 
 test.describe("PDF text editor - vector shapes survive save", () => {
-  test("a deleted shape inside a form is gone from the saved file", async ({
+  test("a deleted shape inside a form is gone from the saved file, and the form's other use keeps it", async ({
     page,
   }) => {
-    await openSample(page);
+    await openSample(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
 
     await saveAndReopen(page);
-    expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
+    const reopened = await shapes(page);
+    expect(drawnAt(reopened, target.bounds)).toBe(false);
+    expect(drawnAt(reopened, target.bounds, otherInstanceDx(target))).toBe(
+      true,
+    );
   });
 
   test("an undone delete inside a form keeps the shape in the saved file", async ({
     page,
   }) => {
-    await openSample(page);
+    await openSample(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
+    expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
     await page.keyboard.press("ControlOrMeta+z");
-    await page.waitForTimeout(500);
+    await expect
+      .poll(async () => drawnAt(await shapes(page), target.bounds))
+      .toBe(true);
 
     await saveAndReopen(page);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(true);
@@ -199,15 +252,33 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("undoing a delete after the save that removed it brings the shape back", async ({
     page,
   }) => {
-    await openSample(page);
+    await openSample(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
+    expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
     const download = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     await download;
     await page.keyboard.press("ControlOrMeta+z");
-    await page.waitForTimeout(500);
+    await expect
+      .poll(async () => drawnAt(await shapes(page), target.bounds))
+      .toBe(true);
+
+    await saveAndReopen(page);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(true);
+  });
+
+  test("a shape in a form whose lift would change the drawing is not deleted", async ({
+    page,
+  }) => {
+    await openSample(page);
+    const target = await largestGrouped(page);
+    await deleteShape(page, target.id);
+    await expect(page.getByRole("alert")).toContainText(
+      "it is drawn as part of a group",
+    );
+    expect(drawnAt(await shapes(page), target.bounds)).toBe(true);
+    await expect(page.getByTestId("pdf-editor-undo")).toBeDisabled();
 
     await saveAndReopen(page);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(true);

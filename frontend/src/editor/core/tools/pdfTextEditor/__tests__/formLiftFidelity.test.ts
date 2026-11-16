@@ -2,6 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
+import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -299,6 +300,65 @@ describe("lifting form contents onto the page", () => {
       ),
     ).toThrow(HistoryStepError);
     expect(history.canUndo).toBe(false);
+    const reopened = await open(await saved(doc));
+    expect(changedPixels(before, raster(reopened))).toBe(0);
+  });
+
+  test("refuses a shape delete in a group drawn at a page opacity its own graphics state would replace", async () => {
+    const doc = await open(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${SIZE} ${SIZE}] /Contents 4 0 R /Resources << /XObject << /Fm 5 0 R >> /ExtGState << /Faint 7 0 R >> >> >>`,
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              "1 0 0 rg 0 0 300 300 re f q /Faint gs 1 0 0 1 50 100 cm /Fm Do Q",
+            ),
+          },
+          {
+            num: 5,
+            body: streamBody(
+              "/Type /XObject /Subtype /Form /BBox [0 0 200 100] /Group << /S /Transparency /I true >> /Resources << /ExtGState << /Half 6 0 R >> >>",
+              "/Half gs 0 0 1 rg 0 0 200 40 re f 0 1 0 rg 100 20 100 80 re f",
+            ),
+          },
+          { num: 6, body: HALF },
+          { num: 7, body: "<< /Type /ExtGState /ca 0.1 /CA 0.1 >>" },
+        ],
+        1,
+      ),
+    );
+    const page = doc.page(0);
+    const before = raster(doc);
+    const shapesBefore = page.shapes.map((s) => s.id);
+    const target = page.shapes.find(
+      (s) => s.containerPtr && Math.abs(s.bounds.height - 40) < 1,
+    );
+    expect(target).toBeDefined();
+    const history = new HistoryStack();
+    let refusal: unknown = null;
+    try {
+      history.execute(
+        new DeleteShapeCommand({ pageIndex: 0, shapeId: target!.id }),
+        doc,
+      );
+    } catch (err) {
+      refusal = err;
+    }
+    expect(refusal).toBeInstanceOf(HistoryStepError);
+    expect((refusal as HistoryStepError).documentIntact).toBe(true);
+    expect(String((refusal as HistoryStepError).cause)).toContain(
+      "drawn as part of a group",
+    );
+    expect(history.canUndo).toBe(false);
+    expect(page.shapes.map((s) => s.id)).toEqual(shapesBefore);
+    expect(changedPixels(before, raster(doc))).toBe(0);
     const reopened = await open(await saved(doc));
     expect(changedPixels(before, raster(reopened))).toBe(0);
   });
