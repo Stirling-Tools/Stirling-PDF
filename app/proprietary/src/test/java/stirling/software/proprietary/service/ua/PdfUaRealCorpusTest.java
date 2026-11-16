@@ -53,7 +53,9 @@ class PdfUaRealCorpusTest {
                     "rtl-mixed-sample.pdf",
                     "ISO 50001 بلغ الاستهلاك (في الربع) 12,450.75 كيلوواط [بزيادة 3.5%] حسب تقرير استخدم برنامج LibreOffice Writer أو Word لفتح report-2026.docx الآن. הטלפון הוא 03-555-1234 (שלוחה 12), והמחיר 1,299.90 לפי Open Source סעיף 4. An English line quoting مرحبا بالعالم and שלום עולם then 1,234. ISO 50001 هو المعيار",
                     "shaped-line-sample.pdf",
-                    "नमस्ते दु\u0000नया, 2024.");
+                    "नमस्ते दु\u0000नया, 2024.",
+                    "thai-line-sample.pdf",
+                    "มนุษยท\u0000 ง้ั หลายเกดิมามีอสิระ");
 
     @BeforeAll
     static void setUp() {
