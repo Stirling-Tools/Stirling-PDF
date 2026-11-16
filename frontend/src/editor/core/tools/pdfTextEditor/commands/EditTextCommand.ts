@@ -83,10 +83,10 @@ import {
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
-  notePush,
-  notePushedLines,
-  pushedLines,
+  type PushRecord,
+  pushRecords,
   runsPulledBack,
+  setPushRecords,
   runsPushedBelow,
 } from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
 
@@ -266,8 +266,11 @@ export class EditTextCommand implements Command {
   private readonly pushesBelow: boolean;
   // The runs below that this edit's added lines moved down, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
-  // How many lines this edit added to (or, negative, took from) those holding the runs below down.
-  private pushedLines = 0;
+  // What the run was recorded as holding down before and after this edit, when the edit changed it.
+  private pushRecords: {
+    before: readonly PushRecord[];
+    after: readonly PushRecord[];
+  } | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -310,14 +313,28 @@ export class EditTextCommand implements Command {
           lines * lineHeight,
         );
         this.pushes = runIds.map((runId) => this.moveBelow(runId, dy));
-        // Lines added while others already hold the text down share in holding it, even where these moved nothing.
-        if (runIds.length > 0 || pushedLines(run) > 0) this.pushedLines = lines;
+        if (runIds.length > 0)
+          this.pushRecords = {
+            before: pushRecords(run),
+            after: [
+              ...pushRecords(run),
+              {
+                lineCount: lineCount(this.nextText),
+                linesAdded: lines,
+                runIds,
+                dy,
+              },
+            ],
+          };
       } else {
         // By lines, not ink: a blank line holds the text below down without drawing anything.
-        this.pushes = runsPulledBack(page, run, -lines).map(({ runId, dy }) =>
-          this.moveBelow(runId, dy),
+        const { moves, records } = runsPulledBack(
+          page,
+          run,
+          lineCount(this.nextText),
         );
-        this.pushedLines = Math.max(lines, -pushedLines(run));
+        this.pushes = moves.map(({ runId, dy }) => this.moveBelow(runId, dy));
+        this.pushRecords = { before: pushRecords(run), after: records };
       }
     }
     this.redoPushes(doc);
@@ -334,20 +351,14 @@ export class EditTextCommand implements Command {
 
   private redoPushes(doc: EditorDocument): void {
     const run = doc.page(this.pageIndex).findRun(this.runId);
-    for (const push of this.pushes ?? []) {
-      push.apply(doc);
-      if (run) notePush(run, push.runId, push.dy);
-    }
-    if (run) notePushedLines(run, this.pushedLines);
+    for (const push of this.pushes ?? []) push.apply(doc);
+    if (run && this.pushRecords) setPushRecords(run, this.pushRecords.after);
   }
 
   private undoPushes(doc: EditorDocument): void {
     const run = doc.page(this.pageIndex).findRun(this.runId);
-    for (const push of [...(this.pushes ?? [])].reverse()) {
-      push.revert(doc);
-      if (run) notePush(run, push.runId, -push.dy);
-    }
-    if (run) notePushedLines(run, -this.pushedLines);
+    for (const push of [...(this.pushes ?? [])].reverse()) push.revert(doc);
+    if (run && this.pushRecords) setPushRecords(run, this.pushRecords.before);
   }
 
   private applyEdit(doc: EditorDocument): void {

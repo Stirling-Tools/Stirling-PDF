@@ -113,58 +113,69 @@ function landsOnStillText(
     });
 }
 
-interface Pushed {
-  byRun: Map<string, number>;
-  lines: number;
+/** One push: the runs an edit moved, how far, and the lines of the edited run it made room for. */
+export interface PushRecord {
+  /** How many lines the edited run had once this push was made. */
+  lineCount: number;
+  linesAdded: number;
+  runIds: readonly string[];
+  /** Negative: down the page. */
+  dy: number;
 }
 
-// How far each edited run has pushed the runs below it, and over how many added lines, net of undo: only that much is pulled back when its lines go.
-const pushedBelow = new WeakMap<TextRun, Pushed>();
+// The pushes each edited run still holds the runs below down with, oldest first, net of undo.
+const pushedBelow = new WeakMap<TextRun, readonly PushRecord[]>();
 
-function pushedBy(edited: TextRun): Pushed {
-  let pushed = pushedBelow.get(edited);
-  if (!pushed)
-    pushedBelow.set(edited, (pushed = { byRun: new Map(), lines: 0 }));
-  return pushed;
+export function pushRecords(edited: TextRun): readonly PushRecord[] {
+  return pushedBelow.get(edited) ?? [];
 }
 
-export function notePush(edited: TextRun, runId: string, dy: number): void {
-  const { byRun } = pushedBy(edited);
-  const total = (byRun.get(runId) ?? 0) + dy;
-  if (Math.abs(total) < 0.01) byRun.delete(runId);
-  else byRun.set(runId, total);
-}
-
-/** Records `lines` more (or, negative, fewer) of the edited run's lines as holding the runs below down. */
-export function notePushedLines(edited: TextRun, lines: number): void {
-  const pushed = pushedBy(edited);
-  pushed.lines = Math.max(0, pushed.lines + lines);
-}
-
-/** How many of the edited run's added lines are holding the runs below down. */
-export function pushedLines(edited: TextRun): number {
-  return pushedBelow.get(edited)?.lines ?? 0;
+/** Replaces what `edited` is recorded as holding down; undo and redo put back the list they found. */
+export function setPushRecords(
+  edited: TextRun,
+  records: readonly PushRecord[],
+): void {
+  pushedBelow.set(edited, records);
 }
 
 /**
- * The runs `edited` pushed down that losing `linesRemoved` of its added lines
- * lets back up. Each rises by that share of how far it was pushed, so the last
- * added line to go returns it to exactly where the document put it, whatever
- * the line height has become since. A run that can no longer move, such as
- * one locked since, stays where it is.
+ * What to let back up now `edited` is down to `lineCount` lines: every push
+ * made for a line it no longer has is taken back, the latest first, so the
+ * runs below end up exactly where that many lines put them the first time,
+ * whatever the line height has become since. A push made for several lines is
+ * taken back by the share of them that went. `records` is what is still held
+ * down afterwards.
+ *
+ * A run that can no longer move, such as one locked since, stays where it is
+ * and is no longer held to this run.
  */
 export function runsPulledBack(
   page: Page,
   edited: TextRun,
-  linesRemoved: number,
-): Array<{ runId: string; dy: number }> {
-  const pushed = pushedBelow.get(edited);
-  if (!pushed || linesRemoved <= 0) return [];
-  const share = pushed.lines > 0 ? Math.min(1, linesRemoved / pushed.lines) : 1;
-  return [...pushed.byRun]
-    .filter(([runId, total]) => {
+  lineCount: number,
+): { moves: Array<{ runId: string; dy: number }>; records: PushRecord[] } {
+  const records = [...pushRecords(edited)];
+  const rise = new Map<string, number>();
+  for (let last = records.at(-1); last; last = records.at(-1)) {
+    const gone = Math.min(last.linesAdded, last.lineCount - lineCount);
+    if (gone <= 0) break;
+    const share = gone / last.linesAdded;
+    for (const runId of last.runIds)
+      rise.set(runId, (rise.get(runId) ?? 0) - last.dy * share);
+    records.pop();
+    if (gone < last.linesAdded)
+      records.push({
+        ...last,
+        lineCount: last.lineCount - gone,
+        linesAdded: last.linesAdded - gone,
+        dy: last.dy * (1 - share),
+      });
+  }
+  const moves = [...rise]
+    .filter(([runId]) => {
       const run = page.findRun(runId);
-      return total < 0 && run !== undefined && canMove(page, run);
+      return run !== undefined && canMove(page, run);
     })
-    .map(([runId, total]) => ({ runId, dy: -total * share }));
+    .map(([runId, dy]) => ({ runId, dy }));
+  return { moves, records };
 }
