@@ -7,14 +7,17 @@ import { invoke } from "@tauri-apps/api/core";
 
 const QUIET_MS = 1500;
 
+/** Best-effort write to the desktop log; never throws. The message must not contain file names. */
 export function logDropDiagnostic(message: string): void {
   void invoke("log_drop_diagnostic", { message }).catch(() => {});
 }
 
+/** The folder part of a path, never the file name: "no path" when missing, "no folder" when bare. */
 export function folderOf(path: string | null | undefined): string {
   if (!path) return "no path";
   const cut = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
-  return cut > 0 ? path.slice(0, cut) : path;
+  if (cut < 0) return "no folder";
+  return cut === 0 ? path[0] : path.slice(0, cut);
 }
 
 function extension(name: string): string {
