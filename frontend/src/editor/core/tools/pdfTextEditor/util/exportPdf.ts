@@ -138,8 +138,6 @@ async function serializeEdits(
   doc: EditorDocument,
   incremental: boolean,
 ): Promise<Uint8Array> {
-  commitPendingFormRemovals(doc);
-
   // Must be read AFTER serialize: serialize is what marks pages regenerated,
   // so reading first always yielded an empty list and silently skipped the
   // shading repair on the first save after an edit.
@@ -167,27 +165,6 @@ async function serializeEdits(
     }
   }
   return bytes;
-}
-
-interface FormRemovalModule {
-  FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
-}
-
-/**
- * Remove the form children that DeleteShapeCommand only hid. Done here, on the
- * user's save, rather than in every serialize: other serializes (the charcode
- * probe) must not make a delete permanent while it can still be undone.
- */
-function commitPendingFormRemovals(doc: EditorDocument): void {
-  const m = doc.module as unknown as FormRemovalModule;
-  for (const page of doc.loadedPages()) {
-    if (page.pendingFormRemovals.size === 0) continue;
-    for (const [objPtr, formPtr] of page.pendingFormRemovals) {
-      m.FPDFFormObj_RemoveObject?.(formPtr, objPtr);
-    }
-    page.pendingFormRemovals.clear();
-    page.markNeedsGenerate();
-  }
 }
 
 function pdfBlob(bytes: Uint8Array): Blob {

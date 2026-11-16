@@ -26,12 +26,6 @@ export class Page {
   runs: TextRun[];
   images: ImageObject[];
   shapes: ShapeObject[];
-  /**
-   * Deleted shapes still inside a form XObject (object ptr -> form ptr). They
-   * are hidden for now and removed on save: removal is the only change to a
-   * form's children that PDFium writes back, and it cannot be undone.
-   */
-  pendingFormRemovals: Map<number, number>;
   /** Text-carrying annotations: rendered by the canvas, not editable. */
   annotations: AnnotationBox[];
   // Bounding boxes of the thin filled/stroked paths the page draws - table
@@ -75,7 +69,6 @@ export class Page {
     this.runs = [];
     this.images = [];
     this.shapes = [];
-    this.pendingFormRemovals = new Map();
     this.annotations = [];
     this.tables = [];
     this.dirty = false;

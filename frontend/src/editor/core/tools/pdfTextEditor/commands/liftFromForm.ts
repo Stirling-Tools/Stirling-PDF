@@ -11,7 +11,7 @@ import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
-// Why text and images are lifted out of form XObjects before they are edited.
+// Why text, images and shapes are lifted out of form XObjects before they are edited.
 //
 // PDFium does not save a change made to an object inside a form: moved,
 // recoloured or resized, it shows on screen and is gone from the saved file.
@@ -33,7 +33,6 @@ interface FormModule {
 const FPDF_PAGEOBJ_FORM = 5;
 // As deep as the reader walks: a run is never found in a form nested further.
 const MAX_FORM_DEPTH = 4;
-const IDENTITY = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
 function childrenOf(m: WrappedPdfiumModule, form: number): number[] {
   const mod = m as unknown as FormModule;
@@ -102,8 +101,6 @@ function dissolve(page: Page, m: WrappedPdfiumModule, form: number): boolean {
   const placed: Array<{ ptr: number; index: number }> = [];
   for (const child of children) {
     if (!remove(form, child)) continue;
-    // A shape deleted from this form was only hidden until the next save; it stays off the page, as its undo expects.
-    if (page.pendingFormRemovals.delete(child)) continue;
     transformObject(m, child, a, b, c, d, e, f);
     m.FPDFPage_InsertObject(page.pagePtr, child);
     placed.push({ ptr: child, index: at + placed.length });
@@ -131,12 +128,8 @@ function forgetForm(page: Page, form: number): void {
   }
   for (const image of page.images)
     image.containerPtr = onPage(image.containerPtr);
-  for (const shape of page.shapes) {
-    if (shape.containerPtr !== form) continue;
-    shape.containerPtr = 0;
-    shape.topLevelContainerPtr = 0;
-    shape.containerTransform = { ...IDENTITY };
-  }
+  for (const shape of page.shapes)
+    shape.containerPtr = onPage(shape.containerPtr);
 }
 
 function drawsEditedScan(page: Page, forms: number[]): boolean {

@@ -11,6 +11,7 @@ import {
   vi,
 } from "vitest";
 import { DeleteImageCommand } from "@editor/tools/pdfTextEditor/commands/DeleteImageCommand";
+import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
@@ -477,5 +478,93 @@ describe("a form drawn more than once", () => {
     expect(await texts(saved, 0)).toEqual(
       before.map((line) => (line === was ? moved : line)).sort(),
     );
+  });
+});
+
+// One form holding a filled panel, drawn twice on the first page and once on the second.
+function sharedPanelFormPdf(): Uint8Array {
+  const draw = (y: number) => `q 1 0 0 1 ${FORM_X} ${y} cm /Fm1 Do Q\n`;
+  const page = (contents: number) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contents} 0 R ` +
+    "/Resources << /XObject << /Fm1 5 0 R >> >> >>";
+  return buildClassicPdf(
+    [
+      { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 7 0 R] /Count 2 >>" },
+      { num: 3, body: page(4) },
+      { num: 4, body: streamBody("", draw(600) + draw(300)) },
+      {
+        num: 5,
+        body: streamBody(
+          "/Type /XObject /Subtype /Form /BBox [0 0 400 120] " +
+            "/Resources << /Font << /F1 6 0 R >> >>",
+          "1 0.9 0.2 rg 0 0 300 100 re f\n" +
+            "0 g BT /F1 12 Tf 10 40 Td (Panel label) Tj ET\n",
+        ),
+      },
+      {
+        num: 6,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      { num: 7, body: page(8) },
+      { num: 8, body: streamBody("", draw(600)) },
+    ],
+    1,
+  );
+}
+
+describe("a shape in a form drawn more than once", () => {
+  function panels(doc: EditorDocument, pageIndex: number): number[] {
+    const page = doc.page(pageIndex);
+    if (!page.loaded) PdfiumTextReader.populate(doc, page);
+    return page.shapes.map((s) => Math.round(s.bounds.y)).sort();
+  }
+
+  async function savedPanels(doc: EditorDocument) {
+    const reopened = await EditorDocument.open(
+      new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+    );
+    opened.push(reopened);
+    return [panels(reopened, 0), panels(reopened, 1)];
+  }
+
+  async function deleteUpperPanel() {
+    const doc = await EditorDocument.open(sharedPanelFormPdf());
+    opened.push(doc);
+    panels(doc, 0);
+    panels(doc, 1);
+    const upper = doc.page(0).shapes.find((s) => s.bounds.y > 500)!;
+    const history = new HistoryStack();
+    history.execute(
+      new DeleteShapeCommand({ pageIndex: 0, shapeId: upper.id }),
+      doc,
+    );
+    return { doc, history };
+  }
+
+  test("is deleted from the copy it was picked in and nowhere else", async () => {
+    const { doc, history } = await deleteUpperPanel();
+
+    expect(panels(doc, 0)).toEqual([300]);
+    expect(await savedPanels(doc)).toEqual([[300], [600]]);
+
+    history.undo(doc);
+    expect(panels(doc, 0)).toEqual([300, 600]);
+    expect(await savedPanels(doc)).toEqual([[300, 600], [600]]);
+
+    history.redo(doc);
+    expect(await savedPanels(doc)).toEqual([[300], [600]]);
+    expect(await savedPanels(doc)).toEqual([[300], [600]]);
+  });
+
+  test("keeps the text of the copy it was deleted from", async () => {
+    const { doc } = await deleteUpperPanel();
+
+    const reopened = await saved(doc);
+    expect(
+      reopened
+        .filter((r) => r.text.includes("Panel"))
+        .map((r) => Math.round(r.bounds.y / 100)),
+    ).toEqual(expect.arrayContaining([6, 3]));
   });
 });

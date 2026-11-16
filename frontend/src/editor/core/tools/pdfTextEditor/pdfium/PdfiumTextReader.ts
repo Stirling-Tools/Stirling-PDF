@@ -562,10 +562,14 @@ function walkObjects(
       if (path.length <= 1) {
         // PDFium can save shape removals only in page-level forms.
         const indexId = [...path, i].join("-");
-        const shape = readShape(m, page, objPtr, indexId, transform, {
+        const shape = readShape(
+          m,
+          page,
+          objPtr,
+          indexId,
+          transform,
           containerPtr,
-          topLevelContainerPtr,
-        });
+        );
         if (shape) shapes.push(shape);
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
@@ -1103,7 +1107,7 @@ function readShape(
   objPtr: number,
   index: number | string,
   transform: Affine,
-  containers: { containerPtr: number; topLevelContainerPtr: number },
+  containerPtr: number,
 ): ShapeObject | null {
   if (!isPainted(m, objPtr)) return null;
   const localBounds = readBounds(m, objPtr);
@@ -1119,8 +1123,7 @@ function readShape(
     id: `p${page.index}-s${index}`,
     pageIndex: page.index,
     pdfiumObjPtr: objPtr,
-    ...containers,
-    containerTransform: transform,
+    containerPtr,
     bounds,
   });
 }

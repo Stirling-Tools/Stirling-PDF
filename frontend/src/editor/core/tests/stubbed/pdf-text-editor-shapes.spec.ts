@@ -4,9 +4,9 @@ import path from "path";
 
 /**
  * Vector shapes: what a delete or move leaves in the SAVED file, not just on
- * screen. PDFium writes back a form XObject child's removal but not its new
- * paint or position, so shapes inside a form are deleted at save time and are
- * not movable; the sample keeps most of its shapes in one such form.
+ * screen. PDFium does not write back a form XObject child's new position, so
+ * a shape inside a form is not movable, and deleting one first puts its form's
+ * contents onto the page; the sample keeps most of its shapes in one such form.
  */
 const SAMPLE = path.join(
   import.meta.dirname,

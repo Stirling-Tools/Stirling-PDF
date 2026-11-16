@@ -63,6 +63,7 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -1697,7 +1698,7 @@ export function restoreContentOrder(
   if (!insertAt || placed.length === 0) return;
   for (const { ptr } of placed) m.FPDFPage_RemoveObject(pagePtr, ptr);
   for (const { ptr, index } of [...placed].sort((a, b) => a.index - b.index))
-    if (!insertAt(pagePtr, ptr, index)) m.FPDFPage_InsertObject(pagePtr, ptr);
+    insertPageObjectAt(m, pagePtr, ptr, index);
 }
 
 export function measureObjRightEdgePt(

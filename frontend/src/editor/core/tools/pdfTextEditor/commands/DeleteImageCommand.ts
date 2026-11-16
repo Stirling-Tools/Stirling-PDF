@@ -3,6 +3,7 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 
 /** Remove an image object from a page. */
 export class DeleteImageCommand implements Command {
@@ -56,28 +57,19 @@ export class DeleteImageCommand implements Command {
     if (!this.snapshot || !this.cachedObjPtr) return;
     const page = doc.page(this.pageIndex);
     const m = doc.module as unknown as {
-      FPDFPage_InsertObjectAtIndex?: (
-        page: number,
-        obj: number,
-        index: number,
-      ) => boolean;
-      FPDFPage_InsertObject: (page: number, obj: number) => void;
+      FPDFPage_InsertObjectAtIndex?: unknown;
     };
-    const insertAt = m.FPDFPage_InsertObjectAtIndex;
-    let inserted = false;
-    if (typeof insertAt === "function" && this.originalIndex >= 0) {
-      try {
-        inserted = insertAt.call(
-          m,
-          page.pagePtr,
-          this.cachedObjPtr,
-          this.originalIndex,
-        );
-      } catch {
-        inserted = false;
-      }
-    }
-    if (!inserted) {
+    if (
+      typeof m.FPDFPage_InsertObjectAtIndex === "function" &&
+      this.originalIndex >= 0
+    ) {
+      insertPageObjectAt(
+        doc.module,
+        page.pagePtr,
+        this.cachedObjPtr,
+        this.originalIndex,
+      );
+    } else {
       // Fallback: re-insert at end.
       doc.module.FPDFPage_InsertObject(page.pagePtr, this.cachedObjPtr);
       if (this.originalIndex >= 0) {

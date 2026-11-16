@@ -1,5 +1,6 @@
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 
 export type ZOrderMode =
@@ -117,7 +118,7 @@ export class ChangeZOrderCommand implements Command {
     // Re-inserting in ascending original index order reconstructs the
     // exact pre-apply list.
     for (const { ptr, idx } of this.memberPrev) {
-      ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, idx);
+      insertPageObjectAt(m, page.pagePtr, ptr, idx);
     }
     page.markDirty();
     page.markNeedsGenerate();

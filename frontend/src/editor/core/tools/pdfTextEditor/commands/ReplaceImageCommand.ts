@@ -14,6 +14,7 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -107,7 +108,7 @@ export class ReplaceImageCommand implements Command {
     if (this.nextObjPtr) {
       if (nested) setActive(m, this.prevObjPtr, false);
       else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
-      insertObjectAt(m, page.pagePtr, this.nextObjPtr, this.prevIndex);
+      insertPageObjectAt(m, page.pagePtr, this.nextObjPtr, this.prevIndex);
       this.adopt(page, img, this.nextObjPtr);
       return;
     }
@@ -151,7 +152,7 @@ export class ReplaceImageCommand implements Command {
     // The embed appended, so without this the replacement jumps to the top.
     if (this.prevIndex >= 0 && supportsInsertAtIndex(m)) {
       m.FPDFPage_RemoveObject(page.pagePtr, objPtr);
-      insertObjectAt(m, page.pagePtr, objPtr, this.prevIndex);
+      insertPageObjectAt(m, page.pagePtr, objPtr, this.prevIndex);
     }
     this.nextObjPtr = objPtr;
     this.adopt(page, img, objPtr);
@@ -166,7 +167,7 @@ export class ReplaceImageCommand implements Command {
     // Detach only again: the replacement is what redo re-attaches.
     m.FPDFPage_RemoveObject(page.pagePtr, this.nextObjPtr);
     if (img.containerPtr) setActive(m, this.prevObjPtr, true);
-    else insertObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
+    else insertPageObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
     this.adopt(page, img, this.prevObjPtr);
   }
 
@@ -197,24 +198,6 @@ function supportsInsertAtIndex(m: WrappedPdfiumModule): boolean {
     typeof (m as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex ===
     "function"
   );
-}
-
-/** Re-attach a detached object at `index`, appending when that is unavailable. */
-function insertObjectAt(
-  m: WrappedPdfiumModule,
-  pagePtr: number,
-  objPtr: number,
-  index: number,
-): void {
-  const insertAt = (m as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex;
-  if (typeof insertAt === "function" && index >= 0) {
-    try {
-      if (insertAt.call(m, pagePtr, objPtr, index)) return;
-    } catch {
-      /* fall through to append */
-    }
-  }
-  m.FPDFPage_InsertObject(pagePtr, objPtr);
 }
 
 function setImageMatrix(

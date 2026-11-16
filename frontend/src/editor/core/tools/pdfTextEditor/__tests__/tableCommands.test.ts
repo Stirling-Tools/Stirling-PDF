@@ -201,8 +201,6 @@ function ruleShape(rule: PageRuleSnapshot): ShapeObject {
     bounds: { x: rule.x, y: rule.y, width: rule.width, height: rule.height },
     pdfiumObjPtr: rule.ptr,
     containerPtr: 0,
-    topLevelContainerPtr: 0,
-    containerTransform: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
   });
 }
 
