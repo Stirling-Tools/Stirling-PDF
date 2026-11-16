@@ -8,8 +8,9 @@
  *
  * Local signature results are integrity evidence, not identity: the signature value and certificate
  * chain are never verified here, so whether the signer is trusted needs the backend.
- * Hashing every signed byte grows with file size: for a file too large to reuse its worker, the
- * queue slot is freed as soon as `access` is sent and only the memory stays held.
+ * Background checks run only when the request asks for them. Hashing every signed byte grows with
+ * file size: for a file too large to reuse its worker, the queue slot is freed as soon as `access` is
+ * sent, and its bytes still count against the memory budget until `done`.
  *
  * Workers are reused only after small unencrypted files, because WASM memory never shrinks and freed
  * pages keep their contents; every other file gets a fresh worker, and a clean spare is started for the next.
@@ -40,6 +41,7 @@ import type { PdfAccess } from "@editor/services/pdfAccessService";
 export interface PdfAccessRequest {
   file: Blob;
   password: string;
+  runBackgroundChecks: boolean;
   wasmUrl: string;
   wasmModule: WebAssembly.Module | null;
 }
@@ -156,7 +158,9 @@ self.onmessage = async ({
             throw new Error("Unable to verify the PDF opening password");
           access.requiresOpeningPassword = !empty;
         }
-        const background = backgroundChecksAfter(access);
+        const background = data.runBackgroundChecks
+          ? backgroundChecksAfter(access)
+          : [];
         self.postMessage({
           access,
           background: background.length > 0,

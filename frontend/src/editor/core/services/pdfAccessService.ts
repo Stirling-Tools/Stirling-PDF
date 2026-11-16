@@ -255,10 +255,7 @@ let detailsByFile = new WeakMap<Blob, Partial<PdfProbeDetails>>();
 function drainInspections(): void {
   while (inspectionQueue.length && activeInspections < MAX_INSPECTION_WORKERS) {
     const next = inspectionQueue[0];
-    if (
-      activeInspections &&
-      inspectingBytes + next.size > INSPECTION_BYTE_BUDGET
-    )
+    if (inspectingBytes && inspectingBytes + next.size > INSPECTION_BYTE_BUDGET)
       return;
     inspectionQueue.shift();
     next.start();
@@ -415,6 +412,7 @@ function runInspection(
               const request: PdfAccessRequest = {
                 file,
                 password,
+                runBackgroundChecks: blockSignedPdfEdits,
                 wasmUrl: pdfiumWasmUrl,
                 wasmModule,
               };

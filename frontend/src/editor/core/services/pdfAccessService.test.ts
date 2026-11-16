@@ -11,6 +11,7 @@ import {
   inspectLocalPdfAccess,
   setPdfAccessPolicy,
   subscribePdfAccess,
+  setSignedPdfEditPolicy,
 } from "@editor/services/pdfAccessService";
 
 import { preflightPdfOperation } from "@editor/services/pdfSessionUnlock";
@@ -107,12 +108,29 @@ describe("local inspection lifetime", () => {
       expect(workers[0].postMessage).toHaveBeenCalledWith({
         file,
         password: "",
+        runBackgroundChecks: false,
         wasmUrl: "/pdfium.wasm",
         wasmModule: "precompiled-module",
       }),
     );
     workers[0].onmessage?.({ data: { access } });
     await result;
+  });
+
+  it("asks for background checks only while signed PDF edits are blocked", async () => {
+    setSignedPdfEditPolicy(true);
+    try {
+      const result = inspectLocalPdfAccess(new File(["PDF"], "signed.pdf"));
+      await vi.waitFor(() =>
+        expect(workers[0].postMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ runBackgroundChecks: true }),
+        ),
+      );
+      workers[0].onmessage?.({ data: { access } });
+      await result;
+    } finally {
+      setSignedPdfEditPolicy(false);
+    }
   });
 
   it("bounds concurrent inspections and drops a cancelled queued file", async () => {
@@ -413,6 +431,26 @@ describe("warm workers and background signature details", () => {
     expect(workers[0].terminate).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(10_000);
     expect(workers[0].terminate).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a large file's bytes in the memory budget while its background checks run", async () => {
+    const sized = (name: string) => {
+      const file = new File(["PDF"], name);
+      Object.defineProperty(file, "size", { value: 80 * 1024 * 1024 });
+      return file;
+    };
+    const first = inspectLocalPdfAccess(sized("a.pdf"));
+    const second = inspectLocalPdfAccess(sized("b.pdf"));
+    expect(workers).toHaveLength(1);
+    workers[0].onmessage?.({
+      data: { access: { ...plain, signed: true }, background: true },
+    });
+    await first;
+    expect(workers).toHaveLength(1);
+    workers[0].onmessage?.({ data: { done: true } });
+    await vi.waitFor(() => expect(workers).toHaveLength(2));
+    workers[1].onmessage?.({ data: { access: plain } });
+    await second;
   });
 
   it("frees the queue slot once a large signed file's blocking answer arrives", async () => {

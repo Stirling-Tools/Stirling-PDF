@@ -31,6 +31,7 @@ const ready = {
 const request: PdfAccessRequest = {
   file: new Blob(["PDF"]),
   password: "",
+  runBackgroundChecks: true,
   wasmUrl: "/pdfium.wasm",
   wasmModule: new WebAssembly.Module(
     new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]),
@@ -112,6 +113,16 @@ it("runs the signature check in the background after the blocking answer for a s
     pointer: 1,
     length: 3,
   });
+});
+
+it("skips background checks when the request does not ask for them", async () => {
+  init.mockResolvedValue(ready);
+  readAccess.mockReturnValueOnce({ encrypted: false, signed: true } as never);
+  await scope.onmessage!({ data: { ...request, runBackgroundChecks: false } });
+  expect(scope.postMessage.mock.calls.map(([message]) => message)).toEqual([
+    { access: { encrypted: false, signed: true }, background: false },
+  ]);
+  expect(readSignatures).not.toHaveBeenCalled();
 });
 
 it("still finishes when a background check fails", async () => {
