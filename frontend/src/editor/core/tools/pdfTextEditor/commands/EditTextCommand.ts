@@ -290,7 +290,12 @@ export class EditTextCommand implements Command {
       !isScanRun(run);
     const lines = run ? lineCount(this.nextText) - lineCount(run.text) : 0;
     const oldBottom = run?.bounds.y ?? 0;
-    const oldInkBottom = deciding && lines < 0 ? inkBottom(doc, run) : null;
+    // Read before the edit: a paragraph joined into one line forgets its line height.
+    const lineHeight = run
+      ? run.paragraphLineHeight > 0
+        ? run.paragraphLineHeight
+        : run.fontSize * 1.2
+      : 0;
     this.applyEdit(doc);
     if (this.pushes === null) {
       if (!deciding || this.scanEdited || lines === 0) this.pushes = [];
@@ -298,13 +303,9 @@ export class EditTextCommand implements Command {
         const { runIds, dy } = runsPushedBelow(page, run, oldBottom);
         this.pushes = runIds.map((runId) => this.moveBelow(runId, dy));
       } else {
-        const newInkBottom = inkBottom(doc, run);
-        const rise =
-          oldInkBottom !== null && newInkBottom !== null
-            ? newInkBottom - oldInkBottom
-            : 0;
-        this.pushes = runsPulledBack(run, rise).map(({ runId, dy }) =>
-          this.moveBelow(runId, dy),
+        // By line height, not ink: a blank line holds the text below down without drawing anything.
+        this.pushes = runsPulledBack(page, run, -lines * lineHeight).map(
+          ({ runId, dy }) => this.moveBelow(runId, dy),
         );
       }
     }
@@ -1918,10 +1919,6 @@ export class EditTextCommand implements Command {
     if (previous.resultText !== this.prevText) return false;
     return previous.isLineBreakOnlyInsertion();
   }
-}
-
-function inkBottom(doc: EditorDocument, run: TextRun): number | null {
-  return measureObjBoundsPt(doc.module, collectMemberPtrs(run))?.bottom ?? null;
 }
 
 function lineCount(text: string): number {

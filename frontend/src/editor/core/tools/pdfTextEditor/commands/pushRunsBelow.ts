@@ -117,14 +117,19 @@ export function notePush(edited: TextRun, runId: string, dy: number): void {
 /**
  * The runs `edited` pushed down that its shrinking by `rise` points lets back
  * up, each by no more than it was pushed, so nothing rises above where the
- * document put it.
+ * document put it. A run that can no longer move, such as one locked since,
+ * stays where it is.
  */
 export function runsPulledBack(
+  page: Page,
   edited: TextRun,
   rise: number,
 ): Array<{ runId: string; dy: number }> {
   if (rise <= 0.5) return [];
   return [...(pushedBelow.get(edited) ?? [])]
-    .filter(([, total]) => total < 0)
+    .filter(([runId, total]) => {
+      const run = page.findRun(runId);
+      return total < 0 && run !== undefined && canMove(page, run);
+    })
     .map(([runId, total]) => ({ runId, dy: Math.min(rise, -total) }));
 }

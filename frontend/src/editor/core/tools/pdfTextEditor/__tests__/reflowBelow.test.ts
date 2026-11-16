@@ -155,6 +155,29 @@ test.each([
   },
 );
 
+test("deleting blank lines added after the text brings the paragraph back up", async () => {
+  const { doc, heading, bodyInk, startTop } = await open();
+  const history = new HistoryStack();
+
+  type(doc, history, heading.id, [`${HEADING}\n\n`]);
+  expect(bodyInk()).toBeLessThan(startTop - 30);
+  type(doc, history, heading.id, [HEADING]);
+
+  expect(bodyInk()).toBeCloseTo(startTop, 3);
+});
+
+test("leaves a pushed paragraph where it is once it has been locked", async () => {
+  const { doc, heading, body, bodyInk } = await open();
+  const history = new HistoryStack();
+  type(doc, history, heading.id, [TWO_BREAKS]);
+  const pushedTop = bodyInk();
+  body.locked = true;
+
+  type(doc, history, heading.id, [HEADING]);
+
+  expect(bodyInk()).toBeCloseTo(pushedTop, 3);
+});
+
 test("joining the document's own lines leaves the text below where it is", async () => {
   const doc = await EditorDocument.open(
     new Uint8Array(
