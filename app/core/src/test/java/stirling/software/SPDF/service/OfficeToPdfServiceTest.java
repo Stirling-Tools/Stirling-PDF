@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mockStatic;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -21,16 +20,29 @@ class OfficeToPdfServiceTest {
     private final Path output = Path.of("document.pdf");
 
     @Test
-    void truncatedOutputFails() throws Exception {
+    void truncatedOutputNamesTheReason() throws Exception {
         var options = service.options();
         try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
             engine.when(() -> OfficeToPdf.convert(input, output, options))
-                    .thenReturn(new OfficeToPdf.Result(1, true, List.of(), false));
+                    .thenReturn(
+                            new OfficeToPdf.Result(
+                                    1,
+                                    true,
+                                    List.of(
+                                            "Arial is not installed; using Liberation Sans",
+                                            "Only the start of the text was converted: the rest"
+                                                    + " is past the page limit of 10000 pages"),
+                                    false));
 
-            IOException failure =
-                    assertThrows(IOException.class, () -> service.convert(input, output, options));
+            IllegalArgumentException failure =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> service.convert(input, output, options));
 
-            assertThat(failure).hasMessage("Only part of document.docx could be converted");
+            assertThat(failure.getMessage())
+                    .startsWith("Only part of document.docx could be converted.")
+                    .contains("past the page limit")
+                    .doesNotContain("Arial");
         }
     }
 

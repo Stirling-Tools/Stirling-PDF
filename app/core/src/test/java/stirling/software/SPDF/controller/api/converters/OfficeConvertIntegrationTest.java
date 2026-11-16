@@ -202,7 +202,7 @@ class OfficeConvertIntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-        "true,false,500,Only part of book.epub could be converted",
+        "true,false,400,Only part of book.epub could be converted",
         "false,true,400,book.epub would be longer than"
     })
     void ebookIncompleteOutputReturnsTheReasonToTheClient(

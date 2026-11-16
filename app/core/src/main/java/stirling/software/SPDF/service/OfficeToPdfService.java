@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -96,7 +97,16 @@ public class OfficeToPdfService {
                     options.maxPages());
         }
         if (result.truncated()) {
-            throw new IOException("Only part of " + in.getFileName() + " could be converted");
+            String reasons =
+                    result.warnings().stream()
+                            .filter(warning -> warning.contains("converted"))
+                            .map(warning -> warning.endsWith(".") ? warning : warning + ".")
+                            .collect(Collectors.joining(" "));
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionIncomplete",
+                    "Only part of {0} could be converted. {1}",
+                    in.getFileName(),
+                    reasons);
         }
     }
 }
