@@ -21,17 +21,20 @@ import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFace;
 import stirling.software.SPDF.service.EditorFontRegistry.EditorFontFamily;
@@ -443,6 +446,108 @@ class EditorFontRegistryTest {
                 .containsExactly("DejaVu Sans");
     }
 
+    @Test
+    void simultaneousRequestsForOneFaceShareOneRead() throws Exception {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        byte[] expected = Files.readAllBytes(font);
+        CountingRegistry counting = new CountingRegistry(root, clock);
+        String id = counting.snapshot().manifest().families().get(0).faces().get(0).id();
+        counting.reads.set(0);
+        CountDownLatch release = new CountDownLatch(1);
+        counting.hold = release;
+        List<AtomicReference<FontFile>> served = new ArrayList<>();
+        List<Thread> requests = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            AtomicReference<FontFile> result = new AtomicReference<>();
+            served.add(result);
+            requests.add(new Thread(() -> result.set(counting.resolve(id).orElse(null))));
+        }
+
+        requests.forEach(Thread::start);
+        try {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+            while (requests.stream().anyMatch(EditorFontRegistryTest::isStillRunning)) {
+                if (System.nanoTime() > deadline) {
+                    fail("requests never settled into reading or waiting for the read");
+                }
+                Thread.onSpinWait();
+            }
+        } finally {
+            release.countDown();
+        }
+        for (Thread request : requests) {
+            request.join();
+        }
+
+        assertThat(counting.reads).hasValue(1);
+        byte[] shared = arrayOf(served.get(0).get());
+        assertThat(shared).isEqualTo(expected);
+        assertThat(served).allSatisfy(result -> assertThat(arrayOf(result.get())).isSameAs(shared));
+        assertThat(arrayOf(counting.resolve(id).orElseThrow())).isSameAs(shared);
+        assertThat(counting.reads).hasValue(1);
+    }
+
+    @Test
+    void aFaceRemovedFromTheFolderIsNotServedFromMemory() throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        byte[] original = Files.readAllBytes(font);
+        String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FontFile served = registry.resolve(id).orElseThrow();
+
+        Files.delete(font);
+        clock.advance(EditorFontRegistry.RESCAN_INTERVAL.plusSeconds(1));
+
+        assertThat(registry.snapshot().manifest().families()).isEmpty();
+        assertThat(registry.resolve(id)).isEmpty();
+        assertThat(bytesOf(served)).isEqualTo(original);
+    }
+
+    @Test
+    void aFileSwappedForOtherBytesIsNotServedUnderItsOldIdFromMemory() throws IOException {
+        Path font = root.resolve("Face.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        byte[] original = Files.readAllBytes(font);
+        String oldId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FontFile served = registry.resolve(oldId).orElseThrow();
+
+        copyFixture("LiberationSans-Regular.ttf", font);
+        byte[] replacement = Files.readAllBytes(font);
+
+        assertThat(registry.resolve(oldId)).isEmpty();
+        String newId = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        assertThat(newId).isNotEqualTo(oldId);
+        assertThat(registry.resolve(newId))
+                .hasValueSatisfying(file -> assertThat(bytesOf(file)).isEqualTo(replacement));
+        assertThat(bytesOf(served)).isEqualTo(original);
+    }
+
+    @Test
+    void aSwapKeepingSizeAndTimeNeverServesTheNewBytesUnderTheOldId() throws IOException {
+        Path font = root.resolve("DejaVuSans.ttf");
+        copyFixture("DejaVuSans.ttf", font);
+        byte[] original = Files.readAllBytes(font);
+        String id = registry.snapshot().manifest().families().get(0).faces().get(0).id();
+        FontFile served = registry.resolve(id).orElseThrow();
+        FileTime modified = Files.getLastModifiedTime(font);
+        setFsType(font, 0x0008);
+        Files.setLastModifiedTime(font, modified);
+
+        registry.resolve(id).ifPresent(file -> assertThat(bytesOf(file)).isEqualTo(original));
+        assertThat(bytesOf(served)).isEqualTo(original);
+    }
+
+    private static boolean isStillRunning(Thread thread) {
+        Thread.State state = thread.getState();
+        return state == Thread.State.NEW || state == Thread.State.RUNNABLE;
+    }
+
+    private static byte[] arrayOf(FontFile file) {
+        assertThat(file).isNotNull();
+        return ((ByteArrayResource) file.resource()).getByteArray();
+    }
+
     private static byte[] bytesOf(FontFile file) {
         try (InputStream in = file.resource().getInputStream()) {
             return in.readAllBytes();
@@ -512,6 +617,30 @@ class EditorFontRegistryTest {
             }
         }
         throw new IllegalStateException("no " + table + " table");
+    }
+
+    private static final class CountingRegistry extends EditorFontRegistry {
+        private final AtomicInteger reads = new AtomicInteger();
+        private volatile CountDownLatch hold;
+
+        CountingRegistry(Path root, Clock clock) {
+            super(root, null, clock);
+        }
+
+        @Override
+        byte[] readBounded(Path path) throws IOException {
+            reads.incrementAndGet();
+            CountDownLatch latch = hold;
+            try {
+                if (latch != null && !latch.await(60, TimeUnit.SECONDS)) {
+                    throw new IOException("the read was never released");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+            return super.readBounded(path);
+        }
     }
 
     private static final class PausingClassLoader extends ClassLoader {
