@@ -7990,6 +7990,7 @@ renderingPreview = "Rendering preview"
 [pdfTextEditor.table]
 addColumn = "Add column"
 addRow = "Add row"
+cellNoGlyphs = "This text has characters the table's fonts can't draw. The cell was left empty."
 column = "Col"
 deleteColumn = "Delete column"
 deleteRow = "Delete row"

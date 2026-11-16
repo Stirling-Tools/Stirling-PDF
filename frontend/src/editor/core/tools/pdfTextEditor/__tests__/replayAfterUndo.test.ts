@@ -288,10 +288,13 @@ test("deleting a line of an ungrouped paragraph takes every word of it off the p
   expect(body.text.split("\n")).toHaveLength(4);
 });
 
-test("new table cell text holds only the letters it could draw, and none is refused", async () => {
+test("new table cell text is drawn whole or not at all", async () => {
   const doc = await open();
   const page = doc.page(0);
+  const runs = page.runs.length;
 
-  expect(emitCellText(doc, page, 50, 50, "A漢字", 12)?.run.text).toBe("A");
+  expect(emitCellText(doc, page, 50, 50, "A漢字", 12)).toBeNull();
   expect(emitCellText(doc, page, 50, 30, "漢字", 12)).toBeNull();
+  expect(page.runs).toHaveLength(runs);
+  expect(emitCellText(doc, page, 50, 10, "Plain", 12)?.run.text).toBe("Plain");
 });

@@ -15,6 +15,8 @@ import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import { detectTables } from "@editor/tools/pdfTextEditor/util/tableDetection";
 import { ModifyTableCommand } from "@editor/tools/pdfTextEditor/commands/ModifyTableCommand";
 import { FillTableCellCommand } from "@editor/tools/pdfTextEditor/commands/FillTableCellCommand";
+import { cellTextDrawable } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
+import { alert } from "@editor/components/toast";
 import type { TableResize } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
 import { ResizeTableCommand } from "@editor/tools/pdfTextEditor/commands/ResizeTableCommand";
 import { MaterialiseTableCommand } from "@editor/tools/pdfTextEditor/commands/MaterialiseTableCommand";
@@ -465,6 +467,17 @@ function EditableTable({
                 const text = e.currentTarget.textContent?.trim() ?? "";
                 if (!text) return;
                 e.currentTarget.textContent = "";
+                if (!cellTextDrawable(text)) {
+                  alert({
+                    alertType: "warning",
+                    title: t(
+                      "pdfTextEditor.table.cellNoGlyphs",
+                      "This text has characters the table's fonts can't draw. The cell was left empty.",
+                    ),
+                    expandable: false,
+                  });
+                  return;
+                }
                 const cmd = new FillTableCellCommand({
                   tableId: table.id,
                   row: cell.row,

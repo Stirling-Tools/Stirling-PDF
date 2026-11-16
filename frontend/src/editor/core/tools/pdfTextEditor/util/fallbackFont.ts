@@ -35,6 +35,11 @@ function fallbackFontCovers(text: string): boolean {
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
+/** True when the fallback font has loaded and has a glyph for every visible character of `text`. */
+export function fallbackFontDraws(text: string): boolean {
+  return isFallbackFontReady() && fallbackFontCovers(text);
+}
+
 interface ExtendedPdfiumRuntime {
   HEAPU8: Uint8Array;
 }

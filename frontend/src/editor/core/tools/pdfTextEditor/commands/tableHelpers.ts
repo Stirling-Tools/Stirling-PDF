@@ -13,6 +13,10 @@ import {
   measureObjSpanPt,
   sanitizeForBase14,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  emitFallbackTextObject,
+  fallbackFontDraws,
+} from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 
 const LINE_RGB = { r: 0, g: 0, b: 0 } as const;
@@ -405,8 +409,21 @@ export interface EmittedText {
   run: TextRun;
 }
 
-// Insert a base-14 (Helvetica) text object at a page-space point and register a
-// matching run. Mirrors InsertTextCommand's core; used for cell content.
+const leavesBase14 = (text: string): boolean =>
+  [...sanitizeForBase14(text)].length < [...text].length;
+
+/** True when cell text can be drawn whole: the standard fonts encode every character, or the fallback face has loaded and covers them. */
+export function cellTextDrawable(text: string): boolean {
+  return !leavesBase14(text) || fallbackFontDraws(text);
+}
+
+/**
+ * Inserts `text` at a page-space point and registers a matching run: in the
+ * standard font `family` when that encodes every character, otherwise in the
+ * fallback face. Draws all of `text` or nothing: null when some character
+ * cannot be drawn, since a run holding letters the page never drew loses them
+ * on save.
+ */
 export function emitCellText(
   doc: EditorDocument,
   page: Page,
@@ -418,24 +435,14 @@ export function emitCellText(
   family: string = CELL_FAMILY,
 ): EmittedText | null {
   const m = doc.module;
-  const sanitized = sanitizeForBase14(text);
-  // Setting empty text traps in PDFium, and a run holding letters that were never drawn loses them on save.
-  if (text.length > 0 && sanitized.length === 0) return null;
-  // PDFium can only build a text object for a base-14 name; a family it cannot
-  // resolve returns 0, so fall back rather than dropping the text.
-  const ptr =
-    m.FPDFPageObj_NewTextObj(doc.docPtr, family, fontSize) ||
-    m.FPDFPageObj_NewTextObj(doc.docPtr, CELL_FAMILY, fontSize);
+  const standard = !leavesBase14(text);
+  const drawn = standard ? sanitizeForBase14(text) : text;
+  // Setting empty text traps in PDFium.
+  if (drawn.length === 0) return null;
+  const ptr = standard
+    ? emitStandardText(doc, page, x, y, drawn, fontSize, fill, family)
+    : emitFallbackTextObject(doc, page, drawn, fontSize, fill, x, y);
   if (!ptr) return null;
-  const textPtr = writeUtf16(m, sanitized);
-  try {
-    m.FPDFText_SetText(ptr, textPtr);
-  } finally {
-    m.pdfium.wasmExports.free(textPtr);
-  }
-  m.FPDFPageObj_SetFillColor(ptr, fill.r, fill.g, fill.b, fill.a);
-  m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, x, y);
-  m.FPDFPage_InsertObject(page.pagePtr, ptr);
 
   const runId = `p${page.index}-cell-${page.runs.length}-${ptr}`;
   // Measured, not estimated: a guessed box puts the editing overlay off the
@@ -449,11 +456,11 @@ export function emitCellText(
     bounds: measured ?? {
       x,
       y,
-      width: Math.max(1, sanitized.length * fontSize * 0.55),
+      width: Math.max(1, drawn.length * fontSize * 0.55),
       height: fontSize * 1.2,
     },
     matrix: { a: 1, b: 0, c: 0, d: 1, e: x, f: y },
-    text: sanitized,
+    text: drawn,
     fontId: `base14:${family}`,
     fontSize,
     fill: { ...fill },
@@ -461,6 +468,35 @@ export function emitCellText(
   });
   page.setRuns([...page.runs, run]);
   return { ptr, run };
+}
+
+function emitStandardText(
+  doc: EditorDocument,
+  page: Page,
+  x: number,
+  y: number,
+  text: string,
+  fontSize: number,
+  fill: RGBA,
+  family: string,
+): number {
+  const m = doc.module;
+  // PDFium can only build a text object for a base-14 name; a family it cannot
+  // resolve returns 0, so fall back rather than dropping the text.
+  const ptr =
+    m.FPDFPageObj_NewTextObj(doc.docPtr, family, fontSize) ||
+    m.FPDFPageObj_NewTextObj(doc.docPtr, CELL_FAMILY, fontSize);
+  if (!ptr) return 0;
+  const textPtr = writeUtf16(m, text);
+  try {
+    m.FPDFText_SetText(ptr, textPtr);
+  } finally {
+    m.pdfium.wasmExports.free(textPtr);
+  }
+  m.FPDFPageObj_SetFillColor(ptr, fill.r, fill.g, fill.b, fill.a);
+  m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, x, y);
+  m.FPDFPage_InsertObject(page.pagePtr, ptr);
+  return ptr;
 }
 
 /** Translate a run and its PDFium object by (dx, dy) page points. */
