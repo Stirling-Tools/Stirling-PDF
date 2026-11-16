@@ -12,7 +12,7 @@ import type {
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
-import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { canResizeRun } from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -501,7 +501,7 @@ export const PageView = memo(function PageView({
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
             }
             onResize={
-              onResizeRun && !isScanRun(run) && !run.textReadOnly
+              onResizeRun && canResizeRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }

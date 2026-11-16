@@ -34,6 +34,7 @@ import {
   wrapScanText,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { resizeRunCommand } from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import { MoveShapeCommand } from "@editor/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
 import { InsertTableCommand } from "@editor/tools/pdfTextEditor/commands/InsertTableCommand";
@@ -455,14 +456,9 @@ function pageViewHandlers(store: EditorStore) {
       return !reflow.refusedForSpaceBelow;
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
-      store.dispatch(
-        new ReflowWrapCommand({
-          pageIndex,
-          runId,
-          maxWidthPt: widthPt,
-          explicit: true,
-        }),
-      );
+      const doc = store.document;
+      const cmd = doc && resizeRunCommand(doc, pageIndex, runId, widthPt);
+      if (cmd) store.dispatch(cmd);
     },
     onPageClick: (pageIndex: number, pageX: number, pageY: number) => {
       const { mode } = store.getState();

@@ -75,3 +75,36 @@ describe("useSelectionGeometry setters", () => {
     });
   });
 });
+
+describe("useSelectionGeometry width", () => {
+  const UPRIGHT = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const TURNED = { a: 0, b: 1, c: -1, d: 0, e: 0, f: 0 };
+
+  function widthFor(run: Record<string, unknown>) {
+    const state = {
+      pages: [
+        {
+          pageIndex: 0,
+          runs: [{ id: "r1", bounds: rect(0, 0), matrix: UPRIGHT, ...run }],
+          images: [],
+        },
+      ],
+    } as unknown as EditorViewState;
+    const store = { getState: () => state } as unknown as EditorStore;
+    const { result } = renderHook(() =>
+      useSelectionGeometry(store, state, selected({ runIds: ["r1"] })),
+    );
+    return result.current.single!.setWidth;
+  }
+
+  it("is editable for upright scanned text as for plain text", () => {
+    expect(widthFor({})).toBeTypeOf("function");
+    expect(widthFor({ renderMode: 3 })).toBeTypeOf("function");
+  });
+
+  it("stays off for read-only text and turned scanned text", () => {
+    expect(widthFor({ textReadOnly: true })).toBeUndefined();
+    expect(widthFor({ renderMode: 3, textReadOnly: true })).toBeUndefined();
+    expect(widthFor({ renderMode: 3, matrix: TURNED })).toBeUndefined();
+  });
+});

@@ -11,7 +11,10 @@ import {
   type Command,
   type PageRepaintArea,
 } from "@editor/tools/pdfTextEditor/commands/Command";
-import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
+import {
+  RENDER_MODE_INVISIBLE,
+  type PageRect,
+} from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
@@ -86,6 +89,7 @@ import {
   captureScanEdit,
   isScanRun,
   renderScanEdit,
+  scanBlockBounds,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   editedTags,
@@ -268,6 +272,9 @@ export class EditTextCommand implements Command {
   /** Set when apply went through the word-level scanned-OCR path. */
   private scanEdited = false;
   private scanRefused = false;
+  // The box of a scanned block before this edit and around what it drew, so undo and redo put back exactly the size the overlay and inspector read.
+  private scanBounds: { before: PageRect; after: PageRect | null } | null =
+    null;
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   /** Rotation of the run when apply() snapshotted it; re-applied on revert. */
@@ -316,6 +323,7 @@ export class EditTextCommand implements Command {
   // Objects the last whole-burst replay drew for this run, kept on the burst's last edit: the next replay replaces and frees them.
   private replayDrawn: number[] = [];
   private readonly pushesBelow: boolean;
+  private readonly explicit: boolean;
   // The runs below that this edit's added lines moved down, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
   // What the run was recorded as holding down before and after this edit, when the edit changed it.
@@ -331,6 +339,7 @@ export class EditTextCommand implements Command {
     nextTags?: TextTags | null;
     nextFont?: { ptr: number; id: string } | null;
     pushesBelow?: boolean;
+    explicit?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
@@ -338,6 +347,7 @@ export class EditTextCommand implements Command {
     this.nextTagsOverride = opts.nextTags ?? null;
     this.nextFont = opts.nextFont ?? null;
     this.pushesBelow = opts.pushesBelow ?? true;
+    this.explicit = opts.explicit ?? false;
   }
 
   apply(doc: EditorDocument): void {
@@ -443,6 +453,7 @@ export class EditTextCommand implements Command {
       run.scanEdit ??= captureScanEdit(doc.module, run, page);
       if (run.scanEdit) {
         this.scanEdited = true;
+        this.scanBounds ??= { before: { ...run.bounds }, after: null };
         this.scanRefused = !renderScanEdit(
           doc,
           page,
@@ -450,6 +461,10 @@ export class EditTextCommand implements Command {
           run.scanEdit,
           this.nextText,
         );
+        if (!this.scanRefused) {
+          this.scanBounds.after ??= scanBlockBounds(doc, run);
+          if (this.scanBounds.after) run.bounds = { ...this.scanBounds.after };
+        }
         return;
       }
     }
@@ -1240,6 +1255,7 @@ export class EditTextCommand implements Command {
     if (!run || this.prevText === null) return;
     if (this.scanEdited && run.scanEdit) {
       renderScanEdit(doc, page, run, run.scanEdit, this.prevText);
+      if (this.scanBounds) run.bounds = { ...this.scanBounds.before };
       return;
     }
     this.assertSingleRevertPath();
@@ -2169,8 +2185,9 @@ export class EditTextCommand implements Command {
     };
   }
 
-  /** Consecutive typing on the SAME run coalesces into one undo step. */
-  coalesceKey(): string {
+  /** Consecutive typing on the SAME run coalesces into one undo step; an `explicit` edit (a resize) is always its own. */
+  coalesceKey(): string | null {
+    if (this.explicit) return null;
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
 

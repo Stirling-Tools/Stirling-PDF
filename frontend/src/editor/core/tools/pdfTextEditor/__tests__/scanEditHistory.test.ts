@@ -25,6 +25,7 @@ vi.mock("@editor/tools/pdfTextEditor/commands/scanTextEdit", () => ({
   isScanRun: (run: { renderMode?: number }) => run.renderMode === 3,
   captureScanEdit: () => ({}) as ScanEditState,
   renderScanEdit,
+  scanBlockBounds: () => null,
 }));
 
 function fixture() {

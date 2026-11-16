@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
-import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  canResizeRun,
+  resizeRunCommand,
+} from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -100,18 +102,14 @@ export function useSelectionGeometry(
               ),
             // Narrowing a run is exactly the wrap gesture, so it reuses the
             // same command the canvas resize handle drives.
-            setWidth:
-              isScanRun(run) || run.textReadOnly
-                ? undefined
-                : (next) =>
-                    store.dispatch(
-                      new ReflowWrapCommand({
-                        pageIndex,
-                        runId,
-                        maxWidthPt: Math.max(1, next),
-                        explicit: true,
-                      }),
-                    ),
+            setWidth: canResizeRun(run)
+              ? (next) => {
+                  const doc = store.document;
+                  const cmd =
+                    doc && resizeRunCommand(doc, pageIndex, runId, next);
+                  if (cmd) store.dispatch(cmd);
+                }
+              : undefined,
           },
         };
       }

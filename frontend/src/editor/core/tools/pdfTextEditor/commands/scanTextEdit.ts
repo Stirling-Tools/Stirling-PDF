@@ -13,6 +13,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   RENDER_MODE_INVISIBLE,
   type Affine,
+  type PageRect,
   type RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import {
@@ -39,6 +40,7 @@ import {
 } from "@editor/tools/pdfTextEditor/commands/scanLayout";
 import {
   emitFillRect,
+  measureObjBoxPt,
   removeAndDestroyObject,
   removeMemberPtrs,
   recordUndrawableChars,
@@ -1357,6 +1359,38 @@ function attachToRun(run: TextRun, state: ScanEditState): void {
     ...live.flatMap((w) => [w.container, ...(w.extraPtrs ?? []).map(() => 0)]),
     ...state.textPtrs.map(() => 0),
   ];
+}
+
+/** Page-space box around a scanned run's text as last drawn: the OCR words still on the page plus the text the edit emitted. Null for a turned block, whose words are not in page space, or when nothing can be measured. */
+export function scanBlockBounds(
+  doc: EditorDocument,
+  run: TextRun,
+): PageRect | null {
+  const state = run.scanEdit;
+  if (!state || state.frame) return null;
+  const boxes: PageRect[] = state.lines.flatMap((line, li) =>
+    line.words
+      .filter((_, wi) => !state.lifted.has(`${li}:${wi}`))
+      .map((w) => ({
+        x: w.x,
+        y: w.baseline,
+        width: w.right - w.x,
+        height: line.height,
+      })),
+  );
+  for (const ptr of state.textPtrs) {
+    const box = measureObjBoxPt(doc.module, ptr);
+    if (box && box.width > 0) boxes.push(box);
+  }
+  if (boxes.length === 0) return null;
+  const x = Math.min(...boxes.map((b) => b.x));
+  const y = Math.min(...boxes.map((b) => b.y));
+  return {
+    x,
+    y,
+    width: Math.max(...boxes.map((b) => b.x + b.width)) - x,
+    height: Math.max(...boxes.map((b) => b.y + b.height)) - y,
+  };
 }
 
 /** The run's scan-edit state, captured on first use; null when it has none. */
