@@ -50,6 +50,7 @@ function fakeDoc(page: Page, emittedFont: number) {
     FPDFPage_RemoveObject: vi.fn(() => true),
     FPDFPageObj_Destroy: vi.fn(),
     FPDFPage_InsertObject: vi.fn(),
+    FPDFPage_CountObjects: vi.fn(() => 0),
   };
   const doc = {
     module,

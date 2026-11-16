@@ -12,12 +12,14 @@ import {
   collectContainersByPtr,
   charcodesResolveFully,
   collectMemberPtrs,
+  contentIndices,
   droppedCharsOf,
   emitRunLines,
   planLineOrigins,
   recordUndrawableChars,
   removeAndDestroyObject,
   removeMemberPtrs,
+  restoreContentOrder,
   warmOnPageAdvances,
   type EmittedLine,
   type FontSpan,
@@ -74,6 +76,8 @@ export class SetFontFamilyCommand implements Command {
   private prev: RunModelSnapshot | null;
   /** Original on-page member ptrs (re-inserted on revert). */
   private prevMemberPtrs: number[];
+  /** Where each original sat in the page's content order, which decides how the text of an object reads beside its neighbours. */
+  private prevContentOrder: Array<{ ptr: number; index: number }>;
   /** Every object this command created (removed on revert). */
   private createdPtrs: number[];
 
@@ -83,6 +87,7 @@ export class SetFontFamilyCommand implements Command {
     this.nextFamily = opts.nextFamily;
     this.prev = null;
     this.prevMemberPtrs = [];
+    this.prevContentOrder = [];
     this.createdPtrs = [];
   }
 
@@ -108,6 +113,9 @@ export class SetFontFamilyCommand implements Command {
     // Read on every apply: redoing an earlier step draws the run in new objects.
     this.prev = snapshotRun(run);
     this.prevMemberPtrs = collectMemberPtrs(run).slice();
+    this.prevContentOrder = [
+      ...contentIndices(m, page.pagePtr, this.prevMemberPtrs),
+    ].map(([ptr, index]) => ({ ptr, index }));
 
     if (!restoring && !documentFont && isDocumentFontId(run.fontId)) {
       run.documentFont = { fontId: run.fontId, subset: run.fontSubset };
@@ -345,6 +353,7 @@ export class SetFontFamilyCommand implements Command {
         /* best-effort */
       }
     }
+    restoreContentOrder(m, page.pagePtr, this.prevContentOrder);
   }
 }
 

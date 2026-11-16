@@ -562,31 +562,49 @@ function actualTextMark(m: WrappedPdfiumModule, objPtr: number): number {
  * The text objects inside one ActualText span, as a walk passes them. PDFium
  * gives the span's whole text to one of its objects and none to the others,
  * which would then belong to no run: a letter drawn apart from its vowel mark
- * stays on the page when its line is moved, deleted or redrawn.
+ * stays on the page when its line is moved, deleted or redrawn. It gives the
+ * text to a second object as well when something else on the line sorts
+ * between the two, and read as a run of its own that one would double the
+ * span's letters.
  */
 class ActualTextSpan {
   private mark = 0;
   private owner = 0;
+  private ownerText = "";
   private rest: number[] = [];
 
   constructor(private readonly companions: Map<number, number[]>) {}
 
+  /**
+   * Whether the object repeats the text the span's first run already holds, so
+   * it is a companion of that run and not a run itself. `runText` is the text
+   * the object reads as a run, or null when it reads as none.
+   */
   take(
     objPtr: number,
     mark: number,
-    isRun: boolean,
+    runText: string | null,
     hasNoText: (objPtr: number) => boolean,
-  ): void {
+  ): boolean {
     if (mark !== this.mark) {
       this.mark = mark;
       this.owner = 0;
+      this.ownerText = "";
       this.rest = [];
     }
-    if (mark === 0) return;
-    if (isRun) this.owner ||= objPtr;
-    else if (hasNoText(objPtr)) this.rest.push(objPtr);
+    if (mark === 0) return false;
+    const first = runText !== null && this.owner === 0;
+    const repeats =
+      runText !== null && !first && runText.trim() === this.ownerText;
+    if (first) {
+      this.owner = objPtr;
+      this.ownerText = runText.trim();
+    } else if (repeats || (runText === null && hasNoText(objPtr))) {
+      this.rest.push(objPtr);
+    }
     if (this.owner && this.rest.length > 0)
       this.companions.set(this.owner, this.rest);
+    return repeats;
   }
 }
 
@@ -634,13 +652,13 @@ function walkObjects(
         transform,
         textPagePtr,
       );
-      span.take(
+      const repeatsSpanText = span.take(
         objPtr,
         actualTextMark(m, objPtr),
-        run !== null,
+        run?.text ?? null,
         (ptr) => readTextObjString(m, textPagePtr, ptr) === "",
       );
-      if (run) {
+      if (run && !repeatsSpanText) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
         // A form's MCIDs resolve against its own /StructParents, not the

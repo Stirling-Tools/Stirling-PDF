@@ -16,6 +16,7 @@ import {
   inkFromRun,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
+  measureObjSpanPt,
   moveObjectLeftEdgeTo,
   removeAndDestroyObject,
   removeTextObject,
@@ -220,6 +221,28 @@ function surrogatePairsSurviveTogether(
     b++;
   }
   return true;
+}
+
+/**
+ * The pieces straight after the one at `idx` that hold no text of their own:
+ * objects drawing the rest of its glyph cluster, such as a vowel mark drawn
+ * apart from its letter. They are moved, removed and kept with it, and nothing
+ * goes between them in content order.
+ */
+function ridersOf(texts: readonly string[], idx: number): number[] {
+  const riders: number[] = [];
+  if (texts[idx] === "") return riders;
+  for (let i = idx + 1; i < texts.length && texts[i] === ""; i++)
+    riders.push(i);
+  return riders;
+}
+
+/** The piece the one at `idx` rides, or -1 when it holds text itself or nothing with text comes before it. */
+function riddenBy(texts: readonly string[], idx: number): number {
+  if (texts[idx] !== "") return -1;
+  let owner = idx - 1;
+  while (owner >= 0 && texts[owner] === "") owner--;
+  return owner;
 }
 
 /** Diff-driven partial editing. */
@@ -545,6 +568,9 @@ export function planPartialEdit(
       if (keptMax.get(sr)! - keptMin.get(sr)! + 1 !== cnt)
         replacedSubRuns.add(sr);
     }
+    // SetText reaches one object: the rest of a piece's glyph cluster would go on drawing the letters taken out of it.
+    for (const sr of mixedSubRuns)
+      if (ridersOf(run.mergedFromTexts, sr).length > 0) replacedSubRuns.add(sr);
     for (const { aIdx, bIdx } of alignment) {
       if (!replacedSubRuns.has(charToSubRun[aIdx])) continue;
       keptA.delete(aIdx);
@@ -555,6 +581,10 @@ export function planPartialEdit(
       mixedSubRuns.delete(sr);
       mixedSurviving.delete(sr);
     }
+  }
+  for (let i = 0; i < subRunStatus.length; i++) {
+    const owner = riddenBy(run.mergedFromTexts, i);
+    if (owner >= 0) subRunStatus[i] = subRunStatus[owner];
   }
 
   for (let b = 0; b < nextText.length; b++) {
@@ -801,7 +831,8 @@ export function applyPartialEditPlan(
   };
   // Letters typed onto a word take that word's face, so it is not drawn half in one font and half in another.
   const wordNeighbourFont = (text: string, beforeIdx?: number): number => {
-    const last = newMergedFromTexts.length - 1;
+    let last = newMergedFromTexts.length - 1;
+    while (last >= 0 && newMergedFromTexts[last] === "") last--;
     const touching =
       last >= 0 && /\S$/.test(newMergedFromTexts[last]) && /^\S/.test(text)
         ? newMergedFromPtrs[last]
@@ -887,15 +918,20 @@ export function applyPartialEditPlan(
         run.charSpacingPt * text.length
       : 0;
   let offset = 0;
+  // A rider has no place of its own on the line: it sits wherever its piece is put.
+  const rides = (idx: number) => riddenBy(plan.prevMergedFromTexts, idx) >= 0;
   // Tracks the highest sub-run index we've already accounted for in `offset`.
   let processedUpTo = -1;
   function absorbDeletesBefore(idx: number): void {
     for (let i = processedUpTo + 1; i < idx; i++) {
-      if (plan.subRunStatus[i] === "all-deleted") {
+      if (plan.subRunStatus[i] === "all-deleted" && !rides(i)) {
         const b = plan.prevMergedFromBounds[i];
         if (!b) continue;
         // Subtract the deleted sub-run's ADVANCE, not just its ink width.
-        const next = plan.prevMergedFromBounds[i + 1];
+        const next =
+          plan.prevMergedFromBounds[
+            i + 1 + ridersOf(plan.prevMergedFromTexts, i).length
+          ];
         offset -= next && next.x > b.x ? next.x - b.x : b.right - b.x;
       }
     }
@@ -916,7 +952,7 @@ export function applyPartialEditPlan(
     const idx = nextSurvivorOp[opIndex]?.subRunIdx;
     if (idx === undefined) return null;
     for (let i = processedUpTo + 1; i < idx; i++)
-      if (plan.subRunStatus[i] === "all-deleted") return null;
+      if (plan.subRunStatus[i] === "all-deleted" && !rides(i)) return null;
     const bounds = plan.prevMergedFromBounds[idx];
     return bounds ? bounds.x + offset : null;
   };
@@ -996,6 +1032,24 @@ export function applyPartialEditPlan(
       newMergedFromBounds.push({ x: newX, right: newRight });
       newMergedFromCharStarts.push(op.startBIdx);
       extendLastEnd(newRight, text);
+      for (const rider of ridersOf(plan.prevMergedFromTexts, op.subRunIdx)) {
+        const riderPtr = plan.prevMergedFromPtrs[rider];
+        const riderBounds = plan.prevMergedFromBounds[rider];
+        if (Math.abs(offset) > 0.05) {
+          try {
+            shiftAlongPage(riderPtr, offset);
+          } catch {
+            /* best-effort */
+          }
+        }
+        newMergedFromPtrs.push(riderPtr);
+        newMergedFromTexts.push("");
+        newMergedFromBounds.push({
+          x: riderBounds.x + offset,
+          right: riderBounds.right + offset,
+        });
+        newMergedFromCharStarts.push(op.startBIdx + text.length);
+      }
     } else if (
       op.type === "modify" &&
       op.subRunIdx !== undefined &&
@@ -1295,6 +1349,7 @@ export function applyPartialEditPlan(
     m,
     page.pagePtr,
     newMergedFromPtrs,
+    newMergedFromTexts,
     new Set(insertedPtrs),
     lineStart,
   );
@@ -1379,7 +1434,16 @@ export function revertPartialEditPlan(
   for (let i = 0; i < ptrs.length; i++) {
     const live = replacements.get(ptrs[i]) ?? ptrs[i];
     const bounds = plan.prevMergedFromBounds[i];
-    if (live && bounds) moveObjectLeftEdgeTo(m, live, bounds.x);
+    if (!live || !bounds || riddenBy(plan.prevMergedFromTexts, i) >= 0)
+      continue;
+    const left = measureObjSpanPt(m, [live])?.left;
+    moveObjectLeftEdgeTo(m, live, bounds.x);
+    const moved = measureObjSpanPt(m, [live])?.left;
+    if (left === undefined || moved === undefined || moved === left) continue;
+    // A rider's stored bounds are its piece's, so it follows by the piece's shift, not to the piece's edge.
+    for (const rider of ridersOf(plan.prevMergedFromTexts, i))
+      if (ptrs[rider])
+        transformObject(m, ptrs[rider], 1, 0, 0, 1, moved - left, 0);
   }
   return replacements;
 }
@@ -1411,6 +1475,7 @@ function placeInsertedPieces(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   pagePtr: number,
   pieces: readonly number[],
+  texts: readonly string[],
   inserted: ReadonlySet<number>,
   lineStart: number,
 ): void {
@@ -1420,18 +1485,29 @@ function placeInsertedPieces(
     const at = contentIndices(m, pagePtr, pieces);
     const here = at.get(ptr);
     if (here === undefined) continue;
-    const before = pieces
-      .slice(0, i)
-      .reverse()
-      .find((p) => at.has(p));
-    const after = pieces
-      .slice(i + 1)
-      .find((p) => at.has(p) && !inserted.has(p));
+    // A piece and its riders are one stretch of content order whichever of them comes first in it, so a neighbour goes past the whole stretch.
+    const clusterAt = (piece: number): number[] => {
+      const owner = riddenBy(texts, piece);
+      const head = owner >= 0 ? owner : piece;
+      return [head, ...ridersOf(texts, head)].flatMap((j) =>
+        at.has(pieces[j]) ? [at.get(pieces[j])!] : [],
+      );
+    };
+    let before = i - 1;
+    while (before >= 0 && !at.has(pieces[before])) before--;
+    let after = i + 1;
+    while (
+      after < pieces.length &&
+      (!at.has(pieces[after]) || inserted.has(pieces[after]))
+    )
+      after++;
+    const last = before >= 0 ? Math.max(...clusterAt(before)) : -1;
+    const first = after < pieces.length ? Math.min(...clusterAt(after)) : -1;
     const target =
-      before !== undefined
-        ? at.get(before)! + (at.get(before)! < here ? 1 : 0)
-        : after !== undefined
-          ? at.get(after)! - (at.get(after)! < here ? 0 : 1)
+      last >= 0
+        ? last + (last < here ? 1 : 0)
+        : first >= 0
+          ? first - (first < here ? 0 : 1)
           : Number.isFinite(lineStart)
             ? Math.min(lineStart, here)
             : here;

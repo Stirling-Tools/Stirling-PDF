@@ -289,6 +289,15 @@ function drawn(doc: EditorDocument, run: TextRun): string[] {
   return ptrs.map((ptr, i) => `${fontNameOf(doc, ptr)}|${texts[i]?.trim()}`);
 }
 
+/** The page's objects in content order, which PDFium's reading of each object's text depends on. */
+function contentOrder(doc: EditorDocument): number[] {
+  const m = doc.module;
+  const pagePtr = doc.page(0).pagePtr;
+  return Array.from({ length: m.FPDFPage_CountObjects(pagePtr) }, (_, i) =>
+    m.FPDFPage_GetObject(pagePtr, i),
+  );
+}
+
 const letters = (text: string) => [...text.replace(/\s+/g, "")].sort().join("");
 const lettersDrawn = (pieces: string[]) =>
   letters(pieces.map((piece) => piece.slice(piece.indexOf("|") + 1)).join(""));
@@ -447,6 +456,7 @@ test("a line the new font has no letter of is still drawn whole", async () => {
   const doc = await open("rtl-sample.pdf");
   const run = doc.page(0).runs.find((r) => /^[\u0590-\u05ff ]+$/.test(r.text))!;
   const before = drawn(doc, run);
+  const order = contentOrder(doc);
   const cmd = new SetFontFamilyCommand({
     pageIndex: 0,
     runId: run.id,
@@ -461,6 +471,7 @@ test("a line the new font has no letter of is still drawn whole", async () => {
 
   cmd.revert(doc);
   expect(drawn(doc, run)).toEqual(before);
+  expect(contentOrder(doc)).toEqual(order);
 });
 
 test.each(["Liberation Serif", "Times-Roman"])(
@@ -468,7 +479,12 @@ test.each(["Liberation Serif", "Times-Roman"])(
   async (family) => {
     const doc = await open("shaped-line-sample.pdf");
     const run = doc.page(0).runs.find((r) => r.text.includes("2024"))!;
-    const before = { fontId: run.fontId, drawn: drawn(doc, run) };
+    const page = () => ({
+      fontId: run.fontId,
+      drawn: drawn(doc, run),
+      order: contentOrder(doc),
+    });
+    const before = page();
     expect(lettersDrawn(before.drawn)).toBe(letters(run.text));
     const cmd = new SetFontFamilyCommand({
       pageIndex: 0,
@@ -477,17 +493,15 @@ test.each(["Liberation Serif", "Times-Roman"])(
     });
 
     expect(cmd.wouldLoseText(doc)).toBe(true);
-    expect({ fontId: run.fontId, drawn: drawn(doc, run) }).toEqual(before);
+    expect(page()).toEqual(before);
 
     cmd.apply(doc);
-    expect(run.fontId).toBe(before.fontId);
-    expect(lettersDrawn(drawn(doc, run))).toBe(letters(run.text));
+    expect(page()).toEqual(before);
     expect(getDroppedBase14Chars()).toEqual([]);
     expect(await savedText(doc)).toContain("2024");
 
     cmd.revert(doc);
-    expect(run.fontId).toBe(before.fontId);
-    expect(lettersDrawn(drawn(doc, run))).toBe(letters(run.text));
+    expect(page()).toEqual(before);
   },
 );
 
