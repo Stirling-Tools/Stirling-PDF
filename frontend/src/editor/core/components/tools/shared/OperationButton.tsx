@@ -1,4 +1,4 @@
-import { Box } from "@mantine/core";
+import { Box, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -6,6 +6,7 @@ import {
   type ButtonAccent,
 } from "@editor/ui/Button";
 import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
 import { useBackendHealth } from "@editor/hooks/useBackendHealth";
 import { CloudBadge } from "@editor/components/shared/CloudBadge";
 import type { ExecuteDisabledReason } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -101,6 +102,35 @@ const OperationButton = ({
     : disabledReason
       ? (reasonTooltip[disabledReason] ?? null)
       : null;
+
+  if (
+    disabledReason === "endpointUnavailable" &&
+    onEndpointUnavailableClick &&
+    !blockedByBackend
+  ) {
+    return (
+      <Stack gap={6} mx="md" mt={mt} data-testid="sign-in-required">
+        <Text size="xs" style={{ color: "var(--c-text-muted)" }}>
+          {t(
+            "tool.signInRequired",
+            "This needs a Stirling account. Sign in to continue.",
+          )}
+        </Text>
+        <Button
+          type="button"
+          fullWidth
+          variant="primary"
+          leftSection={<Icon name="log-in" size="1rem" />}
+          onClick={onEndpointUnavailableClick}
+          data-testid={dataTestId}
+          data-tour={dataTour}
+          style={{ minHeight: "2.5rem", height: "auto" }}
+        >
+          {t("tool.signInToUse", "Sign in to use")}
+        </Button>
+      </Stack>
+    );
+  }
 
   const sharedVariant: ButtonVariant =
     operationButtonVariantMap[variant] ?? "primary";
