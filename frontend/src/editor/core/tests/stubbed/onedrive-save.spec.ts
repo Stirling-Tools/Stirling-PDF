@@ -222,6 +222,8 @@ test.describe("Saving files opened from OneDrive", () => {
     await openInViewer(page);
 
     const more = page.getByRole("button", { name: "More save options" });
+    await more.hover();
+    await expect(page.getByRole("tooltip")).toHaveText("More save options");
     await more.click();
     await expectOtherDestinations(page);
     await expect(
