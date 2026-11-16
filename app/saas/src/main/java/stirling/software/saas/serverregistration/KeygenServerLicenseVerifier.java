@@ -87,7 +87,10 @@ public class KeygenServerLicenseVerifier {
                     "Server registration needs Keygen credentials and an explicit Server product allowlist");
         }
         try {
-            canonicalAccountId = UUID.fromString(keygen.getAccountId());
+            UUID accountId = UUID.fromString(keygen.getAccountId());
+            if (accountId.toString().equalsIgnoreCase(keygen.getAccountId())) {
+                canonicalAccountId = accountId;
+            }
         } catch (IllegalArgumentException ignored) {
             // Slugs need a live account lookup; startup must not depend on Keygen availability.
         }

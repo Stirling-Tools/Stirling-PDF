@@ -272,10 +272,11 @@ class KeygenServerLicenseVerifierTest {
         }
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {"stirling-test", "1-2-3-4-5"})
     @SuppressWarnings("unchecked")
-    void slugResolvesCanonicalAccountAndStillRejectsForeignLicenses() throws Exception {
-        useSlug();
+    void slugResolvesCanonicalAccountAndStillRejectsForeignLicenses(String slug) throws Exception {
+        useSlug(slug);
         HttpResponse<String> accountResponse = mock(HttpResponse.class);
         when(accountResponse.statusCode()).thenReturn(200);
         when(accountResponse.body())
@@ -289,7 +290,7 @@ class KeygenServerLicenseVerifierTest {
                                                 "id",
                                                 ACCOUNT,
                                                 "attributes",
-                                                Map.of("slug", "stirling-test")))));
+                                                Map.of("slug", slug)))));
         HttpResponse<String> licenseResponse = mock(HttpResponse.class);
         when(licenseResponse.statusCode()).thenReturn(200);
         when(licenseResponse.body()).thenReturn(mapper.writeValueAsString(liveBody()));
@@ -311,18 +312,18 @@ class KeygenServerLicenseVerifierTest {
         verify(http, times(4)).sendAsync(requests.capture(), any());
         assertThat(requests.getAllValues().getFirst().method()).isEqualTo("GET");
         assertThat(requests.getAllValues().getFirst().uri().getPath())
-                .isEqualTo("/v1/accounts/stirling-test");
+                .isEqualTo("/v1/accounts/" + slug);
         assertThat(requests.getAllValues().subList(1, 4))
                 .allSatisfy(
                         request ->
                                 assertThat(request.uri().getPath())
-                                        .endsWith("/stirling-test/licenses/actions/validate-key"));
+                                        .endsWith("/" + slug + "/licenses/actions/validate-key"));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {403, 500, 200})
     void failedOrMalformedSlugResolutionFailsClosedAndCanRetry(int status) throws Exception {
-        useSlug();
+        useSlug("stirling-test");
         respond(status, liveBody());
         for (int attempt = 0; attempt < 2; attempt++) {
             assertThatThrownBy(() -> verifier.verify("test-license-secret", "machine"))
@@ -405,8 +406,8 @@ class KeygenServerLicenseVerifierTest {
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
     }
 
-    private void useSlug() {
-        keygen.setAccountId("stirling-test");
+    private void useSlug(String slug) {
+        keygen.setAccountId(slug);
         verifier =
                 new KeygenServerLicenseVerifier(
                         keygen, properties, mapper, http, Clock.fixed(NOW, ZoneOffset.UTC));
