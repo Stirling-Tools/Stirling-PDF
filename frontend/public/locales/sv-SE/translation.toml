@@ -1467,8 +1467,8 @@ description = "Användarnamn för SMTP-autentisering"
 label = "SMTP-användarnamn"
 
 [admin.settings.mcp]
-apikeyNote = "Klienter skickar en Stirling API-nyckel i huvudet X-API-KEY (eller Authorization: Bearer <key>). Nyckeln kopplas till sin Stirling-användare – endast etablerade konton kommer in och åtgärder granskas som den användaren. Hantera nycklar under Konto > API-nycklar."
-description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en OAuth-skyddad slutpunkt."
+apikeyNote = "Klienter skickar en Stirling API-nyckel i huvudet X-API-KEY (eller Authorization: Bearer <key>). Nyckeln kopplas till sin Stirling-användare. Endast etablerade konton kommer in och åtgärder granskas som den användaren. Hantera nycklar under Konto > API-nycklar."
+description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en slutpunkt med OAuth- eller API-nyckelautentisering."
 title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
