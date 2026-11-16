@@ -294,6 +294,23 @@ export const pipelinesHandlers = [
     return HttpResponse.json(policy);
   }),
 
+  // Self-hosted publish reads the pipeline from here, then records the listing it became.
+  // Mock pipelines hold no real secrets, so the export is the stored policy as-is.
+  http.get("/api/v1/policies/:id/store-export", async ({ params }) => {
+    const policy = store.find((p) => p.id === params.id);
+    if (!policy) return undefined;
+    await delay(120);
+    return HttpResponse.json(policy);
+  }),
+  http.put("/api/v1/policies/:id/store-link", async ({ params, request }) => {
+    const policy = store.find((p) => p.id === params.id);
+    if (!policy) return undefined;
+    const { storeId } = (await request.json()) as { storeId: string };
+    const linked: StoredPolicy = { ...policy, storeId };
+    store = store.map((p) => (p.id === policy.id ? linked : p));
+    return HttpResponse.json(linked);
+  }),
+
   // Store install: a paused copy of a manifest, named uniquely, linked back by storeId.
   http.post("/api/v1/policies/import", async ({ request }) => {
     const body = (await request.json()) as {

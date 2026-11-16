@@ -64,12 +64,12 @@ export function StoreFindings({ findings }: StoreFindingsProps) {
               <span className="portal-store__findings-icon" aria-hidden>
                 {ICON[severity]}
               </span>
-              <h4 className="portal-store__findings-title">
+              <h3 className="portal-store__findings-title">
                 {t(`portal.store.findings.${severity}.title`)}
                 <span className="portal-store__findings-count">
                   {items.length}
                 </span>
-              </h4>
+              </h3>
               <Button
                 variant="quiet"
                 accent="neutral"

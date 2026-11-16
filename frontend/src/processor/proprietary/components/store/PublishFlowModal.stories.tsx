@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { http, HttpResponse } from "msw";
 import { expect, userEvent, within } from "storybook/test";
 import { ToolRegistryProvider } from "@editor/contexts/ToolRegistryProvider";
 import type { Policy } from "@processor/api/pipelines";
@@ -36,7 +37,17 @@ async function continueToChecks() {
 const meta: Meta<typeof PublishFlowModal> = {
   title: "Portal/Store/PublishFlowModal",
   component: PublishFlowModal,
-  parameters: { layout: "fullscreen" },
+  parameters: {
+    layout: "fullscreen",
+    // Outside the SaaS build the flow publishes the server's export of the pipeline.
+    msw: {
+      handlers: [
+        http.get("/api/v1/policies/:id/store-export", () =>
+          HttpResponse.json(policy),
+        ),
+      ],
+    },
+  },
   args: { open: true, onClose: () => undefined, policy },
   decorators: [
     (Story) => (
