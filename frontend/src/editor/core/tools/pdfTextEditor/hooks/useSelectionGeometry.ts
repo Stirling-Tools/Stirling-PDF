@@ -100,17 +100,18 @@ export function useSelectionGeometry(
               ),
             // Narrowing a run is exactly the wrap gesture, so it reuses the
             // same command the canvas resize handle drives.
-            setWidth: isScanRun(run)
-              ? undefined
-              : (next) =>
-                  store.dispatch(
-                    new ReflowWrapCommand({
-                      pageIndex,
-                      runId,
-                      maxWidthPt: Math.max(1, next),
-                      explicit: true,
-                    }),
-                  ),
+            setWidth:
+              isScanRun(run) || run.textReadOnly
+                ? undefined
+                : (next) =>
+                    store.dispatch(
+                      new ReflowWrapCommand({
+                        pageIndex,
+                        runId,
+                        maxWidthPt: Math.max(1, next),
+                        explicit: true,
+                      }),
+                    ),
           },
         };
       }

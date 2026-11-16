@@ -2,6 +2,7 @@ import {
   assertLiftable,
   liftRunToPage,
 } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -62,6 +63,8 @@ export class MergeRunsCommand implements Command {
       .map((id) => page.findRun(id))
       .filter((r): r is TextRun => !!r);
     if (runs.length < 2) return;
+    // The merged paragraph is edited as one run, which would redraw the line with it.
+    for (const run of runs) refuseRedrawOfReadOnlyText(run);
     assertLiftable(doc, page, runs);
     for (const run of runs) liftRunToPage(doc, page, run);
 

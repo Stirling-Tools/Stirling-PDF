@@ -3,6 +3,7 @@ import {
   needsShaping,
   needsShapingMessage,
 } from "@editor/tools/pdfTextEditor/util/complexShaping";
+import { unsafeRtlEditMessage } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import i18n from "i18next";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
@@ -2235,13 +2236,6 @@ function insertedChunk(prev: string, next: string): string | null {
 function keptText(prev: string, next: string): string {
   const { start, prevEnd } = diffSpan(prev, next);
   return prev.slice(0, start) + prev.slice(prevEnd);
-}
-
-function unsafeRtlEditMessage(): string {
-  return i18n.t(
-    "pdfTextEditor.error.unsafeRtlEdit",
-    "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it.",
-  );
 }
 
 function clampWidthToPage(x: number, width: number, page: Page): number {

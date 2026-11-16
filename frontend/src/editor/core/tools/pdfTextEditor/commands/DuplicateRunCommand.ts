@@ -8,6 +8,7 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import { drawsWhole } from "@editor/tools/pdfTextEditor/commands/bidiLineEdit";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { writeUtf16 } from "@editor/services/pdfiumService";
@@ -60,6 +61,7 @@ export class DuplicateRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const src = page.findRun(this.runId);
     if (!src) return;
+    refuseRedrawOfReadOnlyText(src);
     if (needsShaping(src.text))
       throw new RolledBackError(new Error(needsShapingMessage()));
     const newX = src.matrix.e + OFFSET;

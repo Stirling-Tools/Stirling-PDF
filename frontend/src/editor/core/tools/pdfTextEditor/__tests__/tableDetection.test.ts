@@ -626,21 +626,25 @@ describe("detectTables", () => {
     const cands = [
       {
         run: run(60, 700, 30, "A"),
+        inset: [],
         text: "A",
         left: 60,
         right: 90,
         cx: 75,
         cy: 706,
         height: 8,
+        baseline: 700,
       },
       {
         run: run(60, 680, 30, "B"),
+        inset: [],
         text: "B",
         left: 60,
         right: 90,
         cx: 75,
         cy: 686,
         height: 8,
+        baseline: 680,
       },
     ];
     const banded = bandByRules(cands, pins);
@@ -648,6 +652,115 @@ describe("detectTables", () => {
     expect(banded).toHaveLength(2);
     expect(banded![0].cands).toHaveLength(1);
     expect(banded![1].cands).toHaveLength(1);
+  });
+});
+
+describe("detectTables - letters a line draws as objects of their own", () => {
+  // Three lines of an Arabic paragraph as the reader returns them: [x, y, width, height, baseline, text]. The one-letter runs are letters the producer drew apart from their words, inside the line's extent.
+  const PARAGRAPH: Array<[number, number, number, number, number, string]> = [
+    [276.56, 693.87, 62.06, 1.42, 694.59, "ر    الصفحة 12)."],
+    [328.13, 693.15, 177.86, 9.79, 694.59, "معدل ال مو 75% في عام 2026 وفقاً ("],
+    [519.52, 694.59, 3.29, 4.11, 694.59, "ي"],
+    [510.4, 699.42, 9.4, 1.52, 691.19, "بلغ"],
+    [475, 698.12, 1.5, 1.52, 689.89, "ن"],
+    [
+      217.86,
+      665.27,
+      300.69,
+      1.42,
+      665.99,
+      "وروا الموقع https://www.example.org",
+    ],
+    [520.55, 670.37, 1.5, 1.52, 662.14, "ز"],
+    [222, 669.47, 3.05, 1.57, 661.24, "ت"],
+    [262.45, 668.57, 1.5, 1.52, 660.34, "ن"],
+    [
+      115.31,
+      636.67,
+      363.6,
+      1.42,
+      637.39,
+      "امج LibreOffice Writer أو Word ل   ح",
+    ],
+    [479.45, 642.22, 43.22, 1.52, 633.99, "اس خدم برن"],
+    [256.95, 640.72, 6.3, 1.57, 632.49, "فت"],
+    [510.1, 640.72, 3.05, 1.57, 632.49, "ت"],
+    [119.3, 639.97, 1.5, 1.52, 631.74, "ن"],
+  ];
+  const drawn = ([
+    x,
+    y,
+    width,
+    height,
+    baseline,
+    text,
+  ]: (typeof PARAGRAPH)[0]) =>
+    run(x, y, width, text, {
+      bounds: { x, y, width, height },
+      matrix: { a: 1, b: 0, c: 0, d: 1, e: x, f: baseline },
+      fontSize: 11,
+    });
+
+  it("does not build a table out of a paragraph whose lines hold separately drawn letters", () => {
+    expect(detectTables(PARAGRAPH.map(drawn), 0)).toEqual([]);
+  });
+
+  it("puts a letter drawn inside a cell's text in that cell", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["القطاع", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const sector = table[3];
+    // Low enough on the line to band as a row of its own were it a candidate.
+    const letter = run(70, 677, 3, "ن", {
+      bounds: { x: 70, y: 677, width: 3, height: 1 },
+    });
+
+    const plain = detectTables(table, 0);
+    const tables = detectTables([...table, letter], 0);
+
+    expect(tables).toHaveLength(1);
+    expect(tables[0].colEdges).toEqual(plain[0].colEdges);
+    expect(tables[0].rowEdges).toEqual(plain[0].rowEdges);
+    const cell = tables[0].cells.find((c) => c.row === 1 && c.col === 0);
+    expect(cell?.runIds).toEqual([sector.id, letter.id]);
+  });
+
+  it("leaves a run inside a left-to-right line a candidate of its own", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const mark = run(70, 677, 3, ".", {
+      bounds: { x: 70, y: 677, width: 3, height: 1 },
+      matrix: { a: 1, b: 0, c: 0, d: 1, e: 70, f: 680 },
+    });
+
+    const cells = detectTables([...table, mark], 0)[0].cells;
+
+    expect(cells.find((c) => c.runIds.includes(table[3].id))?.runIds).toEqual([
+      table[3].id,
+    ]);
+    expect(cells.find((c) => c.runIds.includes(mark.id))?.runIds).toEqual([
+      mark.id,
+    ]);
+  });
+
+  it("keeps both of two runs drawn over each other", () => {
+    const table = grid([50, 200, 350], 700, 20, [
+      ["Item", "Qty", "Price"],
+      ["Widget", "2", "$10.00"],
+      ["Gadget", "5", "$25.00"],
+    ]);
+    const doubled = run(50, 680, 60, "Widget");
+
+    const cell = detectTables([...table, doubled], 0)[0].cells.find(
+      (c) => c.row === 1 && c.col === 0,
+    );
+
+    expect(cell?.runIds).toEqual([table[3].id, doubled.id]);
   });
 });
 

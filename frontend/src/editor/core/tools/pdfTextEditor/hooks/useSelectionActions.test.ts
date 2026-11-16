@@ -102,6 +102,7 @@ interface FakeRun {
   fontId: string;
   text: string;
   locked: boolean;
+  textReadOnly?: boolean;
   fill: { r: number; g: number; b: number; a: number };
 }
 
@@ -145,9 +146,11 @@ function fakeStore(
   let doc = openDocument();
   const selection = { value: { runIds: selected } };
   const dispatch = vi.fn();
+  const setError = vi.fn();
   const store = {
     selection,
     dispatch,
+    setError,
     get document() {
       return doc;
     },
@@ -155,6 +158,7 @@ function fakeStore(
   return {
     store,
     dispatch,
+    setError,
     select: (ids: string[]) => {
       selection.value = { runIds: ids };
     },
@@ -639,6 +643,27 @@ describe("useSelectionActions font changes", () => {
       "someLeftUnchanged",
     );
     expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
+  });
+
+  it("leaves a line the editor cannot redraw as it is, says so, and changes the rest", async () => {
+    const mixed = {
+      ...run("b", "pdf:8:Noto Sans", "ISO 50001"),
+      textReadOnly: true,
+    };
+    const { store, dispatch, setError } = fakeStore(
+      [run("a", "pdf:7:Noto Sans", "Article 1"), mixed],
+      ["a", "b"],
+    );
+    const actions = actionsFor(store);
+
+    expect(await actions.changeFontFamily("Helvetica")).toBeNull();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
+    expect(setError).toHaveBeenCalledTimes(1);
+
+    actions.changeFill("#ff0000");
+    await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(2));
+    expect((dispatch.mock.calls[1][0] as Recorded).commands).toHaveLength(2);
+    expect(setError).toHaveBeenCalledTimes(1);
   });
 
   it("gives a run the plain family when the italic cut has none of its letters", async () => {

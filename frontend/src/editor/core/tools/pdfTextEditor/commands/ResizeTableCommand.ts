@@ -1,4 +1,5 @@
 import { locateTable } from "@editor/tools/pdfTextEditor/util/locateTable";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -71,6 +72,8 @@ export class ResizeTableCommand implements Command {
     if (!found) return;
     const { page, model } = found;
     assertTableLiftable(doc, page, model);
+    // Scaling resizes every cell's text, so it is refused whole before any cell is touched.
+    if (this.edit.kind === "scale") refuseScalingReadOnlyText(page, model);
     this.before = {
       colEdges: [...model.colEdges],
       rowEdges: [...model.rowEdges],
@@ -215,6 +218,17 @@ export class ResizeTableCommand implements Command {
 
   describe(): string {
     return `resize-table:${this.edit.kind}`;
+  }
+}
+
+function refuseScalingReadOnlyText(page: Page, model: TableModel): void {
+  for (let r = 0; r < model.rows; r++) {
+    for (let c = 0; c < model.cols; c++) {
+      for (const id of model.runsAt(r, c)) {
+        const run = page.findRun(id);
+        if (run) refuseRedrawOfReadOnlyText(run);
+      }
+    }
   }
 }
 

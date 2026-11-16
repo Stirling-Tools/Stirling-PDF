@@ -1,5 +1,6 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -95,7 +96,9 @@ export class SetFontFamilyCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run || needsShaping(run.text)) return;
+    if (!run) return;
+    refuseRedrawOfReadOnlyText(run);
+    if (needsShaping(run.text)) return;
     // A document fontId as nextFamily puts the run back in the font it was changed away from.
     const restoring = isDocumentFontId(this.nextFamily);
     const documentFont = run.documentFont;

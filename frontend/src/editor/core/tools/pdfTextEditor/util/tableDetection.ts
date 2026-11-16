@@ -4,6 +4,7 @@ import type {
   TableSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
+import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import { median } from "@editor/tools/pdfTextEditor/util/median";
 
 // Recognizes tabular layouts from a page's text runs. PDF has no native table
@@ -39,6 +40,10 @@ const PROSE_COLUMNS_MAX = 1;
 // Text a table's own cells leave out but that sits inside its area means the "grid" is page layout around other text.
 const INTRUDER_SHARE = 0.15;
 const INTRUDER_MIN_CHARS = 6;
+// Where a line's ink can sit about its baseline, in ems: from its descenders to the marks above its letters, and short of the lines either side.
+const LINE_INK_BELOW_EM = 0.25;
+const LINE_INK_ABOVE_EM = 0.8;
+const INSET_EDGE_SLACK_PT = 0.5;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -50,12 +55,15 @@ export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
 
 interface Cand {
   run: TextRunSnapshot;
+  /** Runs drawn inside this line: they share its cell and are no cells of their own. */
+  inset: TextRunSnapshot[];
   text: string;
   left: number;
   right: number;
   cx: number;
   cy: number;
   height: number;
+  baseline: number;
 }
 
 interface Row {
@@ -80,12 +88,14 @@ function toCandidates(run: TextRunSnapshot): Cand[] {
     return [
       {
         run,
+        inset: [],
         text: run.text,
         left: x,
         right: x + width,
         cx: x + width / 2,
         cy: y + height / 2,
         height,
+        baseline: run.matrix.f,
       },
     ];
   }
@@ -125,12 +135,14 @@ function expandParagraph(run: TextRunSnapshot, lines: number): Cand[] {
     const bottom = baselines[i] - descent;
     out.push({
       run,
+      inset: [],
       text: texts[i],
       left,
       right: left + w,
       cx: left + w / 2,
       cy: bottom + lineHeight / 2,
       height: lineHeight,
+      baseline: baselines[i],
     });
   }
   return out;
@@ -144,6 +156,79 @@ function isTurned(run: TextRunSnapshot): boolean {
     a <= 0 ||
     d <= 0
   );
+}
+
+function drawnInside(piece: Cand, line: Cand): boolean {
+  if (piece.run === line.run) return false;
+  if (piece.right - piece.left >= line.right - line.left) return false;
+  if (
+    piece.left < line.left - INSET_EDGE_SLACK_PT ||
+    piece.right > line.right + INSET_EDGE_SLACK_PT
+  )
+    return false;
+  const size = line.run.fontSize;
+  return (
+    piece.cy >= line.baseline - LINE_INK_BELOW_EM * size &&
+    piece.cy <= line.baseline + LINE_INK_ABOVE_EM * size
+  );
+}
+
+// A producer shaping right-to-left text can draw a letter of a word as an
+// object of its own, in another font or off the line's baseline, and it arrives
+// as a run inside the line it belongs to. Left as a candidate it reads as a
+// cell, and a page of such paragraphs as a sparse grid; folded into its line it
+// goes where that goes.
+//
+// Only lines holding right-to-left text take insets. Folding a stray run
+// elsewhere changes which rows count as holding several cells, and with it where
+// a block of rows starts, so text further down the page can turn into a grid.
+function foldInsetRuns(cands: Cand[]): Cand[] {
+  // Only the lines whose baseline a piece's centre can sit on are tried: detection reruns on every keystroke, and trying every pair is quadratic in the page's runs.
+  const byBaseline = cands
+    .filter((cand) => hasRtl(cand.text))
+    .sort((a, b) => a.baseline - b.baseline);
+  if (byBaseline.length === 0) return cands;
+  const largest = Math.max(...byBaseline.map((line) => line.run.fontSize));
+  const host = new Map<Cand, Cand>();
+  for (const piece of cands) {
+    const lowest = piece.cy - LINE_INK_ABOVE_EM * largest;
+    const highest = piece.cy + LINE_INK_BELOW_EM * largest;
+    let widest: Cand | null = null;
+    for (
+      let i = firstAtOrAbove(byBaseline, lowest);
+      i < byBaseline.length && byBaseline[i].baseline <= highest;
+      i++
+    ) {
+      const line = byBaseline[i];
+      if (!drawnInside(piece, line)) continue;
+      if (!widest || line.right - line.left > widest.right - widest.left)
+        widest = line;
+    }
+    if (widest) host.set(piece, widest);
+  }
+  if (host.size === 0) return cands;
+  for (const piece of host.keys()) {
+    let line = host.get(piece);
+    while (line && host.has(line)) line = host.get(line);
+    line?.inset.push(piece.run);
+  }
+  return cands.filter((cand) => !host.has(cand));
+}
+
+/** Index of the first of `byBaseline`, sorted ascending, whose baseline is at least `baseline`. */
+function firstAtOrAbove(byBaseline: Cand[], baseline: number): number {
+  let lo = 0;
+  let hi = byBaseline.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (byBaseline[mid].baseline < baseline) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function runIdsOf(cand: Cand): string[] {
+  return [cand.run.id, ...cand.inset.map((run) => run.id)];
 }
 
 // Cluster candidates into rows by vertical-centre proximity, top-down.
@@ -744,7 +829,7 @@ function buildTable(
     for (const c of row.cands) {
       const col = edgeIndex(colEdges, c.cx);
       const list = map.get(col) ?? [];
-      list.push(c.run.id);
+      list.push(...runIdsOf(c));
       map.set(col, list);
     }
     return map;
@@ -844,6 +929,13 @@ function proseColumns(columns: Cand[][]): number {
   ).length;
 }
 
+function visibleChars(cand: Cand): number {
+  return [cand.text, ...cand.inset.map((run) => run.text)].reduce(
+    (sum, text) => sum + text.replace(/\s+/g, "").length,
+    0,
+  );
+}
+
 // Characters of upright page text the table leaves out of its cells yet covers.
 function intrudingChars(table: TableSnapshot, runs: TextRunSnapshot[]): number {
   const own = new Set(table.cells.flatMap((cell) => cell.runIds));
@@ -873,7 +965,7 @@ export function detectTables(
   rules: PageRect[] = [],
 ): TableSnapshot[] {
   const opts = { ...DEFAULT_TABLE_OPTIONS, ...options };
-  const cands = runs.flatMap(toCandidates);
+  const cands = foldInsetRuns(runs.flatMap(toCandidates));
   if (cands.length < opts.minRows * opts.minCols) return [];
 
   const medHeight = median(cands.map((c) => c.height)) || 1;
@@ -948,7 +1040,7 @@ export function detectTables(
     if (!table) continue;
     const cellChars = block
       .flatMap((row) => row.cands)
-      .reduce((sum, c) => sum + c.text.replace(/\s+/g, "").length, 0);
+      .reduce((sum, c) => sum + visibleChars(c), 0);
     const intruding = intrudingChars(table, runs);
     if (
       intruding >= INTRUDER_MIN_CHARS &&

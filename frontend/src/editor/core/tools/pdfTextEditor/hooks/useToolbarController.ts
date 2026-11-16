@@ -497,7 +497,15 @@ export function useToolbarController(
       .find((r) => r.id === selection.runIds[0]);
     // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
     // count enabled the item for paragraphs the command then refused.
-    return !!run && (run.paragraphSlotCount ?? 0) >= 2;
+    return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
+  }, [state.pages, selection]);
+
+  const selectionTextReadOnly = useMemo(() => {
+    const ids = new Set(selection.runIds);
+    const runs = state.pages
+      .flatMap((p) => p.runs)
+      .filter((r) => ids.has(r.id));
+    return runs.length > 0 && runs.every((r) => r.textReadOnly);
   }, [state.pages, selection]);
 
   const onReplaceImage = useCallback(() => {
@@ -584,6 +592,7 @@ export function useToolbarController(
     textOtherPages: textA11y.otherPages,
     textUntaggedLinks: textA11y.untaggedLinks,
     selectionAllLocked,
+    selectionTextReadOnly,
     hasRunSelection: selection.runIds.length > 0,
     selectedRunIds: selection.runIds,
     hasImageSelection: selection.imageIds.length > 0,

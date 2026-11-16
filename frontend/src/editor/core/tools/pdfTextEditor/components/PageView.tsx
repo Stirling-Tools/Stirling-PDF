@@ -494,7 +494,7 @@ export const PageView = memo(function PageView({
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
             }
             onResize={
-              onResizeRun && !isScanRun(run)
+              onResizeRun && !isScanRun(run) && !run.textReadOnly
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }

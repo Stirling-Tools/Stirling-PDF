@@ -113,6 +113,8 @@ export class UngroupParagraphCommand implements Command {
       });
       r.containerPtr = containers[i] ?? 0;
       r.documentFont = rep.documentFont && { ...rep.documentFont };
+      // Which of the paragraph's lines could not be read back is not kept, so none of them becomes editable by being split off.
+      r.readingOrderUnsure = rep.readingOrderUnsure;
       // Each line keeps its own object's tags: lines grouped into one paragraph
       // can belong to different structure elements, such as list items.
       if (!r.containerPtr) {

@@ -375,6 +375,32 @@ describe("table commands (fake PDFium)", () => {
     expect(extra.bounds).toEqual(before[1].bounds);
   });
 
+  it("refuses to scale a table holding a line it cannot redraw, before any cell changes", () => {
+    const { model, primary, extra } = filledTable();
+    extra.readingOrderUnsure = true;
+    const before = {
+      runs: [primary.snapshot(), extra.snapshot()],
+      colEdges: [...model.colEdges],
+      rowEdges: [...model.rowEdges],
+    };
+    const history = new HistoryStack();
+
+    expect(() =>
+      history.execute(
+        new ResizeTableCommand({
+          tableId: model.id,
+          edit: { kind: "scale", width: 600, height: 180 },
+        }),
+        doc,
+      ),
+    ).toThrow(expect.objectContaining({ documentIntact: true }));
+
+    expect([primary.snapshot(), extra.snapshot()]).toEqual(before.runs);
+    expect(model.colEdges).toEqual(before.colEdges);
+    expect(model.rowEdges).toEqual(before.rowEdges);
+    expect(history.canUndo).toBe(false);
+  });
+
   it("does not draw separators through a cell merged across both axes", () => {
     const { model } = filledTable();
     model.cellSpans[0][0] = { rowSpan: 2, colSpan: 2 };

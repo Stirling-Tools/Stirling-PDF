@@ -15,6 +15,7 @@ import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolve
 import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
 import {
   forgetDroppedChars,
+  getDroppedBase14Chars,
   resetCharCoverageCache,
   resetDroppedBase14Chars,
   resetOnPageAdvCache,
@@ -465,9 +466,17 @@ export class EditorStore {
     const before = cmd.repaintArea?.(this.doc) ?? null;
     const fromRevision = before ? this.doc.page(before.pageIndex).revision : -1;
     takeUndrawnScriptText();
+    const droppedBefore = new Set(getDroppedBase14Chars());
     try {
       this.history.execute(cmd, this.doc);
     } catch (err) {
+      // A step taken back drew nothing, so the letters its attempt could not draw are not ones a save loses.
+      if (err instanceof HistoryStepError && err.documentIntact)
+        forgetDroppedChars(
+          getDroppedBase14Chars()
+            .filter((ch) => !droppedBefore.has(ch))
+            .join(""),
+        );
       this.recoverFromBrokenStep(err);
       return;
     }

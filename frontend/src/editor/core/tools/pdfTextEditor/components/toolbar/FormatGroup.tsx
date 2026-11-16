@@ -32,6 +32,7 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
     state,
     scanFont,
     hasRunSelection,
+    selectionTextReadOnly,
     onChangeFontFamily,
     onChangeFontSize,
     onChangeFill,
@@ -50,6 +51,12 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
     scanFont === undefined ? documentFamily : (scanFont?.family ?? null);
   const inputSize = touch ? "lg" : "xs";
   const buttonSize = touch ? "xl" : "sm";
+  const readOnlyNote = selectionTextReadOnly
+    ? t(
+        "pdfTextEditor.run.readOnlyOrderTitle",
+        "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely",
+      )
+    : null;
 
   return (
     <>
@@ -61,6 +68,7 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
         documentFontId={state.documentFontId}
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
+        disabled={selectionTextReadOnly}
         touch={touch}
       />
       <NumberInput
@@ -83,6 +91,8 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
           const next = typeof value === "number" ? value : Number(value);
           if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
         }}
+        disabled={selectionTextReadOnly}
+        title={readOnlyNote ?? undefined}
         aria-label={t("pdfTextEditor.toolbar.fontSize", "Font size")}
         data-testid="pdf-editor-font-size"
         style={NO_SHRINK}
@@ -137,15 +147,19 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
       <Popover position="bottom-start" withinPortal shadow="md">
         <Popover.Target>
           <Tooltip
-            label={t(
-              "pdfTextEditor.toolbar.advancedColourTooltip",
-              "Advanced colour (glyph outline)",
-            )}
+            label={
+              readOnlyNote ??
+              t(
+                "pdfTextEditor.toolbar.advancedColourTooltip",
+                "Advanced colour (glyph outline)",
+              )
+            }
           >
             <Button
               variant={outlineWidth > 0 ? "primary" : "tertiary"}
               accent={outlineWidth > 0 ? "default" : "neutral"}
               size={buttonSize}
+              disabled={selectionTextReadOnly}
               aria-label={t(
                 "pdfTextEditor.toolbar.advancedColour",
                 "Advanced colour",
@@ -198,12 +212,13 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
       </Popover>
       <Tooltip
         label={
-          !state.canItalic
+          readOnlyNote ??
+          (!state.canItalic
             ? t(
                 "pdfTextEditor.toolbar.italicUnavailable",
                 "This font has no italic version. Load your device fonts or pick another font family.",
               )
-            : t("pdfTextEditor.toolbar.italic", "Italic")
+            : t("pdfTextEditor.toolbar.italic", "Italic"))
         }
       >
         <Button
@@ -211,7 +226,7 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
           accent={state.italic ? "default" : "neutral"}
           size={buttonSize}
           onClick={onToggleItalic}
-          disabled={!state.canItalic}
+          disabled={!state.canItalic || selectionTextReadOnly}
           aria-label={t("pdfTextEditor.toolbar.italic", "Italic")}
           data-testid="pdf-editor-italic"
           style={NO_SHRINK}
@@ -221,15 +236,19 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
       <Menu shadow="md" position="bottom-start" withinPortal>
         <Menu.Target>
           <Tooltip
-            label={t(
-              "pdfTextEditor.toolbar.changeCaseTooltip",
-              "Change case (text runs only)",
-            )}
+            label={
+              readOnlyNote ??
+              t(
+                "pdfTextEditor.toolbar.changeCaseTooltip",
+                "Change case (text runs only)",
+              )
+            }
           >
             <Button
               variant="tertiary"
               accent="neutral"
               size={buttonSize}
+              disabled={selectionTextReadOnly}
               aria-label={t("pdfTextEditor.toolbar.changeCase", "Change case")}
               data-testid="pdf-editor-change-case"
               style={NO_SHRINK}

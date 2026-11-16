@@ -5,6 +5,7 @@ import type { DecodedImage } from "@editor/utils/pdfiumBitmapUtils";
 import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { DeleteShapeCommand } from "@editor/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
+import { unsafeRtlEditMessage } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
@@ -51,7 +52,14 @@ interface SelectedRun {
   fontId: string;
   text: string;
   fill: { r: number; g: number; b: number; a: number };
+  textReadOnly: boolean;
 }
+
+/** `redraws` is for an action that redraws, rescales or restyles text: it leaves out the lines the editor cannot redraw and says so. */
+type VisitSelectedRuns = (
+  visit: (run: SelectedRun, page: Page) => void,
+  redraws?: boolean,
+) => void;
 
 export type FontPickFailure =
   | "needsShaping"
@@ -174,29 +182,33 @@ function liveRuns(store: EditorStore): Map<string, TextRun> {
 export function useSelectionActions(store: EditorStore) {
   const { busy: fittingScan, dispatch: dispatchAfterScanFit } =
     useDispatchAfterScanFit(store);
-  const forEachSelectedRun = useCallback(
-    (visit: (run: SelectedRun, page: Page) => void) => {
+  const forEachSelectedRun = useCallback<VisitSelectedRuns>(
+    (visit, redraws = false) => {
       const sel = store.selection.value;
       const doc = store.document;
       if (!doc || sel.runIds.length === 0) return;
       // Pre-index the selection for O(1) membership in the nested walk.
       const selIds = new Set(sel.runIds);
+      let refused = false;
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
           // Locked runs are selectable but must not mutate.
-          if (selIds.has(run.id) && !run.locked) visit(run, page);
+          if (!selIds.has(run.id) || run.locked) continue;
+          if (redraws && run.textReadOnly) refused = true;
+          else visit(run, page);
         }
       }
+      if (refused) store.setError(unsafeRtlEditMessage());
     },
     [store],
   );
 
   const dispatchPerRun = useCallback(
-    (build: (run: SelectedRun) => Command | null) => {
+    (build: (run: SelectedRun) => Command | null, redraws = false) => {
       const targets: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
         targets.push({ page, run: run as TextRun });
-      });
+      }, redraws);
       return dispatchAfterScanFit(targets, () => {
         const live = liveRuns(store);
         return targets.flatMap(({ run: target }) => {
@@ -218,6 +230,7 @@ export function useSelectionActions(store: EditorStore) {
             runId: run.id,
             nextSize: size,
           }),
+        true,
       );
     },
     [dispatchPerRun],
@@ -252,6 +265,7 @@ export function useSelectionActions(store: EditorStore) {
             stroke: stroke ? { ...stroke, a: 255 } : null,
             width,
           }),
+        true,
       );
     },
     [dispatchPerRun],
@@ -338,7 +352,7 @@ export function useSelectionActions(store: EditorStore) {
       forEachSelectedRun((run, page) => {
         targets.push(run);
         fit.push({ page, run: run as TextRun });
-      });
+      }, true);
       const stillApplies = claimFontChange(targets);
       const changes = targets.map((run) => ({
         pageIndex: run.pageIndex,
@@ -420,7 +434,7 @@ export function useSelectionActions(store: EditorStore) {
         device: cap.source === "device",
         fit: { page, run: run as TextRun },
       });
-    });
+    }, true);
     const stillApplies = claimFontChange(
       targets.map((target) => target.fit.run),
     );

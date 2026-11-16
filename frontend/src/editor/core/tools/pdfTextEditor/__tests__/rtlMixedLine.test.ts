@@ -16,7 +16,9 @@ import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCo
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { detectSaveRisks } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 
 const SAMPLE = path.join(
@@ -372,6 +374,35 @@ describe("a line mixing directions", () => {
     expect(run.text).toBe(ARABIC);
     expect(history.canUndo).toBe(false);
     expect([...placements(doc)]).toEqual([...before]);
+  });
+
+  test("leaves a save nothing to warn about when its whole redraw is refused", async () => {
+    const doc = await EditorDocument.open(
+      new Uint8Array(await readFile(SAMPLE)),
+    );
+    const store = new EditorStore();
+    await store.setDocument(doc);
+    try {
+      PdfiumTextReader.populate(doc, doc.page(0));
+      const run = lineOf(doc, ARABIC);
+      // A box resized to wrap is redrawn whole.
+      run.wrapWidthPt = run.bounds.width;
+
+      store.dispatch(
+        new EditTextCommand({
+          pageIndex: 0,
+          runId: run.id,
+          nextText: `${ARABIC} 5`,
+        }),
+      );
+
+      expect(store.getState().error).not.toBeNull();
+      expect(run.text).toBe(ARABIC);
+      expect(store.history.canUndo).toBe(false);
+      expect(detectSaveRisks(doc).droppedChars).toEqual([]);
+    } finally {
+      store.dispose();
+    }
   });
 
   test("leaves every line of a batch alone when one of its edits is refused", async () => {
