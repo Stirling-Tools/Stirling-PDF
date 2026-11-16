@@ -11,6 +11,15 @@ import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/devic
 import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import {
+  needsArabicShaping,
+  shapeArabic,
+} from "@editor/tools/pdfTextEditor/util/arabicShaping";
+import {
+  hasRtl,
+  isRtlBase,
+  visualOrder,
+} from "@editor/tools/pdfTextEditor/util/bidi";
 
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
 // user can quickly stamp the same text elsewhere on the page.
@@ -97,7 +106,7 @@ function drawCopy(
       doc,
       page,
       wanted,
-      text,
+      drawnLeftToRight(text),
       size,
       src.fill,
       x,
@@ -128,4 +137,11 @@ function drawCopy(
   m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, x, y);
   m.FPDFPage_InsertObject(page.pagePtr, ptr);
   return { ptr, family };
+}
+
+// Glyphs are drawn left to right in content order, so right-to-left text goes in reordered and shaped.
+function drawnLeftToRight(text: string): string {
+  if (!hasRtl(text)) return text;
+  const shaped = needsArabicShaping(text) ? shapeArabic(text).text : text;
+  return visualOrder(shaped, isRtlBase(text)).visual;
 }

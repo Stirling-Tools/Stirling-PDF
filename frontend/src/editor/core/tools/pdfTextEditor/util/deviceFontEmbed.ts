@@ -58,8 +58,8 @@ interface DeviceFontModule {
   ) => boolean;
 }
 
-/** Parsed cmap per family, so coverage is computed once per session. */
-const coverageByFamily = new Map<string, Set<number> | null>();
+/** Parsed cmap per font file: two faces can share a family name, and a document keeps the one it embedded. */
+let coverageByBytes = new WeakMap<Uint8Array, Set<number> | null>();
 /** Families PDFium already refused for a document; never retried. */
 let refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
 /** Successful device-font emits per document, keyed by owned-font id. */
@@ -76,7 +76,7 @@ function refusedFor(doc: EditorDocument): Set<string> {
 
 /** Test hook: drop the per-session coverage and per-document memos. */
 export function resetDeviceFontEmbedCache(): void {
-  coverageByFamily.clear();
+  coverageByBytes = new WeakMap<Uint8Array, Set<number> | null>();
   refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
   emitCountByDoc = new WeakMap<EditorDocument, Map<string, number>>();
 }
@@ -92,11 +92,10 @@ export function fontCoverage(bytes: Uint8Array): Set<number> | null {
   }
 }
 
-function coverageOf(family: string, bytes: Uint8Array): Set<number> | null {
-  const key = deviceFontIdFor(family);
-  if (!coverageByFamily.has(key))
-    coverageByFamily.set(key, fontCoverage(bytes));
-  return coverageByFamily.get(key) ?? null;
+function coverageOf(bytes: Uint8Array): Set<number> | null {
+  if (!coverageByBytes.has(bytes))
+    coverageByBytes.set(bytes, fontCoverage(bytes));
+  return coverageByBytes.get(bytes) ?? null;
 }
 
 export function visibleCodePoints(text: string): number[] {
@@ -110,24 +109,20 @@ export function visibleCodePoints(text: string): number[] {
 }
 
 // Whether the face covers every visible code point; fails open to the width self-check.
-function deviceFontCovers(
-  family: string,
-  bytes: Uint8Array,
-  text: string,
-): boolean {
-  const coverage = coverageOf(family, bytes);
+function deviceFontCovers(bytes: Uint8Array, text: string): boolean {
+  const coverage = coverageOf(bytes);
   if (!coverage) return true;
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
 export function deviceFontCoverage(family: string): Set<number> | null {
   const bytes = getExternalFontBytes(family);
-  return bytes ? coverageOf(family, bytes) : null;
+  return bytes ? coverageOf(bytes) : null;
 }
 
 export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
   const bytes = getExternalFontBytes(family);
-  const coverage = bytes ? coverageOf(family, bytes) : null;
+  const coverage = bytes ? coverageOf(bytes) : null;
   const codePoints = visibleCodePoints(text);
   if (!coverage || codePoints.length === 0) return true;
   return codePoints.some((cp) => coverage.has(cp));
@@ -311,7 +306,7 @@ export function emitDeviceFontTextObject(
   if (text.length === 0) return 0;
   const bytes = faceBytes(doc, family);
   if (!bytes || bytes.length === 0) return 0;
-  if (!deviceFontCovers(family, bytes, text)) return 0;
+  if (!deviceFontCovers(bytes, text)) return 0;
   const fontPtr = loadDeviceFontInto(doc, family);
   if (!fontPtr) return 0;
   const m = doc.module;

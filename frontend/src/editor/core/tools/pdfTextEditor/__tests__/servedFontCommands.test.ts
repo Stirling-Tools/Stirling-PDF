@@ -20,6 +20,11 @@ import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/Duplic
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
+import {
+  deviceFontDrawsAnyOf,
+  emitDeviceFontTextObject,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import { setClosestFont } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 import { loadExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
@@ -178,4 +183,56 @@ test("redo keeps the face a font change drew in after another server offers a di
   cmd.apply(doc);
 
   expect(fontNameOf(doc, run.pdfiumObjPtr)).toBe("LiberationSerif");
+});
+
+test("checks typed letters against the face the document holds, not a newer one of the same name", async () => {
+  const doc = await open("subset-font-sample.pdf");
+  const page = doc.page(0);
+  const black = { r: 0, g: 0, b: 0, a: 255 };
+  const draw = (text: string) =>
+    emitDeviceFontTextObject(
+      doc,
+      page,
+      "Liberation Serif",
+      text,
+      12,
+      black,
+      40,
+      40,
+    );
+  expect(draw("Latin")).not.toBe(0);
+
+  served = [["Liberation Serif", "NotoSansJP-Regular.ttf"]];
+  forgetServerFontList();
+  await loadServerFonts();
+  await loadExternalFontBytes("Liberation Serif");
+  expect(deviceFontDrawsAnyOf("Liberation Serif", "漢字")).toBe(true);
+
+  expect(draw("漢字")).toBe(0);
+});
+
+test("a duplicated right-to-left line is drawn in the same direction as the original", async () => {
+  served = [["Noto Sans Hebrew", "NotoSansHebrew-Regular.ttf"]];
+  forgetServerFontList();
+  await loadServerFonts();
+  await loadExternalFontBytes("Noto Sans Hebrew");
+  const doc = await open("rtl-sample.pdf");
+  const page = doc.page(0);
+  const run = page.runs.find((r) => /^[\u0590-\u05ff ]+$/.test(r.text))!;
+  setClosestFont(run.fontId, "Noto Sans Hebrew");
+
+  const cmd = new DuplicateRunCommand({ pageIndex: 0, runId: run.id });
+  cmd.apply(doc);
+
+  const saved = await EditorDocument.open(
+    new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+  );
+  opened.push(saved);
+  PdfiumTextReader.populate(saved, saved.page(0));
+  const squash = (text: string) => text.replace(/\s+/g, "");
+  const lines = saved
+    .page(0)
+    .runs.flatMap((r) => r.text.split("\n"))
+    .filter((line) => /^[\u0590-\u05ff ]+$/.test(line));
+  expect(lines.map(squash)).toEqual([squash(run.text), squash(run.text)]);
 });
