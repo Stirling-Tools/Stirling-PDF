@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.RepeatedFailureFilter;
 import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -59,6 +60,9 @@ public class PolicyRunner {
     private final DatabaseLicenseGuard databaseLicenseGuard;
     private final PolicyFailureRecorder failureRecorder;
     private final ApplicationEventPublisher eventPublisher;
+
+    // Triggers poll every few seconds, so a source that stays broken would warn on every sweep.
+    private final RepeatedFailureFilter unresolvableSources = new RepeatedFailureFilter();
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -282,14 +286,24 @@ public class PolicyRunner {
             context.vetoCleanup();
         }
         List<ResolvedInput> work;
+        String resolveKey = policy.id() + "/" + storedSource.id();
         try {
             work = source.resolve(storedSource, context, policy.owner());
+            unresolvableSources.recovered(resolveKey);
         } catch (IOException | RuntimeException e) {
-            log.warn(
-                    "Failed to resolve source '{}' for policy {}: {}",
-                    spec.type(),
-                    policy.id(),
-                    e.getMessage());
+            if (unresolvableSources.isNew(resolveKey, e.getMessage())) {
+                log.warn(
+                        "Failed to resolve source '{}' for policy {}: {}",
+                        spec.type(),
+                        policy.id(),
+                        e.getMessage());
+            } else {
+                log.debug(
+                        "Source '{}' for policy {} still unresolvable: {}",
+                        spec.type(),
+                        policy.id(),
+                        e.getMessage());
+            }
             // Recorded, not just logged, for a disk folder that could not be listed or that the
             // server's allowlist now refuses: its owner would otherwise never hear that the folder
             // stopped working, and only they can fix it. A bucket's SDK error or a bug in a source

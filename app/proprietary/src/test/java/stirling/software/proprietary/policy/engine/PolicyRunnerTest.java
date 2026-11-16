@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 
@@ -64,6 +65,11 @@ import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 /**
  * Tests for {@link PolicyRunner}: the one place that turns a policy's sources into runs, and the
@@ -251,6 +257,36 @@ class PolicyRunnerTest {
         recording.run(policy);
 
         verifyNoInteractions(recorder);
+    }
+
+    @Test
+    void aSourceThatStaysUnresolvableWarnsOnceUntilItRecovers() throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(new IllegalArgumentException("Unknown or inaccessible storage folder"))
+                .thenThrow(new IllegalArgumentException("Unknown or inaccessible storage folder"))
+                .thenReturn(List.of())
+                .thenThrow(new IllegalArgumentException("Unknown or inaccessible storage folder"));
+        Logger runnerLogger = (Logger) LoggerFactory.getLogger(PolicyRunner.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        runnerLogger.addAppender(appender);
+        try {
+            for (int sweep = 0; sweep < 4; sweep++) {
+                runner.run(policy);
+            }
+        } finally {
+            runnerLogger.detachAppender(appender);
+        }
+
+        long warnings =
+                appender.list.stream()
+                        .filter(e -> e.getLevel() == Level.WARN)
+                        .filter(e -> e.getFormattedMessage().startsWith("Failed to resolve source"))
+                        .count();
+        assertEquals(2, warnings);
     }
 
     @Test
