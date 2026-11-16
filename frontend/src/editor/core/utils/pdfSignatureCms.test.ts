@@ -25,9 +25,8 @@ describe("CMS signer certificate", () => {
   it("gives no name when no embedded certificate matches", () => {
     const tampered = BY_SERIAL.slice();
     const serial = [0x02, 0x01, 0x01];
-    const at = tampered.findLastIndex((_, i) =>
-      serial.every((b, j) => tampered[i + j] === b),
-    );
+    let at = tampered.length - serial.length;
+    while (at >= 0 && !serial.every((b, j) => tampered[at + j] === b)) at--;
     tampered[at + 2] = 0x02;
     expect(readCmsSignatureFacts(tampered).signerName).toBeNull();
   });
