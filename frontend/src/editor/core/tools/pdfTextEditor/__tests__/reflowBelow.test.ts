@@ -166,6 +166,58 @@ test("deleting blank lines added after the text brings the paragraph back up", a
   expect(bodyInk()).toBeCloseTo(startTop, 3);
 });
 
+test("line breaks in the document's own paragraph move the text below by their height, and joining them brings it back", async () => {
+  const doc = await EditorDocument.open(
+    new Uint8Array(
+      await readFile(
+        path.join(
+          import.meta.dirname,
+          "../../../tests/test-fixtures/mixed-style-sample.pdf",
+        ),
+      ),
+    ),
+  );
+  opened.push(doc);
+  PdfiumTextReader.populate(doc, doc.page(0));
+  const [paragraph, below] = doc.page(0).runs;
+  const startY = below.bounds.y;
+  const original = paragraph.text;
+  const history = new HistoryStack();
+  const breaks = 7;
+
+  type(doc, history, paragraph.id, [
+    original.replace(" ", " " + "\n".repeat(breaks)),
+  ]);
+  // The box an edit gives the paragraph is not the one the document's text measured to; the lines are what moved.
+  expect(startY - below.bounds.y).toBeCloseTo(
+    breaks * paragraph.paragraphLineHeight,
+    3,
+  );
+
+  history.breakCoalescing();
+  type(doc, history, paragraph.id, [original]);
+  expect(below.bounds.y).toBeCloseTo(startY, 3);
+});
+
+test.each([
+  ["both at once", [HEADING]],
+  ["one at a time", ["Heading in\na bigger size", HEADING]],
+])(
+  "a paragraph comes all the way back when the added lines go, %s, whatever the line height is by then",
+  async (_case, back) => {
+    const { doc, heading, bodyInk, startTop } = await open();
+    const history = new HistoryStack();
+
+    type(doc, history, heading.id, [TWO_BREAKS]);
+    expect(bodyInk()).toBeLessThan(startTop - 30);
+    history.breakCoalescing();
+    heading.paragraphLineHeight *= 0.8;
+    type(doc, history, heading.id, back);
+
+    expect(bodyInk()).toBeCloseTo(startTop, 3);
+  },
+);
+
 test("leaves a pushed paragraph where it is once it has been locked", async () => {
   const { doc, heading, body, bodyInk } = await open();
   const history = new HistoryStack();

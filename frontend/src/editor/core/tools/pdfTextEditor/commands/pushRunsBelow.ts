@@ -7,6 +7,7 @@ import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 // Lines set tighter than their own boxes already overlap the line above a little; that much is the document's layout, not a collision.
 const TOUCH_TOLERANCE_EM = 0.25;
 const SLACK_PT = 0.5;
+const BOX_ESTIMATE_EM = 0.5;
 
 const top = (run: TextRun) => run.bounds.y + run.bounds.height;
 
@@ -41,16 +42,26 @@ function canMove(page: Page, run: TextRun): boolean {
  * with it. Empty when nothing would be covered, and also when any
  * run in that chain cannot move or would leave the page: moving only part of
  * a chain swaps one overlap for another.
+ *
+ * `addedHeight` is the height of the lines the edit added. The runs move by
+ * that, so the distance from the last line to the text below stays what the
+ * document had, unless the box grew by something else altogether.
  */
 export function runsPushedBelow(
   page: Page,
   edited: TextRun,
   oldBottom: number,
+  addedHeight = 0,
 ): { runIds: string[]; dy: number } {
-  const drop = oldBottom - edited.bounds.y;
+  const grown = oldBottom - edited.bounds.y;
   const none = { runIds: [], dy: 0 };
-  if (drop <= 0.5 || !canMove(page, edited) || inTable(page, edited.id))
+  if (grown <= 0.5 || !canMove(page, edited) || inTable(page, edited.id))
     return none;
+  // The box of an edited run is an estimate where the document's was measured, so the first edit shifts its bottom by a little more or less than the lines it added.
+  const drop =
+    Math.abs(grown - addedHeight) <= edited.fontSize * BOX_ESTIMATE_EM
+      ? addedHeight
+      : grown;
   const tolerance = edited.fontSize * TOUCH_TOLERANCE_EM;
   const left = edited.bounds.x;
   const right = edited.bounds.x + edited.bounds.width;
@@ -102,33 +113,58 @@ function landsOnStillText(
     });
 }
 
-// How far each edited run has pushed the runs below it, net of undo: only that much is pulled back when its lines go.
-const pushedBelow = new WeakMap<TextRun, Map<string, number>>();
+interface Pushed {
+  byRun: Map<string, number>;
+  lines: number;
+}
+
+// How far each edited run has pushed the runs below it, and over how many added lines, net of undo: only that much is pulled back when its lines go.
+const pushedBelow = new WeakMap<TextRun, Pushed>();
+
+function pushedBy(edited: TextRun): Pushed {
+  let pushed = pushedBelow.get(edited);
+  if (!pushed)
+    pushedBelow.set(edited, (pushed = { byRun: new Map(), lines: 0 }));
+  return pushed;
+}
 
 export function notePush(edited: TextRun, runId: string, dy: number): void {
-  let pushed = pushedBelow.get(edited);
-  if (!pushed) pushedBelow.set(edited, (pushed = new Map()));
-  const total = (pushed.get(runId) ?? 0) + dy;
-  if (Math.abs(total) < 0.01) pushed.delete(runId);
-  else pushed.set(runId, total);
+  const { byRun } = pushedBy(edited);
+  const total = (byRun.get(runId) ?? 0) + dy;
+  if (Math.abs(total) < 0.01) byRun.delete(runId);
+  else byRun.set(runId, total);
+}
+
+/** Records `lines` more (or, negative, fewer) of the edited run's lines as holding the runs below down. */
+export function notePushedLines(edited: TextRun, lines: number): void {
+  const pushed = pushedBy(edited);
+  pushed.lines = Math.max(0, pushed.lines + lines);
+}
+
+/** How many of the edited run's added lines are holding the runs below down. */
+export function pushedLines(edited: TextRun): number {
+  return pushedBelow.get(edited)?.lines ?? 0;
 }
 
 /**
- * The runs `edited` pushed down that its shrinking by `rise` points lets back
- * up, each by no more than it was pushed, so nothing rises above where the
- * document put it. A run that can no longer move, such as one locked since,
- * stays where it is.
+ * The runs `edited` pushed down that losing `linesRemoved` of its added lines
+ * lets back up. Each rises by that share of how far it was pushed, so the last
+ * added line to go returns it to exactly where the document put it, whatever
+ * the line height has become since. A run that can no longer move, such as
+ * one locked since, stays where it is.
  */
 export function runsPulledBack(
   page: Page,
   edited: TextRun,
-  rise: number,
+  linesRemoved: number,
 ): Array<{ runId: string; dy: number }> {
-  if (rise <= 0.5) return [];
-  return [...(pushedBelow.get(edited) ?? [])]
+  const pushed = pushedBelow.get(edited);
+  if (!pushed || linesRemoved <= 0) return [];
+  const share = pushed.lines > 0 ? Math.min(1, linesRemoved / pushed.lines) : 1;
+  return [...pushed.byRun]
     .filter(([runId, total]) => {
       const run = page.findRun(runId);
       return total < 0 && run !== undefined && canMove(page, run);
     })
-    .map(([runId, total]) => ({ runId, dy: Math.min(rise, -total) }));
+    .map(([runId, total]) => ({ runId, dy: -total * share }));
 }

@@ -84,6 +84,8 @@ import {
 import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import {
   notePush,
+  notePushedLines,
+  pushedLines,
   runsPulledBack,
   runsPushedBelow,
 } from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
@@ -264,6 +266,8 @@ export class EditTextCommand implements Command {
   private readonly pushesBelow: boolean;
   // The runs below that this edit's added lines moved down, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
+  // How many lines this edit added to (or, negative, took from) those holding the runs below down.
+  private pushedLines = 0;
 
   constructor(opts: {
     pageIndex: number;
@@ -291,23 +295,29 @@ export class EditTextCommand implements Command {
       !isScanRun(run);
     const lines = run ? lineCount(this.nextText) - lineCount(run.text) : 0;
     const oldBottom = run?.bounds.y ?? 0;
-    // Read before the edit: a paragraph joined into one line forgets its line height.
-    const lineHeight = run
-      ? run.paragraphLineHeight > 0
-        ? run.paragraphLineHeight
-        : run.fontSize * 1.2
-      : 0;
     this.applyEdit(doc);
     if (this.pushes === null) {
       if (!deciding || this.scanEdited || lines === 0) this.pushes = [];
       else if (lines > 0) {
-        const { runIds, dy } = runsPushedBelow(page, run, oldBottom);
-        this.pushes = runIds.map((runId) => this.moveBelow(runId, dy));
-      } else {
-        // By line height, not ink: a blank line holds the text below down without drawing anything.
-        this.pushes = runsPulledBack(page, run, -lines * lineHeight).map(
-          ({ runId, dy }) => this.moveBelow(runId, dy),
+        const lineHeight =
+          run.paragraphLineHeight > 0
+            ? run.paragraphLineHeight
+            : run.fontSize * 1.2;
+        const { runIds, dy } = runsPushedBelow(
+          page,
+          run,
+          oldBottom,
+          lines * lineHeight,
         );
+        this.pushes = runIds.map((runId) => this.moveBelow(runId, dy));
+        // Lines added while others already hold the text down share in holding it, even where these moved nothing.
+        if (runIds.length > 0 || pushedLines(run) > 0) this.pushedLines = lines;
+      } else {
+        // By lines, not ink: a blank line holds the text below down without drawing anything.
+        this.pushes = runsPulledBack(page, run, -lines).map(({ runId, dy }) =>
+          this.moveBelow(runId, dy),
+        );
+        this.pushedLines = Math.max(lines, -pushedLines(run));
       }
     }
     this.redoPushes(doc);
@@ -328,6 +338,7 @@ export class EditTextCommand implements Command {
       push.apply(doc);
       if (run) notePush(run, push.runId, push.dy);
     }
+    if (run) notePushedLines(run, this.pushedLines);
   }
 
   private undoPushes(doc: EditorDocument): void {
@@ -336,6 +347,7 @@ export class EditTextCommand implements Command {
       push.revert(doc);
       if (run) notePush(run, push.runId, -push.dy);
     }
+    if (run) notePushedLines(run, -this.pushedLines);
   }
 
   private applyEdit(doc: EditorDocument): void {
