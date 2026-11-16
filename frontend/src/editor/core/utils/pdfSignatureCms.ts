@@ -8,11 +8,26 @@ interface Tlv {
 export interface CmsSignatureFacts {
   signerName: string | null;
   digest: Uint8Array | null;
+  digestAlgorithm: AlgorithmIdentifier | null;
 }
 
 const OID_COMMON_NAME = "2.5.4.3";
 const OID_MESSAGE_DIGEST = "1.2.840.113549.1.9.4";
 const OID_TIMESTAMP_TOKEN_INFO = "1.2.840.113549.1.9.16.1.4";
+const DIGEST_BY_OID: Record<string, AlgorithmIdentifier> = {
+  "1.3.14.3.2.26": "SHA-1",
+  "2.16.840.1.101.3.4.2.1": "SHA-256",
+  "2.16.840.1.101.3.4.2.2": "SHA-384",
+  "2.16.840.1.101.3.4.2.3": "SHA-512",
+};
+
+function digestAlgorithm(
+  bytes: Uint8Array,
+  identifier: Tlv | undefined,
+): AlgorithmIdentifier | null {
+  const type = identifier && children(bytes, identifier)[0];
+  return type?.tag === 0x06 ? (DIGEST_BY_OID[oid(bytes, type)] ?? null) : null;
+}
 
 function readTlv(
   bytes: Uint8Array,
@@ -99,14 +114,15 @@ function commonName(bytes: Uint8Array, name: Tlv): string | null {
   return found;
 }
 
-function certificateSerialAndSubject(bytes: Uint8Array, certificate: Tlv) {
+function certificateIdentity(bytes: Uint8Array, certificate: Tlv) {
   const [tbs] = children(bytes, certificate);
   if (!tbs) return null;
   const fields = children(bytes, tbs);
   const offset = fields[0]?.tag === 0xa0 ? 1 : 0;
   const serial = fields[offset];
+  const issuer = fields[offset + 2];
   const subject = fields[offset + 4];
-  return serial && subject ? { serial, subject } : null;
+  return serial && issuer && subject ? { serial, issuer, subject } : null;
 }
 
 function attributeValue(
@@ -125,21 +141,24 @@ function attributeValue(
 function timestampImprint(
   bytes: Uint8Array,
   encapsulated: Tlv,
-): Uint8Array | null {
+): { digest: Uint8Array; algorithm: AlgorithmIdentifier | null } | null {
   const [type, explicit] = children(bytes, encapsulated);
   if (!type || oid(bytes, type) !== OID_TIMESTAMP_TOKEN_INFO || !explicit)
     return null;
   const octets = children(bytes, explicit)[0];
   const info = octets && readTlv(bytes, octets.start, octets.contentEnd);
   const imprint = info && children(bytes, info)[2];
-  const hashed = imprint && children(bytes, imprint)[1];
+  const [hashAlgorithm, hashed] = imprint ? children(bytes, imprint) : [];
   return hashed?.tag === 0x04
-    ? bytes.slice(hashed.start, hashed.contentEnd)
+    ? {
+        digest: bytes.slice(hashed.start, hashed.contentEnd),
+        algorithm: digestAlgorithm(bytes, hashAlgorithm),
+      }
     : null;
 }
 
 export function readCmsSignatureFacts(contents: Uint8Array): CmsSignatureFacts {
-  const none = { signerName: null, digest: null };
+  const none = { signerName: null, digest: null, digestAlgorithm: null };
   const contentInfo = readTlv(contents, 0);
   const signedDataWrapper = contentInfo && children(contents, contentInfo)[1];
   const signedData =
@@ -150,29 +169,39 @@ export function readCmsSignatureFacts(contents: Uint8Array): CmsSignatureFacts {
   const signerInfos = fields.filter((f) => f.tag === 0x31).at(-1);
   const signerInfo = signerInfos && children(contents, signerInfos)[0];
   if (!signerInfo) return none;
-  const [, sid, , signedAttributes] = children(contents, signerInfo);
-  const sidSerial = sid?.tag === 0x30 ? children(contents, sid)[1] : undefined;
-  const certs = certificates
-    ? children(contents, certificates).map((c) =>
-        certificateSerialAndSubject(contents, c),
-      )
-    : [];
+  const [, sid, signerDigestAlgorithm, signedAttributes] = children(
+    contents,
+    signerInfo,
+  );
+  const [sidIssuer, sidSerial] =
+    sid?.tag === 0x30 ? children(contents, sid) : [];
   const signerCert =
-    certs.find(
-      (c) => c && sidSerial && sameBytes(contents, c.serial, sidSerial),
-    ) ?? certs[0];
+    sidIssuer && sidSerial && certificates
+      ? children(contents, certificates)
+          .map((c) => certificateIdentity(contents, c))
+          .find(
+            (c) =>
+              c &&
+              sameBytes(contents, c.serial, sidSerial) &&
+              sameBytes(contents, c.issuer, sidIssuer),
+          )
+      : undefined;
   const imprint = fields[2] ? timestampImprint(contents, fields[2]) : null;
   const digestNode =
     signedAttributes?.tag === 0xa0
       ? attributeValue(contents, signedAttributes, OID_MESSAGE_DIGEST)
       : null;
-  const digest =
-    imprint ??
-    (digestNode?.tag === 0x04
-      ? contents.slice(digestNode.start, digestNode.contentEnd)
-      : null);
+  const signed =
+    digestNode?.tag === 0x04
+      ? {
+          digest: contents.slice(digestNode.start, digestNode.contentEnd),
+          algorithm: digestAlgorithm(contents, signerDigestAlgorithm),
+        }
+      : null;
+  const found = imprint ?? signed;
   return {
     signerName: signerCert ? commonName(contents, signerCert.subject) : null,
-    digest,
+    digest: found?.digest ?? null,
+    digestAlgorithm: found?.algorithm ?? null,
   };
 }

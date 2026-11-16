@@ -11,13 +11,6 @@ export interface PdfSignatureInfo {
   digestMatches: boolean | null;
 }
 
-const DIGEST_BY_LENGTH: Record<number, AlgorithmIdentifier> = {
-  20: "SHA-1",
-  32: "SHA-256",
-  48: "SHA-384",
-  64: "SHA-512",
-};
-
 function heap(module: WrappedPdfiumModule): Uint8Array<ArrayBuffer> {
   return (
     module.pdfium as typeof module.pdfium & {
@@ -88,9 +81,9 @@ async function digestMatches(
   file: { pointer: number; length: number },
   range: number[],
   expected: Uint8Array | null,
+  algorithm: AlgorithmIdentifier | null,
 ): Promise<boolean | null> {
-  const algorithm = expected && DIGEST_BY_LENGTH[expected.length];
-  if (!algorithm || range.length !== 4) return null;
+  if (!expected || !algorithm || range.length !== 4) return null;
   const [start, firstLength, secondStart, secondLength] = range;
   if (
     range.some((n) => n < 0) ||
@@ -127,6 +120,7 @@ export async function readPdfiumSignatures(
     info: PdfSignatureInfo;
     range: number[];
     digest: Uint8Array | null;
+    digestAlgorithm: AlgorithmIdentifier | null;
   }[] = [];
   const total = module.FPDF_GetSignatureCount(document);
   for (let i = 0; i < total; i++) {
@@ -139,9 +133,15 @@ export async function readPdfiumSignatures(
     if (contents.length === 0) continue;
     const range = byteRange(module, signature);
     const facts = readCmsSignatureFacts(contents);
+    const subFilter = text(
+      readBuffer(module, module.FPDFSignatureObj_GetSubFilter, signature),
+      "latin1",
+    );
+    const encapsulatesDigest = subFilter === "adbe.pkcs7.sha1";
     read.push({
       range,
-      digest: facts.digest,
+      digest: encapsulatesDigest ? null : facts.digest,
+      digestAlgorithm: facts.digestAlgorithm,
       info: {
         signerName: facts.signerName,
         signedAt: text(
@@ -152,10 +152,7 @@ export async function readPdfiumSignatures(
           readBuffer(module, module.FPDFSignatureObj_GetReason, signature),
           "utf-16le",
         ),
-        subFilter: text(
-          readBuffer(module, module.FPDFSignatureObj_GetSubFilter, signature),
-          "latin1",
-        ),
+        subFilter,
         certificationLevel:
           module.FPDFSignatureObj_GetDocMDPPermission(signature),
         coversWholeFile:
@@ -170,6 +167,7 @@ export async function readPdfiumSignatures(
       file,
       entry.range,
       entry.digest,
+      entry.digestAlgorithm,
     ).catch(() => null);
   return read.map((entry) => entry.info);
 }
