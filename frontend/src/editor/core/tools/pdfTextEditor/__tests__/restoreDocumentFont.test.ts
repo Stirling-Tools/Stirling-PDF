@@ -51,7 +51,11 @@ function fakeDoc(page: Page, emittedFont: number) {
     FPDFPageObj_Destroy: vi.fn(),
     FPDFPage_InsertObject: vi.fn(),
   };
-  const doc = { module, page: () => page } as unknown as EditorDocument;
+  const doc = {
+    module,
+    page: () => page,
+    ownedFontAt: () => undefined,
+  } as unknown as EditorDocument;
   return { doc, module };
 }
 

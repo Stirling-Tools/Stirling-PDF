@@ -1,7 +1,5 @@
-import {
-  isBoldFamily,
-  isItalicFamily,
-} from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { isBoldFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { isItalicFont } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import { canToggleItalic } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type {
@@ -62,10 +60,10 @@ export function deriveToolbarState(
     (r) => (r.strokeWidth ?? 0) === firstStrokeWidth,
   );
   const firstBold = isBoldFamily(first.fontId);
-  const firstItalic = isItalicFamily(first.fontId);
+  const firstItalic = isItalicFont(first.fontId);
   const sameBold = selected.every((r) => isBoldFamily(r.fontId) === firstBold);
   const sameItalic = selected.every(
-    (r) => isItalicFamily(r.fontId) === firstItalic,
+    (r) => isItalicFont(r.fontId) === firstItalic,
   );
   const documentFontId = first.documentFontId ?? null;
   const sameDocumentFont = selected.every(

@@ -32,7 +32,10 @@ import {
   warmOnPageAdvances,
   planLineOrigins,
   emitRunLines,
+  sliceFontSpans,
+  type FontSpan,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { deviceFamilyOf } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   bestFontPtrForText,
   applyParagraphEditPlan,
@@ -704,27 +707,34 @@ export class EditTextCommand implements Command {
           ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
             candidateFontPtr
           : 0);
-    // Read before the source objects go: a one-line run mixing bold and regular keeps each word's face.
+    // Read before the source objects go: a run mixing bold and regular keeps each word's face, and a letter
+    // drawn in another font because the run's own lacks it stays in that font.
+    const oneLine =
+      !/\n/.test(this.prevText ?? "") && !/\n/.test(this.nextText);
+    // A paragraph's own pieces are those of its first line only, so its lines are read off the page.
+    const pieces =
+      oneLine && run.mergedFromPtrs.length > 0
+        ? run
+        : (piecesFromObjects(
+            m,
+            page.pagePtr,
+            oneLine ? run.paragraphLeafPtrs : borrowPtrs,
+            this.prevText ?? "",
+          ) ?? (oneLine ? run : null));
     const fontSpans =
-      !this.nextFont &&
-      !scanText &&
-      !/\n/.test(this.prevText ?? "") &&
-      !/\n/.test(this.nextText)
+      !this.nextFont && !scanText && pieces
         ? sourceFontSpans(
             m,
-            run.mergedFromPtrs.length > 0
-              ? run
-              : (piecesFromObjects(
-                  m,
-                  page.pagePtr,
-                  run.paragraphLeafPtrs,
-                  this.prevText ?? "",
-                ) ?? run),
+            pieces,
             this.prevText ?? "",
             this.nextText,
             (font, text) =>
               charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
-          )
+          )?.map((span) => ({
+            ...span,
+            fallbackFamily:
+              deviceFamilyOf(doc, span.fontPtr) ?? span.fallbackFamily,
+          }))
         : undefined;
 
     this.revertLines = snapshotRevertLines(
@@ -826,7 +836,7 @@ export class EditTextCommand implements Command {
       originalFontSubset: run.fontSubset,
       originalFontForCoveredWords: coveredWordsOnly,
       fallbackFamily,
-      fontSpansByLine: fontSpans ? [fontSpans] : undefined,
+      fontSpansByLine: fontSpans && spansByLine(fontSpans, this.nextText),
     });
     for (const line of emitted) {
       // Empty lines keep a placeholder slot; a FAILED emit is dropped entirely.
@@ -2018,6 +2028,18 @@ function snapshotRevertLines(
     fontSize: Math.max(4, run.fontSize),
     charSpacingPt: run.charSpacingPt,
   }));
+}
+
+/** `spans`, which run the length of `text`, cut into the spans of each of its lines. */
+function spansByLine(spans: readonly FontSpan[], text: string): FontSpan[][] {
+  const lines: FontSpan[][] = [];
+  let start = 0;
+  for (const line of text.split(/\r?\n/)) {
+    const at = text.indexOf(line, start);
+    lines.push(sliceFontSpans(spans, at, at + line.length));
+    start = at + line.length;
+  }
+  return lines;
 }
 
 // Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.

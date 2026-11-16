@@ -3,11 +3,26 @@ import path from "node:path";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, losesText, loadScriptScanFaces } = vi.hoisted(() => ({
+  get: vi.fn(),
+  losesText: new Set<string>(),
+  loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
+}));
+vi.mock(
+  "@editor/tools/pdfTextEditor/util/scanFontLibrary",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    loadScriptScanFaces,
+  }),
+);
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
   SetFontFamilyCommand: class {
     constructor(readonly opts: { runId: string; nextFamily: string }) {}
+
+    wouldLoseText(): boolean {
+      return losesText.has(this.opts.runId);
+    }
   },
 }));
 vi.mock(
@@ -37,6 +52,12 @@ import {
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { resetDeviceFontEmbedCache } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
+  noteDocumentFontStyle,
+  resetDocumentFontStyles,
+} from "@editor/tools/pdfTextEditor/util/documentFontStyle";
+import { _clearFontNameCacheForTests } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
   prefitScanRun,
   scanRunNeedsFit,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
@@ -45,12 +66,21 @@ const REGULAR = "1".repeat(64);
 const ITALIC = "2".repeat(64);
 const HEBREW = "5".repeat(64);
 
-const HEBREW_TTF = readFileSync(
-  path.resolve(
-    __dirname,
-    "../../../../../../../app/core/src/main/resources/static/fonts/NotoSansHebrew-Regular.ttf",
-  ),
+const FONTS = path.resolve(
+  __dirname,
+  "../../../../../../../app/core/src/main/resources/static/fonts",
 );
+const HEBREW_TTF = readFileSync(path.join(FONTS, "NotoSansHebrew-Regular.ttf"));
+const LATIN_TTF = readFileSync(path.join(FONTS, "LiberationSans-Regular.ttf"));
+
+function bytesOf(font: Buffer): { data: ArrayBuffer } {
+  return {
+    data: font.buffer.slice(
+      font.byteOffset,
+      font.byteOffset + font.byteLength,
+    ) as ArrayBuffer,
+  };
+}
 
 function face(id: string, style: string, italic: boolean) {
   return { id, style, bold: false, italic, weight: 400, postscriptName: "" };
@@ -162,12 +192,34 @@ function actionsFor(store: EditorStore) {
   return renderHook(() => useSelectionActions(store)).result.current;
 }
 
+const ITALIC_FLAG = 64;
+
+/** A document font as PDFium describes it: its /BaseFont name and descriptor flags. */
+function documentFont(handle: number, baseFont: string, flags: number): void {
+  noteDocumentFontStyle(
+    {
+      FPDFFont_GetBaseFontName: (_font: number, buf: number) =>
+        buf ? 0 : baseFont.length + 1,
+      FPDFFont_GetFlags: () => flags,
+      pdfium: {
+        UTF8ToString: () => baseFont,
+        wasmExports: { malloc: () => 8, free: () => {} },
+      },
+    } as unknown as WrappedPdfiumModule,
+    handle,
+  );
+}
+
 describe("useSelectionActions font changes", () => {
   beforeEach(() => {
     get.mockReset();
     forgetServerFontList();
     resetLocalFontsCache();
     resetDeviceFontEmbedCache();
+    resetDocumentFontStyles();
+    _clearFontNameCacheForTests();
+    losesText.clear();
+    loadScriptScanFaces.mockClear();
   });
 
   afterEach(() => {
@@ -206,6 +258,43 @@ describe("useSelectionActions font changes", () => {
     await loadServerFonts();
     const { store, dispatch } = fakeStore(
       [run("a", "pdf:7:TrebuchetMS-Italic"), run("b", "base14:Helvetica")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Acme Sans Italic",
+      "b:Acme Sans",
+    ]);
+  });
+
+  it("keeps a run italic when only the PDF's own font name says so", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    documentFont(7, "DAAAAA+Georgia-Italic", 0);
+    documentFont(8, "BAAAAA+Georgia", 0);
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:Georgia"), run("b", "pdf:8:Georgia")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Acme Sans")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Acme Sans Italic",
+      "b:Acme Sans",
+    ]);
+  });
+
+  it("keeps a run italic when only its font descriptor says so", async () => {
+    serveFaces(async () => fontBytes());
+    await loadServerFonts();
+    documentFont(7, "ABCDEF+MinionPro-It", ITALIC_FLAG);
+    const noDescriptor = -1;
+    documentFont(8, "ABCDEF+MinionPro", noDescriptor);
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:Minion Pro"), run("b", "pdf:8:Minion Pro")],
       ["a", "b"],
     );
 
@@ -457,6 +546,159 @@ describe("useSelectionActions font changes", () => {
     ).toBeNull();
     expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
   });
+
+  it("refuses a font that has only the digits and punctuation of a line", async () => {
+    serveFaces(async () => bytesOf(LATIN_TTF));
+    await loadServerFonts();
+    const heading = fakeStore(
+      [run("a", "pdf:7:DejaVu Serif", "Հոդված 1, 2.")],
+      ["a"],
+    );
+    const numbers = fakeStore([run("b", "pdf:7:DejaVu Serif", "1, 2.")], ["b"]);
+
+    expect(await actionsFor(heading.store).changeFontFamily("Acme Sans")).toBe(
+      "noGlyphs",
+    );
+    expect(heading.dispatch).not.toHaveBeenCalled();
+    expect(
+      await actionsFor(numbers.store).changeFontFamily("Acme Sans"),
+    ).toBeNull();
+    expect(dispatchedChanges(numbers.dispatch)).toEqual(["b:Acme Sans"]);
+  });
+
+  it("leaves a run upright when the italic cut has none of its letters", async () => {
+    serveFaces(async (id) =>
+      id === ITALIC ? bytesOf(HEBREW_TTF) : bytesOf(LATIN_TTF),
+    );
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [
+        run("a", "device:Acme Sans", "Hello"),
+        run("b", "device:Acme Sans", "שלום"),
+      ],
+      ["a", "b"],
+    );
+
+    await actionsFor(store).toggleItalic();
+
+    expect(dispatchedChanges(dispatch)).toEqual(["b:Acme Sans Italic"]);
+  });
+
+  it("refuses a built-in font that has none of a line's letters", async () => {
+    const korean = fakeStore(
+      [run("a", "pdf:7:Noto Sans KR", "모든 인류 구성원의 자유,")],
+      ["a"],
+    );
+    const symbols = fakeStore([run("b", "pdf:7:Symbols", "✓ → ≥")], ["b"]);
+    const numbers = fakeStore(
+      [run("c", "pdf:7:Noto Sans KR", "1,250.00")],
+      ["c"],
+    );
+
+    expect(await actionsFor(korean.store).changeFontFamily("Times-Bold")).toBe(
+      "noGlyphs",
+    );
+    expect(korean.dispatch).not.toHaveBeenCalled();
+    expect(await actionsFor(symbols.store).changeFontFamily("Helvetica")).toBe(
+      "noGlyphs",
+    );
+    expect(symbols.dispatch).not.toHaveBeenCalled();
+    expect(
+      await actionsFor(numbers.store).changeFontFamily("Helvetica"),
+    ).toBeNull();
+    expect(dispatchedChanges(numbers.dispatch)).toEqual(["c:Helvetica"]);
+  });
+
+  it("leaves a run the font has no letters for as it is and changes the rest", async () => {
+    const { store, dispatch } = fakeStore(
+      [
+        run("a", "pdf:7:Noto Sans", "Article 1"),
+        run("b", "pdf:8:Noto Sans KR", "모든 인류"),
+      ],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Helvetica")).toBe(
+      "someLeftUnchanged",
+    );
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
+  });
+
+  it("gives a run the plain family when the italic cut has none of its letters", async () => {
+    const hebrew = HEBREW_TTF.buffer.slice(
+      HEBREW_TTF.byteOffset,
+      HEBREW_TTF.byteOffset + HEBREW_TTF.byteLength,
+    );
+    get.mockImplementation(async (url: string) => {
+      if (url === SERVER_FONTS_URL)
+        return {
+          data: {
+            families: [
+              {
+                family: "Mixed Sans",
+                faces: [
+                  face(REGULAR, "Regular", false),
+                  face(HEBREW, "Italic", true),
+                ],
+              },
+            ],
+          },
+        };
+      return url.endsWith(HEBREW) ? { data: hebrew } : fontBytes();
+    });
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [
+        run("a", "pdf:7:Georgia-Italic", "Hello"),
+        run("b", "pdf:7:Georgia-Italic", "שלום"),
+      ],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Mixed Sans")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Mixed Sans",
+      "b:Mixed Sans Italic",
+    ]);
+  });
+
+  it("leaves a run that would lose letters as it is", async () => {
+    losesText.add("b");
+    const both = fakeStore(
+      [run("a", "pdf:7:Noto Sans"), run("b", "pdf:7:Noto Sans")],
+      ["a", "b"],
+    );
+    const alone = fakeStore([run("b", "pdf:7:Noto Sans")], ["b"]);
+
+    expect(await actionsFor(both.store).changeFontFamily("Helvetica")).toBe(
+      "someLeftUnchanged",
+    );
+    expect(dispatchedChanges(both.dispatch)).toEqual(["a:Helvetica"]);
+
+    expect(await actionsFor(alone.store).changeFontFamily("Helvetica")).toBe(
+      "missingGlyphs",
+    );
+    expect(alone.dispatch).not.toHaveBeenCalled();
+    expect(loadScriptScanFaces).not.toHaveBeenCalled();
+  });
+
+  it("fetches the script fonts for text a change would lose before giving up on it", async () => {
+    losesText.add("a");
+    loadScriptScanFaces.mockImplementationOnce(async () => {
+      losesText.clear();
+    });
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:Noto Sans", "Total മലയാളം")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Helvetica")).toBeNull();
+
+    expect(loadScriptScanFaces).toHaveBeenCalledWith(["malayalam"]);
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
+  });
+
   it("puts text back in the PDF's own font without loading any font bytes", async () => {
     const { store, dispatch } = fakeStore(
       [run("a", "device:Acme Sans")],

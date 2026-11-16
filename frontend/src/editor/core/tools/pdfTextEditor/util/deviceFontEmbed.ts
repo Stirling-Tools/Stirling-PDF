@@ -11,8 +11,10 @@ import {
   loadExternalFontBytes,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
+  encodesInBase14,
   isBoldFamily,
   isItalicFamily,
+  nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
@@ -120,12 +122,23 @@ export function deviceFontCoverage(family: string): Set<number> | null {
   return bytes ? coverageOf(bytes) : null;
 }
 
-export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
-  const bytes = getExternalFontBytes(family);
-  const coverage = bytes ? coverageOf(bytes) : null;
-  const codePoints = visibleCodePoints(text);
-  if (!coverage || codePoints.length === 0) return true;
-  return codePoints.some((cp) => coverage.has(cp));
+/**
+ * Whether `draws` has any letter of `text`, or any visible character of text
+ * with no letters. Letters decide because digits and punctuation are in every
+ * face: a line of another script would count as drawn by a face with none of
+ * its words.
+ */
+export function drawsSomeOf(
+  draws: ((codePoint: number) => boolean) | null,
+  text: string,
+): boolean {
+  if (!draws) return true;
+  const visible = visibleCodePoints(text);
+  const letters = visible.filter((cp) =>
+    /\p{L}/u.test(String.fromCodePoint(cp)),
+  );
+  const judged = letters.length > 0 ? letters : visible;
+  return judged.length === 0 || judged.some(draws);
 }
 
 // Read the family's font file so a later synchronous emit can embed it. The UI
@@ -188,6 +201,23 @@ function faceBytes(doc: EditorDocument, family: string): Uint8Array | null {
   return (
     embeddedBytes.get(doc)?.get(family) ?? getExternalFontBytes(family) ?? null
   );
+}
+
+/**
+ * The code points an emit in `family` draws in that family's own face: the
+ * face `doc` holds under the name, else the loaded one. A standard font, like a
+ * family with no bytes loaded, draws what WinAnsi encodes. Null when the
+ * face's tables cannot be read, so nothing is known.
+ */
+export function familyCoverage(
+  doc: EditorDocument | null,
+  family: string,
+): ((codePoint: number) => boolean) | null {
+  if (nearestStandardFont(family) === family) return encodesInBase14;
+  const bytes = doc ? faceBytes(doc, family) : getExternalFontBytes(family);
+  if (!bytes || bytes.length === 0) return encodesInBase14;
+  const coverage = coverageOf(bytes);
+  return coverage ? (codePoint) => coverage.has(codePoint) : null;
 }
 
 export function loadDeviceFontInto(

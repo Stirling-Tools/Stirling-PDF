@@ -40,6 +40,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import { resetDocumentFontStyles } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import {
   loadScriptScanFaces,
   scanScriptsOf,
@@ -61,6 +62,7 @@ function resetCharcodeCaches(): void {
   // FontFaces are keyed by font pointer, which PDFium reuses across documents.
   resetEmbeddedFaces();
   resetFontCompletions();
+  resetDocumentFontStyles();
 }
 
 export type InteractionMode = "select" | "addText" | "addTable";

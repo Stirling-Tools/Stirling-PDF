@@ -1,9 +1,9 @@
 import {
   familyOf,
   flipItalic,
-  isItalicFamily,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { isItalicFont } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
 import {
   faceStyleFlags,
@@ -121,7 +121,7 @@ export function canToggleItalic(
   // select-all hands this thousands of runs sharing a handful of fonts - on
   // every keystroke, because the toolbar state is derived from the snapshot.
   return [...new Set(fontIds)].every(
-    (id) => italicCapability(id, !isItalicFamily(id), fonts).family !== null,
+    (id) => italicCapability(id, !isItalicFont(id), fonts).family !== null,
   );
 }
 

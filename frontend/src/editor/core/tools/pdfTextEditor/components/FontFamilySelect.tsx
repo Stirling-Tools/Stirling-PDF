@@ -63,6 +63,14 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
     "pdfTextEditor.fontPicker.noGlyphs",
     "This font has no characters for the selected text. The text was left unchanged.",
   ],
+  missingGlyphs: [
+    "pdfTextEditor.fontPicker.missingGlyphs",
+    "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged.",
+  ],
+  someLeftUnchanged: [
+    "pdfTextEditor.fontPicker.someLeftUnchanged",
+    "This font does not have the characters for some of the selected text. That text was left unchanged.",
+  ],
 };
 
 type DeviceFontNotice = "unavailable" | "none";

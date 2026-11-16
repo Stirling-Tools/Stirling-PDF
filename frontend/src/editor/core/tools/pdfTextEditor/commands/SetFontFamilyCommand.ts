@@ -1,6 +1,8 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   cloneParagraphLineSlot,
   type ParagraphLineSlot,
@@ -8,33 +10,59 @@ import {
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import {
   collectContainersByPtr,
+  charcodesResolveFully,
   collectMemberPtrs,
+  droppedCharsOf,
   emitRunLines,
   planLineOrigins,
+  recordUndrawableChars,
   removeAndDestroyObject,
   removeMemberPtrs,
+  warmOnPageAdvances,
+  type EmittedLine,
+  type FontSpan,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { piecesFromObjects } from "@editor/tools/pdfTextEditor/commands/partialEdit";
 import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
 import {
   sliceTags,
   splitLines,
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
-import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  deviceFontEmitCount,
+  familyCoverage,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import {
   base14FontId,
   deviceFontId,
   documentFontHandle,
+  familyOf,
   isDocumentFontId,
+  nearestStandardFont,
+  stripSubsetTag,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { readFontName } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { fallbackFamilyFor } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
+  isScanRun,
   setScanOverride,
   type ScanOverride,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 
+interface LineToEmit {
+  text: string;
+  tags: TextTags;
+  /** Where the line starts in the run's text. */
+  start: number;
+  x: number;
+  y: number;
+}
+
 // Re-emit a run's text in another family: PDFium has no SetFont accessor.
 // Device fonts embed when pre-warmed, else the nearest standard face.
+// Letters the family has no glyph for stay in the font that drew them, and a
+// change that would still leave a letter undrawn is not made.
 export class SetFontFamilyCommand implements Command {
   readonly type = "set-font-family";
   private readonly pageIndex: number;
@@ -85,7 +113,11 @@ export class SetFontFamilyCommand implements Command {
       run.documentFont = { fontId: run.fontId, subset: run.fontSubset };
     }
 
-    const tags = readRunTags(doc, page, run);
+    const emitLines = linesToEmit(run, readRunTags(doc, page, run));
+    const lineHeight = lineHeightOf(run);
+    // Read while the source objects are still on the page: the kept fonts and their glyph advances come off them.
+    const keptFonts = this.keptFontSpans(doc, page, run, emitLines);
+    warmOnPageAdvances(m, page.pagePtr);
     // Detach every original object so the page stops painting them.
     removeMemberPtrs(
       m,
@@ -95,46 +127,6 @@ export class SetFontFamilyCommand implements Command {
       run.containerPtr,
     );
 
-    // Re-emit one base-14 object per visual line at descending baselines.
-    const lineHeight =
-      run.paragraphLineHeight > 0
-        ? run.paragraphLineHeight
-        : run.fontSize * 1.2;
-    // Prefer per-line SLOT ranges: run.text joins SOFT-wrapped lines with
-    // separators a \n split can't see. Baseline stepping for the fallback case
-    // comes from planLineOrigins so it cannot drift from EditTextCommand's.
-    const slots = run.paragraphLineSlots;
-    const splitLinesOfText =
-      slots.length > 0 ? null : splitLines(run.text, tags);
-    const emitLines: Array<{
-      text: string;
-      tags: TextTags;
-      x: number;
-      y: number;
-    }> = splitLinesOfText
-      ? (() => {
-          const origins = planLineOrigins(
-            run,
-            splitLinesOfText.length,
-            lineHeight,
-          );
-          return splitLinesOfText.map((line, i) => ({
-            ...line,
-            ...origins[i],
-          }));
-        })()
-      : slots.map((s) => {
-          const start = Math.max(0, s.startChar);
-          const text = run.text
-            .slice(start, Math.min(run.text.length, s.endChar))
-            .replace(/[\r\n]+$/, "");
-          return {
-            text,
-            tags: sliceTags(tags, start, start + text.length),
-            x: s.matrixE,
-            y: s.baselineY,
-          };
-        });
     const lineAnchors: number[] = [];
     const memberFs: number[] = [];
     const leaf: number[] = [];
@@ -142,18 +134,9 @@ export class SetFontFamilyCommand implements Command {
     // Emits with the embedded device face are counted, so the font id below
     // can say what actually rendered rather than what was requested.
     const deviceEmitsBefore = deviceFontEmitCount(doc, this.nextFamily);
-    const emitted = emitRunLines({
-      doc,
-      page,
-      run,
-      lines: emitLines.map(({ text, tags }) => ({ text, tags })),
-      origins: emitLines.map((l) => ({ x: l.x, y: l.y })),
-      // Only a restore reuses a document font; a new family never does.
-      originalFontPtr: restoring ? documentFontHandle(this.nextFamily) : 0,
-      originalFontSubset: restoring ? documentFont?.subset : undefined,
-      fallbackFamily: restoring
-        ? fallbackFamilyFor(this.nextFamily)
-        : this.nextFamily,
+    let emitted: EmittedLine[] = [];
+    const dropped = droppedCharsOf(() => {
+      emitted = this.emit(doc, page, run, emitLines, keptFonts);
     });
     for (const line of emitted) {
       memberFs.push(line.y);
@@ -171,8 +154,8 @@ export class SetFontFamilyCommand implements Command {
     const notRestored =
       restoring &&
       !created.some((ptr) => m.FPDFTextObj_GetFont(ptr) === restoreFont);
-    if (created.length === 0 || notRestored) {
-      // Nothing usable emitted (e.g. all-whitespace dropped) - restore and bail.
+    if (created.length === 0 || notRestored || losesLetters(dropped)) {
+      // Nothing usable emitted (e.g. all-whitespace dropped), or a letter went undrawn - restore and bail.
       for (const ptr of created) removeAndDestroyObject(m, page.pagePtr, ptr);
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
@@ -182,6 +165,8 @@ export class SetFontFamilyCommand implements Command {
       return;
     }
 
+    // Only characters that draw nothing get this far, and a save still lists them as dropped.
+    recordUndrawableChars(dropped.join(""));
     this.createdPtrs = created;
     run.pdfiumObjPtr = lineAnchors.find((p) => p) ?? leaf[0];
     // `device:` marks glyphs from an embedded device font; a substituted run
@@ -221,6 +206,105 @@ export class SetFontFamilyCommand implements Command {
     page.markNeedsGenerate();
   }
 
+  /**
+   * Whether applying this would leave a letter of the run undrawn. Found by
+   * drawing the run beside itself and taking that back, so the answer is the
+   * emit's own and the page is left as it was.
+   */
+  wouldLoseText(doc: EditorDocument): boolean {
+    const page = doc.page(this.pageIndex);
+    const run = page.findRun(this.runId);
+    if (!run || isScanRun(run) || run.scanEdit) return false;
+    if (
+      isDocumentFontId(this.nextFamily) &&
+      run.documentFont?.fontId !== this.nextFamily
+    )
+      return false;
+    const emitLines = linesToEmit(run, readRunTags(doc, page, run));
+    const keptFonts = this.keptFontSpans(doc, page, run, emitLines);
+    warmOnPageAdvances(doc.module, page.pagePtr);
+    let emitted: EmittedLine[] = [];
+    const dropped = droppedCharsOf(() => {
+      emitted = this.emit(doc, page, run, emitLines, keptFonts);
+    });
+    for (const line of emitted)
+      for (const ptr of line.ptrs)
+        removeAndDestroyObject(doc.module, page.pagePtr, ptr);
+    return losesLetters(dropped);
+  }
+
+  private emit(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    lines: readonly LineToEmit[],
+    keptFonts: ReadonlyArray<readonly FontSpan[] | undefined> | undefined,
+  ): EmittedLine[] {
+    // Only a restore reuses a document font for the run; either way `keptFonts` holds the letters that stay where they are.
+    const restoring = isDocumentFontId(this.nextFamily);
+    return emitRunLines({
+      doc,
+      page,
+      run,
+      lines: lines.map(({ text, tags }) => ({ text, tags })),
+      origins: lines.map((line) => ({ x: line.x, y: line.y })),
+      originalFontPtr: restoring ? documentFontHandle(this.nextFamily) : 0,
+      originalFontSubset: restoring ? run.documentFont?.subset : run.fontSubset,
+      fallbackFamily: restoring
+        ? fallbackFamilyFor(this.nextFamily)
+        : this.nextFamily,
+      fontSpansByLine: keptFonts,
+    });
+  }
+
+  /**
+   * Per line, the stretches the next font has no glyph for, each with the font
+   * its letters are drawn in. Undefined when the next font draws every letter.
+   * A restore keeps only letters still in a font of the document: one the
+   * editor drew, in the family being left or a stand-in for it, goes back with
+   * the rest of the run.
+   */
+  private keptFontSpans(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    lines: readonly LineToEmit[],
+  ): Array<FontSpan[] | undefined> | undefined {
+    const m = doc.module;
+    const restoreFont = documentFontHandle(this.nextFamily);
+    const draws = restoreFont
+      ? (ch: string) =>
+          charcodesResolveFully(m, restoreFont, ch, page.pagePtr, doc.docPtr)
+      : familyDraws(doc, this.nextFamily);
+    if (!draws) return undefined;
+    const lacks = (ch: string) => !/\s/.test(ch) && !draws(ch);
+    if (![...run.text].some(lacks)) return undefined;
+    const fontAt = sourceFontAt(m, page.pagePtr, run);
+    const leaving = familyOf(run.fontId);
+    const drawnByEditor = (font: number) =>
+      !!doc.ownedFontAt(font) ||
+      [leaving, nearestStandardFont(leaving)].includes(
+        stripSubsetTag(readFontName(m, font) ?? ""),
+      );
+    const keeps = (font: number) =>
+      !restoreFont || (font !== restoreFont && !drawnByEditor(font));
+    const fallbackFamily = restoreFont
+      ? fallbackFamilyFor(this.nextFamily)
+      : this.nextFamily;
+    return lines.map((line) => {
+      const kept = new Array<number>(line.text.length).fill(0);
+      for (const stretch of stretchesLacking(line.text, lacks)) {
+        if (NEEDS_SHAPING.test(line.text.slice(stretch.start, stretch.end)))
+          continue;
+        for (let c = stretch.start; c < stretch.end; c++) {
+          const font = fontAt[line.start + c] ?? 0;
+          if (keeps(font)) kept[c] = font;
+        }
+      }
+      return spansOf(line.text, kept, fallbackFamily);
+    });
+  }
+
   revert(doc: EditorDocument): void {
     if (this.scanPrev) {
       const page = doc.page(this.pageIndex);
@@ -252,10 +336,7 @@ export class SetFontFamilyCommand implements Command {
     page.markNeedsGenerate();
   }
 
-  private reinsertOriginals(
-    m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-    page: import("@editor/tools/pdfTextEditor/model/Page").Page,
-  ): void {
+  private reinsertOriginals(m: WrappedPdfiumModule, page: Page): void {
     for (const ptr of this.prevMemberPtrs) {
       if (!ptr) continue;
       try {
@@ -265,6 +346,139 @@ export class SetFontFamilyCommand implements Command {
       }
     }
   }
+}
+
+/** Whether an emit in `family` draws a character in that family's own face; null when that cannot be known. */
+function familyDraws(
+  doc: EditorDocument,
+  family: string,
+): ((ch: string) => boolean) | null {
+  const covers = familyCoverage(doc, family);
+  return covers && ((ch) => covers(ch.codePointAt(0)!));
+}
+
+/**
+ * Text whose look depends on shaping: combining marks, joiners, the joining
+ * scripts and conjoining jamo. Redrawn letter by letter in its own font it
+ * would lose its ligatures and mark positions, so it is never split off.
+ */
+const NEEDS_SHAPING =
+  /\p{M}|\u200c|\u200d|[\u1100-\u11ff]|\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Mongolian}|\p{Script=Phags_Pa}|\p{Script=Adlam}/u;
+const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
+/** Format and control characters draw nothing, so losing one loses no letter. */
+const DRAWS_NOTHING = /[\p{Cf}\p{Cc}]/u;
+
+function losesLetters(dropped: readonly string[]): boolean {
+  return dropped.some((ch) => !DRAWS_NOTHING.test(ch));
+}
+
+function lineHeightOf(run: TextRun): number {
+  return run.paragraphLineHeight > 0
+    ? run.paragraphLineHeight
+    : run.fontSize * 1.2;
+}
+
+// Prefer per-line SLOT ranges: run.text joins SOFT-wrapped lines with
+// separators a \n split can't see. Baseline stepping for the fallback case
+// comes from planLineOrigins so it cannot drift from EditTextCommand's.
+function linesToEmit(run: TextRun, tags: TextTags): LineToEmit[] {
+  const slots = run.paragraphLineSlots;
+  if (slots.length > 0)
+    return slots.map((s) => {
+      const start = Math.max(0, s.startChar);
+      const text = run.text
+        .slice(start, Math.min(run.text.length, s.endChar))
+        .replace(/[\r\n]+$/, "");
+      return {
+        text,
+        tags: sliceTags(tags, start, start + text.length),
+        start,
+        x: s.matrixE,
+        y: s.baselineY,
+      };
+    });
+  const lines = splitLines(run.text, tags);
+  const origins = planLineOrigins(run, lines.length, lineHeightOf(run));
+  let cursor = 0;
+  return lines.map((line, i) => {
+    const start = run.text.indexOf(line.text, cursor);
+    cursor = start + line.text.length;
+    return { ...line, ...origins[i], start };
+  });
+}
+
+/** The font handle drawing each code unit of the run's text, 0 where none is known. */
+function sourceFontAt(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  run: TextRun,
+): number[] {
+  const fontAt = new Array<number>(run.text.length).fill(0);
+  const mark = (
+    pieces: Pick<
+      ParagraphLineSlot,
+      "mergedFromPtrs" | "mergedFromTexts" | "mergedFromCharStarts"
+    >,
+    offset: number,
+  ) =>
+    pieces.mergedFromPtrs.forEach((ptr, i) => {
+      const start = offset + (pieces.mergedFromCharStarts[i] ?? 0);
+      const end = start + (pieces.mergedFromTexts[i]?.length ?? 0);
+      const font = ptr ? m.FPDFTextObj_GetFont(ptr) : 0;
+      for (let c = Math.max(0, start); c < Math.min(end, fontAt.length); c++)
+        fontAt[c] = font;
+    });
+  if (run.paragraphLineSlots.length > 0) {
+    for (const slot of run.paragraphLineSlots) mark(slot, slot.startChar);
+  } else {
+    const pieces =
+      run.mergedFromPtrs.length > 0
+        ? run
+        : piecesFromObjects(m, pagePtr, collectMemberPtrs(run), run.text);
+    if (pieces) mark(pieces, 0);
+  }
+  for (let c = 1; c < fontAt.length; c++) fontAt[c] ||= fontAt[c - 1];
+  for (let c = fontAt.length - 2; c >= 0; c--) fontAt[c] ||= fontAt[c + 1];
+  if (fontAt[0] === 0 && run.pdfiumObjPtr)
+    fontAt.fill(m.FPDFTextObj_GetFont(run.pdfiumObjPtr));
+  return fontAt;
+}
+
+/** Each unbroken stretch of `text` holding a character `lacks` is true of, with the marks attached to it. */
+function stretchesLacking(
+  text: string,
+  lacks: (ch: string) => boolean,
+): Array<{ start: number; end: number }> {
+  const stretches: Array<{ start: number; end: number }> = [];
+  let open: { start: number; end: number } | null = null;
+  let at = 0;
+  for (const ch of text) {
+    const end = at + ch.length;
+    if (lacks(ch) || (open && ATTACHES_TO_PREVIOUS.test(ch))) {
+      if (open) open.end = end;
+      else stretches.push((open = { start: at, end }));
+    } else {
+      open = null;
+    }
+    at = end;
+  }
+  return stretches;
+}
+
+/** `kept` as font spans: 0 is the next font, and a space stays with the letter before it. */
+function spansOf(
+  text: string,
+  kept: readonly number[],
+  family: string,
+): FontSpan[] | undefined {
+  const spans: FontSpan[] = [];
+  for (let c = 0; c < text.length; c++) {
+    const last = spans[spans.length - 1];
+    if (last && (/\s/.test(text[c]) || kept[c] === last.fontPtr))
+      last.end = c + 1;
+    else spans.push({ end: c + 1, fontPtr: kept[c], fallbackFamily: family });
+  }
+  return spans.some((span) => span.fontPtr !== 0) ? spans : undefined;
 }
 
 interface RunModelSnapshot {

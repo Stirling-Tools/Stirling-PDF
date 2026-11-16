@@ -11,16 +11,22 @@ import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFo
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import {
-  deviceFontDrawsAnyOf,
+  drawsSomeOf,
+  familyCoverage,
   loadDeviceFontInto,
+  visibleCodePoints,
 } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  loadScriptScanFaces,
+  scanScriptsOf,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import {
   isDocumentFontId,
-  isItalicFamily,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { isItalicFont } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import {
   italicCapability,
   italicCutOf,
@@ -50,12 +56,22 @@ export type FontPickFailure =
   | "serverFontFailed"
   | "embeddingForbidden"
   | "embedFailed"
-  | "noGlyphs";
+  | "noGlyphs"
+  | "missingGlyphs"
+  | "someLeftUnchanged";
 
 interface FamilyChange {
   pageIndex: number;
   runId: string;
   family: string;
+  text: string;
+}
+
+/** How many runs a font change reached, and how many it left as they were and why. */
+interface FamilyChangeOutcome {
+  applied: number;
+  undrawable: number;
+  wouldLoseText: number;
 }
 
 /** Loads the family's bytes; the failure that must stop the pick, or null to go on. */
@@ -73,25 +89,30 @@ function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
 }
 
 async function fontPickFailure(
+  doc: EditorStore["document"],
   family: string,
-  text: string,
+  texts: string[],
 ): Promise<FontPickFailure | null> {
-  if (nearestStandardFont(family) === family) return null;
-  const refusal = await prepareExternalFont(family);
-  if (refusal) return refusal;
-  return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
+  if (nearestStandardFont(family) !== family) {
+    const refusal = await prepareExternalFont(family);
+    if (refusal) return refusal;
+  }
+  const draws = familyCoverage(doc, family);
+  return texts.length === 0 || texts.some((text) => drawsSomeOf(draws, text))
+    ? null
+    : "noGlyphs";
 }
 
-/** Null when the family is ready to draw, or when `doc` is no longer the open document, which callers check for themselves. */
+/** Null when the family is ready to draw at least one of `texts`, or when `doc` is no longer the open document, which callers check for themselves. */
 async function prepareFamily(
   store: EditorStore,
   doc: EditorStore["document"],
   family: string,
-  text: string,
+  texts: string[],
 ): Promise<FontPickFailure | null> {
   // Embedding is async and Command.apply is not, so warm the bytes first.
   // A no-op for the built-in families.
-  const failure = await fontPickFailure(family, text);
+  const failure = await fontPickFailure(doc, family, texts);
   if (failure) return failure;
   // Another document may have opened during the download; this one's PDFium handle is then gone.
   if (!doc || store.document !== doc) return null;
@@ -102,6 +123,40 @@ async function prepareFamily(
   )
     return "embedFailed";
   return null;
+}
+
+function familyCommand(change: FamilyChange): SetFontFamilyCommand {
+  return new SetFontFamilyCommand({
+    pageIndex: change.pageIndex,
+    runId: change.runId,
+    nextFamily: change.family,
+  });
+}
+
+/**
+ * Fetch the script fonts that draw text a change would otherwise leave
+ * undrawn. Typed text gets them the same way, by being redrawn once they are
+ * in; a font change is refused instead of drawn short, so they are fetched first.
+ */
+async function loadScriptFacesFor(
+  doc: EditorDocument,
+  changes: FamilyChange[],
+): Promise<void> {
+  const lost = changes
+    .filter((change) => {
+      if (isDocumentFontId(change.family)) return false;
+      const covers = familyCoverage(doc, change.family);
+      return (
+        covers !== null &&
+        visibleCodePoints(change.text).some((cp) => !covers(cp))
+      );
+    })
+    .filter((change) => familyCommand(change).wouldLoseText(doc))
+    .map((change) => change.text)
+    .join("");
+  const scripts = scanScriptsOf(lost);
+  if (scripts.length > 0)
+    await loadScriptScanFaces(scripts).catch(() => undefined);
 }
 
 function liveRuns(store: EditorStore): Map<string, TextRun> {
@@ -232,23 +287,42 @@ export function useSelectionActions(store: EditorStore) {
       stillApplies: () => (runId: string) => boolean,
       changes: FamilyChange[],
       fit: ScanFitTarget[],
-    ) => {
-      await dispatchAfterScanFit(fit, () => {
-        // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
-        const applies = stillApplies();
-        return changes
-          .filter((change) => applies(change.runId))
-          .map(
-            (change) =>
-              new SetFontFamilyCommand({
-                pageIndex: change.pageIndex,
-                runId: change.runId,
-                nextFamily: change.family,
-              }),
-          );
-      });
+    ): Promise<FamilyChangeOutcome> => {
+      const doc = store.document;
+      // Run by run: one with none of its letters in the family would be named after a font it is not drawn in, so it stays as it is.
+      const drawable = changes.filter(
+        (change) =>
+          isDocumentFontId(change.family) ||
+          drawsSomeOf(familyCoverage(doc, change.family), change.text),
+      );
+      const changing = new Set(drawable.map((change) => change.runId));
+      const outcome = {
+        applied: 0,
+        undrawable: changes.length - drawable.length,
+        wouldLoseText: 0,
+      };
+      if (doc) await loadScriptFacesFor(doc, drawable);
+      if (store.document !== doc) return outcome;
+      await dispatchAfterScanFit(
+        fit.filter((target) => changing.has(target.run.id)),
+        () => {
+          // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
+          const applies = stillApplies();
+          const commands = drawable
+            .filter((change) => applies(change.runId))
+            .map(familyCommand);
+          const open = store.document;
+          const safe = open
+            ? commands.filter((command) => !command.wouldLoseText(open))
+            : commands;
+          outcome.applied = safe.length;
+          outcome.wouldLoseText = commands.length - safe.length;
+          return safe;
+        },
+      );
+      return outcome;
     },
-    [dispatchAfterScanFit],
+    [store, dispatchAfterScanFit],
   );
 
   const changeFontFamily = useCallback(
@@ -266,7 +340,7 @@ export function useSelectionActions(store: EditorStore) {
         runId: run.id,
         // The list offers bold cuts as their own entries but italic only through its toggle.
         family:
-          isDocumentFontId(family) || !isItalicFamily(run.fontId)
+          isDocumentFontId(family) || !isItalicFont(run.fontId)
             ? family
             : italicCutOf(family),
         text: run.text,
@@ -276,7 +350,7 @@ export function useSelectionActions(store: EditorStore) {
           store,
           doc,
           family,
-          changes.map((change) => change.text).join(""),
+          changes.map((change) => change.text),
         );
         if (failure) return failure;
         if (store.document !== doc) return null;
@@ -284,20 +358,30 @@ export function useSelectionActions(store: EditorStore) {
           changes.map((c) => c.family).filter((f) => f !== family),
         );
         for (const face of styled) {
-          const text = changes
+          const texts = changes
             .filter((c) => c.family === face)
-            .map((c) => c.text)
-            .join("");
+            .map((c) => c.text);
           // A styled cut that will not load is not worth refusing the family the user picked.
-          if (await prepareFamily(store, doc, face, text)) {
+          if (await prepareFamily(store, doc, face, texts)) {
             for (const change of changes)
               if (change.family === face) change.family = family;
           }
           if (store.document !== doc) return null;
         }
       }
-      await dispatchFamilyChanges(stillApplies, changes, fit);
-      return null;
+      // A run whose letters the styled cut lacks may still have them in the family that was picked.
+      for (const change of changes) {
+        if (
+          change.family !== family &&
+          !drawsSomeOf(familyCoverage(doc, change.family), change.text)
+        )
+          change.family = family;
+      }
+      const { applied, undrawable, wouldLoseText } =
+        await dispatchFamilyChanges(stillApplies, changes, fit);
+      if (undrawable + wouldLoseText === 0) return null;
+      if (applied > 0) return "someLeftUnchanged";
+      return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
     [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],
   );
@@ -311,7 +395,7 @@ export function useSelectionActions(store: EditorStore) {
     forEachSelectedRun((run, page) => {
       const cap = italicCapability(
         run.fontId,
-        !isItalicFamily(run.fontId),
+        !isItalicFont(run.fontId),
         fonts,
       );
       // No real italic cut for this face. Leave it alone: swapping the
@@ -321,6 +405,7 @@ export function useSelectionActions(store: EditorStore) {
         pageIndex: run.pageIndex,
         runId: run.id,
         family: cap.family,
+        text: run.text,
         device: cap.source === "device",
         fit: { page, run: run as TextRun },
       });

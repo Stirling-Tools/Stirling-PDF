@@ -7614,6 +7614,7 @@ embedFailed = "This font could not be embedded in the PDF. The text was left unc
 includedGroup = "Included fonts"
 label = "Font family"
 matchedGroup = "Matched font"
+missingGlyphs = "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged."
 mixed = "Mixed"
 noGlyphs = "This font has no characters for the selected text. The text was left unchanged."
 noMatch = "No matching font"
@@ -7621,6 +7622,7 @@ placeholder = "Font family"
 scannedText = "Scanned text"
 serverFontFailed = "That server font could not be downloaded. The text was left unchanged."
 serverGroup = "Server fonts"
+someLeftUnchanged = "This font does not have the characters for some of the selected text. That text was left unchanged."
 useDeviceFonts = "Use device fonts"
 
 [pdfTextEditor.fonts]

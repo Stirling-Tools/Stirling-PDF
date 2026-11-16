@@ -149,12 +149,35 @@ export function withoutDroppedChars<T>(measure: () => T): T {
   }
 }
 
+let droppedDuringEmit: Set<string> | null = null;
+
+/**
+ * Run `emit` and return the visible characters it could not draw. They stay
+ * out of what a save warns were dropped, and no script font is fetched for
+ * them: this is for a caller that takes back an emit that lost any.
+ */
+export function droppedCharsOf(emit: () => void): string[] {
+  const outer = droppedDuringEmit;
+  const was = measuring;
+  const dropped = new Set<string>();
+  droppedDuringEmit = dropped;
+  measuring = true;
+  try {
+    emit();
+  } finally {
+    droppedDuringEmit = outer;
+    measuring = was;
+  }
+  return [...dropped];
+}
+
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
 function recordDroppedChars(original: string, kept: string): void {
-  if (measuring) return;
+  const into = droppedDuringEmit ?? (measuring ? null : droppedBase14Chars);
+  if (!into) return;
   const keptSet = new Set(kept);
   for (const ch of original) {
-    if (!keptSet.has(ch) && ch.trim().length > 0) droppedBase14Chars.add(ch);
+    if (!keptSet.has(ch) && ch.trim().length > 0) into.add(ch);
   }
 }
 
@@ -1320,7 +1343,7 @@ function emitDirectionRuns(
   return ptrs;
 }
 
-function sliceFontSpans(
+export function sliceFontSpans(
   spans: readonly FontSpan[] | undefined,
   start: number,
   end: number,
@@ -1927,6 +1950,9 @@ export function emitRunLines(opts: {
       continue;
     }
     const texts: string[] = [];
+    const fontSpans = opts.fontSpansByLine?.[i];
+    // emitTextLine splits a line only on two or more spans, so one span is the font of the whole line.
+    const wholeLine = fontSpans?.length === 1 ? fontSpans[0] : undefined;
     const ptrs = emitTextLine({
       outTexts: texts,
       doc: opts.doc,
@@ -1937,15 +1963,15 @@ export function emitRunLines(opts: {
       fontSize: opts.run.fontSize,
       fill: opts.run.fill,
       ...inkFromRun(opts.run),
-      originalFontPtr: opts.originalFontPtr,
+      originalFontPtr: wholeLine?.fontPtr || opts.originalFontPtr,
       originalFontSubset: opts.originalFontSubset,
       originalFontForCoveredWords: opts.originalFontForCoveredWords,
       charSpacingPt: opts.run.charSpacingPt,
-      fallbackFamily: opts.fallbackFamily,
+      fallbackFamily: wholeLine?.fallbackFamily ?? opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
       tags,
-      fontSpans: opts.fontSpansByLine?.[i],
+      fontSpans,
     });
     // A right-to-left line keeps its right edge, where it starts.
     const ink =
