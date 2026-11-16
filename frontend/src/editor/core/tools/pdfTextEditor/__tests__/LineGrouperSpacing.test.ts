@@ -324,6 +324,42 @@ describe("LineGrouper inter-run space synthesis", () => {
     expect(text).toBe("Alpha beta  Gamma");
   });
 
+  it("keeps a justified line in two fonts at one space a gap", () => {
+    const fs = 10;
+    const runs = lineOf(
+      [
+        { text: "Alpha", width: 28, gapAfter: 6 },
+        { text: "beta", width: 22, gapAfter: 6.2 },
+        { text: "gamma", width: 30, gapAfter: 5.9 },
+        { text: "delta", width: 26, gapAfter: 6.1 },
+        { text: "omega", width: 30 },
+      ],
+      fs,
+    );
+    runs[0].fontId = "pdf:2:Times";
+    const advance: SpaceAdvance = (run) =>
+      run.fontId === "pdf:2:Times" ? 0.25 : 0.35;
+
+    expect(joinLine(runs, advance)).toBe("Alpha beta gamma delta omega");
+  });
+
+  it("counts spaces typed in a second font by that font's space", () => {
+    const fs = 10;
+    const runs = lineOf(
+      [
+        { text: "Document", width: 44, gapAfter: 5.6 },
+        { text: "A", width: 6, gapAfter: 9.2 },
+        { text: "B", width: 6 },
+      ],
+      fs,
+    );
+    runs[0].fontId = "pdf:2:Aptos";
+    const advance: SpaceAdvance = (run) =>
+      run.fontId === "pdf:2:Aptos" ? 0.2 : 0.278;
+
+    expect(joinLine(runs, advance)).toBe("Document A   B");
+  });
+
   it("keeps the gap-based count when the font reports no usable space width", () => {
     const text = joinLine(
       lineOf(

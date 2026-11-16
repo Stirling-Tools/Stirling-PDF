@@ -94,24 +94,63 @@ function minWordGapRatio(spaceEm: number | null): number {
     : WORD_GAP_MIN_RATIO;
 }
 
-function lineSpaceUnitRatio(
+function lineSpaceUnit(
   members: TextRun[],
   spaceAdvance: SpaceAdvance,
   minGap: number,
-): number {
+): { ratio: number; fromFont: boolean } {
   const wordGaps: number[] = [];
   for (let i = 1; i < members.length; i++) {
     const ratio = junctionGapRatio(members[i - 1], members[i]);
     if (ratio > minGap) wordGaps.push(ratio);
   }
-  if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
+  if (wordGaps.length < 2)
+    return { ratio: FALLBACK_SPACE_UNIT_RATIO, fromFont: false };
   wordGaps.sort((a, b) => a - b);
   // Two unequal gaps cannot tell one space from several: the narrower may itself be a double space.
   if (wordGaps.length === 2) {
     const em = fontSpaceEm(members, spaceAdvance);
-    if (em !== null && wordGaps[1] - wordGaps[0] >= em) return em;
+    if (em !== null && wordGaps[1] - wordGaps[0] >= em)
+      return { ratio: em, fromFont: true };
   }
-  return clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]);
+  return {
+    ratio: clampSpaceUnit(wordGaps[Math.floor((wordGaps.length - 1) / 2)]),
+    fromFont: false,
+  };
+}
+
+/**
+ * The width of one space at each junction of a line, as a share of the font
+ * size.
+ *
+ * The line's own gaps usually say it best, since justified text stretches
+ * every space alike. They cannot where the line mixes fonts, or holds too few
+ * gaps to tell one space from several: a word typed in a fallback font after
+ * the document's own sits a different distance away, and a median over such
+ * gaps reads three typed spaces as one. There each junction between two pieces
+ * in the same font is counted in that font's space instead, unless those
+ * junctions are all alike, which is justification, not typing.
+ */
+function junctionSpaceUnits(
+  members: TextRun[],
+  spaceAdvance: SpaceAdvance,
+  minGap: number,
+): number[] {
+  const line = lineSpaceUnit(members, spaceAdvance, minGap);
+  const own: Array<number | null> = [];
+  const counted: number[] = [];
+  for (let i = 1; i < members.length; i++) {
+    const em = fontSpaceEm([members[i - 1], members[i]], spaceAdvance);
+    own.push(em);
+    const gap = junctionGapRatio(members[i - 1], members[i]);
+    if (em !== null && gap > minGap) counted.push(gap / em);
+  }
+  const alike =
+    counted.length >= 3 &&
+    Math.max(...counted) < MULTI_SPACE_UNITS * Math.min(...counted);
+  const byFont =
+    !alike && (line.fromFont || fontSpaceEm(members, spaceAdvance) === null);
+  return own.map((em) => (byFont && em !== null ? em : line.ratio));
 }
 
 function spacesForGap(
@@ -408,7 +447,7 @@ export class LineGrouper {
       // Gaps between neighbours, in drawn order.
       const gaps: string[] = [];
       const minGap = minWordGapRatio(fontSpaceEm(group.members, spaceAdvance));
-      const spaceUnitRatio = lineSpaceUnitRatio(
+      const spaceUnits = junctionSpaceUnits(
         group.members,
         spaceAdvance,
         minGap,
@@ -416,7 +455,7 @@ export class LineGrouper {
       for (let i = 1; i < group.members.length; i++) {
         const extraSpaces = spacesForGap(
           junctionGapRatio(group.members[i - 1], group.members[i]),
-          spaceUnitRatio,
+          spaceUnits[i - 1],
           minGap,
         );
         // A right-to-left piece's trailing space is drawn on its left.
