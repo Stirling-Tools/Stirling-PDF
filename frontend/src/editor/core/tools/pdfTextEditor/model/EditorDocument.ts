@@ -5,6 +5,7 @@ import {
   openRawDocument,
 } from "@editor/services/pdfiumService";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { documentClosed } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 import {
   PageStructure,
   givenMcids,
@@ -902,6 +903,7 @@ export class EditorDocument {
     forgetArtifactKinds(this.module, this);
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
+    documentClosed();
   }
 }
 

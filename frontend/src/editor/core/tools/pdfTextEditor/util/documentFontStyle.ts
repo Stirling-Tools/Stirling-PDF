@@ -4,16 +4,18 @@ import {
   documentFontHandle,
   isItalicFamily,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /** The Italic bit of a font descriptor's /Flags (ISO 32000-1, table 123). */
 const ITALIC_FLAG = 1 << 6;
 
-// Keyed by PDFium font handle, unique only within one open document: EditorStore resets it with its other pointer-keyed caches.
+// Keyed by PDFium font handle, unique only within one open document: cleared when any document closes.
 const italicByHandle = new Map<number, boolean>();
 
 export function resetDocumentFontStyles(): void {
   italicByHandle.clear();
 }
+clearOnDocumentClose(resetDocumentFontStyles);
 
 /**
  * Record whether a document font is an italic face. A fontId names the family

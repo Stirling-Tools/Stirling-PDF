@@ -64,6 +64,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -102,6 +103,7 @@ export function resetPerCharBranchPtrs(): void {
   perCharBranchPtrs.clear();
   readBackValidated.clear();
 }
+clearOnDocumentClose(resetPerCharBranchPtrs);
 
 /** Test-only: clear the verified-ptr set between cases. */
 export function _clearVerifiedPerCharPtrsForTests(): void {
@@ -206,6 +208,7 @@ export function resetCharCoverageCache(): void {
   charCoverage.clear();
   resetFontGlyphs();
 }
+clearOnDocumentClose(resetCharCoverageCache);
 
 // True when the emit path will map EVERY char in this font. Same condition
 // emitTextLine uses to take its setCharcodes branch, so a true here means the
@@ -704,6 +707,7 @@ export function warmOnPageAdvances(
 export function resetOnPageAdvCache(): void {
   onPageAdvCache.clear();
 }
+clearOnDocumentClose(resetOnPageAdvCache);
 
 /** Test-only alias for {@link resetOnPageAdvCache}. */
 export function _clearOnPageAdvCacheForTests(): void {

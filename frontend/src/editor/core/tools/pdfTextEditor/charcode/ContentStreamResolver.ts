@@ -4,6 +4,7 @@ import type {
   CharcodeResolveResult,
   ResolverContext,
 } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // Strategy 2: scrape Unicode→charcode mappings by walking the page's existing
 // text via PDFium's text page API.
@@ -136,6 +137,7 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
 export function resetContentStreamCache(): void {
   perPageCache.clear();
 }
+clearOnDocumentClose(resetContentStreamCache);
 
 /** Test-only alias for {@link resetContentStreamCache}. */
 export function _clearContentStreamCacheForTests(): void {

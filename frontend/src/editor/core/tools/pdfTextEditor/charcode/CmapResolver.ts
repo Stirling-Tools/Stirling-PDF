@@ -12,6 +12,7 @@ import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 /** Strategy 1: parse the embedded font's cmap table. */
 
@@ -327,6 +328,7 @@ export function resetCmapCache(): void {
   cmapCache.clear();
   fontShaCache.clear();
 }
+clearOnDocumentClose(resetCmapCache);
 
 /** Test-only alias for {@link resetCmapCache}. */
 export function _clearCmapCacheForTests(): void {
