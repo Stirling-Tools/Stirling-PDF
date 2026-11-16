@@ -1,9 +1,9 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use serde::Serialize;
 use tauri::ipc::Response;
-use ttf_parser::{name_id, Face, Language, Permissions};
+use ttf_parser::{name_id, Face, Language, Permissions, Tag};
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,8 +32,36 @@ static CATALOG: OnceLock<Vec<CatalogEntry>> = OnceLock::new();
 
 const SEMIBOLD_WEIGHT: u16 = 600;
 
+/// Must stay equal to the server's `EditorFontRegistry.MAX_FONT_BYTES`: picking a face sends its whole file to the webview.
+const MAX_FONT_BYTES: u64 = 64 * 1024 * 1024;
+
+fn has_table(face: &Face, tag: &[u8; 4]) -> bool {
+    face.raw_face().table(Tag::from_bytes(tag)).is_some()
+}
+
+/// A face with no OS/2 table records no restriction, which is how the server reads it too. One that is present but unreadable is refused.
 fn embedding_allowed(face: &Face) -> bool {
-    face.permissions() != Some(Permissions::Restricted) && face.is_outline_embedding_allowed()
+    !has_table(face, b"OS/2")
+        || (face.permissions() != Some(Permissions::Restricted)
+            && face.is_outline_embedding_allowed())
+}
+
+/// A PDF embeds only a variable face's default instance. The table's presence decides, as on the server.
+fn is_variable(face: &Face) -> bool {
+    has_table(face, b"fvar")
+}
+
+/// A leading dot on either name marks an OS-private UI face: ".Keyboard", or "System Font" whose PostScript name is ".SFNS-Regular".
+fn is_os_private(family: &str, post_script_name: &str) -> bool {
+    family.starts_with('.') || post_script_name.starts_with('.')
+}
+
+fn fits_size_limit(size: std::io::Result<u64>) -> bool {
+    size.is_ok_and(|bytes| bytes <= MAX_FONT_BYTES)
+}
+
+fn file_fits_size_limit(path: &Path) -> bool {
+    fits_size_limit(std::fs::metadata(path).map(|file| file.len()))
 }
 
 /// The editor embeds device fonts as TrueType; a CFF face would save as a broken font resource.
@@ -59,10 +87,10 @@ fn english_name(face: &Face, id: u16) -> Option<String> {
     fallback
 }
 
-/// The face's display names, or `None` when it is unparseable, not licensed for embedding, or not TrueType.
+/// The face's display names, or `None` when it is unparseable, variable, not licensed for embedding, or not TrueType.
 fn embeddable_face_names(data: &[u8], index: u32) -> Option<FaceNames> {
     let face = Face::parse(data, index).ok()?;
-    if !embedding_allowed(&face) || !has_truetype_outlines(&face) {
+    if is_variable(&face) || !embedding_allowed(&face) || !has_truetype_outlines(&face) {
         return None;
     }
     Some(FaceNames {
@@ -106,8 +134,10 @@ fn build_catalog(db: &fontdb::Database) -> Vec<CatalogEntry> {
         let Some((family, _)) = info.families.first() else {
             continue;
         };
-        // A leading dot marks an OS-private UI face (".SF NS", ".Keyboard").
-        if family.starts_with('.') || info.post_script_name.is_empty() {
+        if info.post_script_name.is_empty()
+            || is_os_private(family, &info.post_script_name)
+            || !file_fits_size_limit(&path)
+        {
             continue;
         }
         let Some(names) = db.with_face_data(info.id, embeddable_face_names).flatten() else {
@@ -144,7 +174,7 @@ fn catalog() -> &'static [CatalogEntry] {
     })
 }
 
-/// The installed faces the editor can embed: TrueType outlines and a licence that allows embedding.
+/// The installed faces the editor can embed: static TrueType outlines, a licence that allows embedding, and a file no larger than the server accepts.
 #[tauri::command]
 pub async fn list_system_fonts() -> Result<Vec<SystemFontFace>, String> {
     tauri::async_runtime::spawn_blocking(|| {
@@ -174,6 +204,8 @@ mod tests {
     use super::*;
 
     const FS_TYPE_OFFSET: usize = 8;
+    const TABLE_DIRECTORY_OFFSET: usize = 12;
+    const TABLE_RECORD_SIZE: usize = 16;
 
     fn bundled(name: &str) -> Vec<u8> {
         let dir = concat!(
@@ -187,21 +219,54 @@ mod tests {
         bundled("Carlito-Regular.ttf")
     }
 
-    fn with_fs_type(mut data: Vec<u8>, fs_type: u16) -> Vec<u8> {
-        let os2 = ttf_parser::RawFace::parse(&data, 0)
+    fn os2_offset(data: &[u8]) -> usize {
+        ttf_parser::RawFace::parse(data, 0)
             .expect("font parses")
             .table(ttf_parser::Tag::from_bytes(b"OS/2"))
             .expect("font has an OS/2 table")
             .as_ptr() as usize
-            - data.as_ptr() as usize;
+            - data.as_ptr() as usize
+    }
+
+    fn with_fs_type(mut data: Vec<u8>, fs_type: u16) -> Vec<u8> {
+        let os2 = os2_offset(&data);
         data[os2 + FS_TYPE_OFFSET..os2 + FS_TYPE_OFFSET + 2]
             .copy_from_slice(&fs_type.to_be_bytes());
         data
     }
 
+    fn with_os2_version(mut data: Vec<u8>, version: u16) -> Vec<u8> {
+        let os2 = os2_offset(&data);
+        data[os2..os2 + 2].copy_from_slice(&version.to_be_bytes());
+        data
+    }
+
+    /// The parser binary-searches the table directory, so `to` must sort where `from` did.
+    fn with_table_renamed(mut data: Vec<u8>, from: &[u8; 4], to: &[u8; 4]) -> Vec<u8> {
+        let tables = usize::from(u16::from_be_bytes([data[4], data[5]]));
+        let record = (0..tables)
+            .map(|table| TABLE_DIRECTORY_OFFSET + table * TABLE_RECORD_SIZE)
+            .find(|&record| data[record..record + 4] == from[..])
+            .expect("font has the table");
+        data[record..record + 4].copy_from_slice(to);
+        data
+    }
+
     fn catalog_of(data: Vec<u8>) -> Vec<CatalogEntry> {
+        let size = data.len() as u64;
+        catalog_of_file_sized(data, size)
+    }
+
+    /// Extends the file without writing the tail, so one at the size limit stays cheap to make.
+    fn catalog_of_file_sized(data: Vec<u8>, size: u64) -> Vec<CatalogEntry> {
         let dir = tempfile::tempdir().expect("temp dir");
-        std::fs::write(dir.path().join("font.ttf"), data).expect("font written");
+        let path = dir.path().join("font.ttf");
+        std::fs::write(&path, data).expect("font written");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .and_then(|file| file.set_len(size))
+            .expect("font resized");
         let mut db = fontdb::Database::new();
         db.load_fonts_dir(dir.path());
         build_catalog(&db)
@@ -281,6 +346,57 @@ mod tests {
     #[test]
     fn drops_a_bitmap_only_face() {
         assert!(catalog_of(with_fs_type(bundled_font(), 0x0208)).is_empty());
+    }
+
+    #[test]
+    fn lists_a_face_with_no_os2_table() {
+        let entries = catalog_of(with_table_renamed(bundled_font(), b"OS/2", b"OS/1"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].face.family, "Carlito");
+    }
+
+    #[test]
+    fn drops_a_face_whose_os2_table_cannot_be_read() {
+        let unreadable = with_os2_version(with_fs_type(bundled_font(), 0x0002), 0xFFFF);
+        assert!(catalog_of(unreadable).is_empty());
+    }
+
+    #[test]
+    fn drops_a_face_with_an_fvar_table() {
+        assert!(catalog_of(with_table_renamed(bundled_font(), b"fpgm", b"fvar")).is_empty());
+    }
+
+    #[test]
+    fn a_leading_dot_on_either_name_is_os_private() {
+        assert!(is_os_private(".Keyboard", "Keyboard"));
+        assert!(is_os_private("System Font", ".SFNS-Regular"));
+        assert!(!is_os_private("Carlito", "Carlito-Bold"));
+    }
+
+    #[test]
+    fn drops_a_face_whose_postscript_name_is_os_private() {
+        let entries = catalog_of(with_name_text(
+            bundled("Carlito-Bold.ttf"),
+            "Carlito-Bold",
+            ".arlito-Bold",
+        ));
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn a_size_that_is_too_large_or_unreadable_does_not_fit() {
+        assert!(fits_size_limit(Ok(MAX_FONT_BYTES)));
+        assert!(!fits_size_limit(Ok(MAX_FONT_BYTES + 1)));
+        assert!(!fits_size_limit(Err(std::io::ErrorKind::NotFound.into())));
+    }
+
+    #[test]
+    fn drops_a_file_over_the_size_limit() {
+        assert_eq!(
+            catalog_of_file_sized(bundled_font(), MAX_FONT_BYTES).len(),
+            1
+        );
+        assert!(catalog_of_file_sized(bundled_font(), MAX_FONT_BYTES + 1).is_empty());
     }
 
     #[test]
