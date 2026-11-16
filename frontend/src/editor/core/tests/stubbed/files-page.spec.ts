@@ -1582,6 +1582,57 @@ test.describe("Files page", () => {
       expect(serverDeletes).toEqual([]);
     });
 
+    test("a file moved into a folder while the dialog is open is kept", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [
+          { id: "loose", name: "loose.pdf", remoteStorageId: null },
+          { id: "moved", name: "moved.pdf", remoteStorageId: null },
+        ],
+        [{ id: "vf-1", name: "Kept" }],
+      );
+      await page.goto("/editor", { waitUntil: "domcontentloaded" });
+      const rows = page.locator(".file-sidebar-file-item");
+      await expect(rows).toHaveCount(2, { timeout: 10_000 });
+
+      await page
+        .locator(".file-sidebar-group-header-row", { hasText: "Recent" })
+        .hover();
+      await page.getByTestId("file-sidebar-clear-recents").click();
+      await expect(page.getByRole("dialog")).toContainText(
+        "Clear 2 files from recents?",
+      );
+      // Written straight to storage, as another tab would.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            const open = indexedDB.open("stirling-pdf-files");
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const tx = db.transaction("files", "readwrite");
+              const store = tx.objectStore("files");
+              const get = store.get("moved");
+              get.onsuccess = () =>
+                store.put({ ...get.result, folderId: "vf-1" });
+              tx.oncomplete = () => {
+                db.close();
+                resolve();
+              };
+              tx.onerror = () => reject(tx.error);
+            };
+          }),
+      );
+      await page.getByTestId("file-sidebar-clear-recents-confirm").click();
+
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(rows).toHaveCount(1);
+      await expect(rows.first()).toContainText("moved.pdf");
+    });
+
     test("Skip open files clears the rest and leaves open files alone", async ({
       page,
     }) => {

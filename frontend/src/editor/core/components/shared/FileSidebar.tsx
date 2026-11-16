@@ -897,10 +897,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     }, [clearTargets, state.files.ids]);
     const handleConfirmClearRecents = useCallback(
       async (skipOpen: boolean) => {
+        const open = new Set(state.files.ids.map(String));
+        const spared = (id: string) => skipOpen && open.has(id);
+        // Re-read, so a file moved into a folder while the dialog was up (from
+        // another tab, say) is still kept. A file not stored yet stays a target.
+        const stored = new Map(
+          (await fileStorage.getAllStirlingFileStubs()).map((s) => [s.id, s]),
+        );
         const ids = (clearTargets ?? [])
           .map((s) => s.id)
-          .filter((id) => !skipOpen || !openClearTargetIds.has(id));
-        const orphans = await fileStorage.orphanedAncestorIds(ids);
+          .filter((id) => stored.get(id)?.folderId == null && !spared(id));
+        // An open older version can fall out as an ancestor no kept file needs.
+        const orphans = (await fileStorage.orphanedAncestorIds(ids)).filter(
+          (id) => !spared(id),
+        );
         const doomed = [...ids, ...orphans];
         // Storage goes first: removeFiles only logs a failed delete, and the dialog
         // has to see it before any file is closed.
@@ -915,7 +925,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [
         clearTargets,
-        openClearTargetIds,
+        state.files.ids,
         indexedDB,
         fileActions,
         refreshStubs,
