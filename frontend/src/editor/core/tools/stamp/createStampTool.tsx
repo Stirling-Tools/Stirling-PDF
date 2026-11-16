@@ -27,7 +27,10 @@ import {
   getPdfAccess,
   signedPdfEditsBlocked,
 } from "@editor/services/pdfAccessService";
-import { SignedPdfEditsBlockedError } from "@editor/services/pdfSessionUnlock";
+import {
+  assertSignedPdfsEditable,
+  SignedPdfEditsBlockedError,
+} from "@editor/services/pdfSessionUnlock";
 
 export type StampToolConfig = {
   toolId: ToolId;
@@ -184,9 +187,7 @@ export const createStampTool = (config: StampToolConfig) => {
         if (!originalFile) {
           throw new Error("No file available to replace");
         }
-        if (signedPdfEditsBlocked(getPdfAccess(originalFile))) {
-          throw new SignedPdfEditsBlockedError();
-        }
+        await assertSignedPdfsEditable([originalFile], undefined, true);
 
         const flattenResult = await flattenSignatures({
           signatureApiRef,
@@ -217,17 +218,29 @@ export const createStampTool = (config: StampToolConfig) => {
       } catch (error) {
         console.error("Error saving signed document:", error);
         setHasUnsavedChanges(true);
-        alert({
-          alertType: "error",
-          title: t(
-            "sign.wallet.toast.applyFailed",
-            "Could not apply signatures",
-          ),
-          body: t(
-            "sign.wallet.toast.applyFailedBody",
-            "Your signatures are still on the document. Try again.",
-          ),
-        });
+        alert(
+          error instanceof SignedPdfEditsBlockedError
+            ? {
+                alertType: "warning",
+                title: t(
+                  "signedPdf.editsBlockedTitle",
+                  "Signed PDF can't be changed",
+                ),
+                body: error.message,
+                expandable: false,
+              }
+            : {
+                alertType: "error",
+                title: t(
+                  "sign.wallet.toast.applyFailed",
+                  "Could not apply signatures",
+                ),
+                body: t(
+                  "sign.wallet.toast.applyFailedBody",
+                  "Your signatures are still on the document. Try again.",
+                ),
+              },
+        );
         return false;
       } finally {
         applyInFlightRef.current = false;

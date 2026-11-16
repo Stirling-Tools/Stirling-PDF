@@ -1721,11 +1721,16 @@ export function LocalEmbedPDF({
           />
           <ExportAPIBridge
             originalFile={
-              pdfAccess?.encrypted || signedPdfEditsBlocked(pdfAccess)
+              pdfAccess?.encrypted
                 ? file
-                : undefined
+                : signedPdfEditsBlocked(pdfAccess)
+                  ? (file ?? urlSource ?? undefined)
+                  : undefined
             }
-            disabled={pdfAccess?.encrypted && !file}
+            disabled={
+              (pdfAccess?.encrypted && !file) ||
+              (signedPdfEditsBlocked(pdfAccess) && !file && !urlSource)
+            }
           />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />

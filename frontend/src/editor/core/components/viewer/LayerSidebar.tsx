@@ -170,12 +170,17 @@ export function LayerSidebar({
     return () => clearTimeout(timer);
   }, [visibility, file, layers, isApplying, onApplyLayers]);
 
-  const toggleLayerVisibility = useCallback((id: string) => {
-    userChangedRef.current = true;
-    setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
-  }, []);
+  const toggleLayerVisibility = useCallback(
+    (id: string) => {
+      if (readOnly) return;
+      userChangedRef.current = true;
+      setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
+    },
+    [readOnly],
+  );
 
   const showAll = useCallback(() => {
+    if (readOnly) return;
     userChangedRef.current = true;
     setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
@@ -184,9 +189,10 @@ export function LayerSidebar({
       }
       return updated;
     });
-  }, []);
+  }, [readOnly]);
 
   const hideAll = useCallback(() => {
+    if (readOnly) return;
     userChangedRef.current = true;
     setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
@@ -195,7 +201,7 @@ export function LayerSidebar({
       }
       return updated;
     });
-  }, []);
+  }, [readOnly]);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));

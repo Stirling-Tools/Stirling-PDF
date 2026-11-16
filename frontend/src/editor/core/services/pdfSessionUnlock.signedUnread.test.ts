@@ -9,6 +9,7 @@ import {
   clearPdfAccess,
   ensureLocalPdfAccess,
   inspectLocalPdfAccess,
+  rememberPdfAccess,
   setSignedPdfEditPolicy,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
@@ -109,6 +110,18 @@ describe("signed PDFs nobody has opened yet", () => {
       changePdfSecurity(file, form, "/api/v1/security/remove-password"),
     ).rejects.toThrow("digitally signed");
     expect(inspect).toHaveBeenCalledWith(file, "opening", undefined);
+    expect(apiClient.post).not.toHaveBeenCalled();
+  });
+
+  it("refuses a password change on a file whose signed access is already known", async () => {
+    const file = unread();
+    rememberPdfAccess(file, signed);
+    const form = new FormData();
+    form.set("password", "new");
+    await expect(
+      changePdfSecurity(file, form, "/api/v1/security/add-password"),
+    ).rejects.toThrow("digitally signed");
+    expect(inspect).not.toHaveBeenCalled();
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 

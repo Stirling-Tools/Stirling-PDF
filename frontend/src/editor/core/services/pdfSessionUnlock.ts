@@ -439,9 +439,13 @@ export async function changePdfSecurity(
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
   const access = getPdfAccess(file);
-  if (!access && signedCheckApplies(endpoint, false))
+  if (signedCheckApplies(endpoint, false))
     assertSignedPdfEditable(
-      await inspectForPasswordTool(file, String(form.get("password") ?? "")),
+      access ??
+        (await inspectForPasswordTool(
+          file,
+          String(form.get("password") ?? ""),
+        )),
       endpoint,
     );
   if (settingProtection) {
