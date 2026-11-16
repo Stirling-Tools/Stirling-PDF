@@ -11,6 +11,8 @@ export interface InfoTooltipProps {
   ariaLabel?: string;
   /** Which side the tooltip opens on. Default "top". */
   position?: TooltipPlacement;
+  /** For use over a layer that sits above the default tooltip layer. */
+  zIndex?: number;
 }
 
 /**
@@ -22,10 +24,11 @@ export function InfoTooltip({
   label,
   ariaLabel,
   position = "top",
+  zIndex,
 }: InfoTooltipProps) {
   const { t } = useTranslation();
   return (
-    <Tooltip content={label} placement={position}>
+    <Tooltip content={label} placement={position} zIndex={zIndex}>
       <button
         type="button"
         className="sui-info"
