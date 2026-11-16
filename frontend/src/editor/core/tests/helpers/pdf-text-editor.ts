@@ -208,28 +208,32 @@ export async function setViewerZoom(
   const current = () =>
     thumb.getAttribute("aria-valuenow").then((v) => Number(v));
   // Every step the slider passes through re-renders the pages, so jump close
-  // with one click on the track and finish with the arrow keys.
-  if ((await current()) !== percent) {
-    const track = page
-      .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
-      .first();
-    const box = await track.boundingBox();
-    if (box) {
-      const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
-      await page.mouse.click(
-        box.x + fraction * box.width,
-        box.y + box.height / 2,
-      );
+  // with one click on the track and finish with the arrow keys. The viewer
+  // may still fit a newly opened document to its width just after, so the
+  // zoom is set again until it holds.
+  await expect(async () => {
+    if ((await current()) !== percent) {
+      const track = page
+        .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
+        .first();
+      const box = await track.boundingBox();
+      if (box) {
+        const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
+        await page.mouse.click(
+          box.x + fraction * box.width,
+          box.y + box.height / 2,
+        );
+      }
+      await thumb.focus();
+      for (let i = 0; i < 20; i++) {
+        const value = await current();
+        if (value === percent) break;
+        await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
+      }
     }
-    await thumb.focus();
-    for (let i = 0; i < 20; i++) {
-      const value = await current();
-      if (value === percent) break;
-      await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
-    }
-  }
-  await expect(thumb).toHaveAttribute("aria-valuenow", String(percent));
-  await page.waitForTimeout(800);
+    await page.waitForTimeout(800);
+    expect(await current()).toBe(percent);
+  }).toPass({ timeout: 30_000 });
   // Zoom keeps the scroll position; start from the top, as a fresh open does.
   await page
     .getByTestId("pdf-editor-page-0")
