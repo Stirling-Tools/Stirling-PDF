@@ -10,6 +10,7 @@ import type {
   PageRect,
   PageSnapshot,
   TextRange,
+  TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { canResizeRun } from "@editor/tools/pdfTextEditor/commands/resizeRun";
@@ -81,6 +82,8 @@ interface PageViewProps {
     maxWidthPt: number,
     keepClearBelow?: boolean,
   ) => string | null | void;
+  /** The run with the engine's pen positions for its current text, read now. */
+  onMeasureRun?: (pageIndex: number, runId: string) => TextRunSnapshot | null;
   /** Right-edge drag to a new box width; widthPt in PDF points. */
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
@@ -133,6 +136,7 @@ export const PageView = memo(function PageView({
   selectedTextRange,
   onMoveRun,
   onWrapRun,
+  onMeasureRun,
   onResizeRun,
   onPageClick,
   onTransformImage,
@@ -574,6 +578,11 @@ export const PageView = memo(function PageView({
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt, keepClearBelow) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            }
+            onMeasure={
+              onMeasureRun
+                ? () => onMeasureRun(page.pageIndex, run.id)
+                : undefined
             }
             onResize={
               onResizeRun && canResizeRun(run)

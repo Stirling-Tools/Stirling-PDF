@@ -58,10 +58,17 @@ import {
 import { offsetAcrossRewrap } from "@editor/tools/pdfTextEditor/util/wrapCaret";
 import {
   cssFontShorthand,
+  measureAdvancePx,
   measureFontMetrics,
   measureLongestTokenWidth,
   measureMaxLineWidth,
 } from "@editor/tools/pdfTextEditor/util/textMetrics";
+import {
+  lineWidthPx,
+  type MeasuredText,
+  mergeAdvances,
+  unpricedChars,
+} from "@editor/tools/pdfTextEditor/util/typedAdvances";
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
@@ -274,19 +281,50 @@ function computeExactLayout(args: {
   return { lines, leftPx, topPx: stack.topPx, widthPx, heightPx, signature };
 }
 
+function measuredTextOf(run: TextRunSnapshot): MeasuredText | null {
+  const { charStartsX: starts, charEndsX: ends } = run;
+  if (!starts || !ends || starts.length !== run.text.length) return null;
+  return { text: run.text, starts, ends };
+}
+
 // PDF advance per em for every character the run already carries. Scale-free,
-// so it stays valid as the user zooms.
+// so it stays valid as the user zooms. Each character is priced from its last
+// occurrence: the engine can draw typed letters at other advances than the
+// document's own, and the letters typed last are the ones the next keystroke
+// repeats.
 function charAdvancesEm(run: TextRunSnapshot): Map<string, number> | null {
   const starts = run.charStartsX;
   const ends = run.charEndsX;
   if (!starts || !ends || starts.length !== run.text.length) return null;
   if (!(run.fontSize > 0)) return null;
   const map = new Map<string, number>();
+  const price = (ch: string, widthPt: number) => {
+    if (Number.isFinite(widthPt) && widthPt > 0)
+      map.set(ch, widthPt / run.fontSize);
+  };
+  const placed = (i: number) =>
+    Number.isFinite(starts[i]) && Number.isFinite(ends[i]);
+  // A glyph's box is its ink, not its advance: neighbours overlap it. The pen
+  // moves from one glyph's start to the next one's.
+  for (let i = 0; i + 1 < run.text.length; i += 1) {
+    if (run.text[i + 1] === "\n" || !placed(i) || !placed(i + 1)) continue;
+    price(run.text[i], starts[i + 1] - starts[i]);
+  }
+  // A space the PDF draws by advancing the pen has no box of its own, so it
+  // takes what is left of the step between the glyphs either side of it.
   for (let i = 0; i < run.text.length; i += 1) {
-    const width = ends[i] - starts[i];
-    if (!Number.isFinite(width) || width <= 0) continue;
-    const ch = run.text[i];
-    if (!map.has(ch)) map.set(ch, width / run.fontSize);
+    if (!placed(i) || run.text[i] === "\n") continue;
+    let j = i + 1;
+    while (j < run.text.length && run.text[j] !== "\n" && !placed(j)) j += 1;
+    const gap = j - i - 1;
+    const own = map.get(run.text[i]);
+    if (gap === 0 || j >= run.text.length || run.text[j] === "\n") {
+      if (own === undefined) price(run.text[i], ends[i] - starts[i]);
+      continue;
+    }
+    if (own === undefined) continue;
+    const each = (starts[j] - starts[i] - own * run.fontSize) / gap;
+    for (let k = i + 1; k < j; k += 1) price(run.text[k], each);
   }
   return map.size > 0 ? map : null;
 }
@@ -337,6 +375,13 @@ interface TextRunOverlayProps {
     maxWidthPt: number,
     keepClearBelow?: boolean,
   ) => string | null | void;
+  /**
+   * The run with the engine's pen positions for its current text, read
+   * synchronously. Costs a re-read of the page, so the box calls it only for
+   * a letter it has no PDF advance for, for a line that looks to cross the
+   * edge, and once a wrap has moved the lines.
+   */
+  onMeasure?: () => TextRunSnapshot | null;
   /** Fires when the user drags the right edge to a new width, in PDF points. */
   onResize?: (widthPt: number) => void;
   /** Fires while the box has focus, as the characters selected inside it change. */
@@ -473,6 +518,7 @@ export function TextRunOverlay({
   onEdit,
   onMove,
   onWrap,
+  onMeasure,
   onResize,
   onTextRangeChange,
   textRange,
@@ -646,9 +692,28 @@ export function TextRunOverlay({
 
   const advanceEm = useMemo(() => charAdvancesEm(run), [run]);
   // Kept across the edit: the engine drops the pen positions the moment the
-  // text changes, and a token typed into needs them most right then.
+  // text changes, and a token typed into needs them most right then. Letters
+  // learned from a measure mid-burst stay until the face changes.
   const heldAdvanceEmRef = useRef<Map<string, number> | null>(null);
-  if (advanceEm) heldAdvanceEmRef.current = advanceEm;
+  const heldAdvanceFaceRef = useRef("");
+  const advanceFace = `${run.fontId}\u0000${run.fontSize}`;
+  if (heldAdvanceFaceRef.current !== advanceFace) {
+    heldAdvanceFaceRef.current = advanceFace;
+    heldAdvanceEmRef.current = null;
+  }
+  if (advanceEm)
+    heldAdvanceEmRef.current = mergeAdvances(
+      heldAdvanceEmRef.current,
+      advanceEm,
+    );
+  // Letters a measure could not price, such as a mark with no advance of its
+  // own, so a burst does not re-read the page for them on every keystroke.
+  const unpriceableRef = useRef(new Set<string>());
+  // The latest text the engine gave pen positions for, from the run or from a
+  // measure taken mid-keystroke, whichever is newer.
+  const measuredRef = useRef<MeasuredText | null>(null);
+  const runMeasured = measuredTextOf(run);
+  if (runMeasured) measuredRef.current = runMeasured;
 
   useEffect(() => {
     const el = ref.current;
@@ -686,6 +751,20 @@ export function TextRunOverlay({
     fontSizePx,
     advanceEm: heldAdvanceEmRef.current,
   };
+  const livePaintOpts = () => ({
+    ...paintOpts,
+    advanceEm: heldAdvanceEmRef.current,
+  });
+  const lineWidth = (text: string, lineIndex: number) =>
+    lineWidthPx(
+      text,
+      lineIndex,
+      measuredRef.current,
+      heldAdvanceEmRef.current,
+      fontSizePx,
+      scale,
+      (ch) => measureAdvancePx(ch, font),
+    );
 
   useEffect(() => {
     if (!layoutIsGuessed) {
@@ -919,8 +998,19 @@ export function TextRunOverlay({
     const line = lineAt(text, caret ?? text.length);
     // A space typed at the edge waits for the letter after it: wrapping on it
     // would leave nothing on the new line for the caret to follow.
-    const width = measureMaxLineWidth(line.text.replace(/[ \t]+$/, ""), font);
+    let width = lineWidth(text, line.index);
     if (width <= overflowAt) return false;
+    // Priced letters can land a pixel either side of the PDF's, and the reflow
+    // judges by the PDF's: asking it on a price alone gets a refusal, and the
+    // half-em retry below then breaks the line two keys late.
+    if (onMeasure && measuredRef.current?.text !== text) {
+      const measured = onMeasure();
+      if (measured?.text === text) {
+        learnAdvances(measured);
+        width = lineWidth(text, line.index);
+        if (width <= overflowAt) return false;
+      }
+    }
     // A line the reflow left as it was is retried once it is half an em wider.
     const unwrapped = unwrappedLineRef.current;
     if (
@@ -941,12 +1031,64 @@ export function TextRunOverlay({
       return false;
     }
     unwrappedLineRef.current = null;
-    paintPlainText(el, wrapped);
-    paintedSignatureRef.current = "";
+    paintMeasured(el, wrapped);
     if (caret !== null)
       restoreCaretOffset(el, offsetAcrossRewrap(text, caret, wrapped));
     setFitWidthPx(null);
     return true;
+  }
+
+  // Lays `text` out where the PDF now draws it, read in this keystroke: a
+  // later repaint from the debounced re-measure then finds nothing to move.
+  // Plain text, laid out on the browser's advances, when it cannot be read.
+  function paintMeasured(el: HTMLDivElement, text: string): void {
+    const measured = onMeasure?.() ?? null;
+    const layout =
+      measured && measured.text === text && !runRotation
+        ? computeExactLayout({
+            run: measured,
+            transform,
+            pageHeight,
+            scale,
+            font,
+            fontSizePx,
+            lineHeightPx,
+            ascent,
+            descent,
+          })
+        : null;
+    if (measured) learnAdvances(measured);
+    if (layout) {
+      paintLines(el, layout.lines, livePaintOpts());
+      paintedSignatureRef.current = layout.signature;
+    } else {
+      paintPlainText(el, text);
+      paintedSignatureRef.current = "";
+    }
+  }
+
+  function learnAdvances(measured: TextRunSnapshot): void {
+    measuredRef.current = measuredTextOf(measured) ?? measuredRef.current;
+    heldAdvanceEmRef.current = mergeAdvances(
+      heldAdvanceEmRef.current,
+      charAdvancesEm(measured),
+    );
+  }
+
+  // Prices every letter of `text` from the PDF before the keystroke is laid
+  // out, reading the run once for any letter not priced yet: a letter priced
+  // on the browser's advance is drawn wider or narrower than the page draws
+  // it, and correcting it later moves the caret back under the user.
+  function priceTypedLetters(text: string): void {
+    if (!onMeasure) return;
+    const unpriced = unpricedChars(text, heldAdvanceEmRef.current);
+    for (const ch of unpriceableRef.current) unpriced.delete(ch);
+    if (unpriced.size === 0) return;
+    const measured = onMeasure();
+    if (!measured || measured.text !== text) return;
+    learnAdvances(measured);
+    for (const ch of unpriced)
+      if (!heldAdvanceEmRef.current?.has(ch)) unpriceableRef.current.add(ch);
   }
 
   // Widen the box to keep the caret in it when the line it is typing on did
@@ -1252,9 +1394,11 @@ export function TextRunOverlay({
         setGrowBlocked(false);
         setFitWidthPx(null);
         unwrappedLineRef.current = null;
-        focusWidestRef.current = measureMaxLineWidth(
-          focusTextRef.current,
-          font,
+        focusWidestRef.current = Math.max(
+          0,
+          ...focusTextRef.current
+            .split("\n")
+            .map((_, i) => lineWidth(focusTextRef.current, i)),
         );
         const fromPointer = pointerFocusRef.current;
         pointerFocusRef.current = false;
@@ -1326,6 +1470,8 @@ export function TextRunOverlay({
         const el = e.currentTarget;
         const text = readOverlayText(el).replace(/\u00A0/g, " ");
         onEdit(text);
+        priceTypedLetters(text);
+        if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
         if (!wrapTypedText(el, text)) fitTypedText(el);
       }}
       onInput={(e) => {
@@ -1335,16 +1481,17 @@ export function TextRunOverlay({
         // Skip intermediate IME steps; compositionend commits the result.
         if (composingRef.current || e.nativeEvent.isComposing) return;
         const el = e.currentTarget;
-        // Re-fit the token the user just typed into. Its painted width is the
-        // PDF's advance for the ORIGINAL string, so leaving it alone lays the
-        // new text out at the browser's own advances and the caret drifts off
-        // the glyphs on the page, a pixel or so per keystroke.
-        if (isLinePainted(el)) refitEditedTokens(el, paintOpts);
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
         const raw = readOverlayText(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
+        priceTypedLetters(text);
+        // Re-fit the token the user just typed into. Its painted width is the
+        // PDF's advance for the ORIGINAL string, so leaving it alone lays the
+        // new text out at the browser's own advances and the caret drifts off
+        // the glyphs on the page, a pixel or so per keystroke.
+        if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
         if (!wrapTypedText(el, text)) fitTypedText(el);
       }}
       onMouseEnter={() => setHovered(true)}

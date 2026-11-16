@@ -148,10 +148,25 @@ function recordFrames(page: Page, testId: string): Promise<void> {
   }, testId);
 }
 
+// Holds the main thread for `frameMs` of every frame, as a slow machine does,
+// so the engine's re-measure lands several keystrokes after the letters it
+// measures.
+function slowFrames(page: Page, frameMs: number): Promise<void> {
+  return page.evaluate((ms) => {
+    const busy = () => {
+      const until = performance.now() + ms;
+      while (performance.now() < until);
+      requestAnimationFrame(busy);
+    };
+    requestAnimationFrame(busy);
+  }, frameMs);
+}
+
 async function typeAndRecord(
   page: Page,
   mode: "grow" | "wrap",
   delay: number,
+  frameMs: number,
 ): Promise<{ frames: Frame[]; startText: string; fontPx: number }> {
   await open(page, mode);
   const testId = await focusEndOfHeading(page);
@@ -161,6 +176,7 @@ async function typeAndRecord(
     await box.evaluate((el) => getComputedStyle(el).fontSize),
   );
   await recordFrames(page, testId);
+  if (frameMs > 0) await slowFrames(page, frameMs);
   await page.keyboard.type(TYPED, { delay });
   await expect
     .poll(
@@ -237,10 +253,14 @@ function check(
   expect(brokeAt, "the line never broke while typing").not.toBeNull();
   const crossing =
     crossedAt && crossedAt.inputs < brokeAt!.inputs ? crossedAt : brokeAt!;
+  // Counted in drawn frames, not keys: a key that lands before its frame is
+  // drawn leaves no frame for the user to see the line unbroken in.
   expect(
-    brokeAt!.inputs - crossing.inputs,
-    "keystrokes between crossing the edge and the line break",
-  ).toBeLessThanOrEqual(1);
+    frames.filter(
+      (f) => f.inputs > crossing.inputs && f.inputs < brokeAt!.inputs,
+    ).length,
+    "frames drawn between crossing the edge and the line break",
+  ).toBe(0);
   expect(
     brokeAt!.tFrame - crossing.tKey,
     "ms from the crossing keystroke to the drawn break",
@@ -249,13 +269,20 @@ function check(
 
 test.describe("Typing past the box edge wraps on the crossing keystroke", () => {
   test.setTimeout(120_000);
+  const paces = [
+    { delay: 25, frameMs: 0 },
+    { delay: 90, frameMs: 0 },
+    { delay: 25, frameMs: 28 },
+  ];
   for (const mode of ["grow", "wrap"] as const) {
-    for (const delay of [25, 90]) {
-      test(`${mode}, ${delay}ms per key`, async ({ page }) => {
+    for (const { delay, frameMs } of paces) {
+      const pace = frameMs ? `, ${frameMs}ms frames` : "";
+      test(`${mode}, ${delay}ms per key${pace}`, async ({ page }) => {
         const { frames, startText, fontPx } = await typeAndRecord(
           page,
           mode,
           delay,
+          frameMs,
         );
         check(frames, startText, fontPx, mode);
       });

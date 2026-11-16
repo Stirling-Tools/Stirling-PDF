@@ -37,6 +37,7 @@ import type {
   GroupingMode,
   PageSnapshot,
   TableSnapshot,
+  TextRunSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
@@ -545,6 +546,27 @@ export class EditorStore {
       }
       if (changedByPage.size > 0) this.refreshRunSnapshots(changedByPage);
     }, delay);
+  }
+
+  /**
+   * Run `runId` with the engine's pen positions for its current text, read
+   * now rather than at the debounced refresh. Re-reads every glyph on the
+   * page, so it is for the keystroke that needs a letter's real advance, not
+   * for every keystroke. Null when the run or the read is unavailable.
+   */
+  measureRun(pageIndex: number, runId: string): TextRunSnapshot | null {
+    const doc = this.doc;
+    if (!doc) return null;
+    const page = doc.page(pageIndex);
+    let changed: Set<TextRun>;
+    try {
+      changed = PdfiumTextReader.recapturePositions(doc, page);
+    } catch {
+      return null;
+    }
+    if (changed.size > 0)
+      this.refreshRunSnapshots(new Map([[pageIndex, changed]]));
+    return page.findRun(runId)?.snapshot() ?? null;
   }
 
   // Re-read one page's geometry from the engine immediately, keeping run ids.

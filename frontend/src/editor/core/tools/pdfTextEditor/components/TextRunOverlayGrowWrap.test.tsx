@@ -41,6 +41,7 @@ vi.mock(
     ...(await importOriginal<object>()),
     measureFontMetrics: () => ({ ascent: 9, descent: 3 }),
     measureMaxLineWidth: (text: string) => longest(text),
+    measureAdvancePx: (text: string) => text.length * CHAR_PX,
     measureLongestTokenWidth: (text: string) =>
       Math.max(0, ...text.split(/\s+/).map((w) => w.length)) * CHAR_PX,
   }),

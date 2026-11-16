@@ -425,6 +425,8 @@ function pageViewHandlers(store: EditorStore) {
           expandable: false,
         });
     },
+    onMeasureRun: (pageIndex: number, runId: string) =>
+      store.measureRun(pageIndex, runId),
     onMoveRun: (pageIndex: number, runId: string, dx: number, dy: number) => {
       store.dispatch(new MoveTextRunCommand({ pageIndex, runId, dx, dy }));
     },

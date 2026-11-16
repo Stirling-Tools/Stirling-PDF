@@ -138,17 +138,23 @@ function predictedAdvance(
   sourceAdvancePx: number,
   opts: PaintOptions,
 ): number | null {
-  if (text === "" || source === "") return null;
-  const sourceNatural = measureAdvancePx(source, opts.font);
-  if (!(sourceNatural > 0) || !(sourceAdvancePx > 0)) return null;
-  const ratio = sourceAdvancePx / sourceNatural;
+  if (text === "") return null;
   const table = opts.advanceEm;
+  const sourceNatural = source ? measureAdvancePx(source, opts.font) : 0;
+  // A line's trailing space token has no advance of its own: the engine trims
+  // it. Letters typed into it are priced from the table alone.
+  const sized = sourceNatural > 0 && sourceAdvancePx > 0;
+  if (!sized && (!table || table.size === 0)) return null;
+  const ratio = sized ? sourceAdvancePx / sourceNatural : 1;
   if (!table || table.size === 0) {
     const natural = measureAdvancePx(text, opts.font);
     return natural > 0 ? natural * ratio : null;
   }
-  let total = 0;
-  for (const ch of text) {
+  // Letters typed after the token still advance the pen the document set its
+  // own letters to, so only what follows them is priced.
+  const kept = sized && text.startsWith(source) ? source.length : 0;
+  let total = kept > 0 ? sourceAdvancePx : 0;
+  for (const ch of text.slice(kept)) {
     const em = table.get(ch);
     total +=
       em === undefined
