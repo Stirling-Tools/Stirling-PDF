@@ -523,10 +523,14 @@ export async function ensureLocalPdfAccess(
   const lifetime = pdfAccessLifetime(file);
   const lookup = password ? undefined : readCachedPdfAccess(file);
   const cached = lookup && (await lookup);
+  const closed = () => {
+    if (signal?.aborted || lifetime.aborted)
+      throw new DOMException("Session closed", "AbortError");
+  };
+  closed();
   const access =
     cached ?? (await inspectLocalPdfAccess(file, password ?? "", signal));
-  if (signal?.aborted || lifetime.aborted)
-    throw new DOMException("Session closed", "AbortError");
+  closed();
   if (!cached) cachePdfAccess(file, access);
   const current = getPdfAccess(file);
   return current && current !== existing

@@ -126,7 +126,10 @@ describe("AI chat on a signed PDF while changes are blocked", () => {
     await expect(
       send(stream(["progress", rotate], ["result", rotated])),
     ).resolves.toBe(signedPdfEditsBlockedMessage());
-    expect(ensureLocalPdfAccess).toHaveBeenCalledWith(signed, undefined);
+    expect(ensureLocalPdfAccess).toHaveBeenCalledWith(
+      signed,
+      expect.any(AbortSignal),
+    );
     expect(consumeFiles).not.toHaveBeenCalled();
   });
 

@@ -339,10 +339,11 @@ interface ProgressEvent {
 async function rewroteSignedSource(
   sources: readonly File[],
   tools: readonly string[],
+  signal: AbortSignal,
 ): Promise<boolean> {
   try {
     for (const tool of tools)
-      await assertSignedPdfsEditable(sources, tool, false);
+      await assertSignedPdfsEditable(sources, tool, false, signal);
     return false;
   } catch (error) {
     if (error instanceof SignedPdfEditsBlockedError) return true;
@@ -766,12 +767,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             receivedResult = true;
             if (refused) return;
             dispatch({ type: "SET_PROGRESS", progress: null });
-            handledResult = rewroteSignedSource(sourceFiles, toolsUsed).then(
-              (refused) => {
-                if (refused) refuseSignedEdit();
-                else showResult(data);
-              },
-            );
+            handledResult = rewroteSignedSource(
+              sourceFiles,
+              toolsUsed,
+              controller.signal,
+            ).then((refused) => {
+              if (controller.signal.aborted || abortRef.current !== controller)
+                return;
+              if (refused) refuseSignedEdit();
+              else showResult(data);
+            });
           },
           onError: (data) => {
             receivedResult = true;
