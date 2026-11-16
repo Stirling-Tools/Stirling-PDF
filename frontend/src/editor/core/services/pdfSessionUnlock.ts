@@ -14,7 +14,7 @@ import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 
 import type { StirlingFile } from "@editor/types/fileContext";
-import { PdfPermissionFlag } from "@embedpdf/models";
+import { PdfErrorCode, PdfPermissionFlag } from "@embedpdf/models";
 import { zipFileService } from "@editor/services/zipFileService";
 
 import {
@@ -130,7 +130,7 @@ const isPdf = (file: File) =>
 /**
  * Access for the signed-PDF check on a file not read yet. Password tools read it without remembering
  * the result, so their own encryption handling is unchanged; a file that needs an opening password
- * cannot be read here and is left to the server.
+ * cannot be read here, and Remove Password checks it again with the password the user enters.
  */
 async function accessForSignedCheck(
   file: File,
@@ -140,8 +140,24 @@ async function accessForSignedCheck(
   const known = getPdfAccess(file);
   if (known) return known;
   if (endpoint && PASSWORD_ENDPOINTS.has(endpoint))
-    return inspectLocalPdfAccess(file, "", signal).catch(() => undefined);
+    return inspectForPasswordTool(file, "", signal);
   return ensureAccessUnlessDamaged(file, signal);
+}
+
+/** Only a wrong password or unparseable bytes leave the file unread; any other failure refuses the run. */
+async function inspectForPasswordTool(
+  file: File,
+  password: string,
+  signal?: AbortSignal,
+): Promise<PdfAccess | undefined> {
+  try {
+    return await inspectLocalPdfAccess(file, password, signal);
+  } catch (error) {
+    if ((error as { code?: unknown } | null)?.code === PdfErrorCode.Password)
+      return undefined;
+    if (isDamagedPdfError(error)) return undefined;
+    throw error;
+  }
 }
 
 /** Reads every PDF not read yet, then refuses the run if any is signed and the tool would rewrite it. */
@@ -425,10 +441,7 @@ export async function changePdfSecurity(
   const access = getPdfAccess(file);
   if (!access && signedCheckApplies(endpoint, false))
     assertSignedPdfEditable(
-      await inspectLocalPdfAccess(
-        file,
-        String(form.get("password") ?? ""),
-      ).catch(() => undefined),
+      await inspectForPasswordTool(file, String(form.get("password") ?? "")),
       endpoint,
     );
   if (settingProtection) {

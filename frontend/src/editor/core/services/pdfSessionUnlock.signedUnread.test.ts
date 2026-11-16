@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PdfErrorCode } from "@embedpdf/models";
 import apiClient from "@editor/services/apiClient";
 import { createStirlingFile } from "@editor/types/fileContext";
 import { ToolType } from "@editor/hooks/tools/shared/useToolOperation";
@@ -107,8 +108,36 @@ describe("signed PDFs nobody has opened yet", () => {
     await expect(
       changePdfSecurity(file, form, "/api/v1/security/remove-password"),
     ).rejects.toThrow("digitally signed");
-    expect(inspect).toHaveBeenCalledWith(file, "opening");
+    expect(inspect).toHaveBeenCalledWith(file, "opening", undefined);
     expect(apiClient.post).not.toHaveBeenCalled();
+  });
+
+  it("refuses add-password when the file cannot be checked", async () => {
+    inspect.mockRejectedValue(
+      new DOMException("PDF permission inspection timed out", "TimeoutError"),
+    );
+    await expect(
+      preflightPdfOperation(
+        [unread()],
+        "/api/v1/security/add-password",
+        false,
+        vi.fn(),
+      ),
+    ).rejects.toThrow("timed out");
+  });
+
+  it("leaves a file that needs its opening password to the password the user enters", async () => {
+    inspect.mockRejectedValue(
+      Object.assign(new Error("password"), { code: PdfErrorCode.Password }),
+    );
+    await expect(
+      preflightPdfOperation(
+        [unread()],
+        "/api/v1/security/add-password",
+        false,
+        vi.fn(),
+      ),
+    ).resolves.toBe(true);
   });
 
   it("treats an endpoint without declared output as a rewrite", () => {

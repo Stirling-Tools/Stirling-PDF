@@ -206,9 +206,10 @@ export const useToolOperation = <TParams>(
   const editsInBrowser = useCallback(
     (endpoint: string | undefined) =>
       !endpoint &&
+      config.endpoint === undefined &&
       !!config.customProcessor &&
       config.operationType !== "automate",
-    [config.customProcessor, config.operationType],
+    [config.customProcessor, config.endpoint, config.operationType],
   );
 
   const getCompatibleFiles = useCallback(
