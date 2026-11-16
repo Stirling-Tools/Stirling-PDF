@@ -1,5 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 /**
@@ -39,8 +42,9 @@ interface PageGeom {
 /** Geometry + bitmap state of every mounted page, relative to the viewer's scroll container. */
 function scanPages(p: Page): Promise<{ vpH: number; pages: PageGeom[] }> {
   return p.evaluate(() => {
+    // Any mounted page leads to the viewer's scroll container.
     const first = document.querySelector<HTMLElement>(
-      '[data-testid="pdf-editor-page-0"]',
+      "[data-testid^='pdf-editor-page-']",
     );
     let vp: HTMLElement | null = first?.parentElement ?? null;
     while (vp && !/(auto|scroll)/.test(getComputedStyle(vp).overflowY)) {
@@ -82,6 +86,7 @@ function fmt(scan: { vpH: number; pages: PageGeom[] }) {
 
 /** Scroll so page `idx`'s top edge sits exactly `gap` px below the fold. */
 async function parkGapBelow(p: Page, idx: number, gap: number) {
+  await scrollToEditorPage(p, idx);
   await p.evaluate(
     ({ i, g }) => {
       const el = document.querySelector<HTMLElement>(
@@ -214,11 +219,7 @@ test.describe("near-viewport prefetch", () => {
     page,
   }) => {
     await openEditor(page, MANY_PAGES_PDF);
-    await page.evaluate(() => {
-      document
-        .querySelector<HTMLElement>('[data-testid="pdf-editor-page-4"]')
-        ?.scrollIntoView({ block: "center" });
-    });
+    await scrollToEditorPage(page, 4);
     const scan = await settledScan(page);
     console.log(`[page 4 centred] viewport height ${scan.vpH}\n${fmt(scan)}`);
 

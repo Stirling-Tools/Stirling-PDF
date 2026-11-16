@@ -53,6 +53,22 @@ async function openEditor(
   });
 }
 
+/** Waits until `target`'s box holds still between samples. */
+async function settledBox(target: Locator): Promise<void> {
+  let last = "";
+  await expect
+    .poll(
+      async () => {
+        const box = JSON.stringify(await target.boundingBox());
+        const still = box === last;
+        last = box;
+        return still;
+      },
+      { intervals: [150] },
+    )
+    .toBe(true);
+}
+
 /**
  * Whether page 0 is fitted to the viewer's width: centred, with nothing but the
  * viewer's own gutter either side.
@@ -256,9 +272,8 @@ test.describe("PDF text editor - phone layout", () => {
 
     await page.getByTestId("pdf-editor-open-find").tap();
     // The bar's arrival shortens the page area, and the viewer's refit for
-    // that re-anchors the scroll; typing a few frames later is what a person
-    // does.
-    await page.waitForTimeout(500);
+    // that re-anchors the scroll; a person types once it has settled.
+    await settledBox(page.getByTestId("pdf-editor-page-0"));
     await page.getByTestId("pdf-editor-find-input").fill("Page 8 line 2");
     await expect(page.getByTestId("pdf-editor-find-count")).toContainText(
       /1 of 1/,
@@ -336,18 +351,23 @@ test.describe("PDF text editor - phone entry", () => {
       .locator(".pdf-viewer-toolbar-dock")
       .getByRole("button", { name: "More" })
       .tap();
+    const fitted = (await viewerPage.boundingBox())?.width ?? 0;
     await page.getByRole("menuitem", { name: /Zoom In/i }).tap();
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(500);
+    await expect
+      .poll(async () => (await viewerPage.boundingBox())?.width ?? 0)
+      .toBeGreaterThan(fitted);
+    await settledBox(viewerPage);
     const zoomed = (await viewerPage.boundingBox())?.width ?? 0;
 
     await page.getByTestId("viewer-edit-text").first().tap();
     const editing = page.getByTestId("pdf-editor-page-0");
     await expect(editing).toBeVisible({ timeout: 60_000 });
-    await page.waitForTimeout(500);
-    expect(
-      Math.abs(((await editing.boundingBox())?.width ?? 0) - zoomed),
-    ).toBeLessThanOrEqual(2);
+    await expect
+      .poll(async () =>
+        Math.abs(((await editing.boundingBox())?.width ?? 0) - zoomed),
+      )
+      .toBeLessThanOrEqual(2);
   });
 });
 

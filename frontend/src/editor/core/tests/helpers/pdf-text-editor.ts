@@ -3,6 +3,38 @@ import { expect, type Page } from "@playwright/test";
 
 type Upload = string | { name: string; mimeType: string; buffer: Buffer };
 
+/** Marks the file list's rows from before an upload, so the new row stands out. */
+const SEEN_ROW = "data-test-seen-row";
+
+/** The file-list rows whose file is named exactly `name`. */
+export function fileRows(page: Page, name: string) {
+  return page.locator(".file-sidebar-file-item").filter({
+    has: page.locator(".file-sidebar-file-name").getByText(name, {
+      exact: true,
+    }),
+  });
+}
+
+/**
+ * Adds `file` through the file list and returns its new row. A reopened saved
+ * copy shares its name with the original, and the list's order is not one
+ * to rely on, so the new row is the one that was not there before.
+ */
+async function addToFileList(page: Page, file: Upload) {
+  await page.evaluate((attr) => {
+    document
+      .querySelectorAll(".file-sidebar-file-item")
+      .forEach((el) => el.setAttribute(attr, ""));
+  }, SEEN_ROW);
+  await page.getByTestId("file-input").setInputFiles(file);
+  const name = typeof file === "string" ? path.basename(file) : file.name;
+  const added = fileRows(page, name).and(
+    page.locator(`.file-sidebar-file-item:not([${SEEN_ROW}])`),
+  );
+  await expect(added).toHaveCount(1, { timeout: 30_000 });
+  return added;
+}
+
 /** The zoom most specs' pixel geometry assumes. */
 const DEFAULT_ZOOM_PERCENT = 150;
 /** The viewer's zoom slider: 20% to 500% in steps of 5. */
@@ -38,36 +70,38 @@ export async function openInTextEditor(
 
   const name = typeof file === "string" ? path.basename(file) : file.name;
   // Phones have no file list; any of the app's own upload inputs adds the file.
-  const sidebarInput = page.getByTestId("file-input");
-  const hasSidebar = (await sidebarInput.count()) > 0;
-  await (
-    hasSidebar
-      ? sidebarInput
-      : page
-          .locator(
-            'input[type="file"]:not([data-testid="pdf-editor-image-input"])',
-          )
-          .first()
-  ).setInputFiles(file);
-  // The newest row for this name is the copy just added.
-  const row = page
-    .locator(".file-sidebar-file-item")
-    .filter({ hasText: name })
-    .first();
-  if (hasSidebar) await expect(row).toBeVisible({ timeout: 30_000 });
+  const hasSidebar = (await page.getByTestId("file-input").count()) > 0;
+  let row = null;
+  if (hasSidebar) {
+    row = await addToFileList(page, file);
+  } else {
+    await page
+      .locator('input[type="file"]:not([data-testid="pdf-editor-image-input"])')
+      .first()
+      .setInputFiles(file);
+  }
 
   await expect
     .poll(
       async () => {
-        const opened = await page.evaluate(() => {
+        // A reload can bring back the file viewed before it, so the document
+        // must be this file's, not just a new one.
+        const opened = await page.evaluate((fileName) => {
           const w = window as unknown as {
-            __editor_store?: { document: unknown };
+            __editor_store?: {
+              document: unknown;
+              source: { fileName: string | null };
+            };
             __openedBefore?: unknown;
           };
           const doc = w.__editor_store?.document ?? null;
-          return doc != null && doc !== w.__openedBefore;
-        });
-        if (opened || !hasSidebar) return opened;
+          return (
+            doc != null &&
+            doc !== w.__openedBefore &&
+            w.__editor_store?.source.fileName === fileName
+          );
+        }, name);
+        if (opened || !row) return opened;
         // Viewing a row that is already shown closes it, so only ask once.
         if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
           await row.hover();
@@ -100,11 +134,11 @@ export async function showInTextEditor(
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByTestId("file-input").setInputFiles(file);
-  await viewInTextEditor(
-    page,
-    typeof file === "string" ? path.basename(file) : file.name,
-  );
+  const row = await addToFileList(page, file);
+  if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
+    await row.hover();
+    await row.locator(".file-sidebar-eye-btn").click();
+  }
 }
 
 /** Shows an uploaded file in the viewer by its sidebar row's eye button. */
@@ -112,10 +146,7 @@ export async function viewInTextEditor(
   page: Page,
   name: string,
 ): Promise<void> {
-  const row = page
-    .locator(".file-sidebar-file-item")
-    .filter({ hasText: name })
-    .first();
+  const row = fileRows(page, name).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
   if (!(await row.evaluate((el) => el.classList.contains("viewed")))) {
     await row.hover();

@@ -1,6 +1,7 @@
 import path from "path";
 import type { Page } from "@playwright/test";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { fileRows } from "@editor/tests/helpers/pdf-text-editor";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -59,7 +60,7 @@ test("a view rotation is not carried onto another document", async ({
   const rows = page.locator(".file-sidebar-file-item");
   await expect(rows).toHaveCount(2, { timeout: 30_000 });
   const view = async (name: string) => {
-    const row = rows.filter({ hasText: name }).first();
+    const row = fileRows(page, name).first();
     await row.hover();
     await row.locator(".file-sidebar-eye-btn").click();
   };
@@ -96,6 +97,8 @@ test("a view rotation is not carried onto another document", async ({
 
   await page.getByRole("button", { name: "Back to all tools" }).click();
   await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+  // A fixed wait, not a poll: the page is upright at first either way, and the
+  // failure is a held rotation restored onto it a moment later.
   await page.waitForTimeout(1_000);
   expect(await firstPageLandscape(page)).toBe(false);
 });

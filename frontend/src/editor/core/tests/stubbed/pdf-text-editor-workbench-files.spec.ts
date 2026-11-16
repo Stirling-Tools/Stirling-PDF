@@ -114,6 +114,7 @@ test.describe("PDF text editor - workbench file selection", () => {
           ).__editor_store.source.fileName,
       );
 
+    await expect.poll(sourceName, { timeout: 30_000 }).toBe("sample.pdf");
     await viewInTextEditor(page, "paragraph-sample.pdf");
     await expect
       .poll(sourceName, {

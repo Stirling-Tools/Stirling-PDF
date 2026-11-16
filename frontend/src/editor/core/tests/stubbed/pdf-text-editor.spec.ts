@@ -3285,7 +3285,7 @@ test.describe("PDF text editor - lazy page loading", () => {
     // zero coverage.
     test.setTimeout(120_000);
     await gotoEditor(page);
-    await openInTextEditor(page, BIG_SAMPLE_PDF);
+    await openInTextEditor(page, BIG_SAMPLE_PDF, { zoomPercent: null });
 
     // Page 0 must render within a bounded time even for the big doc.
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -3316,11 +3316,15 @@ test.describe("PDF text editor - lazy page loading", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    await openInTextEditor(page, {
-      name: "big-round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
+    await openInTextEditor(
+      page,
+      {
+        name: "big-round-trip.pdf",
+        mimeType: "application/pdf",
+        buffer: savedBytes,
+      },
+      { zoomPercent: null },
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
