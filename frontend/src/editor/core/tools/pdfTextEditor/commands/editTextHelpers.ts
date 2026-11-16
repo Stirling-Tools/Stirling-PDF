@@ -409,6 +409,8 @@ export interface FontSpan {
   fontPtr: number;
   /** The base-14 or completion family for characters `fontPtr` cannot draw. */
   fallbackFamily?: string;
+  /** The span's own fill; absent, it takes the line's. */
+  fill?: RGBA;
 }
 
 interface CreateTextObjModule {
@@ -1327,6 +1329,7 @@ function emitDirectionRuns(
           oneObject: whole,
           fontSpans: spans.length > 1 ? spans : undefined,
           originalFontPtr: font,
+          fill: spans[0]?.fill ?? opts.fill,
           fallbackFamily: spans[0]?.fallbackFamily ?? opts.fallbackFamily,
           outTexts: texts,
         })
@@ -1382,11 +1385,7 @@ function visualFontSpans(
     if (last && last.source === source) last.end = drawn + 1;
     else out.push({ ...source, end: drawn + 1, source });
   });
-  return out.map(({ end, fontPtr, fallbackFamily }) => ({
-    end,
-    fontPtr,
-    fallbackFamily,
-  }));
+  return out.map(({ source: _source, ...span }) => span);
 }
 
 // Glyphs are drawn left to right in content order, so right-to-left text goes in reordered; each object still reports the logical stretch it shows.
@@ -1465,6 +1464,7 @@ function emitFontSpans(
       rotation: undefined,
       fontSpans: undefined,
       originalFontPtr: fontPtr || opts.originalFontPtr,
+      fill: span.fill ?? opts.fill,
       // A word already typed in a device face goes on in that family, which the name inside its embedded copy does not spell.
       fallbackFamily:
         deviceFamilyOf(opts.doc, fontPtr) ??

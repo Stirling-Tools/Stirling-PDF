@@ -16,6 +16,8 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import {
   tagsAt,
   uniformTags,
@@ -824,14 +826,20 @@ export function applyBidiLineEdit(
         : -1;
   const sourceGlyph = (unit: number) =>
     toPrev(unit) >= 0 ? map.glyphOf[toPrev(unit)] : -1;
-  // A redrawn letter keeps the font of the object that drew it; a typed one takes the font of the piece sharing most of its letters.
-  const fontFor = (word: Word): number => {
+  const sourceObjectOf = (word: Word): number => {
     for (let unit = word.start; unit < word.end; unit++)
       if (sourceGlyph(unit) >= 0)
-        return objectFont(
-          m,
-          map.objects[map.glyphs[sourceGlyph(unit)].object].ptr,
-        );
+        return map.objects[map.glyphs[sourceGlyph(unit)].object].ptr;
+    return 0;
+  };
+  // A redrawn letter keeps the font and fill of the object that drew it; a typed one takes the font of the piece sharing most of its letters.
+  const fillFor = (word: Word): RGBA => {
+    const source = sourceObjectOf(word);
+    return (source ? readObjFill(m, source) : null) ?? run.fill;
+  };
+  const fontFor = (word: Word): number => {
+    const source = sourceObjectOf(word);
+    if (source) return objectFont(m, source);
     return bestFontPtrForText(
       m,
       drawing.map(({ ptr }) => ptr),
@@ -861,7 +869,7 @@ export function applyBidiLineEdit(
         x: parkedX,
         y: parkedY(words.size),
         fontSize: run.fontSize,
-        fill: run.fill,
+        fill: fillFor(item),
         ...inkFromRun(run),
         originalFontPtr: fontFor(item),
         originalFontSubset: run.fontSubset,

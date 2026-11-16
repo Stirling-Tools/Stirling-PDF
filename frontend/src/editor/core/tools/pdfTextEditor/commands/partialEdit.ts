@@ -32,6 +32,8 @@ import {
   type TextTags,
 } from "@editor/tools/pdfTextEditor/model/TextTags";
 import { readTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
+import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { readMatrix } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
 import { deviceFamilyOf } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
@@ -829,8 +831,8 @@ export function applyPartialEditPlan(
         (-form[1] * dx) / det,
       );
   };
-  // Letters typed onto a word take that word's face, so it is not drawn half in one font and half in another.
-  const wordNeighbourFont = (text: string, beforeIdx?: number): number => {
+  // Letters typed onto a word take that word's face and colour, so it is not drawn half in one style and half in another.
+  const wordNeighbour = (text: string, beforeIdx?: number): number => {
     let last = newMergedFromTexts.length - 1;
     while (last >= 0 && newMergedFromTexts[last] === "") last--;
     const touching =
@@ -841,7 +843,7 @@ export function applyPartialEditPlan(
             /^\S/.test(plan.prevMergedFromTexts[beforeIdx] ?? "")
           ? plan.prevMergedFromPtrs[beforeIdx]
           : 0;
-    return touching ? objFontPtr(m, touching) : 0;
+    return touching;
   };
   const drawsAll = (font: number, text: string): boolean =>
     charcodesResolveFully(
@@ -857,6 +859,12 @@ export function applyPartialEditPlan(
           ...contentIndices(m, page.pagePtr, plan.prevMergedFromPtrs).values(),
         )
       : Infinity;
+  // Read before the removals below take any of these objects off the page.
+  const prevFills = plan.prevMergedFromPtrs.map((ptr) =>
+    ptr ? readObjFill(m, ptr) : null,
+  );
+  const fillOf = (prevIdx: number | undefined) =>
+    (prevIdx === undefined ? null : prevFills[prevIdx]) ?? run.fill;
   // Removals run before the walk below: it re-emits from the surviving
   // pointers, so a deleted object still on the page would be re-counted.
   for (const { ptr, containerPtr } of plan.removePtrs) {
@@ -1092,7 +1100,7 @@ export function applyPartialEditPlan(
           x: newX,
           y: emitY,
           fontSize: run.fontSize,
-          fill: run.fill,
+          fill: fillOf(op.subRunIdx),
           ...inkFromRun(run),
           tags: uniformTags(modTags),
           originalFontPtr: modFontPtr,
@@ -1178,9 +1186,12 @@ export function applyPartialEditPlan(
           : 0;
       // Borrow the font from a survivor that actually contains the inserted
       // chars, so the new glyph reuses that exact embedded font.
-      const neighbourFont = ownFont
-        ? 0
-        : wordNeighbourFont(insertText, beforeIdx);
+      const neighbour = ownFont ? 0 : wordNeighbour(insertText, beforeIdx);
+      const neighbourFont = neighbour ? objFontPtr(m, neighbour) : 0;
+      const insertFill =
+        anchorIdx !== undefined
+          ? fillOf(anchorIdx)
+          : ((neighbour ? readObjFill(m, neighbour) : null) ?? run.fill);
       const neighbourDraws =
         neighbourFont !== 0 && drawsAll(neighbourFont, insertText);
       const borrowedFontPtr =
@@ -1205,7 +1216,7 @@ export function applyPartialEditPlan(
         x: anchorX,
         y: emitY,
         fontSize: run.fontSize,
-        fill: run.fill,
+        fill: insertFill,
         ...inkFromRun(run),
         tags: insertTags,
         originalFontPtr: borrowedFontPtr,
@@ -1250,7 +1261,7 @@ export function applyPartialEditPlan(
           x: anchorX,
           y: emitY,
           fontSize: run.fontSize,
-          fill: run.fill,
+          fill: insertFill,
           ...inkFromRun(run),
           tags: insertTags,
           originalFontPtr: 0,
@@ -1376,6 +1387,8 @@ export function applyPartialEditPlan(
 export interface PartialEditRevertState {
   /** Font each sub-run was drawn in, parallel to `plan.prevMergedFromPtrs`. */
   fonts: number[];
+  /** Fill each sub-run was drawn in, parallel to `plan.prevMergedFromPtrs`; null where unreadable. */
+  fills: Array<RGBA | null>;
   charStarts: number[];
   baselineY: number;
   fontSubset: boolean;
@@ -1420,7 +1433,7 @@ export function revertPartialEditPlan(
       x: bounds.x,
       y: prev.baselineY,
       fontSize: run.fontSize,
-      fill: run.fill,
+      fill: prev.fills[i] ?? run.fill,
       ...inkFromRun(run),
       tags: tagsOf(start, start + text.length),
       originalFontPtr: liveFonts.has(font) ? font : 0,
@@ -1565,10 +1578,15 @@ export function piecesFromObjects(
   };
 }
 
+interface PieceStyle {
+  font: number;
+  fill: RGBA | null;
+}
+
 /**
- * The font each stretch of `nextLine` came from, when the line held more than one: characters
- * outside the edited middle keep their piece's font, and typed ones take the font of the
- * word they were typed into. Undefined for a single-font line.
+ * The font and fill each stretch of `nextLine` came from, when the line held more than one:
+ * characters outside the edited middle keep their piece's, and typed ones take those of the
+ * word they were typed into. Undefined for a line drawn in a single font and fill.
  */
 export function sourceFontSpans(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
@@ -1580,17 +1598,28 @@ export function sourceFontSpans(
   nextLine: string,
   covers?: (fontPtr: number, text: string) => boolean,
 ): FontSpan[] | undefined {
-  const fontAt = new Array<number>(prevLine.length).fill(0);
+  const styles = new Map<string, PieceStyle>();
+  const styleOf = (ptr: number): PieceStyle | null => {
+    const font = objFontPtr(m, ptr);
+    if (!font) return null;
+    const fill = readObjFill(m, ptr);
+    const key = fill
+      ? `${font}:${fill.r},${fill.g},${fill.b},${fill.a}`
+      : `${font}`;
+    if (!styles.has(key)) styles.set(key, { font, fill });
+    return styles.get(key)!;
+  };
+  const styleAt = new Array<PieceStyle | null>(prevLine.length).fill(null);
   pieces.mergedFromPtrs.forEach((ptr, i) => {
     const start = pieces.mergedFromCharStarts[i];
     const end = start + (pieces.mergedFromTexts[i]?.length ?? 0);
-    const font = objFontPtr(m, ptr);
+    const style = styleOf(ptr);
     for (let c = Math.max(0, start); c < Math.min(end, prevLine.length); c++)
-      fontAt[c] = font;
+      styleAt[c] = style;
   });
-  for (let c = 1; c < fontAt.length; c++) fontAt[c] ||= fontAt[c - 1];
-  for (let c = fontAt.length - 2; c >= 0; c--) fontAt[c] ||= fontAt[c + 1];
-  if (new Set(fontAt.filter(Boolean)).size < 2) return undefined;
+  for (let c = 1; c < styleAt.length; c++) styleAt[c] ||= styleAt[c - 1];
+  for (let c = styleAt.length - 2; c >= 0; c--) styleAt[c] ||= styleAt[c + 1];
+  if (new Set(styleAt.filter(Boolean)).size < 2) return undefined;
 
   let prefix = 0;
   while (
@@ -1608,42 +1637,49 @@ export function sourceFontSpans(
   )
     suffix++;
   const typedEnd = nextLine.length - suffix;
-  const after = fontAt[prevLine.length - suffix] ?? 0;
-  const fonts: number[] = [];
-  // A new word takes the font after it, else the nearest of the line's fonts that can draw it.
-  const typedWordFont = (j: number): number => {
-    let before = 0;
+  const after = styleAt[prevLine.length - suffix] ?? null;
+  const chosen: Array<PieceStyle | null> = [];
+  // A new word takes the style after it, else the nearest of the line's styles whose font can draw it.
+  const typedWordStyle = (j: number): PieceStyle | null => {
+    let before: PieceStyle | null = null;
     for (let k = j - 1; k >= 0 && !before; k--)
-      if (!/\s/.test(nextLine[k])) before = fonts[k];
+      if (!/\s/.test(nextLine[k])) before = chosen[k];
     const word = /^\S*/.exec(nextLine.slice(j))?.[0] ?? "";
     const candidates = [
-      ...new Set([after, before, fonts[j - 1] ?? 0, ...fontAt]),
-    ].filter(Boolean);
+      ...new Set([after, before, chosen[j - 1] ?? null, ...styleAt]),
+    ].filter((style): style is PieceStyle => style !== null);
     return (
-      (covers && word && candidates.find((font) => covers(font, word))) ||
+      (covers &&
+        word &&
+        candidates.find((style) => covers(style.font, word))) ||
       candidates[0] ||
-      0
+      null
     );
   };
   for (let j = 0; j < nextLine.length; j++) {
-    if (j < prefix) fonts.push(fontAt[j]);
+    if (j < prefix) chosen.push(styleAt[j]);
     else if (j >= typedEnd)
-      fonts.push(fontAt[j - nextLine.length + prevLine.length]);
-    else if (j > 0 && !/\s/.test(nextLine[j - 1])) fonts.push(fonts[j - 1]);
-    else fonts.push(typedWordFont(j) || 0);
+      chosen.push(styleAt[j - nextLine.length + prevLine.length]);
+    else if (j > 0 && !/\s/.test(nextLine[j - 1])) chosen.push(chosen[j - 1]);
+    else chosen.push(typedWordStyle(j));
   }
   const spans: FontSpan[] = [];
-  for (let j = 0; j < fonts.length; j++) {
+  let lastStyle: PieceStyle | null = null;
+  for (let j = 0; j < chosen.length; j++) {
+    const style = chosen[j];
     const last = spans[spans.length - 1];
-    if (last && (fonts[j] === 0 || fonts[j] === last.fontPtr)) last.end = j + 1;
-    else
-      spans.push({
-        end: j + 1,
-        fontPtr: fonts[j],
-        fallbackFamily: fallbackFamilyFor(
-          `pdf:${fonts[j]}:${baseFontName(m, fonts[j])}`,
-        ),
-      });
+    if (last && (!style || style === lastStyle)) {
+      last.end = j + 1;
+      continue;
+    }
+    const font = style?.font ?? 0;
+    spans.push({
+      end: j + 1,
+      fontPtr: font,
+      fallbackFamily: fallbackFamilyFor(`pdf:${font}:${baseFontName(m, font)}`),
+      ...(style?.fill ? { fill: style.fill } : {}),
+    });
+    lastStyle = style;
   }
   return spans.length > 1 ? spans : undefined;
 }

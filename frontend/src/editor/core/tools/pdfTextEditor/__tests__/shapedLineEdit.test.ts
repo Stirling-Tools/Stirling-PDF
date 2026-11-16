@@ -9,6 +9,7 @@ import {
   planPartialEdit,
   revertPartialEditPlan,
 } from "@editor/tools/pdfTextEditor/commands/partialEdit";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
@@ -261,6 +262,7 @@ test("an undo that cannot put the original objects back still returns each vowel
   const tags = uniformTags(run.tagMarks);
   const prev = {
     fonts: run.mergedFromPtrs.map((ptr) => m.FPDFTextObj_GetFont(ptr)),
+    fills: run.mergedFromPtrs.map((ptr) => readObjFill(m, ptr)),
     charStarts: [...run.mergedFromCharStarts],
     baselineY: run.matrix.f,
     fontSubset: run.fontSubset,

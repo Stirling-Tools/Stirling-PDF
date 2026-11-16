@@ -18,8 +18,10 @@ import {
 import {
   RENDER_MODE_INVISIBLE,
   type PageRect,
+  type RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { readObjFill } from "@editor/tools/pdfTextEditor/pdfium/PdfiumObjectColour";
 import { PdfiumTextWriter } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import {
   sampleBackground,
@@ -294,6 +296,8 @@ export class EditTextCommand implements Command {
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
   /** The font each pre-edit sub-run was drawn in (parallel to its ptrs). */
   private prevMergedFromFonts: number[] = [];
+  /** The fill each pre-edit sub-run was drawn in (parallel to its ptrs). */
+  private prevMergedFromFills: Array<RGBA | null> = [];
   /** The objects drawn by an apply that kept right-to-left text's own objects; null when it took another path. */
   private bidiInsertedPtrs: number[] | null = null;
   /** Set when the apply path took the paragraph-aware partial shortcut. */
@@ -678,6 +682,9 @@ export class EditTextCommand implements Command {
         this.prevMergedFromFonts = run.mergedFromPtrs.map((ptr) =>
           safeGetFont(doc.module, ptr),
         );
+        this.prevMergedFromFills = run.mergedFromPtrs.map((ptr) =>
+          readObjFill(doc.module, ptr),
+        );
         this.editSnapshot = snapshotRunModel(run);
         this.originalObjects = captureOriginalObjects(
           doc.module,
@@ -842,18 +849,7 @@ export class EditTextCommand implements Command {
           ) ?? (oneLine ? run : null));
     const fontSpans =
       !this.nextFont && !scanText && pieces
-        ? sourceFontSpans(
-            m,
-            pieces,
-            this.prevText ?? "",
-            this.nextText,
-            (font, text) =>
-              charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
-          )?.map((span) => ({
-            ...span,
-            fallbackFamily:
-              deviceFamilyOf(doc, span.fontPtr) ?? span.fallbackFamily,
-          }))
+        ? editedFontSpans(doc, page, pieces, this.prevText ?? "", this.nextText)
         : undefined;
 
     this.revertLines = snapshotRevertLines(
@@ -1521,6 +1517,7 @@ export class EditTextCommand implements Command {
               this.partialPlan,
               {
                 fonts: this.prevMergedFromFonts,
+                fills: this.prevMergedFromFills,
                 charStarts: snap.mergedFromCharStarts,
                 baselineY: snap.matrixF,
                 fontSubset: snap.fontSubset,
@@ -1715,6 +1712,13 @@ export class EditTextCommand implements Command {
           (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
         : 0;
     const match = lineLCS(prevLines, nextLines);
+    const prevText = prevLines.join("\n");
+    const nextText = nextLines.join("\n");
+    const pieces = piecesFromObjects(m, page.pagePtr, memberPtrs, prevText);
+    const spans = pieces
+      ? editedFontSpans(doc, page, pieces, prevText, nextText)
+      : undefined;
+    const spansOfLine = spans && spansByLine(spans, nextText);
 
     this.lineEdit = {
       moves: [],
@@ -1787,6 +1791,7 @@ export class EditTextCommand implements Command {
         // has a different x per line, and slot 0's x drops it into the
         // neighbouring column.
         const lineX = slots[i]?.matrixE ?? leftX;
+        const lineSpans = spansOfLine?.[i];
         const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
           outTexts: emittedTexts,
@@ -1796,10 +1801,11 @@ export class EditTextCommand implements Command {
           x: lineX,
           y,
           fontSize: run.fontSize,
-          fill: run.fill,
+          fill: lineSpans?.[0]?.fill ?? run.fill,
           ...inkFromRun(run),
           tags: sliceTags(nextTags, cursor, cursor + text.length),
-          originalFontPtr: reuseFontPtr,
+          fontSpans: lineSpans,
+          originalFontPtr: lineSpans?.[0]?.fontPtr || reuseFontPtr,
           originalFontSubset: run.fontSubset,
           originalFontForCoveredWords: reuseFontPtr !== 0,
           charSpacingPt: run.charSpacingPt,
@@ -2328,6 +2334,23 @@ function snapshotRevertLines(
     fill: { ...run.fill },
     fontSize: Math.max(4, run.fontSize),
     charSpacingPt: run.charSpacingPt,
+  }));
+}
+
+// The face and fill each stretch of an edited run's text came from; undefined for a run drawn in one of each.
+function editedFontSpans(
+  doc: EditorDocument,
+  page: Page,
+  pieces: Parameters<typeof sourceFontSpans>[1],
+  prevText: string,
+  nextText: string,
+): FontSpan[] | undefined {
+  const m = doc.module;
+  return sourceFontSpans(m, pieces, prevText, nextText, (font, text) =>
+    charcodesResolveFully(m, font, text, page.pagePtr, doc.docPtr),
+  )?.map((span) => ({
+    ...span,
+    fallbackFamily: deviceFamilyOf(doc, span.fontPtr) ?? span.fallbackFamily,
   }));
 }
 
