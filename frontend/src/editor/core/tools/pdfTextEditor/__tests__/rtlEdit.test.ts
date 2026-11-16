@@ -11,6 +11,7 @@ import {
   test,
   vi,
 } from "vitest";
+import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
@@ -158,6 +159,27 @@ describe("a right-to-left line", () => {
     history.undo(doc);
 
     expect(readLines(doc)).toEqual(original);
+  });
+});
+
+describe("a copy of right-to-left text", () => {
+  test("is refused when no font draws its letters, instead of made without them", async () => {
+    const doc = await open();
+    const history = new HistoryStack();
+    const run = doc.page(0).runs.find((r) => r.text.includes("שלום ע"))!;
+    const runs = doc.page(0).runs.length;
+    const objects = doc.module.FPDFPage_CountObjects(doc.page(0).pagePtr);
+
+    expect(() =>
+      history.execute(
+        new DuplicateRunCommand({ pageIndex: 0, runId: run.id }),
+        doc,
+      ),
+    ).toThrow(expect.objectContaining({ documentIntact: true }));
+
+    expect(doc.page(0).runs.length).toBe(runs);
+    expect(doc.module.FPDFPage_CountObjects(doc.page(0).pagePtr)).toBe(objects);
+    expect(history.canUndo).toBe(false);
   });
 });
 

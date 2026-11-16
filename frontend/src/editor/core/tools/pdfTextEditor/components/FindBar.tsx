@@ -173,7 +173,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     const m = matches[activeIndex];
     if (!m) return;
     // A locked run is still findable, but must not be rewritten.
-    if (m.run.locked) return;
+    if (m.run.locked || m.run.textReadOnly) return;
     const updated = replaceMatches(m.run.text, [m.range], replace);
     if (updated === m.run.text) return;
     store.dispatch(
@@ -198,7 +198,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     const seen = new Set<string>();
     for (const m of matches) {
       // Skip locked runs: the lock is a user instruction, not a hint.
-      if (m.run.locked || seen.has(m.runId)) continue;
+      if (m.run.locked || m.run.textReadOnly || seen.has(m.runId)) continue;
       seen.add(m.runId);
       if (replaceMatches(m.run.text, m.ranges, replace) === m.run.text)
         continue;
@@ -210,7 +210,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const cmds: EditTextCommand[] = [];
       for (const { page, run: target } of targets) {
         const run = page.findRun(target.id);
-        if (!run || run.locked) continue;
+        if (!run || run.locked || run.textReadOnly) continue;
         const ranges = findMatches(run.text, query, options);
         const updated = replaceMatches(run.text, ranges, replace);
         if (updated === run.text) continue;

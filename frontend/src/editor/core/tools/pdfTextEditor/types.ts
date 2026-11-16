@@ -90,6 +90,8 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** The text cannot be changed, though the run can still be selected, moved and deleted: the reader could not tell the order its line was drawn in. */
+  textReadOnly?: boolean;
   /** Box width the user set by resize, in PDF points; absent = follow the ink. */
   wrapWidthPt?: number;
   /** The marked-content ID that ties the run's text into the structure tree. */

@@ -870,7 +870,7 @@ export function TextRunOverlay({
       data-testid={`pdf-editor-run-${run.id}`}
       data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
-      contentEditable={!run.locked}
+      contentEditable={!run.locked && !run.textReadOnly}
       suppressContentEditableWarning
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}
@@ -881,7 +881,12 @@ export function TextRunOverlay({
               "pdfTextEditor.run.lockedTitle",
               "Locked - use the Unlock button to edit",
             )
-          : undefined
+          : run.textReadOnly
+            ? t(
+                "pdfTextEditor.run.readOnlyOrderTitle",
+                "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely",
+              )
+            : undefined
       }
       onKeyDown={(e) => {
         // A caret parked on the container (a click past the text lands there)

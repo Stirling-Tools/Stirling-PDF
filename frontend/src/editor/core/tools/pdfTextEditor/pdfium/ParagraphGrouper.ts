@@ -120,6 +120,9 @@ export class ParagraphGrouper {
       rep.paragraphLeafPtrs = leafPtrs;
       rep.paragraphLeafContainers = leafContainers;
       rep.paragraphLineSlots = slots;
+      rep.readingOrderUnsure = para.members.some(
+        (member) => member.readingOrderUnsure,
+      );
     }
 
     page.setRuns(paragraphs.map((p) => p.representative));

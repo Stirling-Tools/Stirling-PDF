@@ -1,6 +1,11 @@
-import { isMostlyRtl } from "@editor/tools/pdfTextEditor/util/bidi";
+import { hasRtl, isMostlyRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { PageGlyphs } from "@editor/tools/pdfTextEditor/pdfium/drawnGlyphs";
+import {
+  readDrawnLine,
+  type DrawnLine,
+} from "@editor/tools/pdfTextEditor/pdfium/drawnLine";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 
@@ -27,6 +32,21 @@ export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
 export type SpaceAdvance = (run: TextRun) => number | null;
 
 const NO_SPACE_ADVANCE: SpaceAdvance = () => null;
+
+/** What the page draws beyond each object's own text. */
+export interface DrawnPage {
+  /** Where every glyph sits; null when the build cannot say. */
+  glyphs: PageGlyphs | null;
+  /** The objects that draw the rest of an object's glyph cluster and hold no text of their own, by that object. */
+  companions: ReadonlyMap<number, readonly number[]>;
+}
+
+const NOTHING_DRAWN: DrawnPage = { glyphs: null, companions: new Map() };
+// Digits and Latin letters keep their own order inside right-to-left text, which reversing a line's objects does not.
+const KEEPS_OWN_ORDER = /[0-9A-Za-z\u0660-\u0669\u06f0-\u06f9]/;
+const UPRIGHT_TOLERANCE = 0.02;
+// Glyphs of one line can sit a little off its baseline; an object running over two lines has some a whole line away.
+const ONE_LINE_EM = 0.6;
 
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
@@ -162,6 +182,104 @@ function spacesForGap(
   const units = gapRatio / unitRatio;
   if (units < MULTI_SPACE_UNITS) return 1;
   return Math.max(2, Math.round(units));
+}
+
+function isUpright(run: TextRun): boolean {
+  const scale = Math.hypot(run.matrix.a, run.matrix.b);
+  return (
+    scale > 0 &&
+    run.matrix.a > 0 &&
+    Math.abs(run.matrix.b) / scale <= UPRIGHT_TOLERANCE
+  );
+}
+
+// A line holding right-to-left text, read from where its glyphs are drawn; null when it holds none or its glyphs cannot be placed on one upright baseline.
+function readMixedLine(
+  members: TextRun[],
+  glyphs: PageGlyphs | null,
+  spaceAdvance: SpaceAdvance,
+): DrawnLine | null {
+  if (!glyphs || !members.some((member) => hasRtl(member.text))) return null;
+  if (!members.every(isUpright)) return null;
+  const objects = members.map(
+    (member) => glyphs.byObject.get(member.pdfiumObjPtr) ?? [],
+  );
+  const fontSize = Math.max(...members.map((member) => member.fontSize), 4);
+  const baseline = objects[0][0]?.baseline ?? 0;
+  if (
+    objects.some(
+      (own) =>
+        own.length === 0 ||
+        own.some(
+          (glyph) =>
+            Math.abs(glyph.baseline - baseline) > ONE_LINE_EM * fontSize,
+        ),
+    )
+  )
+    return null;
+  const spaceEm = fontSpaceEm(members, spaceAdvance);
+  const minGap = minWordGapRatio(spaceEm);
+  return readDrawnLine(objects, glyphs.spaces, fontSize, (gapPt) =>
+    spacesForGap(
+      gapRatio(gapPt, fontSize),
+      spaceEm ?? FALLBACK_SPACE_UNIT_RATIO,
+      minGap,
+    ),
+  );
+}
+
+function applyMixedLine(group: LineGroupInfo, line: DrawnLine): void {
+  const { representative, members } = group;
+  const pieces = members.map((member, i) => ({
+    ptr: member.pdfiumObjPtr,
+    start: line.spans[i].start,
+    end: line.spans[i].end,
+    x: member.bounds.x,
+    right: member.bounds.x + member.bounds.width,
+  }));
+  const left = Math.min(...pieces.map(({ x }) => x));
+  const right = Math.max(...pieces.map((piece) => piece.right));
+  // A space drawn as an object of its own is a piece of the line too, or it stays where it was when the line moves.
+  for (const { ptr, start } of line.spaces)
+    pieces.push({ ptr, start, end: start + 1, x: left, right: left });
+  pieces.sort((a, b) => a.start - b.start);
+  representative.text = line.text;
+  representative.bounds = {
+    ...representative.bounds,
+    x: left,
+    width: Math.max(representative.bounds.width, right - left),
+  };
+  representative.mergedFromTexts = pieces.map(({ start, end }) =>
+    line.text.slice(start, end),
+  );
+  representative.mergedFromCharStarts = pieces.map(({ start }) => start);
+  representative.mergedFromBounds = pieces.map(({ x, right: end }) => ({
+    x,
+    right: end,
+  }));
+  representative.mergedFromPtrs = pieces.map(({ ptr }) => ptr);
+  representative.readingOrderUnsure = !line.faithful;
+}
+
+// A companion goes wherever its object goes: listed as a piece with no text of its own, every command that walks a line's objects takes it along.
+function addCompanions(
+  run: TextRun,
+  companions: ReadonlyMap<number, readonly number[]>,
+): void {
+  if (companions.size === 0) return;
+  for (let i = run.mergedFromPtrs.length - 1; i >= 0; i--) {
+    const own = companions.get(run.mergedFromPtrs[i]);
+    if (!own) continue;
+    const at = run.mergedFromCharStarts[i] + run.mergedFromTexts[i].length;
+    run.mergedFromPtrs.splice(i + 1, 0, ...own);
+    run.mergedFromTexts.splice(i + 1, 0, ...own.map(() => ""));
+    run.mergedFromCharStarts.splice(i + 1, 0, ...own.map(() => at));
+    run.mergedFromBounds.splice(
+      i + 1,
+      0,
+      ...own.map(() => ({ ...run.mergedFromBounds[i] })),
+    );
+  }
 }
 
 // True when a same-baseline cluster's glyphs overlap so heavily that it can't
@@ -381,6 +499,7 @@ export class LineGrouper {
     page: Page,
     blockKey: BlockKey = SAME_BLOCK,
     spaceAdvance: SpaceAdvance = NO_SPACE_ADVANCE,
+    drawn: DrawnPage = NOTHING_DRAWN,
   ): LineGroupInfo[] {
     // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
     const partitions = new Map<string, TextRun[]>();
@@ -414,6 +533,14 @@ export class LineGrouper {
     // Mutate the representative's text/bounds to reflect the merged group and
     // remember the underlying object pointers so ReplaceLineGroupCommand can.
     for (const group of groups) {
+      const mixed = readMixedLine(group.members, drawn.glyphs, spaceAdvance);
+      if (mixed) {
+        const text = group.members.find((member) => !isBulletLead(member));
+        if (text && innermostMcid(group.representative.tagMarks) === null)
+          group.representative.tagMarks = text.tagMarks;
+        applyMixedLine(group, mixed);
+        continue;
+      }
       if (group.members.length === 1) {
         // A one-object line still needs its sub-run arrays. EditTextCommand's
         // surgical path requires a non-empty mergedFromPtrs; without it even a
@@ -507,7 +634,11 @@ export class LineGrouper {
       group.representative.mergedFromPtrs = reading.map(
         (i) => group.members[i].pdfiumObjPtr,
       );
+      group.representative.readingOrderUnsure =
+        hasRtl(joined) && KEEPS_OWN_ORDER.test(joined);
     }
+    for (const group of groups)
+      addCompanions(group.representative, drawn.companions);
 
     // Replace the page's runs with just the representatives.
     page.setRuns(groups.map((g) => g.representative));

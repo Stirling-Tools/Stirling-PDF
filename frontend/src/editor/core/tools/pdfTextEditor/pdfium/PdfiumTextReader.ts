@@ -1,3 +1,7 @@
+import {
+  readPageGlyphs,
+  type PageGlyphs,
+} from "@editor/tools/pdfTextEditor/pdfium/drawnGlyphs";
 import { readObjectTexts } from "@editor/tools/pdfTextEditor/pdfium/objectTexts";
 import {
   drawnCodePoint,
@@ -26,6 +30,7 @@ import type {
   RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import { readUtf16 } from "@editor/services/pdfiumService";
+import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import { registerEmbeddedFace } from "@editor/tools/pdfTextEditor/util/embeddedFace";
 import { noteDocumentFontStyle } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import {
@@ -76,6 +81,7 @@ export class PdfiumTextReader {
     const rules: PageRuleSnapshot[] = [];
     const fills: PageRuleSnapshot[] = [];
     const shapes: ShapeObject[] = [];
+    const companions = new Map<number, number[]>();
 
     // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
     // extraction, so opening it per text object made population O.
@@ -98,6 +104,7 @@ export class PdfiumTextReader {
         0,
         IDENTITY,
         textPagePtr,
+        companions,
       );
 
       page.setRuns(runs);
@@ -108,7 +115,7 @@ export class PdfiumTextReader {
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
-      groupAndMeasure(doc, page, mode, textPagePtr);
+      groupAndMeasure(doc, page, mode, textPagePtr, companions);
     } finally {
       closeTextPage(m, textPagePtr);
     }
@@ -146,7 +153,7 @@ export class PdfiumTextReader {
           return [run];
         }),
       );
-      groupAndMeasure(doc, scratch, mode, textPagePtr);
+      groupAndMeasure(doc, scratch, mode, textPagePtr, new Map());
     } finally {
       closeTextPage(m, textPagePtr);
     }
@@ -181,12 +188,22 @@ function groupAndMeasure(
   page: Page,
   mode: GroupingMode,
   textPagePtr: number,
+  companions: ReadonlyMap<number, readonly number[]>,
 ): void {
   // LineGrouper always runs (merges per-glyph/per-word source objects into
   // one line).
   const blockKey = structureBlockKey(doc, page.index);
-  const lines = LineGrouper.apply(page, blockKey, (run) =>
-    fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
+  const lines = LineGrouper.apply(
+    page,
+    blockKey,
+    (run) => fontSpaceAdvanceEm(doc.module, run.pdfiumObjPtr),
+    {
+      // Only a page with right-to-left text is read by glyph, so every other page costs no second walk.
+      glyphs: page.runs.some((run) => hasRtl(run.text))
+        ? glyphsWithCompanions(doc.module, page, textPagePtr, companions)
+        : null,
+      companions,
+    },
   );
   if (mode === "auto") {
     const faces = new Map<string, string | null>();
@@ -202,6 +219,29 @@ function groupAndMeasure(
     inferRunCharSpacing(page, geometry);
     captureCharPositions(geometry);
   }
+}
+
+// A glyph cluster drawn by several objects reaches as far as they do: the text page places it by the one object it gives the text to, which can be a vowel mark alone.
+function glyphsWithCompanions(
+  m: WrappedPdfiumModule,
+  page: Page,
+  textPagePtr: number,
+  companions: ReadonlyMap<number, readonly number[]>,
+): PageGlyphs | null {
+  const glyphs = readPageGlyphs(m, textPagePtr);
+  if (!glyphs) return null;
+  for (const run of page.runs) {
+    const own = glyphs.byObject.get(run.pdfiumObjPtr);
+    const rest = companions.get(run.pdfiumObjPtr);
+    if (!rest || own?.length !== 1 || run.containerPtr !== 0) continue;
+    for (const ptr of rest) {
+      const bounds = readBounds(m, ptr);
+      if (!bounds) continue;
+      own[0].left = Math.min(own[0].left, bounds.x);
+      own[0].right = Math.max(own[0].right, bounds.x + bounds.width);
+    }
+  }
+  return glyphs;
 }
 
 function fontSpaceAdvanceEm(
@@ -503,6 +543,53 @@ type PdfiumWithForms = WrappedPdfiumModule & {
   FPDFFormObj_GetObject: (formObj: number, index: number) => number;
 };
 
+const ACTUAL_TEXT = "ActualText";
+const FPDF_OBJECT_UNKNOWN = 0;
+
+/** The innermost mark on the object when it replaces the object's text with an ActualText, else 0. */
+function actualTextMark(m: WrappedPdfiumModule, objPtr: number): number {
+  const count = m.FPDFPageObj_CountMarks(objPtr);
+  if (count <= 0) return 0;
+  const mark = m.FPDFPageObj_GetMark(objPtr, count - 1);
+  if (!mark) return 0;
+  return m.FPDFPageObjMark_GetParamValueType(mark, ACTUAL_TEXT) ===
+    FPDF_OBJECT_UNKNOWN
+    ? 0
+    : mark;
+}
+
+/**
+ * The text objects inside one ActualText span, as a walk passes them. PDFium
+ * gives the span's whole text to one of its objects and none to the others,
+ * which would then belong to no run: a letter drawn apart from its vowel mark
+ * stays on the page when its line is moved, deleted or redrawn.
+ */
+class ActualTextSpan {
+  private mark = 0;
+  private owner = 0;
+  private rest: number[] = [];
+
+  constructor(private readonly companions: Map<number, number[]>) {}
+
+  take(
+    objPtr: number,
+    mark: number,
+    isRun: boolean,
+    hasNoText: (objPtr: number) => boolean,
+  ): void {
+    if (mark !== this.mark) {
+      this.mark = mark;
+      this.owner = 0;
+      this.rest = [];
+    }
+    if (mark === 0) return;
+    if (isRun) this.owner ||= objPtr;
+    else if (hasNoText(objPtr)) this.rest.push(objPtr);
+    if (this.owner && this.rest.length > 0)
+      this.companions.set(this.owner, this.rest);
+  }
+}
+
 function walkObjects(
   m: WrappedPdfiumModule,
   pagePtr: number,
@@ -518,6 +605,7 @@ function walkObjects(
   depth: number,
   transform: Affine,
   textPagePtr: number,
+  companions: Map<number, number[]>,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -527,6 +615,7 @@ function walkObjects(
     path.length === 0 ? 0 : getFormContainer(m, pagePtr, path);
   const topLevelContainerPtr =
     path.length === 0 ? 0 : m.FPDFPage_GetObject(pagePtr, path[0]);
+  const span = new ActualTextSpan(companions);
   for (let i = 0; i < count; i++) {
     const objPtr =
       path.length === 0
@@ -544,6 +633,12 @@ function walkObjects(
         `p${page.index}-t${indexId}`,
         transform,
         textPagePtr,
+      );
+      span.take(
+        objPtr,
+        actualTextMark(m, objPtr),
+        run !== null,
+        (ptr) => readTextObjString(m, textPagePtr, ptr) === "",
       );
       if (run) {
         run.containerPtr = containerPtr;
@@ -611,6 +706,7 @@ function walkObjects(
           depth + 1,
           childTransform,
           textPagePtr,
+          companions,
         );
       }
     }

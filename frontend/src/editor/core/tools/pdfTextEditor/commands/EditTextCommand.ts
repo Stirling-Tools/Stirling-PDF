@@ -40,6 +40,7 @@ import {
   bestFontPtrForText,
   applyParagraphEditPlan,
   applyPartialEditPlan,
+  diffSpan,
   planModifiesUndrawableWhitespace,
   piecesFromObjects,
   sourceFontSpans,
@@ -66,6 +67,11 @@ import {
   writeMatrix,
 } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
+import {
+  applyBidiLineEdit,
+  drawsLetters,
+  planBidiLineEdit,
+} from "@editor/tools/pdfTextEditor/commands/bidiLineEdit";
 import {
   SCRATCH,
   scratchPtr,
@@ -237,6 +243,8 @@ export class EditTextCommand implements Command {
   private prevMergedFromBounds: Array<{ x: number; right: number }> = [];
   /** The font each pre-edit sub-run was drawn in (parallel to its ptrs). */
   private prevMergedFromFonts: number[] = [];
+  /** The objects drawn by an apply that kept right-to-left text's own objects; null when it took another path. */
+  private bidiInsertedPtrs: number[] | null = null;
   /** Set when the apply path took the paragraph-aware partial shortcut. */
   private paragraphPlan: ParagraphEditPlan | null = null;
   private paragraphInsertedPtrs: number[] = [];
@@ -379,6 +387,8 @@ export class EditTextCommand implements Command {
     // No-op edit: a contentEditable insert can fire several `input` events for
     // one keystroke burst, re-dispatching the SAME final text.
     if (this.prevText === this.nextText) return;
+    if (run.textReadOnly && !this.scanEdited && !isScanRun(run))
+      throw new RolledBackError(new Error(unsafeRtlEditMessage()));
     liftRunToPage(doc, page, run);
 
     if (this.scanEdited || isScanRun(run)) {
@@ -419,6 +429,17 @@ export class EditTextCommand implements Command {
     const keepsFont = this.nextFont === null;
     // The partial paths shift pieces rightward from where they were; only the full re-emit lays out right-to-left text.
     const leftToRight = !hasRtl(this.prevText ?? "") && !hasRtl(this.nextText);
+
+    if (
+      !leftToRight &&
+      this.nextText.length > 0 &&
+      run.wrapWidthPt === null &&
+      !isRotated &&
+      !scanText &&
+      keepsFont &&
+      this.applyKeepingLineObjects(doc, page, run, nextTags)
+    )
+      return;
 
     // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep per-line
     // sub-run data in `paragraphLineSlots`.
@@ -953,6 +974,82 @@ export class EditTextCommand implements Command {
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
+    // A whole redraw finds no font for some right-to-left letters and leaves them out. Letters the run already drew are put back and the edit refused; a typed letter still waits for its script's font.
+    if (
+      !leftToRight &&
+      !scanText &&
+      allRemoved &&
+      this.originalObjects !== null &&
+      !drawsLetters(
+        m,
+        page,
+        allEmittedPtrs,
+        keptText(this.prevText, this.nextText),
+      )
+    ) {
+      this.revertEdit(doc);
+      throw new RolledBackError(new Error(unsafeRtlEditMessage()));
+    }
+  }
+
+  // Edit a run holding right-to-left text by moving the objects the edit leaves alone and drawing only what it changes. False, with nothing changed, when the run's objects do not draw its text the way the editor lays it out; throws when what it must redraw no font can draw.
+  private applyKeepingLineObjects(
+    doc: EditorDocument,
+    page: Page,
+    run: TextRun,
+    nextTags: TextTags,
+  ): boolean {
+    const prev = this.prevText ?? "";
+    const plan = planBidiLineEdit(doc, page, run, prev, this.nextText);
+    if (!plan) return false;
+    const snapshot = snapshotRunModel(run);
+    const originals = captureOriginalObjects(
+      doc.module,
+      run,
+      plan.ptrs,
+      plan.removePtrs.map((ptr) => ({ ptr, containerPtr: 0 })),
+      page.pagePtr,
+    );
+    if (!originals) return false;
+    const result = applyBidiLineEdit(doc, page, run, prev, plan, nextTags);
+    if (!result) throw new RolledBackError(new Error(unsafeRtlEditMessage()));
+    this.editSnapshot = snapshot;
+    this.originalObjects = originals;
+    this.bidiInsertedPtrs = result.insertedPtrs;
+    const drawn = result.lines.filter((line) => line.ptrs.length > 0);
+    const all = result.lines.flatMap((line) => line.ptrs);
+    const [only] = result.lines;
+    const oneLine = result.lines.length === 1;
+    run.mergedFromPtrs = oneLine ? only.ptrs : [];
+    run.mergedFromTexts = oneLine ? only.texts : [];
+    run.mergedFromBounds = oneLine ? only.bounds : [];
+    run.mergedFromCharStarts = oneLine ? only.charStarts : [];
+    run.paragraphMemberPtrs = oneLine ? [] : drawn.map((line) => line.ptrs[0]);
+    run.paragraphMemberContainers = run.paragraphMemberPtrs.map(() => 0);
+    run.paragraphMemberFs = oneLine ? [] : drawn.map((line) => line.y);
+    run.paragraphLeafPtrs = oneLine ? [] : all;
+    run.paragraphLeafContainers = run.paragraphLeafPtrs.map(() => 0);
+    run.paragraphLineSlots = oneLine
+      ? []
+      : buildSlotsFromOverlayEmit(doc.module, run, result.lines, run.fontId);
+    const lineHeight =
+      run.paragraphLineHeight > 0
+        ? run.paragraphLineHeight
+        : run.fontSize * 1.2;
+    if (!oneLine) run.paragraphLineHeight = lineHeight;
+    run.pdfiumObjPtr = all[0] ?? run.pdfiumObjPtr;
+    const drop = (result.lines.length - prev.split("\n").length) * lineHeight;
+    run.bounds = {
+      x: result.left,
+      y: run.bounds.y - drop,
+      width: clampWidthToPage(result.left, result.right - result.left, page),
+      height: run.bounds.height + drop,
+    };
+    run.text = this.nextText;
+    run.dirty = true;
+    page.markDirty();
+    page.markNeedsGenerate();
+    return true;
   }
 
   private prevTagsOf(run: TextRun, start: number, end: number): TextTags {
@@ -991,6 +1088,7 @@ export class EditTextCommand implements Command {
   // guard ordering, so fail fast in dev if two paths ran or a member leaked.
   private assertSingleRevertPath(): void {
     const set =
+      (this.bidiInsertedPtrs !== null ? 1 : 0) +
       (this.lineEdit !== null ? 1 : 0) +
       (this.paragraphPlan !== null ? 1 : 0) +
       (this.partialPlan !== null ? 1 : 0) +
@@ -1017,6 +1115,19 @@ export class EditTextCommand implements Command {
     }
     this.assertSingleRevertPath();
     const m = doc.module;
+
+    if (this.bidiInsertedPtrs) {
+      for (const ptr of this.bidiInsertedPtrs)
+        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+      this.bidiInsertedPtrs = null;
+      if (this.editSnapshot && this.putOriginalObjectsBack(m, page))
+        restoreRunModel(run, this.editSnapshot);
+      run.text = this.prevText;
+      run.dirty = true;
+      page.markDirty();
+      page.markNeedsGenerate();
+      return;
+    }
 
     // Paragraph line add/remove revert: move matched lines back to their
     // original baselines, drop the freshly-emitted new/changed lines.
@@ -1989,6 +2100,19 @@ function insertedChunk(prev: string, next: string): string | null {
 }
 
 /** Keep a run's model width from claiming space past the page's right edge. */
+// What `prev` and `next` share before and after the one stretch that differs.
+function keptText(prev: string, next: string): string {
+  const { start, prevEnd } = diffSpan(prev, next);
+  return prev.slice(0, start) + prev.slice(prevEnd);
+}
+
+function unsafeRtlEditMessage(): string {
+  return i18n.t(
+    "pdfTextEditor.error.unsafeRtlEdit",
+    "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it.",
+  );
+}
+
 function clampWidthToPage(x: number, width: number, page: Page): number {
   // x/width are RAW PDF space, so the right edge is the CropBox right edge in
   // raw space.

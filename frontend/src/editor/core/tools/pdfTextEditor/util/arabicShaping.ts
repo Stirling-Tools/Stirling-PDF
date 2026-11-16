@@ -65,6 +65,20 @@ function joinsBack(cp: number | undefined): boolean {
   return cp === TATWEEL || (cp !== undefined && (FORMS[cp]?.length ?? 0) >= 2);
 }
 
+/** True when the letters on either side of code unit `at` are written joined, whatever marks sit between them. */
+export function joinsAt(text: string, at: number): boolean {
+  let before = at - 1;
+  while (before >= 0 && TRANSPARENT.test(text[before])) before--;
+  let after = at;
+  while (after < text.length && TRANSPARENT.test(text[after])) after++;
+  return (
+    before >= 0 &&
+    after < text.length &&
+    joinsForward(text.codePointAt(before)) &&
+    joinsBack(text.codePointAt(after))
+  );
+}
+
 /** True when `text` holds an Arabic letter that has contextual forms. */
 export function needsArabicShaping(text: string): boolean {
   for (const ch of text) if (FORMS[ch.codePointAt(0)!]) return true;

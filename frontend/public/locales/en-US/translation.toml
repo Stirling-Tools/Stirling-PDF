@@ -7582,8 +7582,10 @@ title = "Drop a PDF to open"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
+duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
 insertImage = "Could not insert the selected image."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
+unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7901,6 +7903,7 @@ vertical = "Vertical ruler"
 
 [pdfTextEditor.run]
 lockedTitle = "Locked - use the Unlock button to edit"
+readOnlyOrderTitle = "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely"
 
 [pdfTextEditor.saveRisk]
 cancel = "Cancel"

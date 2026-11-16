@@ -5,11 +5,12 @@ import {
   innermostMcid,
   type TagMark,
 } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import type {
-  Affine,
-  PageRect,
-  RGBA,
-  TextRunSnapshot,
+import {
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type PageRect,
+  type RGBA,
+  type TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 
 /** One line's worth of sub-run data inside a paragraph. */
@@ -121,11 +122,22 @@ export class TextRun {
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
   /**
+   * True when the reader could not tell the reading order this line was drawn
+   * from: redrawing it from `text` would move its numbers and words, so an
+   * edit of the text is refused.
+   */
+  readingOrderUnsure: boolean;
+  /**
    * Width the user resized the box to, in PDF points, or null to follow the
    * ink. Kept apart from `bounds`, which a reflow sets to the glyphs' extent:
    * text rarely fills its box, so the box would shrink back to the ink.
    */
   wrapWidthPt: number | null;
+
+  /** True when an edit of the text would be refused; invisible OCR text is redrawn from its scan, not from its reading order. */
+  get textReadOnly(): boolean {
+    return this.readingOrderUnsure && this.renderMode !== RENDER_MODE_INVISIBLE;
+  }
 
   constructor(
     init: TextRunSnapshot & {
@@ -171,6 +183,7 @@ export class TextRun {
     this.scanEdit = null;
     this.documentFont = null;
     this.locked = init.locked ?? false;
+    this.readingOrderUnsure = false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
 
@@ -218,6 +231,7 @@ export class TextRun {
       paragraphLineLefts: this.lineLefts(),
       paragraphLineRights: this.lineRights(),
       locked: this.locked || undefined,
+      textReadOnly: this.textReadOnly || undefined,
       wrapWidthPt: this.wrapWidthPt ?? undefined,
       mcid: innermostMcid(this.tagMarks) ?? undefined,
       artifact: artifactMark(this.tagMarks) !== undefined || undefined,

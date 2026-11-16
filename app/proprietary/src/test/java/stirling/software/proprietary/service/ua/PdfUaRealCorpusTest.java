@@ -43,8 +43,10 @@ class PdfUaRealCorpusTest {
 
     // Files PDFBox reads back in another order once tagged, measured 2026-11-16, with every
     // character still there. The vowel marks are text objects of their own, and
-    // position-sorted extraction groups those differently inside marked content.
-    private static final List<String> KNOWN_ORDER_DIFFS = List.of("rtl-marks-sample.pdf");
+    // position-sorted extraction groups those differently inside marked content; a pair of
+    // brackets around right-to-left text comes back with its two halves swapped.
+    private static final List<String> KNOWN_ORDER_DIFFS =
+            List.of("rtl-marks-sample.pdf", "rtl-mixed-sample.pdf");
 
     @BeforeAll
     static void setUp() {

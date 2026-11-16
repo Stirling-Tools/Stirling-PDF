@@ -1656,7 +1656,7 @@ function glyphAdvancePt(
  * short of the last glyph's advance and pulls every later word in by its side
  * bearing.
  */
-function drawnEndPt(
+export function drawnEndPt(
   m: WrappedPdfiumModule,
   ptrs: readonly number[],
   texts: readonly string[],

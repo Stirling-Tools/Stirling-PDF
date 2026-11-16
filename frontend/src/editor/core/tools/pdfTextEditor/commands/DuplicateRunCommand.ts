@@ -1,4 +1,9 @@
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import i18n from "i18next";
+import {
+  RolledBackError,
+  type Command,
+} from "@editor/tools/pdfTextEditor/commands/Command";
+import { drawsWhole } from "@editor/tools/pdfTextEditor/commands/bidiLineEdit";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { writeUtf16 } from "@editor/services/pdfiumService";
@@ -6,7 +11,10 @@ import {
   fallbackFamilyFor,
   fallbackFontIdFor,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
-import { sanitizeForBase14 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  removeAndDestroyObject,
+  sanitizeForBase14,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
@@ -24,6 +32,7 @@ import {
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
 // user can quickly stamp the same text elsewhere on the page.
 const OFFSET = 12;
+const CLEAR_OF_PAGE_PT = 20000;
 
 export class DuplicateRunCommand implements Command {
   readonly type = "duplicate-run";
@@ -52,6 +61,18 @@ export class DuplicateRunCommand implements Command {
     const drawn = drawCopy(doc, page, src, newX, newY);
     if (!drawn) return;
     const { ptr: newPtr, family } = drawn;
+    // The copy is one object in one fallback face, which seldom holds right-to-left letters: a copy of only the line's digits and brackets is refused.
+    if (hasRtl(src.text) && !copyDrawsWhole(doc, page, newPtr, src.text)) {
+      removeAndDestroyObject(doc.module, page.pagePtr, newPtr);
+      throw new RolledBackError(
+        new Error(
+          i18n.t(
+            "pdfTextEditor.error.duplicateDropsLetters",
+            "Can't duplicate this text: no available font draws all of its letters.",
+          ),
+        ),
+      );
+    }
     // Kept across redo: later steps that edit the copy find it by this id.
     const id =
       this.createdRunId ?? `p${page.index}-dup-${page.runs.length}-${newPtr}`;
@@ -87,6 +108,20 @@ export class DuplicateRunCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
   }
+}
+
+// Read back clear of the page: where the copy lies on the letters it copies, PDFium takes a doubled letter for one.
+function copyDrawsWhole(
+  doc: EditorDocument,
+  page: Page,
+  ptr: number,
+  text: string,
+): boolean {
+  const m = doc.module;
+  m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, 0, -CLEAR_OF_PAGE_PT);
+  const whole = drawsWhole(m, page, [ptr], text);
+  m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, 0, CLEAR_OF_PAGE_PT);
+  return whole;
 }
 
 // A standard font is created by name; any other family has to be loaded into the document first.

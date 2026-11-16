@@ -418,7 +418,7 @@ export function useToolbarController(
       const cmds: EditTextCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
-          if (!selIds.has(r.id) || r.locked) continue;
+          if (!selIds.has(r.id) || r.locked || r.textReadOnly) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
           cmds.push(
