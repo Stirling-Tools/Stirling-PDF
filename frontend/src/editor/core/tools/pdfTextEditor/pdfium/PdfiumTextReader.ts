@@ -1,3 +1,4 @@
+import { readObjectTexts } from "@editor/tools/pdfTextEditor/pdfium/objectTexts";
 import {
   drawnCodePoint,
   drawnText,
@@ -108,7 +109,7 @@ export class PdfiumTextReader {
       PdfiumAnnotationReader.populate(m, page);
       groupAndMeasure(doc, page, mode, textPagePtr);
     } finally {
-      m.FPDFText_ClosePage(textPagePtr);
+      closeTextPage(m, textPagePtr);
     }
     page.loaded = true;
   }
@@ -146,7 +147,7 @@ export class PdfiumTextReader {
       );
       groupAndMeasure(doc, scratch, mode, textPagePtr);
     } finally {
-      m.FPDFText_ClosePage(textPagePtr);
+      closeTextPage(m, textPagePtr);
     }
     return scratch.runs;
   }
@@ -165,7 +166,7 @@ export class PdfiumTextReader {
       const geometry = collectCharGeometry(m, page, textPagePtr);
       return geometry ? captureCharPositions(geometry) : new Set();
     } finally {
-      m.FPDFText_ClosePage(textPagePtr);
+      closeTextPage(m, textPagePtr);
     }
   }
 }
@@ -935,11 +936,23 @@ function readStroke(
   return { stroke, strokeWidth: readStrokeWidth(m, objPtr) };
 }
 
+// Per text page, so a page is walked once however many objects are read from it; dropped when the page closes.
+const objectTextsByPage = new Map<number, Map<number, string> | null>();
+
+function closeTextPage(m: WrappedPdfiumModule, textPagePtr: number): void {
+  objectTextsByPage.delete(textPagePtr);
+  m.FPDFText_ClosePage(textPagePtr);
+}
+
 function readTextObjString(
   m: WrappedPdfiumModule,
   textPagePtr: number,
   objPtr: number,
 ): string {
+  if (!objectTextsByPage.has(textPagePtr))
+    objectTextsByPage.set(textPagePtr, readObjectTexts(m, textPagePtr));
+  const texts = objectTextsByPage.get(textPagePtr);
+  if (texts) return drawnText(texts.get(objPtr) ?? "");
   // First call returns size in bytes for the UTF-16 buffer (including NUL).
   const len = m.FPDFTextObj_GetText(objPtr, textPagePtr, 0, 0);
   if (len <= 2) return "";
