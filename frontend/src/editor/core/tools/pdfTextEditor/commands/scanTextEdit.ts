@@ -62,6 +62,7 @@ import {
   preferredScanFace,
   preferredStyle,
   rankStyles,
+  strokeRatioOn,
   withPreferredFace,
   type FitInput,
   type FitWord,
@@ -159,6 +160,8 @@ export interface ScanEditState {
   undrawableWithFaces?: number;
   /** Styles for text in the block that the scan sets at another size. */
   classes: Array<{ style: ScanStyle; top: number }>;
+  /** Per OCR line, the style of a group of lines whose ink or weight is not the block's; null for lines in the block's look. */
+  lineStyles?: Map<number, ScanStyle | null>;
   face?: Face | null;
   nearbyFace?: Face | null;
   neighbours?: PlacedWord[];
@@ -638,15 +641,17 @@ const X_HEIGHT_ONLY = /^[acemnorsuvwxz\s\p{P}]+$/u;
 
 // One style for the whole block, fitted to its longest line, so an edit never
 // switches face or size part way through a sentence. Only text the scan itself
-// sets at another size (a label and its value on one OCR line) gets its own.
+// sets at another size (a label and its value on one OCR line), or lines it
+// sets in another colour or weight, get their own.
 function styleFor(
   doc: EditorDocument,
   page: Page,
   state: ScanEditState,
   span: SpanInk | null,
+  line?: number,
 ): ScanStyle | null {
   return onOriginalScan(doc, page, state, () =>
-    styleOnScan(doc, page, state, span),
+    styleOnScan(doc, page, state, span, line),
   );
 }
 
@@ -655,27 +660,36 @@ function styleOnScan(
   page: Page,
   state: ScanEditState,
   span: SpanInk | null,
+  line: number | undefined,
 ): ScanStyle | null {
   if (undrawableWithFewerFaces(state)) state.block = undefined;
   if (state.block === undefined) {
     state.block = fitBlock(doc, page, state);
+    state.lineStyles = undefined;
     if (state.block === null) state.undrawableWithFaces = scanFacesGeneration();
   }
-  if (state.block && fittedForOtherPreference(doc, state))
+  if (state.block && fittedForOtherPreference(doc, state)) {
     state.block = withPreferredFit(doc, page, state, state.block);
+    state.lineStyles = undefined;
+  }
   const block = state.block;
   const blockStyle = drawnBlockStyle(doc, state);
   if (!block || !blockStyle) return null;
   if (!span) return blockStyle;
   const top = inkTop(span);
   const near = (t: number) => Math.abs(top / t - 1) < 0.25;
-  if (near(block.top)) return blockStyle;
-  if (
-    block.xHeight !== null &&
-    X_HEIGHT_ONLY.test(span.original) &&
-    near(block.xHeight)
-  )
-    return blockStyle;
+  const atBlockSize =
+    near(block.top) ||
+    (block.xHeight !== null &&
+      X_HEIGHT_ONLY.test(span.original) &&
+      near(block.xHeight));
+  if (atBlockSize)
+    return (
+      (line === undefined
+        ? null
+        : lineLookStyle(doc, page, state, line, block.ref, blockStyle)) ??
+      blockStyle
+    );
   const known = state.classes.find((c) => near(c.top));
   if (known) return known.style;
   const ranked = rank(doc, page, state, [span], span);
@@ -684,6 +698,87 @@ function styleOnScan(
     ? ranked[0].style
     : (preferredStyle(doc, ranked) ?? ranked[0].style);
   state.classes.push({ style, top });
+  return style;
+}
+
+// Lines the OCR joined into one paragraph can differ in colour or weight while
+// sharing a size, such as an address over a bold coloured link; each such line
+// takes the look of its own group, fitted to that group's longest line.
+const LOOK_INK_DISTANCE = 96;
+const LOOK_STROKE = Math.log(1.25);
+
+interface LineLook {
+  ink: RGBA;
+  /** -1 lighter strokes than the block's reference line, 1 heavier, 0 alike. */
+  weight: number;
+}
+
+const inkDistance = (a: RGBA, b: RGBA) =>
+  Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
+
+const sameLook = (a: LineLook, b: LineLook) =>
+  a.weight === b.weight && inkDistance(a.ink, b.ink) < LOOK_INK_DISTANCE;
+
+// Relative to the reference line: the fitted style need not match even that
+// line's strokes, as on a low-resolution scan no face draws as thin as the scan.
+function lookOf(
+  doc: EditorDocument,
+  page: Page,
+  span: SpanInk,
+  blockStyle: ScanStyle,
+  refRatio: number,
+): LineLook {
+  const stroke = Math.log(
+    strokeRatioOn(doc, page, span, blockStyle) / refRatio,
+  );
+  return {
+    ink: span.ink.fill,
+    weight: Math.abs(stroke) < LOOK_STROKE ? 0 : stroke > 0 ? -1 : 1,
+  };
+}
+
+function lineLookStyle(
+  doc: EditorDocument,
+  page: Page,
+  state: ScanEditState,
+  line: number,
+  ref: SpanInk,
+  blockStyle: ScanStyle,
+): ScanStyle | null {
+  const known = (state.lineStyles ??= new Map());
+  if (known.has(line)) return known.get(line) ?? null;
+  const inked = inkedLines(doc, page, state);
+  const own = inked.find((l) => l.li === line);
+  if (inked.length < 2 || !own) {
+    known.set(line, null);
+    return null;
+  }
+  const refRatio = strokeRatioOn(doc, page, ref, blockStyle);
+  const ownLook = lookOf(doc, page, own.ink, blockStyle, refRatio);
+  if (sameLook(ownLook, { ink: ref.ink.fill, weight: 0 })) {
+    known.set(line, null);
+    return null;
+  }
+  const group = inked.filter(
+    (l) =>
+      l === own ||
+      sameLook(lookOf(doc, page, l.ink, blockStyle, refRatio), ownLook),
+  );
+  const longest = group.reduce((p, q) =>
+    q.ink.original.length > p.ink.original.length ? q : p,
+  );
+  const groupRef = referenceSpan(doc, page, state, longest);
+  const ranked = rank(
+    doc,
+    page,
+    state,
+    group.map((l) => l.ink),
+    groupRef,
+  );
+  const style = ranked.length
+    ? (preferredStyle(doc, ranked) ?? ranked[0].style)
+    : null;
+  for (const l of group) known.set(l.li, style);
   return style;
 }
 
@@ -924,7 +1019,8 @@ function editStyles(
     if (known) return known;
     const blockStyle = fitted();
     const own =
-      styleFor(doc, page, state, anchor ? inkOf(anchor) : null) ?? blockStyle;
+      styleFor(doc, page, state, anchor ? inkOf(anchor) : null, anchor?.line) ??
+      blockStyle;
     const style = withOverride(o, anchorBase(o, own, blockStyle));
     styles.set(anchor, style);
     return style;
