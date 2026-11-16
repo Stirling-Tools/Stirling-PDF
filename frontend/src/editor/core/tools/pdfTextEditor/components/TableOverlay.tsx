@@ -464,30 +464,31 @@ function EditableTable({
                 }
               }}
               onBlur={(e) => {
-                const text = e.currentTarget.textContent?.trim() ?? "";
+                const input = e.currentTarget;
+                const text = input.textContent?.trim() ?? "";
                 if (!text) return;
-                e.currentTarget.textContent = "";
-                if (!cellTextDrawable(text)) {
+                const cmd = cellTextDrawable(text)
+                  ? new FillTableCellCommand({
+                      tableId: table.id,
+                      row: cell.row,
+                      col: cell.col,
+                      text,
+                    })
+                  : null;
+                if (cmd) mutate(cmd);
+                if (!cmd?.insertedRunId) {
                   alert({
                     alertType: "warning",
                     title: t(
                       "pdfTextEditor.table.cellNoGlyphs",
-                      "This text has characters the table's fonts can't draw. The cell was left empty.",
+                      "This text has characters the table's fonts can't draw. Change or remove them to fill the cell.",
                     ),
                     expandable: false,
                   });
                   return;
                 }
-                const cmd = new FillTableCellCommand({
-                  tableId: table.id,
-                  row: cell.row,
-                  col: cell.col,
-                  text,
-                });
-                mutate(cmd);
-                if (cmd.insertedRunId) {
-                  store.selection.selectOne(cmd.insertedRunId);
-                }
+                input.textContent = "";
+                store.selection.selectOne(cmd.insertedRunId);
               }}
               style={{
                 position: "absolute",

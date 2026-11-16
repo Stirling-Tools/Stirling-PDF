@@ -31,7 +31,7 @@ afterEach(cleanup);
 
 it("keeps a cancelled workbench password prompt closed until explicit retry", () => {
   const file = files.selected[0];
-  const load = vi.fn();
+  const load = vi.fn(async () => false);
   const choose = vi.fn();
   const initial: EditorLoadState = {
     hasDocument: false,
@@ -59,7 +59,7 @@ it("keeps a cancelled workbench password prompt closed until explicit retry", ()
 
 it("allows another selected file to load after cancelling a password prompt", () => {
   const file = files.selected[0];
-  const load = vi.fn();
+  const load = vi.fn(async () => false);
   const choose = vi.fn();
   const initial: EditorLoadState = {
     hasDocument: false,
@@ -78,3 +78,35 @@ it("allows another selected file to load after cancelling a password prompt", ()
   expect(load).toHaveBeenLastCalledWith(files.selected[0]);
   expect(load).toHaveBeenCalledTimes(2);
 });
+
+it.each([
+  ["fails or asks for a password", false],
+  ["opens", true],
+])(
+  "names the editor after a chosen workbench file only once it %s",
+  async (_case, opens) => {
+    const file = files.selected[0];
+    let finish: (opened: boolean) => void = () => {};
+    const load = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const choose = vi.fn();
+    const editor: EditorLoadState = {
+      hasDocument: true,
+      loading: false,
+      error: null,
+    };
+    const view = renderHook(() =>
+      useAutoLoadFile(load, choose, null, false, editor),
+    );
+    act(() => view.result.current.openFile(file));
+    expect(load).toHaveBeenCalledWith(file);
+    expect(choose).not.toHaveBeenCalled();
+    await act(async () => finish(opens));
+    if (opens) expect(choose).toHaveBeenCalledWith(file.name, file.fileId);
+    else expect(choose).not.toHaveBeenCalled();
+  },
+);

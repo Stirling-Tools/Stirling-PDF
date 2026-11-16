@@ -4,7 +4,8 @@ import type { FileId } from "@editor/types/file";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
 
-type Loader = (file: File) => unknown;
+/** Resolves true once `file` is the document on screen. */
+type Loader = (file: File) => Promise<boolean>;
 // The workbench fileId is what lets save write the edit back to the
 // same file rather than only producing a download.
 type OnFileChosen = (name: string, fileId?: FileId) => void;
@@ -98,8 +99,9 @@ export function useAutoLoadFile(
   const openFile = useCallback(
     (file: File) => {
       adopt(file);
-      onFileChosen(file.name, (file as WorkbenchFile).fileId);
-      void load(file);
+      void load(file).then((installed) => {
+        if (installed) onFileChosen(file.name, (file as WorkbenchFile).fileId);
+      });
     },
     [adopt, load, onFileChosen],
   );

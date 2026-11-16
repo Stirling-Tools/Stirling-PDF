@@ -45,9 +45,11 @@ import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSide
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
 import { PageStage } from "@editor/tools/pdfTextEditor/components/PageStage";
-import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import {
+  centredImageRect,
+  InsertImageCommand,
+} from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
-import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
@@ -137,11 +139,30 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     },
     [pinWorkbench, setSourceFile, store],
   );
+  // The workbench file being opened. It owns the error banner's permissions
+  // unlock until it opens, since the filename and source change only then.
+  const [openingFile, setOpeningFile] = useState<File | null>(null);
+  const loadOpening = useCallback(
+    async (file: File, password?: string) => {
+      setOpeningFile(file);
+      const installed = await load(file, password);
+      if (installed)
+        setOpeningFile((current) => (current === file ? null : current));
+      return installed;
+    },
+    [load],
+  );
   const {
     openFile: openWorkbenchFile,
     adopt: adoptFile,
     cancel: cancelAutoLoad,
-  } = useAutoLoadFile(load, handleFileChosen, sourceFileId, applying, state);
+  } = useAutoLoadFile(
+    loadOpening,
+    handleFileChosen,
+    sourceFileId,
+    applying,
+    state,
+  );
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
 
@@ -376,23 +397,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const visibleIndex = visiblePageNumber();
       const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
       if (!page) return;
-      const w = page.width * INSERTED_IMAGE_RATIO;
-      const h = w * (decoded.height / decoded.width);
-      // Centre in the VISIBLE (display) page, then invert the CropBox/rotation
-      // transform to raw PDF space (commands store raw coords).
-      const ll = DisplayTransform.fromData(page.display).invert(
-        (page.width - w) / 2,
-        (page.height - h) / 2,
+      const rect = centredImageRect(
+        page.display,
+        decoded.width,
+        decoded.height,
+        INSERTED_IMAGE_RATIO,
       );
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
         pixelWidth: decoded.width,
         pixelHeight: decoded.height,
-        x: ll.x,
-        y: ll.y,
-        width: w,
-        height: h,
+        ...rect,
         jpegBytes,
       });
       store.dispatch(cmd);
@@ -591,11 +607,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const loading = load(file, password);
       const token = store.currentLoadToken;
       void loading
-        .then(async () => {
-          if (!mountedRef.current || !store.isCurrentLoad(token)) return null;
-          const opened = store.getState();
-          if (!opened.hasDocument || opened.error || opened.passwordPrompt)
-            return null;
+        .then(async (installed) => {
+          if (!installed || !mountedRef.current) return null;
+          setOpenedFileName(file.name);
+          setSourceFile(null);
+          if (store.getState().error) return null;
           return addFiles([file], {
             selectFiles: false,
           });
@@ -616,7 +632,28 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             );
         });
     },
-    [store, addFiles, adoptFile, handleFileChosen, load, setSelectedFiles],
+    [
+      store,
+      addFiles,
+      adoptFile,
+      handleFileChosen,
+      load,
+      setSelectedFiles,
+      setSourceFile,
+    ],
+  );
+
+  const loadWorkbenchFile = useCallback(
+    (file: File, password?: string) => {
+      void loadOpening(file, password).then((installed) => {
+        if (installed && mountedRef.current)
+          handleFileChosen(
+            file.name,
+            (file as File & { fileId?: FileId }).fileId,
+          );
+      });
+    },
+    [handleFileChosen, loadOpening],
   );
 
   const openDocument = useCallback(
@@ -628,20 +665,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         openWorkbenchFile(file);
         return;
       }
-      setOpenedFileName(file.name);
+      setOpeningFile(null);
       adoptFile(file);
-      setSourceFile(null);
       // Password-protected files join the library only after unlocking, so its
       // own upload flow does not ask for the password a second time.
       loadDiskFile(file);
     },
-    [
-      adoptFile,
-      loadDiskFile,
-      openWorkbenchFile,
-      setSelectedFiles,
-      setSourceFile,
-    ],
+    [adoptFile, loadDiskFile, openWorkbenchFile, setSelectedFiles],
   );
 
   const [pendingOpen, setPendingOpen] = useState<{
@@ -704,15 +734,16 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const file = store.pendingPasswordFile;
       if (!file) return;
       if (pendingDiskFileRef.current === file) loadDiskFile(file, password);
-      else void load(file, password);
+      else loadWorkbenchFile(file, password);
     },
-    [store, load, loadDiskFile],
+    [store, loadDiskFile, loadWorkbenchFile],
   );
 
   const handleCancelPassword = useCallback(() => {
     const file = store.pendingPasswordFile;
     if (file) cancelAutoLoad(file);
     pendingDiskFileRef.current = null;
+    setOpeningFile(null);
     store.clearPasswordPrompt();
   }, [store, cancelAutoLoad]);
 
@@ -786,11 +817,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             <PermissionsPasswordButton
               file={
                 pendingDiskFileRef.current ??
+                openingFile ??
                 (sourceFileId ? selectors.getFile(sourceFileId) : null)
               }
               onVerified={(file) => {
                 if (pendingDiskFileRef.current === file) loadDiskFile(file);
-                else void load(file);
+                else loadWorkbenchFile(file);
               }}
             />
           </Stack>
