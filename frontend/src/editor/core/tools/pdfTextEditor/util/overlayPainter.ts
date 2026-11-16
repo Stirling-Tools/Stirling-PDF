@@ -191,7 +191,11 @@ function isLineBreak(node: Node): node is HTMLElement {
  */
 function blockLines(element: HTMLElement): string[] {
   if ((element.textContent ?? "") === "") return [""];
-  return flowLines(element);
+  const lines = flowLines(element);
+  // A break that ends a block draws no line of its own: WebKit merges a line up into a blank one by putting its text in front of that block's filler break.
+  if (lines.length > 1 && lines.at(-1) === "" && endsWithBreak(element))
+    lines.pop();
+  return lines;
 }
 
 // Merging two lines with Backspace leaves the lower one as an inline span on the upper one's line, not a line of its own.
@@ -331,7 +335,10 @@ function plainOffset(
   }
   const host = document.createElement("div");
   host.appendChild(range.cloneContents());
-  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops.
+  // A <br> just before the caret is a real break, not the trailing filler readOverlayText drops, whether it ends the text or the line the caret is in.
+  const last = host.lastChild;
+  if (last instanceof HTMLElement && isLineElement(last))
+    last.appendChild(document.createTextNode(""));
   host.appendChild(document.createTextNode(""));
   const chars = readOverlayText(host).length;
   // A caret parked on the container BETWEEN two line children sits at the

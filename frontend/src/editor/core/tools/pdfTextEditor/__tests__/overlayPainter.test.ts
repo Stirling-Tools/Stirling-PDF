@@ -323,6 +323,49 @@ describe("readOverlayText - browser-emptied blocks", () => {
     expect(readOverlayText(el)).toBe("\nleft margin");
   });
 
+  // WebKit merges a line up into a blank one by moving its text in front of that block's filler <br> and leaving the filler there.
+  it("reads a block whose text is followed by the filler break as one line", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("merged up"), line("last")], OPTS);
+    el.children[1].appendChild(document.createElement("br"));
+    expect(readOverlayText(el)).toBe("first\nmerged up\nlast");
+  });
+
+  it("keeps a real break at the end of a block, which the browser follows with a filler", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("broken"), line("last")], OPTS);
+    el.children[1].append(
+      document.createElement("br"),
+      document.createElement("br"),
+    );
+    expect(readOverlayText(el)).toBe("first\nbroken\n\nlast");
+  });
+
+  it("counts a break just before the caret, inside a block, as a line", () => {
+    const el = host();
+    paintLines(el, [line("one two")], OPTS);
+    const block = el.children[0] as HTMLElement;
+    const after = document.createTextNode("two");
+    block.replaceChildren(
+      document.createTextNode("one"),
+      document.createElement("br"),
+      after,
+    );
+    window.getSelection()!.collapse(after, 0);
+    expect(plainCaretOffset(el)).toBe(4);
+  });
+
+  it("puts a caret at the start of a line WebKit merged up at the start of that line", () => {
+    const el = host();
+    paintLines(el, [line("first"), line("merged up"), line("last")], OPTS);
+    const block = el.children[1] as HTMLElement;
+    block.appendChild(document.createElement("br"));
+    let start: Node = block;
+    while (start.firstChild) start = start.firstChild;
+    window.getSelection()!.collapse(start, 0);
+    expect(plainCaretOffset(el)).toBe("first\n".length);
+  });
+
   it("still splits a block that really does hold two lines", () => {
     const el = host();
     paintLines(el, [line("one two")], OPTS);
