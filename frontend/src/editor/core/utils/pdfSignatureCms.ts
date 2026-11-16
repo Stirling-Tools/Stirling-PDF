@@ -14,6 +14,7 @@ export interface CmsSignatureFacts {
 const OID_COMMON_NAME = "2.5.4.3";
 const OID_MESSAGE_DIGEST = "1.2.840.113549.1.9.4";
 const OID_TIMESTAMP_TOKEN_INFO = "1.2.840.113549.1.9.16.1.4";
+const OID_SUBJECT_KEY_IDENTIFIER = "2.5.29.14";
 const DIGEST_BY_OID: Record<string, AlgorithmIdentifier> = {
   "1.3.14.3.2.26": "SHA-1",
   "2.16.840.1.101.3.4.2.1": "SHA-256",
@@ -122,7 +123,34 @@ function certificateIdentity(bytes: Uint8Array, certificate: Tlv) {
   const serial = fields[offset];
   const issuer = fields[offset + 2];
   const subject = fields[offset + 4];
-  return serial && issuer && subject ? { serial, issuer, subject } : null;
+  const extensions = fields.find((field) => field.tag === 0xa3);
+  return serial && issuer && subject
+    ? {
+        serial,
+        issuer,
+        subject,
+        keyIdentifier: extensions
+          ? subjectKeyIdentifier(bytes, extensions)
+          : null,
+      }
+    : null;
+}
+
+function subjectKeyIdentifier(bytes: Uint8Array, extensions: Tlv): Tlv | null {
+  const list = children(bytes, extensions)[0];
+  for (const extension of list ? children(bytes, list) : []) {
+    const parts = children(bytes, extension);
+    const value = parts.at(-1);
+    if (
+      parts[0]?.tag === 0x06 &&
+      oid(bytes, parts[0]) === OID_SUBJECT_KEY_IDENTIFIER &&
+      value?.tag === 0x04
+    ) {
+      const inner = readTlv(bytes, value.start, value.contentEnd);
+      return inner?.tag === 0x04 ? inner : null;
+    }
+  }
+  return null;
 }
 
 function attributeValue(
@@ -175,17 +203,22 @@ export function readCmsSignatureFacts(contents: Uint8Array): CmsSignatureFacts {
   );
   const [sidIssuer, sidSerial] =
     sid?.tag === 0x30 ? children(contents, sid) : [];
-  const signerCert =
-    sidIssuer && sidSerial && certificates
-      ? children(contents, certificates)
-          .map((c) => certificateIdentity(contents, c))
-          .find(
-            (c) =>
-              c &&
-              sameBytes(contents, c.serial, sidSerial) &&
-              sameBytes(contents, c.issuer, sidIssuer),
-          )
-      : undefined;
+  const sidKeyIdentifier = sid?.tag === 0x80 ? sid : undefined;
+  const signerCert = certificates
+    ? children(contents, certificates)
+        .map((c) => certificateIdentity(contents, c))
+        .find((c) =>
+          !c
+            ? false
+            : sidKeyIdentifier
+              ? !!c.keyIdentifier &&
+                sameBytes(contents, c.keyIdentifier, sidKeyIdentifier)
+              : !!sidIssuer &&
+                !!sidSerial &&
+                sameBytes(contents, c.serial, sidSerial) &&
+                sameBytes(contents, c.issuer, sidIssuer),
+        )
+    : undefined;
   const imprint = fields[2] ? timestampImprint(contents, fields[2]) : null;
   const digestNode =
     signedAttributes?.tag === 0xa0
