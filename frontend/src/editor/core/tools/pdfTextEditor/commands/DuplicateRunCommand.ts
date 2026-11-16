@@ -1,5 +1,9 @@
 import i18n from "i18next";
 import {
+  needsShaping,
+  needsShapingMessage,
+} from "@editor/tools/pdfTextEditor/util/complexShaping";
+import {
   RolledBackError,
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -56,6 +60,8 @@ export class DuplicateRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const src = page.findRun(this.runId);
     if (!src) return;
+    if (needsShaping(src.text))
+      throw new RolledBackError(new Error(needsShapingMessage()));
     const newX = src.matrix.e + OFFSET;
     const newY = src.matrix.f - OFFSET;
     const drawn = drawCopy(doc, page, src, newX, newY);

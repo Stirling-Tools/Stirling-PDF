@@ -1,4 +1,8 @@
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import {
+  needsShaping,
+  needsShapingMessage,
+} from "@editor/tools/pdfTextEditor/util/complexShaping";
 import i18n from "i18next";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
@@ -173,6 +177,37 @@ function withGained(
   return [...new Set([...inserted, ...gained])];
 }
 
+// Typed text has no font's shaping applied whichever face draws it, and with no face loaded for it the letters would be dropped instead. Read from the letter before, which a typed mark is set on.
+function typesUnshaped(prev: string, next: string): boolean {
+  const { start, nextEnd } = diffSpan(prev, next);
+  return needsShaping(next.slice(Math.max(0, start - 1), nextEnd));
+}
+
+/** What each object of the run reads as, by object. */
+function memberTexts(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+): Map<number, string> {
+  const ptrs = collectMemberPtrs(run).filter((ptr) => ptr);
+  const texts = objectTexts(doc.module, page.pagePtr, ptrs) ?? [];
+  return new Map(ptrs.map((ptr, i) => [ptr, texts[i] ?? ""]));
+}
+
+// An object the edit drew or rewrote is drawn from code points, so any shaped cluster in it comes out wrong. An object that read as nothing is a glyph piece whose text an ActualText span gives to a neighbour, and moving the pair can hand the text to it instead.
+function drewUnshaped(
+  doc: EditorDocument,
+  page: Page,
+  run: TextRun,
+  before: ReadonlyMap<number, string>,
+): boolean {
+  for (const [ptr, text] of memberTexts(doc, page, run)) {
+    const was = before.get(ptr);
+    if (was !== "" && was !== text && needsShaping(text)) return true;
+  }
+  return false;
+}
+
 // True when a partial-edit plan only ADDED objects (no original object was
 // freed via removePtrs, none mutated in place via a "modify" op).
 function planIsPureInsert(plan: PartialEditPlan): boolean {
@@ -314,7 +349,15 @@ export class EditTextCommand implements Command {
       !isScanRun(run);
     const lines = run ? lineCount(this.nextText) - lineCount(run.text) : 0;
     const oldBottom = run?.bounds.y ?? 0;
+    const shaped = run !== undefined && needsShaping(this.nextText);
+    if (shaped && typesUnshaped(run.text, this.nextText))
+      throw new RolledBackError(new Error(needsShapingMessage()));
+    const membersBefore = shaped ? memberTexts(doc, page, run) : null;
     this.applyEdit(doc);
+    if (run && membersBefore && drewUnshaped(doc, page, run, membersBefore)) {
+      this.revertEdit(doc);
+      throw new RolledBackError(new Error(needsShapingMessage()));
+    }
     if (this.pushes === null) {
       if (!deciding || this.scanEdited || lines === 0) this.pushes = [];
       else if (lines > 0) {

@@ -547,6 +547,23 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
   });
 
+  it("leaves text that needs shaping in its own font", async () => {
+    const hindi = fakeStore([run("a", "pdf:7:Mangal", "नमस्ते")], ["a"]);
+    const mixed = fakeStore(
+      [run("b", "pdf:7:Mangal", "नमस्ते"), run("c", "pdf:7:Arial", "Hello")],
+      ["b", "c"],
+    );
+
+    expect(await actionsFor(hindi.store).changeFontFamily("Times-Roman")).toBe(
+      "needsShaping",
+    );
+    expect(hindi.dispatch).not.toHaveBeenCalled();
+    expect(await actionsFor(mixed.store).changeFontFamily("Times-Roman")).toBe(
+      "needsShaping",
+    );
+    expect(dispatchedChanges(mixed.dispatch)).toEqual(["c:Times-Roman"]);
+  });
+
   it("refuses a font that has only the digits and punctuation of a line", async () => {
     serveFaces(async () => bytesOf(LATIN_TTF));
     await loadServerFonts();
@@ -689,13 +706,13 @@ describe("useSelectionActions font changes", () => {
       losesText.clear();
     });
     const { store, dispatch } = fakeStore(
-      [run("a", "pdf:7:Noto Sans", "Total മലയാളം")],
+      [run("a", "pdf:7:Noto Sans", "Total ภาษาไทย")],
       ["a"],
     );
 
     expect(await actionsFor(store).changeFontFamily("Helvetica")).toBeNull();
 
-    expect(loadScriptScanFaces).toHaveBeenCalledWith(["malayalam"]);
+    expect(loadScriptScanFaces).toHaveBeenCalledWith(["thai"]);
     expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
   });
 

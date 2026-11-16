@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -159,6 +160,50 @@ describe("font picker server fonts", () => {
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("Acme Sans"));
     expect(alert).not.toHaveBeenCalled();
+  });
+
+  it.each<FontPickFailure>([
+    "serverFontFailed",
+    "embedFailed",
+    "noGlyphs",
+    "missingGlyphs",
+  ])("names the text's own font again after a %s refusal", async (failure) => {
+    const onChange = vi.fn(async (): Promise<FontPickFailure> => failure);
+    const input = renderPicker(onChange);
+
+    fireEvent.click(input);
+    fireEvent.change(input, { target: { value: "Acme" } });
+    fireEvent.click(await screen.findByText("Acme Sans"));
+
+    await waitFor(() => expect(alert).toHaveBeenCalled());
+    await waitFor(() => expect(input).not.toBeDisabled());
+    expect(input).toHaveValue("Helvetica");
+  });
+
+  it("names the picked font once the text takes it", async () => {
+    function Controlled() {
+      const [value, setValue] = useState("Helvetica");
+      return (
+        <MantineProvider env="test">
+          <FontFamilySelect
+            value={value}
+            onChange={async (family) => {
+              setValue(family);
+              return null;
+            }}
+          />
+        </MantineProvider>
+      );
+    }
+    render(<Controlled />);
+    const input = screen.getByTestId("pdf-editor-font-family");
+
+    fireEvent.click(input);
+    fireEvent.change(input, { target: { value: "Acme" } });
+    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+
+    await waitFor(() => expect(input).not.toBeDisabled());
+    expect(input).toHaveValue("Acme Sans Bold");
   });
 
   it("names the font a scan was matched to, not a document font", async () => {

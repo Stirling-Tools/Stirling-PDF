@@ -42,6 +42,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
+import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
@@ -53,6 +54,7 @@ interface SelectedRun {
 }
 
 export type FontPickFailure =
+  | "needsShaping"
   | "serverFontFailed"
   | "embeddingForbidden"
   | "embedFailed"
@@ -72,6 +74,7 @@ interface FamilyChangeOutcome {
   applied: number;
   undrawable: number;
   wouldLoseText: number;
+  unshapeable: number;
 }
 
 /** Loads the family's bytes; the failure that must stop the pick, or null to go on. */
@@ -289,8 +292,9 @@ export function useSelectionActions(store: EditorStore) {
       fit: ScanFitTarget[],
     ): Promise<FamilyChangeOutcome> => {
       const doc = store.document;
+      const shapeable = changes.filter((change) => !needsShaping(change.text));
       // Run by run: one with none of its letters in the family would be named after a font it is not drawn in, so it stays as it is.
-      const drawable = changes.filter(
+      const drawable = shapeable.filter(
         (change) =>
           isDocumentFontId(change.family) ||
           drawsSomeOf(familyCoverage(doc, change.family), change.text),
@@ -298,8 +302,9 @@ export function useSelectionActions(store: EditorStore) {
       const changing = new Set(drawable.map((change) => change.runId));
       const outcome = {
         applied: 0,
-        undrawable: changes.length - drawable.length,
+        undrawable: shapeable.length - drawable.length,
         wouldLoseText: 0,
+        unshapeable: changes.length - shapeable.length,
       };
       if (doc) await loadScriptFacesFor(doc, drawable);
       if (store.document !== doc) return outcome;
@@ -345,6 +350,11 @@ export function useSelectionActions(store: EditorStore) {
             : italicCutOf(family),
         text: run.text,
       }));
+      if (
+        changes.length > 0 &&
+        changes.every((change) => needsShaping(change.text))
+      )
+        return "needsShaping";
       if (!isDocumentFontId(family)) {
         const failure = await prepareFamily(
           store,
@@ -377,8 +387,9 @@ export function useSelectionActions(store: EditorStore) {
         )
           change.family = family;
       }
-      const { applied, undrawable, wouldLoseText } =
+      const { applied, undrawable, wouldLoseText, unshapeable } =
         await dispatchFamilyChanges(stillApplies, changes, fit);
+      if (unshapeable > 0) return "needsShaping";
       if (undrawable + wouldLoseText === 0) return null;
       if (applied > 0) return "someLeftUnchanged";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";

@@ -2,10 +2,18 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Select, Text, Tooltip } from "@mantine/core";
+import {
+  getParsedComboboxData,
+  Group,
+  Loader,
+  Select,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import type {
   ComboboxData,
   ComboboxItem,
@@ -47,6 +55,10 @@ export const BUILT_IN_FONT_FAMILIES: FontFamilyOption[] = [
 const BUILT_IN_NAMES = BUILT_IN_FONT_FAMILIES.map((option) => option.value);
 
 const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
+  needsShaping: [
+    "pdfTextEditor.fontPicker.needsShaping",
+    "The editor can't yet redraw this script's joined letters and vowel signs correctly, so that text was left in its current font.",
+  ],
   serverFontFailed: [
     "pdfTextEditor.fontPicker.serverFontFailed",
     "That server font could not be downloaded. The text was left unchanged.",
@@ -231,6 +243,27 @@ export function FontFamilySelect({
     [t],
   );
 
+  // Mantine shows nothing for a value with no matching option; the document
+  // font is in `data` precisely so a recognised face still gets named.
+  const selected = useMemo(() => {
+    if (mixed || !value) return null;
+    return isKnown(value) || documentFamily === value ? value : null;
+  }, [mixed, value, isKnown, documentFamily]);
+
+  const selectedLabel = useMemo(() => {
+    if (!selected) return "";
+    const option = getParsedComboboxData(data)
+      .flatMap((entry) => ("items" in entry ? entry.items : [entry]))
+      .find((item) => item.value === selected);
+    return option?.label ?? selected;
+  }, [data, selected]);
+
+  // Mantine only resyncs its search text when `value` changes, and blur never
+  // reaches an input disabled mid-apply, so a refused pick would stay named.
+  const [search, setSearch] = useState(selectedLabel);
+  const selectedLabelRef = useRef(selectedLabel);
+  selectedLabelRef.current = selectedLabel;
+
   const applyFamily = useCallback(
     async (family: string) => {
       setNotice(null);
@@ -246,17 +279,11 @@ export function FontFamilySelect({
         }
       } finally {
         setApplying(false);
+        setSearch(selectedLabelRef.current);
       }
     },
     [onChange, pickFailureText],
   );
-
-  // Mantine shows nothing for a value with no matching option; the document
-  // font is in `data` precisely so a recognised face still gets named.
-  const selected = useMemo(() => {
-    if (mixed || !value) return null;
-    return isKnown(value) || documentFamily === value ? value : null;
-  }, [mixed, value, isKnown, documentFamily]);
 
   const placeholder = useMemo(() => {
     if (mixed) return t("pdfTextEditor.fontPicker.mixed", "Mixed");
@@ -279,6 +306,8 @@ export function FontFamilySelect({
         searchable
         data={data}
         value={selected}
+        searchValue={search}
+        onSearchChange={setSearch}
         onChange={(next) => {
           if (next) void applyFamily(next);
         }}

@@ -306,19 +306,51 @@ export function loadDeviceFontInto(
   }
 }
 
-/** Right edge (PDF points) of an object's visible bbox, or 0 if unmeasurable. */
-function measureRightEdge(m: EditorDocument["module"], ptr: number): number {
+/** Horizontal extent (PDF points) of an object's visible bbox, or null if unmeasurable. */
+function measureInkSpan(
+  m: EditorDocument["module"],
+  ptr: number,
+): { left: number; right: number } | null {
   const mod = m as unknown as DeviceFontModule;
-  if (typeof mod.FPDFPageObj_GetBounds !== "function") return 0;
+  if (typeof mod.FPDFPageObj_GetBounds !== "function") return null;
   const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
   try {
     if (!mod.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
-      return 0;
+      return null;
     }
-    return m.pdfium.getValue(buf + 8, "float");
+    return {
+      left: m.pdfium.getValue(buf, "float"),
+      right: m.pdfium.getValue(buf + 8, "float"),
+    };
   } catch {
-    return 0;
+    return null;
   }
+}
+
+const COMBINING_MARK = /\p{M}/u;
+
+/**
+ * Whether an object just drawn at `x` came out too narrow to hold `text`, the
+ * sign of a face whose glyphs draw nothing. Combining marks advance the pen by
+ * nothing, so they are judged by having ink rather than by width.
+ */
+export function drawnTooNarrow(
+  m: EditorDocument["module"],
+  ptr: number,
+  text: string,
+  size: number,
+  x: number,
+): boolean {
+  const visible = visibleCodePoints(text);
+  if (visible.length === 0) return false;
+  const ink = measureInkSpan(m, ptr);
+  if (!ink) return true;
+  const advancing = visible.filter(
+    (cp) => !COMBINING_MARK.test(String.fromCodePoint(cp)),
+  ).length;
+  return advancing > 0
+    ? ink.right - x < advancing * size * 0.05
+    : ink.right <= ink.left;
 }
 
 // Emit one text object in `family`'s embedded face. Returns 0 when the font is
@@ -353,9 +385,7 @@ export function emitDeviceFontTextObject(
   m.FPDFPageObj_SetFillColor(fp, fill.r, fill.g, fill.b, fill.a);
   m.FPDFPageObj_Transform(fp, 1, 0, 0, 1, x, y);
   m.FPDFPage_InsertObject(page.pagePtr, fp);
-  const right = measureRightEdge(m, fp);
-  const visible = text.replace(/\s+/g, "").length;
-  if (visible > 0 && right - x < visible * size * 0.05) {
+  if (drawnTooNarrow(m, fp, text, size, x)) {
     try {
       m.FPDFPage_RemoveObject(page.pagePtr, fp);
     } catch {
