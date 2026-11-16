@@ -114,14 +114,6 @@ function EditablePage({
   const shapeIds = useOwnIds(selection.shapeIds, page.shapes);
   const ownsHighlight = page.runs.some((r) => r.id === highlightedRunId);
   const handlers = pageViewHandlers(store);
-  const onFirstRendered = useCallback(
-    (pageIndex: number, painted: boolean) => {
-      handlers.onFirstRendered(pageIndex);
-      // A failed render leaves the viewer's own page showing.
-      if (painted) onPainted();
-    },
-    [handlers, onPainted],
-  );
 
   return (
     <PageView
@@ -141,7 +133,8 @@ function EditablePage({
           : null
       }
       {...handlers}
-      onFirstRendered={onFirstRendered}
+      // A failed render leaves the viewer's own page showing.
+      onFirstPainted={onPainted}
     />
   );
 }

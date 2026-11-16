@@ -31,11 +31,10 @@ interface PageViewProps {
   page: PageSnapshot;
   /** Fires when the page enters the viewport for the first time. */
   onFirstVisible?: (pageIndex: number) => void;
-  /**
-   * Fires when the page's first render finishes; `painted` is false when it
-   * failed and the canvas is empty.
-   */
-  onFirstRendered?: (pageIndex: number, painted: boolean) => void;
+  /** Fires when the page's first render finishes, painted or failed. */
+  onFirstRendered?: (pageIndex: number) => void;
+  /** Fires the first time the page's bitmap is painted, including on a retry. */
+  onFirstPainted?: () => void;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -126,6 +125,7 @@ export const PageView = memo(function PageView({
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
+  onFirstPainted,
 }: PageViewProps) {
   const { t } = useTranslation();
   const imageAttentions = useMemo(() => {
@@ -158,6 +158,7 @@ export const PageView = memo(function PageView({
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
+  const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -229,7 +230,11 @@ export const PageView = memo(function PageView({
         setPaintedRevision(page.revision);
         if (firstRenderedDocRef.current !== document) {
           firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex, true);
+          onFirstRendered?.(page.pageIndex);
+        }
+        if (firstPaintedDocRef.current !== document) {
+          firstPaintedDocRef.current = document;
+          onFirstPainted?.();
         }
       })
       .catch((err: unknown) => {
@@ -242,7 +247,7 @@ export const PageView = memo(function PageView({
         // overlay dismisses instead of leaving the user on a spinner.
         if (firstRenderedDocRef.current !== document) {
           firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex, false);
+          onFirstRendered?.(page.pageIndex);
         }
       });
     return () => {

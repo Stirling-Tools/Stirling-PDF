@@ -225,13 +225,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           if (toolId === "ocr")
             assertEditorOcrAllowed(store.document, sourceId, t);
           await consumeFiles([sourceId], stirlingFiles, stubs);
+          // A file opened meanwhile is not the one just written.
+          if (!isCurrent()) return null;
           // Claim the replacement before releasing the hold, otherwise the
           // editor sees an unfamiliar selection and re-opens the file it just
           // wrote, throwing away undo history.
-          if (isCurrent()) {
-            if (stirlingFiles[0]) adoptFile(stirlingFiles[0]);
-            setSourceFile(stubs[0]?.id ?? null);
-          }
+          if (stirlingFiles[0]) adoptFile(stirlingFiles[0]);
+          setSourceFile(stubs[0]?.id ?? null);
           return stirlingFiles[0] ?? null;
         }
         if (!isCurrent()) return null;
@@ -239,10 +239,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           selectFiles: true,
           derivedFromTool: true,
         });
-        if (isCurrent()) {
-          if (added[0]) adoptFile(added[0]);
-          setSourceFile(added[0]?.fileId ?? null);
-        }
+        if (!isCurrent()) return null;
+        if (added[0]) adoptFile(added[0]);
+        setSourceFile(added[0]?.fileId ?? null);
         return added[0] ?? null;
       } finally {
         setApplying(false);
@@ -286,6 +285,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // Yield once so React can paint the disabled/saving state before the
         // synchronous PDFium serialize blocks the main thread.
         await new Promise((resolve) => setTimeout(resolve, 0));
+        if (!isCurrent()) return;
         // The position that is about to be written out. Anything the user edits
         // while the export runs is NOT in these bytes, so it must stay dirty.
         const exported = store.savedPosition();
