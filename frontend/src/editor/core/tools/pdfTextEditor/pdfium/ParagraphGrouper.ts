@@ -250,14 +250,50 @@ function lineFontKeys(
   );
 }
 
+// OCR estimates each line's size from its own glyph heights, so the lines of one paragraph come out a point or so apart (10.4 next to 8.5).
+const OCR_SIZE_RATIO = 1.3;
+// A scan fed in a couple of degrees off square still reads as upright lines.
+const OCR_UPRIGHT_SLOPE = 0.05;
+
+// A turned scan's words come out as runs of their own, which this vertical-stacking grouper must not join.
+function isUprightOcr(run: TextRun): boolean {
+  const { a, b } = run.matrix;
+  return (
+    run.renderMode === RENDER_MODE_INVISIBLE &&
+    a > 0 &&
+    Math.abs(b) <= OCR_UPRIGHT_SLOPE * a
+  );
+}
+
+function sameOcrSize(a: TextRun, b: TextRun): boolean {
+  const big = Math.max(a.fontSize, b.fontSize);
+  const small = Math.min(a.fontSize, b.fontSize);
+  return small > 0 && big / small <= OCR_SIZE_RATIO;
+}
+
 function shareAFont(
   a: TextRun,
   b: TextRun,
   lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
   faceOf: (fontId: string) => string | null,
 ): boolean {
+  if (isUprightOcr(a) && isUprightOcr(b))
+    return sameOcrSize(a, b) && shareAFace(a, b, lineFonts, faceOf);
   const theirs = lineFontKeys(b, lineFonts, faceOf);
   return [...lineFontKeys(a, lineFonts, faceOf)].some((key) => theirs.has(key));
+}
+
+function shareAFace(
+  a: TextRun,
+  b: TextRun,
+  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
+  faceOf: (fontId: string) => string | null,
+): boolean {
+  const faceOnly = (key: string) => key.slice(0, key.lastIndexOf("@"));
+  const theirs = new Set([...lineFontKeys(b, lineFonts, faceOf)].map(faceOnly));
+  return [...lineFontKeys(a, lineFonts, faceOf)].some((key) =>
+    theirs.has(faceOnly(key)),
+  );
 }
 
 /** Split a page's line-runs into columns. */
