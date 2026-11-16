@@ -16,12 +16,18 @@ import {
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 
+import { resetCmapCache } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { resetContentStreamCache } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { resetFontHelperCaches } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import {
   _clearDroppedBase14CharsForTests,
   getDroppedBase14Chars,
   readObjTexts,
+  resetCharCoverageCache,
+  resetOnPageAdvCache,
+  resetPerCharBranchPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -115,6 +121,13 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  // Font and page handles are reused by the next document opened; the editor resets these when it loads one.
+  resetCharCoverageCache();
+  resetContentStreamCache();
+  resetCmapCache();
+  resetFontHelperCaches();
+  resetOnPageAdvCache();
+  resetPerCharBranchPtrs();
   for (const doc of opened.splice(0)) doc.dispose();
   forgetServerFontList();
 });
