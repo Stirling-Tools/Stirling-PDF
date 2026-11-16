@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +36,7 @@ import stirling.software.proprietary.security.service.UserService;
 /** SCIM 2.0 user provisioning (RFC 7644) for identity providers such as Okta and Entra ID. */
 @Hidden
 @EnterpriseEndpoint
+@Profile("!saas")
 @RestController
 @RequestMapping("/api/v1/scim/v2/Users")
 @PreAuthorize("hasAuthority('" + ScimTokenFilter.AUTHORITY + "')")
