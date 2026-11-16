@@ -102,6 +102,14 @@ function caretOffset(page: Page): Promise<number | null> {
   }, RUN);
 }
 
+function gripAt(page: Page, at: { x: number; y: number }) {
+  return page.evaluate(
+    ({ x, y }) =>
+      document.elementFromPoint(x, y)?.getAttribute("data-grip") ?? null,
+    at,
+  );
+}
+
 async function clickAndExpectCaret(
   page: Page,
   x: number,
@@ -157,11 +165,17 @@ test.describe("PDF text editor - run grips", () => {
       const before = await boundsOf(page);
       const box = await boxOf(page);
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      // The frame appears on hover. Leaving the box before it is drawn leaves
+      // nothing to grab, and the press then starts a marquee instead.
+      await expect(page.getByTestId(`pdf-editor-grips-${RUN}`)).toBeVisible();
       const start =
         edge === "bottom"
           ? { x: box.x + box.width / 2, y: box.y + box.height + 3 }
           : { x: box.x - 3, y: box.y + box.height / 2 };
       await page.mouse.move(start.x, start.y, { steps: 4 });
+      await expect
+        .poll(() => gripAt(page, start), { timeout: 10_000 })
+        .toBe("move");
       await page.mouse.down();
       await page.mouse.move(start.x + 40, start.y + 30, { steps: 8 });
       await page.mouse.up();
