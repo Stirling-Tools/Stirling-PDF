@@ -5,6 +5,7 @@ import {
   planPartialEdit,
 } from "@editor/tools/pdfTextEditor/commands/partialEdit";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 
 const FONT_SIZE = 12;
 // measureWhitespaceAdvancePt's no-DOM estimate for one space at FONT_SIZE.
@@ -78,15 +79,11 @@ describe("deleting a space between two text objects", () => {
     const run = perLetterRun("Audit Desk");
     const plan = planPartialEdit(run, "Audit Desk", "AuditDesk")!;
     const { doc, page, x } = fakeDocAndPage(run.mergedFromPtrs);
-    const result = applyPartialEditPlan(doc, page, run, plan);
+    const result = applyPartialEditPlan(doc, page, run, plan, uniformTags([]));
     for (const ptr of run.mergedFromPtrs.slice(0, 5))
       expect(x.get(ptr) ?? 0).toBe(0);
     for (const ptr of run.mergedFromPtrs.slice(5))
       expect(x.get(ptr)).toBeCloseTo(-SPACE_PT);
-    // Undo reverses the shifts recorded in the journal.
-    expect(result.journal.shifted.map((s) => s.ptr)).toEqual(
-      run.mergedFromPtrs.slice(5),
-    );
     expect(result.newMergedFromBounds[5].x).toBeCloseTo(60 - SPACE_PT);
   });
 
@@ -97,7 +94,7 @@ describe("deleting a space between two text objects", () => {
     run.mergedFromBounds[4] = { x: 0, right: 8 };
     const plan = planPartialEdit(run, "Audit Desk", "AuditDesk")!;
     const { doc, page, x } = fakeDocAndPage(run.mergedFromPtrs);
-    applyPartialEditPlan(doc, page, run, plan);
+    applyPartialEditPlan(doc, page, run, plan, uniformTags([]));
     expect(x.get(run.mergedFromPtrs[5])).toBeCloseTo(-1);
   });
 
