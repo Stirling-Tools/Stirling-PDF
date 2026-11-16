@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Duration;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,10 +76,36 @@ public class EditorFontRegistry {
 
     private record ScanEntry(long size, long modified, IndexedFace face) {}
 
+    private record FileStamp(Path path, long size, FileTime modified, Object fileKey) {}
+
+    /**
+     * Bytes that hashed to a face's id, with the file's stamp from just before they were read. Its
+     * monitor is held across a read, so simultaneous requests for the face wait for one read.
+     */
+    private static final class VerifiedFace {
+        private FileStamp stamp;
+        private SoftReference<byte[]> bytes;
+
+        byte[] bytesAt(FileStamp current) {
+            return current.equals(stamp) ? bytes.get() : null;
+        }
+
+        void keep(FileStamp current, byte[] verified) {
+            stamp = current;
+            bytes = new SoftReference<>(verified);
+        }
+
+        void clear() {
+            stamp = null;
+            bytes = null;
+        }
+    }
+
     private final Path root;
     private final String bundledPattern;
     private final Clock clock;
     private final Map<Path, ScanEntry> scanned = new HashMap<>();
+    private final Map<String, VerifiedFace> verifiedById = new ConcurrentHashMap<>();
     private List<BundledFace> bundled;
     private volatile Map<String, FontFile> bundledById = Map.of();
     private volatile Map<String, IndexedFace> customById = Map.of();
@@ -120,19 +149,50 @@ public class EditorFontRegistry {
         return Optional.ofNullable(verified);
     }
 
-    private static FontFile readVerified(IndexedFace face) {
-        try {
-            byte[] bytes = readBounded(face.path());
-            if (bytes == null || !face.face().id().equals(EditorFontReader.sha256(bytes))) {
-                return null;
+    /**
+     * Requests for one face share one read and one array, because a face can be 64 MiB and a copy
+     * per request exhausts the heap. The array is held softly: once no response is using it, the
+     * collector may reclaim it rather than run out of memory.
+     */
+    private FontFile readVerified(IndexedFace face) {
+        VerifiedFace verified =
+                verifiedById.computeIfAbsent(face.face().id(), id -> new VerifiedFace());
+        byte[] bytes;
+        synchronized (verified) {
+            bytes = verifiedBytes(face, verified);
+            if (bytes == null) {
+                verified.clear();
             }
-            return new FontFile(new ByteArrayResource(bytes), face.face().format(), bytes.length);
+        }
+        return bytes == null
+                ? null
+                : new FontFile(new ByteArrayResource(bytes), face.face().format(), bytes.length);
+    }
+
+    private byte[] verifiedBytes(IndexedFace face, VerifiedFace verified) {
+        try {
+            // Stamped before the read, so a file that changes during it no longer matches.
+            FileStamp stamp = stampOf(face.path());
+            byte[] bytes = verified.bytesAt(stamp);
+            if (bytes == null) {
+                bytes = readBounded(face.path());
+                if (bytes == null || !face.face().id().equals(EditorFontReader.sha256(bytes))) {
+                    return null;
+                }
+                verified.keep(stamp, bytes);
+            }
+            return bytes;
         } catch (IOException e) {
             return null;
         }
     }
 
-    private static byte[] readBounded(Path path) throws IOException {
+    private static FileStamp stampOf(Path path) throws IOException {
+        BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+        return new FileStamp(path, attrs.size(), attrs.lastModifiedTime(), attrs.fileKey());
+    }
+
+    byte[] readBounded(Path path) throws IOException {
         try (InputStream in = Files.newInputStream(path)) {
             return readBounded(in);
         }
@@ -349,6 +409,7 @@ public class EditorFontRegistry {
             families.add(new EditorFontFamily(group.getKey(), List.copyOf(faces)));
         }
         customById = Map.copyOf(customs);
+        verifiedById.keySet().retainAll(customs.keySet());
         bundledById = Map.copyOf(bundledFiles);
         snapshot = new Snapshot(new EditorFontManifest(List.copyOf(families)), etagOf(families));
     }
