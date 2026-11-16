@@ -19,23 +19,15 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
-// Why text, images and shapes are lifted out of form XObjects before they are edited.
+// PDFium never saves a change made inside a form XObject, and saves an object
+// taken out of one only by rewriting the form's shared stream, so every other
+// use of the form loses it too. Taking this page's instance off the page
+// leaves the shared stream alone, and its contents go onto the page as
+// ordinary objects, in the same place and order, where later changes save.
 //
-// PDFium does not save a change made to an object inside a form: moved,
-// recoloured or resized, it shows on screen and is gone from the saved file.
-// It does save an object taken out of a form, but by rewriting the form's own
-// stream, and a form is shared: the same one can be drawn twice on a page and
-// again on others, and each of those would lose the object too.
-//
-// Taking the form's instance off the page avoids both. PDFium then leaves the
-// shared stream alone, so every other use still draws it whole, and what the
-// instance drew goes onto this page as ordinary objects, in the same place
-// and the same order, where every later change is saved.
-//
-// What the page itself set up around the instance stays with the instance:
-// PDFium has no call to give an object a clip, so a clip that cuts what the
-// form draws, an optional-content mark, and the resources only the form binds
-// are lost with it. A lift that would lose any of them is refused instead.
+// PDFium cannot give an object a clip, so a clip that cuts what the form
+// draws, an optional-content mark, and resources only the form binds would be
+// lost with the instance; a lift that would lose any of them is refused.
 
 interface FormModule {
   FPDFFormObj_CountObjects?: (form: number) => number;
