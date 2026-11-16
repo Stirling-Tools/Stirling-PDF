@@ -38,7 +38,7 @@ export const buildAutoFormDetectionFormData = (
 
 function asPdf(data: Blob, source: File): File {
   const base = (source.name || "document").replace(/\.pdf$/i, "");
-  return new File([data], `${base}_form.pdf`, { type: "application/pdf" });
+  return new File([data], `${base}.pdf`, { type: "application/pdf" });
 }
 
 async function processAutoFormDetection(

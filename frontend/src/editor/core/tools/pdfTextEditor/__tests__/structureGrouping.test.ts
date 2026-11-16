@@ -190,17 +190,24 @@ describe("textTag", () => {
   }
 
   test("gives text the block it belongs to", async () => {
-    const tagged = (role: string, cannotRetag: string | null) => ({
+    const tagged = (
+      role: string,
+      cannotRetag: string | null,
+      canBeArtifact: boolean,
+    ) => ({
       kind: "tagged",
       block: { role, type: role },
       cannotRetag,
+      canBeArtifact,
     });
     expect(await tagOf(paragraphsPdf(), "Introduction")).toEqual(
-      tagged("H1", null),
+      tagged("H1", null, true),
     );
-    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(tagged("P", null));
+    expect(await tagOf(paragraphsPdf(), "guide")).toEqual(
+      tagged("P", null, false),
+    );
     expect(await tagOf(paragraphsPdf(), "Item")).toEqual(
-      tagged("LI", "not-text"),
+      tagged("LI", "not-text", false),
     );
   });
 
@@ -419,7 +426,7 @@ describe("Chrome-style tagging", () => {
       }),
       doc,
     );
-    const { blob } = await exportToBlob(doc, "chrome.pdf");
+    const blob = await exportToBlob(doc);
     const pdf = (await RawPdf.parse(new Uint8Array(await blob.arrayBuffer())))!;
     expect(pdf.dictName(pdf.objectBody(8)!, "S")).toBe("H2");
     expect(pdf.dictName(pdf.objectBody(9)!, "S")).toBe("NonStruct");

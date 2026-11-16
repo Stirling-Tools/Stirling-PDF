@@ -49,6 +49,7 @@ import type {
 import { createStirlingFilesAndStubs } from "@editor/services/fileStubHelpers";
 import { rememberPlainPdfExport } from "@editor/services/pdfAccessService";
 import { assertSignedPdfsEditable } from "@editor/services/pdfSessionUnlock";
+import { hasUnsavedWork } from "@editor/services/unsavedWork";
 import {
   isStirlingFile,
   getFormFillFileId,
@@ -863,10 +864,11 @@ const EmbedPdfViewerContent = ({
             return;
           case "s":
           case "S":
-            // Ctrl+S: Save/apply changes
+            // Ctrl+S: Save/apply changes. Every apply adds a version, so only
+            // when there is something to apply.
             if (!event.shiftKey) {
               event.preventDefault();
-              if (viewerApplyChanges) {
+              if (viewerApplyChanges && hasUnsavedWork()) {
                 viewerApplyChanges();
               }
             }

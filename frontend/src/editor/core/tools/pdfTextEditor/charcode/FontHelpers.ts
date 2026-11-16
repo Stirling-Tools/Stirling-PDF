@@ -1,3 +1,4 @@
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { ResolverContext } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import {
   SCRATCH,
@@ -164,7 +165,7 @@ export function findFontForChar(
     // right weight, slightly wrong shapes and advances.
     let fallback: number | null = null;
     for (let i = 0; i < count; i++) {
-      const u = tpMod.FPDFText_GetUnicode(textPage, i);
+      const u = drawnCodePoint(tpMod.FPDFText_GetUnicode(textPage, i));
       if (u !== cp) continue;
       const obj = tpMod.FPDFText_GetTextObject(textPage, i);
       if (!obj) continue;
