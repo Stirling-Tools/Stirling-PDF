@@ -1,16 +1,20 @@
 package stirling.software.proprietary.policy.engine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.common.util.PipelineLimits;
 import stirling.software.proprietary.document.conditions.ConditionValidator;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
@@ -47,6 +51,7 @@ public class PolicyValidator {
     private final SourceStore sourceStore;
     private final PolicyAssetStore assetStore;
     private final ToolChainValidator toolChainValidator;
+    private final ApplicationProperties applicationProperties;
 
     /**
      * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
@@ -63,6 +68,7 @@ public class PolicyValidator {
         if (policy.outputIds().size() > 1) {
             throw new IllegalArgumentException("a policy supports at most one output");
         }
+        validateStepCount(policy.steps());
         for (PipelineInput input : policy.inputs()) {
             Source source =
                     sourceStore
@@ -177,20 +183,49 @@ public class PolicyValidator {
      *
      * <p>Only errors block; warnings depend on configuration or file content.
      *
-     * @throws IllegalArgumentException if any step cannot accept what the one before it produces
+     * @throws IllegalArgumentException if any step names an unknown operation or cannot accept what
+     *     the one before it produces
      */
     public void validateChain(List<PipelineStep> steps) {
         List<ToolDiagnostic> diagnostics = diagnoseChain(steps, null);
+        requireKnownOperations(diagnostics);
         if (!ToolChainValidator.hasErrors(diagnostics)) {
             return;
         }
-        String reasons =
-                diagnostics.stream()
-                        .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
-                        .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
-                        .reduce((a, b) -> a + "; " + b)
-                        .orElse("");
-        throw new IllegalArgumentException("pipeline steps cannot run in this order - " + reasons);
+        throw new IllegalArgumentException(
+                "pipeline steps cannot run in this order - "
+                        + describeErrors(diagnostics, d -> true));
+    }
+
+    /**
+     * Ad-hoc gate: the step cap and known operations only; format mismatches are left to the run.
+     */
+    public void validateRunnableSteps(List<PipelineStep> steps) {
+        validateStepCount(steps);
+        requireKnownOperations(diagnoseChain(steps, null));
+    }
+
+    /** Rejects more steps than {@code policies.maxSteps}, where 0 or less means no cap. */
+    public void validateStepCount(List<PipelineStep> steps) {
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
+    }
+
+    private static void requireKnownOperations(List<ToolDiagnostic> diagnostics) {
+        String unknown =
+                describeErrors(diagnostics, d -> ToolDiagnostic.UNKNOWN_OPERATION.equals(d.code()));
+        if (!unknown.isEmpty()) {
+            throw new IllegalArgumentException("pipeline cannot run - " + unknown);
+        }
+    }
+
+    private static String describeErrors(
+            List<ToolDiagnostic> diagnostics, Predicate<ToolDiagnostic> filter) {
+        return diagnostics.stream()
+                .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
+                .filter(filter)
+                .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("");
     }
 
     /**
@@ -207,7 +242,17 @@ public class PolicyValidator {
                                         new ToolChainValidator.Step(
                                                 step.operation(), step.parameters()))
                         .toList();
-        return toolChainValidator.validate(chain, sourceFormat);
+        List<ToolDiagnostic> diagnostics =
+                new ArrayList<>(toolChainValidator.validate(chain, sourceFormat));
+        ApplicationProperties.Policies policies = applicationProperties.getPolicies();
+        if (PipelineLimits.exceedsStepLimit(steps.size(), policies)) {
+            diagnostics.add(
+                    ToolDiagnostic.error(
+                            policies.getMaxSteps(),
+                            ToolDiagnostic.TOO_MANY_STEPS,
+                            PipelineLimits.stepLimitMessage(policies)));
+        }
+        return diagnostics;
     }
 
     /**
@@ -216,10 +261,11 @@ public class PolicyValidator {
      * #validateOutput(OutputSpec)}: a step that dereferences an integration connection by id is
      * access-checked here or nowhere, since the worker thread that later runs it has no principal.
      *
-     * @throws IllegalArgumentException if any step is invalid or references an inaccessible
-     *     resource
+     * @throws IllegalArgumentException if there are more than {@code policies.maxSteps} steps, or
+     *     any step is invalid or references an inaccessible resource
      */
     public void validateSteps(List<PipelineStep> steps) {
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
         for (PipelineStep step : steps) {
             for (PipelineStepValidator validator : stepValidators) {
                 validator.validate(step);

@@ -9,10 +9,11 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -170,33 +171,22 @@ class FileToPdfMoreTest {
         }
 
         @Test
-        @DisplayName("non-html entries inside the ZIP are copied through unchanged")
-        void zipNonHtmlCopied() throws Exception {
+        @DisplayName("a ZIP with no HTML document is rejected before any process is started")
+        void zipWithoutHtmlRejected() throws Exception {
             byte[] zip = buildZip(new String[] {"data.txt"}, new String[] {"plain text content"});
 
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doReturn(successResult())
-                    .when(executor)
-                    .runCommandWithOutputHandling(anyList());
-
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
-                        .thenReturn(executor);
-
-                // Drop the identity-stub invocation recorded during setUp.
-                Mockito.clearInvocations(sanitizer);
-
-                byte[] result =
-                        FileToPdf.convertHtmlToPdf(
-                                "weasyprint",
-                                new HTMLToPdfRequest(),
-                                zip,
-                                "bundle.zip",
-                                tempFileManager,
-                                sanitizer);
-
-                assertThat(result).isNotNull();
-                Mockito.verifyNoInteractions(sanitizer);
+                assertThatThrownBy(
+                                () ->
+                                        FileToPdf.convertHtmlToPdf(
+                                                "weasyprint",
+                                                new HTMLToPdfRequest(),
+                                                zip,
+                                                "bundle.zip",
+                                                tempFileManager,
+                                                sanitizer))
+                        .isInstanceOf(IllegalArgumentException.class);
+                mocked.verifyNoInteractions();
             }
         }
     }
@@ -239,50 +229,163 @@ class FileToPdfMoreTest {
         }
     }
 
+    private CapturedRun run(byte[] input, String fileName) throws Exception {
+        CapturedRun captured = new CapturedRun();
+        ProcessExecutor executor = mock(ProcessExecutor.class);
+        Mockito.doAnswer(
+                        invocation -> {
+                            List<String> command = invocation.getArgument(0);
+                            captured.command = List.copyOf(command);
+                            captured.html =
+                                    Files.readString(Path.of(command.get(command.size() - 2)));
+                            return successResult();
+                        })
+                .when(executor)
+                .runCommandWithOutputHandling(anyList());
+
+        try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
+            mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
+                    .thenReturn(executor);
+            FileToPdf.convertHtmlToPdf(
+                    "weasyprint",
+                    new HTMLToPdfRequest(),
+                    input,
+                    fileName,
+                    tempFileManager,
+                    sanitizer);
+        }
+        return captured;
+    }
+
+    private static final class CapturedRun {
+        List<String> command;
+        String html;
+    }
+
     @Nested
-    @DisplayName("repacked ZIP integrity")
-    class RepackedZipTests {
+    @DisplayName("WeasyPrint input hardening")
+    class WeasyPrintInputTests {
 
         @Test
-        @DisplayName("the temp input zip handed to weasyprint still contains the html entry")
-        void repackedZipContainsEntry() throws Exception {
-            byte[] zip = buildZip(new String[] {"a.html"}, new String[] {"<i>hi</i>"});
+        @DisplayName("sanitized HTML input may only fetch data: URIs")
+        void htmlRestrictsProtocols() throws Exception {
+            CapturedRun run = run("<p>x</p>".getBytes(StandardCharsets.UTF_8), "page.html");
 
-            // Inspect the repacked zip from inside the command answer, while the temp file is
-            // still on disk (it is auto-deleted once convertHtmlToPdf returns).
-            List<String> entryNames = new java.util.ArrayList<>();
-            ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doAnswer(
-                            invocation -> {
-                                List<String> command = invocation.getArgument(0);
-                                Path inputZip = Path.of(command.get(command.size() - 2));
-                                try (ZipInputStream zis =
-                                        new ZipInputStream(
-                                                java.nio.file.Files.newInputStream(inputZip))) {
-                                    ZipEntry entry;
-                                    while ((entry = zis.getNextEntry()) != null) {
-                                        entryNames.add(entry.getName());
-                                    }
-                                }
-                                return successResult();
-                            })
-                    .when(executor)
-                    .runCommandWithOutputHandling(anyList());
+            int flag = run.command.indexOf("--allowed-protocols");
+            assertThat(flag).isPositive();
+            assertThat(run.command.get(flag + 1)).isEqualTo("data");
+        }
 
-            try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
-                        .thenReturn(executor);
+        @Test
+        @DisplayName("unsanitized HTML input may fetch http(s) but never file:")
+        void unsanitizedHtmlExcludesFileProtocol() throws Exception {
+            when(sanitizer.isDisabled()).thenReturn(true);
 
-                FileToPdf.convertHtmlToPdf(
-                        "weasyprint",
-                        new HTMLToPdfRequest(),
-                        zip,
-                        "bundle.zip",
-                        tempFileManager,
-                        sanitizer);
+            CapturedRun run = run("<p>x</p>".getBytes(StandardCharsets.UTF_8), "page.html");
 
-                assertThat(entryNames).anyMatch(name -> name.endsWith("a.html"));
-            }
+            int flag = run.command.indexOf("--allowed-protocols");
+            assertThat(run.command.get(flag + 1)).isEqualTo("data,http,https");
+        }
+
+        @Test
+        @DisplayName("ZIP input hands WeasyPrint the main HTML document, never the archive")
+        void zipPassesHtmlNotArchive() throws Exception {
+            byte[] zip =
+                    buildZip(
+                            new String[] {"other.html", "index.html", "style.css"},
+                            new String[] {"<p>other</p>", "<p>main</p>", "p{}"});
+
+            CapturedRun run = run(zip, "bundle.zip");
+
+            assertThat(run.command.get(run.command.size() - 2)).endsWith(".html");
+            assertThat(run.command).contains("--allowed-protocols", "data");
+            assertThat(run.html).isEqualTo("<p>main</p>");
+        }
+
+        @Test
+        @DisplayName("markup in ZIP entry names never reaches the WeasyPrint input")
+        void entryNamesNotParsedAsMarkup() throws Exception {
+            String markupName = "<link rel=attachment href=\"file:/tmp/canary.txt\">";
+            byte[] zip =
+                    buildZip(
+                            new String[] {"index.html", markupName},
+                            new String[] {"<p>main</p>", "x"});
+
+            CapturedRun run = run(zip, "bundle.zip");
+
+            assertThat(run.html).isEqualTo("<p>main</p>");
+        }
+
+        @Test
+        @DisplayName("relative images in the archive are inlined as data URIs")
+        void relativeImagesInlined() throws Exception {
+            byte[] zip =
+                    buildZip(
+                            new String[] {"site/index.html", "site/img/a b.png"},
+                            new String[] {"<img src=\"img/a%20b.png\" />", "PNGDATA"});
+
+            CapturedRun run = run(zip, "bundle.zip");
+
+            String expected =
+                    Base64.getEncoder().encodeToString("PNGDATA".getBytes(StandardCharsets.UTF_8));
+            assertThat(run.html)
+                    .isEqualTo("<img src=\"data:image/png;base64," + expected + "\" />");
+        }
+
+        @Test
+        @DisplayName("archive images are inlined before sanitizing, so relative src survives it")
+        void imagesInlinedBeforeSanitizing() throws Exception {
+            byte[] zip =
+                    buildZip(
+                            new String[] {"index.html", "logo.png"},
+                            new String[] {"<img src=logo.png>", "PNGDATA"});
+
+            run(zip, "bundle.zip");
+
+            String expected =
+                    Base64.getEncoder().encodeToString("PNGDATA".getBytes(StandardCharsets.UTF_8));
+            Mockito.verify(sanitizer)
+                    .sanitize("<img src=\"data:image/png;base64," + expected + "\">");
+        }
+
+        @Test
+        @DisplayName("image references outside the archive are left for WeasyPrint to refuse")
+        void traversalImageNotInlined() throws Exception {
+            String html = "<img src=\"../../tmp/canary.png\" />";
+            byte[] zip = buildZip(new String[] {"index.html"}, new String[] {html});
+
+            CapturedRun run = run(zip, "bundle.zip");
+
+            assertThat(run.html).isEqualTo(html);
+        }
+    }
+
+    @Nested
+    @DisplayName("entry name helpers")
+    class EntryNameHelperTests {
+
+        @Test
+        @DisplayName("markup characters are replaced in stored entry names")
+        void markupCharactersReplaced() {
+            assertThat(FileToPdf.sanitizeZipFilename("<link href=\"file:/x\">.png"))
+                    .matches("[A-Za-z0-9._/-]+");
+        }
+
+        @Test
+        @DisplayName("a root index.html is preferred, otherwise the shallowest HTML file")
+        void selectsMainHtml() {
+            assertThat(FileToPdf.selectMainHtml(List.of("b/x.html", "a.htm", "index.html")))
+                    .isEqualTo("index.html");
+            assertThat(FileToPdf.selectMainHtml(List.of("b/x.html", "z.html", "a.css")))
+                    .isEqualTo("z.html");
+            assertThat(FileToPdf.selectMainHtml(List.of("a.css"))).isNull();
+        }
+
+        @Test
+        @DisplayName("paths that climb out of the archive normalize to null")
+        void normalizeRejectsEscape() {
+            assertThat(FileToPdf.normalizeEntryPath("a/./b/../c.png")).isEqualTo("a/c.png");
+            assertThat(FileToPdf.normalizeEntryPath("../c.png")).isNull();
         }
     }
 }

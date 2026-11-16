@@ -13,17 +13,21 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The level of optimization to apply to the PDF file. Higher values indicate"
-                            + " greater compression but may reduce quality.",
+                    "Compression level from 1 (lightest) to 9 (strongest). Or set"
+                            + " expectedOutputSize to pick one automatically.",
             type = "integer",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "5",
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
     private Integer optimizeLevel = 5;
 
     @Schema(
-            description = "The expected output size, e.g. '100MB', '25KB', etc.",
-            defaultValue = "25KB",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            description =
+                    "Target output size, e.g. '100MB' or '25KB'. When set, the optimization"
+                            + " level is chosen automatically to reach it; omit to compress at"
+                            + " optimizeLevel.",
+            example = "25KB",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String expectedOutputSize;
 
     @Schema(

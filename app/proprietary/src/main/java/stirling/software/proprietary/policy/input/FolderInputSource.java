@@ -95,7 +95,7 @@ public class FolderInputSource implements InputSource {
                     inputDir.toString(), null, "input directory does not exist");
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
-        List<Path> present = listFiles(inputDir, config.recursive());
+        List<Path> present = listFiles(inputDir, config.recursive(), accessGuard);
         // Filtered before anything observes the listing: an out-of-scope file is invisible to the
         // ledger and the sweep alike, so it neither burns the sweep limit nor parks as a failure.
         if (!config.extensions().isEmpty()) {
@@ -334,7 +334,8 @@ public class FolderInputSource implements InputSource {
         }
     }
 
-    private static List<Path> listFiles(Path inputDir, boolean recursive) throws IOException {
+    private static List<Path> listFiles(
+            Path inputDir, boolean recursive, FolderAccessGuard accessGuard) throws IOException {
         List<Path> files = new ArrayList<>();
         if (!recursive) {
             try (Stream<Path> entries = Files.list(inputDir)) {
@@ -351,7 +352,8 @@ public class FolderInputSource implements InputSource {
                     @Override
                     public FileVisitResult preVisitDirectory(
                             Path dir, BasicFileAttributes attributes) {
-                        if (!dir.equals(inputDir) && hidden(dir)) {
+                        if (!dir.equals(inputDir)
+                                && (hidden(dir) || accessGuard.isProtected(dir))) {
                             return FileVisitResult.SKIP_SUBTREE;
                         }
                         return FileVisitResult.CONTINUE;

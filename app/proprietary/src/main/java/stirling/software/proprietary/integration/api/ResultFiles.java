@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 
@@ -75,7 +76,8 @@ final class ResultFiles {
     }
 
     /**
-     * Pick the file a step asked for out of an archive.
+     * Pick the file a step asked for out of an archive. The entry is returned in memory, like the
+     * response it came from; the archive's unpacked files are deleted before this returns.
      *
      * @param select a glob such as {@code *.pdf}, or a 0-based index such as {@code 1}
      * @throws IOException if nothing in the archive matches, naming what was there - a silent pick
@@ -83,7 +85,19 @@ final class ResultFiles {
      */
     static Resource selectFromArchive(
             Resource archive, String select, TempFileManager tempFileManager) throws IOException {
-        List<Resource> entries = ZipExtractionUtils.extractZip(archive, tempFileManager);
+        List<TempFile> unpacked = new ArrayList<>();
+        try {
+            Resource entry =
+                    pick(
+                            ZipExtractionUtils.extractZip(archive, tempFileManager, unpacked::add),
+                            select);
+            return asResource(entry.getContentAsByteArray(), entry.getFilename());
+        } finally {
+            unpacked.forEach(TempFile::close);
+        }
+    }
+
+    private static Resource pick(List<Resource> entries, String select) throws IOException {
         if (entries.isEmpty()) {
             throw new IOException("The API returned an empty archive");
         }

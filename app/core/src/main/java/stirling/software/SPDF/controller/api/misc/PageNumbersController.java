@@ -98,6 +98,7 @@ public class PageNumbersController {
                 customText = "{n}";
             }
 
+            GeneralUtils.requireValidPageSelection(pagesToNumber, document.getNumberOfPages());
             List<Integer> pagesToNumberList =
                     GeneralUtils.parsePageList(
                             pagesToNumber.split(","), document.getNumberOfPages());
@@ -192,9 +193,7 @@ public class PageNumbersController {
             }
 
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(
-                            file.getOriginalFilename(), "_page_numbers_added.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"));
         }
     }
 }

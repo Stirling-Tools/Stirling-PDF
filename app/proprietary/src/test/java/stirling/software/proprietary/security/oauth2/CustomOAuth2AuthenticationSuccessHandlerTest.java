@@ -96,17 +96,14 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertEquals(
-                "http://localhost:8080/auth/callback/tauri#access_token=jwt",
-                response.getRedirectedUrl());
+        assertEquals("/auth/callback/tauri#access_token=jwt", response.getRedirectedUrl());
     }
 
     @ParameterizedTest
     @CsvSource(
             value = {
-                "'', '', '', http://hcrn-fs01:8080/auth/callback#access_token=jwt",
-                "'', https://app.example.com, '',"
-                        + " http://hcrn-fs01:8080/auth/callback#access_token=jwt",
+                "'', '', '', /auth/callback#access_token=jwt",
+                "'', https://app.example.com, '', /auth/callback#access_token=jwt",
                 "https://pdf.example.com/, '', '',"
                         + " https://pdf.example.com/auth/callback#access_token=jwt",
                 "https://api.example.com, https://app.example.com/, '',"
@@ -167,6 +164,52 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
         handler.onAuthenticationSuccess(request, response, authentication);
 
         assertEquals(expected, response.getRedirectedUrl());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true", "false"})
+    void localPasswordAccountIsRefusedRegardlessOfAutoCreateUser(boolean autoCreateUser)
+            throws Exception {
+        LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
+        ApplicationProperties properties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2 = properties.getSecurity().getOauth2();
+        oauth2.setAutoCreateUser(autoCreateUser);
+        oauth2.setBlockRegistration(false);
+
+        when(userService.usernameExistsIgnoreCase("admin")).thenReturn(true);
+        when(userService.isUserDisabled("admin")).thenReturn(false);
+        when(userService.hasPassword("admin")).thenReturn(true);
+        when(userService.isSsoAuthenticationTypeByUsername("admin")).thenReturn(false);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        loginAttemptService,
+                        oauth2,
+                        userService,
+                        jwtService,
+                        licenseSettingsService,
+                        properties);
+        DefaultOAuth2User principal =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "admin"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(principal, principal.getAuthorities(), "google");
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("/stirling");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals(
+                "/stirling/logout?oAuth2AuthenticationErrorWeb=true", response.getRedirectedUrl());
+        verify(userService, never())
+                .processSSOPostLogin(anyString(), anyString(), anyString(), anyBoolean(), any());
+        verifyNoInteractions(jwtService);
     }
 
     @ParameterizedTest

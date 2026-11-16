@@ -153,7 +153,7 @@ genuinely nothing to add, but do not cite it to skip something a reader needs.
 Summary fragments are noun or verb phrases, not sentences starting "This method
 returns".
 
-**TypeScript.** JSDoc on the `@app/*` seams, exported hooks, and anything crossing
+**TypeScript.** JSDoc on the `@editor/*` seams, exported hooks, and anything crossing
 a layer boundary. No `@param`/`@returns` that restates a typed signature. JSX
 comments follow the same rules as any other.
 

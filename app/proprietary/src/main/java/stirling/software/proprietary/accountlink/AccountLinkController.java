@@ -155,7 +155,7 @@ public class AccountLinkController {
         if (headerValue == null || headerValue.isBlank()) {
             return null;
         }
-        String first = headerValue.split(",")[0].strip();
+        String first = headerValue.split(",", 2)[0].strip();
         return first.isEmpty() ? null : first;
     }
 

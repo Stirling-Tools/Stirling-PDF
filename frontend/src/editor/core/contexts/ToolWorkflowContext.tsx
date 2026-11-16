@@ -1,0 +1,883 @@
+/**
+ * ToolWorkflowContext - Manages tool selection, UI state, and workflow coordination
+ * Eliminates prop drilling with a single, simple context
+ */
+
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
+import { useLocation } from "react-router-dom";
+import {
+  useToolManagement,
+  type ToolAvailabilityMap,
+} from "@editor/hooks/useToolManagement";
+import { ToolRegistryEntry, ToolRegistry } from "@editor/data/toolsTaxonomy";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@editor/contexts/NavigationContext";
+import { ToolId, isValidToolId } from "@editor/types/toolId";
+import {
+  WorkbenchType,
+  getDefaultWorkbench,
+  isBaseWorkbench,
+} from "@editor/types/workbench";
+import { useNavigationUrlSync } from "@editor/hooks/useUrlSync";
+import { isAuthRoute } from "@editor/constants/routes";
+import { EDITOR_BASENAME } from "@editor/routes/editorBasename";
+import { filterToolRegistryByQuery } from "@editor/utils/toolSearch";
+import { useToolHistory } from "@editor/hooks/tools/useUserToolActivity";
+import { markReaderModeFromPreference } from "@editor/utils/pendingReaderMode";
+import {
+  ToolWorkflowState,
+  createInitialState,
+  toolWorkflowReducer,
+} from "@editor/contexts/toolWorkflow/toolWorkflowState";
+import type { ToolPanelMode } from "@editor/constants/toolPanel";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { preferencesService } from "@editor/services/preferencesService";
+import { useToolRegistry } from "@editor/contexts/ToolRegistryContext";
+import { ToolFileEligibilityProvider } from "@editor/contexts/ToolFileEligibilityContext";
+
+// State interface
+// Types and reducer/state moved to './toolWorkflow/state'
+
+// Context value interface
+export interface CustomWorkbenchViewRegistration<T = unknown> {
+  id: string;
+  workbenchId: WorkbenchType;
+  label: string;
+  icon?: React.ReactNode;
+  component: React.ComponentType<{ data: T }>;
+  hideTopControls?: boolean;
+  hideToolPanel?: boolean;
+}
+
+export interface CustomWorkbenchViewInstance<
+  T = unknown,
+> extends CustomWorkbenchViewRegistration<T> {
+  data: T;
+}
+
+interface ToolWorkflowContextValue extends ToolWorkflowState {
+  // Tool management (from hook)
+  selectedToolKey: ToolId | null;
+  selectedTool: ToolRegistryEntry | null;
+  toolRegistry: Partial<ToolRegistry>;
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  toolAvailability: ToolAvailabilityMap;
+
+  // UI Actions
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
+  setReaderMode: (mode: boolean) => void;
+  setToolPanelMode: (mode: ToolPanelMode) => void;
+  setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
+  setSearchQuery: (query: string) => void;
+
+  selectTool: (toolId: ToolId | null) => void;
+  clearToolSelection: () => void;
+
+  // Tool Reset Actions
+  toolResetFunctions: Record<string, () => void>;
+  registerToolReset: (toolId: string, resetFunction: () => void) => void;
+  resetTool: (toolId: string) => void;
+
+  // Workflow Actions (compound actions)
+  handleToolSelect: (toolId: ToolId) => void;
+  /** Like handleToolSelect but bypasses the availability guard — use when you want to
+   *  navigate to a tool's UI even if it's marked unavailable (e.g. to show a disabled
+   *  execute button with a sign-in prompt rather than blocking navigation entirely). */
+  handleToolSelectForced: (toolId: ToolId) => void;
+  handleBackToTools: () => void;
+  handleReaderToggle: () => void;
+
+  // Computed values
+  filteredTools: Array<{
+    item: [ToolId, ToolRegistryEntry];
+    matchedText?: string;
+  }>; // Filtered by search
+
+  // Tool History
+  favoriteTools: ToolId[];
+  toggleFavorite: (toolId: ToolId) => void;
+  isFavorite: (toolId: ToolId) => boolean;
+
+  customWorkbenchViews: CustomWorkbenchViewInstance[];
+  registerCustomWorkbenchView: <T>(
+    view: CustomWorkbenchViewRegistration<T>,
+  ) => void;
+  unregisterCustomWorkbenchView: (id: string) => void;
+  setCustomWorkbenchViewData: <T>(
+    id: string,
+    data: T | ((prev: T) => T),
+  ) => void;
+  clearCustomWorkbenchViewData: (id: string) => void;
+}
+
+// Ensure a single context instance across HMR to avoid provider/consumer mismatches
+const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
+const existingContext = (globalThis as Record<string, unknown>)[
+  __GLOBAL_CONTEXT_KEY__
+] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
+const ToolWorkflowContext =
+  existingContext ??
+  createContext<ToolWorkflowContextValue | undefined>(undefined);
+if (!existingContext) {
+  (globalThis as Record<string, unknown>)[__GLOBAL_CONTEXT_KEY__] =
+    ToolWorkflowContext;
+}
+
+/**
+ * Slim subset contexts for hot consumers that don't need the full state.
+ *
+ *  - `useToolWorkflowActions()` — referentially-stable callbacks.
+ *  - `useToolWorkflowData()` — tool registry, availability, favorites.
+ */
+export interface ToolWorkflowActionsValue {
+  selectTool: (toolId: ToolId | null) => void;
+  clearToolSelection: () => void;
+  toggleFavorite: (toolId: ToolId) => void;
+  handleToolSelect: (toolId: ToolId) => void;
+  handleToolSelectForced: (toolId: ToolId) => void;
+  handleBackToTools: () => void;
+  handleReaderToggle: () => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
+  setReaderMode: (mode: boolean) => void;
+  setToolPanelMode: (mode: ToolPanelMode) => void;
+  setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
+  setSearchQuery: (query: string) => void;
+  registerToolReset: (toolId: string, resetFunction: () => void) => void;
+  resetTool: (toolId: string) => void;
+}
+
+export interface ToolWorkflowDataValue {
+  toolAvailability: ToolAvailabilityMap;
+  toolRegistry: Partial<ToolRegistry>;
+  favoriteTools: ToolId[];
+  getSelectedTool: (toolId: ToolId | null) => ToolRegistryEntry | null;
+  isFavorite: (toolId: ToolId) => boolean;
+}
+
+const ToolWorkflowActionsContext = createContext<
+  ToolWorkflowActionsValue | undefined
+>(undefined);
+const ToolWorkflowDataContext = createContext<
+  ToolWorkflowDataValue | undefined
+>(undefined);
+
+// Login, signup, invite, share, and the account-link page all sit inside these
+// providers and then navigate into the editor without remounting. Spending the
+// launch there would drop the admin default. A tool URL is not one of these:
+// that address wins.
+function defersStartupView(pathname: string): boolean {
+  if (isAuthRoute(pathname)) return true;
+  return (
+    pathname === "/link" ||
+    pathname.startsWith("/link/") ||
+    pathname === "/share" ||
+    pathname.startsWith("/share/")
+  );
+}
+
+function isEditorHome(pathname: string): boolean {
+  const path =
+    pathname.length > 1 && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  return path === "/" || path === EDITOR_BASENAME;
+}
+
+// Provider component
+interface ToolWorkflowProviderProps {
+  children: React.ReactNode;
+}
+
+export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
+  const [state, dispatch] = useReducer(
+    toolWorkflowReducer,
+    undefined,
+    createInitialState,
+  );
+  const { preferences, updatePreference } = usePreferences();
+  const { pathname } = useLocation();
+  const { configFromServer } = useAppConfig();
+
+  // Store reset functions for tools
+  const [toolResetFunctions, setToolResetFunctions] = React.useState<
+    Record<string, () => void>
+  >({});
+
+  const [customViewRegistry, setCustomViewRegistry] = React.useState<
+    Record<string, CustomWorkbenchViewRegistration>
+  >({});
+  const [customViewData, setCustomViewData] = React.useState<
+    Record<string, unknown>
+  >({});
+
+  // Navigation actions and state are available since we're inside NavigationProvider
+  const { actions } = useNavigationActions();
+  const navigationState = useNavigationState();
+
+  // Tool management hook
+  const { toolRegistry, getSelectedTool, toolAvailability } =
+    useToolManagement();
+  const { allTools } = useToolRegistry();
+
+  // Tool history hook
+  const { favoriteTools, toggleFavorite, isFavorite } = useToolHistory();
+
+  // Get selected tool from navigation context
+  const selectedTool = getSelectedTool(navigationState.selectedTool);
+
+  // UI Action creators
+  const setLeftPanelView = useCallback((view: "toolPicker" | "toolContent") => {
+    dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
+  }, []);
+
+  const setReaderMode = useCallback(
+    (mode: boolean) => {
+      if (mode) {
+        // Reading is a mode the open document is put into, not a tool run on it.
+        actions.setWorkbench("viewer");
+      }
+      dispatch({ type: "SET_READER_MODE", payload: mode });
+    },
+    [actions],
+  );
+
+  const setToolPanelMode = useCallback(
+    (mode: ToolPanelMode) => {
+      dispatch({ type: "SET_TOOL_PANEL_MODE", payload: mode });
+      updatePreference("defaultToolPanelMode", mode);
+      updatePreference("hasSelectedToolPanelMode", true);
+    },
+    [updatePreference],
+  );
+
+  const setPreviewFile = useCallback(
+    (file: File | null) => {
+      dispatch({ type: "SET_PREVIEW_FILE", payload: file });
+      if (file) {
+        actions.setWorkbench("viewer");
+      }
+    },
+    [actions],
+  );
+
+  // A preview is not in the file store, so tools would resolve to whatever the
+  // viewer had open before it. Whoever owns the preview leaves the import here.
+  const previewImportRef = useRef<(() => Promise<void>) | null>(null);
+  const registerPreviewImport = useCallback(
+    (importFile: (() => Promise<void>) | null) => {
+      previewImportRef.current = importFile;
+    },
+    [],
+  );
+
+  const setSearchQuery = useCallback((query: string) => {
+    dispatch({ type: "SET_SEARCH_QUERY", payload: query });
+  }, []);
+
+  const registerCustomWorkbenchView = useCallback(
+    <T,>(view: CustomWorkbenchViewRegistration<T>) => {
+      setCustomViewRegistry((prev) => ({
+        ...prev,
+        // Type-erase the view's data shape for uniform storage; the render site
+        // hands the opaque data back to this same component to narrow.
+        [view.id]: view as CustomWorkbenchViewRegistration,
+      }));
+    },
+    [],
+  );
+
+  const unregisterCustomWorkbenchView = useCallback(
+    (id: string) => {
+      let removedView: CustomWorkbenchViewRegistration | undefined;
+
+      setCustomViewRegistry((prev) => {
+        const existing = prev[id];
+        if (!existing) {
+          return prev;
+        }
+        removedView = existing;
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+
+      setCustomViewData((prev) => {
+        if (!(id in prev)) {
+          return prev;
+        }
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+
+      if (
+        removedView &&
+        navigationState.workbench === removedView.workbenchId
+      ) {
+        actions.setWorkbench(getDefaultWorkbench());
+      }
+    },
+    [actions, navigationState.workbench],
+  );
+
+  const setCustomWorkbenchViewData = useCallback(
+    <T,>(id: string, dataOrUpdater: T | ((prev: T) => T)) => {
+      setCustomViewData((prev) => {
+        const currentData = prev[id] as T;
+        const newData =
+          typeof dataOrUpdater === "function"
+            ? (dataOrUpdater as (prev: T) => T)(currentData)
+            : dataOrUpdater;
+        return { ...prev, [id]: newData };
+      });
+    },
+    [],
+  );
+
+  const clearCustomWorkbenchViewData = useCallback((id: string) => {
+    setCustomViewData((prev) => {
+      if (!(id in prev)) {
+        return prev;
+      }
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
+  }, []);
+
+  const customWorkbenchViews = useMemo<CustomWorkbenchViewInstance[]>(() => {
+    return Object.values(customViewRegistry).map((view) => ({
+      ...view,
+      data: Object.prototype.hasOwnProperty.call(customViewData, view.id)
+        ? customViewData[view.id]
+        : null,
+    }));
+  }, [customViewRegistry, customViewData]);
+
+  useEffect(() => {
+    if (isBaseWorkbench(navigationState.workbench)) {
+      return;
+    }
+
+    if (
+      navigationState.pendingNavigation ||
+      navigationState.showNavigationWarning
+    ) {
+      return;
+    }
+
+    const currentCustomView = customWorkbenchViews.find(
+      (view) => view.workbenchId === navigationState.workbench,
+    );
+    if (!currentCustomView || currentCustomView.data == null) {
+      actions.setWorkbench(getDefaultWorkbench());
+    }
+  }, [
+    actions,
+    customWorkbenchViews,
+    navigationState.workbench,
+    navigationState.pendingNavigation,
+    navigationState.showNavigationWarning,
+  ]);
+
+  // Persisted via PreferencesContext; no direct localStorage writes needed here
+
+  // Keep tool panel mode in sync with user preference. This ensures the
+  // Config setting (Default tool picker mode) immediately affects the app
+  // and persists across reloads.
+  useEffect(() => {
+    const preferredMode = preferences.defaultToolPanelMode;
+    if (preferredMode !== state.toolPanelMode) {
+      dispatch({ type: "SET_TOOL_PANEL_MODE", payload: preferredMode });
+    }
+  }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
+
+  // One launch decision. A stored choice wins without waiting. Otherwise wait
+  // for a real /app-config: a stand-in looks loaded and would lock this in as
+  // "tools". Auth routes must not spend the launch, because sign-in navigates
+  // here without remounting; a deep link does, because the URL wins. A reload
+  // keeps the open view, unless that reload was the login page.
+  const hasAppliedStartupView = React.useRef(false);
+  // True once an auth route was showing, so its document reload does not count
+  // as the launch after sign-in moves to the editor.
+  const deferredStartupForAuth = React.useRef(false);
+  // Set when the startup view picks the tool, so the URL sync knows this
+  // selection came from a preference and must not be written to the address.
+  const startupSelectedToolRef = React.useRef<ToolId | null>(null);
+  useEffect(() => {
+    if (hasAppliedStartupView.current) return;
+    if (defersStartupView(pathname)) {
+      deferredStartupForAuth.current = true;
+      return;
+    }
+    const navigation = performance.getEntriesByType?.("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    const reloaded =
+      !deferredStartupForAuth.current && navigation?.type === "reload";
+    if (reloaded || !isEditorHome(pathname)) {
+      hasAppliedStartupView.current = true;
+      return;
+    }
+    if (
+      !preferencesService.hasStoredPreference("defaultStartupView") &&
+      (!configFromServer || !preferencesService.hasServerDefaults())
+    ) {
+      return;
+    }
+    // The service, not this render's snapshot: defaults can be installed in the
+    // same commit, before PreferencesProvider re-renders with the merge.
+    const startupView = preferencesService.hasStoredPreference(
+      "defaultStartupView",
+    )
+      ? preferences.defaultStartupView
+      : preferencesService.getPreference("defaultStartupView");
+    if (startupView === "read") {
+      // Reading is a surface, not a tool: selecting the Read tool as well would
+      // disagree with the reader's address, and the URL sync would close both.
+      hasAppliedStartupView.current = true;
+      markReaderModeFromPreference();
+      setReaderMode(true);
+    } else if (startupView === "automate") {
+      hasAppliedStartupView.current = true;
+      startupSelectedToolRef.current = "automate";
+      actions.setSelectedTool("automate");
+      setLeftPanelView("toolContent");
+    }
+    // 'tools' is the default — no action needed
+    if (startupView === "tools") {
+      hasAppliedStartupView.current = true;
+    }
+  }, [
+    pathname,
+    preferences,
+    configFromServer,
+    actions,
+    setReaderMode,
+    setLeftPanelView,
+  ]);
+
+  // Tool reset methods
+  const registerToolReset = useCallback(
+    (toolId: string, resetFunction: () => void) => {
+      setToolResetFunctions((prev) => ({ ...prev, [toolId]: resetFunction }));
+    },
+    [],
+  );
+
+  const resetTool = useCallback((toolId: string) => {
+    // Use the current state directly instead of depending on the state in the closure
+    setToolResetFunctions((current) => {
+      const resetFunction = current[toolId];
+      if (resetFunction) {
+        resetFunction();
+      }
+      return current; // Return the same state to avoid unnecessary updates
+    });
+  }, []); // Empty dependency array makes this stable
+
+  // Workflow actions (compound actions that coordinate multiple state changes)
+  const handleToolSelect = useCallback(
+    (toolId: ToolId) => {
+      const availabilityInfo = toolAvailability[toolId];
+      const isExplicitlyDisabled = availabilityInfo
+        ? availabilityInfo.available === false
+        : false;
+      if (toolId !== "read" && toolId !== "multiTool" && isExplicitlyDisabled) {
+        return;
+      }
+
+      // Guard: if there are unsaved changes and we're switching away from the current tool,
+      // show the save modal before proceeding.
+      const hasUnsavedChanges = navigationState.hasUnsavedChanges;
+      if (
+        hasUnsavedChanges &&
+        navigationState.selectedTool &&
+        navigationState.selectedTool !== toolId
+      ) {
+        actions.requestNavigation(() => handleToolSelectRef.current(toolId));
+        return;
+      }
+
+      // Promote the preview first, then reopen this selection against the real file.
+      const importPreview = previewImportRef.current;
+      if (importPreview) {
+        previewImportRef.current = null;
+        void importPreview().then(() => handleToolSelect(toolId));
+        return;
+      }
+
+      // If we're currently on a custom workbench (e.g., Validate Signature report),
+      // selecting any tool should take the user back to the default file manager view.
+      const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
+
+      // Handle read tool selection - should behave exactly like QuickAccessBar read button
+      if (toolId === "read") {
+        setReaderMode(true);
+        actions.setSelectedTool("read");
+        actions.setWorkbench(
+          wasInCustomWorkbench ? getDefaultWorkbench() : "viewer",
+        );
+        setSearchQuery("");
+        return;
+      }
+
+      // Handle multiTool selection - enable page editor workbench
+      if (toolId === "multiTool") {
+        setReaderMode(false);
+        // The page editor is the tool, so the panel beside it stays on the picker:
+        // left on toolContent it would render this tool's header over no body.
+        setLeftPanelView("toolPicker");
+        actions.setSelectedTool("multiTool");
+        actions.setWorkbench(
+          wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
+        );
+        setSearchQuery("");
+        return;
+      }
+
+      // Set the selected tool and determine the appropriate workbench
+      const validToolId = isValidToolId(toolId) ? toolId : null;
+      actions.setSelectedTool(validToolId);
+
+      // Switch workbench only when required: leaving a custom view, or the tool declares one.
+      const tool = getSelectedTool(toolId);
+      if (wasInCustomWorkbench) {
+        actions.setWorkbench(getDefaultWorkbench());
+      } else if (tool && tool.workbench) {
+        actions.setWorkbench(tool.workbench);
+      }
+
+      // Clear search query when selecting a tool
+      setSearchQuery("");
+      setLeftPanelView("toolContent");
+      setReaderMode(false); // Disable read mode when selecting tools
+    },
+    [
+      actions,
+      getSelectedTool,
+      navigationState.workbench,
+      navigationState.hasUnsavedChanges,
+      navigationState.selectedTool,
+      setLeftPanelView,
+      setReaderMode,
+      setSearchQuery,
+      toolAvailability,
+    ],
+  );
+
+  const handleToolSelectForced = useCallback(
+    (toolId: ToolId) => {
+      const validToolId = isValidToolId(toolId) ? toolId : null;
+      actions.setSelectedTool(validToolId);
+      const tool = getSelectedTool(toolId);
+      const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
+      if (wasInCustomWorkbench) {
+        actions.setWorkbench(getDefaultWorkbench());
+      } else if (tool && tool.workbench) {
+        actions.setWorkbench(tool.workbench);
+      }
+      setSearchQuery("");
+      setLeftPanelView("toolContent");
+      setReaderMode(false);
+    },
+    [
+      actions,
+      getSelectedTool,
+      navigationState.workbench,
+      setLeftPanelView,
+      setReaderMode,
+      setSearchQuery,
+    ],
+  );
+
+  const handleBackToTools = useCallback(() => {
+    actions.requestNavigation(() => {
+      setLeftPanelView("toolPicker");
+      setReaderMode(false);
+      actions.setSelectedTool(null);
+    });
+  }, [setLeftPanelView, setReaderMode, actions]);
+
+  const handleReaderToggle = useCallback(() => {
+    setReaderMode(true);
+  }, [setReaderMode]);
+
+  // Filter tools based on search query with fuzzy matching (name, description, id, synonyms)
+  const filteredTools = useMemo(() => {
+    if (!toolRegistry) return [];
+    return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
+  }, [toolRegistry, state.searchQuery]);
+
+  // An address naming no tool clears the tool, not reading: the reader's own path
+  // decides that, and /reader names no tool either.
+  const clearToolFromAddress = useCallback(() => {
+    setLeftPanelView("toolPicker");
+    actions.setSelectedTool(null);
+  }, [setLeftPanelView, actions.setSelectedTool]);
+
+  useNavigationUrlSync(
+    navigationState.selectedTool,
+    handleToolSelect,
+    clearToolFromAddress,
+    allTools,
+    true,
+    startupSelectedToolRef,
+  );
+
+  // Ref-backed wrappers so callback identities stay stable across renders.
+  const handleToolSelectRef = useRef(handleToolSelect);
+  handleToolSelectRef.current = handleToolSelect;
+  const stableHandleToolSelect = useCallback(
+    (id: ToolId) => handleToolSelectRef.current(id),
+    [],
+  );
+
+  const handleToolSelectForcedRef = useRef(handleToolSelectForced);
+  handleToolSelectForcedRef.current = handleToolSelectForced;
+  const stableHandleToolSelectForced = useCallback(
+    (id: ToolId) => handleToolSelectForcedRef.current(id),
+    [],
+  );
+
+  const handleBackToToolsRef = useRef(handleBackToTools);
+  handleBackToToolsRef.current = handleBackToTools;
+  const stableHandleBackToTools = useCallback(
+    () => handleBackToToolsRef.current(),
+    [],
+  );
+
+  const handleReaderToggleRef = useRef(handleReaderToggle);
+  handleReaderToggleRef.current = handleReaderToggle;
+  const stableHandleReaderToggle = useCallback(
+    () => handleReaderToggleRef.current(),
+    [],
+  );
+
+  const setReaderModeRef = useRef(setReaderMode);
+  setReaderModeRef.current = setReaderMode;
+  const stableSetReaderMode = useCallback(
+    (mode: boolean) => setReaderModeRef.current(mode),
+    [],
+  );
+
+  const setPreviewFileRef = useRef(setPreviewFile);
+  setPreviewFileRef.current = setPreviewFile;
+  const stableSetPreviewFile = useCallback(
+    (file: File | null) => setPreviewFileRef.current(file),
+    [],
+  );
+
+  const setToolPanelModeRef = useRef(setToolPanelMode);
+  setToolPanelModeRef.current = setToolPanelMode;
+  const stableSetToolPanelMode = useCallback(
+    (mode: ToolPanelMode) => setToolPanelModeRef.current(mode),
+    [],
+  );
+
+  const selectToolRef = useRef(actions.setSelectedTool);
+  selectToolRef.current = actions.setSelectedTool;
+  const stableSelectTool = useCallback(
+    (id: ToolId | null) => selectToolRef.current(id),
+    [],
+  );
+
+  const stableClearToolSelection = useCallback(
+    () => selectToolRef.current(null),
+    [],
+  );
+
+  const actionsValue = useMemo<ToolWorkflowActionsValue>(
+    () => ({
+      selectTool: stableSelectTool,
+      clearToolSelection: stableClearToolSelection,
+      toggleFavorite,
+      handleToolSelect: stableHandleToolSelect,
+      handleToolSelectForced: stableHandleToolSelectForced,
+      handleBackToTools: stableHandleBackToTools,
+      handleReaderToggle: stableHandleReaderToggle,
+      setLeftPanelView,
+      setReaderMode: stableSetReaderMode,
+      setToolPanelMode: stableSetToolPanelMode,
+      setPreviewFile: stableSetPreviewFile,
+      registerPreviewImport,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    }),
+    [
+      stableSelectTool,
+      stableClearToolSelection,
+      toggleFavorite,
+      stableHandleToolSelect,
+      stableHandleToolSelectForced,
+      stableHandleBackToTools,
+      stableHandleReaderToggle,
+      setLeftPanelView,
+      stableSetReaderMode,
+      stableSetToolPanelMode,
+      stableSetPreviewFile,
+      setSearchQuery,
+      registerToolReset,
+      resetTool,
+    ],
+  );
+
+  const dataValue = useMemo<ToolWorkflowDataValue>(
+    () => ({
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    }),
+    [
+      toolAvailability,
+      toolRegistry,
+      favoriteTools,
+      getSelectedTool,
+      isFavorite,
+    ],
+  );
+
+  // Properly memoized context value
+  const contextValue = useMemo(
+    (): ToolWorkflowContextValue => ({
+      // State
+      ...state,
+      selectedToolKey: navigationState.selectedTool,
+      selectedTool,
+      toolRegistry,
+      getSelectedTool,
+
+      // Actions
+      setLeftPanelView,
+      setReaderMode,
+      setToolPanelMode,
+      setPreviewFile,
+      registerPreviewImport,
+      setSearchQuery,
+      selectTool: actions.setSelectedTool,
+      clearToolSelection: () => actions.setSelectedTool(null),
+
+      // Tool Reset Actions
+      toolResetFunctions,
+      registerToolReset,
+      resetTool,
+      toolAvailability,
+
+      // Workflow Actions
+      handleToolSelect,
+      handleToolSelectForced,
+      handleBackToTools,
+      handleReaderToggle,
+
+      // Computed
+      filteredTools,
+
+      // Tool History
+      favoriteTools,
+      toggleFavorite,
+      isFavorite,
+
+      // Custom workbench views
+      customWorkbenchViews,
+      registerCustomWorkbenchView,
+      unregisterCustomWorkbenchView,
+      setCustomWorkbenchViewData,
+      clearCustomWorkbenchViewData,
+    }),
+    [
+      state,
+      navigationState.selectedTool,
+      selectedTool,
+      toolRegistry,
+      getSelectedTool,
+      toolAvailability,
+      setLeftPanelView,
+      setReaderMode,
+      setToolPanelMode,
+      setPreviewFile,
+      setSearchQuery,
+      actions.setSelectedTool,
+      registerToolReset,
+      resetTool,
+      handleToolSelect,
+      handleBackToTools,
+      handleReaderToggle,
+      filteredTools,
+      favoriteTools,
+      toggleFavorite,
+      isFavorite,
+      customWorkbenchViews,
+      registerCustomWorkbenchView,
+      unregisterCustomWorkbenchView,
+      setCustomWorkbenchViewData,
+      clearCustomWorkbenchViewData,
+    ],
+  );
+
+  return (
+    <ToolWorkflowActionsContext.Provider value={actionsValue}>
+      <ToolWorkflowDataContext.Provider value={dataValue}>
+        <ToolWorkflowContext.Provider value={contextValue}>
+          <ToolFileEligibilityProvider>{children}</ToolFileEligibilityProvider>
+        </ToolWorkflowContext.Provider>
+      </ToolWorkflowDataContext.Provider>
+    </ToolWorkflowActionsContext.Provider>
+  );
+}
+
+/** Tool-workflow callbacks with referentially-stable identities. */
+export function useToolWorkflowActions(): ToolWorkflowActionsValue {
+  const ctx = useContext(ToolWorkflowActionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowActions must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
+}
+
+/** Tool registry, availability, and favorites — stable while unchanged. */
+export function useToolWorkflowData(): ToolWorkflowDataValue {
+  const ctx = useContext(ToolWorkflowDataContext);
+  if (!ctx) {
+    throw new Error(
+      "useToolWorkflowData must be used within ToolWorkflowProvider",
+    );
+  }
+  return ctx;
+}
+
+// Custom hook to use the context
+export function useToolWorkflow(): ToolWorkflowContextValue {
+  const context = useContext(ToolWorkflowContext);
+  if (!context) {
+    console.error(
+      "ToolWorkflowContext not found. Current stack:",
+      new Error().stack,
+    );
+    throw new Error(
+      "useToolWorkflow must be used within a ToolWorkflowProvider",
+    );
+  }
+  return context;
+}

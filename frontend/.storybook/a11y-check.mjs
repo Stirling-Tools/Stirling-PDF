@@ -66,8 +66,8 @@ function collect(dir) {
     }
     for (const tf of report.testResults || []) {
       const norm = tf.name.replace(/\\/g, "/");
-      const idx = norm.search(/editor\/src\//);
-      const file = idx >= 0 ? norm.slice(idx) : norm;
+      const rel = norm.match(/(?:^|\/)frontend\/(.*)$/);
+      const file = rel ? rel[1] : norm;
       seenFiles.add(file);
       // A story file that fails to import produces a failed suite with no
       // assertions at all. Every other check here reads assertions, so such a

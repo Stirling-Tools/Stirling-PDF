@@ -7,6 +7,8 @@ import java.util.Map;
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.node.FencedCodeBlock;
+import org.commonmark.node.IndentedCodeBlock;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
@@ -15,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -23,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -37,10 +42,24 @@ import stirling.software.common.util.*;
 @RequiredArgsConstructor
 public class ConvertMarkdownToPdf {
 
+    private static final List<Extension> MARKDOWN_EXTENSIONS = List.of(TablesExtension.create());
+
+    private static final Parser MARKDOWN_PARSER =
+            Parser.builder().extensions(MARKDOWN_EXTENSIONS).build();
+
+    private static final HtmlRenderer HTML_RENDERER =
+            HtmlRenderer.builder()
+                    .attributeProviderFactory(context -> new TableAttributeProvider())
+                    .attributeProviderFactory(context -> new CodeBlockAttributeProvider())
+                    .extensions(MARKDOWN_EXTENSIONS)
+                    .build();
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
+    private final OfficeConversionService officeConversionService;
+    private final OfficeToPdfService officeToPdfService;
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
@@ -59,7 +78,10 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
                             + " input, converts it to HTML, and then to PDF format.")
-    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<Resource> markdownToPdf(
+            @ModelAttribute GeneralFile generalFile,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
@@ -82,6 +104,8 @@ public class ConvertMarkdownToPdf {
                     "error.fileFormatRequired", "File must be in {0} format", ".md or .zip");
         }
 
+        boolean officeConvert =
+                officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
         byte[] pdfBytes;
         String outputFilename;
 
@@ -121,28 +145,12 @@ public class ConvertMarkdownToPdf {
 
                 // Read and convert markdown to HTML
                 String markdownContent = java.nio.file.Files.readString(markdownFile.toPath());
-                List<Extension> extensions = List.of(TablesExtension.create());
-                Parser parser = Parser.builder().extensions(extensions).build();
-                Node document = parser.parse(markdownContent);
-                HtmlRenderer renderer =
-                        HtmlRenderer.builder()
-                                .attributeProviderFactory(context -> new TableAttributeProvider())
-                                .extensions(extensions)
-                                .build();
-                String htmlContent = renderer.render(document);
+                String htmlContent = renderHtml(markdownContent);
 
                 // Create a new ZIP with HTML + images for WeasyPrint
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
 
-                // Use FileToPdf which already supports ZIP files with images
-                pdfBytes =
-                        FileToPdf.convertHtmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(),
-                                null,
-                                htmlZipBytes,
-                                "package.zip",
-                                tempFileManager,
-                                customHtmlSanitizer);
+                pdfBytes = convertHtml(htmlZipBytes, true, officeConvert);
 
                 outputFilename =
                         GeneralUtils.generateFilename(
@@ -151,26 +159,11 @@ public class ConvertMarkdownToPdf {
             }
         } else {
             // Handle plain markdown file (no images)
-            List<Extension> extensions = List.of(TablesExtension.create());
-            Parser parser = Parser.builder().extensions(extensions).build();
-
-            Node document = parser.parse(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
-            HtmlRenderer renderer =
-                    HtmlRenderer.builder()
-                            .attributeProviderFactory(context -> new TableAttributeProvider())
-                            .extensions(extensions)
-                            .build();
-
-            String htmlContent = renderer.render(document);
+            String htmlContent =
+                    renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
 
             pdfBytes =
-                    FileToPdf.convertHtmlToPdf(
-                            runtimePathConfig.getWeasyPrintPath(),
-                            null,
-                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                            "converted.html",
-                            tempFileManager,
-                            customHtmlSanitizer);
+                    convertHtml(htmlContent.getBytes(StandardCharsets.UTF_8), false, officeConvert);
 
             outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         }
@@ -185,6 +178,24 @@ public class ConvertMarkdownToPdf {
             throw e;
         }
         return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+    }
+
+    private byte[] convertHtml(byte[] html, boolean packaged, boolean officeConvert)
+            throws Exception {
+        if (officeConvert) {
+            return officeToPdfService.convertHtml(html, packaged);
+        }
+        return FileToPdf.convertHtmlToPdf(
+                runtimePathConfig.getWeasyPrintPath(),
+                null,
+                html,
+                packaged ? "package.zip" : "converted.html",
+                tempFileManager,
+                customHtmlSanitizer);
+    }
+
+    static String renderHtml(String markdown) {
+        return HTML_RENDERER.render(MARKDOWN_PARSER.parse(markdown));
     }
 
     /**
@@ -261,6 +272,19 @@ class TableAttributeProvider implements AttributeProvider {
     public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
         if (node instanceof TableBlock) {
             attributes.put("class", "table table-striped");
+        }
+    }
+}
+
+// The HTML reaches WeasyPrint with no stylesheet, and its default `white-space: pre` lets a long
+// code line run past the page margin and get clipped. Inline, because the sanitizer strips <style>
+// elements; word-wrap rather than overflow-wrap, because its CSS allowlist drops the latter.
+class CodeBlockAttributeProvider implements AttributeProvider {
+    @Override
+    public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+        if ("pre".equals(tagName)
+                && (node instanceof FencedCodeBlock || node instanceof IndentedCodeBlock)) {
+            attributes.put("style", "white-space: pre-wrap; word-wrap: break-word");
         }
     }
 }

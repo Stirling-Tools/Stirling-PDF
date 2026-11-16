@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -61,9 +62,10 @@ class FolderAccessGuardTest {
                 sourceStore);
     }
 
-    private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
+    private FolderAccessGuard guardWithWatchedFolder(String watchedDir, List<String> allowedRoots) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getSecurity().setEnableLogin(true);
+        properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         properties
                 .getSystem()
                 .getCustomPaths()
@@ -162,39 +164,127 @@ class FolderAccessGuardTest {
     }
 
     @Test
-    void permitsTheLocalServerStorageDirectoryEvenWithNoConfiguredRoots() {
+    void rejectsTheLocalStorageDirectoryEvenInsideAnAllowedRoot() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(
+                        List.of(tempDir.toString()), true, "local", storageBase.toString());
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(storageBase.resolve("4")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+        assertTrue(guard.isProtected(storageBase.resolve("4").resolve("doc.pdf")));
+        assertFalse(guard.isProtected(tempDir));
+    }
+
+    @Test
+    void rejectsTheStorageDirectoryWhateverTheProviderOrEnabledFlag() {
+        Path storageBase = tempDir.resolve("storage");
+        for (FolderAccessGuard guard :
+                List.of(
+                        guardWithStorage(
+                                List.of(tempDir.toString()),
+                                false,
+                                "local",
+                                storageBase.toString()),
+                        guardWithStorage(
+                                List.of(tempDir.toString()), true, "s3", storageBase.toString()))) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> guard.requirePermitted(storageBase.resolve("4")));
+        }
+    }
+
+    @Test
+    void rejectsTheStorageDirectoryWithNoConfiguredRoots() {
         Path storageBase = tempDir.resolve("storage");
         FolderAccessGuard guard =
                 guardWithStorage(List.of(), true, "local", storageBase.toString());
-        Path within = storageBase.resolve("inbox");
 
-        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(storageBase.resolve("3")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
     @Test
-    void ignoresServerStorageWhenTheStorageFeatureIsDisabled() {
-        Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard =
-                guardWithStorage(List.of(), false, "local", storageBase.toString());
-
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
-    }
-
-    @Test
-    void ignoresServerStorageWhenTheProviderIsNotLocal() {
-        Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard = guardWithStorage(List.of(), true, "s3", storageBase.toString());
-
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
-    }
-
-    @Test
-    void permitsPipelineWatchedFoldersEvenWithNoConfiguredRoots() {
+    void rejectsPipelineWatchedFoldersWithNoConfiguredRoots() {
         Path watched = tempDir.resolve("watched");
-        FolderAccessGuard guard = guardWithWatchedFolder(watched.toString());
-        Path within = watched.resolve("inbox");
+        FolderAccessGuard guard = guardWithWatchedFolder(watched.toString(), List.of());
 
-        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(watched.resolve("drop")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
+        assertTrue(guard.isProtected(watched.resolve("drop").resolve("config.json")));
+    }
+
+    @Test
+    void rejectsPipelineWatchedFoldersEvenInsideAnAllowedRoot() {
+        Path watched = tempDir.resolve("pipeline").resolve("watchedFolders");
+        FolderAccessGuard guard =
+                guardWithWatchedFolder(watched.toString(), List.of(tempDir.toString()));
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(watched.resolve("drop")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(watched));
+        assertEquals(
+                tempDir.resolve("pipeline").resolve("finishedFolders").toAbsolutePath().normalize(),
+                guard.requirePermitted(tempDir.resolve("pipeline").resolve("finishedFolders")));
+    }
+
+    @Test
+    void rejectsPipelineWatchedFoldersInTheDesktopBundle() {
+        Path watched = tempDir.resolve("watched");
+        withDesktopBundle(
+                () ->
+                        assertThrows(
+                                IllegalArgumentException.class,
+                                () ->
+                                        guardWithWatchedFolder(watched.toString(), List.of())
+                                                .requirePermitted(watched.resolve("drop"))));
+    }
+
+    @Test
+    void rejectsRelativePaths() {
+        FolderAccessGuard guard =
+                guardWithStorage(
+                        List.of(Path.of("").toAbsolutePath().toString()), true, "local", "storage");
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(Path.of("storage", "3")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> guard.requirePermitted(Path.of("pipeline", "watchedFolders", "drop")));
+        assertTrue(guard.isProtected(Path.of("storage", "3")));
+    }
+
+    @Test
+    void rejectsASymlinkInsideAnAllowedRootThatPointsIntoAProtectedRoot() throws Exception {
+        Path watched = Files.createDirectories(tempDir.resolve("watched"));
+        Path allowed = Files.createDirectories(tempDir.resolve("allowed"));
+        Path link = Files.createSymbolicLink(allowed.resolve("link"), watched);
+        FolderAccessGuard guard =
+                guardWithWatchedFolder(watched.toString(), List.of(allowed.toString()));
+
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(link));
+        assertThrows(
+                IllegalArgumentException.class, () -> guard.requirePermitted(link.resolve("drop")));
+        assertTrue(guard.isProtected(link.resolve("drop")));
+        assertEquals(
+                allowed.resolve("inbox").toAbsolutePath().normalize(),
+                guard.requirePermitted(allowed.resolve("inbox")));
     }
 
     @Test

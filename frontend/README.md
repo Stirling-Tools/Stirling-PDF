@@ -16,7 +16,7 @@ For desktop app development, see the [Tauri](#tauri) section below.
 ## Layout
 
 `frontend/` is a workspace containing one or more apps. Today it holds the
-PDF editor under `frontend/editor/`; new apps (the developer portal, etc.)
+PDF editor under `frontend/`; new apps (the developer portal, etc.)
 will sit alongside it as siblings. Shared tooling — `package.json`, `node_modules`,
 `.storybook/`, oxlint, oxfmt — lives at `frontend/` so every app installs
 once and lints with the same config.
@@ -24,7 +24,7 @@ once and lints with the same config.
 ## Environment Variables
 
 The editor's environment variables live in committed `.env` files at
-`frontend/editor/`:
+`frontend/`:
 
 - `.env` — used by all builds (core, proprietary, and as the base for desktop/SaaS)
 - `.env.desktop` — additional vars loaded in desktop (Tauri) mode
@@ -32,7 +32,7 @@ The editor's environment variables live in committed `.env` files at
 
 These files contain non-secret defaults and are checked into Git, so most dev work needs no further setup.
 
-To override values locally (API keys, machine-specific settings), create an uncommitted sibling `editor/.env.local` / `editor/.env.desktop.local` / `editor/.env.saas.local`. Vite automatically layers these on top of the committed files.
+To override values locally (API keys, machine-specific settings), create an uncommitted sibling `.env.local` / `.env.desktop.local` / `.env.saas.local`. Vite automatically layers these on top of the committed files.
 
 ## Docker Setup
 

@@ -22,10 +22,10 @@ Bucketing rules:
     stirling/software/saas/**          -> saas
     *desktop*                          -> desktop (no real backend match today)
   Frontend (source path -> area):
-    frontend/editor/src/core/**        -> core
-    frontend/editor/src/proprietary/** -> proprietary
-    frontend/editor/src/saas/**        -> saas
-    frontend/editor/src/desktop/**     -> desktop
+    frontend/src/editor/core/**        -> core
+    frontend/src/editor/proprietary/** -> proprietary
+    frontend/src/editor/saas/**        -> saas
+    frontend/src/editor/desktop/**     -> desktop
 
 Cells render as `pct% (covered/total)` where the metric is:
   - Backend: JaCoCo METHOD counter (most directly comparable to JS funcs)
@@ -151,12 +151,12 @@ def parse_jacoco_methods(path: Path) -> RowBuckets:
 
 
 def _classify_frontend(file_path: str) -> str | None:
-    """Map a vitest per-file path (anything containing src/<area>/) to an area."""
+    """Map a vitest per-file path (anything containing src/editor/<area>/) to an area."""
     if not file_path:
         return None
     norm = file_path.replace("\\", "/")
     for area in AREAS:
-        if f"/src/{area}/" in norm:
+        if f"/src/editor/{area}/" in norm:
             return area
     return None
 

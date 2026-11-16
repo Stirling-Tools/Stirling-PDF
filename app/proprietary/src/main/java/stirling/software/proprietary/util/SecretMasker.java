@@ -20,9 +20,9 @@ public final class SecretMasker {
     private static final Pattern SENSITIVE =
             RegexPatternUtils.getInstance()
                     .getPattern(
-                            // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
-                            // like secretAccessKey (no word boundary after "secret") still match.
-                            "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+                            // Password names also occur inside camelCase fields and arg_ audit
+                            // keys.
+                            "(?i)password|\\b(token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
 
     private SecretMasker() {}
 
@@ -33,7 +33,7 @@ public final class SecretMasker {
                 .filter(e -> e.getValue() != null)
                 .collect(
                         Collectors.toMap(
-                                Map.Entry::getKey, e -> deepMaskValue(e.getKey(), e.getValue())));
+                                Map.Entry::getKey, e -> maskValue(e.getKey(), e.getValue())));
     }
 
     private static Object deepMask(Object value) {
@@ -43,7 +43,10 @@ public final class SecretMasker {
                     .collect(
                             Collectors.toMap(
                                     Map.Entry::getKey,
-                                    e -> deepMaskValue((String) e.getKey(), e.getValue())));
+                                    e ->
+                                            maskValue(
+                                                    e.getKey() instanceof String key ? key : null,
+                                                    e.getValue())));
         } else if (value instanceof List<?> list) {
             return list.stream().map(SecretMasker::deepMask).toList();
         } else {
@@ -51,7 +54,11 @@ public final class SecretMasker {
         }
     }
 
-    private static Object deepMaskValue(String key, Object value) {
+    /**
+     * Redacts named secrets and nested maps/lists before callers stringify them; input is
+     * unchanged.
+     */
+    public static Object maskValue(String key, Object value) {
         if (key != null && SENSITIVE.matcher(key).find()) {
             return REDACTED;
         }

@@ -17,7 +17,7 @@ public class RemoveBlankPagesRequest extends PDFFile {
             minimum = "0",
             maximum = "255",
             defaultValue = "10")
-    private int threshold;
+    private int threshold = 10;
 
     @Schema(
             description = "The percentage of white color on a page to consider it as blank",
@@ -25,5 +25,5 @@ public class RemoveBlankPagesRequest extends PDFFile {
             minimum = "0.1",
             maximum = "100",
             defaultValue = "99.9")
-    private float whitePercent;
+    private float whitePercent = 99.9f;
 }

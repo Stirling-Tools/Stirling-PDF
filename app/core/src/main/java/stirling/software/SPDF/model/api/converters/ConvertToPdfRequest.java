@@ -26,18 +26,18 @@ public class ConvertToPdfRequest {
                 "fitDocumentToPage",
                 "maintainAspectRatio"
             })
-    private String fitOption;
+    private String fitOption = "fillPage";
 
     @Schema(
             description = "The color type of the output image(s)",
             defaultValue = "color",
             requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"color", "greyscale", "blackwhite"})
-    private String colorType;
+    private String colorType = "color";
 
     @Schema(
             description = "Whether to automatically rotate the images to better fit the PDF page",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
-    private Boolean autoRotate;
+    private Boolean autoRotate = false;
 }

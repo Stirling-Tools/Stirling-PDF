@@ -42,4 +42,31 @@ class EndpointInterceptorTest {
         assertFalse(interceptor.preHandle(request, response, new Object()));
         verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
     }
+
+    @Test
+    void preHandleBlocksPercentEncodedDisabledEndpoint() throws Exception {
+        when(request.getRequestURI()).thenReturn("/api/v1/convert/html/pd%66");
+        when(endpointConfiguration.isEndpointEnabledForUri("/api/v1/convert/html/pdf"))
+                .thenReturn(false);
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
+    }
+
+    @Test
+    void preHandleChecksPathRelativeToContextPath() throws Exception {
+        when(request.getContextPath()).thenReturn("/pdf");
+        when(request.getRequestURI()).thenReturn("/pdf/api/v1/general/rotate-pdf");
+        when(endpointConfiguration.isEndpointEnabledForUri("/api/v1/general/rotate-pdf"))
+                .thenReturn(false);
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
+    }
+
+    @Test
+    void preHandleRejectsMalformedEscape() throws Exception {
+        when(request.getRequestURI()).thenReturn("/api/v1/general/rotate-pdf%zz");
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST);
+        verifyNoInteractions(endpointConfiguration);
+    }
 }

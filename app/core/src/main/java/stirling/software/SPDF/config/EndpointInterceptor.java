@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.RequestUriUtils;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -20,7 +22,14 @@ public class EndpointInterceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        String requestURI = request.getRequestURI();
+        String requestURI;
+        try {
+            requestURI =
+                    RequestUriUtils.normalizeUri(request.getContextPath(), request.getRequestURI());
+        } catch (IllegalArgumentException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return false;
+        }
 
         // Prevent API responses from being stored by browsers or intermediary caches by default
         String servletPath = request.getServletPath();

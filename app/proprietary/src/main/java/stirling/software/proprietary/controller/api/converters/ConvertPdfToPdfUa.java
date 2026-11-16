@@ -56,12 +56,12 @@ public class ConvertPdfToPdfUa {
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert a PDF to PDF/UA-1 or PDF/UA-2",
+            summary = "Make a PDF accessible for screen readers (tagged PDF/UA-1 or PDF/UA-2)",
             description =
-                    "Tags the document, marks decorative content as artifacts, embeds fonts and"
-                            + " applies the document-level requirements of PDF/UA, then validates"
-                            + " the result. A conformance declaration is written only if validation"
-                            + " passes, so the returned file never claims more than it delivers.")
+                    "Tags the document, marks decorative content as artifacts and embeds"
+                            + " fonts, then validates. PDF/UA is declared only if validation passes"
+                            + " (see the X-Stirling-UA-Declared header). Figures without alt text"
+                            + " block it unless altText is given or figurePolicy=mark-decorative.")
     public ResponseEntity<Resource> pdfToPdfUa(@ModelAttribute PdfToPdfUaRequest request)
             throws IOException {
 
@@ -82,7 +82,7 @@ public class ConvertPdfToPdfUa {
                         // Only used when the document declares no language of its own.
                         .language(
                                 request.getLanguage() == null || request.getLanguage().isBlank()
-                                        ? "en-GB"
+                                        ? "en-US"
                                         : request.getLanguage())
                         .overrideLanguage(
                                 request.getOverrideLanguage() != null
@@ -105,7 +105,6 @@ public class ConvertPdfToPdfUa {
         outcome.warnings().forEach(warning -> log.info("PDF/UA warning: {}", warning));
 
         // Streamed from a temp file so a large conversion does not hold a second heap copy.
-        String suffix = outcome.declared() ? "_pdfua" + profile.part() : "_tagged";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try {
             Files.write(tempOut.getPath(), outcome.pdfBytes());
@@ -114,7 +113,7 @@ public class ConvertPdfToPdfUa {
             throw e;
         }
         ResponseEntity<Resource> response =
-                WebResponseUtils.pdfFileToWebResponse(tempOut, stem + suffix + ".pdf");
+                WebResponseUtils.pdfFileToWebResponse(tempOut, stem + ".pdf");
 
         return ResponseEntity.status(response.getStatusCode())
                 .headers(response.getHeaders())

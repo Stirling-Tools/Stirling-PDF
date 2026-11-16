@@ -153,7 +153,8 @@ class ZipExtractionUtilsTest {
                             new String[] {"first.txt", "second.txt"},
                             new byte[][] {bytes("one"), bytes("two")});
 
-            List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager);
+            List<Resource> result =
+                    ZipExtractionUtils.extractZip(resource(zip), tempFileManager, created::add);
 
             assertThat(result).hasSize(2);
             assertThat(result)
@@ -170,7 +171,8 @@ class ZipExtractionUtilsTest {
                             new String[] {"dir/", "dir/file.txt"},
                             new byte[][] {null, bytes("payload")});
 
-            List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager);
+            List<Resource> result =
+                    ZipExtractionUtils.extractZip(resource(zip), tempFileManager, created::add);
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getFilename()).isEqualTo("dir/file.txt");
@@ -180,7 +182,8 @@ class ZipExtractionUtilsTest {
         @DisplayName("empty ZIP yields no resources")
         void emptyZip() throws IOException {
             byte[] zip = buildZip(new String[] {}, new byte[][] {});
-            List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager);
+            List<Resource> result =
+                    ZipExtractionUtils.extractZip(resource(zip), tempFileManager, created::add);
             assertThat(result).isEmpty();
         }
 
@@ -194,7 +197,8 @@ class ZipExtractionUtilsTest {
                             new String[] {"top.txt", "child.zip"},
                             new byte[][] {bytes("top-content"), inner});
 
-            List<Resource> result = ZipExtractionUtils.extractZip(resource(outer), tempFileManager);
+            List<Resource> result =
+                    ZipExtractionUtils.extractZip(resource(outer), tempFileManager, created::add);
 
             // top.txt + the single file inside child.zip => 2 flat resources
             assertThat(result).hasSize(2);
@@ -230,7 +234,8 @@ class ZipExtractionUtilsTest {
             byte[] innerZip = buildZip(new String[] {"page.png"}, new byte[][] {bytes("imgdata")});
             byte[] outer = buildZip(new String[] {"book.cbz"}, new byte[][] {innerZip});
 
-            List<Resource> result = ZipExtractionUtils.extractZip(resource(outer), tempFileManager);
+            List<Resource> result =
+                    ZipExtractionUtils.extractZip(resource(outer), tempFileManager, created::add);
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getFilename()).isEqualTo("book.cbz");
@@ -249,7 +254,7 @@ class ZipExtractionUtilsTest {
             assertThatThrownBy(
                             () ->
                                     ZipExtractionUtils.extractZip(
-                                            resource(truncated), tempFileManager))
+                                            resource(truncated), tempFileManager, created::add))
                     .isInstanceOf(IOException.class);
         }
     }

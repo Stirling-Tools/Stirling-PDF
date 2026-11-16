@@ -8,49 +8,47 @@ import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
+// Before any component import, as in src/index.tsx: component CSS overrides
+// Mantine's at equal specificity, so Mantine's must load first.
+import "@mantine/core/styles.css";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
-import { MantineProvider } from "@mantine/core";
-import {
-  mantineTheme as editorMantineTheme,
-  editorCssVariablesResolver,
-} from "@core/theme/mantineTheme";
-import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+import { TierProvider, type Tier } from "@processor/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ThemeProvider } from "@editor-core/components/shared/ThemeProvider";
+import { PreferencesProvider } from "@editor-core/contexts/PreferencesContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { AppConfigProvider } from "@editor-core/contexts/AppConfigContext";
+import { handlers } from "@processor/mocks/handlers";
+import { configureSupabase } from "@editor-proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
-import { rtlLanguages, supportedLanguages } from "@core/i18n/languages";
+import { rtlLanguages, supportedLanguages } from "@editor-core/i18n/languages";
 
-import "@mantine/core/styles.css";
-import "@core/tokens/tokens.css";
-import "@core/theme/index.css";
+import "@editor-core/tokens/tokens.css";
+import "@editor-core/theme/index.css";
 // The editor's semantic token layer (--bg-surface, --onboarding-title, …).
 // The app reaches it through its style entry; without it here, components
 // styled on those variables render unthemed (e.g. transparent modal surfaces)
 // and axe measures contrast against colours the app never shows.
-import "@core/styles/theme.css";
-import "@core/tokens/base.css";
+import "@editor-core/styles/theme.css";
+import "@editor-core/tokens/base.css";
 // Portal element reset + typography. Scoped to .portal-scope in the app so it
 // can't leak into the editor; the decorator below adds that class around
 // portal stories only, mirroring how PortalApp mounts.
-import "@portal/theme/base.css";
+import "@processor/theme/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
 // glob, so the toolbar language switcher can flip between all languages with no
 // async fetch (Storybook has no backend to serve /locales/). t(key) then renders
 // the shipped copy (e.g. "No sources connected yet") rather than the raw key.
 const localeModules = import.meta.glob<string>(
-  "../editor/public/locales/*/translation.toml",
+  "../public/locales/*/translation.toml",
   { query: "?raw", import: "default", eager: true },
 );
 
@@ -160,37 +158,6 @@ function TierKey({
   );
 }
 
-/**
- * Makes the Storybook toolbar the SINGLE source of truth for the theme.
- */
-function ThemeBridge({
-  theme,
-  children,
-}: {
-  theme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-  return <>{children}</>;
-}
-
-/**
- * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
- * with the fixed default accent (data-accent="default"), matching the editor.
- */
-function SchemeSetup({ scheme }: { scheme: "light" | "dark" }) {
-  useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-app-theme", "custom");
-    root.setAttribute("data-accent", "default");
-    root.setAttribute("data-mantine-color-scheme", scheme);
-  }, [scheme]);
-  return null;
-}
-
 /** Switches i18next to the toolbar locale and keeps document dir/lang in sync. */
 const withLocale: Decorator = (Story, context) => {
   const locale = (context.globals.locale as string) ?? "en-US";
@@ -203,37 +170,6 @@ const withLocale: Decorator = (Story, context) => {
   }, [locale]);
   return <Story />;
 };
-
-/**
- * Applies the Mantine theme the story's component actually runs under in the
- * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
- * everything else in its own ThemeProvider. Getting this wrong is not just
- * cosmetic — the two themes carry different neutral ramps, so rendering an
- * editor component under the Processor's theme drops it onto Mantine's stock
- * greys and reports contrast failures the app doesn't have.
- */
-function StoryTheme({
-  isPortalStory,
-  colorScheme,
-  children,
-}: {
-  isPortalStory: boolean;
-  colorScheme: "light" | "dark";
-  children: React.ReactNode;
-}) {
-  if (isPortalStory) {
-    return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
-  }
-  return (
-    <MantineProvider
-      theme={editorMantineTheme}
-      cssVariablesResolver={editorCssVariablesResolver}
-      forceColorScheme={colorScheme}
-    >
-      {children}
-    </MantineProvider>
-  );
-}
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
@@ -252,19 +188,23 @@ const withProviders: Decorator = (Story, context) => {
   // styles never apply to editor components).
   // `fileName` is only injected by the dev/build pipeline — under the Vitest
   // runner it is absent, so path alone would silently drop every portal story
-  // onto the editor theme (where portal-only palette entries like `amber`
-  // resolve to nothing and render unstyled). The title prefix is the fallback
-  // that survives both environments.
+  // out of the wrapper. The title prefix is the fallback that survives both
+  // environments.
   const isPortalStory =
     (context.parameters.fileName ?? "").includes("/portal/") ||
     context.title.startsWith("Portal/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <SchemeSetup scheme={colorScheme} />
-          <ThemeBridge theme={colorScheme}>
-            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+        <PreferencesProvider>
+          <ThemeProvider forcedTheme={colorScheme}>
+            {/* The app mounts this with the platform providers; without it the config never
+                loads and anything waiting on it (the portal's connect gate) never settles.
+                Seeded rather than fetched; a story can mount its own to vary it. */}
+            <AppConfigProvider
+              initialConfig={STORY_APP_CONFIG}
+              autoFetch={false}
+            >
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
@@ -282,13 +222,16 @@ const withProviders: Decorator = (Story, context) => {
                   </UIProvider>
                 </TierKey>
               </LinkProvider>
-            </StoryTheme>
-          </ThemeBridge>
-        </ThemeProvider>
+            </AppConfigProvider>
+          </ThemeProvider>
+        </PreferencesProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
 };
+
+/** Matches the mocked /api/v1/config/app-config, which the portal's views were written against. */
+const STORY_APP_CONFIG = { aiEngineEnabled: true };
 
 const preview: Preview = {
   loaders: [mswLoader],

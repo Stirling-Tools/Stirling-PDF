@@ -23,15 +23,14 @@ public class CropPdfForm extends PDFWithPageNums {
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         String pageNumbers = getPageNumbers();
+        GeneralUtils.requireValidPageSelection(pageNumbers, doc.getNumberOfPages());
         return GeneralUtils.parsePageList(
                 (pageNumbers == null || pageNumbers.isBlank()) ? "all" : pageNumbers,
                 doc.getNumberOfPages(),
                 oneBased);
     }
 
-    // The base model marks pageNumbers required, but this endpoint treats an
-    // omitted or blank value as "all" (see above): advertise it as optional so
-    // generated clients do not fail local validation for a legal request.
+    // Crop-specific wording; omitted or blank still means every page.
     @Override
     @Schema(
             description =

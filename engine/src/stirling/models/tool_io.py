@@ -33,9 +33,6 @@ class ToolFormat(StrEnum):
     JAVASCRIPT = "JAVASCRIPT"
     EBOOK = "EBOOK"
     EMAIL = "EMAIL"
-    POSTSCRIPT = "POSTSCRIPT"
-    PCL = "PCL"
-    XPS = "XPS"
     VIDEO = "VIDEO"
     CBZ = "CBZ"
     CBR = "CBR"
@@ -127,28 +124,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.PDF_TO_UA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.PDF_TO_VECTOR: ToolIOSpec(
-        accepts=[ToolFormat.PDF],
-        produces=ToolFormat.IMAGE,
-        arity=ToolArity.SISO,
-        cases=[
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["ps"], default="eps")],
-                produces=ToolFormat.POSTSCRIPT,
-                arity=ToolArity.SISO,
-            ),
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["pcl"], default="eps")],
-                produces=ToolFormat.PCL,
-                arity=ToolArity.SISO,
-            ),
-            ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["xps"], default="eps")],
-                produces=ToolFormat.XPS,
-                arity=ToolArity.SISO,
-            ),
-        ],
-    ),
     ToolEndpoint.PDF_TO_WORD: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.WORD, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XLSX: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.EXCEL, arity=ToolArity.SISO),
     ToolEndpoint.PDF_TO_XML: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.XML, arity=ToolArity.SISO),
@@ -165,9 +140,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.URL_TO_PDF: ToolIOSpec(accepts=[ToolFormat.NONE], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.VECTOR_TO_PDF: ToolIOSpec(
-        accepts=[ToolFormat.POSTSCRIPT], produces=ToolFormat.PDF, arity=ToolArity.SISO
-    ),
     ToolEndpoint.BOOKLET_IMPOSITION: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
@@ -175,7 +147,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
-    ToolEndpoint.EDIT_TEXT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.MERGE_PDFS: ToolIOSpec(
         accepts=[ToolFormat.PDF, ToolFormat.IMAGE], produces=ToolFormat.PDF, arity=ToolArity.MISO
     ),
@@ -261,7 +232,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.JSON, arity=ToolArity.SISO
     ),
     ToolEndpoint.ADD_PASSWORD: ToolIOSpec(
-        accepts=[ToolFormat.PDF],
+        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED],
         produces=ToolFormat.PDF_ENCRYPTED,
         arity=ToolArity.SISO,
         cases=[
@@ -269,6 +240,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
                 when=[
                     ToolIOWhen(param="password", matches=[""], default=""),
                     ToolIOWhen(param="ownerPassword", matches=[""], default=""),
+                    ToolIOWhen(param="preserveExisting", matches=["false"], default="false"),
                 ],
                 produces=ToolFormat.PDF,
                 arity=ToolArity.SISO,
@@ -281,7 +253,16 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.REDACT_EXECUTE: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_CERT_SIGN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_PASSWORD: ToolIOSpec(
-        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED], produces=ToolFormat.PDF, arity=ToolArity.SISO
+        accepts=[ToolFormat.PDF, ToolFormat.PDF_ENCRYPTED],
+        produces=ToolFormat.PDF,
+        arity=ToolArity.SISO,
+        cases=[
+            ToolIOCase(
+                when=[ToolIOWhen(param="password", matches=[""], default="")],
+                produces=ToolFormat.ANY,
+                arity=ToolArity.SISO,
+            )
+        ],
     ),
     ToolEndpoint.SANITIZE_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.TIMESTAMP_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),

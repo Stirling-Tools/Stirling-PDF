@@ -1,0 +1,150 @@
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { Icon } from "@editor/ui/Icon";
+import { createPortal } from "react-dom";
+import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { Button } from "@editor/ui/Button";
+import { useIsOverflowing } from "@editor/hooks/useIsOverflowing";
+import "@editor/ui/Modal.css";
+
+export type ModalWidth = "sm" | "md" | "lg" | "xl";
+
+export interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  footer?: ReactNode;
+  /** When set, a back arrow renders at the start of the header (e.g. to step back in a staged modal). */
+  onBack?: () => void;
+  /** Accessible label for the back arrow. */
+  backLabel?: string;
+  /** sm=24rem, md=32rem, lg=48rem, xl=64rem. */
+  width?: ModalWidth;
+  disableBackdropClose?: boolean;
+  disableEscapeClose?: boolean;
+  /** Accessible name when no visible title is provided. */
+  ariaLabel?: string;
+  className?: string;
+  zIndex?: number;
+  children?: ReactNode;
+}
+
+/** Tab focus trapping and restoration are delegated to Mantine's FocusTrap. */
+export function Modal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  footer,
+  onBack,
+  backLabel,
+  width = "md",
+  disableBackdropClose = false,
+  disableEscapeClose = false,
+  ariaLabel,
+  className,
+  zIndex,
+  children,
+}: ModalProps) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // A body that overflows must be reachable by keyboard to scroll; only its non-focusable
+  // content (header close + footer live outside it). tabindex lands only when it scrolls, so
+  // fitting modals gain no stray tab stop (axe scrollable-region-focusable).
+  const bodyScrolls = useIsOverflowing(bodyRef);
+
+  useEffect(() => {
+    if (!open || disableEscapeClose) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, disableEscapeClose, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  function onBackdropClick() {
+    if (!disableBackdropClose) onClose();
+  }
+
+  const hasTitle = title !== undefined && title !== null;
+
+  return createPortal(
+    <div
+      className="sui-modal__backdrop"
+      style={zIndex === undefined ? undefined : { zIndex }}
+      onClick={onBackdropClick}
+      role="presentation"
+    >
+      <FocusTrap active>
+        <div
+          className={["sui-modal", `sui-modal--${width}`, className ?? ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={hasTitle ? titleId : undefined}
+          aria-label={!hasTitle ? ariaLabel : undefined}
+          tabIndex={-1}
+        >
+          {(title || subtitle || onBack) && (
+            <header className="sui-modal__header">
+              {onBack && (
+                <Button
+                  variant="tertiary"
+                  accent="neutral"
+                  size="sm"
+                  shape="circle"
+                  className="sui-modal__back"
+                  onClick={onBack}
+                  aria-label={backLabel ?? t("common.back", "Back")}
+                  leftSection={<Icon name="arrow-left" size={16} />}
+                />
+              )}
+              <div className="sui-modal__header-text">
+                {title && (
+                  <div id={titleId} className="sui-modal__title">
+                    {title}
+                  </div>
+                )}
+                {subtitle && <div className="sui-modal__sub">{subtitle}</div>}
+              </div>
+              <Button
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                shape="circle"
+                className="sui-modal__close"
+                onClick={onClose}
+                aria-label={t("common.close", "Close")}
+                leftSection={<Icon name="x" size={16} />}
+              />
+            </header>
+          )}
+          <div
+            ref={bodyRef}
+            className="sui-modal__body"
+            tabIndex={bodyScrolls ? 0 : undefined}
+          >
+            {children}
+          </div>
+          {footer && <footer className="sui-modal__footer">{footer}</footer>}
+        </div>
+      </FocusTrap>
+    </div>,
+    document.body,
+  );
+}

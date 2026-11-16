@@ -19,30 +19,30 @@ public class ExtractImageScansRequest {
     @Schema(
             description = "The angle threshold for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "5")
-    private int angleThreshold;
+            defaultValue = "10")
+    private int angleThreshold = 10;
 
     @Schema(
             description = "The tolerance for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "20")
-    private int tolerance;
+            defaultValue = "30")
+    private int tolerance = 30;
 
     @Schema(
             description = "The minimum area for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "8000")
-    private int minArea;
+            defaultValue = "10000")
+    private int minArea = 10000;
 
     @Schema(
             description = "The minimum contour area for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "500")
-    private int minContourArea;
+    private int minContourArea = 500;
 
     @Schema(
             description = "The border size for the image scan extraction",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "1")
-    private int borderSize;
+    private int borderSize = 1;
 }
