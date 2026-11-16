@@ -21,6 +21,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
 import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
+import { visibleImageBounds } from "@editor/tools/pdfTextEditor/util/imageClip";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
@@ -317,6 +318,65 @@ export const PageView = memo(function PageView({
     retryToken,
   ]);
 
+  // A lifted image: the canvas pixels it covered, put back if the gesture is
+  // cancelled, and the revision a committed gesture must move the page past.
+  const liftRef = useRef<{
+    area: PageRect;
+    covered: ImageData;
+    revision: number;
+  } | null>(null);
+
+  // Paints the page under image `imageId` as it would be without it, so a
+  // drag shows only the moving picture. One area render per gesture.
+  function liftImage(imageId: string): void {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const live = document.page(page.pageIndex);
+    const image = live.findImage(imageId);
+    if (!canvas || !ctx || !image || liftRef.current) return;
+    const full = PdfiumPageRenderer.rasterSize(
+      live.width,
+      live.height,
+      deviceScale,
+    );
+    if (canvas.width !== full.width || canvas.height !== full.height) return;
+    const area = PdfiumPageRenderer.pixelsCovering(
+      live,
+      deviceScale,
+      visibleImageBounds(image),
+    );
+    if (!area) return;
+    const without = PdfiumPageRenderer.renderAreaWithout(
+      document,
+      live,
+      deviceScale,
+      area,
+      image.pdfiumObjPtr,
+    );
+    if (!without) return;
+    liftRef.current = {
+      area,
+      covered: ctx.getImageData(area.x, area.y, area.width, area.height),
+      revision: live.revision,
+    };
+    ctx.putImageData(without, area.x, area.y);
+  }
+
+  // Ends a lift. Returns true when the page has changed and will repaint;
+  // otherwise the image is painted back where it was.
+  function settleImage(committed: boolean): boolean {
+    const lift = liftRef.current;
+    liftRef.current = null;
+    if (!lift) return false;
+    const repaints =
+      committed && document.page(page.pageIndex).revision !== lift.revision;
+    if (!repaints)
+      canvasRef.current
+        ?.getContext("2d")
+        ?.putImageData(lift.covered, lift.area.x, lift.area.y);
+    return repaints;
+  }
+
   return (
     <Box
       pos="relative"
@@ -469,6 +529,9 @@ export const PageView = memo(function PageView({
             readPixels={() =>
               readShownImagePixels(store, page.pageIndex, image.id)
             }
+            onLift={() => liftImage(image.id)}
+            onSettle={settleImage}
+            pageRevision={paintedRevision}
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
