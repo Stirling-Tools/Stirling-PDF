@@ -80,6 +80,7 @@ import {
   pdfAccessLifetime,
   rememberPdfAccess,
   signedPdfEditPolicyOn,
+  signedPdfEditsBlocked,
   subscribePdfAccess,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
@@ -92,6 +93,7 @@ import {
   setPendingUnlocks,
 } from "@editor/services/pendingUnlocks";
 import { handlePasswordError } from "@editor/utils/toolErrorHandler";
+import { SignedPdfEditsBlockedError } from "@editor/services/pdfSessionUnlock";
 import apiClient from "@editor/services/apiClient";
 import { buildRemovePasswordFormData } from "@editor/hooks/tools/removePassword/buildRemovePasswordFormData";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
@@ -896,6 +898,7 @@ function FileContextInner({
             "Enter the permissions password to continue.",
           ),
         );
+      if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
       const file = filesRef.current.get(fileId);
       if (!file)
         throw new Error(
@@ -961,6 +964,7 @@ function FileContextInner({
     try {
       const access = await inspectLocalPdfAccess(file, unlockPassword, signal);
       if (filesRef.current.get(fileId) !== file) return;
+      if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
       if (openingPasswordToRemove === null) {
         if (!access.ownerAuthenticated) {
           setOpeningPasswordToRemove(unlockPassword);
@@ -1004,14 +1008,16 @@ function FileContextInner({
     } catch (error) {
       if (signal.aborted) return;
       setUnlockError(
-        await handlePasswordError(
-          error,
-          t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
-          t(
-            "removePassword.error.failed",
-            "An error occurred while removing the password from the PDF.",
-          ),
-        ),
+        error instanceof SignedPdfEditsBlockedError
+          ? error.message
+          : await handlePasswordError(
+              error,
+              t("encryptedPdfUnlock.incorrectPassword", "Incorrect password"),
+              t(
+                "removePassword.error.failed",
+                "An error occurred while removing the password from the PDF.",
+              ),
+            ),
       );
     } finally {
       dispose();

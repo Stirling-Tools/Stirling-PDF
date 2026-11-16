@@ -1,4 +1,7 @@
-import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
+import {
+  SignedPdfEditsBlockedError,
+  signedPdfEditsBlockedMessage,
+} from "@editor/services/pdfSessionUnlock";
 import { useState } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
@@ -84,12 +87,14 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
     try {
       await fileActions.createUnprotectedCopy(file.fileId);
       close();
-    } catch {
+    } catch (error) {
       setError(
-        t(
-          "encryptedPdfUnlock.copyFailed",
-          "Unable to create the copy. Your PDF is unchanged.",
-        ),
+        error instanceof SignedPdfEditsBlockedError
+          ? error.message
+          : t(
+              "encryptedPdfUnlock.copyFailed",
+              "Unable to create the copy. Your PDF is unchanged.",
+            ),
       );
       setOpened(true);
     } finally {
