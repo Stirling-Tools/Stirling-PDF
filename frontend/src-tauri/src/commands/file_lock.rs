@@ -58,8 +58,7 @@ impl Locks {
                 held.launched_at = None;
                 return true;
             }
-            held.launched_at
-                .is_some_and(|at| now.duration_since(at) < LAUNCH_GRACE)
+            launch_pending(held, now)
         });
         for path in open {
             if self.held.contains_key(path) {
@@ -78,6 +77,12 @@ impl Locks {
         }
     }
 
+    /// Drops launch locks no window claimed within the grace; claimed files have no launch time.
+    fn expire_launches(&mut self, now: Instant) {
+        self.held
+            .retain(|_, held| held.launched_at.is_none() || launch_pending(held, now));
+    }
+
     /// Ok(false) when no writable lock is held, so the caller writes normally.
     fn write(&mut self, path: &str, bytes: &[u8]) -> std::io::Result<bool> {
         let Some(held) = self.held.get_mut(path).filter(|held| held.writable) else {
@@ -90,6 +95,11 @@ impl Locks {
         file.sync_all()?;
         Ok(true)
     }
+}
+
+fn launch_pending(held: &Held, now: Instant) -> bool {
+    held.launched_at
+        .is_some_and(|at| now.duration_since(at) < LAUNCH_GRACE)
 }
 
 #[cfg(windows)]
@@ -133,6 +143,12 @@ fn locks() -> std::sync::MutexGuard<'static, Locks> {
 
 pub fn lock_launch_file(path: &str) {
     locks().lock_launch_file(path, Instant::now());
+    // A file that never loads is never claimed, and nothing else may sync the
+    // locks again, so the grace needs its own timer.
+    std::thread::spawn(|| {
+        std::thread::sleep(LAUNCH_GRACE);
+        locks().expire_launches(Instant::now());
+    });
 }
 
 /// Lock exactly the files some window has open, plus launch files still loading.
@@ -239,6 +255,28 @@ mod tests {
         locks.sync(&[], start + LAUNCH_GRACE);
         assert!(exclusive_open_succeeds(&path));
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn an_unclaimed_launch_file_expires_without_another_sync() {
+        let unclaimed = temp_file("expire_unclaimed");
+        let claimed = temp_file("expire_claimed");
+        let start = Instant::now();
+        let mut locks = Locks::new();
+        locks.lock_launch_file(&key(&unclaimed), start);
+        locks.lock_launch_file(&key(&claimed), start);
+        locks.sync(&[key(&claimed)], start + Duration::from_secs(1));
+
+        locks.expire_launches(start + Duration::from_secs(5));
+        assert!(!exclusive_open_succeeds(&unclaimed));
+
+        locks.expire_launches(start + LAUNCH_GRACE);
+        assert!(exclusive_open_succeeds(&unclaimed));
+        assert!(!exclusive_open_succeeds(&claimed));
+
+        locks.sync(&[], start + LAUNCH_GRACE);
+        std::fs::remove_dir_all(unclaimed.parent().unwrap()).unwrap();
+        std::fs::remove_dir_all(claimed.parent().unwrap()).unwrap();
     }
 
     #[test]
