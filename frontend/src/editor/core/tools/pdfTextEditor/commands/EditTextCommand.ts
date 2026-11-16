@@ -259,6 +259,8 @@ export class EditTextCommand implements Command {
     prev: RunModelSnapshot;
   } | null = null;
 
+  // Objects the last whole-burst replay drew for this run, kept on the burst's last edit: the next replay replaces and frees them.
+  private replayDrawn: number[] = [];
   private readonly pushesBelow: boolean;
   // The runs below that this edit's added lines moved down, chosen on the first apply so a redo moves the same ones.
   private pushes: MoveTextRunCommand[] | null = null;
@@ -1797,6 +1799,11 @@ export class EditTextCommand implements Command {
     });
     const reversed = [...edits].reverse();
     if (phase === "revert") for (const edit of reversed) edit.undoPushes(doc);
+    const before = new Set(collectMemberPtrs(run));
+    // Only while the run is still made of exactly what the last replay drew: after any other step, that step may hold these objects.
+    const replaced = this.replayDrawn.every((ptr) => before.has(ptr))
+      ? this.replayDrawn
+      : [];
     try {
       move.apply(doc);
       if (phase === "revert") edits[0].restoreLayout(doc, run);
@@ -1810,6 +1817,11 @@ export class EditTextCommand implements Command {
       throw new RolledBackError(err);
     }
     if (phase === "apply") for (const edit of edits) edit.redoPushes(doc);
+    const after = new Set(collectMemberPtrs(run));
+    // The replay command is thrown away, and with it the only record of the objects it took off the page.
+    for (const ptr of replaced)
+      if (ptr && !after.has(ptr)) doc.module.FPDFPageObj_Destroy(ptr);
+    this.replayDrawn = [...after].filter((ptr) => ptr && !before.has(ptr));
     return true;
   }
 
