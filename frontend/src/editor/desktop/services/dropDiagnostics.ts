@@ -15,7 +15,10 @@ export function logDropDiagnostic(message: string): void {
 /** The folder part of a path, never the file name: "no path" when missing, "no folder" when bare. */
 export function folderOf(path: string | null | undefined): string {
   if (!path) return "no path";
-  const cut = Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
+  // A POSIX file name may contain a backslash; only Windows paths split on it.
+  const cut = path.startsWith("/")
+    ? path.lastIndexOf("/")
+    : Math.max(path.lastIndexOf("\\"), path.lastIndexOf("/"));
   if (cut < 0) return "no folder";
   return cut === 0 ? path[0] : path.slice(0, cut);
 }

@@ -101,5 +101,6 @@ describe("drop diagnostics", () => {
   it("never returns a file name from a root-level or bare path", () => {
     expect(folderOf("/report.pdf")).toBe("/");
     expect(folderOf("report.pdf")).toBe("no folder");
+    expect(folderOf("/tmp/Akte\\report.pdf")).toBe("/tmp");
   });
 });
