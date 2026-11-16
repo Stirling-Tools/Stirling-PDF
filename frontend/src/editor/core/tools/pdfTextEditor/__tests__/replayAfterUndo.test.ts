@@ -3,11 +3,15 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { DeleteObjectCommand } from "@editor/tools/pdfTextEditor/commands/DeleteObjectCommand";
+import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
 import { DuplicateRunCommand } from "@editor/tools/pdfTextEditor/commands/DuplicateRunCommand";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColourCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
+import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
+import { emitCellText } from "@editor/tools/pdfTextEditor/commands/tableHelpers";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -169,4 +173,125 @@ test("redo keeps an edit made to a duplicated line", async () => {
   expect(doc.page(0).findRun(duplicate.insertedRunId!)?.text).toBe(
     "Changed copy",
   );
+});
+
+test("redoing a delete after a redone font change takes the line out of the saved file", async () => {
+  const doc = await open();
+  const heading = doc.page(0).runs.find((r) => r.text === HEADING)!;
+  const history = new HistoryStack();
+  step(doc, history, family(heading.id, "Courier"));
+  step(
+    doc,
+    history,
+    new DeleteObjectCommand({ pageIndex: 0, runId: heading.id }),
+  );
+  const deleted = drawnText(doc);
+
+  history.undo(doc);
+  history.undo(doc);
+  history.redo(doc);
+  history.redo(doc);
+
+  expect(drawnText(doc)).toBe(deleted);
+  const saved = await open(
+    new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+  );
+  expect(saved.page(0).runs.map((r) => r.text)).not.toContain(HEADING);
+});
+
+test("undoing an outline after redoing it over a font change takes the stroke off", async () => {
+  const doc = await open();
+  const heading = doc.page(0).runs.find((r) => r.text === HEADING)!;
+  const history = new HistoryStack();
+  step(doc, history, family(heading.id, "Courier"));
+  step(
+    doc,
+    history,
+    new SetTextOutlineCommand({
+      pageIndex: 0,
+      runId: heading.id,
+      stroke: RED,
+      width: 1,
+    }),
+  );
+
+  history.undo(doc);
+  history.undo(doc);
+  history.redo(doc);
+  history.redo(doc);
+  history.undo(doc);
+
+  const FILL_ONLY = 0;
+  for (const ptr of collectMemberPtrs(heading))
+    expect(doc.module.FPDFTextObj_GetTextRenderMode(ptr)).toBe(FILL_ONLY);
+});
+
+test("redo keeps an edit made to added text", async () => {
+  const doc = await open();
+  const history = new HistoryStack();
+  const insert = new InsertTextCommand({
+    pageIndex: 0,
+    x: 60,
+    y: 60,
+    text: "New text",
+  });
+  step(doc, history, insert);
+  step(
+    doc,
+    history,
+    new EditTextCommand({
+      pageIndex: 0,
+      runId: insert.insertedRunId!,
+      nextText: "Changed text",
+    }),
+  );
+
+  history.undo(doc);
+  history.undo(doc);
+  history.redo(doc);
+  history.redo(doc);
+
+  expect(doc.page(0).findRun(insert.insertedRunId!)?.text).toBe("Changed text");
+});
+
+test("deleting a line of an ungrouped paragraph takes every word of it off the page", async () => {
+  const doc = await open();
+  const page = doc.page(0);
+  const body = page.runs.find((r) => r.text !== HEADING)!;
+  const secondLine = body.text.split("\n")[1];
+  const lines = body.text.split("\n");
+  const history = new HistoryStack();
+  step(doc, history, family(body.id, "Courier"));
+  const ungroup = new UngroupParagraphCommand({ pageIndex: 0, runId: body.id });
+  step(doc, history, ungroup);
+  const line = page.runs.find((r) => r.text.trim() === secondLine.trim())!;
+
+  step(doc, history, new DeleteObjectCommand({ pageIndex: 0, runId: line.id }));
+
+  const saved = await open(
+    new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()),
+  );
+  const left = saved
+    .page(0)
+    .runs.map((r) => r.text)
+    .join("\n");
+  const others = lines.filter((l) => l !== secondLine);
+  const ownWords = secondLine
+    .trim()
+    .split(/\s+/)
+    .filter((word) => !others.some((l) => l.includes(word)));
+  expect(ownWords.length).toBeGreaterThan(2);
+  for (const word of ownWords) expect(left).not.toContain(word);
+
+  history.undo(doc);
+  history.undo(doc);
+  expect(body.text.split("\n")).toHaveLength(4);
+});
+
+test("new table cell text holds only the letters it could draw, and none is refused", async () => {
+  const doc = await open();
+  const page = doc.page(0);
+
+  expect(emitCellText(doc, page, 50, 50, "A漢字", 12)?.run.text).toBe("A");
+  expect(emitCellText(doc, page, 50, 30, "漢字", 12)).toBeNull();
 });

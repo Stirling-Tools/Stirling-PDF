@@ -418,6 +418,8 @@ export function emitCellText(
 ): EmittedText | null {
   const m = doc.module;
   const sanitized = sanitizeForBase14(text);
+  // Setting empty text traps in PDFium, and a run holding letters that were never drawn loses them on save.
+  if (text.length > 0 && sanitized.length === 0) return null;
   // PDFium can only build a text object for a base-14 name; a family it cannot
   // resolve returns 0, so fall back rather than dropping the text.
   const ptr =
@@ -446,11 +448,11 @@ export function emitCellText(
     bounds: measured ?? {
       x,
       y,
-      width: Math.max(1, text.length * fontSize * 0.55),
+      width: Math.max(1, sanitized.length * fontSize * 0.55),
       height: fontSize * 1.2,
     },
     matrix: { a: 1, b: 0, c: 0, d: 1, e: x, f: y },
-    text,
+    text: sanitized,
     fontId: `base14:${family}`,
     fontSize,
     fill: { ...fill },

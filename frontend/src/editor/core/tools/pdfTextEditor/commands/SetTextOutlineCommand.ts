@@ -58,21 +58,20 @@ export class SetTextOutlineCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
 
-    if (this.prev === null) {
-      const seen = new Set<number>();
-      const members: MemberInk[] = [];
-      for (const ptr of collectMemberPtrs(run)) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        members.push(readMemberInk(doc, ptr, run));
-      }
-      this.prev = {
-        renderMode: run.renderMode,
-        stroke: run.stroke ? { ...run.stroke } : null,
-        strokeWidth: run.strokeWidth,
-        members,
-      };
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    const seen = new Set<number>();
+    const members: MemberInk[] = [];
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      members.push(readMemberInk(doc, ptr, run));
     }
+    this.prev = {
+      renderMode: run.renderMode,
+      stroke: run.stroke ? { ...run.stroke } : null,
+      strokeWidth: run.strokeWidth,
+      members,
+    };
 
     const outlined = this.nextStroke !== null && this.nextWidth > 0;
     // An invisible OCR layer stays invisible, and a clipping mode (4-7) keeps

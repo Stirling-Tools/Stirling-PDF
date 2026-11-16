@@ -51,21 +51,20 @@ export class DeleteObjectCommand implements Command {
       page.setRuns(page.runs.filter((r) => r.id !== run.id));
       return;
     }
-    if (this.snapshot === null) {
-      this.snapshot = run.snapshot();
-      this.removedRun = run;
-      const memberPtrs = collectMemberPtrs(run);
-      const containerByPtr = collectContainersByPtr(run);
-      const seen = new Set<number>();
-      this.cachedPtrs = [];
-      for (const ptr of memberPtrs) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        this.cachedPtrs.push({
-          ptr,
-          containerPtr: containerByPtr.get(ptr) ?? run.containerPtr,
-        });
-      }
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    this.snapshot = run.snapshot();
+    this.removedRun = run;
+    const memberPtrs = collectMemberPtrs(run);
+    const containerByPtr = collectContainersByPtr(run);
+    const seen = new Set<number>();
+    this.cachedPtrs = [];
+    for (const ptr of memberPtrs) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      this.cachedPtrs.push({
+        ptr,
+        containerPtr: containerByPtr.get(ptr) ?? run.containerPtr,
+      });
     }
     removeMemberPtrs(
       doc.module,
