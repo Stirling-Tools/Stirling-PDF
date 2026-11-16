@@ -121,7 +121,17 @@ export function ImageHandle({
       onResize={(e) => setKeepRatio(e.shiftKey)}
       onDragStop={(_, data) => {
         setDragging(false);
-        const next = cssToPdfBounds(data.x, data.y, width, height);
+        // Rnd fixes its bounds when the drag starts, so a scroll mid-drag
+        // (Safari scrolls the viewer when the pointer leaves it) can drop the
+        // image off the page, where PDFium crops it.
+        const page = data.node.parentElement;
+        const x = page
+          ? Math.min(Math.max(0, data.x), page.clientWidth - width)
+          : data.x;
+        const y = page
+          ? Math.min(Math.max(0, data.y), page.clientHeight - height)
+          : data.y;
+        const next = cssToPdfBounds(x, y, width, height);
         const moved =
           Math.abs(next.x - image.bounds.x) > 0.01 ||
           Math.abs(next.y - image.bounds.y) > 0.01;

@@ -31,8 +31,11 @@ interface PageViewProps {
   page: PageSnapshot;
   /** Fires when the page enters the viewport for the first time. */
   onFirstVisible?: (pageIndex: number) => void;
-  /** Fires when the page's bitmap finishes its first render. */
-  onFirstRendered?: (pageIndex: number) => void;
+  /**
+   * Fires when the page's first render finishes; `painted` is false when it
+   * failed and the canvas is empty.
+   */
+  onFirstRendered?: (pageIndex: number, painted: boolean) => void;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -226,7 +229,7 @@ export const PageView = memo(function PageView({
         setPaintedRevision(page.revision);
         if (firstRenderedDocRef.current !== document) {
           firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
+          onFirstRendered?.(page.pageIndex, true);
         }
       })
       .catch((err: unknown) => {
@@ -239,7 +242,7 @@ export const PageView = memo(function PageView({
         // overlay dismisses instead of leaving the user on a spinner.
         if (firstRenderedDocRef.current !== document) {
           firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
+          onFirstRendered?.(page.pageIndex, false);
         }
       });
     return () => {

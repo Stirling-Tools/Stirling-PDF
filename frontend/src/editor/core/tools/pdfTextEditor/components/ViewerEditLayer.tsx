@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useEditorState,
-  useEditorStoreView,
+  useSharedEditorStore,
 } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import {
   useEditorSelection,
@@ -35,8 +35,10 @@ export function ViewerEditLayer({
   height,
   onCovered,
 }: ViewerPageLayerProps) {
-  const { store } = useEditorStoreView();
+  const store = useSharedEditorStore();
   // Each page watches only its own snapshot, so an edit re-renders one page.
+  // A new or closed document replaces every snapshot, so `store.document`
+  // below stays current.
   const page = useEditorState(store, (s) => s.pages[pageIndex]);
   const document = store.document;
   const [paintedFor, setPaintedFor] = useState<EditorDocument | null>(null);
@@ -113,9 +115,10 @@ function EditablePage({
   const ownsHighlight = page.runs.some((r) => r.id === highlightedRunId);
   const handlers = pageViewHandlers(store);
   const onFirstRendered = useCallback(
-    (pageIndex: number) => {
+    (pageIndex: number, painted: boolean) => {
       handlers.onFirstRendered(pageIndex);
-      onPainted();
+      // A failed render leaves the viewer's own page showing.
+      if (painted) onPainted();
     },
     [handlers, onPainted],
   );

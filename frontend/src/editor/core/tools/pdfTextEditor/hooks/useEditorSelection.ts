@@ -2,6 +2,10 @@ import { useCallback, useSyncExternalStore } from "react";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 
+/**
+ * The editor's selection. It changes without touching the editor state, so a
+ * component reading both re-renders on either.
+ */
 export function useEditorSelection(store: EditorStore): SelectionState {
   const subscribe = useCallback(
     (onChange: () => void) => store.selection.subscribe(onChange),

@@ -60,9 +60,17 @@ export function useEditorStoreView(): {
   store: EditorStore;
   state: EditorViewState;
 } {
-  const store = useMemo(sharedStore, []);
+  const store = useSharedEditorStore();
   const state = useEditorState(store, identity);
   return { store, state };
+}
+
+/**
+ * The singleton editor store without subscribing to its state; pair it with
+ * `useEditorState` to re-render on just the slice a component reads.
+ */
+export function useSharedEditorStore(): EditorStore {
+  return useMemo(sharedStore, []);
 }
 
 /**

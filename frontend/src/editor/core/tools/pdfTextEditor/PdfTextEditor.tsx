@@ -272,11 +272,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const doSave = useCallback(
     async (download: boolean) => {
-      if (!store.document || savingRef.current || store.getState().loading)
-        return;
+      const doc = store.document;
+      if (!doc || savingRef.current || store.getState().loading) return;
       savingRef.current = true;
       store.setError(null);
       const sourceId = sourceFileIdRef.current;
+      // A file switch confirmed while the export runs must not get these bytes.
+      const isCurrent = () =>
+        store.document === doc && sourceFileIdRef.current === sourceId;
       try {
         assertFilesNotBlocked([sourceId ?? undefined]);
         assertPdfSessionEditable(getPdfAccess(sourceId));
@@ -286,12 +289,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // The position that is about to be written out. Anything the user edits
         // while the export runs is NOT in these bytes, so it must stay dirty.
         const exported = store.savedPosition();
-        const blob = await exportToBlob(store.document);
+        const blob = await exportToBlob(doc);
         const filename = openedFileName?.trim() || "edited.pdf";
         // Apply first and unconditionally. Gating the write-back on the browser
         // download dialog meant cancelling it silently discarded the save.
         assertFilesNotBlocked([sourceId ?? undefined]);
-        const saved = await applyToWorkbench(blob, filename);
+        if (!isCurrent()) return;
+        const saved = await applyToWorkbench(
+          blob,
+          filename,
+          "pdfTextEditor",
+          isCurrent,
+        );
         if (!saved) return;
         store.markSaved(exported);
         if (download) {
