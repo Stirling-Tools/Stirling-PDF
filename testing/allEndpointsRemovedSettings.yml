@@ -222,8 +222,6 @@ system:
       watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" # Defaults to /opt/venv/bin/weasyprint
-      calibre: "" # Defaults to /usr/bin/ebook-convert
       ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
   fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
@@ -285,23 +283,17 @@ AutomaticallyGenerated:
 
 processExecutor:
   sessionLimit: # Process executor instances limits
-    pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
-    calibreSessionLimit: 1
     imageMagickSessionLimit: 4
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
-    officeConvertTimeoutMinutes: 30
-    pdfToHtmltimeoutMinutes: 20
+    officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
     pythonOpenCvtimeoutMinutes: 30
-    weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
-    calibretimeoutMinutes: 30
     imageMagickTimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30

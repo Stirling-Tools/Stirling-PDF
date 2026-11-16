@@ -77,6 +77,7 @@ export const buildConvertFormData = (
     fromExtension,
     toExtension,
     imageOptions,
+    htmlOptions,
     emailOptions,
     pdfaOptions,
     pdfUaOptions,
@@ -116,6 +117,11 @@ export const buildConvertFormData = (
       "combineIntoSinglePdf",
       imageOptions.combineImages.toString(),
     );
+  } else if (
+    (fromExtension === "html" || fromExtension === "zip") &&
+    toExtension === "pdf"
+  ) {
+    formData.append("zoom", htmlOptions.zoomLevel.toString());
   } else if (
     (fromExtension === "eml" || fromExtension === "msg") &&
     toExtension === "pdf"

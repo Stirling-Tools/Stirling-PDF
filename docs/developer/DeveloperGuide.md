@@ -60,7 +60,6 @@ These are not required to run the app but enable specific features. The app dete
 | Dependency | Feature | Install |
 |---|---|---|
 | Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
-| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
 | qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
 
 ### Setup Steps

@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
@@ -86,7 +87,15 @@ public class OfficeToPdfService {
                 in.getFileName(),
                 result.pages(),
                 result.warnings().size());
-        if (result.truncated() || result.pageLimitReached()) {
+        if (result.pageLimitReached()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.conversionPageLimit",
+                    "{0} would be longer than {1} pages, the most one conversion can produce."
+                            + " Split it into smaller files and convert each one.",
+                    in.getFileName(),
+                    options.maxPages());
+        }
+        if (result.truncated()) {
             throw new IOException("Only part of " + in.getFileName() + " could be converted");
         }
     }

@@ -1,7 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -62,10 +64,27 @@ public class ConvertHtmlToPDF {
                     "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
-        byte[] pdfBytes =
-                officeToPdfService.convertHtml(
-                        fileInput.getBytes(), originalFilename.endsWith(".zip"));
+        boolean packaged = originalFilename.endsWith(".zip");
+        float zoom = request.getZoom();
+        boolean zoomed = HtmlPageZoom.applies(zoom);
+        byte[] html = fileInput.getBytes();
+        if (zoomed) {
+            html =
+                    packaged
+                            ? HtmlPageZoom.layOutPackage(html, zoom)
+                            : HtmlPageZoom.layOutPage(html, zoom);
+        }
 
+        byte[] pdfBytes = officeToPdfService.convertHtml(html, packaged);
+
+        if (zoomed) {
+            try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
+                HtmlPageZoom.scaleToZoom(document, zoom);
+                ByteArrayOutputStream scaled = new ByteArrayOutputStream(pdfBytes.length);
+                document.save(scaled);
+                pdfBytes = scaled.toByteArray();
+            }
+        }
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
         String outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");

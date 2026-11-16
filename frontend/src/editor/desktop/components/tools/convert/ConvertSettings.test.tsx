@@ -5,9 +5,6 @@ import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
 import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 
 const state = vi.hoisted(() => ({ localOnly: true }));
-vi.mock("@editor/hooks/useOfficeConversionDefault", () => ({
-  useOfficeConversionDefault: () => false,
-}));
 vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));

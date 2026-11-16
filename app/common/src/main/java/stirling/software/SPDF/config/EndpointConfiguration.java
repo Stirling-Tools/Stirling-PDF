@@ -47,6 +47,29 @@ public class EndpointConfiguration {
     }
 
     private static final String REMOVE_BLANKS = "remove-blanks";
+
+    private static final Map<String, List<String>> RETIRED_DEPENDENCY_GROUPS =
+            Map.of(
+                    "LibreOffice",
+                    List.of(
+                            "file-to-pdf",
+                            "pdf-to-word",
+                            "pdf-to-presentation",
+                            "pdf-to-rtf",
+                            "pdf-to-html",
+                            "pdf-to-xml",
+                            "pdf-to-pdfa"),
+                    "Unoconvert",
+                    List.of("file-to-pdf"),
+                    "Weasyprint",
+                    List.of("html-to-pdf", "url-to-pdf", "markdown-to-pdf", "eml-to-pdf"),
+                    "Pdftohtml",
+                    List.of("pdf-to-html", "pdf-to-markdown"),
+                    "Calibre",
+                    List.of("pdf-to-epub", "ebook-to-pdf"),
+                    "OpenCV",
+                    List.of("extract-image-scans"));
+
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
@@ -606,7 +629,18 @@ public class EndpointConfiguration {
 
             if (groupsToRemove != null) {
                 for (String group : groupsToRemove) {
-                    disableGroup(group.trim());
+                    String name = group.trim();
+                    List<String> retiredEndpoints = RETIRED_DEPENDENCY_GROUPS.get(name);
+                    if (retiredEndpoints != null) {
+                        log.info(
+                                "groupsToRemove entry '{}' names a dependency Stirling PDF no"
+                                        + " longer uses; disabling the endpoints it covered: {}",
+                                name,
+                                String.join(", ", retiredEndpoints));
+                        retiredEndpoints.forEach(this::disableEndpoint);
+                    } else {
+                        disableGroup(name);
+                    }
                 }
             }
         }

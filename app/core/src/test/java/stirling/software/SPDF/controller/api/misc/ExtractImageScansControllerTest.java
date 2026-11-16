@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -135,6 +136,33 @@ class ExtractImageScansControllerTest {
                         IllegalArgumentException.class,
                         () -> controller.extractImageScans(requestFor(garbage)));
         assertEquals("Unsupported image format: png", e.getMessage());
+    }
+
+    @Test
+    @DisplayName("reads a binary PPM scan")
+    void readsBinaryPpm() throws Exception {
+        int width = 120;
+        int height = 90;
+        ByteArrayOutputStream ppm = new ByteArrayOutputStream();
+        ppm.write(("P6 " + width + " " + height + " 255\n").getBytes(StandardCharsets.US_ASCII));
+        for (int i = 0; i < width * height; i++) {
+            ppm.write(new byte[] {(byte) 0xf5, (byte) 0xea, 0x0a});
+        }
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "scan.ppm", "image/x-portable-pixmap", ppm.toByteArray());
+
+        try (MockedStatic<PhotoSplitter> splitter = splitterReturning(1)) {
+            ResponseEntity<Resource> response = controller.extractImageScans(requestFor(file));
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            ArgumentCaptor<BufferedImage> scan = ArgumentCaptor.forClass(BufferedImage.class);
+            splitter.verify(
+                    () -> PhotoSplitter.split(scan.capture(), any(PhotoSplitter.Options.class)));
+            assertEquals(width, scan.getValue().getWidth());
+            assertEquals(height, scan.getValue().getHeight());
+            assertEquals(0xfff5ea0a, scan.getValue().getRGB(0, 0));
+        }
     }
 
     @Test

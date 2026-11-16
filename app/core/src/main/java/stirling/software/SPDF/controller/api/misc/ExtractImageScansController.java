@@ -7,11 +7,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -54,6 +57,8 @@ public class ExtractImageScansController {
     private static final int SCAN_RENDER_DPI = 300;
 
     private static final String REPLACEFIRST = "[.][^.]+$";
+
+    private static final String JAI_IMAGEIO_PACKAGE = "com.github.jaiimageio.";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -118,10 +123,7 @@ public class ExtractImageScansController {
                     }
                 }
             } else {
-                BufferedImage image;
-                try (InputStream in = inputFile.getInputStream()) {
-                    image = ImageIO.read(in);
-                }
+                BufferedImage image = readImage(inputFile);
                 if (image == null) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.unsupportedImageFormat",
@@ -179,6 +181,30 @@ public class ExtractImageScansController {
         } finally {
             if (finalOutput != null && !finalOutputOwnershipTransferred) {
                 finalOutput.close();
+            }
+        }
+    }
+
+    private static BufferedImage readImage(MultipartFile file) throws IOException {
+        try (InputStream raw = file.getInputStream();
+                ImageInputStream in = ImageIO.createImageInputStream(raw)) {
+            if (in == null) {
+                return null;
+            }
+            List<ImageReader> readers = new ArrayList<>();
+            ImageIO.getImageReaders(in).forEachRemaining(readers::add);
+            if (readers.isEmpty()) {
+                return null;
+            }
+            readers.sort(
+                    Comparator.comparing(
+                            reader -> reader.getClass().getName().startsWith(JAI_IMAGEIO_PACKAGE)));
+            ImageReader reader = readers.getFirst();
+            try {
+                reader.setInput(in, true, true);
+                return reader.read(0);
+            } finally {
+                readers.forEach(ImageReader::dispose);
             }
         }
     }

@@ -203,7 +203,7 @@ Feature: API Validation
             | .pptx     |
             | .rtf      |
 
-    @calibre @positive @htmltopdf
+    @positive @htmltopdf
     Scenario: Convert HTML to PDF
         Given I use an example file at "exampleFiles/example.html" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/html/pdf"
@@ -211,7 +211,7 @@ Feature: API Validation
         And the response file should have size greater than 100
         And the response file should have extension ".pdf"
 
-    @calibre @positive @zippedhtmltopdf
+    @positive @zippedhtmltopdf
     Scenario: Convert zipped HTML to PDF
         Given I use an example file at "exampleFiles/example_html.zip" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/html/pdf"
@@ -219,7 +219,7 @@ Feature: API Validation
         And the response file should have size greater than 100
         And the response file should have extension ".pdf"
 
-    @calibre @positive @markdowntopdf
+    @positive @markdowntopdf
     Scenario: Convert Markdown to PDF
         Given I use an example file at "exampleFiles/example.md" as parameter "fileInput"
         When I send the API request to the endpoint "/api/v1/convert/markdown/pdf"

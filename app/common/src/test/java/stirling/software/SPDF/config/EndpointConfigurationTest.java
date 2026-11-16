@@ -45,6 +45,40 @@ class EndpointConfigurationTest {
     }
 
     @Test
+    void retiredGroupsInConfigStillDisableTheirConversions() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getEndpoints().setGroupsToRemove(List.of(" LibreOffice", "Calibre"));
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+
+        for (String endpoint :
+                List.of(
+                        "file-to-pdf",
+                        "pdf-to-word",
+                        "pdf-to-presentation",
+                        "pdf-to-rtf",
+                        "pdf-to-html",
+                        "pdf-to-xml",
+                        "pdf-to-pdfa",
+                        "pdf-to-epub",
+                        "ebook-to-pdf")) {
+            assertFalse(endpoints.isEndpointEnabled(endpoint), endpoint);
+        }
+        assertTrue(endpoints.isEndpointEnabled("html-to-pdf"));
+        assertTrue(endpoints.isEndpointEnabled("pdf-to-markdown"));
+        assertTrue(endpoints.isEndpointEnabled("merge-pdfs"));
+    }
+
+    @Test
+    void currentGroupsInConfigAreUnaffected() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getEndpoints().setGroupsToRemove(List.of("veraPDF"));
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+
+        assertFalse(endpoints.isEndpointEnabled("verify-pdf"));
+        assertTrue(endpoints.isEndpointEnabled("file-to-pdf"));
+    }
+
+    @Test
     void endpointKeyForUriExtractsSimpleKebab() {
         assertEquals(
                 "remove-pages",
