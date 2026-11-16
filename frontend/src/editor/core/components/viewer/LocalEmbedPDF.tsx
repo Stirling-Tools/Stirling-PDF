@@ -71,6 +71,7 @@ import {
   RedactionLayer,
 } from "@embedpdf/plugin-redaction/react";
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
+import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
@@ -940,7 +941,11 @@ export function LocalEmbedPDF({
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [urlSource, setUrlSource] = useState<File | null>(null);
+  const {
+    source: urlSource,
+    stage: stageUrlSource,
+    settle: settleUrlSource,
+  } = useActiveUrlSource();
   const pdfAccess = usePdfAccess(file ?? urlSource ?? fileId);
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
@@ -1220,7 +1225,7 @@ export function LocalEmbedPDF({
           const buf = await source.arrayBuffer();
           if (!cancelled) {
             bindPdfViewerSource(buf, source);
-            setUrlSource(source);
+            stageUrlSource(url, source, !initialDocumentOpenedRef.current);
             openDocument(buf, exportFileName, url);
           }
         })
@@ -1282,6 +1287,7 @@ export function LocalEmbedPDF({
 
   const handleDocumentSwapped = useCallback(
     (documentId: string, fileKey: string) => {
+      settleUrlSource(fileKey, true);
       onDocumentReady?.(fileKey);
       onDocumentSwapped?.(documentId);
       setPendingDocument((pending) =>
@@ -1290,7 +1296,7 @@ export function LocalEmbedPDF({
       setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
       setTimeout(() => setSwapAnnouncement(null), 3000);
     },
-    [onDocumentReady, onDocumentSwapped, t],
+    [onDocumentReady, onDocumentSwapped, settleUrlSource, t],
   );
   const handleDocumentSwapFailed = useCallback(
     (fileKey: string, error: unknown) => {
@@ -1299,13 +1305,19 @@ export function LocalEmbedPDF({
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
+      settleUrlSource(fileKey, false);
       onDocumentLoadFailed?.(fileKey, error);
       if (fileKey === fileStableKey) onDocumentSwapFailed?.(error);
       setPendingDocument((pending) =>
         pending?.fileKey === fileKey ? null : pending,
       );
     },
-    [onDocumentLoadFailed, onDocumentSwapFailed, fileStableKey],
+    [
+      onDocumentLoadFailed,
+      onDocumentSwapFailed,
+      fileStableKey,
+      settleUrlSource,
+    ],
   );
 
   useEffect(() => {
