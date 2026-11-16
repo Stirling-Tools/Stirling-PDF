@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Rnd } from "react-rnd";
 import { Tooltip } from "@mantine/core";
@@ -10,6 +10,44 @@ import type {
   PageRect,
 } from "@editor/tools/pdfTextEditor/types";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
+import {
+  imageBoundsForVisible,
+  visibleImageBounds,
+} from "@editor/tools/pdfTextEditor/util/imageClip";
+import type { ImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
+
+function ImageGhost({
+  pixels,
+  style,
+}: {
+  pixels: ImagePixels;
+  style: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    canvas.width = pixels.width;
+    canvas.height = pixels.height;
+    context.putImageData(
+      new ImageData(
+        new Uint8ClampedArray(pixels.rgba),
+        pixels.width,
+        pixels.height,
+      ),
+      0,
+      0,
+    );
+  }, [pixels]);
+  return (
+    <canvas
+      ref={ref}
+      data-testid="pdf-editor-image-ghost"
+      style={{ position: "absolute", pointerEvents: "none", ...style }}
+    />
+  );
+}
 
 interface ImageHandleProps {
   image: ImageObjectSnapshot;
@@ -22,6 +60,11 @@ interface ImageHandleProps {
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
   attention?: ImageAttention | null;
+  /**
+   * The image's pixels as the page draws them, filling its bounds, so a drag
+   * carries the picture instead of an empty frame. Null when unreadable.
+   */
+  readPixels?: () => ImagePixels | null;
 }
 
 /** Draggable + resizable affordance for an image object. */
@@ -34,6 +77,7 @@ export function ImageHandle({
   onSelect,
   onTransformCommit,
   attention = null,
+  readPixels,
 }: ImageHandleProps) {
   const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
@@ -41,10 +85,12 @@ export function ImageHandle({
   // Shift during a corner drag keeps the proportions, as in Acrobat. Read
   // from every resize event, so pressing or releasing it mid-drag applies.
   const [keepRatio, setKeepRatio] = useState(false);
+  const [ghost, setGhost] = useState<ImagePixels | null>(null);
 
-  // Map the image's raw-PDF AABB into display-PDF space (4 corners through the
+  // The box is what shows: a clipped image's hidden part is not the user's to
+  // grab. Map its raw-PDF AABB into display-PDF space (4 corners through the
   // transform, then min/max), then to CSS px.
-  const b = image.bounds;
+  const b = visibleImageBounds(image);
   const dispCorners = [
     transform.apply(b.x, b.y),
     transform.apply(b.x + b.width, b.y),
@@ -89,6 +135,22 @@ export function ImageHandle({
     return { x: maxX - w, y: maxY - h, width: w, height: h };
   }
 
+  // A quarter-turned page would need the pixels turned too; the frame alone
+  // still shows where the image goes.
+  function liftPixels(): ImagePixels | null {
+    return transform.rotate === 0 ? (readPixels?.() ?? null) : null;
+  }
+
+  // The whole image placed in the box of what shows, in percent so it keeps
+  // its place while a resize stretches the box.
+  const full = image.bounds;
+  const ghostStyle: React.CSSProperties = {
+    left: `${((full.x - b.x) / b.width) * 100}%`,
+    top: `${((b.y + b.height - (full.y + full.height)) / b.height) * 100}%`,
+    width: `${(full.width / b.width) * 100}%`,
+    height: `${(full.height / b.height) * 100}%`,
+  };
+
   // Locked images are inert: no select, drag, or resize.
   const locked = image.locked === true;
 
@@ -110,26 +172,29 @@ export function ImageHandle({
       bounds="parent"
       onDragStart={() => {
         setDragging(true);
+        setGhost(liftPixels());
         onSelect();
       }}
       lockAspectRatio={keepRatio}
       onResizeStart={(e) => {
         setKeepRatio(e.shiftKey);
         if (locked) return;
+        setGhost(liftPixels());
         onSelect();
       }}
       onResize={(e) => setKeepRatio(e.shiftKey)}
       onDragStop={(_, data) => {
         setDragging(false);
+        setGhost(null);
         const next = cssToPdfBounds(data.x, data.y, width, height);
         const moved =
-          Math.abs(next.x - image.bounds.x) > 0.01 ||
-          Math.abs(next.y - image.bounds.y) > 0.01;
+          Math.abs(next.x - b.x) > 0.01 || Math.abs(next.y - b.y) > 0.01;
         if (!moved) return;
-        onTransformCommit(next);
+        onTransformCommit(imageBoundsForVisible(image, next));
       }}
       onResizeStop={(_e, _dir, ref, _delta, position) => {
         setKeepRatio(false);
+        setGhost(null);
         const next = cssToPdfBounds(
           position.x,
           position.y,
@@ -137,12 +202,12 @@ export function ImageHandle({
           ref.offsetHeight,
         );
         const changed =
-          Math.abs(next.x - image.bounds.x) > 0.01 ||
-          Math.abs(next.y - image.bounds.y) > 0.01 ||
-          Math.abs(next.width - image.bounds.width) > 0.01 ||
-          Math.abs(next.height - image.bounds.height) > 0.01;
+          Math.abs(next.x - b.x) > 0.01 ||
+          Math.abs(next.y - b.y) > 0.01 ||
+          Math.abs(next.width - b.width) > 0.01 ||
+          Math.abs(next.height - b.height) > 0.01;
         if (!changed) return;
-        onTransformCommit(next);
+        onTransformCommit(imageBoundsForVisible(image, next));
       }}
       style={{
         outline: selected
@@ -150,7 +215,7 @@ export function ImageHandle({
           : hovered || dragging
             ? "1px dashed rgba(0,0,0,0.45)"
             : "none",
-        background:
+        backgroundColor:
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
         cursor: locked ? "default" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
@@ -177,6 +242,11 @@ export function ImageHandle({
       data-testid={`pdf-editor-image-${image.id}`}
       data-locked={locked ? "true" : undefined}
     >
+      {ghost && (
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+          <ImageGhost pixels={ghost} style={ghostStyle} />
+        </div>
+      )}
       {attention && (
         <Tooltip
           label={

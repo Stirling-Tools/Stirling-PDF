@@ -1,4 +1,8 @@
-import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import i18n from "i18next";
+import {
+  RolledBackError,
+  type Command,
+} from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -15,6 +19,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import { clipHidesImage } from "@editor/tools/pdfTextEditor/util/imageClip";
 
 interface ZOrderModule {
   FPDFPage_InsertObjectAtIndex?: (
@@ -90,6 +95,18 @@ export class ReplaceImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
+    // The replacement is a new object, and PDFium cannot give an object a
+    // clip, so it would show what the original's clip hides.
+    if (clipHidesImage(img)) {
+      throw new RolledBackError(
+        new Error(
+          i18n.t(
+            "pdfTextEditor.error.replaceClippedImage",
+            "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides.",
+          ),
+        ),
+      );
+    }
     const m = doc.module;
     // A form-nested original cannot be detached and put back (this build has
     // no FPDFFormObj_InsertObject), so hide it in place instead and draw the

@@ -120,6 +120,11 @@ export interface ImageObjectSnapshot {
   artifact?: boolean;
   /** Drawn by a form XObject, whose marks are not the page's to change. */
   inForm?: boolean;
+  /**
+   * Page-space box of the clips the image is drawn through; what shows is
+   * `bounds` cut to it. Absent when nothing clips the image.
+   */
+  clip?: PageRect;
 }
 
 // One ruling line the page draws, with the ink needed to reproduce it: a table

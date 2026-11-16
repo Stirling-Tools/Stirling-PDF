@@ -20,6 +20,7 @@ import {
   type ImageAttention,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
+import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
@@ -465,6 +466,9 @@ export const PageView = memo(function PageView({
               onTransformImage?.(page.pageIndex, image.id, next)
             }
             attention={imageAttentions.get(image.id) ?? null}
+            readPixels={() =>
+              readShownImagePixels(store, page.pageIndex, image.id)
+            }
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled

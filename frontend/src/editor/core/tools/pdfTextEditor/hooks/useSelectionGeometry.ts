@@ -5,9 +5,14 @@ import {
   resizeRunCommand,
 } from "@editor/tools/pdfTextEditor/commands/resizeRun";
 import { SetImageTransformCommand } from "@editor/tools/pdfTextEditor/commands/SetImageTransformCommand";
+import {
+  imageBoundsForVisible,
+  visibleImageBounds,
+} from "@editor/tools/pdfTextEditor/util/imageClip";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
+  ImageObjectSnapshot,
   PageRect,
   SelectionState,
 } from "@editor/tools/pdfTextEditor/types";
@@ -45,14 +50,14 @@ function liveRunBounds(
   return fallback;
 }
 
-function liveImageBounds(
+function liveImage(
   store: EditorStore,
   imageId: string,
-  fallback: PageRect,
-): PageRect {
+  fallback: ImageObjectSnapshot,
+): ImageObjectSnapshot {
   for (const page of store.getState().pages) {
     const img = page.images.find((i) => i.id === imageId);
-    if (img) return img.bounds;
+    if (img) return img;
   }
   return fallback;
 }
@@ -121,18 +126,20 @@ export function useSelectionGeometry(
         const img = page.images.find((i) => i.id === imageId);
         if (!img) continue;
         const pageIndex = page.pageIndex;
-        const bounds = img.bounds;
-        const set = (patch: Partial<PageRect>) =>
+        const bounds = visibleImageBounds(img);
+        const set = (patch: Partial<PageRect>) => {
+          const live = liveImage(store, imageId, img);
           store.dispatch(
             new SetImageTransformCommand({
               pageIndex,
               imageId,
-              nextBounds: {
-                ...liveImageBounds(store, imageId, bounds),
+              nextBounds: imageBoundsForVisible(live, {
+                ...visibleImageBounds(live),
                 ...patch,
-              },
+              }),
             }),
           );
+        };
         return {
           single: {
             bounds,

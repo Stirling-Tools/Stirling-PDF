@@ -11,6 +11,7 @@ import {
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
+import { readImageClip } from "@editor/tools/pdfTextEditor/util/imageClip";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -1281,6 +1282,7 @@ function readImage(
     containerPtr,
     mcid: tags.mcid ?? undefined,
     artifact: tags.artifact || undefined,
+    clip: readImageClip(m, page.pagePtr, objPtr, containerPtr) ?? undefined,
   });
 }
 

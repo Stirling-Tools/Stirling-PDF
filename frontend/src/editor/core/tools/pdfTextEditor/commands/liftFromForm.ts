@@ -67,7 +67,8 @@ function chainFrom(
   return null;
 }
 
-function chainTo(
+/** The forms from a page-level one down to `form`, outermost first; null when the page does not draw it. */
+export function chainTo(
   m: WrappedPdfiumModule,
   pagePtr: number,
   form: number,

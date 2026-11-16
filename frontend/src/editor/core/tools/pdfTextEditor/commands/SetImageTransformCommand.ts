@@ -7,6 +7,7 @@ import {
   remapImageMatrix,
 } from "@editor/tools/pdfTextEditor/model/affine";
 import { retargetClipPath } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { readImageClip } from "@editor/tools/pdfTextEditor/util/imageClip";
 
 /** Set an image object's transform to an absolute target. */
 export class SetImageTransformCommand implements Command {
@@ -54,6 +55,12 @@ export class SetImageTransformCommand implements Command {
     retargetClipPath(doc.module, img.pdfiumObjPtr, prevMatrix, next);
     img.matrix = next;
     img.bounds = imageMatrixBounds(next);
+    img.clip = readImageClip(
+      doc.module,
+      page.pagePtr,
+      img.pdfiumObjPtr,
+      img.containerPtr,
+    );
     img.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -97,6 +104,12 @@ export class SetImageTransformCommand implements Command {
     retargetClipPath(m, img.pdfiumObjPtr, img.matrix, this.prevMatrix);
     img.bounds = { ...this.prevBounds };
     img.matrix = { ...this.prevMatrix };
+    img.clip = readImageClip(
+      m,
+      page.pagePtr,
+      img.pdfiumObjPtr,
+      img.containerPtr,
+    );
     img.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
