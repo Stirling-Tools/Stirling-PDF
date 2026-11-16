@@ -46,7 +46,23 @@ export function buildExactLines(
     lines.push(built);
     lineStart = i + 1;
   }
-  return lines.length > 0 ? lines : null;
+  if (lines.length === 0) return null;
+  // An empty line draws nothing, so it has no pen position of its own; page x 0
+  // in its place moved the whole box to the page edge for as long as the line
+  // stayed empty.
+  return lines.map((line, i) =>
+    Number.isFinite(line.left)
+      ? line
+      : { ...line, left: neighbourLeft(lines, i) ?? 0 },
+  );
+}
+
+function neighbourLeft(lines: ExactLine[], at: number): number | null {
+  for (let i = at - 1; i >= 0; i -= 1)
+    if (Number.isFinite(lines[i].left)) return lines[i].left;
+  for (let i = at + 1; i < lines.length; i += 1)
+    if (Number.isFinite(lines[i].left)) return lines[i].left;
+  return null;
 }
 
 function buildLine(
@@ -60,7 +76,10 @@ function buildLine(
   let end = to;
   while (end > from && SPACE.has(text[end - 1])) end -= 1;
   if (end === from)
-    return { left: firstFinite(positions.starts, from, to) ?? 0, tokens: [] };
+    return {
+      left: firstFinite(positions.starts, from, to) ?? Number.NaN,
+      tokens: [],
+    };
 
   const left = positions.starts[from];
   if (!Number.isFinite(left)) return null;
