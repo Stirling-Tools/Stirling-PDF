@@ -39,7 +39,7 @@ async function addToFileList(page: Page, file: Upload) {
 const DEFAULT_ZOOM_PERCENT = 150;
 /** The viewer's zoom slider: 20% to 500% in steps of 5. */
 const SLIDER_MIN = 20;
-const SLIDER_STEP = 5;
+const SLIDER_MAX = 500;
 
 /**
  * Opens `file` in the PDF text editor the way a user does: add it to the
@@ -205,10 +205,28 @@ export async function setViewerZoom(
     .locator(".pdf-viewer-toolbar-zoom-slider [role=slider]")
     .first();
   if (!(await thumb.isVisible())) return;
-  await thumb.focus();
-  await page.keyboard.press("Home");
-  for (let i = 0; i < (percent - SLIDER_MIN) / SLIDER_STEP; i++) {
-    await page.keyboard.press("ArrowRight");
+  const current = () =>
+    thumb.getAttribute("aria-valuenow").then((v) => Number(v));
+  // Every step the slider passes through re-renders the pages, so jump close
+  // with one click on the track and finish with the arrow keys.
+  if ((await current()) !== percent) {
+    const track = page
+      .locator(".pdf-viewer-toolbar-zoom-slider .mantine-Slider-track")
+      .first();
+    const box = await track.boundingBox();
+    if (box) {
+      const fraction = (percent - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN);
+      await page.mouse.click(
+        box.x + fraction * box.width,
+        box.y + box.height / 2,
+      );
+    }
+    await thumb.focus();
+    for (let i = 0; i < 20; i++) {
+      const value = await current();
+      if (value === percent) break;
+      await page.keyboard.press(value < percent ? "ArrowRight" : "ArrowLeft");
+    }
   }
   await expect(thumb).toHaveAttribute("aria-valuenow", String(percent));
   await page.waitForTimeout(800);
