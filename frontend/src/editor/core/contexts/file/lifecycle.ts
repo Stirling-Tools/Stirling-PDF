@@ -5,6 +5,7 @@
 import { FileId } from "@editor/types/file";
 import { releaseSharedDocumentWhenIdle } from "@editor/services/pdfiumService";
 import { releaseDocumentBytes } from "@editor/services/documentBytesCache";
+import { thumbnailGenerationService } from "@editor/services/thumbnailGenerationService";
 import {
   forgetPdfAccess,
   getPdfAccess,
@@ -181,6 +182,7 @@ export class FileLifecycleManager {
     // and cannot be reused once it leaves the workbench.
     releaseSharedDocumentWhenIdle();
     if (file) releaseDocumentBytes(file);
+    thumbnailGenerationService.forgetFile(fileId);
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
