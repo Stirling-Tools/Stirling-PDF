@@ -7,8 +7,14 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -16,10 +22,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.sun.net.httpserver.HttpServer;
@@ -31,6 +40,70 @@ import stirling.software.proprietary.accountlink.AccountLinkProperties;
 import tools.jackson.databind.ObjectMapper;
 
 class ServerRegistrationClientTest {
+    private static final Instant NOW = Instant.parse("2026-11-16T12:00:00Z");
+
+    @ParameterizedTest
+    @MethodSource("retryHeaders")
+    @SuppressWarnings("unchecked")
+    void httpFailuresCarrySafeStatusAndValidatedRetryDeadline(
+            int status, String retryAfter, Instant expectedDeadline) throws Exception {
+        var http = mock(HttpClient.class);
+        HttpResponse<String> response = mock(HttpResponse.class);
+        when(response.statusCode()).thenReturn(status);
+        when(response.headers())
+                .thenReturn(
+                        HttpHeaders.of(
+                                retryAfter == null
+                                        ? Map.of()
+                                        : Map.of("Retry-After", List.of(retryAfter)),
+                                (name, value) -> true));
+        when(response.body()).thenReturn("sensitive-license-and-credential");
+        when(http.sendAsync(any(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(CompletableFuture.completedFuture(response));
+        var client =
+                new ServerRegistrationClient(
+                        new AccountLinkProperties(),
+                        new ObjectMapper(),
+                        http,
+                        Clock.fixed(NOW, ZoneOffset.UTC));
+        assertThatThrownBy(
+                        () ->
+                                client.sync(
+                                        new ServerRegistrationProtocol.SyncRequest(
+                                                UUID.randomUUID(),
+                                                "a".repeat(43),
+                                                new ServerRegistrationProtocol.Report(
+                                                        1L, 1L, "test", 1))))
+                .isInstanceOfSatisfying(
+                        ServerRegistrationClient.HttpFailureException.class,
+                        failure -> {
+                            assertThat(failure.status()).isEqualTo(status);
+                            assertThat(failure.retryNotBefore()).isEqualTo(expectedDeadline);
+                            assertThat(failure.getCause()).isNull();
+                        })
+                .hasMessage("Registration returned HTTP " + status)
+                .hasMessageNotContaining("sensitive-license-and-credential");
+        verify(response, never()).body();
+    }
+
+    private static Stream<Arguments> retryHeaders() {
+        return Stream.of(
+                Arguments.of(429, "120", NOW.plusSeconds(120)),
+                Arguments.of(503, "120", NOW.plusSeconds(120)),
+                Arguments.of(429, "0", NOW),
+                Arguments.of(429, "Mon, 16 Nov 2026 12:30:00 GMT", NOW.plusSeconds(1800)),
+                Arguments.of(503, "Mon, 16 Nov 2026 12:30:00 GMT", NOW.plusSeconds(1800)),
+                Arguments.of(503, "Sun, 15 Nov 2026 12:00:00 GMT", null),
+                Arguments.of(429, null, null),
+                Arguments.of(429, "", null),
+                Arguments.of(429, "-1", null),
+                Arguments.of(429, "1.5", null),
+                Arguments.of(503, "invalid-secret-value", null),
+                Arguments.of(429, "9999999999999999999999999", null),
+                Arguments.of(429, Long.toString(Long.MAX_VALUE), null),
+                Arguments.of(401, "120", null));
+    }
+
     @Test
     @Timeout(10)
     @SuppressWarnings("unchecked")
@@ -205,7 +278,8 @@ class ServerRegistrationClientTest {
                                                 new ServerRegistrationProtocol.Report(
                                                         1L, 0L, "test", 1))))
                 .isInstanceOf(IOException.class)
-                .hasMessage("Incomplete registration response");
+                .isInstanceOf(ServerRegistrationClient.InvalidResponseException.class)
+                .hasMessage("Invalid registration response");
     }
 
     @Test

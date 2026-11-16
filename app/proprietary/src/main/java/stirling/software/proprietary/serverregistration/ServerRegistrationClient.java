@@ -5,7 +5,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +33,7 @@ public class ServerRegistrationClient {
     private final Duration timeout;
     private final ObjectMapper mapper;
     private final HttpClient http;
+    private final Clock clock;
 
     @Autowired
     public ServerRegistrationClient(AccountLinkProperties properties, ObjectMapper mapper) {
@@ -42,10 +48,16 @@ public class ServerRegistrationClient {
 
     ServerRegistrationClient(
             AccountLinkProperties properties, ObjectMapper mapper, HttpClient http) {
+        this(properties, mapper, http, Clock.systemUTC());
+    }
+
+    ServerRegistrationClient(
+            AccountLinkProperties properties, ObjectMapper mapper, HttpClient http, Clock clock) {
         this.base = URI.create(properties.getSaasBaseUrl().replaceAll("/+$", ""));
         this.timeout = Duration.ofSeconds(properties.getRequestTimeoutSeconds());
         this.mapper = mapper;
         this.http = http;
+        this.clock = clock;
         boolean loopback =
                 base.getHost() != null
                         && Set.of("localhost", "127.0.0.1", "[::1]").contains(base.getHost());
@@ -86,6 +98,33 @@ public class ServerRegistrationClient {
         }
     }
 
+    /** Carries only the HTTP status and optional retry deadline, never the upstream body. */
+    public static final class HttpFailureException extends IOException {
+        private final int status;
+        private final Instant retryNotBefore;
+
+        public HttpFailureException(int status, Instant retryNotBefore) {
+            super("Registration returned HTTP " + status);
+            this.status = status;
+            this.retryNotBefore = retryNotBefore;
+        }
+
+        public int status() {
+            return status;
+        }
+
+        public Instant retryNotBefore() {
+            return retryNotBefore;
+        }
+    }
+
+    /** Identifies an unusable receipt without retaining credential-bearing parse errors. */
+    public static final class InvalidResponseException extends IOException {
+        public InvalidResponseException() {
+            super("Invalid registration response");
+        }
+    }
+
     private ServerRegistrationProtocol.Receipt send(String path, Object payload)
             throws IOException {
         HttpRequest request =
@@ -107,36 +146,53 @@ public class ServerRegistrationClient {
                                     response.body(),
                                     ServerRegistrationProtocol.SequenceConflict.class);
                 } catch (RuntimeException e) {
-                    throw new IOException("Invalid registration conflict");
+                    throw new InvalidResponseException();
                 }
                 if (conflict == null
                         || conflict.registrationId() == null
                         || conflict.acceptedSequence() < 1
                         || conflict.acceptedSequence() == Long.MAX_VALUE) {
-                    throw new IOException("Invalid registration conflict");
+                    throw new InvalidResponseException();
                 }
                 throw new SequenceConflictException(conflict);
             }
             if (response.statusCode() != 200) {
-                throw new IOException("Registration returned HTTP " + response.statusCode());
+                throw new HttpFailureException(response.statusCode(), retryNotBefore(response));
             }
             ServerRegistrationProtocol.Receipt receipt;
             try {
                 receipt =
                         mapper.readValue(response.body(), ServerRegistrationProtocol.Receipt.class);
             } catch (RuntimeException e) {
-                throw new IOException("Invalid registration response");
+                throw new InvalidResponseException();
             }
             if (receipt == null
                     || receipt.registrationId() == null
                     || receipt.acceptedSequence() < 1
                     || receipt.purchaseMapping() == null) {
-                throw new IOException("Incomplete registration response");
+                throw new InvalidResponseException();
             }
             return receipt;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Registration interrupted");
+        }
+    }
+
+    private Instant retryNotBefore(HttpResponse<?> response) {
+        if (response.statusCode() != 429 && response.statusCode() != 503) return null;
+        String value = response.headers().firstValue("Retry-After").orElse("").strip();
+        if (value.isEmpty()) return null;
+        try {
+            Instant now = clock.instant();
+            Instant deadline =
+                    value.matches("[0-9]+")
+                            ? now.plusSeconds(Long.parseLong(value))
+                            : ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME)
+                                    .toInstant();
+            return deadline.isBefore(now) ? null : deadline;
+        } catch (DateTimeException | ArithmeticException | NumberFormatException e) {
+            return null;
         }
     }
 }
