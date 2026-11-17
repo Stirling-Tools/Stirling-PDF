@@ -4,25 +4,30 @@ import {
   type ConnectionMode,
 } from "@editor/services/connectionModeService";
 
+/** The live connection mode; null until the saved mode is known. */
 export function useConnectionMode(): ConnectionMode | null {
-  const [mode, setMode] = useState<ConnectionMode | null>(() =>
-    connectionModeService.getCachedMode(),
-  );
+  const [mode, setMode] = useState(() => connectionModeService.getCachedMode());
+
   useEffect(() => {
-    let active = true;
+    let current = true;
     void connectionModeService.getCurrentMode().then(
-      (current) => {
-        if (active) setMode(current);
+      (saved) => {
+        if (current) setMode(saved);
       },
       () => undefined,
     );
-    const unsubscribe = connectionModeService.subscribeToModeChanges((config) =>
-      setMode(config.mode),
+    const unsubscribe = connectionModeService.subscribeToModeChanges(
+      (config) => {
+        // A change can land before the saved mode resolves; that read is stale.
+        current = false;
+        setMode(config.mode);
+      },
     );
     return () => {
-      active = false;
+      current = false;
       unsubscribe();
     };
   }, []);
+
   return mode;
 }

@@ -58,9 +58,8 @@ export const extractPagesOperationConfig = defineCustomTool({
         { responseType: "blob" },
       );
 
-      // Name output file with suffix
       const base = (file.name || "document.pdf").replace(/\.[^.]+$/, "");
-      const outName = `${base}_extracted_pages.pdf`;
+      const outName = `${base}.pdf`;
       const outFile = new File([response.data], outName, {
         type: "application/pdf",
       });

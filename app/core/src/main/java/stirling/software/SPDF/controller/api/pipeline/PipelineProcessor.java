@@ -64,25 +64,6 @@ public class PipelineProcessor {
         this.applicationProperties = applicationProperties;
     }
 
-    public static String removeTrailingNaming(String filename) {
-        // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf('.');
-        if (dotIndex == -1) {
-            // No extension found
-            return filename;
-        }
-        String name = filename.substring(0, dotIndex);
-        String extension = filename.substring(dotIndex);
-        // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf('_');
-        if (underscoreIndex == -1) {
-            // No underscore found
-            return filename;
-        }
-        // Removing the last part and reattaching the extension
-        return name.substring(0, underscoreIndex) + extension;
-    }
-
     /**
      * Runs the pipeline. The inputs stay the caller's; the caller closes the returned result, which
      * holds the outputs, once it has read them.
@@ -304,17 +285,7 @@ public class PipelineProcessor {
             List<Resource> newOutputFiles,
             PipelineResult result)
             throws IOException {
-        // Define filename
-        String newFilename;
-        if (operation.contains("auto-rename")) {
-            // If the operation is "auto-rename", generate a new filename.
-            // This is a simple example of generating a filename using current timestamp.
-            // Modify as per your needs.
-            newFilename = extractFilename(response);
-        } else {
-            // Otherwise, keep the original filename.
-            newFilename = removeTrailingNaming(extractFilename(response));
-        }
+        String newFilename = extractFilename(response);
         // Check if the response body is a zip file
         if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files

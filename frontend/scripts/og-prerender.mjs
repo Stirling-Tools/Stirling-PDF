@@ -236,67 +236,6 @@ export function injectOg(html, entry, opts = {}) {
   );
 }
 
-// Scoped styling for the prerendered body content so the pre-hydration paint
-// (what crawlers see and the first visible paint for users) looks intentional.
-// It lives inside #root and is wiped when React mounts.
-const SEO_STYLE =
-  "<style>.spdf-seo{max-width:760px;margin:0 auto;padding:56px 24px;" +
-  "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a}" +
-  ".spdf-seo h1{font-size:2rem;line-height:1.2;margin:0 0 .75rem}" +
-  ".spdf-seo p{font-size:1.05rem;line-height:1.6;color:#444;margin:0 0 1rem}" +
-  ".spdf-seo nav{margin-top:2.5rem}.spdf-seo nav h2{font-size:.95rem;" +
-  "text-transform:uppercase;letter-spacing:.04em;color:#666;margin:0 0 .5rem}" +
-  ".spdf-seo nav a{display:inline-block;margin:0 .75rem .35rem 0;" +
-  "color:#0a58ca;text-decoration:none;font-size:.92rem}" +
-  "@media(prefers-color-scheme:dark){.spdf-seo{color:#e8e8e8}" +
-  ".spdf-seo p{color:#b8b8b8}.spdf-seo nav a{color:#6ea8fe}}</style>";
-
-/**
- * Build the crawlable body content injected into #root: an H1, the page
- * description, and a hub of real <a href> links to every tool. React (createRoot)
- * replaces it on mount, so it only ever shows on a full page load - i.e. to
- * crawlers and as the first paint (which also helps LCP). Links are relative so
- * they resolve against <base href> under any deploy (root, /app, context path).
- * @param {{title:string,description:string}} entry
- * @param {{navLinks?:{path:string,label:string}[], heading?:string|null}} opts
- */
-export function buildBodyContent(
-  entry,
-  { navLinks = [], heading = null } = {},
-) {
-  const name =
-    heading ||
-    (entry.title.endsWith(APP_SUFFIX)
-      ? entry.title.slice(0, -APP_SUFFIX.length)
-      : entry.title);
-  const links = navLinks
-    .map(
-      (l) =>
-        `<a href="${escapeHtml(l.path.replace(/^\//, ""))}">${escapeHtml(l.label)}</a>`,
-    )
-    .join("\n        ");
-  const nav = links
-    ? `\n      <nav aria-label="All PDF tools">\n        <h2>All PDF tools</h2>\n        ${links}\n      </nav>`
-    : "";
-  return (
-    `<div class="spdf-seo">${SEO_STYLE}\n      ` +
-    `<h1>${escapeHtml(name)}</h1>\n      ` +
-    `<p>${escapeHtml(entry.description)}</p>${nav}\n    </div>`
-  );
-}
-
-const ROOT_RE = /<div id="root">\s*<\/div>/;
-
-/** Inject crawlable content into the (otherwise empty) React mount point. */
-export function injectBody(html, content) {
-  return replaceOrThrow(
-    html,
-    ROOT_RE,
-    () => `<div id="root">${content}</div>`,
-    'empty <div id="root">',
-  );
-}
-
 const BASE_HREF_RE = /<base\s+href="[^"]*"\s*\/?>/i;
 
 // Clean single/multi-segment route (e.g. /compress, /settings/people); rejects
@@ -322,10 +261,6 @@ function cleanSegments(routePath) {
  * `ogBase` and `canonicalBase` are absolute deploy roots (see injectOg) - any
  * sub-path already folded in by the caller, because only the caller knows
  * whether a given origin serves the app at the sub-path or at its own root.
- *
- * `injectLanding` bakes the crawlable landing body (see buildBodyContent). It is
- * only worth the pre-hydration flash on a crawlable public deploy, so callers
- * enable it only when a deploy origin is known.
  * @returns {Promise<number>}
  */
 export async function prerenderOg({
@@ -334,37 +269,18 @@ export async function prerenderOg({
   ogBase = "",
   canonicalBase = "",
   baseHref = "/",
-  injectLanding = false,
 }) {
   const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
   const homePath = "/";
   const canonicalByPath = manifest.canonicalByPath || {};
-  const navLinks = manifest.navLinks;
-  // The hub is the only crawlable path to the tools, so an empty one is a stale
-  // manifest, not a valid input - fail loudly instead of shipping a bare page.
-  if (injectLanding && (!Array.isArray(navLinks) || navLinks.length === 0)) {
-    throw new Error(
-      "prerenderOg: manifest has no navLinks - run scripts/generate-og-metadata.mjs",
-    );
-  }
 
-  let home = injectOg(template, manifest.default, {
+  const home = injectOg(template, manifest.default, {
     ogBase,
     canonicalBase,
     pageUrlPath: ogBase ? homePath : null,
     canonicalPath: homePath,
     isHome: true,
   });
-  // Home <title> stays the brand ("Stirling PDF"); the H1 targets the keyword.
-  if (injectLanding) {
-    home = injectBody(
-      home,
-      buildBodyContent(manifest.default, {
-        navLinks,
-        heading: "Free Online PDF Tools",
-      }),
-    );
-  }
   await fs.writeFile(path.join(distDir, "index.html"), home);
 
   let count = 0;
@@ -382,9 +298,6 @@ export async function prerenderOg({
       noindex: !!entry.noindex,
       isHome: false,
     });
-    // App/auth pages (noindex) stay the bare shell - no crawlable landing copy.
-    if (injectLanding && !entry.noindex)
-      html = injectBody(html, buildBodyContent(entry, { navLinks }));
     const nested = segments.length > 1;
     if (nested)
       html = html.replace(BASE_HREF_RE, `<base href="${baseHref}" />`);
