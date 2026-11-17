@@ -3986,6 +3986,7 @@ body = "These PDFs together exceed 2,000 pages. Processing can take several minu
 title = "Large comparison in progress"
 
 [compare.mode]
+label = "Comparison mode"
 pixel = "Pixel Comparison"
 text = "Text Comparison"
 
