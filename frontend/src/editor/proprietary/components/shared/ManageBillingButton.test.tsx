@@ -29,7 +29,9 @@ it("opens the legacy subscription using the installed licence identity", async (
   service.createBillingPortalSession.mockResolvedValue({
     url: "https://billing.stripe.com/test",
   });
-  const open = vi.spyOn(window, "open").mockImplementation(() => null);
+  const open = vi
+    .spyOn(window, "open")
+    .mockImplementation(() => ({ opener: null }) as Window);
   render(
     <MantineProvider>
       <ManageBillingButton returnUrl="https://server.example/settings/billing" />
