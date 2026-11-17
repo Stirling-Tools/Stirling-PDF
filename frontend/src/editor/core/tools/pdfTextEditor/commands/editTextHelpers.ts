@@ -19,6 +19,12 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import {
+  advanceWidth,
+  parseFontMetrics,
+  type FontMetrics,
+} from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { applyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
 import {
   taggedSpans,
@@ -95,6 +101,10 @@ export function resetDroppedBase14Chars(): void {
 /** Test-only alias for {@link resetDroppedBase14Chars}. */
 export function _clearDroppedBase14CharsForTests(): void {
   resetDroppedBase14Chars();
+}
+
+export function recordUndrawableChars(chars: string): void {
+  recordDroppedChars(chars, "");
 }
 
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
@@ -317,14 +327,37 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   return `${italic}${bold}${sizePx}px ${stack}`;
 }
 
+function embeddedMetricsFor(family: string): FontMetrics | null {
+  const bytes = getExternalFontBytes(family);
+  return bytes ? parseFontMetrics(bytes) : null;
+}
+
+const BASE14_SPACE: Array<[RegExp, number]> = [
+  [/^times/i, 250],
+  [/^courier/i, 600],
+  [/^helvetica/i, 278],
+];
+
+export function base14SpaceAdvance(family: string): number | null {
+  return BASE14_SPACE.find(([re]) => re.test(family))?.[1] ?? null;
+}
+
 /** Measure the natural advance width of `s` in PDF points. */
 function measureAdvancePt(
   text: string,
   fontFamily: string,
   fontSizePt: number,
 ): number {
+  const metrics = embeddedMetricsFor(fontFamily);
+  const embedded = metrics ? advanceWidth(metrics, text) : null;
+  if (embedded !== null) return (embedded * fontSizePt) / 1000;
   const ctx = measureCtx();
-  if (!ctx) return text.length * fontSizePt * 0.5;
+  if (!ctx) {
+    const space = base14SpaceAdvance(fontFamily) ?? 500;
+    let sum = 0;
+    for (const ch of text) sum += /\s/.test(ch) ? space : 500;
+    return (sum * fontSizePt) / 1000;
+  }
   ctx.font = cssFontSpecFor(fontFamily, fontSizePt);
   return ctx.measureText(text).width;
 }
@@ -1244,9 +1277,19 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
+  const box = measureObjBoundsPt(m, ptrs);
+  return box && { left: box.left, right: box.right };
+}
+
+export function measureObjBoundsPt(
+  m: WrappedPdfiumModule,
+  ptrs: number[],
+): { left: number; bottom: number; right: number; top: number } | null {
   const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
   let left = Infinity;
+  let bottom = Infinity;
   let right = -Infinity;
+  let top = -Infinity;
   for (const ptr of ptrs) {
     if (!ptr) continue;
     try {
@@ -1259,10 +1302,12 @@ export function measureObjSpanPt(
     const lo = m.pdfium.getValue(buf, "float");
     const hi = m.pdfium.getValue(buf + 8, "float");
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
-    if (lo < left) left = lo;
-    if (hi > right) right = hi;
+    left = Math.min(left, lo);
+    right = Math.max(right, hi);
+    bottom = Math.min(bottom, m.pdfium.getValue(buf + 4, "float"));
+    top = Math.max(top, m.pdfium.getValue(buf + 12, "float"));
   }
-  return right > left ? { left, right } : null;
+  return right > left ? { left, bottom, right, top } : null;
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {

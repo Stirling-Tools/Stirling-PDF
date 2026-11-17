@@ -4,6 +4,7 @@ pub mod connection;
 pub mod default_app;
 pub mod file_drop;
 pub mod files;
+pub mod fonts;
 pub mod local_proxy;
 pub mod platform;
 pub mod print;
