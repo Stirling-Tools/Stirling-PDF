@@ -3,10 +3,7 @@ import type {
   DescribableType,
   DescriptionBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type {
-  ImageObjectSnapshot,
-  PageSnapshot,
-} from "@editor/tools/pdfTextEditor/types";
+import type { ImageObjectSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 /** What can be said and done about one image's accessibility. */
 export type ImageAccessibility =
@@ -101,13 +98,6 @@ function blocked(
  */
 export type ImageAttention = "needs-description" | "untagged" | "untaggable";
 
-/** Images needing attention, by reason. */
-export interface ImageReview {
-  needsDescription: number;
-  untagged: number;
-  untaggable: number;
-}
-
 export function attentionFor(
   accessibility: ImageAccessibility,
 ): ImageAttention | null {
@@ -135,42 +125,4 @@ export function imageAttention(
   image: ImageObjectSnapshot,
 ): ImageAttention | null {
   return attentionFor(imageAccessibility(doc, image));
-}
-
-export function reviewImages(
-  doc: EditorDocument,
-  pages: readonly PageSnapshot[],
-): ImageReview {
-  const review: ImageReview = {
-    needsDescription: 0,
-    untagged: 0,
-    untaggable: 0,
-  };
-  for (const image of pages.flatMap((page) => page.images)) {
-    const attention = imageAttention(doc, image);
-    if (attention === "needs-description") review.needsDescription++;
-    if (attention === "untagged") review.untagged++;
-    if (attention === "untaggable") review.untaggable++;
-  }
-  return review;
-}
-
-/**
- * The first image with actionable attention after `currentId`, in page order
- * and then the order each page draws its images, wrapping round to the start.
- * Covers only the pages in `pages` that have been read.
- */
-export function nextImageNeedingAttention(
-  doc: EditorDocument,
-  pages: readonly PageSnapshot[],
-  currentId: string | null,
-): ImageObjectSnapshot | null {
-  const images = pages.flatMap((page) => page.images);
-  // An id not in the list (or none) yields 0: start from the first image.
-  const start = images.findIndex((img) => img.id === currentId) + 1;
-  for (let i = 0; i < images.length; i++) {
-    const image = images[(start + i) % images.length];
-    if (isActionable(imageAttention(doc, image))) return image;
-  }
-  return null;
 }

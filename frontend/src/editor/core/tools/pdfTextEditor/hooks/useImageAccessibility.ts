@@ -4,7 +4,6 @@ import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlo
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
@@ -17,17 +16,13 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import {
   imageAccessibility,
-  nextImageNeedingAttention,
   retaggableTag,
-  reviewImages,
   type ImageAccessibility,
-  type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 /**
- * The accessibility of the selected image (null unless exactly one image and
- * nothing else is selected), and the review of images needing attention.
- * `review` covers only pages read so far.
+ * The accessibility of the selected image: null unless exactly one image and
+ * nothing else is selected.
  */
 export function useImageAccessibility(
   store: EditorStore,
@@ -82,43 +77,11 @@ export function useImageAccessibility(
     [store, image],
   );
 
-  const review = useMemo(
-    (): ImageReview =>
-      store.document
-        ? reviewImages(store.document, state.pages)
-        : { needsDescription: 0, untagged: 0, untaggable: 0 },
-    [store, state.pages],
-  );
-
-  /** False when no image needs attention, leaving the selection alone. */
-  const selectNextImage = useCallback((): boolean => {
-    // An image on a page not yet scrolled to would otherwise be skipped.
-    ensureAllPagesRead(store);
-    const doc = store.document;
-    if (!doc) return false;
-    const next = nextImageNeedingAttention(
-      doc,
-      store.getState().pages,
-      store.selection.value.imageIds[0] ?? null,
-    );
-    if (!next) return false;
-    store.selection.selectImage(next.id);
-    // A page read just now has no overlay until React commits it.
-    window.requestAnimationFrame(() =>
-      document
-        .querySelector(`[data-testid="pdf-editor-image-${next.id}"]`)
-        ?.scrollIntoView({ block: "center", behavior: "smooth" }),
-    );
-    return true;
-  }, [store]);
-
   return {
     accessibility,
     setDescription,
     setType,
     setDecorative,
-    review,
-    selectNextImage,
   };
 }
 

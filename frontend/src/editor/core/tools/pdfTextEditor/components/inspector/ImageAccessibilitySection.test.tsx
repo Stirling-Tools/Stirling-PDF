@@ -2,10 +2,8 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
-import type {
-  ImageAccessibility,
-  ImageReview,
-} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { ImageAccessibility } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 
 function renderSection(
   accessibility: ImageAccessibility,
@@ -149,7 +147,7 @@ describe("ImageAccessibilitySection", () => {
     expect(onNext).toHaveBeenCalledOnce();
   });
 
-  it.each<[string, ImageAccessibility, ImageReview, boolean]>([
+  it.each<[string, ImageAccessibility, AccessibilityReview, boolean]>([
     [
       "only this one needs a description",
       describable(null),

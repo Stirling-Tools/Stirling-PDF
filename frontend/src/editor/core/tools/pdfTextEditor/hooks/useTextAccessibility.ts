@@ -24,6 +24,7 @@ import {
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import { describableTextElement } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
   EditorStore,
@@ -402,26 +403,19 @@ function describedElement(
   targets: readonly { run: TextRunSnapshot; tag: TextTag }[],
 ): { pageIndex: number; mcid: number; type: DescribableType } | null {
   const [first, ...rest] = targets.map(({ run }) => run);
-  if (!first || first.mcid === undefined || first.inForm) return null;
-  const { pageIndex, mcid } = first;
-  const structure = doc.structure(pageIndex);
-  const type = structure.describableType(mcid);
-  if (
-    !type ||
-    structure.cannotDescribe(mcid) !== null ||
-    structure.decorative(mcid)
-  ) {
-    return null;
-  }
-  const element = structure.element(mcid);
+  const described = first ? describableTextElement(doc, first) : null;
+  if (!first || !described) return null;
+  const structure = doc.structure(first.pageIndex);
   const sameElement = rest.every(
     (run) =>
-      run.pageIndex === pageIndex &&
+      run.pageIndex === first.pageIndex &&
       run.mcid !== undefined &&
       !run.inForm &&
-      structure.element(run.mcid) === element,
+      structure.element(run.mcid) === described.element,
   );
-  return sameElement ? { pageIndex, mcid, type } : null;
+  return sameElement
+    ? { pageIndex: first.pageIndex, mcid: first.mcid!, type: described.type }
+    : null;
 }
 
 /**

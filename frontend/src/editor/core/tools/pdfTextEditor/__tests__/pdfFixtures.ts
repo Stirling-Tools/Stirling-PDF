@@ -138,3 +138,62 @@ export function splitContentPdf(parts: string[], tight = false): Uint8Array {
   );
   return buildClassicPdf(objects, 1);
 }
+
+/**
+ * One page, top to bottom: a formula drawn as two lines with no description
+ * (MCIDs 0 and 1, one element), a described formula (MCID 2), and a
+ * paragraph (MCID 3).
+ */
+export function formulasPdf(): Uint8Array {
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+      {
+        num: 3,
+        body:
+          "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /StructParents 0 " +
+          "/Resources << /Font << /F1 5 0 R >> >> >>",
+      },
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/Formula <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (a = b) Tj ET EMC\n" +
+            "/Formula <</MCID 1>> BDC BT /F1 12 Tf 72 600 Td (c = d) Tj ET EMC\n" +
+            "/Formula <</MCID 2>> BDC BT /F1 12 Tf 72 500 Td (e = f) Tj ET EMC\n" +
+            "/P <</MCID 3>> BDC BT /F1 12 Tf 72 400 Td (Where a is) Tj ET EMC\n",
+        ),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 11 0 R /ParentTreeNextKey 1 >>",
+      },
+      {
+        num: 7,
+        body: "<< /Type /StructElem /S /Document /P 6 0 R /K [8 0 R 9 0 R 10 0 R] >>",
+      },
+      {
+        num: 8,
+        body: "<< /Type /StructElem /S /Formula /P 7 0 R /Pg 3 0 R /K [0 1] >>",
+      },
+      {
+        num: 9,
+        body: "<< /Type /StructElem /S /Formula /P 7 0 R /Pg 3 0 R /K 2 /Alt (e equals f) >>",
+      },
+      {
+        num: 10,
+        body: "<< /Type /StructElem /S /P /P 7 0 R /Pg 3 0 R /K 3 >>",
+      },
+      { num: 11, body: "<< /Nums [0 [8 0 R 8 0 R 9 0 R 10 0 R]] >>" },
+    ],
+    1,
+  );
+}

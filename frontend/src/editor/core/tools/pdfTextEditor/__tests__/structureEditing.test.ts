@@ -37,11 +37,16 @@ import { expectConsole } from "@editor/tests/failOnConsole";
 import {
   imageAccessibility,
   imageAttention,
-  nextImageNeedingAttention,
-  reviewImages,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import {
+  nextNeedingAttention,
+  reviewAccessibility,
+} from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
-import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type {
+  PageSnapshot,
+  TextRunSnapshot,
+} from "@editor/tools/pdfTextEditor/types";
 import {
   buildClassicPdf,
   streamBody,
@@ -435,13 +440,14 @@ describe("reviewing images that need attention", () => {
       return {
         pageIndex,
         images: page.images.map((img) => img.snapshot()),
+        runs: [] as TextRunSnapshot[],
       } as PageSnapshot;
     });
   }
 
   test("counts the undescribed images across pages", async () => {
     const doc = await open(figuresPdf());
-    expect(reviewImages(doc, await pages(doc))).toEqual({
+    expect(reviewAccessibility(doc, await pages(doc))).toEqual({
       needsDescription: 2,
       untagged: 0,
       untaggable: 0,
@@ -454,7 +460,7 @@ describe("reviewing images that need attention", () => {
     const [a, b] = read[0].images;
     const [c] = read[1].images;
     const next = (from: string | null) =>
-      nextImageNeedingAttention(doc, read, from)?.id;
+      nextNeedingAttention(doc, read, from)?.id;
     expect(next(null)).toBe(a.id);
     expect(next(a.id)).toBe(c.id);
     expect(next(b.id)).toBe(c.id);
@@ -470,11 +476,11 @@ describe("reviewing images that need attention", () => {
         doc,
       );
     describe("   ");
-    expect(reviewImages(doc, read).needsDescription).toBe(2);
+    expect(reviewAccessibility(doc, read).needsDescription).toBe(2);
     describe("A bar chart");
-    expect(reviewImages(doc, read).needsDescription).toBe(1);
+    expect(reviewAccessibility(doc, read).needsDescription).toBe(1);
     const [c] = read[1].images;
-    expect(nextImageNeedingAttention(doc, read, c.id)?.id).toBe(c.id);
+    expect(nextNeedingAttention(doc, read, c.id)?.id).toBe(c.id);
   });
 
   test("flags an image inserted into a tagged document as untagged", async () => {
@@ -496,16 +502,20 @@ describe("reviewing images that need attention", () => {
       .find((img) => img.id === insert.insertedImageId)!
       .snapshot();
     const read = [
-      { pageIndex: 0, images: page.images.map((img) => img.snapshot()) },
+      {
+        pageIndex: 0,
+        images: page.images.map((img) => img.snapshot()),
+        runs: [] as TextRunSnapshot[],
+      },
     ] as PageSnapshot[];
 
     expect(imageAttention(doc, inserted)).toBe("untagged");
-    expect(reviewImages(doc, read)).toEqual({
+    expect(reviewAccessibility(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 1,
       untaggable: 0,
     });
-    expect(nextImageNeedingAttention(doc, read, null)?.id).toBe(inserted.id);
+    expect(nextNeedingAttention(doc, read, null)?.id).toBe(inserted.id);
   });
 
   test("counts an image marked for a missing tree as untaggable", async () => {
@@ -513,9 +523,13 @@ describe("reviewing images that need attention", () => {
     const page = doc.page(0);
     PdfiumTextReader.populate(doc, page);
     const read = [
-      { pageIndex: 0, images: page.images.map((img) => img.snapshot()) },
+      {
+        pageIndex: 0,
+        images: page.images.map((img) => img.snapshot()),
+        runs: [] as TextRunSnapshot[],
+      },
     ] as PageSnapshot[];
-    expect(reviewImages(doc, read)).toEqual({
+    expect(reviewAccessibility(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 0,
       untaggable: 1,
@@ -626,14 +640,18 @@ describe("images drawn by a form XObject", () => {
   test("counts an untaggable image apart, and Next passes it by", async () => {
     const doc = await open(formImagesPdf());
     const read = [
-      { pageIndex: 0, images: await images(doc) },
+      {
+        pageIndex: 0,
+        images: await images(doc),
+        runs: [] as TextRunSnapshot[],
+      },
     ] as PageSnapshot[];
-    expect(reviewImages(doc, read)).toEqual({
+    expect(reviewAccessibility(doc, read)).toEqual({
       needsDescription: 0,
       untagged: 0,
       untaggable: 1,
     });
-    expect(nextImageNeedingAttention(doc, read, null)).toBeNull();
+    expect(nextNeedingAttention(doc, read, null)).toBeNull();
   });
 
   test("saves the page's tag on its form as an artifact when marked decorative", async () => {
@@ -894,8 +912,8 @@ describe("SetDecorativeCommand", () => {
       "Figure",
     );
     expect(
-      reviewImages(reopened, [
-        { pageIndex: 0, images: [image] },
+      reviewAccessibility(reopened, [
+        { pageIndex: 0, images: [image], runs: [] as TextRunSnapshot[] },
       ] as PageSnapshot[]),
     ).toEqual({
       needsDescription: 0,
@@ -1272,7 +1290,9 @@ describe("saving an added figure", () => {
     const { doc: reopened, images } = await reopen(await savedBytes(doc));
     expect(images.filter((img) => img.artifact)).toHaveLength(2);
     expect(
-      reviewImages(reopened, [{ pageIndex: 0, images }] as PageSnapshot[]),
+      reviewAccessibility(reopened, [
+        { pageIndex: 0, images, runs: [] as TextRunSnapshot[] },
+      ] as PageSnapshot[]),
     ).toEqual({
       needsDescription: 0,
       untagged: 0,

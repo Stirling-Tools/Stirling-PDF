@@ -2,7 +2,6 @@ import { Stack, Text, Textarea } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@editor/components/shared/Tooltip";
-import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
 import { Select } from "@editor/ui/Select";
@@ -19,14 +18,15 @@ import {
   attentionFor,
   isActionable,
   type ImageAccessibility,
-  type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The selected image's tag as a figure or formula and its description, or
  * its decorative mark, or why it cannot have any, and a way on to the next
- * image needing attention. `review` counts this image too.
+ * image or text needing attention. `review` counts this image too.
  */
 export function ImageAccessibilitySection({
   accessibility,
@@ -40,7 +40,7 @@ export function ImageAccessibilitySection({
   onSetDescription: (text: string) => void;
   onSetType: (type: DescribableType) => void;
   onSetDecorative: (decorative: boolean) => void;
-  review: ImageReview;
+  review: AccessibilityReview;
   onNext: () => void;
 }) {
   const { t } = useTranslation();
@@ -116,18 +116,10 @@ export function ImageAccessibilitySection({
           </>
         )}
         {othersPending > 0 && (
-          <Button
-            size="sm"
-            variant="secondary"
-            accent="neutral"
-            fullWidth
-            justify="start"
-            leftSection={<Icon name="arrow-right" size={20} />}
+          <NextToReviewButton
             onClick={onNext}
-            data-testid="pdf-editor-image-description-next"
-          >
-            {t("pdfTextEditor.inspector.accessibility.nextImage", "Next image")}
-          </Button>
+            testId="pdf-editor-image-description-next"
+          />
         )}
       </Stack>
     </Section>

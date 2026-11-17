@@ -41,12 +41,15 @@ import type {
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 
 /**
  * What the selected text is tagged as and the language it is read in, with
  * pickers to change them: retagging its block, giving untagged text an
  * element of its own, or making it an artifact. A formula or figure also
- * takes a description. Beneath them, the tags marking parts of the text, a
+ * takes a description, with a way on to the next image or text needing
+ * attention; `review` counts this text too. Beneath them, the tags marking parts of the text, a
  * way to tag the links over it, and pickers for characters selected in it.
  * With several runs selected, the tag they share and their language.
  */
@@ -58,6 +61,8 @@ export function TextAccessibilitySection({
   otherPages,
   description,
   untaggedLinks,
+  review,
+  onNext,
 }: {
   tag: TextTag | null;
   onSetTag: (choice: TextTagChoice) => void;
@@ -66,6 +71,8 @@ export function TextAccessibilitySection({
   otherPages: OtherPagesControl | null;
   description: TextDescriptionControl | null;
   untaggedLinks: UntaggedLinksControl | null;
+  review: AccessibilityReview;
+  onNext: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -75,7 +82,13 @@ export function TextAccessibilitySection({
       </SectionLabel>
       <Stack gap="xs">
         {tag && <TagField tag={tag} onSetTag={onSetTag} />}
-        {description && <DescriptionField control={description} />}
+        {description && (
+          <DescriptionField
+            control={description}
+            review={review}
+            onNext={onNext}
+          />
+        )}
         {otherPages && <OtherPagesButton control={otherPages} />}
         {language && <TextLanguageField control={language} />}
         {tag && (
@@ -190,23 +203,43 @@ function artifactValue(furniture: Furniture | null): string {
 }
 
 /** What screen readers read out in place of the formula or figure the text makes up. */
-function DescriptionField({ control }: { control: TextDescriptionControl }) {
+function DescriptionField({
+  control,
+  review,
+  onNext,
+}: {
+  control: TextDescriptionControl;
+  review: AccessibilityReview;
+  onNext: () => void;
+}) {
   const { t } = useTranslation();
   const label = descriptionLabel(t, control.type);
+  const othersPending =
+    review.needsDescription +
+    review.untagged -
+    (control.description?.trim() ? 0 : 1);
   return (
-    <Field label={label} hint={descriptionHint(t, control.type)}>
-      <Textarea
-        aria-label={label}
-        value={control.description ?? ""}
-        className={privateContentClassName}
-        onChange={(e) => control.onSet(e.currentTarget.value)}
-        autosize
-        minRows={2}
-        maxRows={6}
-        size="xs"
-        data-testid="pdf-editor-text-description"
-      />
-    </Field>
+    <>
+      <Field label={label} hint={descriptionHint(t, control.type)}>
+        <Textarea
+          aria-label={label}
+          value={control.description ?? ""}
+          className={privateContentClassName}
+          onChange={(e) => control.onSet(e.currentTarget.value)}
+          autosize
+          minRows={2}
+          maxRows={6}
+          size="xs"
+          data-testid="pdf-editor-text-description"
+        />
+      </Field>
+      {othersPending > 0 && (
+        <NextToReviewButton
+          onClick={onNext}
+          testId="pdf-editor-text-description-next"
+        />
+      )}
+    </>
   );
 }
 

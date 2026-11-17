@@ -115,8 +115,8 @@ export function EditorSidebar({
 
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
-  const selectNextImageToReview = () => {
-    if (controller.onSelectNextImageToReview()) setTab("selected");
+  const selectNextToReview = () => {
+    if (controller.onSelectNextToReview()) setTab("selected");
   };
 
   if (!state.hasDocument) {
@@ -191,10 +191,10 @@ export function EditorSidebar({
               onSetGroupingMode={onSetGroupingMode}
               onSetWidthMode={onSetWidthMode}
               onSetShowRulers={onSetShowRulers}
-              imageReview={
-                reviewingAccessibility ? controller.imageReview : null
+              accessibilityReview={
+                reviewingAccessibility ? controller.accessibilityReview : null
               }
-              onSelectNextImageToReview={selectNextImageToReview}
+              onSelectNextToReview={selectNextToReview}
               untaggedPages={bulkTagging.untaggedPages}
               onTagUntaggedContent={bulkTagging.tagAll}
               markedTagged={
