@@ -1215,10 +1215,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
-        await ingestFiles(Array.from(e.target.files ?? []));
-        e.target.value = "";
+        const input = e.target;
+        try {
+          await ingestFiles(Array.from(input.files ?? []));
+        } catch (err) {
+          console.error("[FileSidebar] Native file pick failed", err);
+          reportUploadFailure(err);
+        } finally {
+          input.value = "";
+        }
       },
-      [ingestFiles],
+      [ingestFiles, reportUploadFailure],
     );
 
     const openNativeFilePicker = useCallback(() => {

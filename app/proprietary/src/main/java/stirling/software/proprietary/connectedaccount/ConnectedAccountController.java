@@ -227,7 +227,8 @@ public class ConnectedAccountController {
     }
 
     private static String origin(URI uri) {
-        return uri.getScheme() + "://" + uri.getAuthority();
+        String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
+        return uri.getScheme() + "://" + uri.getHost() + port;
     }
 
     private String publicBaseUrl() {

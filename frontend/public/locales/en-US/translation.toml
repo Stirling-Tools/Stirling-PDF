@@ -4324,7 +4324,7 @@ reconnect = "Sign in again"
 work = "Work account"
 
 [connectedAccounts.disconnectConfirm]
-body = "Sources and pipelines that use this account will stop until you connect it again."
+body = "Sources and pipelines that use this account will stop. After you connect it again, update their account settings to use the new connection."
 confirm = "Disconnect"
 title = "Disconnect {{account}}?"
 
