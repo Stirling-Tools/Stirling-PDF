@@ -10,26 +10,88 @@ import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetT
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
-import { ensureDeviceFontReady } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  deviceFontDrawsAnyOf,
+  loadDeviceFontInto,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import { isItalicFamily } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import {
+  isItalicFamily,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { italicCapability } from "@editor/tools/pdfTextEditor/util/fontCapability";
-import { loadedLocalFonts } from "@editor/tools/pdfTextEditor/util/localFonts";
+import {
+  loadedExternalFonts,
+  loadExternalFont,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
+import { serverFaceFor } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 
 /** The fields the selection actions read off a run they are about to change. */
 interface SelectedRun {
   id: string;
   pageIndex: number;
   fontId: string;
+  text: string;
   fill: { r: number; g: number; b: number; a: number };
+}
+
+export type FontPickFailure =
+  | "serverFontFailed"
+  | "embeddingForbidden"
+  | "embedFailed"
+  | "noGlyphs";
+
+interface FamilyChange {
+  pageIndex: number;
+  runId: string;
+  family: string;
+}
+
+/** Loads the family's bytes; the failure that must stop the pick, or null to go on. */
+async function prepareExternalFont(
+  family: string,
+): Promise<FontPickFailure | null> {
+  const load = await loadExternalFont(family);
+  if ("bytes" in load) return null;
+  if (serverFaceFor(family)) return "serverFontFailed";
+  return load.refused === "licence" ? "embeddingForbidden" : null;
+}
+
+function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
+  return loadDeviceFontInto(doc, family) !== 0;
+}
+
+async function fontPickFailure(
+  family: string,
+  text: string,
+): Promise<FontPickFailure | null> {
+  if (nearestStandardFont(family) === family) return null;
+  const refusal = await prepareExternalFont(family);
+  if (refusal) return refusal;
+  return deviceFontDrawsAnyOf(family, text) ? null : "noGlyphs";
+}
+
+function liveRuns(store: EditorStore): Map<string, TextRun> {
+  const runs = new Map<string, TextRun>();
+  for (const page of store.document?.loadedPages() ?? []) {
+    for (const run of page.runs) runs.set(run.id, run);
+  }
+  return runs;
 }
 
 /** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
+  const { busy: fittingScan, dispatch: dispatchAfterScanFit } =
+    useDispatchAfterScanFit(store);
   const forEachSelectedRun = useCallback(
-    (visit: (run: SelectedRun) => void) => {
+    (visit: (run: SelectedRun, page: Page) => void) => {
       const sel = store.selection.value;
       const doc = store.document;
       if (!doc || sel.runIds.length === 0) return;
@@ -38,33 +100,34 @@ export function useSelectionActions(store: EditorStore) {
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
           // Locked runs are selectable but must not mutate.
-          if (selIds.has(run.id) && !run.locked) visit(run);
+          if (selIds.has(run.id) && !run.locked) visit(run, page);
         }
       }
     },
     [store],
   );
 
-  // One command per run, dispatched as ONE undo step - same reason
-  // `deleteSelection` groups its deletes. Select-all now reaches the whole
-  // document, so a per-run dispatch left the user hundreds of undos behind and
-  // the first Ctrl+Z looked like the restyle had only covered part of the file.
   const dispatchPerRun = useCallback(
     (build: (run: SelectedRun) => Command | null) => {
-      const cmds: Command[] = [];
-      forEachSelectedRun((run) => {
-        const cmd = build(run);
-        if (cmd) cmds.push(cmd);
+      const targets: ScanFitTarget[] = [];
+      forEachSelectedRun((run, page) => {
+        targets.push({ page, run: run as TextRun });
       });
-      if (cmds.length === 1) store.dispatch(cmds[0]);
-      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
+      return dispatchAfterScanFit(targets, () => {
+        const live = liveRuns(store);
+        return targets.flatMap(({ run: target }) => {
+          const run = live.get(target.id);
+          const cmd = run && !run.locked ? build(run) : null;
+          return cmd ? [cmd] : [];
+        });
+      });
     },
-    [store, forEachSelectedRun],
+    [store, forEachSelectedRun, dispatchAfterScanFit],
   );
 
   const changeFontSize = useCallback(
     (size: number) => {
-      dispatchPerRun(
+      void dispatchPerRun(
         (run) =>
           new SetFontSizeCommand({
             pageIndex: run.pageIndex,
@@ -80,7 +143,7 @@ export function useSelectionActions(store: EditorStore) {
     (hex: string) => {
       const fill = parseCssColor(hex);
       if (!fill) return;
-      dispatchPerRun(
+      void dispatchPerRun(
         (run) =>
           new SetColourCommand({
             pageIndex: run.pageIndex,
@@ -97,7 +160,7 @@ export function useSelectionActions(store: EditorStore) {
   const changeOutline = useCallback(
     (hex: string | null, width: number) => {
       const stroke = hex ? parseCssColor(hex) : null;
-      dispatchPerRun(
+      void dispatchPerRun(
         (run) =>
           new SetTextOutlineCommand({
             pageIndex: run.pageIndex,
@@ -110,32 +173,75 @@ export function useSelectionActions(store: EditorStore) {
     [dispatchPerRun],
   );
 
+  const dispatchFamilyChanges = useCallback(
+    async (
+      doc: EditorDocument | null,
+      changes: FamilyChange[],
+      fit: ScanFitTarget[],
+    ) => {
+      if (store.document !== doc) return;
+      await dispatchAfterScanFit(fit, () => {
+        const live = liveRuns(store);
+        return changes
+          .filter((change) => {
+            const run = live.get(change.runId);
+            return !!run && !run.locked;
+          })
+          .map(
+            (change) =>
+              new SetFontFamilyCommand({
+                pageIndex: change.pageIndex,
+                runId: change.runId,
+                nextFamily: change.family,
+              }),
+          );
+      });
+    },
+    [store, dispatchAfterScanFit],
+  );
+
   const changeFontFamily = useCallback(
-    async (family: string) => {
+    async (family: string): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      const targets: SelectedRun[] = [];
+      const fit: ScanFitTarget[] = [];
+      forEachSelectedRun((run, page) => {
+        targets.push(run);
+        fit.push({ page, run: run as TextRun });
+      });
+      const changes = targets.map((run) => ({
+        pageIndex: run.pageIndex,
+        runId: run.id,
+        family,
+      }));
       // Embedding is async and Command.apply is not, so warm the bytes first.
       // A no-op for the built-in families.
-      await ensureDeviceFontReady(family);
-      dispatchPerRun(
-        (run) =>
-          new SetFontFamilyCommand({
-            pageIndex: run.pageIndex,
-            runId: run.id,
-            nextFamily: family,
-          }),
+      const failure = await fontPickFailure(
+        family,
+        targets.map((run) => run.text).join(""),
       );
+      if (failure) return failure;
+      if (store.document !== doc) return null;
+      // Refuse here, as the command would fall back to a standard face the user never picked.
+      if (
+        doc &&
+        nearestStandardFont(family) !== family &&
+        !tryEmbedDeviceFont(doc, family)
+      )
+        return "embedFailed";
+      await dispatchFamilyChanges(doc, changes, fit);
+      return null;
     },
-    [dispatchPerRun],
+    [store, forEachSelectedRun, dispatchFamilyChanges],
   );
 
   const toggleItalic = useCallback(async () => {
-    const fonts = loadedLocalFonts();
-    const targets: Array<{
-      pageIndex: number;
-      runId: string;
-      family: string;
-      device: boolean;
-    }> = [];
-    forEachSelectedRun((run) => {
+    const doc = store.document;
+    const fonts = loadedExternalFonts();
+    const targets: Array<
+      FamilyChange & { device: boolean; fit: ScanFitTarget }
+    > = [];
+    forEachSelectedRun((run, page) => {
       const cap = italicCapability(
         run.fontId,
         !isItalicFamily(run.fontId),
@@ -149,23 +255,24 @@ export function useSelectionActions(store: EditorStore) {
         runId: run.id,
         family: cap.family,
         device: cap.source === "device",
+        fit: { page, run: run as TextRun },
       });
     });
     // Embedding is async and Command.apply is not, so warm the bytes first.
+    const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
     for (const target of targets) {
-      if (target.device) await ensureDeviceFontReady(target.family);
+      if (target.device) {
+        if (await prepareExternalFont(target.family)) continue;
+        if (!doc || !tryEmbedDeviceFont(doc, target.family)) continue;
+      }
+      ready.push(target);
     }
-    const cmds = targets.map(
-      (target) =>
-        new SetFontFamilyCommand({
-          pageIndex: target.pageIndex,
-          runId: target.runId,
-          nextFamily: target.family,
-        }),
+    await dispatchFamilyChanges(
+      doc,
+      ready,
+      ready.map((target) => target.fit),
     );
-    if (cmds.length === 1) store.dispatch(cmds[0]);
-    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-  }, [store, forEachSelectedRun]);
+  }, [store, forEachSelectedRun, dispatchFamilyChanges]);
 
   const deleteSelection = useCallback(() => {
     const sel = store.selection.value;
@@ -279,6 +386,7 @@ export function useSelectionActions(store: EditorStore) {
   }, [store]);
 
   return {
+    fittingScan,
     changeFontSize,
     changeFill,
     changeOutline,

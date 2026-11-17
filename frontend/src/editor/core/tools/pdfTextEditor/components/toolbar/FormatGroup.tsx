@@ -30,6 +30,7 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
   const { t } = useTranslation();
   const {
     state,
+    scanFont,
     hasRunSelection,
     onChangeFontFamily,
     onChangeFontSize,
@@ -44,7 +45,9 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
   const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
   const outlineWidth = state.strokeWidth ?? 0;
-  const fontFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
+  const documentFamily = state.fontFamily ? familyOf(state.fontFamily) : null;
+  const fontFamily =
+    scanFont === undefined ? documentFamily : (scanFont?.family ?? null);
   const inputSize = touch ? "lg" : "xs";
   const buttonSize = touch ? "xl" : "sm";
 
@@ -52,6 +55,9 @@ export function FormatGroup({ controller, touch = false }: FormatGroupProps) {
     <>
       <FontFamilySelect
         value={fontFamily}
+        scanned={
+          scanFont === undefined ? undefined : { label: scanFont?.label }
+        }
         onChange={onChangeFontFamily}
         mixed={state.mixed.fontFamily}
         touch={touch}

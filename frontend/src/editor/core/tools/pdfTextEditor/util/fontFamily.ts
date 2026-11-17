@@ -9,10 +9,47 @@ export function isItalicFamily(fontId: string): boolean {
   return /italic|oblique/i.test(fontId);
 }
 
+/** Subset fonts carry a 6-letter "ABCDEF+" tag; strip it for display. */
+export function stripSubsetTag(name: string): string {
+  return name.replace(/^[A-Z]{6}\+/, "");
+}
+
 /** Strip any `prefix:` qualifier that `PdfiumTextReader` adds to font ids. */
 export function familyOf(fontId: string): string {
   const idx = fontId.lastIndexOf(":");
   return idx >= 0 ? fontId.slice(idx + 1) : fontId;
+}
+
+/** Whether a fontId names a font carried by the PDF itself. */
+export function isDocumentFontId(fontId: string): boolean {
+  return fontId.startsWith("pdf:");
+}
+
+/** The PDFium font handle in a pdf:<ptr>:<family> fontId, or 0; valid while some object uses it. */
+export function documentFontHandle(fontId: string): number {
+  if (!isDocumentFontId(fontId)) return 0;
+  const n = Number(fontId.split(":")[1]);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+const DEVICE_FONT_PREFIX = "device:";
+const BASE14_FONT_PREFIX = "base14:";
+
+/** Whether a fontId names an installed or server font embedded by the editor. */
+export function isDeviceFontId(fontId: string): boolean {
+  return fontId.startsWith(DEVICE_FONT_PREFIX);
+}
+
+export function isBase14FontId(fontId: string): boolean {
+  return fontId.startsWith(BASE14_FONT_PREFIX);
+}
+
+export function deviceFontId(family: string): string {
+  return `${DEVICE_FONT_PREFIX}${family}`;
+}
+
+export function base14FontId(family: string): string {
+  return `${BASE14_FONT_PREFIX}${family}`;
 }
 
 type Base14Root = "Helvetica" | "Times" | "Courier";
@@ -78,6 +115,20 @@ const STANDARD_FONTS = new Set([
   "Symbol",
   "ZapfDingbats",
 ]);
+
+const WIN_ANSI_EXTRAS = new Set([
+  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017d, 0x017e, 0x0192, 0x02c6,
+  0x02dc, 0x2013, 0x2014, 0x2018, 0x2019, 0x201a, 0x201c, 0x201d, 0x201e,
+  0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039, 0x203a, 0x20ac, 0x2122,
+]);
+
+export function encodesInBase14(cp: number): boolean {
+  return (
+    (cp >= 0x20 && cp < 0x7f) ||
+    (cp >= 0xa0 && cp <= 0xff) ||
+    WIN_ANSI_EXTRAS.has(cp)
+  );
+}
 
 // The standard PDF font that best stands in for an arbitrary family: PDFium
 // can only build a text object for one of the 14, so approximate, don't drop.

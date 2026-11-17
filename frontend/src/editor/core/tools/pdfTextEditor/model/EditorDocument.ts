@@ -93,7 +93,7 @@ export class EditorDocument {
   private readonly fileStructure: FileStructure | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
-  private readonly embeddedFonts: Uint8Array[] = [];
+  private readonly _embeddedFontFiles: Uint8Array[] = [];
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
   // this layer, so without it such fields are invisible in the editor while
@@ -102,6 +102,7 @@ export class EditorDocument {
   private formEnvPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
+  private scratch: EditorDocument | null = null;
   /** By page index, as each page is first read: the artifact marks whose kinds only the file names. */
   private readonly artifactMarks = new Map<number, ArtifactMarkRef[]>();
   private readonly artifactKindReads = new Map<number, Promise<boolean>>();
@@ -762,17 +763,14 @@ export class EditorDocument {
     });
   }
 
-  /**
-   * Note a font file handed to PDFium for embedding in this document. PDFium
-   * writes such a font whole; the save uses these to find and subset them.
-   */
+  /** Record a font file PDFium embeds whole, so the save can subset it. */
   recordEmbeddedFontFile(bytes: Uint8Array): void {
-    this.embeddedFonts.push(bytes);
+    this._embeddedFontFiles.push(bytes);
   }
 
   /** The exact font files embedded into this document during the session. */
   embeddedFontFiles(): readonly Uint8Array[] {
-    return this.embeddedFonts;
+    return this._embeddedFontFiles;
   }
 
   registerOwnedFont(font: FontRef): void {
@@ -788,9 +786,49 @@ export class EditorDocument {
     return Array.from(this.pageCache.values());
   }
 
+  scratchPageFor(page: Page): { doc: EditorDocument; page: Page } {
+    this.scratch ??= new EditorDocument(
+      this.module,
+      this.module.FPDF_CreateNewDocument(),
+      EMPTY,
+      null,
+    );
+    return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
+  }
+
+  private blankPageLike(like: Page): Page {
+    const cached = this.pageCache.get(like.index);
+    if (cached) return cached;
+    const m = this.module;
+    const d = like.display;
+    const pagePtr = m.FPDFPage_New(
+      this.docPtr,
+      this.pageCache.size,
+      d.cropWidth,
+      d.cropHeight,
+    );
+    if (!pagePtr) throw new Error("EditorDocument: failed to add a page");
+    const right = d.cropLeft + d.cropWidth;
+    const top = d.cropBottom + d.cropHeight;
+    m.FPDFPage_SetMediaBox(pagePtr, d.cropLeft, d.cropBottom, right, top);
+    m.FPDFPage_SetCropBox(pagePtr, d.cropLeft, d.cropBottom, right, top);
+    m.FPDFPage_SetRotation(pagePtr, d.rotate);
+    const page = new Page({
+      index: like.index,
+      pagePtr,
+      width: like.width,
+      height: like.height,
+      display: d,
+    });
+    this.pageCache.set(like.index, page);
+    return page;
+  }
+
   dispose(): void {
     if (this._disposed) return;
     this._disposed = true;
+    this.scratch?.dispose();
+    this.scratch = null;
     if (this.formEnvPtr) {
       const m = this.module as unknown as {
         FORM_OnBeforeClosePage?: (pagePtr: number, env: number) => void;

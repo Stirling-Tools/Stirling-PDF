@@ -1,3 +1,4 @@
+import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
 import { Group, Stack, Text } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -6,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 function RemovePasswordAction() {
   const { t } = useTranslation();
@@ -47,10 +49,14 @@ export function ProtectedPdfToolNotice({
       {files.map((file) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
           <Tooltip
-            content={t(
-              "encryptedPdfUnlock.toolUnavailable",
-              "This tool doesn't support encrypted PDFs. Remove the password first.",
-            )}
+            content={
+              getPdfAccess(file.id)?.encrypted
+                ? t(
+                    "encryptedPdfUnlock.toolUnavailable",
+                    "This tool doesn't support encrypted PDFs. Remove the password first.",
+                  )
+                : signedPdfEditsBlockedMessage()
+            }
             position="top"
             maxWidth={260}
             arrow
@@ -80,7 +86,7 @@ export function ProtectedPdfToolNotice({
           >
             <PrivateContent>{file.name}</PrivateContent>
           </Text>
-          <RemovePasswordAction />
+          {getPdfAccess(file.id)?.encrypted && <RemovePasswordAction />}
         </Group>
       ))}
     </Stack>
