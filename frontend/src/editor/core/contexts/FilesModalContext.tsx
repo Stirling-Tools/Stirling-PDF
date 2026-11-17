@@ -16,10 +16,10 @@ import {
 import { StirlingFileStub } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 import { fileStorage } from "@editor/services/fileStorage";
+import { importShareBundle } from "@editor/services/shareBundleImportService";
 import apiClient from "@editor/services/apiClient";
 import {
   extractLatestFilesFromBundle,
-  getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
@@ -96,72 +96,29 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         ? await loadShareBundleEntries(blob)
         : null;
       if (bundle) {
-        const { manifest, rootOrder, sortedEntries, files } = bundle;
-
-        const stirlingFiles = await actions.addFilesWithOptions(files, {
-          selectFiles: false,
-          autoUnzip: false,
-          skipAutoUnzip: false,
-          allowDuplicates: true,
-        });
-
-        const idMap = new Map<string, FileId>();
-        for (let i = 0; i < stirlingFiles.length; i += 1) {
-          idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId);
-        }
-
-        const rootIdMap = new Map<string, FileId>();
-        for (const rootLogicalId of rootOrder) {
-          const mappedId = idMap.get(rootLogicalId);
-          if (mappedId) {
-            rootIdMap.set(rootLogicalId, mappedId);
-          }
-        }
-
         const remoteUpdatedAt = remoteStorageUpdatedAt ?? Date.now();
-        for (const entry of sortedEntries) {
-          const newId = idMap.get(entry.logicalId);
-          if (!newId) continue;
-          const parentId = entry.parentLogicalId
-            ? idMap.get(entry.parentLogicalId)
-            : undefined;
-          const rootId =
-            rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
-            idMap.get(manifest.rootLogicalId) ||
-            newId;
-          const updates = {
-            versionNumber: entry.versionNumber,
-            originalFileId: rootId,
-            parentFileId: parentId,
-            toolHistory: entry.toolHistory,
-            isLeaf: entry.isLeaf,
+        const currentFiles = await importShareBundle(
+          bundle,
+          {
+            addFiles: (files) =>
+              actions.addFilesWithOptions(files, {
+                selectFiles: false,
+                autoUnzip: false,
+                skipAutoUnzip: false,
+                allowDuplicates: true,
+              }),
+            updateStub: actions.updateStirlingFileStub,
+          },
+          {
             remoteStorageId,
             remoteStorageUpdatedAt: remoteUpdatedAt,
             remoteOwnerUsername,
             remoteOwnedByCurrentUser,
             remoteSharedViaLink,
             remoteShareToken,
-          };
-          actions.updateStirlingFileStub(newId, updates);
-          await fileStorage.updateFileMetadata(newId, updates);
-        }
-
-        const selectedIds: FileId[] = [];
-        for (const rootId of rootOrder) {
-          const rootEntries = sortedEntries.filter(
-            (entry) => getShareBundleEntryRootId(manifest, entry) === rootId,
-          );
-          const latestEntry = rootEntries[rootEntries.length - 1];
-          if (!latestEntry) {
-            continue;
-          }
-          const latestId = idMap.get(latestEntry.logicalId);
-          if (latestId) {
-            selectedIds.push(latestId);
-          }
-        }
-
-        return selectedIds;
+          },
+        );
+        return currentFiles.map(({ file }) => file.fileId);
       }
 
       const file = new File([blob], filename, {

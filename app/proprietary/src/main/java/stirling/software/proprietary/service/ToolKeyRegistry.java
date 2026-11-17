@@ -67,6 +67,7 @@ public class ToolKeyRegistry {
                     "changeMetadata",
                     "overlayPdfs",
                     "getPdfInfo",
+                    "checkAccessibility",
                     "validateSignature",
                     "timestampPdf",
                     "replaceColor",

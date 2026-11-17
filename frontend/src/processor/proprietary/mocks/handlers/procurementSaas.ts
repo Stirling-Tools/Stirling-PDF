@@ -129,7 +129,7 @@ export function priceQuote(cfg: Cfg) {
         ? "Regulated"
         : intensity === 4
           ? "Governed"
-          : `${intensity}-policy`;
+          : `${intensity}-pipeline`;
   const deployName =
     cfg.deployment === "airgap"
       ? "Air-gapped"
