@@ -71,6 +71,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/typedAdvances";
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
+import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const SETTLE_MS = 400;
@@ -357,6 +358,8 @@ interface TextRunOverlayProps {
   scale: number;
   /** "grow": box widens to the right up to the page edge, then wraps. "wrap": locked width, wraps down. */
   widthMode: WidthMode;
+  /** Other text set beside the run on its rows, which Grow wraps short of as it does the page edge. */
+  growEdge?: GrowEdge | null;
   selected: boolean;
   /** The find-bar occurrence inside this run, painted as a highlight. */
   findRange?: TextRange | null;
@@ -503,6 +506,21 @@ function caretClientX(el: HTMLElement): number | null {
   return rect.width === 0 && rect.height === 0 && rect.x === 0 ? null : rect.x;
 }
 
+// The room `edge` leaves a box whose left sits at `leftPx`, in CSS px. A turned page lays the page's x along the screen's y, where Grow does not reach.
+function growEdgeRoomPx(
+  edge: GrowEdge | null | undefined,
+  run: TextRunSnapshot,
+  transform: DisplayTransform,
+  scale: number,
+  leftPx: number,
+): number {
+  if (!edge || transform.rotate !== 0) return Number.POSITIVE_INFINITY;
+  const edgePx = transform.apply(edge.x, run.matrix.f).x * scale;
+  if (edge.side === "right") return edgePx - leftPx;
+  const end = run.bounds.x + run.bounds.width;
+  return transform.apply(end, run.matrix.f).x * scale - edgePx;
+}
+
 /** One editable HTML element per PDF text run. */
 export function TextRunOverlay({
   run,
@@ -511,6 +529,7 @@ export function TextRunOverlay({
   transform,
   scale,
   widthMode,
+  growEdge,
   selected,
   findRange,
   pageRevision,
@@ -908,8 +927,16 @@ export function TextRunOverlay({
   const wantWrap = wrapMode;
   const left = exact ? exact.leftPx : flowLeft;
   // Both modes keep typed text on the page: Wrap at its locked width, Grow once
-  // the box reaches the page edge.
+  // the box reaches the page edge or the text set beside it, never narrower
+  // than the run already is.
   const pageCap = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
+  const growCap = Math.min(
+    pageCap,
+    Math.max(
+      growEdgeRoomPx(growEdge, run, transform, scale, left),
+      originalBoundsWidthRef.current * scale,
+    ),
+  );
   // Wrapping cannot break inside a word, so a box narrower than the longest one
   // hides its tail however the lines are broken - 707px of a held-down key
   // measured invisible, with the caret out there past the box edge.
@@ -925,7 +952,7 @@ export function TextRunOverlay({
   );
   // The reflow lays text out along the page axis, so a turned run keeps growing.
   const growWraps = !wantWrap && !!onWrap && !runRotation && !growBlocked;
-  const growWrapWidth = Math.max(pageCap, longestTokenWidth + fontSizePx);
+  const growWrapWidth = Math.max(growCap, longestTokenWidth + fontSizePx);
   const growOverflowWidth = Math.max(growWrapWidth, focusWidestRef.current);
   const maxOnPageWidth = wantWrap ? pageCap : Number.POSITIVE_INFINITY;
   const naturalWidth = wantWrap
@@ -945,9 +972,9 @@ export function TextRunOverlay({
   const exactWidth = exact
     ? Math.max(exact.widthPx + fontSizePx * 0.5, measuredWidth + fontSizePx)
     : 0;
-  // Grow stops at the page edge, or at the document's own width for a line it
-  // set wider than that, focused or not so the box keeps its size across a
-  // blur; the live reflow below moves the overflow onto new lines. The box
+  // Grow stops at the page edge or the text beside it, or at the document's
+  // own width for a line it set wider than that, focused or not so the box
+  // keeps its size across a blur; the live reflow below moves the overflow onto new lines. The box
   // itself never wraps: the PDF draws each line as ONE text object at one pen
   // origin, so an overlay that wrapped by CSS would stop describing the page
   // underneath it.
@@ -987,7 +1014,7 @@ export function TextRunOverlay({
     const longest = measureLongestTokenWidth(text, font) + fontSizePx;
     const target = wantWrap
       ? Math.max(Math.min(wrapLockWidth, pageCap), longest)
-      : Math.max(pageCap, longest);
+      : Math.max(growCap, longest);
     const overflowAt = wantWrap
       ? target
       : Math.max(target, focusWidestRef.current);
