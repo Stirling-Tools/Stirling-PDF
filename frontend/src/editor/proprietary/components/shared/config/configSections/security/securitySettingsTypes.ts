@@ -4,6 +4,7 @@
 export interface SecuritySettingsData {
   enableLogin?: boolean;
   honorOwnerPasswords?: boolean;
+  blockSignedPdfEdits?: boolean;
   loginMethod?: string;
   loginAttemptCount?: number;
   loginResetTimeMinutes?: number;
