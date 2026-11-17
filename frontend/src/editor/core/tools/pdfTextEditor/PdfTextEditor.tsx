@@ -356,6 +356,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     riskAnswerRef.current = null;
   }, []);
 
+  const toggleFind = useCallback(
+    () => store.setFindOpen(!store.getState().findOpen),
+    [store],
+  );
+
   useRegisterViewerPageTool(
     useMemo(
       () => ({
@@ -368,6 +373,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
         onDiscard: discardEdits,
         onSave: saveBeforeLeaving,
+        onToggleFind: toggleFind,
       }),
       [
         isMobile,
@@ -375,6 +381,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         sourceFileId,
         discardEdits,
         saveBeforeLeaving,
+        toggleFind,
       ],
     ),
   );

@@ -48,6 +48,8 @@ export interface ViewerPageTool {
    * prompt. Rejecting keeps the prompt open.
    */
   onSave?: () => Promise<void>;
+  /** Toggles the tool's own find, which the viewer's search button opens in place of its own. */
+  onToggleFind?: () => void;
 }
 
 interface ViewerPageToolSlot {

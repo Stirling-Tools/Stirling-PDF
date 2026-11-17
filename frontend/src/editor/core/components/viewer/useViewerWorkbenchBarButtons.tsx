@@ -131,7 +131,8 @@ export function useViewerWorkbenchBarButtons(
 
   const isFormFillActive = (selectedTool as string) === "formFill";
   const isTextEditActive = selectedTool === "pdfTextEditor";
-  const pageToolActive = useViewerPageTool() != null;
+  const pageTool = useViewerPageTool();
+  const pageToolActive = pageTool != null;
 
   // The text editor owns the pages while it is open, so a viewer tool that
   // works on them closes it first, behind the unsaved-edits prompt. Leaving
@@ -234,7 +235,11 @@ export function useViewerWorkbenchBarButtons(
                     disabled={disabled}
                     aria-label={searchLabel}
                     onClick={() =>
-                      leaveTextEditThen(viewer.searchInterfaceActions.toggle)
+                      pageTool?.onToggleFind
+                        ? pageTool.onToggleFind()
+                        : leaveTextEditThen(
+                            viewer.searchInterfaceActions.toggle,
+                          )
                     }
                   >
                     <Icon name="file-search" size="1.25rem" />
@@ -642,6 +647,7 @@ export function useViewerWorkbenchBarButtons(
     editTextLabel,
     isTextEditActive,
     toolRegistry,
+    pageTool,
     pageToolActive,
     leaveTextEditThen,
     rulerLabel,

@@ -147,17 +147,36 @@ test.describe("PDF text editor - viewer tools", () => {
     await expectEditorClosedWithRuler(page);
   });
 
-  for (const tool of ["Pan Mode", "Search PDF"]) {
-    test(`${tool} closes the editor too`, async ({ page }) => {
-      test.setTimeout(120_000);
-      await openEditor(page);
-      await page.getByRole("button", { name: tool, exact: true }).click();
-      await expect(editText(page)).toHaveAttribute("aria-pressed", "false", {
-        timeout: 15_000,
-      });
-      await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+  test("pan closes the editor too", async ({ page }) => {
+    test.setTimeout(120_000);
+    await openEditor(page);
+    await page.getByRole("button", { name: "Pan Mode", exact: true }).click();
+    await expect(editText(page)).toHaveAttribute("aria-pressed", "false", {
+      timeout: 15_000,
     });
-  }
+    await expect(page.getByTestId("pdf-editor-page-0")).toHaveCount(0);
+  });
+
+  test("search opens the editor's find bar and keeps the edits", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openEditor(page);
+    await makeAnEdit(page);
+    const search = page.getByRole("button", {
+      name: "Search PDF",
+      exact: true,
+    });
+
+    await search.click();
+    await expect(page.getByTestId("pdf-editor-find-bar")).toBeVisible();
+    await expect(page.getByTestId("unsaved-discard")).toBeHidden();
+    await expect(editText(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+
+    await search.click();
+    await expect(page.getByTestId("pdf-editor-find-bar")).toBeHidden();
+  });
 
   test("opening the editor turns the ruler off", async ({ page }) => {
     test.setTimeout(120_000);
