@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
+import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -211,29 +213,40 @@ public class AnalysisController {
     @Operation(
             summary = "Get security information",
             description = "Returns encryption and permission details.")
-    public ResponseEntity<?> getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+    public ResponseEntity<?> getSecurityInfo(@ModelAttribute PDFPasswordRequest request)
+            throws IOException {
+        String password = request.getPassword() != null ? request.getPassword() : "";
+
+        try (PDDocument document =
+                pdfDocumentFactory.load(request.getFileInput(), password)) {
             Map<String, Object> securityInfo = new HashMap<>();
             PDEncryption encryption = document.getEncryption();
 
             if (encryption != null) {
                 securityInfo.put("isEncrypted", true);
                 securityInfo.put("keyLength", encryption.getLength());
+                if (encryption.getFilter() != null) {
+                    securityInfo.put("filter", encryption.getFilter());
+                }
 
                 // Get permissions
-                Map<String, Boolean> permissions = new HashMap<>();
-                permissions.put(
-                        "preventPrinting", !document.getCurrentAccessPermission().canPrint());
-                permissions.put(
-                        "preventModify", !document.getCurrentAccessPermission().canModify());
-                permissions.put(
-                        "preventExtractContent",
-                        !document.getCurrentAccessPermission().canExtractContent());
-                permissions.put(
-                        "preventModifyAnnotations",
-                        !document.getCurrentAccessPermission().canModifyAnnotations());
+                AccessPermission permissions = document.getCurrentAccessPermission();
+                Map<String, Boolean> permsMap = new HashMap<>();
+                permsMap.put("canPrint", permissions.canPrint());
+                permsMap.put("canPrintDegraded", permissions.canPrintDegraded());
+                permsMap.put("canModify", permissions.canModify());
+                permsMap.put("canExtractContent", permissions.canExtractContent());
+                permsMap.put("canExtractForAccessibility", permissions.canExtractForAccessibility());
+                permsMap.put("canModifyAnnotations", permissions.canModifyAnnotations());
+                permsMap.put("canFillInForm", permissions.canFillInForm());
+                permsMap.put("canAssembleDocument", permissions.canAssembleDocument());
 
-                securityInfo.put("permissions", permissions);
+                permsMap.put("preventPrinting", !permissions.canPrint());
+                permsMap.put("preventModify", !permissions.canModify());
+                permsMap.put("preventExtractContent", !permissions.canExtractContent());
+                permsMap.put("preventModifyAnnotations", !permissions.canModifyAnnotations());
+
+                securityInfo.put("permissions", permsMap);
             } else {
                 securityInfo.put("isEncrypted", false);
             }

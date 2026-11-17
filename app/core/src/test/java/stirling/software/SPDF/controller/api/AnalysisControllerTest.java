@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
@@ -311,11 +312,13 @@ class AnalysisControllerTest {
 
     @Test
     void getSecurityInfo_encrypted() throws IOException {
-        PDFFile request = createRequest();
+        PDFPasswordRequest request = new PDFPasswordRequest();
+        request.setFileInput(mockFile);
+
         PDDocument doc = mock(PDDocument.class);
         PDEncryption encryption = mock(PDEncryption.class);
         AccessPermission perm = mock(AccessPermission.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
+        when(pdfDocumentFactory.load(mockFile, "")).thenReturn(doc);
         when(doc.getEncryption()).thenReturn(encryption);
         when(encryption.getLength()).thenReturn(128);
         when(doc.getCurrentAccessPermission()).thenReturn(perm);
@@ -337,10 +340,50 @@ class AnalysisControllerTest {
     }
 
     @Test
-    void getSecurityInfo_notEncrypted() throws IOException {
-        PDFFile request = createRequest();
+    void getSecurityInfo_withPassword_returnsDecryptedPermissions() throws IOException {
+        PDFPasswordRequest request = new PDFPasswordRequest();
+        request.setFileInput(mockFile);
+        request.setPassword("secret123");
+
         PDDocument doc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(mockFile)).thenReturn(doc);
+        PDEncryption encryption = mock(PDEncryption.class);
+        AccessPermission perm = mock(AccessPermission.class);
+
+        when(pdfDocumentFactory.load(mockFile, "secret123")).thenReturn(doc);
+        when(doc.getEncryption()).thenReturn(encryption);
+        when(encryption.getLength()).thenReturn(256);
+        when(encryption.getFilter()).thenReturn("Standard");
+        when(doc.getCurrentAccessPermission()).thenReturn(perm);
+        when(perm.canPrint()).thenReturn(true);
+        when(perm.canModify()).thenReturn(false);
+        when(perm.canFillInForm()).thenReturn(true);
+
+        ResponseEntity<?> response = analysisController.getSecurityInfo(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertThat(body).containsEntry("isEncrypted", true);
+        assertThat(body).containsEntry("keyLength", 256);
+        assertThat(body).containsEntry("filter", "Standard");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Boolean> perms = (Map<String, Boolean>) body.get("permissions");
+        assertThat(perms).containsEntry("canPrint", true);
+        assertThat(perms).containsEntry("canModify", false);
+        assertThat(perms).containsEntry("canFillInForm", true);
+        assertThat(perms).containsEntry("preventPrinting", false);
+        assertThat(perms).containsEntry("preventModify", true);
+        verify(doc).close();
+    }
+
+    @Test
+    void getSecurityInfo_notEncrypted() throws IOException {
+        PDFPasswordRequest request = new PDFPasswordRequest();
+        request.setFileInput(mockFile);
+
+        PDDocument doc = mock(PDDocument.class);
+        when(pdfDocumentFactory.load(mockFile, "")).thenReturn(doc);
         when(doc.getEncryption()).thenReturn(null);
 
         ResponseEntity<?> response = analysisController.getSecurityInfo(request);
