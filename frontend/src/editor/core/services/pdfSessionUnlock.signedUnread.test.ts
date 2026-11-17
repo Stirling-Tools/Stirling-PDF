@@ -88,6 +88,17 @@ describe("signed PDFs nobody has opened yet", () => {
     ).rejects.toThrow("digitally signed");
   });
 
+  it("inspects again in a signed preflight after an unused timeout verdict", async () => {
+    const file = unread();
+    ensure.mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([file], undefined, false, vi.fn()),
+    ).resolves.toBe(true);
+    await expect(
+      preflightPdfOperation([file], "/api/v1/misc/repair", false, vi.fn()),
+    ).rejects.toThrow("digitally signed");
+  });
+
   it("reads damaged bytes once, without a second inspection", async () => {
     ensure.mockRejectedValue(
       Object.assign(new Error("Unable to open PDF"), {
