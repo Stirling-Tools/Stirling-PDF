@@ -1,8 +1,9 @@
 /**
  * Turn whole structure elements into artifacts (ISO 32000-1 14.8.2.2): each
- * marked-content sequence an element owns is retagged `/Artifact BMC` and the
- * element leaves the tree. Only the sequences' opening operators change, so
- * nothing the page paints does.
+ * marked-content sequence an element owns is retagged `/Artifact`, with the
+ * kind's /Type and /Subtype when it has one, and the element leaves the tree.
+ * Only the sequences' opening operators change, so nothing the page paints
+ * does.
  */
 import {
   ParentTreeWriter,
@@ -19,8 +20,7 @@ import {
   type RawPdf,
 } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import type { RevisionObject } from "@editor/tools/pdfTextEditor/pdfdoc/revision";
-
-const ARTIFACT = "/Artifact BMC";
+import type { ArtifactKind } from "@editor/tools/pdfTextEditor/model/artifactKind";
 
 export interface DecorativeWrites {
   /** Rewritten content streams. */
@@ -30,21 +30,22 @@ export interface DecorativeWrites {
 }
 
 /**
- * Plan turning `elements` (object numbers) into artifacts. Element and parent
- * bodies are read from and written to `bodies`, and ParentTree slots to
- * `parentTree`, so the caller can combine them with its other edits. Nothing
- * is written for a document with any failure: the caller must discard it all.
+ * Plan turning `elements` (object numbers) into artifacts, each of the kind
+ * it maps to, or plain for null. Element and parent bodies are read from and
+ * written to `bodies`, and ParentTree slots to `parentTree`, so the caller can
+ * combine them with its other edits. Nothing is written for a document with
+ * any failure: the caller must discard it all.
  */
 export async function markDecorative(
   pdf: RawPdf,
-  elements: ReadonlySet<number>,
+  elements: ReadonlyMap<number, ArtifactKind | null>,
   bodies: Map<number, string>,
   parentTree: ParentTreeWriter,
 ): Promise<DecorativeWrites> {
   const failed = new Map<number, string>();
   if (elements.size === 0) return { streams: [], failed };
   const body = (num: number) => bodies.get(num) ?? pdf.objectBody(num);
-  for (const num of elements) {
+  for (const num of elements.keys()) {
     const own = body(num);
     if (!own || !ownsOnlyMarkedContent(pdf, own)) {
       failed.set(num, "its content is not all marked content on its pages");
@@ -75,16 +76,18 @@ export async function markDecorative(
     // Content an element owned but the page no longer draws needs only its
     // slot emptied.
     const retag = read.sites.filter((site) => owners.has(site.mcid));
+    const opening = (site: McidSite) =>
+      artifactOperator(elements.get(owners.get(site.mcid)!) ?? null);
     read.texts.forEach((text, stream) => {
       const here = retag.filter((site) => site.stream === stream);
       if (here.length > 0) {
-        streams.push(retaggedStream(read.refs[stream], text, here));
+        streams.push(retaggedStream(read.refs[stream], text, here, opening));
       }
     });
     for (const mcid of owners.keys()) slots[mcid] = "null";
   }
 
-  for (const num of elements) {
+  for (const num of elements.keys()) {
     const parentNum = pdf.dictRef(body(num) ?? "", "P");
     const parent = parentNum === null ? null : body(parentNum);
     const detached = parent ? withoutKid(pdf, parent, num) : null;
@@ -94,11 +97,12 @@ export async function markDecorative(
   return { streams: await Promise.all(streams), failed };
 }
 
-/** Stream object `num` holding `text` with each site's opening operator retagged as an artifact. */
+/** Stream object `num` holding `text` with each site's opening operator replaced by `opening`'s. */
 function retaggedStream(
   num: number,
   text: string,
   sites: readonly McidSite[],
+  opening: (site: McidSite) => string,
 ): Promise<RevisionObject> {
   let out = text;
   for (const site of [...sites].sort(
@@ -106,10 +110,17 @@ function retaggedStream(
   )) {
     out =
       out.slice(0, site.operator.start) +
-      ARTIFACT +
+      opening(site) +
       out.slice(site.operator.end);
   }
   return contentStreamObject(num, out);
+}
+
+/** The operator opening an artifact of `kind`. */
+function artifactOperator(kind: ArtifactKind | null): string {
+  if (!kind) return "/Artifact BMC";
+  const subtype = kind.subtype === null ? "" : ` /Subtype /${kind.subtype}`;
+  return `/Artifact <</Type /${kind.type}${subtype}>> BDC`;
 }
 
 /** The parent's body without `num` among its /K, or null when it is not there. */

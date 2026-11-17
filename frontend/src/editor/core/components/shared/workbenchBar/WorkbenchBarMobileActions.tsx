@@ -6,7 +6,7 @@ import { WorkbenchBarActionsProps } from "@editor/components/shared/workbenchBar
 
 /**
  * Mobile version of the workbench bar's global actions: the icon row won't fit
- * on a phone, so print / export / save-as / close collapse into one overflow menu.
+ * on a phone, so print / save / close collapse into one overflow menu.
  */
 export default function WorkbenchBarMobileActions({
   currentView,
@@ -15,7 +15,8 @@ export default function WorkbenchBarMobileActions({
   policyEnforcing,
   downloadLabel,
   downloadIconName,
-  saveAsIconName,
+  downloadUnsaved,
+  saveMenu,
   onPrint,
   printDisabledReason,
   onExport,
@@ -32,7 +33,7 @@ export default function WorkbenchBarMobileActions({
   if (!showPrint && !showFileActions) return null;
 
   return (
-    <Menu shadow="md" width={230} position="bottom-end">
+    <Menu shadow="md" width={270} position="bottom-end">
       <Menu.Target>
         <ActionIcon
           variant="tertiary"
@@ -40,7 +41,12 @@ export default function WorkbenchBarMobileActions({
           className="workbench-bar-action-icon"
           aria-label={t("workbenchBar.moreActions", "More actions")}
         >
-          <Icon name="ellipsis-vertical" size={"1.25rem"} />
+          <span className="workbench-bar-unsaved-anchor">
+            <Icon name="ellipsis-vertical" size={"1.25rem"} />
+            {showFileActions && downloadUnsaved && (
+              <span className="workbench-bar-unsaved-dot" />
+            )}
+          </span>
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
@@ -57,21 +63,28 @@ export default function WorkbenchBarMobileActions({
         {showFileActions && (
           <Menu.Item
             leftSection={<Icon name={downloadIconName} size="1.1rem" />}
+            rightSection={
+              downloadUnsaved && (
+                <span className="workbench-bar-menu-unsaved-dot" />
+              )
+            }
             disabled={exportDisabled}
             onClick={() => void onExport()}
           >
             {downloadLabel}
           </Menu.Item>
         )}
-        {showFileActions && saveAsIconName && (
-          <Menu.Item
-            leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
-            disabled={exportDisabled}
-            onClick={() => void onExport(true)}
-          >
-            {t("workbenchBar.saveAs", "Save As")}
-          </Menu.Item>
-        )}
+        {showFileActions &&
+          saveMenu?.map((item) => (
+            <Menu.Item
+              key={item.key}
+              leftSection={<Icon name={item.icon} size="1.1rem" />}
+              disabled={exportDisabled}
+              onClick={item.onClick}
+            >
+              {item.label}
+            </Menu.Item>
+          ))}
         {showFileActions && (
           <>
             <Menu.Divider />

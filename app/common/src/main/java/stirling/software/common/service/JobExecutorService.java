@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -264,6 +265,19 @@ public class JobExecutorService {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
                 Object body = response.getBody();
 
+                if (!response.getStatusCode().is2xxSuccessful()) {
+                    String error =
+                            "Job rejected with HTTP status " + response.getStatusCode().value();
+                    String reason = rejectionReason(response);
+                    if (reason != null) {
+                        error += ": " + reason;
+                    } else if (response.getHeaders().getLocation() != null) {
+                        error += " at " + response.getHeaders().getLocation();
+                    }
+                    taskManager.setError(jobId, error);
+                    return;
+                }
+
                 if (body instanceof byte[]) {
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
@@ -415,6 +429,54 @@ public class JobExecutorService {
                     .body(file.getBytes());
         } else {
             return ResponseEntity.ok(result);
+        }
+    }
+
+    private static final int MAX_REJECTION_REASON_CHARS = 300;
+
+    /** The short message a rejecting endpoint gave, or null when it sent none worth showing. */
+    static String rejectionReason(ResponseEntity<?> response) {
+        Object body = response.getBody();
+        String reason = null;
+        if (body instanceof String text) {
+            reason = text;
+        } else if (body instanceof Map<?, ?> map) {
+            Object value = map.containsKey("error") ? map.get("error") : map.get("message");
+            reason = value instanceof String text ? text : null;
+        } else if (isPlainText(response.getHeaders().getContentType())) {
+            reason = smallText(body);
+        }
+        if (reason == null || reason.isBlank()) {
+            return null;
+        }
+        String flat = reason.strip().replaceAll("\\s+", " ");
+        return flat.length() > MAX_REJECTION_REASON_CHARS
+                ? flat.substring(0, MAX_REJECTION_REASON_CHARS) + "..."
+                : flat;
+    }
+
+    private static boolean isPlainText(MediaType contentType) {
+        return contentType != null && MediaType.TEXT_PLAIN.isCompatibleWith(contentType);
+    }
+
+    private static String smallText(Object body) {
+        try {
+            byte[] bytes;
+            if (body instanceof byte[] raw) {
+                bytes = raw;
+            } else if (body instanceof Resource resource && resource.isReadable()) {
+                if (resource.contentLength() > 4096) {
+                    return null;
+                }
+                try (var in = resource.getInputStream()) {
+                    bytes = in.readNBytes(4096);
+                }
+            } else {
+                return null;
+            }
+            return bytes.length > 4096 ? null : new String(bytes, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
         }
     }
 

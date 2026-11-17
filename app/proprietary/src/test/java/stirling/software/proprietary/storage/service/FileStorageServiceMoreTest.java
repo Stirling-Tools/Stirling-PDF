@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +30,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -384,6 +388,74 @@ class FileStorageServiceMoreTest {
             FileShare share = shareFor(f, intended, ShareAccessRole.VIEWER);
 
             assertThat(service.canAccessShareLink(share, authFor(owner))).isTrue();
+        }
+
+        @Test
+        void ownerOnlyShare_supabaseJwt_resolvesOwnerBySubjectNotEmail() {
+            User owner = user(1L);
+            UUID supabaseId = UUID.randomUUID();
+            FileShare share = shareFor(ownedFile(owner), owner, ShareAccessRole.VIEWER);
+            when(userRepository.findBySupabaseId(supabaseId)).thenReturn(Optional.of(owner));
+            Jwt jwt =
+                    Jwt.withTokenValue("t")
+                            .header("alg", "RS256")
+                            .subject(supabaseId.toString())
+                            .claim("email", "changed@example.com")
+                            .build();
+            // SaaS names the token by its email claim, which may no longer match the username.
+            Authentication auth = new JwtAuthenticationToken(jwt, List.of(), "changed@example.com");
+
+            assertThat(service.canAccessShareLink(share, auth)).isTrue();
+        }
+
+        @Test
+        void recipientShare_jwtWithUnknownSubject_doesNotFallBackToEmail() {
+            User owner = user(1L);
+            User localRecipient = user(2L);
+            localRecipient.setUsername("shared@example.com");
+            FileShare share = shareFor(ownedFile(owner), localRecipient, ShareAccessRole.VIEWER);
+            lenient()
+                    .when(userRepository.findByUsernameIgnoreCase("shared@example.com"))
+                    .thenReturn(Optional.of(localRecipient));
+            Jwt jwt =
+                    Jwt.withTokenValue("t")
+                            .header("alg", "RS256")
+                            .subject(UUID.randomUUID().toString())
+                            .claim("email", "shared@example.com")
+                            .build();
+            Authentication auth = new JwtAuthenticationToken(jwt, List.of(), "shared@example.com");
+
+            assertThat(service.canAccessShareLink(share, auth)).isFalse();
+        }
+
+        @Test
+        void isOwnedByCaller_resolvesJwtOwnerBySubject() {
+            User owner = user(1L);
+            UUID supabaseId = UUID.randomUUID();
+            StoredFile file = ownedFile(owner);
+            when(userRepository.findBySupabaseId(supabaseId)).thenReturn(Optional.of(owner));
+            Jwt jwt =
+                    Jwt.withTokenValue("t")
+                            .header("alg", "RS256")
+                            .subject(supabaseId.toString())
+                            .claim("email", "changed@example.com")
+                            .build();
+
+            assertThat(
+                            service.isOwnedByCaller(
+                                    file,
+                                    new JwtAuthenticationToken(
+                                            jwt, List.of(), "changed@example.com")))
+                    .isTrue();
+            assertThat(service.isOwnedByCaller(file, authFor(user(9L)))).isFalse();
+        }
+
+        @Test
+        void ownerOnlyShare_otherSignedInUser_returnsFalse() {
+            User owner = user(1L);
+            FileShare share = shareFor(ownedFile(owner), owner, ShareAccessRole.VIEWER);
+
+            assertThat(service.canAccessShareLink(share, authFor(user(9L)))).isFalse();
         }
     }
 

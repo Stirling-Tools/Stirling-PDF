@@ -1,3 +1,4 @@
+import { drawnCodePoint } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
@@ -94,7 +95,7 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
     // in a given font gets the next sequential CID starting at 1.
     const perFontNext = new Map<number, number>();
     for (let i = 0; i < count; i++) {
-      const unicode = tpMod.FPDFText_GetUnicode(textPage, i);
+      const unicode = drawnCodePoint(tpMod.FPDFText_GetUnicode(textPage, i));
       if (!unicode) continue;
       const obj = tpMod.FPDFText_GetTextObject(textPage, i);
       if (!obj) continue;

@@ -75,7 +75,8 @@ def pack_blocks(blocks: list[MarkdownBlock], chunk_size: int, overlap: int) -> l
             # Too big to pack whole, so hand it to the character chunker, which applies
             # its own overlap; that is why nothing carries into or across this branch.
             emit()
-            buffer, buffer_len, carry = [], 0, ""
+            buffer = []
+            carry = ""
             for piece in chunk_text(markdown, chunk_size=chunk_size, overlap=overlap):
                 chunks.append(
                     DocChunk(
@@ -97,7 +98,8 @@ def pack_blocks(blocks: list[MarkdownBlock], chunk_size: int, overlap: int) -> l
             while buffer and _is_heading(buffer[-1].markdown):
                 held.insert(0, buffer.pop())
             if not buffer:
-                buffer, held = held, []
+                buffer = held
+                held = []
             emit()
             for heading in held:
                 buffer.append(heading)
