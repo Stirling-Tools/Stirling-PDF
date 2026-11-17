@@ -77,6 +77,17 @@ describe("signed PDFs nobody has opened yet", () => {
     ).rejects.toMatchObject({ name: "TimeoutError" });
   });
 
+  it("inspects again after a read-only preflight let a timed-out file through", async () => {
+    const file = unread();
+    ensure.mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([file], undefined, false, vi.fn()),
+    ).resolves.toBe(true);
+    await expect(
+      assertSignedPdfsEditable([file], "/api/v1/misc/repair", false),
+    ).rejects.toThrow("digitally signed");
+  });
+
   it("reads damaged bytes once, without a second inspection", async () => {
     ensure.mockRejectedValue(
       Object.assign(new Error("Unable to open PDF"), {

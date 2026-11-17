@@ -197,7 +197,8 @@ async function ensureAccessUnlessDamaged(
   signedCheck = false,
 ): Promise<PdfAccess | undefined> {
   // Preflight's verdict is consumed once, so processing does not wait out a second inspection.
-  if (passedThrough.delete(file)) return undefined;
+  // A signed check never reuses it: the timed-out read could not see signatures.
+  if (!signedCheck && passedThrough.delete(file)) return undefined;
   try {
     return await ensureLocalPdfAccess(file, signal);
   } catch (error) {
