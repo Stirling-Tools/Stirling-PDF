@@ -14,6 +14,7 @@ import {
 } from "@editor/utils/convertUtils";
 import { getConversionEndpoints } from "@editor/data/toolsTaxonomy";
 import { usePreferences } from "@editor/contexts/PreferencesContext";
+import { useToolActions } from "@editor/contexts/ToolActionsContext";
 import { useConversionCloudStatus } from "@editor/hooks/useConversionCloudStatus";
 import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
@@ -87,7 +88,19 @@ const ConvertSettings = ({
     return endpoints;
   }, []);
 
-  const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
+  const { endpointStatus, endpointDetails } =
+    useMultipleEndpointsEnabled(allEndpoints);
+  const { onEndpointUnavailableClick } = useToolActions();
+
+  const unlockedBySignIn = (fromExt: string, toExt: string): boolean => {
+    const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
+    return (
+      !localProcessingOnly &&
+      !!onEndpointUnavailableClick &&
+      !!endpointKey &&
+      endpointDetails?.[endpointKey]?.reason === "NOT_SUPPORTED_LOCALLY"
+    );
+  };
 
   // Get comprehensive conversion status (availability + cloud routing)
   const conversionStatus = useConversionCloudStatus();
@@ -119,7 +132,8 @@ const ConvertSettings = ({
       const availableConversions = getAvailableToExtensions(option.value) || [];
       const hasAvailableConversions = availableConversions.some(
         (targetOption) =>
-          isConversionAvailable(option.value, targetOption.value),
+          isConversionAvailable(option.value, targetOption.value) ||
+          unlockedBySignIn(option.value, targetOption.value),
       );
 
       return {
@@ -154,6 +168,8 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
+    endpointDetails,
+    onEndpointUnavailableClick,
     hideUnavailableConversions,
     conversionStatus,
   ]);
@@ -169,14 +185,16 @@ const ConvertSettings = ({
         parameters.fromExtension,
         option.value,
       );
-      const usesCloud = doesConversionUseCloud(
-        parameters.fromExtension,
-        option.value,
-      );
+      const needsSignIn =
+        !enabled && unlockedBySignIn(parameters.fromExtension, option.value);
+      const usesCloud =
+        !needsSignIn &&
+        doesConversionUseCloud(parameters.fromExtension, option.value);
       return {
         ...option,
-        enabled,
+        enabled: enabled || needsSignIn,
         usesCloud,
+        needsSignIn,
       };
     });
 
@@ -188,6 +206,8 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
+    endpointDetails,
+    onEndpointUnavailableClick,
     hideUnavailableConversions,
     conversionStatus,
   ]);
