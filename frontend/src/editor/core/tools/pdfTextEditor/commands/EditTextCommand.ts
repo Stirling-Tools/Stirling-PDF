@@ -59,8 +59,8 @@ import {
   planModifiesUndrawableWhitespace,
   piecesFromObjects,
   sourceFontSpans,
-  planParagraphEdit,
-  planPartialEdit,
+  planUndoableParagraphEdit,
+  planUndoablePartialEdit,
   redrawingUndrawableWhitespace,
   revertPartialEditPlan,
   setObjText,
@@ -537,7 +537,9 @@ export class EditTextCommand implements Command {
       keepsFont &&
       leftToRight
     ) {
-      const planned = planParagraphEdit(
+      const planned = planUndoableParagraphEdit(
+        doc.module,
+        page.pagePtr,
         run,
         this.prevText ?? "",
         this.nextText,
@@ -665,7 +667,13 @@ export class EditTextCommand implements Command {
       keepsFont &&
       leftToRight
     ) {
-      const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
+      const partial = planUndoablePartialEdit(
+        doc.module,
+        page.pagePtr,
+        run,
+        this.prevText ?? "",
+        this.nextText,
+      );
       if (
         partial &&
         !planModifiesUndrawableWhitespace(
