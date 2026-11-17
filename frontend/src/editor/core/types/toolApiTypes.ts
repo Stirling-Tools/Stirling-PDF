@@ -1026,16 +1026,6 @@ export interface PdfToWordRequest {
   outputFormat: "doc" | "docx" | "odt";
   useStirlingOfficeConvert?: boolean;
 }
-export interface PdfVectorExportRequest {
-  /**
-   * Target vector format extension
-   */
-  outputFormat?: "eps" | "ps" | "pcl" | "xps";
-  /**
-   * Apply Ghostscript prepress settings
-   */
-  prepress?: true | false;
-}
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;
   pin?: string;
@@ -1099,7 +1089,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1108,6 +1098,7 @@ export interface RearrangePagesRequest {
     | "BOOKLET_SORT"
     | "SIDE_STITCH_BOOKLET_SORT"
     | "ODD_EVEN_SPLIT"
+    | "ODD_EVEN_MERGE"
     | "REMOVE_FIRST"
     | "REMOVE_LAST"
     | "REMOVE_FIRST_AND_LAST"
@@ -1594,13 +1585,11 @@ export type ToolEndpoint =
   | "/api/v1/convert/pdf/presentation"
   | "/api/v1/convert/pdf/text"
   | "/api/v1/convert/pdf/ua"
-  | "/api/v1/convert/pdf/vector"
   | "/api/v1/convert/pdf/word"
   | "/api/v1/convert/pdf/xlsx"
   | "/api/v1/convert/pdf/xml"
   | "/api/v1/convert/svg/pdf"
   | "/api/v1/convert/url/pdf"
-  | "/api/v1/convert/vector/pdf"
   | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
@@ -1700,13 +1689,11 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/presentation": PdfToPresentationRequest;
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
   "/api/v1/convert/pdf/ua": PdfToPdfUaRequest;
-  "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
   "/api/v1/convert/pdf/xml": ConvertPdfXmlRequest;
   "/api/v1/convert/svg/pdf": SvgToPdfRequest;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
-  "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
   "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
@@ -1807,13 +1794,11 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/pdf/presentation",
   "/api/v1/convert/pdf/text",
   "/api/v1/convert/pdf/ua",
-  "/api/v1/convert/pdf/vector",
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
   "/api/v1/convert/pdf/xml",
   "/api/v1/convert/svg/pdf",
   "/api/v1/convert/url/pdf",
-  "/api/v1/convert/vector/pdf",
   "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",

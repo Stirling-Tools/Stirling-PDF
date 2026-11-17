@@ -3,13 +3,23 @@ import { useTranslation } from "react-i18next";
 import { StirlingFileStub } from "@editor/types/fileContext";
 import { diskLinkState } from "@editor/services/diskLinkState";
 import styles from "@editor/components/fileEditor/FileEditorThumbnail.module.css";
+import {
+  TargetStatusDot,
+  type TargetStatus,
+} from "@editor/components/fileEditor/TargetStatusDot";
 
 interface FileEditorStatusDotProps {
   file: StirlingFileStub;
+  /** Set when Save sends this file to a save target. */
+  target?: TargetStatus;
 }
 
-export function FileEditorStatusDot({ file }: FileEditorStatusDotProps) {
+export function FileEditorStatusDot({
+  file,
+  target,
+}: FileEditorStatusDotProps) {
   const { t } = useTranslation();
+  if (target) return <TargetStatusDot {...target} />;
 
   // Orphaned needs its own case: sharing "not saved to disk" would make a
   // deleted original indistinguishable from a file never saved.

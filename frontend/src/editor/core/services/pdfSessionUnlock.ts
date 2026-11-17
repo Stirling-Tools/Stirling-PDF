@@ -1,16 +1,20 @@
 import {
   ensureLocalPdfAccess,
   getPdfAccess,
+  inspectLocalPdfAccess,
   pdfAccessLifetime,
   rememberPdfAccess,
+  signedPdfEditPolicyOn,
+  signedPdfEditsBlocked,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
+import { toolIOFor } from "@editor/types/toolIO";
 import apiClient from "@editor/services/apiClient";
 import axios, { type CancelToken } from "axios";
 import i18n from "i18next";
 
 import type { StirlingFile } from "@editor/types/fileContext";
-import { PdfPermissionFlag } from "@embedpdf/models";
+import { PdfErrorCode, PdfPermissionFlag } from "@embedpdf/models";
 import { zipFileService } from "@editor/services/zipFileService";
 
 import {
@@ -61,6 +65,119 @@ async function requestWorkingPdf(
   }
 }
 
+const SIGNATURE_ENDPOINTS = new Set([
+  "/api/v1/security/cert-sign",
+  "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/remove-cert-sign",
+]);
+
+const PASSWORD_ENDPOINTS = new Set([
+  "/api/v1/security/add-password",
+  "/api/v1/security/remove-password",
+]);
+
+/** An endpoint missing from TOOL_IO counts as a rewrite, so it is refused on signed PDFs until it declares its output. */
+function rewritesPdf(
+  endpoint: string | undefined,
+  editsInBrowser: boolean,
+): boolean {
+  if (!endpoint) return editsInBrowser;
+  if (SIGNATURE_ENDPOINTS.has(endpoint)) return false;
+  const produces = toolIOFor(endpoint)?.produces;
+  return (
+    produces === undefined || produces === "PDF" || produces === "PDF_ENCRYPTED"
+  );
+}
+
+export function signedPdfEditsBlockedMessage(): string {
+  return i18n.t(
+    "signedPdf.editsBlocked",
+    "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view or print it, convert it to another format, or sign it again.",
+  );
+}
+
+export class SignedPdfEditsBlockedError extends Error {
+  constructor() {
+    super(signedPdfEditsBlockedMessage());
+  }
+}
+
+/** `editsInBrowser` marks a tool with no endpoint that rewrites the PDF itself. */
+export function signedPdfEditRefused(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+  editsInBrowser = false,
+): boolean {
+  return signedPdfEditsBlocked(access) && rewritesPdf(endpoint, editsInBrowser);
+}
+
+function assertSignedPdfEditable(
+  access: PdfAccess | undefined,
+  endpoint: string | undefined,
+  editsInBrowser = false,
+): void {
+  if (signedPdfEditRefused(access, endpoint, editsInBrowser))
+    throw new SignedPdfEditsBlockedError();
+}
+
+const signedCheckApplies = (
+  endpoint: string | undefined,
+  editsInBrowser: boolean,
+) => signedPdfEditPolicyOn() && rewritesPdf(endpoint, editsInBrowser);
+
+const isPdf = (file: File) =>
+  file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+/**
+ * Access for the signed-PDF check on a file not read yet. Password tools read it without remembering
+ * the result, so their own encryption handling is unchanged; a file that needs an opening password
+ * cannot be read here, and Remove Password checks it again with the password the user enters.
+ */
+async function accessForSignedCheck(
+  file: File,
+  endpoint: string | undefined,
+  signal?: AbortSignal,
+): Promise<PdfAccess | undefined> {
+  const known = getPdfAccess(file);
+  if (known) return known;
+  if (endpoint && PASSWORD_ENDPOINTS.has(endpoint))
+    return inspectForPasswordTool(file, "", signal);
+  return ensureAccessUnlessDamaged(file, signal);
+}
+
+/** Only a wrong password or unparseable bytes leave the file unread; any other failure refuses the run. */
+async function inspectForPasswordTool(
+  file: File,
+  password: string,
+  signal?: AbortSignal,
+): Promise<PdfAccess | undefined> {
+  try {
+    return await inspectLocalPdfAccess(file, password, signal);
+  } catch (error) {
+    if ((error as { code?: unknown } | null)?.code === PdfErrorCode.Password)
+      return undefined;
+    if (isDamagedPdfError(error)) return undefined;
+    throw error;
+  }
+}
+
+/** Reads every PDF not read yet, then refuses the run if any is signed and the tool would rewrite it. */
+export async function assertSignedPdfsEditable(
+  files: readonly File[],
+  endpoint: string | undefined,
+  editsInBrowser: boolean,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (!signedCheckApplies(endpoint, editsInBrowser)) return;
+  for (const file of files)
+    if (isPdf(file))
+      assertSignedPdfEditable(
+        await accessForSignedCheck(file, endpoint, signal),
+        endpoint,
+        editsInBrowser,
+      );
+}
+
 /** These interactive operations restore protection before exposing or persisting any result. */
 export function supportsSessionUnlock(endpoint: string | undefined): boolean {
   return endpoint !== undefined && SUPPORTED_ENDPOINTS.has(endpoint);
@@ -74,9 +191,9 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
 const passedThrough = new WeakSet<Blob>();
 
 async function ensureAccessUnlessDamaged(
-  file: StirlingFile,
+  file: File,
   signal?: AbortSignal,
-  onPassThrough?: (file: StirlingFile) => void,
+  onPassThrough?: (file: File) => void,
 ): Promise<PdfAccess | undefined> {
   // Preflight's verdict is consumed once, so processing does not wait out a second inspection.
   if (passedThrough.delete(file)) return undefined;
@@ -104,6 +221,7 @@ export async function preflightPdfOperation(
   requestOwner: (file: StirlingFile) => Promise<boolean>,
   signal?: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
+  editsInBrowser = false,
 ): Promise<boolean> {
   // Inspections still pending when preflight exits early stop holding worker slots.
   const done = new AbortController();
@@ -112,7 +230,7 @@ export async function preflightPdfOperation(
     ...(signal ? [signal] : []),
   ]);
   // Pass-through verdicts only reach processing when this preflight lets it proceed.
-  const passes = new Set<StirlingFile>();
+  const passes = new Set<File>();
   try {
     const proceed = await runPreflight(
       files,
@@ -121,6 +239,7 @@ export async function preflightPdfOperation(
       requestOwner,
       combined.signal,
       isKnownEncrypted,
+      editsInBrowser,
       (file) => passes.add(file),
     );
     if (proceed) for (const file of passes) passedThrough.add(file);
@@ -138,14 +257,12 @@ async function runPreflight(
   requestOwner: (file: StirlingFile) => Promise<boolean>,
   signal: AbortSignal,
   isKnownEncrypted: (file: StirlingFile) => boolean,
-  onPassThrough: (file: StirlingFile) => void,
+  editsInBrowser: boolean,
+  onPassThrough: (file: File) => void,
 ): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
-    endpoint === "/api/v1/security/add-password" ||
-    endpoint === "/api/v1/security/remove-password";
-  const isPdf = (file: StirlingFile) =>
-    file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    endpoint !== undefined && PASSWORD_ENDPOINTS.has(endpoint);
   // Inspect the whole selection at once; the access service bounds concurrent workers.
   const inspections = new Map(
     changesProtection
@@ -167,6 +284,12 @@ async function runPreflight(
     const access = changesProtection
       ? getPdfAccess(file)
       : await inspections.get(file);
+    if (signedCheckApplies(endpoint, editsInBrowser))
+      assertSignedPdfEditable(
+        access ?? (await accessForSignedCheck(file, endpoint, signal)),
+        endpoint,
+        editsInBrowser,
+      );
     const encrypted =
       access?.encrypted ??
       (endpoint === "/api/v1/security/add-password" && isKnownEncrypted(file));
@@ -217,6 +340,7 @@ function operationPermission(endpoint: string | undefined): PdfPermissionFlag {
 
 /** Signed protected PDFs remain view-only until their edits can preserve signatures. */
 export function assertPdfSessionEditable(access: PdfAccess | undefined): void {
+  if (signedPdfEditsBlocked(access)) throw new SignedPdfEditsBlockedError();
   if (access?.encrypted && access.signed)
     throw new Error(
       i18n.t(
@@ -243,16 +367,12 @@ export async function prepareUnlockedFile(
   inspectionSignal?: AbortSignal,
   cancelToken?: CancelToken,
 ): Promise<File> {
-  if (
-    endpoint === "/api/v1/security/remove-password" ||
-    endpoint === "/api/v1/security/add-password"
-  )
-    return file;
-  if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name))
+  if ((endpoint && PASSWORD_ENDPOINTS.has(endpoint)) || !isPdf(file))
     return file;
   const access =
     getPdfAccess(file) ??
     (await ensureAccessUnlessDamaged(file, inspectionSignal));
+  assertSignedPdfEditable(access, endpoint);
   if (!access?.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
     throw new Error(
@@ -322,7 +442,7 @@ async function protectPdfOutput(
     protectionRestoreError().message,
   );
   const file = new File([bytes], output.name, { type: "application/pdf" });
-  rememberPdfAccess(file, { ...access, signed: false });
+  rememberPdfAccess(file, access);
   return file;
 }
 
@@ -383,6 +503,15 @@ export async function changePdfSecurity(
 ): Promise<Blob> {
   const settingProtection = endpoint === "/api/v1/security/add-password";
   const access = getPdfAccess(file);
+  if (signedCheckApplies(endpoint, false))
+    assertSignedPdfEditable(
+      access ??
+        (await inspectForPasswordTool(
+          file,
+          String(form.get("password") ?? ""),
+        )),
+      endpoint,
+    );
   if (settingProtection) {
     if (access?.encrypted && !hasPdfPermissionOverride(access))
       throw new Error(

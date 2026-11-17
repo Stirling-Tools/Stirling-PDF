@@ -237,6 +237,24 @@ test.describe("Compare tool slot selection", () => {
     ).toHaveAttribute("data-slot-state", "empty");
   });
 
+  test("Pixel Comparison mode renders the pixel diff view", async ({
+    page,
+  }) => {
+    await navigateToCompare(page);
+    await page.getByText("Pixel Comparison", { exact: true }).click();
+    await uploadIntoSlot(page, "base", PDF_A, "compare_sample_a.pdf");
+    await uploadIntoSlot(page, "comparison", PDF_B, "compare_sample_b.pdf");
+
+    await page.getByRole("button", { name: "Compare", exact: true }).click();
+
+    await expect(page.locator(".compare-pixel-workbench")).toBeVisible({
+      timeout: 30000,
+    });
+    await expect(page.locator(".compare-pixel-page").first()).toBeVisible({
+      timeout: 30000,
+    });
+  });
+
   // These specs stop at slot state. Actually running a comparison lives in
   // `engine-capabilities.spec.ts`, which is cross-browser in PR CI.
 });
