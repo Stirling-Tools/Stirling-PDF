@@ -120,6 +120,7 @@ test("mixed uploads use their own endpoint and retain existing PDFs", async () =
     expect(config.endpointName).toBe(name);
   });
   expect(api.post.mock.calls[1][1].get("includeAttachments")).not.toBeNull();
+  expect(api.post.mock.calls[2][1].get("zoom")).not.toBeNull();
   expect(
     api.post.mock.calls[4][1].get("includeTableOfContents"),
   ).not.toBeNull();

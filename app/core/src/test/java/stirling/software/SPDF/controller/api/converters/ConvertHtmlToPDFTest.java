@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -124,6 +126,7 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(officeToPdfService).convertHtml(any(byte[].class), eq(false));
         }
     }
 
@@ -161,6 +164,7 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(officeToPdfService).convertHtml(any(byte[].class), eq(true));
         }
     }
 

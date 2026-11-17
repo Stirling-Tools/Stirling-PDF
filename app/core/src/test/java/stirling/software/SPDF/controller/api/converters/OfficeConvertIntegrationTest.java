@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,6 +65,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.officeconvert.pdfa.PdfToPdfA;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 class OfficeConvertIntegrationTest {
@@ -183,15 +185,20 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(floats = {2f, 8f})
-    void officeHtmlZoomOverridesAuthorPageSize(float zoom) throws Exception {
+    @CsvSource({"html,2", "html,8", "zip,2", "zip,8"})
+    void officeHtmlZoomOverridesAuthorPageSize(String format, float zoom) throws Exception {
         byte[] html =
                 ("<html><head><style>@page{size:210mm 297mm}</style></head><body><p>"
                                 + TEXT
                                 + "</p></body></html>")
                         .getBytes(StandardCharsets.UTF_8);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(new MockMultipartFile("fileInput", "page.html", "text/html", html));
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "page." + format,
+                        "application/octet-stream",
+                        format.equals("zip") ? zip("index.html", html) : html));
         request.setZoom(zoom);
         var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
 
@@ -336,6 +343,163 @@ class OfficeConvertIntegrationTest {
                 new ConvertEbookToPDFController(
                         factory, tempFiles, endpoints, mock(OfficeDocumentSanitizer.class), toPdf);
         assertPdfText(body(reader.convertEbookToPdf(read)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"6,true", "3,false"})
+    void pdfaRefusesDocumentsOverThePageLimit(int pages, boolean overLimit) throws Exception {
+        properties.getSystem().setMaxPdfaConversionPages(5);
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat("pdfa-2b");
+        try (PDDocument pdf = new PDDocument();
+                var out = new ByteArrayOutputStream()) {
+            for (int i = 0; i < pages; i++) {
+                pdf.addPage(new PDPage());
+            }
+            pdf.save(out);
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "long.pdf", "application/pdf", out.toByteArray()));
+        }
+
+        try (MockedStatic<PdfToPdfA> engine = mockStatic(PdfToPdfA.class)) {
+            engine.when(
+                            () ->
+                                    PdfToPdfA.convert(
+                                            any(Path.class),
+                                            any(Path.class),
+                                            any(PdfToPdfA.Options.class)))
+                    .thenThrow(new IOException("converter refused"));
+
+            if (overLimit) {
+                assertThatThrownBy(() -> controller.pdfToPdfA(request))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("limited to 5 pages");
+            } else {
+                assertThatThrownBy(() -> controller.pdfToPdfA(request))
+                        .isInstanceOf(IOException.class)
+                        .hasMessage("converter refused");
+            }
+        }
+    }
+
+    @Test
+    void pdfaKeepsTheUploadNameAndDocumentInformation() throws Exception {
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat("pdfa-2b");
+        try (PDDocument pdf = document();
+                var out = new ByteArrayOutputStream()) {
+            pdf.getDocumentInformation().setTitle("Quarterly report");
+            pdf.getDocumentInformation().setAuthor("Finance team");
+            pdf.save(out);
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "report.pdf", "application/pdf", out.toByteArray()));
+        }
+
+        var response = controller.pdfToPdfA(request);
+
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .isEqualTo("report.pdf");
+        try (PDDocument output = Loader.loadPDF(body(response))) {
+            assertThat(output.getDocumentInformation().getTitle()).isEqualTo("Quarterly report");
+            assertThat(output.getDocumentInformation().getAuthor()).isEqualTo("Finance team");
+        }
+    }
+
+    @Test
+    void attachmentsConvertAnOpenDocumentToCompliantPdfA3() throws Exception {
+        VeraPDFService validator = new VeraPDFService();
+        validator.initialize();
+        var controller = new ConvertPDFToPDFA(null, validator, null, tempFiles, properties, office);
+
+        byte[] output;
+        try (PDDocument pdf = document()) {
+            output = controller.convertPDDocumentToPDFA(pdf, "pdfa-3b");
+        }
+
+        assertPdfText(output);
+        assertThat(validator.validatePDF(new ByteArrayInputStream(output)))
+                .anySatisfy(
+                        result -> {
+                            assertThat(result.isCompliant()).isTrue();
+                            assertThat(result.getStandard()).startsWith("3");
+                        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({"html-endpoint,html", "html-endpoint,zip", "file-endpoint,html"})
+    void htmlNeverReadsLocalFiles(String endpoint, String format) throws Exception {
+        Path secret = dir.resolve("secret.png");
+        javax.imageio.ImageIO.write(
+                new java.awt.image.BufferedImage(40, 40, java.awt.image.BufferedImage.TYPE_INT_RGB),
+                "png",
+                secret.toFile());
+        byte[] html =
+                ("<html><body><p>"
+                                + TEXT
+                                + "</p><img src=\""
+                                + secret.toUri()
+                                + "\"><img src=\"../secret.png\"><img src=\"data:image/png;base64,"
+                                + java.util.Base64.getEncoder().encodeToString(inlinePng())
+                                + "\"></body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+        byte[] upload = format.equals("zip") ? zip("index.html", html) : html;
+        byte[] pdf;
+        if (endpoint.equals("html-endpoint")) {
+            HTMLToPdfRequest request = new HTMLToPdfRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "page." + format, "application/octet-stream", upload));
+            pdf = body(new ConvertHtmlToPDF(factory, tempFiles, toPdf).HtmlToPdf(request));
+        } else {
+            var sanitizer =
+                    new OfficeDocumentSanitizer(
+                            mock(stirling.software.common.service.SsrfProtectionService.class),
+                            properties);
+            GeneralFile request = new GeneralFile();
+            request.setFileInput(
+                    new MockMultipartFile("fileInput", "page.html", "text/html", upload));
+            pdf =
+                    body(
+                            new ConvertOfficeController(factory, sanitizer, tempFiles, toPdf)
+                                    .processFileToPDF(request));
+        }
+
+        assertPdfText(pdf);
+        int images = 0;
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            for (var page : document.getPages()) {
+                for (var name : page.getResources().getXObjectNames()) {
+                    if (page.getResources().isImageXObject(name)) {
+                        images++;
+                    }
+                }
+            }
+        }
+        assertThat(images).as("only the inline image, nothing from the local disk").isEqualTo(1);
+    }
+
+    private static byte[] inlinePng() throws Exception {
+        var out = new ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(
+                new java.awt.image.BufferedImage(8, 8, java.awt.image.BufferedImage.TYPE_INT_RGB),
+                "png",
+                out);
+        return out.toByteArray();
+    }
+
+    @Test
+    void pdfaTreatsANegativePageLimitAsUnlimited() throws Exception {
+        properties.getSystem().setMaxPdfaConversionPages(-1);
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat("pdfa-2b");
+        request.setFileInput(uploadPdf());
+
+        assertPdfText(body(controller.pdfToPdfA(request)));
     }
 
     @ParameterizedTest

@@ -2,7 +2,12 @@ package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,8 +25,14 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 class OfficeConversionServiceTest {
 
@@ -33,6 +44,28 @@ class OfficeConversionServiceTest {
     @BeforeEach
     void setUp() {
         service = new OfficeConversionService(properties, null, null);
+    }
+
+    @Test
+    void failedUploadConversionReleasesItsOutputFile() throws Exception {
+        TempFileManager tempFiles = mock(TempFileManager.class);
+        TempFile out = mock(TempFile.class);
+        when(tempFiles.createManagedTempFile(".epub")).thenReturn(out);
+        CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
+        when(factory.load(any(MultipartFile.class))).thenThrow(new IOException("not a pdf"));
+        var uploads = new OfficeConversionService(properties, factory, tempFiles);
+        var upload =
+                new MockMultipartFile("fileInput", "in.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(
+                        () ->
+                                uploads.convert(
+                                        upload,
+                                        "epub",
+                                        MediaType.APPLICATION_OCTET_STREAM,
+                                        uploads.settings()))
+                .isInstanceOf(IOException.class);
+        verify(out).close();
     }
 
     @Test

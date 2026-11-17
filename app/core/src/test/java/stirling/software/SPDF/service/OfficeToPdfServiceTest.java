@@ -2,15 +2,23 @@ package stirling.software.SPDF.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 class OfficeToPdfServiceTest {
@@ -60,6 +68,29 @@ class OfficeToPdfServiceTest {
 
             assertThat(failure.getMessage())
                     .contains("Converting document.docx would produce more than 50 pages");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true,.zip", "false,.html"})
+    void htmlPackagesOnlyGetPackageAccessWhenZipped(
+            boolean packaged, String suffix, @TempDir Path dir) throws Exception {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSystem().getTempFileManagement().setBaseTmpDir(dir.toString());
+        var html =
+                new OfficeToPdfService(
+                        properties, new TempFileManager(new TempFileRegistry(), properties));
+        try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
+            ArgumentCaptor<Path> in = ArgumentCaptor.forClass(Path.class);
+            ArgumentCaptor<OfficeToPdf.Options> options =
+                    ArgumentCaptor.forClass(OfficeToPdf.Options.class);
+            engine.when(() -> OfficeToPdf.convert(in.capture(), any(Path.class), options.capture()))
+                    .thenReturn(new OfficeToPdf.Result(1, false, List.of(), false));
+
+            html.convertHtml("<p>x</p>".getBytes(StandardCharsets.UTF_8), packaged);
+
+            assertThat(in.getValue().toString()).endsWith(suffix);
+            assertThat(options.getValue().allowPackages()).isEqualTo(packaged);
         }
     }
 

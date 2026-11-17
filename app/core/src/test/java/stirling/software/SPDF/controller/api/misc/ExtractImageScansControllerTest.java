@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -136,6 +137,37 @@ class ExtractImageScansControllerTest {
                         IllegalArgumentException.class,
                         () -> controller.extractImageScans(requestFor(garbage)));
         assertEquals("Unsupported image format: png", e.getMessage());
+    }
+
+    @Test
+    @DisplayName("refuses an image too large to decode before decoding it")
+    void refusesOversizedImageBeforeDecoding() throws Exception {
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        png.write(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'});
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
+        java.io.DataOutputStream ihdr = new java.io.DataOutputStream(header);
+        ihdr.writeBytes("IHDR");
+        ihdr.writeInt(50_000);
+        ihdr.writeInt(50_000);
+        ihdr.write(new byte[] {8, 2, 0, 0, 0});
+        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        crc.update(header.toByteArray());
+        java.io.DataOutputStream out = new java.io.DataOutputStream(png);
+        out.writeInt(13);
+        out.write(header.toByteArray());
+        out.writeInt((int) crc.getValue());
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "huge.png", MediaType.IMAGE_PNG_VALUE, png.toByteArray());
+
+        try (MockedStatic<PhotoSplitter> splitter = splitterReturning(1)) {
+            IllegalArgumentException e =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> controller.extractImageScans(requestFor(file)));
+            assertTrue(e.getMessage().contains("pixels; the limit is"));
+            splitter.verifyNoInteractions();
+        }
     }
 
     @Test

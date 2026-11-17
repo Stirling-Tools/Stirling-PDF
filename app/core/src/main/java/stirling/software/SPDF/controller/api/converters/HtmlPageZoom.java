@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -64,38 +63,46 @@ final class HtmlPageZoom {
     }
 
     static byte[] layOutPage(byte[] html, float zoom) {
-        Charset charset = bomCharset(html);
-        byte[] style = pageStyle(zoom).getBytes(charset);
-        int at = closingHtmlTag(html, charset);
-        byte[] out = new byte[html.length + style.length];
-        System.arraycopy(html, 0, out, 0, at);
-        System.arraycopy(style, 0, out, at, style.length);
-        System.arraycopy(html, at, out, at + style.length, html.length - at);
-        return out;
+        Charset charset = textCharset(html);
+        String document = new String(html, charset);
+        int at = closingHtmlTag(document);
+        return (document.substring(0, at) + pageStyle(zoom) + document.substring(at))
+                .getBytes(charset);
     }
 
-    private static int closingHtmlTag(byte[] html, Charset charset) {
-        int found = html.length;
-        for (String tag : List.of("</html", "</HTML", "</Html")) {
-            int at = lastIndexOf(html, tag.getBytes(charset));
-            if (at >= 0 && (found == html.length || at > found)) {
-                found = at;
-            }
-        }
-        return found;
-    }
-
-    private static int lastIndexOf(byte[] haystack, byte[] needle) {
-        outer:
-        for (int i = haystack.length - needle.length; i >= 0; i--) {
-            for (int j = 0; j < needle.length; j++) {
-                if (haystack[i + j] != needle[j]) {
-                    continue outer;
+    private static int closingHtmlTag(String document) {
+        int closing = document.length();
+        int i = 0;
+        while (i < document.length()) {
+            if (startsWithIgnoreCase(document, i, "<!--")) {
+                i = after(document, i + 4, "-->");
+            } else if (startsWithIgnoreCase(document, i, "<![CDATA[")) {
+                i = after(document, i + 9, "]]>");
+            } else if (startsWithIgnoreCase(document, i, "<script")) {
+                i = after(document, i + 7, "</script");
+            } else if (startsWithIgnoreCase(document, i, "<style")) {
+                i = after(document, i + 6, "</style");
+            } else {
+                if (startsWithIgnoreCase(document, i, "</html")) {
+                    closing = i;
                 }
+                i++;
             }
-            return i;
         }
-        return -1;
+        return closing;
+    }
+
+    private static int after(String document, int from, String end) {
+        for (int i = from; i <= document.length() - end.length(); i++) {
+            if (startsWithIgnoreCase(document, i, end)) {
+                return i + end.length();
+            }
+        }
+        return document.length();
+    }
+
+    private static boolean startsWithIgnoreCase(String document, int at, String prefix) {
+        return document.regionMatches(true, at, prefix, 0, prefix.length());
     }
 
     static byte[] layOutPackage(byte[] zip, float zoom) throws IOException {
@@ -211,14 +218,14 @@ final class HtmlPageZoom {
                 A4_HEIGHT_MM / zoom);
     }
 
-    private static Charset bomCharset(byte[] html) {
+    private static Charset textCharset(byte[] html) {
         if (html.length >= 2 && (html[0] & 0xFF) == 0xFF && (html[1] & 0xFF) == 0xFE) {
             return StandardCharsets.UTF_16LE;
         }
         if (html.length >= 2 && (html[0] & 0xFF) == 0xFE && (html[1] & 0xFF) == 0xFF) {
             return StandardCharsets.UTF_16BE;
         }
-        return StandardCharsets.UTF_8;
+        return StandardCharsets.ISO_8859_1;
     }
 
     private static boolean isHtml(String name) {

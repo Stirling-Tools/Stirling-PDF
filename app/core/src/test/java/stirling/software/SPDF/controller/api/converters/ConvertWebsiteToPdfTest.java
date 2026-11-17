@@ -218,9 +218,11 @@ public class ConvertWebsiteToPdfTest {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com");
         Path[] html = new Path[1];
+        OfficeToPdf.Options[] options = new OfficeToPdf.Options[1];
         Mockito.doAnswer(
                         inv -> {
                             html[0] = inv.getArgument(0);
+                            options[0] = inv.getArgument(2);
                             assertTrue(Files.exists(html[0]));
                             return null;
                         })
@@ -245,9 +247,45 @@ public class ConvertWebsiteToPdfTest {
                                     Mockito.argThat(
                                             access ->
                                                     access.network()
+                                                            && access.redirects()
                                                             && !access.privateAddresses())));
             assertNotNull(html[0]);
+            assertTrue(
+                    Mockito.mockingDetails(options[0].htmlAssets()).isMock(),
+                    "Linked assets must resolve against the fetched page");
             assertFalse(Files.exists(html[0]), "Temp HTML file should be deleted after the call");
+        }
+    }
+
+    @Test
+    void a_failed_temp_file_delete_does_not_fail_the_conversion() throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://example.com");
+
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<WebAssets> fetch = fetchReturning("<html></html>");
+                MockedStatic<Files> files =
+                        Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+            gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("example_com");
+            gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
+                    .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
+            files.when(
+                            () ->
+                                    Files.deleteIfExists(
+                                            Mockito.argThat(
+                                                    (Path path) ->
+                                                            path != null
+                                                                    && path.getFileName()
+                                                                            .toString()
+                                                                            .startsWith(
+                                                                                    "output_"))))
+                    .thenThrow(new java.io.IOException("fail delete"));
+
+            ResponseEntity<?> resp = sut.urlToPdf(request);
+
+            assertEquals(HttpStatus.OK, resp.getStatusCode());
         }
     }
 

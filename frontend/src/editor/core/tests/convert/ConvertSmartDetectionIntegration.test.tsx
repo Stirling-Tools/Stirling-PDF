@@ -449,6 +449,46 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
   });
 
   describe("Web and Email Conversion Options Integration", () => {
+    test("should send correct HTML parameters for web-to-pdf conversion", async () => {
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
+
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
+
+      const htmlFile = createTestStirlingFile(
+        "page.html",
+        "<html>content</html>",
+        "text/html",
+      );
+
+      act(() => {
+        paramsResult.current.analyzeFileTypes([htmlFile]);
+        paramsResult.current.updateParameter("htmlOptions", {
+          zoomLevel: 1.5,
+        });
+      });
+
+      await act(async () => {
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [htmlFile],
+        );
+      });
+
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
+      expect(formData.get("zoom")).toBe("1.5");
+    });
+
     test("should send correct email parameters for eml-to-pdf conversion", async () => {
       const { result: paramsResult } = renderHook(
         () => useConvertParameters(),

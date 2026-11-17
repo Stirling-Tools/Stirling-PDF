@@ -68,6 +68,31 @@ class HtmlPageZoomTest {
                                 + "</HTML>\n");
     }
 
+    @Test
+    void ignoresClosingTagsInCommentsAndScripts() {
+        byte[] html =
+                ("<html><body><script>var s = \"</html>\";</script>x</body></html>"
+                                + "<!-- copied from </html> -->")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        String result = new String(HtmlPageZoom.layOutPage(html, 2f), StandardCharsets.UTF_8);
+
+        assertThat(result)
+                .isEqualTo(
+                        "<html><body><script>var s = \"</html>\";</script>x</body>"
+                                + "<style>@page{size:105.000mm 148.500mm}</style></html>"
+                                + "<!-- copied from </html> -->");
+    }
+
+    @Test
+    void keepsNonUtf8BytesUntouched() {
+        byte[] html = {'<', 'p', '>', (byte) 0xE9, '<', '/', 'p', '>'};
+
+        byte[] result = HtmlPageZoom.layOutPage(html, 2f);
+
+        assertThat(result).startsWith(html);
+    }
+
     private static PDPageXYZDestination destination(PDPage page, int left, int top) {
         PDPageXYZDestination destination = new PDPageXYZDestination();
         destination.setPage(page);

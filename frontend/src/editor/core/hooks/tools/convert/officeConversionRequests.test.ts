@@ -85,3 +85,26 @@ describe("Office conversion requests", () => {
     },
   );
 });
+
+test.each(["eml", "msg"])(
+  "preserves %s email options in saved steps",
+  (fromExtension) => {
+    const parameters = {
+      ...defaultParameters,
+      fromExtension,
+      toExtension: "pdf",
+      emailOptions: {
+        includeAttachments: true,
+        maxAttachmentSizeMB: 3,
+        downloadHtml: false,
+        includeAllRecipients: false,
+      },
+    };
+
+    expect(convertFromApiParams(convertToApiParams(parameters))).toEqual({
+      fromExtension,
+      toExtension: "pdf",
+      emailOptions: parameters.emailOptions,
+    });
+  },
+);

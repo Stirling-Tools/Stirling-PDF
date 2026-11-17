@@ -231,10 +231,9 @@ public class PdfUaConversionService {
     }
 
     /**
-     * Deliberately checked on the working document rather than the source. Permissions-only
-     * encryption with an empty user password is common in published documents, the embedder
-     * resolves it, and those files convert usefully; rejecting them up front would fail a document
-     * for a password its author never set.
+     * Refuses every encrypted document, permissions-only ones included: tagging and saving would
+     * have to drop the owner's restrictions. Checked on the working document, after font embedding,
+     * which leaves encryption in place.
      */
     private static void rejectEncrypted(PDDocument document) throws IOException {
         if (document.isEncrypted()) {

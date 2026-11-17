@@ -117,10 +117,14 @@ public class ConvertWebsiteToPDF {
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
         try {
-            // Public addresses only, for the page and every asset it links.
+            // Public addresses only, for the page, every asset it links and every redirect hop.
             WebAssets assets =
                     WebAssets.fetch(
-                            URL, WebAssets.Access.none().network(true).privateAddresses(false));
+                            URL,
+                            WebAssets.Access.none()
+                                    .network(true)
+                                    .redirects(true)
+                                    .privateAddresses(false));
             String htmlContent = new String(assets.page(), StandardCharsets.UTF_8);
 
             if (containsDisallowedUriScheme(htmlContent)) {

@@ -102,7 +102,8 @@ public class ConvertPDFToPDFA {
         this.veraPDFService = veraPDFService;
         this.pdfaLevelAService = pdfaLevelAService;
         this.tempFileManager = tempFileManager;
-        this.maxConversionPages = applicationProperties.getSystem().getMaxPdfaConversionPages();
+        this.maxConversionPages =
+                Math.max(0, applicationProperties.getSystem().getMaxPdfaConversionPages());
     }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
