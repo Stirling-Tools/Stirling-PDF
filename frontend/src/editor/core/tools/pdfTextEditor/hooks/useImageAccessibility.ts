@@ -1,10 +1,12 @@
 import { useCallback, useMemo } from "react";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
 import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   EditorStore,
   EditorViewState,
@@ -61,6 +63,15 @@ export function useImageAccessibility(
     [store, image, accessibility],
   );
 
+  const setType = useCallback(
+    (type: DescribableType) => {
+      if (!image || accessibility?.kind !== "describable") return;
+      if (type === accessibility.type) return;
+      store.dispatch(typeCommand(image, type));
+    },
+    [store, image, accessibility],
+  );
+
   const setDecorative = useCallback(
     (decorative: boolean) => {
       const doc = store.document;
@@ -104,6 +115,7 @@ export function useImageAccessibility(
   return {
     accessibility,
     setDescription,
+    setType,
     setDecorative,
     review,
     selectNextImage,
@@ -126,9 +138,20 @@ function describeCommand(
   return new TagImageCommand({
     pageIndex: image.pageIndex,
     imageId: image.id,
-    as: "figure",
+    as: "Figure",
     alt,
   });
+}
+
+/** An untagged image is given an element of `type`; a tagged one is retagged. */
+function typeCommand(
+  image: ImageObjectSnapshot,
+  type: DescribableType,
+): Command {
+  const { pageIndex, mcid } = image;
+  if (mcid !== undefined)
+    return new RetagBlockCommand({ pageIndex, mcid, type });
+  return new TagImageCommand({ pageIndex, imageId: image.id, as: type });
 }
 
 /**
@@ -144,7 +167,7 @@ function decorativeCommand(
     return new TagImageCommand({
       pageIndex: image.pageIndex,
       imageId: image.id,
-      as: decorative ? "artifact" : "figure",
+      as: decorative ? "artifact" : "Figure",
     });
   }
   if (image.mcid === undefined) return null;

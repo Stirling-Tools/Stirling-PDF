@@ -13,7 +13,8 @@ import {
   vi,
 } from "vitest";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
-import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
+import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
@@ -68,7 +69,7 @@ function retag(
 ) {
   const run = runWith(doc, fragment);
   const mcid = run.snapshot().mcid!;
-  history.execute(new RetagTextCommand({ pageIndex: PAGE, mcid, type }), doc);
+  history.execute(new RetagBlockCommand({ pageIndex: PAGE, mcid, type }), doc);
   return { run, key: doc.structure(PAGE).block(mcid)!.key };
 }
 
@@ -176,7 +177,7 @@ describe("retagging text", () => {
     expect(doc.structure(PAGE).cannotRetag(mcid)).toBe("not-text");
     expect(() =>
       new HistoryStack().execute(
-        new RetagTextCommand({ pageIndex: PAGE, mcid, type: "H2" }),
+        new RetagBlockCommand({ pageIndex: PAGE, mcid, type: "H2" }),
         doc,
       ),
     ).toThrow();
@@ -701,3 +702,65 @@ function tagAs(
   }
   history.execute(command, doc);
 }
+
+describe("tagging text as a formula", () => {
+  function describe_(
+    doc: EditorDocument,
+    history: HistoryStack,
+    fragment: string,
+    alt: string | null,
+  ) {
+    const mcid = runWith(doc, fragment).snapshot().mcid!;
+    history.execute(new SetAltTextCommand({ pageIndex: PAGE, mcid, alt }), doc);
+    return mcid;
+  }
+
+  test("refuses a description on text that is not a formula", async () => {
+    const doc = await openSample();
+    const mcid = runWith(doc, "All amounts").snapshot().mcid!;
+    expect(doc.structure(PAGE).cannotDescribe(mcid)).toBe("not-figure");
+  });
+
+  test("describes a paragraph retagged as a formula, and saves both", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const { key } = retag(doc, history, "All amounts", "Formula");
+    const mcid = describe_(doc, history, "All amounts", "x squared");
+    expect(doc.structure(PAGE).describableType(mcid)).toBe("Formula");
+    expect(doc.structure(PAGE).alt(mcid)).toBe("x squared");
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    const element = saved!.pages
+      .get(PAGE)!
+      .elements.find((el) => el.key === key);
+    expect(element).toMatchObject({ type: "Formula", alt: "x squared" });
+  });
+
+  test("drops the description when a formula is retagged as text, and restores it on undo", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    retag(doc, history, "All amounts", "Formula");
+    const mcid = describe_(doc, history, "All amounts", "x squared");
+    retag(doc, history, "All amounts", "P");
+    expect(doc.structure(PAGE).alt(mcid)).toBeNull();
+    expect(doc.structureEdits()).toEqual([]);
+
+    history.undo(doc);
+    expect(shownTag(doc, "All amounts")).toBe("Formula");
+    expect(doc.structure(PAGE).alt(mcid)).toBe("x squared");
+  });
+
+  test("tags untagged text as a described formula", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    tagText(doc, history, "Confidential", "Formula");
+    describe_(doc, history, "Confidential", "E equals m c squared");
+
+    const reopened = await EditorDocument.open(await savedBytes(doc));
+    opened.push(reopened);
+    PdfiumTextReader.populate(reopened, reopened.page(PAGE));
+    const mcid = runWith(reopened, "Confidential").snapshot().mcid!;
+    expect(shownTag(reopened, "Confidential")).toBe("Formula");
+    expect(reopened.structure(PAGE).alt(mcid)).toBe("E equals m c squared");
+  });
+});

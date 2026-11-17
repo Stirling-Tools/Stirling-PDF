@@ -12,6 +12,7 @@ import {
   test,
   vi,
 } from "vitest";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
@@ -323,7 +324,7 @@ describe("imageAccessibility", () => {
     expect(imageAccessibility(doc, figure)).toEqual({
       kind: "describable",
       description: "A grey square",
-      tagged: true,
+      type: "Figure",
       canBeDecorative: true,
     });
     new HistoryStack().execute(
@@ -610,7 +611,7 @@ describe("images drawn by a form XObject", () => {
     expect(imageAccessibility(doc, figure)).toEqual({
       kind: "describable",
       description: "A framed square",
-      tagged: true,
+      type: "Figure",
       canBeDecorative: true,
     });
   });
@@ -1036,14 +1037,14 @@ function insertImage(
 
 const tagImage = (
   image: ImageObject,
-  as: "figure" | "artifact",
+  as: "Figure" | "Formula" | "artifact",
   alt?: string,
 ) => new TagImageCommand({ pageIndex: 0, imageId: image.id, as, alt });
 
 const describable = (description: string | null) => ({
   kind: "describable",
   description,
-  tagged: true,
+  type: "Figure",
   canBeDecorative: true,
 });
 
@@ -1056,7 +1057,7 @@ describe("TagImageCommand", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
     expect(marks(doc, image)).toEqual([{ name: "Figure", mcid: 1 }]);
     expect(imageAccessibility(doc, image.snapshot())).toEqual(
       describable("A logo"),
@@ -1077,7 +1078,7 @@ describe("TagImageCommand", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A"), doc);
+    history.execute(tagImage(image, "Figure", "A"), doc);
     history.execute(
       new SetAltTextCommand({ pageIndex: 0, mcid: 1, alt: "A logo" }),
       doc,
@@ -1091,7 +1092,7 @@ describe("TagImageCommand", () => {
     const doc = await open(imagesPdf());
     const [, rule] = (await readPage(doc)).images;
     const history = new HistoryStack();
-    history.execute(tagImage(rule, "figure"), doc);
+    history.execute(tagImage(rule, "Figure"), doc);
     expect(marks(doc, rule)).toEqual([{ name: "Figure", mcid: 1 }]);
     expect(imageAccessibility(doc, rule.snapshot())).toEqual(describable(null));
 
@@ -1108,7 +1109,7 @@ describe("TagImageCommand", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
     history.execute(tagImage(image, "artifact"), doc);
     expect(marks(doc, image)).toEqual([{ name: "Artifact", mcid: null }]);
     expect(doc.structure(0).addedElements()).toEqual([]);
@@ -1128,12 +1129,75 @@ describe("TagImageCommand", () => {
     expect(marks(doc, figure)).toEqual([{ name: "Figure", mcid: 0 }]);
   });
 
+  test("tags an untagged image as a described formula, and saves it", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "Formula", "x squared"), doc);
+    expect(marks(doc, image)).toEqual([{ name: "Formula", mcid: 1 }]);
+    expect(imageAccessibility(doc, image.snapshot())).toEqual({
+      ...describable("x squared"),
+      type: "Formula",
+    });
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    expect(saved!.pages.get(0)!.elements).toMatchObject([
+      { type: "Figure", alt: "A grey square" },
+      { type: "Formula", alt: "x squared" },
+    ]);
+  });
+
+  test("retags the file's figure as a formula, keeping its description", async () => {
+    const doc = await open(imagesPdf());
+    const [figure] = (await readPage(doc)).images;
+    const history = new HistoryStack();
+    history.execute(
+      new RetagBlockCommand({ pageIndex: 0, mcid: 0, type: "Formula" }),
+      doc,
+    );
+    expect(imageAccessibility(doc, figure.snapshot())).toEqual({
+      ...describable("A grey square"),
+      type: "Formula",
+    });
+
+    const saved = await readFileStructure(await savedBytes(doc));
+    expect(saved!.pages.get(0)!.elements).toMatchObject([
+      { type: "Formula", alt: "A grey square" },
+    ]);
+
+    history.undo(doc);
+    expect(imageAccessibility(doc, figure.snapshot())).toEqual(
+      describable("A grey square"),
+    );
+    expect(doc.structureEdits()).toEqual([]);
+  });
+
+  test("removes the mark of an added figure retagged as a formula", async () => {
+    const doc = await open(imagesPdf());
+    await readPage(doc);
+    const history = new HistoryStack();
+    const image = insertImage(doc, history, 60);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
+    history.execute(
+      new RetagBlockCommand({ pageIndex: 0, mcid: 1, type: "Formula" }),
+      doc,
+    );
+    expect(imageAccessibility(doc, image.snapshot())).toMatchObject({
+      type: "Formula",
+      description: "A logo",
+    });
+    history.execute(tagImage(image, "artifact"), doc);
+    expect(marks(doc, image)).toEqual([{ name: "Artifact", mcid: null }]);
+    expect(doc.structure(0).addedElements()).toEqual([]);
+  });
+
   test("tags an image in a document with no structure tree, and saves one for it", async () => {
     const doc = await open(imagesPdf({ tagged: false }));
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
 
     const saved = await readFileStructure(await savedBytes(doc));
     expect(saved!.pages.get(0)!.elements).toMatchObject([
@@ -1160,7 +1224,7 @@ describe("saving an added figure", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
 
     await savedBytes(doc);
     const { doc: reopened, images } = await reopen(await savedBytes(doc));
@@ -1174,7 +1238,7 @@ describe("saving an added figure", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 170);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
 
     const { doc: reopened } = await reopen(await savedBytes(doc));
     expect(tree(reopened)).toEqual(["Document", "A logo", "A grey square"]);
@@ -1184,7 +1248,7 @@ describe("saving an added figure", () => {
     const doc = await open(imagesPdf());
     const [, rule] = (await readPage(doc)).images;
     const history = new HistoryStack();
-    history.execute(tagImage(rule, "figure"), doc);
+    history.execute(tagImage(rule, "Figure"), doc);
     history.execute(
       new SetAltTextCommand({ pageIndex: 0, mcid: 1, alt: "A divider" }),
       doc,
@@ -1222,7 +1286,7 @@ describe("saving an added figure", () => {
     await readPage(doc);
     const history = new HistoryStack();
     const image = insertImage(doc, history, 60);
-    history.execute(tagImage(image, "figure", "A logo"), doc);
+    history.execute(tagImage(image, "Figure", "A logo"), doc);
     history.execute(
       new DeleteImageCommand({ pageIndex: 0, imageId: image.id }),
       doc,

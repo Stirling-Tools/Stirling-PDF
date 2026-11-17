@@ -5,10 +5,16 @@ import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Button } from "@editor/ui/Button";
 import { Checkbox } from "@editor/ui/Checkbox";
 import { Icon } from "@editor/ui/Icon";
+import { Select } from "@editor/ui/Select";
 import {
+  Field,
   Section,
   SectionLabel,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import {
+  DESCRIBABLE_TYPES,
+  type DescribableType,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   attentionFor,
   isActionable,
@@ -18,19 +24,21 @@ import {
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
- * The selected image's description or decorative mark, or why it cannot have
- * either, and a way on to the next image needing attention. `review` counts
- * this image too.
+ * The selected image's tag as a figure or formula and its description, or
+ * its decorative mark, or why it cannot have any, and a way on to the next
+ * image needing attention. `review` counts this image too.
  */
 export function ImageAccessibilitySection({
   accessibility,
   onSetDescription,
+  onSetType,
   onSetDecorative,
   review,
   onNext,
 }: {
   accessibility: ImageAccessibility;
   onSetDescription: (text: string) => void;
+  onSetType: (type: DescribableType) => void;
   onSetDecorative: (decorative: boolean) => void;
   review: ImageReview;
   onNext: () => void;
@@ -56,6 +64,9 @@ export function ImageAccessibilitySection({
           </Text>
         ) : (
           <>
+            {accessibility.kind === "describable" && (
+              <TypePicker type={accessibility.type} onSetType={onSetType} />
+            )}
             <Checkbox
               label={t(
                 "pdfTextEditor.inspector.accessibility.decorativeLabel",
@@ -81,10 +92,17 @@ export function ImageAccessibilitySection({
             />
             {accessibility.kind === "describable" && (
               <Textarea
-                label={t(
-                  "pdfTextEditor.inspector.accessibility.description",
-                  "Image description",
-                )}
+                label={
+                  accessibility.type === "Formula"
+                    ? t(
+                        "pdfTextEditor.inspector.accessibility.formulaDescription",
+                        "Formula description",
+                      )
+                    : t(
+                        "pdfTextEditor.inspector.accessibility.description",
+                        "Image description",
+                      )
+                }
                 value={accessibility.description ?? ""}
                 className={privateContentClassName}
                 onChange={(e) => onSetDescription(e.currentTarget.value)}
@@ -114,6 +132,50 @@ export function ImageAccessibilitySection({
       </Stack>
     </Section>
   );
+}
+
+/**
+ * Whether the image is a figure or a formula; an untagged one is given an
+ * element of the type picked.
+ */
+function TypePicker({
+  type,
+  onSetType,
+}: {
+  type: DescribableType | null;
+  onSetType: (type: DescribableType) => void;
+}) {
+  const { t } = useTranslation();
+  const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
+  return (
+    <Field label={label}>
+      <div data-testid="pdf-editor-image-tag-picker">
+        <Select
+          inputSize="sm"
+          options={DESCRIBABLE_TYPES.map((option) => ({
+            value: option,
+            label: typeName(t, option),
+          }))}
+          value={type}
+          placeholder={t(
+            "pdfTextEditor.inspector.accessibility.untaggedBadge",
+            "Not tagged",
+          )}
+          onChange={(value) => {
+            const picked = DESCRIBABLE_TYPES.find((option) => option === value);
+            if (picked) onSetType(picked);
+          }}
+          aria-label={label}
+        />
+      </div>
+    </Field>
+  );
+}
+
+function typeName(t: TFunction, type: DescribableType): string {
+  return type === "Formula"
+    ? t("pdfTextEditor.inspector.accessibility.tagName.formula", "Formula")
+    : t("pdfTextEditor.inspector.accessibility.tagName.figure", "Figure");
 }
 
 function blockedMessage(

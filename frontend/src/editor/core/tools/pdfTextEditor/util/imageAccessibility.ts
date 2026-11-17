@@ -1,5 +1,8 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { DescriptionBlocker } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type {
+  DescribableType,
+  DescriptionBlocker,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   ImageObjectSnapshot,
   PageSnapshot,
@@ -12,8 +15,8 @@ export type ImageAccessibility =
   | {
       kind: "describable";
       description: string | null;
-      /** False for an image no element owns yet: describing it adds one. */
-      tagged: boolean;
+      /** Null for an image no element owns yet: describing it adds a Figure. */
+      type: DescribableType | null;
       canBeDecorative: boolean;
     };
 
@@ -28,7 +31,7 @@ export function imageAccessibility(
     return {
       kind: "describable",
       description: null,
-      tagged: false,
+      type: null,
       canBeDecorative: true,
     };
   }
@@ -41,7 +44,7 @@ export function imageAccessibility(
   return {
     kind: "describable",
     description: structure.alt(image.mcid),
-    tagged: true,
+    type: structure.describableType(image.mcid),
     canBeDecorative:
       retaggable || structure.cannotMarkDecorative(image.mcid) === null,
   };
@@ -51,13 +54,18 @@ export function imageAccessibility(
 export type RetaggableTag =
   | { kind: "untagged" }
   | { kind: "artifact" }
-  | { kind: "figure"; mcid: number; alt: string | null };
+  | {
+      kind: "element";
+      type: DescribableType;
+      mcid: number;
+      alt: string | null;
+    };
 
 /**
  * The image's tag when TagImageCommand can change it: an image the page
  * itself draws, whose save can add an element, that is untagged, an
- * artifact, or a figure the session added. Null otherwise, for content the file's elements
- * own among the rest.
+ * artifact, or a figure or formula the session added. Null otherwise, for
+ * content the file's elements own among the rest.
  */
 export function retaggableTag(
   doc: EditorDocument,
@@ -69,9 +77,11 @@ export function retaggableTag(
   if (image.mcid === undefined) {
     return image.artifact ? { kind: "artifact" } : { kind: "untagged" };
   }
-  if (!structure.isAdded(image.mcid)) return null;
+  const type = structure.describableType(image.mcid);
+  if (!structure.isAdded(image.mcid) || !type) return null;
   return {
-    kind: "figure",
+    kind: "element",
+    type,
     mcid: image.mcid,
     alt: structure.alt(image.mcid),
   };
@@ -102,7 +112,7 @@ export function attentionFor(
   accessibility: ImageAccessibility,
 ): ImageAttention | null {
   if (accessibility.kind === "describable") {
-    if (!accessibility.tagged) return "untagged";
+    if (accessibility.type === null) return "untagged";
     return accessibility.description?.trim() ? null : "needs-description";
   }
   if (

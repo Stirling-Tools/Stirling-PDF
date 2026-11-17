@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack } from "@mantine/core";
+import { Box, Group, Stack, Textarea } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -15,7 +15,10 @@ import {
   FURNITURE,
   type Furniture,
 } from "@editor/tools/pdfTextEditor/model/artifactKind";
-import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  TEXT_BLOCK_TYPES,
+  type DescribableType,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   StructureRole,
   StructureType,
@@ -31,6 +34,7 @@ import {
 import type {
   InnerTagsControl,
   OtherPagesControl,
+  TextDescriptionControl,
   TextLanguageControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
@@ -40,7 +44,8 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 /**
  * What the selected text is tagged as and the language it is read in, with
  * pickers to change them: retagging its block, giving untagged text an
- * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, and
+ * element of its own, or making it an artifact. A formula or figure also
+ * takes a description. Beneath them, the tags marking parts of the text, and
  * pickers for characters selected in it. With several runs selected, the tag
  * they share and their language.
  */
@@ -50,12 +55,14 @@ export function TextAccessibilitySection({
   inner,
   language,
   otherPages,
+  description,
 }: {
   tag: TextTag | null;
   onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
   otherPages: OtherPagesControl | null;
+  description: TextDescriptionControl | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -65,6 +72,7 @@ export function TextAccessibilitySection({
       </SectionLabel>
       <Stack gap="xs">
         {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {description && <DescriptionField control={description} />}
         {otherPages && <OtherPagesButton control={otherPages} />}
         {language && <TextLanguageField control={language} />}
         {tag && (
@@ -175,6 +183,51 @@ function BlockTagPicker({
 
 function artifactValue(furniture: Furniture | null): string {
   return `${ARTIFACT_VALUE}${furniture ?? ""}`;
+}
+
+/** What screen readers read out in place of the formula or figure the text makes up. */
+function DescriptionField({ control }: { control: TextDescriptionControl }) {
+  const { t } = useTranslation();
+  const label = descriptionLabel(t, control.type);
+  return (
+    <Field label={label} hint={descriptionHint(t, control.type)}>
+      <Textarea
+        aria-label={label}
+        value={control.description ?? ""}
+        className={privateContentClassName}
+        onChange={(e) => control.onSet(e.currentTarget.value)}
+        autosize
+        minRows={2}
+        maxRows={6}
+        size="xs"
+        data-testid="pdf-editor-text-description"
+      />
+    </Field>
+  );
+}
+
+function descriptionLabel(t: TFunction, type: DescribableType): string {
+  return type === "Formula"
+    ? t(
+        "pdfTextEditor.inspector.accessibility.formulaDescription",
+        "Formula description",
+      )
+    : t(
+        "pdfTextEditor.inspector.accessibility.figureDescription",
+        "Figure description",
+      );
+}
+
+function descriptionHint(t: TFunction, type: DescribableType): string {
+  return type === "Formula"
+    ? t(
+        "pdfTextEditor.inspector.accessibility.formulaDescriptionInfo",
+        'Screen readers read this out in place of the formula. Say it as you would aloud, such as "x squared plus one".',
+      )
+    : t(
+        "pdfTextEditor.inspector.accessibility.figureDescriptionInfo",
+        "Screen readers read this out in place of the figure.",
+      );
 }
 
 /** Gives matching text on other pages the selected artifact's kind. */

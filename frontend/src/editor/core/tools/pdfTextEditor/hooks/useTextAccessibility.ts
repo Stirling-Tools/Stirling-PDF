@@ -3,7 +3,8 @@ import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
-import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
+import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
 import {
@@ -16,6 +17,7 @@ import {
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
@@ -69,6 +71,14 @@ export interface TextLanguageControl {
   /** The language the blocks share; undefined when they differ. */
   language: TextLanguage | undefined;
   onSet: (lang: string | null) => void;
+}
+
+/** The description of the formula or figure the selected text makes up, and a way to change it. */
+export interface TextDescriptionControl {
+  type: DescribableType;
+  description: string | null;
+  /** An empty string removes the description. */
+  onSet: (text: string) => void;
 }
 
 /**
@@ -148,6 +158,27 @@ export function useTextAccessibility(
       },
     };
   }, [store, state.pages, run, tag]);
+
+  const description = useMemo((): TextDescriptionControl | null => {
+    const doc = store.document;
+    const element = doc ? describedElement(doc, targets) : null;
+    if (!doc || !element) return null;
+    const { pageIndex, mcid } = element;
+    const structure = doc.structure(pageIndex);
+    return {
+      type: element.type,
+      description: structure.alt(mcid),
+      onSet: (text) =>
+        store.dispatch(
+          new SetAltTextCommand({
+            pageIndex,
+            mcid,
+            alt: text === "" ? null : text,
+          }),
+        ),
+    };
+    // state.pages: a description change republishes the pages, not the targets.
+  }, [store, targets, state.pages]);
 
   const activeInner = useMemo(
     () => inner.findIndex((t) => sameRange(t, selection.textRange)),
@@ -296,7 +327,46 @@ export function useTextAccessibility(
     // state.pages: a language change republishes the pages, not the targets.
   }, [store, languageTargets, state.pages]);
 
-  return { tag, setTag, inner: innerControl, language, otherPages };
+  return {
+    tag,
+    setTag,
+    inner: innerControl,
+    language,
+    otherPages,
+    description,
+  };
+}
+
+/**
+ * The figure or formula every selected run's text belongs to, addressed by
+ * one of its MCIDs; null when the runs do not all make up one that can take
+ * a description.
+ */
+function describedElement(
+  doc: EditorDocument,
+  targets: readonly { run: TextRunSnapshot; tag: TextTag }[],
+): { pageIndex: number; mcid: number; type: DescribableType } | null {
+  const [first, ...rest] = targets.map(({ run }) => run);
+  if (!first || first.mcid === undefined || first.inForm) return null;
+  const { pageIndex, mcid } = first;
+  const structure = doc.structure(pageIndex);
+  const type = structure.describableType(mcid);
+  if (
+    !type ||
+    structure.cannotDescribe(mcid) !== null ||
+    structure.decorative(mcid)
+  ) {
+    return null;
+  }
+  const element = structure.element(mcid);
+  const sameElement = rest.every(
+    (run) =>
+      run.pageIndex === pageIndex &&
+      run.mcid !== undefined &&
+      !run.inForm &&
+      structure.element(run.mcid) === element,
+  );
+  return sameElement ? { pageIndex, mcid, type } : null;
 }
 
 /**
@@ -392,7 +462,7 @@ function typeCommand(
   const { pageIndex, mcid } = run;
   if (tag.kind === "tagged") {
     if (tag.cannotRetag !== null || mcid === undefined) return null;
-    return new RetagTextCommand({ pageIndex, mcid, type });
+    return new RetagBlockCommand({ pageIndex, mcid, type });
   }
   if (tag.kind === "untagged" || tag.kind === "artifact") {
     if (!tag.taggable) return null;
@@ -403,7 +473,7 @@ function typeCommand(
     }
     return new CompositeCommand([
       new SetDecorativeCommand({ pageIndex, mcid, decorative: false }),
-      new RetagTextCommand({ pageIndex, mcid, type }),
+      new RetagBlockCommand({ pageIndex, mcid, type }),
     ]);
   }
   return null;

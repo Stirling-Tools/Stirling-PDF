@@ -12,6 +12,7 @@ function renderSection(
   {
     review = { needsDescription: 0, untagged: 0, untaggable: 0 },
     onSetDescription = vi.fn(),
+    onSetType = vi.fn(),
     onSetDecorative = vi.fn(),
     onNext = vi.fn(),
   } = {},
@@ -21,13 +22,14 @@ function renderSection(
       <ImageAccessibilitySection
         accessibility={accessibility}
         onSetDescription={onSetDescription}
+        onSetType={onSetType}
         onSetDecorative={onSetDecorative}
         review={review}
         onNext={onNext}
       />
     </MantineProvider>,
   );
-  return { onSetDescription, onSetDecorative, onNext };
+  return { onSetDescription, onSetType, onSetDecorative, onNext };
 }
 
 const KEY = "pdfTextEditor.inspector.accessibility";
@@ -41,13 +43,13 @@ const describable = (
 ): ImageAccessibility => ({
   kind: "describable",
   description,
-  tagged: true,
+  type: "Figure",
   canBeDecorative,
 });
 const taggable: ImageAccessibility = {
   kind: "describable",
   description: null,
-  tagged: false,
+  type: null,
   canBeDecorative: true,
 };
 const untagged: ImageAccessibility = {
@@ -203,4 +205,29 @@ describe("ImageAccessibilitySection", () => {
       expect(screen.queryByTestId(NEXT) !== null).toBe(offered);
     },
   );
+  it("tags an image as a formula and names its description so", () => {
+    const { onSetType } = renderSection({
+      kind: "describable",
+      description: "x squared",
+      type: "Formula",
+      canBeDecorative: true,
+    });
+    expect(screen.getByLabelText(`${KEY}.formulaDescription`)).toHaveValue(
+      "x squared",
+    );
+    const picker = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(picker).toHaveValue(`${KEY}.tagName.formula`);
+    fireEvent.click(picker);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.figure`));
+    expect(onSetType).toHaveBeenCalledWith("Figure");
+  });
+
+  it("offers an untagged image both types", () => {
+    const { onSetType } = renderSection(taggable);
+    const picker = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(picker).toHaveValue("");
+    fireEvent.click(picker);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.formula`));
+    expect(onSetType).toHaveBeenCalledWith("Formula");
+  });
 });

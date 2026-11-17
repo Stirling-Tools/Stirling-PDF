@@ -122,10 +122,18 @@ export interface StructureElementEdit {
  * Types whose /Alt stands in for the content. On any other element it would
  * replace text a reader speaks, so a description there is refused.
  */
-const DESCRIBABLE_TYPES: ReadonlySet<StructureType> = new Set<StructureType>([
+export const DESCRIBABLE_TYPES = [
   "Figure",
   "Formula",
-]);
+] as const satisfies readonly StructureType[];
+
+export type DescribableType = (typeof DESCRIBABLE_TYPES)[number];
+
+export function isDescribableType(
+  type: StructureType | null,
+): type is DescribableType {
+  return DESCRIBABLE_TYPES.some((describable) => describable === type);
+}
 
 /** Why the save cannot write descriptions for a page. */
 export type ReadOnlyReason = "encrypted" | "unreadable";
@@ -156,6 +164,7 @@ export const TEXT_BLOCK_TYPES = [
   "Quote",
   "Note",
   "Code",
+  "Formula",
 ] as const satisfies readonly StructureType[];
 
 /**
@@ -380,10 +389,23 @@ export class PageStructure {
     const el = this.element(mcid);
     if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    if (el.type === null || !DESCRIBABLE_TYPES.has(el.type)) {
-      return "not-figure";
-    }
-    return null;
+    return isDescribableType(this.sessionType(el)) ? null : "not-figure";
+  }
+
+  /**
+   * The figure or formula type of the element owning `mcid`, as the session
+   * has it; null when it is neither.
+   */
+  describableType(mcid: number): DescribableType | null {
+    const el = this.element(mcid);
+    const type = el ? this.sessionType(el) : null;
+    return isDescribableType(type) ? type : null;
+  }
+
+  /** The element's type with the session's retag of it as a block applied. */
+  private sessionType(el: StructureElement): StructureType | null {
+    if (el.key !== el.block.key) return el.type;
+    return this.retaggedAs(el.key) ?? el.type;
   }
 
   /**
@@ -395,8 +417,9 @@ export class PageStructure {
     const el = this.element(mcid);
     if (!el) return "untagged";
     if (this.readOnly) return this.readOnly;
-    const describable = el.type !== null && DESCRIBABLE_TYPES.has(el.type);
-    if (!describable && !this.isFileTextBlock(el)) return "not-content";
+    if (!isDescribableType(el.type) && !this.isFileTextBlock(el)) {
+      return "not-content";
+    }
     return el.onlyMarkedContent && !this.hasCutsFrom(el)
       ? null
       : "mixed-content";
@@ -449,6 +472,16 @@ export class PageStructure {
       decorative: edit?.decorative ?? false,
       ...(edit?.furniture && { furniture: edit.furniture }),
     });
+  }
+
+  /**
+   * Remove the description, the file's own included, keeping any decorative
+   * mark. Leaves no edit when the file has no description to remove.
+   */
+  clearAlt(mcid: number): void {
+    const fileAlt = this.element(mcid)?.alt ?? null;
+    if (fileAlt === null && !this.decorative(mcid)) this.setEdit(mcid, null);
+    else this.setAlt(mcid, null);
   }
 
   /**

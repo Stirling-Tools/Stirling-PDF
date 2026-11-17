@@ -7,8 +7,11 @@ import {
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   PageStructure,
+  isDescribableType,
   isInlineType,
+  type DescriptionBlocker,
   type ReadOnlyReason,
+  type RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   effectiveLanguage,
@@ -386,13 +389,30 @@ export class EditorDocument {
   }
 
   /**
-   * Retag the block the text `mcid` marks belongs to as `type`. Null, or the
-   * type it has in the file, drops the change. Throws when cannotRetag
+   * Why the block `mcid` marks cannot be retagged as `type`, or null when it
+   * can: a block of text as any type, and a figure or formula as either,
+   * since only its /S changes and it may hold content other than text.
+   */
+  cannotRetagAs(
+    pageIndex: number,
+    mcid: number,
+    type: StructureType | null,
+  ): RetagBlocker | DescriptionBlocker | null {
+    const structure = this.structure(pageIndex);
+    if (isDescribableType(type) && structure.cannotDescribe(mcid) === null) {
+      return null;
+    }
+    return structure.cannotRetag(mcid);
+  }
+
+  /**
+   * Retag the block the content `mcid` marks belongs to as `type`. Null, or
+   * the type it has in the file, drops the change. Throws when cannotRetagAs
    * refuses it: a retag the save cannot write would fail every later save.
    */
   setRetag(pageIndex: number, mcid: number, type: StructureType | null): void {
     const structure = this.structure(pageIndex);
-    const blocker = structure.cannotRetag(mcid);
+    const blocker = this.cannotRetagAs(pageIndex, mcid, type);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
     const block = structure.element(mcid)!.block;
     // An added element is not in the file yet: its type is just changed.
