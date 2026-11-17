@@ -46,6 +46,7 @@ exampleYmlFiles/stirling/
 /testing/compose/multinode/.active-topology
 /testing/compose/multinode/regression-report/
 /.test-state/
+/.test-state-*.exit
 SwaggerDoc.json
 
 # Runtime storage for uploaded files and user data (not Java source code)

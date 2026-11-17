@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { LineGrouper } from "@editor/tools/pdfTextEditor/pdfium/LineGrouper";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 
 let ptr = 5000;
 function mkRun(opts: {
@@ -167,5 +168,60 @@ describe("LineGrouper inter-run space synthesis", () => {
       ),
     );
     expect(text).toBe("Water");
+  });
+});
+
+describe("LineGrouper text layers", () => {
+  it("keeps visible text out of a line of invisible OCR words", () => {
+    const [typed, ...ocr] = lineOf(
+      [
+        { text: "Receipt", width: 35, gapAfter: 3.2 },
+        { text: "4471", width: 20, gapAfter: 3.2 },
+        { text: "for", width: 14 },
+      ],
+      10,
+    );
+    for (const run of ocr) run.renderMode = 3;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([typed, ...ocr]);
+    page.loaded = true;
+    const groups = LineGrouper.apply(page);
+    expect(
+      groups.map((g) => [g.representative.text, g.representative.renderMode]),
+    ).toEqual([
+      ["Receipt", 0],
+      ["4471 for", 3],
+    ]);
+  });
+});
+
+describe("LineGrouper text layers", () => {
+  it("keeps a whole line in each layer when OCR words sit over the printed ones", () => {
+    const printed = lineOf(
+      [
+        { text: "Hello", width: 25, gapAfter: 3.2 },
+        { text: "world", width: 27 },
+      ],
+      10,
+    );
+    const ocr = printed.map((r) => {
+      const copy = mkRun({
+        x: r.bounds.x + 1,
+        width: r.bounds.width,
+        f: 500,
+        fs: 10,
+        text: r.text,
+      });
+      copy.renderMode = RENDER_MODE_INVISIBLE;
+      return copy;
+    });
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([...printed, ...ocr]);
+    page.loaded = true;
+    const groups = LineGrouper.apply(page);
+    expect(groups.map((g) => g.representative.text).sort()).toEqual([
+      "Hello world",
+      "Hello world",
+    ]);
   });
 });

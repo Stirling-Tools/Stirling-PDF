@@ -38,7 +38,8 @@ export function decodeTextString(token: string): string | null {
   return String.fromCharCode(...bytes.map(fromPdfDocEncoding));
 }
 
-function stringBytes(token: string): number[] | null {
+/** The raw bytes of a `(literal)` or `<hex>` string token; null when it is neither or is malformed. */
+export function stringBytes(token: string): number[] | null {
   if (token.startsWith("(")) return literalBytes(token);
   if (token.startsWith("<") && !token.startsWith("<<")) return hexBytes(token);
   return null;

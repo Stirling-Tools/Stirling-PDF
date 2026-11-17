@@ -278,8 +278,7 @@ public class SigningSessionController {
             }
             WorkflowSession session = workflowSessionService.getSessionForOwner(sessionId, owner);
             return WebResponseUtils.bytesToWebResponse(
-                    signedPdf,
-                    GeneralUtils.generateFilename(session.getDocumentName(), "_shared_signed.pdf"));
+                    signedPdf, GeneralUtils.generateFilename(session.getDocumentName(), ".pdf"));
         } catch (Exception e) {
             log.error("Error fetching signed PDF for session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

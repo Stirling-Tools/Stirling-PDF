@@ -3,6 +3,10 @@ import type {
   CharcodeResolveResult,
   ResolverContext,
 } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
+import {
+  readTableDirectory,
+  SFNT_HEADER_SIZE,
+} from "@editor/tools/pdfTextEditor/util/sfnt";
 import { sha256Hex } from "@editor/tools/pdfTextEditor/util/sha256";
 import {
   SCRATCH,
@@ -159,7 +163,7 @@ export function parseTrueTypeCmap(
   bytes: Uint8Array,
 ): Map<number, number> | null {
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  if (bytes.length < 12) return null;
+  if (bytes.length < SFNT_HEADER_SIZE) return null;
 
   // sfnt header: first 4 bytes are the scaler type
   // (0x00010000 for TrueType, 'OTTO' for OpenType/CFF, 'true', 'typ1').
@@ -171,19 +175,7 @@ export function parseTrueTypeCmap(
     scaler === 0x74797031; // 'typ1'
   if (!isOpenTypeCff && !isTrueType) return null;
 
-  const numTables = dv.getUint16(4);
-  const tableRecordStart = 12;
-  // Find the 'cmap' table record.
-  let cmapOffset = 0;
-  for (let i = 0; i < numTables; i++) {
-    const recordOffset = tableRecordStart + i * 16;
-    if (recordOffset + 16 > bytes.length) return null;
-    const tag = dv.getUint32(recordOffset);
-    if (tag === CMAP_TABLE_TAG) {
-      cmapOffset = dv.getUint32(recordOffset + 8);
-      break;
-    }
-  }
+  const cmapOffset = readTableDirectory(dv)?.get("cmap")?.offset ?? 0;
   if (cmapOffset === 0 || cmapOffset + 4 > bytes.length) return null;
 
   const numSubtables = dv.getUint16(cmapOffset + 2);
@@ -277,9 +269,6 @@ function parseFormat4(
   }
   return out;
 }
-
-/** Big-endian "cmap" as an sfnt table tag. */
-const CMAP_TABLE_TAG = 0x636d6170;
 
 // Hard cap on entries built from any one cmap.
 const MAX_CMAP_ENTRIES = 200_000;
