@@ -3,10 +3,7 @@ import path from "path";
 // Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
 // the fixture generators use.
 import { PDFDocument } from "@cantoo/pdf-lib";
-import {
-  stashCurrentDocument,
-  waitForReopenedPage,
-} from "@editor/tests/stubbed/saveHelpers";
+import { reopenSavedBytes } from "@editor/tests/stubbed/saveHelpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -348,11 +345,7 @@ test.describe("PDF text editor - save", () => {
 
     // Push the saved bytes back into the dropzone as a new file. setInputFiles
     // accepts an in-memory payload.
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
+    await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
 
     // The edited text must be present somewhere in page 0's runs.
     const allText = await page
@@ -438,14 +431,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
+    await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
   }
 
   test("NBSP typed into a single-line run is normalized to a regular space in the model", async ({
@@ -2177,15 +2163,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const buf = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: buf,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(1500);
+    await reopenSavedBytes(page, buf, "round-trip.pdf");
 
     // Scan EVERY run on EVERY page.
     const allText = await page.evaluate(() => {
@@ -2860,18 +2838,7 @@ test.describe("PDF text editor - multi-page", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    // Remember the document we are replacing: after the re-upload the OLD
-    // document's page-2 runs are still mounted.
-    await stashCurrentDocument(page);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(page.getByTestId("pdf-editor-page-2")).toBeVisible({
-      timeout: 30_000,
-    });
-    await waitForReopenedPage(page, 2);
+    await reopenSavedBytes(page, savedBytes, "round-trip.pdf", 2);
 
     // Re-read the page-2 run text through PdfiumTextReader + LineGrouper.
     const page2Text = await page.evaluate(() => {
@@ -3078,14 +3045,7 @@ test.describe("PDF text editor - bold/italic", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
+    await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
 
     const reopenedRuns = () =>
       page.evaluate(() => {
@@ -3425,14 +3385,7 @@ test.describe("PDF text editor - lazy page loading", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "big-round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
+    await reopenSavedBytes(page, savedBytes, "big-round-trip.pdf");
     const reopenedText = await page
       .waitForFunction(
         () => {
@@ -4609,15 +4562,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, savedBytes, "round.pdf");
     const reopenedRuns = await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -4931,15 +4876,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, savedBytes, "round.pdf");
   }
 
   test("save+reopen three times in a row (with one edit each) doesn't compound ghost objects", async ({
@@ -5088,15 +5025,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, savedBytes, "round.pdf");
     const allText = await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -5267,15 +5196,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, savedBytes, "round.pdf");
   }
 
   // Bulk insertText paths
@@ -5694,15 +5615,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "round.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
-    await expect(
-      page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await reopenSavedBytes(page, savedBytes, "round.pdf");
     const xRuns = await page.evaluate(() => {
       const store = (
         window as unknown as {
