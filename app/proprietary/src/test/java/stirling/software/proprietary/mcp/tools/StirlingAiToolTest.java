@@ -60,7 +60,8 @@ class StirlingAiToolTest {
     }
 
     @Test
-    void call_whenEngineReturnsClientError_returnsToolErrorWithStatusAndDetail() throws Exception {
+    void call_whenEngineReturnsClientError_returnsToolErrorWithStatusAndSafeMessage()
+            throws Exception {
         when(engineClient.post(eq("/api/v1/pdf/questions"), any(), any()))
                 .thenThrow(
                         new ResponseStatusException(
@@ -78,7 +79,49 @@ class StirlingAiToolTest {
         String errorText = result.get("content").get(0).get("text").asText();
         assertTrue(errorText.contains("404"));
         assertTrue(errorText.contains("pdf-question-answer"));
-        assertTrue(errorText.contains("Not Found"));
+        assertTrue(errorText.contains("does not expose this capability"));
+        // raw engine detail must never reach the MCP caller
+        assertFalse(errorText.contains("AI engine returned client error"));
+        assertFalse(errorText.contains("\"detail\""));
+    }
+
+    @Test
+    void call_whenEngineReturnsServerError_doesNotLeakEngineDetail() throws Exception {
+        when(engineClient.post(eq("/api/v1/pdf/questions"), any(), any()))
+                .thenThrow(
+                        new ResponseStatusException(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "AI engine unreachable: internal-engine-host.local"));
+
+        ObjectNode args = mapper.createObjectNode();
+        args.put("operation", "pdf-question-answer");
+
+        McpCallContext context = new McpCallContext("user-1", Set.of("mcp.tools.read"), false);
+        ObjectNode result = tool.call(args, context);
+
+        assertTrue(result.get("isError").asBoolean());
+        String errorText = result.get("content").get(0).get("text").asText();
+        assertTrue(errorText.contains("500"));
+        assertTrue(errorText.contains("internal error"));
+        assertFalse(errorText.contains("internal-engine-host.local"));
+    }
+
+    @Test
+    void call_whenEngineRejectsAuth_returnsNotAuthorizedMessage() throws Exception {
+        when(engineClient.post(eq("/api/v1/pdf/questions"), any(), any()))
+                .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "bad api key"));
+
+        ObjectNode args = mapper.createObjectNode();
+        args.put("operation", "pdf-question-answer");
+
+        McpCallContext context = new McpCallContext("user-1", Set.of("mcp.tools.read"), false);
+        ObjectNode result = tool.call(args, context);
+
+        assertTrue(result.get("isError").asBoolean());
+        String errorText = result.get("content").get(0).get("text").asText();
+        assertTrue(errorText.contains("401"));
+        assertTrue(errorText.contains("not authorized"));
+        assertFalse(errorText.contains("bad api key"));
     }
 
     @Test
