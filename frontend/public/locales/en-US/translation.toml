@@ -14086,7 +14086,6 @@ toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
-endpointUnavailableClickable = "Not available in this mode. Click to sign in."
 filesLoading = "Files are still loading, please wait."
 filesLoadingProgress = "{{loaded}} / {{total}} files loading..."
 invalidParams = "Fill in the required settings."

@@ -255,13 +255,25 @@ describe("operationRouter — Office Convert needs an account", () => {
   test("still runs free conversions locally in local mode", async () => {
     vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
     await expect(
-      operationRouter.getBaseUrl("/api/v1/convert/pdf/text"),
+      operationRouter.getBaseUrl("/api/v1/convert/pdf/img"),
     ).resolves.toBe("http://localhost:62994");
     await expect(
       operationRouter.getBaseUrl("/api/v1/convert/pdf/csv"),
     ).resolves.toBe("http://localhost:62994");
     expect(dispatchEvent).not.toHaveBeenCalled();
   });
+
+  test.each(["/api/v1/convert/pdf/text", "/api/v1/convert/pdf/xlsx"])(
+    "needs an account for %s in local mode",
+    async (path) => {
+      vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue(
+        "local",
+      );
+      await expect(operationRouter.getBaseUrl(path)).rejects.toThrow(
+        /requires an account/,
+      );
+    },
+  );
 
   test("badges Office Convert tools as needing sign-in only in local mode", async () => {
     vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");

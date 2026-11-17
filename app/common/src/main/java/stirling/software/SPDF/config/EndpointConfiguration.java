@@ -70,6 +70,11 @@ public class EndpointConfiguration {
                     "OpenCV",
                     List.of("extract-image-scans"));
 
+    private static final Map<String, Set<String>> RETIRED_ALTERNATIVES =
+            Map.of(
+                    "file-to-pdf", Set.of("LibreOffice", "Unoconvert"),
+                    "pdf-to-html", Set.of("LibreOffice", "Pdftohtml"));
+
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
@@ -626,20 +631,16 @@ public class EndpointConfiguration {
             }
 
             if (groupsToRemove != null) {
+                Set<String> retired = new HashSet<>();
                 for (String group : groupsToRemove) {
                     String name = group.trim();
-                    List<String> retiredEndpoints = RETIRED_DEPENDENCY_GROUPS.get(name);
-                    if (retiredEndpoints != null) {
-                        log.info(
-                                "groupsToRemove entry '{}' names a dependency Stirling PDF no"
-                                        + " longer uses; disabling the endpoints it covered: {}",
-                                name,
-                                String.join(", ", retiredEndpoints));
-                        retiredEndpoints.forEach(this::disableEndpoint);
+                    if (RETIRED_DEPENDENCY_GROUPS.containsKey(name)) {
+                        retired.add(name);
                     } else {
                         disableGroup(name);
                     }
                 }
+                disableRetiredDependencyEndpoints(retired);
             }
         }
 
@@ -654,6 +655,26 @@ public class EndpointConfiguration {
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
+        }
+    }
+
+    private void disableRetiredDependencyEndpoints(Set<String> retired) {
+        for (String group : retired) {
+            List<String> disabled =
+                    RETIRED_DEPENDENCY_GROUPS.get(group).stream()
+                            .filter(
+                                    endpoint ->
+                                            retired.containsAll(
+                                                    RETIRED_ALTERNATIVES.getOrDefault(
+                                                            endpoint, Set.of(group))))
+                            .toList();
+            log.info(
+                    "groupsToRemove entry '{}' names a dependency Stirling PDF no longer uses;"
+                            + " disabling the endpoints it covered with no remaining"
+                            + " alternative: {}",
+                    group,
+                    disabled.isEmpty() ? "none" : String.join(", ", disabled));
+            disabled.forEach(this::disableEndpoint);
         }
     }
 

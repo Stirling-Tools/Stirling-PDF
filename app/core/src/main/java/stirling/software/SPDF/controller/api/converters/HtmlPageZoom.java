@@ -7,9 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -64,10 +64,38 @@ final class HtmlPageZoom {
     }
 
     static byte[] layOutPage(byte[] html, float zoom) {
-        byte[] style = pageStyle(zoom).getBytes(bomCharset(html));
-        byte[] out = Arrays.copyOf(html, html.length + style.length);
-        System.arraycopy(style, 0, out, html.length, style.length);
+        Charset charset = bomCharset(html);
+        byte[] style = pageStyle(zoom).getBytes(charset);
+        int at = closingHtmlTag(html, charset);
+        byte[] out = new byte[html.length + style.length];
+        System.arraycopy(html, 0, out, 0, at);
+        System.arraycopy(style, 0, out, at, style.length);
+        System.arraycopy(html, at, out, at + style.length, html.length - at);
         return out;
+    }
+
+    private static int closingHtmlTag(byte[] html, Charset charset) {
+        int found = html.length;
+        for (String tag : List.of("</html", "</HTML", "</Html")) {
+            int at = lastIndexOf(html, tag.getBytes(charset));
+            if (at >= 0 && (found == html.length || at > found)) {
+                found = at;
+            }
+        }
+        return found;
+    }
+
+    private static int lastIndexOf(byte[] haystack, byte[] needle) {
+        outer:
+        for (int i = haystack.length - needle.length; i >= 0; i--) {
+            for (int j = 0; j < needle.length; j++) {
+                if (haystack[i + j] != needle[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
     }
 
     static byte[] layOutPackage(byte[] zip, float zoom) throws IOException {
@@ -195,7 +223,7 @@ final class HtmlPageZoom {
 
     private static boolean isHtml(String name) {
         String lower = name.toLowerCase(Locale.ROOT);
-        return lower.endsWith(".html") || lower.endsWith(".htm");
+        return lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".xhtml");
     }
 
     private static byte[] readLimited(InputStream in, long remaining) throws IOException {

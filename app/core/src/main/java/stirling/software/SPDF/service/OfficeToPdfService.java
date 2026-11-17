@@ -36,7 +36,7 @@ public class OfficeToPdfService {
         try (TempFile in = new TempFile(tempFileManager, packaged ? ".zip" : ".html");
                 TempFile out = new TempFile(tempFileManager, ".pdf")) {
             Files.write(in.getPath(), html);
-            convert(in.getPath(), out.getPath(), options().allowPackages(packaged));
+            convert(in.getPath(), out.getPath(), options().allowPackages(packaged), "the document");
             return Files.readAllBytes(out.getPath());
         }
     }
@@ -82,6 +82,11 @@ public class OfficeToPdfService {
 
     /** Rejects incomplete or page-limited output. */
     public void convert(Path in, Path out, OfficeToPdf.Options options) throws IOException {
+        convert(in, out, options, in.getFileName().toString());
+    }
+
+    private void convert(Path in, Path out, OfficeToPdf.Options options, String name)
+            throws IOException {
         OfficeToPdf.Result result = OfficeToPdf.convert(in, out, options);
         log.debug(
                 "Converted {} to PDF in process: {} pages, {} warnings",
@@ -91,9 +96,9 @@ public class OfficeToPdfService {
         if (result.pageLimitReached()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.conversionPageLimit",
-                    "{0} would be longer than {1} pages, the most one conversion can produce."
-                            + " Split it into smaller files and convert each one.",
-                    in.getFileName(),
+                    "Converting {0} would produce more than {1} pages, the most one conversion"
+                            + " can produce. Split it into smaller files and convert each one.",
+                    name,
                     options.maxPages());
         }
         if (result.truncated()) {
@@ -105,7 +110,7 @@ public class OfficeToPdfService {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.conversionIncomplete",
                     "Only part of {0} could be converted. {1}",
-                    in.getFileName(),
+                    name,
                     reasons);
         }
     }

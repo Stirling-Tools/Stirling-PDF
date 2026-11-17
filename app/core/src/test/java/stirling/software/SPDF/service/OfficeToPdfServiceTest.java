@@ -59,7 +59,7 @@ class OfficeToPdfServiceTest {
                             () -> service.convert(input, output, options));
 
             assertThat(failure.getMessage())
-                    .contains("document.docx would be longer than 50 pages");
+                    .contains("Converting document.docx would produce more than 50 pages");
         }
     }
 

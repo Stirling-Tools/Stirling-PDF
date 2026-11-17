@@ -208,6 +208,52 @@ class OfficeConvertIntegrationTest {
         }
     }
 
+    @Test
+    void officeHtmlZoomAppliesToAnXhtmlPageInAZip() throws Exception {
+        byte[] xhtml =
+                ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                                + "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>t</title>"
+                                + "</head><body><p>"
+                                + TEXT
+                                + "</p></body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+        HTMLToPdfRequest request = new HTMLToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput", "page.zip", "application/zip", zip("index.xhtml", xhtml)));
+        request.setZoom(2f);
+        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
+
+        byte[] pdf = body(controller.HtmlToPdf(request));
+
+        assertPdfText(pdf);
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            var box = document.getPage(0).getMediaBox();
+            assertThat(box.getWidth()).isCloseTo(595.3f, within(1f));
+            assertThat(box.getHeight()).isCloseTo(841.9f, within(1f));
+        }
+    }
+
+    @Test
+    void htmlLimitErrorsNameTheDocumentNotATempFile() throws Exception {
+        try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
+            engine.when(
+                            () ->
+                                    OfficeToPdf.convert(
+                                            any(Path.class),
+                                            any(Path.class),
+                                            any(OfficeToPdf.Options.class)))
+                    .thenReturn(new OfficeToPdf.Result(1, false, List.of(), true));
+
+            assertThatThrownBy(
+                            () ->
+                                    toPdf.convertHtml(
+                                            "<p>x</p>".getBytes(StandardCharsets.UTF_8), false))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageStartingWith("Converting the document would produce more than");
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(floats = {0.05f, 9f})
     void officeHtmlRejectsZoomOutsideTheSupportedRange(float zoom) {
@@ -229,7 +275,7 @@ class OfficeConvertIntegrationTest {
     @ParameterizedTest
     @CsvSource({
         "true,false,400,Only part of book.epub could be converted",
-        "false,true,400,book.epub would be longer than"
+        "false,true,400,Converting book.epub would produce more than"
     })
     void ebookIncompleteOutputReturnsTheReasonToTheClient(
             boolean truncated, boolean pageLimited, int status, String reason) throws Exception {

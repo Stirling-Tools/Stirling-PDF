@@ -3,6 +3,8 @@ const SIGN_IN_REQUIRED_ENDPOINTS: ReadonlySet<string> = new Set([
   "pdf-to-word",
   "pdf-to-presentation",
   "pdf-to-rtf",
+  "pdf-to-text",
+  "pdf-to-xlsx",
   "pdf-to-html",
   "pdf-to-xml",
   "pdf-to-markdown",

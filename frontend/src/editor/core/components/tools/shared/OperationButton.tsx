@@ -75,15 +75,10 @@ const OperationButton = ({
   const combinedDisabled = effectiveDisabled || blockedByBackend;
 
   const reasonTooltip: Record<NonNullable<ExecuteDisabledReason>, string> = {
-    endpointUnavailable: onEndpointUnavailableClick
-      ? t(
-          "tool.endpointUnavailableClickable",
-          "Not available in this mode. Click to sign in.",
-        )
-      : t(
-          "tool.endpointUnavailable",
-          "This tool is unavailable on your server.",
-        ),
+    endpointUnavailable: t(
+      "tool.endpointUnavailable",
+      "This tool is unavailable on your server.",
+    ),
     filesLoading: t(
       "tool.filesLoading",
       "Files are still loading, please wait.",
@@ -171,24 +166,9 @@ const OperationButton = ({
   if (tooltipLabel) {
     // Disabled buttons suppress pointer events at the browser level, so the Tooltip's
     // cloneElement handlers would never fire. Wrap in a Box to capture them instead.
-    // When endpointUnavailable and a click handler is provided (desktop), the Box
-    // also acts as the click target to open the sign-in / connect modal.
-    const boxClickHandler =
-      disabledReason === "endpointUnavailable"
-        ? onEndpointUnavailableClick
-        : undefined;
     return (
       <Tooltip content={tooltipLabel} position="top" arrow>
-        <Box
-          mr="md"
-          ml="md"
-          mt={mt}
-          style={{
-            display: "block",
-            cursor: boxClickHandler ? "pointer" : undefined,
-          }}
-          onClick={boxClickHandler}
-        >
+        <Box mr="md" ml="md" mt={mt} style={{ display: "block" }}>
           {button}
         </Box>
       </Tooltip>

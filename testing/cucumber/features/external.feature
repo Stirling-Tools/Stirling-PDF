@@ -43,7 +43,7 @@ Feature: API Validation
         When I send the API request to the endpoint "/api/v1/misc/extract-image-scans"
         Then the response content type should be "application/octet-stream"
         And the response file should have extension ".zip"
-        And the response ZIP should contain 2 files
+        And the response ZIP should contain 3 files
         And the response file should have size greater than 0
         And the response status code should be 200
 

@@ -56,6 +56,18 @@ class HtmlPageZoomTest {
         assertThat(result).startsWith("﻿<html>").contains("@page{size:105.000mm 148.500mm}");
     }
 
+    @Test
+    void styleGoesInsideTheDocumentBeforeTheClosingTag() {
+        byte[] html = "<HTML><body>x</body></HTML>\n".getBytes(StandardCharsets.UTF_8);
+
+        String result = new String(HtmlPageZoom.layOutPage(html, 2f), StandardCharsets.UTF_8);
+
+        assertThat(result)
+                .isEqualTo(
+                        "<HTML><body>x</body><style>@page{size:105.000mm 148.500mm}</style>"
+                                + "</HTML>\n");
+    }
+
     private static PDPageXYZDestination destination(PDPage page, int left, int top) {
         PDPageXYZDestination destination = new PDPageXYZDestination();
         destination.setPage(page);
