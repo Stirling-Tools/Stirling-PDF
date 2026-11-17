@@ -525,6 +525,7 @@ keep = "Orijinal Boyutu Koru"
 label = "Hedef Sayfa Boyutu"
 legal = "Legal kâğıt"
 letter = "Letter kâğıt"
+custom = "Özel"
 
 [adjustPageScale.scaleFactor]
 label = "Ölçek Faktörü"
@@ -549,6 +550,11 @@ bullet2 = "0.5 = Yarı boyut (yüzde 50 daha küçük)"
 bullet3 = "2.0 = İki katı (yüzde 200 daha büyük, kırpılabilir)"
 text = "İçeriğin sayfada ne kadar büyük veya küçük görüneceğini kontrol eder. İçerik ölçeklendirilir ve ortalanır - ölçeklenen içerik sayfa boyutundan büyükse kırpılabilir."
 title = "Ölçek Faktörü"
+
+[adjustPageScale.customSize]
+height = "Yükseklik"
+unit = "Birim"
+width = "Genişlik"
 
 [admin]
 close = "Kapat"
@@ -1365,6 +1371,10 @@ label = "Güncelleme Bildirimlerini Göster"
 description = "Güncelleme bildirimlerini yalnızca yönetici kullanıcılarla sınırla"
 label = "Güncellemeleri Yalnızca Yöneticilere Göster"
 
+[admin.settings.general.enableFeedback]
+description = "Kullanıcıların Stirling ekibine geri bildirim göndermesine izin ver"
+label = "Geri Bildirimi Etkinleştir"
+
 [admin.settings.legal]
 description = "Yasal belgeler, oturum açma sözleşmesi, analytics ve arama görünürlüğü."
 documentsDescription = "Kullanıcılara şartlar, gizlilik, çerezler ve künye için gösterilen bağlantılar."
@@ -1786,6 +1796,10 @@ description = "Uygulamanın iframe'lere gömülüp gömülemeyeceğini denetler"
 disabled = "Devre dışı (X-Frame-Options üst bilgisi yok)"
 label = "X-Frame-Options"
 sameorigin = "Aynı Kaynak (Aynı etki alanından çerçevelemeye izin verir)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "İmzalı PDF'ler yine görüntülenebilir, yazdırılabilir, dönüştürülebilir veya yeniden imzalanabilir, ancak uygulamada değiştirilemez. API çağrıları ve sunucu ardışık düzenleri etkilenmez."
+label = "İmzalı PDF'lerde değişikliği engelle"
 
 [admin.settings.storage]
 description = "Sunucu depolama ve paylaşım seçeneklerini kontrol edin."
@@ -2970,6 +2984,7 @@ noTeam = "Ekip Yok"
 noUsers = "Başka kullanıcı bulunamadı."
 placeholder = "Kullanıcı seçin..."
 you = "{{name}} (Siz)"
+signInRequired = "Başkalarından imza istemek için oturum açın."
 
 [certSign.device]
 stepTitle = "Bu cihaz"
@@ -3796,6 +3811,10 @@ unlinkedTitle = "Bağımsız kaydırma ve sürükleme etkin"
 
 [compare.too.dissimilar]
 message = "Bu belgeler oldukça farklı görünüyor. Zaman kazanmak için karşılaştırma durduruldu."
+
+[compare.mode]
+pixel = "Piksel Karşılaştırması"
+text = "Metin Karşılaştırması"
 
 [compress]
 desc = "PDF'leri sıkıştırarak dosya boyutunu küçültün."
@@ -4832,6 +4851,17 @@ illegalCharacters = "Bir dosya adı \\ / : * ? \" < > | içeremez"
 label = "Dosya adı"
 save = "Yeniden adlandır"
 title = "Dosyayı yeniden adlandır"
+
+[fileSidebar.clearRecents]
+body_one = "1 dosya son kullanılanlardan temizlensin mi? Bu işlem geri alınamaz."
+body_other = "{{count}} dosya son kullanılanlardan temizlensin mi? Bu işlem geri alınamaz."
+button = "Son kullanılanları temizle"
+confirm = "Son kullanılanları temizle"
+error = "Temizlenemedi. Tekrar deneyin."
+openNote_one = "Bunlardan 1 tanesi çalışma alanında açık."
+openNote_other = "Bunlardan {{count}} tanesi çalışma alanında açık."
+skipOpen = "Açık dosyaları atla"
+title = "Son kullanılanlar temizlensin mi?"
 
 [filesPage]
 addedToLibrary = "Stirling kütüphanesine eklendi"
@@ -5931,6 +5961,11 @@ title = "PDF Görüntüle/Düzenle"
 desc = "PDF belgenize özel bir filigran ekleyin."
 tags = "damga,işaret,kaplama,watermark,markalama,logo,gizli,taslak,telif hakkı,ticari marka,metin kaplaması,görüntü kaplaması,arka plan metni"
 title = "Filigran Ekle"
+
+[home.checkAccessibility]
+desc = "Bir PDF'i değiştirmeden PDF/UA'ya göre puanlayın ve ekran okuyucuları neyin engellediğini görün"
+tags = "erişilebilirlik,a11y,PDF/UA,ekran okuyucu,WCAG,Section 508,veraPDF,etiketli PDF,alternatif metin,erişilebilirlik denetleyici,erişilebilirlik raporu,uyumluluk,UA"
+title = "PDF erişilebilirliğini denetle"
 
 [HTMLToPDF]
 header = "HTML'den PDF'e"
@@ -7151,6 +7186,7 @@ upgradeCompleteMessage = "Aboneliğiniz başarıyla yükseltildi. Mevcut lisans 
 upgradeSuccess = "Ödeme başarılı! Aboneliğiniz yükseltildi. Lisansınız sunucunuza güncellendi. Kısa süre içinde bir onay e-postası alacaksınız."
 upgradeTitle = "{{planName}} planına yükselt"
 yearly = "Yıllık"
+annually = "Yıllık"
 
 [payment.adjustTeam]
 title = "Team planını ayarla"
@@ -7181,6 +7217,14 @@ subheading = "Davet ettiğiniz herkesi {{users}} kullanıcılık bloklar halinde
 subheadingAdd = "Planınız bugün {{current}} kullanıcıyı kapsıyor. Yeni toplamı seçin."
 usersLabel = "Kullanıcılar"
 userTotal = "{{users}} kullanıcı"
+billingLabel = "Faturalandırma"
+custom = "Özel"
+enterUsers = "Bir kullanıcı sayısı girin."
+planName = "Stirling Team"
+roundsUp = "{{users}} kullanıcıya yuvarlanır."
+selfServeLimit = "Burada en fazla {{users}} kullanıcı."
+talkToEnterprise = "Daha fazlası için Kurumsal plan hakkında bizimle görüşün."
+usersCovered = "kullanıcı kapsanıyor"
 
 [payment.emailStage]
 continue = "Devam et"
@@ -7268,6 +7312,11 @@ setOutline = "{{run}} üzerinde outline ayarla"
 typeInto = "{{run}} içine yaz"
 ungroupParagraph = "{{run}} paragrafının grubunu çöz"
 wrap = "{{run}} kaydır"
+markTagged = "Tamamen etiketli olarak işaretle"
+matchScanFont = "Taranmış metni {{face}} ile eşleştir"
+tagLink = "Bağlantıyı etiketle"
+tagPageContent = "Sayfayı otomatik etiketle"
+unmarkTagged = "Tamamen etiketli değil olarak işaretle"
 
 [pdfTextEditor.discard]
 body = "{{name}} açılırsa düzenlediğiniz belge kapanır. Kaydedilmemiş değişiklikleriniz kaybolacak."
@@ -7283,6 +7332,7 @@ title = "Açmak için bir PDF bırakın"
 [pdfTextEditor.error]
 decodeImage = "Seçilen resim çözümlenemedi."
 insertImage = "Seçilen resim eklenemedi."
+scanOffInk = "Bu metin düzenlenemiyor: tanınan sözcükler taramayla hizalanmıyor. OCR'ı tekrar çalıştırın."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG görüntüsü"
@@ -7313,6 +7363,14 @@ mixed = "Karışık"
 noMatch = "Eşleşen yazı tipi yok"
 placeholder = "Yazı tipi ailesi"
 useDeviceFonts = "Cihaz yazı tiplerini kullan"
+embeddingForbidden = "Bu yazı tipinin lisansı PDF'e gömülmesine izin vermiyor. Metin değiştirilmeden bırakıldı."
+embedFailed = "Bu yazı tipi PDF'e gömülemedi. Metin değiştirilmeden bırakıldı."
+includedGroup = "Dahil edilen yazı tipleri"
+matchedGroup = "Eşleşen yazı tipi"
+noGlyphs = "Bu yazı tipinde seçili metin için karakter yok. Metin değiştirilmeden bırakıldı."
+scannedText = "Taranmış metin"
+serverFontFailed = "Bu sunucu yazı tipi indirilemedi. Metin değiştirilmeden bırakıldı."
+serverGroup = "Sunucu yazı tipleri"
 
 [pdfTextEditor.fonts]
 allPresent = "Tüm harfler ve sayılar mevcut"
@@ -7415,6 +7473,12 @@ width = "Genişlik"
 widthHint = "Metin genişliğe sığacak şekilde yeniden kaydırılır."
 x = "X"
 y = "Y"
+fontCompletedClosest = "Gömülü yazı tipi · eksik karakterleri, mevcut en yakın eşleşme olan {{name}} ile çiziliyor."
+fontCompletedOriginal = "Gömülü yazı tipi · eksik karakterleri, aynı yazı tipi olan {{name}} ile çiziliyor."
+fontUnknownCoverage = "{{name}} · eksik olan bir karakter {{fallback}} yazı tipine düşer."
+scannedTextMisaligned = "Taranmış metin · tanınan sözcükler taramayla hizalanmıyor, bu yüzden bu blok düzenlenemez veya silinemez."
+scannedTextNoFont = "Taranmış metin · bu yazı sistemindeki yazılan sözcükler henüz çizilemiyor, bu yüzden saklanmıyor. Sözcük silme yine çalışır."
+scannedTextOffInk = "Taranmış metin · tanınan sözcükler taranmış sözcüklerin dışında duruyor, bu yüzden bu blok düzenlenemez. OCR'ı tekrar çalıştırın."
 
 [pdfTextEditor.inspector.accessibility]
 addTag = "Etiket ekle"
@@ -7446,6 +7510,26 @@ untaggedBadge = "Etiketlenmemiş"
 untaggedDocument = "Belgede etiket yok"
 untaggedImage = "Burada etiketlenemez"
 untaggedImages = "Etiketlenmemiş görseller"
+applyToOtherPages_one = "{{count}} diğer sayfaya uygula"
+applyToOtherPages_other = "{{count}} diğer sayfaya uygula"
+artifactGroup = "Ekran okuyucuların atladıkları"
+cannotDescribeLink = "Bu bağlantının açıklaması değiştirilemez."
+cannotSetDecorative = "Bu öğe dekoratif olarak işaretlenemez veya işareti kaldırılamaz."
+cannotTagLink = "Bu bağlantı etiketlenemez."
+cannotTagPage = "Bu sayfanın içeriği etiketlenemez."
+contentGroup = "İçerik"
+linkDescription = "Bağlantı açıklaması"
+markedTagged = "Belge tamamen etiketli"
+markedTaggedHint = "PDF okuyuculara erişilebilirlik etiketlerini kullanmalarını söyler. Her şey etiketlendiğinde işaretleyin."
+markedWithUntagged = "Bazı içeriklerin etiketi yok, bu yüzden ekran okuyucular bunları atlayabilir."
+mixedTags = "Karışık"
+tagging = "Sayfalar etiketleniyor"
+tagLinks_one = "Bağlantıyı etiketle"
+tagLinks_other = "{{count}} bağlantıyı etiketle"
+tagUntagged = "Belgeyi otomatik etiketle"
+tagUntaggedHint = "Belgenin tamamına otomatik olarak erişilebilirlik etiketleri ekler. Sonuç kabadır: ardından başlıkları, listeleri ve okuma sırasını kontrol edin."
+unmarkedWithTags = "Bazı PDF görüntüleyiciler etiketleri yine de kullanır ve etiketsiz içeriği atlayabilir."
+untaggedPages = "Etiketlenecek sayfalar"
 
 [pdfTextEditor.inspector.accessibility.outline]
 empty = "Metni olmayan başlık"
@@ -7504,6 +7588,29 @@ tableHead = "Tablo üst bilgisi"
 tableHeader = "Tablo başlığı"
 tableRow = "Tablo satırı"
 title = "Başlık"
+
+[pdfTextEditor.inspector.accessibility.furniture]
+footer = "Alt bilgi"
+header = "Üst bilgi"
+pageNumber = "Sayfa numarası"
+watermark = "Filigran"
+
+[pdfTextEditor.inspector.language]
+allLanguages = "Tüm diller"
+cannotSetDocument = "Bu belgenin dili değiştirilemez."
+cannotSetText = "Bu metnin dili değiştirilemez."
+documentHint = "Metnin bir bölümü kendi dilini belirtmedikçe ekran okuyucuların kullandığı dil."
+documentLabel = "Dil"
+documentLocked = "Şifreli bir belgenin dili burada değiştirilemez."
+inDocument = "Bu belgede"
+innerLabel = "Etiket {{number}} dili"
+label = "Dil"
+missing = "Dil ayarlanmamış. Ekran okuyucular tahmin eder ve tüm belgeyi yanlış seslendirmeyle okuyabilir."
+mixed = "Karışık"
+noMatch = "Eşleşen dil yok. Bunun yerine mt veya en-IE gibi dil kodunu yazın."
+placeholder = "Dil seçin"
+selectedText = "Seçili metnin dili"
+textHint = "Ekran okuyucular seslendirmeyi ve telaffuzu bu dile geçirir."
 
 [pdfTextEditor.mobile]
 actions = "Düzenleyici eylemleri"
@@ -7690,6 +7797,35 @@ fitToWidth = "Genişliğe sığdır"
 in = "Yakınlaştır"
 out = "Uzaklaştır"
 reset = "Yakınlaştırmayı %100'e sıfırla"
+
+[pdfTextEditor.scanFont]
+approximate = "Yaklaşık eşleşme"
+approximateHint = "Bulunan en yakın yazı tipi taramayla eşleşmeyebilir."
+change = "Yazı tipi doğru görünmüyor mu?"
+choose = "Yazı tipi seçin"
+chooseMissing = "Bu metin için bir yazı tipi seçin…"
+compare = "Yazı tiplerini karşılaştır…"
+deviceAllow = "Daha iyi eşleşme için yazı tipi erişimine izin ver"
+deviceBlocked = "Tarayıcınız tekrar sormayacak. İzin vermek için adres çubuğunun solundaki simgeye tıklayın, Yazı tipleri'ni açın ve tekrar deneyin."
+deviceBlockedTitle = "Yazı tipi erişimi engellendi"
+deviceNone = "Yaygın belge yazı tiplerinin hiçbiri bu bilgisayarda yüklü değil."
+deviceNote = "Tarayıcınız önce izin ister. Yazı tipleri bu cihazda kalır."
+deviceOn_one = "Bu bilgisayardaki {{count}} yazı tipiyle de karşılaştırıldı."
+deviceOn_other = "Bu bilgisayardaki {{count}} yazı tipiyle de karşılaştırıldı."
+deviceReading = "Bu bilgisayardaki yazı tipleri okunuyor…"
+deviceRetry = "Tekrar dene"
+done = "Bitti"
+hint = "Yazdıklarınız bulunan en yakın yazı tipiyle çizilir. Taramaya daha çok benzeyen başka bir yazı tipi seçebilirsiniz."
+hintFromScan = "Yazdıklarınız taramada bulunan harflerden oluşturulur. Bunun yerine o yazı tipiyle çizmek için bir yazı tipi seçin."
+hintOthers = "Seçiminiz, henüz düzenlemediğiniz taranmış metin için de kullanılır."
+matching = "Yazı tipleri eşleştiriliyor…"
+noFont = "Mevcut yazı tiplerinin hiçbiri bu yazı sistemini çizemiyor, bu yüzden yazılan metin henüz yeniden çizilemez."
+scan = "Orijinal tarama"
+scanAlt = "Taranmış satır"
+scanNote = "Taramalar çoğu zaman yazı tipinin gerçekte olduğundan daha bulanık veya kalın görünür. Kalınlık yerine harf şekillerini karşılaştırın."
+score = "%{{match}} benzer"
+title = "Taranmış yazı tipini eşleştir"
+unmeasurable = "Bu tarama bir yazı tipiyle eşleştirmek için fazla soluk veya küçük."
 
 [PDFToCSV]
 header = "PDF'den CSV'ye"
@@ -8945,6 +9081,51 @@ baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
 description = "Bir ilkeden Zap veya Make senaryosunu tetikleyin."
 label = "Zapier ve Make"
 
+[portal.connections.types.googleworkspace]
+description = "Kuruluş için Google Drive'ı okuyan ve Google Drive'a yazan bir hizmet hesabı."
+label = "Google Workspace"
+
+[portal.connections.types.googleworkspace.fields.credentialsJson]
+helperText = "Hizmet hesabının JSON anahtarını Google Cloud'dan yapıştırın. Anahtar şifrelenir ve bir daha gösterilmez."
+label = "Hizmet hesabı anahtarı (JSON)"
+
+[portal.connections.types.googleworkspace.fields.subject]
+helperText = "İsteğe bağlı. Alan genelinde yetki devriyle, bu bağlantının adına hareket ettiği Drive'ın kullanıcısı (ayrı bir bot kullanıcısı, kişiler ayrıldığında da çalışmaya devam eder). Boş bırakılırsa yalnızca paylaşılan drive'lara ve hizmet hesabıyla paylaşılan klasörlere erişilir."
+label = "Kullanıcı adına hareket et"
+placeholder = "stirling-bot@contoso.com"
+
+[portal.connections.types.microsoft365.fields.clientId]
+helperText = "Yönetici onaylı Microsoft Graph uygulama izinleri gerekir."
+label = "Uygulama (istemci) kimliği"
+
+[portal.connections.types.microsoft365.fields.clientSecret]
+label = "İstemci gizli anahtarı"
+
+[portal.connections.types.microsoft365.fields.tenantId]
+label = "Dizin (kiracı) kimliği"
+placeholder = "contoso.onmicrosoft.com veya kiracı GUID'i"
+
+[portal.connections.types.onedrive]
+description = "Bir kullanıcının OneDrive for Business alanından okuyun ve oraya yazın."
+label = "OneDrive"
+
+[portal.connections.types.onedrive.fields.user]
+helperText = "Bu bağlantının eriştiği OneDrive'ın sahibi. Uygulama kaydının Files.ReadWrite.All uygulama iznine ihtiyacı vardır."
+label = "OneDrive sahibi"
+placeholder = "finance@contoso.com"
+
+[portal.connections.types.sharepoint]
+description = "Bir SharePoint sitesinin belge kitaplığından okuyun ve oraya yazın."
+label = "SharePoint"
+
+[portal.connections.types.sharepoint.fields.library]
+helperText = "İsteğe bağlı. Sitenin varsayılan Belgeler kitaplığı için boş bırakın."
+label = "Belge kitaplığı"
+
+[portal.connections.types.sharepoint.fields.siteUrl]
+label = "Site URL'si"
+placeholder = "https://contoso.sharepoint.com/sites/Finance"
+
 [portal.docs]
 browse = "Dokümanlara göz at"
 viewSource = "Kaynağı GitHub'da görüntüle"
@@ -9299,6 +9480,7 @@ openInBrowser = "Bunun yerine tarayıcıda aç"
 sectionDesktop = "Masaüstü uygulaması"
 sectionSelfHosted = "Kendi barındırılan"
 title = "Stirling PDF Editor'ı yükleyin"
+bodyDesktop = "Masaüstü uygulamasını indirin, ardından Stirling hesabınızla oturum açın."
 
 [portal.home.download.docker]
 detailBody = "Resmi image'ı sunucunuzda çalıştırın."
@@ -10546,6 +10728,34 @@ volume = "Yıllık PDF hacmi"
 volumePlaceholder = "örn. 1.000.000"
 years_one = "{{count}} yıl"
 years_other = "{{count}} yıl"
+addonOneTime = "{{amount}} tek seferlik"
+addonPerYear = "+{{amount}}/yıl"
+belowMinimum = "Bu teklif, bir Enterprise anlaşması için gereken asgari büyüklüğün altında."
+conflict = "Bu anlaşma siz açtıktan sonra değişti. Durumunu görmek için oluşturucuyu kapatıp sayfayı yeniden yükleyin."
+editUsage = "Kullanımı düzenle"
+minimum = "Enterprise için yıllık asgari {{min}} harcama gerekir."
+minimumBelow = "Bu teklif yıllık {{annual}} tutuyor. Daha fazla kullanmayı bekliyorsanız tahmini kullanımınızı artırın; aksi halde Team planı muhtemelen daha uygun olur."
+minimumNear = "Enterprise için yıllık asgari {{min}} harcama gerekir. Bu tutara ulaşmak için tahmini kullanımınızı artırın veya bizimle görüşün."
+minimumNearTitle = "Enterprise'a ulaşmak için yıllık {{gap}} eksiğiniz var."
+paperBrand = "Stirling PDF"
+raiseUsage = "Tahmini kullanımı artır"
+runningLabel = "Tahmini fiyat"
+runningLabelIssued = "Teklif edilen fiyat"
+runningOneYear = "Yıllık {{annual}}"
+runningTotal = "{{years}} yılda toplam {{tcv}}"
+
+[portal.procurement.builder.line]
+deployment = "{{deployment}} dağıtım"
+indemnification = "Fikri mülkiyet tazminat güvencesi"
+multiYear_one = "{{count}} yıllık taahhüt"
+multiYear_other = "{{count}} yıllık taahhüt"
+qbr = "Üç aylık iş değerlendirmeleri"
+seats_one = "{{users}} kararlaştırılmış kullanıcı + SSO / RBAC / denetim"
+seats_other = "{{users}} kararlaştırılmış kullanıcı + SSO / RBAC / denetim"
+seatsUnset = "Kullanıcılar + SSO / RBAC / denetim"
+support = "Özel SE / CSM"
+training = "Başlangıç desteği ve eğitim"
+usage = "PDF işleme — {{rate}}/PDF fiyatla yılda {{volume}} PDF ({{posture}} otomasyon)"
 
 [portal.procurement.documents]
 agreement = "Kurumsal Sözleşme"
@@ -10566,6 +10776,8 @@ subprocessorsSub = "Sizin adınıza veri işleyen üçüncü taraflar."
 subtitle = "Anlaşma evraklarınız her zaman kullanılabilir."
 title = "Belgeler"
 view = "Görüntüle"
+laterSigning = "Sözleşme imzalandığında kullanılabilir"
+laterTitle = "Anlaşmanın ilerleyen aşamalarında"
 
 [portal.procurement.error]
 title = "Bir şeyler ters gitti"
@@ -10664,6 +10876,7 @@ poNumber = "Satın alma siparişi: {{po}}"
 renewal = "Dönemden sonra {{amount}}/yıl üzerinden yenilenir (+{{pct}}% CPI)"
 tcv = "{{years}} yıllık dönem, peşin tam ödemeli: {{tcv}}"
 validUntil = "{{date}} tarihine kadar geçerli"
+oneTime = "tek seferlik"
 
 [portal.procurement.schedule]
 fallback = "Planlayıcı yüklenemedi."
@@ -10711,6 +10924,14 @@ maxed = "Sınıra ulaşıldı"
 subtitle = "Ücretsiz denemeniz {{date}} tarihine kadar sürer. Kart gerekmez."
 title = "Enterprise denemesi"
 
+[portal.procurement.validation]
+confirm = "Kuruluş adına imza yetkiniz olduğunu onaylayın."
+email = "Geçerli bir e-posta adresi girin."
+eula = "Devam etmek için EULA'yı kabul edin."
+required = "Bu alan zorunludur."
+seats = "Kaç kişinin deneyeceğini girin."
+volume = "Yılda kaç PDF işlemeyi beklediğinizi girin."
+
 [portal.review]
 subtitle = "Politika çalıştırmalarınızdan ve ekibinizin düzenleyicilerinden dikkatinizi gerektiren her şey."
 title = "İnceleme"
@@ -10736,6 +10957,7 @@ title = "Kaynaklar"
 
 [portal.sources.actions]
 connectSource = "Kaynak bağla"
+connectDestination = "Hedefi bağla"
 
 [portal.sources.builder]
 advanced = "Gelişmiş"
@@ -10752,6 +10974,8 @@ createTitle = "Bir kaynak bağla"
 delete = "Sil"
 editTitle = "Kaynağı düzenle"
 save = "Değişiklikleri kaydet"
+createDestination = "Hedef oluştur"
+createDestinationTitle = "Hedef ekle"
 
 [portal.sources.builder.folderAccess]
 description = "Klasör otomasyonları yalnızca bir yöneticinin izin verdiği klasörleri kullanabilir. Klasör Erişimi ayarları altında ekleyin, ardından tekrar deneyin."
@@ -10821,6 +11045,7 @@ label = "E-posta gelen kutusu"
 [portal.sources.types.folder]
 description = "Yeni belgeler için sunucudaki bir dizini izleyin."
 label = "Klasör"
+outputDescription = "Sonuçları sunucudaki bir dizine kaydedin."
 
 [portal.sources.types.folder.fields.directory]
 helperText = "Yeni dosyalar için izlenecek klasörün mutlak yolu."
@@ -10859,6 +11084,7 @@ label = "FTP"
 [portal.sources.types.googledrive]
 description = "Paylaşılan Google Drive klasörlerinden belgeleri çekin."
 label = "Google Drive"
+outputDescription = "Sonuçları bir Google Drive klasörüne kaydedin."
 
 [portal.sources.types.network]
 description = "Yeni belgeler için bir SMB ağ paylaşımını izleyin."
@@ -10867,10 +11093,12 @@ label = "Ağ sürücüsü"
 [portal.sources.types.onedrive]
 description = "Yeni belgeler için OneDrive klasörlerini izleyin."
 label = "OneDrive"
+outputDescription = "Sonuçları bir OneDrive klasörüne kaydedin."
 
 [portal.sources.types.s3]
 description = "Belgeleri Amazon S3 veya S3 uyumlu bir bucket'tan çekin."
 label = "Amazon S3"
+outputDescription = "Sonuçları bir Amazon S3 veya S3 uyumlu bucket'a kaydedin."
 
 [portal.sources.types.s3.fields.connection]
 helperText = "Bucket ve kimlik bilgileriyle kaydedilmiş bağlantı. Bunu kullanan her kaynak ve işlem hattı çıktısı tarafından paylaşılır."
@@ -10896,6 +11124,7 @@ label = "SFTP"
 [portal.sources.types.sharepoint]
 description = "SharePoint belge kitaplıklarından belgeleri çekin."
 label = "SharePoint"
+outputDescription = "Sonuçları bir SharePoint belge kitaplığı klasörüne kaydedin."
 
 [portal.sources.types.unknown]
 label = "Kaynak"
@@ -10934,6 +11163,41 @@ usage = "Her belgeyi binary content type (application/pdf veya application/octet
 name = "Ad"
 namePlaceholder = "örn. Talep alımı"
 type = "Tür"
+
+[portal.sources.cloudFields.account]
+connect = "Hesabınızı bağlayın"
+connectAnother = "Başka bir hesap bağla"
+connectFailed = "Hesap bağlanamadı. Tekrar deneyin veya yöneticinizden uygulama kaydını kontrol etmesini isteyin."
+label = "Hesap"
+placeholder = "Bir hesap seçin"
+reconnect = "tekrar oturum açın"
+unavailable = "Bu sunucuda kendi hesabınızı bağlama kapalı. Bunun yerine bir kuruluş bağlantısı seçin."
+
+[portal.sources.cloudFields.authMode]
+accountsOff = "Bu sunucuda kişisel hesaplar kapalı."
+helperText = "Hesabınız açabildiğiniz her şeye erişir ve yönetici gerektirmez. Kuruluş bağlantısı kişiler ayrıldığında da çalışmaya devam eder ve yalnızca bir yöneticinin ayarladığı yerlere erişir."
+label = "Oturum açma kimliği"
+
+[portal.sources.cloudFields.authMode.options]
+account = "Hesabım"
+organisation = "Kuruluş bağlantısı"
+
+[portal.sources.cloudFields.connection]
+helperText = "Bir yönetici tarafından Entegrasyonlar altında ayarlanır. Onu kullanan tüm konumlar tarafından paylaşılır."
+label = "Kuruluş bağlantısı"
+
+[portal.sources.cloudFields.googledrive]
+helperText = "Klasörün bağlantısını yapıştırın veya Drive'ım'ın en üstünden başlayan bir yol yazın. Drive'ım'ın en üstü için boş bırakın. Klasör önceden var olmalıdır."
+placeholder = "Klasör bağlantısı veya Scans/Inbox"
+
+[portal.sources.cloudFields.onedrive]
+helperText = "OneDrive'ınızdaki bir klasör veya bir klasör bağlantısı yapıştırın (OneDrive'da Bağlantıyı kopyala). OneDrive'ın en üstü için boş bırakın. Klasör önceden var olmalıdır."
+placeholder = "Scans/Inbox veya bir klasör bağlantısı"
+
+[portal.sources.cloudFields.sharepoint]
+helperText = "Hesabınızla, klasörün bağlantısını yapıştırın (SharePoint'te Bağlantıyı kopyala). Kuruluş bağlantısıyla, kitaplığının içindeki bir klasör; kitaplık kökü için boş bırakın. Klasör önceden var olmalıdır."
+organisationPlaceholder = "Klasör bağlantısı veya Scans/Inbox"
+placeholder = "Klasör bağlantısı"
 
 [portal.stepModal]
 close = "Kapat"
@@ -11008,6 +11272,130 @@ summary = "Bir takımın sahibidir — takım üyelerinin kaynaklarını ve payl
 [portal.users.seats]
 limited = "{{used}} / {{limit}} koltuk"
 unlimited = "{{used}} koltuk · Sınırsız"
+
+[portal.enterprise]
+backTo = "{{stage}} aşamasına dön"
+brandTag = "Enterprise"
+callInfo = "15 dakikalık bir görüşme. Fiyatlandırma, dağıtım veya güvenlikle ilgili sorularınızı getirin ya da kullanıma geçişi birlikte planlayalım."
+callTitle = "Bir çözüm mühendisiyle görüşün"
+deployment = "Dağıtım"
+footer = "Stirling Enterprise hakkında sorularınız mı var?"
+home = "Stirling'e git"
+member = "Enterprise anlaşmasını ekip lideriniz yürütüyor. Başladığında ilerlemesini buradan takip edebilirsiniz."
+memberDeal = "Bu anlaşmayı ekip lideriniz yürütüyor. İlerlemesini buradan takip edebilirsiniz."
+quotePanel = "Teklifiniz"
+signIn = "Oturum aç"
+signInToStart = "Deneme sürenizi başlatmak için oturum açın"
+stage = "Aşama {{current}}/{{total}}"
+stagesLabel = "İlerleme"
+
+[portal.enterprise.connect]
+ownerOnly = "Bu sunucuyu yalnızca sahibi bağlayabilir. Bu sayfayı açmasını isteyin."
+unavailable = "Bu sunucuda Stirling hesabına bağlanma kapalı. Bir görüşme ayarlayın, deneme sürenizi sizinle birlikte kuralım."
+
+[portal.enterprise.landing]
+lede = "14 gün ücretsiz deneyin, ardından teklifinizi oluşturup sözleşmenizi burada imzalayın. Kart gerekmez."
+tickAgreement = "MSA, sipariş formu, EULA ve DPA'yı kapsayan tek bir sözleşme"
+tickCompliance = "SCIM, veri yerleşimi ve çalışma süresi SLA'ları"
+tickDeploy = "Stirling Cloud'da, kendi sunucularınızda veya tamamen internetten yalıtılmış (air-gapped) olarak çalıştırın"
+title = "Stirling Enterprise"
+
+[portal.enterprise.options.airgap]
+more = "Çevrimdışı lisans belgeleri"
+point1 = "Çevrimiçi denetlenen bir anahtarla değil, çevrimdışı çalışan bir lisans dosyasıyla etkinleştirilir"
+point2 = "Kendi barındırmalı kurulum gibi, sizin taşıdığınız bir imajdan kurulur"
+point3 = "Oturum açma ağınızın içinde kalır"
+tagline = "İnternet erişimi olmayan bir ağda kendi barındırmalı."
+
+[portal.enterprise.options.cloud]
+more = "Stirling Cloud belgeleri"
+point1 = "Ekibiniz stirling.com/app adresinde oturum açar"
+point2 = "AWS üzerinde çalışır, depolanan dosyalar beklemedeyken şifrelenir"
+point3 = "Kendi kimlik sağlayıcınız üzerinden çoklu oturum açma için kendi barındırmalı kurulum gerekir"
+tagline = "Sizin için barındırılır, kurulacak bir şey yoktur."
+
+[portal.enterprise.options.selfhost]
+more = "Kendi barındırma belgeleri"
+point1 = "Docker ile veya Kubernetes üzerinde Helm chart ile kurun"
+point2 = "Belgeler kendi altyapınızda işlenir"
+point3 = "OAuth2, OIDC veya SAML ile çoklu oturum açma"
+tagline = "Kendi sunucularınızda, şirket içinde veya kendi bulutunuzda."
+
+[portal.enterprise.review]
+back = "{{stage}} aşamasına geri dön"
+company = "Şirket"
+completed = "Tamamlandı"
+extensions = "Kullanılan uzatmalar"
+paid = "Ödendi. Faturanız burada erişilebilir kalır."
+people = "Kişiler"
+started = "Başlangıç"
+trialEnds = "Deneme bitiş tarihi"
+trialTitle = "Deneme süreniz"
+version = "Sürüm"
+viewInvoice = "Faturayı görüntüle"
+
+[portal.enterprise.setup]
+copied = "Kopyalandı"
+copy = "Kopyala"
+markDone = "“{{step}}” adımını tamamlandı olarak işaretle"
+progress = "{{total}} adımdan {{done}} tanesi tamamlandı"
+subtitle = "Deneme sürenizden en iyi şekilde yararlanmak için ürünü gerçekte kullanacağınız şekilde deneyin."
+subtitleLive = "Herkese açmadan önce tamamlanması gereken adımlar."
+title = "Kurulumu yapın"
+titleLive = "Canlıya geçiş kontrol listesi"
+
+[portal.enterprise.setup.firstDocument]
+body = "Ekibinizin çalıştığı bir PDF yükleyin ve karartma, sıkıştırma veya OCR gibi günlük kullanacağınız araçları deneyin."
+title = "İlk belgenizi işleyin"
+
+[portal.enterprise.setup.getApp]
+body = "Windows, Mac veya Linux için masaüstü uygulamasını kurun ve az önce oluşturduğunuz hesapla oturum açın ya da doğrudan tarayıcınızdan kullanın."
+title = "Stirling'i edinin"
+
+[portal.enterprise.setup.install]
+body = "Bunu sunucunuzda çalıştırın. Stirling'i lisansınız uygulanmış olarak başlatır; imajda OCR ve ofis dönüştürme de bulunur. Daha büyük ekipler için Kubernetes kullanın."
+title = "Stirling'i kurun ve başlatın"
+
+[portal.enterprise.setup.invite]
+body = "Deneme gerçek işi yansıtsın diye ürünü kullanacak kişileri davet edin."
+title = "Ekibinizi davet edin"
+
+[portal.enterprise.setup.licence]
+body = "<code>http://your-server:8080/settings/adminPlan</code> adresini açın; Enterprise lisansınız orada etkin görünmelidir. Başka bir yolla mı kurdunuz? Anahtarı <code>settings.yml</code> içinde <code>premium.key</code> altına ekleyip yeniden başlatın."
+title = "Lisansınızın etkin olduğunu kontrol edin"
+
+[portal.enterprise.setup.links]
+browser = "Tarayıcınızda kullanın"
+docker = "Docker kılavuzu"
+download = "Uygulamayı indir"
+downloadForTeam = "Ekibiniz için uygulamayı edinin"
+downloading = "İndiriliyor..."
+downloadLicence = "Lisans dosyasını indir"
+invite = "Ekip arkadaşlarını davet et"
+kubernetes = "Kubernetes kılavuzu"
+licence = "Lisans etkinleştirme"
+ocr = "OCR dilleri"
+openApp = "Stirling'i aç"
+samlGuide = "SAML kılavuzu"
+ssoGuide = "SSO kılavuzu"
+
+[portal.enterprise.setup.offlineInstall]
+body = "Tam imajı internete bağlı bir makinede çekin, imajı ve lisans dosyasını taşıyın, ardından yükleyip başlatın. Tam imaj, çevrimdışı bir sunucunun indiremeyeceği yazı tiplerini de içerir."
+title = "Stirling'i taşıyın ve başlatın"
+
+[portal.enterprise.setup.offlineLicence]
+body = "İnternetten yalıtılmış bir sunucu lisans hizmetimize ulaşamaz, bu yüzden bunun yerine bu imzalı dosyayı denetler. Dosyayı taşıdığınız imajla birlikte saklayın."
+title = "Çevrimdışı lisansınızı indirin"
+
+[portal.enterprise.setup.people]
+bodyAirgap = "Hesapları <code>/settings/people</code> adresinde oluşturun veya oturum açma ağınızın dışına çıkmasın diye Stirling'i dahili kimlik sağlayıcınıza yönlendirin."
+bodySelfHosted = "Hesapları <code>/settings/people</code> adresinde oluşturun veya ekibiniz iş hesaplarıyla oturum açsın diye kimlik sağlayıcınızı bağlayın. Stirling'i tarayıcıda sunucunuzun adresinden ya da sunucunuza yönlendirilmiş masaüstü uygulamasında kullanırlar."
+title = "Kişilerinizi ekleyin"
+
+[portal.enterprise.setup.signIn]
+body = "<code>http://your-server:8080</code> adresini açın ve <code>admin</code> / <code>stirling</code> ile oturum açın. Hemen yeni bir parola seçmeniz istenecek."
+bodyAirgap = "<code>http://your-server:8080</code> adresini açın, <code>admin</code> / <code>stirling</code> ile oturum açın, yeni bir parola seçin, ardından <code>/settings/adminPlan</code> sayfasının lisansınızı etkin gösterdiğini kontrol edin."
+title = "Yönetici olarak oturum açın"
 
 [printFile]
 title = "Dosya Yazdır"
@@ -11093,6 +11481,22 @@ label = "Google Drive Dosya Seçiciyi Etkinleştir"
 [provider.googledrive.errors]
 notConfigured = "Google Drive yapılandırılmamış"
 pickerFailed = "Google Drive picker açılamadı"
+
+[provider.googledrive.accountScope]
+description = "drive her dosyaya erişir (Google bunun için herkese açık bir uygulamayı doğrulamalıdır); drive.file yalnızca kişilerin seçtiği veya Stirling'in oluşturduğu dosyalara erişir"
+label = "Drive erişimi"
+
+[provider.googledrive.allowAccountConnections]
+description = "Düzenleyici ve ardışık düzenleri için tek oturum açma. Yalnızca kuruluş bağlantılarına izin vermek için kapatın."
+label = "Kişilerin kendi hesaplarını bağlamasına izin ver"
+
+[provider.googledrive.clientSecret]
+description = "Kişilerin ardışık düzenleri için Google hesaplarını bağlamasını sağlar. Aşağıdaki yönlendirme URI'sini OAuth istemcisinin yetkili yönlendirme URI'si olarak ekleyin."
+label = "İstemci gizli anahtarı"
+
+[provider.googledrive.redirectUri]
+description = "Bunu Google Cloud Console'da OAuth istemcisinin yetkili yönlendirme URI'si olarak ekleyin."
+label = "Yönlendirme URI'si"
 
 [provider.oauth2.generic]
 name = "Genel OAuth2"
@@ -11274,6 +11678,34 @@ label = "SMTP Bağlantı Noktası"
 [provider.smtp.username]
 description = "SMTP kimlik doğrulaması için kullanıcı adı"
 label = "SMTP Kullanıcı Adı"
+
+[provider.microsoft]
+name = "Microsoft 365 (OneDrive ve SharePoint)"
+scope = "Dosyalar ve ardışık düzenler"
+
+[provider.microsoft.allowAccountConnections]
+description = "Düzenleyici ve ardışık düzenleri için tek oturum açma. Yalnızca kuruluş bağlantılarına izin vermek için kapatın."
+label = "Kişilerin kendi hesaplarını bağlamasına izin ver"
+
+[provider.microsoft.clientId]
+description = "Tek bir Microsoft Entra uygulama kaydından."
+label = "Uygulama (istemci) kimliği"
+
+[provider.microsoft.clientSecret]
+description = "Bağlı hesaplar için gereklidir. Sunucuda kalır."
+label = "İstemci gizli anahtarı"
+
+[provider.microsoft.enabled]
+description = "Kişilerin ardışık düzenlerde OneDrive ve SharePoint kullanmasına izin ver"
+label = "OneDrive ve SharePoint'i etkinleştir"
+
+[provider.microsoft.redirectUri]
+description = "Bunu Entra uygulama kaydına Web yönlendirme URI'si olarak ekleyin."
+label = "Yönlendirme URI'si"
+
+[provider.microsoft.tenant]
+description = "iş, okul ve kişisel hesaplar için common; yalnızca iş ve okul hesapları için organizations; ya da tek bir kuruluşu kabul etmek için bir kiracı kimliği"
+label = "Dizin (kiracı) kimliği"
 
 [quickAccess]
 allTools = "Araçlar"
@@ -12073,6 +12505,7 @@ updateBehaviorLockedDescription = "Yöneticiniz bu makinede Stirling-PDF'in gün
 updateBehaviorSaved = "Güncelleme davranışı kaydedildi."
 versionMismatch = "Masaüstü uygulamanız ve sunucunuz farklı sürümler çalıştırıyor. Uyumluluk sorunlarından kaçınmak için ikisini de aynı sürüme güncelleyin."
 viewDetails = "Ayrıntıları Görüntüle"
+descriptionManaged = "Sürüm bilgilerini görüntüle"
 
 [settings.general.versionInfo]
 description = "Masaüstü ve sunucu sürüm ayrıntıları"
@@ -12145,6 +12578,15 @@ listTitle = "Paketlenmiş bağımlılıklar"
 loadError = "Üçüncü taraf lisansları yüklenemedi"
 module = "Modül"
 version = "Sürüm"
+clearSearch = "Aramayı temizle"
+licenseAbout = "Hakkında"
+licenseAboutCompound = "{{short}} hakkında"
+licenseAboutTitle = "{{short}} hakkında"
+noMatch = "Eşleşen bağımlılık yok."
+searchPlaceholder = "Bağımlılıklarda ara"
+showingCount = "{{count}} bağımlılık"
+showingCount_one = "{{count}} bağımlılık"
+showingCount_other = "{{count}} bağımlılık"
 
 [settings.licensingAnalytics]
 audit = "Denetim günlüğü"
@@ -12270,6 +12712,17 @@ people = "Kişiler"
 teams = "Ekipler"
 title = "Çalışma Alanı"
 
+[settings.connectedAccounts]
+description = "Ardışık düzenleriniz için kendi OneDrive, SharePoint ve Google Drive hesaplarınız."
+title = "Bağlı hesaplar"
+
+[settings.feedback]
+label = "Geri bildirim"
+
+[settings.feedback.send]
+description = "Stirling ekibine bir sorun bildirin veya iyileştirme önerin."
+label = "Geri bildirim gönder"
+
 [setup.error]
 loginIncomplete = "Oturum açma tamamlanamadı"
 noSaasServer = "SaaS sunucusu yapılandırılmamış"
@@ -12293,6 +12746,7 @@ emptyEmail = "Lütfen e-postanızı girin"
 emptyPassword = "Lütfen parolanızı girin"
 emptyUsername = "Lütfen kullanıcı adınızı girin"
 oauthFailed = "OAuth oturumu başarısız oldu. Lütfen tekrar deneyin."
+openResetFailed = "Parolanızı sıfırlamak için tarayıcınız açılamadı."
 
 [setup.saas]
 title = "Stirling'de Oturum Açın"
@@ -14250,3 +14704,453 @@ confirm = "Çıkart"
 message_one = "Bu ZIP {{count}} dosya içeriyor. Yine de çıkarılsın mı?"
 message_other = "Bu ZIP {{count}} dosya içeriyor. Yine de çıkarılsın mı?"
 title = "Büyük ZIP Dosyası"
+
+[checkAccessibility]
+aboutRow = "{{label}} hakkında"
+checking = "Denetleniyor..."
+clauseRef = "{{profile}} §{{clauses}}"
+download = "Erişilebilirlik raporunu indir"
+fileFailed = "başarısız"
+pickFile = "Sonuçları göster:"
+submit = "Erişilebilirliği denetle"
+
+[checkAccessibility.category]
+altText = "Alternatif metin"
+fonts = "Yazı tipleri"
+language = "Dil"
+links = "Bağlantılar ve ek açıklamalar"
+metadata = "Meta veriler ve ayarlar"
+structure = "Etiketler ve yapı"
+
+[checkAccessibility.categoryTip]
+altText = "Ekran okuyucuların görsellerin yerine okuyabilmesi için görsellerin kısa bir metin açıklaması olmalıdır."
+fonts = "Metnin sesli okunabilmesi ve kopyalanabilmesi için yazı tipleri dosyanın içinde olmalı ve her karakter gerçek metne bağlı olmalıdır."
+language = "Ekran okuyucuların belgeyi doğru telaffuz edebilmesi için belgenin dilini bilmesi gerekir."
+links = "Bağlantılar, yorumlar ve form alanları etiketlere, açıklamalara ve sayfayı izleyen bir sekme sırasına ihtiyaç duyar."
+metadata = "Yardımcı teknolojinin dosyadan okuduğu başlık, PDF/UA beyanı ve diğer ayarlar."
+structure = "Etiketler, ekran okuyuculara sayfanın her bölümünün ne olduğunu (başlık, liste veya tablo gibi) ve hangi sırayla okunacağını söyler."
+
+[checkAccessibility.checks]
+label = "{{total}} denetimden {{passed}} tanesi geçti"
+
+[checkAccessibility.error]
+download = "Erişilebilirlik raporu oluşturulamadı. Tekrar deneyin."
+fileTitle = "Bu dosya denetlenemedi"
+partial = "Bazı dosyalar denetlenemedi."
+
+[checkAccessibility.facts]
+declares = "PDF/UA beyan ediyor"
+displaysTitle = "Başlığını gösteriyor"
+fonts = "Yazı tipleri gömülü"
+language = "Bir dil beyan ediyor"
+notEncrypted = "Şifreli değil"
+tagged = "Etiketli"
+title = "Başlığı var"
+
+[checkAccessibility.factTip]
+declares = "Dosyanın meta verileri PDF/UA'ya uyduğunu belirtiyor."
+displaysTitle = "PDF okuyucular dosya açıldığında dosya adını değil başlığı gösterir."
+fonts = "Metnin kullandığı tüm yazı tipleri dosyaya dahil."
+language = "Dosya, metninin hangi dilde olduğunu belirtiyor."
+notEncrypted = "Dosya şifreli değil. Şifreleme, yardımcı teknolojinin dosyayı okumasını engelleyebilir."
+tagged = "Dosyada yapısını tanımlayan etiketler var. Etiketler olmadan ekran okuyucular yalnızca düz metin alır."
+title = "Dosyanın meta verilerinde bir başlık var."
+
+[checkAccessibility.figures]
+summary_one = "{{count}} görselin açıklamaya ihtiyacı var (sayfa {{pages}})"
+summary_other = "{{count}} görselin açıklamaya ihtiyacı var (sayfalar {{pages}})"
+
+[checkAccessibility.issue]
+appliesTo = "Geçerli olduğu yer"
+clauseValue = "{{spec}} §{{clause}}, test {{test}}"
+details = "Ayrıntılar"
+instances_one = "{{count}} örnek"
+instances_other = "{{count}} örnek"
+onPages_one = "Sayfa {{pages}}"
+onPages_other = "Sayfalar {{pages}}"
+onPagesPartial_one = "Sayfa {{pages}} (liste eksik olabilir)"
+onPagesPartial_other = "Sayfalar {{pages}} (liste eksik olabilir)"
+pages = "Sayfalar"
+pagesPartialValue = "{{pages}} (yalnızca ilk örnekler sayfa kaydettiği için bu liste eksik olabilir)"
+requirement = "Gereksinim"
+rule = "Kural"
+standard = "Standart"
+where = "Konum"
+
+[checkAccessibility.manual]
+clearAll = "Tümünü temizle"
+done = "Tamamlandı"
+inProgress = "Devam ediyor"
+markAllDone = "Tümünü tamamlandı olarak işaretle"
+tip = "Okuma sırası ve görsel açıklamalarının anlamlı olup olmadığı gibi yalnızca bir insanın değerlendirebileceği konular. Her birini kontrol ettikten sonra işaretleyin; işaretleriniz indirilen rapora eklenir."
+title = "Elle yapılan denetimler"
+
+[checkAccessibility.objects]
+annotation = "Bir ek açıklama"
+bookmark = "Bir yer imi"
+character = "Bir yazı tipindeki bir karakter"
+contentPiece = "Sayfa içeriğinin bir parçası"
+document = "Belge"
+drawing = "Bir çizim"
+figure = "Bir şekil"
+file = "Dosyanın kendisi"
+font = "Bir yazı tipi"
+form = "Form"
+formField = "Bir form alanı"
+link = "Bir bağlantı"
+markedContent = "İşaretlenmiş sayfa içeriği"
+metadata = "Belge meta verileri"
+page = "Bir sayfa"
+properties = "Belge özellikleri"
+tag = "Bir {{name}} etiketi"
+tagTree = "Etiket ağacı"
+textPiece = "Bir metin parçası"
+translatedMetadata = "Çevirileri olan bir meta veri girdisi"
+
+[checkAccessibility.pdf]
+continued = "{{name}} (devamı)"
+footer = "Stirling PDF ile denetlendi"
+page = "Sayfa {{n}}"
+title = "Erişilebilirlik raporu"
+
+[checkAccessibility.result]
+fail = "Başarısız"
+failSummary = "Ekran okuyucular bu belgenin tamamını okuyamayabilir."
+partial = "Kısmi"
+partialSummary = "Ekran okuyucular bu belgeyi okuyabilir, ancak bazı denetimler başarısız."
+pass = "Geçti"
+passSummary = "Tüm otomatik PDF/UA denetimlerini geçiyor."
+
+[checkAccessibility.rules]
+annotationLanguage = "Yorum veya bağlantı metni için dil ayarlanmamış, bu yüzden ekran okuyucular hangi dilde okuyacağını bilmiyor. Düzeltmek için belgenin dilini ayarlayın."
+annotationNoDescription = "Bir yorum, bağlantı veya çizimin metin açıklaması yok, bu yüzden ekran okuyucuların duyuracak bir şeyi yok."
+annotationNotTagged = "Bir yorum veya çizim ek açıklama olarak etiketlenmemiş, bu yüzden ekran okuyucular okuma sırasında ona ulaşamıyor."
+artifactInsideTagged = "Süsleme olarak işaretlenmiş bir öğe etiketli içeriğin içinde duruyor, bu yüzden hem okunuyor hem atlanıyor."
+bookmarkLanguage = "Yer imleri için dil ayarlanmamış, bu yüzden ekran okuyucular hangi dilde okuyacağını bilmiyor. Düzeltmek için belgenin dilini ayarlayın."
+conformancePrefix = "Meta verilerdeki PDF/UA beyanı yanlış önek kullanıyor, bu yüzden PDF okuyucular onu tanımayabilir."
+contentLanguage = "Metin için dil ayarlanmamış, bu yüzden ekran okuyucular hangi dilde okuyacağını bilmiyor. Düzeltmek için belgenin dilini ayarlayın."
+customTagNotMapped = "Bir etiket, standart bir etikete bağlanmamış özel bir ad kullanıyor, bu yüzden ekran okuyucular ne olduğunu bilmiyor."
+figureNoAlt = "Bir görsel şekil olarak etiketlenmiş ama açıklaması yok, bu yüzden ekran okuyucu kullanıcıları ne gösterdiğini bilemez."
+fontMissingGlyphs = "Dahil edilen bir yazı tipinde belgenin kullandığı bazı karakterler eksik."
+fontNotEmbedded = "Bir yazı tipi dosyaya dahil edilmemiş, bu yüzden metin başka bir bilgisayarda farklı görünebilir veya farklı okunabilir."
+formFieldNotTagged = "Bir form alanı formun parçası olarak etiketlenmemiş, bu yüzden ekran okuyucular onu bulamayabilir."
+genericHeading = "Bir başlık, düzeyi olmayan H etiketini kullanıyor. PDF/UA-2, ekran okuyucu kullanıcılarının başlıkların nasıl iç içe geçtiğini anlayabilmesi için H1 ile H6 arasını gerektirir."
+glyphWidths = "Dosyadaki bir yazı tipinin karakter genişlikleri yazı tipinin kendisiyle eşleşmiyor, bu yüzden metin aralıkları yanlış olabilir."
+headingSkipped = "Başlık düzeyleri bir adım atlıyor (ör. Başlık 1'den doğrudan Başlık 3'e), bu da başlıklar arasında gezinmeyi kafa karıştırıcı yapar."
+linkNoDescription = "Bir bağlantının açıklaması yok, bu yüzden ekran okuyucular yalnızca adresini okuyabilir ya da hiçbir şey okuyamaz."
+linkNotTagged = "Bir bağlantı bağlantı olarak etiketlenmemiş, bu yüzden ekran okuyucular onu bağlantı olarak duyurmaz."
+metadataLanguage = "Başlık gibi meta veriler için dil ayarlanmamış, bu yüzden ekran okuyucular hangi dilde okuyacağını bilmiyor. Düzeltmek için belgenin dilini ayarlayın."
+noConformanceClaim = "Dosya PDF/UA'ya uyduğunu belirtmiyor. Meta verilerinde bir PDF/UA tanımlama girdisi olmalıdır."
+noDocumentTag = "Etiketlerin en üstünde tek bir Document etiketi olmalı ve diğer her şey onun içinde yer almalıdır."
+noLanguage = "Belge hangi dilde olduğunu belirtmiyor, bu yüzden ekran okuyucular onu yanlış dilde okuyabilir."
+noMetadataStream = "Dosyada, PDF/UA'nın belge başlığını ve uygunluk ayrıntılarını tuttuğu XMP meta verileri yok."
+noTags = "Dosyada hiç etiket yok, bu yüzden ekran okuyucular başlıkları, paragrafları, listeleri veya tabloları ayırt edemez ve doğru sırada okuyamaz."
+notdefGlyph = "Metin, boşluk veya kutu olarak görünen ve sesli okunamayan bir \"eksik karakter\" yer tutucusu kullanıyor."
+noteTag = "Dosya, PDF/UA-2'nin dipnotlar ve son notlar için FENote ile değiştirdiği Note etiketini kullanıyor."
+noTitle = "Belgenin meta verilerinde başlık yok."
+notMarkedTagged = "Dosya etiketli olarak işaretlenmemiş, bu yüzden yardımcı teknoloji mevcut etiketleri yok sayabilir."
+notPdf2Tags = "PDF/UA-2, bir PDF 2.0 dosyasının kullandığı etiketleri gerektirir. Bunlar PDF 1.7 etiketlerine benziyor; bu genellikle dosyanın PDF/UA-1 için etiketlendiği anlamına gelir."
+noUnicode = "Bazı karakterler okunabilir metne dönüştürülemiyor, bu yüzden ekran okuyucular ve kopyala-yapıştır onları yanlış alabilir."
+replacementTextLanguage = "Bazı yedek metinler için dil ayarlanmamış, bu yüzden ekran okuyucular hangi dilde okuyacağını bilmiyor. Düzeltmek için belgenin dilini ayarlayın."
+standardTagRemapped = "Standart bir etiket özel bir etikete bağlanmış, bu yüzden ekran okuyucular anlamını kaybediyor."
+symbolicEncoding = "Bir sembol yazı tipi taşımaması gereken bir kodlama taşıyor, bu yüzden karakterleri yanlış harfler olarak çıkabilir."
+tabOrder = "Bağlantı veya yorum içeren bir sayfanın sekme sırası belgeyi izleyecek şekilde ayarlanmamış, bu yüzden klavye kullanıcıları sayfada rastgele atlayabilir."
+taggedInsideArtifact = "Etiketli içerik, süsleme olarak işaretlenmiş bir öğenin içinde duruyor, bu yüzden ekran okuyucular onu atlayabilir."
+titleNotDisplayed = "PDF okuyucular belgenin başlığı yerine dosya adını gösterecek. Dosyada \"belge başlığını göster\" ayarının açılması gerekir."
+untaggedContent = "Sayfadaki bir öğe ne içerik olarak etiketlenmiş ne de süsleme olarak işaretlenmiş, bu yüzden ekran okuyucular okuyup okumayacağını bilemiyor. Bu genellikle bir arka plan görseli, üst bilgi, alt bilgi veya sayfa numarasıdır."
+
+[checkAccessibility.ruleTitles]
+annotationLanguage = "Yorumlar veya bağlantılar için dil yok"
+annotationNoDescription = "Açıklaması olmayan yorum, bağlantı veya çizim"
+annotationNotTagged = "Etiketlenmemiş yorum veya çizim"
+artifactInsideTagged = "Etiketli içeriğin içinde süsleme"
+bookmarkLanguage = "Yer imleri için dil yok"
+conformancePrefix = "PDF/UA beyanı yanlış yazılmış"
+contentLanguage = "Metin için dil yok"
+customTagNotMapped = "Standart anlamı olmayan özel etiket"
+figureNoAlt = "Açıklaması olmayan görsel"
+fontMissingGlyphs = "Yazı tipinde eksik karakterler"
+fontNotEmbedded = "Yazı tipi gömülü değil"
+formFieldNotTagged = "Form alanı etiketlenmemiş"
+genericHeading = "Düzeyi olmayan başlık"
+glyphWidths = "Yazı tipi karakter genişlikleri eşleşmiyor"
+headingSkipped = "Başlık düzeyi atlanmış"
+linkNoDescription = "Açıklaması olmayan bağlantı"
+linkNotTagged = "Bağlantı etiketlenmemiş"
+metadataLanguage = "Meta veriler için dil yok"
+noConformanceClaim = "PDF/UA beyan etmiyor"
+noDocumentTag = "Etiketler bir Document etiketiyle başlamıyor"
+noLanguage = "Belge dili yok"
+noMetadataStream = "XMP meta verileri yok"
+noTags = "Etiket yok"
+notdefGlyph = "Eksik karakter yer tutucusu kullanılmış"
+noteTag = "Note etiketini kullanıyor"
+noTitle = "Belge başlığı yok"
+notMarkedTagged = "Etiketli olarak işaretlenmemiş"
+notPdf2Tags = "Etiketler PDF 2.0 etiketleri değil"
+noUnicode = "Metin olarak okunamayan karakterler"
+replacementTextLanguage = "Yedek metin için dil yok"
+standardTagRemapped = "Standart etiket özel etikete dönüştürülmüş"
+symbolicEncoding = "Sembol yazı tipinin kodlaması yanlış"
+tabOrder = "Sekme sırası belgeyi izlemiyor"
+taggedInsideArtifact = "Süsleme olarak gizlenmiş etiketli içerik"
+titleNotDisplayed = "Açıldığında başlık gösterilmiyor"
+untaggedContent = "Etiketlenmemiş içerik"
+
+[checkAccessibility.score]
+issues_one = "{{count}} sorun"
+issues_other = "{{count}} sorun"
+noIssues = "Sorun bulunamadı"
+subtitle_one = "{{profile}} - {{count}} sayfa"
+subtitle_other = "{{profile}} - {{count}} sayfa"
+
+[checkAccessibility.sections]
+breakdown = "Döküm"
+
+[checkAccessibility.status]
+checking = "{{current}}/{{total}} denetleniyor..."
+complete = "Denetim tamamlandı"
+
+[checkAccessibility.steps]
+results = "Sonuçlar"
+standard = "Standart"
+
+[checkAccessibility.tooltip.header]
+title = "Hangi standart denetlensin"
+
+[checkAccessibility.tooltip.ua1]
+text = "PDF/UA'nın 2012'de ISO 14289-1 olarak yayımlanan, PDF 1.7 dosyaları için ilk sürümü."
+title = "PDF/UA-1"
+
+[checkAccessibility.tooltip.ua2]
+text = "2024'te ISO 14289-2 olarak yayımlanan, PDF 2.0 dosyaları için yeni sürüm. Buna göre denetlenen bir PDF 1.7 dosyası, yalnızca PDF 2.0 için geçerli olan kurallarda başarısız olur."
+title = "PDF/UA-2"
+
+[checkAccessibility.where]
+annotation = "Ek açıklama {{n}}"
+bookmarks = "Yer imleri"
+character = "{{font}} içinde bir karakter"
+contentItem = "İçerik öğesi {{n}}"
+drawingStep = "Çizim adımı {{n}}"
+embeddedGraphic = "Gömülü grafik"
+font = "Yazı tipi {{name}}"
+metadata = "Belge meta verileri"
+page = "Sayfa {{n}}"
+piece = "Parça {{n}}"
+tag = "{{tag}} etiketi"
+tagTree = "Etiket ağacı"
+wholeDocument = "Tüm belge"
+
+[checkAccessibility.where.properties]
+author = "Yazar"
+description = "Açıklama"
+pdfUaPart = "PDF/UA bölümü"
+title = "Başlık"
+
+[connectedAccounts]
+connect = "Bağla"
+connectAnother = "Başka bir hesap bağla"
+connectFailed = "Hesap bağlanamadı. Sunucunun uygulama kaydının yapılandırıldığını kontrol edip tekrar deneyin."
+disconnect = "Bağlantıyı kes"
+google = "Google Drive"
+intro = "Kendi hesaplarınızı bir kez bağlayın. Ardından ardışık düzenleriniz sizin adınıza bu hesaplardan okuyup bu hesaplara kaydedebilir."
+microsoft = "Microsoft (OneDrive ve SharePoint)"
+needsReconnect = "Stirling artık bu hesaba erişemiyor, bu yüzden onu kullanan ardışık düzenler duraklatıldı."
+none = "Yöneticiniz bağlı hesapları etkinleştirmedi."
+personal = "Kişisel hesap"
+popupBlocked = "Tarayıcınız oturum açma penceresini engelledi. Bu site için açılır pencerelere izin verip tekrar deneyin."
+reconnect = "Tekrar oturum aç"
+work = "İş hesabı"
+
+[connectedAccounts.disconnectConfirm]
+body = "Bu hesabı kullanan kaynaklar ve ardışık düzenler, hesabı tekrar bağlayana kadar durur."
+confirm = "Bağlantıyı kes"
+title = "{{account}} bağlantısı kesilsin mi?"
+
+[connectedAccounts.status]
+connected = "Bağlı"
+needsSignIn = "Oturum açılması gerekiyor"
+
+[feedback.page]
+open = "Geri bildirim gönder"
+sendMore = "Daha fazla geri bildirim gönder"
+sent = "Geri bildiriminiz için teşekkürler"
+title = "Stirling'i geliştirmemize yardım edin"
+unavailable = "Geri bildirim kullanılamıyor"
+
+[feedback.tag]
+dismiss = "Geri bildirim düğmesini gizle"
+label = "Geri bildirim"
+
+[saveFile.menu]
+more = "Diğer kaydetme seçenekleri"
+saveCopy = "Kopyasını kaydet..."
+
+[saveFile.toolbar]
+mixed = "Tümünü kaydet"
+
+[serverSetup]
+back = "Geri"
+collapse = "{{setting}} ayarlarını gizle"
+configured = "Yapılandırıldı"
+continue = "Devam"
+dialogLabel = "Sunucu kurulumu"
+expand = "{{setting}} ayarlarını göster"
+finishSetup = "Kurulumu bitir"
+loadErrorSubtitle = "Kurulumun başlaması için sunucunun mevcut ayarları gerekiyor."
+loadErrorTitle = "Ayarlarınız yüklenemedi"
+off = "Kapalı"
+on = "Açık"
+save = "Kaydet"
+stepCount = "{{current}}/{{total}}"
+
+[serverSetup.account]
+failed = "Bilgileriniz kaydedilemedi. Sunucuya erişilebildiğini kontrol edip tekrar deneyin."
+save = "Kaydet ve devam et"
+signIn = "Oturum aç"
+signInAgainSubtitle = "Devam etmek için yeni kullanıcı adınız ve parolanızla tekrar oturum açın."
+signInAgainTitle = "Bilgileriniz kaydedildi"
+subtitle = "Bundan sonra nasıl oturum açacağınızı seçin."
+title = "Hesabınızı ayarlayın"
+updating = "Güncelleniyor"
+updatingSubtitle = "Bir dakika."
+updatingTitle = "Bilgileriniz güncelleniyor"
+username = "Kullanıcı adı"
+usernameHelp = "Oturum açarken kullanacağınız ad. E-posta adresi de olur."
+
+[serverSetup.addresses]
+backendUrl = "Sunucu adresi"
+backendUrlHelp = "Oturum açma sağlayıcılarının kişileri geri gönderdiği adres. Genellikle web adresiyle aynıdır."
+frontendUrl = "Web adresi"
+frontendUrlHelp = "Kişilerin Stirling PDF'i açtığı adres. E-postalarda, paylaşım bağlantılarında ve QR kodlarında kullanılır."
+subtitle = "Kişilerin ve oturum açma sağlayıcılarının bu sunucuya nasıl ulaştığı."
+title = "Adresler"
+
+[serverSetup.ai]
+apiKey = "API anahtarı"
+apiKeyHelp = "AI motorunun zaten sahip olduğu anahtarı kullanmak için boş bırakın."
+baseUrl = "Temel URL"
+engineUrl = "AI motoru adresi"
+fastModel = "Hızlı model"
+label = "Kendi barındırmalı AI"
+provider = "Model sağlayıcı"
+providerCustom = "OpenAI uyumlu"
+smartModel = "Tam model"
+stirling = "Stirling AI"
+subtitle = "Belge soruları, otomatik düzenlemeler ve AI ajanları."
+title = "AI"
+
+[serverSetup.analytics]
+accept = "Kabul et ve devam et"
+acceptFinish = "Kabul et ve bitir"
+changeLater = "Bunu istediğiniz zaman {{path}} bölümünden değiştirebilirsiniz."
+decline = "Reddet ve devam et"
+declineFinish = "Reddet ve bitir"
+learnMore = "Neleri topluyoruz"
+note = "Stirling PDF'i geliştirmemize yardımcı olmak için bu sunucunun kullanım verilerini bizimle paylaşın. Dosyaları veya içeriklerini asla toplamayız."
+title = "Sunucu analitiği"
+
+[serverSetup.documents]
+label = "Belge soruları"
+model = "Embedding modeli"
+provider = "Embedding sağlayıcısı"
+providerHelp = "Belge metnini soruları yanıtlayan arama dizinine dönüştürür."
+
+[serverSetup.email]
+from = "Gönderen adresi"
+host = "SMTP sunucusu"
+label = "E-posta gönder"
+password = "Parola"
+port = "Bağlantı noktası"
+subtitle = "Davetler, imza istekleri ve paylaşımlar için."
+title = "E-posta"
+username = "Kullanıcı adı"
+
+[serverSetup.error]
+email = "Bir e-posta adresi girin"
+issuerUnreachable = "Bu sağlayıcıya (issuer) ulaşılamadı. Adresi ve bu sunucunun ona ulaşabildiğini kontrol edin."
+passwordIncorrect = "Parola yanlış"
+passwordLength = "En az 8 karakter kullanın"
+passwordMismatch = "Parolalar eşleşmiyor"
+passwordRejected = "Sunucu bu parolayı kabul etmedi. Başka bir parola deneyin."
+passwordUnchanged = "Mevcut paroladan farklı bir parola seçin"
+port = "1 ile 65535 arasında bir bağlantı noktası girin"
+providerName = "Yalnızca harf, rakam, tire veya alt çizgi kullanın"
+required = "Zorunlu"
+url = "http:// veya https:// ile başlayan tam bir adres girin"
+username = "3 ile 50 arasında harf, rakam veya . _ + - @ karakteri ya da bir e-posta adresi kullanın"
+usernameTaken = "Bu kullanıcı adı alınmış"
+
+[serverSetup.files]
+sharing = "Dosya paylaşımı"
+sharingOffWarning = "Paylaşım kapalıyken mevcut paylaşım bağlantıları çalışmaz."
+storage = "Dosyaları depola"
+storageOffWarning = "Depolama kapalıyken kişilerin sunucuya kaydettiği dosyalar artık açılamaz."
+subtitle = "Dosya depolamayı ve paylaşımı yönetin."
+title = "Dosyalar"
+
+[serverSetup.finish]
+errorNote = "Sunucuya erişilebildiğini ve hâlâ yönetici olarak oturum açmış olduğunuzu kontrol edin."
+errorSubtitle = "Hiçbir şey yeniden başlatılmadı."
+errorTitle = "Ayarlarınız kaydedilemedi"
+manualSubtitle = "Bu sunucu kendini yeniden başlatamıyor. Ayarları uygulamak için konteynerini veya hizmetini yeniden başlatın."
+manualTitle = "Ayarlar kaydedildi"
+restartFailedSubtitle = "Sunucu yeniden başlamadı. Ayarları uygulamak için konteynerini veya hizmetini yeniden başlatın."
+restartingSubtitle = "Sunucu geri geldiğinde bu sayfa yeniden yüklenir; bu genellikle bir dakika içinde olur."
+restartingTitle = "Sunucunuz yeniden başlatılıyor"
+retry = "Tekrar dene"
+saving = "Kaydediliyor"
+savingSubtitle = "Bir dakika."
+savingTitle = "Ayarlarınız kaydediliyor"
+
+[serverSetup.language]
+auto = "Her tarayıcıya uy"
+label = "Varsayılan dil"
+subtitle = "Yeni ziyaretçilerin ilk gördüğü dil."
+title = "Dil"
+
+[serverSetup.mcp]
+label = "MCP sunucusu"
+
+[serverSetup.password]
+confirm = "Yeni parolayı onayla"
+current = "Mevcut parola"
+new = "Yeni parola"
+
+[serverSetup.signIn]
+clientId = "İstemci kimliği"
+clientSecret = "İstemci gizli anahtarı"
+issuer = "Issuer URL'si"
+label = "Oturum açma yöntemi"
+oidc = "Diğer OpenID Connect"
+password = "Kullanıcı adı ve parola"
+providerName = "Sağlayıcı adı"
+providerNameHelp = "Oturum açma düğmesinde gösterilir, örneğin okta veya entra."
+redirectNote = "Bu yönlendirme URI'sini sağlayıcınıza ekleyin:"
+subtitle = "Ekibinizin nasıl oturum açacağı."
+title = "Oturum açma"
+
+[serverSetup.signingIn]
+button = "Oturum açılıyor"
+title = "Varsayılan kimlik bilgileriyle oturum açılıyor"
+
+[serverSetup.start]
+custom = "Özel"
+quick = "Hızlı başlangıç"
+setupLabel = "Kurulum"
+subtitle = "Birkaç adımda ekibiniz için ayarlayın."
+title = "Sunucunuz çalışıyor"
+
+[serverSetup.summary]
+subtitle = "Temel ayarları kontrol edin. Diğer her şey varsayılan değerini korur."
+title = "Hızlı başlangıç"
+
+[signedPdf]
+editsBlocked = "Bu PDF dijital olarak imzalı ve imzalı PDF'lerde değişiklik kapalı. Yine de görüntüleyebilir, yazdırabilir, başka bir biçime dönüştürebilir veya yeniden imzalayabilirsiniz."
+editsBlockedStatus = "İmzalı: düzenleme engellendi"
+editsBlockedTitle = "İmzalı PDF değiştirilemez"
+
+[teamWelcome]
+invite = "Kişileri davet et"
+message = "Sizinle çalışmaya başlayabilmeleri için ekibinizi davet edin."
+title = "Team planınız etkin."
