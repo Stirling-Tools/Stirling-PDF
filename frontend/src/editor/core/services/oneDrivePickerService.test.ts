@@ -115,7 +115,11 @@ describe("picker protocol", () => {
     return service;
   }
 
-  async function connectPicker(): Promise<{
+  async function connectPicker(
+    origin = "https://contoso-my.sharepoint.com",
+  ): Promise<{
+    activated: () => Promise<void>;
+    replies: unknown[];
     send: (id: string, data: unknown) => void;
     tokenReply: (id: string, token: string) => Promise<void>;
   }> {
@@ -141,14 +145,15 @@ describe("picker protocol", () => {
     window.dispatchEvent(
       new MessageEvent("message", {
         data: { type: "initialize", channelId: options.messaging.channelId },
+        origin,
         source: frame.contentWindow,
         ports: [channel.port1],
       }),
     );
-    await vi.waitFor(() =>
-      expect(replies).toContainEqual({ type: "activate" }),
-    );
     return {
+      activated: () =>
+        vi.waitFor(() => expect(replies).toContainEqual({ type: "activate" })),
+      replies,
       send: (id, data) =>
         channel.port2.postMessage({ type: "command", id, data }),
       tokenReply: (id, token) =>
@@ -187,6 +192,7 @@ describe("picker protocol", () => {
     const picked = service.pick({ extensions: [".pdf"] });
 
     const picker = await connectPicker();
+    await picker.activated();
     picker.send("1", {
       command: "authenticate",
       resource: "https://contoso-my.sharepoint.com",
@@ -220,6 +226,7 @@ describe("picker protocol", () => {
     const picked = service.pick();
 
     const picker = await connectPicker();
+    await picker.activated();
     picker.send("1", { command: "close" });
 
     expect(await picked).toEqual([]);
@@ -242,6 +249,7 @@ describe("picker protocol", () => {
     const picked = service.pick({}, { accountId: 3 });
 
     const picker = await connectPicker();
+    await picker.activated();
     picker.send("1", {
       command: "authenticate",
       resource: "https://contoso-my.sharepoint.com/personal/pat",
@@ -253,5 +261,18 @@ describe("picker protocol", () => {
     expect(msal.app.loginPopup).not.toHaveBeenCalled();
     expect(msal.app.acquireTokenSilent).not.toHaveBeenCalled();
     expect(serverTokens.fetchAccessToken).toHaveBeenCalledWith(3, "graph");
+  });
+
+  it("ignores a channel offered by a page from another origin", async () => {
+    const service = await initializedService();
+    const picked = service.pick();
+
+    const intruder = await connectPicker("https://attacker.example");
+    const picker = await connectPicker();
+    await picker.activated();
+    expect(intruder.replies).toEqual([]);
+
+    picker.send("1", { command: "close" });
+    expect(await picked).toEqual([]);
   });
 });

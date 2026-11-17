@@ -323,6 +323,7 @@ class OneDrivePickerService {
     const pickerUrl = personal
       ? `${baseUrl}?${query}`
       : `${baseUrl}/_layouts/15/FilePicker.aspx?${query}`;
+    const pickerOrigin = new URL(pickerUrl).origin;
 
     return new Promise<PickedItem[]>((resolve, reject) => {
       let port: MessagePort | null = null;
@@ -386,7 +387,11 @@ class OneDrivePickerService {
       };
 
       const onWindowMessage = (event: MessageEvent) => {
-        if (event.source !== overlay.frame.contentWindow) return;
+        if (
+          event.source !== overlay.frame.contentWindow ||
+          event.origin !== pickerOrigin
+        )
+          return;
         const message = event.data as { type?: string; channelId?: string };
         if (message?.type !== "initialize" || message.channelId !== channelId) {
           return;
