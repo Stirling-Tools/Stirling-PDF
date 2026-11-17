@@ -642,7 +642,7 @@ test.describe("PDF text editor - font family, measured on the rendered page", ()
   // Would catch: a weight change that only relabels the font in the store. The
   // glyph box barely moves between Helvetica and Helvetica Bold, so the only
   // honest evidence is how much darker the stems are - the ink area.
-  test("Helvetica Bold thickens the glyph ink without moving its box", async ({
+  test("the Bold toggle thickens Helvetica's glyph ink without moving its box", async ({
     page,
   }) => {
     test.setTimeout(120_000);
@@ -653,7 +653,7 @@ test.describe("PDF text editor - font family, measured on the rendered page", ()
     const regular = await settledInk(page);
     expect(regular.n, "regular render must be inked").toBeGreaterThan(100);
 
-    await setFamily(page, "Helvetica Bold");
+    await page.getByTestId("pdf-editor-bold").click();
     const bold = await settledInk(page, { differentFrom: regular });
 
     expect(

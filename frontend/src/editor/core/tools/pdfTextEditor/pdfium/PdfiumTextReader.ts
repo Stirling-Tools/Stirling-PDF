@@ -1172,7 +1172,7 @@ function readTextRun(
     if (fontPtr) primeFontGlyphMap(fontPtr, m);
     // Make the same face available to the overlay as a CSS FontFace.
     if (fontPtr) registerEmbeddedFace(m, fontPtr);
-    noteDocumentFontStyle(m, fontPtr);
+    noteDocumentFontStyle(m, fontPtr, family);
     // Treat the PDFium font handle pointer as a unique id within the doc.
     const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${id}`;
 

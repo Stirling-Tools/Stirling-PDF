@@ -63,6 +63,24 @@ async function selectFontFamily(
   await page.getByRole("option", { name: optionLabel, exact: true }).click();
 }
 
+/** Turn the selected text's bold face on or off through the Bold toggle, and wait until it is. */
+async function setBold(page: import("@playwright/test").Page, on: boolean) {
+  const bold = page.getByTestId("pdf-editor-bold");
+  await expect(bold).toBeEnabled();
+  if ((await bold.getAttribute("aria-pressed")) !== String(on))
+    await bold.click();
+  await expect(bold).toHaveAttribute("aria-pressed", String(on));
+}
+
+/** Put the selected text in Helvetica Bold: the family from the list, then the Bold toggle. */
+async function selectHelveticaBold(page: import("@playwright/test").Page) {
+  await selectFontFamily(page, "Helvetica");
+  await expect(page.getByTestId("pdf-editor-font-family")).toHaveValue(
+    "Helvetica",
+  );
+  await setBold(page, true);
+}
+
 async function loadSamplePdf(page: import("@playwright/test").Page) {
   // The visible "Open" flow goes through the left-sidebar Files panel.
   await page
@@ -2918,9 +2936,8 @@ test.describe("PDF text editor - bold/italic", () => {
     const before = await readState(runId);
     expect(before.undoDepth).toBeGreaterThan(0);
 
-    // Now pick the bold variant. It should dispatch another edit (undo stack
-    // grows). The dedicated weight button is gone; the picker is the way in.
-    await selectFontFamily(page, "Helvetica Bold");
+    // Now the bold face. It should dispatch another edit (undo stack grows).
+    await setBold(page, true);
 
     // The toolbar's active state flips on local component state, which can beat
     // the command onto the screen - so wait for the history itself to grow.
@@ -3014,10 +3031,8 @@ test.describe("PDF text editor - bold/italic", () => {
 
     // Bold then un-bold (the user's exact sequence). Each pick dispatches a
     // SetFontFamily command.
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(300);
-    await selectFontFamily(page, "Helvetica");
-    await page.waitForTimeout(300);
+    await selectHelveticaBold(page);
+    await setBold(page, false);
 
     const after = await page.evaluate((id) => {
       const store = (
@@ -3071,29 +3086,27 @@ test.describe("PDF text editor - bold/italic", () => {
     await expect(
       page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),
     ).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
 
-    const reopenedRuns = await page.evaluate(() => {
-      const store = (
-        window as unknown as {
-          __editor_store: {
-            doc: { page: (i: number) => { runs: Array<{ text: string }> } };
-          };
-        }
-      ).__editor_store;
-      return store.doc.page(0).runs.map((r) => r.text);
-    });
+    const reopenedRuns = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as {
+            __editor_store: {
+              doc: { page: (i: number) => { runs: Array<{ text: string }> } };
+            };
+          }
+        ).__editor_store;
+        return store.doc.page(0).runs.map((r) => r.text);
+      });
     // The CORE assertion: each distinctive tagline word appears in EXACTLY ONE
-    // run.
-    const countCarrying = (word: string) =>
-      reopenedRuns.filter((t) => t.includes(word)).length;
+    // run. Polled, because the run list fills in as the reopened file loads.
     for (const word of ["Adobe", "Acrobat", "Alternative"]) {
-      expect(
-        countCarrying(word),
-        `Runs carrying "${word}": ${JSON.stringify(
-          reopenedRuns.filter((t) => t.includes(word)),
-        )}`,
-      ).toBe(1);
+      await expect
+        .poll(
+          async () => (await reopenedRuns()).filter((t) => t.includes(word)),
+          { message: `runs carrying "${word}"`, timeout: 15_000 },
+        )
+        .toHaveLength(1);
     }
   });
 });
@@ -4490,10 +4503,10 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
       test.skip(true, "fixture missing tagline");
       return;
     }
-    for (const family of ["Helvetica Bold", "Helvetica", "Helvetica Bold"]) {
+    await selectHelveticaBold(page);
+    for (const on of [false, true]) {
       await selectTagline(page);
-      await selectFontFamily(page, family);
-      await page.waitForTimeout(250);
+      await setBold(page, on);
     }
     const after = await readRun(page, id);
     if (!after) throw new Error("run vanished after 3 bold toggles");
@@ -4514,8 +4527,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     if (!before) throw new Error("baseline read failed");
     // Re-select before each toolbar click.
     await selectTagline(page);
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     await selectTagline(page);
     await page.getByTestId("pdf-editor-italic").click();
     await page.waitForTimeout(250);
@@ -4544,13 +4556,16 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const before = await readRun(page, id);
     if (!before) throw new Error("baseline read failed");
     expect(before.merged).toBeGreaterThan(10);
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
-    await page.getByTestId("pdf-editor-undo").click();
-    await page.waitForTimeout(400);
+    // The family pick and the Bold toggle are one undo step each.
+    for (let step = 0; step < 2; step++)
+      await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => (await readRun(page, id))?.fontId)
+      .toBe(before.fontId);
     const after = await readRun(page, id);
     if (!after) throw new Error("post-undo read failed");
     expect(after.fontId).toBe(before.fontId);
@@ -4568,8 +4583,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
       test.skip(true, "fixture missing tagline");
       return;
     }
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     // Now insert text into the bolded run.
     await page.evaluate((tid) => {
       const el = document.querySelector<HTMLDivElement>(
@@ -4640,7 +4654,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     }
     // Change font family through the real toolbar dropdown (the tagline run
     // is already selected). The Select's onChange dispatches SetFontFamily.
-    await selectFontFamily(page, "Times Roman");
+    await selectFontFamily(page, "Times");
     await page.waitForTimeout(300);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");

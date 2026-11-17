@@ -48,6 +48,7 @@ import {
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import { readFontName } from "@editor/tools/pdfTextEditor/charcode/FontHelpers";
 import { fallbackFamilyFor } from "@editor/tools/pdfTextEditor/util/fontCapability";
+import { fontCompletionFor } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 import {
   isScanRun,
   setScanOverride,
@@ -64,7 +65,8 @@ interface LineToEmit {
 }
 
 // Re-emit a run's text in another family: PDFium has no SetFont accessor.
-// Device fonts embed when pre-warmed, else the nearest standard face.
+// Device fonts embed when pre-warmed, else the nearest standard face. A
+// document fontId reuses that font of the PDF, the run's own one to restore it.
 // Letters the family has no glyph for stay in the font that drew them, and a
 // change that would still leave a letter undrawn is not made.
 export class SetFontFamilyCommand implements Command {
@@ -99,10 +101,11 @@ export class SetFontFamilyCommand implements Command {
     if (!run) return;
     refuseRedrawOfReadOnlyText(run);
     if (needsShaping(run.text)) return;
-    // A document fontId as nextFamily puts the run back in the font it was changed away from.
-    const restoring = isDocumentFontId(this.nextFamily);
+    const toDocumentFont = isDocumentFontId(this.nextFamily);
     const documentFont = run.documentFont;
-    if (restoring && documentFont?.fontId !== this.nextFamily) return;
+    const restoring =
+      toDocumentFont && documentFont?.fontId === this.nextFamily;
+    if (toDocumentFont && !documentFontHandle(this.nextFamily)) return;
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
       family: this.nextFamily,
@@ -161,12 +164,12 @@ export class SetFontFamilyCommand implements Command {
       created.push(...line.ptrs);
     }
 
-    // A restore drawn only in fallback faces did not put the run back in its font.
-    const restoreFont = documentFontHandle(this.nextFamily);
-    const notRestored =
-      restoring &&
-      !created.some((ptr) => m.FPDFTextObj_GetFont(ptr) === restoreFont);
-    if (created.length === 0 || notRestored || losesLetters(dropped)) {
+    // A move to a document font drawn only in fallback faces did not put the run in that font.
+    const targetFont = documentFontHandle(this.nextFamily);
+    const notInTarget =
+      toDocumentFont &&
+      !created.some((ptr) => m.FPDFTextObj_GetFont(ptr) === targetFont);
+    if (created.length === 0 || notInTarget || losesLetters(dropped)) {
       // Nothing usable emitted (e.g. all-whitespace dropped), or a letter went undrawn - restore and bail.
       for (const ptr of created) removeAndDestroyObject(m, page.pagePtr, ptr);
       this.reinsertOriginals(m, page);
@@ -189,6 +192,9 @@ export class SetFontFamilyCommand implements Command {
       run.fontId = this.nextFamily;
       run.fontSubset = documentFont?.subset ?? false;
       run.documentFont = null;
+    } else if (toDocumentFont) {
+      run.fontId = this.nextFamily;
+      run.fontSubset = isSubsetFont(m, targetFont);
     } else {
       run.fontId = embedded
         ? deviceFontId(this.nextFamily)
@@ -229,7 +235,7 @@ export class SetFontFamilyCommand implements Command {
     if (!run || isScanRun(run) || run.scanEdit) return false;
     if (
       isDocumentFontId(this.nextFamily) &&
-      run.documentFont?.fontId !== this.nextFamily
+      !documentFontHandle(this.nextFamily)
     )
       return false;
     const emitLines = linesToEmit(run, readRunTags(doc, page, run));
@@ -245,6 +251,36 @@ export class SetFontFamilyCommand implements Command {
     return losesLetters(dropped);
   }
 
+  /**
+   * How much of the run's visible text the next font has glyphs for: the rest
+   * is drawn in the closest font that has them, and none means the change
+   * would not put the run in that font at all.
+   */
+  coverage(doc: EditorDocument): "all" | "some" | "none" {
+    const page = doc.page(this.pageIndex);
+    const run = page.findRun(this.runId);
+    if (!run || isScanRun(run) || run.scanEdit) return "all";
+    const draws = this.nextFontDraws(doc, page);
+    if (!draws) return "all";
+    const visible = [...run.text].filter(
+      (ch) => !/\s/.test(ch) && !DRAWS_NOTHING.test(ch),
+    );
+    const drawn = visible.filter(draws).length;
+    if (drawn === visible.length) return "all";
+    return drawn === 0 ? "none" : "some";
+  }
+
+  /** Whether the next font has a glyph for a character; null when that cannot be known. */
+  private nextFontDraws(
+    doc: EditorDocument,
+    page: Page,
+  ): ((ch: string) => boolean) | null {
+    const target = documentFontHandle(this.nextFamily);
+    if (!target) return familyDraws(doc, this.nextFamily);
+    return (ch) =>
+      charcodesResolveFully(doc.module, target, ch, page.pagePtr, doc.docPtr);
+  }
+
   private emit(
     doc: EditorDocument,
     page: Page,
@@ -252,17 +288,21 @@ export class SetFontFamilyCommand implements Command {
     lines: readonly LineToEmit[],
     keptFonts: ReadonlyArray<readonly FontSpan[] | undefined> | undefined,
   ): EmittedLine[] {
-    // Only a restore reuses a document font for the run; either way `keptFonts` holds the letters that stay where they are.
-    const restoring = isDocumentFontId(this.nextFamily);
+    // Only a document font is reused for the run; either way `keptFonts` holds the letters that stay where they are.
+    const targetFont = documentFontHandle(this.nextFamily);
     return emitRunLines({
       doc,
       page,
       run,
       lines: lines.map(({ text, tags }) => ({ text, tags })),
       origins: lines.map((line) => ({ x: line.x, y: line.y })),
-      originalFontPtr: restoring ? documentFontHandle(this.nextFamily) : 0,
-      originalFontSubset: restoring ? run.documentFont?.subset : run.fontSubset,
-      fallbackFamily: restoring
+      originalFontPtr: targetFont,
+      originalFontSubset: !targetFont
+        ? run.fontSubset
+        : run.documentFont?.fontId === this.nextFamily
+          ? run.documentFont.subset
+          : isSubsetFont(doc.module, targetFont),
+      fallbackFamily: targetFont
         ? fallbackFamilyFor(this.nextFamily)
         : this.nextFamily,
       fontSpansByLine: keptFonts,
@@ -272,9 +312,9 @@ export class SetFontFamilyCommand implements Command {
   /**
    * Per line, the stretches the next font has no glyph for, each with the font
    * its letters are drawn in. Undefined when the next font draws every letter.
-   * A restore keeps only letters still in a font of the document: one the
-   * editor drew, in the family being left or a stand-in for it, goes back with
-   * the rest of the run.
+   * A move to a document font keeps only letters still in a font of the
+   * document: one the editor drew, in the family being left or a stand-in for
+   * it, goes with the rest of the run.
    */
   private keptFontSpans(
     doc: EditorDocument,
@@ -284,22 +324,26 @@ export class SetFontFamilyCommand implements Command {
   ): Array<FontSpan[] | undefined> | undefined {
     const m = doc.module;
     const restoreFont = documentFontHandle(this.nextFamily);
-    const draws = restoreFont
-      ? (ch: string) =>
-          charcodesResolveFully(m, restoreFont, ch, page.pagePtr, doc.docPtr)
-      : familyDraws(doc, this.nextFamily);
+    const draws = this.nextFontDraws(doc, page);
     if (!draws) return undefined;
     const lacks = (ch: string) => !/\s/.test(ch) && !draws(ch);
     if (![...run.text].some(lacks)) return undefined;
     const fontAt = sourceFontAt(m, page.pagePtr, run);
     const leaving = familyOf(run.fontId);
+    // A run still in a document font was drawn by the PDF, so a font named like it is that face, not a stand-in.
     const drawnByEditor = (font: number) =>
       !!doc.ownedFontAt(font) ||
-      [leaving, nearestStandardFont(leaving)].includes(
-        stripSubsetTag(readFontName(m, font) ?? ""),
-      );
+      (!isDocumentFontId(run.fontId) &&
+        [leaving, nearestStandardFont(leaving)].includes(
+          stripSubsetTag(readFontName(m, font) ?? ""),
+        ));
+    // A face completed from its real font draws a missing letter closer than the face the run is leaving.
+    const completed =
+      run.documentFont?.fontId !== this.nextFamily &&
+      !!fontCompletionFor(this.nextFamily);
     const keeps = (font: number) =>
-      !restoreFont || (font !== restoreFont && !drawnByEditor(font));
+      !restoreFont ||
+      (!completed && font !== restoreFont && !drawnByEditor(font));
     const fallbackFamily = restoreFont
       ? fallbackFamilyFor(this.nextFamily)
       : this.nextFamily;
@@ -380,6 +424,10 @@ const NEEDS_SHAPING =
 const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
 /** Format and control characters draw nothing, so losing one loses no letter. */
 const DRAWS_NOTHING = /[\p{Cf}\p{Cc}]/u;
+
+function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {
+  return /^[A-Z]{6}\+/.test(readFontName(m, font) ?? "");
+}
 
 function losesLetters(dropped: readonly string[]): boolean {
   return dropped.some((ch) => !DRAWS_NOTHING.test(ch));

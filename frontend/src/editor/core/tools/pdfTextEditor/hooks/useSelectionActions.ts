@@ -27,11 +27,20 @@ import {
   isDocumentFontId,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
-import { isItalicFont } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import {
-  italicCapability,
-  italicCutOf,
-} from "@editor/tools/pdfTextEditor/util/fontCapability";
+  faceKeepingStyle,
+  faceStyleOf,
+  familyOfFace,
+  knownDocumentFamilies,
+  restyledFace,
+  type FaceSources,
+  type StyleRequest,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
+import {
+  isBoldWeight,
+  type FaceStyle,
+} from "@editor/tools/pdfTextEditor/util/faceNames";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   loadedExternalFonts,
   loadExternalFont,
@@ -53,6 +62,7 @@ interface SelectedRun {
   text: string;
   fill: { r: number; g: number; b: number; a: number };
   textReadOnly: boolean;
+  renderMode?: number;
 }
 
 /** `redraws` is for an action that redraws, rescales or restyles text: it leaves out the lines the editor cannot redraw and says so. */
@@ -68,7 +78,10 @@ export type FontPickFailure =
   | "embedFailed"
   | "noGlyphs"
   | "missingGlyphs"
-  | "someLeftUnchanged";
+  | "someLeftUnchanged"
+  | "closestMatch"
+  | "styleUnavailable"
+  | "styleSkipped";
 
 interface FamilyChange {
   pageIndex: number;
@@ -77,12 +90,13 @@ interface FamilyChange {
   text: string;
 }
 
-/** How many runs a font change reached, and how many it left as they were and why. */
+/** How many runs a font change reached, how many it left as they were and why, and how many of the changed ones the new font lacks letters of. */
 interface FamilyChangeOutcome {
   applied: number;
   undrawable: number;
   wouldLoseText: number;
   unshapeable: number;
+  inClosestMatch: number;
 }
 
 /** Loads the family's bytes; the failure that must stop the pick, or null to go on. */
@@ -168,6 +182,31 @@ async function loadScriptFacesFor(
   const scripts = scanScriptsOf(lost);
   if (scripts.length > 0)
     await loadScriptScanFaces(scripts).catch(() => undefined);
+}
+
+function faceSources(doc: EditorDocument | null): FaceSources {
+  const fontIds: string[] = [];
+  for (const page of doc?.loadedPages() ?? []) {
+    for (const run of page.runs) {
+      fontIds.push(run.fontId);
+      if (run.documentFont) fontIds.push(run.documentFont.fontId);
+    }
+  }
+  return {
+    documentFamilies: knownDocumentFamilies(fontIds),
+    externalFonts: loadedExternalFonts(),
+  };
+}
+
+/** The warning a font or style change owes the user, or null when it changed everything as asked. */
+function changeFailure(
+  outcome: FamilyChangeOutcome,
+  leftAsIs: number,
+): FontPickFailure | null {
+  if (outcome.unshapeable > 0) return "needsShaping";
+  if (leftAsIs > 0)
+    return outcome.applied > 0 ? "styleSkipped" : "styleUnavailable";
+  return outcome.inClosestMatch > 0 ? "closestMatch" : null;
 }
 
 function liveRuns(store: EditorStore): Map<string, TextRun> {
@@ -319,6 +358,7 @@ export function useSelectionActions(store: EditorStore) {
         undrawable: shapeable.length - drawable.length,
         wouldLoseText: 0,
         unshapeable: changes.length - shapeable.length,
+        inClosestMatch: 0,
       };
       if (doc) await loadScriptFacesFor(doc, drawable);
       if (store.document !== doc) return outcome;
@@ -327,16 +367,25 @@ export function useSelectionActions(store: EditorStore) {
         () => {
           // A font picked for a run while these bytes loaded wins; applying this one now would undo it.
           const applies = stillApplies();
+          const open = store.document;
           const commands = drawable
             .filter((change) => applies(change.runId))
-            .map(familyCommand);
-          const open = store.document;
-          const safe = open
-            ? commands.filter((command) => !command.wouldLoseText(open))
-            : commands;
+            .map(familyCommand)
+            .map((command) => ({
+              command,
+              coverage: open ? command.coverage(open) : "all",
+            }));
+          const reachable = commands.filter((c) => c.coverage !== "none");
+          const safe = reachable.filter(
+            ({ command }) => !open || !command.wouldLoseText(open),
+          );
+          outcome.undrawable += commands.length - reachable.length;
           outcome.applied = safe.length;
-          outcome.wouldLoseText = commands.length - safe.length;
-          return safe;
+          outcome.wouldLoseText = reachable.length - safe.length;
+          outcome.inClosestMatch = safe.filter(
+            (c) => c.coverage === "some",
+          ).length;
+          return safe.map(({ command }) => command);
         },
       );
       return outcome;
@@ -354,14 +403,16 @@ export function useSelectionActions(store: EditorStore) {
         fit.push({ page, run: run as TextRun });
       }, true);
       const stillApplies = claimFontChange(targets);
+      // The list offers one entry per family, standing for it by its regular face, so each run takes the face of it nearest its own weight and slant.
+      const owner = familyOfFace(family, faceSources(doc));
+      const picked = owner?.value === family ? owner : null;
       const changes = targets.map((run) => ({
         pageIndex: run.pageIndex,
         runId: run.id,
-        // The list offers bold cuts as their own entries but italic only through its toggle.
         family:
-          isDocumentFontId(family) || !isItalicFont(run.fontId)
-            ? family
-            : italicCutOf(family),
+          picked && !isScanRun(run)
+            ? faceKeepingStyle(picked, faceStyleOf(run.fontId))
+            : family,
         text: run.text,
       }));
       if (
@@ -379,7 +430,9 @@ export function useSelectionActions(store: EditorStore) {
         if (failure) return failure;
         if (store.document !== doc) return null;
         const styled = new Set(
-          changes.map((c) => c.family).filter((f) => f !== family),
+          changes
+            .map((c) => c.family)
+            .filter((f) => f !== family && !isDocumentFontId(f)),
         );
         for (const face of styled) {
           const texts = changes
@@ -401,59 +454,110 @@ export function useSelectionActions(store: EditorStore) {
         )
           change.family = family;
       }
-      const { applied, undrawable, wouldLoseText, unshapeable } =
-        await dispatchFamilyChanges(stillApplies, changes, fit);
+      const unchanged = new Set(
+        targets
+          .filter((run, i) => changes[i].family === run.fontId)
+          .map((run) => run.id),
+      );
+      const outcome = await dispatchFamilyChanges(
+        stillApplies,
+        changes.filter((change) => !unchanged.has(change.runId)),
+        fit,
+      );
+      const { applied, undrawable, wouldLoseText, unshapeable } = outcome;
       if (unshapeable > 0) return "needsShaping";
-      if (undrawable + wouldLoseText === 0) return null;
+      if (undrawable + wouldLoseText === 0)
+        return outcome.inClosestMatch > 0 ? "closestMatch" : null;
       if (applied > 0) return "someLeftUnchanged";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
     [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],
   );
 
-  const toggleItalic = useCallback(async () => {
-    const doc = store.document;
-    const fonts = loadedExternalFonts();
-    const targets: Array<
-      FamilyChange & { device: boolean; fit: ScanFitTarget }
-    > = [];
-    forEachSelectedRun((run, page) => {
-      const cap = italicCapability(
-        run.fontId,
-        !isItalicFont(run.fontId),
-        fonts,
-      );
-      // No real italic cut for this face. Leave it alone: swapping the
-      // document's own font for Helvetica-Oblique is not making it italic.
-      if (!cap.family) return;
-      targets.push({
-        pageIndex: run.pageIndex,
-        runId: run.id,
-        family: cap.family,
-        text: run.text,
-        device: cap.source === "device",
-        fit: { page, run: run as TextRun },
-      });
-    }, true);
-    const stillApplies = claimFontChange(
-      targets.map((target) => target.fit.run),
-    );
-    // Embedding is async and Command.apply is not, so warm the bytes first.
-    const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
-    for (const target of targets) {
-      if (target.device) {
-        if (await prepareExternalFont(target.family)) continue;
-        if (!doc || store.document !== doc) return;
-        if (!tryEmbedDeviceFont(doc, target.family)) continue;
+  const restyle = useCallback(
+    async (
+      request: (styles: FaceStyle[]) => StyleRequest,
+    ): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      const sources = faceSources(doc);
+      const runs: Array<{ run: SelectedRun; fit: ScanFitTarget }> = [];
+      forEachSelectedRun((run, page) => {
+        runs.push({ run, fit: { page, run: run as TextRun } });
+      }, true);
+      if (runs.length === 0) return null;
+      const wanted = request(runs.map(({ run }) => faceStyleOf(run.fontId)));
+      let leftAsIs = 0;
+      const targets: Array<
+        FamilyChange & { device: boolean; fit: ScanFitTarget }
+      > = [];
+      for (const { run, fit } of runs) {
+        const face = restyledFace(run.fontId, wanted, sources);
+        if (face === undefined) continue;
+        // No real face in that style. Leave it alone: swapping the document's
+        // own font for Helvetica-Oblique is not making it italic.
+        if (face === null) {
+          leftAsIs++;
+          continue;
+        }
+        targets.push({
+          pageIndex: run.pageIndex,
+          runId: run.id,
+          family: face,
+          text: run.text,
+          device: !isDocumentFontId(face) && nearestStandardFont(face) !== face,
+          fit,
+        });
       }
-      ready.push(target);
-    }
-    await dispatchFamilyChanges(
-      stillApplies,
-      ready,
-      ready.map((target) => target.fit),
-    );
-  }, [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges]);
+      const stillApplies = claimFontChange(
+        targets.map((target) => target.fit.run),
+      );
+      // Embedding is async and Command.apply is not, so warm the bytes first.
+      const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
+      for (const target of targets) {
+        if (target.device) {
+          const refused = await prepareExternalFont(target.family);
+          if (!doc || store.document !== doc) return null;
+          if (refused || !tryEmbedDeviceFont(doc, target.family)) {
+            leftAsIs++;
+            continue;
+          }
+        }
+        ready.push(target);
+      }
+      const outcome = await dispatchFamilyChanges(
+        stillApplies,
+        ready,
+        ready.map((target) => target.fit),
+      );
+      return changeFailure(
+        outcome,
+        leftAsIs + outcome.undrawable + outcome.wouldLoseText,
+      );
+    },
+    [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],
+  );
+
+  // A selection that is all one style toggles off; a mixed one goes all on.
+  const toggleBold = useCallback(
+    () =>
+      restyle((styles) => ({
+        bold: !styles.every((style) => isBoldWeight(style.weight)),
+      })),
+    [restyle],
+  );
+
+  const toggleItalic = useCallback(
+    () =>
+      restyle((styles) => ({
+        italic: !styles.every((style) => style.italic),
+      })),
+    [restyle],
+  );
+
+  const changeFontWeight = useCallback(
+    (weight: number) => restyle(() => ({ weight })),
+    [restyle],
+  );
 
   const deleteSelection = useCallback(() => {
     const sel = store.selection.value;
@@ -572,7 +676,9 @@ export function useSelectionActions(store: EditorStore) {
     changeFill,
     changeOutline,
     changeFontFamily,
+    toggleBold,
     toggleItalic,
+    changeFontWeight,
     deleteSelection,
     replaceSelectedImage,
     replaceImageById,

@@ -1,4 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Icon } from "@editor/ui/Icon";
 import { Group, Menu, Popover, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -76,7 +82,7 @@ function FormatMenu({ controller }: { controller: Controller }) {
       </Popover.Target>
       <Popover.Dropdown ref={dropdownRef}>
         <Group gap="xs" wrap="wrap" maw={320}>
-          <FormatGroup controller={controller} />
+          <FormatGroup controller={controller} inPopover />
         </Group>
       </Popover.Dropdown>
     </Popover>
@@ -114,6 +120,44 @@ export function EditorTopBar({
   const barRef = useRef<HTMLDivElement | null>(null);
   const barWidth = useElementWidth(barRef);
   const compact = barWidth !== null && barWidth < COMPACT_BELOW_PX;
+  const bandRef = useRef<HTMLDivElement | null>(null);
+  // The bar width the formatting controls need inline; 0 until they are seen not to fit.
+  const [formatNeeds, setFormatNeeds] = useState(0);
+  const foldFormat = compact || (barWidth !== null && barWidth < formatNeeds);
+  const formatShape = [
+    controller.hasRunSelection,
+    controller.hasImageSelection,
+    controller.state.weights.length > 0,
+  ].join();
+  // Other controls may fit again; measuring them inline happens before paint.
+  useLayoutEffect(() => setFormatNeeds(0), [formatShape]);
+  // The controls can grow after they mount (the device-fonts button, a loader), which re-renders only them.
+  const [formatGroup, setFormatGroup] = useState<HTMLDivElement | null>(null);
+  const [formatWidth, setFormatWidth] = useState(0);
+  useEffect(() => {
+    if (!formatGroup || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) =>
+      setFormatWidth(entry.contentRect.width),
+    );
+    observer.observe(formatGroup);
+    return () => observer.disconnect();
+  }, [formatGroup]);
+  useLayoutEffect(() => {
+    const band = bandRef.current;
+    if (!band || barWidth === null || foldFormat || !hasSelection) return;
+    // The colour field widens while its picker is open; folding then would
+    // remount the controls and close the picker under the pointer.
+    if (formatGroup?.querySelector('[aria-expanded="true"]')) return;
+    const overflow = band.scrollWidth - band.clientWidth;
+    if (overflow > 0) setFormatNeeds(Math.ceil(barWidth + overflow));
+  }, [
+    barWidth,
+    foldFormat,
+    hasSelection,
+    formatGroup,
+    formatWidth,
+    formatShape,
+  ]);
 
   const addTextLabel = addTextArmed
     ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page to add text")
@@ -151,7 +195,7 @@ export function EditorTopBar({
       </div>
 
       {hasDocument && (
-        <div className="pdf-editor-topbar__band">
+        <div className="pdf-editor-topbar__band" ref={bandRef}>
           <Tooltip
             label={t("pdfTextEditor.toolbar.undoTooltip", {
               defaultValue: "Undo ({{shortcut}})",
@@ -330,10 +374,12 @@ export function EditorTopBar({
                   is invisible rather than visibly clipped. */}
               <ObjectGroup controller={controller} />
               <ToolbarSeparator />
-              {compact ? (
+              {foldFormat ? (
                 <FormatMenu controller={controller} />
               ) : (
-                <FormatGroup controller={controller} />
+                <div className="pdf-editor-topbar__format" ref={setFormatGroup}>
+                  <FormatGroup controller={controller} />
+                </div>
               )}
             </>
           )}

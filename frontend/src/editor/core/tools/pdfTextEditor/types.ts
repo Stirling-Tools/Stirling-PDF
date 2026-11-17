@@ -3,6 +3,7 @@
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import type { FontFamilyEntry } from "@editor/tools/pdfTextEditor/util/fontFaces";
 
 export const RENDER_MODE_INVISIBLE = 3;
 
@@ -264,11 +265,24 @@ export interface ToolbarState {
   bold: boolean;
   italic: boolean;
   /**
-   * Whether an italic cut is actually reachable for every selected run - a
-   * base-14 flip, or an installed face of the run's own family. False disables
-   * the control instead of silently substituting Helvetica for the real font.
+   * Whether every selected run is in, or has a real face for, the style the
+   * toggle would give the whole selection: bold when any run is not bold, else
+   * regular. False disables the control instead of silently substituting
+   * Helvetica for the real font.
    */
+  canBold: boolean;
+  /** As {@link canBold}, for italic. */
   canItalic: boolean;
+  /** Bold is off only because the italic text's family has a bold face but no bold italic one. */
+  boldNeedsBoldItalic: boolean;
+  /** Italic is off only because the bold text's family has an italic face but no bold italic one. */
+  italicNeedsBoldItalic: boolean;
+  /** The selection's weight (400 regular, 700 bold), or null when it is mixed. */
+  weight: number | null;
+  /** The weights the selection's family has, when it has more than regular and bold; else empty. */
+  weights: number[];
+  /** The document's own fonts, as families. */
+  documentFamilies: FontFamilyEntry[];
   /** Glyph outline colour across the selection; null when unset or mixed. */
   stroke: RGBA | null;
   /** Glyph outline width in points; null when mixed. 0 means no outline. */

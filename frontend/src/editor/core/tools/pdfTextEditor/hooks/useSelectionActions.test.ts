@@ -3,11 +3,14 @@ import path from "node:path";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { get, losesText, loadScriptScanFaces } = vi.hoisted(() => ({
-  get: vi.fn(),
-  losesText: new Set<string>(),
-  loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
-}));
+const { get, losesText, lacksLetters, loadScriptScanFaces } = vi.hoisted(
+  () => ({
+    get: vi.fn(),
+    losesText: new Set<string>(),
+    lacksLetters: new Set<string>(),
+    loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
+  }),
+);
 vi.mock(
   "@editor/tools/pdfTextEditor/util/scanFontLibrary",
   async (importOriginal) => ({
@@ -22,6 +25,10 @@ vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
 
     wouldLoseText(): boolean {
       return losesText.has(this.opts.runId);
+    }
+
+    coverage(): "all" | "some" {
+      return lacksLetters.has(this.opts.runId) ? "some" : "all";
     }
   },
 }));
@@ -223,6 +230,7 @@ describe("useSelectionActions font changes", () => {
     resetDocumentFontStyles();
     _clearFontNameCacheForTests();
     losesText.clear();
+    lacksLetters.clear();
     loadScriptScanFaces.mockClear();
   });
 
@@ -246,15 +254,29 @@ describe("useSelectionActions font changes", () => {
     expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
   });
 
-  it("applies the exact built-in cut picked, even on bold text", async () => {
+  it("keeps bold italic text bold italic in the built-in family picked", async () => {
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:TrebuchetMS-BoldItalic"), run("b", "base14:Helvetica")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("Times-Roman")).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual([
+      "a:Times-BoldItalic",
+      "b:Times-Roman",
+    ]);
+  });
+
+  it("applies a face named outright as it is", async () => {
     const { store, dispatch } = fakeStore(
       [run("a", "pdf:7:TrebuchetMS-BoldItalic")],
       ["a"],
     );
 
-    expect(await actionsFor(store).changeFontFamily("Times-Roman")).toBeNull();
+    expect(await actionsFor(store).changeFontFamily("Times-Italic")).toBeNull();
 
-    expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Roman"]);
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Times-Italic"]);
   });
 
   it("keeps an italic run italic in a server family with an italic face", async () => {
@@ -539,6 +561,7 @@ describe("useSelectionActions font changes", () => {
       [run("b", "base14:Helvetica", "Hello שלום")],
       ["b"],
     );
+    lacksLetters.add("b");
 
     expect(
       await actionsFor(english.store).changeFontFamily("Noto Sans Hebrew"),
@@ -547,7 +570,7 @@ describe("useSelectionActions font changes", () => {
 
     expect(
       await actionsFor(mixed.store).changeFontFamily("Noto Sans Hebrew"),
-    ).toBeNull();
+    ).toBe("closestMatch");
     expect(dispatchedChanges(mixed.dispatch)).toEqual(["b:Noto Sans Hebrew"]);
   });
 
@@ -730,12 +753,15 @@ describe("useSelectionActions font changes", () => {
     loadScriptScanFaces.mockImplementationOnce(async () => {
       losesText.clear();
     });
+    lacksLetters.add("a");
     const { store, dispatch } = fakeStore(
       [run("a", "pdf:7:Noto Sans", "Total ภาษาไทย")],
       ["a"],
     );
 
-    expect(await actionsFor(store).changeFontFamily("Helvetica")).toBeNull();
+    expect(await actionsFor(store).changeFontFamily("Helvetica")).toBe(
+      "closestMatch",
+    );
 
     expect(loadScriptScanFaces).toHaveBeenCalledWith(["thai"]);
     expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica"]);
@@ -826,6 +852,68 @@ describe("useSelectionActions font changes", () => {
       "b:pdf:7:Garamond",
       "a:Acme Sans Italic",
     ]);
+  });
+
+  it("makes a half-bold selection all bold", async () => {
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica"), run("b", "base14:Helvetica-Bold")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).toggleBold()).toBeNull();
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica-Bold"]);
+  });
+
+  it("moves document text to the document's own bold face", async () => {
+    documentFont(7, "ABCDEF+Calibri", 0);
+    documentFont(8, "GHIJKL+Calibri-Bold", 0);
+    const { store, dispatch } = fakeStore(
+      [run("a", "pdf:7:Calibri"), run("b", "pdf:8:Calibri")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).toggleBold()).toBeNull();
+
+    expect(get).not.toHaveBeenCalled();
+    expect(dispatchedChanges(dispatch)).toEqual(["a:pdf:8:Calibri"]);
+  });
+
+  it("makes no bold up for a family that has no bold face, and says so", async () => {
+    documentFont(7, "ABCDEF+Garamond", 0);
+    const { store, dispatch } = fakeStore([run("a", "pdf:7:Garamond")], ["a"]);
+
+    expect(await actionsFor(store).toggleBold()).toBe("styleUnavailable");
+
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("warns that letters the bold face lacks are drawn in the closest match", async () => {
+    lacksLetters.add("a");
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica", "Hello שלום")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).toggleBold()).toBe("closestMatch");
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica-Bold"]);
+  });
+
+  it("says so when the italic toggle leaves some of the selection upright", async () => {
+    serveFaces(async (id) => {
+      if (id === ITALIC) throw new Error("gone");
+      return fontBytes();
+    });
+    await loadServerFonts();
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica"), run("b", "device:Acme Sans")],
+      ["a", "b"],
+    );
+
+    expect(await actionsFor(store).toggleItalic()).toBe("styleSkipped");
+
+    expect(dispatchedChanges(dispatch)).toEqual(["a:Helvetica-Oblique"]);
   });
 });
 

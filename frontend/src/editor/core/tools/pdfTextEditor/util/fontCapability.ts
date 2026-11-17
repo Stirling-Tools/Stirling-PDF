@@ -1,17 +1,9 @@
 import {
   familyOf,
-  flipItalic,
+  isDocumentFontId,
   nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
-import { isItalicFont } from "@editor/tools/pdfTextEditor/util/documentFontStyle";
 import { helveticaVariantFor } from "@editor/tools/pdfTextEditor/util/helveticaVariant";
-import {
-  faceStyleFlags,
-  knownFamilyOf,
-  pickRequestedFace,
-  resolveRequested,
-  type LocalFont,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
 import {
   fontCompletionFor,
   fontNameRefused,
@@ -20,109 +12,42 @@ import {
   getExternalFontBytes,
   loadedExternalFonts,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
+import {
+  restyledFace,
+  type FaceSources,
+  type StyleRequest,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
 
 // Whether a style change is actually possible for a run's face, and in which
-// family. The toolbar asks before offering the control: replacing a document's
+// face. The toolbar asks before offering the control: replacing a document's
 // own typeface with Helvetica-Oblique is not "making it italic", it is losing
 // the font.
 
-export type StyleSource = "base14" | "device";
+export type StyleSource = "base14" | "device" | "document";
 
 export interface StyleCapability {
-  /** Family to emit, or null when nothing available can render the style. */
+  /** Face to emit, or null when nothing available can render the style. */
   family: string | null;
   source: StyleSource | null;
 }
 
 const NONE: StyleCapability = { family: null, source: null };
 
-/** The installed face for `family` in the requested style, or null. */
-function deviceFaceFor(
-  fonts: LocalFont[],
-  family: string,
-  italic: boolean,
-): string | null {
-  const req = resolveRequested(fonts, family);
-  if (!req.family) return null;
-  const face = pickRequestedFace(fonts, { ...req, italic });
-  if (!face) return null;
-  // pickRequestedFace always returns SOMETHING from a matching family, so the
-  // style has to be checked: a family with no italic cut answers with upright.
-  const flags = faceStyleFlags(face);
-  if (flags.italic !== italic) return null;
-  return [req.family, req.bold ? "Bold" : "", italic ? "Italic" : ""]
-    .filter(Boolean)
-    .join(" ");
-}
-
-// Keyed by font list, so loading fonts (a new list) can never return a stale answer.
-const capabilityCache = new WeakMap<
-  LocalFont[],
-  Map<string, StyleCapability>
->();
-
-/** Base-14 flips in place unless an external family of that name exists; others need a real face. */
-export function italicCapability(
+/** The face a run moves to for `request`; null family when its family has no such face or the run is already in that style. */
+export function styleCapability(
   fontId: string,
-  italic: boolean,
-  fonts: LocalFont[] | null = loadedExternalFonts(),
+  request: StyleRequest,
+  sources: FaceSources = {
+    documentFamilies: [],
+    externalFonts: loadedExternalFonts(),
+  },
 ): StyleCapability {
-  if (!fonts) return computeItalicCapability(fontId, italic, fonts);
-  let cached = capabilityCache.get(fonts);
-  if (!cached) capabilityCache.set(fonts, (cached = new Map()));
-  const key = `${italic ? 1 : 0}${fontId}`;
-  let found = cached.get(key);
-  if (!found)
-    cached.set(key, (found = computeItalicCapability(fontId, italic, fonts)));
-  return found;
-}
-
-function computeItalicCapability(
-  fontId: string,
-  italic: boolean,
-  fonts: LocalFont[] | null,
-): StyleCapability {
-  const family = familyOf(fontId);
+  const family = restyledFace(fontId, request, sources);
   if (!family) return NONE;
-  const flipped = flipItalic(family, italic);
-  if (flipped && !hasExternalFamily(fonts, family)) {
-    return { family: flipped, source: "base14" };
-  }
-  if (!fonts || fonts.length === 0) return NONE;
-  const device = deviceFaceFor(fonts, family, italic);
-  return device ? { family: device, source: "device" } : NONE;
-}
-
-/**
- * The italic cut of a listed family, or the family itself when it has none.
- * A standard font name is already an exact cut the user picked, so it is
- * returned as is.
- */
-export function italicCutOf(
-  family: string,
-  fonts: LocalFont[] | null = loadedExternalFonts(),
-): string {
-  if (nearestStandardFont(family) === family) return family;
-  return italicCapability(family, true, fonts).family ?? family;
-}
-
-function hasExternalFamily(fonts: LocalFont[] | null, family: string): boolean {
-  if (!fonts || nearestStandardFont(family) === family) return false;
-  return knownFamilyOf(fonts, family) !== null;
-}
-
-/** Whether every one of these runs can be flipped to the other italic state. */
-export function canToggleItalic(
-  fontIds: string[],
-  fonts: LocalFont[] | null = loadedExternalFonts(),
-): boolean {
-  if (fontIds.length === 0) return false;
-  // Deduped: each miss costs a linear scan of every installed face, and a
-  // select-all hands this thousands of runs sharing a handful of fonts - on
-  // every keystroke, because the toolbar state is derived from the snapshot.
-  return [...new Set(fontIds)].every(
-    (id) => italicCapability(id, !isItalicFont(id), fonts).family !== null,
-  );
+  if (isDocumentFontId(family)) return { family, source: "document" };
+  if (nearestStandardFont(family) === family)
+    return { family, source: "base14" };
+  return { family, source: "device" };
 }
 
 /**
