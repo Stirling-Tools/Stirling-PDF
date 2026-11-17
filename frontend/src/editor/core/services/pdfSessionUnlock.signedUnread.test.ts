@@ -70,6 +70,25 @@ describe("signed PDFs nobody has opened yet", () => {
     expect(ensure).toHaveBeenCalledWith(file, expect.any(AbortSignal));
   });
 
+  it("refuses a timed-out file instead of letting it through unread", async () => {
+    ensure.mockRejectedValue(new DOMException("timed out", "TimeoutError"));
+    await expect(
+      preflightPdfOperation([unread()], "/api/v1/misc/repair", false, vi.fn()),
+    ).rejects.toMatchObject({ name: "TimeoutError" });
+  });
+
+  it("reads damaged bytes once, without a second inspection", async () => {
+    ensure.mockRejectedValue(
+      Object.assign(new Error("Unable to open PDF"), {
+        code: PdfErrorCode.WrongFormat,
+      }),
+    );
+    await expect(
+      preflightPdfOperation([unread()], "/api/v1/misc/repair", false, vi.fn()),
+    ).resolves.toBe(true);
+    expect(ensure).toHaveBeenCalledOnce();
+  });
+
   it("lets a tool with no endpoint that only reads the file through", async () => {
     await expect(
       preflightPdfOperation([unread()], undefined, false, vi.fn()),
