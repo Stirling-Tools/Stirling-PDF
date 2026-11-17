@@ -10,7 +10,7 @@
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Seek, SeekFrom, Write};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 // A file handed over at launch is locked before the window loads it, and must
@@ -20,7 +20,9 @@ const LAUNCH_GRACE: Duration = Duration::from_secs(120);
 static LOCKS: Mutex<Locks> = Mutex::new(Locks::new());
 
 struct Held {
-    file: File,
+    // Its own lock, so a save holds only this file while it writes, and a file
+    // closed mid-save stays locked until the save finishes.
+    file: Arc<Mutex<File>>,
     writable: bool,
     launched_at: Option<Instant>,
 }
@@ -44,7 +46,7 @@ impl Locks {
             self.held.insert(
                 path.to_string(),
                 Held {
-                    file,
+                    file: Arc::new(Mutex::new(file)),
                     writable,
                     launched_at: Some(now),
                 },
@@ -68,7 +70,7 @@ impl Locks {
                 self.held.insert(
                     path.clone(),
                     Held {
-                        file,
+                        file: Arc::new(Mutex::new(file)),
                         writable,
                         launched_at: None,
                     },
@@ -83,18 +85,28 @@ impl Locks {
             .retain(|_, held| held.launched_at.is_none() || launch_pending(held, now));
     }
 
-    /// Ok(false) when no writable lock is held, so the caller writes normally.
-    fn write(&mut self, path: &str, bytes: &[u8]) -> std::io::Result<bool> {
-        let Some(held) = self.held.get_mut(path).filter(|held| held.writable) else {
-            return Ok(false);
-        };
-        let file = &mut held.file;
-        file.seek(SeekFrom::Start(0))?;
-        file.write_all(bytes)?;
-        file.set_len(bytes.len() as u64)?;
-        file.sync_all()?;
-        Ok(true)
+    /// The held handle a save to `path` must write through, if any.
+    fn writer(&self, path: &str) -> Option<Arc<Mutex<File>>> {
+        self.held
+            .get(path)
+            .filter(|held| held.writable)
+            .map(|held| Arc::clone(&held.file))
     }
+}
+
+/// Ok(false) when no writable lock is held, so the caller writes normally.
+fn write_through(file: Option<Arc<Mutex<File>>>, bytes: &[u8]) -> std::io::Result<bool> {
+    let Some(file) = file else {
+        return Ok(false);
+    };
+    let mut file = file
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    file.seek(SeekFrom::Start(0))?;
+    file.write_all(bytes)?;
+    file.set_len(bytes.len() as u64)?;
+    file.sync_all()?;
+    Ok(true)
 }
 
 fn launch_pending(held: &Held, now: Instant) -> bool {
@@ -156,6 +168,13 @@ pub fn sync_locks(open: &[String]) {
     locks().sync(open, Instant::now());
 }
 
+/// Whether a save to `path` goes through write_locked_file. Asked first, so the
+/// bytes cross IPC only when a lock is held.
+#[tauri::command]
+pub fn holds_writable_lock(path: String) -> bool {
+    locks().writer(&path).is_some()
+}
+
 /// Raw body = the bytes; `path` header = the URI-encoded target path.
 #[tauri::command]
 pub async fn write_locked_file(request: tauri::ipc::Request<'_>) -> Result<bool, String> {
@@ -168,9 +187,10 @@ pub async fn write_locked_file(request: tauri::ipc::Request<'_>) -> Result<bool,
         .and_then(|value| value.to_str().ok())
         .and_then(|value| urlencoding::decode(value).ok())
         .ok_or_else(|| "Missing path header".to_string())?;
-    locks()
-        .write(&path, bytes)
-        .map_err(|error| error.to_string())
+    // The global lock is dropped before the write, so a slow save does not
+    // stall opening or closing other files.
+    let file = locks().writer(&path);
+    write_through(file, bytes).map_err(|error| error.to_string())
 }
 
 #[cfg(all(test, windows))]
@@ -227,7 +247,7 @@ mod tests {
 
         // The ordinary write path is refused while we hold the file.
         assert!(std::fs::write(&path, b"x").is_err());
-        assert!(locks.write(&key(&path), b"saved").unwrap());
+        assert!(write_through(locks.writer(&key(&path)), b"saved").unwrap());
         assert_eq!(std::fs::read(&path).unwrap(), b"saved");
         assert!(!exclusive_open_succeeds(&path));
 
@@ -236,9 +256,24 @@ mod tests {
     }
 
     #[test]
+    fn a_file_closed_mid_save_stays_locked_until_the_save_ends() {
+        let path = temp_file("close_mid_save");
+        let mut locks = Locks::new();
+        locks.sync(&[key(&path)], Instant::now());
+        let saving = locks.writer(&key(&path));
+
+        locks.sync(&[], Instant::now());
+        assert!(!exclusive_open_succeeds(&path));
+        assert!(write_through(saving, b"saved").unwrap());
+        assert!(exclusive_open_succeeds(&path));
+        assert_eq!(std::fs::read(&path).unwrap(), b"saved");
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
     fn an_unlocked_path_is_left_to_the_ordinary_write() {
         let path = temp_file("unlocked");
-        assert!(!Locks::new().write(&key(&path), b"x").unwrap());
+        assert!(!write_through(Locks::new().writer(&key(&path)), b"x").unwrap());
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
@@ -299,7 +334,7 @@ mod tests {
         let mut locks = Locks::new();
         locks.sync(&[key(&path)], Instant::now());
         assert!(!exclusive_read_succeeds());
-        assert!(!locks.write(&key(&path), b"x").unwrap());
+        assert!(!write_through(locks.writer(&key(&path)), b"x").unwrap());
 
         locks.sync(&[], Instant::now());
         assert!(exclusive_read_succeeds());

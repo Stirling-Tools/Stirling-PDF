@@ -9,7 +9,8 @@ import type { FileId } from "@editor/types/file";
 
 const writeFile = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock("@tauri-apps/plugin-fs", () => ({ writeFile }));
-// write_locked_file: true when the save went through the held file lock.
+// holds_writable_lock / write_locked_file: true when the path is held locked /
+// the save went through that lock.
 const invoke = vi.hoisted(() => vi.fn(async () => false));
 vi.mock("@tauri-apps/api/core", () => ({ invoke, isTauri: () => true }));
 
@@ -68,10 +69,13 @@ describe("saveToLocalPath", () => {
     const result = await saveToLocalPath(file, PATH);
     expect(result).toEqual({ success: true });
     expect(writeFile).toHaveBeenCalledWith(PATH, expected);
+    // Unlocked (always, off Windows): the bytes are sent once, not twice.
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith("holds_writable_lock", { path: PATH });
   });
 
   test("saves an open, locked file through its lock instead", async () => {
-    invoke.mockResolvedValueOnce(true);
+    invoke.mockResolvedValue(true);
     const file = new File([bytes], "report.pdf");
     const expected = new Uint8Array(await file.arrayBuffer());
 

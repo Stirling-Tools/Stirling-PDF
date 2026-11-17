@@ -27,9 +27,15 @@ export async function saveToLocalPath(
     const bytes = new Uint8Array(await data.arrayBuffer());
     assertFilesNotBlocked();
     // An open file is held locked (file_lock.rs), which refuses a plain write.
-    const wroteThroughLock = await invoke<boolean>("write_locked_file", bytes, {
-      headers: { path: encodeURIComponent(filePath) },
+    // Asked first so the bytes cross IPC once; never true off Windows.
+    const locked = await invoke<boolean>("holds_writable_lock", {
+      path: filePath,
     });
+    const wroteThroughLock =
+      locked &&
+      (await invoke<boolean>("write_locked_file", bytes, {
+        headers: { path: encodeURIComponent(filePath) },
+      }));
     if (!wroteThroughLock) await writeFile(filePath, bytes);
     return { success: true };
   } catch (error) {
