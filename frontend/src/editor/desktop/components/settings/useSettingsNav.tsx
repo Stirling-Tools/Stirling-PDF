@@ -4,6 +4,8 @@ import { useSettingsNav as useCoreSettingsNav } from "@editor-core/components/se
 import type { SettingsNav } from "@editor/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { useAuth } from "@editor/auth/context";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
+import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
 import { useConnectionMode } from "@editor/hooks/useConnectionMode";
 import { useConnectedServer } from "@editor/hooks/useConnectedServer";
 import { connectionModeService } from "@editor/services/connectionModeService";
@@ -19,8 +21,8 @@ export type { SettingsNav };
 /**
  * Desktop settings: the build's own sections plus the processor's, by the
  * rules of the edition the connection runs - Stirling Cloud as on web SaaS, a
- * self-hosted server as on web self-hosted, without the roster. Billing is the
- * browser handoff in configNavSections.
+ * self-hosted server as on web self-hosted. Billing is the browser handoff in
+ * configNavSections.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
@@ -30,6 +32,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
   const { isAdmin, loading } = useAuth();
+  const { config } = useAppConfig();
+  const rosterAvailable = useRosterAvailable();
 
   // A failed lookup still settles: the nav then shows only what needs no server.
   const [connectionReady, setConnectionReady] = useState(false);
@@ -50,7 +54,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     if (!connected) return [];
     if (mode === "saas") {
       return buildPortalSettingsSections(t, {
-        includeRoster: false,
+        includeRoster: rosterAvailable && portalAccess,
         includeApiKeys: portalAccess,
         includeAudit: portalAccess,
         includeEncryption: false,
@@ -60,7 +64,12 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     }
     if (mode === "selfhosted") {
       return buildPortalSettingsSections(t, {
-        includeRoster: false,
+        // Admin-only, as on web self-hosted: processor access alone does not open it.
+        includeRoster:
+          rosterAvailable &&
+          config?.enableLogin === true &&
+          isAdmin &&
+          !loading,
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
         includeBilling: false,
@@ -68,7 +77,16 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
       });
     }
     return [];
-  }, [connected, mode, portalAccess, isAdmin, t]);
+  }, [
+    connected,
+    mode,
+    rosterAvailable,
+    portalAccess,
+    config?.enableLogin,
+    isAdmin,
+    loading,
+    t,
+  ]);
 
   const sections = useMemo(
     () =>
