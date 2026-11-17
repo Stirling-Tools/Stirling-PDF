@@ -20,11 +20,13 @@ const LAUNCH_GRACE: Duration = Duration::from_secs(120);
 static LOCKS: Mutex<Locks> = Mutex::new(Locks::new());
 
 struct Held {
-    // Its own lock, so a save holds only this file while it writes, and a file
-    // closed mid-save stays locked until the save finishes.
+    // Its own lock, so a save holds only this file while it writes. A file
+    // closed mid-save keeps its entry until the save ends, so reopening it in
+    // the meantime reuses this handle rather than failing to open a second.
     file: Arc<Mutex<File>>,
     writable: bool,
     launched_at: Option<Instant>,
+    claimed: bool,
 }
 
 struct Locks {
@@ -49,6 +51,7 @@ impl Locks {
                     file: Arc::new(Mutex::new(file)),
                     writable,
                     launched_at: Some(now),
+                    claimed: false,
                 },
             );
         }
@@ -56,11 +59,11 @@ impl Locks {
 
     fn sync(&mut self, open: &[String], now: Instant) {
         self.held.retain(|path, held| {
-            if open.contains(path) {
+            held.claimed = open.contains(path);
+            if held.claimed {
                 held.launched_at = None;
-                return true;
             }
-            launch_pending(held, now)
+            keep(held, now)
         });
         for path in open {
             if self.held.contains_key(path) {
@@ -73,16 +76,16 @@ impl Locks {
                         file: Arc::new(Mutex::new(file)),
                         writable,
                         launched_at: None,
+                        claimed: true,
                     },
                 );
             }
         }
     }
 
-    /// Drops launch locks no window claimed within the grace; claimed files have no launch time.
-    fn expire_launches(&mut self, now: Instant) {
-        self.held
-            .retain(|_, held| held.launched_at.is_none() || launch_pending(held, now));
+    /// Drops locks nothing needs any more: unclaimed, past the launch grace, and not mid-save.
+    fn sweep(&mut self, now: Instant) {
+        self.held.retain(|_, held| keep(held, now));
     }
 
     /// The held handle a save to `path` must write through, if any.
@@ -109,9 +112,12 @@ fn write_through(file: Option<Arc<Mutex<File>>>, bytes: &[u8]) -> std::io::Resul
     Ok(true)
 }
 
-fn launch_pending(held: &Held, now: Instant) -> bool {
-    held.launched_at
-        .is_some_and(|at| now.duration_since(at) < LAUNCH_GRACE)
+fn keep(held: &Held, now: Instant) -> bool {
+    let launch_pending = held
+        .launched_at
+        .is_some_and(|at| now.duration_since(at) < LAUNCH_GRACE);
+    // A save in progress holds a clone of the handle.
+    held.claimed || launch_pending || Arc::strong_count(&held.file) > 1
 }
 
 #[cfg(windows)]
@@ -159,7 +165,7 @@ pub fn lock_launch_file(path: &str) {
     // locks again, so the grace needs its own timer.
     std::thread::spawn(|| {
         std::thread::sleep(LAUNCH_GRACE);
-        locks().expire_launches(Instant::now());
+        locks().sweep(Instant::now());
     });
 }
 
@@ -190,7 +196,10 @@ pub async fn write_locked_file(request: tauri::ipc::Request<'_>) -> Result<bool,
     // The global lock is dropped before the write, so a slow save does not
     // stall opening or closing other files.
     let file = locks().writer(&path);
-    write_through(file, bytes).map_err(|error| error.to_string())
+    let written = write_through(file, bytes);
+    // Releases the file if it was closed while this save was writing.
+    locks().sweep(Instant::now());
+    written.map_err(|error| error.to_string())
 }
 
 #[cfg(all(test, windows))]
@@ -265,8 +274,27 @@ mod tests {
         locks.sync(&[], Instant::now());
         assert!(!exclusive_open_succeeds(&path));
         assert!(write_through(saving, b"saved").unwrap());
+        locks.sweep(Instant::now());
         assert!(exclusive_open_succeeds(&path));
         assert_eq!(std::fs::read(&path).unwrap(), b"saved");
+        std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn a_file_reopened_mid_save_stays_locked_after_the_save() {
+        let path = temp_file("reopen_mid_save");
+        let mut locks = Locks::new();
+        locks.sync(&[key(&path)], Instant::now());
+        let saving = locks.writer(&key(&path));
+
+        locks.sync(&[], Instant::now());
+        locks.sync(&[key(&path)], Instant::now());
+        assert!(write_through(saving, b"saved").unwrap());
+        locks.sweep(Instant::now());
+        assert!(!exclusive_open_succeeds(&path));
+
+        locks.sync(&[], Instant::now());
+        assert!(exclusive_open_succeeds(&path));
         std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
 
@@ -302,10 +330,10 @@ mod tests {
         locks.lock_launch_file(&key(&claimed), start);
         locks.sync(&[key(&claimed)], start + Duration::from_secs(1));
 
-        locks.expire_launches(start + Duration::from_secs(5));
+        locks.sweep(start + Duration::from_secs(5));
         assert!(!exclusive_open_succeeds(&unclaimed));
 
-        locks.expire_launches(start + LAUNCH_GRACE);
+        locks.sweep(start + LAUNCH_GRACE);
         assert!(exclusive_open_succeeds(&unclaimed));
         assert!(!exclusive_open_succeeds(&claimed));
 
