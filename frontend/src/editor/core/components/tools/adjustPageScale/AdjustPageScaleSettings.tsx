@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Group, Stack, NumberInput, Select } from "@mantine/core";
 import {
   SegmentedControl,
@@ -19,6 +20,54 @@ const CUSTOM_UNIT_OPTIONS: SegmentedOption<CustomSizeUnit>[] = [
   { value: "cm", label: "cm" },
   { value: "in", label: "in" },
 ];
+
+interface CustomSideInputProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  disabled: boolean;
+}
+
+// Mantine reports a half-typed number such as "8." as a string. Feeding the
+// parsed number back as the controlled value would erase the separator
+// mid-keystroke, so the text lives in a local draft and is reset only when the
+// value changes from outside, such as a unit switch.
+const CustomSideInput = ({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  disabled,
+}: CustomSideInputProps) => {
+  const [draft, setDraft] = useState<number | string>(value);
+  const [reported, setReported] = useState(value);
+  if (value !== reported) {
+    setReported(value);
+    setDraft(value);
+  }
+
+  const handleChange = (next: number | string) => {
+    const parsed = typeof next === "number" ? next : Number(next) || 0;
+    setDraft(next);
+    setReported(parsed);
+    onChange(parsed);
+  };
+
+  return (
+    <NumberInput
+      label={label}
+      value={draft}
+      onChange={handleChange}
+      min={min}
+      max={max}
+      decimalScale={2}
+      disabled={disabled}
+    />
+  );
+};
 
 interface AdjustPageScaleSettingsProps {
   parameters: AdjustPageScaleParameters;
@@ -132,32 +181,20 @@ const AdjustPageScaleSettings = ({
       {isCustomSelected && (
         <>
           <Group grow>
-            <NumberInput
+            <CustomSideInput
               label={t("adjustPageScale.customSize.width", "Width")}
               value={parameters.customWidth}
-              onChange={(value) =>
-                onParameterChange(
-                  "customWidth",
-                  typeof value === "number" ? value : 0,
-                )
-              }
+              onChange={(value) => onParameterChange("customWidth", value)}
               min={sideLimits.min}
               max={sideLimits.max}
-              decimalScale={2}
               disabled={disabled}
             />
-            <NumberInput
+            <CustomSideInput
               label={t("adjustPageScale.customSize.height", "Height")}
               value={parameters.customHeight}
-              onChange={(value) =>
-                onParameterChange(
-                  "customHeight",
-                  typeof value === "number" ? value : 0,
-                )
-              }
+              onChange={(value) => onParameterChange("customHeight", value)}
               min={sideLimits.min}
               max={sideLimits.max}
-              decimalScale={2}
               disabled={disabled}
             />
           </Group>
