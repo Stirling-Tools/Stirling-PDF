@@ -29,8 +29,11 @@ vi.mock("@editor/auth/supabase/supabaseClient", () => ({
 vi.mock("@processor/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
-const wallet = vi.hoisted(() => ({ fetch: vi.fn() }));
-vi.mock("@processor/api/billing", () => ({ fetchWallet: wallet.fetch }));
+const wallet = vi.hoisted(() => ({ fetch: vi.fn(), refresh: vi.fn() }));
+vi.mock("@processor/api/billing", () => ({
+  fetchWallet: wallet.fetch,
+  refreshWalletCache: wallet.refresh,
+}));
 
 // The SaaS usersBackend lives under src/saas; the portal vitest project resolves
 // @editor to proprietary (there's no @saas alias here), so the SaaS impl can only be
@@ -46,6 +49,7 @@ afterAll(() => server.close());
 beforeEach(() => {
   resetTeamSaasStore();
   wallet.fetch.mockResolvedValue({ teamId: 1, team: { usersInUse: 4 } });
+  wallet.refresh.mockReset().mockResolvedValue(undefined);
 });
 
 describe("saas usersBackend — fetchUsers mapping", () => {
@@ -179,6 +183,30 @@ describe("saas usersBackend — teams + auth config", () => {
 });
 
 describe("saas usersBackend — mutations hit SaasTeamController", () => {
+  it("refreshes the wallet snapshot before reloading freed seats", async () => {
+    wallet.refresh.mockImplementation(async () => {
+      wallet.fetch.mockResolvedValue({ teamId: 1, team: { usersInUse: 3 } });
+    });
+    expect((await usersBackend.fetchUsers("pro")).summary.seatsUsed).toBe(4);
+    await usersBackend.removeMember({
+      id: "2",
+      teamId: 1,
+      name: "Priya",
+      email: "priya@acme.com",
+      role: "member",
+      status: "active",
+      lastActive: "-",
+    });
+    expect(wallet.refresh).toHaveBeenCalledTimes(1);
+    expect((await usersBackend.fetchUsers("pro")).summary.seatsUsed).toBe(3);
+  });
+
+  it("keeps a successful cancellation when wallet refresh is temporarily unavailable", async () => {
+    wallet.refresh.mockRejectedValue(new Error("offline"));
+    await expect(usersBackend.cancelInvitation(101)).resolves.toBeUndefined();
+    expect(wallet.refresh).toHaveBeenCalledTimes(1);
+    expect((await usersBackend.fetchUsers("pro")).invitations).toHaveLength(0);
+  });
   it("inviteMember POSTs /invite with teamId+email and shows as pending", async () => {
     let seenBody: unknown = null;
     server.events.on("request:start", async ({ request }) => {
@@ -188,6 +216,7 @@ describe("saas usersBackend — mutations hit SaasTeamController", () => {
     });
     const result = await usersBackend.inviteMember("new@acme.com", "member");
     expect(result.successCount).toBe(1);
+    expect(wallet.refresh).toHaveBeenCalledTimes(1);
     expect(seenBody).toMatchObject({ teamId: 1, email: "new@acme.com" });
     server.events.removeAllListeners();
 
@@ -235,6 +264,7 @@ describe("saas usersBackend — mutations hit SaasTeamController", () => {
     });
     await usersBackend.cancelInvitation(101);
     expect(seenUrl).toContain("/api/v1/team/invitations/101");
+    expect(wallet.refresh).toHaveBeenCalledTimes(1);
     server.events.removeAllListeners();
   });
 });

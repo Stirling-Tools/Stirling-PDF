@@ -47,6 +47,7 @@ vi.mock("@processor/auth/saasSupabase", () => ({
 }));
 vi.mock("@processor/api/billing", () => ({
   fetchWallet: vi.fn(async () => ({ teamId: 1, team: { usersInUse: 4 } })),
+  refreshWalletCache: vi.fn(async () => {}),
 }));
 const checkout = vi.hoisted(() => ({ openCheckout: vi.fn() }));
 vi.mock("@editor/contexts/CheckoutContext", () => ({

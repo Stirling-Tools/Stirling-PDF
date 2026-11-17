@@ -1,6 +1,6 @@
 import type { UsersBackend } from "@processor/api/usersBackend";
 import { apiClient } from "@processor/api/http";
-import { fetchWallet } from "@processor/api/billing";
+import { fetchWallet, refreshWalletCache } from "@processor/api/billing";
 import { tryGetPortalQueryClient } from "@processor/queryClient";
 import { qk } from "@processor/queries/keys";
 import {
@@ -246,6 +246,7 @@ export const usersBackend: UsersBackend = {
       method: "POST",
       body: { teamId: tid, email },
     });
+    await refreshWalletCache().catch(() => {});
     return { successCount: 1, failureCount: 0 };
   },
 
@@ -264,11 +265,13 @@ export const usersBackend: UsersBackend = {
       `/api/v1/team/${member.teamId}/members/${member.id}`,
       { method: "DELETE" },
     );
+    await refreshWalletCache().catch(() => {});
   },
 
   async cancelInvitation(invitationId: number): Promise<void> {
     await apiClient.local.json(`/api/v1/team/invitations/${invitationId}`, {
       method: "DELETE",
     });
+    await refreshWalletCache().catch(() => {});
   },
 };

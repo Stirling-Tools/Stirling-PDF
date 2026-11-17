@@ -481,7 +481,7 @@ function CapacitySummary({
               "payment.capacityStage.renewalNote",
               "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
               {
-                total: formatPrice(total, currency, 0),
+                total: formatPrice(total, currency, blockSize === 1 ? 2 : 0),
                 period,
               },
             )}{" "}

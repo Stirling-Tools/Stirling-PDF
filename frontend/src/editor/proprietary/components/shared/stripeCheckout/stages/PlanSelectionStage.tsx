@@ -92,7 +92,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
               </Text>
               <Text component="span" display="block" size="sm" c="dimmed">
-                {formatPrice(plan.price, plan.currency, 0)}
+                {formatPrice(
+                  plan.price,
+                  plan.currency,
+                  plan.userBlockSize === 1 ? 2 : 0,
+                )}
                 {period === "monthly"
                   ? t("payment.capacityStage.perMonth", "/mo")
                   : t("payment.capacityStage.perYear", "/yr")}{" "}
