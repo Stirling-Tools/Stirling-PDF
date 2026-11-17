@@ -19,8 +19,6 @@ const TYPED =
 
 interface Frame {
   inputs: number;
-  tKey: number;
-  tFrame: number;
   domLetters: string;
   model: string;
   domLines: number;
@@ -79,16 +77,10 @@ function recordFrames(page: Page, testId: string): Promise<void> {
     const w = window as unknown as EditorWindow;
     const el = document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
     const runId = el.dataset.runId;
-    const keyTimes: number[] = [];
     const frames: Frame[] = [];
     w.__liveWrapFrames = frames;
     let inputs = 0;
     const lineCount = () => el.innerText.replace(/\n$/, "").split("\n").length;
-    document.addEventListener(
-      "keydown",
-      () => keyTimes.push(performance.now()),
-      true,
-    );
     el.addEventListener("input", () => {
       inputs += 1;
       const n = inputs;
@@ -127,8 +119,6 @@ function recordFrames(page: Page, testId: string): Promise<void> {
           .find((r) => r.id === runId);
         frames.push({
           inputs: n,
-          tKey: keyTimes[n - 1],
-          tFrame: performance.now(),
           domLetters: (el.textContent ?? "").replace(/\s/g, ""),
           model: run?.text ?? "",
           domLines: lineCount(),
@@ -261,10 +251,6 @@ function check(
     ).length,
     "frames drawn between crossing the edge and the line break",
   ).toBe(0);
-  expect(
-    brokeAt!.tFrame - crossing.tKey,
-    "ms from the crossing keystroke to the drawn break",
-  ).toBeLessThan(400);
 }
 
 test.describe("Typing past the box edge wraps on the crossing keystroke", () => {

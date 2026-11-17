@@ -69,8 +69,12 @@ test("a password prompt reports no open until the password is given", async () =
 
 test("a load overtaken by a newer one reports no open", async () => {
   const { store } = await storeWithSample();
-  const first = loadDocument(store, await fixture("sample.pdf"));
-  const second = loadDocument(store, await fixture("paragraph-sample.pdf"));
+  const [older, newer] = await Promise.all([
+    fixture("sample.pdf"),
+    fixture("paragraph-sample.pdf"),
+  ]);
+  const first = loadDocument(store, older);
+  const second = loadDocument(store, newer);
   expect(await first).toBe(false);
   expect(await second).toBe(true);
 });
