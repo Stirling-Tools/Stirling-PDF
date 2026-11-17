@@ -24,6 +24,16 @@ without asking for a password. Regenerate it with:
 # pdf-lib's PDFDocument.attach() and doc.catalog.set(PDFName.of("Collection"), ...)
 qpdf --encrypt "" owner 128 --use-aes=y -- portfolio.pdf portfolio-aes-empty-password.pdf
 ```
+## Signature probe fixtures
+
+`signature-*.pdf` exercise the local signature probe (`utils/pdfiumSignatures.ts`). They were signed by Stirling-PDF's `cert-sign` endpoint with `certs/valid-test.p12` (password `testpass`, signer `Test Signer`):
+
+- `signature-one.pdf`: one signature covering the whole file.
+- `signature-two.pdf`: `signature-one.pdf` countersigned, so the first signature no longer reaches the end of the file.
+- `signature-changed-after.pdf`: `signature-one.pdf` with an incremental metadata update appended after signing.
+- `signature-rewritten.pdf`: `signature-one.pdf` rewritten by `update-metadata`, so its byte range no longer fits the file.
+- `signature-timestamp.pdf`: an RFC 3161 document timestamp from `timestamp-pdf` (DigiCert TSA).
+- `signature-empty-field.pdf`: an empty signature field with no signature value.
 
 ## Required Test Files
 
