@@ -49,6 +49,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.security.model.User;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -492,6 +493,20 @@ class McpPipelineTest {
         assertTrue(saved.getValue().editor().allowed());
         assertEquals("export", saved.getValue().editor().runOn());
         assertTrue(saved.getValue().outputIds().isEmpty());
+    }
+
+    @Test
+    void theTriggerSchemaAcceptsNullSoAScheduleCanBeRemoved() {
+        JsonNode type =
+                new StirlingSaveAutomationTool(mapper, automations)
+                        .inputSchema()
+                        .path("properties")
+                        .path("trigger")
+                        .path("type");
+
+        assertTrue(type.isArray(), type.toString());
+        assertEquals(
+                List.of("object", "null"), List.of(type.get(0).asText(), type.get(1).asText()));
     }
 
     @Test

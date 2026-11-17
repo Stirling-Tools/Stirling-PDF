@@ -6,7 +6,7 @@ Checks a running Stirling PDF `/mcp` endpoint with the official MCP clients. Eve
 | --- | --- | --- |
 | `protocol.mjs` | raw `fetch` | 2026-07-28 rules (`server/discover`, per-request `_meta`, `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name` checks and error codes), MRTR `input_required` round trip, legacy `initialize` |
 | `sdk-v1.mjs` | `@modelcontextprotocol/sdk` 1.32.1 | schema-valid tool list, upload, chained operations, download, result links, attachment refusals, MCP Apps widget |
-| `eras.mjs` | `@modelcontextprotocol/client` 2.3.1 | legacy, pinned 2026-07-28 and auto negotiation; password forms accepted, declined and unsupported |
+| `eras.mjs` | `@modelcontextprotocol/client` 2.3.1 | legacy, pinned 2026-07-28 and auto negotiation; passwords passed in parameters, with and without forms support |
 | `run-all.mjs` | - | the three above in turn |
 | `correctness.mjs` | `@modelcontextprotocol/sdk` 1.32.1 | operation outputs are right, not just present; see [Output correctness](#output-correctness) |
 | `oauth_chain.py` | Python stdlib | the OAuth chain ChatGPT and Claude walk: 401, PRM, AS metadata, DCR, sign-in, token, MCP calls |

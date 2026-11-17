@@ -167,6 +167,16 @@ public class McpFiles {
     }
 
     /** The user's live files, newest first, whose name contains {@code query} (any case). */
+    /**
+     * Largest file the widget may send inline: base64 grows it by a third, and the JSON-RPC
+     * envelope must still fit under mcp.maxRequestBytes.
+     */
+    public long maxInlineUploadBytes() {
+        long envelope = 64L * 1024;
+        return Math.max(
+                0, (applicationProperties.getMcp().getMaxRequestBytes() - envelope) / 4 * 3);
+    }
+
     public List<Listed> recent(User user, String query, int limit) {
         if (!usesStoredFiles(user)) {
             return List.of();

@@ -209,6 +209,7 @@ public class StirlingSelectFileTool implements McpTool {
                 McpResponses.text(mapper, problem == null ? text : problem + " " + text)
                         .get("content"));
         ObjectNode structured = (ObjectNode) result.get("structuredContent");
+        structured.put("maxInlineBytes", files.maxInlineUploadBytes());
         if (purpose != null) {
             structured.put("purpose", purpose);
         }

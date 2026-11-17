@@ -1,4 +1,4 @@
-// Official v2 client (@modelcontextprotocol/client): legacy, pinned 2026-07-28 and auto negotiation, plus MRTR password forms.
+// Official v2 client (@modelcontextprotocol/client): legacy, pinned 2026-07-28 and auto negotiation, plus passwords passed in parameters.
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 import { MODERN_VERSION, checkResultLink, firstText, loadConfig, reporter } from "./lib.mjs";
@@ -22,11 +22,6 @@ async function connect(mode, elicit) {
   return { client, prompts };
 }
 
-const fillPasswords = (secret) => (p) => ({
-  action: "accept",
-  content: Object.fromEntries(Object.keys(p.requestedSchema.properties).map((k) => [k, k === "password" ? secret : ""])),
-});
-
 async function eraRound(label, mode) {
   const { client } = await connect(mode);
   try {
@@ -48,48 +43,34 @@ async function eraRound(label, mode) {
   }
 }
 
-async function mrtrAccept() {
-  const { client, prompts } = await connect({ pin: MODERN_VERSION }, fillPasswords(`harness-${Date.now()}`));
+async function passwordsInParameters() {
+  // Forms are supported here, yet the server must not ask: the password travels in parameters.
+  const { client, prompts } = await connect({ pin: MODERN_VERSION }, () => ({ action: "decline" }));
+  const secret = `harness-${Date.now()}`;
   try {
     const added = await client.callTool({
       name: "stirling_security",
-      arguments: { operation: "add-password", file: cfg.pdfBase64, fileName: "locked.pdf", parameters: { keyLength: 256 } },
+      arguments: { operation: "add-password", file: cfg.pdfBase64, fileName: "locked.pdf", parameters: { password: secret, keyLength: 256 } },
     });
-    r.check("[mrtr] add-password asked for the password once", prompts.length === 1, JSON.stringify(prompts[0]?.requestedSchema?.properties));
-    r.check("[mrtr] add-password succeeded", !added.isError, firstText(added).slice(0, 120));
+    r.check("[mrtr] add-password succeeds without a prompt", !added.isError && prompts.length === 0, firstText(added).slice(0, 120));
     const removed = await client.callTool({
       name: "stirling_security",
-      arguments: { operation: "remove-password", fileId: added.structuredContent?.fileId },
+      arguments: { operation: "remove-password", fileId: added.structuredContent?.fileId, parameters: { password: secret } },
     });
-    r.check("[mrtr] remove-password asked again", prompts.length === 2);
-    r.check("[mrtr] remove-password succeeded", !removed.isError, firstText(removed).slice(0, 120));
+    r.check("[mrtr] remove-password succeeds without a prompt", !removed.isError && prompts.length === 0, firstText(removed).slice(0, 120));
   } finally {
     await client.close();
   }
 }
 
-async function mrtrDecline() {
-  const { client, prompts } = await connect({ pin: MODERN_VERSION }, () => ({ action: "decline" }));
-  try {
-    const res = await client.callTool({
-      name: "stirling_security",
-      arguments: { operation: "add-password", file: cfg.pdfBase64, parameters: {} },
-    });
-    r.check("[mrtr] declining the form cancels the operation", res.isError && /cancelled/.test(firstText(res)) && prompts.length === 1, firstText(res));
-  } finally {
-    await client.close();
-  }
-}
-
-async function mrtrWithoutForms() {
-  // A client without form support gets the pre-MRTR behaviour: the model's value is used.
+async function passwordsWithoutForms() {
   const { client } = await connect({ pin: MODERN_VERSION });
   try {
     const res = await client.callTool({
       name: "stirling_security",
       arguments: { operation: "add-password", file: cfg.pdfBase64, parameters: { password: "model-supplied" } },
     });
-    r.check("[mrtr] model-supplied password is used without a prompt", !res.isError, firstText(res).slice(0, 120));
+    r.check("[mrtr] model-supplied password is used without forms support", !res.isError, firstText(res).slice(0, 120));
   } finally {
     await client.close();
   }
@@ -99,9 +80,8 @@ try {
   await eraRound("legacy", undefined);
   await eraRound(`pin ${MODERN_VERSION}`, { pin: MODERN_VERSION });
   await eraRound("auto", "auto");
-  await mrtrAccept();
-  await mrtrDecline();
-  await mrtrWithoutForms();
+  await passwordsInParameters();
+  await passwordsWithoutForms();
   r.finish();
 } catch (e) {
   r.crash(e);
