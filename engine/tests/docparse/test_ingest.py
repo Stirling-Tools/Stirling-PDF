@@ -218,7 +218,11 @@ def test_ingest_rejects_empty_document_id(client: TestClient) -> None:
 
 @pytest.mark.anyio
 async def test_ingest_reingest_replaces_instead_of_duplicating() -> None:
-    service = DocumentService(embedder=StubEmbedder(), store=SqliteVecStore.ephemeral(), default_top_k=3)  # type: ignore[arg-type]
+    service = DocumentService(
+        embedder=StubEmbedder(),  # pyrefly: ignore [bad-argument-type]
+        store=SqliteVecStore.ephemeral(),
+        default_top_k=3,
+    )
     app.dependency_overrides[get_document_service] = lambda: service
     try:
         client = TestClient(app)

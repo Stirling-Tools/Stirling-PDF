@@ -18,9 +18,9 @@ public enum ToolFormat {
     PDF("pdf"),
     PDF_ENCRYPTED("pdf"),
 
-    // Vector formats are folded in: the extension set has always included svg/eps, and splitting
+    // Vector formats are folded in: the extension set has always included svg/ai, and splitting
     // them out would make chains that run fine today report as broken.
-    IMAGE("png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "svg", "psd", "ai", "eps"),
+    IMAGE("png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "svg", "psd", "ai"),
 
     /**
      * An archive that is itself the deliverable. Multiple results use {@link ToolArity} instead.
@@ -39,10 +39,6 @@ public enum ToolFormat {
     JAVASCRIPT("js", "jsx"),
     EBOOK("epub", "mobi", "azw3", "fb2", "txt", "docx"),
     EMAIL("eml", "msg"),
-    POSTSCRIPT("ps", "eps"),
-
-    PCL("pcl", "pxl"),
-    XPS("xps", "oxps"),
 
     VIDEO("mp4", "webm", "avi", "mov", "mkv"),
     CBZ("cbz"),

@@ -1,7 +1,8 @@
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack } from "@mantine/core";
+import { Box, Group, Stack, Textarea } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
+import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { Select } from "@editor/ui/Select";
 import {
@@ -10,19 +11,28 @@ import {
   SectionLabel,
   StatRow,
 } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
+import {
+  FURNITURE,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
 import { TEXT_BLOCK_TYPES } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   StructureRole,
   StructureType,
 } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
+  canBeArtifact,
   canSetTextTag,
+  canTypeText,
   type InnerTag,
   type TextTag,
+  type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 import type {
   InnerTagsControl,
+  OtherPagesControl,
   TextLanguageControl,
+  UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import { LanguagePicker } from "@editor/tools/pdfTextEditor/components/inspector/LanguagePicker";
 import "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection.css";
@@ -30,21 +40,25 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 /**
  * What the selected text is tagged as and the language it is read in, with
- * pickers to change them: retagging its block, or giving untagged text an
- * element of its own. Beneath them, the tags marking parts of the text, and
- * pickers for characters selected in it. With several runs selected, the tag
- * they share and their language.
+ * pickers to change them: retagging its block, giving untagged text an
+ * element of its own, or making it an artifact. Beneath them, the tags marking parts of the text, a
+ * way to tag the links over it, and pickers for characters selected in it.
+ * With several runs selected, the tag they share and their language.
  */
 export function TextAccessibilitySection({
   tag,
   onSetTag,
   inner,
   language,
+  otherPages,
+  untaggedLinks,
 }: {
   tag: TextTag | null;
-  onSetTag: (type: StructureType) => void;
+  onSetTag: (choice: TextTagChoice) => void;
   inner: InnerTagsControl;
   language: TextLanguageControl | null;
+  otherPages: OtherPagesControl | null;
+  untaggedLinks: UntaggedLinksControl | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -54,10 +68,12 @@ export function TextAccessibilitySection({
       </SectionLabel>
       <Stack gap="xs">
         {tag && <TagField tag={tag} onSetTag={onSetTag} />}
+        {otherPages && <OtherPagesButton control={otherPages} />}
         {language && <TextLanguageField control={language} />}
         {tag && (
           <>
             <InnerTagList inner={inner} />
+            {untaggedLinks && <TagLinksButton control={untaggedLinks} />}
             <NewTagPicker inner={inner} />
             <NewLanguagePicker inner={inner} />
           </>
@@ -72,19 +88,17 @@ function TagField({
   onSetTag,
 }: {
   tag: TextTag;
-  onSetTag: (type: StructureType) => void;
+  onSetTag: (choice: TextTagChoice) => void;
 }) {
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.accessibility.tagLabel", "Tag");
   return canSetTextTag(tag) ? (
     <Field label={label}>
-      <TagPicker
-        types={TEXT_BLOCK_TYPES}
-        current={tag.kind === "tagged" ? tag.block : null}
+      <BlockTagPicker
+        tag={tag}
         placeholder={tagText(t, tag)}
         onSetTag={onSetTag}
         label={label}
-        testId="pdf-editor-text-tag-picker"
       />
     </Field>
   ) : (
@@ -92,6 +106,121 @@ function TagField({
       label={label}
       value={<span data-testid="pdf-editor-text-tag">{tagText(t, tag)}</span>}
     />
+  );
+}
+
+/** Select values for artifact choices: a structure type never starts with a lower-case letter. */
+const ARTIFACT_VALUE = "artifact:";
+
+function BlockTagPicker({
+  tag,
+  placeholder,
+  onSetTag,
+  label,
+}: {
+  tag: TextTag;
+  placeholder: string;
+  onSetTag: (choice: TextTagChoice) => void;
+  label: string;
+}) {
+  const { t } = useTranslation();
+  const typed = canTypeText(tag);
+  const artifactable = canBeArtifact(tag);
+  const artifacts = [null, ...FURNITURE];
+  const choices = new Map<string, TextTagChoice>([
+    ...TEXT_BLOCK_TYPES.map((type) => [type, type] as const),
+    ...artifacts.map(
+      (artifact) => [artifactValue(artifact), { artifact }] as const,
+    ),
+  ]);
+  const options = [
+    {
+      group: t("pdfTextEditor.inspector.accessibility.contentGroup", "Content"),
+      options: TEXT_BLOCK_TYPES.map((type) => ({
+        value: type,
+        label: typeName(t, type),
+        disabled: !typed,
+      })),
+    },
+    {
+      group: t(
+        "pdfTextEditor.inspector.accessibility.artifactGroup",
+        "Skipped by screen readers",
+      ),
+      options: artifacts.map((artifact) => ({
+        value: artifactValue(artifact),
+        label: artifactName(t, artifact),
+        disabled: !artifactable,
+      })),
+    },
+  ];
+  const current =
+    tag.kind === "artifact"
+      ? artifactValue(tag.furniture)
+      : (TEXT_BLOCK_TYPES.find(
+          (type) => tag.kind === "tagged" && type === tag.block.type,
+        ) ?? null);
+  return (
+    <div data-testid="pdf-editor-text-tag-picker">
+      <Select
+        inputSize="sm"
+        options={options}
+        value={current}
+        placeholder={placeholder}
+        onChange={(value) => {
+          const picked = value === null ? undefined : choices.get(value);
+          if (picked) onSetTag(picked);
+        }}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+function artifactValue(furniture: Furniture | null): string {
+  return `${ARTIFACT_VALUE}${furniture ?? ""}`;
+}
+
+/** Gives matching text on other pages the selected artifact's kind. */
+function OtherPagesButton({ control }: { control: OtherPagesControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="copy" size={20} />}
+      onClick={control.onApply}
+      data-testid="pdf-editor-text-tag-other-pages"
+    >
+      {t(
+        "pdfTextEditor.inspector.accessibility.applyToOtherPages",
+        "Apply to {{count}} other pages",
+        { count: control.pages },
+      )}
+    </Button>
+  );
+}
+
+function TagLinksButton({ control }: { control: UntaggedLinksControl }) {
+  const { t } = useTranslation();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      accent="neutral"
+      fullWidth
+      justify="start"
+      leftSection={<Icon name="link" size={20} />}
+      onClick={control.onTag}
+      data-testid="pdf-editor-tag-links"
+    >
+      {t("pdfTextEditor.inspector.accessibility.tagLinks", "Tag link", {
+        count: control.count,
+      })}
+    </Button>
   );
 }
 
@@ -148,6 +277,9 @@ function InnerTagList({ inner }: { inner: InnerTagsControl }) {
             onSelect={() => inner.onSelect(index)}
             onSet={(type) => inner.onSet(index, type)}
             onSetLanguage={(lang) => inner.onSetLanguage(index, lang)}
+            onSetLinkDescription={(description) =>
+              inner.onSetLinkDescription(index, description)
+            }
           />
         ))}
       </Stack>
@@ -162,6 +294,7 @@ function InnerTagRow({
   onSelect,
   onSet,
   onSetLanguage,
+  onSetLinkDescription,
 }: {
   number: number;
   innerTag: InnerTag;
@@ -169,6 +302,7 @@ function InnerTagRow({
   onSelect: () => void;
   onSet: (type: StructureType | null) => void;
   onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
 }) {
   const text = innerTag.text.replace(/\s+/g, " ").trim();
   return (
@@ -193,6 +327,7 @@ function InnerTagRow({
           innerTag={innerTag}
           onSet={onSet}
           onSetLanguage={onSetLanguage}
+          onSetLinkDescription={onSetLinkDescription}
         />
       )}
     </div>
@@ -204,11 +339,13 @@ function InnerTagControls({
   innerTag,
   onSet,
   onSetLanguage,
+  onSetLinkDescription,
 }: {
   number: number;
   innerTag: InnerTag;
   onSet: (type: StructureType | null) => void;
   onSetLanguage: (lang: string | null) => void;
+  onSetLinkDescription: (description: string) => void;
 }) {
   const { t } = useTranslation();
   const removeLabel = t(
@@ -261,6 +398,23 @@ function InnerTagControls({
         testId="pdf-editor-inner-tag-language-picker"
         disabled={!innerTag.languageEditable}
       />
+      {innerTag.link && (
+        <Textarea
+          label={t(
+            "pdfTextEditor.inspector.accessibility.linkDescription",
+            "Link description",
+          )}
+          value={innerTag.link.description ?? ""}
+          className={privateContentClassName}
+          onChange={(e) => onSetLinkDescription(e.currentTarget.value)}
+          disabled={!innerTag.link.editable}
+          autosize
+          minRows={1}
+          maxRows={4}
+          size="xs"
+          data-testid="pdf-editor-inner-tag-link-description"
+        />
+      )}
     </Stack>
   );
 }
@@ -380,10 +534,7 @@ function statusText(
 ): string {
   switch (tag.kind) {
     case "artifact":
-      return t(
-        "pdfTextEditor.inspector.accessibility.artifactText",
-        "Decorative",
-      );
+      return artifactName(t, tag.furniture);
     case "untagged":
       return tag.documentTagged
         ? t("pdfTextEditor.inspector.accessibility.untaggedBadge", "Not tagged")
@@ -398,6 +549,36 @@ function statusText(
       );
     case "mixed":
       return t("pdfTextEditor.inspector.accessibility.mixedTags", "Mixed");
+  }
+}
+
+function artifactName(t: TFunction, furniture: Furniture | null): string {
+  switch (furniture) {
+    case null:
+      return t(
+        "pdfTextEditor.inspector.accessibility.artifactText",
+        "Decorative",
+      );
+    case "Header":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.header",
+        "Header",
+      );
+    case "Footer":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.footer",
+        "Footer",
+      );
+    case "PageNum":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.pageNumber",
+        "Page number",
+      );
+    case "Watermark":
+      return t(
+        "pdfTextEditor.inspector.accessibility.furniture.watermark",
+        "Watermark",
+      );
   }
 }
 

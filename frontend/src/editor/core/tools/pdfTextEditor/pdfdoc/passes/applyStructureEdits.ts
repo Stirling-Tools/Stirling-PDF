@@ -22,7 +22,15 @@ import { markDecorative } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markDe
 import { unwrapElements } from "@editor/tools/pdfTextEditor/pdfdoc/passes/unwrapElements";
 import { StructureNodes } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
 import { encodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
-import type { ContentCut } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import {
+  furnitureKind,
+  type ArtifactKind,
+  type Furniture,
+} from "@editor/tools/pdfTextEditor/model/artifactKind";
+import {
+  givenMcids,
+  type ContentCut,
+} from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 /** A change to the structure element that owns marked content `mcid` on a page. */
@@ -44,6 +52,8 @@ export interface StructureEdit {
   blockLang?: string | null;
   /** Turn the element's content into an artifact and drop the element, its /Alt with it. */
   decorative: boolean;
+  /** The page furniture that artifact is; absent for a plain one. */
+  furniture?: Furniture;
   /**
    * Set when no element owns the content yet: add one of `type` for it, after
    * the element owning MCID `after` on the page (see NewElement).
@@ -120,9 +130,10 @@ export async function applyStructureEdits(
   const unwraps: { edit: StructureEdit; owner: number }[] = [];
   const added = edits.filter((edit) => edit.newElement);
   const cuts = edits.filter((edit) => edit.cut);
+  const cutsFromAdded = cutsFromAddedElements(added, cuts);
   for (const edit of edits) {
     if (edit.newElement || edit.cut) continue;
-    const owner = elementFor(pdf, treeRoot, edit);
+    const owner = elementOwning(pdf, treeRoot, edit);
     if (typeof owner === "string") {
       failures.push({ edit, reason: owner });
       continue;
@@ -161,23 +172,27 @@ export async function applyStructureEdits(
   for (const [index, reason] of kept) {
     failures.push({ edit: unwraps[index].edit, reason });
   }
-  // After the retags, which address elements by the MCIDs a cut can take
-  // from them, and before the added elements, which may be placed beside a cut.
-  const uncut = await cutElements(
-    pdf,
-    cuts.map((edit) => ({
-      ...edit,
-      type: edit.cut!.type,
-      alt: edit.alt ?? null,
-      lang: edit.lang ?? null,
-      cut: edit.cut!,
-    })),
-    bodies,
-    parentTree,
-  );
-  for (const [index, reason] of uncut) {
-    failures.push({ edit: cuts[index], reason });
-  }
+  const writeCuts = async (written: readonly StructureEdit[]) => {
+    const uncut = await cutElements(
+      pdf,
+      written.map((edit) => ({
+        ...edit,
+        type: edit.cut!.type,
+        alt: edit.alt ?? null,
+        lang: edit.lang ?? null,
+        cut: edit.cut!,
+      })),
+      bodies,
+      parentTree,
+    );
+    for (const [index, reason] of uncut) {
+      failures.push({ edit: written[index], reason });
+    }
+  };
+  // Cuts from the file's elements: after the retags, which address elements
+  // by the MCIDs a cut can take from them, and before the added elements,
+  // which may be placed beside a cut.
+  await writeCuts(cuts.filter((edit) => !cutsFromAdded.has(edit)));
   // Before the decorative marks, so an element placed beside one they drop
   // keeps its place among the kids that remain.
   const unplaced = await addElements(
@@ -189,6 +204,10 @@ export async function applyStructureEdits(
       ...edit.newElement!,
       alt: edit.alt ?? null,
       lang: edit.lang ?? null,
+      cutFrom: [...cutsFromAdded].some(
+        (cut) =>
+          cut.pageIndex === edit.pageIndex && cut.cut!.from[0] === edit.mcid,
+      ),
     })),
     bodies,
     parentTree,
@@ -196,9 +215,12 @@ export async function applyStructureEdits(
   for (const [index, reason] of unplaced) {
     failures.push({ edit: added[index], reason });
   }
+  await writeCuts([...cutsFromAdded]);
   const { streams, failed } = await markDecorative(
     pdf,
-    new Set(decorative.keys()),
+    new Map(
+      [...decorative].map(([num, owned]) => [num, artifactKindOf(owned)]),
+    ),
     bodies,
     parentTree,
   );
@@ -218,6 +240,34 @@ export async function applyStructureEdits(
   if (!out)
     throw fail("the file's cross-reference structure cannot be extended");
   return out;
+}
+
+/**
+ * The cuts taking text from an element the save adds, directly or through
+ * the element or the parts an earlier such cut made, in the order made: none
+ * can be written until that element is in the tree.
+ */
+function cutsFromAddedElements(
+  added: readonly StructureEdit[],
+  cuts: readonly StructureEdit[],
+): Set<StructureEdit> {
+  const key = (pageIndex: number, mcid: number) => `${pageIndex}:${mcid}`;
+  const owners = new Set(added.map((edit) => key(edit.pageIndex, edit.mcid)));
+  const late = new Set<StructureEdit>();
+  for (const edit of cuts) {
+    if (!owners.has(key(edit.pageIndex, edit.cut!.from[0]))) continue;
+    late.add(edit);
+    for (const mcid of [edit.mcid, ...givenMcids(edit.cut!)]) {
+      owners.add(key(edit.pageIndex, mcid));
+    }
+  }
+  return late;
+}
+
+/** The kind of artifact the last of an element's edits makes it; null for a plain one. */
+function artifactKindOf(edits: readonly StructureEdit[]): ArtifactKind | null {
+  const furniture = edits.at(-1)?.furniture;
+  return furniture ? furnitureKind(furniture) : null;
 }
 
 /** The element's body with `edit`'s /Alt, /Lang and /S applied; null when it is not a dictionary. */
@@ -246,7 +296,7 @@ function edited(
 }
 
 /** The body with text-string entry `key` set to `value`, or removed for null. */
-function withTextEntry(
+export function withTextEntry(
   body: string,
   key: string,
   value: string | null,
@@ -256,13 +306,13 @@ function withTextEntry(
     : setDictEntry(body, key, encodeTextString(value));
 }
 
-/** The structure element's object number, or why it cannot be found. */
-function elementFor(
+/** The object number of the element owning MCID `mcid` on the page, or why it cannot be found. */
+export function elementOwning(
   pdf: RawPdf,
   treeRoot: number,
-  edit: StructureEdit,
+  { pageIndex, mcid }: { pageIndex: number; mcid: number },
 ): number | string {
-  const pageNum = pdf.pageNumberAt(edit.pageIndex);
+  const pageNum = pdf.pageNumberAt(pageIndex);
   const page = pageNum === null ? null : pdf.objectBody(pageNum);
   if (!page) return "no such page";
   const key = pdf.dictInt(page, "StructParents");
@@ -272,7 +322,7 @@ function elementFor(
   if (!tree) return "the ParentTree has no entry for the page";
   if (!tree.items) return "the page's ParentTree entry is not an array";
 
-  const num = referencedObject(tree.items[edit.mcid]?.text ?? "");
+  const num = referencedObject(tree.items[mcid]?.text ?? "");
   if (num === null) return "no structure element owns this MCID";
   const body = pdf.objectBody(num);
   if (!body || pdf.dictName(body, "S") === null) {

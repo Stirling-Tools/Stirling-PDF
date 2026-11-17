@@ -169,7 +169,6 @@ export const useChangeMetadataOperation = () => {
 
   return useToolOperation<ChangeMetadataParameters>({
     ...changeMetadataOperationConfig,
-    filePrefix: t("changeMetadata.filenamePrefix", "metadata") + "_",
     getErrorMessage: createStandardErrorHandler(
       t(
         "changeMetadata.error.failed",

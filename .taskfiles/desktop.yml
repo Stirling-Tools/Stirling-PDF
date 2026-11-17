@@ -128,12 +128,20 @@ tasks:
       - cargo clippy --all-targets -- -D warnings
 
   format:
-    desc: "Auto-fix Rust formatting (not implemented yet)"
-    cmds: []
+    desc: "Auto-fix Rust formatting"
+    dir: src-tauri
+    cmds:
+      - cargo fmt
+      - cargo fmt --manifest-path provisioner/Cargo.toml
+      - cargo fmt --manifest-path thumbnail-handler/Cargo.toml
 
   format:check:
-    desc: "Check Rust formatting (not implemented yet)"
-    cmds: []
+    desc: "Check Rust formatting"
+    dir: src-tauri
+    cmds:
+      - cargo fmt -- --check
+      - cargo fmt --manifest-path provisioner/Cargo.toml -- --check
+      - cargo fmt --manifest-path thumbnail-handler/Cargo.toml -- --check
 
   check:
     desc: "Full desktop quality gate"
