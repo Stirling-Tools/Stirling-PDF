@@ -3,6 +3,7 @@ package stirling.software.common.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -179,9 +180,42 @@ class JobExecutorServiceTest {
 
         jobExecutorService.runJobGeneric(true, () -> rejection, 5000, true, 80);
 
-        verify(taskManager).setError(anyString(), eq("Job rejected with HTTP status 400"));
+        verify(taskManager)
+                .setError(anyString(), eq("Job rejected with HTTP status 400: bad input"));
         verify(taskManager, never()).setResult(anyString(), any());
         verify(taskManager, never()).setComplete(anyString());
+    }
+
+    @Test
+    void shouldKeepAPlainTextRejectionMessage() {
+        byte[] message = "No files provided".getBytes(StandardCharsets.UTF_8);
+        ResponseEntity<?> rejection =
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .body(new ByteArrayResource(message));
+        when(resourceMonitor.shouldQueueJob(80)).thenReturn(true);
+        when(jobQueue.queueJob(anyString(), eq(80), any(), anyLong()))
+                .thenAnswer(
+                        invocation -> {
+                            Supplier<?> queuedWork = invocation.getArgument(2);
+                            queuedWork.get();
+                            return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+                        });
+
+        jobExecutorService.runJobGeneric(true, () -> rejection, 5000, true, 80);
+
+        verify(taskManager)
+                .setError(anyString(), eq("Job rejected with HTTP status 400: No files provided"));
+    }
+
+    @Test
+    void shouldIgnoreANonTextRejectionBody() {
+        ResponseEntity<?> rejection =
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .body(new ByteArrayResource(new byte[] {0x25, 0x50, 0x44, 0x46}));
+
+        assertNull(JobExecutorService.rejectionReason(rejection));
     }
 
     @Test

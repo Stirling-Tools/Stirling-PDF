@@ -368,6 +368,7 @@ class FileStorageControllerMoreTest {
         Authentication authentication = auth(owner);
         when(fileStorageService.getShareByToken("tok")).thenReturn(share);
         when(fileStorageService.canAccessShareLink(share, authentication)).thenReturn(true);
+        when(fileStorageService.isOwnedByCaller(f, authentication)).thenReturn(true);
 
         ShareLinkMetadataResponse response = controller.getShareLinkMetadata("tok", authentication);
 
