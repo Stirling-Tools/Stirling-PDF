@@ -3,12 +3,16 @@ package stirling.software.proprietary.service.ua;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.Loader;
@@ -17,6 +21,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -46,8 +51,8 @@ class PdfUaRealCorpusTest {
     // marks and brackets drawn as objects of their own in visual order come back in reading order
     // once marked content groups them; a Devanagari vowel sign drawn ahead of its consonant under
     // an ActualText span comes back as U+0000.
-    private static final java.util.Map<String, String> KNOWN_TAGGED_TEXT =
-            java.util.Map.of(
+    private static final Map<String, String> KNOWN_TAGGED_TEXT =
+            Map.of(
                     "rtl-marks-sample.pdf",
                     "שָׁלוֹם עוֹלָם يوُلدَُ جَمِيعُ النَّاسِ",
                     "rtl-mixed-sample.pdf",
@@ -65,8 +70,7 @@ class PdfUaRealCorpusTest {
                 new PdfUaConversionService(
                         validation,
                         new FontEmbeddingService(),
-                        new CustomPDFDocumentFactory(
-                                org.mockito.Mockito.mock(PdfMetadataService.class)));
+                        new CustomPDFDocumentFactory(Mockito.mock(PdfMetadataService.class)));
         repoRoot = findRepoRoot();
     }
 
@@ -97,9 +101,9 @@ class PdfUaRealCorpusTest {
 
         List<Outcome> outcomes = new ArrayList<>();
         List<String> crashes = new ArrayList<>();
-        java.util.Map<String, Integer> clauseFiles = new java.util.TreeMap<>();
-        java.util.Map<String, String> clauseText = new java.util.HashMap<>();
-        java.util.Map<String, String> clauseExamples = new java.util.HashMap<>();
+        Map<String, Integer> clauseFiles = new TreeMap<>();
+        Map<String, String> clauseText = new HashMap<>();
+        Map<String, String> clauseExamples = new HashMap<>();
 
         for (Path pdf : pdfs) {
             String name = repoRoot.relativize(pdf).toString().replace('\\', '/');
@@ -153,7 +157,7 @@ class PdfUaRealCorpusTest {
         StringBuilder clauses =
                 new StringBuilder("\nBlocking clauses, by number of files affected\n");
         clauseFiles.entrySet().stream()
-                .sorted(java.util.Map.Entry.<String, Integer>comparingByValue().reversed())
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .forEach(
                         e ->
                                 clauses.append(
@@ -187,7 +191,7 @@ class PdfUaRealCorpusTest {
         String expected =
                 KNOWN_TAGGED_TEXT.entrySet().stream()
                         .filter(known -> name.contains(known.getKey()))
-                        .map(java.util.Map.Entry::getValue)
+                        .map(Map.Entry::getValue)
                         .findFirst()
                         .orElse(textBefore);
         boolean preserved = expected.equals(textAfter);
@@ -248,11 +252,11 @@ class PdfUaRealCorpusTest {
         }
     }
 
-    private static final String File_BUILD = "build" + java.io.File.separator;
+    private static final String File_BUILD = "build" + File.separator;
 
     // Playwright output, gitignored: leaving it in makes the corpus depend on
     // what a local test run happened to leave behind.
-    private static final String File_TEST_RESULTS = "test-results" + java.io.File.separator;
+    private static final String File_TEST_RESULTS = "test-results" + File.separator;
 
     private static String render(List<Outcome> outcomes) {
         StringBuilder sb = new StringBuilder("\nPDF/UA conversion over the repository corpus\n");
