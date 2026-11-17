@@ -5,7 +5,7 @@
 // Outputs:
 //   src/editor/core/data/ogImageMap.json      - { toolId: imageBasename }  (imported by the client)
 //   src/editor/core/data/urlSeoOverrides.json - { path: { title, description } } (client per-URL meta, English only)
-//   public/og-metadata.json            - { default, byTool, byPath, canonicalByPath, navLinks } (prerender input)
+//   public/og-metadata.json            - { default, byTool, byPath, canonicalByPath } (prerender input)
 //   public/og-metadata.saas.json       - same shape, SaaS marketing copy/art (prerender input, --mode saas)
 //
 // Run: `node scripts/generate-og-metadata.mjs`        (writes files)
@@ -444,41 +444,15 @@ for (const [id, name] of Object.entries(TOOL_SEO_TITLES)) {
       urlSeoOverrides[p] = { title: name, description: descFor(id) };
 }
 
-// --- crawlable internal-link hub --------------------------------------------
-// One routable link per tool + each convert SEO landing page. The in-app
-// toolbar uses onClick buttons (not <a href>), and the prerendered body is
-// otherwise empty, so these baked links are the only tool links a crawler can
-// follow - they spread link equity and help discovery. Paths are the first
-// alias for each tool (guaranteed routable by parseToolRoute). Dev/link tools
-// are external redirects, not landing pages, so they are excluded.
-const stripSuffix = (t) =>
-  t.endsWith(` - ${SITE_NAME}`) ? t.slice(0, -` - ${SITE_NAME}`.length) : t;
+// First alias per tool, guaranteed routable by parseToolRoute.
 const primaryPathByTool = {};
 for (const [p, id] of Object.entries(urlToTool))
   if (!(id in primaryPathByTool)) primaryPathByTool[id] = p;
 
-const navLinks = [];
-const seenNav = new Set();
-const pushNav = (p, label) => {
-  if (p && !seenNav.has(p)) {
-    seenNav.add(p);
-    navLinks.push({ path: p, label });
-  }
-};
-for (const id of allIds) {
-  if (linkIds.includes(id)) continue;
-  pushNav(
-    primaryPathByTool[id] || canonicalPath(id),
-    stripSuffix(byTool[id].title),
-  );
-}
-for (const [p, seo] of Object.entries(CONVERT_SEO_PAGES)) pushNav(p, seo.name);
-navLinks.sort((a, b) => a.label.localeCompare(b.label));
-
 // --- alias canonicalisation --------------------------------------------------
 // Many paths route to the same tool (/compress-pdf and /compress). Indexing them
-// all is duplicate content, so every alias canonicalises to the primary path the
-// nav hub links to, and the prerender leaves aliases out of the sitemap. Paths
+// all is duplicate content, so every alias canonicalises to the tool's primary
+// path, and the prerender leaves aliases out of the sitemap. Paths
 // keyed to themselves in byPath are landing pages with their own copy, so they
 // stay primary.
 const canonicalByPath = {};
@@ -497,18 +471,15 @@ const manifest = {
   byTool,
   byPath,
   canonicalByPath,
-  navLinks,
 };
 
 // SaaS manifest: same tool pages as above, but the home default and two extra
 // marketing routes carry the stirling.com cards. Keeps all per-tool OG intact.
-// SaaS is the deploy with a canonical origin, so it needs the link hub most.
 const saasManifest = {
   default: SAAS_DEFAULT,
   byTool: { ...byTool },
   byPath: { ...byPath },
   canonicalByPath: { ...canonicalByPath },
-  navLinks,
 };
 // Same app-surface rule as the pageTitles loop above: noindex, never a landing page.
 for (const [routePath, label] of Object.entries(SAAS_ONLY_PAGE_TITLES)) {

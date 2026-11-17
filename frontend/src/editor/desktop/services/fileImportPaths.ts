@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { pendingFilePathMappings } from "@editor/services/pendingFilePathMappings";
+import { folderOf, logDropDiagnostic } from "@editor/services/dropDiagnostics";
 
 interface FileDropBridge {
   postMessageWithAdditionalObjects(message: string, objects: File[]): void;
@@ -72,7 +73,14 @@ export function captureDroppedFilePaths(): () => void {
     const files = Array.from(event.dataTransfer?.files ?? []);
     if (files.length === 0) return;
     // Read the drag pasteboard now; addFiles may wait on ZIP extraction or another import.
+    const asked = performance.now();
     const paths = resolveDroppedPaths(files);
+    // A folder under %TEMP% means the source gave data, not a file on disk.
+    void paths.then((resolved) =>
+      logDropDiagnostic(
+        `paths after ${Math.round(performance.now() - asked)} ms: ${files.map((_, index) => folderOf(resolved[index])).join(", ")}`,
+      ),
+    );
     files.forEach((file, index) => {
       pendingFilePathMappings.set(
         file,
