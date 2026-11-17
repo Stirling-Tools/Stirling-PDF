@@ -1,3 +1,4 @@
+import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
 import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
@@ -12,6 +13,7 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
@@ -56,6 +58,8 @@ export interface FileStructure {
   blocks: FileBlock[];
   /** By element key, for every element a page or block names. */
   languages: Map<string, ElementLanguage>;
+  /** The link annotations the save can give an element, by page index (see readLinks). */
+  links: Map<number, LinkAnnotation[]>;
   /** Whether the file has a /StructTreeRoot at all. */
   hasTree: boolean;
   /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
@@ -82,6 +86,7 @@ export async function readFileStructure(
           pages: new Map(),
           blocks: [],
           languages: new Map(),
+          links: readLinks(pdf, null),
           hasTree: false,
           marked: isMarked(pdf, catalog),
         };
@@ -141,6 +146,7 @@ export async function readFileStructure(
     pages: byPage,
     blocks,
     languages,
+    links: readLinks(pdf, treeRoot),
     hasTree: true,
     marked: isMarked(pdf, catalog),
   };

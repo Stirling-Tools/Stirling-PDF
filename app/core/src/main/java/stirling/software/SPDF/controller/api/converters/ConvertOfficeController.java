@@ -338,8 +338,7 @@ public class ConvertOfficeController {
                 doc.save(tempOut.getFile());
             }
             String filename =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf");
             ResponseEntity<Resource> response =
                     WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
             tempOut = null;

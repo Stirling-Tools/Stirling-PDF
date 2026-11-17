@@ -220,10 +220,7 @@ class PDFToFileTest {
 
             // Verify content disposition indicates a ZIP file
             assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("ToMarkdown.zip"));
+                    response.getHeaders().getContentDisposition().toString().contains("test.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -315,7 +312,7 @@ class PDFToFileTest {
                     response.getHeaders()
                             .getContentDisposition()
                             .toString()
-                            .contains("ToMarkdown.zip"));
+                            .contains("multipage.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -390,10 +387,7 @@ class PDFToFileTest {
 
             // Verify content disposition indicates a zip file
             assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("testToHtml.zip"));
+                    response.getHeaders().getContentDisposition().toString().contains("test.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -552,7 +546,7 @@ class PDFToFileTest {
                     response.getHeaders()
                             .getContentDisposition()
                             .toString()
-                            .contains("documentToodp.zip"));
+                            .contains("document.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =

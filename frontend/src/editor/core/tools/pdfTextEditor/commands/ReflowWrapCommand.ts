@@ -1,3 +1,4 @@
+import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -9,6 +10,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import {
   SCRATCH,
   scratchPtr,
@@ -92,7 +94,7 @@ export class ReflowWrapCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run) return;
+    if (!run || isScanRun(run)) return;
     if (this.maxWidthPt <= 0) return;
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.
@@ -554,7 +556,7 @@ function readObjText(
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.reflowText, len);
     m.FPDFTextObj_GetText(ptr, textPage, buf, len);
-    return readUtf16(m, buf, len);
+    return drawnText(readUtf16(m, buf, len));
   } catch {
     return "";
   }

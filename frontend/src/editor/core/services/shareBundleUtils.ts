@@ -108,12 +108,16 @@ function loadJSZip(): Promise<typeof JSZipClass> {
   return jsZipPromise;
 }
 
-export async function loadShareBundleEntries(blob: Blob): Promise<{
+export interface LoadedShareBundle {
   manifest: ShareBundleManifest;
   rootOrder: string[];
   sortedEntries: ShareBundleManifest["entries"];
   files: File[];
-} | null> {
+}
+
+export async function loadShareBundleEntries(
+  blob: Blob,
+): Promise<LoadedShareBundle | null> {
   const JSZip = await loadJSZip();
   const zip = await JSZip.loadAsync(blob);
   const manifestEntry = zip.file(MANIFEST_FILENAME);

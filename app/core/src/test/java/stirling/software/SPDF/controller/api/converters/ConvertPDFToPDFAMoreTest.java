@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -285,8 +286,7 @@ class ConvertPDFToPDFAMoreTest {
                 wr.verify(
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFA-2b.pdf")));
+                                        any(TempFile.class), eq("input.pdf")));
             }
         }
 
@@ -387,8 +387,7 @@ class ConvertPDFToPDFAMoreTest {
                 wr.verify(
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFX.pdf")));
+                                        any(TempFile.class), eq("input.pdf")));
             }
         }
 

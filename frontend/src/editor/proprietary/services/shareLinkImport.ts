@@ -3,8 +3,8 @@ import { fileStorage } from "@editor/services/fileStorage";
 import type { FileId } from "@editor/types/file";
 import type { StirlingFile } from "@editor/types/fileContext";
 import type { FileContextActions } from "@editor/types/fileContext";
+import { importShareBundle } from "@editor/services/shareBundleImportService";
 import {
-  getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
@@ -68,27 +68,6 @@ export async function importShareLinkToWorkbench(
   if (isZipBundle(contentTypeValue, filename)) {
     const bundle = await loadShareBundleEntries(blob);
     if (bundle) {
-      const { manifest, rootOrder, sortedEntries, files } = bundle;
-      const stirlingFiles = await actions.addFilesWithOptions(files, {
-        selectFiles: false,
-        autoUnzip: false,
-        skipAutoUnzip: false,
-        allowDuplicates: true,
-      });
-
-      const idMap = new Map<string, FileId>();
-      for (let i = 0; i < stirlingFiles.length; i += 1) {
-        idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId);
-      }
-
-      const rootIdMap = new Map<string, FileId>();
-      for (const rootLogicalId of rootOrder) {
-        const mappedId = idMap.get(rootLogicalId);
-        if (mappedId) {
-          rootIdMap.set(rootLogicalId, mappedId);
-        }
-      }
-
       const sharedUpdates = {
         remoteStorageId: shareMetadata?.fileId,
         remoteOwnerUsername: shareMetadata?.owner ?? undefined,
@@ -98,45 +77,21 @@ export async function importShareLinkToWorkbench(
         remoteHasShareLinks: false,
         remoteShareToken: shareMetadata?.shareToken || token,
       };
-
-      for (const entry of sortedEntries) {
-        const newId = idMap.get(entry.logicalId);
-        if (!newId) continue;
-        const parentId = entry.parentLogicalId
-          ? idMap.get(entry.parentLogicalId)
-          : undefined;
-        const rootId =
-          rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
-          idMap.get(manifest.rootLogicalId) ||
-          newId;
-        const updates = {
-          versionNumber: entry.versionNumber,
-          originalFileId: rootId,
-          parentFileId: parentId,
-          toolHistory: entry.toolHistory,
-          isLeaf: entry.isLeaf,
-          ...sharedUpdates,
-        };
-        actions.updateStirlingFileStub(newId, updates);
-        await fileStorage.updateFileMetadata(newId, updates);
-      }
-
-      const selectedIds: FileId[] = [];
-      for (const rootId of rootOrder) {
-        const rootEntries = sortedEntries.filter(
-          (entry) => getShareBundleEntryRootId(manifest, entry) === rootId,
-        );
-        const latestEntry = rootEntries[rootEntries.length - 1];
-        if (!latestEntry) {
-          continue;
-        }
-        const latestId = idMap.get(latestEntry.logicalId);
-        if (latestId) {
-          selectedIds.push(latestId);
-        }
-      }
-
-      return selectedIds;
+      const currentFiles = await importShareBundle(
+        bundle,
+        {
+          addFiles: (files) =>
+            actions.addFilesWithOptions(files, {
+              selectFiles: false,
+              autoUnzip: false,
+              skipAutoUnzip: false,
+              allowDuplicates: true,
+            }),
+          updateStub: actions.updateStirlingFileStub,
+        },
+        sharedUpdates,
+      );
+      return currentFiles.map(({ file }) => file.fileId);
     }
   }
 

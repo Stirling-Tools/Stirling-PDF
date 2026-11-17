@@ -36,6 +36,15 @@ export interface ValueSpan {
   text: string;
 }
 
+export interface ObjectExtent {
+  start: number;
+  /** Offset of the `stream` keyword, or the object's end when it has no stream. */
+  dictEnd: number;
+  stream: { start: number; end: number } | null;
+  /** Offset of `endobj`, -1 when none follows the stream. */
+  end: number;
+}
+
 export interface NumberTreeEntry {
   /** The object whose body holds the value. */
   objNum: number;
@@ -317,6 +326,11 @@ export class RawPdf {
     return this.objects.get(num)?.offset ?? -1;
   }
 
+  /** The numbers of every object the file's index holds, ascending. */
+  objectNumbers(): number[] {
+    return [...this.objects.keys()].filter((n) => n > 0).sort((x, y) => x - y);
+  }
+
   /** `/Key 12 0 R` -> 12. */
   dictRef(body: string, key: string): number | null {
     const span = this.valueSpan(body, key);
@@ -454,15 +468,19 @@ export class RawPdf {
     return null;
   }
 
-  /** Decoded stream payload for an object, or null when unsupported. */
-  async streamData(num: number): Promise<Uint8Array | null> {
-    const entry = this.objects.get(num);
-    if (!entry || entry.offset === undefined) return null;
-    const body = this.objectBody(num);
+  /** Where a top-level object's dictionary, stream payload and `endobj` sit in `src`; null when it has no offset. */
+  objectExtent(num: number): ObjectExtent | null {
+    const start = this.bodyOffset(num);
+    const body = start < 0 ? null : this.objectBody(num);
     if (body === null) return null;
-    const kw = body.indexOf("stream");
-    if (kw < 0) return null;
-    let dataStart = entry.offset + kw + "stream".length;
+    const valueEnd = scanValueEnd(body, skipWhitespace(body, 0));
+    const keyword = /^\s*stream\b/.exec(body.slice(valueEnd));
+    const kw = keyword ? valueEnd + keyword[0].length - "stream".length : -1;
+    if (kw < 0) {
+      const end = start + body.length;
+      return { start, dictEnd: end, stream: null, end };
+    }
+    let dataStart = start + kw + "stream".length;
     if (this.src[dataStart] === "\r") dataStart += 1;
     if (this.src[dataStart] === "\n") dataStart += 1;
 
@@ -479,7 +497,10 @@ export class RawPdf {
     // A wrong /Length is common enough in the wild that trusting it blindly
     // truncates real content; verify against the endstream keyword.
     const marker = this.src.indexOf("endstream", dataStart);
-    if (dataEnd < 0 || marker < 0 || dataEnd > marker) {
+    const confirmed =
+      dataEnd >= 0 &&
+      /^\s*endstream/.test(this.src.slice(dataEnd, dataEnd + 16));
+    if (!confirmed && (dataEnd < 0 || marker < 0 || dataEnd > marker)) {
       dataEnd = marker < 0 ? this.bytes.length : marker;
       while (
         dataEnd > dataStart &&
@@ -488,7 +509,20 @@ export class RawPdf {
         dataEnd -= 1;
       }
     }
-    let data = this.bytes.subarray(dataStart, dataEnd);
+    return {
+      start,
+      dictEnd: start + kw,
+      stream: { start: dataStart, end: dataEnd },
+      end: this.src.indexOf("endobj", dataEnd),
+    };
+  }
+
+  /** Decoded stream payload for an object, or null when unsupported. */
+  async streamData(num: number): Promise<Uint8Array | null> {
+    const extent = this.objectExtent(num);
+    const body = this.objectBody(num);
+    if (!extent?.stream || body === null) return null;
+    let data = this.bytes.subarray(extent.stream.start, extent.stream.end);
 
     const filters = this.filterNames(body);
     if (filters === null) return null;
@@ -740,8 +774,34 @@ interface Entry {
 }
 
 function findEntry(body: string, key: string): Entry | null {
+  let found: Entry | null = null;
+  visitEntries(body, (name, entry) => {
+    if (name === key) found = entry;
+    return found !== null;
+  });
+  return found;
+}
+
+/** The keys of the outermost dictionary in `body`, without their slashes; null when there is none. */
+export function dictKeys(body: string): string[] | null {
+  const keys: string[] = [];
+  const read = visitEntries(body, (name) => {
+    keys.push(name);
+    return false;
+  });
+  return read ? keys : null;
+}
+
+/**
+ * Visit the entries of the outermost dictionary in `body` until `visit`
+ * returns true. False when `body` has no dictionary.
+ */
+function visitEntries(
+  body: string,
+  visit: (key: string, entry: Entry) => boolean,
+): boolean {
   const open = body.indexOf("<<");
-  if (open < 0) return null;
+  if (open < 0) return false;
   let i = open + 2;
   let depth = 1;
   while (i < body.length) {
@@ -762,7 +822,7 @@ function findEntry(body: string, key: string): Entry | null {
     if (ch === ">" && body[i + 1] === ">") {
       depth -= 1;
       i += 2;
-      if (depth === 0) return null;
+      if (depth === 0) return true;
       continue;
     }
     if (ch === "[" || ch === "]") {
@@ -773,15 +833,16 @@ function findEntry(body: string, key: string): Entry | null {
       const nameEnd = scanNameEnd(body, i + 1);
       const start = skipWhitespace(body, nameEnd);
       const end = scanValueEnd(body, start);
-      if (body.slice(i + 1, nameEnd) === key)
-        return { keyStart: i, start, end };
+      if (visit(body.slice(i + 1, nameEnd), { keyStart: i, start, end })) {
+        return true;
+      }
       // Past the value too: in `/S /P /P 9 0 R` the value /P is not the key.
       i = end;
       continue;
     }
     i += 1;
   }
-  return null;
+  return true;
 }
 
 function skipWhitespace(text: string, at: number): number {
