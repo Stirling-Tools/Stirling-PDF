@@ -264,7 +264,7 @@ public class MergeController {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
-            log.info("Sorting files based on sortType: {}", request.getSortType());
+            log.debug("Sorting files based on sortType: {}", request.getSortType());
             Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 

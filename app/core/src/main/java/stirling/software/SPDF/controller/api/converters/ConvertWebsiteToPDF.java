@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,9 +78,13 @@ public class ConvertWebsiteToPDF {
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
-        // Jobs run off the request thread, so there is no servlet context to build from.
+        // Async jobs (MCP, pipelines) run off the request thread, where there is no request URL,
+        // so they fall back to the configured context path.
         UriComponentsBuilder uriComponentsBuilder =
-                UriComponentsBuilder.fromPath(contextPathPrefix()).path("/url-to-pdf");
+                (RequestContextHolder.getRequestAttributes() != null
+                                ? ServletUriComponentsBuilder.fromCurrentContextPath()
+                                : UriComponentsBuilder.fromPath(contextPathPrefix()))
+                        .path("/url-to-pdf");
         URI location = null;
         HttpStatus status = HttpStatus.SEE_OTHER;
 

@@ -42,8 +42,7 @@ export class DuplicateRunCommand implements Command {
       Math.max(4, src.fontSize),
     );
     if (!newPtr) return;
-    // Base-14 (WinAnsi) can't render >U+00FF; sanitize so non-Latin code
-    // points are dropped rather than persisted as U+00FF ydieresis tofu.
+    // Base-14 can only render WinAnsi; drop other code points, not U+00FF tofu.
     const textPtr = writeUtf16(
       m,
       sanitizeForBase14(src.text.replace(/\r?\n/g, " ")),

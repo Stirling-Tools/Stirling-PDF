@@ -127,8 +127,22 @@ public class ConvertWebsiteToPdfTest {
     }
 
     @Test
-    void redirect_stays_under_the_application_context_path() throws Exception {
+    void background_job_redirect_stays_under_the_application_context_path() throws Exception {
+        RequestContextHolder.resetRequestAttributes();
         when(appConfig.getContextPath()).thenReturn("/stirling/");
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("not-a-url");
+
+        ResponseEntity<?> resp = sut.urlToPdf(request);
+
+        assertEquals("/stirling/url-to-pdf", resp.getHeaders().getLocation().getPath());
+    }
+
+    @Test
+    void request_redirect_keeps_the_request_context_path() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setContextPath("/stirling");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("not-a-url");
 

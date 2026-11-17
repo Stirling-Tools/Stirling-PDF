@@ -8,12 +8,22 @@ import {
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
 import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
-import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
-import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
-  loadedLocalFonts,
-  subscribeLocalFonts,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+  isScanRun,
+  scanDrawnFont,
+  type ScanDrawnFont,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import {
+  scanFacesGeneration,
+  subscribeScanFaces,
+} from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
+import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
+import {
+  loadedExternalFonts,
+  subscribeExternalFonts,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
+import { loadServerFonts } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   ChangeZOrderCommand,
   type ZOrderMode,
@@ -400,30 +410,46 @@ export function useToolbarController(
     [store],
   );
 
-  // Null until the user loads their device fonts, and it must re-render when
-  // they do - the italic control's availability is derived from it.
-  const localFonts = useSyncExternalStore(
-    subscribeLocalFonts,
-    loadedLocalFonts,
-    loadedLocalFonts,
+  // Null until device or server fonts load; re-render then, as italic availability derives from it.
+  const externalFonts = useSyncExternalStore(
+    subscribeExternalFonts,
+    loadedExternalFonts,
+    loadedExternalFonts,
   );
 
-  const documentFontIds = useMemo(
-    () => [...new Set(state.pages.flatMap((p) => p.runs.map((r) => r.fontId)))],
-    [state.pages],
-  );
-
-  // Match the document's own families against the installed ones, so an edit
-  // that outgrows an embedded subset completes from the real face.
+  const hasTextSelection = selection.runIds.length > 0;
   useEffect(() => {
-    if (!localFonts) return;
-    void warmDocumentDeviceFonts(documentFontIds);
-  }, [localFonts, documentFontIds]);
+    if (hasTextSelection) void loadServerFonts();
+  }, [hasTextSelection]);
+
+  useDocumentFontCompletion(store, state, selection, externalFonts);
 
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection, localFonts),
-    [state.pages, selection, localFonts],
+    () => deriveToolbarState(state.pages, selection, externalFonts),
+    [state.pages, selection, externalFonts],
   );
+
+  const scanFacesVersion = useSyncExternalStore(
+    subscribeScanFaces,
+    scanFacesGeneration,
+    scanFacesGeneration,
+  );
+  // Undefined unless the selection is wholly scanned text; null when no single font is in force.
+  const scanFont = useMemo<ScanDrawnFont | null | undefined>(() => {
+    const doc = store.document;
+    if (!doc || selection.runIds.length === 0) return undefined;
+    const ids = new Set(selection.runIds);
+    const runs = doc
+      .loadedPages()
+      .flatMap((page) => page.runs.filter((run) => ids.has(run.id)));
+    if (runs.length === 0 || !runs.every(isScanRun)) return undefined;
+    const fonts = runs.map((run) => scanDrawnFont(doc, run));
+    const first = fonts[0];
+    return first && fonts.every((font) => font?.family === first.family)
+      ? first
+      : null;
+    // state.pages and scanFacesVersion are unread but change whenever a block is refitted.
+  }, [store, selection.runIds, state.pages, scanFacesVersion]);
 
   const selectionAllLocked = useMemo(() => {
     const runs = new Set(selection.runIds);
@@ -500,6 +526,7 @@ export function useToolbarController(
 
   return {
     state: toolbarState,
+    scanFont,
     canUndo: store.history.canUndo,
     canRedo: store.history.canRedo,
     onUndo: () => store.undo(),
@@ -507,9 +534,7 @@ export function useToolbarController(
     onChangeFontSize: sel.changeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
-    onChangeFontFamily: (family: string) => {
-      void sel.changeFontFamily(family);
-    },
+    onChangeFontFamily: sel.changeFontFamily,
     onToggleItalic: sel.toggleItalic,
     onDelete: sel.deleteSelection,
     onToggleLock,
@@ -541,6 +566,7 @@ export function useToolbarController(
       selection.shapeIds.length,
     canAlignLines,
     disabled:
+      sel.fittingScan ||
       !state.hasDocument ||
       (selection.runIds.length === 0 && selection.imageIds.length === 0),
   };
