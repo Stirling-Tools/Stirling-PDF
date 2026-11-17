@@ -438,6 +438,61 @@ class McpPipelineTest {
     }
 
     @Test
+    void anExplicitNullTriggerTurnsAnEditorAutomationIntoOnDemand() throws Exception {
+        stubSaveEcho();
+        Policy onExport =
+                new Policy(
+                        "p1",
+                        "Tidy exports",
+                        "admin",
+                        true,
+                        List.of(),
+                        List.of(step("/api/v1/misc/repair")),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        new stirling.software.proprietary.policy.model.EditorConfig(
+                                true, "export"));
+        when(policies.listPolicies()).thenReturn(List.of(onExport));
+
+        automations.save(
+                "alice",
+                new McpAutomations.Draft("p1", null, null, null, mapper.nullNode(), null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertFalse(saved.getValue().editor().allowed());
+        assertTrue(saved.getValue().inputs().isEmpty());
+    }
+
+    @Test
+    void omittingTheTriggerKeepsAnEditorAutomationsSetting() throws Exception {
+        stubSaveEcho();
+        Policy onExport =
+                new Policy(
+                        "p1",
+                        "Tidy exports",
+                        "admin",
+                        true,
+                        List.of(),
+                        List.of(step("/api/v1/misc/repair")),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        new stirling.software.proprietary.policy.model.EditorConfig(
+                                true, "export"));
+        when(policies.listPolicies()).thenReturn(List.of(onExport));
+
+        automations.save(
+                "alice", new McpAutomations.Draft("p1", "Renamed", null, null, null, null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertTrue(saved.getValue().editor().allowed());
+        assertEquals("export", saved.getValue().editor().runOn());
+    }
+
+    @Test
     void aTestRunOfASavedAutomationUsesItsStoredPasswordNotTheMaskedOne() throws Exception {
         PipelineStep stored =
                 new PipelineStep(

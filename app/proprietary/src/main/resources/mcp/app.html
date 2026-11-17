@@ -310,7 +310,9 @@
 
   function renderPicker(data) {
     var purpose = data.purpose || toolArgs.purpose;
-    var maxInline = data.maxInlineBytes > 0 ? data.maxInlineBytes : 7 * 1048576;
+    var maxInline = typeof data.maxInlineBytes === "number" && data.maxInlineBytes >= 0
+      ? data.maxInlineBytes
+      : 7 * 1048576;
     var drop = el("div", "drop");
     if (purpose) drop.appendChild(el("div", "purpose", purpose));
     drop.appendChild(el("p", null, "Drop a file here or choose one from your device."));
