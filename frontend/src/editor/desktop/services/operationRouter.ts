@@ -9,7 +9,6 @@ import { connectionModeService } from "@editor/services/connectionModeService";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
-import { requiresSignIn } from "@editor/services/signInRequiredEndpoints";
 import { STIRLING_SAAS_BACKEND_API_URL } from "@editor/constants/connection";
 import {
   CONVERSION_ENDPOINTS,
@@ -56,21 +55,6 @@ export class OperationRouter {
         : (await connectionModeService.getServerConfig())?.url;
     if (!url) throw new Error("Server configuration not found");
     return url.replace(/\/$/, "");
-  }
-
-  private signInRequiredError(): Error {
-    // Open the connection settings so the user can sign in
-    window.dispatchEvent(
-      new CustomEvent("appConfig:navigate", {
-        detail: { key: "connectionMode" },
-      }),
-    );
-    return new Error(
-      i18n.t(
-        "localMode.toolUnavailable",
-        "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
-      ),
-    );
   }
 
   /** Standalone tools route by connection mode. Automation endpoints never reach here —
@@ -199,14 +183,6 @@ export class OperationRouter {
    * @returns Base URL for API calls
    */
   async getBaseUrl(operation?: string, endpointName?: string): Promise<string> {
-    if (
-      operation &&
-      this.isToolEndpoint(operation) &&
-      requiresSignIn(this.capabilityKey(operation, endpointName)) &&
-      (await connectionModeService.getCurrentMode()) === "local"
-    ) {
-      throw this.signInRequiredError();
-    }
     if (await isLocalProcessingOnly()) {
       if (operation && requiresOffDeviceProcessing(operation))
         throw documentPrivacyError();
@@ -246,7 +222,18 @@ export class OperationRouter {
               backendUrl,
             );
           if (!supportedLocally) {
-            throw this.signInRequiredError();
+            // Open the connection settings so the user can sign in
+            window.dispatchEvent(
+              new CustomEvent("appConfig:navigate", {
+                detail: { key: "connectionMode" },
+              }),
+            );
+            throw new Error(
+              i18n.t(
+                "localMode.toolUnavailable",
+                "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.",
+              ),
+            );
           }
         }
       }
@@ -472,7 +459,6 @@ export class OperationRouter {
     if (this.isToolEndpoint(endpoint)) {
       // For UI data endpoints, extract the endpoint name
       const endpointToCheck = this.extractEndpointName(endpoint);
-      if (mode === "local" && requiresSignIn(endpointToCheck)) return true;
       const supportedLocally =
         await endpointAvailabilityService.isEndpointSupportedLocally(
           endpointToCheck,

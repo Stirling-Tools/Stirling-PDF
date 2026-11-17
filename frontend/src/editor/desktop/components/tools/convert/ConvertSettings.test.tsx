@@ -3,9 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
 import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
-import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
 
-const state = vi.hoisted(() => ({ localOnly: true, signedOut: false }));
+const state = vi.hoisted(() => ({ localOnly: true }));
 vi.mock("@editor/hooks/useLocalProcessingOnly", () => ({
   useLocalProcessingOnly: () => state.localOnly,
 }));
@@ -21,9 +20,6 @@ vi.mock("@editor/hooks/useEndpointConfig", () => ({
       "pdf-to-word": false,
       "file-to-pdf": false,
     },
-    endpointDetails: state.signedOut
-      ? { "pdf-to-word": { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" } }
-      : {},
   }),
 }));
 vi.mock("@editor/hooks/useConversionCloudStatus", () => ({
@@ -37,18 +33,15 @@ vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 
 beforeEach(() => {
   state.localOnly = true;
-  state.signedOut = false;
 });
 
-function renderSettings(onEndpointUnavailableClick?: () => void) {
+function renderSettings() {
   return render(
     <MantineProvider>
-      <ToolActionsContext.Provider value={{ onEndpointUnavailableClick }}>
-        <ConvertSettings
-          parameters={{ ...defaultParameters, fromExtension: "pdf" }}
-          onParameterChange={vi.fn()}
-        />
-      </ToolActionsContext.Provider>
+      <ConvertSettings
+        parameters={{ ...defaultParameters, fromExtension: "pdf" }}
+        onParameterChange={vi.fn()}
+      />
     </MantineProvider>,
   );
 }
@@ -74,22 +67,4 @@ it("keeps disabled formats visible when privacy and the hiding preference are of
   fireEvent.click(screen.getByTestId("convert-to-dropdown"));
   expect(await screen.findByTestId("format-option-docx")).toBeDisabled();
   expect(screen.getByTestId("format-option-png")).toBeEnabled();
-});
-
-it("offers formats that need sign-in instead of greying them out", async () => {
-  state.localOnly = false;
-  state.signedOut = true;
-  renderSettings(vi.fn());
-  fireEvent.click(screen.getByTestId("convert-to-dropdown"));
-  const word = await screen.findByTestId("format-option-docx");
-  expect(word).toBeEnabled();
-  expect(word).toHaveAttribute("title", "convert.signInToUse");
-});
-
-it("keeps sign-in formats unavailable under privacy", async () => {
-  state.signedOut = true;
-  renderSettings(vi.fn());
-  fireEvent.click(screen.getByTestId("convert-to-dropdown"));
-  await screen.findByTestId("format-option-png");
-  expect(screen.queryByTestId("format-option-docx")).toBeNull();
 });
