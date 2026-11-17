@@ -3,6 +3,7 @@ import { Stack, Text, Image } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface UploadSignatureImageProps {
   signature: string | null;
   onChange: (signature: string | null) => void;
@@ -92,6 +93,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
           >
             <Image
               src={signature}
+              className={privateContentClassName}
               alt={t(
                 "certSign.collab.signRequest.signatureImageAlt",
                 "Signature",

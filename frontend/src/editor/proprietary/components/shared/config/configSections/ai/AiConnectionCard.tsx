@@ -22,6 +22,7 @@ import { HAS_PORTAL } from "@editor/routes/hasPortal";
 import { useAccountLinked } from "@editor/components/shared/config/configSections/ai/useAiEngineStatus";
 import type { AiCardProps } from "@editor/components/shared/config/configSections/ai/aiCardProps";
 import "@editor/components/shared/config/configSections/ai/AiModeOption.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** The three places AI could run. Only two of them exist. */
 type AiMode = "off" | "self" | "cloud";
@@ -218,6 +219,7 @@ export function AiConnectionCard({
         >
           <Stack gap="sm">
             <TextInput
+              className={privateContentClassName}
               label={
                 <Group gap="xs">
                   <span>

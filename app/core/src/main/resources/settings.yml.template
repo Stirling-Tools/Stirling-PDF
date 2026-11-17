@@ -12,10 +12,13 @@
 
 security:
   honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
+  blockSignedPdfEdits: false # Lock digitally signed PDFs against changes in the web and desktop apps; viewing, converting and signing again stay allowed. API calls and server pipelines are not affected.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
+  scimToken: "" # Bearer token (at least 32 characters) for SCIM 2.0 user provisioning at /api/v1/scim/v2 (Okta, Entra ID). Leave empty to disable
+  scimDeleteRemovesUser: false # When true, a SCIM DELETE permanently erases the user and their files; when false it only deactivates them
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
     username: "" # initial username for the first login
@@ -106,6 +109,15 @@ premium:
       clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
       apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
       appId: "" # Google Drive app ID
+      clientSecret: "" # OAuth client secret; lets users connect their Google account so pipelines can use their Drive (redirect URI <server>/api/v1/connected-accounts/callback/google)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Google account
+      accountScope: drive # Drive scope requested when a user connects: 'drive' (every file) or 'drive.file' (only files they pick or Stirling creates)
+    microsoft:
+      enabled: false # Enable OneDrive and SharePoint (connected accounts, pipeline locations)
+      clientId: "" # Application (client) ID of the Microsoft Entra app registration
+      tenant: common # 'common' (work, school and personal accounts), 'organizations' (work and school only), or a tenant ID/domain to admit one organisation
+      clientSecret: "" # Client secret; needed for connected accounts (redirect URI <server>/api/v1/connected-accounts/callback/microsoft)
+      allowAccountConnections: true # set to 'false' to stop users connecting their own Microsoft account
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking
@@ -181,8 +193,10 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
+  setupCompleted: false # 'true' once an admin has finished or skipped the first-run setup wizard. An existing settings file without this key is marked 'true' on upgrade, so the wizard only appears on new servers
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enableEasterEggs: true # Set to 'false' to remove the app's hidden novelty features
+  enableFeedback: true # Set to 'false' to disable ability to send feedback to Stirling from the app
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
@@ -190,6 +204,7 @@ system:
   stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
+  maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite and signing emails, share links, mobile QR codes, and the account-link handshake.

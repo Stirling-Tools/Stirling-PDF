@@ -51,6 +51,7 @@ dependencies {
     implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-pdfa:$officeConvertVersion"
 
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"

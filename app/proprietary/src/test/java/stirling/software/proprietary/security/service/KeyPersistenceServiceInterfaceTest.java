@@ -27,6 +27,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.configuration.CacheConfig;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.repository.JwtSigningKeyRepository;
@@ -40,17 +41,17 @@ class KeyPersistenceServiceInterfaceTest {
     @Mock private ApplicationProperties.Security.Jwt jwtConfig;
     @Mock private JwtSigningKeyRepository keyRepository;
 
+    private CacheManager cacheManager;
+
     private KeyPersistenceService keyPersistenceService;
     private KeyPair testKeyPair;
-    private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         testKeyPair = keyPairGenerator.generateKeyPair();
-
-        cacheManager = new ConcurrentMapCacheManager("verifyingKeys");
+        cacheManager = new ConcurrentMapCacheManager(CacheConfig.SIGNING_KEYS_CACHE);
 
         lenient().when(applicationProperties.getSecurity()).thenReturn(security);
         lenient().when(security.getJwt()).thenReturn(jwtConfig);

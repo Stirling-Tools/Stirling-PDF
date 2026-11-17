@@ -24,6 +24,7 @@ import {
 import { useDropTarget } from "@editor/components/filesPage/useDropTarget";
 import "@editor/components/filesPage/FolderTreeSidebar.css";
 import { useOpenFolder } from "@editor/components/filesPage/useOpenFolder";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /** Bound recursion to protect rendering from corrupted folder hierarchies. */
 const MAX_TREE_DEPTH = 50;
@@ -357,7 +358,7 @@ function TreeNodeRow({
           <FolderThumbnail color={node.folder.color} size="tree" />
         </span>
         <MiddleTruncated
-          className="files-page-tree-name"
+          className={`files-page-tree-name ${privateContentClassName}`}
           text={node.folder.name}
         />
         {hasChildren && (

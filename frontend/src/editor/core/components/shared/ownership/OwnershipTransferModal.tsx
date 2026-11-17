@@ -12,6 +12,7 @@ import { OwnershipTransferReview } from "@editor/components/shared/ownership/Own
 import { OwnershipTransferActions } from "@editor/components/shared/ownership/OwnershipTransferActions";
 import type { OwnershipTransferProps } from "@editor/components/shared/ownership/ownershipTransfer.types";
 import "@editor/components/shared/ownership/OwnershipTransferModal.css";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export type {
   CloudOwnershipStatus,
@@ -88,7 +89,11 @@ export function OwnershipTransferModal(props: OwnershipTransferProps) {
                 defaults="<user>{{name}}</user> is now the owner."
                 values={{ name: ownerAccount }}
                 components={{
-                  user: <strong className="ownership-flow__username" />,
+                  user: (
+                    <strong
+                      className={`ownership-flow__username ${privateContentClassName}`}
+                    />
+                  ),
                 }}
               />
             </p>

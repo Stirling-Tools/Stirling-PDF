@@ -25,6 +25,8 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
 
     Optional<User> findByUsernameIgnoreCase(String username);
 
+    boolean existsByUsernameIgnoreCaseAndIdNot(String username, Long id);
+
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
     Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
 

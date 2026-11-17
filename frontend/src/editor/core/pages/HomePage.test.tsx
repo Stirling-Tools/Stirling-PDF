@@ -88,9 +88,6 @@ vi.mock("@editor/components/shared/quickNav/QuickNavHostBridge", () => ({
 vi.mock("@editor/components/shared/signing/SignMenu", () => ({
   SignMenu: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@editor/components/home/HomePageExtensions", () => ({
-  HomePageExtensions: () => null,
-}));
 vi.mock("@editor/components/FileManager", () => ({ default: () => null }));
 vi.mock("@editor/components/shared/FileSidebar", () => ({
   default: () => null,

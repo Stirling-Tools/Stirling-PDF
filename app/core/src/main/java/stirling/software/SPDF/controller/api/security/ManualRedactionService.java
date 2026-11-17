@@ -393,6 +393,7 @@ class ManualRedactionService {
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
         String pageNumbersInput = request.getPageNumbers();
+        GeneralUtils.requireValidPageSelection(pageNumbersInput, pagesCount);
         String[] parsedPageNumbers =
                 pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
         List<Integer> pageNumbers =

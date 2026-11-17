@@ -74,8 +74,14 @@ export function extractAxiosErrorMessage(error: unknown): {
           ids: ids.join(", "),
         });
       }
-      const message = (data as { message?: unknown })?.message;
-      if (message) return message as string;
+      const { message, detail } = data as {
+        message?: unknown;
+        detail?: unknown;
+      };
+      if (typeof message === "string" && !isUnhelpfulMessage(message))
+        return message;
+      if (typeof detail === "string" && detail.trim()) return detail;
+      if (typeof message === "string" && message.trim()) return message;
       if (typeof raw === "string") return raw;
       try {
         return JSON.stringify(data);

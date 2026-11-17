@@ -21,6 +21,7 @@ import "@editor/auth/ui/auth.css";
 import { BASE_PATH } from "@editor/constants/app";
 import apiClient from "@editor/services/apiClient";
 import { Button } from "@editor/ui/Button";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface InviteData {
   email: string | null;
   role: string;
@@ -232,7 +233,10 @@ export default function InviteAccept() {
                 disabled={submitting}
                 required
                 autoComplete="email"
-                classNames={{ label: "auth-label" }}
+                classNames={{
+                  label: "auth-label",
+                  input: privateContentClassName,
+                }}
                 styles={authInputStyles}
               />
             </div>
@@ -250,7 +254,10 @@ export default function InviteAccept() {
               disabled={submitting}
               required
               autoComplete="new-password"
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
               styles={authInputStyles}
             />
           </div>
@@ -267,7 +274,10 @@ export default function InviteAccept() {
               disabled={submitting}
               required
               autoComplete="new-password"
-              classNames={{ label: "auth-label" }}
+              classNames={{
+                label: "auth-label",
+                input: privateContentClassName,
+              }}
               styles={authInputStyles}
             />
           </div>

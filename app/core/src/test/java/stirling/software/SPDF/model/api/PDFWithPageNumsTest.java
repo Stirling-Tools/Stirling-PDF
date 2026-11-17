@@ -21,6 +21,25 @@ class PDFWithPageNumsTest {
     }
 
     @Test
+    void omittedOrBlankPageNumbersMeanAllPages() {
+        when(mockDocument.getNumberOfPages()).thenReturn(3);
+
+        assertEquals("all", new PDFWithPageNums().getPageNumbers());
+        assertEquals(
+                List.of(1, 2, 3), new PDFWithPageNums().getPageNumbersList(mockDocument, true));
+        pdfWithPageNums.setPageNumbers(" ");
+        assertEquals(List.of(1, 2, 3), pdfWithPageNums.getPageNumbersList(mockDocument, true));
+    }
+
+    @Test
+    void manualRedactionDoesNotBlackOutPagesByDefault() {
+        assertEquals(
+                null,
+                new stirling.software.SPDF.model.api.security.ManualRedactPdfRequest()
+                        .getPageNumbers());
+    }
+
+    @Test
     void testGetPageNumbersList_AllPages() {
         pdfWithPageNums.setPageNumbers("all");
         when(mockDocument.getNumberOfPages()).thenReturn(10);
@@ -61,22 +80,22 @@ class PDFWithPageNumsTest {
     }
 
     @Test
-    void testGetPageNumbersList_EmptyInput() {
+    void testGetPageNumbersList_EmptyInputMeansAllPages() {
         pdfWithPageNums.setPageNumbers("");
-        when(mockDocument.getNumberOfPages()).thenReturn(10);
+        when(mockDocument.getNumberOfPages()).thenReturn(3);
 
         List<Integer> result = pdfWithPageNums.getPageNumbersList(mockDocument, true);
 
-        assertTrue(result.isEmpty());
+        assertEquals(List.of(1, 2, 3), result);
     }
 
     @Test
-    void testGetPageNumbersList_InvalidInput() {
+    void testGetPageNumbersList_InvalidInputIsRejected() {
         pdfWithPageNums.setPageNumbers("invalid");
         when(mockDocument.getNumberOfPages()).thenReturn(10);
 
-        List<Integer> result = pdfWithPageNums.getPageNumbersList(mockDocument, true);
-
-        assertTrue(result.isEmpty());
+        org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> pdfWithPageNums.getPageNumbersList(mockDocument, true));
     }
 }

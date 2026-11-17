@@ -18,6 +18,7 @@ import PendingBadge from "@editor/components/shared/config/PendingBadge";
 import apiClient from "@editor/services/apiClient";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@editor/styles/zIndex";
 import type { AdvancedCardProps } from "@editor/components/shared/config/configSections/advanced/advancedCardProps";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * Image DPI and the OCR tessdata directory. The language list and its
@@ -287,6 +288,7 @@ export function AdvancedProcessingCard({
         {/* Tessdata Directory */}
         <div>
           <TextInput
+            className={privateContentClassName}
             label={
               <Group gap="xs">
                 <span>

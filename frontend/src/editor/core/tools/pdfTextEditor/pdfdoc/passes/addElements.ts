@@ -25,12 +25,20 @@ export interface NewElement {
   mcid: number;
   type: StructureType;
   alt: string | null;
+  /** Its /Lang; null to read it in its parent's language. */
+  lang: string | null;
   /**
    * The MCID of the content the element reads after: it goes after the
    * block holding that, or before the block holding the page's first tagged
    * content when null or unowned (see StructureNodes.placementSibling).
    */
   after: number | null;
+  /**
+   * True when text was cut out of it, which cutElements writes once it is in
+   * the tree. The cut may have taken all of it, so its MCID need not be on
+   * the page.
+   */
+  cutFrom?: boolean;
 }
 
 interface Placement {
@@ -71,7 +79,8 @@ export async function addElements(
     }
     if (!sites.has(pageNum)) sites.set(pageNum, pageSites(pdf, pageNum));
     const read = await sites.get(pageNum)!;
-    if (!read?.sites.some((site) => site.mcid === element.mcid)) {
+    const carried = read?.sites.some((site) => site.mcid === element.mcid);
+    if (!carried && !element.cutFrom) {
       failed.set(index, "the page's content does not carry its MCID");
       continue;
     }
@@ -85,18 +94,22 @@ export async function addElements(
       continue;
     }
     bodies.set(place.parent, joined);
-    const alt =
-      element.alt === null ? "" : ` /Alt ${encodeTextString(element.alt)}`;
     const id = element.type === "Note" ? ` /ID ${noteId(num)}` : "";
     bodies.set(
       num,
       `<< /Type /StructElem /S /${element.type} /P ${indirectRef(pdf, place.parent)} ` +
-        `/Pg ${indirectRef(pdf, pageNum)} /K ${element.mcid}${alt}${id} >>`,
+        `/Pg ${indirectRef(pdf, pageNum)} /K ${element.mcid}` +
+        `${textEntry("Alt", element.alt)}${textEntry("Lang", element.lang)}${id} >>`,
     );
     while (slots.length < element.mcid) slots.push("null");
     slots[element.mcid] = `${num} 0 R`;
   }
   return failed;
+}
+
+/** ` /Key (value)` for a new element's dictionary; empty for null. */
+export function textEntry(key: string, value: string | null): string {
+  return value === null ? "" : ` /${key} ${encodeTextString(value)}`;
 }
 
 /**

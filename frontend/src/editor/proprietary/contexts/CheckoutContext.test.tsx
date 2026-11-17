@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import {
   CheckoutProvider,
@@ -50,18 +56,42 @@ vi.mock("@editor/services/licenseService", () => ({
   mapLicenseToTier: () => "free",
 }));
 vi.mock("@editor/components/shared/stripeCheckout", () => ({
-  StripeCheckout: () => <div role="dialog">Checkout</div>,
+  StripeCheckout: ({
+    onSuccess,
+    onClose,
+    onContactSales,
+  }: {
+    onSuccess: (sessionId: string) => void;
+    onClose: () => void;
+    onContactSales?: () => void;
+  }) => (
+    <div role="dialog">
+      Checkout
+      <button onClick={() => onSuccess("cs_test")}>Pay</button>
+      <button onClick={onClose}>Close</button>
+      <button onClick={onContactSales}>Contact sales</button>
+    </div>
+  ),
 }));
 
-function Buyer({ linked = false }: { linked?: boolean }) {
+function Buyer({
+  linked = false,
+  onClose,
+  onContactSales,
+}: {
+  linked?: boolean;
+  onClose?: (paid: boolean) => void;
+  onContactSales?: () => void;
+}) {
   const checkout = useCheckout();
   return (
     <button
       onClick={() =>
-        void checkout.openCheckout(
-          "server",
-          linked ? { resolveCurrency: mocks.pricing } : {},
-        )
+        void checkout.openCheckout("server", {
+          ...(linked ? { resolveCurrency: mocks.pricing } : {}),
+          onClose,
+          onContactSales,
+        })
       }
     >
       Add capacity
@@ -135,4 +165,51 @@ it("resolves a linked customer's currency before fetching Team prices", async ()
     true,
     "server",
   );
+});
+
+it("tells the caller on close whether that checkout was paid for", async () => {
+  mocks.getPlans.mockResolvedValue({ plans: [{ id: "server-monthly" }] });
+  const onClose = vi.fn();
+  render(
+    <CheckoutProvider>
+      <Buyer onClose={onClose} />
+    </CheckoutProvider>,
+  );
+  const open = async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
+    await screen.findByRole("dialog");
+  };
+  // Closing refetches plans; let that settle before the next step.
+  const close = async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await act(async () => {});
+  };
+
+  await open();
+  fireEvent.click(screen.getByRole("button", { name: "Pay" }));
+  await close();
+  expect(onClose).toHaveBeenLastCalledWith(true);
+
+  // A later checkout starts unpaid.
+  await open();
+  await close();
+  expect(onClose).toHaveBeenLastCalledWith(false);
+});
+
+it("closes the checkout before handing a buyer to Enterprise", async () => {
+  mocks.getPlans.mockResolvedValue({ plans: [{ id: "server-monthly" }] });
+  const onContactSales = vi.fn();
+  render(
+    <CheckoutProvider>
+      <Buyer onContactSales={onContactSales} />
+    </CheckoutProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
+  await screen.findByRole("dialog");
+
+  fireEvent.click(screen.getByRole("button", { name: "Contact sales" }));
+  await act(async () => {});
+
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(onContactSales).toHaveBeenCalledTimes(1);
 });

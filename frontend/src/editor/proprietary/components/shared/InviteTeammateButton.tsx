@@ -5,6 +5,7 @@ import { useAuth } from "@editor/auth/UseSession";
 import { useSaaSTeam } from "@editor/contexts/SaaSTeamContext";
 import { Button, Modal } from "@editor/ui";
 import { Icon } from "@editor/ui/Icon";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 const InviteTeammateFlow = lazy(
   () => import("@processor/components/users/InviteTeammateFlow"),
@@ -33,11 +34,15 @@ export function InviteTeammateButton({
         leftSection={<Icon name="user-plus" size={18} />}
         onClick={() => setInviteValue(search.trim())}
       >
-        {search.trim()
-          ? t("signWorkspace.invitePerson", "Add teammate: {{name}}", {
+        {search.trim() ? (
+          <PrivateContent>
+            {t("signWorkspace.invitePerson", "Add teammate: {{name}}", {
               name: search.trim(),
-            })
-          : t("signWorkspace.inviteTeammate", "Add a teammate")}
+            })}
+          </PrivateContent>
+        ) : (
+          t("signWorkspace.inviteTeammate", "Add a teammate")
+        )}
       </Button>
       {inviteValue !== null && (
         <Suspense

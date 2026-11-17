@@ -52,27 +52,26 @@ public class ScalePagesController {
     private static final float MIN_CUSTOM_SIDE_POINTS = 3f;
     private static final float MAX_CUSTOM_SIDE_POINTS = 200 * POINTS_PER_INCH;
 
-    private static PDRectangle getTargetSize(ScalePagesRequest request, PDDocument sourceDocument) {
+    private static boolean keepsPageSize(String targetPDRectangle) {
+        return targetPDRectangle == null
+                || targetPDRectangle.isBlank()
+                || "KEEP".equals(targetPDRectangle);
+    }
+
+    /** The page's own size, at the origin like the named sizes so the content lands centred. */
+    private static PDRectangle ownSize(PDRectangle mediaBox) {
+        if (mediaBox == null) {
+            throw ExceptionUtils.createInvalidPageSizeException("KEEP");
+        }
+        return new PDRectangle(mediaBox.getWidth(), mediaBox.getHeight());
+    }
+
+    private static PDRectangle getTargetSize(ScalePagesRequest request) {
         String targetPDRectangle = request.getPageSize();
         if ("CUSTOM".equals(targetPDRectangle)) {
             // Explicit dimensions define orientation, so the orientation parameter is ignored.
             return getCustomSize(request);
         }
-        if ("KEEP".equals(targetPDRectangle)) {
-            if (sourceDocument.getNumberOfPages() == 0) {
-                throw ExceptionUtils.createPdfNoPages();
-            }
-
-            PDPage sourcePage = sourceDocument.getPage(0);
-            PDRectangle sourceSize = sourcePage.getMediaBox();
-
-            if (sourceSize == null) {
-                throw ExceptionUtils.createInvalidPageSizeException("KEEP");
-            }
-
-            return sourceSize;
-        }
-
         Map<String, PDRectangle> sizeMap = getSizeMap();
         PDRectangle base = sizeMap.get(targetPDRectangle);
         if (base == null) {
@@ -150,7 +149,11 @@ public class ScalePagesController {
                 PDDocument outputDocument =
                         pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
-            PDRectangle targetSize = getTargetSize(request, sourceDocument);
+            boolean keepSize = keepsPageSize(request.getPageSize());
+            if (keepSize && sourceDocument.getNumberOfPages() == 0) {
+                throw ExceptionUtils.createPdfNoPages();
+            }
+            PDRectangle fixedSize = keepSize ? null : getTargetSize(request);
 
             // Create LayerUtility once outside the loop for better performance
             LayerUtility layerUtility = new LayerUtility(outputDocument);
@@ -160,6 +163,8 @@ public class ScalePagesController {
                 PDPage sourcePage = sourceDocument.getPage(i);
                 flattenStampAppearances(sourceDocument, sourcePage);
                 PDRectangle sourceSize = sourcePage.getMediaBox();
+                // Per page, so a mixed-size document stays mixed.
+                PDRectangle targetSize = keepSize ? ownSize(sourceSize) : fixedSize;
 
                 float scaleWidth = targetSize.getWidth() / sourceSize.getWidth();
                 float scaleHeight = targetSize.getHeight() / sourceSize.getHeight();
@@ -192,7 +197,7 @@ public class ScalePagesController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     outputDocument,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_scaled.pdf"),
+                    GeneralUtils.generateFilename(file.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

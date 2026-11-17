@@ -15,6 +15,7 @@ import {
   type ImageAccessibility,
   type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 /**
  * The selected image's description or decorative mark, or why it cannot have
@@ -85,6 +86,7 @@ export function ImageAccessibilitySection({
                   "Image description",
                 )}
                 value={accessibility.description ?? ""}
+                className={privateContentClassName}
                 onChange={(e) => onSetDescription(e.currentTarget.value)}
                 autosize
                 minRows={2}

@@ -148,6 +148,7 @@ class ProprietaryUIDataControllerMoreTest {
         void singleAdminFirstLogin() {
             User admin = normalUser(1L, "admin");
             admin.setFirstLogin(true);
+            applicationProperties.getSystem().setSetupCompleted(false);
             when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
                     .thenReturn(1L);
             when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
@@ -157,6 +158,38 @@ class ProprietaryUIDataControllerMoreTest {
             LoginData data = response.getBody();
             assertThat(data.isFirstTimeSetup()).isTrue();
             assertThat(data.isShowDefaultCredentials()).isTrue();
+            assertThat(data.isDefaultSignIn()).isTrue();
+        }
+
+        @Test
+        @DisplayName("never signs in by itself once setup is complete")
+        void noDefaultSignInAfterSetup() {
+            User admin = normalUser(1L, "admin");
+            admin.setFirstLogin(true);
+            applicationProperties.getSystem().setSetupCompleted(true);
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
+            when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+
+            LoginData data = controller.getLoginData().getBody();
+
+            assertThat(data.isShowDefaultCredentials()).isTrue();
+            assertThat(data.isDefaultSignIn()).isFalse();
+        }
+
+        @Test
+        @DisplayName("never signs in by itself once the admin has set a password")
+        void noDefaultSignInAfterPasswordSet() {
+            User admin = normalUser(1L, "admin");
+            admin.setFirstLogin(false);
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
+            when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
+
+            LoginData data = controller.getLoginData().getBody();
+
+            assertThat(data.isShowDefaultCredentials()).isFalse();
+            assertThat(data.isDefaultSignIn()).isFalse();
         }
 
         @Test
@@ -229,6 +262,25 @@ class ProprietaryUIDataControllerMoreTest {
 
             assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
             assertThat(response.getBody().isOAuth2Login()).isTrue();
+        }
+
+        @Test
+        @DisplayName("masks the MFA secret in the returned settings")
+        void masksMfaSecret() {
+            User user = normalUser(4L, "mfauser");
+            user.setSettings(Map.of("mfaEnabled", "true", "mfaSecret", "JBSWY3DPEHPK3PXP"));
+            when(userRepository.findByUsernameIgnoreCaseWithSettings("mfauser"))
+                    .thenReturn(Optional.of(user));
+            lenient().when(mfaService.isMfaEnabled(user)).thenReturn(true);
+            lenient().when(mfaService.isMfaRequired(user)).thenReturn(false);
+            Authentication auth =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+            ResponseEntity<AccountData> response = controller.getAccountData(auth);
+
+            assertThat(response.getBody().getSettings())
+                    .doesNotContain("JBSWY3DPEHPK3PXP")
+                    .contains("mfaEnabled");
         }
 
         @Test

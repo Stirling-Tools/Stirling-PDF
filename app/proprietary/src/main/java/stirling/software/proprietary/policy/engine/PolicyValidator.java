@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.springframework.stereotype.Service;
 
@@ -67,6 +68,7 @@ public class PolicyValidator {
         if (policy.outputIds().size() > 1) {
             throw new IllegalArgumentException("a policy supports at most one output");
         }
+        validateStepCount(policy.steps());
         for (PipelineInput input : policy.inputs()) {
             Source source =
                     sourceStore
@@ -181,20 +183,49 @@ public class PolicyValidator {
      *
      * <p>Only errors block; warnings depend on configuration or file content.
      *
-     * @throws IllegalArgumentException if any step cannot accept what the one before it produces
+     * @throws IllegalArgumentException if any step names an unknown operation or cannot accept what
+     *     the one before it produces
      */
     public void validateChain(List<PipelineStep> steps) {
         List<ToolDiagnostic> diagnostics = diagnoseChain(steps, null);
+        requireKnownOperations(diagnostics);
         if (!ToolChainValidator.hasErrors(diagnostics)) {
             return;
         }
-        String reasons =
-                diagnostics.stream()
-                        .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
-                        .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
-                        .reduce((a, b) -> a + "; " + b)
-                        .orElse("");
-        throw new IllegalArgumentException("pipeline steps cannot run in this order - " + reasons);
+        throw new IllegalArgumentException(
+                "pipeline steps cannot run in this order - "
+                        + describeErrors(diagnostics, d -> true));
+    }
+
+    /**
+     * Ad-hoc gate: the step cap and known operations only; format mismatches are left to the run.
+     */
+    public void validateRunnableSteps(List<PipelineStep> steps) {
+        validateStepCount(steps);
+        requireKnownOperations(diagnoseChain(steps, null));
+    }
+
+    /** Rejects more steps than {@code policies.maxSteps}, where 0 or less means no cap. */
+    public void validateStepCount(List<PipelineStep> steps) {
+        PipelineLimits.requireWithinStepLimit(steps.size(), applicationProperties.getPolicies());
+    }
+
+    private static void requireKnownOperations(List<ToolDiagnostic> diagnostics) {
+        String unknown =
+                describeErrors(diagnostics, d -> ToolDiagnostic.UNKNOWN_OPERATION.equals(d.code()));
+        if (!unknown.isEmpty()) {
+            throw new IllegalArgumentException("pipeline cannot run - " + unknown);
+        }
+    }
+
+    private static String describeErrors(
+            List<ToolDiagnostic> diagnostics, Predicate<ToolDiagnostic> filter) {
+        return diagnostics.stream()
+                .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
+                .filter(filter)
+                .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("");
     }
 
     /**

@@ -20,8 +20,8 @@ export const SELF_SERVE_MAX_BLOCKS = 5;
 /** Capacity at which an enterprise quote is also worth offering. */
 export const ENTERPRISE_ADVISORY_USERS = 1000;
 
-/** The user counts offered as one-click presets, before "Other". */
-export const USER_PRESETS = [100, 200, 300, 400];
+/** The block counts offered as one-click presets, before "Custom". */
+export const PRESET_BLOCKS = [1, 2, 3, 4];
 
 /** Users covered by a given number of blocks. */
 export function usersForBlocks(blocks: number): number {

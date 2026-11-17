@@ -7,6 +7,7 @@ import {
   SavedSignature,
 } from "@editor/hooks/tools/sign/useSavedSignatures";
 import { Icon } from "@editor/ui/Icon";
+import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;
@@ -54,6 +55,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
               textOverflow: "ellipsis",
               maxWidth: "100%",
             }}
+            className={privateContentClassName}
           >
             {sig.signerName}
           </Text>
@@ -78,6 +80,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         <Box
           component="img"
           src={sig.dataUrl}
+          className={privateContentClassName}
           alt={
             sig.label ||
             t("certSign.collab.signRequest.saved.defaultLabel", "Signature")

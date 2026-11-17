@@ -749,7 +749,7 @@ public class FormUtils {
             }
         }
 
-        PDFRenderer renderer = new PDFRenderer(document);
+        PDFRenderer renderer = new LimitedPDFRenderer(document);
         renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);

@@ -30,7 +30,7 @@ public class TaggingOptions {
 
     @Builder.Default private PdfUaProfile profile = PdfUaProfile.UA1;
 
-    /** BCP-47 language tag for the document, for example {@code en-GB}. */
+    /** BCP-47 language tag for the document, for example {@code en-US}. */
     private String language;
 
     /** Replace a language the document already declares. Off, so a French file stays French. */

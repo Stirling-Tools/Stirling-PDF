@@ -1537,8 +1537,8 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
   fi
 fi
 
-wait "$JAVA_PID" || true
-exit_code=$?
+exit_code=0
+wait "$JAVA_PID" || exit_code=$?
 
 if [ -n "$ENGINE_PID" ] && kill -0 "$ENGINE_PID" 2>/dev/null; then
   log "Stopping AI engine (PID $ENGINE_PID)..."

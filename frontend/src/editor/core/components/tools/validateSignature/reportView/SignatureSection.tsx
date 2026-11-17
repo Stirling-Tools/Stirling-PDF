@@ -4,6 +4,7 @@ import type { SignatureValidationSignature } from "@editor/types/validateSignatu
 import SignatureStatusBadge from "@editor/components/tools/validateSignature/reportView/SignatureStatusBadge";
 import FieldBlock from "@editor/components/tools/validateSignature/reportView/FieldBlock";
 import "@editor/components/tools/validateSignature/reportView/styles.css";
+import { PrivateContent } from "@editor/components/shared/PrivateContent";
 
 const formatDate = (value?: string | null) => {
   if (!value) return "-";
@@ -25,7 +26,7 @@ const SignatureSection = ({
   const signatureFields = [
     FieldBlock(
       t("validateSignature.signer", "Signer"),
-      signature.signerName || "-",
+      <PrivateContent>{signature.signerName || "-"}</PrivateContent>,
     ),
     FieldBlock(
       t("validateSignature.date", "Date"),
@@ -33,26 +34,26 @@ const SignatureSection = ({
     ),
     FieldBlock(
       t("validateSignature.reason", "Reason"),
-      signature.reason || "-",
+      <PrivateContent>{signature.reason || "-"}</PrivateContent>,
     ),
     FieldBlock(
       t("validateSignature.location", "Location"),
-      signature.location || "-",
+      <PrivateContent>{signature.location || "-"}</PrivateContent>,
     ),
   ];
 
   const certificateFields = [
     FieldBlock(
       t("validateSignature.cert.issuer", "Issuer"),
-      signature.issuerDN || "-",
+      <PrivateContent>{signature.issuerDN || "-"}</PrivateContent>,
     ),
     FieldBlock(
       t("validateSignature.cert.subject", "Subject"),
-      signature.subjectDN || "-",
+      <PrivateContent>{signature.subjectDN || "-"}</PrivateContent>,
     ),
     FieldBlock(
       t("validateSignature.cert.serialNumber", "Serial Number"),
-      signature.serialNumber || "-",
+      <PrivateContent>{signature.serialNumber || "-"}</PrivateContent>,
     ),
     FieldBlock(
       t("validateSignature.cert.validFrom", "Valid From"),
