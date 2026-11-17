@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.microsoft;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -10,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,8 @@ public class ConnectedDriveWriter {
     private static final long SIMPLE_UPLOAD_LIMIT = GraphDriveClient.SIMPLE_UPLOAD_LIMIT;
     private static final int UPLOAD_CHUNK = GraphDriveClient.UPLOAD_CHUNK;
     private static final String ITEM_FIELDS = "id,name,eTag,webUrl,parentReference";
+    private static final Pattern GRAPH_ID = Pattern.compile("[A-Za-z0-9!_.-]{1,512}");
+    private static final int MAX_NAME_LENGTH = 255;
 
     private final GraphEndpoints endpoints;
     private final ConnectedAccountService accounts;
@@ -73,7 +77,24 @@ public class ConnectedDriveWriter {
         }
     }
 
+    public static boolean isValidId(String value) {
+        return value != null
+                && GRAPH_ID.matcher(value).matches()
+                && !".".equals(value)
+                && !"..".equals(value);
+    }
+
+    public static boolean isValidName(String value) {
+        return value != null
+                && !value.isBlank()
+                && value.length() <= MAX_NAME_LENGTH
+                && !".".equals(value)
+                && !"..".equals(value)
+                && value.chars().noneMatch(c -> c == '/' || c == '\\' || Character.isISOControl(c));
+    }
+
     public SavedItem save(long accountId, Target target, Path content) throws IOException {
+        requireValid(target);
         String token = accounts.accessToken(accountId, List.of());
         long size = Files.size(content);
         if (size <= SIMPLE_UPLOAD_LIMIT) {
@@ -137,7 +158,7 @@ public class ConnectedDriveWriter {
     private SavedItem fetch(String token, JsonNode item) throws IOException {
         String driveId = text(item.path("parentReference"), "driveId");
         String itemId = text(item, "id");
-        if (driveId == null || itemId == null) {
+        if (!isValidId(driveId) || !isValidId(itemId)) {
             throw new IOException("Microsoft Graph returned no saved item");
         }
         HttpResponse<String> response =
@@ -154,6 +175,21 @@ public class ConnectedDriveWriter {
                 text(saved, "name"),
                 text(saved, "eTag"),
                 text(saved, "webUrl"));
+    }
+
+    private static void requireValid(Target target) throws IOException {
+        boolean valid =
+                switch (target) {
+                    case Replace replace ->
+                            isValidId(replace.driveId()) && isValidId(replace.itemId());
+                    case Create create ->
+                            isValidId(create.driveId())
+                                    && isValidId(create.parentId())
+                                    && isValidName(create.name());
+                };
+        if (!valid) {
+            throw new IOException("Invalid drive item reference");
+        }
     }
 
     private String contentUrl(Target target) {
@@ -230,11 +266,28 @@ public class ConnectedDriveWriter {
         };
     }
 
-    private HttpRequest.Builder authorized(String token, String url) {
-        return HttpRequest.newBuilder(URI.create(url))
+    private HttpRequest.Builder authorized(String token, String url) throws IOException {
+        return HttpRequest.newBuilder(graphUri(url))
                 .timeout(Duration.ofMinutes(2))
                 .header("Authorization", "Bearer " + token)
                 .header("Accept", "application/json");
+    }
+
+    private URI graphUri(String url) throws IOException {
+        URI graph = URI.create(endpoints.graphUrl());
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid Microsoft Graph URL");
+        }
+        if (!graph.getScheme().equalsIgnoreCase(uri.getScheme())
+                || !graph.getRawAuthority().equalsIgnoreCase(uri.getRawAuthority())
+                || uri.getRawPath() == null
+                || !uri.getRawPath().startsWith(graph.getRawPath() + "/")) {
+            throw new IOException("Refusing a request outside Microsoft Graph");
+        }
+        return uri;
     }
 
     private HttpResponse<String> send(HttpRequest request) throws IOException {

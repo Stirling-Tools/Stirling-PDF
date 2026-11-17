@@ -152,6 +152,76 @@ class ConnectedDriveWriterTest {
         assertThat(chunks.stream().mapToInt(Seen::size).sum()).isEqualTo(size);
     }
 
+    @Test
+    void hostileIdsNeverReachTheNetwork() throws IOException {
+        respond = savedWith(200);
+        Path content = file(10);
+
+        for (String hostile :
+                List.of(
+                        "..",
+                        "item/../../evil",
+                        "@evil.example",
+                        "http://evil.example/x",
+                        "item?x=1",
+                        "item#frag",
+                        "item%2F..")) {
+            assertThatThrownBy(
+                            () ->
+                                    writer.save(
+                                            33L,
+                                            new ConnectedDriveWriter.Replace(
+                                                    "drive-1", hostile, "\"{E},1\""),
+                                            content))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("Invalid drive item reference");
+            assertThatThrownBy(
+                            () ->
+                                    writer.save(
+                                            33L,
+                                            new ConnectedDriveWriter.Create(
+                                                    hostile, "folder-1", "x.pdf", true),
+                                            content))
+                    .isInstanceOf(IOException.class);
+        }
+        assertThatThrownBy(
+                        () ->
+                                writer.save(
+                                        33L,
+                                        new ConnectedDriveWriter.Create(
+                                                "drive-1", "folder-1", "../x.pdf", true),
+                                        content))
+                .isInstanceOf(IOException.class);
+        assertThat(seen).isEmpty();
+    }
+
+    @Test
+    void savedItemIdsFromTheResponseAreValidatedBeforeTheFollowUpRead() throws IOException {
+        respond =
+                request ->
+                        request.method().equals("PUT")
+                                ? new Response(
+                                        200,
+                                        "{\"id\":\"../../evil\","
+                                                + "\"parentReference\":{\"driveId\":\"drive-1\"}}")
+                                : new Response(200, SAVED_DETAILS);
+
+        Path content = file(10);
+        assertThatThrownBy(() -> writer.save(33L, REPLACE, content))
+                .isInstanceOf(IOException.class);
+        assertThat(seen).hasSize(1);
+    }
+
+    @Test
+    void realGraphIdsAreAccepted() {
+        assertThat(ConnectedDriveWriter.isValidId("D4648F06C91D9D3D!54927")).isTrue();
+        assertThat(
+                        ConnectedDriveWriter.isValidId(
+                                "b!-RIj2DuyvEyV1T4NlOaMHk8XkS_I8MdFlUCq1BlcjgmhRfAj3-Z8RY2VpuvV_tpd"))
+                .isTrue();
+        assertThat(ConnectedDriveWriter.isValidId("01BYE5RZ6QN3ZWBTUFOFD3GSPGOHDJD36K")).isTrue();
+    }
+
     private static Function<Seen, Response> savedWith(int putStatus) {
         return request ->
                 request.method().equals("PUT")

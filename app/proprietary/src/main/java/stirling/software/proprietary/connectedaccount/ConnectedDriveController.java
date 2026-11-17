@@ -33,8 +33,6 @@ import stirling.software.proprietary.security.model.User;
 @Tag(name = "Connected accounts", description = "Users' own OneDrive, SharePoint and Google Drive")
 public class ConnectedDriveController {
 
-    private static final int MAX_NAME_LENGTH = 255;
-
     private final ConnectedAccountService service;
     private final ConnectedDriveWriter writer;
     private final ApplicationProperties applicationProperties;
@@ -93,7 +91,9 @@ public class ConnectedDriveController {
         if (isBlank(driveId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "driveId is required");
         }
-        if (isDotSegment(driveId) || isDotSegment(itemId) || isDotSegment(parentId)) {
+        if (!ConnectedDriveWriter.isValidId(driveId)
+                || (!isBlank(itemId) && !ConnectedDriveWriter.isValidId(itemId))
+                || (!isBlank(parentId) && !ConnectedDriveWriter.isValidId(parentId))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid drive or item ID");
         }
         if (!isBlank(itemId)) {
@@ -108,10 +108,7 @@ public class ConnectedDriveController {
                     HttpStatus.BAD_REQUEST, "itemId, or parentId and name, are required");
         }
         String trimmed = name.trim();
-        if (trimmed.length() > MAX_NAME_LENGTH
-                || trimmed.contains("/")
-                || trimmed.contains("\\")
-                || isDotSegment(trimmed)) {
+        if (!ConnectedDriveWriter.isValidName(trimmed)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid file name");
         }
         return new ConnectedDriveWriter.Create(driveId, parentId, trimmed, true);
@@ -119,11 +116,6 @@ public class ConnectedDriveController {
 
     static boolean editorSavesAllowed(ApplicationProperties properties) {
         return properties.getPremium().getProFeatures().getMicrosoft().isAllowEditorSaves();
-    }
-
-    /** Percent-encoding leaves dots alone, so these would step out of the Graph path they fill. */
-    private static boolean isDotSegment(String value) {
-        return ".".equals(value) || "..".equals(value);
     }
 
     private static boolean isBlank(String value) {
