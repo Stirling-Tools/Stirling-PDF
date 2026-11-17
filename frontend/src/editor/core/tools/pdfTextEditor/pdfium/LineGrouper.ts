@@ -399,6 +399,81 @@ function groupPartitionIntoLines(
   out.push(...lines);
 }
 
+// A column gutter is wider than this many ems and this many of the line's spaces: wide for a word gap, narrow for a gutter.
+const GUTTER_MIN_EM = 0.6;
+const GUTTER_MIN_SPACES = 2.5;
+// Only the middle of the gap is probed, so the slightly uneven column edges of the rows around it still leave it clear.
+const GUTTER_PROBE_EM = 0.2;
+// Lines set either side of a gutter, at least this many ems of text on each side, run past the gap within one unbroken stretch of the page. Justified text never lines its word gaps up so, and a label beside its value is shorter.
+const GUTTER_MIN_LINES = 3;
+const COLUMN_MIN_EM = 8;
+
+// The page's baseline rows, top to bottom, and the row of each run in `sorted`.
+function baselineRows(sorted: readonly TextRun[]): {
+  rows: TextRun[][];
+  rowIndex: number[];
+} {
+  const rows: TextRun[][] = [];
+  const rowIndex: number[] = [];
+  for (const run of sorted) {
+    const row = rows[rows.length - 1];
+    if (
+      row &&
+      Math.abs(run.matrix.f - row[0].matrix.f) <=
+        BASELINE_TOLERANCE * Math.max(row[0].fontSize, 4)
+    )
+      row.push(run);
+    else rows.push([run]);
+    rowIndex.push(rows.length - 1);
+  }
+  return { rows, rowIndex };
+}
+
+// The width of text a row sets left and right of [lo, hi], or null when its text crosses into it.
+function textBeside(
+  row: readonly TextRun[],
+  lo: number,
+  hi: number,
+): { left: number; right: number } | null {
+  let left = 0;
+  let right = 0;
+  for (const run of row) {
+    if (!run.text.trim()) continue;
+    const end = run.bounds.x + run.bounds.width;
+    if (end <= lo) left += run.bounds.width;
+    else if (run.bounds.x >= hi) right += run.bounds.width;
+    else return null;
+  }
+  return { left, right };
+}
+
+/**
+ * Whether the gap from `left` to `right` on row `at` is a column gutter: a
+ * strip of the page the rows above and below it leave empty too, with columns
+ * of text set either side.
+ */
+function isColumnGutter(
+  rows: readonly TextRun[][],
+  at: number,
+  left: number,
+  right: number,
+  em: number,
+): boolean {
+  const mid = (left + right) / 2;
+  const half = Math.min(GUTTER_PROBE_EM * em, (right - left) / 4);
+  const minColumn = COLUMN_MIN_EM * em;
+  let lines = 0;
+  for (const step of [-1, 1]) {
+    for (let i = at + step; i >= 0 && i < rows.length; i += step) {
+      const beside = textBeside(rows[i], mid - half, mid + half);
+      if (!beside) break;
+      if (beside.left >= minColumn && beside.right >= minColumn) lines += 1;
+      if (lines >= GUTTER_MIN_LINES) return true;
+    }
+  }
+  return false;
+}
+
 function groupBaselineBands(
   runs: TextRun[],
   blockKey: BlockKey,
@@ -414,9 +489,10 @@ function groupBaselineBands(
     if (Math.abs(yDiff) > Math.max(1, band)) return yDiff;
     return a.bounds.x - b.bounds.x;
   });
+  const { rows, rowIndex } = baselineRows(sorted);
 
   let current: LineGroupInfo | null = null;
-  for (const run of sorted) {
+  for (const [index, run] of sorted.entries()) {
     if (!current) {
       current = { representative: run, members: [run] };
       out.push(current);
@@ -453,7 +529,20 @@ function groupBaselineBands(
     // Reject joining a run that starts far to the LEFT of the previous run's
     // right edge - a right-column run must never absorb the left column.
     const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
-    const close = gap <= effMaxGap && gap >= -minNegGap;
+    const em = Math.max(ref.fontSize, 4);
+    const close =
+      gap <= effMaxGap &&
+      gap >= -minNegGap &&
+      !(
+        gap > Math.max(GUTTER_MIN_EM * em, GUTTER_MIN_SPACES * spacePt) &&
+        isColumnGutter(
+          rows,
+          rowIndex[index],
+          prev.bounds.x + prev.bounds.width,
+          run.bounds.x,
+          em,
+        )
+      );
 
     const block = lineBlock(current.members, blockKey);
     const sameBlock =
