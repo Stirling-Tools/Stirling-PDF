@@ -35,6 +35,25 @@ type ShareLinkStatus =
   | "notfound"
   | "error";
 
+const LOGIN_REDIRECT_MARKER = "shareLinkLoginRedirect:";
+
+function readSessionFlag(key: string): boolean {
+  try {
+    return sessionStorage.getItem(key) !== null;
+  } catch {
+    return false;
+  }
+}
+
+function writeSessionFlag(key: string, on: boolean): void {
+  try {
+    if (on) sessionStorage.setItem(key, "1");
+    else sessionStorage.removeItem(key);
+  } catch {
+    return;
+  }
+}
+
 export default function ShareLinkPage() {
   const { token } = useParams<{ token: string }>();
   const { actions } = useFileActions();
@@ -214,10 +233,18 @@ export default function ShareLinkPage() {
     t,
   ]);
 
-  // Signed out: go straight to the normal sign-in page; it returns here afterwards.
+  // Signed out: go straight to the normal sign-in page; it returns here afterwards. Only once
+  // per link and tab: a session the backend keeps rejecting would otherwise loop through /login.
   useEffect(() => {
-    if (status === "login") handleLogin();
-  }, [handleLogin, status]);
+    if (!normalizedToken) return;
+    const marker = `${LOGIN_REDIRECT_MARKER}${normalizedToken}`;
+    if (status === "ready") {
+      writeSessionFlag(marker, false);
+    } else if (status === "login" && !readSessionFlag(marker)) {
+      writeSessionFlag(marker, true);
+      handleLogin();
+    }
+  }, [handleLogin, normalizedToken, status]);
 
   useEffect(() => {
     if (status !== "ready" || autoActionDone) return;

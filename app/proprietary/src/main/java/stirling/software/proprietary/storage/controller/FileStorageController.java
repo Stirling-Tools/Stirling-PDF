@@ -241,10 +241,7 @@ public class FileStorageController {
             return response.build();
         }
         User owner = file.getOwner();
-        boolean ownedByCurrentUser =
-                owner != null
-                        && authentication.getPrincipal() instanceof User currentUser
-                        && owner.getId().equals(currentUser.getId());
+        boolean ownedByCurrentUser = fileStorageService.isOwnedByCaller(file, authentication);
         return response.fileId(file.getId())
                 .owner(owner != null ? owner.getUsername() : null)
                 .ownedByCurrentUser(ownedByCurrentUser)
