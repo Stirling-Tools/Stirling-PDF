@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import stirling.software.SPDF.service.RemoteHtmlFetcher;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -43,7 +44,8 @@ class ConvertWebsiteToPDFExtraTest {
                         pdfDocumentFactory,
                         runtimePathConfig,
                         new ApplicationProperties(),
-                        tempFileManager);
+                        tempFileManager,
+                        new RemoteHtmlFetcher());
     }
 
     private boolean containsDisallowed(String html) throws Exception {

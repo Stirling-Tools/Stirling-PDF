@@ -279,7 +279,7 @@ public class GeneralUtils {
             Urls.create(
                     urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | SecurityException e) {
             return false;
         }
     }
@@ -385,7 +385,7 @@ public class GeneralUtils {
      * @param address the resolved address
      * @return {@code true} if the address is considered sensitive
      */
-    private boolean isSensitiveAddress(InetAddress address) {
+    public boolean isSensitiveAddress(InetAddress address) {
         if (address.isAnyLocalAddress()
                 || address.isLoopbackAddress()
                 || address.isLinkLocalAddress()

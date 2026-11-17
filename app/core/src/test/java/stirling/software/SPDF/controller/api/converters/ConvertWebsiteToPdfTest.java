@@ -6,21 +6,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
@@ -42,6 +38,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
+import stirling.software.SPDF.service.RemoteHtmlFetcher;
+import stirling.software.SPDF.service.RemoteHtmlFetcher.RemoteHtml;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -69,6 +67,7 @@ public class ConvertWebsiteToPdfTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
+    @Mock private RemoteHtmlFetcher remoteHtmlFetcher;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
@@ -104,7 +103,8 @@ public class ConvertWebsiteToPdfTest {
                         pdfDocumentFactory,
                         runtimePathConfig,
                         applicationProperties,
-                        tempFileManager);
+                        tempFileManager,
+                        remoteHtmlFetcher);
 
         RequestContextHolder.resetRequestAttributes();
     }
@@ -130,25 +130,18 @@ public class ConvertWebsiteToPdfTest {
     }
 
     @Test
-    void follows_validated_redirect_and_uses_final_url_as_rendering_base() throws Exception {
+    void uses_final_fetched_url_as_rendering_base() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://google.com");
-        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<GeneralUtils> gu =
-                        Mockito.mockStatic(GeneralUtils.class, Mockito.CALLS_REAL_METHODS);
-                MockedStatic<HttpClient> httpClient =
-                        mockHttpClientResponses(
-                                List.of(
-                                        htmlResponse(301, "", "https://www.google.com/"),
-                                        htmlResponse(200, "<html></html>", null)))) {
-            gu.when(() -> GeneralUtils.isURLReachable(anyString())).thenReturn(true);
+        when(remoteHtmlFetcher.fetch("https://google.com"))
+                .thenReturn(new RemoteHtml("<html></html>", "https://www.google.com/"));
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
             ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
             pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
 
             ResponseEntity<?> response = sut.urlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            gu.verify(() -> GeneralUtils.isURLReachable("https://www.google.com/"));
             Mockito.verify(mockExec)
                     .runCommandWithOutputHandling(
                             org.mockito.ArgumentMatchers.argThat(
@@ -159,36 +152,31 @@ public class ConvertWebsiteToPdfTest {
     }
 
     @Test
-    void rejects_redirect_to_disallowed_destination_before_fetching_it() throws Exception {
+    void returns_error_when_fetcher_refuses_the_url() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com/");
-        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<HttpClient> httpClient =
-                        mockHttpClientResponses(
-                                List.of(htmlResponse(302, "", "http://127.0.0.1/")))) {
-            gu.when(() -> GeneralUtils.isValidURL("https://example.com/")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("https://example.com/")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("http://127.0.0.1/")).thenReturn(false);
+        when(remoteHtmlFetcher.fetch("https://example.com/"))
+                .thenThrow(new UnknownHostException("Host 127.0.0.1 is not allowed"));
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ResponseEntity<?> response = sut.urlToPdf(request);
 
-            IOException error = assertThrows(IOException.class, () -> sut.urlToPdf(request));
-            assertTrue(error.getMessage().contains("not allowed or reachable"));
+            assertErrorResponse(
+                    response,
+                    HttpStatus.BAD_REQUEST,
+                    "The URL is not allowed or could not be reached.");
+            pe.verifyNoInteractions();
         }
     }
 
     @Test
-    void rejects_redirect_loop_after_five_redirects() throws Exception {
+    void does_not_fetch_when_endpoint_disabled() throws Exception {
+        applicationProperties.getSystem().setEnableUrlToPDF(false);
         UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("https://example.com/");
-        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<HttpClient> httpClient =
-                        mockHttpClientResponses(
-                                Collections.nCopies(6, htmlResponse(302, "", "/")))) {
-            gu.when(() -> GeneralUtils.isValidURL("https://example.com/")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("https://example.com/")).thenReturn(true);
+        request.setUrlInput("http://169.254.169.254/latest/meta-data/");
 
-            IOException error = assertThrows(IOException.class, () -> sut.urlToPdf(request));
-            assertTrue(error.getMessage().contains("redirect limit"));
-        }
+        sut.urlToPdf(request);
+
+        verify(remoteHtmlFetcher, never()).fetch(anyString());
     }
 
     @Test
@@ -204,8 +192,9 @@ public class ConvertWebsiteToPdfTest {
     @Test
     void returns_error_when_url_is_not_reachable() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
-        // .invalid is reserved by RFC and not resolvable
         request.setUrlInput("https://nonexistent.invalid/");
+        when(remoteHtmlFetcher.fetch("https://nonexistent.invalid/"))
+                .thenThrow(new UnknownHostException("nonexistent.invalid"));
 
         ResponseEntity<?> resp = sut.urlToPdf(request);
 
@@ -265,11 +254,11 @@ public class ConvertWebsiteToPdfTest {
         request.setUrlInput("https://example.com");
 
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
+            when(remoteHtmlFetcher.fetch("https://example.com"))
+                    .thenReturn(new RemoteHtml("<html></html>", "https://example.com"));
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("example_com");
             gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
                     .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
@@ -320,11 +309,11 @@ public class ConvertWebsiteToPdfTest {
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                MockedStatic<Files> files = Mockito.mockStatic(Files.class);
-                MockedStatic<HttpClient> httpClient = mockHttpClientReturning("<html></html>")) {
+                MockedStatic<Files> files = Mockito.mockStatic(Files.class)) {
+            when(remoteHtmlFetcher.fetch("https://example.com"))
+                    .thenReturn(new RemoteHtml("<html></html>", "https://example.com"));
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("example_com");
             gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
                     .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
@@ -371,54 +360,19 @@ public class ConvertWebsiteToPdfTest {
         }
     }
 
-    private static MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
-        return mockHttpClientResponses(List.of(htmlResponse(200, body, null)));
-    }
-
-    private static HttpResponse<String> htmlResponse(int status, String body, String location) {
-        HttpResponse<String> response = Mockito.mock();
-        when(response.statusCode()).thenReturn(status);
-        lenient().when(response.body()).thenReturn(body);
-        lenient()
-                .when(response.headers())
-                .thenReturn(
-                        HttpHeaders.of(
-                                location == null ? Map.of() : Map.of("Location", List.of(location)),
-                                (name, value) -> true));
-        return response;
-    }
-
-    private static MockedStatic<HttpClient> mockHttpClientResponses(
-            List<HttpResponse<String>> responses) throws Exception {
-        MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
-        HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
-        HttpClient client = Mockito.mock(HttpClient.class);
-
-        httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
-        when(builder.followRedirects(HttpClient.Redirect.NEVER)).thenReturn(builder);
-        when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
-        when(builder.build()).thenReturn(client);
-
-        var iterator = responses.iterator();
-        Mockito.doAnswer(invocation -> iterator.next())
-                .when(client)
-                .send(any(HttpRequest.class), any());
-
-        return httpClientStatic;
-    }
-
     @Test
     void returns_error_when_disallowed_content_detected() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com");
 
-        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<HttpClient> httpClient =
-                        mockHttpClientReturning(
-                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">")) {
+        when(remoteHtmlFetcher.fetch("https://example.com"))
+                .thenReturn(
+                        new RemoteHtml(
+                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">",
+                                "https://example.com"));
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class)) {
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
-            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
 
             ResponseEntity<?> resp = sut.urlToPdf(request);
 

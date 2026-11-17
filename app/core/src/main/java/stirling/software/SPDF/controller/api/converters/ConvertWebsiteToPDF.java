@@ -2,13 +2,9 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
+import stirling.software.SPDF.service.RemoteHtmlFetcher;
+import stirling.software.SPDF.service.RemoteHtmlFetcher.RemoteHtml;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -36,7 +34,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.RegexPatternUtils;
@@ -53,6 +50,7 @@ public class ConvertWebsiteToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
+    private final RemoteHtmlFetcher remoteHtmlFetcher;
 
     private static final Pattern FILE_SCHEME_PATTERN =
             Pattern.compile("(?<![a-z0-9_])file\\s*:(?:/{1,3}|%2f|%5c|%3a|&#x2f;|&#47;)");
@@ -84,7 +82,12 @@ public class ConvertWebsiteToPDF {
         if (!patternValid && !generalValid) {
             return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
         }
-        if (!GeneralUtils.isURLReachable(URL)) {
+
+        RemoteHtml remoteHtml;
+        try {
+            remoteHtml = remoteHtmlFetcher.fetch(URL);
+        } catch (IOException e) {
+            log.info("URL to PDF fetch refused or failed for {}: {}", URL, e.getMessage());
             return errorResponse(
                     HttpStatus.BAD_REQUEST, "The URL is not allowed or could not be reached.");
         }
@@ -92,8 +95,6 @@ public class ConvertWebsiteToPDF {
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
         try {
-            // Download the remote content first to ensure we don't allow dangerous schemes
-            RemoteHtml remoteHtml = fetchRemoteHtml(URL);
             String htmlContent = remoteHtml.content();
             URL = remoteHtml.url();
 
@@ -157,67 +158,6 @@ public class ConvertWebsiteToPDF {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(ProblemDetail.forStatusAndDetail(status, message));
-    }
-
-    private record RemoteHtml(String content, String url) {}
-
-    private RemoteHtml fetchRemoteHtml(String url) throws IOException, InterruptedException {
-        HttpClient client =
-                HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NEVER)
-                        .connectTimeout(Duration.ofSeconds(10))
-                        .build();
-
-        URI currentUri = URI.create(url);
-        for (int redirects = 0; redirects <= 5; redirects++) {
-            HttpRequest request =
-                    HttpRequest.newBuilder(currentUri)
-                            .timeout(Duration.ofSeconds(20))
-                            .GET()
-                            .header("User-Agent", "Stirling-PDF/URL-to-PDF")
-                            .build();
-
-            HttpResponse<String> response =
-                    client.send(
-                            request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-            int statusCode = response.statusCode();
-            if (statusCode == 301
-                    || statusCode == 302
-                    || statusCode == 303
-                    || statusCode == 307
-                    || statusCode == 308) {
-                String location = response.headers().firstValue("Location").orElse(null);
-                if (location == null || redirects == 5) {
-                    throw new IOException(
-                            "Remote HTML redirect is missing a location or exceeds the redirect limit");
-                }
-                URI nextUri;
-                try {
-                    nextUri = currentUri.resolve(location);
-                } catch (IllegalArgumentException ex) {
-                    throw new IOException("Invalid remote HTML redirect location", ex);
-                }
-                // Revalidate every destination before following a redirect.
-                if (!GeneralUtils.isURLReachable(nextUri.toString())) {
-                    throw new IOException(
-                            "Remote HTML redirect destination is not allowed or reachable");
-                }
-                currentUri = nextUri;
-                continue;
-            }
-
-            if (response.statusCode() >= 300 || response.body() == null) {
-                throw ExceptionUtils.createIOException(
-                        "error.httpRequestFailed",
-                        "Failed to retrieve remote HTML. Status: {0}",
-                        null,
-                        response.statusCode());
-            }
-
-            return new RemoteHtml(response.body(), currentUri.toString());
-        }
-        throw new IOException("Remote HTML redirect limit exceeded");
     }
 
     private boolean containsDisallowedUriScheme(String htmlContent) {
