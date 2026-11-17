@@ -1,6 +1,8 @@
 import { PlanTierGroup } from "@editor/services/licenseService";
+import type { TeamCheckoutCapacity } from "@editor/services/serverPlanCheckout";
 
 export interface StripeCheckoutProps {
+  capacity?: TeamCheckoutCapacity;
   /**
    * Put the period and capacity choices on one page instead of walking them separately. Nothing
    * precedes it: the buyer is never asked for an address, so the combined page is the first thing

@@ -20,8 +20,8 @@ export interface StaticStripeLinks {
 // PRODUCTION LINKS FOR LIVE SERVER
 export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
   server: {
-    monthly: "https://buy.stripe.com/fZu4gB8Nv6ysfAj0ts8Zq03",
-    yearly: "https://buy.stripe.com/9B68wR6Fn0a40Fpcca8Zq02",
+    monthly: `${import.meta.env.VITE_SAAS_FRONTEND_URL}/team`,
+    yearly: `${import.meta.env.VITE_SAAS_FRONTEND_URL}/team`,
   },
   enterprise: {
     monthly: "",

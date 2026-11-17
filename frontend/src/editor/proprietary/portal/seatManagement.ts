@@ -1,20 +1,34 @@
 import { useOptionalUpdateSeats } from "@editor/contexts/UpdateSeatsContext";
 import { useOptionalLicense } from "@editor/contexts/LicenseContext";
 import type { SeatManagement } from "@processor/api/seatManagement";
+import { useCheckoutOptional } from "@editor/contexts/CheckoutContext";
 
-/** Licence types sold with a seat count, i.e. the ones seats can be bought for.
- *  SERVER is the licence behind the plan the pricing page calls "Team". */
-const SEATED_LICENCES = new Set(["SERVER", "ENTERPRISE"]);
-
-/** Self-hosted: the seat picker, offered to the plans that sell seats. A free
- *  licence upgrades instead; `maxUsers: 0` is legacy unlimited, nothing to raise. */
+/** Team capacity uses account billing; Enterprise retains its licence seat picker. */
 export function useSeatManagement(): SeatManagement {
+  const checkout = useCheckoutOptional();
   const seats = useOptionalUpdateSeats();
   const info = useOptionalLicense()?.licenseInfo;
+  if (
+    info &&
+    (info.enabled || info.licenseType === "NORMAL") &&
+    info.licenseType !== "ENTERPRISE" &&
+    info.maxUsers > 0 &&
+    checkout
+  ) {
+    return {
+      available: true,
+      busy: checkout.isLoading,
+      open: (onChanged) =>
+        void checkout.openCheckout("server", {
+          combinedChoose: true,
+          onSuccess: onChanged,
+        }),
+    };
+  }
   const available =
     seats !== undefined &&
     info?.enabled === true &&
-    SEATED_LICENCES.has(info.licenseType) &&
+    info.licenseType === "ENTERPRISE" &&
     info.maxUsers > 0;
   return {
     available,

@@ -388,16 +388,24 @@ export function Users() {
               {seatsLabel(t, seats.used, seats.limit)}
             </StatusBadge>
           )}
-          {seatManagement.available && (
-            <Button
-              fat
-              variant="secondary"
-              loading={seatManagement.busy}
-              onClick={() => seatManagement.open(refresh)}
-            >
-              {t("users.seats.update", "Update seats")}
-            </Button>
+          {seats?.limit != null && (
+            <span>
+              {t("users.seats.remaining", "{{count}} seats remaining", {
+                count: Math.max(0, seats.limit - seats.used),
+              })}
+            </span>
           )}
+          {seatManagement.available &&
+            (viewer?.orgOwner || viewer?.teamLead) && (
+              <Button
+                fat
+                variant="secondary"
+                loading={seatManagement.busy}
+                onClick={() => seatManagement.open(refresh)}
+              >
+                {t("users.seats.add", "Add seats")}
+              </Button>
+            )}
           {caps.createTeam && (
             <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}

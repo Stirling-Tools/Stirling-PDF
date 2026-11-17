@@ -29,6 +29,8 @@ vi.mock("@editor/auth/supabase/supabaseClient", () => ({
 vi.mock("@processor/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
+const wallet = vi.hoisted(() => ({ fetch: vi.fn() }));
+vi.mock("@processor/api/billing", () => ({ fetchWallet: wallet.fetch }));
 
 // The SaaS usersBackend lives under src/saas; the portal vitest project resolves
 // @editor to proprietary (there's no @saas alias here), so the SaaS impl can only be
@@ -41,9 +43,43 @@ const server = setupServer(...teamSaasHandlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
-beforeEach(() => resetTeamSaasStore());
+beforeEach(() => {
+  resetTeamSaasStore();
+  wallet.fetch.mockResolvedValue({ teamId: 1, team: { usersInUse: 4 } });
+});
 
 describe("saas usersBackend — fetchUsers mapping", () => {
+  it("includes connected-server usage in the remaining seat calculation", async () => {
+    wallet.fetch.mockResolvedValue({ teamId: 1, team: { usersInUse: 9 } });
+    const res = await usersBackend.fetchUsers("pro");
+    expect(res.summary.seatsUsed).toBe(9);
+    expect(res.access).toEqual({ tier: "pro", seatsUsed: 9, seatLimit: 10 });
+  });
+
+  it("refuses capacity belonging to a different team", async () => {
+    wallet.fetch.mockResolvedValue({ teamId: 2, team: { usersInUse: 0 } });
+    await expect(usersBackend.fetchUsers("pro")).rejects.toThrow(
+      "Team capacity could not be resolved",
+    );
+  });
+
+  it("keeps the free allowance finite", async () => {
+    server.use(
+      http.get("*/api/v1/team/my", () =>
+        HttpResponse.json([
+          {
+            teamId: 1,
+            name: "Acme",
+            current: true,
+            isLeader: true,
+            maxSeats: 5,
+          },
+        ]),
+      ),
+    );
+    const res = await usersBackend.fetchUsers("free");
+    expect(res.access.seatLimit).toBe(5);
+  });
   it("maps SaasTeamController members + invitations onto UsersResponse", async () => {
     const res = await usersBackend.fetchUsers("pro");
 

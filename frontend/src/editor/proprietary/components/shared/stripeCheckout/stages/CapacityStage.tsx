@@ -5,6 +5,7 @@ import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { PlanTier } from "@editor/services/licenseService";
+import type { TeamCheckoutCapacity } from "@editor/services/serverPlanCheckout";
 import { formatPrice } from "@editor/components/shared/stripeCheckout/utils/pricingUtils";
 import {
   PRESET_BLOCKS,
@@ -16,6 +17,7 @@ import {
 } from "@editor/components/shared/stripeCheckout/utils/capacity";
 
 interface CapacityStageProps {
+  capacity?: TeamCheckoutCapacity;
   /** The plan the buyer picked a billing period for; supplies block price and currency. */
   selectedPlan: PlanTier | null;
   /** Stripe quantity counts blocks of users. */
@@ -39,19 +41,14 @@ function checkCustomEntry(value: string, maximum: number): CustomEntry {
   return n > maximum ? "overLimit" : "ok";
 }
 
-/**
- * Choose how many users the Team plan should cover.
- *
- * The buyer picks users; the plan is priced per block of {@link USERS_PER_BLOCK}. Presets cover the
- * common sizes and "Custom" turns into a free entry that rounds up to the next whole block, because
- * a part-block cannot be bought. Above the self-serve maximum the hint points to Enterprise.
- */
+/** Prices only the selected subscription; free and grandfathered capacity remain included. */
 export const CapacityStage: React.FC<CapacityStageProps> = ({
   selectedPlan,
   serverQuantity,
   setServerQuantity,
   currentUsers = 0,
   currentLimit = null,
+  capacity,
   periodPicker,
   capacityNotice,
   onContinue,
@@ -62,20 +59,30 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const currency = selectedPlan?.currency || "$";
   const blockPrice = selectedPlan?.price || 0;
   const isYearly = selectedPlan?.period?.includes("year") ?? false;
-  const covered = usersForBlocks(serverQuantity);
+  const blockSize = selectedPlan?.userBlockSize ?? USERS_PER_BLOCK;
+  const includedUsers =
+    (capacity?.freeUsers ?? 0) + (capacity?.legacyUsers ?? 0);
+  const maxBlocks = capacity?.maxQuantity ?? SELF_SERVE_MAX_BLOCKS;
+  const covered = usersForBlocks(serverQuantity, blockSize, includedUsers);
   const [draftUsers, setDraftUsers] = useState(String(covered));
 
   const adjusting = currentLimit != null;
-  const minBlocks = adjusting ? 1 : blocksForUsers(currentUsers);
+  const minBlocks = adjusting
+    ? 1
+    : blocksForUsers(currentUsers, blockSize, includedUsers);
   const reducing = adjusting && covered < currentLimit;
-  const minUsers = usersForBlocks(minBlocks);
-  const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
+  const minUsers = usersForBlocks(minBlocks, blockSize, includedUsers);
+  const maxUsers = usersForBlocks(maxBlocks, blockSize, includedUsers);
   const belowMinimumCapacity = serverQuantity < minBlocks;
-  const offerEnterprise = shouldOfferEnterprise(serverQuantity);
+  const offerEnterprise = shouldOfferEnterprise(
+    serverQuantity,
+    blockSize,
+    includedUsers,
+  );
 
-  const presets = PRESET_BLOCKS.filter(
-    (blocks) => blocks <= SELF_SERVE_MAX_BLOCKS,
-  ).map((blocks) => usersForBlocks(blocks));
+  const presets = (blockSize === 1 ? [1, 5, 10, 25] : PRESET_BLOCKS)
+    .filter((blocks) => blocks <= maxBlocks)
+    .map((blocks) => usersForBlocks(blocks, blockSize, includedUsers));
   const [showCustom, setShowCustom] = useState(
     () => !presets.includes(covered),
   );
@@ -89,7 +96,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
     : t("payment.capacityStage.perMonth", "/mo");
 
   const selectUsers = (users: number) =>
-    setServerQuantity(blocksForUsers(users));
+    setServerQuantity(blocksForUsers(users, blockSize, includedUsers));
 
   return (
     <div className="team-capacity">
@@ -126,13 +133,18 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
                   current: currentLimit,
                 },
               )
-            : t(
-                "payment.capacityStage.subheading",
-                "Covers everyone you invite, in blocks of {{users}} users.",
-                {
-                  users: USERS_PER_BLOCK,
-                },
-              )}
+            : blockSize === 1
+              ? t(
+                  "payment.capacityStage.individualSeats",
+                  "Choose how many users to cover. Pay only for seats beyond your included allowance.",
+                )
+              : t(
+                  "payment.capacityStage.subheading",
+                  "Covers everyone you invite, in blocks of {{users}} users.",
+                  {
+                    users: USERS_PER_BLOCK,
+                  },
+                )}
         </Text>
 
         {periodPicker && (
@@ -253,6 +265,8 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
 
       <CapacitySummary
         blocks={serverQuantity}
+        blockSize={blockSize}
+        capacity={capacity}
         blockPrice={blockPrice}
         currency={currency}
         period={period}
@@ -329,6 +343,8 @@ function CapacityHint({
 }
 
 interface CapacitySummaryProps {
+  blockSize: number;
+  capacity?: TeamCheckoutCapacity;
   blocks: number;
   blockPrice: number;
   currency: string;
@@ -343,6 +359,8 @@ interface CapacitySummaryProps {
 /** The order as it stands, and the way on to payment. */
 function CapacitySummary({
   blocks,
+  blockSize,
+  capacity,
   blockPrice,
   currency,
   period,
@@ -352,7 +370,11 @@ function CapacitySummary({
   onEnterpriseQuote,
 }: CapacitySummaryProps) {
   const { t } = useTranslation();
-  const covered = usersForBlocks(blocks);
+  const covered = usersForBlocks(
+    blocks,
+    blockSize,
+    (capacity?.freeUsers ?? 0) + (capacity?.legacyUsers ?? 0),
+  );
   const total = blockPrice * blocks;
 
   return (
@@ -370,21 +392,40 @@ function CapacitySummary({
         </Text>
       </div>
       <Stack gap="sm">
-        <Group justify="space-between" wrap="nowrap">
+        {capacity && (
           <Text size="sm" c="dimmed">
             {t(
-              "payment.capacityStage.lineItem",
-              "Team · {{price}}{{period}} per {{block}} users",
+              "payment.capacityStage.includedSeats",
+              "{{free}} free + {{legacy}} from existing blocks + {{paid}} paid seats",
               {
-                price: formatPrice(blockPrice, currency, 0),
-                period,
-                block: USERS_PER_BLOCK,
+                free: capacity.freeUsers,
+                legacy: capacity.legacyUsers,
+                paid: blocks * blockSize,
               },
             )}
           </Text>
+        )}
+        <Group justify="space-between" wrap="nowrap">
+          <Text size="sm" c="dimmed">
+            {blockSize === 1
+              ? t(
+                  "payment.capacityStage.seatLineItem",
+                  "Team · {{price}}{{period}} per user",
+                  { price: formatPrice(blockPrice, currency), period },
+                )
+              : t(
+                  "payment.capacityStage.lineItem",
+                  "Team · {{price}}{{period}} per {{block}} users",
+                  {
+                    price: formatPrice(blockPrice, currency, 0),
+                    period,
+                    block: blockSize,
+                  },
+                )}
+          </Text>
           <Text size="sm" fw={500}>
             {t("payment.capacityStage.userTotal", "{{users}} users", {
-              users: covered,
+              users: blocks * blockSize,
             })}
           </Text>
         </Group>
@@ -392,7 +433,12 @@ function CapacitySummary({
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
             {adjusting
-              ? t("payment.capacityStage.newPlanTotal", "New plan total")
+              ? blockSize === 1
+                ? t(
+                    "payment.capacityStage.seatSubscriptionTotal",
+                    "Individual seats total",
+                  )
+                : t("payment.capacityStage.newPlanTotal", "New plan total")
               : t("payment.capacityStage.estimatedTotal", "Estimated total")}
           </Text>
           <Text size="xl" fw={700}>
@@ -420,6 +466,12 @@ function CapacitySummary({
         </Button>
       )}
       <Text size="xs" c="dimmed" ta="center">
+        {capacity &&
+          capacity.legacyUsers > 0 &&
+          t(
+            "payment.capacityStage.legacyBilling",
+            "Your existing blocks keep their current price and renewal date. These seats are billed separately.",
+          )}{" "}
         {adjusting
           ? t(
               "payment.capacityStage.adjustmentNote",

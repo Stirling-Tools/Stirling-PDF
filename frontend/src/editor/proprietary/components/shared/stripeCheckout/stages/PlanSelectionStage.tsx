@@ -96,9 +96,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 {period === "monthly"
                   ? t("payment.capacityStage.perMonth", "/mo")
                   : t("payment.capacityStage.perYear", "/yr")}{" "}
-                {t("payment.perUserBlock", "per {{users}} users", {
-                  users: USERS_PER_BLOCK,
-                })}
+                {plan.userBlockSize === 1
+                  ? t("payment.perUser", "per user")
+                  : t("payment.perUserBlock", "per {{users}} users", {
+                      users: plan.userBlockSize ?? USERS_PER_BLOCK,
+                    })}
               </Text>
             </button>
           );
@@ -151,7 +153,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                     mode="simple"
                     price={planGroup.monthly?.price || 0}
                     currency={planGroup.monthly?.currency || "£"}
-                    period={t("payment.perMonth", "/month")}
+                    period={
+                      planGroup.monthly.userBlockSize === 1
+                        ? t("payment.perUserMonth", "/user/month")
+                        : t("payment.perMonth", "/month")
+                    }
                     size="2.5rem"
                   />
                 )}
@@ -248,7 +254,11 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                         planGroup.yearly?.price || 0,
                       )}
                       currency={planGroup.yearly?.currency || "£"}
-                      period={t("payment.perMonth", "/month")}
+                      period={
+                        planGroup.yearly.userBlockSize === 1
+                          ? t("payment.perUserMonth", "/user/month")
+                          : t("payment.perMonth", "/month")
+                      }
                       size="2.5rem"
                     />
                     <Text size="sm" c="dimmed" mt="xs">

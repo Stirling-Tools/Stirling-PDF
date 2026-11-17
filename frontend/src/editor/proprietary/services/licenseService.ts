@@ -23,6 +23,8 @@ export interface PlanTier {
   seatPrice?: number; // Per-seat price for enterprise plans
   requiresSeats?: boolean; // Flag indicating seat selection is needed
   lookupKey: string; // Stripe lookup key for this plan
+  /** Users bought by one Stripe quantity; absent on historical 100-user plans. */
+  userBlockSize?: number;
 }
 
 export interface PlanTierGroup {
@@ -83,6 +85,8 @@ const getCurrencySymbol = (currency: string): string => {
 
 // Self-hosted plan lookup keys
 const SELF_HOSTED_LOOKUP_KEYS = [
+  "selfhosted:teamseat:monthly",
+  "selfhosted:teamseat:yearly",
   "selfhosted:team:monthly",
   "selfhosted:team:yearly",
   "selfhosted:enterpriseseat:monthly",
@@ -129,7 +133,7 @@ const licenseService = {
           lookup_keys:
             tier === "server"
               ? SELF_HOSTED_LOOKUP_KEYS.filter((key) =>
-                  key.startsWith("selfhosted:team:"),
+                  key.startsWith("selfhosted:teamseat:"),
                 )
               : SELF_HOSTED_LOOKUP_KEYS,
           currency,
@@ -186,22 +190,24 @@ const licenseService = {
       // Build plan tiers
       const plans: PlanTier[] = [
         {
-          id: "selfhosted:team:monthly",
-          lookupKey: "selfhosted:team:monthly",
+          id: "selfhosted:teamseat:monthly",
+          lookupKey: "selfhosted:teamseat:monthly",
+          userBlockSize: 1,
           name: "Team - Monthly",
-          price: getPriceInfo("selfhosted:team:monthly"),
-          currency: priceCurrency("selfhosted:team:monthly"),
+          price: getPriceInfo("selfhosted:teamseat:monthly"),
+          currency: priceCurrency("selfhosted:teamseat:monthly"),
           period: "/month",
           popular: false,
           features: planFeatures.SERVER,
           highlights: planHighlights.SERVER_MONTHLY,
         },
         {
-          id: "selfhosted:team:yearly",
-          lookupKey: "selfhosted:team:yearly",
+          id: "selfhosted:teamseat:yearly",
+          lookupKey: "selfhosted:teamseat:yearly",
+          userBlockSize: 1,
           name: "Team - Yearly",
-          price: getPriceInfo("selfhosted:team:yearly"),
-          currency: priceCurrency("selfhosted:team:yearly"),
+          price: getPriceInfo("selfhosted:teamseat:yearly"),
+          currency: priceCurrency("selfhosted:teamseat:yearly"),
           period: "/year",
           popular: true,
           features: planFeatures.SERVER,
@@ -294,10 +300,10 @@ const licenseService = {
 
     // Server tier
     const serverMonthly = plans.find(
-      (p) => p.lookupKey === "selfhosted:team:monthly",
+      (p) => p.id === "selfhosted:teamseat:monthly",
     );
     const serverYearly = plans.find(
-      (p) => p.lookupKey === "selfhosted:team:yearly",
+      (p) => p.id === "selfhosted:teamseat:yearly",
     );
     if (serverMonthly || serverYearly) {
       groups.push({

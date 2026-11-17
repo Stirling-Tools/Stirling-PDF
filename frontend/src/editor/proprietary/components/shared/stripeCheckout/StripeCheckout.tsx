@@ -45,6 +45,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   minimumSeats = 1,
   combinedChoose: requestedCombinedChoose = false,
   currentLimit = null,
+  capacity,
   capacityNotice,
   onContactSales,
   onSuccess,
@@ -56,7 +57,21 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   const isMobile = useIsMobile();
   const sellsCapacity = planGroup.tier === "server";
   const combinedChoose = requestedCombinedChoose && sellsCapacity;
-  const minimumCapacity = Math.max(minimumSeats, currentLimit ?? 0);
+  const includedUsers =
+    (capacity?.freeUsers ?? 0) + (capacity?.legacyUsers ?? 0);
+  const heldCapacity = capacity
+    ? capacity.quantity > 0 || capacity.legacyUsers > 0
+      ? includedUsers + capacity.quantity
+      : null
+    : currentLimit;
+  const minimumCapacity = Math.max(minimumSeats, heldCapacity ?? 0);
+  const blockSize =
+    planGroup.monthly?.userBlockSize ?? planGroup.yearly?.userBlockSize ?? 100;
+  const initialQuantity = blocksForUsers(
+    minimumCapacity,
+    blockSize,
+    includedUsers,
+  );
 
   // Initialize all state via custom hook
   const checkoutState = useCheckoutState(planGroup);
@@ -105,7 +120,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     checkoutState.setSelectedPeriod(period);
     if (sellsCapacity) {
       // Arrive on the capacity an installation already needs rather than on a blocked minimum.
-      checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
+      checkoutState.setServerQuantity(initialQuantity);
       navigation.goToStage("capacity");
       return;
     }
@@ -166,7 +181,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       const landing = combinedChoose ? "choose" : "plan-selection";
       try {
         if (combinedChoose && sellsCapacity)
-          checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
+          checkoutState.setServerQuantity(initialQuantity);
         const licenseInfo = sellsCapacity
           ? null
           : await licenseService.getLicenseInfo();
@@ -186,7 +201,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     hostedCheckoutSuccess,
     combinedChoose,
     sellsCapacity,
-    minimumCapacity,
+    initialQuantity,
     checkoutState.setServerQuantity,
     checkoutState.setEmailInput,
     checkoutState.setCurrentLicenseKey,
@@ -225,7 +240,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             serverQuantity={checkoutState.serverQuantity}
             setServerQuantity={checkoutState.setServerQuantity}
             currentUsers={minimumSeats}
-            currentLimit={currentLimit}
+            currentLimit={heldCapacity}
+            capacity={capacity}
             capacityNotice={capacityNotice}
             periodPicker={
               <PlanSelectionStage
@@ -259,7 +275,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             serverQuantity={checkoutState.serverQuantity}
             setServerQuantity={checkoutState.setServerQuantity}
             currentUsers={minimumSeats}
-            currentLimit={currentLimit}
+            currentLimit={heldCapacity}
+            capacity={capacity}
             capacityNotice={capacityNotice}
             onContinue={() => navigation.goToStage("payment")}
             onContactSales={onContactSales}

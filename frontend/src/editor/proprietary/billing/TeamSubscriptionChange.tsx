@@ -70,14 +70,14 @@ export function TeamSubscriptionChange({ refreshKey }: { refreshKey: number }) {
     <Banner
       tone="info"
       title={t(
-        "payment.teamChangePending",
-        "{{users}} users · {{period}} from {{date}}",
+        "payment.teamChangePaidPending",
+        "{{users}} paid seats · {{period}} from {{date}}",
         {
           period:
             pending.interval === "year"
               ? t("payment.yearly", "Yearly")
               : t("payment.monthly", "Monthly"),
-          users: pending.quantity * USERS_PER_BLOCK,
+          users: pending.quantity * (pending.userBlockSize ?? USERS_PER_BLOCK),
           date: new Date(pending.effectiveAt * 1000).toLocaleDateString(),
         },
       )}

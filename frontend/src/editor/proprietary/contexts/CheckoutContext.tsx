@@ -33,6 +33,10 @@ import {
 import { useLicense } from "@editor/contexts/LicenseContext";
 import { getPreferredCurrency } from "@editor/utils/currencyDetection";
 import {
+  getTeamCheckoutCapacity,
+  type TeamCheckoutCapacity,
+} from "@editor/services/serverPlanCheckout";
+import {
   usePlanFeatures,
   usePlanHighlights,
 } from "@editor/constants/planConstants";
@@ -92,6 +96,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   const [selectedPlanGroup, setSelectedPlanGroup] =
     useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
+  const [capacity, setCapacity] = useState<TeamCheckoutCapacity>();
   const [currentCurrency, setCurrentCurrency] = useState(() => {
     return defaultCurrency || getPreferredCurrency();
   });
@@ -432,6 +437,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           throw new Error(`No ${tier} plan available`);
         }
 
+        const teamCapacity =
+          tier === "server" ? await getTeamCheckoutCapacity() : undefined;
+        setCapacity(teamCapacity);
+
         // Store options for callbacks
         paid.current = false;
         setCurrentOptions(options);
@@ -513,6 +522,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             opened={isOpen}
             onClose={closeCheckout}
             planGroup={selectedPlanGroup}
+            capacity={capacity}
             minimumSeats={minimumSeats}
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}

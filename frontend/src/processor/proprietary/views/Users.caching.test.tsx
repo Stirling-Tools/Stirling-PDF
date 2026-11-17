@@ -41,6 +41,9 @@ vi.mock("@editor/auth/supabase/supabaseClient", () => ({
 vi.mock("@processor/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
 }));
+vi.mock("@processor/api/billing", () => ({
+  fetchWallet: vi.fn(async () => ({ teamId: 1, team: { usersInUse: 4 } })),
+}));
 
 vi.mock("@editor/portal/usersCapabilities", async () => ({
   usersCapabilities:

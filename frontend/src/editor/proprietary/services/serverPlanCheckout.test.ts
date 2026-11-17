@@ -21,6 +21,7 @@ vi.mock("@editor/auth/session", () => ({ getAccessToken }));
 import {
   createServerPlanCheckoutSession,
   verifyTeamCheckout,
+  getTeamCheckoutCapacity,
 } from "@editor/services/serverPlanCheckout";
 
 const plan = {
@@ -33,6 +34,38 @@ const plan = {
 beforeEach(() => {
   invoke.mockReset();
   getAccessToken.mockReset().mockResolvedValue("native-token");
+});
+
+describe("getTeamCheckoutCapacity", () => {
+  it("reads the authenticated team's free and purchased capacity", async () => {
+    const capacity = {
+      freeUsers: 5,
+      legacyUsers: 100,
+      quantity: 7,
+      maxQuantity: 999999,
+    };
+    invoke.mockResolvedValue({ data: capacity, error: null });
+    expect(await getTeamCheckoutCapacity()).toEqual(capacity);
+    expect(invoke).toHaveBeenCalledWith("team-subscription-change", {
+      headers: { Authorization: "Bearer native-token" },
+      body: { action: "capacity" },
+    });
+  });
+  it.each([
+    null,
+    {},
+    { freeUsers: 5, legacyUsers: -100, quantity: 0, maxQuantity: 999999 },
+  ])("refuses missing or invalid holdings", async (data) => {
+    invoke.mockResolvedValue({ data, error: null });
+    await expect(getTeamCheckoutCapacity()).rejects.toThrow(
+      "Could not load Team capacity",
+    );
+  });
+  it("refuses to read holdings without an account", async () => {
+    getAccessToken.mockResolvedValue(null);
+    await expect(getTeamCheckoutCapacity()).rejects.toThrow("Sign in");
+    expect(invoke).not.toHaveBeenCalled();
+  });
 });
 
 describe("createServerPlanCheckoutSession", () => {

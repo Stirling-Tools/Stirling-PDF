@@ -14,6 +14,7 @@ import { expectConsole } from "@editor/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   getPlans: vi.fn(),
+  capacity: vi.fn(),
   pricing: vi.fn(),
   preferred: vi.fn(() => "usd"),
   getLicenseInfo: vi.fn(),
@@ -32,6 +33,9 @@ vi.mock("react-i18next", () => ({
 vi.mock("@editor/constants/planConstants", () => ({
   usePlanFeatures: () => mocks.features,
   usePlanHighlights: () => mocks.highlights,
+}));
+vi.mock("@editor/services/serverPlanCheckout", () => ({
+  getTeamCheckoutCapacity: mocks.capacity,
 }));
 vi.mock("@editor/contexts/LicenseContext", () => ({
   useLicense: () => ({ refetchLicense: mocks.refetch }),
@@ -101,6 +105,12 @@ function Buyer({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.capacity.mockResolvedValue({
+    freeUsers: 5,
+    legacyUsers: 0,
+    quantity: 0,
+    maxQuantity: 999999,
+  });
 });
 
 it("opens on the first click using asynchronously fetched plans", async () => {
