@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -28,6 +29,7 @@ import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 
 @AnalysisApi
 @RequiredArgsConstructor
@@ -217,8 +219,23 @@ public class AnalysisController {
             throws IOException {
         String password = request.getPassword() != null ? request.getPassword() : "";
 
-        try (PDDocument document =
-                pdfDocumentFactory.load(request.getFileInput(), password)) {
+        PDDocument document;
+        try {
+            document = pdfDocumentFactory.load(request.getFileInput(), password);
+        } catch (IOException e) {
+            if (password.isEmpty()
+                    && (e instanceof InvalidPasswordException
+                            || e instanceof ExceptionUtils.PdfPasswordException
+                            || ExceptionUtils.isPasswordError(e))) {
+                Map<String, Object> securityInfo = new HashMap<>();
+                securityInfo.put("isEncrypted", true);
+                securityInfo.put("passwordProtected", true);
+                return ResponseEntity.ok(securityInfo);
+            }
+            throw e;
+        }
+
+        try (document) {
             Map<String, Object> securityInfo = new HashMap<>();
             PDEncryption encryption = document.getEncryption();
 

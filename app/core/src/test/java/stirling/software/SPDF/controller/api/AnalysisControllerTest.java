@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -391,6 +392,24 @@ class AnalysisControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertThat(body).containsEntry("isEncrypted", false);
+        assertThat(body).doesNotContainKey("permissions");
+    }
+
+    @Test
+    void getSecurityInfo_encryptedWithoutPassword_returnsFallbackMetadata() throws IOException {
+        PDFPasswordRequest request = new PDFPasswordRequest();
+        request.setFileInput(mockFile);
+
+        when(pdfDocumentFactory.load(mockFile, ""))
+                .thenThrow(new InvalidPasswordException("Password is required"));
+
+        ResponseEntity<?> response = analysisController.getSecurityInfo(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertThat(body).containsEntry("isEncrypted", true);
+        assertThat(body).containsEntry("passwordProtected", true);
         assertThat(body).doesNotContainKey("permissions");
     }
 }
