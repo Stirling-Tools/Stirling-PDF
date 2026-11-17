@@ -6,6 +6,7 @@ import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes"
 import type {
   InnerTagsControl,
   TextLanguageControl,
+  UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
@@ -20,6 +21,7 @@ const NO_INNER: InnerTagsControl = {
   onTagSelection: () => {},
   onSetLanguage: () => {},
   onLanguageSelection: null,
+  onSetLinkDescription: () => {},
 };
 
 function tagShown(tag: TextTag): HTMLElement {
@@ -30,6 +32,8 @@ function tagShown(tag: TextTag): HTMLElement {
         onSetTag={vi.fn()}
         inner={NO_INNER}
         language={null}
+        otherPages={null}
+        untaggedLinks={null}
       />
     </MantineProvider>,
   );
@@ -40,6 +44,7 @@ const tagged = (role: string): TextTag => ({
   kind: "tagged",
   block: structureRole(role),
   cannotRetag: "not-text",
+  canBeArtifact: false,
 });
 
 describe("TextAccessibilitySection", () => {
@@ -58,7 +63,14 @@ describe("TextAccessibilitySection", () => {
   });
 
   it.each([
-    [{ kind: "artifact" } as const, "artifactText"],
+    [
+      { kind: "artifact", furniture: null, taggable: false } as const,
+      "artifactText",
+    ],
+    [
+      { kind: "artifact", furniture: "PageNum", taggable: false } as const,
+      "furniture.pageNumber",
+    ],
     [
       { kind: "untagged", documentTagged: true, taggable: false } as const,
       "untaggedBadge",
@@ -68,7 +80,10 @@ describe("TextAccessibilitySection", () => {
       "untaggedDocument",
     ],
     [{ kind: "unknown" } as const, "unknownTag"],
-    [{ kind: "mixed", settable: false } as const, "mixedTags"],
+    [
+      { kind: "mixed", settable: false, canBeArtifact: false } as const,
+      "mixedTags",
+    ],
   ])("explains text with no element (%o)", (tag, message) => {
     expect(tagShown(tag)).toHaveTextContent(`${KEY}.${message}`);
   });
@@ -78,10 +93,17 @@ describe("TextAccessibilitySection", () => {
     render(
       <MantineProvider env="test">
         <TextAccessibilitySection
-          tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: true,
+          }}
           onSetTag={onRetag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -92,15 +114,143 @@ describe("TextAccessibilitySection", () => {
     expect(onRetag).toHaveBeenCalledWith("Code");
   });
 
+  it("offers making the text decorative", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "untagged",
+            documentTagged: true,
+            taggable: true,
+          }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.artifactText`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: null });
+  });
+
+  it("offers marking the text as page furniture", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "untagged", documentTagged: true, taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    fireEvent.click(screen.getByText(`${KEY}.furniture.footer`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Footer" });
+  });
+
+  it("shows decorative text as decorative, and offers it a type again", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: null, taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.artifactText`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.tagName.paragraph`));
+    expect(onSetTag).toHaveBeenCalledWith("P");
+  });
+
+  it("shows page furniture by its kind, and offers it another", () => {
+    const onSetTag = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Header", taggable: true }}
+          onSetTag={onSetTag}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByRole("textbox", { name: `${KEY}.tagLabel` });
+    expect(input).toHaveValue(`${KEY}.furniture.header`);
+    fireEvent.click(input);
+    fireEvent.click(screen.getByText(`${KEY}.furniture.watermark`));
+    expect(onSetTag).toHaveBeenCalledWith({ artifact: "Watermark" });
+  });
+
+  it("does not offer decorative where the text cannot become an artifact", () => {
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{
+            kind: "tagged",
+            block: structureRole("P"),
+            cannotRetag: null,
+            canBeArtifact: false,
+          }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={null}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByRole("textbox", { name: `${KEY}.tagLabel` }));
+    expect(
+      screen.getByRole("option", { name: `${KEY}.artifactText` }),
+    ).toHaveAttribute("data-combobox-disabled", "true");
+  });
+
+  it("offers giving matching text on other pages the artifact's kind", () => {
+    const onApply = vi.fn();
+    render(
+      <MantineProvider env="test">
+        <TextAccessibilitySection
+          tag={{ kind: "artifact", furniture: "Footer", taggable: true }}
+          onSetTag={vi.fn()}
+          inner={NO_INNER}
+          language={null}
+          otherPages={{ pages: 3, onApply }}
+          untaggedLinks={null}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByTestId("pdf-editor-text-tag-other-pages"));
+    expect(onApply).toHaveBeenCalled();
+  });
+
   it("offers a picker for runs tagged differently, set on all of them", () => {
     const onSetTag = vi.fn();
     render(
       <MantineProvider env="test">
         <TextAccessibilitySection
-          tag={{ kind: "mixed", settable: true }}
+          tag={{ kind: "mixed", settable: true, canBeArtifact: true }}
           onSetTag={onSetTag}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -119,10 +269,13 @@ describe("TextAccessibilitySection", () => {
             kind: "tagged",
             block: structureRole("Callout"),
             cannotRetag: null,
+            canBeArtifact: true,
           }}
           onSetTag={vi.fn()}
           inner={NO_INNER}
           language={null}
+          otherPages={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -224,6 +377,8 @@ describe("TextAccessibilitySection", () => {
           onSetTag={vi.fn()}
           inner={innerControl()}
           language={{ language: undefined, onSet: vi.fn() }}
+          otherPages={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -263,6 +418,31 @@ describe("TextAccessibilitySection", () => {
   });
 });
 
+describe("TextAccessibilitySection links", () => {
+  it("edits the description of the link a tag holds", () => {
+    const inner = innerControl({ active: 1 });
+    renderSection(inner);
+    const field = screen.getByTestId("pdf-editor-inner-tag-link-description");
+    expect(field).toHaveValue("The appendix");
+    fireEvent.change(field, { target: { value: "Appendix B" } });
+    expect(inner.onSetLinkDescription).toHaveBeenCalledWith(1, "Appendix B");
+  });
+
+  it("shows no link description for a tag holding no link", () => {
+    renderSection(innerControl({ active: 0 }));
+    expect(
+      screen.queryByTestId("pdf-editor-inner-tag-link-description"),
+    ).toBeNull();
+  });
+
+  it("offers tagging the links over the text", () => {
+    const onTag = vi.fn();
+    renderSection(innerControl(), null, { count: 2, onTag });
+    fireEvent.click(screen.getByTestId("pdf-editor-tag-links"));
+    expect(onTag).toHaveBeenCalled();
+  });
+});
+
 function languageControl(
   inherited: string | null,
   own: string | null,
@@ -285,6 +465,7 @@ function innerControl(
         removable: true,
         language: { own: "de", inherited: "en" },
         languageEditable: true,
+        link: null,
       },
       {
         key: "2",
@@ -296,6 +477,11 @@ function innerControl(
         removable: false,
         language: { own: null, inherited: "en" },
         languageEditable: true,
+        link: {
+          annotations: [20],
+          description: "The appendix",
+          editable: true,
+        },
       },
     ],
     active: null,
@@ -305,6 +491,7 @@ function innerControl(
     onTagSelection: vi.fn(),
     onSetLanguage: vi.fn(),
     onLanguageSelection: null,
+    onSetLinkDescription: vi.fn(),
     ...overrides,
   };
 }
@@ -312,14 +499,22 @@ function innerControl(
 function renderSection(
   inner: InnerTagsControl,
   language: TextLanguageControl | null = null,
+  untaggedLinks: UntaggedLinksControl | null = null,
 ) {
   render(
     <MantineProvider env="test">
       <TextAccessibilitySection
-        tag={{ kind: "tagged", block: structureRole("P"), cannotRetag: null }}
+        tag={{
+          kind: "tagged",
+          block: structureRole("P"),
+          cannotRetag: null,
+          canBeArtifact: true,
+        }}
         onSetTag={vi.fn()}
         inner={inner}
         language={language}
+        otherPages={null}
+        untaggedLinks={untaggedLinks}
       />
     </MantineProvider>,
   );

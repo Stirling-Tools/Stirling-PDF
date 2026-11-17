@@ -279,9 +279,14 @@ public class McpToolCatalog {
         }
         if (category == OperationCategory.CONVERT) {
             // Conversions are /convert/{from}/{to}: "pdf/word" becomes "pdf-to-word".
-            String[] parts = tail.split("/");
+            String[] parts = tail.split("/", -1);
             boolean editorInternal = tail.contains("text-editor");
-            return parts.length == 2 && !editorInternal ? parts[0] + "-to-" + parts[1] : null;
+            return parts.length == 2
+                            && !parts[0].isEmpty()
+                            && !parts[1].isEmpty()
+                            && !editorInternal
+                    ? parts[0] + "-to-" + parts[1]
+                    : null;
         }
         // Skip nested paths elsewhere.
         return tail.contains("/") ? null : tail;

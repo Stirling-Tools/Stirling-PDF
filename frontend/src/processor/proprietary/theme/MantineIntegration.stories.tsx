@@ -8,10 +8,10 @@ import {
 import { Button as SuiButton } from "@editor/ui";
 
 /**
- * Proof that Mantine components render with the SUI-bound theme — a Mantine
- * filled button uses --color-blue, so it sits next to a SUI button as one
- * system. This is the "escape hatch" pattern: reach for Mantine when a
- * component isn't worth rebuilding in SUI, and it still looks on-brand.
+ * Proof that raw Mantine components sit next to SUI ones as one system, in
+ * every palette the portal names. This is the "escape hatch" pattern: reach for
+ * Mantine when a component isn't worth rebuilding in SUI, and it still looks
+ * on-brand.
  */
 const meta: Meta = {
   title: "Portal/Theme/Mantine Integration",
@@ -35,7 +35,7 @@ export const SideBySide: Story = {
         <MantineButton color="purple">Mantine purple</MantineButton>
       </Group>
       <MantineButton variant="light" color="blue">
-        Light variant (uses --color-blue-light)
+        Light variant
       </MantineButton>
       <TextInput
         label="Mantine TextInput"
