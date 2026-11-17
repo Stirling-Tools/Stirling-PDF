@@ -122,7 +122,7 @@ async function savedIn(
 }
 
 async function saved(doc: EditorDocument) {
-  const { blob } = await exportToBlob(doc, "tags.pdf");
+  const blob = await exportToBlob(doc);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   return { bytes, structure: (await readFileStructure(bytes))! };
 }

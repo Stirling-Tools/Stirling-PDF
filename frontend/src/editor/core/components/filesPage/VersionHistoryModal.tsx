@@ -76,7 +76,7 @@ export function VersionHistoryModal({
         .map((id) => stubById(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
       if (stubs.length === 0) return;
-      void fileActions.addStirlingFileStubs(stubs);
+      void fileActions.addStirlingFileStubs(stubs, { selectFiles: true });
       navActions.setWorkbench("fileEditor");
       onClose();
     },

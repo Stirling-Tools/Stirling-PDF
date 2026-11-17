@@ -17,7 +17,7 @@ import "@editor/components/shared/config/configSections/preferences/PreferencesS
 export interface PreferencesSectionProps {
   /** SaaS: login is always on, so the "turn login on" banner never applies. */
   hideAdminBanner?: boolean;
-  /** SaaS build and managed-disabled desktop: no update UI, and no update call. */
+  /** SaaS build: no update UI, and no update call. */
   hideUpdateSection?: boolean;
   desktopInstall?: DesktopInstall;
   desktopUpdateMode?: DesktopUpdateModeControl;
