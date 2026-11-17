@@ -14,6 +14,10 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
 import { canResizeRun } from "@editor/tools/pdfTextEditor/commands/resizeRun";
+import {
+  growEdges,
+  type GrowEdge,
+} from "@editor/tools/pdfTextEditor/util/growEdge";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -153,6 +157,11 @@ export const PageView = memo(function PageView({
     }
     return out;
   }, [document, page]);
+  const runGrowEdges = useMemo(
+    () =>
+      widthMode === "grow" ? growEdges(page.runs) : new Map<string, GrowEdge>(),
+    [page.runs, widthMode],
+  );
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -559,6 +568,7 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             widthMode={widthMode}
+            growEdge={runGrowEdges.get(run.id) ?? null}
             pageRevision={paintedRevision}
             gripLayer={gripLayer}
             selected={selectedRunIds.includes(run.id)}

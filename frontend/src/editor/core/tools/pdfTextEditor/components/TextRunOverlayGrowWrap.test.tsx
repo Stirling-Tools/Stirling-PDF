@@ -12,6 +12,7 @@ import type {
   TextRunSnapshot,
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
+import type { GrowEdge } from "@editor/tools/pdfTextEditor/util/growEdge";
 
 const CHAR_PX = 6;
 const longest = (text: string) =>
@@ -99,10 +100,12 @@ function Harness({
   text,
   widthMode,
   onWrap,
+  growEdge,
 }: {
   text: string;
   widthMode: WidthMode;
   onWrap: OnWrap;
+  growEdge?: GrowEdge | null;
 }) {
   const [current, setCurrent] = useState(text);
   const edit = (next: string) => {
@@ -117,6 +120,7 @@ function Harness({
       transform={DisplayTransform.identity(PAGE_WIDTH, 792)}
       scale={1}
       widthMode={widthMode}
+      growEdge={growEdge}
       selected={false}
       onSelect={() => {}}
       onEdit={edit}
@@ -133,6 +137,7 @@ function renderRun(
   text: string,
   widthMode: WidthMode = "grow",
   wraps: "refuse" | "wrap" | "ignore" = "ignore",
+  growEdge: GrowEdge | null = null,
 ) {
   editedTexts = [];
   const onWrap = vi.fn((width: number, _keepClear?: boolean) => {
@@ -142,7 +147,12 @@ function renderRun(
   });
   render(
     <MantineProvider env="test">
-      <Harness text={text} widthMode={widthMode} onWrap={onWrap} />
+      <Harness
+        text={text}
+        widthMode={widthMode}
+        onWrap={onWrap}
+        growEdge={growEdge}
+      />
     </MantineProvider>,
   );
   const box = screen.getByTestId("pdf-editor-run-r1");
@@ -337,5 +347,52 @@ describe("Wrapping as the user types", () => {
     });
     expect(onWrap).toHaveBeenCalledOnce();
     expect(readOverlayText(box)).toBe(wrapText(LONG, PAGE_CAP));
+  });
+});
+
+describe("Grow mode beside other text", () => {
+  const COLUMN_EDGE = LEFT + 100;
+  const NEXT_COLUMN: GrowEdge = { side: "right", x: COLUMN_EDGE };
+
+  it("wraps text typed up to the next column at that column, not the page edge", () => {
+    const { box, onWrap } = renderRun(SHORT, "grow", "wrap", NEXT_COLUMN);
+    type(box, LONG);
+    expect(onWrap).toHaveBeenCalledOnce();
+    expect(onWrap.mock.calls[0][0]).toBeCloseTo(COLUMN_EDGE - LEFT, 3);
+    expect(onWrap.mock.calls[0][1]).toBe(true);
+    expect(readOverlayText(box)).toBe(wrapText(LONG, COLUMN_EDGE - LEFT));
+  });
+
+  it("stops the box short of the next column while the user types", () => {
+    const { box } = renderRun(SHORT, "grow", "ignore", NEXT_COLUMN);
+    type(box, LONG);
+    expect(parseFloat(box.style.width)).toBeLessThanOrEqual(COLUMN_EDGE - LEFT);
+  });
+
+  it("wraps on blur at the next column too", () => {
+    const { box, onWrap } = renderRun(SHORT, "grow", "ignore", NEXT_COLUMN);
+    type(box, LONG);
+    onWrap.mockClear();
+    fireEvent.blur(box);
+    expect(onWrap).toHaveBeenCalledOnce();
+    expect(onWrap.mock.calls[0][0]).toBeCloseTo(COLUMN_EDGE - LEFT, 3);
+  });
+
+  it("measures right-to-left text from its right end to the text on its left", () => {
+    const rtl = "שלום עולם";
+    const edge: GrowEdge = { side: "left", x: LEFT - 40 };
+    const { box, onWrap } = renderRun(rtl, "grow", "ignore", edge);
+    type(box, `${rtl} ${"מילה ".repeat(30)}`);
+    expect(onWrap).toHaveBeenCalledOnce();
+    expect(onWrap.mock.calls[0][0]).toBeCloseTo(longest(rtl) + 40, 3);
+  });
+
+  it("keeps the page edge when the next column is past it", () => {
+    const { box, onWrap } = renderRun(SHORT, "grow", "ignore", {
+      side: "right",
+      x: PAGE_WIDTH + 50,
+    });
+    type(box, LONG);
+    expect(onWrap.mock.calls[0][0]).toBeCloseTo(PAGE_CAP, 3);
   });
 });

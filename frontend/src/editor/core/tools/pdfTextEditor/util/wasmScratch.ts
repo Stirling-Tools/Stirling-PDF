@@ -98,6 +98,10 @@ export const SCRATCH = {
   glyphPoint: key(),
   liftClipPoint: key(),
   liftBounds: key(),
+  kernOriginX: key(),
+  kernOriginY: key(),
+  kernFontSize: key(),
+  kernGlyphWidth: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */
