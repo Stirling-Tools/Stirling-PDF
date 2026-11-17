@@ -35,6 +35,7 @@ import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelect
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
 import { SaveRiskModal } from "@editor/tools/pdfTextEditor/components/SaveRiskModal";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/DiscardChangesModal";
 import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
@@ -154,21 +155,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEffect(() => {
     if (sourceFileId) setActiveFileId(sourceFileId);
   }, [sourceFileId, setActiveFileId]);
-  useRegisterViewerPageTool(
-    useMemo(
-      () => ({
-        fileId: sourceFileId,
-        PageLayer: ViewerEditLayer,
-        Toolbar: ViewerEditToolbar,
-        // Small screens trade the viewer's page bar for the editing actions,
-        // once there is a document to act on.
-        BottomBar:
-          isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
-        onDiscard: discardEdits,
-      }),
-      [isMobile, state.hasDocument, sourceFileId, discardEdits],
-    ),
-  );
 
   // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
   // dropping the glyphs.
@@ -184,6 +170,16 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
   const ackedRiskRef = useRef<{ doc: object; sig: string } | null>(null);
+  // Re-evaluated on EVERY save: the ack only covers the exact risk set the
+  // user saw. A new risk appearing later must warn again.
+  const unackedRisks = useCallback((doc: EditorDocument) => {
+    const risks = detectSaveRisks(doc);
+    if (!hasSaveRisks(risks)) return null;
+    const acked = ackedRiskRef.current;
+    return acked?.doc === doc && acked.sig === JSON.stringify(risks)
+      ? null
+      : risks;
+  }, []);
 
   // Land the edit in the workbench the way every other tool does: replace the
   // file it came from, or add it if the document was opened from disk. Without
@@ -325,21 +321,62 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     async (download: boolean) => {
       const doc = store.document;
       if (!doc || savingRef.current || store.getState().loading) return;
-      // Re-evaluate on EVERY save: the ack only covers the exact risk set
-      // the user saw. A new risk appearing later must warn again.
-      const risks = detectSaveRisks(doc);
-      if (hasSaveRisks(risks)) {
-        const sig = JSON.stringify(risks);
-        const acked = ackedRiskRef.current;
-        if (!acked || acked.doc !== doc || acked.sig !== sig) {
-          pendingDownloadRef.current = download;
-          setSaveRisks(risks);
-          return;
-        }
+      const risks = unackedRisks(doc);
+      if (risks) {
+        pendingDownloadRef.current = download;
+        setSaveRisks(risks);
+        return;
       }
       await doSave(download);
     },
-    [store, doSave],
+    [store, doSave, unackedRisks],
+  );
+
+  // Answers a risk warning raised from the app's unsaved-changes prompt.
+  const riskAnswerRef = useRef<((save: boolean) => void) | null>(null);
+
+  const saveBeforeLeaving = useCallback(async () => {
+    const doc = store.document;
+    const risks = doc && unackedRisks(doc);
+    if (risks) {
+      const save = await new Promise<boolean>((resolve) => {
+        riskAnswerRef.current = resolve;
+        setSaveRisks(risks);
+      });
+      if (!save) throw new Error("Save cancelled at the risk warning");
+    }
+    await doSave(false);
+    // doSave reports its failures in the editor; the prompt must stay open.
+    if (store.getState().dirty) throw new Error("Edits not saved");
+  }, [store, doSave, unackedRisks]);
+
+  const handleCancelSaveRisk = useCallback(() => {
+    setSaveRisks(null);
+    riskAnswerRef.current?.(false);
+    riskAnswerRef.current = null;
+  }, []);
+
+  useRegisterViewerPageTool(
+    useMemo(
+      () => ({
+        fileId: sourceFileId,
+        PageLayer: ViewerEditLayer,
+        Toolbar: ViewerEditToolbar,
+        // Small screens trade the viewer's page bar for the editing actions,
+        // once there is a document to act on.
+        BottomBar:
+          isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
+        onDiscard: discardEdits,
+        onSave: saveBeforeLeaving,
+      }),
+      [
+        isMobile,
+        state.hasDocument,
+        sourceFileId,
+        discardEdits,
+        saveBeforeLeaving,
+      ],
+    ),
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -354,7 +391,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       };
     }
     setSaveRisks(null);
-    void doSave(pendingDownloadRef.current);
+    const answer = riskAnswerRef.current;
+    riskAnswerRef.current = null;
+    if (answer) answer(true);
+    else void doSave(pendingDownloadRef.current);
   }, [store, doSave]);
 
   const handleInsertImage = useCallback(
@@ -685,7 +725,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       <SaveRiskModal
         risks={saveRisks}
         onConfirm={handleConfirmSaveRisk}
-        onCancel={() => setSaveRisks(null)}
+        onCancel={handleCancelSaveRisk}
       />
       <PasswordPromptModal
         prompt={state.passwordPrompt}

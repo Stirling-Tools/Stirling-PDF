@@ -68,6 +68,9 @@ export function useViewerWorkbenchBarButtons(
     handleToolSelect,
     handleToolSelectForced,
     handleBackToTools,
+    clearToolSelection,
+    setLeftPanelView,
+    setReaderMode,
     toolRegistry,
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
@@ -129,6 +132,31 @@ export function useViewerWorkbenchBarButtons(
   const isFormFillActive = (selectedTool as string) === "formFill";
   const isTextEditActive = selectedTool === "pdfTextEditor";
   const pageToolActive = useViewerPageTool() != null;
+
+  // The text editor owns the pages while it is open, so a viewer tool that
+  // works on them closes it first, behind the unsaved-edits prompt. Leaving
+  // without a second guard: the prompt has already settled the edits.
+  const leaveTextEditThen = useCallback(
+    (action: () => void) => {
+      if (!isTextEditActive) {
+        action();
+        return;
+      }
+      requestNavigation(() => {
+        setLeftPanelView("toolPicker");
+        setReaderMode(false);
+        clearToolSelection();
+        action();
+      });
+    },
+    [
+      isTextEditActive,
+      requestNavigation,
+      setLeftPanelView,
+      setReaderMode,
+      clearToolSelection,
+    ],
+  );
 
   const handleStartScaleCalibration = useCallback(() => {
     startScaleCalibration?.();
@@ -205,7 +233,9 @@ export function useViewerWorkbenchBarButtons(
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
-                    onClick={viewer.searchInterfaceActions.toggle}
+                    onClick={() =>
+                      leaveTextEditThen(viewer.searchInterfaceActions.toggle)
+                    }
                   >
                     <Icon name="file-search" size="1.25rem" />
                   </ActionIcon>
@@ -239,10 +269,11 @@ export function useViewerWorkbenchBarButtons(
         active: isPanning,
         disabled:
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
-        onClick: () => {
-          viewer.panActions.togglePan();
-          if (!isPanning && isRulerActive) setIsRulerActive?.(false);
-        },
+        onClick: () =>
+          leaveTextEditThen(() => {
+            viewer.panActions.togglePan();
+            if (!isPanning && isRulerActive) setIsRulerActive?.(false);
+          }),
       },
       {
         id: "viewer-ruler",
@@ -252,13 +283,14 @@ export function useViewerWorkbenchBarButtons(
         section: "top" as const,
         order: 25,
         active: Boolean(isRulerActive),
-        onClick: () => {
-          const next = !isRulerActive;
-          setIsRulerActive?.(next);
-          if (next && isPanning) {
-            viewer.panActions.disablePan();
-          }
-        },
+        onClick: () =>
+          leaveTextEditThen(() => {
+            const next = !isRulerActive;
+            setIsRulerActive?.(next);
+            if (next && isPanning) {
+              viewer.panActions.disablePan();
+            }
+          }),
       },
       // Ruler scale settings button - only visible when ruler is active
       ...(isRulerActive
@@ -611,6 +643,7 @@ export function useViewerWorkbenchBarButtons(
     isTextEditActive,
     toolRegistry,
     pageToolActive,
+    leaveTextEditThen,
     rulerLabel,
     rulerSettingsLabel,
     isRulerActive,

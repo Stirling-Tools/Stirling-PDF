@@ -43,6 +43,11 @@ export interface ViewerPageTool {
    * unsaved-changes prompt, which then lets the navigation through.
    */
   onDiscard?: () => void;
+  /**
+   * Saves the tool's work when the user picks Save at the app's unsaved-changes
+   * prompt. Rejecting keeps the prompt open.
+   */
+  onSave?: () => Promise<void>;
 }
 
 interface ViewerPageToolSlot {

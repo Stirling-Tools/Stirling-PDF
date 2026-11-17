@@ -157,7 +157,7 @@ const EmbedPdfViewerContent = ({
     searchInterfaceActions,
     zoomActions,
     scrollActions,
-    panActions: _panActions,
+    panActions,
     rotationActions,
     getScrollState,
     getSpreadState,
@@ -1458,6 +1458,7 @@ const EmbedPdfViewerContent = ({
     if (pageTool) {
       const discard = pageTool.onDiscard;
       registerNavigationWarningHandlers({
+        onApplyAndContinue: pageTool.onSave,
         onDiscardAndContinue: async () => discard?.(),
       });
       return () => unregisterNavigationWarningHandlers();
@@ -1841,6 +1842,15 @@ const EmbedPdfViewerContent = ({
     effectiveFile,
     rulerOverlayRef,
   });
+
+  // A page tool takes the pages' pointer input and draws its own find, so the
+  // viewer's ruler, pan and search stand down while it is open.
+  useEffect(() => {
+    if (!pageToolActive) return;
+    setIsRulerActive(false);
+    panActions.disablePan();
+    searchInterfaceActions.close();
+  }, [pageToolActive, setIsRulerActive, panActions, searchInterfaceActions]);
 
   // Register workbench bar buttons for the viewer
   useViewerWorkbenchBarButtons(
