@@ -15,6 +15,7 @@ export interface Command {
   // Optional - when true, a matching `coalesceKey` merges this command into the
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
+  supersedes?(adjacent: Command): boolean;
 }
 
 export class RolledBackError extends Error {

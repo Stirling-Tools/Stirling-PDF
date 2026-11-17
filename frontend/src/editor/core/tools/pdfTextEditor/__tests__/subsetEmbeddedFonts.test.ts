@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { deflateSync } from "node:zlib";
 import { describe, expect, test } from "vitest";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { subsetEmbeddedFonts } from "@editor/tools/pdfTextEditor/pdfdoc/passes/subsetEmbeddedFonts";
@@ -62,6 +63,7 @@ interface PdfOptions {
   /** The page's /Font entry, in place of the inline `<< /F1 5 0 R >>`. */
   fonts?: string;
   info?: string;
+  descriptorEntries?: string;
   /** Body of an object 11 added after the others. */
   extra?: string;
 }
@@ -84,7 +86,7 @@ function pdfWithFont(font: Uint8Array, options: PdfOptions): Uint8Array {
       `<< /Type /Font /Subtype /${options.cidSubtype ?? "CIDFontType2"} /BaseFont /Carlito /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 7 0 R /CIDToGIDMap /Identity /W 10 0 R >>`,
     ),
     latin1(
-      "<< /Type /FontDescriptor /FontName /Carlito /Flags 4 /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 900 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 8 0 R >>",
+      `<< /Type /FontDescriptor /FontName /Carlito /Flags 4 /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 900 /Descent -200 /CapHeight 700 /StemV 80 /FontFile2 8 0 R${options.descriptorEntries ?? ""} >>`,
     ),
     (() => {
       const headPart = latin1(
@@ -171,6 +173,15 @@ describe("subsetTrueType", () => {
     expect(glyph(subset, base).length).toBeGreaterThan(0);
   });
 
+  test("keeps a font whole when its licence forbids subsetting", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const os2 = table(font, "OS/2")!;
+    const fsType = new DataView(os2.buffer, os2.byteOffset + 8, 2);
+    fsType.setUint16(0, fsType.getUint16(0) | 0x0100);
+
+    expect(subsetTrueType(font, gidsOf(font, "Hello"))).toBeNull();
+  });
+
   test("declines a file that is not a TrueType font", () => {
     expect(subsetTrueType(new Uint8Array([1, 2, 3, 4]), [1])).toBeNull();
   });
@@ -208,6 +219,21 @@ describe("subsetEmbeddedFonts", () => {
     for (const gid of used) expect(widths).toContain(`${gid} [${500 + gid}]`);
     expect(widths.length).toBeLessThan(200);
     expect(reread.objectBody(10)!.trim()).toBe("null");
+  });
+
+  test("keeps the space's width when words are drawn without one", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const [space] = gidsOf(font, " ");
+    const pdf = pdfWithFont(font, {
+      content: `BT /F1 12 Tf <${hex(gidsOf(font, "we"))}> Tj 20 0 Td <${hex(gidsOf(font, "want"))}> Tj ET`,
+    });
+
+    const out = await subsetEmbeddedFonts(pdf, [font]);
+
+    const reread = (await RawPdf.parse(out))!;
+    const widths = reread.valueSpan(reread.objectBody(6)!, "W")!.text;
+    expect(widths).toContain(`${space} [${500 + space}]`);
+    expect(parseTrueTypeCmap(await fontFileIn(out))!.get(0x20)).toBe(space);
   });
 
   test("counts only the text shown in the embedded font", async () => {
@@ -324,6 +350,38 @@ describe("subsetEmbeddedFonts", () => {
       );
     },
   );
+
+  test("drops the CIDSet that still lists the emptied glyphs", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const pdf = pdfWithFont(font, {
+      content: "BT /F1 12 Tf <0001> Tj ET",
+      descriptorEntries: " /CIDSet 11 0 R",
+      extra: "<< /Length 2 >>\nstream\n\u00ff\u00ff\nendstream",
+    });
+
+    const reread = (await RawPdf.parse(
+      await subsetEmbeddedFonts(pdf, [font]),
+    ))!;
+
+    const descriptor = reread.objectBody(7)!;
+    expect(reread.valueSpan(descriptor, "CIDSet")).toBeNull();
+    expect(reread.dictName(descriptor, "FontName")).toMatch(
+      /^[A-Z]{6}\+Carlito$/,
+    );
+  });
+
+  test("still subsets when an object stream's predictor rows are too wide to allocate", async () => {
+    const font = new Uint8Array(await readFile(FONT));
+    const packed = String.fromCharCode(...deflateSync(Buffer.from("1 0 ")));
+    const pdf = pdfWithFont(font, {
+      content: "BT /F1 12 Tf <0001> Tj ET",
+      extra: `<< /Type /ObjStm /N 1 /First 4 /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns 99999999999999999 >> /Length ${packed.length} >>\nstream\n${packed}\nendstream`,
+    });
+
+    expect((await subsetEmbeddedFonts(pdf, [font])).length).toBeLessThan(
+      pdf.length / 5,
+    );
+  });
 
   test("leaves the file alone when a page holds an inline image", async () => {
     const font = new Uint8Array(await readFile(FONT));
