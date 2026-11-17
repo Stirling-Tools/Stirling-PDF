@@ -1661,6 +1661,10 @@ verbose = "STANDARD events plus: continuous polling calls, all GET requests, det
 description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
 
+[admin.settings.security.blockSignedPdfEdits]
+description = "Signed PDFs can still be viewed, printed, converted or signed again, but not changed in the app. API calls and server pipelines are not affected."
+label = "Block changes to signed PDFs"
+
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
 label = "Disable CSRF Protection"
@@ -3975,6 +3979,10 @@ message = "One or Both of the provided documents are too large to process"
 body = "These PDFs together exceed 2,000 pages. Processing can take several minutes."
 title = "Large comparison in progress"
 
+[compare.mode]
+pixel = "Pixel Comparison"
+text = "Text Comparison"
+
 [compare.no.text]
 message = "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
 
@@ -5084,6 +5092,17 @@ searchFiles = "Search files"
 uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
+
+[fileSidebar.clearRecents]
+body_one = "Clear 1 file from recents? This can't be undone."
+body_other = "Clear {{count}} files from recents? This can't be undone."
+button = "Clear recents"
+confirm = "Clear recents"
+error = "Could not clear. Try again."
+openNote_one = "1 of them is open in the workbench."
+openNote_other = "{{count}} of them are open in the workbench."
+skipOpen = "Skip open files"
+title = "Clear recents?"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
@@ -13577,6 +13596,11 @@ bullet2 = "<b>Invisible</b>: Certificate embedded without visual mark"
 bullet3 = "Invisible signatures still provide cryptographic validation"
 description = "Controls whether the signature is visible on the document or embedded invisibly."
 title = "Signature Visibility"
+
+[signedPdf]
+editsBlocked = "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view or print it, convert it to another format, or sign it again."
+editsBlockedStatus = "Signed: edits blocked"
+editsBlockedTitle = "Signed PDF can't be changed"
 
 [signingDetail]
 allSigned = "Everyone has signed. Review the document, then finalize."
