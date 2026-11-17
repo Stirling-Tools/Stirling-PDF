@@ -20,6 +20,13 @@ export const useAdjustPageScaleTips = (): TooltipContent => {
         ),
       },
       {
+        title: t("adjustPageScale.tooltip.pageSize.title", "Target Page Size"),
+        description: t(
+          "adjustPageScale.tooltip.pageSize.text",
+          "Sets the dimensions of the output PDF pages. For a standard size, pages are scaled proportionally and centred, so mixed-size scans are fitted without stretching. 'Keep Original Size' maintains current dimensions.",
+        ),
+      },
+      {
         title: t("adjustPageScale.tooltip.scaleFactor.title", "Scale Factor"),
         description: t(
           "adjustPageScale.tooltip.scaleFactor.text",
@@ -39,13 +46,6 @@ export const useAdjustPageScaleTips = (): TooltipContent => {
             "2.0 = Double size (200% larger, may crop)",
           ),
         ],
-      },
-      {
-        title: t("adjustPageScale.tooltip.pageSize.title", "Target Page Size"),
-        description: t(
-          "adjustPageScale.tooltip.pageSize.text",
-          "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, while other options resize to standard paper sizes.",
-        ),
       },
     ],
   };

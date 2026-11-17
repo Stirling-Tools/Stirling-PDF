@@ -11,8 +11,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -387,6 +389,257 @@ class ScalePagesControllerTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void normalizesMixedSizePagesToA5WithoutClipping() throws Exception {
+        setupFactory();
+        try (PDDocument out =
+                org.apache.pdfbox.Loader.loadPDF(
+                        scalePdf(createCornerMarkedPdf(), "A5", "PORTRAIT", 1f))) {
+            assertEquals(6, out.getNumberOfPages());
+            float[] displayAspects = {
+                595f / 842f, 400f / 800f, 500f / 350f, 400f / 300f, 400f / 300f, 300f / 400f
+            };
+            PDFRenderer renderer = new PDFRenderer(out);
+            for (int page = 0; page < out.getNumberOfPages(); page++) {
+                PDRectangle box = out.getPage(page).getMediaBox();
+                assertEquals(PDRectangle.A5.getWidth(), box.getWidth(), 0.01f);
+                assertEquals(PDRectangle.A5.getHeight(), box.getHeight(), 0.01f);
+                BufferedImage image = renderer.renderImage(page, 2f);
+                assertCornerMarkersVisible(image, page);
+                assertContentAspect(image, displayAspects[page], page);
+            }
+        }
+    }
+
+    @Test
+    void fitsEveryNamedSizeInBothOrientationsWithoutClipping() throws Exception {
+        setupFactory();
+        byte[] input = createCornerMarkedPdf();
+        for (String size : List.of("A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL")) {
+            for (String orientation : List.of("PORTRAIT", "LANDSCAPE")) {
+                PDRectangle expected = namedSize(size);
+                if ("LANDSCAPE".equals(orientation)) {
+                    expected = new PDRectangle(expected.getHeight(), expected.getWidth());
+                }
+                String label = size + "/" + orientation;
+                try (PDDocument out =
+                        org.apache.pdfbox.Loader.loadPDF(scalePdf(input, size, orientation, 1f))) {
+                    assertEquals(6, out.getNumberOfPages(), label);
+                    PDFRenderer renderer = new PDFRenderer(out);
+                    float[] displayAspects = {
+                        595f / 842f, 400f / 800f, 500f / 350f, 400f / 300f, 400f / 300f, 300f / 400f
+                    };
+                    for (int page = 0; page < out.getNumberOfPages(); page++) {
+                        PDRectangle box = out.getPage(page).getMediaBox();
+                        assertEquals(expected.getWidth(), box.getWidth(), 0.01f, label);
+                        assertEquals(expected.getHeight(), box.getHeight(), 0.01f, label);
+                        assertEquals(0, out.getPage(page).getRotation(), label);
+                        BufferedImage image = renderer.renderImage(page, 1.5f);
+                        assertCornerMarkersVisible(image, label + " page " + page);
+                        assertContentAspect(image, displayAspects[page], label + " page " + page);
+                    }
+                }
+            }
+        }
+    }
+
+    private PDRectangle namedSize(String size) {
+        return switch (size) {
+            case "A0" -> PDRectangle.A0;
+            case "A1" -> PDRectangle.A1;
+            case "A2" -> PDRectangle.A2;
+            case "A3" -> PDRectangle.A3;
+            case "A4" -> PDRectangle.A4;
+            case "A5" -> PDRectangle.A5;
+            case "A6" -> PDRectangle.A6;
+            case "LETTER" -> PDRectangle.LETTER;
+            case "LEGAL" -> PDRectangle.LEGAL;
+            default -> throw new IllegalArgumentException("unknown size " + size);
+        };
+    }
+
+    @Test
+    void normalizesBundledMixedScanFixtureToA5() throws Exception {
+        setupFactory();
+        byte[] pdf;
+        try (InputStream input =
+                getClass().getResourceAsStream("/scale-pages/mixed-size-book-scan.pdf")) {
+            assertNotNull(input, "mixed-size scan fixture is missing");
+            pdf = input.readAllBytes();
+        }
+
+        try (PDDocument out =
+                org.apache.pdfbox.Loader.loadPDF(scalePdf(pdf, "A5", "PORTRAIT", 1f))) {
+            assertEquals(7, out.getNumberOfPages());
+            PDFRenderer renderer = new PDFRenderer(out);
+            for (int page = 0; page < out.getNumberOfPages(); page++) {
+                PDRectangle box = out.getPage(page).getMediaBox();
+                assertEquals(PDRectangle.A5.getWidth(), box.getWidth(), 0.01f);
+                assertEquals(PDRectangle.A5.getHeight(), box.getHeight(), 0.01f);
+                assertTrue(
+                        hasContent(renderer.renderImage(page, 1f)),
+                        "page " + page + " rendered blank");
+            }
+        }
+    }
+
+    @Test
+    void keepPreservesBundledScanPageSizes() throws Exception {
+        setupFactory();
+        byte[] pdf;
+        try (InputStream input =
+                getClass().getResourceAsStream("/scale-pages/mixed-size-book-scan.pdf")) {
+            assertNotNull(input);
+            pdf = input.readAllBytes();
+        }
+
+        try (PDDocument source = org.apache.pdfbox.Loader.loadPDF(pdf);
+                PDDocument out =
+                        org.apache.pdfbox.Loader.loadPDF(scalePdf(pdf, "KEEP", "PORTRAIT", 1f))) {
+            assertEquals(source.getNumberOfPages(), out.getNumberOfPages());
+            for (int page = 0; page < source.getNumberOfPages(); page++) {
+                PDRectangle original = source.getPage(page).getMediaBox();
+                PDRectangle kept = out.getPage(page).getMediaBox();
+                assertEquals(original.getWidth(), kept.getWidth(), 0.01f, "page " + page);
+                assertEquals(original.getHeight(), kept.getHeight(), 0.01f, "page " + page);
+            }
+        }
+    }
+
+    private boolean hasContent(BufferedImage image) {
+        for (int y = 0; y < image.getHeight(); y += 4) {
+            for (int x = 0; x < image.getWidth(); x += 4) {
+                if (image.getRGB(x, y) != Color.WHITE.getRGB()) return true;
+            }
+        }
+        return false;
+    }
+
+    @Test
+    void fitsToCropBoxAndIgnoresContentOutsideIt() throws Exception {
+        setupFactory();
+        byte[] pdf;
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage(new PDRectangle(500, 700));
+            page.setCropBox(new PDRectangle(50, 50, 300, 500));
+            document.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.setNonStrokingColor(Color.GREEN);
+                for (float[] corner :
+                        new float[][] {
+                            {50, 50}, {350 - 24, 50}, {50, 550 - 24}, {350 - 24, 550 - 24}
+                        }) {
+                    content.addRect(corner[0], corner[1], 24, 24);
+                    content.fill();
+                }
+                content.setNonStrokingColor(Color.RED);
+                content.addRect(0, 0, 24, 24);
+                content.fill();
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.save(output);
+            pdf = output.toByteArray();
+        }
+
+        try (PDDocument out =
+                org.apache.pdfbox.Loader.loadPDF(scalePdf(pdf, "A5", "PORTRAIT", 1f))) {
+            BufferedImage image = new PDFRenderer(out).renderImage(0, 2f);
+            assertCornerMarkersVisible(image, 0);
+            assertContentAspect(image, 300f / 500f, 0);
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    assertFalse(
+                            isRed(image.getRGB(x, y)),
+                            "content outside the crop box should not render");
+                }
+            }
+        }
+    }
+
+    private byte[] createCornerMarkedPdf() throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            addCornerMarkedPage(document, new PDRectangle(595, 842), 0);
+            addCornerMarkedPage(document, new PDRectangle(400, 800), 0);
+            addCornerMarkedPage(document, new PDRectangle(500, 350), 0);
+            addCornerMarkedPage(document, new PDRectangle(300, 400), 90);
+            addCornerMarkedPage(document, new PDRectangle(300, 400), 270);
+            addCornerMarkedPage(document, new PDRectangle(300, 400), 180);
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.save(output);
+            return output.toByteArray();
+        }
+    }
+
+    private void addCornerMarkedPage(PDDocument document, PDRectangle size, int rotation)
+            throws IOException {
+        PDPage page = new PDPage(size);
+        page.setRotation(rotation);
+        document.addPage(page);
+        float marker = 24;
+        try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+            content.setNonStrokingColor(Color.GREEN);
+            for (float[] corner :
+                    new float[][] {
+                        {0, 0},
+                        {size.getWidth() - marker, 0},
+                        {0, size.getHeight() - marker},
+                        {size.getWidth() - marker, size.getHeight() - marker}
+                    }) {
+                content.addRect(corner[0], corner[1], marker, marker);
+                content.fill();
+            }
+        }
+    }
+
+    private void assertCornerMarkersVisible(BufferedImage image, int page) {
+        assertCornerMarkersVisible(image, "page " + page);
+    }
+
+    private void assertCornerMarkersVisible(BufferedImage image, String label) {
+        boolean[] quadrants = new boolean[4];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                if (!isGreen(image.getRGB(x, y))) continue;
+                quadrants[
+                                (y < image.getHeight() / 2 ? 0 : 2)
+                                        + (x < image.getWidth() / 2 ? 0 : 1)] =
+                        true;
+            }
+        }
+        assertArrayEquals(new boolean[] {true, true, true, true}, quadrants, label + " is clipped");
+    }
+
+    private void assertContentAspect(BufferedImage image, float expectedAspect, int page) {
+        assertContentAspect(image, expectedAspect, "page " + page);
+    }
+
+    private void assertContentAspect(BufferedImage image, float expectedAspect, String label) {
+        int minX = image.getWidth();
+        int maxX = -1;
+        int minY = image.getHeight();
+        int maxY = -1;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                if (!isGreen(image.getRGB(x, y))) continue;
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+        assertTrue(maxX >= 0, label + " has no content");
+        float actualAspect = (maxX - minX + 1f) / (maxY - minY + 1f);
+        assertEquals(expectedAspect, actualAspect, 0.02f, label + " is stretched");
+    }
+
+    private boolean isGreen(int rgb) {
+        return ((rgb >> 16) & 0xff) < 80 && ((rgb >> 8) & 0xff) > 160 && (rgb & 0xff) < 80;
+    }
+
+    private boolean isRed(int rgb) {
+        return ((rgb >> 16) & 0xff) > 160 && ((rgb >> 8) & 0xff) < 80 && (rgb & 0xff) < 80;
     }
 
     @ParameterizedTest
