@@ -731,8 +731,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
   const emitWord = (text: string, x: number): number => {
-    // base-14 can only render WinAnsi; drop the rest so PDFium never emits
-    // U+00FF tofu.
+    // base-14 can only render WinAnsi; drop the rest, not U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number => {
       const ptr = m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
