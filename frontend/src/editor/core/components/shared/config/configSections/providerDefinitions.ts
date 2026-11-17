@@ -952,7 +952,7 @@ const useMicrosoftProvider = (): Provider => {
       ),
       t(
         "provider.microsoft.setupSteps.permissions",
-        "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All.",
+        "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All, and the SharePoint delegated permissions MyFiles.Read and AllSites.Read so work and school accounts can open the file picker.",
       ),
       t(
         "provider.microsoft.setupSteps.secret",

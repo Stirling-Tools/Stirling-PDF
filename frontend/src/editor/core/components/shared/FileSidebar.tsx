@@ -969,24 +969,53 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
 
+    const reportUploadFailure = useCallback(
+      (err: unknown) =>
+        alert({
+          alertType: "error",
+          title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
+          body:
+            err instanceof Error
+              ? err.message
+              : t(
+                  "fileSidebar.uploadFailedBody",
+                  "Could not add the selected files.",
+                ),
+          isPersistentPopup: false,
+        }),
+      [t],
+    );
+
     const handleCloudPick = useCallback(
       async (picker: CloudFilePicker) => {
         const files = await picker.openPicker({ multiple: true });
         if (files.length === 0) return;
-        await trackIngest(async () => {
-          if (onPickCloudFiles) {
-            await onPickCloudFiles(files);
-            return;
-          }
-          await addFiles(files);
-          if (!staysOnAdd) {
-            navActions.setWorkbench(
-              files.length === 1 ? "viewer" : "fileEditor",
-            );
-          }
-        });
+        try {
+          await trackIngest(async () => {
+            if (onPickCloudFiles) {
+              await onPickCloudFiles(files);
+              return;
+            }
+            await addFiles(files);
+            if (!staysOnAdd) {
+              navActions.setWorkbench(
+                files.length === 1 ? "viewer" : "fileEditor",
+              );
+            }
+          });
+        } catch (err) {
+          console.error("[FileSidebar] Cloud file ingest failed", err);
+          reportUploadFailure(err);
+        }
       },
-      [trackIngest, addFiles, navActions, staysOnAdd, onPickCloudFiles],
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onPickCloudFiles,
+        reportUploadFailure,
+      ],
     );
 
     const failedPicker = cloudPickers.find((picker) => picker.error);
@@ -1181,20 +1210,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         .then(ingestFiles)
         .catch((err) => {
           console.error("[FileSidebar] Native file pick failed", err);
-          alert({
-            alertType: "error",
-            title: t("fileSidebar.uploadFailedTitle", "Upload failed"),
-            body:
-              err instanceof Error
-                ? err.message
-                : t(
-                    "fileSidebar.uploadFailedBody",
-                    "Could not add the selected files.",
-                  ),
-            isPersistentPopup: false,
-          });
+          reportUploadFailure(err);
         });
-    }, [ingestFiles, t]);
+    }, [ingestFiles, reportUploadFailure]);
 
     useEffect(() => {
       if (!onRegisterOpenFromComputer) return;

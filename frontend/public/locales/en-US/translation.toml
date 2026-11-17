@@ -11833,7 +11833,7 @@ label = "Redirect URI"
 
 [provider.microsoft.setupSteps]
 connect = "Save, restart, then connect an account under Connected accounts."
-permissions = "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All."
+permissions = "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All, and the SharePoint delegated permissions MyFiles.Read and AllSites.Read so work and school accounts can open the file picker."
 redirects = "Add the two redirect URIs below to it: one as Web, one as Single-page application."
 register = "Register an app in the Microsoft Entra admin center. Allow personal Microsoft accounts if people use personal OneDrive."
 secret = "Create a client secret, then paste its value and the app's client ID below."
