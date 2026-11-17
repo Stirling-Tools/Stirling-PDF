@@ -482,6 +482,7 @@ class ConvertOfficeControllerTest {
                     .thenAnswer(inv -> inv.getArgument(0));
 
             List<Path> workDirs = new ArrayList<>();
+            List<Path> profileDirs = new ArrayList<>();
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 mockExecutor(pe, 1);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
@@ -493,6 +494,17 @@ class ConvertOfficeControllerTest {
                                     Path workDir = Path.of(command.getLast()).getParent();
                                     workDirs.add(workDir);
                                     Files.write(workDir.resolve("partial.tmp"), new byte[] {1});
+                                    String profileArg = "-env:UserInstallation=";
+                                    command.stream()
+                                            .filter(arg -> arg.startsWith(profileArg))
+                                            .map(
+                                                    arg ->
+                                                            Path.of(
+                                                                    java.net.URI.create(
+                                                                            arg.substring(
+                                                                                    profileArg
+                                                                                            .length()))))
+                                            .forEach(profileDirs::add);
                                     throw new IOException("soffice exited with code 1");
                                 });
 
@@ -503,6 +515,9 @@ class ConvertOfficeControllerTest {
             assertThat(workDirs).hasSize(1);
             Mockito.verify(tempFileManager).deleteTempDirectory(workDirs.getFirst());
             assertThat(workDirs.getFirst()).doesNotExist();
+            assertThat(profileDirs).hasSize(1);
+            Mockito.verify(tempFileManager).deleteTempDirectory(profileDirs.getFirst());
+            assertThat(profileDirs.getFirst()).doesNotExist();
         }
 
         @Test

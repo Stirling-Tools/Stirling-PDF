@@ -7,11 +7,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -919,5 +921,84 @@ class PDFToFileTest {
                     IOException.class,
                     () -> pdfToFile.processPdfToOfficeFormat(pdfFile, "odp", "draw_pdf_import"));
         }
+    }
+
+    @Test
+    void processPdfToOfficeFormat_unoconvertOutputIgnoresLongUploadName() throws Exception {
+        when(mockRuntimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
+        String longBaseName = "a".repeat(250);
+        List<String> captured = new ArrayList<>();
+        try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
+                mockStatic(ProcessExecutor.class)) {
+            mockedStaticProcessExecutor
+                    .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
+                    .thenReturn(mockProcessExecutor);
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList()))
+                    .thenAnswer(
+                            invocation -> {
+                                List<String> args = invocation.getArgument(0);
+                                captured.addAll(args);
+                                Files.write(Path.of(args.getLast()), new byte[] {1});
+                                return mockExecutorResult;
+                            });
+            MultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "file",
+                            longBaseName + ".pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
+
+            ResponseEntity<Resource> response =
+                    pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertTrue(
+                    response.getHeaders()
+                            .getContentDisposition()
+                            .toString()
+                            .contains(longBaseName + ".docx"));
+        }
+        assertEquals("document.docx", Path.of(captured.getLast()).getFileName().toString());
+        assertTrue(captured.stream().noneMatch(arg -> arg.contains(longBaseName)));
+    }
+
+    @Test
+    void processPdfToOfficeFormat_failedSofficeRemovesManagedProfileDir() throws Exception {
+        List<Path> profileDirs = new ArrayList<>();
+        try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
+                mockStatic(ProcessExecutor.class)) {
+            mockedStaticProcessExecutor
+                    .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
+                    .thenReturn(mockProcessExecutor);
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList()))
+                    .thenAnswer(
+                            invocation -> {
+                                List<String> args = invocation.getArgument(0);
+                                String prefix = "-env:UserInstallation=";
+                                args.stream()
+                                        .filter(arg -> arg.startsWith(prefix))
+                                        .map(
+                                                arg ->
+                                                        Path.of(
+                                                                URI.create(
+                                                                        arg.substring(
+                                                                                prefix.length()))))
+                                        .forEach(profileDirs::add);
+                                throw new IOException("soffice exited with code 1");
+                            });
+            MultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "file",
+                            "document.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "Fake PDF content".getBytes());
+
+            assertThrows(
+                    IOException.class,
+                    () -> pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import"));
+        }
+        assertEquals(1, profileDirs.size());
+        verify(mockTempFileManager).deleteTempDirectory(profileDirs.getFirst());
+        Files.deleteIfExists(profileDirs.getFirst());
     }
 }

@@ -41,6 +41,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,22 @@ class ConvertPDFToPDFAGapTest {
     @Mock private VeraPDFService veraPDFService;
     @Mock private PdfaLevelAServiceInterface pdfaLevelAService;
     @Mock private TempFileManager tempFileManager;
+
+    @BeforeEach
+    void stubManagedTempDirectories() throws IOException {
+        lenient()
+                .when(tempFileManager.createTempDirectory())
+                .thenAnswer(inv -> Files.createTempDirectory(tempDir, "managed-"));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            org.apache.commons.io.FileUtils.deleteDirectory(
+                                    inv.<Path>getArgument(0).toFile());
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
+    }
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(

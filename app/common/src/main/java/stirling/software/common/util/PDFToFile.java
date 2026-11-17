@@ -36,10 +36,10 @@ public class PDFToFile {
     private static final Pattern PATTERN =
             Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
 
-    // pdftohtml names its output files after this and writes it into the generated HTML, so the
-    // upload's name is never used: it could be read as an option, exceed the filename length
-    // limit, or inject markup.
-    private static final String PDFTOHTML_OUTPUT_NAME = "document";
+    // The converters name their output files after this and pdftohtml writes it into the generated
+    // HTML, so the upload's name is never used: it could be read as an option, exceed the filename
+    // length limit, or inject markup.
+    private static final String CONVERTER_OUTPUT_NAME = "document";
 
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
@@ -105,7 +105,7 @@ public class PDFToFile {
                                         "-noframes",
                                         "-c",
                                         tempInputFile.getAbsolutePath(),
-                                        PDFTOHTML_OUTPUT_NAME));
+                                        CONVERTER_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -205,7 +205,7 @@ public class PDFToFile {
                                         "pdftohtml",
                                         "-c",
                                         tempInputFile.toAbsolutePath().toString(),
-                                        PDFTOHTML_OUTPUT_NAME));
+                                        CONVERTER_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -270,7 +270,9 @@ public class PDFToFile {
                 Path tempOutputDir = outputDirTemp.getPath();
                 Path unoOutputFile =
                         tempOutputDir.resolve(
-                                pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
+                                CONVERTER_OUTPUT_NAME
+                                        + "."
+                                        + resolvePrimaryExtension(outputFormat));
 
                 // Save the uploaded file to a temporary location
                 inputFile.transferTo(tempInputFile);
@@ -300,7 +302,7 @@ public class PDFToFile {
 
                 if (returnCode == null) {
                     // Run the LibreOffice command as a fallback
-                    libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+                    libreOfficeProfile = tempFileManager.createTempDirectory();
                     List<String> command = new ArrayList<>();
                     command.add(runtimePathConfig.getSOfficePath());
                     command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
@@ -354,7 +356,7 @@ public class PDFToFile {
             throw e;
         } finally {
             if (libreOfficeProfile != null) {
-                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
+                tempFileManager.deleteTempDirectory(libreOfficeProfile);
             }
         }
         return WebResponseUtils.fileToWebResponse(

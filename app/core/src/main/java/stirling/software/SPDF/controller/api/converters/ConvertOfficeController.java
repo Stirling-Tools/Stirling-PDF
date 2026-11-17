@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
@@ -183,7 +182,7 @@ public class ConvertOfficeController {
 
             // Fallback to soffice if unoconvert was unavailable or failed
             if (result == null) {
-                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+                libreOfficeProfile = tempFileManager.createTempDirectory();
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getSOfficePath());
                 command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
@@ -250,7 +249,7 @@ public class ConvertOfficeController {
                 log.warn("Failed to delete temp input file: {}", inputPath, e);
             }
             if (libreOfficeProfile != null) {
-                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
+                tempFileManager.deleteTempDirectory(libreOfficeProfile);
             }
         }
     }

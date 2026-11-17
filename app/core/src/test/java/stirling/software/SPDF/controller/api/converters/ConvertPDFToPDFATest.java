@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -556,37 +555,6 @@ class ConvertPDFToPDFATest {
             String glyphSet = invokePrivateMethod("buildStandardType1GlyphSet");
 
             assertThat(glyphSet).isNotBlank().contains("space", "A", "a", "zero", "period");
-        }
-
-        @Test
-        @DisplayName("Should delete directory recursively")
-        void shouldDeleteDirectoryRecursively() throws Exception {
-            Path testDir = tempDir.resolve("test_delete");
-            Files.createDirectories(testDir);
-            Path subDir = testDir.resolve("subdir");
-            Files.createDirectories(subDir);
-            Files.createFile(testDir.resolve("file1.txt"));
-            Files.createFile(subDir.resolve("file2.txt"));
-
-            assertThat(Files.exists(testDir)).isTrue();
-
-            invokePrivateMethod("deleteQuietly", testDir);
-
-            assertThat(Files.exists(testDir)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should handle null path in deleteQuietly")
-        void shouldHandleNullPathInDeleteQuietly() {
-            assertDoesNotThrow(() -> invokePrivateMethod("deleteQuietly", (Path) null));
-        }
-
-        @Test
-        @DisplayName("Should handle non-existent path in deleteQuietly")
-        void shouldHandleNonExistentPathInDeleteQuietly() {
-            Path nonExistent = tempDir.resolve("non_existent_dir");
-
-            assertDoesNotThrow(() -> invokePrivateMethod("deleteQuietly", nonExistent));
         }
     }
 

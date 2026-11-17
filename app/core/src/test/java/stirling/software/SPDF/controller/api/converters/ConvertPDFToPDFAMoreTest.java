@@ -24,6 +24,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.service.VeraPDFService;
@@ -69,6 +71,22 @@ class ConvertPDFToPDFAMoreTest {
     @Mock private VeraPDFService veraPDFService;
     @Mock private PdfaLevelAServiceInterface pdfaLevelAService;
     @Mock private TempFileManager tempFileManager;
+
+    @BeforeEach
+    void stubManagedTempDirectories() throws IOException {
+        lenient()
+                .when(tempFileManager.createTempDirectory())
+                .thenAnswer(inv -> Files.createTempDirectory(tempDir, "managed-"));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            org.apache.commons.io.FileUtils.deleteDirectory(
+                                    inv.<Path>getArgument(0).toFile());
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
+    }
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(
@@ -606,7 +624,8 @@ class ConvertPDFToPDFAMoreTest {
         Path input = tempDir.resolve("in.pdf");
         Files.write(input, simplePdfBytes());
         Path managedOutputDir = Files.createDirectory(tempDir.resolve("lo-out"));
-        when(tempFileManager.createTempDirectory()).thenReturn(managedOutputDir);
+        Path managedProfileDir = Files.createDirectory(tempDir.resolve("lo-profile"));
+        when(tempFileManager.createTempDirectory()).thenReturn(managedOutputDir, managedProfileDir);
         List<Path> outputDirs = new java.util.ArrayList<>();
 
         try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
@@ -633,5 +652,28 @@ class ConvertPDFToPDFAMoreTest {
 
         assertThat(outputDirs).containsExactly(managedOutputDir);
         Mockito.verify(tempFileManager).deleteTempDirectory(managedOutputDir);
+        Mockito.verify(tempFileManager).deleteTempDirectory(managedProfileDir);
+        assertThat(managedOutputDir).doesNotExist();
+        assertThat(managedProfileDir).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("upload that fails to save removes the managed PDF/A working directory")
+    void failedUploadSaveRemovesWorkingDir() throws Exception {
+        MultipartFile upload = mock(MultipartFile.class);
+        when(upload.getOriginalFilename()).thenReturn("in.pdf");
+        when(upload.getContentType()).thenReturn("application/pdf");
+        Mockito.doThrow(new IOException("disk full")).when(upload).transferTo(any(Path.class));
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setFileInput(upload);
+        request.setOutputFormat("pdfa-2b");
+
+        assertThatThrownBy(() -> newController().pdfToPdfA(request)).isInstanceOf(Exception.class);
+
+        Mockito.verify(tempFileManager).createTempDirectory();
+        Mockito.verify(tempFileManager).deleteTempDirectory(any(Path.class));
+        try (var leftovers = Files.newDirectoryStream(tempDir, "managed-*")) {
+            assertThat(leftovers).isEmpty();
+        }
     }
 }
