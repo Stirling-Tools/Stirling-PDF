@@ -5,7 +5,10 @@ import {
   documentPrivacyError,
 } from "@editor/services/documentPrivacyService";
 import { authService } from "@editor/services/authService";
-import { connectionModeService } from "@editor/services/connectionModeService";
+import {
+  connectionModeService,
+  type ConnectionMode,
+} from "@editor/services/connectionModeService";
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
@@ -16,6 +19,11 @@ import {
 } from "@editor/constants/convertConstants";
 
 export type ExecutionTarget = "local" | "remote";
+
+/** Where a standalone tool runs in `mode`, before any per-endpoint capability fallback. */
+export function executionTargetFor(mode: ConnectionMode): ExecutionTarget {
+  return mode === "saas" || mode === "local" ? "local" : "remote";
+}
 
 export class OperationRouter {
   private static instance: OperationRouter;
@@ -60,13 +68,7 @@ export class OperationRouter {
   /** Standalone tools route by connection mode. Automation endpoints never reach here —
    *  getBaseUrl resolves those via getConnectedServerBaseUrl before this is consulted. */
   async getExecutionTarget(): Promise<ExecutionTarget> {
-    const mode = await connectionModeService.getCurrentMode();
-
-    if (mode === "saas" || mode === "local") {
-      return "local";
-    }
-
-    return "remote";
+    return executionTargetFor(await connectionModeService.getCurrentMode());
   }
 
   /**

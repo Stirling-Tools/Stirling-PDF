@@ -199,13 +199,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
             (cfg.lock_connection_mode && cfg.server_config?.url)
           ) {
             // Preserve the managed connection; DesktopAccessGate controls access to local tools.
-            await tauriBackendService.startBackend().catch(console.error);
+            void tauriBackendService.startBackend().catch(console.error);
             setConnectionMode(cfg.mode);
           } else {
             // Normal first launch — auto-enter local mode.
             // The onboarding carousel + sign-in slide will be shown inside the main app.
             await connectionModeService.switchToLocal();
-            await tauriBackendService.startBackend();
+            void tauriBackendService.startBackend().catch(console.error);
             setConnectionMode("local");
           }
         })
