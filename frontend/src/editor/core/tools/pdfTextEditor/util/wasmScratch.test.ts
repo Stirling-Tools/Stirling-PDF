@@ -50,7 +50,7 @@ describe("scratchPtr", () => {
 
   it("never allocates less than four bytes", () => {
     const { m, malloc } = fakeModule();
-    scratchPtr(m, SCRATCH.colourR, 1);
+    scratchPtr(m, SCRATCH.colourRGBA, 1);
     expect(malloc).toHaveBeenCalledWith(4);
   });
 
@@ -75,7 +75,7 @@ describe("scratchPtr", () => {
   it("releases every slot and re-allocates on next use", () => {
     const { m, malloc, free } = fakeModule();
     const rect = scratchPtr(m, SCRATCH.readerCharRect, 16);
-    const colour = scratchPtr(m, SCRATCH.colourR, 16);
+    const colour = scratchPtr(m, SCRATCH.colourRGBA, 16);
     releaseScratch(m);
     expect(free).toHaveBeenCalledWith(rect);
     expect(free).toHaveBeenCalledWith(colour);
@@ -107,5 +107,27 @@ describe("scratchPtr", () => {
     expect(scratchPtr(m, SCRATCH.readerCharRect, 16)).toBe(4112);
     expect(malloc).toHaveBeenCalledTimes(2);
     expect(free).not.toHaveBeenCalled();
+  });
+
+  it("does not keep a freed pointer cached when the grow throws", () => {
+    let calls = 0;
+    const malloc = vi.fn((_n: number) => {
+      calls += 1;
+      if (calls === 2) throw new Error("out of memory");
+      return calls === 1 ? 1024 : 8192;
+    });
+    const free = vi.fn();
+    const m = {
+      pdfium: { wasmExports: { malloc, free } },
+    } as unknown as WrappedPdfiumModule;
+
+    const small = scratchPtr(m, SCRATCH.readerBounds, 8);
+    expect(() => scratchPtr(m, SCRATCH.readerBounds, 64)).toThrow(
+      "out of memory",
+    );
+    // The failed grow freed `small`, so the slot must not still name it: the
+    // next caller would hand PDFium a pointer into released memory.
+    expect(scratchPtr(m, SCRATCH.readerBounds, 8)).toBe(8192);
+    expect(free).toHaveBeenCalledWith(small);
   });
 });
