@@ -401,7 +401,7 @@ export function planPartialEdit(
   run: TextRun,
   prevText: string,
   nextText: string,
-  /** Objects to redraw whole rather than set new text on: see {@link kernedObjects}. */
+  /** Objects to redraw whole rather than set new text on: see {@link objectsToRedrawWhole}. */
   redrawWhole: ReadonlySet<number> = new Set(),
 ): PartialEditPlan | null {
   if (run.mergedFromPtrs.length === 0) return null;
@@ -726,24 +726,28 @@ export function modifiedPtrs(plan: PartialEditPlan): number[] {
 }
 
 /**
- * The objects among `ptrs` whose letters are not all spaced by their font's
- * advance plus one constant letter spacing: a TJ kern. SetText lays an object
- * out from its advances alone, so text set on a kerned object can never be set
- * back where it was drawn, and undo would shift its letters. Pairs that start
- * at whitespace are skipped so word spacing is not taken for kerning; a letter
- * whose width the font cannot report is never evidence. Loads a text page.
+ * The objects among `ptrs` an edit should redraw whole rather than set new
+ * text on: those whose letters are not all spaced by their font's advance plus
+ * one constant letter spacing, a TJ kern. SetText lays an object out from its
+ * advances alone, so text set on a kerned object can never be set back where
+ * it was drawn, and undo would shift its letters. A letter whose width the font
+ * cannot report is never evidence. Loads a text page.
+ *
+ * A redraw is a new object, which carries neither the original's clip nor its
+ * word spacing (Tw); an object with either stays edited in place, so the edit
+ * draws right and only its undo is inexact.
  */
-export function kernedObjects(
+export function objectsToRedrawWhole(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   pagePtr: number,
   ptrs: Iterable<number>,
 ): Set<number> {
   const wanted = new Set([...ptrs].filter(Boolean));
-  const kerned = new Set<number>();
-  if (wanted.size === 0) return kerned;
+  const redraw = new Set<number>();
+  if (wanted.size === 0) return redraw;
   const glyphs = new Map<number, Array<{ cp: number; x: number }>>();
   const textPage = m.FPDFText_LoadPage(pagePtr);
-  if (!textPage) return kerned;
+  if (!textPage) return redraw;
   try {
     const xPtr = scratchPtr(m, SCRATCH.kernOriginX, 8);
     const yPtr = scratchPtr(m, SCRATCH.kernOriginY, 8);
@@ -770,23 +774,34 @@ export function kernedObjects(
     const font = objFontPtr(m, ptr);
     if (!matrix || !font || matrix[0] <= 0 || Math.abs(matrix[1]) > 1e-3)
       continue;
+    const clip = m.FPDFPageObj_GetClipPath(ptr);
+    if (clip && m.FPDFClipPath_CountPaths(clip) > 0) continue;
     if (!m.FPDFTextObj_GetFontSize(ptr, sizePtr)) continue;
     const size = m.pdfium.getValue(sizePtr, "float");
-    let low = Infinity;
-    let high = -Infinity;
+    const letters: number[] = [];
+    const spaces: number[] = [];
     for (let k = 0; k + 1 < list.length; k++) {
       const { cp, x } = list[k];
-      if (cp <= 0x20 || cp === 0xa0) continue;
+      if (cp < 0x20 || cp === 0xa0) continue;
       if (!m.FPDFFont_GetGlyphWidth(font, cp, size, widthPtr)) continue;
       const width = m.pdfium.getValue(widthPtr, "float");
       if (!(width > 0)) continue;
       const extra = (list[k + 1].x - x) / matrix[0] - width;
-      low = Math.min(low, extra);
-      high = Math.max(high, extra);
+      (cp === 0x20 ? spaces : letters).push(extra);
     }
-    if ((high - low) * matrix[0] > KERN_TOLERANCE_PT) kerned.add(ptr);
+    if (letters.length === 0) continue;
+    const low = Math.min(...letters);
+    const high = Math.max(...letters);
+    const tolerance = KERN_TOLERANCE_PT / matrix[0];
+    const kerned = high - low > tolerance;
+    // A kern after a space reads like word spacing, so a space only counts as Tw when it is set apart further than the kerns themselves vary.
+    const slack = Math.max(tolerance, high - low);
+    const wordSpaced = spaces.some(
+      (extra) => extra < low - slack || extra > high + slack,
+    );
+    if (kerned && !wordSpaced) redraw.add(ptr);
   }
-  return kerned;
+  return redraw;
 }
 
 /** {@link planPartialEdit}, redrawing whole each piece whose in-place edit undo could not set back exactly. */
@@ -799,7 +814,11 @@ export function planUndoablePartialEdit(
 ): PartialEditPlan | null {
   const plan = planPartialEdit(run, prevText, nextText);
   if (!plan) return null;
-  const kerned = kernedObjects(m, pagePtr, onPage(run, modifiedPtrs(plan)));
+  const kerned = objectsToRedrawWhole(
+    m,
+    pagePtr,
+    onPage(run, modifiedPtrs(plan)),
+  );
   return kerned.size > 0
     ? planPartialEdit(run, prevText, nextText, kerned)
     : plan;
@@ -818,7 +837,7 @@ export function planUndoableParagraphEdit(
   const modified = plan.perSlot.flatMap((entry) =>
     entry.plan ? modifiedPtrs(entry.plan) : [],
   );
-  const kerned = kernedObjects(m, pagePtr, onPage(run, modified));
+  const kerned = objectsToRedrawWhole(m, pagePtr, onPage(run, modified));
   return kerned.size > 0
     ? planParagraphEdit(run, prevText, nextText, kerned)
     : plan;
