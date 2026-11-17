@@ -370,6 +370,13 @@
 
     function start(file) {
       if (!file) return;
+      if (file.size === 0) {
+        status.classList.add("hidden");
+        err.textContent = file.name + " is empty. Choose a file with content.";
+        err.classList.remove("hidden");
+        resize();
+        return;
+      }
       btn.disabled = true;
       err.classList.add("hidden");
       status.classList.remove("hidden");
