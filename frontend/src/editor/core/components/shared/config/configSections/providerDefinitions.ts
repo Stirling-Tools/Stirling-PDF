@@ -44,6 +44,8 @@ export interface Provider {
   scope: string; // Summary of what this provider does
   businessTier?: boolean; // Enterprise only
   documentationUrl?: string; // Optional link to documentation
+  /** What an admin does outside Stirling before the provider works, in order. */
+  setupSteps?: string[];
   fields: ProviderField[];
 }
 
@@ -939,6 +941,28 @@ const useMicrosoftProvider = (): Provider => {
     icon: "onedrive",
     type: "microsoft",
     scope: t("provider.microsoft.scope", "Files & pipelines"),
+    setupSteps: [
+      t(
+        "provider.microsoft.setupSteps.register",
+        "Register an app in the Microsoft Entra admin center. Allow personal Microsoft accounts if people use personal OneDrive.",
+      ),
+      t(
+        "provider.microsoft.setupSteps.redirects",
+        "Add the two redirect URIs below to it: one as Web, one as Single-page application.",
+      ),
+      t(
+        "provider.microsoft.setupSteps.permissions",
+        "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All.",
+      ),
+      t(
+        "provider.microsoft.setupSteps.secret",
+        "Create a client secret, then paste its value and the app's client ID below.",
+      ),
+      t(
+        "provider.microsoft.setupSteps.connect",
+        "Save, restart, then connect an account under Connected accounts.",
+      ),
+    ],
     fields: [
       {
         key: "enabled",

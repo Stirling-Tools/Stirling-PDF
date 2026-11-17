@@ -11,10 +11,12 @@ import { ViewerContext } from "@editor/contexts/ViewerContext";
 import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 import { rightsManagedToolAccepts } from "@editor/services/rightsManagedTools";
 import { isKnownRightsManagedPdf } from "@editor/services/rightsManagedPdf";
+import { getPdfAccess } from "@editor/services/pdfAccessService";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
   preflightPdfOperation,
+  signedPdfEditRefused,
 } from "@editor/services/pdfSessionUnlock";
 import { useToolState } from "@editor/hooks/tools/shared/useToolState";
 import {
@@ -204,6 +206,15 @@ export const useToolOperation = <TParams>(
     [config, notificationsAvailable],
   );
 
+  const editsInBrowser = useCallback(
+    (endpoint: string | undefined) =>
+      !endpoint &&
+      config.endpoint === undefined &&
+      !!config.customProcessor &&
+      config.operationType !== "automate",
+    [config.customProcessor, config.endpoint, config.operationType],
+  );
+
   const getCompatibleFiles = useCallback(
     (params: TParams, selectedFiles: StirlingFile[]) => {
       const endpoint =
@@ -215,10 +226,16 @@ export const useToolOperation = <TParams>(
           toolAcceptsFile(
             endpoint ?? undefined,
             selectors.getStirlingFileStub(file.fileId) ?? file,
-          ) && rightsManagedToolAccepts(endpoint ?? undefined, file.fileId),
+          ) &&
+          rightsManagedToolAccepts(endpoint ?? undefined, file.fileId) &&
+          !signedPdfEditRefused(
+            getPdfAccess(file),
+            endpoint ?? undefined,
+            editsInBrowser(endpoint ?? undefined),
+          ),
       );
     },
-    [config.endpoint, selectors],
+    [config.endpoint, editsInBrowser, selectors],
   );
 
   const eligibleFilesRef = useRef<StirlingFile[]>([]);
@@ -348,6 +365,7 @@ export const useToolOperation = <TParams>(
           (file) =>
             selectors.getStirlingFileStub(file.fileId)?.processedFile
               ?.isEncrypted === true,
+          editsInBrowser(runtimeEndpoint),
         );
         if (!permitted) return;
         let processedFiles: File[];

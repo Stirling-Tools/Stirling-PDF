@@ -1,5 +1,11 @@
+import {
+  SignedPdfEditsBlockedError,
+  signedPdfEditsBlockedMessage,
+} from "@editor/services/pdfSessionUnlock";
 import { useState } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import { Icon } from "@editor/ui/Icon";
 import { ProtectedPdfFileCard } from "@editor/components/shared/ProtectedPdfFileCard";
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
@@ -16,6 +22,28 @@ import {
   type ProtectionRight,
   type ProtectionSummary,
 } from "@editor/components/viewer/protection/ProtectionIndicator";
+import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
+
+function SignedPdfLockedStatus() {
+  const { t } = useTranslation();
+  return (
+    <Group gap="xs" px="sm" py={4}>
+      <Tooltip
+        content={signedPdfEditsBlockedMessage()}
+        position="bottom"
+        maxWidth={280}
+        arrow
+      >
+        <Group gap={6} role="status" tabIndex={0}>
+          <Icon name="signature" size={14} />
+          <Text size="xs">
+            {t("signedPdf.editsBlockedStatus", "Signed: edits blocked")}
+          </Text>
+        </Group>
+      </Tooltip>
+    </Group>
+  );
+}
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
@@ -27,7 +55,9 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const rightsManaged = useRightsManagedPdf(file);
-  if (!access?.encrypted || rightsManaged.status === "opened") return null;
+  if (rightsManaged.status === "opened") return null;
+  if (!access?.encrypted)
+    return signedPdfEditsBlocked(access) ? <SignedPdfLockedStatus /> : null;
   const close = () => {
     setOpened(false);
     setError(null);
@@ -47,12 +77,14 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
     try {
       await fileActions.createUnprotectedCopy(file.fileId);
       close();
-    } catch {
+    } catch (error) {
       setError(
-        t(
-          "encryptedPdfUnlock.copyFailed",
-          "Unable to create the copy. Your PDF is unchanged.",
-        ),
+        error instanceof SignedPdfEditsBlockedError
+          ? error.message
+          : t(
+              "encryptedPdfUnlock.copyFailed",
+              "Unable to create the copy. Your PDF is unchanged.",
+            ),
       );
       setOpened(true);
     } finally {

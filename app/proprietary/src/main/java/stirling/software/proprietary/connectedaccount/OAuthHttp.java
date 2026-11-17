@@ -106,7 +106,9 @@ public final class OAuthHttp {
         String detail = description != null ? firstLine(description) : error;
         throw new OAuthException(
                 "sign-in refused: " + (detail == null ? "HTTP " + response.statusCode() : detail),
-                "invalid_grant".equals(error) && !refusesOnlyTheScope(description));
+                "invalid_grant".equals(error) && !refusesOnlyTheScope(description),
+                "consent_required".equals(text(body, "suberror"))
+                        || (description != null && description.startsWith("AADSTS65001")));
     }
 
     static boolean refusesOnlyTheScope(String description) {

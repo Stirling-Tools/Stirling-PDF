@@ -93,6 +93,9 @@ public class ConnectedDriveController {
         if (isBlank(driveId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "driveId is required");
         }
+        if (isDotSegment(driveId) || isDotSegment(itemId) || isDotSegment(parentId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid drive or item ID");
+        }
         if (!isBlank(itemId)) {
             if (isBlank(eTag)) {
                 throw new ResponseStatusException(
@@ -108,8 +111,7 @@ public class ConnectedDriveController {
         if (trimmed.length() > MAX_NAME_LENGTH
                 || trimmed.contains("/")
                 || trimmed.contains("\\")
-                || trimmed.equals(".")
-                || trimmed.equals("..")) {
+                || isDotSegment(trimmed)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid file name");
         }
         return new ConnectedDriveWriter.Create(driveId, parentId, trimmed, true);
@@ -117,6 +119,11 @@ public class ConnectedDriveController {
 
     static boolean editorSavesAllowed(ApplicationProperties properties) {
         return properties.getPremium().getProFeatures().getMicrosoft().isAllowEditorSaves();
+    }
+
+    /** Percent-encoding leaves dots alone, so these would step out of the Graph path they fill. */
+    private static boolean isDotSegment(String value) {
+        return ".".equals(value) || "..".equals(value);
     }
 
     private static boolean isBlank(String value) {

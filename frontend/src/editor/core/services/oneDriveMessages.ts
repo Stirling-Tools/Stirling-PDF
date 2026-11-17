@@ -39,7 +39,7 @@ export function oneDrivePickerLabels(
   return {
     title,
     close: t("close", "Close"),
-    loading: t("provider.onedrive.pickerLoading", "Connecting to OneDrive…"),
+    loading: t("provider.onedrive.pickerLoading", "Connecting to OneDrive..."),
   };
 }
 

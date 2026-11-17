@@ -312,19 +312,21 @@ const MICROSOFT_APP_FIELDS: ConnectionFieldDef[] = [
     key: "tenantId",
     labelKey: `${PREFIX}.microsoft365.fields.tenantId.label`,
     control: "text",
+    required: true,
     placeholderKey: `${PREFIX}.microsoft365.fields.tenantId.placeholder`,
-    helperTextKey: `${PREFIX}.microsoft365.fields.tenantId.helperText`,
   },
   {
     key: "clientId",
     labelKey: `${PREFIX}.microsoft365.fields.clientId.label`,
     control: "text",
+    required: true,
     helperTextKey: `${PREFIX}.microsoft365.fields.clientId.helperText`,
   },
   {
     key: "clientSecret",
     labelKey: `${PREFIX}.microsoft365.fields.clientSecret.label`,
     control: "password",
+    required: true,
   },
 ];
 

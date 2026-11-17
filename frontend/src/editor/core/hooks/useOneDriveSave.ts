@@ -175,7 +175,10 @@ export function useOneDriveSave(): OneDriveSave {
           copyTarget
             ? {
                 isPersistentPopup: true,
-                buttonText: t("oneDriveSave.saveCopy", "Save a copy"),
+                buttonText: t(
+                  "oneDriveSave.saveCopyToOneDrive",
+                  "Save a copy in OneDrive",
+                ),
                 buttonCallback: () => {
                   dismissToast(toastId);
                   void run(
@@ -250,7 +253,7 @@ export function useOneDriveSave(): OneDriveSave {
         saveFailed(
           t(
             "oneDriveSave.personalUnsupported",
-            "Uploading to a chosen folder needs a work or school Microsoft account.",
+            "Uploading to OneDrive needs a work or school Microsoft account.",
           ),
         );
         return;
@@ -306,7 +309,7 @@ export function useOneDriveSave(): OneDriveSave {
           name: stub.cloudOrigin?.name ?? stub.name,
         }),
       saveAllLabel: () =>
-        t("oneDriveSave.toolbar.saveAll", "Save all to OneDrive"),
+        t("oneDriveSave.toolbar.saveAll", "Update all in OneDrive"),
       statusLabel: (unsaved) =>
         unsaved
           ? t(
@@ -323,12 +326,8 @@ export function useOneDriveSave(): OneDriveSave {
               {
                 key: "folder",
                 label: t(
-                  "oneDriveSave.saveToFolder",
-                  "Upload copy to OneDrive…",
-                ),
-                description: t(
-                  "oneDriveSave.menu.folderHint",
-                  "Choose a folder",
+                  "oneDriveSave.uploadToOneDrive",
+                  "Upload to OneDrive...",
                 ),
                 icon: "folder-up",
                 onClick: () => void file().then((f) => saveToFolder(stub, f)),

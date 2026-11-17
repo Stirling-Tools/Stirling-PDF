@@ -91,7 +91,7 @@ export function VersionHistoryModal({
           void fileStorage.updateFileMetadata(stub.id, {
             cloudOrigin: stub.cloudOrigin,
           });
-      void fileActions.addStirlingFileStubs(stubs);
+      void fileActions.addStirlingFileStubs(stubs, { selectFiles: true });
       navActions.setWorkbench("fileEditor");
       onClose();
     },

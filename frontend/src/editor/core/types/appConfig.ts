@@ -8,6 +8,7 @@ export interface AppConfig {
   defaultLocale?: string;
   enableLogin?: boolean;
   honorOwnerPasswords?: boolean;
+  blockSignedPdfEdits?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
   enableOAuth?: boolean;
@@ -55,6 +56,8 @@ export interface AppConfig {
   dependenciesReady?: boolean;
   error?: string;
   isNewServer?: boolean;
+  /** False until an admin finishes or skips first-run server setup. */
+  setupCompleted?: boolean;
   isNewUser?: boolean;
   /** Server tool-panel default; a stored user preference takes precedence. */
   defaultToolPanelMode?: "sidebar" | "fullscreen";

@@ -73,7 +73,10 @@ class GoogleCloudDriveContractTest extends CloudDriveContract<GoogleDriveConfig,
     protected Map<String, Object> options(String folder, Map<String, Object> extra) {
         Map<String, Object> options = new HashMap<>(extra);
         options.put("accountId", accountId);
-        options.put("directory", folders.getOrDefault(folder, "Scans/" + folder));
+        String id = folders.get(folder);
+        options.put(
+                "directory",
+                id == null ? "Scans/" + folder : "https://drive.google.com/drive/folders/" + id);
         return options;
     }
 

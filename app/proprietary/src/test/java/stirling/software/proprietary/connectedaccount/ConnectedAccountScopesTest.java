@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -54,30 +55,39 @@ class ConnectedAccountScopesTest {
                 .containsExactly("https://www.googleapis.com/auth/drive.readonly");
     }
 
+    private static ApplicationProperties.Premium.ProFeatures.GoogleDrive drive(
+            String accountScope) {
+        ApplicationProperties.Premium.ProFeatures.GoogleDrive app =
+                new ApplicationProperties.Premium.ProFeatures.GoogleDrive();
+        app.setAccountScope(accountScope);
+        return app;
+    }
+
     @ParameterizedTest
-    @CsvSource(
-            value = {
-                "NULL, drive.readonly",
-                "drive, drive.readonly",
-                "drive.readonly, drive.readonly",
-                "drive.file, drive.file",
-                "bogus, drive.readonly"
-            },
-            nullValues = "NULL")
+    @CsvSource({
+        "drive, drive.readonly",
+        "drive.readonly, drive.readonly",
+        "drive.file, drive.file"
+    })
     void googleBrowserScopeNeverAllowsWrites(String configured, String expected) {
-        assertThat(GoogleOAuthClient.browserScope(configured))
+        assertThat(GoogleOAuthClient.browserScope(drive(configured)))
                 .isEqualTo("https://www.googleapis.com/auth/" + expected);
     }
 
     @ParameterizedTest
-    @CsvSource(
-            value = {
-                "NULL, drive drive.readonly",
-                "drive, drive drive.readonly",
-                "drive.readonly, drive.readonly",
-                "drive.file, drive.file"
-            },
-            nullValues = "NULL")
+    @NullSource
+    @ValueSource(strings = {"bogus", "drive.full"})
+    void googleBrowserScopeRefusesAnUnknownAccountScope(String configured) {
+        assertThatThrownBy(() -> GoogleOAuthClient.browserScope(drive(configured)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "drive, drive drive.readonly",
+        "drive.readonly, drive.readonly",
+        "drive.file, drive.file"
+    })
     void googleConsentIncludesTheBrowserScope(String configured, String expected) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPremium().getProFeatures().getGoogleDrive().setAccountScope(configured);

@@ -59,7 +59,7 @@ class EngineSharedSecretMiddleware(BaseHTTPMiddleware):
             if require is None:
                 require = settings.engine_require_auth
         self._secret = secret or ""
-        self._require = bool(require)
+        self._require = require
         if self._secret:
             logger.info(
                 "Engine shared-secret enforcement ENABLED: non-public routes require a valid %s"

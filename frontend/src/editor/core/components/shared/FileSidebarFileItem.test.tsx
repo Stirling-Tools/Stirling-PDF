@@ -36,7 +36,7 @@ it("names the OneDrive file an update will replace and links to it", async () =>
   const onOpenInOneDrive = vi.fn();
   renderItem({
     hasOneDriveOrigin: true,
-    oneDriveName: "Q3 Board Pack.pdf",
+    oneDriveName: "Q3 Board Pack (draft).pdf",
     onSaveToOneDrive,
     onSaveToOneDriveFolder: vi.fn(),
     onOpenInOneDrive,
@@ -49,12 +49,24 @@ it("names the OneDrive file an update will replace and links to it", async () =>
     "oneDriveSave.replaces",
   );
   expect(screen.getByTestId("file-save-onedrive-folder").textContent).toContain(
-    "oneDriveSave.saveToFolder",
+    "oneDriveSave.uploadToOneDrive",
   );
 
   fireEvent.click(screen.getByTestId("file-open-onedrive"));
   expect(onOpenInOneDrive).toHaveBeenCalledWith(fileId);
   expect(onSaveToOneDrive).not.toHaveBeenCalled();
+});
+
+it("leaves out the replaced name when it matches the file's own", async () => {
+  renderItem({
+    hasOneDriveOrigin: true,
+    oneDriveName: "Q3 Board Pack.pdf",
+    onSaveToOneDrive: vi.fn(),
+  });
+  openMenu();
+
+  expect(await screen.findByTestId("file-save-onedrive")).toBeTruthy();
+  expect(screen.queryByTestId("file-save-onedrive-target")).toBeNull();
 });
 
 it("marks a file that came from OneDrive", () => {

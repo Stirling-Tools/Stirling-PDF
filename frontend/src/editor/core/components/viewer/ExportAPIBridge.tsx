@@ -3,7 +3,7 @@ import { useExportCapability } from "@embedpdf/plugin-export/react";
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 
-/** Supply originalFile for protected, read-only documents: native export can remove their encryption. */
+/** Supply originalFile for read-only documents whose bytes must survive export: native export can remove encryption and invalidates signatures. */
 export function ExportAPIBridge({
   disabled = false,
   originalFile,

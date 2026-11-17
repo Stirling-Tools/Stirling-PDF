@@ -135,19 +135,50 @@ describe("tauriHttpClient — Content-Type handling", () => {
     expect(fetchMock.mock.calls[0][1].body).toBeInstanceOf(FormData);
   });
 
-  test("sends in-memory copies of FormData files, keeping fields, names and bytes", async () => {
+  test("keeps application/json for plain object bodies", async () => {
     const client = create({ baseURL: "https://api.test" });
-    const original = new File(["%PDF-2.0 bytes"], "Report.pdf", {
-      type: "application/pdf",
-      lastModified: 1234,
-    });
+    await client.post("/api/v1/x", { a: 1 });
+
+    const ct = Object.entries(lastFetchHeaders()).find(
+      ([k]) => k.toLowerCase() === "content-type",
+    )?.[1];
+    expect(ct).toBe("application/json");
+  });
+});
+
+describe("tauriHttpClient - FormData uploads", () => {
+  const WEBKIT =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)";
+  const WEBVIEW2 =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0";
+
+  const original = new File(["%PDF-2.0 bytes"], "Report.pdf", {
+    type: "application/pdf",
+    lastModified: 1234,
+  });
+
+  async function send(userAgent: string): Promise<FormData> {
+    vi.stubGlobal("navigator", { userAgent, maxTouchPoints: 0 });
     const form = new FormData();
     form.append("fileInput", original);
     form.append("accountId", "33");
+    await create({ baseURL: "https://api.test" }).post(
+      "/api/v1/rights-management/open",
+      form,
+    );
+    return fetchMock.mock.calls[0][1].body as FormData;
+  }
 
-    await client.post("/api/v1/rights-management/open", form);
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(okJson());
+  });
 
-    const sent = fetchMock.mock.calls[0][1].body as FormData;
+  afterEach(() => vi.unstubAllGlobals());
+
+  test("sends in-memory copies from WebKit, keeping fields, names and bytes", async () => {
+    const sent = await send(WEBKIT);
+
     const file = sent.get("fileInput") as File;
     expect(file).not.toBe(original);
     expect(file.name).toBe("Report.pdf");
@@ -157,13 +188,10 @@ describe("tauriHttpClient — Content-Type handling", () => {
     expect(sent.get("accountId")).toBe("33");
   });
 
-  test("keeps application/json for plain object bodies", async () => {
-    const client = create({ baseURL: "https://api.test" });
-    await client.post("/api/v1/x", { a: 1 });
+  test("streams the original file from other engines", async () => {
+    const sent = await send(WEBVIEW2);
 
-    const ct = Object.entries(lastFetchHeaders()).find(
-      ([k]) => k.toLowerCase() === "content-type",
-    )?.[1];
-    expect(ct).toBe("application/json");
+    expect(sent.get("fileInput")).toBe(original);
+    expect(sent.get("accountId")).toBe("33");
   });
 });

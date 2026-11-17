@@ -33,21 +33,16 @@ public record MicrosoftDriveConfig(
 
     public record AccountCredential(long accountId) implements Credential {}
 
-    public record AppDefaults(String tenant, String clientId, String clientSecret) {
-        public static final AppDefaults NONE = new AppDefaults(null, null, null);
-    }
-
     private static final Pattern TENANT = Pattern.compile("[A-Za-z0-9][A-Za-z0-9.-]{0,252}");
     private static final Pattern USER = Pattern.compile("[^/\\\\?#\\s]{1,256}");
 
-    public static MicrosoftDriveConfig fromConnection(
-            Map<String, Object> options, AppDefaults defaults) {
+    public static MicrosoftDriveConfig fromConnection(Map<String, Object> options) {
         MicrosoftDrive drive = requireDrive(options);
         AppCredential credential =
                 new AppCredential(
-                        tenant(options, defaults),
-                        orDefault(options, "clientId", defaults.clientId()),
-                        orDefault(options, "clientSecret", defaults.clientSecret()));
+                        tenant(options),
+                        required(options, "clientId"),
+                        required(options, "clientSecret"));
 
         String user = null;
         String siteHost = null;
@@ -161,11 +156,8 @@ public record MicrosoftDriveConfig(
         return drive;
     }
 
-    private static String tenant(Map<String, Object> options, AppDefaults defaults) {
+    private static String tenant(Map<String, Object> options) {
         String tenant = LocationOptions.trimmed(options.get("tenantId"));
-        if (tenant == null && defaults.tenant() != null && isSpecificTenant(defaults.tenant())) {
-            tenant = defaults.tenant().trim();
-        }
         if (tenant == null) {
             throw new IllegalArgumentException(
                     "Microsoft 365 connection requires a 'tenantId' (directory ID or domain)");
@@ -178,26 +170,12 @@ public record MicrosoftDriveConfig(
         return tenant;
     }
 
-    static boolean isSpecificTenant(String tenant) {
+    private static boolean isSpecificTenant(String tenant) {
         String value = tenant.trim().toLowerCase();
         return !value.isEmpty()
                 && !value.equals("common")
                 && !value.equals("organizations")
                 && !value.equals("consumers");
-    }
-
-    private static String orDefault(Map<String, Object> options, String key, String fallback) {
-        String value = LocationOptions.trimmed(options.get(key));
-        if (value == null) {
-            value = LocationOptions.trimmed(fallback);
-        }
-        if (value == null) {
-            throw new IllegalArgumentException(
-                    "Microsoft 365 connection requires a '"
-                            + key
-                            + "', or the server's Microsoft app must be set up in Settings");
-        }
-        return value;
     }
 
     private static URI httpsUrl(String value, String label) {

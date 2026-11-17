@@ -195,11 +195,7 @@ public class ConnectedAccountController {
             }
             return List.of(
                     GoogleOAuthClient.browserScope(
-                            applicationProperties
-                                    .getPremium()
-                                    .getProFeatures()
-                                    .getGoogleDrive()
-                                    .getAccountScope()));
+                            applicationProperties.getPremium().getProFeatures().getGoogleDrive()));
         }
         if ("graph".equals(resource)) {
             return List.of(MicrosoftOAuthClient.BROWSER_SCOPE);

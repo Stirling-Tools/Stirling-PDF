@@ -14,11 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import stirling.software.proprietary.policy.microsoft.MicrosoftDriveConfig.AppDefaults;
-
 class MicrosoftDriveConfigTest {
-
-    private static final AppDefaults NONE = AppDefaults.NONE;
 
     private static Map<String, Object> credentials(String drive) {
         Map<String, Object> options = new HashMap<>();
@@ -37,7 +33,7 @@ class MicrosoftDriveConfigTest {
         options.put("mode", "snapshot");
         options.put("recursive", "true");
 
-        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options, NONE);
+        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options);
 
         assertEquals(MicrosoftDrive.ONEDRIVE, config.drive());
         assertEquals("Inbox/Scans", config.directory());
@@ -52,7 +48,7 @@ class MicrosoftDriveConfigTest {
         options.put("siteUrl", "https://contoso.sharepoint.com/sites/Finance/");
         options.put("library", "Invoices");
 
-        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options, NONE);
+        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options);
 
         assertEquals("contoso.sharepoint.com", config.siteHost());
         assertEquals("sites/Finance", config.sitePath());
@@ -65,7 +61,7 @@ class MicrosoftDriveConfigTest {
         Map<String, Object> options = credentials("sharepoint");
         options.put("siteUrl", "https://contoso.sharepoint.com");
 
-        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options, NONE);
+        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options);
 
         assertEquals("", config.sitePath());
         assertNull(config.library());
@@ -83,8 +79,7 @@ class MicrosoftDriveConfigTest {
         Map<String, Object> options = credentials("sharepoint");
         options.put("siteUrl", url);
         assertThrows(
-                IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(options, NONE));
+                IllegalArgumentException.class, () -> MicrosoftDriveConfig.fromConnection(options));
     }
 
     @ParameterizedTest
@@ -94,66 +89,50 @@ class MicrosoftDriveConfigTest {
         options.put("user", "finance@contoso.com");
         options.put(key, value);
         assertThrows(
-                IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(options, NONE));
+                IllegalArgumentException.class, () -> MicrosoftDriveConfig.fromConnection(options));
     }
 
     @Test
     void requiresTheCredentialsAndTheLibraryOwner() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(credentials("onedrive"), NONE));
+                () -> MicrosoftDriveConfig.fromConnection(credentials("onedrive")));
         Map<String, Object> noSecret = credentials("sharepoint");
         noSecret.put("siteUrl", "https://contoso.sharepoint.com");
         noSecret.remove("clientSecret");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(noSecret, NONE));
+                () -> MicrosoftDriveConfig.fromConnection(noSecret));
         Map<String, Object> noDrive = credentials("dropbox");
         assertThrows(
-                IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(noDrive, NONE));
+                IllegalArgumentException.class, () -> MicrosoftDriveConfig.fromConnection(noDrive));
     }
 
     @Test
     void neverPrintsTheSecret() {
         Map<String, Object> options = credentials("onedrive");
         options.put("user", "finance@contoso.com");
-        assertFalse(
-                MicrosoftDriveConfig.fromConnection(options, NONE).toString().contains("s3cret"));
+        assertFalse(MicrosoftDriveConfig.fromConnection(options).toString().contains("s3cret"));
     }
 
-    @Test
-    void blankCredentialsFallBackToTheServersMicrosoftApp() {
-        Map<String, Object> options = new HashMap<>();
-        options.put("drive", "onedrive");
+    @ParameterizedTest
+    @ValueSource(strings = {"tenantId", "clientId", "clientSecret"})
+    void requiresItsOwnAppRegistration(String key) {
+        Map<String, Object> options = credentials("onedrive");
         options.put("user", "finance@contoso.com");
-        AppDefaults server =
-                new AppDefaults("contoso.onmicrosoft.com", "server-app", "server-secret");
-
-        MicrosoftDriveConfig config = MicrosoftDriveConfig.fromConnection(options, server);
-
-        MicrosoftDriveConfig.AppCredential app =
-                (MicrosoftDriveConfig.AppCredential) config.credential();
-        assertEquals("contoso.onmicrosoft.com", app.tenantId());
-        assertEquals("server-app", app.clientId());
-        assertEquals("server-secret", app.clientSecret());
+        options.remove(key);
+        assertThrows(
+                IllegalArgumentException.class, () -> MicrosoftDriveConfig.fromConnection(options));
     }
 
-    @Test
-    void aMultiTenantServerAppStillNeedsTheConnectionsTenant() {
-        Map<String, Object> options = new HashMap<>();
-        options.put("drive", "onedrive");
+    @ParameterizedTest
+    @ValueSource(strings = {"common", "organizations", "consumers"})
+    void rejectsATenantThatIsNotOneOrganisation(String tenant) {
+        Map<String, Object> options = credentials("onedrive");
         options.put("user", "finance@contoso.com");
-        AppDefaults server = new AppDefaults("common", "server-app", "server-secret");
-
+        options.put("tenantId", tenant);
         assertThrows(
-                IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(options, server));
-        options.put("tenantId", "organizations");
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> MicrosoftDriveConfig.fromConnection(options, server));
+                IllegalArgumentException.class, () -> MicrosoftDriveConfig.fromConnection(options));
     }
 
     @Test

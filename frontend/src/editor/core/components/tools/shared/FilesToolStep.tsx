@@ -4,7 +4,11 @@ import { StirlingFile } from "@editor/types/fileContext";
 import i18n from "@editor/i18n";
 import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
-import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
+import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { rightsManagedToolBlockReason } from "@editor/services/rightsManagedTools";
 import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
@@ -50,6 +54,14 @@ function FilesStepContent({
                 "This tool doesn't support encrypted PDFs. Remove the password first.",
               ),
               passwordProtected: true,
+            },
+          ];
+        if (signedPdfEditsBlocked(getPdfAccess(file.id)))
+          return [
+            {
+              file,
+              reason: signedPdfEditsBlockedMessage(),
+              passwordProtected: false,
             },
           ];
         return [];

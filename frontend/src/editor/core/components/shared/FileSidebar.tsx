@@ -55,6 +55,7 @@ import BulkUploadToServerModal from "@editor/components/shared/BulkUploadToServe
 import { getFileOrigin } from "@editor/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@editor/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@editor/components/filesPage/DeleteFilesDialog";
+import { ClearRecentsDialog } from "@editor/components/shared/ClearRecentsDialog";
 import { RenameFileDialog } from "@editor/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@editor/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@editor/components/shared/SidebarChecklistSlot";
@@ -218,6 +219,28 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
   );
 }
 
+function ClearRecentsButton({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <ActionIcon
+      variant="quiet"
+      className={`file-sidebar-section-btn${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      title={t("fileSidebar.clearRecents.button", "Clear recents")}
+      aria-label={t("fileSidebar.clearRecents.button", "Clear recents")}
+      data-testid="file-sidebar-clear-recents"
+    >
+      <Icon name="trash" size={"1rem"} />
+    </ActionIcon>
+  );
+}
+
 interface LibraryHeaderProps {
   stubs: StirlingFileStub[];
   scrolled: boolean;
@@ -225,6 +248,8 @@ interface LibraryHeaderProps {
   onCloudPick: (picker: CloudFilePicker) => void;
   onAddFiles: () => void;
   onOpenFilesPage: () => void;
+  /** Set only for a flat list; a grouped list carries it on its Recent group. */
+  onClearRecents?: () => void;
 }
 
 function LibraryHeader({
@@ -234,6 +259,7 @@ function LibraryHeader({
   onCloudPick,
   onAddFiles,
   onOpenFilesPage,
+  onClearRecents,
 }: LibraryHeaderProps) {
   const { t } = useTranslation();
   return (
@@ -268,6 +294,7 @@ function LibraryHeader({
       >
         <Icon name="search" size={"1rem"} />
       </ActionIcon>
+      {onClearRecents && <ClearRecentsButton onClick={onClearRecents} />}
       {cloudPickers.length === 0 ? (
         <ActionIcon
           variant="quiet"
@@ -354,31 +381,44 @@ interface FileGroupProps {
   isOpen: boolean;
   onToggle: () => void;
   renderFileRow: RenderFileRow;
+  /** A control beside the header; the header is itself a button, so it can't nest. */
+  action?: React.ReactNode;
 }
 
-function FileGroup({ group, isOpen, onToggle, renderFileRow }: FileGroupProps) {
+function FileGroup({
+  group,
+  isOpen,
+  onToggle,
+  renderFileRow,
+  action,
+}: FileGroupProps) {
   return (
     <div className="file-sidebar-group">
-      <Button
-        variant="quiet"
-        fullWidth
-        justify="between"
-        className="file-sidebar-group-header"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        leftSection={
-          <FileGroupSymbol
-            icon={group.icon}
-            color={group.color}
-            isOpen={isOpen}
-          />
-        }
-        rightSection={
-          <span className="file-sidebar-group-count">{group.stubs.length}</span>
-        }
-      >
-        <span className="file-sidebar-group-label">{group.label}</span>
-      </Button>
+      <div className="file-sidebar-group-header-row">
+        <Button
+          variant="quiet"
+          fullWidth
+          justify="between"
+          className="file-sidebar-group-header"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          leftSection={
+            <FileGroupSymbol
+              icon={group.icon}
+              color={group.color}
+              isOpen={isOpen}
+            />
+          }
+          rightSection={
+            <span className="file-sidebar-group-count">
+              {group.stubs.length}
+            </span>
+          }
+        >
+          <span className="file-sidebar-group-label">{group.label}</span>
+        </Button>
+        {action}
+      </div>
       <div className="file-sidebar-group-items">
         {isOpen && group.stubs.map(renderFileRow)}
       </div>
@@ -394,6 +434,8 @@ interface GroupedFileListProps {
   renderFileRow: RenderFileRow;
   total: number;
   onViewAll: () => void;
+  /** Absent when nothing is clearable, which hides the button. */
+  onClearRecents?: () => void;
 }
 
 function GroupedFileList({
@@ -403,6 +445,7 @@ function GroupedFileList({
   renderFileRow,
   total,
   onViewAll,
+  onClearRecents,
 }: GroupedFileListProps) {
   const { t } = useTranslation();
   return (
@@ -416,6 +459,14 @@ function GroupedFileList({
             isOpen={isOpen}
             onToggle={() => onGroupOpenChange(group.id, !isOpen)}
             renderFileRow={renderFileRow}
+            action={
+              group.id === "recent" && onClearRecents ? (
+                <ClearRecentsButton
+                  onClick={onClearRecents}
+                  className="file-sidebar-group-action"
+                />
+              ) : undefined
+            }
           />
         );
       })}
@@ -515,6 +566,7 @@ function FileLibrarySection({
         onCloudPick={onCloudPick}
         onAddFiles={onAddFiles}
         onOpenFilesPage={list.onOpenFilesPage}
+        onClearRecents={list.groups ? undefined : list.onClearRecents}
       />
       <BulkAddProgressRow />
       <LibraryFileList scrollRef={scrollRef} {...list} />
@@ -587,6 +639,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [],
     );
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    const [ingestsInFlight, setIngestsInFlight] = useState(0);
+    const trackIngest = useCallback(async (ingest: () => Promise<void>) => {
+      setIngestsInFlight((n) => n + 1);
+      try {
+        await ingest();
+      } finally {
+        setIngestsInFlight((n) => n - 1);
+      }
+    }, []);
     const [saveToServerTarget, setSaveToServerTarget] = useState<
       StirlingFileStub[] | null
     >(null);
@@ -595,6 +656,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Kebab "Delete" target when the file is on the cloud; drives the
     // local/cloud/both choice dialog. Local-only files delete immediately.
     const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
+    // Fixed when the dialog opens, so files added while it is up aren't cleared.
+    const [clearTargets, setClearTargets] = useState<StirlingFileStub[] | null>(
       null,
     );
     const [renameTarget, setRenameTarget] = useState<StirlingFileStub | null>(
@@ -881,6 +946,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       return counts;
     }, [allFileStubs]);
+    // Foldered files are kept: the user filed them deliberately.
+    const clearableStubs = useMemo(
+      () => allFileStubs.filter((s) => s.folderId == null),
+      [allFileStubs],
+    );
+    const openClearTargetIds = useMemo(() => {
+      const open = new Set(state.files.ids.map(String));
+      return new Set(
+        (clearTargets ?? []).filter((s) => open.has(s.id)).map((s) => s.id),
+      );
+    }, [clearTargets, state.files.ids]);
+    const handleConfirmClearRecents = useCallback(
+      async (skipOpen: boolean) => {
+        const removed = await fileActions.clearRecentFiles(
+          (clearTargets ?? []).map((s) => s.id),
+          skipOpen ? new Set(state.files.ids.map(String)) : undefined,
+        );
+        // A cleared file's unsaved changes went with it; left set, the flag would
+        // prompt about them on the next navigation.
+        if (activeFileId && removed.includes(activeFileId as FileId)) {
+          navActions.setHasUnsavedChanges(false);
+        }
+        await refreshStubs();
+      },
+      [
+        clearTargets,
+        state.files.ids,
+        fileActions,
+        refreshStubs,
+        activeFileId,
+        navActions,
+      ],
+    );
+
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
       (id: string, open: boolean) =>
@@ -892,16 +991,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       async (picker: CloudFilePicker) => {
         const files = await picker.openPicker({ multiple: true });
         if (files.length === 0) return;
-        if (onPickCloudFiles) {
-          await onPickCloudFiles(files);
-          return;
-        }
-        await addFiles(files);
-        if (!staysOnAdd) {
-          navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
-        }
+        await trackIngest(async () => {
+          if (onPickCloudFiles) {
+            await onPickCloudFiles(files);
+            return;
+          }
+          await addFiles(files);
+          if (!staysOnAdd) {
+            navActions.setWorkbench(
+              files.length === 1 ? "viewer" : "fileEditor",
+            );
+          }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onPickCloudFiles],
+      [trackIngest, addFiles, navActions, staysOnAdd, onPickCloudFiles],
     );
 
     const failedPicker = cloudPickers.find((picker) => picker.error);
@@ -967,14 +1070,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             navActions.setWorkbench("fileEditor");
           }
 
-          await fileActions.addStirlingFileStubs([stub]);
+          await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
 
-          if (staysOnAdd) {
-            fileActions.setSelectedFiles([
-              ...state.ui.selectedFileIds,
-              stub.id,
-            ]);
-          } else {
+          if (!staysOnAdd) {
             if (workbenchCount === 0) {
               navActions.setWorkbench("viewer");
             } else {
@@ -988,7 +1086,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         lostFileIds,
         t,
         state.files.ids,
-        state.ui.selectedFileIds,
         fileActions,
         navActions,
         currentWorkbench,
@@ -1028,7 +1125,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
               navActions.setWorkbench("fileEditor");
             }
-            await fileActions.addStirlingFileStubs([stub]);
+            await fileActions.addStirlingFileStubs([stub], {
+              selectFiles: true,
+            });
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
@@ -1060,9 +1159,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const ingestFiles = useCallback(
       async (files: File[]) => {
         if (files.length === 0) return;
-        if (onUploadFiles) {
-          await onUploadFiles(files);
-        } else {
+        await trackIngest(async () => {
+          if (onUploadFiles) {
+            await onUploadFiles(files);
+            return;
+          }
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
@@ -1071,9 +1172,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
-        }
+        });
       },
-      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
+      [
+        trackIngest,
+        addFiles,
+        navActions,
+        staysOnAdd,
+        onUploadFiles,
+        currentWorkbench,
+      ],
     );
 
     const handleNativeFilePick = useCallback(
@@ -1266,7 +1374,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
-            <div className="file-sidebar-scroll">
+            <div
+              className="file-sidebar-scroll"
+              aria-busy={ingestsInFlight > 0}
+            >
               {currentWorkbench === "myFiles" ? (
                 <FolderTreeSection />
               ) : (
@@ -1281,6 +1392,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   onCloudPick={(picker) => void handleCloudPick(picker)}
                   onAddFiles={openNativeFilePicker}
                   onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
+                  onClearRecents={
+                    clearableStubs.length > 0
+                      ? () => setClearTargets(clearableStubs)
+                      : undefined
+                  }
                 />
               )}
             </div>
@@ -1313,6 +1429,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           files={deleteTarget ? [deleteTarget] : []}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
+        />
+
+        <ClearRecentsDialog
+          opened={clearTargets !== null}
+          clearCount={clearTargets?.length ?? 0}
+          openCount={openClearTargetIds.size}
+          onClose={() => setClearTargets(null)}
+          onConfirm={handleConfirmClearRecents}
         />
 
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
