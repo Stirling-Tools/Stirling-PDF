@@ -1198,35 +1198,6 @@ class PdfToUaParams(ApiModel):
 
 class OutputFormat4(StrEnum):
     """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class Prepress(Enum):
-    """
-    Apply Ghostscript prepress settings
-    """
-
-    boolean_true = True
-    boolean_false = False
-
-
-class PdfToVectorParams(ApiModel):
-    """
-    Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS). Input:PDF Output:IMAGE Type:SISO
-    """
-
-    output_format: OutputFormat4 = Field(OutputFormat4.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class OutputFormat5(StrEnum):
-    """
     The output Word document format
     """
 
@@ -1240,7 +1211,7 @@ class PdfToWordParams(ApiModel):
     This endpoint converts a given PDF file to a Word document format. Input:PDF Output:WORD Type:SISO
     """
 
-    output_format: OutputFormat5 = Field(..., description="The output Word document format")
+    output_format: OutputFormat4 = Field(..., description="The output Word document format")
     use_stirling_office_convert: bool | None = None
 
 
@@ -1266,7 +1237,7 @@ class PdfToXmlParams(ApiModel):
 
 class CustomMode(StrEnum):
     """
-    Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
+    Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
     """
 
     custom = "CUSTOM"
@@ -1275,6 +1246,7 @@ class CustomMode(StrEnum):
     booklet_sort = "BOOKLET_SORT"
     side_stitch_booklet_sort = "SIDE_STITCH_BOOKLET_SORT"
     odd_even_split = "ODD_EVEN_SPLIT"
+    odd_even_merge = "ODD_EVEN_MERGE"
     remove_first = "REMOVE_FIRST"
     remove_last = "REMOVE_LAST"
     remove_first_and_last = "REMOVE_FIRST_AND_LAST"
@@ -1288,7 +1260,7 @@ class RearrangePagesParams(ApiModel):
 
     custom_mode: CustomMode | None = Field(
         None,
-        description="Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).",
+        description="Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).",
     )
     page_numbers: str = Field(
         "all",
@@ -1492,9 +1464,19 @@ class SanitizePdfParams(ApiModel):
     remove_xmp_metadata: bool = Field(False, description="Remove XMP metadata from the PDF")
 
 
+class CustomUnit(StrEnum):
+    """
+    Unit of customWidth and customHeight.
+    """
+
+    mm = "mm"
+    cm = "cm"
+    in_ = "in"
+
+
 class Orientation1(StrEnum):
     """
-    Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+    Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
     """
 
     portrait = "PORTRAIT"
@@ -1503,7 +1485,7 @@ class Orientation1(StrEnum):
 
 class PageSize(StrEnum):
     """
-    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
+    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.
     """
 
     a0 = "A0"
@@ -1516,6 +1498,7 @@ class PageSize(StrEnum):
     letter = "LETTER"
     legal = "LEGAL"
     keep = "KEEP"
+    custom = "CUSTOM"
 
 
 class ScalePagesParams(ApiModel):
@@ -1523,13 +1506,24 @@ class ScalePagesParams(ApiModel):
     This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO
     """
 
+    custom_height: float | None = Field(
+        None,
+        description="Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
+        gt=0.0,
+    )
+    custom_unit: CustomUnit = Field(CustomUnit.mm, description="Unit of customWidth and customHeight.")
+    custom_width: float | None = Field(
+        None,
+        description="Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
+        gt=0.0,
+    )
     orientation: Orientation1 = Field(
         Orientation1.portrait,
-        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.",
     )
     page_size: PageSize = Field(
         PageSize.keep,
-        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.",
+        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.",
     )
     scale_factor: float = Field(
         1, description="The scale of the content on the pages of the output PDF. Acceptable values are floats.", ge=0.0
@@ -1830,26 +1824,6 @@ class UrlToPdfParams(ApiModel):
     url_input: str = Field(..., description="The input URL to be converted to a PDF file")
 
 
-class OutputFormat6(StrEnum):
-    """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class VectorToPdfParams(ApiModel):
-    """
-    Converts PS, EPS and EPSF with Ghostscript; outputFormat is ignored. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
-    """
-
-    output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
 class AutoRotatePdfParams(ApiModel):
     """
     Detects each page's orientation (embedded-text direction first, Tesseract OSD for scanned pages) and sets the page rotation so the content displays upright. With dryRun=true, returns a JSON per-page report instead of the PDF. With pageRotations set (a JSON list such as [{"pageNumber":3,"rotation":90}]), applies only those clockwise turns without running detection. Input:PDF Output:PDF Type:SISO
@@ -1949,13 +1923,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -2028,13 +2000,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -2108,13 +2078,11 @@ type ParamToolModel = (
     | PdfToPresentationParams
     | PdfToTextParams
     | PdfToUaParams
-    | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
     | PdfToXmlParams
     | SvgToPdfParams
     | UrlToPdfParams
-    | VectorToPdfParams
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
@@ -2189,13 +2157,11 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
     PDF_TO_UA = "/api/v1/convert/pdf/ua"
-    PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
     PDF_TO_XML = "/api/v1/convert/pdf/xml"
     SVG_TO_PDF = "/api/v1/convert/svg/pdf"
     URL_TO_PDF = "/api/v1/convert/url/pdf"
-    VECTOR_TO_PDF = "/api/v1/convert/vector/pdf"
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
@@ -2268,13 +2234,11 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
     ToolEndpoint.PDF_TO_UA: PdfToUaParams,
-    ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
     ToolEndpoint.PDF_TO_XML: PdfToXmlParams,
     ToolEndpoint.SVG_TO_PDF: SvgToPdfParams,
     ToolEndpoint.URL_TO_PDF: UrlToPdfParams,
-    ToolEndpoint.VECTOR_TO_PDF: VectorToPdfParams,
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,

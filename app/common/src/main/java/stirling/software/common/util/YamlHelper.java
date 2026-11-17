@@ -14,7 +14,6 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -346,12 +345,10 @@ public class YamlHelper {
         if (this.updatedRootNode != null) {
             return this.updatedRootNode;
         }
+        // Parse once: every key lookup lands here, so reparsing made config sync O(keys x file).
         Composer composer = new Composer(loadSettings, getParserImpl());
-        Optional<Node> rootNodeOpt = composer.getSingleNode();
-        if (rootNodeOpt.isPresent()) {
-            return rootNodeOpt.get();
-        }
-        return null;
+        this.updatedRootNode = composer.getSingleNode().orElse(null);
+        return this.updatedRootNode;
     }
 
     /**

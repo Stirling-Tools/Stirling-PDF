@@ -45,6 +45,8 @@ import AdminAuditSection from "@editor/components/shared/config/configSections/A
 import AdminUsageSection from "@editor/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 import McpSection from "@editor/components/shared/config/configSections/mcp/McpSection";
+import ConnectedAccountsSection from "@editor/components/shared/config/configSections/ConnectedAccountsSection";
+import { accountConnectionsOffered } from "@editor/hooks/useConnectedAccounts";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -104,6 +106,18 @@ export const useConfigNavSections = (
         ),
         icon: "bot",
         component: <McpSection />,
+      });
+    }
+    if (loginEnabled && accountConnectionsOffered(config)) {
+      preferences.items.push({
+        key: "connectedAccounts",
+        label: t("settings.connectedAccounts.title", "Connected accounts"),
+        description: t(
+          "settings.connectedAccounts.description",
+          "Your own OneDrive, SharePoint and Google Drive, for your pipelines.",
+        ),
+        icon: "cloud",
+        component: <ConnectedAccountsSection />,
       });
     }
   }
