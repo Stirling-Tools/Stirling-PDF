@@ -205,6 +205,9 @@ export async function resolveOriginalFonts(
   if (!fonts || fonts.length === 0) return;
   const ids = new Set(fontIds);
   for (const fontId of ids) {
+    // Each pass reads the font through the document: once it closes, the
+    // handle is a dangling pointer and PDFium reading it crashes the tab.
+    if (!stillOpen()) return;
     const handle = documentFontHandle(fontId);
     if (lookedUp.get(handle) === fonts || lookingUp.has(handle)) continue;
     if (!fontCanBeCompleted(m, fontId)) continue;
