@@ -132,6 +132,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={{ type: "Formula", description: "x squared", onSet }}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -159,6 +160,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
