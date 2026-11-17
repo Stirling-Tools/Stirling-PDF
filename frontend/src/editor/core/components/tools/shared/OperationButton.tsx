@@ -98,11 +98,7 @@ const OperationButton = ({
       ? (reasonTooltip[disabledReason] ?? null)
       : null;
 
-  if (
-    disabledReason === "endpointUnavailable" &&
-    onEndpointUnavailableClick &&
-    !blockedByBackend
-  ) {
+  if (disabledReason === "endpointUnavailable" && onEndpointUnavailableClick) {
     return (
       <Stack gap={6} mx="md" mt={mt} data-testid="sign-in-required">
         <Text size="xs" style={{ color: "var(--c-text-muted)" }}>

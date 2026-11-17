@@ -93,7 +93,7 @@ const ConvertSettings = ({
   const { onEndpointUnavailableClick } = useToolActions();
 
   const unlockedBySignIn = (fromExt: string, toExt: string): boolean => {
-    const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
+    const endpointKey = getEndpointName(fromExt, toExt);
     return (
       !localProcessingOnly &&
       !!onEndpointUnavailableClick &&
@@ -132,13 +132,18 @@ const ConvertSettings = ({
       const availableConversions = getAvailableToExtensions(option.value) || [];
       const hasAvailableConversions = availableConversions.some(
         (targetOption) =>
-          isConversionAvailable(option.value, targetOption.value) ||
-          unlockedBySignIn(option.value, targetOption.value),
+          isConversionAvailable(option.value, targetOption.value),
       );
+      const needsSignIn =
+        !hasAvailableConversions &&
+        availableConversions.some((targetOption) =>
+          unlockedBySignIn(option.value, targetOption.value),
+        );
 
       return {
         ...option,
-        enabled: hasAvailableConversions,
+        enabled: hasAvailableConversions || needsSignIn,
+        needsSignIn,
       };
     });
 

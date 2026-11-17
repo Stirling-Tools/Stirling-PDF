@@ -5,7 +5,11 @@ import ConvertSettings from "@editor/components/tools/convert/ConvertSettings";
 import { defaultParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import { ToolActionsContext } from "@editor/contexts/ToolActionsContext";
 
-const state = vi.hoisted(() => ({ localOnly: true, signedOut: false }));
+const state = vi.hoisted(() => ({
+  localOnly: true,
+  signedOut: false,
+  signInEndpoints: ["pdf-to-word"],
+}));
 vi.mock("@editor/hooks/useOfficeConversionDefault", () => ({
   useOfficeConversionDefault: () => false,
 }));
@@ -25,7 +29,12 @@ vi.mock("@editor/hooks/useEndpointConfig", () => ({
       "file-to-pdf": false,
     },
     endpointDetails: state.signedOut
-      ? { "pdf-to-word": { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" } }
+      ? Object.fromEntries(
+          state.signInEndpoints.map((endpoint) => [
+            endpoint,
+            { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" },
+          ]),
+        )
       : {},
   }),
 }));
@@ -41,14 +50,18 @@ vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
 beforeEach(() => {
   state.localOnly = true;
   state.signedOut = false;
+  state.signInEndpoints = ["pdf-to-word"];
 });
 
-function renderSettings(onEndpointUnavailableClick?: () => void) {
+function renderSettings(
+  onEndpointUnavailableClick?: () => void,
+  fromExtension = "pdf",
+) {
   return render(
     <MantineProvider>
       <ToolActionsContext.Provider value={{ onEndpointUnavailableClick }}>
         <ConvertSettings
-          parameters={{ ...defaultParameters, fromExtension: "pdf" }}
+          parameters={{ ...defaultParameters, fromExtension }}
           onParameterChange={vi.fn()}
         />
       </ToolActionsContext.Provider>
@@ -95,4 +108,29 @@ it("keeps sign-in formats unavailable under privacy", async () => {
   fireEvent.click(screen.getByTestId("convert-to-dropdown"));
   await screen.findByTestId("format-option-png");
   expect(screen.queryByTestId("format-option-docx")).toBeNull();
+});
+
+it("offers PDF for a dynamic file source that needs sign-in", async () => {
+  state.localOnly = false;
+  state.signedOut = true;
+  state.signInEndpoints = ["file-to-pdf"];
+  renderSettings(vi.fn(), "file-docm");
+  fireEvent.click(screen.getByTestId("convert-to-dropdown"));
+  const pdf = await screen.findByTestId("format-option-pdf");
+  expect(pdf).toBeEnabled();
+  expect(pdf).toHaveAttribute("title", "convert.signInToUse");
+});
+
+it("locks source formats reachable only by signing in", async () => {
+  state.localOnly = false;
+  state.signedOut = true;
+  state.signInEndpoints = ["file-to-pdf"];
+  renderSettings(vi.fn());
+  fireEvent.click(screen.getByTestId("convert-from-dropdown"));
+  const docx = await screen.findByTestId("format-option-docx");
+  expect(docx).toBeEnabled();
+  expect(docx).toHaveAttribute("title", "convert.signInToUse");
+  const pdf = screen.getByTestId("format-option-pdf");
+  expect(pdf).toBeEnabled();
+  expect(pdf).not.toHaveAttribute("title");
 });
