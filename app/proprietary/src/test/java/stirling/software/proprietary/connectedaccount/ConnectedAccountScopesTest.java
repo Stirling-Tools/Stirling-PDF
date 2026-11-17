@@ -42,6 +42,15 @@ class ConnectedAccountScopesTest {
                 .containsExactly("https://contoso-my.sharepoint.com/.default");
     }
 
+    @Test
+    void sharePointScopeLeavesOutUserInfo() {
+        assertThat(
+                        controller.scopesFor(
+                                CloudProvider.MICROSOFT,
+                                "https://intruder@contoso.sharepoint.com/sites/x"))
+                .containsExactly("https://contoso.sharepoint.com/.default");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"https://evil.example", "https://contoso.sharepoint.com.evil.test"})
     void otherHostsAreRefused(String resource) {
