@@ -491,6 +491,7 @@ describe("session PDF access", () => {
   it.each([
     ["password", { password: "other" }],
     ["encryption revision", { encryptionRevision: 4 }],
+    ["opening-password requirement", { requiresOpeningPassword: true }],
   ])(
     "rejects a merge whose middle input differs only by %s",
     async (_field, change) => {

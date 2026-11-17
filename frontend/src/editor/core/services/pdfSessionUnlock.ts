@@ -212,7 +212,9 @@ async function hasMixedProtection(files: readonly File[]): Promise<boolean> {
       access.permissions !== first.permissions ||
       access.encryptionRevision !== first.encryptionRevision ||
       access.password !== first.password ||
-      access.openingPassword !== first.openingPassword,
+      access.openingPassword !== first.openingPassword ||
+      Boolean(access.requiresOpeningPassword) !==
+        Boolean(first.requiresOpeningPassword),
   );
   if (settingsDiffer) return true;
   const [cipher, ...others] = await Promise.all(files.map(readCipherProfile));
