@@ -71,6 +71,7 @@ export class PdfiumPageRenderer {
         0,
         0x01 | 0x10,
       );
+      page.shownInViewer = true;
 
       // Second pass for the form layer. A widget with no appearance stream is
       // drawn ONLY here - FPDF_ANNOT alone leaves such fields blank, which is

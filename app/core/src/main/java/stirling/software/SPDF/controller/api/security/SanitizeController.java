@@ -103,8 +103,7 @@ public class SanitizeController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_sanitized.pdf"),
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

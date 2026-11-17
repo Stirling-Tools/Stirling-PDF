@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { Banner, Chip } from "@editor/ui";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 import { SidebarProvider } from "@editor/contexts/SidebarContext";
 import { type ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { type ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -143,19 +142,17 @@ export function PipelineStepSettings({
       );
     }
     return (
-      <PreferencesProvider>
-        <SidebarProvider>
-          <Suspense fallback={null}>
-            <Settings
-              parameters={step.params}
-              onParameterChange={(key, value) =>
-                onChange((prev) => ({ ...prev, [key]: value }))
-              }
-              disabled={false}
-            />
-          </Suspense>
-        </SidebarProvider>
-      </PreferencesProvider>
+      <SidebarProvider>
+        <Suspense fallback={null}>
+          <Settings
+            parameters={step.params}
+            onParameterChange={(key, value) =>
+              onChange((prev) => ({ ...prev, [key]: value }))
+            }
+            disabled={false}
+          />
+        </Suspense>
+      </SidebarProvider>
     );
   }
 
