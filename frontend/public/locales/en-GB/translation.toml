@@ -10336,6 +10336,12 @@ subtitle = "Activate a self-hosted instance with this key, or keep it for your r
 title = "Your licence key"
 trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
+[portal.procurement.link]
+cta = "Link account"
+description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote and start billing. Link an account to start."
+eyebrow = "Enterprise"
+title = "Link your account to begin"
+
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
 eyebrow = "Live"

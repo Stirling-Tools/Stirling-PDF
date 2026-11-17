@@ -10634,6 +10634,12 @@ subtitle = "Attiva un'istanza self-hosted con questa chiave, oppure conservala p
 title = "La tua chiave di licenza"
 trialFileHint = "Questo è il tuo file di licenza di prova. Una volta concluso il contratto, torna e scaricalo di nuovo — a differenza della chiave di licenza online, il file .lic non si aggiorna da solo."
 
+[portal.procurement.link]
+cta = "Collega account"
+description = "Il procurement viene eseguito sul tuo account Stirling collegato: è così che effettuiamo il provisioning della trial, prezzamo il preventivo e avviamo la fatturazione. Collega un account per iniziare."
+eyebrow = "Enterprise"
+title = "Collega il tuo account per iniziare"
+
 [portal.procurement.live]
 description = "Il tuo abbonamento è attivo e la tua licenza è stata emessa. Il provisioning del tuo team è completato e la fatturazione è iniziata."
 eyebrow = "Live"

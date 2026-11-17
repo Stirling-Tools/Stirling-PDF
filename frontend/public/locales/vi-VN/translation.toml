@@ -10634,6 +10634,12 @@ subtitle = "Kích hoạt một phiên bản self-hosted bằng khóa này, hoặ
 title = "Khóa giấy phép của bạn"
 trialFileHint = "Đây là file giấy phép dùng thử của bạn. Khi thỏa thuận của bạn đã hoàn tất, hãy quay lại và tải xuống lần nữa — khác với khóa giấy phép trực tuyến, file .lic sẽ không tự cập nhật."
 
+[portal.procurement.link]
+cta = "Liên kết tài khoản"
+description = "Mua sắm chạy trên tài khoản Stirling được liên kết của bạn: đó là cách chúng tôi cấp phát bản dùng thử, định giá báo giá và bắt đầu lập hóa đơn. Liên kết một tài khoản để bắt đầu."
+eyebrow = "Doanh nghiệp"
+title = "Liên kết tài khoản của bạn để bắt đầu"
+
 [portal.procurement.live]
 description = "Đăng ký của bạn đang hoạt động và giấy phép của bạn đã được cấp. Đội ngũ của bạn đã được cấp phát và việc lập hóa đơn đã bắt đầu."
 eyebrow = "Hoạt động"

@@ -10634,6 +10634,12 @@ subtitle = "S tem ključem aktivirajte samostojno gostovano instanco ali ga shra
 title = "Vaš licenčni ključ"
 trialFileHint = "To je vaša preskusna licenčna datoteka. Ko je vaša pogodba sklenjena, se vrnite in jo znova prenesite — za razliko od spletnega licenčnega ključa se datoteka .lic ne posodobi sama."
 
+[portal.procurement.link]
+cta = "Poveži račun"
+description = "Nabava teče na vašem povezanem računu Stirling: tako pripravimo preizkus, določimo ceno ponudbe in začnemo zaračunavanje. Za začetek povežite račun."
+eyebrow = "Enterprise"
+title = "Za začetek povežite svoj račun"
+
 [portal.procurement.live]
 description = "Vaša naročnina je aktivna in vaša licenca je izdana. Vaša ekipa je pripravljena in zaračunavanje se je začelo."
 eyebrow = "V živo"

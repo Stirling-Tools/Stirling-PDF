@@ -10634,6 +10634,12 @@ subtitle = "Aktivirajte self-hosted instancu ovim ključem ili ga sačuvajte za 
 title = "Vaš licencni ključ"
 trialFileHint = "Ovo je vaša probna licencna datoteka. Kada ugovor bude uspostavljen, vratite se i ponovo je preuzmite — za razliku od online licencnog ključa, .lic datoteka se neće sama ažurirati."
 
+[portal.procurement.link]
+cta = "Poveži nalog"
+description = "Nabavka radi na vašem povezanom Stirling nalogu: tako obezbeđujemo probni period, određujemo cenu ponude i pokrećemo naplatu. Povežite nalog za početak."
+eyebrow = "Enterprise"
+title = "Povežite svoj nalog da biste počeli"
+
 [portal.procurement.live]
 description = "Vaša pretplata je aktivna i licenca je izdata. Vaš tim je obezbeđen i naplata je počela."
 eyebrow = "Uživo"

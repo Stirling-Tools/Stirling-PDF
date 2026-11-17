@@ -10634,6 +10634,12 @@ subtitle = "Aktivujte self-hosted inštanciu týmto kľúčom alebo si ho ponech
 title = "Váš licenčný kľúč"
 trialFileHint = "Toto je váš súbor skúšobnej licencie. Keď bude vaša zmluva uzavretá, vráťte sa a stiahnite si ho znova — na rozdiel od online licenčného kľúča sa súbor .lic neaktualizuje sám."
 
+[portal.procurement.link]
+cta = "Prepojiť účet"
+description = "Obstarávanie beží na vašom prepojenom účte Stirling: takto zriaďujeme skúšobnú verziu, oceňujeme ponuku a spúšťame fakturáciu. Prepojte účet a začnite."
+eyebrow = "Enterprise"
+title = "Prepojte svoj účet a začnite"
+
 [portal.procurement.live]
 description = "Vaše predplatné je aktívne a licencia je vydaná. Váš tím je zriadený a fakturácia sa začala."
 eyebrow = "Live"

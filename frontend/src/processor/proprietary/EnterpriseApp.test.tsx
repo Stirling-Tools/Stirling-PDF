@@ -22,9 +22,9 @@ describe("self-hosted EnterpriseApp", () => {
     });
   });
 
-  it("forwards to the hosted Enterprise page, keeping the link's query", () => {
+  it("forwards to the hosted Enterprise page, keeping the link's query and hash", () => {
     render(
-      <MemoryRouter initialEntries={["/enterprise?source=sales"]}>
+      <MemoryRouter initialEntries={["/enterprise?source=sales#quote"]}>
         <EnterpriseApp />
       </MemoryRouter>,
     );
@@ -32,5 +32,6 @@ describe("self-hosted EnterpriseApp", () => {
     const target = new URL(replace.mock.calls[0][0]);
     expect(target.pathname).toMatch(/\/enterprise$/);
     expect(target.search).toBe("?source=sales");
+    expect(target.hash).toBe("#quote");
   });
 });

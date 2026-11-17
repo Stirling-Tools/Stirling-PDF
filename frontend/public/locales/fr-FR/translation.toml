@@ -10634,6 +10634,12 @@ subtitle = "Activez une instance auto-hébergée avec cette clé, ou conservez-l
 title = "Votre clé de licence"
 trialFileHint = "Ceci est votre fichier de licence d’essai. Une fois votre contrat en place, revenez le télécharger à nouveau — contrairement à la clé de licence en ligne, le fichier .lic ne se mettra pas à jour tout seul."
 
+[portal.procurement.link]
+cta = "Lier le compte"
+description = "Les achats s’exécutent sur votre compte Stirling lié : c’est ainsi que nous provisionnons l’essai, tarifons votre devis et lançons la facturation. Liez un compte pour commencer."
+eyebrow = "Entreprise"
+title = "Liez votre compte pour commencer"
+
 [portal.procurement.live]
 description = "Votre abonnement est actif et votre licence est émise. Votre équipe est provisionnée et la facturation a commencé."
 eyebrow = "En ligne"

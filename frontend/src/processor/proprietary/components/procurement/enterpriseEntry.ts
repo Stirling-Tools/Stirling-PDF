@@ -10,7 +10,7 @@ const SAAS_FRONTEND_URL = (
  */
 export const HOSTS_ENTERPRISE_DEAL = false;
 
-/** The hosted Enterprise page, keeping whatever query a link to it carries (?source=sales). */
+/** The hosted Enterprise page, keeping whatever query and hash a link to it carries (?source=sales). */
 export function hostedEnterpriseUrl(search = ""): string {
   return `${SAAS_FRONTEND_URL}/enterprise${search}`;
 }

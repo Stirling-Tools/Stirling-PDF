@@ -10634,6 +10634,12 @@ subtitle = "使用此密钥激活自托管实例，或将其保存作为记录�
 title = "你的许可证密钥"
 trialFileHint = "这是你的试用许可证文件。协议就位后，请回来再次下载它 — 与在线许可证密钥不同，.lic 文件不会自行更新。"
 
+[portal.procurement.link]
+cta = "关联账户"
+description = "采购基于你关联的 Stirling 账户运行：我们通过它配置试用、为报价定价并开始计费。关联账户即可开始。"
+eyebrow = "企业版"
+title = "关联你的账户以开始"
+
 [portal.procurement.live]
 description = "你的订阅已激活，许可证已签发。你的团队已配置完成，计费已开始。"
 eyebrow = "已上线"

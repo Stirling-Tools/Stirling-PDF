@@ -10634,6 +10634,12 @@ subtitle = "Bu açarla self-hosted instansiyanı aktivləşdirin və ya qeydlər
 title = "Lisenziya açarınız"
 trialFileHint = "Bu, sınaq lisenziya faylınızdır. Razılaşmanız qüvvəyə mindikdən sonra qayıdıb onu yenidən endirin — onlayn lisenziya açarından fərqli olaraq, .lic faylı öz-özünə yenilənməyəcək."
 
+[portal.procurement.link]
+cta = "Hesabı əlaqələndir"
+description = "Satınalma əlaqələndirilmiş Stirling hesabınızda işləyir: sınağı təmin etməyimiz, təklifinizi qiymətləndirməyimiz və hesablaşmanı başlatmağımız belə olur. Başlamaq üçün hesabı əlaqələndirin."
+eyebrow = "Korporativ"
+title = "Başlamaq üçün hesabınızı əlaqələndirin"
+
 [portal.procurement.live]
 description = "Abunəliyiniz aktivdir və lisenziyanız verilib. Komandanız təmin edilib və hesablaşma başlayıb."
 eyebrow = "Canlı"

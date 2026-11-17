@@ -10634,6 +10634,12 @@ subtitle = "Aktivieren Sie mit diesem Schlüssel eine selbst gehostete Instanz o
 title = "Ihr Lizenzschlüssel"
 trialFileHint = "Dies ist Ihre Testlizenzdatei. Sobald Ihre Vereinbarung abgeschlossen ist, kommen Sie zurück und laden Sie sie erneut herunter — im Gegensatz zum Online-Lizenzschlüssel aktualisiert sich die .lic-Datei nicht von selbst."
 
+[portal.procurement.link]
+cta = "Konto verknüpfen"
+description = "Die Beschaffung läuft über Ihr verknüpftes Stirling-Konto: So stellen wir die Testversion bereit, bepreisen Ihr Angebot und starten die Abrechnung. Verknüpfen Sie ein Konto, um zu beginnen."
+eyebrow = "Enterprise"
+title = "Verknüpfen Sie Ihr Konto, um zu beginnen"
+
 [portal.procurement.live]
 description = "Ihr Abonnement ist aktiv und Ihre Lizenz wurde ausgestellt. Ihr Team ist bereitgestellt und die Abrechnung hat begonnen."
 eyebrow = "Live"

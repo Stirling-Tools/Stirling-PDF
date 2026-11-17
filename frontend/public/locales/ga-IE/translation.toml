@@ -10634,6 +10634,12 @@ subtitle = "Gníomhachtaigh ásc féin-óstáilte leis an eochair seo, nó coinn
 title = "D'eochair cheadúnais"
 trialFileHint = "Seo do chomhad ceadúnais trialach. Nuair a bheidh do chomhaontú i bhfeidhm, tar ar ais agus íoslódáil arís é — murab ionann agus an eochair cheadúnais ar líne, ní nuashonróidh an comhad .lic é féin."
 
+[portal.procurement.link]
+cta = "Nasc cuntas"
+description = "Ritheann soláthar ar do chuntas Stirling nasctha: sin mar a sholáthraímid an triail, a phraghsálaimid do luachan, agus a thosaímid billeáil. Nasc cuntas chun tosú."
+eyebrow = "Fiontar"
+title = "Nasc do chuntas chun tosú"
+
 [portal.procurement.live]
 description = "Tá do shíntiús gníomhach agus tá do cheadúnas eisithe. Tá d’fhoireann soláthraithe agus tá billeáil tosaithe."
 eyebrow = "Beo"

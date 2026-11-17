@@ -10634,6 +10634,12 @@ subtitle = "Activa una instància autoallotjada amb aquesta clau o conserva-la p
 title = "La teva clau de llicència"
 trialFileHint = "Aquest és el teu fitxer de llicència de prova. Quan l'acord estigui en vigor, torna i descarrega'l de nou; a diferència de la clau de llicència en línia, el fitxer .lic no s'actualitzarà tot sol."
 
+[portal.procurement.link]
+cta = "Enllaça el compte"
+description = "La contractació s'executa amb el teu compte de Stirling enllaçat: així aprovisionem la prova, fixem el preu del pressupost i iniciem la facturació. Enllaça un compte per començar."
+eyebrow = "Enterprise"
+title = "Enllaça el teu compte per començar"
+
 [portal.procurement.live]
 description = "La teva subscripció és activa i la teva llicència s'ha emès. El teu equip està aprovisionat i la facturació ha començat."
 eyebrow = "En producció"

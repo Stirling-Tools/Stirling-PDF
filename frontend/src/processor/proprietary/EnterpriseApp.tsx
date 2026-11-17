@@ -8,9 +8,9 @@ import { hostedEnterpriseUrl } from "@processor/components/procurement/enterpris
  * The SaaS build shadows this with the page itself.
  */
 export function EnterpriseApp() {
-  const { search } = useLocation();
+  const { search, hash } = useLocation();
   useEffect(() => {
-    window.location.replace(hostedEnterpriseUrl(search));
-  }, [search]);
+    window.location.replace(hostedEnterpriseUrl(`${search}${hash}`));
+  }, [search, hash]);
   return null;
 }

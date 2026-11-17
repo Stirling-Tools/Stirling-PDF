@@ -10634,6 +10634,12 @@ subtitle = "Aktifkan instance self-hosted dengan key ini, atau simpan untuk arsi
 title = "Key lisensi Anda"
 trialFileHint = "Ini adalah file lisensi uji coba Anda. Setelah perjanjian Anda siap, kembali dan unduh lagi — tidak seperti key lisensi online, file .lic tidak akan diperbarui sendiri."
 
+[portal.procurement.link]
+cta = "Tautkan akun"
+description = "Pengadaan berjalan pada akun Stirling tertaut Anda: begitulah cara kami memprovision uji coba, memberi harga penawaran, dan memulai penagihan. Tautkan akun untuk memulai."
+eyebrow = "Enterprise"
+title = "Tautkan akun Anda untuk memulai"
+
 [portal.procurement.live]
 description = "Langganan Anda aktif dan lisensi Anda telah diterbitkan. Tim Anda telah diprovision dan penagihan telah dimulai."
 eyebrow = "Live"

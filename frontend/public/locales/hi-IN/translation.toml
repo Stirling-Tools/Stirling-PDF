@@ -10634,6 +10634,12 @@ subtitle = "इस key से self-hosted instance सक्रिय करे�
 title = "आपकी लाइसेंस key"
 trialFileHint = "यह आपकी trial licence file है। आपका agreement लागू होने के बाद, वापस आएँ और इसे फिर से डाउनलोड करें — online licence key के विपरीत, .lic file अपने आप update नहीं होगी।"
 
+[portal.procurement.link]
+cta = "Account लिंक करें"
+description = "Procurement आपके linked Stirling account पर चलता है: इसी से हम trial provision करते हैं, आपके quote की कीमत तय करते हैं, और billing शुरू करते हैं। शुरू करने के लिए account लिंक करें।"
+eyebrow = "Enterprise"
+title = "शुरू करने के लिए अपना account लिंक करें"
+
 [portal.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
 eyebrow = "लाइव"
