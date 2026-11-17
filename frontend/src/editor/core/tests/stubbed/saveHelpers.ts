@@ -86,3 +86,25 @@ export async function waitForReopenedPage(
     { timeout },
   );
 }
+
+/**
+ * Open `bytes` through the editor's file input and wait until they, not the
+ * document they replace, have populated `pageIndex`. The replaced document's
+ * runs stay mounted while the new file is read, and for a moment afterwards the
+ * new document has no pages, so a wait on a visible run resolves too early.
+ */
+export async function reopenSavedBytes(
+  page: Page,
+  bytes: Buffer,
+  name: string,
+  pageIndex = 0,
+  timeout = 30_000,
+): Promise<void> {
+  await stashCurrentDocument(page);
+  await page.getByTestId("pdf-editor-file-input").setInputFiles({
+    name,
+    mimeType: "application/pdf",
+    buffer: bytes,
+  });
+  await waitForReopenedPage(page, pageIndex, timeout);
+}
