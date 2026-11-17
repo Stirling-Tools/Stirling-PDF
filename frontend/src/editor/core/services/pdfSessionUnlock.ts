@@ -212,13 +212,31 @@ async function hasMixedProtection(files: readonly File[]): Promise<boolean> {
       access.permissions !== first.permissions ||
       access.encryptionRevision !== first.encryptionRevision ||
       access.password !== first.password ||
-      access.openingPassword !== first.openingPassword ||
       Boolean(access.requiresOpeningPassword) !==
         Boolean(first.requiresOpeningPassword),
   );
   if (settingsDiffer) return true;
+  if (!(await shareOpeningPassword(files))) return true;
   const [cipher, ...others] = await Promise.all(files.map(readCipherProfile));
   return !cipher || others.some((other) => other !== cipher);
+}
+
+async function shareOpeningPassword(files: readonly File[]): Promise<boolean> {
+  const accesses = files.map((file) => getPdfAccess(file)!);
+  if (!accesses[0].requiresOpeningPassword) return true;
+  const known = new Set(
+    accesses.flatMap((access) =>
+      access.openingPassword === undefined ? [] : [access.openingPassword],
+    ),
+  );
+  if (known.size !== 1) return false;
+  const [openingPassword] = known;
+  for (const [index, file] of files.entries()) {
+    if (accesses[index].openingPassword !== undefined) continue;
+    const opened = await inspectForPasswordTool(file, openingPassword);
+    if (!opened || opened.ownerAuthenticated) return false;
+  }
+  return true;
 }
 
 /** Checks the whole selection before processing; encryption hints request authentication but never grant access. */
