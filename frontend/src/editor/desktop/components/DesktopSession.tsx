@@ -1,0 +1,339 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { isTauri } from "@tauri-apps/api/core";
+import { DesktopQueryCacheReset } from "@editor/components/DesktopQueryCacheReset";
+import { OPEN_SIGN_IN_EVENT } from "@editor/constants/signInEvents";
+import { useFirstLaunchCheck } from "@editor/hooks/useFirstLaunchCheck";
+import { useBackendInitializer } from "@editor/hooks/useBackendInitializer";
+import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
+import {
+  connectionModeService,
+  JWT_EXPIRED_PROMPTED_KEY,
+  type ConnectionConfig,
+} from "@editor/services/connectionModeService";
+import { STIRLING_SAAS_URL } from "@editor/constants/connection";
+import { tauriBackendService } from "@editor/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@editor/services/selfHostedServerMonitor";
+import { authService } from "@editor/services/authService";
+import { endpointAvailabilityService } from "@editor/services/endpointAvailabilityService";
+
+// Common tool endpoints to preload for faster first-use
+const COMMON_TOOL_ENDPOINTS = [
+  "/api/v1/misc/compress-pdf",
+  "/api/v1/general/merge-pdfs",
+  "/api/v1/general/split-pages",
+  "/api/v1/convert/pdf/img",
+  "/api/v1/convert/img/pdf",
+  "/api/v1/general/rotate-pdf",
+  "/api/v1/misc/add-watermark",
+  "/api/v1/security/add-password",
+  "/api/v1/security/remove-password",
+  "/api/v1/general/extract-pages",
+];
+
+type ConnectionMode = "saas" | "selfhosted" | "local";
+
+interface DesktopSession {
+  connectionMode: ConnectionMode | null;
+  /** The startup auth check has settled the mode; until then neither app renders. */
+  authChecked: boolean;
+  /** Bumped on a real saas/local switch so the editor's SaaS tree remounts. */
+  appKey: number;
+  /** Lets the access gate seed the mode after a failed startup config read is retried. */
+  initializeConnectionMode: (config: ConnectionConfig) => void;
+}
+
+const DesktopSessionContext = createContext<DesktopSession | null>(null);
+
+export function useDesktopSession(): DesktopSession {
+  const session = useContext(DesktopSessionContext);
+  if (!session) {
+    throw new Error(
+      "useDesktopSession must be used inside DesktopSessionProvider",
+    );
+  }
+  return session;
+}
+
+/**
+ * The desktop app's connection and backend lifecycle, shared by the editor and
+ * the Processor. Mounted in PlatformProviders, above the app frame, so moving
+ * between the two never restarts it.
+ */
+export function DesktopSessionProvider({ children }: { children: ReactNode }) {
+  const localOnly = useLocalProcessingOnly();
+  const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
+  const [authChecked, setAuthChecked] = useState(false);
+  const [pendingSignIn, setPendingSignIn] = useState(false);
+  // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
+  const firstLaunchInitiated = useRef(false);
+  // Key incremented on every connection mode change after initial load — forces SaaS provider
+  // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
+  const [appKey, setAppKey] = useState(0);
+  const hasLoadedInitialMode = useRef(false);
+  // The mode the current appKey reflects. A same-mode notify (e.g. "continue without
+  // signing in" re-selecting local while already local) must not remount the provider
+  // tree - that resets DesktopOnboardingModal mid-flow and re-shows the welcome slide.
+  const lastAppliedMode = useRef<ConnectionMode | null>(null);
+
+  const initializeConnectionMode = useCallback((config: ConnectionConfig) => {
+    if (hasLoadedInitialMode.current) return;
+    setConnectionMode(config.mode);
+    lastAppliedMode.current = config.mode;
+    hasLoadedInitialMode.current = true;
+  }, []);
+
+  // Files dropped outside a dropzone must never navigate the webview to the
+  // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
+  // Dropzone-level handlers run before these window-level listeners, so
+  // in-app drag & drop is unaffected.
+  useEffect(() => {
+    const preventNavigation = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", preventNavigation);
+    window.addEventListener("drop", preventNavigation);
+    return () => {
+      window.removeEventListener("dragover", preventNavigation);
+      window.removeEventListener("drop", preventNavigation);
+    };
+  }, []);
+
+  // Load connection mode on mount and subscribe to future changes
+  useEffect(() => {
+    void connectionModeService
+      .getCurrentConfig()
+      .then(initializeConnectionMode)
+      .catch(() => setAuthChecked(true));
+
+    const unsub = connectionModeService.subscribeToModeChanges((config) => {
+      setConnectionMode(config.mode);
+      // Remount the SaaS provider tree when transitioning between saas/local modes so
+      // Supabase client state is reset without a full page reload (avoids the Windows
+      // WebView2 freeze that window.location.reload() causes during an OAuth flow).
+      // Switching TO selfhosted skips the remount — self-hosted mode doesn't use the
+      // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
+      // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
+      // which is intentional — the SaaS provider tree needs fresh state after login.
+      // Only on a real transition: a same-mode notify has nothing to reset, and
+      // remounting would tear down an in-flight modal (e.g. onboarding sign-in).
+      const modeChanged = lastAppliedMode.current !== config.mode;
+      lastAppliedMode.current = config.mode;
+      if (
+        hasLoadedInitialMode.current &&
+        modeChanged &&
+        config.mode !== "selfhosted"
+      ) {
+        setAppKey((k) => k + 1);
+      }
+      hasLoadedInitialMode.current = true;
+    });
+    return unsub;
+  }, [initializeConnectionMode]);
+
+  useEffect(() => {
+    // Wait until connection mode is loaded before checking auth
+    if (connectionMode === null) return;
+
+    if (!isFirstLaunch && setupComplete) {
+      if (connectionMode === "local") {
+        // Even in local mode, check for a valid JWT — on Windows, the OAuth callback
+        // can complete without switchToSaaS() being called (race condition), leaving
+        // LOCAL_MODE_STORAGE_KEY set while the user has a valid session. Upgrade to
+        // SaaS mode automatically so credits/billing/team features work correctly.
+        authService
+          .isAuthenticated()
+          .then(async (isAuth) => {
+            if (isAuth) {
+              await connectionModeService
+                .switchToSaaS(STIRLING_SAAS_URL)
+                .catch(console.error);
+              setConnectionMode("saas");
+            }
+          })
+          .finally(() => setAuthChecked(true));
+      } else {
+        authService
+          .isAuthenticated()
+          .then(async (isAuth) => {
+            if (!isAuth) {
+              const cfg = await connectionModeService
+                .getCurrentConfig()
+                .catch(() => null);
+              if (cfg && !cfg.lock_connection_mode && !cfg.require_sign_in) {
+                // JWT expired — fall back to local so local tools still work.
+                await connectionModeService
+                  .switchToLocal()
+                  .catch(console.error);
+                setConnectionMode("local");
+                // Show sign-in modal once per expiry cycle. If the user dismisses
+                // without signing in the flag stays set and we won't prompt again
+                // until they successfully sign in (which clears the flag).
+                if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                  localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
+                  setPendingSignIn(true);
+                }
+              }
+              // Locked deployments stay in their configured mode — user can sign in
+              // via Settings when they're ready.
+            }
+          })
+          .catch(async () => {
+            const cfg = await connectionModeService
+              .getCurrentConfig()
+              .catch(() => null);
+            if (cfg && !cfg.lock_connection_mode && !cfg.require_sign_in) {
+              await connectionModeService.switchToLocal().catch(console.error);
+              setConnectionMode("local");
+              if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
+                setPendingSignIn(true);
+              }
+            }
+          })
+          .finally(() => setAuthChecked(true));
+      }
+    } else if (isFirstLaunch && !setupComplete) {
+      // Guard against re-running when setConnectionMode triggers this effect.
+      if (firstLaunchInitiated.current) return;
+      firstLaunchInitiated.current = true;
+      connectionModeService
+        .getCurrentConfig()
+        .then(async (cfg) => {
+          if (
+            cfg.require_sign_in ||
+            (cfg.lock_connection_mode && cfg.server_config?.url)
+          ) {
+            // Preserve the managed connection; DesktopAccessGate controls access to local tools.
+            void tauriBackendService.startBackend().catch(console.error);
+            setConnectionMode(cfg.mode);
+          } else {
+            // Normal first launch — auto-enter local mode.
+            // The onboarding carousel + sign-in slide will be shown inside the main app.
+            await connectionModeService.switchToLocal();
+            void tauriBackendService.startBackend().catch(console.error);
+            setConnectionMode("local");
+          }
+        })
+        .catch(console.error)
+        .finally(() => setAuthChecked(true));
+    }
+  }, [isFirstLaunch, setupComplete, connectionMode]);
+
+  // Initialize backend health monitoring for self-hosted mode
+  useEffect(() => {
+    if (connectionMode !== "selfhosted") {
+      // Stop the monitor whenever we leave selfhosted mode so the dot resets.
+      selfHostedServerMonitor.stop();
+      return;
+    }
+    if (setupComplete && !isFirstLaunch) {
+      void tauriBackendService.initializeExternalBackend();
+      connectionModeService.getServerConfig().then((cfg) => {
+        if (cfg?.url) {
+          selfHostedServerMonitor.start(cfg.url);
+        }
+      });
+    }
+    return () => {
+      selfHostedServerMonitor.stop();
+    };
+  }, [setupComplete, isFirstLaunch, connectionMode]);
+
+  // Initialize monitoring for bundled backend (already started in Rust)
+  // This sets up port detection and health checks
+  const shouldMonitorBackend =
+    setupComplete &&
+    !isFirstLaunch &&
+    (connectionMode === "saas" || connectionMode === "local" || localOnly);
+  useBackendInitializer(shouldMonitorBackend);
+
+  // Preload endpoint availability for the local bundled backend.
+  // SaaS mode: triggers when the bundled backend reports healthy.
+  // Self-hosted mode: triggers when the local bundled backend port is discovered
+  //   (so useSelfHostedToolAvailability can use the cache instead of making
+  //   individual requests per-tool when the remote server goes offline).
+  const shouldPreloadLocalEndpoints =
+    (setupComplete && !isFirstLaunch && connectionMode === "saas") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "local") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "selfhosted");
+  useEffect(() => {
+    if (!shouldPreloadLocalEndpoints) return;
+
+    const tryPreload = () => {
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) return;
+      // tauriBackendService.isOnline now always reflects the local backend.
+      // Wait for it to be healthy before preloading in both modes.
+      if (!tauriBackendService.isOnline) return;
+      console.debug(
+        "[DesktopSession] Preloading common tool endpoints for local backend",
+      );
+      void endpointAvailabilityService.preloadEndpoints(
+        COMMON_TOOL_ENDPOINTS,
+        backendUrl,
+      );
+    };
+
+    const unsubscribe = tauriBackendService.subscribeToStatus(() =>
+      tryPreload(),
+    );
+    tryPreload();
+    return unsubscribe;
+  }, [shouldPreloadLocalEndpoints, connectionMode]);
+
+  // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
+  // The modal mounts in the access gate once authChecked flips; the frame below
+  // commits it before this parent effect runs.
+  // detail.locked is always false here: setPendingSignIn(true) is only called inside
+  // `if (!cfg?.lock_connection_mode)` branches above, so locked deployments never set
+  // pendingSignIn and therefore never reach this dispatch.
+  useEffect(() => {
+    if (!authChecked || !pendingSignIn) return;
+    window.dispatchEvent(
+      new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
+    );
+    setPendingSignIn(false);
+  }, [authChecked, pendingSignIn]);
+
+  useEffect(() => {
+    if (!authChecked) {
+      return;
+    }
+
+    if (!isTauri()) {
+      return;
+    }
+
+    const currentWindow = getCurrentWindow();
+    currentWindow
+      .show()
+      .then(() => currentWindow.unminimize().catch(() => {}))
+      .then(() => currentWindow.setFocus().catch(() => {}))
+      .then(() => currentWindow.requestUserAttention(1).catch(() => {}))
+      .catch(() => {});
+  }, [authChecked]);
+
+  const session = useMemo(
+    () => ({ connectionMode, authChecked, appKey, initializeConnectionMode }),
+    [connectionMode, authChecked, appKey, initializeConnectionMode],
+  );
+
+  return (
+    <DesktopSessionContext.Provider value={session}>
+      {/* Before the auth check too: it switches mode pre-authChecked. */}
+      <DesktopQueryCacheReset />
+      {children}
+    </DesktopSessionContext.Provider>
+  );
+}
