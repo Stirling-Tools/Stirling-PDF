@@ -16,6 +16,7 @@ import { createQuickKey, isStirlingFile } from "@editor/types/fileContext";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { SidebarBase } from "@editor/components/viewer/SidebarBase";
 import { detectNonPdfFileType, isPdfFile } from "@editor/utils/fileUtils";
 import { readPortfolioMemberBytes } from "@editor/utils/portfolioMembers";
@@ -123,6 +124,20 @@ const canPreviewMember = (attachment: PdfAttachmentObject): boolean => {
   };
   return isPdfFile(probe) || detectNonPdfFileType(probe) !== "unknown";
 };
+
+function attachmentRowTitle(
+  t: TFunction,
+  attachment: PdfAttachmentObject,
+  isPortfolio: boolean,
+): string {
+  if (!isPortfolio) {
+    return attachment.name || t("viewer.attachments.untitled", "Untitled");
+  }
+  if (canPreviewMember(attachment)) {
+    return t("viewer.portfolio.preview", "Preview");
+  }
+  return t("viewer.attachments.download", "Download attachment");
+}
 
 interface AttachmentCacheEntry {
   status: "idle" | "loading" | "success" | "error";
@@ -628,14 +643,7 @@ export const AttachmentSidebar = ({
             role="button"
             tabIndex={0}
             aria-current={isCurrent ? "true" : undefined}
-            title={
-              isPortfolio
-                ? canPreviewMember(attachment)
-                  ? t("viewer.portfolio.preview", "Preview")
-                  : t("viewer.attachments.download", "Download attachment")
-                : attachment.name ||
-                  t("viewer.attachments.untitled", "Untitled")
-            }
+            title={attachmentRowTitle(t, attachment, isPortfolio)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Group, NumberInput, Select, Stack, Text, Grid } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Button } from "@editor/ui/Button";
 import type { MeasureScale } from "@editor/utils/measurementTypes";
 import {
@@ -13,6 +14,21 @@ import {
 // ─── Constants ─────────────────────────────────────────────────────────────
 // Preset scales as architectural ratios (e.g., "1:100" = 1 page unit = 100 real-world units)
 const PRESET_SCALES = ["1:5", "1:10", "1:20", "1:50", "1:100", "1:150"];
+
+function activeScaleLabel(
+  t: TFunction,
+  currentScale: MeasureScale | null | undefined,
+): string {
+  if (currentScale && currentScale.ratio) {
+    return generateScaleLabel(currentScale.ratio, currentScale.unit);
+  }
+  if (currentScale && !currentScale.ratio) {
+    return t("scaleSettings.customUnit", "{{unit}} (custom)", {
+      unit: currentScale.unit,
+    });
+  }
+  return t("scaleSettings.noneSet", "No custom scale set");
+}
 
 // ─── Component ────────────────────────────────────────────────────────────
 interface ScaleSettingsPanelProps {
@@ -278,13 +294,7 @@ export function ScaleSettingsPanel({
       >
         <Text size="xs" c={currentScale ? "blue" : "dimmed"}>
           <strong>{t("scaleSettings.activeScale", "Active Scale")}:</strong>{" "}
-          {currentScale && currentScale.ratio
-            ? generateScaleLabel(currentScale.ratio, currentScale.unit)
-            : currentScale && !currentScale.ratio
-              ? t("scaleSettings.customUnit", "{{unit}} (custom)", {
-                  unit: currentScale.unit,
-                })
-              : t("scaleSettings.noneSet", "No custom scale set")}
+          {activeScaleLabel(t, currentScale)}
         </Text>
       </div>
 

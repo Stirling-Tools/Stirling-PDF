@@ -282,11 +282,8 @@ function resolveColorValue(v, t, primitives, seen) {
 }
 function resolveColorVar(name, fallback, t, primitives, seen) {
   if (name.startsWith("--p-")) {
-    return primitives[name]
-      ? hexToRgb(primitives[name])
-      : fallback
-        ? resolveColorValue(fallback, t, primitives, seen)
-        : null;
+    if (primitives[name]) return hexToRgb(primitives[name]);
+    return fallback ? resolveColorValue(fallback, t, primitives, seen) : null;
   }
   if (!seen.has(name) && t[name] !== undefined) {
     const next = new Set(seen).add(name);
@@ -543,10 +540,14 @@ function reportToneContrast() {
       continue;
     }
     // ✖ = near-invisible (blocks CI), ⚠ = below the WCAG floor (warn only).
-    const mark =
-      ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
-    if (ratio < TONE_INVISIBLE) invisible++;
-    else if (ratio < TONE_FLOOR) warnings++;
+    let mark = "  ";
+    if (ratio < TONE_INVISIBLE) {
+      mark = "✖ ";
+      invisible++;
+    } else if (ratio < TONE_FLOOR) {
+      mark = "⚠ ";
+      warnings++;
+    }
     console.log(
       `    ${mark}${ratio.toFixed(2).padStart(5)}  (floor ${TONE_FLOOR}, blocks <${TONE_INVISIBLE})  ${base} on ${fill}`,
     );

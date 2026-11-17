@@ -123,6 +123,56 @@ const findScrollableAncestor = (el: HTMLElement | null): HTMLElement | null => {
   return null;
 };
 
+function viewerFileName(
+  previewFile: File | null | undefined,
+  currentFile: File | null,
+  effectiveFile: { file: File | Blob } | null,
+): string | undefined {
+  if (previewFile) return previewFile.name;
+  if (currentFile && isStirlingFile(currentFile)) return currentFile.name;
+  if (effectiveFile?.file instanceof File) return effectiveFile.file.name;
+  return undefined;
+}
+
+/** The missing-file error wins over the lock prompt. */
+function ViewerUnavailable({
+  hasFile,
+  onUnlock,
+}: {
+  hasFile: boolean;
+  onUnlock: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!hasFile) {
+    return (
+      <Center style={{ flex: 1 }}>
+        <Text c="var(--color-red-dark)">
+          {t(
+            "viewer.error.noFileProvided",
+            "Error: No file provided to viewer",
+          )}
+        </Text>
+      </Center>
+    );
+  }
+  return (
+    <Center style={{ flex: 1 }}>
+      <Stack align="center" gap="md">
+        <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
+        <Text fw={500}>
+          {t(
+            "encryptedPdfUnlock.viewerLocked",
+            "This PDF is password-protected",
+          )}
+        </Text>
+        <Button onClick={onUnlock}>
+          {t("encryptedPdfUnlock.viewerUnlock", "Unlock")}
+        </Button>
+      </Stack>
+    </Center>
+  );
+}
+
 const EmbedPdfViewerContent = ({
   onClose,
   previewFile,
@@ -1889,36 +1939,15 @@ const EmbedPdfViewerContent = ({
         </ActionIcon>
       )}
 
-      {!effectiveFile ? (
-        <Center style={{ flex: 1 }}>
-          <Text c="var(--color-red-dark)">
-            {t(
-              "viewer.error.noFileProvided",
-              "Error: No file provided to viewer",
-            )}
-          </Text>
-        </Center>
-      ) : isCurrentFileLocked ? (
-        <Center style={{ flex: 1 }}>
-          <Stack align="center" gap="md">
-            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
-            <Text fw={500}>
-              {t(
-                "encryptedPdfUnlock.viewerLocked",
-                "This PDF is password-protected",
-              )}
-            </Text>
-            <Button
-              onClick={() => {
-                if (currentFile && isStirlingFile(currentFile)) {
-                  actions.openEncryptedUnlockPrompt(currentFile.fileId);
-                }
-              }}
-            >
-              {t("encryptedPdfUnlock.viewerUnlock", "Unlock")}
-            </Button>
-          </Stack>
-        </Center>
+      {!effectiveFile || isCurrentFileLocked ? (
+        <ViewerUnavailable
+          hasFile={Boolean(effectiveFile)}
+          onUnlock={() => {
+            if (currentFile && isStirlingFile(currentFile)) {
+              actions.openEncryptedUnlockPrompt(currentFile.fileId);
+            }
+          }}
+        />
       ) : (
         <>
           {currentFile && isStirlingFile(currentFile) && (
@@ -1954,15 +1983,7 @@ const EmbedPdfViewerContent = ({
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
-              fileName={
-                previewFile
-                  ? previewFile.name
-                  : currentFile && isStirlingFile(currentFile)
-                    ? currentFile.name
-                    : effectiveFile?.file instanceof File
-                      ? effectiveFile.file.name
-                      : undefined
-              }
+              fileName={viewerFileName(previewFile, currentFile, effectiveFile)}
               enableAnnotations={
                 shouldEnableAnnotations && !!pdfAccess && !pdfAccess.encrypted
               }

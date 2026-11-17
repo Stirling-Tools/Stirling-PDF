@@ -16,3 +16,16 @@ export function fleetUsersInUse(
     team.breakdown.cloudUsers,
   );
 }
+
+/**
+ * Users the team occupies. Outside a fleet, {@code localUsers} replaces the wallet's count whenever
+ * it is passed, null included; only undefined falls back to the wallet.
+ */
+export function teamUsersInUse(
+  team: TeamHolding | undefined,
+  deviceId?: string | null,
+  localUsers?: number | null,
+): number | null | undefined {
+  if (team?.fleet) return fleetUsersInUse(team, deviceId, localUsers);
+  return localUsers === undefined ? team?.usersInUse : localUsers;
+}

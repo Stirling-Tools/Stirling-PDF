@@ -11,7 +11,7 @@ import { KvRow } from "@editor/billing/KvRow";
 import { TeamPlanRow } from "@editor/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@editor/billing/ProcessorPlanRow";
 import { estimatedBillWithPending } from "@editor/billing/pendingUsage";
-import { fleetUsersInUse } from "@editor/billing/fleetSeats";
+import { teamUsersInUse } from "@editor/billing/fleetSeats";
 import type { ServerPlan } from "@editor/billing/serverPlan";
 import type { Wallet } from "@editor/billing/types";
 import type { LegacyTeamAllowance } from "@editor/types/legacyBilling";
@@ -93,6 +93,23 @@ function cycleDay(
   const of = Math.round((e - s) / day);
   const elapsed = Math.floor((Date.now() - s) / day) + 1;
   return { day: Math.min(Math.max(1, elapsed), of), of };
+}
+
+/**
+ * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
+ * it is the same hundred-user deal the cloud sells, bought locally instead.
+ */
+function currentComparePlan(
+  wallet: Wallet | null,
+  serverPlan: ServerPlan | undefined,
+  walletPays: boolean,
+): ComparePlan | null {
+  if (wallet?.enterprise) return "enterprise";
+  if (serverPlan) {
+    return serverPlan.licenseType === "ENTERPRISE" ? "enterprise" : "team";
+  }
+  if (!wallet) return null;
+  return walletPays ? "team" : "free";
 }
 
 /**
@@ -258,21 +275,11 @@ export function BillingScreen({
     t,
   ]);
 
-  /**
-   * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
-   * it is the same hundred-user deal the cloud sells, bought locally instead.
-   */
-  const currentPlan: ComparePlan | null = wallet?.enterprise
-    ? "enterprise"
-    : serverPlan
-      ? serverPlan.licenseType === "ENTERPRISE"
-        ? "enterprise"
-        : "team"
-      : !wallet
-        ? null
-        : paying || teamHeld
-          ? "team"
-          : "free";
+  const currentPlan = currentComparePlan(
+    wallet,
+    serverPlan,
+    paying || teamHeld,
+  );
 
   /**
    * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
@@ -293,11 +300,7 @@ export function BillingScreen({
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
     ? serverPlan.usersInUse
-    : wallet?.team.fleet
-      ? fleetUsersInUse(wallet.team, deviceId, usersInUse)
-      : usersInUse === undefined
-        ? wallet?.team.usersInUse
-        : usersInUse;
+    : teamUsersInUse(wallet?.team, deviceId, usersInUse);
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||

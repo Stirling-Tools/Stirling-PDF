@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -50,6 +51,70 @@ function Tranche({
       {note && <small>{note}</small>}
     </div>
   );
+}
+
+function percentOfCap(spentMajor: number, capMajor: number): number {
+  return capMajor === 0 ? 100 : (spentMajor / capMajor) * 100;
+}
+
+function prepaidNote(
+  t: TFunction,
+  prepaidLeft: number,
+  expiresAt: string | null,
+): string | undefined {
+  if (prepaidLeft === 0) {
+    return t(
+      "portal.billing.processor.prepaidExhausted",
+      "Used up, metered billing has resumed",
+    );
+  }
+  if (!expiresAt) return undefined;
+  return t("portal.billing.processor.prepaidExpires", "Expires {{date}}", {
+    date: formatPeriodDate(expiresAt, { year: true }),
+  });
+}
+
+function meteredMid(
+  t: TFunction,
+  wallet: Wallet,
+  spentMinor: number | null,
+  capped: boolean,
+): string {
+  if (spentMinor == null) {
+    return t(
+      "portal.billing.processor.midMeteredUnknown",
+      "Metered this cycle",
+    );
+  }
+  const spend = formatMinor(spentMinor, wallet.currency);
+  if (capped) {
+    return t(
+      "portal.billing.processor.spendAgainstLimit",
+      "{{spend}} of {{cap}} metered this cycle",
+      {
+        spend,
+        cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
+      },
+    );
+  }
+  return t(
+    "portal.billing.processor.midMetered",
+    "{{spend}} metered this cycle",
+    { spend },
+  );
+}
+
+function meteredFact(
+  t: TFunction,
+  spentMinor: number | null,
+  capped: boolean,
+  spendPct: number,
+): string {
+  if (!capped) return t("portal.billing.processor.factNoCap", "no limit");
+  if (spentMinor == null) return "—";
+  return t("portal.billing.processor.percentUsed", "{{pct}}%", {
+    pct: Math.round(spendPct).toLocaleString(),
+  });
 }
 
 /**
@@ -141,15 +206,12 @@ export function ProcessorPlanRow({
 
   // One door per row, and both of them already reach a purchase: the activation fork sells
   // prepay, the spend-limit dialog sells credits. Prepaid therefore adds no third door.
-  const door = active
-    ? onGovern
-      ? (governLabel ?? t("portal.billing.processor.raiseLimit", "Raise limit"))
-      : undefined
-    : onActivate
-      ? (activateLabel ??
-        t("portal.billing.processor.activate", "Switch on the Processor"))
-      : undefined;
   const onDoor = active ? onGovern : onActivate;
+  const doorLabel = active
+    ? (governLabel ?? t("portal.billing.processor.raiseLimit", "Raise limit"))
+    : (activateLabel ??
+      t("portal.billing.processor.activate", "Switch on the Processor"));
+  const door = onDoor ? doorLabel : undefined;
 
   // Drawdown order mirrors pendingMeteredUnits: the free grant, then the prepaid pool, then the
   // meter. Unsynced units consume them in that same order, so no tranche reports headroom the
@@ -177,9 +239,7 @@ export function ProcessorPlanRow({
   const spentMajor = spentMinor != null ? spentMinor / 100 : null;
   const spendPct =
     capped && spentMajor != null
-      ? wallet.capUsd === 0
-        ? 100
-        : (spentMajor / (wallet.capUsd as number)) * 100
+      ? percentOfCap(spentMajor, wallet.capUsd as number)
       : 0;
 
   const remainingOf = (remaining: number, total: number) =>
@@ -211,24 +271,7 @@ export function ProcessorPlanRow({
         )}
         value={remainingOf(prepaidLeft, prepaidTotal)}
         pct={prepaidMeter?.pct ?? 0}
-        note={
-          prepaidLeft === 0
-            ? t(
-                "portal.billing.processor.prepaidExhausted",
-                "Used up, metered billing has resumed",
-              )
-            : wallet.prepaidExpiresAt
-              ? t(
-                  "portal.billing.processor.prepaidExpires",
-                  "Expires {{date}}",
-                  {
-                    date: formatPeriodDate(wallet.prepaidExpiresAt, {
-                      year: true,
-                    }),
-                  },
-                )
-              : undefined
-        }
+        note={prepaidNote(t, prepaidLeft, wallet.prepaidExpiresAt)}
       />,
     );
   if (active)
@@ -361,33 +404,8 @@ export function ProcessorPlanRow({
     );
   }
 
-  const mid =
-    spentMinor != null
-      ? capped
-        ? t(
-            "portal.billing.processor.spendAgainstLimit",
-            "{{spend}} of {{cap}} metered this cycle",
-            {
-              spend: formatMinor(spentMinor, wallet.currency),
-              cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
-            },
-          )
-        : t(
-            "portal.billing.processor.midMetered",
-            "{{spend}} metered this cycle",
-            {
-              spend: formatMinor(spentMinor, wallet.currency),
-            },
-          )
-      : t("portal.billing.processor.midMeteredUnknown", "Metered this cycle");
-
-  const fact = capped
-    ? spentMinor == null
-      ? "—"
-      : t("portal.billing.processor.percentUsed", "{{pct}}%", {
-          pct: Math.round(spendPct).toLocaleString(),
-        })
-    : t("portal.billing.processor.factNoCap", "no limit");
+  const mid = meteredMid(t, wallet, spentMinor, capped);
+  const fact = meteredFact(t, spentMinor, capped, spendPct);
 
   return (
     <MeterRow

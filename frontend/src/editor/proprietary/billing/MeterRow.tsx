@@ -3,6 +3,12 @@ import { Tooltip } from "@editor/ui/Tooltip";
 
 export type MeterRowTone = "free" | "paid" | "warn";
 
+const TONE_CLASS: Record<MeterRowTone, string> = {
+  free: "billing-meter",
+  paid: "billing-meter billing-meter--paid",
+  warn: "billing-meter billing-meter--warn",
+};
+
 export interface MeterRowProps {
   /** The product's name on a measuring surface: "Users", "Processor". */
   name: string;
@@ -45,10 +51,9 @@ export function MeterRow({
   midTitle,
   details,
 }: MeterRowProps) {
-  const cls = `billing-meter${tone === "paid" ? " billing-meter--paid" : tone === "warn" ? " billing-meter--warn" : ""}`;
   const row = (
     <div
-      className={cls}
+      className={TONE_CLASS[tone]}
       tabIndex={details ? 0 : undefined}
       role={details ? "group" : undefined}
       aria-label={details ? name : undefined}

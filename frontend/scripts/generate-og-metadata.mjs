@@ -559,13 +559,15 @@ console.log(
 console.log(
   `Tools using the DEFAULT image (${DEFAULT_IMAGE_BASENAME}.png) - no bespoke art: ${missing.length}`,
 );
+function toolKind(id) {
+  if (superIds.includes(id)) return "super";
+  if (linkIds.includes(id)) return "link";
+  return "regular";
+}
 for (const id of missing) {
-  const kind = superIds.includes(id)
-    ? "super"
-    : linkIds.includes(id)
-      ? "link"
-      : "regular";
-  console.log(`  ${kind.padEnd(8)} ${id.padEnd(20)} ${canonicalPath(id)}`);
+  console.log(
+    `  ${toolKind(id).padEnd(8)} ${id.padEnd(20)} ${canonicalPath(id)}`,
+  );
 }
 const used = new Set(Object.values(ogImageMap));
 const orphans = [...images]

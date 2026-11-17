@@ -13,6 +13,19 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@editor/styles/zIndex";
 import { hasPdfPermissionOverride } from "@editor/services/pdfPermissions";
+import type { TFunction } from "i18next";
+
+function permissionStatusLabel(
+  t: TFunction,
+  lowResolutionOnly: boolean,
+  allowed: boolean,
+): string {
+  if (lowResolutionOnly) {
+    return t("encryptedPdfUnlock.lowResolutionOnly", "Low resolution only");
+  }
+  if (allowed) return t("encryptedPdfUnlock.allowed", "Allowed");
+  return t("encryptedPdfUnlock.restricted", "Restricted");
+}
 
 /** Persistent document settings; authentication is requested only when an action needs it. */
 export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
@@ -206,14 +219,7 @@ export function PdfProtectionStatus({ file }: { file: StirlingFile }) {
                           </Tooltip>
                         )}
                       <Text size="sm">
-                        {lowResolutionOnly
-                          ? t(
-                              "encryptedPdfUnlock.lowResolutionOnly",
-                              "Low resolution only",
-                            )
-                          : allowed
-                            ? t("encryptedPdfUnlock.allowed", "Allowed")
-                            : t("encryptedPdfUnlock.restricted", "Restricted")}
+                        {permissionStatusLabel(t, lowResolutionOnly, allowed)}
                       </Text>
                     </Group>
                   </Group>
