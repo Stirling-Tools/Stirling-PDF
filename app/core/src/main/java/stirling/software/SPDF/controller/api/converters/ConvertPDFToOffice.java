@@ -1,9 +1,13 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -88,11 +92,20 @@ public class ConvertPDFToOffice {
         if ("rtf".equals(outputFormat) && !endpointConfiguration.isEndpointEnabled("pdf-to-rtf")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This endpoint is disabled");
         }
-        return convert(
-                inputFile,
-                outputFormat,
-                Set.of("rtf", "txt"),
-                plainText ? MediaType.TEXT_PLAIN : MediaType.APPLICATION_OCTET_STREAM);
+        if (plainText) {
+            String fileName =
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
+            TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
+            try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                Files.writeString(finalOut.getPath(), stripper.getText(document), UTF_8);
+            } catch (Exception e) {
+                finalOut.close();
+                throw e;
+            }
+            return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.TEXT_PLAIN);
+        }
+        return convert(inputFile, outputFormat, Set.of("rtf"), MediaType.APPLICATION_OCTET_STREAM);
     }
 
     @AutoJobPostMapping(
@@ -130,9 +143,8 @@ public class ConvertPDFToOffice {
     private ResponseEntity<Resource> convert(
             MultipartFile input, String format, Set<String> formats, MediaType type)
             throws IOException {
-        // Text reads any upload; every other format takes only an upload typed as a PDF.
         boolean pdf = MediaType.APPLICATION_PDF_VALUE.equals(input.getContentType());
-        if (format == null || !formats.contains(format) || !pdf && !"txt".equals(format)) {
+        if (format == null || !formats.contains(format) || !pdf) {
             return ResponseEntity.badRequest().build();
         }
         TempFile out = tempFileManager.createManagedTempFile("." + format);

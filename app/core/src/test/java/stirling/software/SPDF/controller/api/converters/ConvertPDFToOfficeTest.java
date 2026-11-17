@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -22,6 +23,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -137,20 +139,25 @@ class ConvertPDFToOfficeTest {
     }
 
     @Test
-    void processPdfToRTForTXT_txtUsesOfficeConvert() throws Exception {
+    void processPdfToRTForTXT_withTxtFormat_usesStripper() throws Exception {
         MockMultipartFile pdfFile = createPdfFile();
-        when(pdfDocumentFactory.load(pdfFile)).thenReturn(new PDDocument());
         PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
         request.setFileInput(pdfFile);
         request.setOutputFormat("txt");
+        PDDocument realDoc = new PDDocument();
+        realDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+        when(pdfDocumentFactory.load(pdfFile)).thenReturn(realDoc);
+        ResponseEntity<Resource> expectedResponse = streamingOk("text content".getBytes());
 
         try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-            wr.when(() -> WebResponseUtils.fileToWebResponse(any(), anyString(), any()))
-                    .thenReturn(streamingOk("txt".getBytes()));
+            wr.when(
+                            () ->
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(), anyString(), Mockito.eq(MediaType.TEXT_PLAIN)))
+                    .thenReturn(expectedResponse);
 
-            controller.processPdfToRTForTXT(request);
+            assertSame(expectedResponse, controller.processPdfToRTForTXT(request));
         }
-        Mockito.verify(officeConversionService)
-                .convert(any(PDDocument.class), any(), Mockito.eq("txt"), any());
+        Mockito.verifyNoInteractions(officeConversionService);
     }
 }

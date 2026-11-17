@@ -131,7 +131,9 @@ class OfficeConvertIntegrationTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void markdownConvertsInBothDirections(boolean packaged) throws Exception {
-        var toMarkdown = new ConvertPDFToMarkdown(office);
+        var toMarkdown =
+                new ConvertPDFToMarkdown(
+                        tempFiles, new stirling.software.common.pdf.BasicPdfMarkdownExtractor());
         PDFFile pdf = new PDFFile();
         pdf.setFileInput(uploadPdf());
         byte[] markdown = toMarkdown.processPdfToMarkdown(pdf).getBody();
@@ -656,7 +658,7 @@ class OfficeConvertIntegrationTest {
         request.setPageNumbers(pages);
         request.setFileInput(
                 new MockMultipartFile("fileInput", "tables.pdf", "application/pdf", input));
-        var controller = new ConvertPDFToExcelController(factory, tempFiles, office);
+        var controller = new ConvertPDFToExcelController(factory, tempFiles);
         byte[] output = body(controller.pdfToExcel(request));
         StringBuilder cells = new StringBuilder();
         try (var workbook =
