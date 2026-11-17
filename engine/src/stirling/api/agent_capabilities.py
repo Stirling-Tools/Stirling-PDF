@@ -43,9 +43,8 @@ class AgentCapability:
             plan that Java executes via the job pipeline.
         required_scope: coarse OAuth scope. ``mcp.tools.read`` for pure-read capabilities
             (Q&A, audits) and ``mcp.tools.write`` for anything that yields a plan / file.
-        route: HTTP path Java POSTs to when invoking this capability. When a capability does
-            not have a stable per-agent route yet, use the generic invoke fallback at
-            ``/api/v1/agents/invoke/{id}``.
+        route: HTTP path Java POSTs to when invoking this capability. Must be a POST route
+            registered on the engine app.
     """
 
     id: str
@@ -63,7 +62,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
         input_model=PdfQuestionRequest,
         mode="sync",
         required_scope="mcp.tools.read",
-        route="/api/v1/pdf-question",
+        route="/api/v1/pdf/questions",
     ),
     AgentCapability(
         id="pdf-edit-plan",
@@ -75,7 +74,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
         input_model=PdfEditRequest,
         mode="async",
         required_scope="mcp.tools.write",
-        route="/api/v1/pdf-edit",
+        route="/api/v1/pdf/edit",
     ),
     AgentCapability(
         id="agent-draft",
@@ -85,7 +84,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
         input_model=AgentDraftRequest,
         mode="sync",
         required_scope="mcp.tools.read",
-        route="/api/v1/ai/agents/draft",
+        route="/api/v1/agents/draft",
     ),
     AgentCapability(
         id="agent-revise",
@@ -93,7 +92,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
         input_model=AgentRevisionRequest,
         mode="sync",
         required_scope="mcp.tools.read",
-        route="/api/v1/ai/agents/revise",
+        route="/api/v1/agents/revise",
     ),
     AgentCapability(
         id="math-audit-examine",
@@ -123,7 +122,7 @@ EXPOSED_CAPABILITIES: list[AgentCapability] = [
         input_model=PdfCommentRequest,
         mode="sync",
         required_scope="mcp.tools.read",
-        route="/api/v1/pdf-comment/generate",
+        route="/api/v1/ai/pdf-comment-agent/generate",
     ),
     AgentCapability(
         id="agent-next-action",
