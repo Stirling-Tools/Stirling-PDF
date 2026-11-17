@@ -35,11 +35,10 @@ def test_folio_manifest_round_trip() -> None:
     assert reloaded == manifest
 
 
-def test_folio_manifest_round_bounds() -> None:
+@pytest.mark.parametrize("round_value", [0, 4])
+def test_folio_manifest_round_bounds(round_value: int) -> None:
     with pytest.raises(ValidationError):
-        FolioManifest(session_id="x", page_count=1, folio_types=[FolioType.TEXT], round=0)
-    with pytest.raises(ValidationError):
-        FolioManifest(session_id="x", page_count=1, folio_types=[FolioType.TEXT], round=4)
+        FolioManifest(session_id="x", page_count=1, folio_types=[FolioType.TEXT], round=round_value)
 
 
 # ---------------------------------------------------------------------------

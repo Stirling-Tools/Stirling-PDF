@@ -122,8 +122,7 @@ public class OverlayImageController {
             log.info("PDF with overlaid image successfully created");
 
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
+                    tempOut, GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"));
         }
     }
 }

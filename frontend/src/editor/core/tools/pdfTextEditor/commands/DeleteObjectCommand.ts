@@ -44,9 +44,10 @@ export class DeleteObjectCommand implements Command {
     const scan = scanEditOf(doc, run);
     if (scan) {
       // The words are pixels in the scan; only covering them removes them.
-      this.scanText ??= run.text;
+      const text = run.text;
+      if (!renderScanEdit(doc, page, run, scan, "")) return;
+      this.scanText ??= text;
       this.removedRun = run;
-      renderScanEdit(doc, page, run, scan, "");
       page.setRuns(page.runs.filter((r) => r.id !== run.id));
       return;
     }

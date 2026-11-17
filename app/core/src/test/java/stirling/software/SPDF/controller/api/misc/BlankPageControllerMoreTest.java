@@ -208,7 +208,7 @@ class BlankPageControllerMoreTest {
             List<String> names = zipNames(response.getBody());
             // Only non-blank pages exist, so only the non-blank entry is written.
             assertEquals(1, names.size());
-            assertTrue(names.get(0).endsWith("_nonBlankPages.pdf"));
+            assertEquals("in.pdf", names.get(0));
         }
 
         @Test
@@ -232,7 +232,7 @@ class BlankPageControllerMoreTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
             assertEquals(2, names.size());
-            assertTrue(names.stream().anyMatch(n -> n.endsWith("_nonBlankPages.pdf")));
+            assertTrue(names.contains("in.pdf"));
             assertTrue(names.stream().anyMatch(n -> n.endsWith("_blankPages.pdf")));
         }
     }
@@ -250,7 +250,7 @@ class BlankPageControllerMoreTest {
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
-            assertTrue(names.get(0).endsWith("_nonBlankPages.pdf"));
+            assertEquals("in.pdf", names.get(0));
         }
 
         @Test

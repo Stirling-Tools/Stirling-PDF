@@ -14,7 +14,6 @@ import { NotificationBell } from "@editor/components/notifications/NotificationB
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { ConnectAccountRail } from "@processor/components/ConnectAccountRail";
 import { FeedbackTag } from "@editor/components/feedback/FeedbackTag";
-import { PreferencesProvider } from "@editor/contexts/PreferencesContext";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -111,9 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ConnectAccountRail />
           {children}
         </main>
-        <PreferencesProvider>
-          <FeedbackTag />
-        </PreferencesProvider>
+        <FeedbackTag />
       </div>
     </div>
   );

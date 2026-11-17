@@ -29,6 +29,7 @@ interface LayerSidebarProps {
   onApplyLayers: (modifiedBlob: Blob) => Promise<void>;
   /** Called when layer detection completes, reporting whether the PDF has layers. */
   onLayersDetected?: (hasLayers: boolean) => void;
+  readOnly?: boolean;
 }
 
 type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
@@ -39,6 +40,7 @@ export function LayerSidebar({
   file,
   documentCacheKey,
   onApplyLayers,
+  readOnly = false,
   onLayersDetected,
 }: LayerSidebarProps) {
   const { t } = useTranslation();
@@ -168,12 +170,17 @@ export function LayerSidebar({
     return () => clearTimeout(timer);
   }, [visibility, file, layers, isApplying, onApplyLayers]);
 
-  const toggleLayerVisibility = useCallback((id: string) => {
-    userChangedRef.current = true;
-    setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
-  }, []);
+  const toggleLayerVisibility = useCallback(
+    (id: string) => {
+      if (readOnly) return;
+      userChangedRef.current = true;
+      setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
+    },
+    [readOnly],
+  );
 
   const showAll = useCallback(() => {
+    if (readOnly) return;
     userChangedRef.current = true;
     setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
@@ -182,9 +189,10 @@ export function LayerSidebar({
       }
       return updated;
     });
-  }, []);
+  }, [readOnly]);
 
   const hideAll = useCallback(() => {
+    if (readOnly) return;
     userChangedRef.current = true;
     setVisibility((prev) => {
       const updated: Record<string, boolean> = {};
@@ -193,7 +201,7 @@ export function LayerSidebar({
       }
       return updated;
     });
-  }, []);
+  }, [readOnly]);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
@@ -262,6 +270,7 @@ export function LayerSidebar({
             <Checkbox
               size="xs"
               checked={visibility[layer.id] ?? layer.visible}
+              disabled={readOnly}
               onChange={() => toggleLayerVisibility(layer.id)}
               onClick={(e) => e.stopPropagation()}
               style={{ flexShrink: 0 }}
@@ -306,7 +315,7 @@ export function LayerSidebar({
             variant="tertiary"
             size="sm"
             onClick={showAll}
-            disabled={allVisible || isApplying}
+            disabled={readOnly || allVisible || isApplying}
             aria-label={t("viewer.layers.showAll", "Show all layers")}
             title={t("viewer.layers.showAll", "Show all layers")}
           >
@@ -316,7 +325,7 @@ export function LayerSidebar({
             variant="tertiary"
             size="sm"
             onClick={hideAll}
-            disabled={allHidden || isApplying}
+            disabled={readOnly || allHidden || isApplying}
             aria-label={t("viewer.layers.hideAll", "Hide all layers")}
             title={t("viewer.layers.hideAll", "Hide all layers")}
           >

@@ -1,9 +1,11 @@
+import { scanFaceCssFamily } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  TextRange,
-  TextRunSnapshot,
-  WidthMode,
+import {
+  RENDER_MODE_INVISIBLE,
+  type TextRange,
+  type TextRunSnapshot,
+  type WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { toCssHex } from "@editor/tools/pdfTextEditor/model/Color";
 import type { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
@@ -15,7 +17,10 @@ import {
   embeddedFaceFamily,
   onEmbeddedFaceLoaded,
 } from "@editor/tools/pdfTextEditor/util/embeddedFace";
-import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+import {
+  isDeviceFontId,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   fitTextToWidth,
   NO_FIT,
@@ -49,9 +54,8 @@ import {
   resetTextMetricsCache,
 } from "@editor/tools/pdfTextEditor/util/textMetrics";
 import { MIN_WRAP_WIDTH_EM } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { serverFontCssFamily } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import "@editor/tools/pdfTextEditor/components/TextRunOverlay.css";
-
-const RENDER_MODE_INVISIBLE = 3;
 
 const SETTLE_MS = 400;
 
@@ -77,13 +81,15 @@ function cssFontFamilyFor(fontId: string): string {
   // The document's own face, when PDFium gave us bytes a FontFace accepts.
   // An unresolved name costs nothing: the browser moves on to the next entry.
   const own = ownFaceFor(fontId);
-  // An edit that outgrew a subset now re-emits in the user's INSTALLED face
+  // An edit that outgrew a subset now re-emits in an installed or server face
   // (`device:Calibri`), so the page really is Calibri. Naming it first keeps
   // the overlay measuring and drawing what the page renders; without it
   // nearestStandardFont collapses it to Helvetica and every advance the
   // overlay predicts is a different font's.
-  if (fontId.startsWith("device:")) {
-    return `"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  if (isDeviceFontId(fontId)) {
+    const server = serverFontCssFamily(family);
+    const served = server ? `"${server}", ` : "";
+    return `${served}"${family}", ${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
   }
   const standard = nearestStandardFont(family);
   if (standard.startsWith("Times")) {
@@ -448,9 +454,13 @@ export function TextRunOverlay({
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
-  const fontFamily = cssFontFamilyFor(run.fontId);
-  const fontWeight = cssWeightFor(run.fontId);
-  const fontStyle = cssStyleFor(run.fontId);
+  const faceName = run.scanFamily ?? run.fontId;
+  // The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
+  const fontFamily = run.scanFamily
+    ? scanFaceCssFamily(run.scanFamily)
+    : cssFontFamilyFor(run.fontId);
+  const fontWeight = cssWeightFor(faceName);
+  const fontStyle = cssStyleFor(faceName);
   const fontSizePx = Math.max(4, run.fontSize * scale);
   const font = cssFontShorthand(fontStyle, fontWeight, fontSizePx, fontFamily);
   const { ascent, descent } = useMemo(
@@ -853,6 +863,7 @@ export function TextRunOverlay({
     <div
       ref={ref}
       data-testid={`pdf-editor-run-${run.id}`}
+      data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning

@@ -12,5 +12,7 @@ public enum IntegrationType {
     PURVIEW,
     /** ConsignO Cloud (Notarius) e-signature and notarization. */
     CONSIGNO,
-    VECTOR_DB
+    VECTOR_DB,
+    MICROSOFT_365,
+    GOOGLE_WORKSPACE
 }
