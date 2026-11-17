@@ -4,6 +4,8 @@ import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/Dis
 import type { AnnotationBox } from "@editor/tools/pdfTextEditor/model/AnnotationBox";
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 
+export const RENDER_MODE_INVISIBLE = 3;
+
 export interface RGBA {
   r: number; // 0..255
   g: number;

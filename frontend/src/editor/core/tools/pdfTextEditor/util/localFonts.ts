@@ -1,11 +1,24 @@
 // Local Font Access API wrapper. Chromium-only and permission-gated, so every
 // entry point degrades to null instead of throwing.
 
+export interface FaceAxes {
+  bold: boolean;
+  italic: boolean;
+  weight: number | null;
+}
+
 export interface LocalFont {
   family: string;
   fullName: string;
   style: string;
   postscriptName: string;
+  /** Style axes the font source states outright; absent for device faces, whose axes are read from the style name. */
+  axes?: FaceAxes;
+}
+
+export interface FontFamilyOption {
+  value: string;
+  label: string;
 }
 
 export interface LocalFontFamily {
@@ -110,6 +123,7 @@ export function resetLocalFontsCache(): void {
   faceEntries = [];
   resolved = null;
   bytesByFamily.clear();
+  faceKeyByFamily.clear();
   bytesPending.clear();
 }
 
@@ -141,8 +155,36 @@ export function groupByFamily(fonts: LocalFont[]): LocalFontFamily[] {
   return families;
 }
 
+/** Picker options per family, plus a Bold entry where an upright bold cut exists; `taken` names are left out. */
+export function familyOptions(
+  fonts: LocalFont[] | null,
+  taken: string[],
+): FontFamilyOption[] {
+  if (!fonts) return [];
+  const hidden = new Set(taken.map(normaliseName));
+  const families = groupByFamily(fonts);
+  const listed = new Set([
+    ...hidden,
+    ...families.map(({ family }) => normaliseName(family)),
+  ]);
+  const withBold = new Set<string>();
+  for (const font of fonts) {
+    const flags = faceStyleFlags(font);
+    if (flags.bold && !flags.italic) withBold.add(normaliseName(font.family));
+  }
+  return families.flatMap(({ family }) => {
+    const key = normaliseName(family);
+    if (hidden.has(key)) return [];
+    const options = [{ value: family, label: family }];
+    if (withBold.has(key) && !listed.has(normaliseName(`${family} Bold`))) {
+      options.push({ value: `${family} Bold`, label: `${family} Bold` });
+    }
+    return options;
+  });
+}
+
 /** Case/separator-insensitive key, so "Segoe-UI" and "Segoe UI" are one name. */
-function normaliseName(name: string): string {
+export function normaliseName(name: string): string {
   return name
     .trim()
     .toLowerCase()
@@ -155,17 +197,47 @@ export interface RequestedFace {
   italic: boolean;
 }
 
+const STYLE_WORDS = /\b(bold|italic|oblique|regular|book|normal|roman)\b/gi;
+
+function styleAxes(text: string): { bold: boolean; italic: boolean } {
+  return {
+    bold: /\bbold\b/i.test(text),
+    italic: /\b(italic|oblique)\b/i.test(text),
+  };
+}
+
 // Split a picker value into family plus style axes, so "Segoe UI Bold" finds
 // "Segoe UI". A bare name yields the upright regular cut.
 export function splitRequested(requested: string): RequestedFace {
   const spaced = requested.trim().replace(/[_-]+/g, " ");
-  const bold = /\bbold\b/i.test(spaced);
-  const italic = /\b(italic|oblique)\b/i.test(spaced);
-  const family = spaced
-    .replace(/\b(bold|italic|oblique|regular|book|normal|roman)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return { family: family || spaced, bold, italic };
+  const family = spaced.replace(STYLE_WORDS, " ").replace(/\s+/g, " ").trim();
+  return { family: family || spaced, ...styleAxes(spaced) };
+}
+
+export function knownFamilyOf(
+  fonts: LocalFont[],
+  requested: string,
+): RequestedFace | null {
+  const name = normaliseName(requested);
+  let best: RequestedFace | null = null;
+  let bestLength = 0;
+  for (const font of fonts) {
+    const family = normaliseName(font.family);
+    if (!family || family.length <= bestLength) continue;
+    if (name !== family && !name.startsWith(`${family} `)) continue;
+    const rest = name.slice(family.length);
+    if (rest.replace(STYLE_WORDS, "").trim()) continue;
+    best = { family: font.family, ...styleAxes(rest) };
+    bestLength = family.length;
+  }
+  return best;
+}
+
+export function resolveRequested(
+  fonts: LocalFont[],
+  requested: string,
+): RequestedFace {
+  return knownFamilyOf(fonts, requested) ?? splitRequested(requested);
 }
 
 // The style words of a face. The family is excluded on purpose so a face of
@@ -186,6 +258,7 @@ export function faceStyleFlags(font: LocalFont): {
   bold: boolean;
   italic: boolean;
 } {
+  if (font.axes) return { bold: font.axes.bold, italic: font.axes.italic };
   const style = faceStyleText(font);
   return {
     bold: /bold|black|heavy|semib|demi/.test(style),
@@ -200,6 +273,7 @@ function scoreFace(
   wantBold: boolean,
   wantItalic: boolean,
 ): number {
+  if (font.axes) return scoreStatedAxes(font.axes, wantBold, wantItalic);
   const style = faceStyleText(font);
   const bold = /bold|black|heavy|semib|demi/.test(style);
   const italic = /italic|oblique/.test(style);
@@ -212,29 +286,32 @@ function scoreFace(
   return score - Math.min(style.length, 32) / 100;
 }
 
+function scoreStatedAxes(
+  axes: FaceAxes,
+  wantBold: boolean,
+  wantItalic: boolean,
+): number {
+  let score = 0;
+  if (axes.bold === wantBold) score += 4;
+  if (axes.italic === wantItalic) score += 4;
+  const target = wantBold ? 700 : 400;
+  const weight = axes.weight ?? (axes.bold ? 700 : 400);
+  return score - Math.min(Math.abs(weight - target), 900) / 1000;
+}
+
 // The installed face best answering a family name, or null. An exact family
 // hit wins, so "Arial Black" is not read as a bold cut of "Arial".
 export function pickLocalFontFace(
   fonts: LocalFont[],
   requested: string,
 ): LocalFont | null {
-  const wanted = splitRequested(requested);
-  const exact = fonts.filter(
-    (font) => normaliseName(font.family) === normaliseName(requested),
-  );
-  const group =
-    exact.length > 0
-      ? exact
-      : fonts.filter(
-          (font) => normaliseName(font.family) === normaliseName(wanted.family),
-        );
-  if (group.length === 0) return null;
-  const wantBold = exact.length > 0 ? false : wanted.bold;
-  const wantItalic = exact.length > 0 ? false : wanted.italic;
+  const wanted = resolveRequested(fonts, requested);
+  const family = normaliseName(wanted.family);
   let best: LocalFont | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
-  for (const font of group) {
-    const score = scoreFace(font, wantBold, wantItalic);
+  for (const font of fonts) {
+    if (normaliseName(font.family) !== family) continue;
+    const score = scoreFace(font, wanted.bold, wanted.italic);
     if (score > bestScore) {
       best = font;
       bestScore = score;
@@ -268,11 +345,17 @@ async function readFaceBytes(source: unknown): Promise<Uint8Array | null> {
 }
 
 const bytesByFamily = new Map<string, Uint8Array>();
+const faceKeyByFamily = new Map<string, string>();
 const bytesPending = new Map<string, Promise<Uint8Array | null>>();
 
 /** Already-read bytes for a family, or null. Never prompts, never awaits. */
 export function getLocalFontBytes(family: string): Uint8Array | null {
   return bytesByFamily.get(normaliseName(family)) ?? null;
+}
+
+/** Which installed face the bytes for `family` were read from, or null. */
+export function getLocalFaceKey(family: string): string | null {
+  return faceKeyByFamily.get(normaliseName(family)) ?? null;
 }
 
 // The font file bytes behind a family name, cached for the session. Null when
@@ -293,7 +376,10 @@ export async function loadLocalFontBytes(
     if (!picked) return null;
     const entry = faceEntries.find((candidate) => candidate.font === picked);
     const bytes = entry ? await readFaceBytes(entry.source) : null;
-    if (bytes) bytesByFamily.set(key, bytes);
+    if (bytes) {
+      bytesByFamily.set(key, bytes);
+      faceKeyByFamily.set(key, picked.postscriptName || picked.fullName);
+    }
     return bytes;
   })();
   bytesPending.set(key, job);

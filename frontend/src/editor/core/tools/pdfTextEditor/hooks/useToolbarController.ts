@@ -11,9 +11,10 @@ import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextA
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
 import { warmDocumentDeviceFonts } from "@editor/tools/pdfTextEditor/util/fontCapability";
 import {
-  loadedLocalFonts,
-  subscribeLocalFonts,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+  loadedExternalFonts,
+  subscribeExternalFonts,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
+import { loadServerFonts } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import {
   ChangeZOrderCommand,
   type ZOrderMode,
@@ -400,13 +401,17 @@ export function useToolbarController(
     [store],
   );
 
-  // Null until the user loads their device fonts, and it must re-render when
-  // they do - the italic control's availability is derived from it.
-  const localFonts = useSyncExternalStore(
-    subscribeLocalFonts,
-    loadedLocalFonts,
-    loadedLocalFonts,
+  // Null until device or server fonts load; re-render then, as italic availability derives from it.
+  const externalFonts = useSyncExternalStore(
+    subscribeExternalFonts,
+    loadedExternalFonts,
+    loadedExternalFonts,
   );
+
+  const hasTextSelection = selection.runIds.length > 0;
+  useEffect(() => {
+    if (hasTextSelection) void loadServerFonts();
+  }, [hasTextSelection]);
 
   const documentFontIds = useMemo(
     () => [...new Set(state.pages.flatMap((p) => p.runs.map((r) => r.fontId)))],
@@ -416,13 +421,13 @@ export function useToolbarController(
   // Match the document's own families against the installed ones, so an edit
   // that outgrows an embedded subset completes from the real face.
   useEffect(() => {
-    if (!localFonts) return;
+    if (!externalFonts) return;
     void warmDocumentDeviceFonts(documentFontIds);
-  }, [localFonts, documentFontIds]);
+  }, [externalFonts, documentFontIds]);
 
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection, localFonts),
-    [state.pages, selection, localFonts],
+    () => deriveToolbarState(state.pages, selection, externalFonts),
+    [state.pages, selection, externalFonts],
   );
 
   const selectionAllLocked = useMemo(() => {
@@ -507,9 +512,7 @@ export function useToolbarController(
     onChangeFontSize: sel.changeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
-    onChangeFontFamily: (family: string) => {
-      void sel.changeFontFamily(family);
-    },
+    onChangeFontFamily: sel.changeFontFamily,
     onToggleItalic: sel.toggleItalic,
     onDelete: sel.deleteSelection,
     onToggleLock,
