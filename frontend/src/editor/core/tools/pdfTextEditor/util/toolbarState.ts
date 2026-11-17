@@ -4,6 +4,7 @@ import {
   faceStyleOf,
   familyHasStyle,
   familiesOfFont,
+  fontFamilyKey,
   hasExtraWeights,
   knownDocumentFamilies,
   type FaceSources,
@@ -43,11 +44,17 @@ export const EMPTY_TOOLBAR: ToolbarState = {
   },
 };
 
-/** Collapse a multi-run selection into a single toolbar snapshot. */
+/**
+ * Collapse a multi-run selection into a single toolbar snapshot. `rangeFontIds`
+ * are the fonts drawing the characters selected inside the one selected run,
+ * when only some of its text is selected: the font controls then describe
+ * those characters, not the run.
+ */
 export function deriveToolbarState(
   pages: PageSnapshot[],
   selection: SelectionState,
   localFonts: LocalFont[] | null = null,
+  rangeFontIds: readonly string[] | null = null,
 ): ToolbarState {
   if (selection.runIds.length === 0) return EMPTY_TOOLBAR;
   const selected = pages
@@ -55,7 +62,12 @@ export function deriveToolbarState(
     .filter((r) => selection.runIds.includes(r.id));
   if (selected.length === 0) return EMPTY_TOOLBAR;
   const first = selected[0];
-  const sameFamily = selected.every((r) => r.fontId === first.fontId);
+  const inRange = rangeFontIds !== null && rangeFontIds.length > 0;
+  const fontId = inRange ? rangeFontIds[0] : first.fontId;
+  // Bold and regular words of one family are one family, as a word processor shows them.
+  const sameFamily = inRange
+    ? rangeFontIds.every((id) => fontFamilyKey(id) === fontFamilyKey(fontId))
+    : selected.every((r) => r.fontId === first.fontId);
   const sameSize = selected.every((r) => r.fontSize === first.fontSize);
   const sameFill = selected.every(
     (r) =>
@@ -74,7 +86,9 @@ export function deriveToolbarState(
   );
   // Per font, not per run: a select-all hands this thousands of runs sharing a
   // handful of fonts, on every keystroke.
-  const fontIds = [...new Set(selected.map((r) => r.fontId))];
+  const fontIds = inRange
+    ? [...new Set(rangeFontIds)]
+    : [...new Set(selected.map((r) => r.fontId))];
   const styles = fontIds.map(faceStyleOf);
   const allBold = styles.every((style) => isBoldWeight(style.weight));
   const allItalic = styles.every((style) => style.italic);
@@ -96,13 +110,13 @@ export function deriveToolbarState(
   const lacksOnlyBoldItalic = (
     request: { bold: boolean } | { italic: boolean },
   ) => fontIds.every((id) => familyHasStyle(id, request, sources));
-  const family = sameFamily ? familiesOfFont(first.fontId, sources)[0] : null;
+  const family = sameFamily ? familiesOfFont(fontId, sources)[0] : null;
   const documentFontId = first.documentFontId ?? null;
   const sameDocumentFont = selected.every(
     (r) => (r.documentFontId ?? null) === documentFontId,
   );
   return {
-    fontFamily: first.fontId,
+    fontFamily: fontId,
     documentFontId: sameDocumentFont ? documentFontId : null,
     fontSize: sameSize ? first.fontSize : null,
     fill: sameFill ? first.fill : null,

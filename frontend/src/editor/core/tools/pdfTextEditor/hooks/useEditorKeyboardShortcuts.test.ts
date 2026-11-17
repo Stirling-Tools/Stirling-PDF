@@ -23,6 +23,8 @@ function setup() {
     onFindNext: vi.fn(),
     onEscape: vi.fn(),
     onMergeSelection: vi.fn(),
+    onToggleBold: vi.fn(),
+    onToggleItalic: vi.fn(),
   };
   renderHook(() => useEditorKeyboardShortcuts(cbs));
   return cbs;
@@ -98,5 +100,34 @@ describe("help while editing text", () => {
     focusText();
     press("?");
     expect(cbs.onToggleHelp).not.toHaveBeenCalled();
+  });
+});
+
+describe("Bold and Italic", () => {
+  test("Ctrl+B and Ctrl+I restyle the selection, typing in a run included", () => {
+    const cbs = setup();
+    const run = document.createElement("div");
+    run.contentEditable = "true";
+    document.body.append(run);
+    run.focus();
+    const bold = new KeyboardEvent("keydown", {
+      key: "b",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(bold);
+    press("I", { metaKey: true, shiftKey: true });
+    expect(cbs.onToggleBold).toHaveBeenCalledTimes(1);
+    expect(cbs.onToggleItalic).toHaveBeenCalledTimes(1);
+    expect(bold.defaultPrevented).toBe(true);
+  });
+
+  test("a field keeps Ctrl+B for itself", () => {
+    const cbs = setup();
+    const field = document.createElement("input");
+    document.body.append(field);
+    field.focus();
+    press("b", { ctrlKey: true });
+    expect(cbs.onToggleBold).not.toHaveBeenCalled();
   });
 });

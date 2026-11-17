@@ -10,6 +10,13 @@ import { SetColourCommand } from "@editor/tools/pdfTextEditor/commands/SetColour
 import { SetTextOutlineCommand } from "@editor/tools/pdfTextEditor/commands/SetTextOutlineCommand";
 import { SetFontFamilyCommand } from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@editor/tools/pdfTextEditor/commands/SetFontSizeCommand";
+import {
+  rangeRefusal,
+  selectedFontStretches,
+  selectedPartOfRun,
+  StyleTextRangeCommand,
+  type FaceStretch,
+} from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import {
   drawsSomeOf,
@@ -81,7 +88,8 @@ export type FontPickFailure =
   | "someLeftUnchanged"
   | "closestMatch"
   | "styleUnavailable"
-  | "styleSkipped";
+  | "styleSkipped"
+  | "partOfRunUnsupported";
 
 interface FamilyChange {
   pageIndex: number;
@@ -215,6 +223,33 @@ function liveRuns(store: EditorStore): Map<string, TextRun> {
     for (const run of page.runs) runs.set(run.id, run);
   }
   return runs;
+}
+
+type SelectedPart = NonNullable<ReturnType<typeof selectedPartOfRun>>;
+
+/** The width a change to part of a run rewraps its lines at, as typing in it would. */
+function rewrapWidth(store: EditorStore, part: SelectedPart): number {
+  const { run, page } = part;
+  if (store.getState().widthMode === "wrap")
+    return run.wrapWidthPt ?? run.bounds.width;
+  return page.display.cropLeft + page.display.cropWidth - run.bounds.x;
+}
+
+/** What to tell the user when the selected characters cannot be restyled apart from the rest of their run; undefined when they can. */
+function refusePart(
+  store: EditorStore,
+  part: SelectedPart,
+): FontPickFailure | null | undefined {
+  if (part.run.locked) return null;
+  const doc = store.document;
+  const refusal = doc && rangeRefusal(doc, part.page, part.run, part.range);
+  if (refusal === "rightToLeft") {
+    store.setError(unsafeRtlEditMessage());
+    return null;
+  }
+  if (refusal === "needsShaping") return "needsShaping";
+  if (refusal === "unsupported") return "partOfRunUnsupported";
+  return undefined;
 }
 
 /** Bundle of callbacks that operate on the current selection. */
@@ -393,9 +428,109 @@ export function useSelectionActions(store: EditorStore) {
     [store, dispatchAfterScanFit],
   );
 
+  const restyleSelectedPart = useCallback(
+    async (
+      part: SelectedPart,
+      faceFor: (
+        fontIds: string[],
+      ) => (fontId: string) => string | null | undefined,
+      fallbackFace?: string,
+    ): Promise<FontPickFailure | null> => {
+      const doc = store.document;
+      if (!doc) return null;
+      const refused = refusePart(store, part);
+      if (refused !== undefined) return refused;
+      const stretches = selectedFontStretches(
+        doc,
+        part.page,
+        part.run,
+        part.range,
+      );
+      if (stretches.length === 0) return null;
+      const face = faceFor([...new Set(stretches.map((s) => s.fontId))]);
+      let leftAsIs = 0;
+      const faces: FaceStretch[] = [];
+      for (const stretch of stretches) {
+        const next = face(stretch.fontId);
+        if (next === undefined) continue;
+        if (next === null) leftAsIs++;
+        else faces.push({ start: stretch.start, end: stretch.end, face: next });
+      }
+      // Embedding is async and Command.apply is not, so warm the bytes first.
+      const ready = new Map<string, string | null>();
+      for (const { face: wanted } of faces) {
+        if (ready.has(wanted)) continue;
+        if (
+          isDocumentFontId(wanted) ||
+          nearestStandardFont(wanted) === wanted
+        ) {
+          ready.set(wanted, wanted);
+          continue;
+        }
+        const refused = await prepareExternalFont(wanted);
+        if (store.document !== doc) return null;
+        ready.set(
+          wanted,
+          !refused && tryEmbedDeviceFont(doc, wanted)
+            ? wanted
+            : (fallbackFace ?? null),
+        );
+      }
+      const usable = faces.flatMap((stretch) => {
+        const drawn = ready.get(stretch.face);
+        if (!drawn) leftAsIs++;
+        return drawn ? [{ ...stretch, face: drawn }] : [];
+      });
+      // The run may have been edited or regrouped while fonts loaded.
+      if (part.page.findRun(part.run.id) !== part.run) return null;
+      if (usable.length === 0) return leftAsIs > 0 ? "styleUnavailable" : null;
+      const command = new StyleTextRangeCommand({
+        pageIndex: part.page.index,
+        runId: part.run.id,
+        faces: usable,
+        wrapWidthPt: rewrapWidth(store, part),
+      });
+      const refusal = command.refusal(doc);
+      if (refusal === "rightToLeft") {
+        store.setError(unsafeRtlEditMessage());
+        return null;
+      }
+      if (refusal === "needsShaping") return "needsShaping";
+      if (refusal === "unsupported") return "partOfRunUnsupported";
+      const coverage = command.coverage(doc);
+      if (coverage === "unchanged")
+        return leftAsIs > 0 ? "styleUnavailable" : null;
+      if (coverage === "none")
+        return leftAsIs > 0 ? "styleUnavailable" : "noGlyphs";
+      store.dispatch(command);
+      if (leftAsIs > 0) return "styleSkipped";
+      return coverage === "some" ? "closestMatch" : null;
+    },
+    [store],
+  );
+
   const changeFontFamily = useCallback(
     async (family: string): Promise<FontPickFailure | null> => {
       const doc = store.document;
+      const part = selectedPartOfRun(doc, store.selection.value);
+      if (part) {
+        const refused = refusePart(store, part);
+        if (refused !== undefined) return refused;
+        const text = part.run.text.slice(part.range.start, part.range.end);
+        if (!isDocumentFontId(family)) {
+          const failure = await prepareFamily(store, doc, family, [text]);
+          if (failure) return failure;
+          if (store.document !== doc) return null;
+        }
+        const owner = familyOfFace(family, faceSources(doc));
+        const picked = owner?.value === family ? owner : null;
+        return restyleSelectedPart(
+          part,
+          () => (fontId) =>
+            picked ? faceKeepingStyle(picked, faceStyleOf(fontId)) : family,
+          family,
+        );
+      }
       const targets: SelectedRun[] = [];
       const fit: ScanFitTarget[] = [];
       forEachSelectedRun((run, page) => {
@@ -471,7 +606,13 @@ export function useSelectionActions(store: EditorStore) {
       if (applied > 0) return "someLeftUnchanged";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
-    [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],
+    [
+      store,
+      forEachSelectedRun,
+      claimFontChange,
+      dispatchFamilyChanges,
+      restyleSelectedPart,
+    ],
   );
 
   const restyle = useCallback(
@@ -480,6 +621,12 @@ export function useSelectionActions(store: EditorStore) {
     ): Promise<FontPickFailure | null> => {
       const doc = store.document;
       const sources = faceSources(doc);
+      const part = selectedPartOfRun(doc, store.selection.value);
+      if (part)
+        return restyleSelectedPart(part, (fontIds) => {
+          const wanted = request(fontIds.map(faceStyleOf));
+          return (fontId) => restyledFace(fontId, wanted, sources);
+        });
       const runs: Array<{ run: SelectedRun; fit: ScanFitTarget }> = [];
       forEachSelectedRun((run, page) => {
         runs.push({ run, fit: { page, run: run as TextRun } });
@@ -534,7 +681,13 @@ export function useSelectionActions(store: EditorStore) {
         leftAsIs + outcome.undrawable + outcome.wouldLoseText,
       );
     },
-    [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],
+    [
+      store,
+      forEachSelectedRun,
+      claimFontChange,
+      dispatchFamilyChanges,
+      restyleSelectedPart,
+    ],
   );
 
   // A selection that is all one style toggles off; a mixed one goes all on.

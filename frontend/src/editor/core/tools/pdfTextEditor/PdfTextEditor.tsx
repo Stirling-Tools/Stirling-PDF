@@ -33,6 +33,7 @@ import { useUnsavedChangesGuard } from "@editor/tools/pdfTextEditor/hooks/useUns
 import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
 import { useEditorTestGlobal } from "@editor/tools/pdfTextEditor/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
 import { SaveRiskModal } from "@editor/tools/pdfTextEditor/components/SaveRiskModal";
@@ -175,6 +176,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useScanPrefit(store, state);
 
   const sel = useSelectionActions(store);
+  const warnAboutFontChange = useFontChangeWarning();
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
@@ -593,6 +595,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     onFindNext: handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: handleMergeSelection,
+    onToggleBold: useCallback(
+      () => void warnAboutFontChange(sel.toggleBold),
+      [warnAboutFontChange, sel.toggleBold],
+    ),
+    onToggleItalic: useCallback(
+      () => void warnAboutFontChange(sel.toggleItalic),
+      [warnAboutFontChange, sel.toggleItalic],
+    ),
   });
 
   useEditorClipboard({

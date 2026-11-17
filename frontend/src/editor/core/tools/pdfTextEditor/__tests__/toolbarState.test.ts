@@ -92,3 +92,32 @@ describe("deriveToolbarState documentFontId", () => {
     expect(s.documentFontId).toBeNull();
   });
 });
+
+describe("deriveToolbarState for characters selected inside a run", () => {
+  const pages = mkPages([mkRun("a", "base14:Helvetica")]);
+
+  it("describes the selected characters' fonts, not the run's", () => {
+    const s = deriveToolbarState(pages, mkSel(["a"]), null, [
+      "base14:Helvetica-Bold",
+    ]);
+    expect(s.bold).toBe(true);
+    expect(s.fontFamily).toBe("base14:Helvetica-Bold");
+  });
+
+  it("reads bold and regular cuts of one family as one family with Bold mixed", () => {
+    const s = deriveToolbarState(pages, mkSel(["a"]), null, [
+      "base14:Helvetica",
+      "base14:Helvetica-Bold",
+    ]);
+    expect(s.mixed.bold).toBe(true);
+    expect(s.mixed.fontFamily).toBe(false);
+  });
+
+  it("reads two families as mixed", () => {
+    const s = deriveToolbarState(pages, mkSel(["a"]), null, [
+      "base14:Helvetica",
+      "base14:Times-Roman",
+    ]);
+    expect(s.mixed.fontFamily).toBe(true);
+  });
+});

@@ -66,6 +66,11 @@ export function documentFontIds(): string[] {
   return [...styleByHandle.values()].map((style) => style.fontId);
 }
 
+/** The fontId a document font was read under, or null for a font no page read has met. */
+export function documentFontIdAt(fontPtr: number): string | null {
+  return styleByHandle.get(fontPtr)?.fontId ?? null;
+}
+
 /** Whether a run's fontId names an italic face, by its name or by what its document font declares. */
 export function isItalicFont(fontId: string): boolean {
   return (

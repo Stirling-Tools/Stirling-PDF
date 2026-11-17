@@ -44,6 +44,10 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
     "pdfTextEditor.fontPicker.styleSkipped",
     "Some of the selected text has no version of its font in that style, so it was left unchanged.",
   ],
+  partOfRunUnsupported: [
+    "pdfTextEditor.fontPicker.partOfRunUnsupported",
+    "This text can only be restyled as a whole. Select the box instead of some of its words.",
+  ],
 };
 
 /** Applies a font or style change and warns about whatever it could not do as asked. */
