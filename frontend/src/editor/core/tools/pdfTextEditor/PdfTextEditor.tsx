@@ -60,6 +60,7 @@ import {
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
@@ -151,6 +152,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     void preloadFallbackFontBytes();
   }, []);
 
+  useScanPrefit(store, state);
   // Fetching and compiling PDFium otherwise happens after a file is picked, ahead of its first page.
   useEffect(() => {
     const warm = () => void getPdfiumModule().catch(() => undefined);

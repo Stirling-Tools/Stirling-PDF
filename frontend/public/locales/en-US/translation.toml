@@ -512,6 +512,11 @@ submit = "Adjust Page Scale"
 tags = "resize,modify,dimension,adapt"
 title = "Adjust Page Scale"
 
+[adjustPageScale.customSize]
+height = "Height"
+unit = "Unit"
+width = "Width"
+
 [adjustPageScale.error]
 failed = "An error occurred while adjusting the page scale."
 
@@ -521,6 +526,7 @@ landscape = "Landscape"
 portrait = "Portrait"
 
 [adjustPageScale.pageSize]
+custom = "Custom"
 keep = "Keep Original Size"
 label = "Target Page Size"
 legal = "Legal"
@@ -540,7 +546,7 @@ title = "Description"
 title = "Page Scale Settings Overview"
 
 [adjustPageScale.tooltip.pageSize]
-text = "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, while other options resize to standard paper sizes."
+text = "Sets the dimensions of the output PDF pages. 'Keep Original Size' maintains current dimensions, 'Custom' uses the width and height you enter, and the other options resize to standard paper sizes."
 title = "Target Page Size"
 
 [adjustPageScale.tooltip.scaleFactor]
@@ -1660,6 +1666,10 @@ verbose = "STANDARD events plus: continuous polling calls, all GET requests, det
 [admin.settings.security.audit.retentionDays]
 description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
+
+[admin.settings.security.blockSignedPdfEdits]
+description = "Signed PDFs can still be viewed, printed, converted or signed again, but not changed in the app. API calls and server pipelines are not affected."
+label = "Block changes to signed PDFs"
 
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
@@ -3975,6 +3985,10 @@ message = "One or Both of the provided documents are too large to process"
 body = "These PDFs together exceed 2,000 pages. Processing can take several minutes."
 title = "Large comparison in progress"
 
+[compare.mode]
+pixel = "Pixel Comparison"
+text = "Text Comparison"
+
 [compare.no.text]
 message = "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."
 
@@ -5084,6 +5098,17 @@ searchFiles = "Search files"
 uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
+
+[fileSidebar.clearRecents]
+body_one = "Clear 1 file from recents? This can't be undone."
+body_other = "Clear {{count}} files from recents? This can't be undone."
+button = "Clear recents"
+confirm = "Clear recents"
+error = "Could not clear. Try again."
+openNote_one = "1 of them is open in the workbench."
+openNote_other = "{{count}} of them are open in the workbench."
+skipOpen = "Skip open files"
+title = "Clear recents?"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
@@ -7557,6 +7582,7 @@ widget = "Form field - not page text, so it can't be edited here"
 [pdfTextEditor.commands]
 edit = "Edit"
 markTagged = "Mark as fully tagged"
+matchScanFont = "Match scanned text to {{face}}"
 mergeRuns_one = "Merge {{count}} run into a paragraph"
 mergeRuns_other = "Merge {{count}} runs into a paragraph"
 setColour = "Set colour on {{run}}"
@@ -7582,6 +7608,7 @@ title = "Drop a PDF to open"
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
 insertImage = "Could not insert the selected image."
+scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7607,10 +7634,18 @@ deviceFontsNone = "No extra device fonts were found."
 deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
 deviceGroup = "Device fonts"
 documentGroup = "Document font"
+embeddingForbidden = "This font's licence does not allow embedding it in a PDF. The text was left unchanged."
+embedFailed = "This font could not be embedded in the PDF. The text was left unchanged."
+includedGroup = "Included fonts"
 label = "Font family"
+matchedGroup = "Matched font"
 mixed = "Mixed"
+noGlyphs = "This font has no characters for the selected text. The text was left unchanged."
 noMatch = "No matching font"
 placeholder = "Font family"
+scannedText = "Scanned text"
+serverFontFailed = "That server font could not be downloaded. The text was left unchanged."
+serverGroup = "Server fonts"
 useDeviceFonts = "Use device fonts"
 
 [pdfTextEditor.fonts]
@@ -7679,8 +7714,11 @@ zoomDesc = "Zoom in / out"
 
 [pdfTextEditor.inspector]
 document = "Document"
+fontCompletedClosest = "Embedded font · characters it lacks are drawn in {{name}}, the closest match available."
+fontCompletedOriginal = "Embedded font · characters it lacks are drawn in {{name}}, the same font."
 fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
-fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}."
+fontUnknownCoverage = "{{name}} · a character it lacks falls back to {{fallback}}."
 geometry = "Position & size"
 height = "Height"
 heightHint = "A text box's height follows its type size and line count."
@@ -7707,6 +7745,9 @@ runOcr = "Run OCR"
 scanHint_one = "This page is a scanned image with no text to edit. Run OCR first to make its text editable."
 scanHint_other = "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable."
 scannedText = "Scanned text · changed words are covered and redrawn in a matching font."
+scannedTextMisaligned = "Scanned text · its recognised words do not line up with the scan, so this block cannot be edited or deleted."
+scannedTextNoFont = "Scanned text · typed words in this script cannot be drawn yet, so they are not kept. Deleting words still works."
+scannedTextOffInk = "Scanned text · its recognised words sit off the scanned words, so this block cannot be edited. Run OCR again."
 tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"
@@ -7890,6 +7931,35 @@ intro = "Saving the edited copy changes the file. That means:"
 note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
 saveAnyway = "Save anyway"
 title = "Saving will change this PDF"
+
+[pdfTextEditor.scanFont]
+approximate = "Approximate match"
+approximateHint = "The closest font found may not match the scan."
+change = "Font not looking right?"
+choose = "Choose a font"
+chooseMissing = "Choose a font for this text…"
+compare = "Compare fonts…"
+deviceAllow = "Allow font access for better matching"
+deviceBlocked = "Your browser won't ask again. To allow it, click the icon left of the address bar, turn on Fonts, then try again."
+deviceBlockedTitle = "Font access is blocked"
+deviceNone = "None of the usual document fonts are installed on this computer."
+deviceNote = "Your browser asks first. Fonts stay on this device."
+deviceOn_one = "Also compared with {{count}} font on this computer."
+deviceOn_other = "Also compared with {{count}} fonts on this computer."
+deviceReading = "Reading fonts on this computer…"
+deviceRetry = "Try again"
+done = "Done"
+hint = "Your typing is drawn in the closest font found. Pick another if it looks more like the scan."
+hintFromScan = "Your typing is built from letters found in the scan. Pick a font to draw it in that font instead."
+hintOthers = "Your pick is also used for scanned text you have not edited yet."
+matching = "Matching fonts…"
+noFont = "None of the available fonts can draw this script, so typed text cannot be redrawn yet."
+scan = "Original scan"
+scanAlt = "The scanned line"
+scanNote = "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness."
+score = "{{match}}% alike"
+title = "Match the scanned font"
+unmeasurable = "This scan is too faint or small to match a font to."
 
 [pdfTextEditor.settings]
 advanced = "Advanced"
@@ -13520,6 +13590,11 @@ bullet3 = "Invisible signatures still provide cryptographic validation"
 description = "Controls whether the signature is visible on the document or embedded invisibly."
 title = "Signature Visibility"
 
+[signedPdf]
+editsBlocked = "This PDF is digitally signed, and changes to signed PDFs are turned off. You can still view or print it, convert it to another format, or sign it again."
+editsBlockedStatus = "Signed: edits blocked"
+editsBlockedTitle = "Signed PDF can't be changed"
+
 [signingDetail]
 allSigned = "Everyone has signed. Review the document, then finalize."
 awaitingOwner = "The owner will finalize the document once they are ready."
@@ -13927,7 +14002,6 @@ noLinks = "No active share links yet."
 noSharedUsers = "No users have access yet."
 openInApp = "Open in Stirling PDF"
 ownerLabel = "Owner"
-ownerUnknown = "Unknown"
 removeLink = "Remove link"
 removeUser = "Remove"
 requiresLogin = "This shared file requires login."

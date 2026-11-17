@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
 import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -26,6 +27,10 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -254,6 +259,52 @@ class JpaPolicyStoreTest {
                 + "\"mode\":\"new_version\","
                 + sourcesField
                 + "\"scopeTypes\":[],\"reviewerEmail\":\"\"}},\"teamId\":1}";
+    }
+
+    @Test
+    void aPolicyEncryptedWithAnotherKeyIsLoggedOnceAcrossRepeatedLists() {
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId("p-foreign");
+        entity.setName("foreign");
+        entity.setPolicyJson("U6bfuXYZ==");
+        when(repository.findAllOrdered()).thenReturn(List.of(entity));
+        Logger storeLogger = (Logger) LoggerFactory.getLogger(JpaPolicyStore.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        storeLogger.addAppender(appender);
+        try {
+            assertTrue(store.all().isEmpty());
+            assertTrue(store.all().isEmpty());
+            assertTrue(store.all().isEmpty());
+        } finally {
+            storeLogger.detachAppender(appender);
+        }
+
+        List<ILoggingEvent> errors =
+                appender.list.stream().filter(e -> e.getLevel() == Level.ERROR).toList();
+        assertEquals(1, errors.size());
+        assertTrue(errors.get(0).getFormattedMessage().contains("p-foreign"));
+    }
+
+    @Test
+    void aPolicyStoredAsJsonNullIsLoggedOnceAcrossRepeatedLists() {
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId("p-null");
+        entity.setName("empty");
+        entity.setPolicyJson("null");
+        when(repository.findAllOrdered()).thenReturn(List.of(entity));
+        Logger storeLogger = (Logger) LoggerFactory.getLogger(JpaPolicyStore.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        storeLogger.addAppender(appender);
+        try {
+            assertTrue(store.all().isEmpty());
+            assertTrue(store.all().isEmpty());
+        } finally {
+            storeLogger.detachAppender(appender);
+        }
+
+        assertEquals(1, appender.list.stream().filter(e -> e.getLevel() == Level.ERROR).count());
     }
 
     private Policy readLegacy(String policyJson) {
