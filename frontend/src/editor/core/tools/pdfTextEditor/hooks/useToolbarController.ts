@@ -533,6 +533,7 @@ export function useToolbarController(
     textLanguage: textA11y.language,
     textOtherPages: textA11y.otherPages,
     textDescription: textA11y.description,
+    textUntaggedLinks: textA11y.untaggedLinks,
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

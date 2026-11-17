@@ -279,7 +279,11 @@ class StubEmbeddingService:
 def documents() -> DocumentService:
     """Each DocumentService test gets its own fresh ephemeral store to avoid dimension conflicts."""
     store = SqliteVecStore.ephemeral()
-    return DocumentService(embedder=StubEmbeddingService(), store=store, default_top_k=3)  # type: ignore[arg-type]
+    return DocumentService(
+        embedder=StubEmbeddingService(),  # pyrefly: ignore [bad-argument-type]
+        store=store,
+        default_top_k=3,
+    )
 
 
 def _pages(text: str) -> list[PageText]:
@@ -508,7 +512,7 @@ async def _invoke_search_knowledge(capability: RagCapability, query: str, max_re
     toolset = capability.toolset
     assert isinstance(toolset, FunctionToolset)
     tool = toolset.tools["search_knowledge"]
-    return await tool.function(query=query, max_results=max_results)  # type: ignore[call-arg]
+    return await tool.function(query=query, max_results=max_results)
 
 
 class TestRagCapability:
@@ -637,12 +641,24 @@ class TestRagCapability:
         cap = RagCapability(documents, principals=OWNER_PRINCIPALS, max_searches=2)
         tool_def = _dummy_tool_def()
 
-        assert await cap._prepare_search_knowledge(None, tool_def) is tool_def  # type: ignore[arg-type]
+        assert (
+            await cap._prepare_search_knowledge(
+                None,  # pyrefly: ignore [bad-argument-type]
+                tool_def,  # pyrefly: ignore [bad-argument-type]
+            )
+            is tool_def
+        )
 
         await _invoke_search_knowledge(cap, "content")
         await _invoke_search_knowledge(cap, "content")
 
-        assert await cap._prepare_search_knowledge(None, tool_def) is None  # type: ignore[arg-type]
+        assert (
+            await cap._prepare_search_knowledge(
+                None,  # pyrefly: ignore [bad-argument-type]
+                tool_def,  # pyrefly: ignore [bad-argument-type]
+            )
+            is None
+        )
 
 
 def _dummy_tool_def() -> object:
@@ -660,7 +676,7 @@ def test_many_stores_open_the_same_file_without_locking_out(tmp_path: Path) -> N
 
     db_path = tmp_path / "rag.db"
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
-        stores = list(pool.map(lambda _: SqliteVecStore(db_path), range(8)))
+        stores = list(pool.map(SqliteVecStore, [db_path] * 8))
 
     assert len(stores) == 8
     mode = stores[0]._conn.execute("PRAGMA journal_mode").fetchone()[0]

@@ -6,6 +6,7 @@ import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes"
 import type {
   InnerTagsControl,
   TextLanguageControl,
+  UntaggedLinksControl,
 } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import type { TextTag } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
@@ -20,6 +21,7 @@ const NO_INNER: InnerTagsControl = {
   onTagSelection: () => {},
   onSetLanguage: () => {},
   onLanguageSelection: null,
+  onSetLinkDescription: () => {},
 };
 
 function tagShown(tag: TextTag): HTMLElement {
@@ -32,6 +34,7 @@ function tagShown(tag: TextTag): HTMLElement {
         language={null}
         otherPages={null}
         description={null}
+        untaggedLinks={null}
       />
     </MantineProvider>,
   );
@@ -102,6 +105,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -179,6 +183,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -198,6 +203,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -217,6 +223,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -238,6 +245,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -263,6 +271,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -283,6 +292,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={{ pages: 3, onApply }}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -301,6 +311,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -326,6 +337,7 @@ describe("TextAccessibilitySection", () => {
           language={null}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -429,6 +441,7 @@ describe("TextAccessibilitySection", () => {
           language={{ language: undefined, onSet: vi.fn() }}
           otherPages={null}
           description={null}
+          untaggedLinks={null}
         />
       </MantineProvider>,
     );
@@ -468,6 +481,31 @@ describe("TextAccessibilitySection", () => {
   });
 });
 
+describe("TextAccessibilitySection links", () => {
+  it("edits the description of the link a tag holds", () => {
+    const inner = innerControl({ active: 1 });
+    renderSection(inner);
+    const field = screen.getByTestId("pdf-editor-inner-tag-link-description");
+    expect(field).toHaveValue("The appendix");
+    fireEvent.change(field, { target: { value: "Appendix B" } });
+    expect(inner.onSetLinkDescription).toHaveBeenCalledWith(1, "Appendix B");
+  });
+
+  it("shows no link description for a tag holding no link", () => {
+    renderSection(innerControl({ active: 0 }));
+    expect(
+      screen.queryByTestId("pdf-editor-inner-tag-link-description"),
+    ).toBeNull();
+  });
+
+  it("offers tagging the links over the text", () => {
+    const onTag = vi.fn();
+    renderSection(innerControl(), null, { count: 2, onTag });
+    fireEvent.click(screen.getByTestId("pdf-editor-tag-links"));
+    expect(onTag).toHaveBeenCalled();
+  });
+});
+
 function languageControl(
   inherited: string | null,
   own: string | null,
@@ -490,6 +528,7 @@ function innerControl(
         removable: true,
         language: { own: "de", inherited: "en" },
         languageEditable: true,
+        link: null,
       },
       {
         key: "2",
@@ -501,6 +540,11 @@ function innerControl(
         removable: false,
         language: { own: null, inherited: "en" },
         languageEditable: true,
+        link: {
+          annotations: [20],
+          description: "The appendix",
+          editable: true,
+        },
       },
     ],
     active: null,
@@ -510,6 +554,7 @@ function innerControl(
     onTagSelection: vi.fn(),
     onSetLanguage: vi.fn(),
     onLanguageSelection: null,
+    onSetLinkDescription: vi.fn(),
     ...overrides,
   };
 }
@@ -517,6 +562,7 @@ function innerControl(
 function renderSection(
   inner: InnerTagsControl,
   language: TextLanguageControl | null = null,
+  untaggedLinks: UntaggedLinksControl | null = null,
 ) {
   render(
     <MantineProvider env="test">
@@ -532,6 +578,7 @@ function renderSection(
         language={language}
         otherPages={null}
         description={null}
+        untaggedLinks={untaggedLinks}
       />
     </MantineProvider>,
   );

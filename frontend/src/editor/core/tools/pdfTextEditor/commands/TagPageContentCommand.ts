@@ -12,6 +12,10 @@ import {
   furnitureKind,
   type Furniture,
 } from "@editor/tools/pdfTextEditor/model/artifactKind";
+import {
+  TagLinkCommand,
+  taggableLinks,
+} from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
@@ -71,8 +75,9 @@ interface Plan {
  * other object an artifact, the new elements read in content order. Content already
  * tagged or marked an artifact is left alone. Content marked with an MCID no
  * element owns counts as untagged, losing that mark. Content in a form
- * XObject is left alone: the editor cannot tag inside one. The page must
- * already be read.
+ * XObject is left alone: the editor cannot tag inside one. Each link
+ * annotation no element holds is then tagged (TagLinkCommand), where it can
+ * be. The page must already be read.
  */
 export class TagPageContentCommand implements Command {
   readonly type = "tag-page-content";
@@ -80,6 +85,8 @@ export class TagPageContentCommand implements Command {
   private readonly furniture: ReadonlyMap<string, Furniture>;
   /** Chosen on first apply, so a redo reuses its MCIDs. */
   private plan: Plan | null = null;
+  /** The links the first apply tagged, which a redo tags again. */
+  private links: TagLinkCommand[] | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -109,6 +116,7 @@ export class TagPageContentCommand implements Command {
         applyStep(doc, page, structure, step, this.plan.follows);
         done.push(step);
       }
+      this.tagLinks(doc);
     } catch (err) {
       for (const step of done.reverse()) revertStep(doc, page, structure, step);
       throw new RolledBackError(err);
@@ -121,6 +129,7 @@ export class TagPageContentCommand implements Command {
     if (!this.plan) return;
     const page = doc.page(this.pageIndex);
     const structure = doc.structure(this.pageIndex);
+    for (const link of [...(this.links ?? [])].reverse()) link.revert(doc);
     for (const step of [...this.plan.steps].reverse()) {
       revertStep(doc, page, structure, step);
     }
@@ -131,6 +140,40 @@ export class TagPageContentCommand implements Command {
   describe(): string {
     return i18n.t("pdfTextEditor.commands.tagPageContent", "Auto-tag page");
   }
+
+  /**
+   * Tag the links once their text is: on the first apply each one that can
+   * be, and on a redo the same ones. Throws, with none tagged, when a redo
+   * cannot.
+   */
+  private tagLinks(doc: EditorDocument): void {
+    if (this.links === null) {
+      this.links = [];
+      for (const { annotation } of taggableLinks(doc, this.pageIndex)) {
+        const link = new TagLinkCommand({
+          pageIndex: this.pageIndex,
+          annotation,
+        });
+        try {
+          link.apply(doc);
+          this.links.push(link);
+        } catch {
+          /* left untagged rather than failing the page */
+        }
+      }
+      return;
+    }
+    const done: TagLinkCommand[] = [];
+    try {
+      for (const link of this.links) {
+        link.apply(doc);
+        done.push(link);
+      }
+    } catch (err) {
+      for (const link of done.reverse()) link.revert(doc);
+      throw err;
+    }
+  }
 }
 
 /** True when TagPageContentCommand would change anything on the page, which must already be read. */
@@ -140,9 +183,8 @@ export function hasUntaggedContent(
 ): boolean {
   const structure = doc.structure(pageIndex);
   if (structure.cannotAddElement() !== null) return false;
-  return (
-    planTagging(doc, doc.page(pageIndex), structure, new Map()).steps.length > 0
-  );
+  const { steps } = planTagging(doc, doc.page(pageIndex), structure, new Map());
+  return steps.length > 0 || taggableLinks(doc, pageIndex).length > 0;
 }
 
 /** The untagged content as steps, and where each new element reads. */

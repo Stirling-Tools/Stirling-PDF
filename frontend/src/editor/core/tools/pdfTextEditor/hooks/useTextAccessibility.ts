@@ -7,10 +7,15 @@ import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlo
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
+import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/SetLinkContentsCommand";
 import {
   SetTextLanguageCommand,
   type LanguageTarget,
 } from "@editor/tools/pdfTextEditor/commands/SetTextLanguageCommand";
+import {
+  TagLinkCommand,
+  taggableLinks,
+} from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import {
   rangeTagTypes,
@@ -57,6 +62,14 @@ export interface InnerTagsControl {
   onSetLanguage: (index: number, lang: string | null) => void;
   /** Tags the characters selected inside the run as a Span in `lang`; null when they cannot take one. */
   onLanguageSelection: ((lang: string) => void) | null;
+  /** Sets the description of the links tag `index` holds; empty removes it. */
+  onSetLinkDescription: (index: number, description: string) => void;
+}
+
+/** The selected run's links no element holds that can be tagged, and a way to tag them. */
+export interface UntaggedLinksControl {
+  count: number;
+  onTag: () => void;
 }
 
 /** Matching text on other pages that the selected artifact's kind can be given, and a way to give it. */
@@ -180,6 +193,30 @@ export function useTextAccessibility(
     // state.pages: a description change republishes the pages, not the targets.
   }, [store, targets, state.pages]);
 
+  const untaggedLinks = useMemo((): UntaggedLinksControl | null => {
+    const doc = store.document;
+    const links = doc && run ? taggableLinks(doc, run.pageIndex, run.id) : [];
+    if (!doc || !run || links.length === 0) return null;
+    return {
+      count: links.length,
+      onTag: () => {
+        const commands = links.map(
+          ({ annotation }) =>
+            new TagLinkCommand({ pageIndex: run.pageIndex, annotation }),
+        );
+        store.dispatch(
+          commands.length === 1 ? commands[0] : new CompositeCommand(commands),
+        );
+        // Selecting the one link's text opens its description.
+        if (links.length === 1) {
+          const { start, end } = links[0].text;
+          store.selection.setTextRange(run.id, { start, end });
+        }
+      },
+    };
+    // state.pages: tagging republishes the pages, not the run.
+  }, [store, run, state.pages]);
+
   const activeInner = useMemo(
     () => inner.findIndex((t) => sameRange(t, selection.textRange)),
     [inner, selection.textRange],
@@ -265,6 +302,21 @@ export function useTextAccessibility(
     [store, run, inner],
   );
 
+  const setLinkDescription = useCallback(
+    (index: number, description: string) => {
+      const link = inner[index]?.link;
+      if (!run || !link) return;
+      store.dispatch(
+        new SetLinkContentsCommand({
+          pageIndex: run.pageIndex,
+          annotations: link.annotations,
+          contents: description === "" ? null : description,
+        }),
+      );
+    },
+    [store, run, inner],
+  );
+
   const spansSelection = newTagTypes?.includes("Span") ?? false;
   const setSelectionLanguage = useCallback(
     (lang: string) => {
@@ -294,6 +346,7 @@ export function useTextAccessibility(
       onTagSelection: tagSelectedText,
       onSetLanguage: setInnerLanguage,
       onLanguageSelection: spansSelection ? setSelectionLanguage : null,
+      onSetLinkDescription: setLinkDescription,
     }),
     [
       inner,
@@ -305,6 +358,7 @@ export function useTextAccessibility(
       setInnerLanguage,
       spansSelection,
       setSelectionLanguage,
+      setLinkDescription,
     ],
   );
 
@@ -334,6 +388,7 @@ export function useTextAccessibility(
     language,
     otherPages,
     description,
+    untaggedLinks,
   };
 }
 

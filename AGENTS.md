@@ -88,15 +88,15 @@ The engine is a Python reasoning service for Stirling: it plans and interprets w
 
 #### Python Commands
 All engine commands run from the repo root using Task:
-- `task engine:check` — run all checks (typecheck + lint + format-check + test)
-- `task engine:fix` — auto-fix lint + formatting
-- `task engine:install` — install Python dependencies via uv
-- `task engine:dev` — start FastAPI with hot reload (localhost:5001)
-- `task engine:test` — run pytest
-- `task engine:lint` — run ruff linting
-- `task engine:typecheck` — run pyright
-- `task engine:format` — format code with ruff
-- `task engine:tool-models` — generate `tool_models.py` from the Java OpenAPI spec
+- `task engine:check` — run all checks
+- `task engine:fix` — auto-fix code issues
+- `task engine:install` — install Python dependencies
+- `task engine:dev` — start server in dev mode
+- `task engine:test` — run the tests
+- `task engine:lint` — run linters
+- `task engine:typecheck` — run type checkers
+- `task engine:format` — run formatters
+- `task engine:tool-models` — generate tool models from the Java OpenAPI spec
 
 The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `task engine:install`.
 
