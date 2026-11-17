@@ -211,6 +211,7 @@ public class SecurityConfiguration {
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",
+                        "Mcp-Session-Id",
                         "X-Total-Count",
                         "X-Page-Number",
                         "X-Page-Size",

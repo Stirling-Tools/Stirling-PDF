@@ -203,8 +203,9 @@
     if (!result) return;
     var data = result.structuredContent;
     root.textContent = "";
-    if (result.isError || !data) {
-      var text = (result.content || []).map(function (c) { return c.text || ""; }).join(" ").trim();
+    if (result.isError || !data || data.kind === "error") {
+      var structured = data && data.error && data.error.message;
+      var text = structured || (result.content || []).map(function (c) { return c.text || ""; }).join(" ").trim();
       var card = el("div", "card");
       card.appendChild(el("div", "name", "Something went wrong"));
       card.appendChild(el("div", "err", text || "The tool did not return a result."));
@@ -309,6 +310,7 @@
 
   function renderPicker(data) {
     var purpose = data.purpose || toolArgs.purpose;
+    var maxInline = data.maxInlineBytes > 0 ? data.maxInlineBytes : 7 * 1048576;
     var drop = el("div", "drop");
     if (purpose) drop.appendChild(el("div", "purpose", purpose));
     drop.appendChild(el("p", null, "Drop a file here or choose one from your device."));
@@ -327,6 +329,43 @@
     }
     renderRecent(data.files || [], purpose, data.kind === "library");
 
+    // Base64 in the tool call would pass the MCP request limit; the one-time upload page takes the
+    // file directly instead, and the picker waits for it to arrive.
+    function uploadByLink(file) {
+      return callTool("stirling_upload", { link: true, fileName: file.name }).then(function (res) {
+        var sc = res && res.structuredContent;
+        if (!sc || !sc.uploadUrl || res.isError) {
+          var msg = res && res.content && res.content[0] && res.content[0].text;
+          throw new Error(msg || "Could not make an upload link.");
+        }
+        status.textContent = file.name + " (" + size(file.size) + ") is too large to send through"
+          + " the chat. Choose it again on the upload page; this card updates when it arrives.";
+        var open = el("button", "primary", "Open upload page");
+        open.type = "button";
+        open.addEventListener("click", function () { openLink(sc.uploadUrl); });
+        status.appendChild(el("div"));
+        status.appendChild(open);
+        openLink(sc.uploadUrl);
+        resize();
+        return waitForUpload(sc.uploadId, Date.now() + (sc.expiresInMinutes || 15) * 60000)
+          .then(function (done) { open.remove(); return done; });
+      });
+    }
+    function waitForUpload(uploadId, deadline) {
+      return new Promise(function (resolve) { setTimeout(resolve, 4000); }).then(function () {
+        return callTool("stirling_upload", { uploadId: uploadId });
+      }).then(function (res) {
+        var sc = res && res.structuredContent;
+        if (res && res.isError) {
+          var msg = res.content && res.content[0] && res.content[0].text;
+          throw new Error(msg || "Upload failed.");
+        }
+        if (sc && sc.fileId) return res;
+        if (Date.now() > deadline) throw new Error("The upload link expired. Choose the file again.");
+        return waitForUpload(uploadId, deadline);
+      });
+    }
+
     function start(file) {
       if (!file) return;
       btn.disabled = true;
@@ -334,9 +373,12 @@
       status.classList.remove("hidden");
       status.textContent = "Uploading " + file.name + "...";
       resize();
-      readBase64(file).then(function (b64) {
-        return callTool("stirling_upload", { file: b64, fileName: file.name });
-      }).then(function (res) {
+      var upload = file.size > maxInline
+        ? uploadByLink(file)
+        : readBase64(file).then(function (b64) {
+            return callTool("stirling_upload", { file: b64, fileName: file.name });
+          });
+      upload.then(function (res) {
         var sc = res && res.structuredContent;
         if (!sc || !sc.fileId || res.isError) {
           var msg = res && res.content && res.content[0] && res.content[0].text;

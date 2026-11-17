@@ -425,6 +425,7 @@ public class SupabaseSecurityConfig {
         cfg.setExposedHeaders(
                 List.of(
                         "WWW-Authenticate",
+                        "Mcp-Session-Id",
                         "X-Stirling-Skipped-Field-Edits",
                         "X-Stirling-Skipped-Field-Edits-Total",
                         "X-Stirling-Detected-Fields"));
