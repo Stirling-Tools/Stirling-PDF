@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -152,7 +153,23 @@ public class StirlingAiTool implements McpTool {
             log.warn("MCP AI capability '{}' engine request failed", opId, e);
             return McpResponses.error(
                     mapper, "Engine request failed for capability '" + opId + "'.");
+        } catch (ResponseStatusException e) {
+            log.warn("MCP AI capability '{}' engine request failed: {}", opId, e.getMessage());
+            return McpResponses.error(mapper, engineFailureMessage(opId, e));
         }
+    }
+
+    /**
+     * A 4xx carries the engine's own detail (a validation error names the bad argument), so the
+     * caller can fix the call. Anything else is about this server or the engine, and its reason can
+     * name internal hosts, so only the status goes back.
+     */
+    private static String engineFailureMessage(String opId, ResponseStatusException e) {
+        String prefix = "Engine request failed for capability '" + opId + "'";
+        if (e.getStatusCode().is4xxClientError() && e.getReason() != null) {
+            return prefix + ": " + e.getReason();
+        }
+        return prefix + " (HTTP " + e.getStatusCode().value() + ").";
     }
 
     private List<OperationMeta> aiOps() {
