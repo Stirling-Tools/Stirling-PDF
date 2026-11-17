@@ -98,7 +98,6 @@ export function useViewerWorkbenchBarButtons(
   // mirror drifts the moment the address changes without a popstate.
   const isAnnotationsActive = selectedTool === "annotate";
 
-  const searchLabel = t("workbenchBar.search", "Search PDF");
   const panLabel = t("workbenchBar.panMode", "Pan Mode");
   const applyRedactionsLabel = t(
     "workbenchBar.applyRedactionsFirst",
@@ -133,6 +132,10 @@ export function useViewerWorkbenchBarButtons(
   const isTextEditActive = selectedTool === "pdfTextEditor";
   const pageTool = useViewerPageTool();
   const pageToolActive = pageTool != null;
+  // While a page tool with its own find is open, the search button opens that.
+  const searchLabel = pageTool?.onToggleFind
+    ? t("workbenchBar.findReplace", "Find & replace")
+    : t("workbenchBar.search", "Search PDF");
 
   // The text editor owns the pages while it is open, so a viewer tool that
   // works on them closes it first, behind the unsaved-edits prompt. Leaving

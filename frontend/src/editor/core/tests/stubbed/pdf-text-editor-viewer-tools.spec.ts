@@ -163,8 +163,12 @@ test.describe("PDF text editor - viewer tools", () => {
     test.setTimeout(120_000);
     await openEditor(page);
     await makeAnEdit(page);
+    // Its label says what it opens here.
+    await expect(
+      page.getByRole("button", { name: "Search PDF", exact: true }),
+    ).toHaveCount(0);
     const search = page.getByRole("button", {
-      name: "Search PDF",
+      name: "Find & replace",
       exact: true,
     });
 
