@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -148,6 +149,17 @@ public class StirlingAiTool implements McpTool {
         try {
             String response = client.post(meta.endpointPath(), body, context.stirlingUserId());
             return McpResponses.text(mapper, response);
+        } catch (ResponseStatusException e) {
+            log.warn("MCP AI capability '{}' returned HTTP {}", opId, e.getStatusCode().value());
+            String detail = e.getReason() != null ? e.getReason() : e.getMessage();
+            return McpResponses.error(
+                    mapper,
+                    "Engine error ("
+                            + e.getStatusCode().value()
+                            + ") for capability '"
+                            + opId
+                            + "': "
+                            + detail);
         } catch (IOException e) {
             log.warn("MCP AI capability '{}' engine request failed", opId, e);
             return McpResponses.error(
