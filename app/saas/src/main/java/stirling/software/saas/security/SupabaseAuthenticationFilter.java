@@ -102,10 +102,12 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (isPublicAuthEndpoint(request.getRequestURI(), request.getContextPath())) {
-            if (isShareLinkRead(request.getRequestURI(), request.getContextPath())) {
-                tryJwtAuthentication(request);
+            HttpServletRequest forwarded = request;
+            if (isShareLinkRead(request.getRequestURI(), request.getContextPath())
+                    && !tryJwtAuthentication(request)) {
+                forwarded = new WithoutAuthorizationHeader(request);
             }
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(forwarded, response);
             return;
         }
 
@@ -145,12 +147,18 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         return isPublicAuthEndpoint(uri, contextPath) && !isShareLinkRead(uri, contextPath);
     }
 
-    private void tryJwtAuthentication(HttpServletRequest request) {
+    /**
+     * Signs in from an optional bearer token. False when the token was rejected: the caller must
+     * then hide it, or the resource-server filter later in the chain accepts it on its own.
+     */
+    private boolean tryJwtAuthentication(HttpServletRequest request) {
         try {
             processJwtAuthentication(request);
+            return true;
         } catch (AuthenticationException e) {
             log.debug("Optional JWT on a share link ignored: {}", e.getMessage());
             SecurityContextHolder.clearContext();
+            return false;
         }
     }
 

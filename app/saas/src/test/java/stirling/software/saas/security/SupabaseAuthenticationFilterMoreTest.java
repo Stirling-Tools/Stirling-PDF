@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -182,7 +185,7 @@ class SupabaseAuthenticationFilterMoreTest {
         }
 
         @Test
-        @DisplayName("share-link read with a bad bearer stays anonymous instead of failing")
+        @DisplayName("share-link read with a bad bearer stays anonymous and hides the token")
         void shareLinkReadIgnoresInvalidBearer() throws Exception {
             when(jwtDecoder.decode("bad")).thenThrow(new BadJwtException("bad"));
             request.setRequestURI(SHARE_LINK);
@@ -191,7 +194,10 @@ class SupabaseAuthenticationFilterMoreTest {
 
             filter.doFilter(request, response, chain);
 
-            assertThat(chain.getRequest()).isSameAs(request);
+            HttpServletRequest forwarded = (HttpServletRequest) chain.getRequest();
+            assertThat(forwarded.getHeader("Authorization")).isNull();
+            assertThat(Collections.list(forwarded.getHeaderNames()))
+                    .noneMatch(name -> name.equalsIgnoreCase("Authorization"));
             assertThat(response.getStatus()).isEqualTo(200);
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         }
