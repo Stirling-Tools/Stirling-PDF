@@ -5085,6 +5085,17 @@ uploadFailedBody = "Could not add the selected files."
 uploadFailedTitle = "Upload failed"
 viewAll = "View all {{count}} files"
 
+[fileSidebar.clearRecents]
+body_one = "Clear 1 file from recents? This can't be undone."
+body_other = "Clear {{count}} files from recents? This can't be undone."
+button = "Clear recents"
+confirm = "Clear recents"
+error = "Could not clear. Try again."
+openNote_one = "1 of them is open in the workbench."
+openNote_other = "{{count}} of them are open in the workbench."
+skipOpen = "Skip open files"
+title = "Clear recents?"
+
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
 dataLost = "Data lost"
