@@ -1109,7 +1109,11 @@ mod keyring_timeout_tests {
             .unwrap();
     }
 
-    fn mock_entry_with(password: &'static str) -> Result<Entry, String> {
+    fn random_test_token() -> String {
+        format!("{:032x}", rand::random::<u128>())
+    }
+
+    fn mock_entry_with(password: &str) -> Result<Entry, String> {
         let entry = Entry::new_with_credential(
             keyring::mock::default_credential_builder()
                 .build(None, "test", "token")
@@ -1123,9 +1127,11 @@ mod keyring_timeout_tests {
     async fn waits_for_an_earlier_read_to_release_the_permit() {
         static PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
         let held = PERMIT.acquire().await.unwrap();
+        let token = random_test_token();
+        let stored = token.clone();
         let (password, ()) = tokio::join!(
             read_keyring_password_with_limit(
-                || mock_entry_with("refresh-token"),
+                move || mock_entry_with(&stored),
                 "test token",
                 &PERMIT,
             ),
@@ -1134,27 +1140,21 @@ mod keyring_timeout_tests {
                 drop(held);
             }
         );
-        assert_eq!(password.as_deref(), Some("refresh-token"));
+        assert_eq!(password, Some(token));
     }
 
     #[tokio::test]
     async fn returns_a_successful_keyring_read_and_releases_the_permit() {
         static PERMIT: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+        let token = random_test_token();
+        let stored = token.clone();
         let password = read_keyring_password_with_limit(
-            || {
-                let entry = Entry::new_with_credential(
-                    keyring::mock::default_credential_builder()
-                        .build(None, "test", "token")
-                        .unwrap(),
-                );
-                entry.set_password("stored-token").unwrap();
-                Ok(entry)
-            },
+            move || mock_entry_with(&stored),
             "test token",
             &PERMIT,
         )
         .await;
-        assert_eq!(password.as_deref(), Some("stored-token"));
+        assert_eq!(password, Some(token));
         assert!(PERMIT.acquire().await.is_ok());
     }
 }
