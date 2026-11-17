@@ -1,3 +1,4 @@
+import { scanFaceCssFamily } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -453,9 +454,13 @@ export function TextRunOverlay({
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
-  const fontFamily = cssFontFamilyFor(run.fontId);
-  const fontWeight = cssWeightFor(run.fontId);
-  const fontStyle = cssStyleFor(run.fontId);
+  const faceName = run.scanFamily ?? run.fontId;
+  // The caret is placed by letter widths, so scanned text uses the matched face, not the invisible OCR layer's font.
+  const fontFamily = run.scanFamily
+    ? scanFaceCssFamily(run.scanFamily)
+    : cssFontFamilyFor(run.fontId);
+  const fontWeight = cssWeightFor(faceName);
+  const fontStyle = cssStyleFor(faceName);
   const fontSizePx = Math.max(4, run.fontSize * scale);
   const font = cssFontShorthand(fontStyle, fontWeight, fontSizePx, fontFamily);
   const { ascent, descent } = useMemo(
@@ -858,6 +863,7 @@ export function TextRunOverlay({
     <div
       ref={ref}
       data-testid={`pdf-editor-run-${run.id}`}
+      data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning

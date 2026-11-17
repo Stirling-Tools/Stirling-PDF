@@ -10,7 +10,10 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { useSelectedFontNote } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
+import {
+  useSelectedFontNote,
+  type ScanNote,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -19,6 +22,13 @@ import {
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import {
+  scanBlockMisaligned,
+  scanBlockOffInk,
+  scanTypingDropped,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
   LoadProgress,
@@ -80,7 +90,12 @@ export function EditorSidebar({
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
 
-  const fontNote = useSelectedFontNote(state, selection);
+  const fontNote = useSelectedFontNote(
+    state,
+    selection,
+    selectedScanNote(store, state, selection),
+  );
+  const scanFontMatch = useScanFontMatch(store, state, selection);
 
   const editorDocument = store.document;
   const reviewingAccessibility = useMemo(
@@ -166,6 +181,7 @@ export function EditorSidebar({
                 selection={selection}
                 geometry={geometry}
                 fontNote={fontNote}
+                scanFontMatch={scanFontMatch}
                 canGroup={canGroup}
                 canUngroup={canUngroup}
                 onGroup={onGroup}
@@ -211,6 +227,7 @@ export function EditorSidebar({
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
+      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Tabs>
   );
 }
@@ -239,6 +256,27 @@ function NothingSelected(props: ScanHintProps) {
       </Stack>
     </Center>
   );
+}
+
+function selectedScanNote(
+  store: EditorStore,
+  state: EditorViewState,
+  selection: SelectionState,
+): ScanNote {
+  const doc = store.document;
+  if (!doc) return null;
+  const picked = new Set(selection.runIds);
+  const runs = state.pages.flatMap((page) =>
+    page.runs.flatMap((r) => {
+      if (!picked.has(r.id)) return [];
+      const run = doc.page(page.pageIndex).findRun(r.id);
+      return run ? [run] : [];
+    }),
+  );
+  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
+  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
+  return null;
 }
 
 function EmptySidebar({

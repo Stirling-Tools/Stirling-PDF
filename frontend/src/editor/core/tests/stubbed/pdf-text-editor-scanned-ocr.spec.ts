@@ -1,5 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
@@ -126,6 +126,22 @@ async function bitmapSig(page: Page): Promise<string> {
     for (let k = 0; k < d.length; k += 16) h = (h * 31 + d[k]) | 0;
     return `${c.width}x${c.height}:${h}`;
   }, PAGE_TESTID);
+}
+
+// The picker slides in for ~150ms; a click aimed while it moves can land beside the button.
+async function untilStill(target: Locator): Promise<void> {
+  let prev = "";
+  await expect
+    .poll(
+      async () => {
+        const box = JSON.stringify(await target.boundingBox());
+        const still = box !== "null" && box === prev;
+        prev = box;
+        return still;
+      },
+      { message: "control never stopped moving", intervals: [100] },
+    )
+    .toBe(true);
 }
 
 // Wait until the bitmap differs from `from` (when given), then holds still.
@@ -773,4 +789,55 @@ test("only blurry scans get softened edits", async ({ page }) => {
   const south = (await runs(page)).find((r) => r.text.startsWith("SOUTH"))!;
   await replaceRunText(page, south.id, south.text.replace("SOUTH", "EAST"));
   expect(await blockSoftness(page, south.id)).toBeGreaterThan(0);
+});
+
+test("a scanned edit applies the best font, the picker swaps it, and undo puts it back", async ({
+  page,
+}) => {
+  test.setTimeout(150_000);
+  await openForm(page);
+  const line = (await runs(page)).find((r) => r.renderMode === 3)!;
+  const runBox = page.getByTestId(`pdf-editor-run-${line.id}`);
+  const choices = page.getByTestId("pdf-editor-scan-font-choice");
+  const applied = choices.and(page.locator('[aria-pressed="true"]'));
+  const open = page.getByTestId("pdf-editor-scan-font-open");
+  const label = (i: number) => choices.nth(i).locator("p").first().innerText();
+  await runBox.click();
+  await expect(open).toHaveCount(0);
+
+  await replaceRunText(page, line.id, `${line.text}X`);
+  await expect(choices).toHaveCount(0);
+  await runBox.click();
+  await open.click();
+  await expect(choices.first()).toBeVisible({ timeout: 30_000 });
+  expect(await choices.count()).toBeGreaterThan(1);
+  await expect(choices.first()).toHaveAttribute("aria-pressed", "true");
+  const best = await label(0);
+  const runnerUp = await label(1);
+
+  await snap(page, "edited");
+  const edited = await bitmapSig(page);
+  await untilStill(choices.nth(1));
+  await choices.nth(1).click();
+  await expect(choices).toHaveCount(0);
+  await settle(page, edited);
+
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(runnerUp);
+  const done = page.getByTestId("pdf-editor-scan-font-done");
+  await untilStill(done);
+  await done.click();
+  await expect(choices).toHaveCount(0);
+
+  const picked = await bitmapSig(page);
+  await page.getByTestId("pdf-editor-undo").click();
+  await settle(page, picked);
+  await snap(page, "undone");
+  expect(await diff(page, "edited", "undone")).toBeLessThan(20);
+
+  await runBox.click();
+  await open.click();
+  await expect(applied).toHaveCount(1, { timeout: 30_000 });
+  await expect(applied).toContainText(best);
 });
