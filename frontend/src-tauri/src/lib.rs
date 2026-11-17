@@ -209,6 +209,8 @@ pub fn run() {
       clear_opened_files,
       file_disk_state,
       commands::files::publish_processing_file,
+      commands::file_lock::holds_writable_lock,
+      commands::file_lock::write_locked_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,
