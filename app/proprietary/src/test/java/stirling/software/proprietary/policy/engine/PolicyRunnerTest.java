@@ -70,6 +70,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 /**
  * Tests for {@link PolicyRunner}: the one place that turns a policy's sources into runs, and the
@@ -287,6 +289,49 @@ class PolicyRunnerTest {
                         .filter(e -> e.getFormattedMessage().startsWith("Failed to resolve source"))
                         .count();
         assertEquals(2, warnings);
+    }
+
+    @Test
+    void s3ErrorsThatDifferOnlyByRequestIdWarnOnce() throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenThrow(accessDenied("7GV1A"))
+                .thenThrow(accessDenied("9QXZ2"))
+                .thenThrow(accessDenied("K3PL8"));
+        Logger runnerLogger = (Logger) LoggerFactory.getLogger(PolicyRunner.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        runnerLogger.addAppender(appender);
+        try {
+            for (int sweep = 0; sweep < 3; sweep++) {
+                runner.run(policy);
+            }
+        } finally {
+            runnerLogger.detachAppender(appender);
+        }
+
+        long warnings =
+                appender.list.stream()
+                        .filter(e -> e.getLevel() == Level.WARN)
+                        .filter(e -> e.getFormattedMessage().startsWith("Failed to resolve source"))
+                        .count();
+        assertEquals(1, warnings);
+    }
+
+    private static S3Exception accessDenied(String requestId) {
+        return (S3Exception)
+                S3Exception.builder()
+                        .statusCode(403)
+                        .requestId(requestId)
+                        .awsErrorDetails(
+                                AwsErrorDetails.builder()
+                                        .serviceName("S3")
+                                        .errorCode("AccessDenied")
+                                        .errorMessage("Access Denied")
+                                        .build())
+                        .build();
     }
 
     @Test

@@ -286,6 +286,27 @@ class JpaPolicyStoreTest {
         assertTrue(errors.get(0).getFormattedMessage().contains("p-foreign"));
     }
 
+    @Test
+    void aPolicyStoredAsJsonNullIsLoggedOnceAcrossRepeatedLists() {
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId("p-null");
+        entity.setName("empty");
+        entity.setPolicyJson("null");
+        when(repository.findAllOrdered()).thenReturn(List.of(entity));
+        Logger storeLogger = (Logger) LoggerFactory.getLogger(JpaPolicyStore.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        storeLogger.addAppender(appender);
+        try {
+            assertTrue(store.all().isEmpty());
+            assertTrue(store.all().isEmpty());
+        } finally {
+            storeLogger.detachAppender(appender);
+        }
+
+        assertEquals(1, appender.list.stream().filter(e -> e.getLevel() == Level.ERROR).count());
+    }
+
     private Policy readLegacy(String policyJson) {
         PolicyEntity entity = new PolicyEntity();
         entity.setId("p1");

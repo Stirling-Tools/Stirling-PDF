@@ -39,6 +39,9 @@ import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+
 /**
  * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
  * persisted {@link Source}, then to an {@link InputSpec}. Triggers decide <em>when</em> and call
@@ -291,7 +294,7 @@ public class PolicyRunner {
             work = source.resolve(storedSource, context, policy.owner());
             unresolvableSources.recovered(resolveKey);
         } catch (IOException | RuntimeException e) {
-            if (unresolvableSources.isNew(resolveKey, e.getMessage())) {
+            if (unresolvableSources.isNew(resolveKey, failureSignature(e))) {
                 log.warn(
                         "Failed to resolve source '{}' for policy {}: {}",
                         spec.type(),
@@ -442,5 +445,17 @@ public class PolicyRunner {
                 .filter(source -> source.supports(spec))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private static String failureSignature(Exception e) {
+        if (e instanceof AwsServiceException aws) {
+            AwsErrorDetails details = aws.awsErrorDetails();
+            return aws.getClass().getName()
+                    + ":"
+                    + aws.statusCode()
+                    + ":"
+                    + (details == null ? null : details.errorCode());
+        }
+        return e.getClass().getName() + ":" + e.getMessage();
     }
 }

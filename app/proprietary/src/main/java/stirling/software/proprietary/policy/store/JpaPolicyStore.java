@@ -172,8 +172,9 @@ public class JpaPolicyStore implements PolicyStore {
                             .readerFor(Policy.class)
                             .without(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
                             .readValue(node);
+            Optional<Policy> result = Optional.of(policy);
             unreadableRows.readable(entity.getId());
-            return Optional.of(policy);
+            return result;
         } catch (Exception e) {
             unreadableRows.skipped(entity.getId(), entity.getName(), entity.getPolicyJson(), e);
             return Optional.empty();

@@ -86,8 +86,9 @@ public class JpaSourceStore implements SourceStore {
     private Optional<Source> toSource(SourceEntity entity) {
         try {
             Source source = objectMapper.readValue(entity.getSourceJson(), Source.class);
+            Optional<Source> result = Optional.of(source);
             unreadableRows.readable(entity.getId());
-            return Optional.of(source);
+            return result;
         } catch (Exception e) {
             unreadableRows.skipped(entity.getId(), entity.getName(), entity.getSourceJson(), e);
             return Optional.empty();
