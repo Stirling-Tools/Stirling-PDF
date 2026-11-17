@@ -34,6 +34,9 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.xml.DomXmpParser;
+import org.apache.xmpbox.xml.XmpSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -482,6 +485,182 @@ class OfficeConvertIntegrationTest {
             }
         }
         assertThat(images).as("only the inline image, nothing from the local disk").isEqualTo(1);
+    }
+
+    @Test
+    void htmlPackageDrawsImagesFromInsideThePackage() throws Exception {
+        byte[] page =
+                ("<html><body><p>" + TEXT + "</p><img src=\"images/photo.png\"></body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+        byte[] pdf =
+                htmlToPdf(
+                        "page.zip",
+                        zip(Map.of("index.html", page, "images/photo.png", inlinePng())));
+
+        assertPdfText(pdf);
+        assertThat(imageCount(pdf)).isEqualTo(1);
+    }
+
+    @Test
+    void htmlPackageWithoutAPageIsRefused() throws Exception {
+        byte[] upload = zip(Map.of("images/photo.png", inlinePng()));
+
+        assertThatThrownBy(() -> htmlToPdf("page.zip", upload)).isInstanceOf(Exception.class);
+    }
+
+    @Test
+    void htmlPackageOpensItsIndexPage() throws Exception {
+        byte[] index =
+                ("<html><body><p>" + TEXT + "</p></body></html>").getBytes(StandardCharsets.UTF_8);
+        byte[] other =
+                "<html><body><p>Unrelated page</p></body></html>".getBytes(StandardCharsets.UTF_8);
+        byte[] pdf = htmlToPdf("page.zip", zip(Map.of("about.html", other, "index.html", index)));
+
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            assertThat(new PDFTextStripper().getText(document))
+                    .contains(TEXT)
+                    .doesNotContain("Unrelated page");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"html", "zip"})
+    void htmlScriptsNeverRun(String format) throws Exception {
+        byte[] page =
+                ("<html><body><p>"
+                                + TEXT
+                                + "</p><script>document.write('Injected by script')</script>"
+                                + "</body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+        byte[] upload = format.equals("zip") ? zip("index.html", page) : page;
+
+        byte[] pdf = htmlToPdf("page." + format, upload);
+
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            assertThat(new PDFTextStripper().getText(document))
+                    .contains(TEXT)
+                    .doesNotContain("Injected by script");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"pdfa-1,1,B", "pdfa-2b,2,B", "pdfa-3b,3,B"})
+    void pdfaRecordsTheProfileAndKeepsTheAuthorInXmp(String format, int part, String conformance)
+            throws Exception {
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat(format);
+        try (PDDocument pdf = document();
+                var out = new ByteArrayOutputStream()) {
+            pdf.getDocumentInformation().setAuthor("Finance team");
+            pdf.getDocumentInformation()
+                    .setCreationDate(
+                            new java.util.GregorianCalendar(
+                                    2024, java.util.Calendar.MARCH, 5, 9, 30, 0));
+            pdf.save(out);
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "report.pdf", "application/pdf", out.toByteArray()));
+        }
+
+        try (PDDocument output = Loader.loadPDF(body(controller.pdfToPdfA(request)));
+                var xmp = output.getDocumentCatalog().getMetadata().exportXMPMetadata()) {
+            XMPMetadata metadata = new DomXmpParser().parse(xmp);
+            assertThat(metadata.getPDFAIdentificationSchema().getPart()).isEqualTo(part);
+            assertThat(metadata.getPDFAIdentificationSchema().getConformance())
+                    .isEqualTo(conformance);
+            assertThat(metadata.getDublinCoreSchema().getCreators()).contains("Finance team");
+            assertThat(metadata.getXMPBasicSchema().getCreateDate().get(java.util.Calendar.YEAR))
+                    .isEqualTo(2024);
+        }
+    }
+
+    @Test
+    void pdfaReplacesStaleXmpIdentificationAndLeadsWithTheAuthor() throws Exception {
+        XMPMetadata stale = XMPMetadata.createXMPMetadata();
+        stale.createAndAddPDFAIdentificationSchema().setPart(1);
+        var creators = stale.createAndAddDublinCoreSchema();
+        for (int i = 0; i < 5_000; i++) {
+            creators.addCreator("creator " + i);
+        }
+        var packet = new ByteArrayOutputStream();
+        new XmpSerializer().serialize(stale, packet, true);
+
+        XMPMetadata metadata = pdfaXmp("pdfa-2b", packet.toByteArray());
+
+        assertThat(metadata.getPDFAIdentificationSchema().getPart()).isEqualTo(2);
+        assertThat(metadata.getDublinCoreSchema().getCreators())
+                .singleElement()
+                .asString()
+                .startsWith("Finance team");
+    }
+
+    @Test
+    void pdfaReplacesAnOversizedXmpPacket() throws Exception {
+        byte[] oversized =
+                ("<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?><!--"
+                                + "x".repeat(8 * 1024 * 1024)
+                                + "--><x:xmpmeta xmlns:x=\"adobe:ns:meta/\"/>"
+                                + "<?xpacket end=\"w\"?>")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        XMPMetadata metadata = pdfaXmp("pdfa-2b", oversized);
+
+        assertThat(metadata.getPDFAIdentificationSchema().getPart()).isEqualTo(2);
+    }
+
+    private XMPMetadata pdfaXmp(String format, byte[] existingXmp) throws Exception {
+        var controller = new ConvertPDFToPDFA(null, null, null, tempFiles, properties, office);
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setOutputFormat(format);
+        try (PDDocument pdf = document();
+                var out = new ByteArrayOutputStream()) {
+            pdf.getDocumentInformation().setAuthor("Finance team");
+            var metadata = new org.apache.pdfbox.pdmodel.common.PDMetadata(pdf);
+            metadata.importXMPMetadata(existingXmp);
+            pdf.getDocumentCatalog().setMetadata(metadata);
+            pdf.save(out);
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "report.pdf", "application/pdf", out.toByteArray()));
+        }
+        try (PDDocument output = Loader.loadPDF(body(controller.pdfToPdfA(request)));
+                var xmp = output.getDocumentCatalog().getMetadata().exportXMPMetadata()) {
+            return new DomXmpParser().parse(xmp);
+        }
+    }
+
+    private byte[] htmlToPdf(String name, byte[] upload) throws Exception {
+        HTMLToPdfRequest request = new HTMLToPdfRequest();
+        request.setFileInput(
+                new MockMultipartFile("fileInput", name, "application/octet-stream", upload));
+        return body(new ConvertHtmlToPDF(factory, tempFiles, toPdf).HtmlToPdf(request));
+    }
+
+    private static int imageCount(byte[] pdf) throws Exception {
+        int images = 0;
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            for (var page : document.getPages()) {
+                for (var name : page.getResources().getXObjectNames()) {
+                    if (page.getResources().isImageXObject(name)) {
+                        images++;
+                    }
+                }
+            }
+        }
+        return images;
+    }
+
+    private static byte[] zip(Map<String, byte[]> entries) throws Exception {
+        var out = new ByteArrayOutputStream();
+        try (var zip = new ZipOutputStream(out)) {
+            for (var entry : new java.util.TreeMap<>(entries).entrySet()) {
+                zip.putNextEntry(new ZipEntry(entry.getKey()));
+                zip.write(entry.getValue());
+                zip.closeEntry();
+            }
+        }
+        return out.toByteArray();
     }
 
     private static byte[] inlinePng() throws Exception {
