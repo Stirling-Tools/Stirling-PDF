@@ -110,6 +110,38 @@ function gripAt(page: Page, at: { x: number; y: number }) {
   );
 }
 
+function moveBandCentre(page: Page, edge: "bottom" | "left", runId = RUN) {
+  return page.evaluate(
+    ({ edge, runId }) => {
+      const bands = [
+        ...document.querySelectorAll(
+          `[data-testid="pdf-editor-grips-${runId}"] [data-grip="move"]`,
+        ),
+      ].map((band) => band.getBoundingClientRect());
+      if (bands.length === 0) return null;
+      const band = bands.reduce((best, rect) =>
+        edge === "bottom"
+          ? rect.top > best.top
+            ? rect
+            : best
+          : rect.right < best.right
+            ? rect
+            : best,
+      );
+      const centre = {
+        x: band.left + band.width / 2,
+        y: band.top + band.height / 2,
+      };
+      return document
+        .elementFromPoint(centre.x, centre.y)
+        ?.getAttribute("data-grip") === "move"
+        ? centre
+        : null;
+    },
+    { edge, runId },
+  );
+}
+
 async function clickAndExpectCaret(
   page: Page,
   x: number,
@@ -168,10 +200,17 @@ test.describe("PDF text editor - run grips", () => {
       // The frame appears on hover. Leaving the box before it is drawn leaves
       // nothing to grab, and the press then starts a marquee instead.
       await expect(page.getByTestId(`pdf-editor-grips-${RUN}`)).toBeVisible();
-      const start =
-        edge === "bottom"
-          ? { x: box.x + box.width / 2, y: box.y + box.height + 3 }
-          : { x: box.x - 3, y: box.y + box.height / 2 };
+      // Aim at the middle of the band as drawn: a point fixed from the box
+      // rect sits under 2 px inside the band and misses it when the box and
+      // frame lay out a pixel apart.
+      let start = { x: 0, y: 0 };
+      await expect
+        .poll(async () => {
+          const centre = await moveBandCentre(page, edge);
+          if (centre) start = centre;
+          return centre !== null;
+        })
+        .toBe(true);
       await page.mouse.move(start.x, start.y, { steps: 4 });
       await expect
         .poll(() => gripAt(page, start), { timeout: 10_000 })

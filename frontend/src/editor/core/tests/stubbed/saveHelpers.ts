@@ -25,6 +25,18 @@ export async function saveAndDownload(
   await page.getByTestId("pdf-editor-download").click();
   // Wait for the modal itself before arming the download listener.
   await expect(confirm).toBeVisible({ timeout: 10_000 });
+  // The modal slides in; a click while it moves presses the button and
+  // releases past it, so no click fires and the download never starts.
+  await expect
+    .poll(() =>
+      confirm.evaluate(
+        (button) =>
+          (button.closest('[role="dialog"]') ?? button)
+            .getAnimations({ subtree: true })
+            .filter((animation) => animation.playState === "running").length,
+      ),
+    )
+    .toBe(0);
   const downloadPromise = page.waitForEvent("download");
   await confirm.click();
   return downloadPromise;
