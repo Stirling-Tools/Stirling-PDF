@@ -10634,12 +10634,6 @@ subtitle = "Activeer een self-hosted instantie met deze sleutel, of bewaar deze 
 title = "Je licentiesleutel"
 trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw — anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
 
-[portal.procurement.link]
-cta = "Account koppelen"
-description = "Inkoop draait op je gekoppelde Stirling-account: zo richten we de trial in, bepalen we de prijs van je offerte en starten we de facturatie. Koppel een account om te beginnen."
-eyebrow = "Enterprise"
-title = "Koppel je account om te beginnen"
-
 [portal.procurement.live]
 description = "Je abonnement is actief en je licentie is uitgegeven. Je team is ingericht en de facturatie is gestart."
 eyebrow = "Live"

@@ -10634,12 +10634,6 @@ subtitle = "Aktiváljon egy saját üzemeltetésű példányt ezzel a kulccsal, 
 title = "Az Ön licenckulcsa"
 trialFileHint = "Ez az Ön próba licencfájlja. Miután a megállapodás létrejött, térjen vissza, és töltse le újra — az online licenckulccsal ellentétben a .lic fájl nem frissül magától."
 
-[portal.procurement.link]
-cta = "Fiók összekapcsolása"
-description = "A beszerzés az összekapcsolt Stirling-fiókján fut: így hozzuk létre a próbaidőszakot, árazzuk be az ajánlatát és indítjuk el a számlázást. A kezdéshez kapcsoljon össze egy fiókot."
-eyebrow = "Enterprise"
-title = "Kapcsolja össze fiókját a kezdéshez"
-
 [portal.procurement.live]
 description = "Az előfizetése aktív, és a licence ki lett állítva. A csapata létrehozva, és a számlázás elindult."
 eyebrow = "Élő"

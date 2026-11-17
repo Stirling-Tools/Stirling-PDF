@@ -10634,12 +10634,6 @@ subtitle = "Activa una instancia autoalojada con esta clave o guárdala para tus
 title = "Tu clave de licencia"
 trialFileHint = "Este es tu archivo de licencia de prueba. Una vez que el acuerdo esté en vigor, vuelve y descárgalo de nuevo; a diferencia de la clave de licencia online, el archivo .lic no se actualizará por sí solo."
 
-[portal.procurement.link]
-cta = "Vincular cuenta"
-description = "Compras se ejecuta en tu cuenta de Stirling vinculada: así provisionamos la prueba, calculamos tu presupuesto e iniciamos la facturación. Vincula una cuenta para empezar."
-eyebrow = "Empresa"
-title = "Vincula tu cuenta para empezar"
-
 [portal.procurement.live]
 description = "Tu suscripción está activa y tu licencia se ha emitido. Tu equipo está provisionado y la facturación ha comenzado."
 eyebrow = "En directo"

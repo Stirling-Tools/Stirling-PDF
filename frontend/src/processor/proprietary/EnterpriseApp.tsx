@@ -1,37 +1,16 @@
-import { type ReactNode } from "react";
-import { useAuth } from "@editor/auth";
-import { EnterpriseAuthBoundary } from "@processor/auth/EnterpriseAuthBoundary";
-import { PortalFrame } from "@processor/PortalFrame";
-import { PortalSettingsProviders } from "@processor/components/settings/PortalSettingsProviders";
-import { ErrorBoundary } from "@processor/components/ErrorBoundary";
-import { Enterprise } from "@processor/views/Enterprise";
-
-/** The portal's providers load account data as they mount, so a visitor without one gets none. */
-function AccountProviders({ children }: { children: ReactNode }) {
-  const { session, isAnonymous } = useAuth();
-  return session && !isAnonymous ? (
-    <PortalSettingsProviders>{children}</PortalSettingsProviders>
-  ) : (
-    children
-  );
-}
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { hostedEnterpriseUrl } from "@processor/components/procurement/enterpriseEntry";
 
 /**
- * The Enterprise page as its own route, served like a website separate from the app: none of the
- * portal's chrome, but the same query cache, sign-in and account link as billing, so a deal started
- * on either side shows on the other. EnterpriseAuthBoundary decides per build whether sign-in
- * comes first.
+ * Self-hosted: Enterprise is bought on the hosted Enterprise page, signed in to a Stirling account
+ * there, and applied here as a licence key, so this server's own Enterprise address forwards to it.
+ * The SaaS build shadows this with the page itself.
  */
 export function EnterpriseApp() {
-  return (
-    <PortalFrame>
-      <EnterpriseAuthBoundary>
-        <AccountProviders>
-          <ErrorBoundary>
-            <Enterprise />
-          </ErrorBoundary>
-        </AccountProviders>
-      </EnterpriseAuthBoundary>
-    </PortalFrame>
-  );
+  const { search } = useLocation();
+  useEffect(() => {
+    window.location.replace(hostedEnterpriseUrl(search));
+  }, [search]);
+  return null;
 }

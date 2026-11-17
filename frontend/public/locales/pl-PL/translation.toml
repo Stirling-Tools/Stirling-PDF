@@ -10634,12 +10634,6 @@ subtitle = "Aktywuj instancję self-hosted tym kluczem albo zachowaj go do swoic
 title = "Twój klucz licencji"
 trialFileHint = "To jest plik licencji próbnej. Gdy umowa będzie gotowa, wróć i pobierz go ponownie — w przeciwieństwie do klucza licencji online plik .lic nie zaktualizuje się sam."
 
-[portal.procurement.link]
-cta = "Połącz konto"
-description = "Zakupy działają na połączonym koncie Stirling: tak przygotowujemy wersję próbną, wyceniamy ofertę i rozpoczynamy rozliczenia. Połącz konto, aby zacząć."
-eyebrow = "Enterprise"
-title = "Połącz swoje konto, aby rozpocząć"
-
 [portal.procurement.live]
 description = "Twoja subskrypcja jest aktywna, a licencja została wydana. Twój zespół jest przygotowany, a rozliczanie rozpoczęte."
 eyebrow = "Na żywo"

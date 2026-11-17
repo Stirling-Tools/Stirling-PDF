@@ -10634,12 +10634,6 @@ subtitle = "Aktiver en selvhostet instans med denne nøkkelen, eller behold den 
 title = "Lisensnøkkelen din"
 trialFileHint = "Dette er prøvelisensfilen din. Når avtalen din er på plass, kom tilbake og last den ned igjen — i motsetning til den nettbaserte lisensnøkkelen oppdateres ikke .lic-filen av seg selv."
 
-[portal.procurement.link]
-cta = "Koble til konto"
-description = "Innkjøp kjører på den tilkoblede Stirling-kontoen din: det er slik vi klargjør prøveperioden, priser tilbudet ditt og starter fakturering. Koble til en konto for å starte."
-eyebrow = "Enterprise"
-title = "Koble til kontoen din for å begynne"
-
 [portal.procurement.live]
 description = "Abonnementet ditt er aktivt og lisensen din er utstedt. Teamet ditt er klargjort, og fakturering har startet."
 eyebrow = "I drift"

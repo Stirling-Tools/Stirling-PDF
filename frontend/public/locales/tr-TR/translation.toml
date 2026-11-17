@@ -10634,12 +10634,6 @@ subtitle = "Kendi barındırdığınız bir instance'ı bu anahtarla etkinleşti
 title = "Lisans anahtarınız"
 trialFileHint = "Bu, deneme lisans dosyanızdır. Sözleşmeniz yürürlüğe girdikten sonra geri dönüp tekrar indirin — çevrimiçi lisans anahtarının aksine, .lic dosyası kendiliğinden güncellenmez."
 
-[portal.procurement.link]
-cta = "Hesabı bağla"
-description = "Satın alma, bağlı Stirling hesabınızda çalışır: denemeyi hazırlama, teklifinizi fiyatlandırma ve faturalandırmayı başlatma şeklimiz budur. Başlamak için bir hesap bağlayın."
-eyebrow = "Kurumsal"
-title = "Başlamak için hesabınızı bağlayın"
-
 [portal.procurement.live]
 description = "Aboneliğiniz aktif ve lisansınız verildi. Ekibiniz hazırlandı ve faturalandırma başladı."
 eyebrow = "Canlı"

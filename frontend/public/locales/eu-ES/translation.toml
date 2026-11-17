@@ -10634,12 +10634,6 @@ subtitle = "Aktibatu autoostatatutako instantzia bat gako honekin, edo gorde zur
 title = "Zure lizentzia-gakoa"
 trialFileHint = "Hau zure proba-lizentziaren fitxategia da. Zure akordioa indarrean dagoenean, itzuli eta deskargatu berriro — online lizentzia-gakoa ez bezala, .lic fitxategia ez da berez eguneratuko."
 
-[portal.procurement.link]
-cta = "Lotu kontua"
-description = "Erosketa zure lotutako Stirling kontuan exekutatzen da: horrela hornitzen dugu probaldia, aurrekontuaren prezioa kalkulatzen dugu eta fakturazioa hasten dugu. Lotu kontu bat hasteko."
-eyebrow = "Enterprise"
-title = "Lotu zure kontua hasteko"
-
 [portal.procurement.live]
 description = "Zure harpidetza aktibo dago eta zure lizentzia jaulkita dago. Zure taldea hornituta dago eta fakturazioa hasi da."
 eyebrow = "Martxan"

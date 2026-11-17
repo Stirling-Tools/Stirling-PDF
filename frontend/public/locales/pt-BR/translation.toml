@@ -10634,12 +10634,6 @@ subtitle = "Ative uma instância self-hosted com esta chave ou guarde-a para seu
 title = "Sua chave de licença"
 trialFileHint = "Este é o arquivo de licença do seu teste. Assim que seu contrato estiver em vigor, volte e baixe-o novamente — ao contrário da chave de licença online, o arquivo .lic não será atualizado sozinho."
 
-[portal.procurement.link]
-cta = "Vincular conta"
-description = "Compras funciona na sua conta Stirling vinculada: é assim que provisionamos o teste, precificamos sua cotação e iniciamos o faturamento. Vincule uma conta para começar."
-eyebrow = "Enterprise"
-title = "Vincule sua conta para começar"
-
 [portal.procurement.live]
 description = "Sua assinatura está ativa e sua licença foi emitida. Sua equipe está provisionada e o faturamento foi iniciado."
 eyebrow = "No ar"

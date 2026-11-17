@@ -10634,12 +10634,6 @@ subtitle = "使用此金鑰啟用自行託管的執行個體，或保留作為�
 title = "您的授權金鑰"
 trialFileHint = "這是您的試用授權檔案。協議就緒後，請回來再次下載 — 與線上授權金鑰不同，.lic 檔案不會自行更新。"
 
-[portal.procurement.link]
-cta = "連結帳戶"
-description = "採購流程會在您連結的 Stirling 帳戶上執行：我們會用它來佈建試用、為報價定價並開始計費。連結帳戶即可開始。"
-eyebrow = "企業版"
-title = "連結您的帳戶以開始"
-
 [portal.procurement.live]
 description = "您的訂閱已啟用，授權已核發。您的團隊已完成佈建，計費也已開始。"
 eyebrow = "上線"

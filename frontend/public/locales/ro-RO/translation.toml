@@ -10634,12 +10634,6 @@ subtitle = "Activați o instanță self-hosted cu această cheie sau păstrați-
 title = "Cheia dvs. de licență"
 trialFileHint = "Acesta este fișierul dvs. de licență de probă. După ce acordul este în vigoare, reveniți și descărcați-l din nou — spre deosebire de cheia de licență online, fișierul .lic nu se actualizează singur."
 
-[portal.procurement.link]
-cta = "Conectează contul"
-description = "Achizițiile rulează pe contul tău Stirling conectat: așa provisionăm trialul, stabilim prețul ofertei și pornim facturarea. Conectează un cont pentru a începe."
-eyebrow = "Enterprise"
-title = "Conectează-ți contul pentru a începe"
-
 [portal.procurement.live]
 description = "Abonamentul tău este activ și licența ta a fost emisă. Echipa ta este provisionată și facturarea a început."
 eyebrow = "Activ"
