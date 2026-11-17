@@ -9,11 +9,13 @@ import {
   forgetPdfAccess,
   getPdfAccess,
   rememberPdfAccess,
+  setSignedPdfEditPolicy,
   type PdfAccess,
 } from "@editor/services/pdfAccessService";
 import {
   hasPdfPermissionOverride,
   pdfAllows,
+  pdfEditingLocked,
 } from "@editor/services/pdfPermissions";
 import {
   prepareUnlockedFile,
@@ -21,8 +23,10 @@ import {
   assertPdfSessionEditable,
   preflightPdfOperation,
   changePdfSecurity,
+  signedPdfEditRefused,
 } from "@editor/services/pdfSessionUnlock";
 import { PdfPermissionFlag } from "@embedpdf/models";
+import { toolAcceptsFile } from "@editor/utils/toolIOCompat";
 
 vi.mock("@editor/services/apiClient", () => ({ default: { post: vi.fn() } }));
 const post = vi.mocked(apiClient.post);
@@ -600,5 +604,85 @@ describe("protected split archives", () => {
       protectUnlockedResults([output], [source], rotate),
     ).rejects.toThrow("No unprotected result was saved");
     expect(post).not.toHaveBeenCalled();
+  });
+});
+
+describe("signed PDF edit policy", () => {
+  const signedAccess: PdfAccess = {
+    ...access,
+    password: "",
+    encrypted: false,
+    signed: true,
+  };
+
+  function signedPdf() {
+    const file = createStirlingFile(new File(["%PDF-1.7"], "signed.pdf"));
+    rememberPdfAccess(file, signedAccess);
+    return file;
+  }
+
+  const stub = (file: File & { fileId: string }) => ({
+    id: file.fileId,
+    name: file.name,
+    type: "application/pdf",
+  });
+
+  afterEach(() => setSignedPdfEditPolicy(false));
+
+  it("leaves signed PDFs editable while the setting is off", async () => {
+    const file = signedPdf();
+    expect(await preflightPdfOperation([file], rotate, false, vi.fn())).toBe(
+      true,
+    );
+    await expect(prepareUnlockedFile(file, rotate)).resolves.toBe(file);
+    expect(pdfEditingLocked(signedAccess)).toBe(false);
+    expect(signedPdfEditRefused(signedAccess, rotate)).toBe(false);
+  });
+
+  it("refuses every way of rewriting a signed PDF while it is on", async () => {
+    setSignedPdfEditPolicy(true);
+    const file = signedPdf();
+    await expect(
+      preflightPdfOperation([file], rotate, false, vi.fn()),
+    ).rejects.toThrow("digitally signed");
+    await expect(
+      prepareUnlockedFile(file, "/api/v1/general/rearrange-pages"),
+    ).rejects.toThrow("digitally signed");
+    expect(() => assertPdfSessionEditable(signedAccess)).toThrow(
+      "digitally signed",
+    );
+    expect(pdfEditingLocked(signedAccess)).toBe(true);
+    expect(signedPdfEditRefused(signedAccess, rotate)).toBe(true);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "/api/v1/security/cert-sign",
+    "/api/v1/security/remove-cert-sign",
+    "/api/v1/convert/pdf/img",
+  ])("still allows %s on a signed PDF", async (endpoint) => {
+    setSignedPdfEditPolicy(true);
+    const file = signedPdf();
+    expect(await preflightPdfOperation([file], endpoint, false, vi.fn())).toBe(
+      true,
+    );
+    await expect(prepareUnlockedFile(file, endpoint)).resolves.toBe(file);
+    expect(signedPdfEditRefused(signedAccess, endpoint)).toBe(false);
+    expect(toolAcceptsFile(endpoint, stub(file))).toBe(true);
+  });
+
+  it("leaves signed PDFs out of tools that rewrite them", () => {
+    setSignedPdfEditPolicy(true);
+    const file = signedPdf();
+    expect(toolAcceptsFile(rotate, stub(file))).toBe(false);
+  });
+
+  it("does not block unsigned PDFs", async () => {
+    setSignedPdfEditPolicy(true);
+    const file = createStirlingFile(new File(["%PDF-1.7"], "plain.pdf"));
+    rememberPdfAccess(file, { ...signedAccess, signed: false });
+    expect(await preflightPdfOperation([file], rotate, false, vi.fn())).toBe(
+      true,
+    );
   });
 });

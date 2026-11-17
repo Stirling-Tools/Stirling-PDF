@@ -21,6 +21,7 @@ import {
   buildTrackFile,
   policyIdsForTracks,
 } from "@editor/components/pageTracks/buildTrackFile";
+import { SignedPdfEditsBlockedError } from "@editor/services/pdfSessionUnlock";
 
 /**
  * The page editor is a page-level rework of the open documents, which is what
@@ -242,6 +243,16 @@ export function useTrackSave(
             alertType: "warning",
             title: t("policy.recoveryTitle"),
             body: t("policy.recoveryBody"),
+          });
+        } else if (error instanceof SignedPdfEditsBlockedError) {
+          alert({
+            alertType: "warning",
+            title: t(
+              "signedPdf.editsBlockedTitle",
+              "Signed PDF can't be changed",
+            ),
+            body: error.message,
+            expandable: false,
           });
         } else {
           console.error("[PageTracks] save failed", error);
