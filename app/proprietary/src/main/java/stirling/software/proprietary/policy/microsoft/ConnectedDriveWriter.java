@@ -281,6 +281,9 @@ public class ConnectedDriveWriter {
         } catch (URISyntaxException e) {
             throw new IOException("Invalid Microsoft Graph URL");
         }
+        if (graph.getHost() == null || !graph.getHost().equals(uri.getHost())) {
+            throw new IOException("Refusing a request outside Microsoft Graph");
+        }
         if (!graph.getScheme().equalsIgnoreCase(uri.getScheme())
                 || !graph.getRawAuthority().equalsIgnoreCase(uri.getRawAuthority())
                 || uri.getRawPath() == null
