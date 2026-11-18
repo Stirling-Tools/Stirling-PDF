@@ -910,7 +910,7 @@ public class ConvertPDFToPDFA {
                 optionsBuilder
                         .outputIntentProfile(cmykProfile)
                         .conditionIdentifier("Stirling PDF CMYK")
-                        .info(CmykProfileResolver.source());
+                        .info("Stirling PDF CMYK output intent");
             } else {
                 optionsBuilder.useCompactCmyk();
             }
