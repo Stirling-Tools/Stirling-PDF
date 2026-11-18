@@ -166,7 +166,12 @@ export function useOneDriveSave(): OneDriveSave {
                   "oneDriveSave.missing",
                   "This file was moved or deleted in OneDrive. Save your version as a copy instead.",
                 )
-              : oneDriveFailureMessage(t, code),
+              : code === "unprotected"
+                ? t(
+                    "oneDriveSave.unprotected",
+                    "This version is no longer protected with Microsoft Purview, so it was not saved to OneDrive.",
+                  )
+                : oneDriveFailureMessage(t, code),
           copyTarget
             ? {
                 isPersistentPopup: true,

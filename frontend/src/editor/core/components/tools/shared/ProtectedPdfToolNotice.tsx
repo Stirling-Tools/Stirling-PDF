@@ -1,4 +1,3 @@
-import { signedPdfEditsBlockedMessage } from "@editor/services/pdfSessionUnlock";
 import { Group, Stack, Text } from "@mantine/core";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -7,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
-import { getPdfAccess } from "@editor/services/pdfAccessService";
 
 function RemovePasswordAction() {
   const { t } = useTranslation();
@@ -36,31 +34,25 @@ function RemovePasswordAction() {
   );
 }
 
+export interface UnavailableProtectedFile {
+  file: StirlingFileStub;
+  reason: string;
+  passwordProtected: boolean;
+}
+
 /** Protected inputs remain visible in the Files list even when this tool cannot process them. */
 export function ProtectedPdfToolNotice({
   files,
 }: {
-  files: readonly StirlingFileStub[];
+  files: readonly UnavailableProtectedFile[];
 }) {
   const { t } = useTranslation();
   if (!files.length) return null;
   return (
     <Stack gap="xs" role="list">
-      {files.map((file) => (
+      {files.map(({ file, reason, passwordProtected }) => (
         <Group key={file.id} gap={6} wrap="nowrap" role="listitem">
-          <Tooltip
-            content={
-              getPdfAccess(file.id)?.encrypted
-                ? t(
-                    "encryptedPdfUnlock.toolUnavailable",
-                    "This tool doesn't support encrypted PDFs. Remove the password first.",
-                  )
-                : signedPdfEditsBlockedMessage()
-            }
-            position="top"
-            maxWidth={260}
-            arrow
-          >
+          <Tooltip content={reason} position="bottom" maxWidth={260} arrow>
             <ActionIcon
               variant="quiet"
               accent="warning"
@@ -86,7 +78,7 @@ export function ProtectedPdfToolNotice({
           >
             <PrivateContent>{file.name}</PrivateContent>
           </Text>
-          {getPdfAccess(file.id)?.encrypted && <RemovePasswordAction />}
+          {passwordProtected && <RemovePasswordAction />}
         </Group>
       ))}
     </Stack>

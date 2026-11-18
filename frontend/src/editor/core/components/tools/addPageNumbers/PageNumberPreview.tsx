@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AddPageNumbersParameters } from "@editor/components/tools/addPageNumbers/useAddPageNumbersParameters";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
+import { useReadablePdf } from "@editor/hooks/useReadablePdf";
 import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
 import styles from "@editor/components/tools/addPageNumbers/PageNumberPreview.module.css";
 import { PrivateContent } from "@editor/components/shared/PrivateContent";
@@ -121,6 +122,7 @@ export default function PageNumberPreview({
   } | null>(null);
   const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
   const { requestThumbnail } = useThumbnailGeneration();
+  const readable = useReadablePdf(file);
   const [hoverTile, setHoverTile] = useState<number | null>(null);
   const [textColor, setTextColor] = useState<string>("#fff");
 
@@ -151,11 +153,13 @@ export default function PageNumberPreview({
         setPageSize(null);
         return;
       }
+      if (!readable) return;
       try {
-        const buffer = await file.arrayBuffer();
+        const buffer = await readable.file.arrayBuffer();
         const pdf = await pdfWorkerManager.createDocument(buffer, {
           disableAutoFetch: true,
           disableStream: true,
+          password: readable.password,
         });
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1 });
@@ -171,7 +175,7 @@ export default function PageNumberPreview({
     return () => {
       cancelled = true;
     };
-  }, [file]);
+  }, [file, readable]);
 
   // Load first-page thumbnail for background preview
   useEffect(() => {
@@ -181,13 +185,15 @@ export default function PageNumberPreview({
         setPageThumbnail(null);
         return;
       }
+      if (!readable) return;
       try {
         const pageNumber = Math.max(
           1,
           getFirstSelectedPage(parameters.pagesToNumber || "1"),
         );
-        const pageId = `${file.name}:${file.size}:${file.lastModified}:page:${pageNumber}`;
-        const thumb = await requestThumbnail(pageId, file, pageNumber);
+        const source = readable.file;
+        const pageId = `${source.name}:${source.size}:${source.lastModified}:page:${pageNumber}`;
+        const thumb = await requestThumbnail(pageId, source, pageNumber);
         if (isActive) setPageThumbnail(thumb || null);
       } catch {
         if (isActive) setPageThumbnail(null);
@@ -197,7 +203,7 @@ export default function PageNumberPreview({
     return () => {
       isActive = false;
     };
-  }, [file, parameters.pagesToNumber, requestThumbnail]);
+  }, [file, readable, parameters.pagesToNumber, requestThumbnail]);
 
   // Detect text color based on overall PDF background
   useEffect(() => {

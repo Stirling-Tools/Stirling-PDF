@@ -32,6 +32,7 @@ interface AttachmentSidebarProps {
   /** Set for an Adobe PDF Portfolio: renders the richer collection experience
    * (type icons, open-in-place) from the portfolio rather than the open document. */
   portfolio?: PortfolioView | null;
+  contentLocked?: boolean;
 }
 
 export interface PortfolioView {
@@ -148,6 +149,7 @@ export const AttachmentSidebar = ({
   documentCacheKey,
   preloadCacheKeys = [],
   portfolio = null,
+  contentLocked = false,
 }: AttachmentSidebarProps) => {
   const isPortfolio = portfolio !== null;
   const { t } = useTranslation();
@@ -374,6 +376,7 @@ export const AttachmentSidebar = ({
     event: React.SyntheticEvent,
   ) => {
     event.stopPropagation();
+    if (contentLocked) return;
     if (portfolio) {
       void saveMember(attachment);
       return;
@@ -596,6 +599,7 @@ export const AttachmentSidebar = ({
   const renderAttachments = (attachments: PdfAttachmentObject[]) => {
     return attachments.map((attachment, index) => {
       const rowClick = (event: React.SyntheticEvent) => {
+        if (contentLocked) return;
         if (isPortfolio) {
           event.stopPropagation();
           void previewMember(attachment);
@@ -664,7 +668,7 @@ export const AttachmentSidebar = ({
                 </Text>
               )}
             </div>
-            {isOpening ? (
+            {contentLocked ? null : isOpening ? (
               <Loader size="xs" />
             ) : (
               <>
@@ -842,14 +846,16 @@ export const AttachmentSidebar = ({
           <Text size="sm" c="dimmed" ta="center">
             {t("viewer.attachments.empty", "No attachments in this document")}
           </Text>
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={handleAddAttachment}
-            leftSection={<Icon name="plus" size="1rem" />}
-          >
-            {t("viewer.attachments.addAttachment", "Add attachment")}
-          </Button>
+          {!contentLocked && (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={handleAddAttachment}
+              leftSection={<Icon name="plus" size="1rem" />}
+            >
+              {t("viewer.attachments.addAttachment", "Add attachment")}
+            </Button>
+          )}
         </Stack>
       )}
 
@@ -864,19 +870,28 @@ export const AttachmentSidebar = ({
               })}
             </Text>
           )}
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth
-            justify="start"
-            onClick={handleAddAttachment}
-            leftSection={<Icon name="plus" size="0.9rem" />}
-            style={{ marginBottom: "var(--space-xs)" }}
-          >
-            {isPortfolio
-              ? t("viewer.portfolio.addFile", "Add file")
-              : t("viewer.attachments.addAttachment", "Add attachment")}
-          </Button>
+          {contentLocked ? (
+            <Text size="xs" c="dimmed" mb="xs">
+              {t(
+                "viewer.attachments.protectedContent",
+                "Attachments of a Microsoft Purview protected PDF can't be saved or changed.",
+              )}
+            </Text>
+          ) : (
+            <Button
+              variant="tertiary"
+              size="sm"
+              fullWidth
+              justify="start"
+              onClick={handleAddAttachment}
+              leftSection={<Icon name="plus" size="0.9rem" />}
+              style={{ marginBottom: "var(--space-xs)" }}
+            >
+              {isPortfolio
+                ? t("viewer.portfolio.addFile", "Add file")
+                : t("viewer.attachments.addAttachment", "Add attachment")}
+            </Button>
+          )}
           <div className="attachment-list">
             {renderAttachments(filteredAttachments)}
           </div>

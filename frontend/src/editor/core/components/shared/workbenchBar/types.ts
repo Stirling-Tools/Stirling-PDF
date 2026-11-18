@@ -23,6 +23,7 @@ export interface WorkbenchBarActionsProps {
   saveMenu?: SaveMenuItem[];
   onPrint?: () => void;
   printDisabledReason?: string;
+  downloadDisabledReason?: string;
   onExport: () => void;
   onClose: () => void;
 }

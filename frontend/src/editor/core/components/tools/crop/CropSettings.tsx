@@ -20,6 +20,8 @@ import {
 } from "@editor/utils/cropCoordinates";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import DocumentThumbnail from "@editor/components/shared/filePreview/DocumentThumbnail";
+import { useReadablePdf } from "@editor/hooks/useReadablePdf";
+import { useRightsManagedThumbnail } from "@editor/hooks/useRightsManagedPdf";
 
 interface CropSettingsProps {
   parameters: CropParametersHook;
@@ -34,6 +36,8 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
   // follow the viewer when the user switches files with the tool open.
   const [selectedStub = null] = useViewScopedFileStubs();
   const [selectedFile = null] = useViewScopedFiles();
+  const readable = useReadablePdf(selectedFile);
+  const decryptedThumbnail = useRightsManagedThumbnail(selectedStub?.id);
 
   const [pdfBounds, setPdfBounds] = useState<PDFBounds | null>(null);
 
@@ -43,16 +47,17 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
         setPdfBounds(null);
         return;
       }
+      if (!readable) return;
 
       try {
-        // Get PDF dimensions from the actual file
-        const arrayBuffer = await selectedFile.arrayBuffer();
+        const arrayBuffer = await readable.file.arrayBuffer();
 
         // Load PDF to get actual dimensions
         const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
           disableAutoFetch: true,
           disableStream: true,
           stopAtErrors: false,
+          password: readable.password,
         });
 
         const firstPage = await pdf.getPage(1);
@@ -97,7 +102,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     };
 
     loadPDFDimensions();
-  }, [selectedStub, selectedFile, parameters]);
+  }, [selectedStub, selectedFile, readable, parameters]);
 
   // Listen for tour events to set crop area
   useEffect(() => {
@@ -212,7 +217,9 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               >
                 <DocumentThumbnail
                   file={selectedStub}
-                  thumbnail={selectedStub?.thumbnailUrl ?? null}
+                  thumbnail={
+                    decryptedThumbnail ?? selectedStub?.thumbnailUrl ?? null
+                  }
                   style={{
                     width: pdfBounds.thumbnailWidth,
                     height: pdfBounds.thumbnailHeight,

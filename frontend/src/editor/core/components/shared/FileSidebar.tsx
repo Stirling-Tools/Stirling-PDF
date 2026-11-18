@@ -14,7 +14,11 @@ import { NavSurface } from "@editor/ui/NavSurface";
 import { Button } from "@editor/ui/Button";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions } from "@editor/contexts/file/fileHooks";
+import {
+  useFileState,
+  useFileActions,
+  useFileSelectors,
+} from "@editor/contexts/file/fileHooks";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import {
   useCloudFilePickers,
@@ -81,6 +85,12 @@ import {
   CONNECTED_ACCOUNTS_SETTINGS_PATH,
   useOneDriveSave,
 } from "@editor/hooks/useOneDriveSave";
+import {
+  getRightsManagedThumbnail,
+  isKnownRightsManagedPdf,
+  isMicrosoftProtectedPdf,
+} from "@editor/services/rightsManagedPdf";
+import { useRightsManagedPdfRevision } from "@editor/hooks/useRightsManagedPdf";
 import { hasUnsavedCloudChanges } from "@editor/services/oneDriveSave";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -578,6 +588,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   ) {
     const { t } = useTranslation();
     const labelName = useLabelName();
+    useRightsManagedPdfRevision();
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();
@@ -592,6 +603,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const navigate = useNavigate();
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
+    const fileSelectors = useFileSelectors();
+    useEffect(() => {
+      for (const file of fileSelectors.getFiles(state.files.ids)) {
+        if (file.type === "application/pdf" || /\.pdf$/i.test(file.name))
+          void isMicrosoftProtectedPdf(file);
+      }
+    }, [fileSelectors, state.files.ids]);
     const damagedRepair = useDamagedFileRepair();
     const { actions: navActions } = useNavigationActions();
     const { workbench: currentWorkbench } = useNavigationState();
@@ -1242,9 +1260,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       const isActive = isViewedInViewer;
       const isEncryptedFile = stub.processedFile?.isEncrypted === true;
       const thumbnailUrl =
+        getRightsManagedThumbnail(stub.id) ||
         (workbenchFileId
           ? state.files.byId[workbenchFileId]?.thumbnailUrl
-          : undefined) || stub.thumbnailUrl;
+          : undefined) ||
+        stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
         stub.dataUnavailable === true || lostFileIds.has(stub.id);
@@ -1275,6 +1295,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
           isEncrypted={isEncryptedFile}
+          isRightsManaged={isKnownRightsManagedPdf(stub.id)}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}

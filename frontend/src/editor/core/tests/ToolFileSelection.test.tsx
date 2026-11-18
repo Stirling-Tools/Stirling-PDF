@@ -57,6 +57,10 @@ const pdfWorker = vi.hoisted(() => ({
   createDocument: vi.fn(),
   destroyDocument: vi.fn(),
 }));
+const purview = vi.hoisted(() => ({
+  known: new Set<string>(),
+  selectedEndpoint: undefined as string | undefined,
+}));
 
 function FilePreviews() {
   const eligibleFileIds = useToolEligibleFileIds();
@@ -114,6 +118,17 @@ vi.mock("@editor/contexts/NavigationContext", () => ({
 }));
 vi.mock("@editor/contexts/ToolWorkflowContext", () => ({
   useToolWorkflowActions: () => ({ handleToolSelect }),
+  useToolWorkflow: () => ({
+    selectedTool: purview.selectedEndpoint
+      ? { operationConfig: { endpoint: purview.selectedEndpoint } }
+      : null,
+  }),
+}));
+vi.mock("@editor/services/rightsManagedPdf", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@editor/services/rightsManagedPdf")
+  >()),
+  isKnownRightsManagedPdf: (fileId: string) => purview.known.has(fileId),
 }));
 vi.mock("@editor/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {} }),
@@ -204,6 +219,35 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("explains why a Microsoft Purview protected PDF is excluded", async () => {
+    purview.known.add(workspace.files[0].fileId);
+    purview.selectedEndpoint = "/api/v1/security/cert-sign";
+    try {
+      render(
+        <MantineProvider>
+          <EmptyFileSelectionTool filesVisible />
+        </MantineProvider>,
+      );
+      expect(await screen.findByRole("listitem")).toHaveTextContent(
+        "report.pdf",
+      );
+      act(() =>
+        screen
+          .getByRole("button", { name: "Why report.pdf is unavailable" })
+          .focus(),
+      );
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        "Microsoft Purview can't protect a digitally signed PDF, so signing tools can't be used on protected files.",
+      );
+      expect(
+        screen.queryByRole("button", { name: "Remove Password" }),
+      ).not.toBeInTheDocument();
+    } finally {
+      purview.known.clear();
+      purview.selectedEndpoint = undefined;
+    }
+  });
+
   test("explains why an unlocked protected PDF is excluded", async () => {
     workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
     act(() => forgetPdfAccess([workspace.files[0].fileId]));

@@ -75,6 +75,10 @@ describe("server-owned automation", () => {
     "/api/v1/processing-folders",
     "/api/v1/automation/meter",
     "/api/v1/pipeline/handleData",
+    "/api/v1/rights-management/open",
+    "/api/v1/rights-management/status",
+    "/api/v1/connected-accounts",
+    "/api/v1/connected-accounts/microsoft/connect",
   ];
   test.each(endpoints)("refuses %s in local mode", async (endpoint) => {
     vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");

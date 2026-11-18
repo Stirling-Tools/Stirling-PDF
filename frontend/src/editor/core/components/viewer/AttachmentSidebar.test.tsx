@@ -68,7 +68,7 @@ const MEMBER = {
   checksum: "",
 };
 
-const renderSidebar = () => {
+const renderSidebar = (contentLocked = false) => {
   const portfolioFile = new File(["%PDF-1.7"], "portfolio.pdf", {
     type: "application/pdf",
   });
@@ -83,6 +83,7 @@ const renderSidebar = () => {
           members: [MEMBER],
           activeMemberName: null,
         }}
+        contentLocked={contentLocked}
       />
     </MantineProvider>,
   );
@@ -154,5 +155,22 @@ describe("AttachmentSidebar portfolio import", () => {
       await screen.findByText("viewer.portfolio.importFailed"),
     ).toBeInTheDocument();
     expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+  });
+});
+
+describe("AttachmentSidebar for a decrypted protected document", () => {
+  it("lists attachments without offering to save, open or add any", async () => {
+    mocks.readPortfolioMemberBytes.mockClear();
+    viewer.attachmentActions.downloadAttachment.mockClear();
+    renderSidebar(true);
+
+    expect(screen.getByText("note.pdf")).toBeTruthy();
+    expect(screen.queryByLabelText("viewer.portfolio.import")).toBeNull();
+    expect(screen.queryByLabelText("viewer.attachments.download")).toBeNull();
+    expect(screen.queryByText("viewer.portfolio.addFile")).toBeNull();
+
+    await userEvent.setup().click(screen.getByText("note.pdf"));
+    expect(mocks.readPortfolioMemberBytes).not.toHaveBeenCalled();
+    expect(viewer.attachmentActions.downloadAttachment).not.toHaveBeenCalled();
   });
 });

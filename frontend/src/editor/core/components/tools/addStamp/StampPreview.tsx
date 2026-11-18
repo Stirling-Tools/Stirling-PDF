@@ -7,6 +7,7 @@ import {
 } from "@editor/components/tools/addStamp/useAddStampParameters";
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@editor/hooks/useThumbnailGeneration";
+import { useReadablePdf } from "@editor/hooks/useReadablePdf";
 import {
   A4_ASPECT_RATIO,
   getFirstSelectedPage,
@@ -53,6 +54,7 @@ export default function StampPreview({
   } | null>(null);
   const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
   const { requestThumbnail } = useThumbnailGeneration();
+  const readable = useReadablePdf(file);
   const [hoverTile, setHoverTile] = useState<number | null>(null);
 
   // Load image URL and meta for aspect ratio if an image is selected
@@ -97,11 +99,13 @@ export default function StampPreview({
         setPageSize(null);
         return;
       }
+      if (!readable) return;
       try {
-        const buffer = await file.arrayBuffer();
+        const buffer = await readable.file.arrayBuffer();
         const pdf = await pdfWorkerManager.createDocument(buffer, {
           disableAutoFetch: true,
           disableStream: true,
+          password: readable.password,
         });
         const page = await pdf.getPage(1);
         // Unrotated viewport keeps points to pixels aligned and avoids width and height swaps
@@ -119,7 +123,7 @@ export default function StampPreview({
     return () => {
       cancelled = true;
     };
-  }, [file]);
+  }, [file, readable]);
 
   // Load first-page thumbnail for background preview so users see the content
   useEffect(() => {
@@ -129,13 +133,15 @@ export default function StampPreview({
         setPageThumbnail(null);
         return;
       }
+      if (!readable) return;
       try {
         const pageNumber = Math.max(
           1,
           getFirstSelectedPage(parameters.pageNumbers),
         );
-        const pageId = `${file.name}:${file.size}:${file.lastModified}:page:${pageNumber}`;
-        const thumb = await requestThumbnail(pageId, file, pageNumber);
+        const source = readable.file;
+        const pageId = `${source.name}:${source.size}:${source.lastModified}:page:${pageNumber}`;
+        const thumb = await requestThumbnail(pageId, source, pageNumber);
         if (isActive) setPageThumbnail(thumb || null);
       } catch {
         if (isActive) setPageThumbnail(null);
@@ -145,7 +151,7 @@ export default function StampPreview({
     return () => {
       isActive = false;
     };
-  }, [file, parameters.pageNumbers, requestThumbnail]);
+  }, [file, readable, parameters.pageNumbers, requestThumbnail]);
 
   const style = useMemo(
     () =>
