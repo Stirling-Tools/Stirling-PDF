@@ -86,7 +86,7 @@ describe("SaaS avatar menu links only to live settings pages", () => {
               ? ["appearance", "hotkeys"]
               : [
                   "users",
-                  hasPortal && portalAccess ? "billing" : "plan",
+                  ...(hasPortal && portalAccess ? ["billing"] : []),
                   "api-keys",
                 ],
           );

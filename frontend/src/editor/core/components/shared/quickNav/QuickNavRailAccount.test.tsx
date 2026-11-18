@@ -53,6 +53,7 @@ describe("QuickNavRailAccount menu", () => {
     const { open } = setup({ shortcuts: [], signOut: vi.fn() });
     const trigger = screen.getByRole("button", { name: /Ada/ });
     trigger.focus();
+    fireEvent.keyDown(trigger, { key: "Enter" });
     open();
     const [settings, signOut] = screen.getAllByRole("menuitem");
     expect(settings).toHaveFocus();
@@ -63,6 +64,17 @@ describe("QuickNavRailAccount menu", () => {
     fireEvent.keyDown(settings, { key: "Escape" });
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it("leaves every row unfocused when opened with the pointer, until an arrow key moves in", () => {
+    const { open } = setup({ shortcuts: [], signOut: vi.fn() });
+    const trigger = screen.getByRole("button", { name: /Ada/ });
+    fireEvent.pointerDown(trigger);
+    open();
+    const [settings] = screen.getAllByRole("menuitem");
+    expect(settings).not.toHaveFocus();
+    fireEvent.keyDown(trigger, { key: "ArrowDown" });
+    expect(settings).toHaveFocus();
   });
 
   it("masks the account identity in both the trigger and the portaled menu", () => {

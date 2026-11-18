@@ -75,6 +75,7 @@ export function QuickNavRailAccount({
 }: QuickNavRailAccountProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [openedByKeyboard, setOpenedByKeyboard] = useState(false);
   const displayName =
     identity?.displayName ?? t("auth.displayName.user", "User");
   const profilePictureUrl = identity?.profilePictureUrl ?? undefined;
@@ -102,6 +103,12 @@ export function QuickNavRailAccount({
                 className={`quick-nav-rail-avatar ${privateContentClassName}`}
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
+                onPointerDown={() => setOpenedByKeyboard(false)}
+                onKeyDown={(event) => {
+                  if (["Enter", " ", "ArrowDown"].includes(event.key)) {
+                    setOpenedByKeyboard(true);
+                  }
+                }}
               >
                 {/* Decorative: the button's own label already names the account. */}
                 <span aria-hidden className="quick-nav-rail-avatar__disc">
@@ -119,7 +126,7 @@ export function QuickNavRailAccount({
           className="quick-nav-account-menu"
           width="14rem"
           placement="side"
-          autoFocus
+          autoFocus={openedByKeyboard}
         >
           <AccountMenuHeader
             header={menu?.header}

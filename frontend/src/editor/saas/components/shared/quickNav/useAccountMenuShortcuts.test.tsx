@@ -8,10 +8,13 @@ const auth = vi.hoisted(() => ({
   user: { id: "u1" } as { id: string } | null,
   isAnonymous: false,
 }));
-const access = vi.hoisted(() => ({ granted: false }));
+const access = vi.hoisted(() => ({ granted: false, settled: true }));
 vi.mock("@editor/auth/UseSession", () => ({ useAuth: () => auth }));
 vi.mock("@editor/hooks/usePortalAccess", () => ({
-  usePortalAccessState: () => ({ granted: access.granted, settled: true }),
+  usePortalAccessState: () => ({
+    granted: access.granted,
+    settled: access.settled,
+  }),
 }));
 vi.mock("@editor/routes/hasPortal", () => ({ HAS_PORTAL: true }));
 
@@ -31,15 +34,22 @@ describe("SaaS account menu shortcuts", () => {
     auth.user = { id: "u1" };
     auth.isAnonymous = false;
     access.granted = false;
+    access.settled = true;
   });
 
-  it("offers team, billing and keys to a signed-in user", () => {
-    expect(shortcutIds()).toEqual(["users", "plan", "api-keys"]);
+  it("offers team and keys, never Plan, to a signed-in user without processor access", () => {
+    expect(shortcutIds()).toEqual(["users", "api-keys"]);
   });
 
-  it("links Usage & Billing instead of Plan for processor members, as settings does", () => {
+  it("adds Usage & Billing once processor access is confirmed", () => {
     access.granted = true;
     expect(shortcutIds()).toEqual(["users", "billing", "api-keys"]);
+  });
+
+  it("holds Usage & Billing back while processor access is only a cached guess", () => {
+    access.granted = true;
+    access.settled = false;
+    expect(shortcutIds()).toEqual(["users", "api-keys"]);
   });
 
   it("offers a guest only their own preferences", () => {

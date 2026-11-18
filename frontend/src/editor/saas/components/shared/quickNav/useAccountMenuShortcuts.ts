@@ -5,43 +5,39 @@ import { HAS_PORTAL } from "@editor/routes/hasPortal";
 import { preferenceShortcuts } from "@editor/components/shared/quickNav/preferenceShortcuts";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
-/** SaaS: users, billing and keys, which a guest has none of; a guest gets their own preferences. */
+/** SaaS: users, keys and, once processor access is confirmed, Usage & Billing; a guest gets their own preferences. */
 export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
   const { user, isAnonymous } = useAuth();
   // Not from useAuth: the Supabase session carries no permission flags.
-  const { granted: portalAccess } = usePortalAccessState();
+  const { granted: portalAccess, settled: accessSettled } =
+    usePortalAccessState();
 
   if (!user || isAnonymous) {
     return preferenceShortcuts(t);
   }
 
-  return [
+  const shortcuts: QuickNavAccountShortcut[] = [
     {
       id: "users",
       label: t("portal.nav.users", "Users"),
       icon: "users",
       to: "/settings/users",
     },
-    // Usage & Billing replaces Plan in settings for processor members.
-    HAS_PORTAL && portalAccess
-      ? {
-          id: "billing",
-          label: t("portal.nav.usage", "Usage & Billing"),
-          icon: "credit-card",
-          to: "/settings/billing",
-        }
-      : {
-          id: "plan",
-          label: t("config.plan", "Plan"),
-          icon: "credit-card",
-          to: "/settings/plan",
-        },
-    {
-      id: "api-keys",
-      label: t("settings.developer.apiKeys", "API Keys"),
-      icon: "key",
-      to: "/settings/api-keys",
-    },
   ];
+  if (HAS_PORTAL && portalAccess && accessSettled) {
+    shortcuts.push({
+      id: "billing",
+      label: t("portal.nav.usage", "Usage & Billing"),
+      icon: "credit-card",
+      to: "/settings/billing",
+    });
+  }
+  shortcuts.push({
+    id: "api-keys",
+    label: t("settings.developer.apiKeys", "API Keys"),
+    icon: "key",
+    to: "/settings/api-keys",
+  });
+  return shortcuts;
 }
