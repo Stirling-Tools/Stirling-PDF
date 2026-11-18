@@ -65,6 +65,7 @@ import {
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
@@ -164,6 +165,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEffect(() => {
     void preloadFallbackFontBytes();
   }, []);
+
+  useScanPrefit(store, state);
 
   const sel = useSelectionActions(store);
 

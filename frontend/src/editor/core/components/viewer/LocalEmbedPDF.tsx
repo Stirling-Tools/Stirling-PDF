@@ -72,6 +72,7 @@ import {
   RedactionLayer,
 } from "@embedpdf/plugin-redaction/react";
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
+import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
@@ -111,7 +112,12 @@ import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge
 import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
-import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
+import {
+  pdfAllows,
+  canPrintPdf,
+  pdfEditingLocked,
+} from "@editor/services/pdfPermissions";
+import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
@@ -971,13 +977,16 @@ export function LocalEmbedPDF({
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [urlSource, setUrlSource] = useState<File | null>(null);
+  const {
+    source: urlSource,
+    stage: stageUrlSource,
+    settle: settleUrlSource,
+  } = useActiveUrlSource();
   const pdfAccess = usePdfAccess(file ?? urlSource ?? fileId);
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
     (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
-  const annotationsReadOnly =
-    !pdfAccess || pdfAccess.encrypted || !enableAnnotations;
+  const annotationsReadOnly = pdfEditingLocked(pdfAccess) || !enableAnnotations;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1252,7 +1261,7 @@ export function LocalEmbedPDF({
           const buf = await source.arrayBuffer();
           if (!cancelled) {
             bindPdfViewerSource(buf, source);
-            setUrlSource(source);
+            stageUrlSource(url, source, !initialDocumentOpenedRef.current);
             openDocument(buf, exportFileName, url);
           }
         })
@@ -1314,6 +1323,7 @@ export function LocalEmbedPDF({
 
   const handleDocumentSwapped = useCallback(
     (documentId: string, fileKey: string) => {
+      settleUrlSource(fileKey, true);
       onDocumentReady?.(fileKey);
       onDocumentSwapped?.(documentId);
       setPendingDocument((pending) =>
@@ -1322,7 +1332,7 @@ export function LocalEmbedPDF({
       setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
       setTimeout(() => setSwapAnnouncement(null), 3000);
     },
-    [onDocumentReady, onDocumentSwapped, t],
+    [onDocumentReady, onDocumentSwapped, settleUrlSource, t],
   );
   const handleDocumentSwapFailed = useCallback(
     (fileKey: string, error: unknown) => {
@@ -1331,13 +1341,19 @@ export function LocalEmbedPDF({
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
+      settleUrlSource(fileKey, false);
       onDocumentLoadFailed?.(fileKey, error);
       if (fileKey === fileStableKey) onDocumentSwapFailed?.(error);
       setPendingDocument((pending) =>
         pending?.fileKey === fileKey ? null : pending,
       );
     },
-    [onDocumentLoadFailed, onDocumentSwapFailed, fileStableKey],
+    [
+      onDocumentLoadFailed,
+      onDocumentSwapFailed,
+      fileStableKey,
+      settleUrlSource,
+    ],
   );
 
   useEffect(() => {
@@ -1754,8 +1770,18 @@ export function LocalEmbedPDF({
             onPasswordRequired={onPasswordRequired}
           />
           <ExportAPIBridge
-            originalFile={pdfAccess?.encrypted ? file : undefined}
-            disabled={pdfAccess?.encrypted && !file}
+            originalFile={
+              pdfAccess?.encrypted
+                ? file
+                : signedPdfEditsBlocked(pdfAccess)
+                  ? (file ?? urlSource ?? undefined)
+                  : undefined
+            }
+            disabled={
+              pendingDocument !== null ||
+              (pdfAccess?.encrypted && !file) ||
+              (signedPdfEditsBlocked(pdfAccess) && !file && !urlSource)
+            }
           />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />

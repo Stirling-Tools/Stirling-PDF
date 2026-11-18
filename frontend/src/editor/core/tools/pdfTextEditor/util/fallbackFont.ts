@@ -3,6 +3,7 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { visibleCodePoints } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import { BASE_PATH } from "@editor/constants/app";
 import {
@@ -29,13 +30,9 @@ function fallbackFontCovers(text: string): boolean {
   if (!fallbackCoverage && cachedBytes) {
     fallbackCoverage = parseTrueTypeCmap(cachedBytes);
   }
-  if (!fallbackCoverage) return true;
-  for (const ch of text) {
-    if (/\s/.test(ch)) continue;
-    const cp = ch.codePointAt(0)!;
-    if (!fallbackCoverage.has(cp)) return false;
-  }
-  return true;
+  const coverage = fallbackCoverage;
+  if (!coverage) return true;
+  return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
 interface ExtendedPdfiumRuntime {

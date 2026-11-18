@@ -1,5 +1,11 @@
+import i18n from "i18next";
+import { alert } from "@editor/components/toast";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
+import {
+  scanBlockOffInk,
+  wrapScanText,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ReflowWrapCommand } from "@editor/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { MoveShapeCommand } from "@editor/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
@@ -54,11 +60,34 @@ function createHandlers(store: EditorStore) {
       const current = store.document?.page(pageIndex).findRun(runId);
       if (current && current.text === nextText) return;
       store.dispatch(new EditTextCommand({ pageIndex, runId, nextText }));
+      const doc = store.document;
+      const run = doc?.page(pageIndex).findRun(runId);
+      if (doc && run && scanBlockOffInk(doc, run))
+        alert({
+          alertType: "warning",
+          title: i18n.t(
+            "pdfTextEditor.error.scanOffInk",
+            "Can't edit this text: its recognised words don't line up with the scan. Run OCR again.",
+          ),
+          expandable: false,
+        });
     },
     onMoveRun: (pageIndex: number, runId: string, dx: number, dy: number) => {
       store.dispatch(new MoveTextRunCommand({ pageIndex, runId, dx, dy }));
     },
     onWrapRun: (pageIndex: number, runId: string, maxWidthPt: number) => {
+      const doc = store.document;
+      const page = doc?.page(pageIndex);
+      const run = page?.findRun(runId);
+      const wrapped =
+        doc && page && run ? wrapScanText(doc, page, run, maxWidthPt) : null;
+      if (wrapped !== null) {
+        if (wrapped !== run?.text)
+          store.dispatch(
+            new EditTextCommand({ pageIndex, runId, nextText: wrapped }),
+          );
+        return;
+      }
       store.dispatch(new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }));
     },
     onResizeRun: (pageIndex: number, runId: string, widthPt: number) => {
