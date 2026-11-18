@@ -35,6 +35,42 @@ const WEIGHT_NAMES: Record<number, [string, string]> = {
   900: ["pdfTextEditor.fontPicker.weightBlack", "Black"],
 };
 
+type TranslatedText = [key: string, fallback: string];
+
+interface ToggleTexts {
+  name: TranslatedText;
+  /** Why the toggle is off when the text is in the style and its font has no face without it. */
+  only: TranslatedText;
+  /** Why the toggle is off when the font has no face in the style. */
+  unavailable: TranslatedText;
+}
+
+const BOLD_TEXTS: ToggleTexts = {
+  name: ["pdfTextEditor.toolbar.bold", "Bold"],
+  only: ["pdfTextEditor.toolbar.boldOnly", "This font has only a bold version"],
+  unavailable: [
+    "pdfTextEditor.toolbar.boldUnavailable",
+    "No bold version of this font",
+  ],
+};
+
+const ITALIC_TEXTS: ToggleTexts = {
+  name: ["pdfTextEditor.toolbar.italic", "Italic"],
+  only: [
+    "pdfTextEditor.toolbar.italicOnly",
+    "This font has only an italic version",
+  ],
+  unavailable: [
+    "pdfTextEditor.toolbar.italicUnavailable",
+    "This font has no italic version. Load your device fonts or pick another font family.",
+  ],
+};
+
+const NO_BOLD_ITALIC: TranslatedText = [
+  "pdfTextEditor.toolbar.noBoldItalic",
+  "No bold italic version of this font",
+];
+
 /** A style toggle's look: filled when the whole selection has the style, outlined when only some of it does. */
 function toggleLook(on: boolean, mixed: boolean) {
   if (mixed) return { variant: "secondary", accent: "default" } as const;
@@ -103,6 +139,22 @@ export function FormatGroup({
         "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely",
       )
     : null;
+  const toggleTooltip = (
+    texts: ToggleTexts,
+    can: boolean,
+    needsBoldItalic: boolean,
+    on: boolean,
+  ) =>
+    readOnlyNote ??
+    t(
+      ...(can
+        ? texts.name
+        : needsBoldItalic
+          ? NO_BOLD_ITALIC
+          : on
+            ? texts.only
+            : texts.unavailable),
+    );
 
   return (
     <>
@@ -292,32 +344,19 @@ export function FormatGroup({
         </Popover.Dropdown>
       </Popover>
       <Tooltip
-        label={
-          readOnlyNote ??
-          (state.canBold
-            ? t("pdfTextEditor.toolbar.bold", "Bold")
-            : state.boldNeedsBoldItalic
-              ? t(
-                  "pdfTextEditor.toolbar.noBoldItalic",
-                  "No bold italic version of this font",
-                )
-              : state.bold
-                ? t(
-                    "pdfTextEditor.toolbar.boldOnly",
-                    "This font has only a bold version",
-                  )
-                : t(
-                    "pdfTextEditor.toolbar.boldUnavailable",
-                    "No bold version of this font",
-                  ))
-        }
+        label={toggleTooltip(
+          BOLD_TEXTS,
+          state.canBold,
+          state.boldNeedsBoldItalic,
+          state.bold,
+        )}
       >
         <Button
           {...toggleLook(state.bold, state.mixed.bold)}
           size={buttonSize}
           onClick={() => void warnAbout(onToggleBold)}
           disabled={!state.canBold || selectionTextReadOnly}
-          aria-label={t("pdfTextEditor.toolbar.bold", "Bold")}
+          aria-label={t(...BOLD_TEXTS.name)}
           aria-pressed={state.mixed.bold ? "mixed" : state.bold}
           data-testid="pdf-editor-bold"
           style={NO_SHRINK}
@@ -325,32 +364,19 @@ export function FormatGroup({
         />
       </Tooltip>
       <Tooltip
-        label={
-          readOnlyNote ??
-          (state.canItalic
-            ? t("pdfTextEditor.toolbar.italic", "Italic")
-            : state.italicNeedsBoldItalic
-              ? t(
-                  "pdfTextEditor.toolbar.noBoldItalic",
-                  "No bold italic version of this font",
-                )
-              : state.italic
-                ? t(
-                    "pdfTextEditor.toolbar.italicOnly",
-                    "This font has only an italic version",
-                  )
-                : t(
-                    "pdfTextEditor.toolbar.italicUnavailable",
-                    "This font has no italic version. Load your device fonts or pick another font family.",
-                  ))
-        }
+        label={toggleTooltip(
+          ITALIC_TEXTS,
+          state.canItalic,
+          state.italicNeedsBoldItalic,
+          state.italic,
+        )}
       >
         <Button
           {...toggleLook(state.italic, state.mixed.italic)}
           size={buttonSize}
           onClick={() => void warnAbout(onToggleItalic)}
           disabled={!state.canItalic || selectionTextReadOnly}
-          aria-label={t("pdfTextEditor.toolbar.italic", "Italic")}
+          aria-label={t(...ITALIC_TEXTS.name)}
           aria-pressed={state.mixed.italic ? "mixed" : state.italic}
           data-testid="pdf-editor-italic"
           style={NO_SHRINK}

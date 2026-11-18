@@ -45,10 +45,11 @@ export interface FaceSources {
   externalFonts: LocalFont[] | null;
 }
 
-export type StyleRequest =
-  | { bold: boolean }
-  | { italic: boolean }
-  | { weight: number };
+export type ToggleRequest = { bold: boolean } | { italic: boolean };
+
+export type StyleRequest = ToggleRequest | { weight: number };
+
+type NamedFace = FaceOption & { family: string };
 
 const BUILT_IN_FACE_NAMES = [
   "Helvetica",
@@ -79,11 +80,8 @@ function nearest<T extends FaceStyle>(faces: T[], want: FaceStyle): T | null {
   return best;
 }
 
-function familyEntry(
-  label: string,
-  faces: Array<FaceOption & { family: string }>,
-): FontFamilyEntry {
-  const unique: Array<FaceOption & { family: string }> = [];
+function familyEntry(label: string, faces: NamedFace[]): FontFamilyEntry {
+  const unique: NamedFace[] = [];
   for (const face of faces) {
     if (
       !unique.some((u) => u.weight === face.weight && u.italic === face.italic)
@@ -108,10 +106,8 @@ function familyEntry(
 }
 
 /** Faces grouped into families by name, in the order each family first appears. */
-export function groupFaces(
-  faces: Array<FaceOption & { family: string }>,
-): FontFamilyEntry[] {
-  const byKey = new Map<string, Array<FaceOption & { family: string }>>();
+function groupFaces(faces: NamedFace[]): FontFamilyEntry[] {
+  const byKey = new Map<string, NamedFace[]>();
   for (const face of faces) {
     const key = familyKey(face.family);
     const members = byKey.get(key);
@@ -214,7 +210,7 @@ export function knownDocumentFamilies(
 
 /** The document fonts among `fontIds` as families. */
 export function documentFamilies(fontIds: Iterable<string>): FontFamilyEntry[] {
-  const faces: Array<FaceOption & { family: string }> = [];
+  const faces: NamedFace[] = [];
   for (const fontId of new Set(fontIds)) {
     if (!isDocumentFontId(fontId)) continue;
     // The font's own name for its family reads better ("Liberation Sans" over "LiberationSans") when it is the same family.
@@ -227,10 +223,6 @@ export function documentFamilies(fontIds: Iterable<string>): FontFamilyEntry[] {
     });
   }
   return groupFaces(faces);
-}
-
-export function isBuiltInFamily(key: string): boolean {
-  return BUILT_IN_KEYS.has(key);
 }
 
 /** The families a run's font can move within, the document's own faces first. */
@@ -313,7 +305,7 @@ export function restyledFace(
 /** Whether a run's family has any face of `request`'s weight or slant, whatever its other axis. */
 export function familyHasStyle(
   fontId: string,
-  request: { bold: boolean } | { italic: boolean },
+  request: ToggleRequest,
   sources: FaceSources,
 ): boolean {
   return familiesOfFont(fontId, sources).some((entry) =>

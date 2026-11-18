@@ -141,6 +141,16 @@ function runBox(page: Page, id: string) {
   return page.getByTestId(`pdf-editor-run-${id}`);
 }
 
+/** Put the run in the served family, whose extra weights bring up the weight menu. */
+async function pickServerFamily(page: Page, id: string) {
+  await runBox(page, id).click();
+  await page.getByTestId("pdf-editor-font-family").click();
+  await page
+    .getByRole("option", { name: SERVER_FAMILY.family, exact: true })
+    .click();
+  await expect.poll(() => fontIdOf(page, id)).toMatch(/Demo Sans/);
+}
+
 test.describe("PDF text editor - Bold toggle", () => {
   test("the font list names each family once and Bold picks the bold face", async ({
     page,
@@ -256,13 +266,7 @@ test.describe("PDF text editor - formatting controls stay reachable", () => {
       await serveFonts(page);
       await page.setViewportSize({ width: 1920, height: 1000 });
       await openEditor(page, TAGGED_PDF);
-      const body = await runId(page, "Revenue grew");
-      await runBox(page, body).click();
-      await page.getByTestId("pdf-editor-font-family").click();
-      await page
-        .getByRole("option", { name: "Demo Sans", exact: true })
-        .click();
-      await expect.poll(() => fontIdOf(page, body)).toMatch(/Demo Sans/);
+      await pickServerFamily(page, await runId(page, "Revenue grew"));
 
       await page.setViewportSize({ width, height: 1000 });
 
@@ -341,12 +345,7 @@ test.describe("PDF text editor - formatting popovers stay open", () => {
       await page.setViewportSize({ width: 2400, height: 1000 });
       await openEditor(page, TAGGED_PDF);
       const body = await runId(page, "Revenue grew");
-      await runBox(page, body).click();
-      await page.getByTestId("pdf-editor-font-family").click();
-      await page
-        .getByRole("option", { name: "Demo Sans", exact: true })
-        .click();
-      await expect.poll(() => fontIdOf(page, body)).toMatch(/Demo Sans/);
+      await pickServerFamily(page, body);
       await page.setViewportSize({ width, height: 1000 });
       const menu = page.getByTestId("pdf-editor-format-menu");
       await expect(

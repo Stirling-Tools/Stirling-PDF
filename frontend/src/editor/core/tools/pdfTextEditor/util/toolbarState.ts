@@ -8,6 +8,7 @@ import {
   hasExtraWeights,
   knownDocumentFamilies,
   type FaceSources,
+  type ToggleRequest,
 } from "@editor/tools/pdfTextEditor/util/fontFaces";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type {
@@ -107,9 +108,8 @@ export function deriveToolbarState(
   };
   const canBold = canRestyle(fontIds, { bold: !allBold }, sources);
   const canItalic = canRestyle(fontIds, { italic: !allItalic }, sources);
-  const lacksOnlyBoldItalic = (
-    request: { bold: boolean } | { italic: boolean },
-  ) => fontIds.every((id) => familyHasStyle(id, request, sources));
+  const lacksOnlyBoldItalic = (request: ToggleRequest) =>
+    fontIds.every((id) => familyHasStyle(id, request, sources));
   const family = sameFamily ? familiesOfFont(fontId, sources)[0] : null;
   const documentFontId = first.documentFontId ?? null;
   const sameDocumentFont = selected.every(

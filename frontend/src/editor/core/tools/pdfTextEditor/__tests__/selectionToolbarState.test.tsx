@@ -1,9 +1,6 @@
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import path from "node:path";
 import { MantineProvider } from "@mantine/core";
 import { act, render, renderHook, screen } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { beforeAll, expect, test, vi } from "vitest";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
@@ -11,48 +8,25 @@ vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
 import { FormatGroup } from "@editor/tools/pdfTextEditor/components/toolbar/FormatGroup";
 import { StyleTextRangeCommand } from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
-import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
-import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
-import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import {
+  editorStores,
+  servePdfiumWasm,
+} from "@editor/tools/pdfTextEditor/__tests__/editorStores";
 
-const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
+servePdfiumWasm();
+const { fixture } = editorStores();
 
-const stores: EditorStore[] = [];
-
-beforeAll(async () => {
-  const wasm = await readFile(
-    createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
-  );
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (url: string) =>
-      String(url).endsWith(".wasm")
-        ? new Response(wasm, {
-            headers: { "Content-Type": "application/wasm" },
-          })
-        : new Response(null, { status: 404 }),
-    ),
-  );
+beforeAll(() => {
   get.mockRejectedValue(new Error("no server fonts"));
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
 
-afterEach(() => {
-  for (const store of stores.splice(0)) store.dispose();
-});
-
-afterAll(() => vi.unstubAllGlobals());
-
 /** tagged-sample.pdf with "every" redrawn in Helvetica-Bold and "region" in Times-Roman. */
 async function styledLine(): Promise<{ store: EditorStore; run: TextRun }> {
-  const bytes = await readFile(path.join(FIXTURES, "tagged-sample.pdf"));
-  const doc = await EditorDocument.open(new Uint8Array(bytes));
-  const store = new EditorStore();
-  stores.push(store);
-  await store.setDocument(doc);
-  PdfiumTextReader.populate(doc, doc.page(0));
+  const store = await fixture("tagged-sample.pdf");
   // A revision no page has, so the first dispatch publishes the page as read.
   store.publishPages([
     {
@@ -65,7 +39,9 @@ async function styledLine(): Promise<{ store: EditorStore; run: TextRun }> {
       rules: [],
     } as unknown as PageSnapshot,
   ]);
-  const run = doc.page(0).runs.find((r) => r.text.startsWith("Revenue"))!;
+  const run = store
+    .document!.page(0)
+    .runs.find((r) => r.text.startsWith("Revenue"))!;
   const at = (word: string) => run.text.indexOf(word);
   store.dispatch(
     new StyleTextRangeCommand({

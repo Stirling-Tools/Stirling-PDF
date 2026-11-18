@@ -179,8 +179,3 @@ export function parseFaceName(name: string): ParsedFaceName {
 export function familyKey(family: string): string {
   return family.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 }
-
-/** The family key a font name belongs to. */
-export function familyKeyOf(name: string): string {
-  return familyKey(parseFaceName(name).family);
-}

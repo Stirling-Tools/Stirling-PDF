@@ -2,9 +2,11 @@ import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
-  styleCapability,
 } from "@editor/tools/pdfTextEditor/util/fontCapability";
-import { canRestyle } from "@editor/tools/pdfTextEditor/util/fontFaces";
+import {
+  canRestyle,
+  restyledFace,
+} from "@editor/tools/pdfTextEditor/util/fontFaces";
 import {
   resetFontCompletions,
   resolveOriginalFonts,
@@ -78,103 +80,78 @@ beforeEach(() => {
   stubQueryLocalFonts(null);
 });
 
-describe("styleCapability for italic", () => {
+const NO_DOCUMENT = { documentFamilies: [] };
+
+describe("restyledFace for italic", () => {
   it("flips a base-14 family in place", () => {
     expect(
-      styleCapability(
+      restyledFace(
         "base14:Helvetica",
         { italic: true },
-        { documentFamilies: [], externalFonts: null },
+        { ...NO_DOCUMENT, externalFonts: null },
       ),
-    ).toEqual({
-      family: "Helvetica-Oblique",
-      source: "base14",
-    });
+    ).toBe("Helvetica-Oblique");
     expect(
-      styleCapability(
+      restyledFace(
         "base14:Times-BoldItalic",
         { italic: false },
-        { documentFamilies: [], externalFonts: null },
+        { ...NO_DOCUMENT, externalFonts: null },
       ),
-    ).toEqual({
-      family: "Times-Bold",
-      source: "base14",
-    });
+    ).toBe("Times-Bold");
   });
 
   it("refuses an embedded family with no device fonts loaded", () => {
     expect(
-      styleCapability(
+      restyledFace(
         "pdf:4242:Calibri",
         { italic: true },
-        { documentFamilies: [], externalFonts: null },
-      ).family,
+        { ...NO_DOCUMENT, externalFonts: null },
+      ),
     ).toBeNull();
   });
 
   it("refuses a subset family whose installed face has no italic cut", () => {
     expect(
-      styleCapability(
+      restyledFace(
         "pdf:4242:Stencil",
         { italic: true },
-        { documentFamilies: [], externalFonts: STENCIL },
-      ).family,
+        { ...NO_DOCUMENT, externalFonts: STENCIL },
+      ),
     ).toBeNull();
   });
 
   it("uses the installed italic cut of the run's own family", () => {
     expect(
-      styleCapability(
+      restyledFace(
         "pdf:4242:Calibri",
         { italic: true },
-        { documentFamilies: [], externalFonts: CALIBRI },
+        { ...NO_DOCUMENT, externalFonts: CALIBRI },
       ),
-    ).toEqual({
-      family: "Calibri Italic",
-      source: "device",
-    });
+    ).toBe("Calibri Italic");
   });
 
   it("never substitutes a different typeface", () => {
     // The whole point: Calibri does not become Helvetica just to look slanted.
-    const cap = styleCapability(
-      "pdf:4242:Calibri",
-      { italic: true },
-      { documentFamilies: [], externalFonts: STENCIL },
-    );
-    expect(cap.family).toBeNull();
-    expect(cap.source).toBeNull();
+    expect(
+      restyledFace(
+        "pdf:4242:Calibri",
+        { italic: true },
+        { ...NO_DOCUMENT, externalFonts: STENCIL },
+      ),
+    ).toBeNull();
   });
-});
 
-describe("styleCapability answers", () => {
-  it("are read from the font list asked with, so a new list is asked afresh", () => {
-    const before = styleCapability(
-      "pdf:4242:Calibri",
-      { italic: true },
-      { documentFamilies: [], externalFonts: STENCIL },
-    );
-    expect(before.family).toBeNull();
-    expect(
-      styleCapability(
+  it("is read from the font list asked with, so a new list is asked afresh", () => {
+    const ask = (fonts: LocalFont[]) =>
+      restyledFace(
         "pdf:4242:Calibri",
         { italic: true },
-        { documentFamilies: [], externalFonts: STENCIL },
-      ),
-    ).toEqual(before);
-    const found = styleCapability(
-      "pdf:4242:Calibri",
-      { italic: true },
-      { documentFamilies: [], externalFonts: CALIBRI },
-    );
-    expect(found.family).toBe("Calibri Italic");
-    expect(
-      styleCapability(
-        "pdf:4242:Calibri",
-        { italic: true },
-        { documentFamilies: [], externalFonts: CALIBRI },
-      ),
-    ).toEqual(found);
+        { ...NO_DOCUMENT, externalFonts: fonts },
+      );
+    expect(ask(STENCIL)).toBeNull();
+    expect(ask(STENCIL)).toBeNull();
+    expect(ask(CALIBRI)).toBe("Calibri Italic");
+    expect(ask(CALIBRI)).toBe("Calibri Italic");
   });
 });
 

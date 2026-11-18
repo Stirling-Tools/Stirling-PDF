@@ -1,8 +1,7 @@
 // @vitest-environment node
 import { readdir, readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
-import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { parseFaceName } from "@editor/tools/pdfTextEditor/util/faceNames";
@@ -11,26 +10,12 @@ import {
   documentFamilies,
   type FontFamilyEntry,
 } from "@editor/tools/pdfTextEditor/util/fontFaces";
+import {
+  FIXTURES,
+  servePdfiumWasm,
+} from "@editor/tools/pdfTextEditor/__tests__/editorStores";
 
-const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
-
-beforeAll(async () => {
-  const wasm = await readFile(
-    createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
-  );
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (url: string) =>
-      String(url).endsWith(".wasm")
-        ? new Response(wasm, {
-            headers: { "Content-Type": "application/wasm" },
-          })
-        : new Response(null, { status: 404 }),
-    ),
-  );
-});
-
-afterAll(() => vi.unstubAllGlobals());
+servePdfiumWasm();
 
 /** The document fonts on a fixture's first page as families, or null when it does not open. */
 async function familiesOf(file: string): Promise<FontFamilyEntry[] | null> {

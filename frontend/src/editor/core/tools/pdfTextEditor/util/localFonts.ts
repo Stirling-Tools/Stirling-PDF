@@ -126,7 +126,7 @@ export function splitRequested(requested: string): RequestedFace {
   return { family: family || spaced, ...styleAxes(spaced) };
 }
 
-export function knownFamilyOf(
+function knownFamilyOf(
   fonts: LocalFont[],
   requested: string,
 ): RequestedFace | null {
@@ -145,7 +145,7 @@ export function knownFamilyOf(
   return best;
 }
 
-export function resolveRequested(
+function resolveRequested(
   fonts: LocalFont[],
   requested: string,
 ): RequestedFace {
@@ -226,7 +226,7 @@ export function pickLocalFontFace(
   );
 }
 
-export function pickRequestedFace(
+function pickRequestedFace(
   fonts: LocalFont[],
   wanted: RequestedFace,
 ): LocalFont | null {

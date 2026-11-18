@@ -456,9 +456,10 @@ export function useToolbarController(
 
   // state.pages is unread but changes whenever a restyle redraws the selected characters.
   const selectedFontIds = useMemo(() => {
-    const part = selectedPartOfRun(store.document, selection);
-    return part
-      ? rangeFontIds(store.document!, part.page, part.run, part.range)
+    const doc = store.document;
+    const part = selectedPartOfRun(doc, selection);
+    return doc && part
+      ? rangeFontIds(doc, part.page, part.run, part.range)
       : null;
   }, [store, selection, state.pages]);
 

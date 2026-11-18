@@ -16,6 +16,8 @@ import {
   selectedPartOfRun,
   StyleTextRangeCommand,
   type FaceStretch,
+  type RangeRefusal,
+  type SelectedPart,
 } from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
 import { parseCssColor } from "@editor/tools/pdfTextEditor/model/Color";
 import {
@@ -41,6 +43,7 @@ import {
   knownDocumentFamilies,
   restyledFace,
   type FaceSources,
+  type FontFamilyEntry,
   type StyleRequest,
 } from "@editor/tools/pdfTextEditor/util/fontFaces";
 import {
@@ -119,6 +122,24 @@ async function prepareExternalFont(
 
 function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
   return loadDeviceFontInto(doc, family) !== 0;
+}
+
+function isDeviceFace(face: string): boolean {
+  return !isDocumentFontId(face) && nearestStandardFont(face) !== face;
+}
+
+/**
+ * Loads and embeds a device face ahead of the command that draws in it, as
+ * Command.apply cannot wait for bytes. Null when `doc` closed meanwhile.
+ */
+async function embedDeviceFace(
+  store: EditorStore,
+  doc: EditorDocument,
+  face: string,
+): Promise<boolean | null> {
+  const refused = await prepareExternalFont(face);
+  if (store.document !== doc) return null;
+  return !refused && tryEmbedDeviceFont(doc, face);
 }
 
 async function fontPickFailure(
@@ -206,6 +227,19 @@ function faceSources(doc: EditorDocument | null): FaceSources {
   };
 }
 
+/**
+ * The family the font list offers `family` as, standing for it by its regular
+ * face; null for a face named outright. A pick of it takes each run to the
+ * face nearest its own weight and slant.
+ */
+function listedFamily(
+  doc: EditorDocument | null,
+  family: string,
+): FontFamilyEntry | null {
+  const owner = familyOfFace(family, faceSources(doc));
+  return owner?.value === family ? owner : null;
+}
+
 /** The warning a font or style change owes the user, or null when it changed everything as asked. */
 function changeFailure(
   outcome: FamilyChangeOutcome,
@@ -225,8 +259,6 @@ function liveRuns(store: EditorStore): Map<string, TextRun> {
   return runs;
 }
 
-type SelectedPart = NonNullable<ReturnType<typeof selectedPartOfRun>>;
-
 /** The width a change to part of a run rewraps its lines at, as typing in it would. */
 function rewrapWidth(store: EditorStore, part: SelectedPart): number {
   const { run, page } = part;
@@ -236,13 +268,10 @@ function rewrapWidth(store: EditorStore, part: SelectedPart): number {
 }
 
 /** What to tell the user when the selected characters cannot be restyled apart from the rest of their run; undefined when they can. */
-function refusePart(
+function refusalFailure(
   store: EditorStore,
-  part: SelectedPart,
+  refusal: RangeRefusal | null,
 ): FontPickFailure | null | undefined {
-  if (part.run.locked) return null;
-  const doc = store.document;
-  const refusal = doc && rangeRefusal(doc, part.page, part.run, part.range);
   if (refusal === "rightToLeft") {
     store.setError(unsafeRtlEditMessage());
     return null;
@@ -250,6 +279,18 @@ function refusePart(
   if (refusal === "needsShaping") return "needsShaping";
   if (refusal === "unsupported") return "partOfRunUnsupported";
   return undefined;
+}
+
+function refusePart(
+  store: EditorStore,
+  part: SelectedPart,
+): FontPickFailure | null | undefined {
+  if (part.run.locked) return null;
+  const doc = store.document;
+  return refusalFailure(
+    store,
+    doc && rangeRefusal(doc, part.page, part.run, part.range),
+  );
 }
 
 /** Bundle of callbacks that operate on the current selection. */
@@ -456,25 +497,16 @@ export function useSelectionActions(store: EditorStore) {
         if (next === null) leftAsIs++;
         else faces.push({ start: stretch.start, end: stretch.end, face: next });
       }
-      // Embedding is async and Command.apply is not, so warm the bytes first.
       const ready = new Map<string, string | null>();
       for (const { face: wanted } of faces) {
         if (ready.has(wanted)) continue;
-        if (
-          isDocumentFontId(wanted) ||
-          nearestStandardFont(wanted) === wanted
-        ) {
+        if (!isDeviceFace(wanted)) {
           ready.set(wanted, wanted);
           continue;
         }
-        const refused = await prepareExternalFont(wanted);
-        if (store.document !== doc) return null;
-        ready.set(
-          wanted,
-          !refused && tryEmbedDeviceFont(doc, wanted)
-            ? wanted
-            : (fallbackFace ?? null),
-        );
+        const embedded = await embedDeviceFace(store, doc, wanted);
+        if (embedded === null) return null;
+        ready.set(wanted, embedded ? wanted : (fallbackFace ?? null));
       }
       const usable = faces.flatMap((stretch) => {
         const drawn = ready.get(stretch.face);
@@ -490,13 +522,8 @@ export function useSelectionActions(store: EditorStore) {
         faces: usable,
         wrapWidthPt: rewrapWidth(store, part),
       });
-      const refusal = command.refusal(doc);
-      if (refusal === "rightToLeft") {
-        store.setError(unsafeRtlEditMessage());
-        return null;
-      }
-      if (refusal === "needsShaping") return "needsShaping";
-      if (refusal === "unsupported") return "partOfRunUnsupported";
+      const commandRefused = refusalFailure(store, command.refusal(doc));
+      if (commandRefused !== undefined) return commandRefused;
       const coverage = command.coverage(doc);
       if (coverage === "unchanged")
         return leftAsIs > 0 ? "styleUnavailable" : null;
@@ -522,8 +549,7 @@ export function useSelectionActions(store: EditorStore) {
           if (failure) return failure;
           if (store.document !== doc) return null;
         }
-        const owner = familyOfFace(family, faceSources(doc));
-        const picked = owner?.value === family ? owner : null;
+        const picked = listedFamily(doc, family);
         return restyleSelectedPart(
           part,
           () => (fontId) =>
@@ -538,9 +564,7 @@ export function useSelectionActions(store: EditorStore) {
         fit.push({ page, run: run as TextRun });
       }, true);
       const stillApplies = claimFontChange(targets);
-      // The list offers one entry per family, standing for it by its regular face, so each run takes the face of it nearest its own weight and slant.
-      const owner = familyOfFace(family, faceSources(doc));
-      const picked = owner?.value === family ? owner : null;
+      const picked = listedFamily(doc, family);
       const changes = targets.map((run) => ({
         pageIndex: run.pageIndex,
         runId: run.id,
@@ -631,12 +655,10 @@ export function useSelectionActions(store: EditorStore) {
       forEachSelectedRun((run, page) => {
         runs.push({ run, fit: { page, run: run as TextRun } });
       }, true);
-      if (runs.length === 0) return null;
+      if (!doc || runs.length === 0) return null;
       const wanted = request(runs.map(({ run }) => faceStyleOf(run.fontId)));
       let leftAsIs = 0;
-      const targets: Array<
-        FamilyChange & { device: boolean; fit: ScanFitTarget }
-      > = [];
+      const targets: Array<FamilyChange & { fit: ScanFitTarget }> = [];
       for (const { run, fit } of runs) {
         const face = restyledFace(run.fontId, wanted, sources);
         if (face === undefined) continue;
@@ -651,20 +673,18 @@ export function useSelectionActions(store: EditorStore) {
           runId: run.id,
           family: face,
           text: run.text,
-          device: !isDocumentFontId(face) && nearestStandardFont(face) !== face,
           fit,
         });
       }
       const stillApplies = claimFontChange(
         targets.map((target) => target.fit.run),
       );
-      // Embedding is async and Command.apply is not, so warm the bytes first.
       const ready: Array<FamilyChange & { fit: ScanFitTarget }> = [];
       for (const target of targets) {
-        if (target.device) {
-          const refused = await prepareExternalFont(target.family);
-          if (!doc || store.document !== doc) return null;
-          if (refused || !tryEmbedDeviceFont(doc, target.family)) {
+        if (isDeviceFace(target.family)) {
+          const embedded = await embedDeviceFace(store, doc, target.family);
+          if (embedded === null) return null;
+          if (!embedded) {
             leftAsIs++;
             continue;
           }

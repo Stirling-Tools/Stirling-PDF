@@ -15,6 +15,7 @@ import {
   charcodesResolveFully,
   collectMemberPtrs,
   contentIndices,
+  drawnEndPt,
   droppedCharsOf,
   emitTextLine,
   measureObjSpanPt,
@@ -25,6 +26,11 @@ import {
   type FontSpan,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { piecesFromObjects } from "@editor/tools/pdfTextEditor/commands/partialEdit";
+import {
+  ATTACHES_TO_PREVIOUS,
+  isSubsetFont,
+  losesLetters,
+} from "@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand";
 import {
   charOrigins,
   readMatrix,
@@ -82,6 +88,13 @@ export interface FontStretch {
   fontId: string;
 }
 
+/** Some of one run's characters, selected apart from the rest of it. */
+export interface SelectedPart {
+  page: Page;
+  run: TextRun;
+  range: TextRange;
+}
+
 /** Why a run's selected characters cannot be restyled on their own. */
 export type RangeRefusal = "rightToLeft" | "needsShaping" | "unsupported";
 
@@ -124,8 +137,6 @@ interface RunSnapshot {
   paragraphLeafContainers: number[];
   paragraphLineSlots: ParagraphLineSlot[];
 }
-
-const SHAPED = /\p{M}|\u200c|\u200d/u;
 
 /**
  * Restyle some characters of a run, leaving the rest of it as it is drawn. The
@@ -238,7 +249,7 @@ export class StyleTextRangeCommand implements Command {
         });
       }
     });
-    if (dropped.some((ch) => /\S/.test(ch) && !/[\p{Cf}\p{Cc}]/u.test(ch))) {
+    if (losesLetters(dropped)) {
       this.takeBackObjects(doc, page);
       restoreRun(run, this.prev);
       this.prev = null;
@@ -390,14 +401,21 @@ export class StyleTextRangeCommand implements Command {
         index: read.order.get(piece.ptr) ?? index ?? 0,
       });
       const drawn: Piece[] = [];
-      const draw = (unit: Unit, x: number): number => {
+      const draw = (unit: Unit, x: number): DrawnUnit => {
         const result = drawUnit(doc, page, run, piece, source, unit, x);
         drawn.push(...result.pieces);
-        return result.widthChange;
+        return result;
       };
       if (placed) {
-        for (const unit of units)
-          offset += draw(unit, placed.get(unit.start)!.x + offset);
+        let before: { end: number; penEnd: number } | null = null;
+        for (const unit of units) {
+          const origin = placed.get(unit.start)!.x;
+          // A word split only where its font changes reads as one word only when its parts abut.
+          if (before?.end === unit.start) offset = before.penEnd - origin;
+          const result = draw(unit, origin + offset);
+          offset += result.widthChange;
+          before = { end: unit.end, penEnd: result.penEnd };
+        }
       } else {
         offset += draw(
           {
@@ -406,7 +424,7 @@ export class StyleTextRangeCommand implements Command {
             targets: pieceTargets(piece, targets),
           },
           source.matrix[4] + offset,
-        );
+        ).widthChange;
       }
       const ptrs = drawn.map((p) => p.ptr);
       this.created.push(...ptrs);
@@ -460,7 +478,11 @@ function piecesRefusal(
     // A line's later pieces are moved along it, which is only the way it reads when it runs left to right.
     if (hasRtl(line.pieces.map((piece) => piece.text).join("")))
       return "rightToLeft";
-    if (picked.some((p) => needsShaping(p.text) || SHAPED.test(p.text)))
+    if (
+      picked.some(
+        (p) => needsShaping(p.text) || ATTACHES_TO_PREVIOUS.test(p.text),
+      )
+    )
       return "needsShaping";
     for (const piece of picked) {
       const at = line.pieces.indexOf(piece);
@@ -516,6 +538,16 @@ function unitsOf(piece: Piece, targets: ReadonlyMap<number, Target>): Unit[] {
   return units;
 }
 
+interface DrawnUnit {
+  pieces: Piece[];
+  widthChange: number;
+  /**
+   * Where a letter drawn straight after the unit starts: its pen position plus
+   * the run's letter spacing, as within one object, not its ink edge.
+   */
+  penEnd: number;
+}
+
 function drawUnit(
   doc: EditorDocument,
   page: Page,
@@ -524,7 +556,7 @@ function drawUnit(
   source: TextSource,
   unit: Unit,
   x: number,
-): { pieces: Piece[]; widthChange: number } {
+): DrawnUnit {
   const m = doc.module;
   const text = piece.text.slice(unit.start, unit.end);
   const size = source.size * Math.hypot(source.matrix[0], source.matrix[1]);
@@ -590,6 +622,7 @@ function drawUnit(
   return {
     pieces: placedPieces(m, ptrs, outTexts, text, piece.start + unit.start, x),
     widthChange,
+    penEnd: drawnEndPt(m, ptrs, outTexts, size) + run.charSpacingPt,
   };
 }
 
@@ -678,7 +711,7 @@ function linesOf(doc: EditorDocument, page: Page, run: TextRun): Line[] | null {
 }
 
 /** Each stretch of the run's text drawn in one font, by the font of the piece drawing it; a space takes the font before it. */
-export function fontStretchesOf(
+function fontStretchesOf(
   doc: EditorDocument,
   page: Page,
   run: TextRun,
@@ -827,10 +860,6 @@ function upright(matrix: Float32Array): boolean {
   );
 }
 
-function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {
-  return /^[A-Z]{6}\+/.test(readFontName(m, font) ?? "");
-}
-
 function updateRunModel(
   run: TextRun,
   lines: readonly Line[],
@@ -916,7 +945,7 @@ function missingGlyphsMessage(): string {
 export function selectedPartOfRun(
   doc: EditorDocument | null,
   selection: { runIds: readonly string[]; textRange: TextRange | null },
-): { page: Page; run: TextRun; range: TextRange } | null {
+): SelectedPart | null {
   const range = selection.textRange;
   if (!doc || !range || selection.runIds.length !== 1) return null;
   for (const page of doc.loadedPages()) {

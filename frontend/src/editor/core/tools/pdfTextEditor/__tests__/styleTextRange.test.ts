@@ -1,8 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import path from "node:path";
 import { act, renderHook } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { beforeAll, expect, test, vi } from "vitest";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
@@ -11,57 +8,31 @@ import {
   useSelectionActions,
   type FontPickFailure,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
-import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
-import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
-import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import {
+  collectMemberPtrs,
+  drawnEndPt,
+} from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { readTextSource } from "@editor/tools/pdfTextEditor/commands/textPieces";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import {
+  editorStores,
+  savedBytes,
+  servePdfiumWasm,
+} from "@editor/tools/pdfTextEditor/__tests__/editorStores";
 
-const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
 const FPDF_PAGEOBJ_TEXT = 1;
 const REVENUE = "Revenue grew in every region this quarter,";
 
-const stores: EditorStore[] = [];
+servePdfiumWasm();
+const { storeWith, fixture } = editorStores();
 
-beforeAll(async () => {
-  const wasm = await readFile(
-    createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
-  );
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (url: string) =>
-      String(url).endsWith(".wasm")
-        ? new Response(wasm, {
-            headers: { "Content-Type": "application/wasm" },
-          })
-        : new Response(null, { status: 404 }),
-    ),
-  );
+beforeAll(() => {
   get.mockRejectedValue(new Error("no server fonts"));
   // jsdom has no canvas; text measurement falls back without one.
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
-
-afterEach(() => {
-  for (const store of stores.splice(0)) store.dispose();
-});
-
-afterAll(() => vi.unstubAllGlobals());
-
-async function storeWith(bytes: Uint8Array): Promise<EditorStore> {
-  const doc = await EditorDocument.open(bytes);
-  const store = new EditorStore();
-  stores.push(store);
-  await store.setDocument(doc);
-  PdfiumTextReader.populate(doc, doc.page(0));
-  return store;
-}
-
-async function fixture(name: string): Promise<EditorStore> {
-  return storeWith(new Uint8Array(await readFile(path.join(FIXTURES, name))));
-}
 
 function runStarting(store: EditorStore, text: string): TextRun {
   const run = store.document!.page(0).runs.find((r) => r.text.startsWith(text));
@@ -152,6 +123,41 @@ function originOf(store: EditorStore, needle: string): number {
   }
 }
 
+/**
+ * The objects of `run` that together draw `word`, in order, and for each after
+ * the first how far it starts from where the one before it left the pen.
+ */
+function seamsIn(store: EditorStore, run: TextRun, word: string): number[] {
+  const m = store.document!.module;
+  const objects = drawn(store, run).flatMap((piece, i) => {
+    const ptr = collectMemberPtrs(run).filter(
+      (p) => p && m.FPDFPageObj_GetType(p) === FPDF_PAGEOBJ_TEXT,
+    )[i];
+    const source = readTextSource(m, ptr);
+    return source && piece.text ? [{ ...piece, ptr, source }] : [];
+  });
+  objects.sort((a, b) => a.source.matrix[4] - b.source.matrix[4]);
+  for (let first = 0; first < objects.length; first++) {
+    let spelled = "";
+    for (let last = first; last < objects.length; last++) {
+      spelled += objects[last].text;
+      if (!word.startsWith(spelled)) break;
+      if (spelled !== word) continue;
+      return objects.slice(first + 1, last + 1).map((piece, k) => {
+        const before = objects[first + k];
+        const penEnd = drawnEndPt(
+          m,
+          [before.ptr],
+          [before.text],
+          before.source.size,
+        );
+        return piece.source.matrix[4] - penEnd - run.charSpacingPt;
+      });
+    }
+  }
+  throw new Error(`no objects of the run spell "${word}"`);
+}
+
 function selectText(store: EditorStore, run: TextRun, part: string): void {
   const start = run.text.indexOf(part);
   expect(start, `"${part}" is not in the run`).toBeGreaterThanOrEqual(0);
@@ -159,19 +165,7 @@ function selectText(store: EditorStore, run: TextRun, part: string): void {
   store.selection.setTextRange(run.id, { start, end: start + part.length });
 }
 
-// jsdom's Blob reads back through FileReader only.
-async function savedBytes(store: EditorStore): Promise<Uint8Array> {
-  const blob = await exportToBlob(store.document!);
-  const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as ArrayBuffer);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsArrayBuffer(blob);
-  });
-  return new Uint8Array(buffer);
-}
-
-async function act$(
+async function perform(
   store: EditorStore,
   action: (
     actions: ReturnType<typeof useSelectionActions>,
@@ -196,7 +190,7 @@ test("Bold on one word mid-line bolds that word only and moves the rest of the l
   };
   selectText(store, run, "every");
 
-  expect(await act$(store, (a) => a.toggleBold())).toBeNull();
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual(["every"]);
   expect(originOf(store, "grew")).toBeCloseTo(before.grew, 1);
@@ -215,7 +209,7 @@ test("Italic on a range across a word boundary slants exactly those letters", as
   const ew = originOf(store, "ew in");
   selectText(store, run, "ew in ev");
 
-  expect(await act$(store, (a) => a.toggleItalic())).toBeNull();
+  expect(await perform(store, (a) => a.toggleItalic())).toBeNull();
 
   const pieces = drawn(store, run).filter((p) => p.text);
   expect(
@@ -232,9 +226,9 @@ test("Bold on the first word of a line toggles off again", async () => {
   const run = runStarting(store, "Revenue grew");
   selectText(store, run, "Revenue");
 
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual(["Revenue"]);
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
 
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual([]);
   expect(pageText(store)).toContain(REVENUE);
@@ -245,7 +239,7 @@ test("a weight picked for part of a line applies to that part only", async () =>
   const run = runStarting(store, "Revenue grew");
   selectText(store, run, "region");
 
-  expect(await act$(store, (a) => a.changeFontWeight(700))).toBeNull();
+  expect(await perform(store, (a) => a.changeFontWeight(700))).toBeNull();
 
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual(["region"]);
 });
@@ -255,7 +249,7 @@ test("a family picked for part of a line redraws that part in the family, keepin
   const run = runStarting(store, "Revenue grew");
   selectText(store, run, "every region");
 
-  expect(await act$(store, (a) => a.changeFontFamily("Times-Roman"))).toBe(
+  expect(await perform(store, (a) => a.changeFontFamily("Times-Roman"))).toBe(
     null,
   );
 
@@ -268,7 +262,7 @@ test("undo puts the line back exactly and redo restyles it again", async () => {
   const run = runStarting(store, "Revenue grew");
   const before = drawn(store, run);
   selectText(store, run, "every");
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
   const after = drawn(store, run);
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual(["every"]);
 
@@ -287,7 +281,7 @@ test("a save keeps the styled word in its own face and the line in reading order
   const store = await fixture("tagged-sample.pdf");
   const run = runStarting(store, "Revenue grew");
   selectText(store, run, "every");
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
 
   const reopened = await storeWith(await savedBytes(store));
   const saved = runStarting(reopened, "Revenue grew");
@@ -305,7 +299,7 @@ test("a range spanning two lines of a paragraph restyles both parts and leaves t
   )!;
   selectText(store, run, "together.\nSecond line");
 
-  expect(await act$(store, (a) => a.toggleBold())).toBeNull();
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
   expect(wordsIn(store, run, "Helvetica-Bold")).toEqual([
     "together.",
@@ -324,7 +318,7 @@ test("letters the bold subset lacks stay in the regular face and the user is tol
   const run = runStarting(store, "Mushrooms represent");
   selectText(store, run, "unique");
 
-  expect(await act$(store, (a) => a.toggleBold())).toBe("closestMatch");
+  expect(await perform(store, (a) => a.toggleBold())).toBe("closestMatch");
 
   const bold = wordsIn(store, run, "LMRoman12-Bold").join("");
   expect(bold.length).toBeGreaterThan(0);
@@ -337,11 +331,43 @@ test("letters the bold subset lacks stay in the regular face and the user is tol
   expect(run.text).toContain("a unique posi-");
 });
 
+test.each([
+  [
+    "before its last letter",
+    "represent one of nature’s",
+    "nature’s",
+    "of nature’s most",
+  ],
+  ["mid-word", "unique", "unique", "a unique posi"],
+  [
+    "at the start of a word",
+    "biological",
+    "biological",
+    "the biological world",
+  ],
+])(
+  "a letter the bold subset lacks %s abuts the letters around it and reads as one word, on the page and after a save",
+  async (_where, part, word, reads) => {
+    const store = await fixture("mushroom-life.pdf");
+    const run = runStarting(store, "Mushrooms represent");
+    selectText(store, run, part);
+
+    expect(await perform(store, (a) => a.toggleBold())).toBe("closestMatch");
+
+    const seams = seamsIn(store, run, word);
+    expect(seams.length).toBeGreaterThan(0);
+    for (const seam of seams) expect(Math.abs(seam)).toBeLessThan(0.01);
+    expect(pageText(store)).toContain(reads);
+    const reopened = await storeWith(await savedBytes(store));
+    expect(pageText(reopened)).toContain(reads);
+  },
+);
+
 test("typing straight after a bolded word goes on in bold", async () => {
   const store = await fixture("tagged-sample.pdf");
   const run = runStarting(store, "Revenue grew");
   selectText(store, run, "every");
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
 
   const at = run.text.indexOf("every") + "every".length;
   store.dispatch(
@@ -363,7 +389,7 @@ test("right-to-left text refuses a change to part of its line and stays as drawn
   const before = drawn(store, run);
   selectText(store, run, "שלום");
 
-  expect(await act$(store, (a) => a.toggleBold())).toBeNull();
+  expect(await perform(store, (a) => a.toggleBold())).toBeNull();
 
   expect(store.getState().error).toMatch(/right-to-left/);
   expect(drawn(store, run)).toEqual(before);
@@ -377,7 +403,7 @@ test("text that needs shaping refuses a change to part of it", async () => {
   store.selection.selectOne(run.id);
   store.selection.setTextRange(run.id, { start: 0, end: 3 });
 
-  expect(await act$(store, (a) => a.changeFontFamily("Times-Roman"))).toBe(
+  expect(await perform(store, (a) => a.changeFontFamily("Times-Roman"))).toBe(
     "needsShaping",
   );
   expect(drawn(store, run)).toEqual(before);
@@ -389,11 +415,11 @@ test("in a wrapped box a change rewraps the paragraph only when a line would ove
   const run = runStarting(store, "First line of the body");
   const text = run.text;
   selectText(store, run, "bottom");
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
   expect(run.text).toBe(text);
 
   selectText(store, run, "Second line continues the paragraph and shares");
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
   expect(run.text).not.toBe(text);
   expect(run.text.replace(/\s+/g, " ")).toBe(text.replace(/\s+/g, " "));
 
@@ -407,7 +433,7 @@ test("with the whole box's text selected Bold applies to the box as before", asy
   store.selection.selectOne(run.id);
   store.selection.setTextRange(run.id, { start: 0, end: run.text.length });
 
-  await act$(store, (a) => a.toggleBold());
+  await perform(store, (a) => a.toggleBold());
 
   const live = runStarting(store, "Revenue grew");
   expect(new Set(drawn(store, live).map((p) => p.font))).toEqual(

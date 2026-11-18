@@ -421,15 +421,15 @@ function familyDraws(
  */
 const NEEDS_SHAPING =
   /\p{M}|\u200c|\u200d|[\u1100-\u11ff]|\p{Script=Arabic}|\p{Script=Syriac}|\p{Script=Nko}|\p{Script=Mandaic}|\p{Script=Mongolian}|\p{Script=Phags_Pa}|\p{Script=Adlam}/u;
-const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
+export const ATTACHES_TO_PREVIOUS = /\p{M}|\u200c|\u200d/u;
 /** Format and control characters draw nothing, so losing one loses no letter. */
 const DRAWS_NOTHING = /[\p{Cf}\p{Cc}]/u;
 
-function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {
+export function isSubsetFont(m: WrappedPdfiumModule, font: number): boolean {
   return /^[A-Z]{6}\+/.test(readFontName(m, font) ?? "");
 }
 
-function losesLetters(dropped: readonly string[]): boolean {
+export function losesLetters(dropped: readonly string[]): boolean {
   return dropped.some((ch) => !DRAWS_NOTHING.test(ch));
 }
 
