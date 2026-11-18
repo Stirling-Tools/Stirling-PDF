@@ -18,11 +18,6 @@ const FPDF_PAGEOBJ_TEXT = 1;
 const FPDF_PAGEOBJ_FORM = 5;
 const MAX_PAGES = 3;
 
-interface FormModule {
-  FPDFFormObj_CountObjects: (form: number) => number;
-  FPDFFormObj_GetObject: (form: number, index: number) => number;
-}
-
 beforeAll(async () => {
   const wasm = await readFile(
     createRequire(import.meta.url).resolve("@embedpdf/pdfium/pdfium.wasm"),
@@ -43,14 +38,13 @@ afterAll(() => vi.unstubAllGlobals());
 
 function textObjects(doc: EditorDocument, pagePtr: number): number[] {
   const m = doc.module;
-  const forms = m as unknown as FormModule;
   const out: number[] = [];
   const visit = (ptr: number, depth: number) => {
     const type = m.FPDFPageObj_GetType(ptr);
     if (type === FPDF_PAGEOBJ_TEXT) out.push(ptr);
     if (type !== FPDF_PAGEOBJ_FORM || depth > 4) return;
-    for (let i = 0; i < forms.FPDFFormObj_CountObjects(ptr); i++)
-      visit(forms.FPDFFormObj_GetObject(ptr, i), depth + 1);
+    for (let i = 0; i < m.FPDFFormObj_CountObjects(ptr); i++)
+      visit(m.FPDFFormObj_GetObject(ptr, i), depth + 1);
   };
   for (let i = 0; i < m.FPDFPage_CountObjects(pagePtr); i++)
     visit(m.FPDFPage_GetObject(pagePtr, i), 0);
@@ -147,7 +141,7 @@ test("a page of ten thousand labels loads in about the time its size suggests", 
     } finally {
       m.FPDFText_ClosePage(textPage);
     }
-    // Relative, so a slow machine cannot fail it: the object-by-object read this replaces is far more than five times slower here.
+    // Relative, so a slow machine cannot fail it: the object-by-object read is far more than five times slower here.
     expect(onePass * 5).toBeLessThan(perObject);
 
     PdfiumTextReader.populate(doc, doc.page(0));

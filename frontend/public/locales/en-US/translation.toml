@@ -7771,6 +7771,7 @@ scannedTextOffInk = "Scanned text · its recognised words sit off the scanned wo
 tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"
+unreadPagesHint = "{{count}} pages have no text to edit: some are scanned images and some draw their text as shapes. Run OCR first to make them editable."
 width = "Width"
 widthHint = "Text re-wraps to fit the width."
 x = "X"

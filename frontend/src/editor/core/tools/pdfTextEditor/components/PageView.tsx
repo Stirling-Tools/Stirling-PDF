@@ -252,6 +252,15 @@ export const PageView = memo(function PageView({
     if (!canvas) return;
     const live = document.page(page.pageIndex);
     const revision = page.revision;
+    const markPainted = () => {
+      paintedRevisionRef.current = revision;
+      setPaintedRevision(revision);
+    };
+    const noteFirstRender = () => {
+      if (firstRenderedDocRef.current === document) return;
+      firstRenderedDocRef.current = document;
+      onFirstRendered?.(page.pageIndex);
+    };
     const paintFull = () => {
       PdfiumPageRenderer.render(document, live, deviceScale)
         .then((image) => {
@@ -262,12 +271,8 @@ export const PageView = memo(function PageView({
           if (ctx) ctx.putImageData(image, 0, 0);
           setRendering(false);
           setRenderError(null);
-          paintedRevisionRef.current = revision;
-          setPaintedRevision(revision);
-          if (firstRenderedDocRef.current !== document) {
-            firstRenderedDocRef.current = document;
-            onFirstRendered?.(page.pageIndex);
-          }
+          markPainted();
+          noteFirstRender();
         })
         .catch((err: unknown) => {
           if (cancelled) return;
@@ -280,10 +285,7 @@ export const PageView = memo(function PageView({
           setRendering(false);
           setRenderError(msg);
           // Flip the first-rendered flag on error too, or the loading overlay never dismisses.
-          if (firstRenderedDocRef.current !== document) {
-            firstRenderedDocRef.current = document;
-            onFirstRendered?.(page.pageIndex);
-          }
+          noteFirstRender();
         });
     };
     const area = changedPixels(
@@ -299,8 +301,7 @@ export const PageView = memo(function PageView({
           if (cancelled || !canvasRef.current) return;
           canvas.getContext("2d")?.putImageData(image, area.x, area.y);
           setRenderError(null);
-          paintedRevisionRef.current = revision;
-          setPaintedRevision(revision);
+          markPainted();
           settleTimer = window.setTimeout(
             paintFull,
             FULL_REDRAW_AFTER_TYPING_MS,
@@ -347,12 +348,7 @@ export const PageView = memo(function PageView({
     const live = document.page(page.pageIndex);
     const image = live.findImage(imageId);
     if (!canvas || !ctx || !image || liftRef.current) return;
-    const full = PdfiumPageRenderer.rasterSize(
-      live.width,
-      live.height,
-      deviceScale,
-    );
-    if (canvas.width !== full.width || canvas.height !== full.height) return;
+    if (!showsWholePage(canvas, live, deviceScale)) return;
     const area = PdfiumPageRenderer.pixelsCovering(
       live,
       deviceScale,
@@ -621,8 +617,16 @@ function changedPixels(
   canvas: HTMLCanvasElement,
   painted: number,
 ): PageRect | null {
-  const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
-  if (canvas.width !== full.width || canvas.height !== full.height) return null;
+  if (!showsWholePage(canvas, page, scale)) return null;
   const raw = page.repaintAreaSince(painted);
   return raw && PdfiumPageRenderer.pixelsCovering(page, scale, raw);
+}
+
+function showsWholePage(
+  canvas: HTMLCanvasElement,
+  page: Page,
+  scale: number,
+): boolean {
+  const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+  return canvas.width === full.width && canvas.height === full.height;
 }

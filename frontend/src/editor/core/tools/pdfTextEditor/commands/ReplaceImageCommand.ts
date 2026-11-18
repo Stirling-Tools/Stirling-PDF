@@ -18,16 +18,12 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { copyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import {
+  indexedInsertOf,
+  insertPageObjectAt,
+} from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import { pageObjectIndex } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { clipHidesImage } from "@editor/tools/pdfTextEditor/util/imageClip";
-
-interface ZOrderModule {
-  FPDFPage_InsertObjectAtIndex?: (
-    page: number,
-    obj: number,
-    index: number,
-  ) => boolean;
-}
 
 interface MatrixModule {
   FPDFImageObj_SetMatrix?: (
@@ -116,7 +112,7 @@ export class ReplaceImageCommand implements Command {
       this.prevObjPtr = img.pdfiumObjPtr;
       this.prevMatrix = { ...img.matrix };
       this.prevBounds = { ...img.bounds };
-      this.prevIndex = objectIndex(m, page.pagePtr, this.prevObjPtr);
+      this.prevIndex = pageObjectIndex(m, page.pagePtr, this.prevObjPtr);
     }
     const matrix = this.prevMatrix;
     const box = this.prevBounds;
@@ -167,7 +163,7 @@ export class ReplaceImageCommand implements Command {
     if (nested) setActive(m, this.prevObjPtr, false);
     else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
     // The embed appended, so without this the replacement jumps to the top.
-    if (this.prevIndex >= 0 && supportsInsertAtIndex(m)) {
+    if (this.prevIndex >= 0 && indexedInsertOf(m)) {
       m.FPDFPage_RemoveObject(page.pagePtr, objPtr);
       insertPageObjectAt(m, page.pagePtr, objPtr, this.prevIndex);
     }
@@ -196,25 +192,6 @@ export class ReplaceImageCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
   }
-}
-
-function objectIndex(
-  m: WrappedPdfiumModule,
-  pagePtr: number,
-  objPtr: number,
-): number {
-  const total = m.FPDFPage_CountObjects(pagePtr);
-  for (let i = 0; i < total; i++) {
-    if (m.FPDFPage_GetObject(pagePtr, i) === objPtr) return i;
-  }
-  return -1;
-}
-
-function supportsInsertAtIndex(m: WrappedPdfiumModule): boolean {
-  return (
-    typeof (m as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex ===
-    "function"
-  );
 }
 
 function setImageMatrix(

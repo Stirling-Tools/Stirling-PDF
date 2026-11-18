@@ -195,6 +195,18 @@ function serveFaces(serve: (id: string) => Promise<{ data: ArrayBuffer }>) {
   });
 }
 
+/** Serve every face from a download that stays pending until the returned call. */
+function holdDownloads(): (value: { data: ArrayBuffer }) => void {
+  let finish: (value: { data: ArrayBuffer }) => void = () => {};
+  serveFaces(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  return (value) => finish(value);
+}
+
 function fontBytes(): { data: ArrayBuffer } {
   return { data: new Uint8Array([0, 1, 0, 0]).buffer };
 }
@@ -388,13 +400,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("changes the runs that were selected when the font was picked", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const { store, dispatch, select } = fakeStore(
       [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")],
@@ -411,13 +417,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("drops a font change when another document opened during the download", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const { store, dispatch, openAnotherDocument } = fakeStore(
       [run("a", "base14:Helvetica")],
@@ -437,13 +437,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("skips runs removed during the download and records nothing when none remain", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const runs = [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")];
     const { store, dispatch } = fakeStore(runs, ["a", "b"]);
@@ -510,13 +504,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("leaves a run locked during the download unchanged", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const runs = [run("a", "base14:Helvetica"), run("b", "base14:Helvetica")];
     const { store, dispatch } = fakeStore(runs, ["a", "b"]);
@@ -549,12 +537,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("refuses a font that has none of the selected characters", async () => {
-    serveFaces(async () => ({
-      data: HEBREW_TTF.buffer.slice(
-        HEBREW_TTF.byteOffset,
-        HEBREW_TTF.byteOffset + HEBREW_TTF.byteLength,
-      ),
-    }));
+    serveFaces(async () => bytesOf(HEBREW_TTF));
     await loadServerFonts();
     const english = fakeStore([run("a", "base14:Helvetica", "Hello")], ["a"]);
     const mixed = fakeStore(
@@ -690,10 +673,6 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("gives a run the plain family when the italic cut has none of its letters", async () => {
-    const hebrew = HEBREW_TTF.buffer.slice(
-      HEBREW_TTF.byteOffset,
-      HEBREW_TTF.byteOffset + HEBREW_TTF.byteLength,
-    );
     get.mockImplementation(async (url: string) => {
       if (url === SERVER_FONTS_URL)
         return {
@@ -709,7 +688,7 @@ describe("useSelectionActions font changes", () => {
             ],
           },
         };
-      return url.endsWith(HEBREW) ? { data: hebrew } : fontBytes();
+      return url.endsWith(HEBREW) ? bytesOf(HEBREW_TTF) : fontBytes();
     });
     await loadServerFonts();
     const { store, dispatch } = fakeStore(
@@ -782,13 +761,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("drops a font still loading once a later font change has been made", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const { store, dispatch } = fakeStore(
       [run("a", "device:Acme Sans")],
@@ -806,13 +779,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("drops a font still loading once the runs were rebuilt under the same ids", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const runs = [run("a", "base14:Helvetica")];
     const { store, dispatch } = fakeStore(runs, ["a"]);
@@ -827,13 +794,7 @@ describe("useSelectionActions font changes", () => {
   });
 
   it("still applies a font still loading for text a later change did not touch", async () => {
-    let finishDownload: (value: { data: ArrayBuffer }) => void = () => {};
-    serveFaces(
-      () =>
-        new Promise((resolve) => {
-          finishDownload = resolve;
-        }),
-    );
+    const finishDownload = holdDownloads();
     await loadServerFonts();
     const { store, dispatch, select } = fakeStore(
       [run("a", "device:Acme Sans"), run("b", "device:Acme Sans")],

@@ -4,10 +4,9 @@ import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
 
-/**
- * Every click on a run's text places the caret; the move frame and the width
- * handle sit just outside the box, so they never compete with the text.
- */
+// Every click on a run's text places the caret; the move frame and the width
+// handle sit just outside the box, so they never compete with the text.
+
 const SAMPLE = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",

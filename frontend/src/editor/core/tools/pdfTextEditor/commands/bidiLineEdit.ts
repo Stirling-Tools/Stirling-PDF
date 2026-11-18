@@ -34,6 +34,7 @@ import {
   removeAndDestroyObject,
   removeTextObject,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { indexedInsertOf } from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import {
   bestFontPtrForText,
   diffSpan,
@@ -721,14 +722,6 @@ export function drawsWhole(
   return drawn !== null && lettersKey(drawn.join("")) === lettersKey(text);
 }
 
-interface InsertAtModule {
-  FPDFPage_InsertObjectAtIndex?: (
-    page: number,
-    obj: number,
-    index: number,
-  ) => boolean;
-}
-
 type Word = Extract<Item, { kind: "word" }>;
 
 // The code unit of the text before the edit that the one at `unit` after it came from, or the first one past the edit when it is new.
@@ -744,8 +737,7 @@ function placeInReadingOrder(
   plan: BidiLineEditPlan,
   words: ReadonlyMap<Word, { ptrs: number[] }>,
 ): void {
-  const insertAt = (m as unknown as InsertAtModule)
-    .FPDFPage_InsertObjectAtIndex;
+  const insertAt = indexedInsertOf(m);
   if (!insertAt) return;
   const { map } = plan;
   const removed = new Set(plan.removePtrs);

@@ -75,6 +75,10 @@ const WORKBENCH_ID = "custom:pdfTextEditor" as const;
 const WORKBENCH_VIEW_ID = "pdfTextEditorWorkbench";
 const INSERTED_IMAGE_RATIO = 0.4;
 
+function workbenchFileId(file: File): FileId | undefined {
+  return (file as File & { fileId?: FileId }).fileId;
+}
+
 export default function PdfTextEditor(_props: BaseToolProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -657,10 +661,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     (file: File, password?: string) => {
       void loadOpening(file, password).then((installed) => {
         if (installed && mountedRef.current)
-          handleFileChosen(
-            file.name,
-            (file as File & { fileId?: FileId }).fileId,
-          );
+          handleFileChosen(file.name, workbenchFileId(file));
       });
     },
     [handleFileChosen, loadOpening],
@@ -670,7 +671,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     (file: File, fromDisk: boolean) => {
       pendingDiskFileRef.current = fromDisk ? file : null;
       if (!fromDisk) {
-        const fileId = (file as File & { fileId?: FileId }).fileId;
+        const fileId = workbenchFileId(file);
         if (fileId != null) setSelectedFiles([fileId]);
         openWorkbenchFile(file);
         return;

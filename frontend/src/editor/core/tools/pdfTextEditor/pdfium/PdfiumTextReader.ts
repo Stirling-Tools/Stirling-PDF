@@ -211,8 +211,12 @@ function groupAndMeasure(
   if (mode === "auto") {
     const faces = new Map<string, string | null>();
     ParagraphGrouper.apply(page, blockKey, lineFontIds(lines), (fontId) => {
-      if (!faces.has(fontId)) faces.set(fontId, faceNameOf(doc.module, fontId));
-      return faces.get(fontId)!;
+      let face = faces.get(fontId);
+      if (face === undefined) {
+        face = faceNameOf(doc.module, fontId);
+        faces.set(fontId, face);
+      }
+      return face;
     });
   }
   // One walk feeds both: each was reading the same characters with its

@@ -1,3 +1,4 @@
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
@@ -98,11 +99,7 @@ export class MoveTextRunCommand implements Command {
   }
 
   /** Shift the run's matrix/bounds + per-line + sub-run model by (dx, dy). */
-  private shiftModel(
-    run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
-    dx: number,
-    dy: number,
-  ): void {
+  private shiftModel(run: TextRun, dx: number, dy: number): void {
     run.matrix = { ...run.matrix, e: run.matrix.e + dx, f: run.matrix.f + dy };
     run.bounds = { ...run.bounds, x: run.bounds.x + dx, y: run.bounds.y + dy };
     if (run.paragraphMemberFs.length > 0) {

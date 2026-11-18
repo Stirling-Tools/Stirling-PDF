@@ -1,3 +1,4 @@
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type {
@@ -73,7 +74,7 @@ export function setObjText(
 
 /** Read a text object's left/right edge in page points. */
 function objBoundsLR(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
@@ -92,7 +93,7 @@ function objBoundsLR(
 // each ptr holds - it emits per word OR per character, so deriving it from the
 // text mislabels every ptr past the word count.
 function buildSlotMerged(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   ptrs: number[],
   text: string,
   leftX: number,
@@ -717,7 +718,7 @@ export function planPartialEdit(
 const KERN_TOLERANCE_PT = 0.01;
 
 /** The objects a plan would set new text on in place. */
-export function modifiedPtrs(plan: PartialEditPlan): number[] {
+function modifiedPtrs(plan: PartialEditPlan): number[] {
   return plan.ops.flatMap((op) =>
     op.type === "modify" && op.subRunIdx !== undefined
       ? [plan.prevMergedFromPtrs[op.subRunIdx]]
@@ -737,8 +738,8 @@ export function modifiedPtrs(plan: PartialEditPlan): number[] {
  * word spacing (Tw); an object with either stays edited in place, so the edit
  * draws right and only its undo is inexact.
  */
-export function objectsToRedrawWhole(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+function objectsToRedrawWhole(
+  m: WrappedPdfiumModule,
   pagePtr: number,
   ptrs: Iterable<number>,
 ): Set<number> {
@@ -806,7 +807,7 @@ export function objectsToRedrawWhole(
 
 /** {@link planPartialEdit}, redrawing whole each piece whose in-place edit undo could not set back exactly. */
 export function planUndoablePartialEdit(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
   run: TextRun,
   prevText: string,
@@ -826,7 +827,7 @@ export function planUndoablePartialEdit(
 
 /** {@link planParagraphEdit}, redrawing whole each piece whose in-place edit undo could not set back exactly. */
 export function planUndoableParagraphEdit(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
   run: TextRun,
   prevText: string,
@@ -874,7 +875,7 @@ interface FontReadingModule {
 // Borrow the font handle from the FIRST surviving sub-object that wasn't slated
 // for removal.
 function borrowFontFromSurvivor(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   plan: PartialEditPlan,
 ): number {
   const fontMod = m as unknown as FontReadingModule;
@@ -896,7 +897,7 @@ function borrowFontFromSurvivor(
 // Borrow the font of a surviving sub-object that ACTUALLY CONTAINS the
 // characters we're about to insert.
 function borrowFontForChars(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   plan: PartialEditPlan,
   chars: string,
 ): number {
@@ -1696,7 +1697,7 @@ function countChar(s: string, ch: string): number {
 
 // Pieces that stayed keep their place, so a fill or underline drawn between them still paints under its word; only the new pieces move, to just after the line piece before them. Pieces inside a form are not page objects and are left alone.
 function placeInsertedPieces(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
   pieces: readonly number[],
   texts: readonly string[],
@@ -1762,7 +1763,7 @@ function placeEmittedTexts(
 
 /** The pieces `ptrs` draw of `line`, found in order by their own text; null when one cannot be placed. */
 export function piecesFromObjects(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
   ptrs: number[],
   line: string,
@@ -1800,7 +1801,7 @@ interface PieceStyle {
  * word they were typed into. Undefined for a line drawn in a single font and fill.
  */
 export function sourceFontSpans(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pieces: Pick<
     ParagraphLineSlot,
     "mergedFromPtrs" | "mergedFromTexts" | "mergedFromCharStarts"
@@ -1896,10 +1897,7 @@ export function sourceFontSpans(
 }
 
 // /BaseFont keeps the style suffix ("LiberationSans-Bold") that the name table's family drops.
-function baseFontName(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  fontPtr: number,
-): string {
+function baseFontName(m: WrappedPdfiumModule, fontPtr: number): string {
   if (!fontPtr) return "";
   const len = m.FPDFFont_GetBaseFontName(fontPtr, 0, 0);
   if (len <= 1) return "";
@@ -1910,7 +1908,7 @@ function baseFontName(
 
 /** True when a plan's in-place "modify" op would SetText whitespace its own piece's font cannot encode, which paints „ on a subset with no space glyph. */
 export function planModifiesUndrawableWhitespace(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   plan: PartialEditPlan,
   pagePtr: number,
   docPtr: number,
@@ -1929,7 +1927,7 @@ export function planModifiesUndrawableWhitespace(
  * Settled before the edit is applied, because its undo puts back the objects the plan says were taken off.
  */
 export function redrawingUndrawableWhitespace(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   plan: ParagraphEditPlan,
   pagePtr: number,
   docPtr: number,
@@ -1946,10 +1944,7 @@ export function redrawingUndrawableWhitespace(
 }
 
 /** Read a text object's own font handle (0 when unavailable). */
-function objFontPtr(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  ptr: number,
-): number {
+function objFontPtr(m: WrappedPdfiumModule, ptr: number): number {
   const fontMod = m as unknown as FontReadingModule;
   if (!ptr || !fontMod.FPDFTextObj_GetFont) return 0;
   try {
@@ -1970,7 +1965,7 @@ function objFontPtr(
  * Returns 0 when nothing matches, leaving the caller on its normal fallback.
  */
 export function siblingFontPtrForText(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   slots: ParagraphLineSlot[],
   selfIndex: number,
   fontId: string,
@@ -1993,7 +1988,7 @@ export function siblingFontPtrForText(
 }
 
 export function bestFontPtrForText(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   ptrs: number[],
   texts: string[],
   targetText: string,

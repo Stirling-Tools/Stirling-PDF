@@ -66,13 +66,19 @@ export function ScanHint({
               defaultValue_other:
                 "{{count}} pages have their text drawn as shapes, so there is no text to edit. Run OCR first to make it editable.",
             })
-          : t("pdfTextEditor.inspector.scanHint", {
-              count: scans + outlined,
-              defaultValue_one:
-                "This page is a scanned image with no text to edit. Run OCR first to make its text editable.",
-              defaultValue_other:
-                "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable.",
-            })}
+          : outlined > 0
+            ? t("pdfTextEditor.inspector.unreadPagesHint", {
+                count: scans + outlined,
+                defaultValue:
+                  "{{count}} pages have no text to edit: some are scanned images and some draw their text as shapes. Run OCR first to make them editable.",
+              })
+            : t("pdfTextEditor.inspector.scanHint", {
+                count: scans,
+                defaultValue_one:
+                  "This page is a scanned image with no text to edit. Run OCR first to make its text editable.",
+                defaultValue_other:
+                  "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable.",
+              })}
       </Text>
       <Button
         size="sm"

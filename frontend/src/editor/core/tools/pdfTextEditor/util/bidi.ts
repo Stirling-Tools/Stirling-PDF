@@ -113,6 +113,17 @@ function classOf(ch: string): BidiClass {
   return ch.toLowerCase() !== ch.toUpperCase() ? "L" : "ON";
 }
 
+/** The code-unit offset of each of `chars`, the code points of one string in order. */
+export function codeUnitOffsets(chars: readonly string[]): number[] {
+  const offsets: number[] = [];
+  let offset = 0;
+  for (const ch of chars) {
+    offsets.push(offset);
+    offset += ch.length;
+  }
+  return offsets;
+}
+
 /** True when `text` holds any right-to-left character. */
 export function hasRtl(text: string): boolean {
   return RTL.test(text);
@@ -338,12 +349,7 @@ export function visualOrder(
   rtlBase = isRtlBase(text),
 ): { visual: string; order: number[]; rightToLeft: boolean[] } {
   const chars = [...text];
-  const offsets: number[] = [];
-  let offset = 0;
-  for (const ch of chars) {
-    offsets.push(offset);
-    offset += ch.length;
-  }
+  const offsets = codeUnitOffsets(chars);
   const levels = resolveLevels(chars, rtlBase ? 1 : 0);
   const order = reorderByLevel(levels);
   // L3: reversal left each right-to-left letter's marks ahead of it; a PDF draws the letter first.
@@ -435,11 +441,12 @@ export function readingOrder(drawn: readonly string[]): {
     [!rtlFirst, true],
     [!rtlFirst, false],
   ] as const;
-  let guess: ReturnType<typeof readFromBase> | null = null;
-  for (const [rtlBase, eitherSide] of attempts) {
+  const [first, ...rest] = attempts;
+  const guess = readFromBase(drawn, ...first);
+  if (guess.faithful) return guess;
+  for (const [rtlBase, eitherSide] of rest) {
     const read = readFromBase(drawn, rtlBase, eitherSide);
     if (read.faithful) return read;
-    guess ??= read;
   }
-  return guess!;
+  return guess;
 }

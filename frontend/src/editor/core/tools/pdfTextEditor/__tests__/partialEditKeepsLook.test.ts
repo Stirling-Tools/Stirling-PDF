@@ -10,6 +10,7 @@ import {
 import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
+import { rasterFirstPage } from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const HEADING = "Quarterly report heading";
 const PAGE_W = 612;
@@ -68,36 +69,8 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
   return doc;
 }
 
-function raster(doc: EditorDocument): Uint8Array {
-  const m = doc.module;
-  const bitmap = m.FPDFBitmap_Create(PAGE_W, PAGE_H, 0);
-  try {
-    m.FPDFBitmap_FillRect(bitmap, 0, 0, PAGE_W, PAGE_H, 0xffffffff);
-    m.FPDF_RenderPageBitmap(
-      bitmap,
-      doc.page(0).pagePtr,
-      0,
-      0,
-      PAGE_W,
-      PAGE_H,
-      0,
-      0x10,
-    );
-    const memory = (
-      m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }
-    ).memory;
-    return new Uint8Array(
-      memory.buffer,
-      m.FPDFBitmap_GetBuffer(bitmap),
-      m.FPDFBitmap_GetStride(bitmap) * PAGE_H,
-    ).slice();
-  } finally {
-    m.FPDFBitmap_Destroy(bitmap);
-  }
-}
-
 function inkedRows(doc: EditorDocument, fromY: number, toY: number): number {
-  const pixels = raster(doc);
+  const pixels = rasterFirstPage(doc, PAGE_W, PAGE_H, false);
   let rows = 0;
   for (let y = fromY; y < toY; y++) {
     const row = PAGE_H - 1 - y;

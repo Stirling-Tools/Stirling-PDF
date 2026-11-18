@@ -15,7 +15,13 @@ const IDENTITY: Affine = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 // Points of slack before a clip counts as hiding part of an image.
 const HIDES_SLACK_PT = 0.5;
 
-export function intersectRect(a: PageRect, b: PageRect): PageRect {
+/** An image's bounds and the page-space box of the clips it is drawn through. */
+interface ClippedImage {
+  bounds: PageRect;
+  clip?: PageRect | null;
+}
+
+function intersectRect(a: PageRect, b: PageRect): PageRect {
   const x = Math.max(a.x, b.x);
   const y = Math.max(a.y, b.y);
   return {
@@ -64,9 +70,13 @@ function clipBox(
       width: Math.max(...xs) - x,
       height: Math.max(...ys) - y,
     };
-    box = box ? intersectRect(box, pathBox) : pathBox;
+    box = narrowTo(box, pathBox);
   }
   return box;
+}
+
+function narrowTo(box: PageRect | null, next: PageRect): PageRect {
+  return box ? intersectRect(box, next) : next;
 }
 
 function toAffine(matrix: Float32Array): Affine {
@@ -90,28 +100,22 @@ export function readImageClip(
   let box: PageRect | null = null;
   for (const form of chain) {
     const formBox = clipBox(m, form, toPage);
-    if (formBox) box = box ? intersectRect(box, formBox) : formBox;
+    if (formBox) box = narrowTo(box, formBox);
     const matrix = readMatrix(m, form);
     if (matrix) toPage = composeAffine(toPage, toAffine(matrix));
   }
   const own = clipBox(m, objPtr, toPage);
-  if (own) box = box ? intersectRect(box, own) : own;
+  if (own) box = narrowTo(box, own);
   return box;
 }
 
 /** What of an image shows on the page: its bounds cut to its clip. */
-export function visibleImageBounds(image: {
-  bounds: PageRect;
-  clip?: PageRect | null;
-}): PageRect {
+export function visibleImageBounds(image: ClippedImage): PageRect {
   return image.clip ? intersectRect(image.bounds, image.clip) : image.bounds;
 }
 
 /** True when the image's clip hides part of what it draws. */
-export function clipHidesImage(image: {
-  bounds: PageRect;
-  clip?: PageRect | null;
-}): boolean {
+export function clipHidesImage(image: ClippedImage): boolean {
   if (!image.clip) return false;
   const shown = visibleImageBounds(image);
   return (
@@ -126,7 +130,7 @@ export function clipHidesImage(image: {
  * to the whole image, which carries its clip with it.
  */
 export function imageBoundsForVisible(
-  image: { bounds: PageRect; clip?: PageRect | null },
+  image: ClippedImage,
   nextVisible: PageRect,
 ): PageRect {
   const shown = visibleImageBounds(image);

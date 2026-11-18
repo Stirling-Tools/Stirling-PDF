@@ -29,6 +29,7 @@ import {
   type Face,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { readBundledFaces } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
+import { differingPixels } from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
@@ -77,19 +78,6 @@ afterAll(() => {
   _resetScanFacesForTests();
   vi.unstubAllGlobals();
 });
-
-function differingPixels(a: ImageData, b: ImageData): number {
-  let count = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    if (
-      a.data[i] !== b.data[i] ||
-      a.data[i + 1] !== b.data[i + 1] ||
-      a.data[i + 2] !== b.data[i + 2]
-    )
-      count++;
-  }
-  return count;
-}
 
 function inkPixels(
   image: ImageData,
