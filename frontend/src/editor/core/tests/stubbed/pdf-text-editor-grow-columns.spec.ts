@@ -1,6 +1,11 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import {
+  saveAndDownload,
+  stashCurrentDocument,
+  waitForReopenedPage,
+} from "@editor/tests/stubbed/saveHelpers";
 
 // Grow widens a box up to the page edge. On a page of two columns the text
 // beside a left-column line is an edge too: typing past the end of that line
@@ -21,10 +26,8 @@ interface RunState {
 
 interface EditorWindow {
   __editor_store: {
-    document: unknown;
     state: { pages: { runs: RunState[] }[] };
   };
-  __prev_document?: unknown;
 }
 
 const pageRuns = (page: Page): Promise<RunState[]> =>
@@ -55,25 +58,9 @@ const acrossGutter = (runs: RunState[]) =>
     .map((run) => run.text);
 
 async function open(page: Page, file: string): Promise<void> {
-  await page.evaluate(() => {
-    const w = window as unknown as Partial<EditorWindow>;
-    w.__prev_document = w.__editor_store?.document;
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
-  await page.waitForFunction(
-    () => {
-      const w = window as unknown as Partial<EditorWindow>;
-      return (
-        !!w.__editor_store?.document &&
-        w.__editor_store.document !== w.__prev_document &&
-        (w.__editor_store.state.pages[0]?.runs.length ?? 0) > 0
-      );
-    },
-    null,
-    { timeout: 60_000 },
-  );
+  await stashCurrentDocument(page);
+  await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+  await waitForReopenedPage(page, 0, 60_000);
 }
 
 test("typing past a left-column line in Grow wraps it inside its column", async ({
@@ -125,12 +112,9 @@ test("typing past a left-column line in Grow wraps it inside its column", async 
   expect(rightColumn(during)).toEqual(rightColumn(before));
 
   await box.evaluate((el) => el.blur());
-  const downloaded = page.waitForEvent("download", { timeout: 30_000 });
-  await page.getByTestId("pdf-editor-download").click();
-  const confirm = page.getByTestId("pdf-editor-save-risk-confirm");
-  if (await confirm.isVisible().catch(() => false)) await confirm.click();
+  const downloaded = await saveAndDownload(page, false);
   const saved = testInfo.outputPath("grow-columns.pdf");
-  await (await downloaded).saveAs(saved);
+  await downloaded.saveAs(saved);
 
   await open(page, saved);
   const reopened = await pageRuns(page);

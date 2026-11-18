@@ -924,16 +924,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       // Its bytes are gone; opening it can only fail. Say so instead of a
       // click that goes nowhere.
       if (stub.dataUnavailable || lostFileIds.has(fileId)) {
-        alert({
-          alertType: "warning",
-          title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
-          body: t(
-            "fileSidebar.dataLostBody",
-            "Couldn't find this file's contents. Add it again to keep working with it.",
-          ),
-          expandable: false,
-          durationMs: 6000,
-        });
+        warnDataUnavailable();
         return;
       }
 

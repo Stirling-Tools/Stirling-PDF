@@ -1,14 +1,12 @@
-import { MantineProvider } from "@mantine/core";
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
+import {
+  pageSnapshot,
+  stubDocument,
+  stubbedPageView,
+} from "@editor/tools/pdfTextEditor/components/pageViewTestSupport";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
-import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import type {
-  PageSnapshot,
-  TextRunSnapshot,
-} from "@editor/tools/pdfTextEditor/types";
+import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 const { resizable } = vi.hoisted(() => ({
   resizable: new Map<string, boolean>(),
@@ -58,41 +56,15 @@ describe("PageView resize handle", () => {
 
   it("is offered on upright scanned text and plain text, not on read-only or turned scanned text", () => {
     const live = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
-    const page: PageSnapshot = {
-      pageIndex: 0,
-      width: live.width,
-      height: live.height,
-      dirty: false,
-      revision: live.revision,
-      runs: [
-        run("plain", {}),
-        run("scanned", { renderMode: 3 }),
-        run("scannedReadOnly", { renderMode: 3, textReadOnly: true }),
-        run("scannedTurned", { renderMode: 3, matrix: TURNED }),
-        run("readOnly", { textReadOnly: true }),
-      ],
-      images: [],
-      shapes: [],
-      display: live.display.toData(),
-    };
+    const page = pageSnapshot(live, [
+      run("plain", {}),
+      run("scanned", { renderMode: 3 }),
+      run("scannedReadOnly", { renderMode: 3, textReadOnly: true }),
+      run("scannedTurned", { renderMode: 3, matrix: TURNED }),
+      run("readOnly", { textReadOnly: true }),
+    ]);
     render(
-      <MantineProvider env="test">
-        <PageView
-          document={{ page: () => live } as unknown as EditorDocument}
-          store={{ setPageNearViewport: () => {} } as unknown as EditorStore}
-          page={page}
-          scale={1}
-          widthMode="grow"
-          selectedRunIds={[]}
-          selectedImageIds={[]}
-          selectedShapeIds={[]}
-          onSelectRun={() => {}}
-          onSelectImage={() => {}}
-          onSelectShape={() => {}}
-          onEditRun={() => {}}
-          onResizeRun={() => {}}
-        />
-      </MantineProvider>,
+      stubbedPageView(stubDocument(live), page, { onResizeRun: () => {} }),
     );
     expect(Object.fromEntries(resizable)).toEqual({
       plain: true,

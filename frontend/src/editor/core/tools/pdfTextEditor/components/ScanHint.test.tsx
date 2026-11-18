@@ -138,6 +138,13 @@ describe("pages whose text is drawn as shapes", () => {
     expect(screen.getByTestId("pdf-editor-scan-hint-ocr")).toBeEnabled();
   });
 
+  it("does not call shape-drawn pages scanned images when both kinds are present", () => {
+    renderHint([scanPage(), outlinedPage(1600)]);
+    const hint = screen.getByTestId("pdf-editor-scan-hint");
+    expect(hint).toHaveTextContent("unreadPagesHint");
+    expect(hint).not.toHaveTextContent("scanHint");
+  });
+
   it("does not offer OCR for a page with a few drawn shapes", () => {
     renderHint([outlinedPage(20)]);
     expect(

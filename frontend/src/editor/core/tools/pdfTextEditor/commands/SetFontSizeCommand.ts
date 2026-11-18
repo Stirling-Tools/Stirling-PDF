@@ -1,3 +1,4 @@
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -150,7 +151,7 @@ export class SetFontSizeCommand implements Command {
 
 /** Mirror the PDFium object scaling in the run's model bookkeeping. */
 function rescaleRunModel(
-  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: TextRun,
   s: number,
   ax: number,
   ay: number,

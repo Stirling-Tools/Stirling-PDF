@@ -9,6 +9,7 @@ import {
   drawnCodePoint,
   drawnText,
 } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import type { CharOriginModule } from "@editor/tools/pdfTextEditor/pdfium/objectTexts";
 import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
 import {
   SCRATCH,
@@ -37,14 +38,8 @@ export interface PageGlyphs {
   spaces: SpaceGlyph[];
 }
 
-interface GlyphModule {
+interface GlyphModule extends CharOriginModule {
   FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
-  FPDFText_GetCharOrigin?: (
-    tp: number,
-    i: number,
-    x: number,
-    y: number,
-  ) => boolean;
 }
 
 interface PlacedChar {

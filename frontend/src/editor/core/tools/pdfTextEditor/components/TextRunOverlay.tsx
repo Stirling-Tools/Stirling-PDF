@@ -962,22 +962,19 @@ export function TextRunOverlay({
 
   const top = exact ? exact.topPx : flowTop;
   // Width must not depend on anything that can flip between renders, or the box
-  // visibly pumps between two sizes while the user types. Two things could:
-  // room for the caret appeared only WHILE focused, and the measured fallback
-  // dropped out the moment `freshExact` arrived. The engine now re-measures
-  // every 100ms, so both flipped about ten times a second. Always keep the
-  // slack, always take the wider of the two - the result is a pure function of
-  // the layout, the text and the font, and a few pixels of margin costs
-  // nothing next to a box that will not sit still.
+  // visibly pumps between two sizes while the user types: caret room kept only
+  // while focused, or the measured fallback dropped once `freshExact` arrives,
+  // would each flip with the engine's 100ms re-measure. So the slack is always
+  // kept and the wider of the two always taken.
   const exactWidth = exact
     ? Math.max(exact.widthPx + fontSizePx * 0.5, measuredWidth + fontSizePx)
     : 0;
   // Grow stops at the page edge or the text beside it, or at the document's
   // own width for a line it set wider than that, focused or not so the box
-  // keeps its size across a blur; the live reflow below moves the overflow onto new lines. The box
-  // itself never wraps: the PDF draws each line as ONE text object at one pen
-  // origin, so an overlay that wrapped by CSS would stop describing the page
-  // underneath it.
+  // keeps its size across a blur; the live reflow below moves the overflow
+  // onto new lines. The box itself never wraps: the PDF draws each line as ONE
+  // text object at one pen origin, so an overlay that wrapped by CSS would
+  // stop describing the page underneath it.
   const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
   const grownWidth = exact ? exactWidth : flowWidth;
   const laidOutWidth = wantWrap
@@ -1116,6 +1113,18 @@ export function TextRunOverlay({
     learnAdvances(measured);
     for (const ch of unpriced)
       if (!heldAdvanceEmRef.current?.has(ch)) unpriceableRef.current.add(ch);
+  }
+
+  function commitTypedText(el: HTMLDivElement, raw: string): void {
+    const text = raw.replace(/\u00A0/g, " ");
+    onEdit(text);
+    priceTypedLetters(text);
+    // Re-fit the token the user just typed into. Its painted width is the
+    // PDF's advance for the ORIGINAL string, so leaving it alone lays the
+    // new text out at the browser's own advances and the caret drifts off
+    // the glyphs on the page, a pixel or so per keystroke.
+    if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
+    if (!wrapTypedText(el, text)) fitTypedText(el);
   }
 
   // Widen the box to keep the caret in it when the line it is typing on did
@@ -1280,6 +1289,10 @@ export function TextRunOverlay({
     },
     onMouseLeave: leaveHover,
   });
+  const resizeHandleLabel = t(
+    "pdfTextEditor.run.resizeHandle",
+    "Drag to change the width; the text rewraps",
+  );
   // Never a child of the box: inside the contentEditable the grips would
   // become editable content.
   const grips =
@@ -1327,14 +1340,8 @@ export function TextRunOverlay({
                 data-testid={`pdf-editor-width-handle-${run.id}`}
                 role="separator"
                 aria-orientation="vertical"
-                aria-label={t(
-                  "pdfTextEditor.run.resizeHandle",
-                  "Drag to change the width; the text rewraps",
-                )}
-                title={t(
-                  "pdfTextEditor.run.resizeHandle",
-                  "Drag to change the width; the text rewraps",
-                )}
+                aria-label={resizeHandleLabel}
+                title={resizeHandleLabel}
                 {...gripProps("resize")}
               />
             )}
@@ -1483,8 +1490,7 @@ export function TextRunOverlay({
         // Only when something actually overflows. Reflowing a paragraph
         // unconditionally re-breaks lines the user never touched: the reflow
         // rebuilds every line, so a two-character edit that still fits could
-        // still move words between lines the moment the box lost focus. The
-        // base branch never reflowed here at all.
+        // still move words between lines the moment the box lost focus.
         if (widest <= target + 1) return;
         onWrap(target / scale);
       }}
@@ -1495,11 +1501,7 @@ export function TextRunOverlay({
         composingRef.current = false;
         // Commit the composed string once, like onInput's non-IME path.
         const el = e.currentTarget;
-        const text = readOverlayText(el).replace(/\u00A0/g, " ");
-        onEdit(text);
-        priceTypedLetters(text);
-        if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
-        if (!wrapTypedText(el, text)) fitTypedText(el);
+        commitTypedText(el, readOverlayText(el));
       }}
       onInput={(e) => {
         setTouched(true);
@@ -1510,16 +1512,7 @@ export function TextRunOverlay({
         const el = e.currentTarget;
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
-        const raw = readOverlayText(el);
-        const text = raw.replace(/\u00A0/g, " ");
-        onEdit(text);
-        priceTypedLetters(text);
-        // Re-fit the token the user just typed into. Its painted width is the
-        // PDF's advance for the ORIGINAL string, so leaving it alone lays the
-        // new text out at the browser's own advances and the caret drifts off
-        // the glyphs on the page, a pixel or so per keystroke.
-        if (isLinePainted(el)) refitEditedTokens(el, livePaintOpts());
-        if (!wrapTypedText(el, text)) fitTypedText(el);
+        commitTypedText(el, readOverlayText(el));
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={leaveHover}

@@ -59,10 +59,11 @@ async function formsDrawn(
   for (const op of parseOps(toLatin1(content))) {
     if (op.op !== "Do" || op.operands.length !== 1) continue;
     const num = pdf.dictRef(xobjects, op.operands[0].slice(1));
-    const body = num === null ? null : pdf.objectBody(num);
+    if (num === null) continue;
+    const body = pdf.objectBody(num);
     if (!body || pdf.dictName(body, "Subtype") !== "Form") continue;
     const own = pdf.resolve(body, "Resources") ?? pageResources;
-    const inner = await pdf.streamData(num!);
+    const inner = await pdf.streamData(num);
     nodes.push({
       changesDrawing: bindsLocally(pdf, pageResources, own),
       forms: inner

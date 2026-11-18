@@ -2312,10 +2312,7 @@ function clampWidthToPage(x: number, width: number, page: Page): number {
   return Math.min(width, maxWidth);
 }
 
-function safeGetFont(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  objPtr: number,
-): number {
+function safeGetFont(m: WrappedPdfiumModule, objPtr: number): number {
   const fn = (m as unknown as { FPDFTextObj_GetFont?: (p: number) => number })
     .FPDFTextObj_GetFont;
   if (!fn) return 0;
@@ -2327,7 +2324,7 @@ function safeGetFont(
 }
 
 function snapshotRevertLines(
-  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
+  run: TextRun,
   prevText: string,
   prevTags: TextTags,
 ): RevertLine[] {
@@ -2376,8 +2373,8 @@ function spansByLine(spans: readonly FontSpan[], text: string): FontSpan[][] {
 
 // Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.
 function buildSlotsFromOverlayEmit(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
+  m: WrappedPdfiumModule,
+  run: TextRun,
   perLineEmits: Array<{
     ptrs: number[];
     texts: string[];
@@ -2386,7 +2383,7 @@ function buildSlotsFromOverlayEmit(
     y: number;
   }>,
   fontId: string,
-): import("@editor/tools/pdfTextEditor/model/TextRun").ParagraphLineSlot[] {
+): ParagraphLineSlot[] {
   const slots = [];
   let cursor = 0;
   for (const emit of perLineEmits) {
@@ -2483,7 +2480,7 @@ function buildSlotsFromOverlayEmit(
 }
 
 function boundsFromPtr(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
@@ -2619,7 +2616,7 @@ function sliceLineAcrossPtrs(
 }
 
 function buildSlotForLine(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   ptrs: number[],
   text: string,
   baselineY: number,
@@ -2812,7 +2809,7 @@ function reflattenLeafArrays(run: TextRun): void {
 
 /** Replace a restored slot (matched by baseline) with re-emitted objects. */
 function patchSlotPtrsByBaseline(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   run: TextRun,
   baselineY: number,
   ptrs: number[],

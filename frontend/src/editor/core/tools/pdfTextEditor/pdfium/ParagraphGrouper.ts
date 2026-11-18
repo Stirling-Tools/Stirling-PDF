@@ -13,7 +13,10 @@ import type {
   TextRun,
 } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { median } from "@editor/tools/pdfTextEditor/util/median";
-import { softLineStarts } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
+import {
+  softLineStarts,
+  type BreakLine,
+} from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 
 /** Cluster consecutive `LineGroup` representatives into "paragraphs". */
 const MIN_LINE_FACTOR = 0.6;
@@ -31,6 +34,11 @@ const COLUMN_LEFT_TOLERANCE = 14;
 const CELL_MAX_WORDS = 3;
 const CELL_MAX_CHARS = 24;
 
+/** Each line's fonts, as the share of its letters each draws. */
+type LineFonts = ReadonlyMap<TextRun, ReadonlyMap<string, number>>;
+/** A document font's own face name, or null when it has none. */
+type FaceOf = (fontId: string) => string | null;
+
 export interface ParagraphInfo {
   representative: TextRun;
   members: TextRun[];
@@ -41,8 +49,8 @@ export class ParagraphGrouper {
   static apply(
     page: Page,
     blockKey: BlockKey = SAME_BLOCK,
-    lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>> = new Map(),
-    faceOf: (fontId: string) => string | null = () => null,
+    lineFonts: LineFonts = new Map(),
+    faceOf: FaceOf = () => null,
   ): ParagraphInfo[] {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
@@ -155,21 +163,36 @@ export class ParagraphGrouper {
 // left of the paragraph reaches: a short paragraph's own widest line is not a
 // margin, so the short lines of a list or an indented block read as ended.
 function documentSoftStarts(members: TextRun[], column: TextRun[]): boolean[] {
-  const lines = members.map((m) => ({
-    text: m.text,
-    left: m.bounds.x,
-    right: m.bounds.x + m.bounds.width,
-    fontSize: m.fontSize,
-  }));
+  const lines = members.map((m) => breakLine(m, m.fontSize));
   if (lines.length < 2) return [];
   const left = Math.min(...lines.map((l) => l.left));
-  const tolerance = Math.max(3, (members[0].fontSize || 12) * 0.6);
-  const margin = Math.max(
+  return softLineStarts(
+    lines,
+    wrapMargin(column, left, members[0].fontSize || 12),
+  );
+}
+
+function breakLine(run: TextRun, fontSize: number): BreakLine {
+  return {
+    text: run.text,
+    left: run.bounds.x,
+    right: run.bounds.x + run.bounds.width,
+    fontSize,
+  };
+}
+
+/** The furthest right a line of `column` starting at or left of `left` reaches. */
+function wrapMargin(
+  column: readonly TextRun[],
+  left: number,
+  fontSize: number,
+): number {
+  const tolerance = Math.max(3, fontSize * 0.6);
+  return Math.max(
     ...column
       .filter((line) => line.bounds.x <= left + tolerance)
       .map((line) => line.bounds.x + line.bounds.width),
   );
-  return softLineStarts(lines, margin);
 }
 
 /** Build a `ParagraphLineSlot[]` from the paragraph's member runs. */
@@ -264,11 +287,7 @@ export function buildLineSlotsFromDescriptors(
 // A run's visual font identity for grouping: family + rounded size.
 // `run.fontId` is `pdf:<fontHandlePtr>:<family>`.
 // A face's own name tells regular from bold where a name-table family does not.
-function fontKey(
-  fontId: string,
-  fontSize: number,
-  faceOf: (fontId: string) => string | null,
-): string {
+function fontKey(fontId: string, fontSize: number, faceOf: FaceOf): string {
   const face = faceOf(fontId) ?? fontId.slice(fontId.lastIndexOf(":") + 1);
   return `${face}@${Math.round(fontSize)}`;
 }
@@ -278,8 +297,8 @@ const SHARED_FONT_MIN_SHARE = 0.25;
 
 function lineFontKeys(
   run: TextRun,
-  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
-  faceOf: (fontId: string) => string | null,
+  lineFonts: LineFonts,
+  faceOf: FaceOf,
 ): Set<string> {
   const shares = lineFonts.get(run);
   if (!shares || shares.size === 0)
@@ -344,26 +363,17 @@ function continuesWrappedLine(
   size: number,
 ): boolean {
   if (!STARTS_MID_SENTENCE.test(line.text)) return false;
-  const tolerance = Math.max(3, size * 0.6);
-  const margin = Math.max(
-    ...column
-      .filter((other) => other.bounds.x <= prev.bounds.x + tolerance)
-      .map((other) => other.bounds.x + other.bounds.width),
-  );
-  const lines = [prev, line].map((run) => ({
-    text: run.text,
-    left: run.bounds.x,
-    right: run.bounds.x + run.bounds.width,
-    fontSize: size,
-  }));
-  return softLineStarts(lines, margin)[1];
+  return softLineStarts(
+    [breakLine(prev, size), breakLine(line, size)],
+    wrapMargin(column, prev.bounds.x, size),
+  )[1];
 }
 
 function shareAFont(
   a: TextRun,
   b: TextRun,
-  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
-  faceOf: (fontId: string) => string | null,
+  lineFonts: LineFonts,
+  faceOf: FaceOf,
 ): boolean {
   if (isUprightOcr(a) && isUprightOcr(b))
     return sameOcrSize(a, b) && shareAFace(a, b, lineFonts, faceOf);
@@ -374,8 +384,8 @@ function shareAFont(
 function shareAFace(
   a: TextRun,
   b: TextRun,
-  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
-  faceOf: (fontId: string) => string | null,
+  lineFonts: LineFonts,
+  faceOf: FaceOf,
 ): boolean {
   const faceOnly = (key: string) => key.slice(0, key.lastIndexOf("@"));
   const theirs = new Set([...lineFontKeys(b, lineFonts, faceOf)].map(faceOnly));
@@ -443,8 +453,8 @@ function groupColumnLines(
   cells: ReadonlySet<TextRun>,
   scannedPairs: ReadonlySet<TextRun>,
   rules: readonly PageRect[],
-  lineFonts: ReadonlyMap<TextRun, ReadonlyMap<string, number>>,
-  faceOf: (fontId: string) => string | null,
+  lineFonts: LineFonts,
+  faceOf: FaceOf,
 ): void {
   let current: ParagraphInfo | null = null;
   let currentDeltas: number[] = [];

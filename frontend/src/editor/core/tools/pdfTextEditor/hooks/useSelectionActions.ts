@@ -100,7 +100,7 @@ function tryEmbedDeviceFont(doc: EditorDocument, family: string): boolean {
 }
 
 async function fontPickFailure(
-  doc: EditorStore["document"],
+  doc: EditorDocument | null,
   family: string,
   texts: string[],
 ): Promise<FontPickFailure | null> {
@@ -117,7 +117,7 @@ async function fontPickFailure(
 /** Null when the family is ready to draw at least one of `texts`, or when `doc` is no longer the open document, which callers check for themselves. */
 async function prepareFamily(
   store: EditorStore,
-  doc: EditorStore["document"],
+  doc: EditorDocument | null,
   family: string,
   texts: string[],
 ): Promise<FontPickFailure | null> {

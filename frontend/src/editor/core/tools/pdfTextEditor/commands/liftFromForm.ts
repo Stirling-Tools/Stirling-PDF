@@ -7,6 +7,7 @@ import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type { FormNode } from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import {
   collectContainersByPtr,
+  pageObjectIndex,
   restoreContentOrder,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { RolledBackError } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -81,17 +82,6 @@ export function chainTo(
     if (chain) return chain;
   }
   return null;
-}
-
-function indexOnPage(
-  m: WrappedPdfiumModule,
-  pagePtr: number,
-  ptr: number,
-): number {
-  const count = m.FPDFPage_CountObjects(pagePtr);
-  for (let i = 0; i < count; i++)
-    if (m.FPDFPage_GetObject(pagePtr, i) === ptr) return i;
-  return -1;
 }
 
 type Point = [number, number];
@@ -361,7 +351,7 @@ function refuseLift(): never {
 function dissolve(page: Page, m: WrappedPdfiumModule, form: number): boolean {
   const remove = (m as unknown as FormModule).FPDFFormObj_RemoveObject;
   const matrix = readMatrix(m, form);
-  const at = indexOnPage(m, page.pagePtr, form);
+  const at = pageObjectIndex(m, page.pagePtr, form);
   if (!remove || !matrix || at < 0) return false;
   const children = childrenOf(m, form);
   // Off the page before anything leaves it: an instance still on the page has its shared stream rewritten.

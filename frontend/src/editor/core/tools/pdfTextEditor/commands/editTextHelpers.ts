@@ -63,7 +63,10 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
-import { insertPageObjectAt } from "@editor/tools/pdfTextEditor/util/insertPageObject";
+import {
+  indexedInsertOf,
+  insertPageObjectAt,
+} from "@editor/tools/pdfTextEditor/util/insertPageObject";
 import { clearOnDocumentClose } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
@@ -517,7 +520,7 @@ const MAX_PLAUSIBLE_ADVANCE_EM = 2;
 
 /** Baseline origin of char `idx` in page points, or null when unreadable. */
 function charOriginPt(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   tp: number,
   idx: number,
 ): { x: number; y: number } | null {
@@ -537,7 +540,7 @@ function charOriginPt(
 }
 
 function looseBoxAdvancePt(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   tp: number,
   idx: number,
 ): number | null {
@@ -556,10 +559,7 @@ function looseBoxAdvancePt(
 }
 
 /** |scale| of a page object's matrix (1 when unreadable). */
-function objMatrixScale(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-  objPtr: number,
-): number {
+function objMatrixScale(m: WrappedPdfiumModule, objPtr: number): number {
   const buf = scratchPtr(m, SCRATCH.editMatrix, 6 * 4);
   try {
     if (!m.FPDFPageObj_GetMatrix(objPtr, buf)) return 1;
@@ -573,7 +573,7 @@ function objMatrixScale(
 }
 
 function buildOnPageAdvMap(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
 ): Map<number, Map<number, number>> {
   const mod = m as unknown as LooseBoxModule;
@@ -668,7 +668,7 @@ function buildOnPageAdvMap(
 
 /** On-page rendered advance (per em) of `ch` in `font`, or null if absent. */
 function onPageAdvanceEm(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
   font: number,
   ch: string,
@@ -692,7 +692,7 @@ function onPageAdvanceEm(
  * lets a re-emit keep the original face instead of collapsing.
  */
 export function warmOnPageAdvances(
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  m: WrappedPdfiumModule,
   pagePtr: number,
 ): void {
   if (!pagePtr || onPageAdvCache.has(pagePtr)) return;
@@ -1694,12 +1694,16 @@ export function drawnEndPt(
   return end;
 }
 
-interface InsertAtModule {
-  FPDFPage_InsertObjectAtIndex?: (
-    page: number,
-    obj: number,
-    index: number,
-  ) => boolean;
+/** Index of `ptr` among the page-level objects, or -1 when the page does not hold it directly. */
+export function pageObjectIndex(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  ptr: number,
+): number {
+  const count = m.FPDFPage_CountObjects(pagePtr);
+  for (let i = 0; i < count; i++)
+    if (m.FPDFPage_GetObject(pagePtr, i) === ptr) return i;
+  return -1;
 }
 
 /** Each of `ptrs` found at page level with its index in the page's content order. */
@@ -1729,9 +1733,7 @@ export function restoreContentOrder(
   pagePtr: number,
   placed: ReadonlyArray<{ ptr: number; index: number }>,
 ): void {
-  const insertAt = (m as unknown as InsertAtModule)
-    .FPDFPage_InsertObjectAtIndex;
-  if (!insertAt || placed.length === 0) return;
+  if (!indexedInsertOf(m) || placed.length === 0) return;
   for (const { ptr } of placed) m.FPDFPage_RemoveObject(pagePtr, ptr);
   for (const { ptr, index } of [...placed].sort((a, b) => a.index - b.index))
     insertPageObjectAt(m, pagePtr, ptr, index);

@@ -4,6 +4,8 @@ import {
   applyPartialEditPlan,
   planPartialEdit,
 } from "@editor/tools/pdfTextEditor/commands/partialEdit";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { uniformTags } from "@editor/tools/pdfTextEditor/model/TextTags";
 
@@ -62,8 +64,8 @@ function fakeDocAndPage(objects: number[]) {
   const doc = { module, docPtr: 1, loadedPages: () => [] };
   const page = { pagePtr: 2, markNeedsGenerate: () => {} };
   return {
-    doc: doc as unknown as Parameters<typeof applyPartialEditPlan>[0],
-    page: page as unknown as Parameters<typeof applyPartialEditPlan>[1],
+    doc: doc as unknown as EditorDocument,
+    page: page as unknown as Page,
     x,
   };
 }

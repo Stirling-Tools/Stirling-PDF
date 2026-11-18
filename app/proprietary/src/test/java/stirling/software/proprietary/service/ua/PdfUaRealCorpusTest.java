@@ -2,6 +2,7 @@ package stirling.software.proprietary.service.ua;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
@@ -46,11 +46,11 @@ class PdfUaRealCorpusTest {
     // caught by FontEmbeddingService, which keeps the original instead.
     private static final List<String> KNOWN_EMBED_TEXT_DIFFS = List.of("rotated-text-sample.pdf");
 
-    // Files whose tagged output PDFBox reads back differently from the original, measured
-    // 2026-11-16, pinned to the exact text it reads so that any other change still fails. Vowel
-    // marks and brackets drawn as objects of their own in visual order come back in reading order
-    // once marked content groups them; a Devanagari vowel sign drawn ahead of its consonant under
-    // an ActualText span comes back as U+0000.
+    // Files whose tagged output PDFBox reads back differently from the original, pinned to the
+    // exact text it reads so that any other change still fails. Vowel marks and brackets drawn as
+    // objects of their own in visual order come back in reading order once marked content groups
+    // them; a Devanagari vowel sign drawn ahead of its consonant under an ActualText span comes
+    // back as U+0000.
     private static final Map<String, String> KNOWN_TAGGED_TEXT =
             Map.of(
                     "rtl-marks-sample.pdf",
@@ -70,7 +70,7 @@ class PdfUaRealCorpusTest {
                 new PdfUaConversionService(
                         validation,
                         new FontEmbeddingService(),
-                        new CustomPDFDocumentFactory(Mockito.mock(PdfMetadataService.class)));
+                        new CustomPDFDocumentFactory(mock(PdfMetadataService.class)));
         repoRoot = findRepoRoot();
     }
 
@@ -199,9 +199,9 @@ class PdfUaRealCorpusTest {
                 preserved,
                 "tagging changed extracted text for "
                         + name
-                        + "\n  before: "
-                        + preview(textBefore)
-                        + "\n  after:  "
+                        + "\n  expected: "
+                        + preview(expected)
+                        + "\n  after:    "
                         + preview(textAfter));
     }
 

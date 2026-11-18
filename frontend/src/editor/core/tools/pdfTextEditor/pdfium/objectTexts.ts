@@ -4,7 +4,7 @@ import {
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
-interface CharOriginModule {
+export interface CharOriginModule {
   FPDFText_GetCharOrigin?: (
     textPage: number,
     index: number,

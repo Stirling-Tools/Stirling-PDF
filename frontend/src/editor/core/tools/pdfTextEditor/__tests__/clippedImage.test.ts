@@ -23,6 +23,10 @@ import {
   buildClassicPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import {
+  changedPixels,
+  rasterFirstPage,
+} from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const SIZE = 300;
 const BLUE_2X2 = streamBody(
@@ -105,33 +109,7 @@ async function reopened(doc: EditorDocument): Promise<EditorDocument> {
   return open(new Uint8Array(await (await exportToBlob(doc)).arrayBuffer()));
 }
 
-function raster(doc: EditorDocument): Uint8Array {
-  const m = doc.module;
-  const bitmap = m.FPDFBitmap_Create(SIZE, SIZE, 1);
-  try {
-    m.FPDFBitmap_FillRect(bitmap, 0, 0, SIZE, SIZE, 0xffffffff);
-    m.FPDF_RenderPageBitmap(
-      bitmap,
-      doc.page(0).pagePtr,
-      0,
-      0,
-      SIZE,
-      SIZE,
-      0,
-      0x10,
-    );
-    const memory = (
-      m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }
-    ).memory;
-    return new Uint8Array(
-      memory.buffer,
-      m.FPDFBitmap_GetBuffer(bitmap),
-      m.FPDFBitmap_GetStride(bitmap) * SIZE,
-    ).slice();
-  } finally {
-    m.FPDFBitmap_Destroy(bitmap);
-  }
-}
+const raster = (doc: EditorDocument) => rasterFirstPage(doc, SIZE, SIZE);
 
 // Page-space box around the blue the page shows, or null when none shows.
 function blueBox(pixels: Uint8Array): PageRect | null {
@@ -150,13 +128,6 @@ function blueBox(pixels: Uint8Array): PageRect | null {
     }
   }
   return x1 < 0 ? null : { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
-}
-
-function changedPixels(a: Uint8Array, b: Uint8Array): number {
-  let changed = 0;
-  for (let i = 0; i < a.length; i += 4)
-    if ([0, 1, 2].some((c) => Math.abs(a[i + c] - b[i + c]) > 2)) changed++;
-  return changed;
 }
 
 function image(doc: EditorDocument) {

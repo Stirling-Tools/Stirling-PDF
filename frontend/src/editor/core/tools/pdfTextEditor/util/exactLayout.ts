@@ -47,9 +47,8 @@ export function buildExactLines(
     lineStart = i + 1;
   }
   if (lines.length === 0) return null;
-  // An empty line draws nothing, so it has no pen position of its own; page x 0
-  // in its place moved the whole box to the page edge for as long as the line
-  // stayed empty.
+  // An empty line draws nothing, so it has no pen position of its own. It
+  // takes a neighbour's: page x 0 would put the whole box at the page edge.
   return lines.map((line, i) =>
     Number.isFinite(line.left)
       ? line

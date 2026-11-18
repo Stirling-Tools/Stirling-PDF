@@ -3,6 +3,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import FileSidebar from "@editor/components/shared/FileSidebar";
 import type { FileItemProps } from "@editor/components/shared/FileSidebarFileItem";
+import type { FileId } from "@editor/types/file";
 import type { StirlingFileStub } from "@editor/types/fileContext";
 
 const sidebar = vi.hoisted(() => ({
@@ -131,14 +132,16 @@ function stub(
   thumbnailUrl: string,
 ): StirlingFileStub {
   return {
-    id,
+    id: id as FileId,
     name,
     size: 1,
     type: "application/pdf",
     lastModified: 1,
     isLeaf: true,
+    originalFileId: id,
+    versionNumber: 1,
     thumbnailUrl,
-  } as unknown as StirlingFileStub;
+  };
 }
 
 const view = () => (

@@ -1,5 +1,9 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
+import {
+  buildClassicPdf,
+  streamBody,
+} from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 // A picture cropped the way Word and PowerPoint crop one: a 200pt image drawn
 // through a 100pt window. What the user can grab is the window, never the
@@ -9,26 +13,33 @@ const PAGE_PT = 300;
 const WINDOW_PT = { x: 100, y: 100, width: 100, height: 100 };
 
 function croppedImagePdf(): Buffer {
-  const image = "\x00\x00\xff".repeat(4);
-  const content = `q 100 100 100 100 re W n 200 0 0 200 50 50 cm /Im Do Q`;
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_PT} ${PAGE_PT}] /Contents 4 0 R /Resources << /XObject << /Im 5 0 R >> >> >>`,
-    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
-    `<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ${image.length} >>\nstream\n${image}\nendstream`,
-  ];
-  let out = "%PDF-1.7\n";
-  const offsets = objects.map((body, i) => {
-    const at = out.length;
-    out += `${i + 1} 0 obj\n${body}\nendobj\n`;
-    return at;
-  });
-  const xref = out.length;
-  out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (const at of offsets) out += `${String(at).padStart(10, "0")} 00000 n \n`;
-  out += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return Buffer.from(out, "latin1");
+  return Buffer.from(
+    buildClassicPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        {
+          num: 3,
+          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_PT} ${PAGE_PT}] /Contents 4 0 R /Resources << /XObject << /Im 5 0 R >> >> >>`,
+        },
+        {
+          num: 4,
+          body: streamBody(
+            "",
+            "q 100 100 100 100 re W n 200 0 0 200 50 50 cm /Im Do Q",
+          ),
+        },
+        {
+          num: 5,
+          body: streamBody(
+            "/Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8",
+            "\x00\x00\xff".repeat(4),
+          ),
+        },
+      ],
+      1,
+    ),
+  );
 }
 
 interface EditorWin {
