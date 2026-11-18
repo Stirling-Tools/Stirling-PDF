@@ -4,6 +4,7 @@ import { Stack, Text, TextInput, Group } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
@@ -39,9 +40,17 @@ export default function WordsToRedactInput({
 
   return (
     <Stack gap="sm">
-      <Text size="sm" fw={500}>
-        {t("redact.auto.wordsToRedact.title", "Words to Redact")}
-      </Text>
+      <Group gap={4} wrap="nowrap">
+        <Text size="sm" fw={500}>
+          {t("redact.auto.wordsToRedact.title", "Words to Redact")}
+        </Text>
+        <InfoTooltip
+          label={t(
+            "redact.auto.wordsToRedact.examples",
+            "Examples: Confidential, Top-Secret",
+          )}
+        />
+      </Group>
 
       {/* Current words */}
       {wordsToRedact.map((word, index) => (
@@ -105,16 +114,6 @@ export default function WordsToRedactInput({
           + {t("redact.auto.wordsToRedact.add", "Add")}
         </Button>
       </Group>
-
-      {/* Examples */}
-      {wordsToRedact.length === 0 && (
-        <Text size="xs" c="dimmed">
-          {t(
-            "redact.auto.wordsToRedact.examples",
-            "Examples: Confidential, Top-Secret",
-          )}
-        </Text>
-      )}
     </Stack>
   );
 }

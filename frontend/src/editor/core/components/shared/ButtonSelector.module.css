@@ -1,0 +1,16 @@
+/* Segments split the track and never grow past it, so FitText sees the narrower
+ * width and shrinks a long label instead of pushing the track off the panel. */
+.fitted :global(.mantine-SegmentedControl-control),
+.fitted :global(.mantine-SegmentedControl-label),
+.fitted :global(.mantine-SegmentedControl-innerLabel),
+.fitted :global(.mantine-SegmentedControl-innerLabel) > * {
+  min-width: 0;
+}
+
+.fitted :global(.mantine-SegmentedControl-label) {
+  overflow: hidden;
+}
+
+.fitted :global(.mantine-SegmentedControl-innerLabel) {
+  width: 100%;
+}

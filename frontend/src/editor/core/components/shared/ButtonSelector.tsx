@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Stack, Text, Tooltip } from "@mantine/core";
 import FitText from "@editor/components/shared/FitText";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import classes from "@editor/components/shared/ButtonSelector.module.css";
 
 export interface ButtonOption<T> {
   value: T;
@@ -80,6 +81,7 @@ const ButtonSelector = <T extends string | number>({
       )}
 
       <SegmentedControl
+        className={classes.fitted}
         options={segmentedOptions}
         value={selectedValue}
         onChange={handleChange}

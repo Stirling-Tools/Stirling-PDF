@@ -3,6 +3,7 @@ import { Icon } from "@editor/ui/Icon";
 import { Tooltip, type FloatingPosition } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import "@editor/ui/InfoTooltip.css";
+import { Z_INDEX_INFO_TOOLTIP } from "@editor/styles/zIndex";
 
 export interface InfoTooltipProps {
   /** The explanation shown in the tooltip on hover/focus. */
@@ -11,7 +12,7 @@ export interface InfoTooltipProps {
   ariaLabel?: string;
   /** Which side the tooltip opens on. Default "top". */
   position?: FloatingPosition;
-  /** For use over a layer that sits above the default tooltip layer. */
+  /** Defaults to a layer above every modal; override only for a surface above that. */
   zIndex?: number;
 }
 
@@ -24,7 +25,7 @@ export function InfoTooltip({
   label,
   ariaLabel,
   position = "top",
-  zIndex,
+  zIndex = Z_INDEX_INFO_TOOLTIP,
 }: InfoTooltipProps) {
   const { t } = useTranslation();
   return (

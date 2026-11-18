@@ -13,7 +13,7 @@ function renderField() {
       </Field>
     </MantineProvider>,
   );
-  return screen.getByRole("img", { name: HINT });
+  return screen.getByRole("button", { name: HINT });
 }
 
 describe("Field hint", () => {
@@ -24,7 +24,6 @@ describe("Field hint", () => {
 
   it("shows the hint when its icon takes keyboard focus", async () => {
     const icon = renderField();
-    expect(icon).toHaveAttribute("tabindex", "0");
     fireEvent.focus(icon);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
   });

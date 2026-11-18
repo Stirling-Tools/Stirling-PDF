@@ -240,6 +240,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {
         isVisible: currentStep === AUTOMATION_STEPS.CREATION,
         isCollapsed: false,
+        tooltip: {
+          content: t(
+            "automate.creation.intro",
+            "Automations run tools sequentially. To get started, add tools in the order you want them to run.",
+          ),
+        },
       },
       currentStep === AUTOMATION_STEPS.CREATION ? renderCurrentStep() : null,
     ),

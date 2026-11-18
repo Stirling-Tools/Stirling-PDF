@@ -35,6 +35,7 @@ import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters"
 import type { BuildToolOptionsExtras } from "@editor/tools/annotate/useAnnotationStyleState";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 interface StyleState {
   inkColor: string;
@@ -427,15 +428,17 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Stack gap="sm">
         {activeTool === "select" ? (
           <>
-            <Text size="sm" fw={600}>
-              {t("annotation.selectAndMove", "Select and Edit")}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {t(
-                "annotation.editSelectDescription",
-                "Click an existing annotation to edit its color, opacity, text, or size.",
-              )}
-            </Text>
+            <Group gap={4} wrap="nowrap">
+              <Text size="sm" fw={600}>
+                {t("annotation.selectAndMove", "Select and Edit")}
+              </Text>
+              <InfoTooltip
+                label={t(
+                  "annotation.editSelectDescription",
+                  "Click an existing annotation to edit its color, opacity, text, or size.",
+                )}
+              />
+            </Group>
           </>
         ) : activeTool === "stamp" ? (
           <>

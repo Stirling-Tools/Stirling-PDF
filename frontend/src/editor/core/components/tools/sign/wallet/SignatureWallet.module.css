@@ -28,6 +28,9 @@
 }
 
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   flex-grow: 1;
   margin: 0;
   font-size: 0.8125rem;
