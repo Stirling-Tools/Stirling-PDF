@@ -14,6 +14,7 @@ import {
 } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { CmapResolver } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { ContentStreamResolver } from "@editor/tools/pdfTextEditor/charcode/ContentStreamResolver";
+import { ToUnicodeResolver } from "@editor/tools/pdfTextEditor/charcode/ToUnicodeResolver";
 import {
   SCRATCH,
   scratchPtr,
@@ -101,6 +102,7 @@ const resolvers: Record<CharcodeStrategy, CharcodeResolver | null> = {
   helvetica: null, // legacy: do nothing, caller falls back.
   cmap: new CmapResolver(),
   "content-stream": new ContentStreamResolver(),
+  tounicode: new ToUnicodeResolver(),
 };
 
 // Get the resolver for the currently active strategy. Returns null for
@@ -144,7 +146,7 @@ export function tryResolveCharcodes(
   font: number,
   text: string,
   ctx: ResolverContext,
-  allowContentStreamFallback = false,
+  allowFallback = false,
 ): {
   strategy: CharcodeStrategy;
   result: ReturnType<CharcodeResolver["resolve"]>;
@@ -155,23 +157,23 @@ export function tryResolveCharcodes(
     if (result && result.coverage === [...text].length) {
       return { strategy: r.name, result };
     }
-    // Active resolver did not fully cover the text.
-    if (allowContentStreamFallback && r.name !== "content-stream") {
-      const cs = resolvers["content-stream"];
-      const csResult = cs?.resolve(font, text, ctx);
-      if (csResult && csResult.coverage === [...text].length) {
-        return { strategy: "content-stream", result: csResult };
+    // Active resolver did not fully cover the text: try the exact ToUnicode
+    // lookup. The content-stream guess is never a fallback; its codes can
+    // draw a different glyph.
+    if (allowFallback && r.name !== "tounicode") {
+      const exact = resolvers.tounicode?.resolve(font, text, ctx);
+      if (exact && exact.coverage === [...text].length) {
+        return { strategy: "tounicode", result: exact };
       }
     }
     return { strategy: r.name, result };
   }
-  // No active resolver (helvetica strategy). Still try the client-side
-  // content-stream reuse when explicitly allowed.
-  if (allowContentStreamFallback) {
-    const cs = resolvers["content-stream"];
-    const csResult = cs?.resolve(font, text, ctx);
-    if (csResult && csResult.coverage === [...text].length) {
-      return { strategy: "content-stream", result: csResult };
+  // No active resolver (helvetica strategy). Still try the exact lookup when
+  // explicitly allowed.
+  if (allowFallback) {
+    const exact = resolvers.tounicode?.resolve(font, text, ctx);
+    if (exact && exact.coverage === [...text].length) {
+      return { strategy: "tounicode", result: exact };
     }
   }
   return null;

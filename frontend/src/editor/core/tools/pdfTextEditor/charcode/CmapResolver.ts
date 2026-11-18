@@ -127,7 +127,7 @@ function buildCmap(
 }
 
 /** Copy a font's embedded program bytes out of the WASM heap (null = none). */
-function readFontData(
+export function readFontData(
   font: number,
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
 ): Uint8Array | null {
