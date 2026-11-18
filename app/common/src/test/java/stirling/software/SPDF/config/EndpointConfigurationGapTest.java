@@ -303,9 +303,8 @@ class EndpointConfigurationGapTest {
         @DisplayName("endpoint with a still-enabled alternative stays enabled")
         void oneAlternativeRemains() {
             EndpointConfiguration config = buildDefault();
-            // compress-pdf alternatives: qpdf, Ghostscript, Java
+            // compress-pdf alternatives: qpdf, Java
             config.disableGroup("qpdf");
-            config.disableGroup("Ghostscript");
             assertTrue(config.isEndpointEnabled("compress-pdf"));
             config.disableGroup("Java");
             assertFalse(config.isEndpointEnabled("compress-pdf"));

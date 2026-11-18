@@ -259,8 +259,8 @@ class CompressControllerTest {
         }
 
         @Test
-        @DisplayName("no size reduction returns the uploaded bytes unchanged")
-        void noReduction_returnsOriginalBytes() throws Exception {
+        @DisplayName("the output is never larger than the upload")
+        void output_neverLargerThanUpload() throws Exception {
             byte[] pdf = textOnlyPdfBytes();
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(pdf));
@@ -269,7 +269,7 @@ class CompressControllerTest {
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(drain(response)).isEqualTo(pdf);
+            assertThat(drain(response).length).isLessThanOrEqualTo(pdf.length);
         }
 
         @Test
@@ -278,13 +278,10 @@ class CompressControllerTest {
             byte[] pdf = smallImagePdfBytes();
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(pdf));
-            request.setOptimizeLevel(4); // triggers Java image compression path
+            request.setOptimizeLevel(4);
 
             when(pdfDocumentFactory.load(any(File.class)))
                     .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
-            // compressImagesInPDF reloads currentFile via load(Path).
-            when(pdfDocumentFactory.load(any(Path.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
@@ -333,62 +330,6 @@ class CompressControllerTest {
         }
     }
 
-    // ----- public compressImagesInPDF ----------------------------------------------------------
-
-    @Nested
-    @DisplayName("compressImagesInPDF")
-    class CompressImages {
-
-        @Test
-        @DisplayName("PDF with a tiny image produces a valid, non-empty output PDF")
-        void smallImage_producesValidPdf() throws Exception {
-            Path src = tempDir.resolve("src.pdf");
-            Files.write(src, smallImagePdfBytes());
-
-            when(pdfDocumentFactory.load(any(Path.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
-
-            TempFile result = controller.compressImagesInPDF(src, 0.5, 0.5f, false);
-
-            assertThat(result).isNotNull();
-            byte[] out = Files.readAllBytes(result.getPath());
-            assertThat(out).isNotEmpty();
-            try (PDDocument doc = Loader.loadPDF(out)) {
-                assertThat(doc.getNumberOfPages()).isEqualTo(1);
-            }
-        }
-
-        @Test
-        @DisplayName("text-only PDF compresses to a valid single-page output")
-        void textOnly_producesValidPdf() throws Exception {
-            Path src = tempDir.resolve("text.pdf");
-            Files.write(src, textOnlyPdfBytes());
-
-            when(pdfDocumentFactory.load(any(Path.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
-
-            TempFile result = controller.compressImagesInPDF(src, 0.8, 0.7f, false);
-
-            assertThat(result).isNotNull();
-            try (PDDocument doc = Loader.loadPDF(Files.readAllBytes(result.getPath()))) {
-                assertThat(doc.getNumberOfPages()).isEqualTo(1);
-            }
-        }
-
-        @Test
-        @DisplayName("load failure closes the temp file and propagates the exception")
-        void loadFailure_propagates() throws Exception {
-            Path src = tempDir.resolve("bad.pdf");
-            Files.write(src, textOnlyPdfBytes());
-
-            when(pdfDocumentFactory.load(any(Path.class))).thenThrow(new IOException("boom"));
-
-            assertThatThrownBy(() -> controller.compressImagesInPDF(src, 0.5, 0.5f, false))
-                    .isInstanceOf(IOException.class)
-                    .hasMessageContaining("boom");
-        }
-    }
-
     // ----- pure helper methods (reflection) ----------------------------------------------------
 
     @Nested
@@ -396,25 +337,22 @@ class CompressControllerTest {
     class Helpers {
 
         @Test
-        @DisplayName("getScaleFactorForLevel maps each level and defaults to 1.0")
-        void scaleFactorForLevel() throws Exception {
-            Method m = privateStatic("getScaleFactorForLevel", int.class);
-            assertThat((double) m.invoke(null, 1)).isEqualTo(0.98);
-            assertThat((double) m.invoke(null, 5)).isEqualTo(0.68);
-            assertThat((double) m.invoke(null, 9)).isEqualTo(0.28);
-            // Out-of-range falls to the default branch.
-            assertThat((double) m.invoke(null, 0)).isEqualTo(1.0);
-            assertThat((double) m.invoke(null, 42)).isEqualTo(1.0);
+        @DisplayName("targetDpiForLevel lowers the target resolution as the level rises")
+        void targetDpiForLevel() throws Exception {
+            Method m = privateStatic("targetDpiForLevel", int.class);
+            assertThat((int) m.invoke(null, 4)).isEqualTo(200);
+            assertThat((int) m.invoke(null, 5)).isEqualTo(150);
+            assertThat((int) m.invoke(null, 9)).isEqualTo(72);
+            assertThat((int) m.invoke(null, 42)).isEqualTo(72);
         }
 
         @Test
-        @DisplayName("getJpegQualityForLevel maps each level and defaults to 0.75")
-        void jpegQualityForLevel() throws Exception {
-            Method m = privateStatic("getJpegQualityForLevel", int.class);
-            assertThat((float) m.invoke(null, 1)).isEqualTo(0.92f);
-            assertThat((float) m.invoke(null, 9)).isEqualTo(0.35f);
-            assertThat((float) m.invoke(null, 0)).isEqualTo(0.75f);
-            assertThat((float) m.invoke(null, 100)).isEqualTo(0.75f);
+        @DisplayName("imageQualityForLevel lowers JPEG quality as the level rises")
+        void imageQualityForLevel() throws Exception {
+            Method m = privateStatic("imageQualityForLevel", int.class);
+            assertThat((float) m.invoke(null, 4)).isEqualTo(0.80f);
+            assertThat((float) m.invoke(null, 5)).isEqualTo(0.70f);
+            assertThat((float) m.invoke(null, 9)).isEqualTo(0.30f);
         }
 
         @Test
