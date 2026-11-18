@@ -3,8 +3,10 @@ import { computeBoxes } from "@editor/components/tools/pageLayout/utils/computeB
 
 export default function LayoutPreview({
   parameters,
+  firstPageDataUrl,
 }: {
   parameters: PageLayoutParameters;
+  firstPageDataUrl?: string | null;
 }) {
   const sheet = {
     x: 0,
@@ -45,29 +47,86 @@ export default function LayoutPreview({
       />
       {boxes.map((box) => (
         <g key={box.label}>
-          <rect
-            x={box.x}
-            y={box.y}
-            width={box.width}
-            height={box.height}
-            rx={3}
-            ry={3}
-            fill="#bfdbfe"
-            stroke={parameters.addBorder ? "#3b82f6" : "none"}
-            strokeWidth={2}
-          />
-          <text
-            x={box.x + box.width / 2}
-            y={box.y + box.height / 2}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={Math.min(box.width, box.height) * 0.6}
-            fill="#1d4ed8"
-            fontFamily="Arial, sans-serif"
-            fontWeight="bold"
-          >
-            {box.label}
-          </text>
+          {firstPageDataUrl ? (
+            <>
+              <image
+                href={firstPageDataUrl}
+                x={box.x}
+                y={box.y}
+                width={box.width}
+                height={box.height}
+                preserveAspectRatio="xMidYMid meet"
+              />
+              {parameters.addBorder && (
+                <rect
+                  x={box.x}
+                  y={box.y}
+                  width={box.width}
+                  height={box.height}
+                  rx={3}
+                  ry={3}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                />
+              )}
+              <rect
+                x={box.x + 4}
+                y={box.y + 4}
+                width={Math.max(18, Math.min(box.width, box.height) * 0.24)}
+                height={Math.max(18, Math.min(box.width, box.height) * 0.24)}
+                rx={3}
+                ry={3}
+                fill="rgba(29, 78, 216, 0.85)"
+              />
+              <text
+                x={
+                  box.x +
+                  4 +
+                  Math.max(18, Math.min(box.width, box.height) * 0.24) / 2
+                }
+                y={
+                  box.y +
+                  4 +
+                  Math.max(18, Math.min(box.width, box.height) * 0.24) / 2
+                }
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={Math.max(11, Math.min(box.width, box.height) * 0.15)}
+                fill="#ffffff"
+                fontFamily="Arial, sans-serif"
+                fontWeight="bold"
+              >
+                {box.label}
+              </text>
+            </>
+          ) : (
+            <>
+              <rect
+                x={box.x}
+                y={box.y}
+                width={box.width}
+                height={box.height}
+                rx={3}
+                ry={3}
+                fill="#bfdbfe"
+                stroke={parameters.addBorder ? "#3b82f6" : "none"}
+                strokeWidth={2}
+              />
+              <text
+                x={box.x + box.width / 2}
+                y={box.y + box.height / 2}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={Math.min(box.width, box.height) * 0.6}
+                fill="#1d4ed8"
+                fontFamily="Arial, sans-serif"
+                fontWeight="bold"
+              >
+                {box.label}
+              </text>
+            </>
+          )}
         </g>
       ))}
     </svg>
