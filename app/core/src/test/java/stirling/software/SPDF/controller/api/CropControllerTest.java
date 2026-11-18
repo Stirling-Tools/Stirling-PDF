@@ -37,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -629,8 +630,8 @@ class CropControllerTest {
                             .build();
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
-                    .isInstanceOf(IOException.class)
-                    .hasMessageContaining("JPDFium crop failed")
+                    .isInstanceOf(ExceptionUtils.PdfCorruptedException.class)
+                    .hasMessageContaining("corrupted")
                     .hasCauseInstanceOf(RuntimeException.class);
         }
 

@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +44,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -289,8 +291,8 @@ class CropControllerMoreTest {
         }
 
         @Test
-        @DisplayName("JPDFium failure is wrapped and surfaced as IOException")
-        void jpdfiumFailureIsWrapped() {
+        @DisplayName("corrupt PDF maps to the corrupt-file error instead of a generic failure")
+        void corruptPdfMapsToCorruptFileError() {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput",
@@ -300,8 +302,7 @@ class CropControllerMoreTest {
             CropPdfForm request = form(file, true);
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
-                    .isInstanceOf(IOException.class)
-                    .hasMessage("JPDFium crop failed")
+                    .isInstanceOf(ExceptionUtils.PdfCorruptedException.class)
                     .hasCauseInstanceOf(RuntimeException.class);
         }
     }

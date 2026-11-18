@@ -21,6 +21,7 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
@@ -28,6 +29,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.exception.PdfCorruptException;
+import stirling.software.jpdfium.exception.PdfPasswordException;
 import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.SaveOptions;
@@ -209,12 +212,15 @@ public class CropController {
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             tempOutputFile.close();
             throw e;
-        } catch (IllegalArgumentException e) {
+        } catch (PdfPasswordException e) {
             tempOutputFile.close();
-            throw e;
+            throw ExceptionUtils.createPdfPasswordException(e);
+        } catch (PdfCorruptException e) {
+            tempOutputFile.close();
+            throw ExceptionUtils.createPdfCorruptedException("during cropping", e);
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
@@ -247,12 +253,15 @@ public class CropController {
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename(request));
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             tempOutputFile.close();
             throw e;
-        } catch (IllegalArgumentException e) {
+        } catch (PdfPasswordException e) {
             tempOutputFile.close();
-            throw e;
+            throw ExceptionUtils.createPdfPasswordException(e);
+        } catch (PdfCorruptException e) {
+            tempOutputFile.close();
+            throw ExceptionUtils.createPdfCorruptedException("during cropping", e);
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
