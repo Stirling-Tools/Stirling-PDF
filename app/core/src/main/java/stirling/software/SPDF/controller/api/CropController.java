@@ -189,9 +189,10 @@ public class CropController {
     private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
             throws IOException {
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
+        File tempInput = spoolInput(request);
 
         try {
-            try (PdfDocument document = openInput(request)) {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     try (PdfPage page = document.page(i)) {
@@ -224,6 +225,8 @@ public class CropController {
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
+        } finally {
+            tempFileManager.deleteTempFile(tempInput);
         }
     }
 
@@ -231,9 +234,10 @@ public class CropController {
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
         Rect crop =
                 new Rect(request.getX(), request.getY(), request.getWidth(), request.getHeight());
+        File tempInput = spoolInput(request);
 
         try {
-            try (PdfDocument document = openInput(request)) {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     applyCrop(document, i, crop, request.isRemoveDataOutsideCrop());
@@ -253,6 +257,8 @@ public class CropController {
         } catch (RuntimeException | LinkageError e) {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
+        } finally {
+            tempFileManager.deleteTempFile(tempInput);
         }
     }
 
@@ -261,9 +267,15 @@ public class CropController {
      * JPDFium pins whatever backs the document for its lifetime, so a byte array would hold the
      * whole upload on the heap for the entire request.
      */
-    private PdfDocument openInput(CropPdfForm request) throws IOException {
-        File tempInput = tempFileManager.convertMultipartFileToFile(request.getFileInput());
-        return PdfDocument.open(tempInput.toPath());
+    /**
+     * Spools the upload like {@code CustomPDFDocumentFactory.load(MultipartFile)} does for PDFBox:
+     * JPDFium pins whatever backs the document for its lifetime, so a byte array would hold the
+     * whole upload on the heap for the entire request. Callers must hand the returned file back to
+     * {@link TempFileManager#deleteTempFile(File)} once the document is closed, or every crop
+     * request leaks a temp file.
+     */
+    private File spoolInput(CropPdfForm request) throws IOException {
+        return tempFileManager.convertMultipartFileToFile(request.getFileInput());
     }
 
     /**

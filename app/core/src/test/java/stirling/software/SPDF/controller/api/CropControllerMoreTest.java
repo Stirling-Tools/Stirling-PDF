@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -16,6 +18,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 
@@ -191,6 +194,21 @@ class CropControllerMoreTest {
         return f;
     }
 
+    private void stubSpoolInput(AtomicReference<File> spooled) throws IOException {
+        doAnswer(
+                        inv -> {
+                            File f = Files.createTempFile(tempDir, "crop", ".pdf").toFile();
+                            try (InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(in, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            spooled.set(f);
+                            return f;
+                        })
+                .when(tempFileManager)
+                .convertMultipartFileToFile(any());
+    }
+
     private static void assertRect(
             PDRectangle actual, float x, float y, float width, float height) {
         // PDRectangle does not override equals, so compare components.
@@ -318,6 +336,30 @@ class CropControllerMoreTest {
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(ExceptionUtils.PdfCorruptedException.class)
                     .hasCauseInstanceOf(RuntimeException.class);
+        }
+
+        @Test
+        @DisplayName("the spooled upload is handed back to TempFileManager after a crop")
+        void spooledUploadIsDeletedAfterCrop() throws Exception {
+            AtomicReference<File> spooled = new AtomicReference<>();
+            stubSpoolInput(spooled);
+
+            cropController.cropPdf(form(pdf(3), true));
+
+            verify(tempFileManager).deleteTempFile(spooled.get());
+        }
+
+        @Test
+        @DisplayName("the spooled upload is handed back to TempFileManager after auto-crop")
+        void spooledUploadIsDeletedAfterAutoCrop() throws Exception {
+            AtomicReference<File> spooled = new AtomicReference<>();
+            stubSpoolInput(spooled);
+
+            CropPdfForm request = form(pdfWithBoundaryText(), false);
+            request.setAutoCrop(true);
+            cropController.cropPdf(request);
+
+            verify(tempFileManager).deleteTempFile(spooled.get());
         }
     }
 
