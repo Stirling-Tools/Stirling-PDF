@@ -10,7 +10,10 @@ import { useSelectionGeometry } from "@editor/tools/pdfTextEditor/hooks/useSelec
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { LanguagesInUse } from "@editor/tools/pdfTextEditor/components/inspector/languagesInUse";
 import { SelectionInspector } from "@editor/tools/pdfTextEditor/components/inspector/SelectionInspector";
-import { analyzePageFonts } from "@editor/tools/pdfTextEditor/util/pageFonts";
+import {
+  useSelectedFontNote,
+  type ScanNote,
+} from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
 import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
@@ -19,6 +22,13 @@ import {
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { useScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
+import {
+  scanBlockMisaligned,
+  scanBlockOffInk,
+  scanTypingDropped,
+} from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
 import type {
   EditorViewState,
   LoadProgress,
@@ -80,7 +90,12 @@ export function EditorSidebar({
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
 
-  const fontNote = useSelectedFontNote(state, selection);
+  const fontNote = useSelectedFontNote(
+    state,
+    selection,
+    selectedScanNote(store, state, selection),
+  );
+  const scanFontMatch = useScanFontMatch(store, state, selection);
 
   const editorDocument = store.document;
   const reviewingAccessibility = useMemo(
@@ -166,6 +181,7 @@ export function EditorSidebar({
                 selection={selection}
                 geometry={geometry}
                 fontNote={fontNote}
+                scanFontMatch={scanFontMatch}
                 canGroup={canGroup}
                 canUngroup={canUngroup}
                 onGroup={onGroup}
@@ -211,6 +227,7 @@ export function EditorSidebar({
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
+      {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Tabs>
   );
 }
@@ -241,64 +258,25 @@ function NothingSelected(props: ScanHintProps) {
   );
 }
 
-/**
- * One line about the selected runs' font - or nothing at all.
- *
- * It speaks only when a character the user types might not survive: a missing
- * glyph, or an embedded face whose coverage we could not read. A font that can
- * render everything says nothing, because "all fine" is not worth a line.
- */
-function useSelectedFontNote(
+function selectedScanNote(
+  store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
-): string | null {
-  const { t } = useTranslation();
-  return useMemo(() => {
-    if (selection.runIds.length === 0) return null;
-    const picked = new Set(selection.runIds);
-    const fontIds = new Set<string>();
-    let scanned = 0;
-    for (const page of state.pages)
-      for (const run of page.runs)
-        if (picked.has(run.id)) {
-          fontIds.add(run.fontId);
-          if (run.renderMode === 3) scanned++;
-        }
-    if (fontIds.size === 0) return null;
-    // OCR text is invisible; its font says nothing about what an edit draws.
-    if (scanned === selection.runIds.length)
-      return t(
-        "pdfTextEditor.inspector.scannedText",
-        "Scanned text · changed words are covered and redrawn in a matching font.",
-      );
-
-    const fonts = analyzePageFonts(state.pages).filter((f) =>
-      // analyzePageFonts keys by display name + status, so match on the names
-      // the selected runs' fonts resolve to.
-      Array.from(fontIds).some((id) => id.endsWith(f.name)),
-    );
-    if (fonts.length !== 1) return null;
-    const font = fonts[0];
-    const gaps = font.coverage.known ? font.coverage.missing : [];
-    if (gaps.length > 0) {
-      return t(
-        "pdfTextEditor.inspector.fontGap",
-        "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica.",
-        {
-          name: font.name,
-          glyphs: gaps.slice(0, 6).join(" "),
-        },
-      );
-    }
-    // Silent when the font can render anything the user types: a standard
-    // base-14 face, or an embedded one whose cmap we read and found complete.
-    if (font.status === "standard") return null;
-    if (font.coverage.known) return null;
-    return t(
-      "pdfTextEditor.inspector.fontEmbedded",
-      "Embedded font · a character it lacks falls back to Helvetica.",
-    );
-  }, [state.pages, selection.runIds, t]);
+): ScanNote {
+  const doc = store.document;
+  if (!doc) return null;
+  const picked = new Set(selection.runIds);
+  const runs = state.pages.flatMap((page) =>
+    page.runs.flatMap((r) => {
+      if (!picked.has(r.id)) return [];
+      const run = doc.page(page.pageIndex).findRun(r.id);
+      return run ? [run] : [];
+    }),
+  );
+  if (runs.some((run) => scanBlockMisaligned(doc, run))) return "misaligned";
+  if (runs.some((run) => scanBlockOffInk(doc, run))) return "offInk";
+  if (runs.some((run) => scanTypingDropped(run))) return "dropsTyping";
+  return null;
 }
 
 function EmptySidebar({

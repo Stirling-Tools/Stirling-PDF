@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  showInTextEditor,
+} from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -24,9 +28,7 @@ async function open(page: Page, file: string, firstPage = 0): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 15_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });
@@ -273,7 +275,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
     // it is dropped and the save-risk modal always gates the save.
     const saved = await downloadBytes(await saveAndDownload(page, true));
 
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "emoji-round-trip.pdf",
       mimeType: "application/pdf",
       buffer: saved,
@@ -498,11 +500,8 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
     page,
   }) => {
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
     await page
-      .locator('[data-testid="pdf-editor-file-input"]')
+      .getByTestId("file-input")
       .setInputFiles(
         path.join(import.meta.dirname, "../test-fixtures/encrypted.pdf"),
       );
@@ -510,7 +509,7 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       page
         .getByTestId("pdf-editor-page-0")
         .or(page.getByTestId("pdf-editor-error"))
-        .or(page.getByTestId("pdf-editor-password-modal"))
+        .or(page.getByLabel("Password to open", { exact: true }))
         .first(),
       "an encrypted PDF must either open or tell the user why it can't",
     ).toBeAttached();
@@ -519,15 +518,10 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
   // ISSUE: opening a CORRUPTED PDF fails silently - same "No document loaded"
   // with no error feedback.
   test("opening a corrupted PDF surfaces an error", async ({ page }) => {
-    await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(import.meta.dirname, "../test-fixtures/corrupted.pdf"),
-      );
+    await showInTextEditor(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures/corrupted.pdf"),
+    );
     await expect(
       page
         .getByTestId("pdf-editor-page-0")

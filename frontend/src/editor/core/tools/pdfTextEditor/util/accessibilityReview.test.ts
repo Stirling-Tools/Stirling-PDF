@@ -69,7 +69,7 @@ describe("reviewing text that makes up a formula", () => {
 
   it("walks Next to the formula from anywhere, and stops once it is described", async () => {
     const { store, doc, pages, idOf } = await openFormulas();
-    const target = { kind: "text", id: idOf("a = b") };
+    const target = { kind: "text", id: idOf("a = b"), pageIndex: 0 };
     expect(nextNeedingAttention(doc, pages(), null)).toEqual(target);
     expect(nextNeedingAttention(doc, pages(), idOf("Where a is"))).toEqual(
       target,

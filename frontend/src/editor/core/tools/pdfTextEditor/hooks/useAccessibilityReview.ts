@@ -9,6 +9,7 @@ import {
   reviewAccessibility,
   type AccessibilityReview,
 } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 /**
  * The images and text needing attention, and a way to select the next one.
@@ -47,9 +48,10 @@ export function useAccessibilityReview(
         : `pdf-editor-run-${next.id}`;
     // A page read just now has no overlay until React commits it.
     window.requestAnimationFrame(() =>
-      document
-        .querySelector(`[data-testid="${testId}"]`)
-        ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      revealOnPage(
+        document.querySelector(`[data-testid="${testId}"]`),
+        next.pageIndex,
+      ),
     );
     return true;
   }, [store]);

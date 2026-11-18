@@ -104,6 +104,7 @@ export function reviewAccessibility(
 export interface ReviewTarget {
   kind: "image" | "text";
   id: string;
+  pageIndex: number;
 }
 
 /**
@@ -133,12 +134,16 @@ function pageItems(
   const { images, runs } = pageAttention(doc, page);
   const items = [
     ...page.images.map((image) => ({
-      target: { kind: "image" as const, id: image.id },
+      target: {
+        kind: "image" as const,
+        id: image.id,
+        pageIndex: page.pageIndex,
+      },
       actionable: isActionable(images.get(image.id) ?? null),
       bounds: image.bounds,
     })),
     ...page.runs.map((run) => ({
-      target: { kind: "text" as const, id: run.id },
+      target: { kind: "text" as const, id: run.id, pageIndex: page.pageIndex },
       actionable: runs.has(run.id),
       bounds: run.bounds,
     })),
