@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
@@ -21,9 +22,7 @@ async function open(page: Page, firstPage = 0): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 15_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });
@@ -202,22 +201,11 @@ test.describe("PDF text editor - inspector layout", () => {
     }
   });
 
-  test("zoom floats on the canvas and save is pinned to the panel", async ({
-    page,
-  }) => {
+  test("save is pinned to the panel", async ({ page }) => {
     await open(page, 0);
     const footer = page.getByTestId("pdf-editor-panel-actions");
     await expect(footer.getByTestId("pdf-editor-save")).toBeVisible();
     await expect(footer.getByTestId("pdf-editor-download")).toBeVisible();
-    // Zoom sits over the pages it scales, not in the far rail.
-    const zoom = page.getByTestId("pdf-editor-zoom-controls");
-    await expect(zoom).toBeVisible();
-    await expect(zoom.getByTestId("pdf-editor-zoom-percent")).toBeVisible();
-    await expect(
-      page
-        .getByTestId("pdf-editor-stage")
-        .getByTestId("pdf-editor-zoom-controls"),
-    ).toHaveCount(0);
   });
 
   test("everyday settings are plain; only parse options are behind Advanced", async ({

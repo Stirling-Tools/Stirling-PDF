@@ -26,6 +26,7 @@ import {
   createViewerActions,
   type PrintActions,
 } from "@editor/contexts/viewer/viewerActions";
+import { ViewerPageToolProvider } from "@editor/contexts/viewer/ViewerPageTool";
 import {
   BridgeRef,
   BridgeApiMap,
@@ -628,6 +629,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   );
 
   return (
-    <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>
+    <ViewerContext.Provider value={value}>
+      <ViewerPageToolProvider>{children}</ViewerPageToolProvider>
+    </ViewerContext.Provider>
   );
 };
