@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,7 +54,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
@@ -793,8 +796,8 @@ class ConvertPDFToPDFAMoreTest {
         }
 
         @Test
-        @DisplayName("PDF/X-1a flattens transparent pages instead of rejecting them")
-        void pdfX1aFlattensTransparency() throws Exception {
+        @DisplayName("PDF/X-1a rejects transparent pages instead of flattening them")
+        void pdfX1aRejectsTransparentPages() throws Exception {
             TempFile managed = managedTempFile();
             when(tempFileManager.createManagedTempFile(anyString())).thenReturn(managed);
 
@@ -802,23 +805,11 @@ class ConvertPDFToPDFAMoreTest {
             request.setFileInput(transparentPdfFile());
             request.setOutputFormat("pdfx-1a");
 
-            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
-            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
-                        .thenReturn(expected);
-
-                ResponseEntity<Resource> response = newController().pdfToPdfA(request);
-
-                assertThat(response).isSameAs(expected);
-                assertThat(managed.getFile()).exists();
-                try (PDDocument output = Loader.loadPDF(managed.getFile())) {
-                    assertThat(output.getVersion()).isEqualTo(1.3f);
-                    assertThat(output.getDocumentCatalog().getOutputIntents()).isNotEmpty();
-                }
-            }
+            assertThatThrownBy(() -> newController().pdfToPdfA(request))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("transparency")
+                    .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
