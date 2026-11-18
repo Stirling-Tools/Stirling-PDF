@@ -42,6 +42,20 @@ public class MergePdfsRequest extends MultiplePDFFiles {
 
     @Schema(
             description =
+                    "Flag indicating whether to interleave pages from two documents (alternate merge, as in pdfsam). If true, exactly two input files are required and pages are alternated: page 1 of file 1, one page of file 2, page 2 of file 1, and so on. Useful for merging scans where front and back sides are in two separate files. TOC generation and bookmark merging are not applied in this mode.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean alternateMerge = false;
+
+    @Schema(
+            description =
+                    "Only used with alternateMerge: walk the second document from its last page backwards instead of forwards. Useful when the back sides of a double-sided scan were captured in reverse order.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            defaultValue = "false")
+    private boolean reverseSecondDocument = false;
+
+    @Schema(
+            description =
                     "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String clientFileIds;
