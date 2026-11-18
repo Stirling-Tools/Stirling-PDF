@@ -580,7 +580,6 @@ public class EndpointConfiguration {
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
         addEndpointToGroup("Ghostscript", "compress-pdf");
-        addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
 
@@ -600,7 +599,6 @@ public class EndpointConfiguration {
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
-        addEndpointAlternative("crop", "Ghostscript");
         addEndpointAlternative("crop", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
