@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { preferenceShortcuts } from "@editor/components/shared/quickNav/preferenceShortcuts";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
 /**
@@ -9,12 +10,5 @@ import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostConte
  */
 export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
-  return [
-    {
-      id: "about",
-      label: t("settings.about.title", "About"),
-      icon: "circle-question-mark",
-      to: "/settings/about",
-    },
-  ];
+  return preferenceShortcuts(t);
 }

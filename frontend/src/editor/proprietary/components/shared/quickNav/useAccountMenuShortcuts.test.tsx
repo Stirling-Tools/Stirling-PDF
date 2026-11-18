@@ -105,6 +105,6 @@ describe("self-hosted account menu shortcuts", () => {
     state.enableLogin = false;
     state.isAdmin = true;
     state.isAnonymous = true;
-    expect(shortcutIds()).toEqual(["about"]);
+    expect(shortcutIds()).toEqual(["appearance", "hotkeys"]);
   });
 });

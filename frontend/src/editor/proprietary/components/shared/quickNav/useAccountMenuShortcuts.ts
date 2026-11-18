@@ -4,6 +4,7 @@ import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
 import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { useRosterAvailable } from "@editor/hooks/useRosterAvailable";
+import { preferenceShortcuts } from "@editor/components/shared/quickNav/preferenceShortcuts";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
 /**
@@ -21,14 +22,7 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const signedIn = Boolean(user) && !isAnonymous;
 
   if (!signedIn) {
-    return [
-      {
-        id: "about",
-        label: t("settings.about.title", "About"),
-        icon: "circle-question-mark",
-        to: "/settings/about",
-      },
-    ];
+    return preferenceShortcuts(t);
   }
 
   // The settings nav gates admin pages on this flag, not the session's.

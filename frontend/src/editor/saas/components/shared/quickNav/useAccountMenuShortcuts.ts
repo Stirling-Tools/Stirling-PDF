@@ -2,9 +2,10 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@editor/auth/UseSession";
 import { usePortalAccessState } from "@editor/hooks/usePortalAccess";
 import { HAS_PORTAL } from "@editor/routes/hasPortal";
+import { preferenceShortcuts } from "@editor/components/shared/quickNav/preferenceShortcuts";
 import type { QuickNavAccountShortcut } from "@editor/contexts/QuickNavHostContext";
 
-/** SaaS: users and billing, which a guest has none of; Settings opens on the account. */
+/** SaaS: users, billing and keys, which a guest has none of; a guest gets their own preferences. */
 export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { t } = useTranslation();
   const { user, isAnonymous } = useAuth();
@@ -12,7 +13,7 @@ export function useAccountMenuShortcuts(): QuickNavAccountShortcut[] {
   const { granted: portalAccess } = usePortalAccessState();
 
   if (!user || isAnonymous) {
-    return [];
+    return preferenceShortcuts(t);
   }
 
   return [

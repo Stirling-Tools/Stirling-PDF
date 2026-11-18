@@ -42,9 +42,9 @@ describe("SaaS account menu shortcuts", () => {
     expect(shortcutIds()).toEqual(["users", "billing", "api-keys"]);
   });
 
-  it("offers a guest no shortcuts beyond Settings", () => {
+  it("offers a guest only their own preferences", () => {
     auth.isAnonymous = true;
-    expect(shortcutIds()).toEqual([]);
+    expect(shortcutIds()).toEqual(["appearance", "hotkeys"]);
   });
 
   it("points every shortcut at a section the SaaS settings page really has", () => {
