@@ -24,6 +24,7 @@ import BadgeDollarSign from "lucide-static/icons/badge-dollar-sign.svg?react";
 import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
 import Blocks from "lucide-static/icons/blocks.svg?react";
+import Bold from "lucide-static/icons/bold.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
 import Book from "lucide-static/icons/book.svg?react";
 import BookOpen from "lucide-static/icons/book-open.svg?react";
@@ -458,6 +459,7 @@ export const ICONS = {
   banknote: { Component: Banknote, kind: "lucide" },
   bell: { Component: Bell, kind: "lucide" },
   blocks: { Component: Blocks, kind: "lucide" },
+  bold: { Component: Bold, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },
   book: { Component: Book, kind: "lucide" },
   "book-open": { Component: BookOpen, kind: "lucide" },

@@ -5,7 +5,7 @@ import {
 } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import {
   useEditorSelection,
-  useHighlightedRunId,
+  useFindMatch,
 } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
 import { pageViewHandlers } from "@editor/tools/pdfTextEditor/util/pageViewHandlers";
@@ -104,7 +104,7 @@ function EditablePage({
   const widthMode = useEditorState(store, (s) => s.widthMode);
   const showRulers = useEditorState(store, (s) => s.showRulers);
   const selection = useEditorSelection(store);
-  const highlightedRunId = useHighlightedRunId(store);
+  const findMatch = useFindMatch(store);
 
   // PageView is memoised: hand it only this page's share of the selection, in
   // arrays that keep their identity while that share is unchanged, so a click
@@ -112,7 +112,7 @@ function EditablePage({
   const runIds = useOwnIds(selection.runIds, page.runs);
   const imageIds = useOwnIds(selection.imageIds, page.images);
   const shapeIds = useOwnIds(selection.shapeIds, page.shapes);
-  const ownsHighlight = page.runs.some((r) => r.id === highlightedRunId);
+  const ownsMatch = page.runs.some((r) => r.id === findMatch?.runId);
   const ownsFormField = (page.annotations ?? []).some(
     (a) => a.id === selection.formFieldId,
   );
@@ -129,8 +129,8 @@ function EditablePage({
       selectedRunIds={runIds}
       selectedImageIds={imageIds}
       selectedShapeIds={shapeIds}
+      findMatch={ownsMatch ? findMatch : null}
       selectedFormFieldId={ownsFormField ? selection.formFieldId : null}
-      highlightedRunId={ownsHighlight ? highlightedRunId : null}
       selectedTextRange={
         runIds.length === 1 && selection.runIds.length === 1
           ? selection.textRange

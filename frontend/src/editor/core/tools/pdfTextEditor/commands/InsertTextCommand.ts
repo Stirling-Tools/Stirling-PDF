@@ -94,7 +94,9 @@ export class InsertTextCommand implements Command {
         }
       : { a: 1, b: 0, c: 0, d: 1, e: this.x, f: this.y };
 
-    const runId = `p${page.index}-new-${page.runs.length}-${objPtr}`;
+    // Kept across redo: later steps that edit this text find it by this id.
+    const runId =
+      this.createdRunId ?? `p${page.index}-new-${page.runs.length}-${objPtr}`;
     const run = new TextRun({
       id: runId,
       pageIndex: page.index,

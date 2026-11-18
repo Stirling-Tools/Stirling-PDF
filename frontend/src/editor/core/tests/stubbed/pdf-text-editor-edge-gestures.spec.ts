@@ -79,10 +79,13 @@ test.describe("PDF text editor - edge gestures", () => {
     const before = await shapeOf(page, "Downloads");
     const box = await boxOf(page, "Downloads");
 
-    // Grab the top edge - the frame, not the text interior.
-    await page.mouse.move(box.x + box.width / 2, box.y + 2);
+    // Grab the frame just below the box, not the text interior: the run
+    // above overlaps this one's top edge, and its text wins there.
+    const below = box.y + box.height + 3;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.move(box.x + box.width / 2, below, { steps: 4 });
     await page.mouse.down();
-    await page.mouse.move(box.x + box.width / 2 + 40, box.y + 2, { steps: 8 });
+    await page.mouse.move(box.x + box.width / 2 + 40, below, { steps: 8 });
     await page.mouse.up();
     await page.waitForTimeout(400);
 
@@ -134,7 +137,8 @@ test.describe("PDF text editor - edge gestures", () => {
     const before = await textOf(page, "Open Source");
     const box = await boxOf(page, "Open Source");
 
-    await page.mouse.move(box.x + 2, box.y + box.height / 2);
+    await page.mouse.move(box.x + 10, box.y + box.height / 2);
+    await page.mouse.move(box.x - 3, box.y + box.height / 2, { steps: 4 });
     await page.mouse.down();
     await page.mouse.move(box.x + 40, box.y + box.height / 2, { steps: 10 });
     await page.mouse.up();
@@ -153,7 +157,16 @@ test.describe("PDF text editor - edge gestures", () => {
     const before = await textOf(page, "Open Source");
     const box = await boxOf(page, "Open Source");
 
-    await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const handle = await page
+      .locator('[data-testid^="pdf-editor-width-handle-"]')
+      .boundingBox();
+    if (!handle) throw new Error("no width handle on the hovered run");
+    await page.mouse.move(
+      handle.x + handle.width / 2,
+      handle.y + handle.height / 2,
+      { steps: 4 },
+    );
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2, {
       steps: 10,
