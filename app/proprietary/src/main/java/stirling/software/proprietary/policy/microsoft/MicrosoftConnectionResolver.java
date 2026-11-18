@@ -1,0 +1,53 @@
+package stirling.software.proprietary.policy.microsoft;
+
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
+import stirling.software.proprietary.connectedaccount.CloudProvider;
+import stirling.software.proprietary.connectedaccount.ConnectedAccount;
+import stirling.software.proprietary.connectedaccount.ConnectedAccountAccess;
+import stirling.software.proprietary.integration.model.IntegrationType;
+import stirling.software.proprietary.integration.service.ConnectionLookup;
+import stirling.software.proprietary.policy.remote.LocationOptions;
+
+@Service
+@RequiredArgsConstructor
+public class MicrosoftConnectionResolver {
+
+    private final ConnectionLookup connections;
+    private final ConnectedAccountAccess accountAccess;
+
+    public MicrosoftDriveConfig resolve(
+            Map<String, Object> options, MicrosoftDrive expected, String owner) {
+        if (ConnectedAccountAccess.usesAccount(options)) {
+            ConnectedAccount account =
+                    accountAccess.require(options, CloudProvider.MICROSOFT, owner);
+            return MicrosoftDriveConfig.forAccount(
+                    expected == null ? MicrosoftDrive.ONEDRIVE : expected,
+                    account.getId(),
+                    options);
+        }
+        MicrosoftDriveConfig config =
+                MicrosoftDriveConfig.fromConnection(
+                        connections.load(
+                                options,
+                                IntegrationType.MICROSOFT_365,
+                                "Microsoft 365",
+                                LocationOptions.PER_USE_KEYS,
+                                owner));
+        if (expected != null && config.drive() != expected) {
+            throw new IllegalArgumentException(
+                    "a "
+                            + expected.sourceType()
+                            + " location needs a "
+                            + expected.sourceType()
+                            + " connection, not a "
+                            + config.drive().sourceType()
+                            + " one");
+        }
+        return config;
+    }
+}

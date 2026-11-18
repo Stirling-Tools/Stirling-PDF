@@ -3,6 +3,11 @@ import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 export const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 255 };
 export const WHITE: RGBA = { r: 255, g: 255, b: 255, a: 255 };
 
+/** Rec. 601 luma, 0-255 for 0-255 channels. */
+export function luma(r: number, g: number, b: number): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
 /** Parse a `#rrggbb`, `#rrggbbaa`, or `rgb(...)` string. Returns null on failure. */
 export function parseCssColor(value: string): RGBA | null {
   const trimmed = value.trim();

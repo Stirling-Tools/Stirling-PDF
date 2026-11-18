@@ -47,7 +47,7 @@ export class InsertTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
 
-    // Base-14 (WinAnsi) can't render >U+00FF.
+    // Base-14 can only render WinAnsi.
     const sanitized = sanitizeForBase14(this.text);
     let objPtr = 0;
     if ([...this.text].length > [...sanitized].length) {

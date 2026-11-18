@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.policy.UnreadableRowLog;
 import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
@@ -34,6 +35,7 @@ public class JpaPolicyStore implements PolicyStore {
 
     private final PolicyRepository repository;
     private final ObjectMapper objectMapper;
+    private final UnreadableRowLog unreadableRows = new UnreadableRowLog(log, "policy");
 
     @Override
     @Transactional
@@ -165,18 +167,16 @@ public class JpaPolicyStore implements PolicyStore {
             // A blob written by an older version won't carry fields added since (e.g. required,
             // icon). Default absent primitives rather than rejecting the whole policy, so upgrades
             // don't drop existing pipelines.
-            return Optional.of(
+            Policy policy =
                     objectMapper
                             .readerFor(Policy.class)
                             .without(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-                            .readValue(node));
+                            .readValue(node);
+            Optional<Policy> result = Optional.of(policy);
+            unreadableRows.readable(entity.getId());
+            return result;
         } catch (Exception e) {
-            log.error(
-                    "Skipping unreadable policy id={} name={}: stored JSON could not be parsed"
-                            + " ({}). Likely written by a different app version or encryption key.",
-                    entity.getId(),
-                    entity.getName(),
-                    e.getMessage());
+            unreadableRows.skipped(entity.getId(), entity.getName(), entity.getPolicyJson(), e);
             return Optional.empty();
         }
     }
