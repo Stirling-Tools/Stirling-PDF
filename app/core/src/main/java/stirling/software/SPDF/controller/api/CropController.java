@@ -32,6 +32,7 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.exception.PdfCorruptException;
 import stirling.software.jpdfium.exception.PdfPasswordException;
+import stirling.software.jpdfium.exception.RedactIncompleteException;
 import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.SaveOptions;
@@ -205,8 +206,7 @@ public class CropController {
                                         image,
                                         page,
                                         PdfPageGeometry.getRotation(document, i));
-                        // Non-strict: a word or object crossing the crop edge survives whole.
-                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
+                        applyCrop(document, i, crop, true);
                     }
                 }
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
@@ -236,18 +236,7 @@ public class CropController {
             try (PdfDocument document = openInput(request)) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
-                    if (request.isRemoveDataOutsideCrop()) {
-                        // Non-strict: content crossing the crop edge is preserved and clipped.
-                        PdfPageGeometry.cropAndRemoveContent(document, i, crop);
-                    } else {
-                        try (PdfPage page = document.page(i)) {
-                            page.setMediaBox(crop);
-                            page.setCropBox(crop);
-                            page.setTrimBox(crop);
-                            page.setBleedBox(crop);
-                            page.setArtBox(crop);
-                        }
-                    }
+                    applyCrop(document, i, crop, request.isRemoveDataOutsideCrop());
                 }
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             }
@@ -275,6 +264,34 @@ public class CropController {
     private PdfDocument openInput(CropPdfForm request) throws IOException {
         File tempInput = tempFileManager.convertMultipartFileToFile(request.getFileInput());
         return PdfDocument.open(tempInput.toPath());
+    }
+
+    /**
+     * Crops one page. Removal runs non-strict, so content crossing the crop edge survives whole
+     * inside the crop; when the post-removal audit still finds content it could not remove (a
+     * shared image straddling the edge on JPDFium ≤ 1.3.1), the page keeps the plain box crop
+     * instead of failing the request — the pre-JPDFium path served these pages the same way.
+     */
+    private static void applyCrop(PdfDocument document, int pageIndex, Rect crop, boolean remove) {
+        if (remove) {
+            try {
+                PdfPageGeometry.cropAndRemoveContent(document, pageIndex, crop);
+                return;
+            } catch (RedactIncompleteException e) {
+                log.warn(
+                        "page {}: content outside the crop could not be removed, keeping the crop"
+                                + " box only",
+                        pageIndex + 1,
+                        e);
+            }
+        }
+        try (PdfPage page = document.page(pageIndex)) {
+            page.setMediaBox(crop);
+            page.setCropBox(crop);
+            page.setTrimBox(crop);
+            page.setBleedBox(crop);
+            page.setArtBox(crop);
+        }
     }
 
     private static String outputFilename(CropPdfForm request) {
