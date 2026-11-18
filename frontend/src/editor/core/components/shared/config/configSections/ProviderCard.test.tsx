@@ -84,3 +84,36 @@ describe("ProviderCard copy field", () => {
     expect(onSave).toHaveBeenCalledWith({ clientId: "abc" });
   });
 });
+
+describe("ProviderCard setup steps", () => {
+  const stepsButton = { name: "admin.settings.connections.setupSteps" };
+
+  function renderWithSteps(setupSteps?: string[]) {
+    render(
+      <MantineProvider>
+        <ProviderCard
+          provider={{ ...provider, setupSteps }}
+          isConfigured={false}
+        />
+      </MantineProvider>,
+    );
+  }
+
+  it("lists the steps in order behind an info button", async () => {
+    renderWithSteps(["Register an app", "Paste its client ID"]);
+
+    fireEvent.focus(screen.getByRole("button", stepsButton));
+
+    const steps = await screen.findAllByRole("listitem");
+    expect(steps.map((step) => step.textContent)).toEqual([
+      "Register an app",
+      "Paste its client ID",
+    ]);
+  });
+
+  it("shows no info button for a provider without steps", () => {
+    renderWithSteps(undefined);
+
+    expect(screen.queryByRole("button", stepsButton)).toBeNull();
+  });
+});
