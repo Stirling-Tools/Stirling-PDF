@@ -24,12 +24,13 @@ import {
 import { ParagraphGrouper } from "@editor/tools/pdfTextEditor/pdfium/ParagraphGrouper";
 import { PdfiumAnnotationReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumAnnotationReader";
 import { primeFontGlyphMap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
-import type {
-  Affine,
-  GroupingMode,
-  PageRect,
-  PageRuleSnapshot,
-  RGBA,
+import {
+  RENDER_MODE_INVISIBLE,
+  type Affine,
+  type GroupingMode,
+  type PageRect,
+  type PageRuleSnapshot,
+  type RGBA,
 } from "@editor/tools/pdfTextEditor/types";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import { hasRtl } from "@editor/tools/pdfTextEditor/util/bidi";
@@ -118,6 +119,11 @@ export class PdfiumTextReader {
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
+      markHiddenText(runs, [
+        ...images.map((image) => image.bounds),
+        ...shapes.map((shape) => shape.bounds),
+        ...fills,
+      ]);
       groupAndMeasure(doc, page, mode, textPagePtr, companions);
     } finally {
       closeTextPage(m, textPagePtr);
@@ -156,6 +162,11 @@ export class PdfiumTextReader {
           return [run];
         }),
       );
+      markHiddenText(scratch.runs, [
+        ...page.images.map((image) => image.bounds),
+        ...page.shapes.map((shape) => shape.bounds),
+        ...page.fills,
+      ]);
       groupAndMeasure(doc, scratch, mode, textPagePtr, new Map());
     } finally {
       closeTextPage(m, textPagePtr);
@@ -1048,6 +1059,26 @@ function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
 
 /** Render modes that actually put stroke ink on the page. */
 const STROKING_MODES = new Set([1, 2, 5, 6]);
+
+// OCR text over a scan is edited by redrawing the ink behind it, a picture or
+// letters drawn as outlines; invisible text with nothing drawn behind it has no
+// ink to redraw and is edited as text.
+function markHiddenText(
+  runs: readonly TextRun[],
+  drawn: readonly PageRect[],
+): void {
+  for (const run of runs) {
+    if (run.renderMode !== RENDER_MODE_INVISIBLE) continue;
+    const r = run.bounds;
+    run.hiddenText = !drawn.some(
+      (b) =>
+        b.x < r.x + r.width &&
+        b.x + b.width > r.x &&
+        b.y < r.y + r.height &&
+        b.y + b.height > r.y,
+    );
+  }
+}
 
 // Outline colour and width, or null when the object does not stroke. PDFium
 // reports a stroke colour for every text object, so the render mode decides.

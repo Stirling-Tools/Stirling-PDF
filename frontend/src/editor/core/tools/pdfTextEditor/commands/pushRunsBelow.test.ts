@@ -238,3 +238,23 @@ describe("runsPulledBack", () => {
     expect(runsPulledBack(p, e, 1).moves).toEqual([{ runId: "far", dy: 15 }]);
   });
 });
+
+describe("invisible text", () => {
+  const invisible = (hiddenText: boolean) => {
+    const r = run("invisible", 50, 484, 300);
+    Object.assign(r, { renderMode: 3, hiddenText });
+    return r;
+  };
+
+  it("moves invisible text with no picture behind it", () => {
+    expect(
+      runsPushedBelow(page([edited(), invisible(true)]), edited(), 500).runIds,
+    ).toEqual(["invisible"]);
+  });
+
+  it("leaves an OCR layer over a scan where it is", () => {
+    expect(
+      runsPushedBelow(page([edited(), invisible(false)]), edited(), 500).runIds,
+    ).toEqual([]);
+  });
+});

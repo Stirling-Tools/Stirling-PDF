@@ -79,6 +79,10 @@ const PICK_FAILURE_TEXT: Record<FontPickFailure, [string, string]> = {
     "pdfTextEditor.fontPicker.missingGlyphs",
     "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged.",
   ],
+  documentFontCannotDraw: [
+    "pdfTextEditor.fontPicker.documentFontCannotDraw",
+    "The editor can't draw this text in the document's own font, so it was left in its current font.",
+  ],
   someLeftUnchanged: [
     "pdfTextEditor.fontPicker.someLeftUnchanged",
     "This font does not have the characters for some of the selected text. That text was left unchanged.",

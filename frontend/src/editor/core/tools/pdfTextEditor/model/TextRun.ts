@@ -59,6 +59,7 @@ export class TextRun {
   // PDF text render mode (Tr): 0 fill, 1/2 stroke variants, 3 invisible (OCR
   // layers over scans), 4-7 clipping.
   renderMode: number;
+  hiddenText: boolean;
   // Glyph outline (PDF stroke state), carried even when the render mode hides
   // it, so a re-emit cannot silently drop an outlined heading's outline.
   stroke: RGBA | null;
@@ -139,7 +140,10 @@ export class TextRun {
 
   /** True when an edit of the text would be refused; invisible OCR text is redrawn from its scan, not from its reading order. */
   get textReadOnly(): boolean {
-    return this.readingOrderUnsure && this.renderMode !== RENDER_MODE_INVISIBLE;
+    return (
+      this.readingOrderUnsure &&
+      (this.renderMode !== RENDER_MODE_INVISIBLE || this.hiddenText)
+    );
   }
 
   constructor(
@@ -160,6 +164,7 @@ export class TextRun {
     this.fill = init.fill;
     this.fontSubset = init.fontSubset;
     this.renderMode = init.renderMode ?? 0;
+    this.hiddenText = init.hiddenText ?? false;
     this.stroke = init.stroke ?? null;
     this.strokeWidth = init.strokeWidth ?? 0;
     this.charStartsX = null;
@@ -219,6 +224,7 @@ export class TextRun {
         this.scanEdit?.block?.style.family,
       documentFontId: this.documentFont?.fontId,
       renderMode: this.renderMode || undefined,
+      hiddenText: this.hiddenText || undefined,
       stroke: this.stroke ? { ...this.stroke } : undefined,
       strokeWidth: this.strokeWidth || undefined,
       charStartsX: this.positionsCurrent()

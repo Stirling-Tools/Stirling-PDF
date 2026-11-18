@@ -68,6 +68,7 @@ export type FontPickFailure =
   | "embedFailed"
   | "noGlyphs"
   | "missingGlyphs"
+  | "documentFontCannotDraw"
   | "someLeftUnchanged";
 
 interface FamilyChange {
@@ -82,6 +83,7 @@ interface FamilyChangeOutcome {
   applied: number;
   undrawable: number;
   wouldLoseText: number;
+  notRestored: number;
   unshapeable: number;
 }
 
@@ -318,6 +320,7 @@ export function useSelectionActions(store: EditorStore) {
         applied: 0,
         undrawable: shapeable.length - drawable.length,
         wouldLoseText: 0,
+        notRestored: 0,
         unshapeable: changes.length - shapeable.length,
       };
       if (doc) await loadScriptFacesFor(doc, drawable);
@@ -331,12 +334,17 @@ export function useSelectionActions(store: EditorStore) {
             .filter((change) => applies(change.runId))
             .map(familyCommand);
           const open = store.document;
-          const safe = open
-            ? commands.filter((command) => !command.wouldLoseText(open))
-            : commands;
-          outcome.applied = safe.length;
-          outcome.wouldLoseText = commands.length - safe.length;
-          return safe;
+          const refusals = commands.map((command) =>
+            open ? command.refusal(open) : null,
+          );
+          outcome.applied = refusals.filter((r) => r === null).length;
+          outcome.wouldLoseText = refusals.filter(
+            (r) => r === "losesText",
+          ).length;
+          outcome.notRestored = refusals.filter(
+            (r) => r === "notRestored",
+          ).length;
+          return commands.filter((_, i) => refusals[i] === null);
         },
       );
       return outcome;
@@ -401,11 +409,12 @@ export function useSelectionActions(store: EditorStore) {
         )
           change.family = family;
       }
-      const { applied, undrawable, wouldLoseText, unshapeable } =
+      const { applied, undrawable, wouldLoseText, notRestored, unshapeable } =
         await dispatchFamilyChanges(stillApplies, changes, fit);
       if (unshapeable > 0) return "needsShaping";
-      if (undrawable + wouldLoseText === 0) return null;
+      if (undrawable + wouldLoseText + notRestored === 0) return null;
       if (applied > 0) return "someLeftUnchanged";
+      if (notRestored > 0) return "documentFontCannotDraw";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
     [store, forEachSelectedRun, claimFontChange, dispatchFamilyChanges],

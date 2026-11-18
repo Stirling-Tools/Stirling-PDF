@@ -75,6 +75,7 @@ import {
   drawInFont,
   emitSearchable,
   invisibleText,
+  lettersRight,
   pasteImage,
   wordGap,
   type Canvas,
@@ -175,8 +176,11 @@ export interface ScanEditState {
   typedFromScan?: boolean;
 }
 
-export function isScanRun(run: { renderMode?: number }): boolean {
-  return run.renderMode === RENDER_MODE_INVISIBLE;
+export function isScanRun(run: {
+  renderMode?: number;
+  hiddenText?: boolean;
+}): boolean {
+  return run.renderMode === RENDER_MODE_INVISIBLE && !run.hiddenText;
 }
 
 function emptyState(lines: ScanLine[], fontPtr: number): ScanEditState {
@@ -792,14 +796,27 @@ function linePitch(state: ScanEditState, style: ScanStyle): number {
 }
 
 /** Typical gap between neighbouring words in the block. */
+const BOX_TOUCH_EM = 0.1;
+
 function wordSpace(state: ScanEditState, style: ScanStyle): number {
   const gaps = state.lines.flatMap((l) =>
     l.words
       .slice(1)
-      .map((w, i) => w.x - l.words[i].right)
+      .map(
+        (w, i) => w.x - lettersRight({ ...l.words[i], text: boxedText(l, i) }),
+      )
       .filter((g) => g > 0),
   );
   return gaps.length ? median(gaps) : style.fontSize * 0.28;
+}
+
+// A word's text with its trailing space only when its box holds that space,
+// as Tesseract's does: such a box reaches the next word's.
+function boxedText(line: ScanLine, w: number): string {
+  const word = line.words[w];
+  const next = line.words[w + 1];
+  const reaches = next && next.x < word.right + BOX_TOUCH_EM * word.fontSize;
+  return reaches ? word.text : word.text.trimEnd() || word.text;
 }
 
 function fallbackStyle(
@@ -1365,7 +1382,7 @@ function renderUprightScanEdit(
     });
     emitSearchable(
       canvas,
-      sw.text.trimEnd() || sw.text,
+      boxedText(state.lines[k.word.line], k.word.index),
       { left: k.x, right: k.x + sw.right - sw.x },
       sw.baseline + k.baseline - lineBase(k.word.line),
       sw.fontSize,
@@ -1429,7 +1446,7 @@ function syncOriginalWords(
       } else if (!gone.has(key) && state.lifted.has(key)) {
         const back = invisibleText(
           canvas,
-          word.text.trimEnd() || word.text,
+          boxedText(line, wi),
           { left: word.x, right: word.right },
           word.baseline,
           word.fontSize,
@@ -1462,7 +1479,7 @@ function bringWordsToPage(canvas: Canvas, state: ScanEditState): void {
       );
       const drawn = invisibleText(
         canvas,
-        word.text.trimEnd() || word.text,
+        boxedText(line, wi),
         { left: word.x, right: word.right },
         word.baseline,
         word.fontSize,

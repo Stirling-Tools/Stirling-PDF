@@ -218,20 +218,23 @@ export class SetFontFamilyCommand implements Command {
     page.markNeedsGenerate();
   }
 
-  /**
-   * Whether applying this would leave a letter of the run undrawn. Found by
-   * drawing the run beside itself and taking that back, so the answer is the
-   * emit's own and the page is left as it was.
-   */
   wouldLoseText(doc: EditorDocument): boolean {
+    return this.refusal(doc) === "losesText";
+  }
+
+  /**
+   * Why applying this would be refused, or null when it would apply: a letter
+   * of the run left undrawn, or a restore the document font cannot draw (a
+   * Type 3 font with no way to encode new text, say). Found by drawing the run
+   * beside itself and taking that back, so the answer is the emit's own and
+   * the page is left as it was.
+   */
+  refusal(doc: EditorDocument): "losesText" | "notRestored" | null {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run || isScanRun(run) || run.scanEdit) return false;
-    if (
-      isDocumentFontId(this.nextFamily) &&
-      run.documentFont?.fontId !== this.nextFamily
-    )
-      return false;
+    if (!run || isScanRun(run) || run.scanEdit) return null;
+    const restoring = isDocumentFontId(this.nextFamily);
+    if (restoring && run.documentFont?.fontId !== this.nextFamily) return null;
     const emitLines = linesToEmit(run, readRunTags(doc, page, run));
     const keptFonts = this.keptFontSpans(doc, page, run, emitLines);
     warmOnPageAdvances(doc.module, page.pagePtr);
@@ -239,10 +242,16 @@ export class SetFontFamilyCommand implements Command {
     const dropped = droppedCharsOf(() => {
       emitted = this.emit(doc, page, run, emitLines, keptFonts);
     });
+    const restoreFont = documentFontHandle(this.nextFamily);
+    let drawsRestoreFont = false;
     for (const line of emitted)
-      for (const ptr of line.ptrs)
+      for (const ptr of line.ptrs) {
+        if (doc.module.FPDFTextObj_GetFont(ptr) === restoreFont)
+          drawsRestoreFont = true;
         removeAndDestroyObject(doc.module, page.pagePtr, ptr);
-    return losesLetters(dropped);
+      }
+    if (losesLetters(dropped)) return "losesText";
+    return restoring && !drawsRestoreFont ? "notRestored" : null;
   }
 
   private emit(

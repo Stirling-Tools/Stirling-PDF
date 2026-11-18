@@ -506,7 +506,7 @@ export class EditTextCommand implements Command {
     const alreadyBase14 = /^base14:/.test(run.fontId);
     // Invisible OCR text over a scan: rewrite the whole run visibly so the
     // scanned ink can be covered, never patch its hidden objects in place.
-    const scanText = run.renderMode === RENDER_MODE_INVISIBLE;
+    const scanText = isScanRun(run);
     // A run rotated within the page can't use the surgical partial/paragraph
     // paths - those assume horizontal layout.
     const isRotated = !!rotationFromMatrix(run.matrix);

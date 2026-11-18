@@ -3,9 +3,10 @@ import path from "node:path";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { get, losesText, loadScriptScanFaces } = vi.hoisted(() => ({
+const { get, losesText, notRestored, loadScriptScanFaces } = vi.hoisted(() => ({
   get: vi.fn(),
   losesText: new Set<string>(),
+  notRestored: new Set<string>(),
   loadScriptScanFaces: vi.fn(async (_scripts: readonly string[]) => {}),
 }));
 vi.mock(
@@ -22,6 +23,11 @@ vi.mock("@editor/tools/pdfTextEditor/commands/SetFontFamilyCommand", () => ({
 
     wouldLoseText(): boolean {
       return losesText.has(this.opts.runId);
+    }
+
+    refusal(): "losesText" | "notRestored" | null {
+      if (this.wouldLoseText()) return "losesText";
+      return notRestored.has(this.opts.runId) ? "notRestored" : null;
     }
   },
 }));
@@ -235,6 +241,7 @@ describe("useSelectionActions font changes", () => {
     resetDocumentFontStyles();
     _clearFontNameCacheForTests();
     losesText.clear();
+    notRestored.clear();
     loadScriptScanFaces.mockClear();
   });
 
@@ -647,6 +654,19 @@ describe("useSelectionActions font changes", () => {
     await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(2));
     expect((dispatch.mock.calls[1][0] as Recorded).commands).toHaveLength(2);
     expect(setError).toHaveBeenCalledTimes(1);
+  });
+
+  it("says why when the document font cannot draw the text it is put back on", async () => {
+    notRestored.add("a");
+    const { store, dispatch } = fakeStore(
+      [run("a", "base14:Helvetica", "Time (s)")],
+      ["a"],
+    );
+
+    expect(await actionsFor(store).changeFontFamily("pdf:7:DejaVuSans")).toBe(
+      "documentFontCannotDraw",
+    );
+    expect(dispatchedChanges(dispatch)).toEqual([]);
   });
 
   it("gives a run the plain family when the italic cut has none of its letters", async () => {
