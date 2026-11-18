@@ -44,6 +44,10 @@ const INTRUDER_MIN_CHARS = 6;
 const LINE_INK_BELOW_EM = 0.25;
 const LINE_INK_ABOVE_EM = 0.8;
 const INSET_EDGE_SLACK_PT = 0.5;
+// Two text stacks side by side, each on its own line pitch, pair lines into rows only by chance: rows hold one column's line as often as both, and the paired lines sit at a different height to each other row to row, where a table's cells, even skewed on a scan, keep one offset.
+const STACK_LONE_ROWS_MIN = 2;
+const STACK_OFFSET_SPREAD_EM = 0.25;
+const STACK_OFFSET_SAMPLES_MIN = 3;
 
 export const DEFAULT_TABLE_OPTIONS: TableDetectionOptions = {
   rowTolFactor: 0.6,
@@ -759,13 +763,15 @@ function buildTable(
   if (rows < opts.minRows || cols < opts.minCols) return null;
 
   // Inner edges sit at the midpoint of the whitespace between tracks. The outer
-  // ones get the SAME half-gap as a margin: taking the glyph extent instead
+  // ones get the same half-gap as a margin: taking the glyph extent instead
   // makes the boundary graze the first and last row's text, which reads as a
   // misdrawn grid on a table that has no printed border to check it against.
+  // Capped, because half of a gutter that spans most of the page puts the
+  // table's edge past the page's.
   const colGaps: number[] = [];
   for (let i = 1; i < cols; i++)
     colGaps.push(bands[i].left - bands[i - 1].right);
-  const colPad = Math.max(1, median(colGaps) / 2);
+  const colPad = Math.max(1, Math.min(median(colGaps) / 2, 2 * snapTol));
   const derivedCols: number[] = [bands[0].left - colPad];
   for (let i = 1; i < cols; i++) {
     derivedCols.push((bands[i - 1].right + bands[i].left) / 2);
@@ -887,6 +893,7 @@ function buildTable(
   // Rows the page rules apart are a table however long their cells run.
   if (!snappedRows.drawn && proseColumns(columns) > PROSE_COLUMNS_MAX)
     return null;
+  if (!snappedRows.drawn && sideBySideStacks(block, colEdges)) return null;
 
   const bounds: PageRect = {
     x: colEdges[0],
@@ -919,6 +926,50 @@ function buildTable(
     columnStyles: [],
     headerStyle: null,
   };
+}
+
+function sideBySideStacks(block: Row[], colEdges: number[]): boolean {
+  const loneRows = new Map<number, number>();
+  const offsets = new Map<number, number[]>();
+  let pairedRows = 0;
+  for (const row of block) {
+    const firstByCol = new Map<number, Cand>();
+    for (const c of row.cands) {
+      const col = edgeIndex(colEdges, c.cx);
+      if (!firstByCol.has(col)) firstByCol.set(col, c);
+    }
+    const cols = [...firstByCol.keys()].sort((a, b) => a - b);
+    if (cols.length === 1) {
+      loneRows.set(cols[0], (loneRows.get(cols[0]) ?? 0) + 1);
+      continue;
+    }
+    pairedRows++;
+    for (let i = 1; i < cols.length; i++) {
+      const offset =
+        firstByCol.get(cols[i])!.baseline -
+        firstByCol.get(cols[i - 1])!.baseline;
+      const list = offsets.get(cols[i - 1]) ?? [];
+      list.push(offset);
+      offsets.set(cols[i - 1], list);
+    }
+  }
+  const lone = [...loneRows.values()];
+  const stackedColumns = lone.filter((n) => n >= STACK_LONE_ROWS_MIN).length;
+  const loneTotal = lone.reduce((sum, n) => sum + n, 0);
+  if (stackedColumns < 2 || loneTotal <= pairedRows) return false;
+  const em = median(block.flatMap((row) => row.cands.map((c) => c.height)));
+  return [...offsets.values()].some(
+    (list) =>
+      list.length >= STACK_OFFSET_SAMPLES_MIN &&
+      spread(list) > STACK_OFFSET_SPREAD_EM * em,
+  );
+}
+
+function spread(values: number[]): number {
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  return Math.sqrt(
+    values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length,
+  );
 }
 
 function proseColumns(columns: Cand[][]): number {

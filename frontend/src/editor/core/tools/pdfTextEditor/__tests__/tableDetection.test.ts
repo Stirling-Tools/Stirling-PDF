@@ -851,6 +851,54 @@ describe("detectTables - layouts that only look like a grid", () => {
     expect(detectTables(runs, 0)).toEqual([]);
   });
 
+  const line = (x: number, y: number, text: string) =>
+    run(x, y, 120, text, { bounds: { x, y, width: 120, height: 6 } });
+
+  it("does not pair two blocks of lines that sit side by side on their own pitches", () => {
+    const left = Array.from({ length: 14 }, (_, i) =>
+      line(50, 700 - i * 11, `Left block line ${i}`),
+    );
+    const right = Array.from({ length: 11 }, (_, i) =>
+      line(320, 702 - i * 14, `Right block line ${i}`),
+    );
+
+    expect(detectTables([...left, ...right], 0)).toEqual([]);
+  });
+
+  it("keeps a table whose cells wrap onto extra lines in either column", () => {
+    const rows: [string, string][] = [
+      ["Item", "Notes"],
+      ["Widget", "Fits the small frame"],
+      ["", "and the large one"],
+      ["Gadget with a", "Ships flat"],
+      ["long name", ""],
+      ["Sprocket", "Spare part"],
+      ["", "for the gadget"],
+      ["Bracket for", "Wall mount"],
+      ["the wall", ""],
+    ];
+    const runs = rows.flatMap(([a, b], i) =>
+      [a && line(50, 700 - i * 11, a), b && line(320, 701 - i * 11, b)].filter(
+        (r): r is TextRunSnapshot => !!r,
+      ),
+    );
+
+    expect(detectTables(runs, 0)).toHaveLength(1);
+  });
+
+  it("keeps a table's edge near its text when its columns sit far apart", () => {
+    const runs = [
+      line(50, 700, "Declared interest"),
+      line(480, 700, "Declared value"),
+      line(50, 690, "in timely delivery"),
+      line(480, 690, "per the consignor"),
+    ];
+    const [table] = detectTables(runs, 0);
+
+    expect(table.colEdges[0]).toBeGreaterThan(30);
+    expect(table.colEdges[table.cols]).toBeLessThan(620);
+  });
+
   it("keeps a table of long descriptions whose rows the page rules apart", () => {
     const runs = grid(
       [50, 320],
