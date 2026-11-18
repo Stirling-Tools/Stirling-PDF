@@ -87,6 +87,10 @@ import { humanizeOperation } from "@processor/components/pipelines/pipelineOpera
 import { canonicalPipelineIconKey } from "@processor/components/pipelines/pipelineIcon";
 import { PipelineCreateHeader } from "@processor/components/pipelines/PipelineCreateHeader";
 import { PipelineEditHeader } from "@processor/components/pipelines/PipelineEditHeader";
+import { PublishFlowModal } from "@processor/components/store/PublishFlowModal";
+import { useStoreAvailable } from "@processor/hooks/useStoreAvailable";
+import { useConnectGate } from "@processor/hooks/useConnectGate";
+import { alert as showToast } from "@editor/components/toast";
 import { PipelineGraphToolbar } from "@processor/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@processor/components/pipelines/PipelineInspector";
 import { PipelineDefinitionModal } from "@processor/components/pipelines/PipelineDefinitionModal";
@@ -316,6 +320,12 @@ export function PipelineBuilder() {
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
+  // Publish to store works on the saved record, so it is offered only where the store is reachable
+  // and opens only when nothing is left unsaved (the store copies what the server has).
+  const storeAvailable = useStoreAvailable();
+  // Publishing goes to the cloud store under a Stirling account, so an unlinked server links first.
+  const { guard: guardForAccount } = useConnectGate();
+  const [publishOpen, setPublishOpen] = useState(false);
 
   // Create or edit a source in place, instead of leaving the builder (and its
   // unsaved edits) for the Sources page.
@@ -826,6 +836,17 @@ export function PipelineBuilder() {
   function attemptLeave(destination: string) {
     if (dirty) setPendingNav(destination);
     else navigate(destination);
+  }
+
+  function openPublish() {
+    if (dirty || !policyState.data?.id) {
+      showToast({
+        title: t("portal.store.publish.saveFirst"),
+        alertType: "warning",
+      });
+      return;
+    }
+    setPublishOpen(true);
   }
 
   /**
@@ -1437,6 +1458,8 @@ export function PipelineBuilder() {
           onReprocess={handleReprocessAll}
           reprocessing={reprocessing}
           onDelete={() => setPendingDelete(true)}
+          onPublish={storeAvailable ? guardForAccount(openPublish) : undefined}
+          storeId={policyState.data?.storeId}
         />
       ) : (
         <PipelineCreateHeader
@@ -1720,6 +1743,14 @@ export function PipelineBuilder() {
         }}
         onClose={() => setSourceModal({ open: false, sourceId: null })}
       />
+
+      {policyState.data && (
+        <PublishFlowModal
+          open={publishOpen}
+          onClose={() => setPublishOpen(false)}
+          policy={policyState.data}
+        />
+      )}
     </div>
   );
 }

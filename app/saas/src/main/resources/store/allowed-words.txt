@@ -1,0 +1,60 @@
+# Whole words that are never a blocked-word hit, whatever list or root they collide with. The
+# store's content check still judges them in context, so allowing a word here only stops the
+# word-list pass from refusing it on sight.
+
+# Place names and dictionary words that contain a root.
+scunthorpe
+penistone
+lightwater
+assist
+assistant
+assess
+assessment
+class
+classic
+classification
+shiitake
+shitake
+swank
+swanky
+swankier
+swankiest
+wankel
+niggard
+niggardly
+niggardliness
+matsushita
+
+# Clinical, legal and historical vocabulary from the vendored lists. Real pipelines process
+# medical records, HR complaints, court bundles and archives that use these words plainly.
+sex
+sexual
+sexually
+sexuality
+intercourse
+genitals
+penis
+vagina
+vulva
+anus
+rectum
+nipple
+nipples
+semen
+ejaculation
+masturbation
+incest
+rape
+raping
+rapist
+paedophile
+pedophile
+swastika
+negro
+eunuch
+bondage
+domination
+
+# Short tokens a list entry folds onto: "s&m" becomes "sm", and "xx" is a placeholder.
+sm
+xx

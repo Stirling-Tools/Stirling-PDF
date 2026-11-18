@@ -30,6 +30,13 @@
   border-radius: inherit;
 }
 
+/* Mantine's inner wrapper sits between the button and its label. Left at min-width: auto it is as
+   wide as the longest line, so in a narrow column a long detail pushes the card past its edge
+   instead of ending in an ellipsis. */
+.sui-node-card__select.sui-btn .mantine-Button-inner {
+  min-width: 0;
+}
+
 /* Mantine wraps a button's children in its label element, so the glyph and text are laid out
    there - a gap on the button root would only space the wrapper, not what is inside it. */
 .sui-node-card__select.sui-btn .mantine-Button-label {

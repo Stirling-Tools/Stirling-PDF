@@ -15,11 +15,13 @@ import { editorDeployHandlers } from "@processor/mocks/handlers/editorDeploy";
 import { linkHandlers } from "@processor/mocks/handlers/link";
 import { integrationsHandlers } from "@processor/mocks/handlers/integrations";
 import { fileRunEventsHandlers } from "@processor/mocks/handlers/fileRunEvents";
+import { storeHandlers } from "@processor/mocks/handlers/store";
 
 export const handlers = [
   ...authHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
+  ...storeHandlers,
   ...pipelinesHandlers,
   ...sourcesHandlers,
   ...infrastructureHandlers,
@@ -38,3 +40,4 @@ export const handlers = [
 
 export { resetNotificationsStore } from "@processor/mocks/handlers/notifications";
 export { resetTeamSaasStore } from "@processor/mocks/handlers/teamSaas";
+export { resetStoreMock } from "@processor/mocks/handlers/store";

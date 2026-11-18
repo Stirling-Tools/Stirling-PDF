@@ -435,18 +435,28 @@ public class PolicyController {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
                 return withOwnerAndTeam(
-                        incoming, existing.owner(), existing.teamId(), existing.surface());
+                        incoming,
+                        existing.owner(),
+                        existing.teamId(),
+                        existing.surface(),
+                        existing.storeId());
             }
         }
         return withOwnerAndTeam(
                 incoming,
                 policyAccessGuard.ownerForNewPolicy(),
                 policyAccessGuard.teamForNewPolicy(),
-                Policy.SURFACE_POLICY);
+                Policy.SURFACE_POLICY,
+                null);
     }
 
+    /**
+     * Stamps the fields a client never decides. The store link included: only publishing and
+     * installing set it, so a builder save that omits it cannot unlink a pipeline from its listing,
+     * and one that invents it cannot claim someone else's.
+     */
     private static Policy withOwnerAndTeam(
-            Policy policy, String owner, Long teamId, String surface) {
+            Policy policy, String owner, Long teamId, String surface, String storeId) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -461,7 +471,8 @@ public class PolicyController {
                 teamId,
                 policy.editor(),
                 surface,
-                policy.routingRules());
+                policy.routingRules(),
+                storeId);
     }
 
     /**

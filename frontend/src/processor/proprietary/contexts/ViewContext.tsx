@@ -12,6 +12,7 @@ export type ViewId =
   | "integrations"
   | "policies"
   | "pipelines"
+  | "store"
   | "documents"
   | "review"
   | "infrastructure"
@@ -26,6 +27,7 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   integrations: "/integrations",
   policies: "/policies",
   pipelines: "/pipelines",
+  store: "/store",
   documents: "/documents",
   // Shared with the notification action that deep-links here, which cannot import portal code.
   review: PORTAL_REVIEW_PATH,

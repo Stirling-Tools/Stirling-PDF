@@ -1,0 +1,22 @@
+# Roots the store matches anywhere inside a word, on top of the vendored word lists
+# (wordlists/ldnoobw), which only match whole words. A root catches the compounds and inflections no
+# list can enumerate ("fucking", "motherfucker", "shitshow"), so only roots that no ordinary word
+# contains belong here; a word that contains one anyway goes in allowed-words.txt. Not a word list:
+# add words to an operator file (stirling.store.blocked-words-file) or upstream, not here.
+*fuck
+*shit
+*cunt
+*bitch
+*whore
+*slut
+*wank
+*jizz
+*twat
+*bollock
+*asshole
+*arsehole
+*dickhead
+*cocksuck
+*nigger
+*nigga
+*faggot

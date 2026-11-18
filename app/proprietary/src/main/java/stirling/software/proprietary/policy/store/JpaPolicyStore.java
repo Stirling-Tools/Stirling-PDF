@@ -59,7 +59,8 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.teamId(),
                         policy.editor(),
                         policy.surface(),
-                        policy.routingRules());
+                        policy.routingRules(),
+                        policy.storeId());
 
         PolicyEntity entity = new PolicyEntity();
         entity.setId(id);

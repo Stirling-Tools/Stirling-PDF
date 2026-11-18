@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@processor/contexts/ViewContext";
 import { useUI } from "@processor/contexts/UIContext";
 import { LinkAccountFooterItem } from "@processor/components/LinkAccountFooterItem";
+import { useStoreAvailable } from "@processor/hooks/useStoreAvailable";
 import { Icon } from "@editor/ui/Icon";
 import {
   GROUP_PROCESSOR,
@@ -47,14 +48,20 @@ export function Sidebar() {
   const credits = useFreeCreditsSummary();
   const adminNavVisible = useAdminNavVisible();
   const openPlan = useOpenPlan();
+  const storeAvailable = useStoreAvailable();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
   const collapsed = sidebarCollapsed && !isMobile;
 
   function renderGroup(entries: NavEntry[]) {
+    // A store entry with no store behind it is noise, not a gate: drop it rather than ask.
     return entries
-      .filter((entry) => adminNavVisible || !entry.requiresAdmin)
+      .filter(
+        (entry) =>
+          (adminNavVisible || !entry.requiresAdmin) &&
+          (!entry.requiresStore || storeAvailable),
+      )
       .map((entry) => {
         const label = t(`portal.nav.${entry.id}`);
         const item = (

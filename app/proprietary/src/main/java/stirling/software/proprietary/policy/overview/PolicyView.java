@@ -20,7 +20,9 @@ public record PolicyView(
         List<SourceRef> sources,
         List<String> steps,
         String output,
-        String owner) {
+        String owner,
+        /** Store listing this pipeline was installed from or published as; null when neither. */
+        String storeId) {
 
     /** A source a policy pulls documents from, resolved to its display name. */
     public record SourceRef(String id, String name) {}
