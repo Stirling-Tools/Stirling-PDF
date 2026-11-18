@@ -17,6 +17,8 @@ import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { FormFieldAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/FormFieldAccessibilitySection";
 import { ImageAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/ImageAccessibilitySection";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
+import { ScanFontMatchRow } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
+import type { ScanFontMatch } from "@editor/tools/pdfTextEditor/hooks/useScanFontMatch";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -26,6 +28,7 @@ interface Props {
   geometry: SelectionGeometry;
   /** Font status for the selected runs, e.g. "Embedded · full alphabet". */
   fontNote: string | null;
+  scanFontMatch?: ScanFontMatch | null;
   canGroup: boolean;
   canUngroup: boolean;
   onGroup: () => void;
@@ -45,6 +48,7 @@ export function SelectionInspector({
   selection,
   geometry,
   fontNote,
+  scanFontMatch,
   canGroup,
   canUngroup,
   onGroup,
@@ -64,6 +68,7 @@ export function SelectionInspector({
         formField={selection.formFieldId !== null}
         fontNote={hasRunSelection ? fontNote : null}
       />
+      {scanFontMatch?.canShow && <ScanFontMatchRow match={scanFontMatch} />}
       {runCount + imageCount > 0 && (
         <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
       )}
@@ -302,7 +307,7 @@ function GeometrySection({
           <Field
             label={t("pdfTextEditor.inspector.width", "Width")}
             hint={
-              isImage
+              isImage || !setWidth
                 ? undefined
                 : t(
                     "pdfTextEditor.inspector.widthHint",
@@ -312,8 +317,9 @@ function GeometrySection({
           >
             <PointsInput
               value={bounds.width}
-              onCommit={setWidth}
+              onCommit={setWidth ?? (() => undefined)}
               min={1}
+              disabled={!setWidth}
               label={t("pdfTextEditor.inspector.width", "Width")}
               testId="pdf-editor-size-w"
             />

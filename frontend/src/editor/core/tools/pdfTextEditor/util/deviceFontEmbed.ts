@@ -3,11 +3,13 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
+import { parseFontMetrics } from "@editor/tools/pdfTextEditor/util/fontMetrics";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import {
-  getLocalFontBytes,
-  loadLocalFontBytes,
-} from "@editor/tools/pdfTextEditor/util/localFonts";
+  externalFaceKey,
+  getExternalFontBytes,
+  loadExternalFontBytes,
+} from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
   isBoldFamily,
   isItalicFamily,
@@ -26,7 +28,7 @@ const DEVICE_FONT_ID_PREFIX = "__device_font:";
 
 /** Owned-font id for a family, stable across emits of the same document. */
 export function deviceFontIdFor(family: string): string {
-  return `${DEVICE_FONT_ID_PREFIX}${family.trim().toLowerCase()}`;
+  return `${DEVICE_FONT_ID_PREFIX}${externalFaceKey(family)}`;
 }
 
 interface ExtendedPdfiumRuntime {
@@ -57,7 +59,7 @@ interface DeviceFontModule {
 }
 
 /** Parsed cmap per family, so coverage is computed once per session. */
-const coverageByFamily = new Map<string, Map<number, number> | null>();
+const coverageByFamily = new Map<string, Set<number> | null>();
 /** Families PDFium already refused for a document; never retried. */
 let refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
 /** Successful device-font emits per document, keyed by owned-font id. */
@@ -79,43 +81,68 @@ export function resetDeviceFontEmbedCache(): void {
   emitCountByDoc = new WeakMap<EditorDocument, Map<string, number>>();
 }
 
-// True if the face covers every non-whitespace code point. Fails open, leaving
-// the width self-check as the backstop.
+/** Code points the font draws, or null when its tables cannot be read. */
+export function fontCoverage(bytes: Uint8Array): Set<number> | null {
+  try {
+    const mapped =
+      parseFontMetrics(bytes)?.advances ?? parseTrueTypeCmap(bytes);
+    return mapped ? new Set(mapped.keys()) : null;
+  } catch {
+    return null;
+  }
+}
+
+function coverageOf(family: string, bytes: Uint8Array): Set<number> | null {
+  const key = deviceFontIdFor(family);
+  if (!coverageByFamily.has(key))
+    coverageByFamily.set(key, fontCoverage(bytes));
+  return coverageByFamily.get(key) ?? null;
+}
+
+export function visibleCodePoints(text: string): number[] {
+  const out: number[] = [];
+  for (const ch of text) {
+    if (/\s/.test(ch)) continue;
+    const cp = ch.codePointAt(0);
+    if (cp !== undefined) out.push(cp);
+  }
+  return out;
+}
+
+// Whether the face covers every visible code point; fails open to the width self-check.
 function deviceFontCovers(
   family: string,
   bytes: Uint8Array,
   text: string,
 ): boolean {
-  const key = deviceFontIdFor(family);
-  if (!coverageByFamily.has(key)) {
-    let parsed: Map<number, number> | null = null;
-    try {
-      parsed = parseTrueTypeCmap(bytes);
-    } catch {
-      parsed = null;
-    }
-    coverageByFamily.set(key, parsed);
-  }
-  const coverage = coverageByFamily.get(key) ?? null;
+  const coverage = coverageOf(family, bytes);
   if (!coverage) return true;
-  for (const ch of text) {
-    if (/\s/.test(ch)) continue;
-    const cp = ch.codePointAt(0);
-    if (cp === undefined || !coverage.has(cp)) return false;
-  }
-  return true;
+  return visibleCodePoints(text).every((cp) => coverage.has(cp));
+}
+
+export function deviceFontCoverage(family: string): Set<number> | null {
+  const bytes = getExternalFontBytes(family);
+  return bytes ? coverageOf(family, bytes) : null;
+}
+
+export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
+  const bytes = getExternalFontBytes(family);
+  const coverage = bytes ? coverageOf(family, bytes) : null;
+  const codePoints = visibleCodePoints(text);
+  if (!coverage || codePoints.length === 0) return true;
+  return codePoints.some((cp) => coverage.has(cp));
 }
 
 // Read the family's font file so a later synchronous emit can embed it. The UI
 // must AWAIT this before dispatching a font-family change.
 export async function ensureDeviceFontReady(family: string): Promise<boolean> {
-  const bytes = await loadLocalFontBytes(family);
+  const bytes = await loadExternalFontBytes(family);
   return !!bytes && bytes.length > 0;
 }
 
 /** Whether a synchronous emit can embed this family right now. */
 export function isDeviceFontReady(family: string): boolean {
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   return !!bytes && bytes.length > 0;
 }
 
@@ -158,7 +185,7 @@ export function loadDeviceFontInto(
   // A refusal is permanent for this document; retrying would re-malloc the
   // whole font file on every keystroke.
   if (refused.has(id)) return 0;
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   if (!bytes || bytes.length === 0) return 0;
 
   const m = doc.module;
@@ -252,7 +279,7 @@ export function emitDeviceFontTextObject(
   y: number,
 ): number {
   if (text.length === 0) return 0;
-  const bytes = getLocalFontBytes(family);
+  const bytes = getExternalFontBytes(family);
   if (!bytes || bytes.length === 0) return 0;
   if (!deviceFontCovers(family, bytes, text)) return 0;
   const fontPtr = loadDeviceFontInto(doc, family);

@@ -4,7 +4,10 @@ import { StirlingFile } from "@editor/types/fileContext";
 import i18n from "@editor/i18n";
 import { useViewScopedFileStubs } from "@editor/hooks/tools/shared/useViewScopedFiles";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
-import { getPdfAccess } from "@editor/services/pdfAccessService";
+import {
+  getPdfAccess,
+  signedPdfEditsBlocked,
+} from "@editor/services/pdfAccessService";
 
 export interface FilesToolStepProps {
   selectedFiles: StirlingFile[];
@@ -22,12 +25,14 @@ function FilesStepContent({
   usePdfAccess(undefined);
   const files = useViewScopedFileStubs();
   const unavailableFiles = showUnavailableFiles
-    ? files.filter(
-        (file) =>
-          file.processedFile?.isEncrypted &&
-          getPdfAccess(file.id) &&
-          !selectedFiles.some((selected) => selected.fileId === file.id),
-      )
+    ? files.filter((file) => {
+        const access = getPdfAccess(file.id);
+        return (
+          ((file.processedFile?.isEncrypted && access) ||
+            signedPdfEditsBlocked(access)) &&
+          !selectedFiles.some((selected) => selected.fileId === file.id)
+        );
+      })
     : [];
   return (
     <FileStatusIndicator

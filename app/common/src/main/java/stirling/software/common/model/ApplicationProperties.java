@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -135,7 +136,12 @@ public class ApplicationProperties {
             environment.getPropertySources().addFirst(propertySource);
         }
 
-        log.debug("Loaded properties: {}", propertySource.getSource());
+        // Names only: values include secrets such as security.scimToken.
+        log.debug(
+                "Loaded property keys: {}",
+                propertySource instanceof EnumerablePropertySource<?> keys
+                        ? Arrays.toString(keys.getPropertyNames())
+                        : propertySource.getName());
 
         return propertySource;
     }
@@ -967,6 +973,7 @@ public class ApplicationProperties {
     public static class Security {
         private boolean enableLogin;
         private boolean honorOwnerPasswords = true;
+        private boolean blockSignedPdfEdits = false;
         private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
@@ -975,6 +982,10 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        // Bearer token (32+ chars) for SCIM 2.0 provisioning at /api/v1/scim/v2; blank disables it.
+        @ToString.Exclude private String scimToken;
+        // SCIM DELETE erases the user and their files; when false it only deactivates them.
+        private boolean scimDeleteRemovesUser = false;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
         private Timestamp timestamp = new Timestamp();
@@ -1484,7 +1495,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;

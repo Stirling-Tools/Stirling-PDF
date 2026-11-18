@@ -1198,35 +1198,6 @@ class PdfToUaParams(ApiModel):
 
 class OutputFormat4(StrEnum):
     """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class Prepress(Enum):
-    """
-    Apply Ghostscript prepress settings
-    """
-
-    boolean_true = True
-    boolean_false = False
-
-
-class PdfToVectorParams(ApiModel):
-    """
-    Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS). Input:PDF Output:IMAGE Type:SISO
-    """
-
-    output_format: OutputFormat4 = Field(OutputFormat4.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class OutputFormat5(StrEnum):
-    """
     The output Word document format
     """
 
@@ -1240,7 +1211,7 @@ class PdfToWordParams(ApiModel):
     This endpoint converts a given PDF file to a Word document format. Input:PDF Output:WORD Type:SISO
     """
 
-    output_format: OutputFormat5 = Field(..., description="The output Word document format")
+    output_format: OutputFormat4 = Field(..., description="The output Word document format")
     use_stirling_office_convert: bool | None = None
 
 
@@ -1493,9 +1464,19 @@ class SanitizePdfParams(ApiModel):
     remove_xmp_metadata: bool = Field(False, description="Remove XMP metadata from the PDF")
 
 
+class CustomUnit(StrEnum):
+    """
+    Unit of customWidth and customHeight.
+    """
+
+    mm = "mm"
+    cm = "cm"
+    in_ = "in"
+
+
 class Orientation1(StrEnum):
     """
-    Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+    Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
     """
 
     portrait = "PORTRAIT"
@@ -1504,7 +1485,7 @@ class Orientation1(StrEnum):
 
 class PageSize(StrEnum):
     """
-    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
+    The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.
     """
 
     a0 = "A0"
@@ -1517,6 +1498,7 @@ class PageSize(StrEnum):
     letter = "LETTER"
     legal = "LEGAL"
     keep = "KEEP"
+    custom = "CUSTOM"
 
 
 class ScalePagesParams(ApiModel):
@@ -1524,13 +1506,24 @@ class ScalePagesParams(ApiModel):
     This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO
     """
 
+    custom_height: float | None = Field(
+        None,
+        description="Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
+        gt=0.0,
+    )
+    custom_unit: CustomUnit = Field(CustomUnit.mm, description="Unit of customWidth and customHeight.")
+    custom_width: float | None = Field(
+        None,
+        description="Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.",
+        gt=0.0,
+    )
     orientation: Orientation1 = Field(
         Orientation1.portrait,
-        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.",
     )
     page_size: PageSize = Field(
         PageSize.keep,
-        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.",
+        description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.",
     )
     scale_factor: float = Field(
         1, description="The scale of the content on the pages of the output PDF. Acceptable values are floats.", ge=0.0
@@ -1756,7 +1749,7 @@ class UnlockPdfFormsParams(ApiModel):
 
 class Trapped(StrEnum):
     """
-    The trapped status of the document. Omit to remove it, which readers treat as Unknown.
+    The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.
     """
 
     true = "True"
@@ -1766,44 +1759,60 @@ class Trapped(StrEnum):
 
 class UpdateMetadataParams(ApiModel):
     """
-    Standard fields left out are cleared, so send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
+    Standard fields left out are cleared unless keepOmitted=true, so otherwise send the current values of the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true removes all metadata. Input:PDF Output:PDF Type:SISO
     """
 
     all_request_params: dict[str, str] | None = Field(
         None,
         description='Custom metadata to add or update, e.g. {"Department":"Finance"}. Existing custom keys are kept. customKeyN/customValueN pairs also work.',
     )
-    author: str | None = Field(None, description="The author of the document. Omit to remove it.", examples=["author"])
+    author: str | None = Field(
+        None, description="The author of the document. Omit to remove it unless keepOmitted=true.", examples=["author"]
+    )
     creation_date: str | None = Field(
         None,
-        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        description="The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.",
         examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
     creator: str | None = Field(
-        None, description="The creator of the document. Omit to remove it.", examples=["creator"]
+        None,
+        description="The creator of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["creator"],
     )
     delete_all: bool = Field(
         False, description="True removes all metadata, including XMP, and ignores the other fields"
     )
+    keep_omitted: bool = Field(
+        False, description="True keeps the current value of every standard field left out, instead of removing it"
+    )
     keywords: str | None = Field(
-        None, description="The keywords for the document. Omit to remove it.", examples=["keywords"]
+        None,
+        description="The keywords for the document. Omit to remove it unless keepOmitted=true.",
+        examples=["keywords"],
     )
     modification_date: str | None = Field(
         None,
-        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.",
+        description="The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.",
         examples=["2023/10/01 12:00:00"],
         pattern="yyyy/MM/dd HH:mm:ss",
     )
     producer: str | None = Field(
-        None, description="The producer of the document. Omit to remove it.", examples=["producer"]
+        None,
+        description="The producer of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["producer"],
     )
     subject: str | None = Field(
-        None, description="The subject of the document. Omit to remove it.", examples=["subject"]
+        None,
+        description="The subject of the document. Omit to remove it unless keepOmitted=true.",
+        examples=["subject"],
     )
-    title: str | None = Field(None, description="The title of the document. Omit to remove it.", examples=["title"])
+    title: str | None = Field(
+        None, description="The title of the document. Omit to remove it unless keepOmitted=true.", examples=["title"]
+    )
     trapped: Trapped | None = Field(
-        None, description="The trapped status of the document. Omit to remove it, which readers treat as Unknown."
+        None,
+        description="The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.",
     )
 
 
@@ -1813,26 +1822,6 @@ class UrlToPdfParams(ApiModel):
     """
 
     url_input: str = Field(..., description="The input URL to be converted to a PDF file")
-
-
-class OutputFormat6(StrEnum):
-    """
-    Target vector format extension
-    """
-
-    eps = "eps"
-    ps = "ps"
-    pcl = "pcl"
-    xps = "xps"
-
-
-class VectorToPdfParams(ApiModel):
-    """
-    Converts PS, EPS and EPSF with Ghostscript; outputFormat is ignored. XPS and PCL are not supported. Input:POSTSCRIPT Output:PDF Type:SISO
-    """
-
-    output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
-    prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
 class AutoRotatePdfParams(ApiModel):
@@ -1934,13 +1923,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -2013,13 +2000,11 @@ class Model(
         | PdfToPresentationParams
         | PdfToTextParams
         | PdfToUaParams
-        | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
         | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
-        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -2093,13 +2078,11 @@ type ParamToolModel = (
     | PdfToPresentationParams
     | PdfToTextParams
     | PdfToUaParams
-    | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
     | PdfToXmlParams
     | SvgToPdfParams
     | UrlToPdfParams
-    | VectorToPdfParams
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
@@ -2174,13 +2157,11 @@ class ToolEndpoint(StrEnum):
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
     PDF_TO_UA = "/api/v1/convert/pdf/ua"
-    PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
     PDF_TO_XML = "/api/v1/convert/pdf/xml"
     SVG_TO_PDF = "/api/v1/convert/svg/pdf"
     URL_TO_PDF = "/api/v1/convert/url/pdf"
-    VECTOR_TO_PDF = "/api/v1/convert/vector/pdf"
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
@@ -2253,13 +2234,11 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
     ToolEndpoint.PDF_TO_UA: PdfToUaParams,
-    ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
     ToolEndpoint.PDF_TO_XML: PdfToXmlParams,
     ToolEndpoint.SVG_TO_PDF: SvgToPdfParams,
     ToolEndpoint.URL_TO_PDF: UrlToPdfParams,
-    ToolEndpoint.VECTOR_TO_PDF: VectorToPdfParams,
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,
