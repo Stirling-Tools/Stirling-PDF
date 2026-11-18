@@ -12,10 +12,13 @@
 
 security:
   honorOwnerPasswords: true # Require the permissions password for restricted PDF actions; opening passwords are always required.
+  blockSignedPdfEdits: false # Lock digitally signed PDFs against changes in the web and desktop apps; viewing, converting and signing again stay allowed. API calls and server pipelines are not affected.
   enableLogin: true # set to 'true' to enable login
   ssoAutoLogin: false
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
+  scimToken: "" # Bearer token (at least 32 characters) for SCIM 2.0 user provisioning at /api/v1/scim/v2 (Okta, Entra ID). Leave empty to disable
+  scimDeleteRemovesUser: false # When true, a SCIM DELETE permanently erases the user and their files; when false it only deactivates them
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
     username: "" # initial username for the first login
@@ -305,7 +308,7 @@ storage:
     maxStorageMbTotal: -1 # Max storage across all users in MB; -1 disables total cap
     maxFileMb: -1 # Max size per stored file (including history/audit) in MB; -1 disables limit
   sharing:
-    enabled: false # set to 'true' to enable file sharing features [ALPHA]
+    enabled: true # set to 'false' to disable file sharing features
     linkEnabled: true # set to 'false' to disable share links (requires system.frontendUrl)
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
     linkExpirationDays: 3 # Number of days before share links expire

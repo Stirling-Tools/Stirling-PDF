@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type ComponentType,
 } from "react";
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
@@ -71,6 +72,7 @@ import {
   RedactionLayer,
 } from "@embedpdf/plugin-redaction/react";
 import { CustomSearchLayer } from "@editor/components/viewer/CustomSearchLayer";
+import { useActiveUrlSource } from "@editor/components/viewer/useActiveUrlSource";
 import { ZoomAPIBridge } from "@editor/components/viewer/ZoomAPIBridge";
 import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@editor/components/viewer/ScrollAPIBridge";
@@ -110,7 +112,12 @@ import { DocumentSwapBridge } from "@editor/components/viewer/DocumentSwapBridge
 import { PdfPasswordBridge } from "@editor/components/viewer/PdfPasswordBridge";
 import { isStirlingFile } from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
-import { pdfAllows, canPrintPdf } from "@editor/services/pdfPermissions";
+import {
+  pdfAllows,
+  canPrintPdf,
+  pdfEditingLocked,
+} from "@editor/services/pdfPermissions";
+import { signedPdfEditsBlocked } from "@editor/services/pdfAccessService";
 
 import { PdfPermissionFlag } from "@embedpdf/models";
 import { usePdfAccess } from "@editor/hooks/usePdfAccess";
@@ -135,6 +142,8 @@ import { useFontFallbackConfig } from "@editor/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@editor/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@editor/tools/formFill/FormCreationInteractionLock";
+import { ViewerInteractionLock } from "@editor/components/viewer/ViewerInteractionLock";
+import type { ViewerPageLayerProps } from "@editor/contexts/viewer/ViewerPageTool";
 import { FormFieldCreationOverlay } from "@editor/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@editor/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@editor/tools/formFill/ButtonAppearanceOverlay";
@@ -153,6 +162,8 @@ interface LocalEmbedPDFProps {
   enableFormFill?: boolean;
   /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
   formEditingActive?: boolean;
+  /** A tool's layer that replaces each page's own, or null for the viewer's layers. */
+  pageLayer?: ComponentType<ViewerPageLayerProps> | null;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -218,6 +229,11 @@ interface ViewerPageContainerProps {
   onPageLayout?: () => void;
   /** Gates the layout callback so steady-state scrolling pays nothing. */
   restorePending?: boolean;
+  /**
+   * Clip overlays to the page rect. A page tool's handles must stay reachable
+   * where an object sticks out past the page edge.
+   */
+  clip?: boolean;
 }
 
 function normalizePageRotation(rotation: number | null | undefined): number {
@@ -358,6 +374,7 @@ function ViewerPageContainer({
   children,
   onPageLayout,
   restorePending = false,
+  clip = true,
 }: ViewerPageContainerProps) {
   const documentState = useDocumentState(documentId);
   const pageRotation = normalizePageRotation(
@@ -379,7 +396,7 @@ function ViewerPageContainer({
         width,
         height,
         position: "relative",
-        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        overflow: clip ? "hidden" : "visible",
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
@@ -425,6 +442,7 @@ interface PageLayerOptions {
   pdfRenderMode: PdfRenderMode;
   enableFormFill: boolean;
   formEditingActive: boolean;
+  pageLayer: ComponentType<ViewerPageLayerProps> | null;
   enableAnnotations: boolean;
   annotationsReadOnly: boolean;
   canCopy: boolean;
@@ -446,7 +464,8 @@ function PageTiles({
   documentId,
   pageIndex,
   renderMode,
-}: PageLayerProps & { renderMode: PdfRenderMode }) {
+  hidden = false,
+}: PageLayerProps & { renderMode: PdfRenderMode; hidden?: boolean }) {
   return (
     <div
       style={{
@@ -454,6 +473,7 @@ function PageTiles({
         inset: 0,
         transition: "filter 0.25s ease",
         filter: PDF_RENDER_FILTERS[renderMode],
+        visibility: hidden ? "hidden" : undefined,
       }}
     >
       <TilingLayer documentId={documentId} pageIndex={pageIndex} />
@@ -625,6 +645,7 @@ function PageLayers({
   pdfRenderMode,
   enableFormFill,
   formEditingActive,
+  pageLayer: PageLayer,
   enableAnnotations,
   annotationsReadOnly,
   canCopy,
@@ -635,13 +656,10 @@ function PageLayers({
   readOnlySignaturePreviews,
 }: PageGeometry & PageLayerOptions) {
   const { isAnnotationMode } = useViewer();
-  return (
+  const [covered, setCovered] = useState(false);
+  const toolCovers = !!PageLayer && covered;
+  const overlays = (
     <>
-      <PageTiles
-        documentId={documentId}
-        pageIndex={pageIndex}
-        renderMode={pdfRenderMode}
-      />
       <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
       <PageTextSelection
         documentId={documentId}
@@ -706,6 +724,28 @@ function PageLayers({
       )}
     </>
   );
+  // The tiles keep their place in the tree and stay mounted, only hidden, under
+  // a page tool: remounting them blanks the page while they reload, on the way
+  // into the tool and again on the way out.
+  return (
+    <>
+      <PageTiles
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+        hidden={toolCovers}
+      />
+      {!toolCovers && overlays}
+      {PageLayer && (
+        <PageLayer
+          pageIndex={pageIndex}
+          width={width}
+          height={height}
+          onCovered={setCovered}
+        />
+      )}
+    </>
+  );
 }
 
 function ViewerPage({
@@ -724,6 +764,7 @@ function ViewerPage({
           height={layers.height}
           onPageLayout={onPageLayout}
           restorePending={restorePending}
+          clip={!layers.pageLayer}
         >
           <PageLayers {...layers} />
         </ViewerPageContainer>
@@ -900,6 +941,7 @@ export function LocalEmbedPDF({
   enableRedaction = false,
   enableFormFill = false,
   formEditingActive = false,
+  pageLayer = null,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -935,13 +977,16 @@ export function LocalEmbedPDF({
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [urlSource, setUrlSource] = useState<File | null>(null);
+  const {
+    source: urlSource,
+    stage: stageUrlSource,
+    settle: settleUrlSource,
+  } = useActiveUrlSource();
   const pdfAccess = usePdfAccess(file ?? urlSource ?? fileId);
   const permissionOverride =
     pdfAccess?.ownerAuthenticated === true ||
     (pdfAccess?.honorOwnerPasswords ?? config?.honorOwnerPasswords) === false;
-  const annotationsReadOnly =
-    !pdfAccess || pdfAccess.encrypted || !enableAnnotations;
+  const annotationsReadOnly = pdfEditingLocked(pdfAccess) || !enableAnnotations;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1216,7 +1261,7 @@ export function LocalEmbedPDF({
           const buf = await source.arrayBuffer();
           if (!cancelled) {
             bindPdfViewerSource(buf, source);
-            setUrlSource(source);
+            stageUrlSource(url, source, !initialDocumentOpenedRef.current);
             openDocument(buf, exportFileName, url);
           }
         })
@@ -1278,6 +1323,7 @@ export function LocalEmbedPDF({
 
   const handleDocumentSwapped = useCallback(
     (documentId: string, fileKey: string) => {
+      settleUrlSource(fileKey, true);
       onDocumentReady?.(fileKey);
       onDocumentSwapped?.(documentId);
       setPendingDocument((pending) =>
@@ -1286,7 +1332,7 @@ export function LocalEmbedPDF({
       setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
       setTimeout(() => setSwapAnnouncement(null), 3000);
     },
-    [onDocumentReady, onDocumentSwapped, t],
+    [onDocumentReady, onDocumentSwapped, settleUrlSource, t],
   );
   const handleDocumentSwapFailed = useCallback(
     (fileKey: string, error: unknown) => {
@@ -1295,13 +1341,19 @@ export function LocalEmbedPDF({
         "[LocalEmbedPDF] Replacement document failed to open:",
         error,
       );
+      settleUrlSource(fileKey, false);
       onDocumentLoadFailed?.(fileKey, error);
       if (fileKey === fileStableKey) onDocumentSwapFailed?.(error);
       setPendingDocument((pending) =>
         pending?.fileKey === fileKey ? null : pending,
       );
     },
-    [onDocumentLoadFailed, onDocumentSwapFailed, fileStableKey],
+    [
+      onDocumentLoadFailed,
+      onDocumentSwapFailed,
+      fileStableKey,
+      settleUrlSource,
+    ],
   );
 
   useEffect(() => {
@@ -1623,6 +1675,7 @@ export function LocalEmbedPDF({
     pdfRenderMode,
     enableFormFill,
     formEditingActive,
+    pageLayer,
     enableAnnotations: true,
     annotationsReadOnly,
     canCopy: pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents),
@@ -1689,6 +1742,7 @@ export function LocalEmbedPDF({
             canCopy={pdfAllows(pdfAccess, PdfPermissionFlag.CopyContents)}
           />
           <FormCreationInteractionLock />
+          <ViewerInteractionLock active={pageLayer != null} />
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
@@ -1716,8 +1770,18 @@ export function LocalEmbedPDF({
             onPasswordRequired={onPasswordRequired}
           />
           <ExportAPIBridge
-            originalFile={pdfAccess?.encrypted ? file : undefined}
-            disabled={pdfAccess?.encrypted && !file}
+            originalFile={
+              pdfAccess?.encrypted
+                ? file
+                : signedPdfEditsBlocked(pdfAccess)
+                  ? (file ?? urlSource ?? undefined)
+                  : undefined
+            }
+            disabled={
+              pendingDocument !== null ||
+              (pdfAccess?.encrypted && !file) ||
+              (signedPdfEditsBlocked(pdfAccess) && !file && !urlSource)
+            }
           />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
