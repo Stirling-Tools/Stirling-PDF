@@ -298,6 +298,9 @@ test.describe("PDF text editor - phone layout", () => {
       localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
     });
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("pdf-editor-root")).toBeAttached({
+      timeout: 30_000,
+    });
     const chooser = page.waitForEvent("filechooser");
     await page.getByRole("button", { name: "Add Files" }).first().click();
     await (await chooser).setFiles(signedProtected);
