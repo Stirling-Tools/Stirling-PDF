@@ -258,7 +258,7 @@ public class CropController {
         MultipartFile fileInput = request.getFileInput();
         String sourceName =
                 fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
-        return GeneralUtils.generateFilename(sourceName, "_cropped.pdf");
+        return GeneralUtils.generateFilename(sourceName, ".pdf");
     }
 
     /** Display-space pixel bounds converted to PDF points at the render scale. */

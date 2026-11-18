@@ -961,7 +961,7 @@ public class ConvertPDFToPDFA {
                 PdfXConverter.applyMetadata(inputTemp.getPath(), outputTemp.getPath(), options);
                 PdfXConverter.checkMetadata(outputTemp.getPath(), options);
 
-                String outputFilename = baseFileName + profile.outputSuffix();
+                String outputFilename = baseFileName + ".pdf";
                 TempFile out = outputTemp;
                 outputTemp = null; // ownership transferred to the response
                 return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
@@ -3036,21 +3036,18 @@ public class ConvertPDFToPDFA {
 
     @Getter
     private enum PdfXProfile {
-        PDF_X("PDF/X", "_PDFX.pdf", PdfXStandard.PDF_X_4, "pdfx"),
-        PDF_X_1A("PDF/X-1a", "_PDFX-1a.pdf", PdfXStandard.PDF_X_1A, "pdfx-1a", "pdfx-1"),
-        PDF_X_3("PDF/X-3", "_PDFX-3.pdf", PdfXStandard.PDF_X_3, "pdfx-3"),
-        PDF_X_4("PDF/X-4", "_PDFX-4.pdf", PdfXStandard.PDF_X_4, "pdfx-4"),
-        PDF_X_6("PDF/X-6", "_PDFX-6.pdf", PdfXStandard.PDF_X_6, "pdfx-6");
+        PDF_X("PDF/X", PdfXStandard.PDF_X_4, "pdfx"),
+        PDF_X_1A("PDF/X-1a", PdfXStandard.PDF_X_1A, "pdfx-1a", "pdfx-1"),
+        PDF_X_3("PDF/X-3", PdfXStandard.PDF_X_3, "pdfx-3"),
+        PDF_X_4("PDF/X-4", PdfXStandard.PDF_X_4, "pdfx-4"),
+        PDF_X_6("PDF/X-6", PdfXStandard.PDF_X_6, "pdfx-6");
 
         private final String displayName;
-        private final String suffix;
         private final PdfXStandard standard;
         private final List<String> requestTokens;
 
-        PdfXProfile(
-                String displayName, String suffix, PdfXStandard standard, String... requestTokens) {
+        PdfXProfile(String displayName, PdfXStandard standard, String... requestTokens) {
             this.displayName = displayName;
-            this.suffix = suffix;
             this.standard = standard;
             this.requestTokens =
                     Arrays.stream(requestTokens)
