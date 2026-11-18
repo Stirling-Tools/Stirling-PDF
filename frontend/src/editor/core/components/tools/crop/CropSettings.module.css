@@ -1,0 +1,19 @@
+.canvasFrame {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  max-height: min(58vh, 560px);
+}
+
+.sizeLabel {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pageLabel {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

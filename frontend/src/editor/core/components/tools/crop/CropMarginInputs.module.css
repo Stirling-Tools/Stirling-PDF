@@ -1,0 +1,60 @@
+/* Margins are physical edges of the page, which is never mirrored with the UI. */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  gap: var(--space-1) var(--space-2);
+  direction: ltr;
+}
+
+.cellTop {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.cellLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.cellCenter {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+}
+
+.cellRight {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.cellBottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.miniFrame {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+}
+
+.miniPage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  border: 1px solid var(--c-border-strong);
+  background-color: #fff;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+.miniCrop {
+  position: absolute;
+  border: 1px solid var(--c-primary);
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}

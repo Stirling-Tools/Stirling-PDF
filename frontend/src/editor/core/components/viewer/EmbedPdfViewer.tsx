@@ -57,6 +57,7 @@ import {
 } from "@editor/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@editor/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@editor/components/viewer/StampPlacementOverlay";
+import CropPageOverlay from "@editor/components/tools/crop/CropPageOverlay";
 import {
   RulerOverlay,
   type RulerOverlayHandle,
@@ -2017,6 +2018,10 @@ const EmbedPdfViewerContent = ({
               customScale={customScale}
               isCalibrationActive={isScaleCalibrationActive}
               onCalibrationMeasure={handleScaleCalibrationMeasurement}
+            />
+            <CropPageOverlay
+              containerRef={pdfContainerRef}
+              isActive={selectedTool === "crop"}
             />
           </Box>
           <ScaleCalibrationDialog

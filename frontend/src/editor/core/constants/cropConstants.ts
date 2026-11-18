@@ -7,14 +7,3 @@ export const DEFAULT_CROP_AREA = {
   width: PAGE_SIZES.A4.width,
   height: PAGE_SIZES.A4.height,
 } as const;
-
-export type ResizeHandle =
-  | "nw"
-  | "ne"
-  | "sw"
-  | "se"
-  | "n"
-  | "e"
-  | "s"
-  | "w"
-  | null;

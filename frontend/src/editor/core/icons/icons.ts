@@ -186,6 +186,7 @@ import LockOpen from "lucide-static/icons/lock-open.svg?react";
 import LogIn from "lucide-static/icons/log-in.svg?react";
 import LogOut from "lucide-static/icons/log-out.svg?react";
 import Luggage from "lucide-static/icons/luggage.svg?react";
+import Magnet from "lucide-static/icons/magnet.svg?react";
 import Mail from "lucide-static/icons/mail.svg?react";
 import Map from "lucide-static/icons/map.svg?react";
 import MapPin from "lucide-static/icons/map-pin.svg?react";
@@ -619,6 +620,7 @@ export const ICONS = {
   "log-in": { Component: LogIn, kind: "lucide" },
   "log-out": { Component: LogOut, kind: "lucide" },
   luggage: { Component: Luggage, kind: "lucide" },
+  magnet: { Component: Magnet, kind: "lucide" },
   mail: { Component: Mail, kind: "lucide" },
   map: { Component: Map, kind: "lucide" },
   "map-pin": { Component: MapPin, kind: "lucide" },

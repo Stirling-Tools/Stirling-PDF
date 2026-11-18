@@ -1,0 +1,61 @@
+import { useEffect } from "react";
+import type { Rectangle } from "@editor/utils/cropCoordinates";
+import type { CropPageGeometry } from "@editor/utils/cropPageGeometry";
+import { setCropViewerSession } from "@editor/components/tools/crop/cropViewerSession";
+
+interface CropViewerSessionPublisherProps {
+  enabled: boolean;
+  geometry: CropPageGeometry | null;
+  geometryPageNumber: number;
+  cropArea: Rectangle;
+  pageNumber: number;
+  aspectRatio: number | null;
+  onApplyArea: (area: Rectangle, geometry: CropPageGeometry) => void;
+  onPageChange: (page: number) => void;
+}
+
+/**
+ * Publishes the tool's live state to the viewer overlay. Rendering nothing
+ * keeps the panel the only owner of the parameters.
+ */
+export default function CropViewerSessionPublisher({
+  enabled,
+  geometry,
+  geometryPageNumber,
+  cropArea,
+  pageNumber,
+  aspectRatio,
+  onApplyArea,
+  onPageChange,
+}: CropViewerSessionPublisherProps) {
+  useEffect(() => {
+    return () => setCropViewerSession(null);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || !geometry) {
+      setCropViewerSession(null);
+      return;
+    }
+    setCropViewerSession({
+      geometry,
+      geometryPageNumber,
+      cropArea,
+      pageNumber,
+      aspectRatio,
+      applyArea: onApplyArea,
+      onPageChange,
+    });
+  }, [
+    enabled,
+    geometry,
+    geometryPageNumber,
+    cropArea,
+    pageNumber,
+    aspectRatio,
+    onApplyArea,
+    onPageChange,
+  ]);
+
+  return null;
+}
