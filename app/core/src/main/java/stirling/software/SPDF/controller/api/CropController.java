@@ -220,10 +220,18 @@ public class CropController {
                     BufferedImage image = renderer.renderImageWithDPI(i, DEFAULT_RENDER_DPI);
                     int[] bounds = detectContentBounds(image);
 
-                    float scaleX = mediaBox.getWidth() / image.getWidth();
-                    float scaleY = mediaBox.getHeight() / image.getHeight();
-
-                    CropBounds cropBounds = CropBounds.fromPixels(bounds, scaleX, scaleY);
+                    // The renderer draws the crop box, rotated; the bounds it
+                    // reports are fractions of that image. Mapping them with
+                    // media-box scales at a (0,0) origin lands the auto-crop
+                    // elsewhere than the visible content on scanner PDFs,
+                    // which often carry offset crop boxes and /Rotate (#8710).
+                    CropBounds cropBounds =
+                            CropBounds.fromPixels(
+                                    bounds,
+                                    sourcePage.getCropBox(),
+                                    image.getWidth(),
+                                    image.getHeight(),
+                                    sourcePage.getRotation());
 
                     PDPage newPage = new PDPage(mediaBox);
                     newDocument.addPage(newPage);
@@ -439,18 +447,79 @@ public class CropController {
         }
     }
 
+    /**
+     * Content bounds in page user space. {@code fromPixels} receives the bounds of the content as
+     * found in the rendered image, which shows the page's crop box after its /Rotate is applied, so
+     * it must scale by the crop box (not the media box), undo the rotation and add the crop box
+     * origin before the coordinates name anything in user space.
+     *
+     * @param pixelBounds [left, bottom, right, top] in image pixels, y up
+     * @param visibleBox the crop box the image rendered
+     * @param rotation the page's clockwise /Rotate
+     */
     private record CropBounds(float x, float y, float width, float height) {
 
-        static CropBounds fromPixels(int[] pixelBounds, float scaleX, float scaleY) {
+        static CropBounds fromPixels(
+                int[] pixelBounds,
+                PDRectangle visibleBox,
+                int imageWidth,
+                int imageHeight,
+                int rotation) {
             if (pixelBounds.length != 4) {
                 throw new IllegalArgumentException(
                         "pixelBounds array must contain exactly 4 elements: [x1, y1, x2, y2]");
             }
-            float x = pixelBounds[0] * scaleX;
-            float y = pixelBounds[1] * scaleY;
-            float width = (pixelBounds[2] - pixelBounds[0]) * scaleX;
-            float height = (pixelBounds[3] - pixelBounds[1]) * scaleY;
-            return new CropBounds(x, y, width, height);
+
+            float left = pixelBounds[0] / (float) imageWidth;
+            float right = pixelBounds[2] / (float) imageWidth;
+            // Fractions of the image height measured from its top edge.
+            float bottom = 1 - pixelBounds[1] / (float) imageHeight;
+            float top = 1 - pixelBounds[3] / (float) imageHeight;
+
+            float w = visibleBox.getWidth();
+            float h = visibleBox.getHeight();
+            float x0 = visibleBox.getLowerLeftX();
+            float y0 = visibleBox.getLowerLeftY();
+            float x1 = visibleBox.getUpperRightX();
+            float y1 = visibleBox.getUpperRightY();
+
+            // Opposite corners of the content in the rendered view, mapped
+            // through the rotation into user space; min/max absorbs the corner
+            // order each rotation produces.
+            float ax;
+            float ay;
+            float bx;
+            float by;
+            switch (Math.floorMod(Math.round(rotation / 90f) * 90, 360)) {
+                case 90 -> {
+                    ax = x0 + bottom * w;
+                    ay = y0 + left * h;
+                    bx = x0 + top * w;
+                    by = y0 + right * h;
+                }
+                case 180 -> {
+                    ax = x1 - right * w;
+                    ay = y0 + bottom * h;
+                    bx = x1 - left * w;
+                    by = y0 + top * h;
+                }
+                case 270 -> {
+                    ax = x1 - top * w;
+                    ay = y1 - right * h;
+                    bx = x1 - bottom * w;
+                    by = y1 - left * h;
+                }
+                default -> {
+                    ax = x0 + left * w;
+                    ay = y1 - top * h;
+                    bx = x0 + right * w;
+                    by = y1 - bottom * h;
+                }
+            }
+
+            float x = Math.min(ax, bx);
+            float y = Math.min(ay, by);
+            return new CropBounds(x, y, Math.abs(bx - ax), Math.abs(by - ay));
         }
     }
 }

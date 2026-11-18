@@ -213,6 +213,37 @@ class CropControllerTest {
                     MediaType.APPLICATION_PDF_VALUE,
                     Files.readAllBytes(testPdfPath));
         }
+
+        /**
+         * A scanner-style page: media box at the origin, crop box inset, optional /Rotate, and a
+         * gray content rectangle at user space (100, 300) to (200, 400). Auto-crop must land on
+         * that rectangle whatever the crop box offset or rotation says.
+         */
+        MockMultipartFile createPdfWithOffsetCropBoxAndRect(String filename, int rotation)
+                throws IOException {
+            Path testPdfPath = tempDir.resolve(filename);
+
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage(new PDRectangle(0, 0, 612, 792));
+                page.setCropBox(new PDRectangle(30, 40, 552, 712));
+                page.setRotation(rotation);
+                doc.addPage(page);
+
+                try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                    contentStream.setNonStrokingColor(java.awt.Color.GRAY);
+                    contentStream.addRect(100, 300, 100, 100);
+                    contentStream.fill();
+                }
+
+                doc.save(testPdfPath.toFile());
+            }
+
+            return new MockMultipartFile(
+                    "fileInput",
+                    filename,
+                    MediaType.APPLICATION_PDF_VALUE,
+                    Files.readAllBytes(testPdfPath));
+        }
     }
 
     @Nested
@@ -376,6 +407,60 @@ class CropControllerTest {
                 Assertions.assertNotNull(response.getBody());
                 try (PDDocument result = Loader.loadPDF(drainBody(response))) {
                     assertThat(result.getNumberOfPages()).isEqualTo(1);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Should auto-crop a page whose crop box is offset from the media box")
+        void shouldAutoCropOffsetCropBoxPage() throws IOException {
+            MockMultipartFile testFile =
+                    autoCropPdfFactory.createPdfWithOffsetCropBoxAndRect("offset_cropbox.pdf", 0);
+            CropPdfForm request =
+                    new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
+
+            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
+                    PDDocument newDoc = new PDDocument()) {
+                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
+                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
+                        .thenReturn(newDoc);
+
+                ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                    PDRectangle box = result.getPage(0).getMediaBox();
+                    assertThat(box.getLowerLeftX()).isCloseTo(100f, within(3f));
+                    assertThat(box.getLowerLeftY()).isCloseTo(300f, within(3f));
+                    assertThat(box.getWidth()).isCloseTo(100f, within(3f));
+                    assertThat(box.getHeight()).isCloseTo(100f, within(3f));
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Should auto-crop a rotated page without rotating the crop area")
+        void shouldAutoCropRotatedPageWithoutRotatingTheArea() throws IOException {
+            MockMultipartFile testFile =
+                    autoCropPdfFactory.createPdfWithOffsetCropBoxAndRect("rotated_cropbox.pdf", 90);
+            CropPdfForm request =
+                    new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
+
+            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
+                    PDDocument newDoc = new PDDocument()) {
+                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
+                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
+                        .thenReturn(newDoc);
+
+                ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                    PDRectangle box = result.getPage(0).getMediaBox();
+                    assertThat(box.getLowerLeftX()).isCloseTo(100f, within(3f));
+                    assertThat(box.getLowerLeftY()).isCloseTo(300f, within(3f));
+                    assertThat(box.getWidth()).isCloseTo(100f, within(3f));
+                    assertThat(box.getHeight()).isCloseTo(100f, within(3f));
                 }
             }
         }
@@ -548,37 +633,80 @@ class CropControllerTest {
                             "stirling.software.SPDF.controller.api.CropController$CropBounds");
             fromPixelsMethod =
                     cropBoundsClass.getDeclaredMethod(
-                            "fromPixels", int[].class, float.class, float.class);
+                            "fromPixels",
+                            int[].class,
+                            PDRectangle.class,
+                            int.class,
+                            int.class,
+                            int.class);
             fromPixelsMethod.setAccessible(true);
         }
 
+        private Object convert(int[] pixelBounds, PDRectangle visibleBox, int rotation) {
+            int imageWidth =
+                    rotation % 180 == 0
+                            ? Math.round(visibleBox.getWidth())
+                            : Math.round(visibleBox.getHeight());
+            int imageHeight =
+                    rotation % 180 == 0
+                            ? Math.round(visibleBox.getHeight())
+                            : Math.round(visibleBox.getWidth());
+            return invokeConvert(pixelBounds, visibleBox, imageWidth, imageHeight, rotation);
+        }
+
+        private Object invokeConvert(
+                int[] pixelBounds,
+                PDRectangle visibleBox,
+                int imageWidth,
+                int imageHeight,
+                int rotation) {
+            try {
+                return fromPixelsMethod.invoke(
+                        null, pixelBounds, visibleBox, imageWidth, imageHeight, rotation);
+            } catch (Exception e) {
+                if (e.getCause() instanceof RuntimeException cause) {
+                    throw cause;
+                }
+                throw new IllegalStateException(e);
+            }
+        }
+
         @Test
-        @DisplayName("Should convert pixel bounds to PDF coordinates correctly")
-        void shouldConvertPixelBoundsToPdfCoordinates() throws Exception {
-            int[] pixelBounds = {10, 20, 110, 120};
-            float scaleX = 0.5f;
-            float scaleY = 0.5f;
+        @DisplayName("Should convert pixel bounds to user space on an offset crop box")
+        void shouldConvertPixelBoundsToUserSpaceOnOffsetCropBox() throws Exception {
+            int[] pixelBounds = {70, 260, 170, 360};
+            PDRectangle visibleBox = new PDRectangle(30, 40, 552, 712);
 
-            Object bounds = fromPixelsMethod.invoke(null, pixelBounds, scaleX, scaleY);
+            Object bounds = convert(pixelBounds, visibleBox, 0);
 
-            assertThat(getFloatField(bounds, "x")).isCloseTo(5.0f, within(0.01f));
-            assertThat(getFloatField(bounds, "y")).isCloseTo(10.0f, within(0.01f));
-            assertThat(getFloatField(bounds, "width")).isCloseTo(50.0f, within(0.01f));
-            assertThat(getFloatField(bounds, "height")).isCloseTo(50.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "x")).isCloseTo(100.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "y")).isCloseTo(300.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "width")).isCloseTo(100.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "height")).isCloseTo(100.0f, within(0.01f));
+        }
+
+        @Test
+        @DisplayName("Should undo a 90 degree rotation when converting pixel bounds")
+        void shouldUndoRotationWhenConvertingPixelBounds() throws Exception {
+            int[] pixelBounds = {300, 412, 400, 512};
+            PDRectangle visibleBox = new PDRectangle(0, 0, 612, 792);
+
+            Object bounds = convert(pixelBounds, visibleBox, 90);
+
+            assertThat(getFloatField(bounds, "x")).isCloseTo(100.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "y")).isCloseTo(300.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "width")).isCloseTo(100.0f, within(0.01f));
+            assertThat(getFloatField(bounds, "height")).isCloseTo(100.0f, within(0.01f));
         }
 
         @ParameterizedTest
-        @CsvSource({
-            "0, 0, 100, 100, 1.0, 1.0",
-            "10, 20, 50, 80, 2.0, 2.0",
-            "5, 5, 25, 25, 0.5, 0.5"
-        })
-        @DisplayName("Should handle various scale factors")
-        void shouldHandleVariousScaleFactors(
-                int x1, int y1, int x2, int y2, float scaleX, float scaleY) throws Exception {
-            int[] pixelBounds = {x1, y1, x2, y2};
+        @ValueSource(ints = {0, 90, 180, 270, 360})
+        @DisplayName("Should produce a positive rectangle for every rotation")
+        void shouldProducePositiveRectangleForEveryRotation(int rotation) throws Exception {
+            int[] pixelBounds = {70, 260, 170, 360};
+            PDRectangle visibleBox = new PDRectangle(30, 40, 552, 712);
 
-            Object bounds = fromPixelsMethod.invoke(null, pixelBounds, scaleX, scaleY);
+            Object bounds = convert(pixelBounds, visibleBox, rotation);
 
             assertThat(bounds).isNotNull();
             assertThat(getFloatField(bounds, "width")).isGreaterThan(0);
@@ -590,10 +718,15 @@ class CropControllerTest {
         void shouldThrowExceptionForInvalidArray() {
             int[] invalidBounds = {10, 20, 30};
 
-            assertThatThrownBy(() -> fromPixelsMethod.invoke(null, invalidBounds, 1.0f, 1.0f))
-                    .isInstanceOf(Exception.class)
-                    .hasCauseInstanceOf(IllegalArgumentException.class)
-                    .cause()
+            assertThatThrownBy(
+                            () ->
+                                    invokeConvert(
+                                            invalidBounds,
+                                            new PDRectangle(0, 0, 100, 100),
+                                            100,
+                                            100,
+                                            0))
+                    .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("pixelBounds array must contain exactly 4 elements");
         }
 
