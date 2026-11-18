@@ -1,4 +1,9 @@
-import { forwardRef, type ComponentPropsWithoutRef } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "@editor/ui/Icon";
@@ -6,6 +11,8 @@ import { ArrangeMenuItems } from "@editor/tools/pdfTextEditor/components/toolbar
 import type { Controller } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import "@editor/tools/pdfTextEditor/components/MobileEditor.css";
 
 interface Props {
@@ -148,6 +155,7 @@ export function MobileActionBar({
               onClick={() => store.setFindOpen(!findOpen)}
               data-testid="pdf-editor-open-find"
             />
+            <ZoomMenu />
             <BarButton
               icon="file-text"
               label={t("pdfTextEditor.mobile.document", "Document")}
@@ -158,6 +166,53 @@ export function MobileActionBar({
         )}
       </div>
     </>
+  );
+}
+
+/** The viewer's zoom, whose own page bar the action bar stands in for. */
+function ZoomMenu() {
+  const { t } = useTranslation();
+  const { getZoomState, zoomActions, registerImmediateZoomUpdate } =
+    useViewer();
+  const [percent, setPercent] = useState(
+    () => getZoomState().zoomPercent || 100,
+  );
+  useEffect(
+    () => registerImmediateZoomUpdate(setPercent),
+    [registerImmediateZoomUpdate],
+  );
+
+  return (
+    <Menu shadow="md" position="top" withinPortal closeOnItemClick={false}>
+      <Menu.Target>
+        <BarButton
+          icon="zoom-in"
+          label={`${percent}%`}
+          aria-label={t("viewer.zoom", "Zoom")}
+          data-testid="pdf-editor-mobile-zoom"
+        />
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<Icon name="zoom-in" size={18} />}
+          onClick={() => zoomActions.zoomIn()}
+        >
+          {t("viewer.zoomIn", "Zoom in")}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<Icon name="zoom-out" size={18} />}
+          onClick={() => zoomActions.zoomOut()}
+        >
+          {t("viewer.zoomOut", "Zoom out")}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<Icon name="arrow-left-right" size={18} />}
+          onClick={() => zoomActions.requestZoom(ZoomMode.FitWidth)}
+        >
+          {t("viewer.fitWidth", "Fit to width")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 

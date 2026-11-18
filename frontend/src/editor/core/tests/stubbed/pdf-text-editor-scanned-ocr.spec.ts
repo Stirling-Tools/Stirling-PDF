@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Locator, Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
@@ -181,13 +182,12 @@ async function runs(page: Page): Promise<RunState[]> {
 }
 
 async function open(page: Page, file: string | Buffer): Promise<void> {
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(
-      typeof file === "string"
-        ? FIX(file)
-        : { name: "reopened.pdf", mimeType: "application/pdf", buffer: file },
-    );
+  await openInTextEditor(
+    page,
+    typeof file === "string"
+      ? FIX(file)
+      : { name: "reopened.pdf", mimeType: "application/pdf", buffer: file },
+  );
   await expect(page.getByTestId(PAGE_TESTID)).toBeVisible({ timeout: 60_000 });
   await waitForEditorReady(page, 60_000);
   await settle(page);
