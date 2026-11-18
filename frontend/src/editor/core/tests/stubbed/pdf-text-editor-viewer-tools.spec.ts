@@ -206,10 +206,21 @@ test("Edit text in the viewer's selection menu opens the editor on that text", a
     timeout: 30_000,
   });
 
-  const box = await firstPage.boundingBox();
+  let box = await firstPage.boundingBox();
+  let y = 0;
+  await expect
+    .poll(async () => {
+      box = await firstPage.boundingBox();
+      if (!box) return "no box";
+      y = box.y + box.height * 0.105;
+      await page.mouse.move(box.x + 5, box.y + 5);
+      await page.mouse.move(box.x + box.width * 0.15, y, { steps: 5 });
+      return firstPage.evaluate(
+        (el) => getComputedStyle(el.parentElement ?? el).cursor,
+      );
+    })
+    .toMatch(/^(text|vertical-text)$/);
   if (!box) throw new Error("page has no bounding box");
-  const y = box.y + box.height * 0.105;
-  await page.mouse.move(box.x + box.width * 0.15, y);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
   await page.mouse.up();
