@@ -72,7 +72,7 @@ export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
       <div className="guest-banner-content">
         <div className="guest-banner-text">
           <div className="guest-banner-title">
-            {t("guestBanner.title", "You're using Stirling PDF as a guest!")}
+            {t("guestBanner.title", "You're using Stirling PDF as a guest")}
           </div>
           <div className="guest-banner-message">
             {t(

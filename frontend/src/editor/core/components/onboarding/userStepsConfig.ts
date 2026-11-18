@@ -83,7 +83,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="tool-button-crop"]',
       content: t(
         "onboarding.selectCropTool",
-        "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools.",
+        "Select the <strong>Crop</strong> tool to see how a tool works.",
       ),
       padding: 0,
       action: async () => {
@@ -95,7 +95,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="tool-panel"]',
       content: t(
         "onboarding.toolInterface",
-        "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet.",
+        "This is the <strong>Crop</strong> tool. It's mostly empty because no PDFs have been added yet.",
       ),
       position: besideCentered,
       padding: 0,
@@ -118,7 +118,7 @@ export function createUserStepsConfig({
       ],
       content: t(
         "onboarding.fileSources",
-        "You can upload new files or access recent files from here. For the tour, we'll just use a sample file.",
+        "Upload new files or open recent ones here. For the tour, we'll use a sample file.",
       ),
       position: "bottom",
       padding: 6,
@@ -135,7 +135,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="workbench"]',
       content: t(
         "onboarding.workbench",
-        "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs.",
+        "This is the <strong>Workbench</strong>, where you view and edit your PDFs.",
       ),
       position: insideBottom,
       padding: 0,
@@ -191,7 +191,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="file-card-checkbox"]',
       content: t(
         "onboarding.fileReplacement",
-        "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools.",
+        "The modified file replaces the original in the Workbench, so you can run it through more tools.",
       ),
       padding: 6,
     },
@@ -210,7 +210,7 @@ export function createUserStepsConfig({
       selector: '[data-tour="settings-tours"]',
       content: t(
         "onboarding.wrapUp",
-        "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
+        "You can replay this tour from <strong>Settings</strong>, in the <strong>Tours</strong> section under Help.",
       ),
       padding: 6,
       action: async () => {

@@ -156,7 +156,7 @@ export default function AdminIntegrationsPage() {
           )}
           description={t(
             "admin.settings.connections.connectedServicesDescription",
-            "Services this server is wired up to. Sign-in providers live under Sign-in & security.",
+            "Services this server is connected to. Sign-in providers are under Sign-in & security.",
           )}
         >
           <LinkedServicesCard {...card} providers={linkedProviders} />

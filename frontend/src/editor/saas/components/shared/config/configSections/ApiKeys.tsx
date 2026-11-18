@@ -104,7 +104,7 @@ export default function ApiKeys() {
           <Text size="sm" c="dimmed" style={{ marginBottom: 8 }}>
             {t(
               "config.apiKeys.description",
-              "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one.",
+              "Your API key for Stirling PDF tools. Copy it to your project or refresh to generate a new one.",
             )}
           </Text>
           <div
