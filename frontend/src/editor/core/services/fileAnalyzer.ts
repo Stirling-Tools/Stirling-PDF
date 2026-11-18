@@ -5,6 +5,8 @@ import { getPdfAccess } from "@editor/services/pdfAccessService";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
+import { readBlobSlice } from "@editor/utils/blobSlice";
+
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
     SMALL: 10 * 1024 * 1024, // 10MB
@@ -261,9 +263,7 @@ export class FileAnalyzer {
     }
 
     try {
-      // Read first few bytes to check PDF header
-      const header = file.slice(0, 8);
-      const headerBytes = new Uint8Array(await header.arrayBuffer());
+      const headerBytes = await readBlobSlice(file, 0, 8);
       const headerString = String.fromCharCode(...headerBytes);
 
       return headerString.startsWith("%PDF-");

@@ -10,6 +10,7 @@ import type { ProcessingProgress } from "@editor/hooks/tools/shared/useToolState
 import type { StirlingFile, FileId } from "@editor/types/fileContext";
 import { isSignupRequiredError } from "@editor/utils/toolErrorHandler";
 import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
+import { namedForUpload } from "@editor/utils/uploadableFile";
 import {
   prepareUnlockedFile,
   protectUnlockedResults,
@@ -111,7 +112,10 @@ export const useToolApiCalls = <TParams = void>() => {
             fileSignal,
             cancellation.token,
           );
-          const formData = config.buildFormData(params, workingFile);
+          const formData = config.buildFormData(
+            params,
+            await namedForUpload(workingFile),
+          );
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response =
             endpoint === "/api/v1/security/add-password" ||
