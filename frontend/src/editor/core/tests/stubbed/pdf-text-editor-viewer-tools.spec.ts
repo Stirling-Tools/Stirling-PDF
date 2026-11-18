@@ -249,4 +249,14 @@ test("Edit text in the viewer's selection menu opens the editor on that text", a
     // The line dragged across in the viewer.
     .toContain("Test document");
   await expect(page.locator("[data-text-selection-menu]")).toHaveCount(0);
+
+  // The run is open for editing with that span selected, so typing replaces it.
+  const focusedRun = page.locator('[data-testid^="pdf-editor-run-"]:focus');
+  await expect(focusedRun).toHaveCount(1);
+  await expect
+    .poll(() => page.evaluate(() => String(window.getSelection())))
+    .toContain("Test document");
+  await page.keyboard.type("Replaced");
+  await expect(focusedRun).toContainText("Replaced");
+  await expect(focusedRun).not.toContainText("Test document");
 });
