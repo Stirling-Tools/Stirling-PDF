@@ -86,7 +86,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
-      pdf2image ocrmypdf \
+      ocrmypdf \
       cryptography "pillow>=13.0.0" "Brotli>=1.2.1"
 
 RUN find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
@@ -147,16 +147,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl libltdl7 libwebpdemux2 libzip4 \
+      libjpeg-turbo8 libpng16-16t64 libtiff6 zlib1g liblcms2-2 libwebpmux3 \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
-      poppler-utils \
       pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
-      fonts-noto-cjk poppler-data \
+      fonts-noto-cjk \
       fonts-freefont-ttf fonts-terminus \
       # Python runtime
       python3 python3-packaging \
@@ -360,4 +360,5 @@ LABEL org.opencontainers.image.title="Stirling-PDF Base" \
 COPY --from=unpaper-build /usr/local/bin/unpaper /usr/local/bin/unpaper
 COPY --from=tesseract-build /opt/tess/bin/tesseract /usr/local/bin/tesseract
 COPY --from=tesseract-build /opt/tess/share/tessdata/configs/ /usr/share/tesseract-ocr/5/tessdata/configs/
-RUN tesseract --version && tesseract --list-langs && unpaper --version
+RUN tesseract --version && tesseract --list-langs && unpaper --version && magick -version && \
+    ! ldd /usr/local/bin/* /usr/local/lib/*.so* 2>/dev/null | grep "not found"

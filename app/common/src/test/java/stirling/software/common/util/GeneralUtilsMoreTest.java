@@ -337,33 +337,6 @@ class GeneralUtilsMoreTest {
     }
 
     @Nested
-    @DisplayName("extractScript validation")
-    class ExtractScriptTests {
-
-        @Test
-        @DisplayName("null or blank name is rejected")
-        void nullOrBlank() {
-            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.extractScript(null));
-            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.extractScript("  "));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"../evil.py", "dir/script.py"})
-        @DisplayName("path-traversal characters are rejected")
-        void pathTraversalRejected(String name) {
-            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.extractScript(name));
-        }
-
-        @Test
-        @DisplayName("name outside the allow-list is rejected")
-        void notInAllowList() {
-            assertThatThrownBy(() -> GeneralUtils.extractScript("random.py"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("png_to_webp.py");
-        }
-    }
-
-    @Nested
     @DisplayName("extractPipeline invalid configuration")
     class ExtractPipelineTests {
 

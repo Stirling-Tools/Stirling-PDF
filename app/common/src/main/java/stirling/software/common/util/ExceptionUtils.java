@@ -709,9 +709,9 @@ public class ExceptionUtils {
         return new ToolRequiredException(message, ErrorCode.GHOSTSCRIPT_REQUIRED.getCode());
     }
 
-    public static ToolRequiredException createPythonRequiredForWebpException() {
-        String message = getMessage(ErrorCode.PYTHON_REQUIRED_WEBP);
-        return new ToolRequiredException(message, ErrorCode.PYTHON_REQUIRED_WEBP.getCode());
+    public static ToolRequiredException createImageMagickRequiredForWebpException() {
+        String message = getMessage(ErrorCode.IMAGEMAGICK_REQUIRED_WEBP);
+        return new ToolRequiredException(message, ErrorCode.IMAGEMAGICK_REQUIRED_WEBP.getCode());
     }
 
     /** Create compression-related exceptions. */
@@ -1245,8 +1245,10 @@ public class ExceptionUtils {
         // Conversion errors
         PDFA_CONVERSION_FAILED("E060", "error.pdfaConversionFailed", "PDF/A conversion failed"),
         HTML_FILE_REQUIRED("E061", "error.htmlFileRequired", "File must be in HTML or ZIP format"),
-        PYTHON_REQUIRED_WEBP(
-                "E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
+        IMAGEMAGICK_REQUIRED_WEBP(
+                "E062",
+                "error.imageMagickRequiredWebp",
+                "ImageMagick is required for WebP conversion"),
         FFMPEG_REQUIRED(
                 "E063",
                 "error.ffmpegRequired",

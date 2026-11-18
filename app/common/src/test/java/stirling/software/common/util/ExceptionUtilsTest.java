@@ -162,9 +162,9 @@ class ExceptionUtilsTest {
         }
 
         @Test
-        void testCreatePythonRequiredForWebpException() {
-            IOException ex = ExceptionUtils.createPythonRequiredForWebpException();
-            assertTrue(ex.getMessage().contains("Python"));
+        void testCreateImageMagickRequiredForWebpException() {
+            IOException ex = ExceptionUtils.createImageMagickRequiredForWebpException();
+            assertTrue(ex.getMessage().contains("ImageMagick"));
             assertTrue(ex.getMessage().contains("WebP conversion"));
         }
     }

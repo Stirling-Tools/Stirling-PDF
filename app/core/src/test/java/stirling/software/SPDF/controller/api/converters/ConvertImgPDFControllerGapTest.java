@@ -40,7 +40,6 @@ import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CbrUtils;
 import stirling.software.common.util.CbzUtils;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfToCbrUtils;
 import stirling.software.common.util.PdfToCbzUtils;
@@ -730,8 +729,8 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
-        @DisplayName("webp requested without Python throws the python-required IOException")
-        void webpWithoutPythonThrows() throws Exception {
+        @DisplayName("webp requested without ImageMagick throws the tool-required IOException")
+        void webpWithoutImageMagickThrows() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             MockMultipartFile file = imagePdf(pdfBytes);
 
@@ -747,11 +746,10 @@ class ConvertImgPDFControllerGapTest {
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
 
-            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class)) {
+            Mockito.when(endpointConfiguration.isGroupEnabled("ImageMagick")).thenReturn(false);
 
-                // webp renders to PNG first, then requires Python for the final conversion.
+            try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class)) {
+
                 pu.when(
                                 () ->
                                         PdfUtils.convertFromPdf(
@@ -764,7 +762,6 @@ class ConvertImgPDFControllerGapTest {
                                                 any(String.class),
                                                 anyBoolean()))
                         .thenReturn("png-image".getBytes());
-                cpi.when(CheckProgramInstall::isPythonAvailable).thenReturn(false);
 
                 assertThrows(IOException.class, () -> controller.convertToImage(request));
             }

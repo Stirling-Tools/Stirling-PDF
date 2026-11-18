@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -34,7 +33,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -45,8 +43,8 @@ import stirling.software.common.util.WebResponseUtils;
 /**
  * Extra branch coverage for {@link ConvertImgPDFController#convertToImage} not exercised by the
  * existing tests: the null-result logging branch, the octet-stream media-type fallback, and the
- * webp-with-Python path that produces no output files. The Python/ProcessExecutor boundary is
- * mocked so no interpreter or external binary ever runs.
+ * webp path that produces no output files. The ImageMagick/ProcessExecutor boundary is mocked so no
+ * external binary ever runs.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -141,33 +139,28 @@ class ConvertImgPDFControllerExtraTest {
     }
 
     @Nested
-    @DisplayName("webp-with-Python branch")
-    class WebpWithPython {
+    @DisplayName("webp via ImageMagick")
+    class WebpViaImageMagick {
 
         @Test
-        @DisplayName("throws when the Python conversion yields no webp files")
+        @DisplayName("throws when ImageMagick yields no webp files")
         void noWebpFilesProducedThrows() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             ConvertToImageRequest request = baseRequest(pdfBytes, "webp");
 
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
+            Mockito.when(endpointConfiguration.isGroupEnabled("ImageMagick")).thenReturn(true);
 
-            // ProcessExecutor instance + result are mocked; the empty output dir drives the
-            // "No WebP files were created" IOException without invoking Python.
             ProcessExecutorResult procResult = Mockito.mock(ProcessExecutorResult.class);
+            Mockito.when(procResult.getRc()).thenReturn(0);
             Mockito.when(procResult.getMessages()).thenReturn("no output");
             ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
             Mockito.when(executor.runCommandWithOutputHandling(anyList())).thenReturn(procResult);
 
-            // parsePageList/generateFilename are stubbed so rearrangePdfPages runs without
-            // touching the real installation path for script extraction.
             java.util.List<Integer> pageOrder = java.util.List.of(0);
-            Path scriptPath = Path.of("png_to_webp.py");
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
 
@@ -190,13 +183,9 @@ class ConvertImgPDFControllerExtraTest {
                         .thenReturn(pageOrder);
                 gu.when(() -> GeneralUtils.generateFilename(any(), any(String.class)))
                         .thenReturn("out");
-                gu.when(() -> GeneralUtils.extractScript("png_to_webp.py")).thenReturn(scriptPath);
-                cpi.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
-                cpi.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn("python3");
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
+                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.IMAGEMAGICK))
                         .thenReturn(executor);
 
-                // Output directory is empty after the (mocked) run, so the controller throws.
                 assertThatThrownBy(() -> controller.convertToImage(request))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("No WebP files were created");
