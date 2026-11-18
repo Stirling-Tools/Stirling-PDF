@@ -217,6 +217,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   useEffect(() => () => clearTimers(), [clearTimers]);
 
+  useEffect(() => {
+    if (disabled) {
+      clearTimers();
+      setInternalOpen(false);
+      setIsPinned(false);
+    }
+  }, [disabled, clearTimers]);
+
   const arrowClass = useMemo(() => {
     if (sidebarTooltip) return null;
     const map: Record<NonNullable<TooltipProps["position"]>, string> = {

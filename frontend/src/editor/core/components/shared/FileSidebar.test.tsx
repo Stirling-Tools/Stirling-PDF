@@ -13,6 +13,10 @@ const sidebar = vi.hoisted(() => ({
   uploadTarget: null as StirlingFileStub[] | null,
 }));
 
+vi.mock("react-router-dom", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useNavigate: () => () => {},
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,

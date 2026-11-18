@@ -1934,6 +1934,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
 
                 public boolean accountConnectionsReady() {
                     return enabled
