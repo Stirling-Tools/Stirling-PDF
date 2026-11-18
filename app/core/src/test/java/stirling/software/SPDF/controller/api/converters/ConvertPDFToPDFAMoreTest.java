@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -41,6 +42,13 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -57,8 +65,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
@@ -317,6 +325,42 @@ class ConvertPDFToPDFAMoreTest {
             document.save(output);
             return new MockMultipartFile(
                     "fileInput", "custom-font.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
+    private MockMultipartFile formWidgetHelveticaPdf() throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+
+            PDAcroForm acroForm = new PDAcroForm(document);
+            PDTextField field = new PDTextField(acroForm);
+            field.setPartialName("name1");
+            acroForm.getFields().add(field);
+            document.getDocumentCatalog().setAcroForm(acroForm);
+
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+            widget.setRectangle(new PDRectangle(100, 650, 100, 15));
+            PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+            PDAppearanceStream normal = new PDAppearanceStream(document);
+            normal.setBBox(new PDRectangle(100, 15));
+            normal.setResources(new PDResources());
+            appearance.setNormalAppearance(normal);
+            widget.setAppearance(appearance);
+            page.getAnnotations().add(widget);
+
+            try (PDPageContentStream content = new PDPageContentStream(document, normal)) {
+                content.beginText();
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
+                content.newLineAtOffset(2, 3);
+                content.showText("WIDGET VALUE");
+                content.endText();
+            }
+
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "widget.pdf", "application/pdf", output.toByteArray());
         }
     }
 
@@ -900,6 +944,34 @@ class ConvertPDFToPDFAMoreTest {
             try (PDDocument converted = Loader.loadPDF(output.getFile())) {
                 assertThat(new PDFTextStripper().getText(converted))
                         .contains("SURVIVES SUBSTITUTION");
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X substitutes fonts inside form widget appearance streams")
+        void pdfxSubstitutesWidgetAppearanceFonts() throws Exception {
+            Path input = tempDir.resolve("widget-helvetica.pdf");
+            try (InputStream in = formWidgetHelveticaPdf().getInputStream()) {
+                Files.copy(in, input, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            invokeInstance(newController(), "embedPdfxFonts", input);
+
+            try (PDDocument output = Loader.loadPDF(input.toFile())) {
+                PDAcroForm acroForm = output.getDocumentCatalog().getAcroForm();
+                assertThat(acroForm).isNotNull();
+                assertThat(acroForm.getFieldTree()).isNotEmpty();
+                for (PDField field : acroForm.getFieldTree()) {
+                    for (PDAnnotationWidget widget : field.getWidgets()) {
+                        PDAppearanceEntry normal = widget.getAppearance().getNormalAppearance();
+                        assertThat(normal.isStream()).isTrue();
+                        PDResources resources = normal.getAppearanceStream().getResources();
+                        assertThat(resources.getFontNames()).isNotEmpty();
+                        for (COSName name : resources.getFontNames()) {
+                            assertThat(resources.getFont(name).isEmbedded()).isTrue();
+                        }
+                    }
+                }
             }
         }
     }

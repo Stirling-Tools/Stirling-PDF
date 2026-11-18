@@ -60,6 +60,10 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.apache.pdfbox.preflight.Format;
 import org.apache.pdfbox.preflight.PreflightConfiguration;
@@ -617,6 +621,9 @@ public class ConvertPDFToPDFA {
         for (PDPage page : doc.getPages()) {
             collectUnembeddedFontNames(page.getResources(), missing, 0);
         }
+        for (PDResources resources : formFontResources(doc)) {
+            collectUnembeddedFontNames(resources, missing, 0);
+        }
         return missing;
     }
 
@@ -648,6 +655,9 @@ public class ConvertPDFToPDFA {
             for (PDPage page : document.getPages()) {
                 replaced += replacePdfxFonts(document, page.getResources(), 0);
             }
+            for (PDResources resources : formFontResources(document)) {
+                replaced += replacePdfxFonts(document, resources, 0);
+            }
             if (replaced > 0) {
                 // The document reads lazily from pdfPath; saving in place truncates
                 // unread content streams, so the substitution lands via a sibling file.
@@ -659,6 +669,49 @@ public class ConvertPDFToPDFA {
                     Files.deleteIfExists(output);
                 }
                 log.info("Embedded {} PDF/X standard font resource(s)", replaced);
+            }
+        }
+    }
+
+    /**
+     * Font resources of the AcroForm: its default resources plus every widget appearance
+     * stream. PDF/X validation checks these like page resources, so detection and
+     * substitution must walk them too or a converted form still claims a non-embedded
+     * font.
+     */
+    private static List<PDResources> formFontResources(PDDocument doc) throws IOException {
+        PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
+        if (acroForm == null) {
+            return List.of();
+        }
+        List<PDResources> resources = new ArrayList<>();
+        if (acroForm.getDefaultResources() != null) {
+            resources.add(acroForm.getDefaultResources());
+        }
+        for (PDField field : acroForm.getFieldTree()) {
+            for (PDAnnotationWidget widget : field.getWidgets()) {
+                collectAppearanceResources(widget, resources);
+            }
+        }
+        return resources;
+    }
+
+    private static void collectAppearanceResources(
+            PDAnnotationWidget widget, List<PDResources> out) {
+        PDAppearanceDictionary appearance = widget.getAppearance();
+        if (appearance == null) return;
+        addAppearanceEntryResources(appearance.getNormalAppearance(), out);
+        addAppearanceEntryResources(appearance.getDownAppearance(), out);
+        addAppearanceEntryResources(appearance.getRolloverAppearance(), out);
+    }
+
+    private static void addAppearanceEntryResources(PDAppearanceEntry entry, List<PDResources> out) {
+        if (entry == null) return;
+        if (entry.isStream()) {
+            out.add(entry.getAppearanceStream().getResources());
+        } else {
+            for (PDAppearanceStream stream : entry.getSubDictionary().values()) {
+                out.add(stream.getResources());
             }
         }
     }
