@@ -231,7 +231,7 @@ public class MergeController {
     @StandardPdfResponse
     @ToolIO(
             accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
-            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai/eps have none.
+            // The installed ImageIO readers cover these; ToolFormat.IMAGE's ai has none.
             inputExtensions = {
                 "pdf", "png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp", "svg", "psd"
             },
@@ -263,7 +263,7 @@ public class MergeController {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
-            log.info("Sorting files based on sortType: {}", request.getSortType());
+            log.debug("Sorting files based on sortType: {}", request.getSortType());
             Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 
@@ -387,8 +387,7 @@ public class MergeController {
         }
 
         String firstFilename = files.length > 0 ? files[0].getOriginalFilename() : null;
-        String mergedFileName =
-                GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
+        String mergedFileName = GeneralUtils.generateFilename(firstFilename, "_merged.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }

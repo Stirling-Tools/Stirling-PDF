@@ -1,3 +1,4 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
@@ -44,27 +45,29 @@ export class DeleteObjectCommand implements Command {
     const scan = scanEditOf(doc, run);
     if (scan) {
       // The words are pixels in the scan; only covering them removes them.
-      this.scanText ??= run.text;
+      const text = run.text;
+      if (!renderScanEdit(doc, page, run, scan, "")) return;
+      this.scanText ??= text;
       this.removedRun = run;
-      renderScanEdit(doc, page, run, scan, "");
       page.setRuns(page.runs.filter((r) => r.id !== run.id));
       return;
     }
-    if (this.snapshot === null) {
-      this.snapshot = run.snapshot();
-      this.removedRun = run;
-      const memberPtrs = collectMemberPtrs(run);
-      const containerByPtr = collectContainersByPtr(run);
-      const seen = new Set<number>();
-      this.cachedPtrs = [];
-      for (const ptr of memberPtrs) {
-        if (!ptr || seen.has(ptr)) continue;
-        seen.add(ptr);
-        this.cachedPtrs.push({
-          ptr,
-          containerPtr: containerByPtr.get(ptr) ?? run.containerPtr,
-        });
-      }
+    // Lifted first, so undo can put the objects back: nothing reinserts into a form.
+    liftRunToPage(doc, page, run);
+    // Read on every apply: redoing an earlier step draws the run in new objects.
+    this.snapshot = run.snapshot();
+    this.removedRun = run;
+    const memberPtrs = collectMemberPtrs(run);
+    const containerByPtr = collectContainersByPtr(run);
+    const seen = new Set<number>();
+    this.cachedPtrs = [];
+    for (const ptr of memberPtrs) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      this.cachedPtrs.push({
+        ptr,
+        containerPtr: containerByPtr.get(ptr) ?? run.containerPtr,
+      });
     }
     removeMemberPtrs(
       doc.module,

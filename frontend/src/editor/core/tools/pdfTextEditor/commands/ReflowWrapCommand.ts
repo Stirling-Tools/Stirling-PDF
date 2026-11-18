@@ -1,6 +1,13 @@
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
+import { drawnText } from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
+import { softStartsOf } from "@editor/tools/pdfTextEditor/pdfium/lineBreaks";
 import i18n from "i18next";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import type { PageRect } from "@editor/tools/pdfTextEditor/types";
+import { overlaps } from "@editor/tools/pdfTextEditor/util/tableAdoption";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -9,10 +16,20 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import { rotationFromMatrix } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@editor/tools/pdfTextEditor/util/objectTransform";
+import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { needsShaping } from "@editor/tools/pdfTextEditor/util/complexShaping";
 import {
   SCRATCH,
   scratchPtr,
 } from "@editor/tools/pdfTextEditor/util/wasmScratch";
+import { MoveTextRunCommand } from "@editor/tools/pdfTextEditor/commands/MoveTextRunCommand";
+import {
+  type PushRecord,
+  pushRecords,
+  runsPulledBack,
+  runsPushedBelow,
+  setPushRecords,
+} from "@editor/tools/pdfTextEditor/commands/pushRunsBelow";
 import {
   endsWithSpace,
   groupWords,
@@ -52,6 +69,7 @@ interface RunSnapshot {
   paragraphLeafContainers: number[];
   paragraphLineSlots: ParagraphLineSlot[];
   paragraphSoftStarts: boolean[];
+  paragraphSoftStartsText: string;
   mergedFromPtrs: number[];
   mergedFromTexts: string[];
   mergedFromBounds: Array<{ x: number; right: number }>;
@@ -66,37 +84,63 @@ export class ReflowWrapCommand implements Command {
   private readonly runId: string;
   private readonly maxWidthPt: number;
   private readonly explicit: boolean;
+  private readonly keepClearBelow: boolean;
   private applied = false;
+  private refused = false;
   /** Per-object translation applied, so revert can undo it exactly. */
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
+  // The runs below the lines this reflow added or removed moved, chosen on the first apply so a redo moves the same ones.
+  private pushes: MoveTextRunCommand[] | null = null;
+  private pushRecords: {
+    before: readonly PushRecord[];
+    after: readonly PushRecord[];
+  } | null = null;
 
   /**
    * `explicit` marks a width the user set directly (resize handle, width
    * field): the paragraph re-lines even when nothing overflows, so widening
    * rejoins lines an earlier wrap broke, and it is its own undo step rather
    * than part of the typing burst.
+   *
+   * `keepClearBelow` leaves the run as it was when the lines the wrap adds
+   * would land on something the push cannot move out of the way: a line,
+   * fill, shape or image, or text that is locked, rotated, scanned, in a
+   * table or would leave the page. `refusedForSpaceBelow` then reads true.
    */
   constructor(opts: {
     pageIndex: number;
     runId: string;
     maxWidthPt: number;
     explicit?: boolean;
+    keepClearBelow?: boolean;
   }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.maxWidthPt = opts.maxWidthPt;
     this.explicit = opts.explicit ?? false;
+    this.keepClearBelow = opts.keepClearBelow ?? false;
+  }
+
+  get refusedForSpaceBelow(): boolean {
+    return this.refused;
   }
 
   apply(doc: EditorDocument): void {
+    if (this.refused) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run) return;
+    if (!run || isScanRun(run)) return;
     if (this.maxWidthPt <= 0) return;
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.
     if (rotationFromMatrix(run.matrix)) return;
+    // An edit to one line of a wrapped run redraws the letters left on that
+    // line, which text that needs shaping refuses, so a wrap the user did not
+    // ask for would block every later edit to the line.
+    if (!this.explicit && needsShaping(run.text)) return;
+    refuseRedrawOfReadOnlyText(run);
+    liftRunToPage(doc, page, run);
 
     const m = doc.module;
     // Geometry + text must reflect the latest edits, and FPDFTextObj_GetText
@@ -110,6 +154,10 @@ export class ReflowWrapCommand implements Command {
       m.FPDFText_ClosePage(textPage);
     }
     if (leaves.length === 0) return;
+    // The reflow lines objects up left to right and rebuilds the text in that
+    // order. A line that does not read in that order, such as right-to-left
+    // text or marks drawn apart from their letters, would come back scrambled.
+    if (!readsInObjectOrder(leaves, run.text)) return;
 
     const fontSize = run.fontSize > 0 ? run.fontSize : 12;
     const lineHeight =
@@ -171,8 +219,7 @@ export class ReflowWrapCommand implements Command {
       if (carried) return Math.max(0, gap);
       return gap > 0 ? gap : spaceWidth;
     };
-    // Manual line breaks the user typed (Enter) live in run.text as "\n".
-    const hardBreaks = hardBreakNonWsCounts(run.text, run.paragraphSoftStarts);
+    const hardBreaks = hardBreakNonWsCounts(run.text, softStartsOf(run));
 
     this.prev = snapshotRun(run);
 
@@ -266,6 +313,82 @@ export class ReflowWrapCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
     this.applied = true;
+    const deciding = this.pushes === null;
+    if (deciding) this.decidePushes(page, run, this.prev);
+    for (const push of this.pushes ?? []) push.apply(doc);
+    if (this.pushRecords) setPushRecords(run, this.pushRecords.after);
+    if (deciding && this.keepClearBelow && this.landsOnUnmoved(page, run)) {
+      this.revert(doc);
+      this.pushes = [];
+      this.pushRecords = null;
+      this.refused = true;
+    }
+  }
+
+  // What the added lines now cover that was clear of the run before and did not move out of their way.
+  private landsOnUnmoved(page: Page, run: TextRun): boolean {
+    const prev = this.prev;
+    if (!prev) return false;
+    const added = {
+      x: run.bounds.x,
+      y: run.bounds.y,
+      width: run.bounds.width,
+      height: prev.bounds.y - run.bounds.y,
+    };
+    if (added.height <= 0) return false;
+    const covers = (r: PageRect) =>
+      overlaps(r, added) && !overlaps(r, prev.bounds);
+    // Text is allowed the slack runsPushedBelow gives it: lines set tighter than their boxes already overlap a little.
+    const slack = run.fontSize * TEXT_OVERLAP_EM;
+    const textBand = {
+      ...added,
+      y: added.y + slack,
+      height: added.height - slack,
+    };
+    const moved = new Set(this.pushes?.map((p) => p.runId) ?? []);
+    const textHit = page.runs.some(
+      (r) =>
+        r !== run &&
+        !moved.has(r.id) &&
+        textBand.height > 0 &&
+        overlaps(r.bounds, textBand) &&
+        !overlaps(r.bounds, prev.bounds),
+    );
+    return (
+      textHit ||
+      page.rules.some(covers) ||
+      page.fills.some(covers) ||
+      page.shapes.some((s) => covers(s.bounds)) ||
+      page.images.some((i) => covers(i.bounds))
+    );
+  }
+
+  // The same room-making EditTextCommand gives lines typed with Enter: lines a wrap adds cover the text below just the same.
+  private decidePushes(page: Page, run: TextRun, prev: RunSnapshot): void {
+    const lines = lineCount(run.text) - lineCount(prev.text);
+    const move = (runId: string, dy: number) =>
+      new MoveTextRunCommand({ pageIndex: this.pageIndex, runId, dx: 0, dy });
+    if (lines > 0) {
+      const { runIds, dy } = runsPushedBelow(
+        page,
+        run,
+        prev.bounds.y,
+        lines * run.paragraphLineHeight,
+      );
+      this.pushes = runIds.map((runId) => move(runId, dy));
+      if (runIds.length > 0)
+        this.pushRecords = {
+          before: pushRecords(run),
+          after: [
+            ...pushRecords(run),
+            { lineCount: lineCount(run.text), linesAdded: lines, runIds, dy },
+          ],
+        };
+    } else if (lines < 0) {
+      const { moves, records } = runsPulledBack(page, run, lineCount(run.text));
+      this.pushes = moves.map(({ runId, dy }) => move(runId, dy));
+      this.pushRecords = { before: pushRecords(run), after: records };
+    } else this.pushes = [];
   }
 
   revert(doc: EditorDocument): void {
@@ -273,6 +396,8 @@ export class ReflowWrapCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    for (const push of [...(this.pushes ?? [])].reverse()) push.revert(doc);
+    if (this.pushRecords) setPushRecords(run, this.pushRecords.before);
     const m = doc.module;
     for (let i = this.moves.length - 1; i >= 0; i--) {
       const mv = this.moves[i];
@@ -308,6 +433,12 @@ export class ReflowWrapCommand implements Command {
   coalesceIgnoresTimeWindow(): boolean {
     return true;
   }
+}
+
+const TEXT_OVERLAP_EM = 0.25;
+
+function lineCount(text: string): number {
+  return text.split(/\r?\n/).length;
 }
 
 /** Read every leaf object's ACTUAL geometry + text straight from PDFium. */
@@ -350,6 +481,11 @@ function extractLeaves(
   return leaves;
 }
 
+function readsInObjectOrder(leaves: Leaf[], text: string): boolean {
+  const letters = (s: string): string => s.replace(/\s+/g, "");
+  return letters(leaves.map((leaf) => leaf.text).join("")) === letters(text);
+}
+
 /** The non-whitespace char counts at which `text` has a hard "\n" break. */
 function hardBreakNonWsCounts(
   text: string,
@@ -361,9 +497,9 @@ function hardBreakNonWsCounts(
   for (const ch of text) {
     if (ch === "\n") {
       lineIndex += 1;
-      // A break this command inserted to make the text fit is not the user's,
-      // so it must stay re-flowable. Reading it back as forced would freeze the
-      // paragraph at whatever width it happened to be wrapped to.
+      // A soft break is not the author's, so it must stay re-flowable. Reading
+      // it back as forced would freeze the paragraph at whatever width it
+      // happened to be wrapped to.
       if (!softStarts?.[lineIndex]) out.set(nonWs, (out.get(nonWs) ?? 0) + 1);
     } else if (!/\s/.test(ch)) nonWs += 1;
   }
@@ -496,6 +632,7 @@ function rebuildRunFromLines(
   } else {
     run.text = glyphDerived;
   }
+  run.paragraphSoftStartsText = run.text;
 
   const s0 = slots[0];
   if (s0) {
@@ -554,7 +691,7 @@ function readObjText(
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.reflowText, len);
     m.FPDFTextObj_GetText(ptr, textPage, buf, len);
-    return readUtf16(m, buf, len);
+    return drawnText(readUtf16(m, buf, len));
   } catch {
     return "";
   }
@@ -574,6 +711,7 @@ function snapshotRun(run: TextRun): RunSnapshot {
     paragraphLeafContainers: [...run.paragraphLeafContainers],
     paragraphLineSlots: run.paragraphLineSlots.map(cloneSlot),
     paragraphSoftStarts: [...run.paragraphSoftStarts],
+    paragraphSoftStartsText: run.paragraphSoftStartsText,
     mergedFromPtrs: [...run.mergedFromPtrs],
     mergedFromTexts: [...run.mergedFromTexts],
     mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
@@ -595,6 +733,7 @@ function restoreRun(run: TextRun, prev: RunSnapshot): void {
   run.paragraphLeafContainers = [...prev.paragraphLeafContainers];
   run.paragraphLineSlots = prev.paragraphLineSlots.map(cloneSlot);
   run.paragraphSoftStarts = [...prev.paragraphSoftStarts];
+  run.paragraphSoftStartsText = prev.paragraphSoftStartsText;
   run.mergedFromPtrs = [...prev.mergedFromPtrs];
   run.mergedFromTexts = [...prev.mergedFromTexts];
   run.mergedFromBounds = prev.mergedFromBounds.map((b) => ({ ...b }));
@@ -654,7 +793,8 @@ function resegmentByLines(
     }
     const start = posAtNonWsIndex(preReflowText, cumNw);
     const lastPos = posAtNonWsIndex(preReflowText, cumNw + nw - 1);
-    out.push(preReflowText.slice(start, lastPos + 1));
+    // A line that joined soft-broken lines spans their breaks.
+    out.push(preReflowText.slice(start, lastPos + 1).replace(/\n/g, " "));
     cumNw += nw;
   }
   return out;

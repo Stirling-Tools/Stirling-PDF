@@ -21,6 +21,7 @@ import {
   type ImageAccessibility,
   type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 /**
  * The accessibility of the selected image (null unless exactly one image and
@@ -94,9 +95,10 @@ export function useImageAccessibility(
     store.selection.selectImage(next.id);
     // A page read just now has no overlay until React commits it.
     window.requestAnimationFrame(() =>
-      document
-        .querySelector(`[data-testid="pdf-editor-image-${next.id}"]`)
-        ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      revealOnPage(
+        document.querySelector(`[data-testid="pdf-editor-image-${next.id}"]`),
+        next.pageIndex,
+      ),
     );
     return true;
   }, [store]);

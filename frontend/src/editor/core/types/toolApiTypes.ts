@@ -781,15 +781,15 @@ export interface MetadataRequest {
     [k: string]: string | undefined;
   };
   /**
-   * The author of the document. Omit to remove it.
+   * The author of the document. Omit to remove it unless keepOmitted=true.
    */
   author?: string;
   /**
-   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
+   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.
    */
   creationDate?: string;
   /**
-   * The creator of the document. Omit to remove it.
+   * The creator of the document. Omit to remove it unless keepOmitted=true.
    */
   creator?: string;
   /**
@@ -797,27 +797,31 @@ export interface MetadataRequest {
    */
   deleteAll?: boolean;
   /**
-   * The keywords for the document. Omit to remove it.
+   * True keeps the current value of every standard field left out, instead of removing it
+   */
+  keepOmitted?: boolean;
+  /**
+   * The keywords for the document. Omit to remove it unless keepOmitted=true.
    */
   keywords?: string;
   /**
-   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it.
+   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss). Omit to remove it unless keepOmitted=true.
    */
   modificationDate?: string;
   /**
-   * The producer of the document. Omit to remove it.
+   * The producer of the document. Omit to remove it unless keepOmitted=true.
    */
   producer?: string;
   /**
-   * The subject of the document. Omit to remove it.
+   * The subject of the document. Omit to remove it unless keepOmitted=true.
    */
   subject?: string;
   /**
-   * The title of the document. Omit to remove it.
+   * The title of the document. Omit to remove it unless keepOmitted=true.
    */
   title?: string;
   /**
-   * The trapped status of the document. Omit to remove it, which readers treat as Unknown.
+   * The trapped status of the document. Omit to remove it unless keepOmitted=true; readers treat a missing value as Unknown.
    */
   trapped?: "True" | "False" | "Unknown";
 }
@@ -1030,16 +1034,6 @@ export interface PdfToWordRequest {
   outputFormat: "doc" | "docx" | "odt";
   useStirlingOfficeConvert?: boolean;
 }
-export interface PdfVectorExportRequest {
-  /**
-   * Target vector format extension
-   */
-  outputFormat?: "eps" | "ps" | "pcl" | "xps";
-  /**
-   * Apply Ghostscript prepress settings
-   */
-  prepress?: true | false;
-}
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;
   pin?: string;
@@ -1103,7 +1097,7 @@ export interface ProcessPdfWithOcrRequest {
 }
 export interface RearrangePagesRequest {
   /**
-   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
+   * Omit or CUSTOM to use pageNumbers. Presets: REVERSE_ORDER, DUPLEX_SORT (fronts then backs reversed), BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT (odd then even), ODD_EVEN_MERGE (interleave the halves back together, inverse of ODD_EVEN_SPLIT), REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST, DUPLICATE (copies = pageNumbers, default 2).
    */
   customMode?:
     | "CUSTOM"
@@ -1112,6 +1106,7 @@ export interface RearrangePagesRequest {
     | "BOOKLET_SORT"
     | "SIDE_STITCH_BOOKLET_SORT"
     | "ODD_EVEN_SPLIT"
+    | "ODD_EVEN_MERGE"
     | "REMOVE_FIRST"
     | "REMOVE_LAST"
     | "REMOVE_FIRST_AND_LAST"
@@ -1339,11 +1334,23 @@ export interface SanitizePdfRequest {
 }
 export interface ScalePagesRequest {
   /**
-   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+   * Height of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
+   */
+  customHeight?: number;
+  /**
+   * Unit of customWidth and customHeight.
+   */
+  customUnit?: "mm" | "cm" | "in";
+  /**
+   * Width of the output pages in customUnit. Required when pageSize is CUSTOM; between 3 points (about 1.06 mm) and 200 inches.
+   */
+  customWidth?: number;
+  /**
+   * Orientation to apply to the target page size. Ignored when pageSize is KEEP or CUSTOM.
    */
   orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP. KEEP keeps each page's own size.
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP, CUSTOM. KEEP keeps each page's own size.
    */
   pageSize?:
     | "A0"
@@ -1355,7 +1362,8 @@ export interface ScalePagesRequest {
     | "A6"
     | "LETTER"
     | "LEGAL"
-    | "KEEP";
+    | "KEEP"
+    | "CUSTOM";
   /**
    * The scale of the content on the pages of the output PDF. Acceptable values are floats.
    */
@@ -1598,13 +1606,11 @@ export type ToolEndpoint =
   | "/api/v1/convert/pdf/presentation"
   | "/api/v1/convert/pdf/text"
   | "/api/v1/convert/pdf/ua"
-  | "/api/v1/convert/pdf/vector"
   | "/api/v1/convert/pdf/word"
   | "/api/v1/convert/pdf/xlsx"
   | "/api/v1/convert/pdf/xml"
   | "/api/v1/convert/svg/pdf"
   | "/api/v1/convert/url/pdf"
-  | "/api/v1/convert/vector/pdf"
   | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
@@ -1704,13 +1710,11 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/presentation": PdfToPresentationRequest;
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
   "/api/v1/convert/pdf/ua": PdfToPdfUaRequest;
-  "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
   "/api/v1/convert/pdf/xml": ConvertPdfXmlRequest;
   "/api/v1/convert/svg/pdf": SvgToPdfRequest;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
-  "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
   "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
@@ -1811,13 +1815,11 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/pdf/presentation",
   "/api/v1/convert/pdf/text",
   "/api/v1/convert/pdf/ua",
-  "/api/v1/convert/pdf/vector",
   "/api/v1/convert/pdf/word",
   "/api/v1/convert/pdf/xlsx",
   "/api/v1/convert/pdf/xml",
   "/api/v1/convert/svg/pdf",
   "/api/v1/convert/url/pdf",
-  "/api/v1/convert/vector/pdf",
   "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",

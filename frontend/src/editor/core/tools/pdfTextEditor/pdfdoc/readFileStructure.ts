@@ -1,3 +1,5 @@
+import type { LinkAnnotation } from "@editor/tools/pdfTextEditor/model/LinkAnnotation";
+import type { WidgetAnnotation } from "@editor/tools/pdfTextEditor/model/WidgetAnnotation";
 import type { StructureElement } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
@@ -12,6 +14,8 @@ import {
   StructureNodes,
   type ElementNode,
 } from "@editor/tools/pdfTextEditor/pdfdoc/structureNodes";
+import { readLinks } from "@editor/tools/pdfTextEditor/pdfdoc/readLinks";
+import { readWidgets } from "@editor/tools/pdfTextEditor/pdfdoc/readWidgets";
 import { decodeTextString } from "@editor/tools/pdfTextEditor/pdfdoc/textString";
 import { isMarked } from "@editor/tools/pdfTextEditor/pdfdoc/passes/markTagged";
 
@@ -56,6 +60,10 @@ export interface FileStructure {
   blocks: FileBlock[];
   /** By element key, for every element a page or block names. */
   languages: Map<string, ElementLanguage>;
+  /** The link annotations the save can give an element, by page index (see readLinks). */
+  links: Map<number, LinkAnnotation[]>;
+  /** The widget annotations the save can give a Form element, by page index (see readWidgets). */
+  widgets: Map<number, WidgetAnnotation[]>;
   /** Whether the file has a /StructTreeRoot at all. */
   hasTree: boolean;
   /** Whether the catalog declares the file tagged (/MarkInfo /Marked). */
@@ -71,7 +79,12 @@ export async function readFileStructure(
   bytes: Uint8Array,
 ): Promise<FileStructure | null> {
   const pdf = await RawPdf.parse(bytes);
-  if (!pdf || pdf.encrypted) return null;
+  return pdf ? fileStructureOf(pdf) : null;
+}
+
+/** As readFileStructure, from a file already parsed. */
+export function fileStructureOf(pdf: RawPdf): FileStructure | null {
+  if (pdf.encrypted) return null;
   const catalog = pdf.objectBody(pdf.rootNum);
   if (!catalog) return null;
   const treeRoot = pdf.dictRef(catalog, "StructTreeRoot");
@@ -82,6 +95,8 @@ export async function readFileStructure(
           pages: new Map(),
           blocks: [],
           languages: new Map(),
+          links: readLinks(pdf, null),
+          widgets: readWidgets(pdf, null),
           hasTree: false,
           marked: isMarked(pdf, catalog),
         };
@@ -141,6 +156,8 @@ export async function readFileStructure(
     pages: byPage,
     blocks,
     languages,
+    links: readLinks(pdf, treeRoot),
+    widgets: readWidgets(pdf, treeRoot),
     hasTree: true,
     marked: isMarked(pdf, catalog),
   };

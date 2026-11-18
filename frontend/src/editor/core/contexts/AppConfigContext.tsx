@@ -18,7 +18,10 @@ import type {
   AppConfigBootstrapMode,
 } from "@editor/types/appConfig";
 import { useJwtConfigSync } from "@editor/hooks/useJwtConfigSync";
-import { setPdfAccessPolicy } from "@editor/services/pdfAccessService";
+import {
+  setPdfAccessPolicy,
+  setSignedPdfEditPolicy,
+} from "@editor/services/pdfAccessService";
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;
@@ -171,6 +174,10 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   useLayoutEffect(() => {
     setPdfAccessPolicy(value.config?.honorOwnerPasswords !== false);
   }, [value.config?.honorOwnerPasswords]);
+
+  useLayoutEffect(() => {
+    setSignedPdfEditPolicy(value.config?.blockSignedPdfEdits === true);
+  }, [value.config?.blockSignedPdfEdits]);
 
   useLayoutEffect(() => () => setPdfAccessPolicy(true), []);
 

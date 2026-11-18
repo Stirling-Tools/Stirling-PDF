@@ -98,7 +98,8 @@ class MultiPageLayoutControllerTest {
     }
 
     @Test
-    @DisplayName("Generates PDF and filename suffix for perfect-square layout with no source pages")
+    @DisplayName(
+            "Generates PDF named after the input for perfect-square layout with no source pages")
     void perfectSquareNoPages() throws Exception {
         PDDocument source = new PDDocument();
         PDDocument target = new PDDocument();
@@ -117,8 +118,7 @@ class MultiPageLayoutControllerTest {
         Assertions.assertNotNull(resp.getBody());
         Assertions.assertTrue(drainBody(resp).length > 0);
         Assertions.assertEquals(
-                "test_multi_page_layout.pdf",
-                resp.getHeaders().getContentDisposition().getFilename());
+                "test.pdf", resp.getHeaders().getContentDisposition().getFilename());
     }
 
     @Test
@@ -144,7 +144,7 @@ class MultiPageLayoutControllerTest {
     }
 
     @Test
-    @DisplayName("Uses input name without extension and appends suffix for 3-up")
+    @DisplayName("Keeps the input name for 3-up")
     void threeUpWithNameNoExtension() throws Exception {
         PDDocument source = new PDDocument();
         PDDocument target = new PDDocument();
@@ -161,7 +161,6 @@ class MultiPageLayoutControllerTest {
 
         ResponseEntity<Resource> resp = controller.mergeMultiplePagesIntoOne(req);
         Assertions.assertEquals(
-                "name_multi_page_layout.pdf",
-                resp.getHeaders().getContentDisposition().getFilename());
+                "name.pdf", resp.getHeaders().getContentDisposition().getFilename());
     }
 }
