@@ -37,51 +37,48 @@ export function MobileEditorTopBar({ controller, hasDocument, dirty }: Props) {
         )}
       </div>
 
-      {hasDocument && (
-        <>
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="xl"
-            onClick={controller.onUndo}
-            disabled={!controller.canUndo}
-            aria-label={t("pdfTextEditor.toolbar.undo", "Undo")}
-            data-testid="pdf-editor-undo"
-            leftSection={<Icon name="undo-2" size={22} />}
-          />
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="xl"
-            onClick={controller.onRedo}
-            disabled={!controller.canRedo}
-            aria-label={t("pdfTextEditor.toolbar.redo", "Redo")}
-            data-testid="pdf-editor-redo"
-            leftSection={<Icon name="redo-2" size={22} />}
-          />
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="xl"
-            onClick={() => session?.download()}
-            disabled={!session}
-            aria-label={t("pdfTextEditor.mobile.download", "Save and download")}
-            data-testid="pdf-editor-mobile-download"
-            leftSection={<Icon name="download" size={22} />}
-          />
-          <Button
-            size="lg"
-            px="md"
-            variant={dirty ? "primary" : "secondary"}
-            accent={dirty ? "default" : "neutral"}
-            onClick={() => session?.save()}
-            disabled={!session}
-            data-testid="pdf-editor-mobile-save"
-          >
-            {t("pdfTextEditor.mobile.save", "Save")}
-          </Button>
-        </>
-      )}
+      {/* Shown from the first frame, idle until the document is read. */}
+      <Button
+        variant="tertiary"
+        accent="neutral"
+        size="xl"
+        onClick={controller.onUndo}
+        disabled={!hasDocument || !controller.canUndo}
+        aria-label={t("pdfTextEditor.toolbar.undo", "Undo")}
+        data-testid="pdf-editor-undo"
+        leftSection={<Icon name="undo-2" size={22} />}
+      />
+      <Button
+        variant="tertiary"
+        accent="neutral"
+        size="xl"
+        onClick={controller.onRedo}
+        disabled={!hasDocument || !controller.canRedo}
+        aria-label={t("pdfTextEditor.toolbar.redo", "Redo")}
+        data-testid="pdf-editor-redo"
+        leftSection={<Icon name="redo-2" size={22} />}
+      />
+      <Button
+        variant="tertiary"
+        accent="neutral"
+        size="xl"
+        onClick={() => session?.download()}
+        disabled={!session || !hasDocument}
+        aria-label={t("pdfTextEditor.mobile.download", "Save and download")}
+        data-testid="pdf-editor-mobile-download"
+        leftSection={<Icon name="download" size={22} />}
+      />
+      <Button
+        size="lg"
+        px="md"
+        variant={dirty ? "primary" : "secondary"}
+        accent={dirty ? "default" : "neutral"}
+        onClick={() => session?.save()}
+        disabled={!session || !hasDocument}
+        data-testid="pdf-editor-mobile-save"
+      >
+        {t("pdfTextEditor.mobile.save", "Save")}
+      </Button>
       {isPhone && <NotificationBell />}
     </div>
   );
