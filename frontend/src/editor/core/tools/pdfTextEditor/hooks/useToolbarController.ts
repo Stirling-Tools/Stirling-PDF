@@ -19,6 +19,10 @@ import {
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import {
+  rangeFontIds,
+  selectedPartOfRun,
+} from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
 import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
 import {
   loadedExternalFonts,
@@ -452,9 +456,24 @@ export function useToolbarController(
 
   useDocumentFontCompletion(store, state, selection, externalFonts);
 
+  // state.pages is unread but changes whenever a restyle redraws the selected characters.
+  const selectedFontIds = useMemo(() => {
+    const doc = store.document;
+    const part = selectedPartOfRun(doc, selection);
+    return doc && part
+      ? rangeFontIds(doc, part.page, part.run, part.range)
+      : null;
+  }, [store, selection, state.pages]);
+
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection, externalFonts),
-    [state.pages, selection, externalFonts],
+    () =>
+      deriveToolbarState(
+        state.pages,
+        selection,
+        externalFonts,
+        selectedFontIds,
+      ),
+    [state.pages, selection, externalFonts, selectedFontIds],
   );
 
   const scanFacesVersion = useSyncExternalStore(
@@ -571,7 +590,9 @@ export function useToolbarController(
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
     onChangeFontFamily: sel.changeFontFamily,
+    onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
+    onChangeFontWeight: sel.changeFontWeight,
     onDelete: sel.deleteSelection,
     onToggleLock,
     onChangeCase,

@@ -21,6 +21,8 @@ interface KeyboardShortcutCallbacks {
   onFindNext: (reverse: boolean) => void;
   onEscape: () => void;
   onMergeSelection: () => void;
+  onToggleBold: () => void;
+  onToggleItalic: () => void;
 }
 
 /** Bind every editor-level keyboard shortcut to `window` for the session. */
@@ -38,6 +40,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   } = cbs;
 
   useEffect(() => {
@@ -99,6 +103,14 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         case "g":
           e.preventDefault();
           onFindNext(e.shiftKey);
+          return;
+        case "b":
+        case "i":
+          if (isFocusInFormField()) return;
+          if (store.selection.value.runIds.length === 0) return;
+          e.preventDefault();
+          if (key === "b") onToggleBold();
+          else onToggleItalic();
           return;
         case "m":
           if (store.selection.value.runIds.length < 2) return;
@@ -193,5 +205,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onFindNext,
     onEscape,
     onMergeSelection,
+    onToggleBold,
+    onToggleItalic,
   ]);
 }

@@ -14,6 +14,7 @@ import {
   forgetServerFontList,
 } from "@editor/tools/pdfTextEditor/util/serverFonts";
 import { resetLocalFontsCache } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { documentFamilies } from "@editor/tools/pdfTextEditor/util/fontFaces";
 
 const MANIFEST = {
   families: [
@@ -79,15 +80,49 @@ describe("font picker server fonts", () => {
     expect(get).toHaveBeenCalledWith(SERVER_FONTS_URL, expect.anything());
   });
 
-  it("offers the bold cut of a server family that has one", async () => {
+  it("lists a server family once, leaving its bold face to the Bold toggle", async () => {
     const onChange = vi.fn(async () => null);
     const input = renderPicker(onChange);
 
     fireEvent.click(input);
-    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+    fireEvent.click(await screen.findByText("Acme Sans"));
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith("Acme Sans"));
+    expect(screen.queryByText("Acme Sans Bold")).not.toBeInTheDocument();
+  });
+
+  it("lists each built-in family once", async () => {
+    const input = renderPicker(async () => null);
+
+    fireEvent.click(input);
+    await screen.findByText("Acme Sans");
+
+    const options = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(options).toEqual(["Helvetica", "Times", "Courier", "Acme Sans"]);
+  });
+
+  it("lists a family that has only a bold face under its family name", async () => {
+    get.mockImplementation(async (url: string) => {
+      if (url !== SERVER_FONTS_URL) throw new Error(`unexpected ${url}`);
+      return {
+        data: {
+          families: [
+            {
+              family: "Acme Display Bold",
+              faces: [{ ...MANIFEST.families[0].faces[0], id: "3".repeat(64) }],
+            },
+          ],
+        },
+      };
+    });
+    const onChange = vi.fn(async () => null);
+    const input = renderPicker(onChange);
+
+    fireEvent.click(input);
+    fireEvent.click(await screen.findByText("Acme Display"));
 
     await waitFor(() =>
-      expect(onChange).toHaveBeenCalledWith("Acme Sans Bold"),
+      expect(onChange).toHaveBeenCalledWith("Acme Display Bold"),
     );
   });
 
@@ -118,7 +153,7 @@ describe("font picker server fonts", () => {
     const input = renderPicker(onChange);
 
     fireEvent.click(input);
-    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+    fireEvent.click(await screen.findByText("Acme Sans"));
 
     await waitFor(() =>
       expect(alert).toHaveBeenCalledWith({
@@ -148,7 +183,8 @@ describe("font picker server fonts", () => {
 
     fireEvent.click(input);
 
-    expect(await screen.findAllByText("Acme Sans Bold")).toHaveLength(1);
+    expect(await screen.findAllByText("Acme Sans")).toHaveLength(1);
+    expect(screen.queryByText("Acme Sans Bold")).not.toBeInTheDocument();
   });
 
   it("raises nothing when the font applies", async () => {
@@ -200,10 +236,10 @@ describe("font picker server fonts", () => {
 
     fireEvent.click(input);
     fireEvent.change(input, { target: { value: "Acme" } });
-    fireEvent.click(await screen.findByText("Acme Sans Bold"));
+    fireEvent.click(await screen.findByText("Acme Sans"));
 
     await waitFor(() => expect(input).not.toBeDisabled());
-    expect(input).toHaveValue("Acme Sans Bold");
+    expect(input).toHaveValue("Acme Sans");
   });
 
   it("names the font a scan was matched to, not a document font", async () => {
@@ -309,5 +345,30 @@ describe("font picker document font", () => {
     await waitFor(() =>
       expect(onChange).toHaveBeenCalledWith("pdf:7:Garamond"),
     );
+  });
+
+  it("lists the document's faces of the text's own family once", async () => {
+    render(
+      <MantineProvider env="test">
+        <FontFamilySelect
+          value="Calibri"
+          fontId="pdf:2:Calibri-Bold"
+          documentFamilies={documentFamilies([
+            "pdf:1:Calibri",
+            "pdf:2:Calibri-Bold",
+            "pdf:3:Calibri-Italic",
+          ])}
+          onChange={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+    const input = screen.getByTestId("pdf-editor-font-family");
+    expect(input).toHaveValue("Calibri");
+
+    fireEvent.click(input);
+
+    expect(
+      await screen.findAllByRole("option", { name: "Calibri" }),
+    ).toHaveLength(1);
   });
 });

@@ -71,6 +71,13 @@ function shortcutSections(t: TFunction): Section[] {
           ),
         },
         {
+          bindings: [mod("KeyB"), mod("KeyI")],
+          description: t(
+            "pdfTextEditor.help.editing.boldItalicDesc",
+            "Bold / Italic, for the selected words or the whole box",
+          ),
+        },
+        {
           bindings: [mod("KeyD")],
           description: t(
             "pdfTextEditor.help.editing.duplicateDesc",

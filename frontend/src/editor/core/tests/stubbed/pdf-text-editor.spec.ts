@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import {
   openInTextEditor,
   scrollToEditorPage,
@@ -49,7 +50,7 @@ const BIG_SAMPLE_PDF = path.join(
 // PDF text editor regression suite. It runs entirely in the browser via
 // PDFium WASM, so these tests do not need a real backend.
 
-async function gotoEditor(page: import("@playwright/test").Page) {
+async function gotoEditor(page: Page) {
   await page.goto("/pdf-text-editor", {
     waitUntil: "domcontentloaded",
   });
@@ -59,15 +60,30 @@ async function gotoEditor(page: import("@playwright/test").Page) {
 }
 
 /** Change the selected run's font family through the real toolbar dropdown. */
-async function selectFontFamily(
-  page: import("@playwright/test").Page,
-  optionLabel: string,
-) {
+async function selectFontFamily(page: Page, optionLabel: string) {
   await page.getByTestId("pdf-editor-font-family").click();
   await page.getByRole("option", { name: optionLabel, exact: true }).click();
 }
 
-async function loadSamplePdf(page: import("@playwright/test").Page) {
+/** Turn the selected text's bold face on or off through the Bold toggle, and wait until it is. */
+async function setBold(page: Page, on: boolean) {
+  const bold = page.getByTestId("pdf-editor-bold");
+  await expect(bold).toBeEnabled();
+  if ((await bold.getAttribute("aria-pressed")) !== String(on))
+    await bold.click();
+  await expect(bold).toHaveAttribute("aria-pressed", String(on));
+}
+
+/** Put the selected text in Helvetica Bold: the family from the list, then the Bold toggle. */
+async function selectHelveticaBold(page: Page) {
+  await selectFontFamily(page, "Helvetica");
+  await expect(page.getByTestId("pdf-editor-font-family")).toHaveValue(
+    "Helvetica",
+  );
+  await setBold(page, true);
+}
+
+async function loadSamplePdf(page: Page) {
   // The visible "Open" flow goes through the left-sidebar Files panel.
   await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -75,7 +91,7 @@ async function loadSamplePdf(page: import("@playwright/test").Page) {
   });
 }
 
-async function loadMultiPageSample(page: import("@playwright/test").Page) {
+async function loadMultiPageSample(page: Page) {
   await openInTextEditor(page, MULTI_PAGE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
@@ -84,7 +100,7 @@ async function loadMultiPageSample(page: import("@playwright/test").Page) {
 
 /** Type a string into a contenteditable using `execCommand('insertText')`. */
 async function typeIntoRun(
-  page: import("@playwright/test").Page,
+  page: Page,
   runTestId: string,
   text: string,
   position: "end" | "start" = "end",
@@ -385,9 +401,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   // These guard against a recurring class of regression where typed spaces
   // vanish from the saved PDF.
 
-  async function readFirstRunText(
-    page: import("@playwright/test").Page,
-  ): Promise<string> {
+  async function readFirstRunText(page: Page): Promise<string> {
     return await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -400,9 +414,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     });
   }
 
-  async function saveAndReopen(
-    page: import("@playwright/test").Page,
-  ): Promise<void> {
+  async function saveAndReopen(page: Page): Promise<void> {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
@@ -1016,7 +1028,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
 
   // Sequential-edit visual-integrity tests.
 
-  async function findTaglineRun(page: import("@playwright/test").Page) {
+  async function findTaglineRun(page: Page) {
     return await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -1054,7 +1066,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     });
   }
 
-  async function readRun(page: import("@playwright/test").Page, id: string) {
+  async function readRun(page: Page, id: string) {
     return await page.evaluate((tid) => {
       const store = (
         window as unknown as {
@@ -1086,11 +1098,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     }, id);
   }
 
-  async function caretAt(
-    page: import("@playwright/test").Page,
-    tid: string,
-    pos: number,
-  ) {
+  async function caretAt(page: Page, tid: string, pos: number) {
     await page.evaluate(
       ({ tid, pos }) => {
         const el = document.querySelector<HTMLDivElement>(
@@ -1128,7 +1136,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   }
 
   async function execAt(
-    page: import("@playwright/test").Page,
+    page: Page,
     tid: string,
     pos: number,
     cmd: "insertText" | "delete",
@@ -1750,7 +1758,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   }
 
   async function snapshotIntegrity(
-    page: import("@playwright/test").Page,
+    page: Page,
     runId: string,
     baselineY: number,
     expectedText: string,
@@ -2821,9 +2829,8 @@ test.describe("PDF text editor - bold/italic", () => {
     const before = await readState(runId);
     expect(before.undoDepth).toBeGreaterThan(0);
 
-    // Now pick the bold variant. It should dispatch another edit (undo stack
-    // grows). The dedicated weight button is gone; the picker is the way in.
-    await selectFontFamily(page, "Helvetica Bold");
+    // Now the bold face. It should dispatch another edit (undo stack grows).
+    await setBold(page, true);
 
     // The toolbar's active state flips on local component state, which can beat
     // the command onto the screen - so wait for the history itself to grow.
@@ -2915,10 +2922,8 @@ test.describe("PDF text editor - bold/italic", () => {
 
     // Bold then un-bold (the user's exact sequence). Each pick dispatches a
     // SetFontFamily command.
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(300);
-    await selectFontFamily(page, "Helvetica");
-    await page.waitForTimeout(300);
+    await selectHelveticaBold(page);
+    await setBold(page, false);
 
     const after = await page.evaluate((id) => {
       const store = (
@@ -2963,27 +2968,26 @@ test.describe("PDF text editor - bold/italic", () => {
     const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
 
-    const reopenedRuns = await page.evaluate(() => {
-      const store = (
-        window as unknown as {
-          __editor_store: {
-            doc: { page: (i: number) => { runs: Array<{ text: string }> } };
-          };
-        }
-      ).__editor_store;
-      return store.doc.page(0).runs.map((r) => r.text);
-    });
+    const reopenedRuns = () =>
+      page.evaluate(() => {
+        const store = (
+          window as unknown as {
+            __editor_store: {
+              doc: { page: (i: number) => { runs: Array<{ text: string }> } };
+            };
+          }
+        ).__editor_store;
+        return store.doc.page(0).runs.map((r) => r.text);
+      });
     // The CORE assertion: each distinctive tagline word appears in EXACTLY ONE
-    // run.
-    const countCarrying = (word: string) =>
-      reopenedRuns.filter((t) => t.includes(word)).length;
+    // run. Polled, because the run list fills in as the reopened file loads.
     for (const word of ["Adobe", "Acrobat", "Alternative"]) {
-      expect(
-        countCarrying(word),
-        `Runs carrying "${word}": ${JSON.stringify(
-          reopenedRuns.filter((t) => t.includes(word)),
-        )}`,
-      ).toBe(1);
+      await expect
+        .poll(
+          async () => (await reopenedRuns()).filter((t) => t.includes(word)),
+          { message: `runs carrying "${word}"`, timeout: 15_000 },
+        )
+        .toHaveLength(1);
     }
   });
 });
@@ -3915,11 +3919,7 @@ test.describe("PDF text editor - Ctrl+A select all", () => {
 
 test.describe("PDF text editor - stress: whitespace insertion variations", () => {
   /** Caret at char index `pos` inside `runTestId`. */
-  async function placeCaret(
-    page: import("@playwright/test").Page,
-    runTestId: string,
-    pos: number,
-  ) {
+  async function placeCaret(page: Page, runTestId: string, pos: number) {
     await page.evaluate(
       ({ tid, pos }) => {
         const el = document.querySelector<HTMLDivElement>(
@@ -3957,7 +3957,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
   }
 
   async function insertAt(
-    page: import("@playwright/test").Page,
+    page: Page,
     runTestId: string,
     pos: number,
     text: string,
@@ -3969,7 +3969,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
     await page.waitForTimeout(250);
   }
 
-  async function readTagline(page: import("@playwright/test").Page) {
+  async function readTagline(page: Page) {
     return await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -4001,7 +4001,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
     });
   }
 
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -4126,7 +4126,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
 });
 
 test.describe("PDF text editor - stress: bold / font swap variations", () => {
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -4135,7 +4135,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     await page.waitForTimeout(500);
   }
 
-  async function selectTagline(page: import("@playwright/test").Page) {
+  async function selectTagline(page: Page) {
     // The page-0 runs are read lazily on first intersection; wait for them
     // to populate so the test actually runs instead of skipping on a race.
     await page
@@ -4176,7 +4176,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     return id;
   }
 
-  async function readRun(page: import("@playwright/test").Page, id: string) {
+  async function readRun(page: Page, id: string) {
     return await page.evaluate((rid) => {
       const store = (
         window as unknown as {
@@ -4210,10 +4210,10 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
       test.skip(true, "fixture missing tagline");
       return;
     }
-    for (const family of ["Helvetica Bold", "Helvetica", "Helvetica Bold"]) {
+    await selectHelveticaBold(page);
+    for (const on of [false, true]) {
       await selectTagline(page);
-      await selectFontFamily(page, family);
-      await page.waitForTimeout(250);
+      await setBold(page, on);
     }
     const after = await readRun(page, id);
     if (!after) throw new Error("run vanished after 3 bold toggles");
@@ -4234,8 +4234,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     if (!before) throw new Error("baseline read failed");
     // Re-select before each toolbar click.
     await selectTagline(page);
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     await selectTagline(page);
     await page.getByTestId("pdf-editor-italic").click();
     await page.waitForTimeout(250);
@@ -4264,13 +4263,16 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const before = await readRun(page, id);
     if (!before) throw new Error("baseline read failed");
     expect(before.merged).toBeGreaterThan(10);
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
-    await page.getByTestId("pdf-editor-undo").click();
-    await page.waitForTimeout(400);
+    // The family pick and the Bold toggle are one undo step each.
+    for (let step = 0; step < 2; step++)
+      await page.getByTestId("pdf-editor-undo").click();
+    await expect
+      .poll(async () => (await readRun(page, id))?.fontId)
+      .toBe(before.fontId);
     const after = await readRun(page, id);
     if (!after) throw new Error("post-undo read failed");
     expect(after.fontId).toBe(before.fontId);
@@ -4288,8 +4290,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
       test.skip(true, "fixture missing tagline");
       return;
     }
-    await selectFontFamily(page, "Helvetica Bold");
-    await page.waitForTimeout(250);
+    await selectHelveticaBold(page);
     // Now insert text into the bolded run.
     await page.evaluate((tid) => {
       const el = document.querySelector<HTMLDivElement>(
@@ -4349,7 +4350,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     }
     // Change font family through the real toolbar dropdown (the tagline run
     // is already selected). The Select's onChange dispatches SetFontFamily.
-    await selectFontFamily(page, "Times Roman");
+    await selectFontFamily(page, "Times");
     await page.waitForTimeout(300);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
@@ -4366,7 +4367,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
 });
 
 test.describe("PDF text editor - stress: add / remove cycles (no leaks)", () => {
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -4605,7 +4606,7 @@ test.describe("PDF text editor - stress: add / remove cycles (no leaks)", () => 
 });
 
 test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -4614,7 +4615,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     await page.waitForTimeout(500);
   }
 
-  async function saveAndReopenLocal(page: import("@playwright/test").Page) {
+  async function saveAndReopenLocal(page: Page) {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
@@ -4789,7 +4790,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
   // The AddText flow has its own input path (singleton run, base-14 Helvetica
   // from the start, no LineGrouper).
 
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -4799,7 +4800,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
   }
 
   async function addNewTextBox(
-    page: import("@playwright/test").Page,
+    page: Page,
     position: { x: number; y: number } = { x: 200, y: 600 },
   ): Promise<string> {
     await page.getByTestId("pdf-editor-add-text").click();
@@ -4819,11 +4820,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     return newId;
   }
 
-  async function clearAndType(
-    page: import("@playwright/test").Page,
-    runId: string,
-    text: string,
-  ) {
+  async function clearAndType(page: Page, runId: string, text: string) {
     await page.evaluate(
       ({ rid, t }) => {
         const el = document.querySelector<HTMLDivElement>(
@@ -4845,11 +4842,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     await page.waitForTimeout(300);
   }
 
-  async function typeCharByChar(
-    page: import("@playwright/test").Page,
-    runId: string,
-    sequence: string,
-  ) {
+  async function typeCharByChar(page: Page, runId: string, sequence: string) {
     // First clear the placeholder.
     await page.evaluate((rid) => {
       const el = document.querySelector<HTMLDivElement>(
@@ -4890,7 +4883,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     }
   }
 
-  async function readRun(page: import("@playwright/test").Page, id: string) {
+  async function readRun(page: Page, id: string) {
     return await page.evaluate((rid) => {
       const store = (
         window as unknown as {
@@ -4926,7 +4919,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     }, id);
   }
 
-  async function saveAndReopenLocal(page: import("@playwright/test").Page) {
+  async function saveAndReopenLocal(page: Page) {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
@@ -5167,7 +5160,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
   // User-reported: "I can add spaces but after adding them I can't remove
   // them".
 
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -5177,7 +5170,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
   }
 
   async function addNewTextBox(
-    page: import("@playwright/test").Page,
+    page: Page,
     position: { x: number; y: number } = { x: 200, y: 600 },
   ): Promise<string> {
     await page.getByTestId("pdf-editor-add-text").click();
@@ -5196,11 +5189,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     });
   }
 
-  async function clearAndType(
-    page: import("@playwright/test").Page,
-    id: string,
-    text: string,
-  ) {
+  async function clearAndType(page: Page, id: string, text: string) {
     await page.evaluate(
       ({ rid, t }) => {
         const el = document.querySelector<HTMLDivElement>(
@@ -5222,11 +5211,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     await page.waitForTimeout(300);
   }
 
-  async function backspace(
-    page: import("@playwright/test").Page,
-    id: string,
-    n: number,
-  ) {
+  async function backspace(page: Page, id: string, n: number) {
     for (let i = 0; i < n; i++) {
       await page.evaluate((rid) => {
         const el = document.querySelector<HTMLDivElement>(
@@ -5247,7 +5232,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     }
   }
 
-  async function readRun(page: import("@playwright/test").Page, id: string) {
+  async function readRun(page: Page, id: string) {
     return await page.evaluate((rid) => {
       const store = (
         window as unknown as {
@@ -5449,7 +5434,7 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
   // User reported the textbox visually "doesn't have the same width as the
   // text".
 
-  async function loadFixture(page: import("@playwright/test").Page) {
+  async function loadFixture(page: Page) {
     await gotoEditor(page);
     await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -5459,7 +5444,7 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
   }
 
   async function overlayCssWidth(
-    page: import("@playwright/test").Page,
+    page: Page,
     runTestId: string,
   ): Promise<number> {
     return await page.evaluate((tid) => {
@@ -5469,10 +5454,7 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
     }, runTestId);
   }
 
-  async function cssTextWidth(
-    page: import("@playwright/test").Page,
-    runTestId: string,
-  ): Promise<number> {
+  async function cssTextWidth(page: Page, runTestId: string): Promise<number> {
     // Measure the text content's intrinsic CSS width via the same canvas
     // measureText the overlay component uses.
     return await page.evaluate((tid) => {

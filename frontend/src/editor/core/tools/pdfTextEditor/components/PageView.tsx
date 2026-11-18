@@ -557,11 +557,7 @@ export const PageView = memo(function PageView({
             findRange={findMatch?.runId === run.id ? findMatch.range : null}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onTextRangeChange={
-              ACCESSIBILITY_EDITING
-                ? (range) => onSelectRunText?.(run.id, range)
-                : undefined
-            }
+            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
             textRange={
               selectedRunIds.length === 1 && selectedRunIds[0] === run.id
                 ? selectedTextRange
