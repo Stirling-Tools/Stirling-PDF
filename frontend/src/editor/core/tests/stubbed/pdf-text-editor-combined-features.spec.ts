@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type {
@@ -26,13 +27,7 @@ async function clickImage(page: Page, testid: string): Promise<void> {
 }
 
 async function open(page: Page, firstPage = 0): Promise<void> {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE);
+  await openInTextEditor(page, SAMPLE);
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });

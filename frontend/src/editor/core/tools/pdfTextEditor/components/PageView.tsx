@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Box, Loader } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
@@ -32,8 +32,10 @@ interface PageViewProps {
   page: PageSnapshot;
   /** Fires when the page enters the viewport for the first time. */
   onFirstVisible?: (pageIndex: number) => void;
-  /** Fires when the page's bitmap finishes its first render. */
+  /** Fires when the page's first render finishes, painted or failed. */
   onFirstRendered?: (pageIndex: number) => void;
+  /** Fires the first time the page's bitmap is painted, including on a retry. */
+  onFirstPainted?: () => void;
   scale: number;
   widthMode: import("@editor/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
@@ -124,6 +126,7 @@ export const PageView = memo(function PageView({
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
+  onFirstPainted,
 }: PageViewProps) {
   const { t } = useTranslation();
   const imageAttentions = useMemo(() => {
@@ -156,7 +159,7 @@ export const PageView = memo(function PageView({
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
-  const [rendering, setRendering] = useState(false);
+  const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
@@ -219,7 +222,6 @@ export const PageView = memo(function PageView({
     }
     let cancelled = false;
     if (!canvas) return;
-    setRendering(true);
     setRenderError(null);
     PdfiumPageRenderer.render(
       document,
@@ -232,11 +234,14 @@ export const PageView = memo(function PageView({
         canvas.height = image.height;
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.putImageData(image, 0, 0);
-        setRendering(false);
         setPaintedRevision(page.revision);
         if (firstRenderedDocRef.current !== document) {
           firstRenderedDocRef.current = document;
           onFirstRendered?.(page.pageIndex);
+        }
+        if (firstPaintedDocRef.current !== document) {
+          firstPaintedDocRef.current = document;
+          onFirstPainted?.();
         }
       })
       .catch((err: unknown) => {
@@ -244,7 +249,6 @@ export const PageView = memo(function PageView({
         const msg =
           err instanceof Error ? `${err.name}: ${err.message}` : String(err);
         console.warn(`[pdf-editor] page ${page.pageIndex} render failed`, err);
-        setRendering(false);
         setRenderError(msg);
         // Flip the first-rendered flag on error too, so the loading
         // overlay dismisses instead of leaving the user on a spinner.
@@ -269,17 +273,12 @@ export const PageView = memo(function PageView({
 
   return (
     <Box
-      pos="relative"
-      mx="auto"
-      mb="lg"
+      // Fills the viewer's page box and stays transparent until painted, so
+      // the viewer's own render shows through.
+      pos="absolute"
       ref={containerRef}
       className={privateContentClassName}
-      style={{
-        width: raster.width,
-        height: raster.height,
-        boxShadow: "0 0 4px rgba(0,0,0,0.2)",
-        background: "#fff",
-      }}
+      style={{ inset: 0 }}
       data-testid={`pdf-editor-page-${page.pageIndex}`}
       onClick={(e) => {
         if (!onPageClick) return;
@@ -305,35 +304,6 @@ export const PageView = memo(function PageView({
           height: raster.height,
         }}
       />
-      {!nearViewport && (
-        <Box
-          pos="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background:
-              "repeating-linear-gradient(45deg, #fafafa, #fafafa 8px, #f0f0f0 8px, #f0f0f0 16px)",
-            color: "#777",
-            fontSize: 13,
-            pointerEvents: "none",
-          }}
-          data-testid={`pdf-editor-page-${page.pageIndex}-placeholder`}
-        >
-          {t("pdfTextEditor.pageView.pageNumber", "Page {{page}}", {
-            page: page.pageIndex + 1,
-          })}
-        </Box>
-      )}
-      {rendering && nearViewport && (
-        <Box pos="absolute" top={8} right={8} style={{ pointerEvents: "none" }}>
-          <Loader size="xs" />
-        </Box>
-      )}
       {renderError && (
         <Box
           pos="absolute"
