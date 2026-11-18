@@ -113,6 +113,9 @@ function EditablePage({
   const imageIds = useOwnIds(selection.imageIds, page.images);
   const shapeIds = useOwnIds(selection.shapeIds, page.shapes);
   const ownsMatch = page.runs.some((r) => r.id === findMatch?.runId);
+  const ownsFormField = (page.annotations ?? []).some(
+    (a) => a.id === selection.formFieldId,
+  );
   const handlers = pageViewHandlers(store);
 
   return (
@@ -127,6 +130,7 @@ function EditablePage({
       selectedImageIds={imageIds}
       selectedShapeIds={shapeIds}
       findMatch={ownsMatch ? findMatch : null}
+      selectedFormFieldId={ownsFormField ? selection.formFieldId : null}
       selectedTextRange={
         runIds.length === 1 && selection.runIds.length === 1
           ? selection.textRange

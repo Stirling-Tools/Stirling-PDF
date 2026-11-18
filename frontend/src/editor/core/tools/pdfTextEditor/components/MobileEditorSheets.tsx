@@ -29,7 +29,8 @@ export const MobileEditorSheets = memo(function MobileEditorSheets(
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
-    selection.shapeIds.length > 0;
+    selection.shapeIds.length > 0 ||
+    selection.formFieldId !== null;
 
   useEffect(() => {
     if (sheet === "style" && !controller.hasRunSelection) {

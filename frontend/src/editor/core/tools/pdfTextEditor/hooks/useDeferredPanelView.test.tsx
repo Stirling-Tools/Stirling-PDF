@@ -11,6 +11,7 @@ function select(runId: string): SelectionState {
     shapeIds: [],
     caret: null,
     textRange: null,
+    formFieldId: null,
   };
 }
 

@@ -43,6 +43,8 @@ function createHandlers(store: EditorStore) {
     onSelectRunText: (runId: string, range: TextRange | null) =>
       store.selection.setTextRange(runId, range),
     onSelectImage: (imageId: string) => store.selection.selectImage(imageId),
+    onSelectFormField: (annotationId: string) =>
+      store.selection.selectFormField(annotationId),
     onSelectShape: (shapeId: string, extend: boolean) => {
       if (extend) store.selection.toggleShape(shapeId);
       else store.selection.selectShape(shapeId);

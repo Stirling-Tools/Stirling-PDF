@@ -29,6 +29,7 @@ function selected(ids: Partial<SelectionState>): SelectionState {
     shapeIds: [],
     caret: null,
     textRange: null,
+    formFieldId: null,
     ...ids,
   };
 }
