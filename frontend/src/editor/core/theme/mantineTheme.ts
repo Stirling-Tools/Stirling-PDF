@@ -74,6 +74,23 @@ const gray: MantineColorsTuple = [
   "var(--color-gray-900)",
 ];
 
+/**
+ * A 10-slot Mantine tuple from the four shades a hue has in tokens.css, with
+ * the base on index 6 (the filled shade). Every slot is a `var()`, so Mantine's
+ * JS colour maths (`autoContrast`, `lighten`/`darken`/`alpha`) cannot read
+ * these hues; CSS `color-mix()` variants work.
+ */
+function fourShadeTuple(hue: string): MantineColorsTuple {
+  const light = `var(--color-${hue}-light)`;
+  const border = `var(--color-${hue}-border)`;
+  const base = `var(--color-${hue})`;
+  const dark = `var(--color-${hue}-dark)`;
+  return [light, light, border, border, base, base, base, dark, dark, dark];
+}
+
+const amber = fourShadeTuple("amber");
+const purple = fourShadeTuple("purple");
+
 // Neutral dark scale (zinc, mirroring --p-zinc-*) replacing Mantine's default gray ramp; colors.css re-points dark-4..7 at the --c-* surfaces. 0..3 text, 4..7 surfaces, 8..9 deepest.
 const dark: MantineColorsTuple = [
   "#f4f4f5", // dark-0  — primary text on dark bg (zinc-100)
@@ -107,6 +124,8 @@ const accessibleColorSlots = {
   "--mantine-color-red-light-color": "var(--color-red-dark)",
   "--mantine-color-green-light-color": "var(--color-green-dark)",
   "--mantine-color-yellow-light-color": "var(--color-amber-dark)",
+  "--mantine-color-amber-light-color": "var(--color-amber-dark)",
+  "--mantine-color-purple-light-color": "var(--color-purple-dark)",
   // Colour names the app never registers still reach Mantine's own palette
   // through `color="..."` props, so pin their light-variant text too.
   "--mantine-color-orange-light-color": "var(--color-amber-dark)",
@@ -126,12 +145,16 @@ const accessibleColorSlots = {
   "--mantine-color-red-text": "var(--color-red-dark)",
   "--mantine-color-green-text": "var(--color-green-dark)",
   "--mantine-color-orange-text": "var(--color-amber-dark)",
+  "--mantine-color-amber-text": "var(--color-amber-dark)",
+  "--mantine-color-purple-text": "var(--color-purple-dark)",
   "--mantine-color-blue-text": "var(--c-accent-text)",
   "--mantine-color-blue-filled": "var(--c-accent-solid)",
   "--mantine-color-green-filled-hover": "var(--c-success-solid)",
   "--mantine-color-orange-filled": "var(--p-amber-700)",
   "--mantine-color-green-filled": "var(--p-green-700)",
   "--mantine-color-yellow-filled": "var(--p-amber-700)",
+  "--mantine-color-amber-filled": "var(--c-warning-solid)",
+  "--mantine-color-purple-filled": "var(--c-accent-solid)",
   // Outline variants paint their label with the hue's -outline slot, which
   // defaults to the solid fill and is therefore too light to read.
   "--mantine-color-red-outline": "var(--color-red-dark)",
@@ -139,13 +162,15 @@ const accessibleColorSlots = {
   "--mantine-color-teal-outline": "var(--color-green-dark)",
   "--mantine-color-orange-outline": "var(--color-amber-dark)",
   "--mantine-color-yellow-outline": "var(--color-amber-dark)",
+  "--mantine-color-amber-outline": "var(--color-amber-dark)",
+  "--mantine-color-purple-outline": "var(--color-purple-dark)",
   "--mantine-color-blue-outline": "var(--c-accent-text)",
   "--mantine-color-primary-outline": "var(--c-accent-text)",
   "--mantine-color-teal-filled": "var(--p-green-700)",
   "--mantine-color-gray-filled": "var(--p-gray-600)",
 } as const;
 
-export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
+export const appCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: {
     ...accessibleColorSlots,
@@ -180,6 +205,8 @@ export const mantineTheme = createTheme({
     red,
     green,
     yellow,
+    amber,
+    purple,
     gray,
     dark,
   },

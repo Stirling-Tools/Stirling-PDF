@@ -1,15 +1,19 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -33,8 +37,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -45,9 +51,9 @@ class CropControllerTest {
         return ResponseEntity.ok(new ByteArrayResource(bytes));
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
+    private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (InputStream __in = response.getBody().getInputStream()) {
             __in.transferTo(baos);
         }
         return baos.toByteArray();
@@ -71,6 +77,17 @@ class CropControllerTest {
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
+                        });
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(in, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            return f;
                         });
         pdfFactory = new TestPdfFactory();
     }
@@ -151,6 +168,26 @@ class CropControllerTest {
 
         MockMultipartFile createPdfWithSize(String filename, PDRectangle size) throws IOException {
             return createPdf(filename, size, null);
+        }
+
+        MockMultipartFile createRotatedRectPdf(String filename, int rotation) throws IOException {
+            Path testPdfPath = tempDir.resolve(filename);
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage(new PDRectangle(400, 600));
+                page.setRotation(rotation);
+                doc.addPage(page);
+                try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                    contentStream.setNonStrokingColor(0, 0, 0);
+                    contentStream.addRect(40, 300, 120, 260);
+                    contentStream.fill();
+                }
+                doc.save(testPdfPath.toFile());
+            }
+            return new MockMultipartFile(
+                    "fileInput",
+                    filename,
+                    MediaType.APPLICATION_PDF_VALUE,
+                    Files.readAllBytes(testPdfPath));
         }
 
         MockMultipartFile createPdf(String filename, PDRectangle pageSize, String content)
@@ -318,6 +355,29 @@ class CropControllerTest {
                 PDRectangle box = result.getPage(0).getMediaBox();
                 assertThat(box.getWidth()).isLessThan(PDRectangle.A4.getWidth());
                 assertThat(box.getHeight()).isLessThan(PDRectangle.A4.getHeight());
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 90, 180, 270})
+        @DisplayName("Should auto-crop the same content rect on every rotation")
+        void shouldAutoCropRotatedPage(int rotation) throws IOException {
+            MockMultipartFile testFile =
+                    autoCropPdfFactory.createRotatedRectPdf(
+                            "rotated-" + rotation + ".pdf", rotation);
+            CropPdfForm request =
+                    new CropRequestBuilder().withFile(testFile).withAutoCrop(true).build();
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                PDRectangle box = result.getPage(0).getMediaBox();
+                assertThat(box.getLowerLeftX()).isBetween(38f, 42f);
+                assertThat(box.getLowerLeftY()).isBetween(298f, 302f);
+                assertThat(box.getWidth()).isBetween(118f, 122f);
+                assertThat(box.getHeight()).isBetween(258f, 262f);
+                assertThat(result.getPage(0).getRotation()).isEqualTo(rotation);
             }
         }
 
@@ -584,8 +644,8 @@ class CropControllerTest {
                             .build();
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
-                    .isInstanceOf(IOException.class)
-                    .hasMessageContaining("JPDFium crop failed")
+                    .isInstanceOf(ExceptionUtils.PdfCorruptedException.class)
+                    .hasMessageContaining("corrupted")
                     .hasCauseInstanceOf(RuntimeException.class);
         }
 

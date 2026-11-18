@@ -59,6 +59,7 @@ import {
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { useScanPrefit } from "@editor/tools/pdfTextEditor/hooks/useScanPrefit";
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
@@ -147,6 +148,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEffect(() => {
     void preloadFallbackFontBytes();
   }, []);
+
+  useScanPrefit(store, state);
 
   const sel = useSelectionActions(store);
 
@@ -258,10 +261,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // The position that is about to be written out. Anything the user edits
         // while the export runs is NOT in these bytes, so it must stay dirty.
         const exported = store.savedPosition();
-        const { blob, filename } = await exportToBlob(
-          store.document,
-          openedFileName,
-        );
+        const blob = await exportToBlob(store.document);
+        const filename = openedFileName?.trim() || "edited.pdf";
         // Apply first and unconditionally. Gating the write-back on the browser
         // download dialog meant cancelling it silently discarded the save.
         assertFilesNotBlocked([sourceId ?? undefined]);
