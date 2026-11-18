@@ -81,7 +81,7 @@ export function ActivityPipelineSuggestions({
   return (
     <section className="portal-pipelines__templates">
       <h2 className="portal-pipelines__section-title">
-        {t("portal.pipelines.activity.title", "From how people work")}
+        {t("portal.pipelines.activity.title", "Frequent workflows")}
       </h2>
       <CardRail itemWidth="16rem">
         {suggestions.map(({ chain, draft }) => (

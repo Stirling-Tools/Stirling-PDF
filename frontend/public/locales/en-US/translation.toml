@@ -2374,7 +2374,7 @@ title = "Automation Selection"
 
 [automate.selection.activity]
 description = "Save it as an automation and run it with one click."
-title = "From how people work"
+title = "Frequent workflows"
 
 [automate.selection.createNew]
 title = "Create New Automation"
@@ -9925,7 +9925,7 @@ newCustomPipeline = "New custom pipeline"
 
 [portal.pipelines.activity]
 build = "Build pipeline"
-title = "From how people work"
+title = "Frequent workflows"
 
 [portal.pipelines.all]
 title = "All pipelines"

@@ -163,7 +163,7 @@ export default function AutomationEntry({
         {title && subtitle ? (
           <>
             <Text
-              size="sm"
+              fz="inherit"
               lineClamp={2}
               w="100%"
               style={{ textAlign: "left" }}
@@ -171,7 +171,7 @@ export default function AutomationEntry({
               {title}
             </Text>
             <Text
-              size="xs"
+              fz="0.72rem"
               c="dimmed"
               truncate="end"
               w="100%"
@@ -182,7 +182,7 @@ export default function AutomationEntry({
           </>
         ) : title ? (
           // Custom automation with title
-          <Text size="sm" style={{ textAlign: "left" }}>
+          <Text fz="inherit" style={{ textAlign: "left" }}>
             {title}
           </Text>
         ) : (

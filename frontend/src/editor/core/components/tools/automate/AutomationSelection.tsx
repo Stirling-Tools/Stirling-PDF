@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Title, Stack, Divider } from "@mantine/core";
 import AutomationEntry from "@editor/components/tools/automate/AutomationEntry";
@@ -19,6 +19,14 @@ import {
   downloadFolderScanningConfig,
 } from "@editor/utils/automationConverter";
 import type { ImportableAutomation } from "@editor/hooks/tools/automate/useSavedAutomations";
+
+const SECTION_TITLE_STYLE: CSSProperties = {
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  color: "var(--c-text-subtle)",
+};
 
 interface AutomationSelectionProps {
   savedAutomations: AutomationConfig[];
@@ -124,13 +132,7 @@ export default function AutomationSelection({
 
   return (
     <div>
-      <Title
-        order={3}
-        size="h4"
-        fw={600}
-        mb="md"
-        style={{ color: "var(--mantine-color-dimmed)" }}
-      >
+      <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
         {t("automate.selection.saved.title", "Saved")}
       </Title>
 
@@ -178,14 +180,8 @@ export default function AutomationSelection({
 
         {activityChains.length > 0 && (
           <div>
-            <Title
-              order={3}
-              size="h4"
-              fw={600}
-              mb="md"
-              style={{ color: "var(--mantine-color-dimmed)" }}
-            >
-              {t("automate.selection.activity.title", "From how people work")}
+            <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
+              {t("automate.selection.activity.title", "Frequent workflows")}
             </Title>
             <Stack gap="xs">
               {activityChains.map((chain) => (
@@ -212,13 +208,7 @@ export default function AutomationSelection({
 
         {/* Suggested Automations */}
         <div>
-          <Title
-            order={3}
-            size="h4"
-            fw={600}
-            mb="md"
-            style={{ color: "var(--mantine-color-dimmed)" }}
-          >
+          <Title order={3} mb="xs" style={SECTION_TITLE_STYLE}>
             {t("automate.selection.suggested.title", "Suggested")}
           </Title>
           <Stack gap="xs">

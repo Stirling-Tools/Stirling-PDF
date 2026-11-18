@@ -41,7 +41,7 @@ describe("AutomationSelection activity section", () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText("From how people work")).toBeTruthy();
+    expect(screen.getByText("Frequent workflows")).toBeTruthy();
     expect(screen.queryByText("From your activity")).toBeNull();
     expect(
       screen.getByText("Colleagues ran this {{count, number}} times"),
