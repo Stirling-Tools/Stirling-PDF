@@ -1,13 +1,12 @@
 import { useSyncExternalStore } from "react";
-import type { FileId } from "@editor/types/file";
 
 export interface EditorSession {
   fileName: string | null;
-  fileId: FileId | null;
   save: () => void;
   download: () => void;
-  pickFile: (file: File) => void;
   pickImage: () => void;
+  /** Brings a page on screen, mounted or not. */
+  revealPage: (pageIndex: number) => void;
 }
 
 let current: EditorSession | null = null;
@@ -28,6 +27,11 @@ function subscribe(listener: () => void): () => void {
 }
 
 function getSnapshot(): EditorSession | null {
+  return current;
+}
+
+/** The session as it stands, for event handlers outside React's render. */
+export function currentEditorSession(): EditorSession | null {
   return current;
 }
 

@@ -43,6 +43,17 @@ export function transformRectAABB(t: Affine, r: PageRect): PageRect {
   };
 }
 
+export function unionRect(a: PageRect, b: PageRect): PageRect {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y,
+  };
+}
+
 /** Inverse of an affine, or identity when singular (degenerate linear part). */
 export function invertAffine(t: Affine): Affine {
   const det = t.a * t.d - t.b * t.c;

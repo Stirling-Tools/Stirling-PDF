@@ -1,6 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import HotkeyDisplay from "@editor/components/hotkeys/HotkeyDisplay";
 import { isMacLike, type HotkeyBinding } from "@editor/utils/hotkeys";
 import "@editor/tools/pdfTextEditor/components/HelpOverlay.css";
@@ -29,9 +30,8 @@ const mod = (
   ...extra,
 });
 
-function ShortcutList() {
-  const { t } = useTranslation();
-  const SHORTCUTS: Section[] = [
+function shortcutSections(t: TFunction): Section[] {
+  return [
     {
       heading: t("pdfTextEditor.help.editing.heading", "Editing"),
       items: [
@@ -68,6 +68,13 @@ function ShortcutList() {
           description: t(
             "pdfTextEditor.help.editing.groupDesc",
             "Group selected runs into one paragraph",
+          ),
+        },
+        {
+          bindings: [mod("KeyB"), mod("KeyI")],
+          description: t(
+            "pdfTextEditor.help.editing.boldItalicDesc",
+            "Bold / Italic, for the selected words or the whole box",
           ),
         },
         {
@@ -195,44 +202,12 @@ function ShortcutList() {
       ],
     },
   ];
-
-  return (
-    <Stack gap="lg">
-      {SHORTCUTS.map((section) => (
-        <section key={section.heading}>
-          <h3 className="pdf-editor-help__section-title">{section.heading}</h3>
-          <div className="pdf-editor-help__card">
-            {section.items.map((item) => (
-              <div
-                className="pdf-editor-help__row"
-                key={`${section.heading}-${item.description}`}
-              >
-                <Text className="pdf-editor-help__label">
-                  {item.description}
-                </Text>
-                <span className="pdf-editor-help__keys">
-                  {item.bindings.map((binding, index) => (
-                    <Fragment key={`${binding.code}-${index}`}>
-                      {index > 0 && (
-                        <span className="pdf-editor-help__or" aria-hidden>
-                          /
-                        </span>
-                      )}
-                      <HotkeyDisplay binding={binding} />
-                    </Fragment>
-                  ))}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-    </Stack>
-  );
 }
 
 export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
   const { t } = useTranslation();
+  // The editor re-renders this on every keystroke, open or not.
+  const sections = useMemo(() => shortcutSections(t), [t]);
 
   return (
     <Modal
@@ -242,7 +217,39 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
       size="lg"
       data-testid="pdf-editor-help-overlay"
     >
-      <ShortcutList />
+      <Stack gap="lg">
+        {sections.map((section) => (
+          <section key={section.heading}>
+            <h3 className="pdf-editor-help__section-title">
+              {section.heading}
+            </h3>
+            <div className="pdf-editor-help__card">
+              {section.items.map((item) => (
+                <div
+                  className="pdf-editor-help__row"
+                  key={`${section.heading}-${item.description}`}
+                >
+                  <Text className="pdf-editor-help__label">
+                    {item.description}
+                  </Text>
+                  <span className="pdf-editor-help__keys">
+                    {item.bindings.map((binding, index) => (
+                      <Fragment key={`${binding.code}-${index}`}>
+                        {index > 0 && (
+                          <span className="pdf-editor-help__or" aria-hidden>
+                            /
+                          </span>
+                        )}
+                        <HotkeyDisplay binding={binding} />
+                      </Fragment>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </Stack>
     </Modal>
   );
 }

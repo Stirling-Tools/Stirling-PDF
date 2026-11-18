@@ -50,7 +50,7 @@ async function loadContext(page: Page) {
       hasDocument: s?.state.hasDocument ?? null,
       loading: s?.state.loading ?? null,
       error: s?.state.error ?? null,
-      stage: !!document.querySelector('[data-testid="pdf-editor-stage"]'),
+      viewerPages: !!document.querySelector("[data-viewer-pages]"),
       pages: document.querySelectorAll('[data-testid^="pdf-editor-page-"]')
         .length,
       fileItems: document.querySelectorAll(".file-sidebar-file-item").length,

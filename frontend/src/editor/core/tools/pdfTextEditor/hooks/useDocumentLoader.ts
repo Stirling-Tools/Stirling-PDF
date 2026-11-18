@@ -26,88 +26,7 @@ const yieldToBrowser = () =>
 /** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
-    async (file: File, password?: string): Promise<void> => {
-      const documentPassword = password ?? getPdfAccess(file)?.password;
-      const token = store.beginLoad();
-      store.setLoading(true);
-      store.setProgress({
-        stage: `Reading ${file.name}`,
-        current: 0,
-        total: 0,
-      });
-      try {
-        await yieldToBrowser();
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (!store.isCurrentLoad(token)) return;
-        store.setProgress({
-          stage: "Parsing PDF",
-          current: 0,
-          total: 0,
-        });
-        await yieldToBrowser();
-        const doc = await EditorDocument.open(bytes, documentPassword);
-        try {
-          if (!store.isCurrentLoad(token)) {
-            doc.dispose();
-            return;
-          }
-          const access = rememberPdfAccess(
-            file,
-            readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
-          );
-          assertPdfSessionEditable(access);
-        } catch (error) {
-          doc.dispose();
-          throw error;
-        }
-        if (!store.isCurrentLoad(token)) {
-          // A newer load superseded us before we installed our doc - free
-          // it ourselves (setDocument never took ownership).
-          try {
-            doc.dispose();
-          } catch {
-            /* best-effort */
-          }
-          return;
-        }
-        await store.setDocument(doc);
-
-        const total = doc.pageCount;
-        store.publishPages(
-          Array.from({ length: total }, (_, i) => unreadSnapshot(doc, i)),
-        );
-        store.setLoading(false);
-        store.setProgress(null);
-        // The first page's bitmap is what the user waits for; reading text first would queue it behind every eager page.
-        await firstPagePainted(store);
-        let any = false;
-        for (let i = 0; i < Math.min(EAGER_PAGE_LIMIT, total); i++) {
-          // One page per task: the paint that resolved the wait is still finishing in this one.
-          await yieldToBrowser();
-          if (!store.isCurrentLoad(token)) return;
-          any = readPage(store, doc, i) || any;
-        }
-        if (any && store.isCurrentLoad(token)) publishAllPages(store);
-      } catch (err) {
-        if (store.isCurrentLoad(token)) {
-          // A password-protected PDF isn't a hard error.
-          if (
-            err instanceof PdfiumOpenError &&
-            err.code === FPDF_ERR_PASSWORD
-          ) {
-            store.setPasswordRequired(file, documentPassword !== undefined);
-          } else {
-            store.setError(err instanceof Error ? err.message : String(err));
-          }
-        }
-      } finally {
-        // Only the winning load owns the loading/progress UI state.
-        if (store.isCurrentLoad(token)) {
-          store.setLoading(false);
-          store.setProgress(null);
-        }
-      }
-    },
+    (file: File, password?: string) => loadDocument(store, file, password),
     [store],
   );
 }
@@ -163,6 +82,100 @@ function firstPagePainted(store: EditorStore): Promise<void> {
       resolve();
     }
   });
+}
+
+/**
+ * Resolves true when the document on screen as this call settles is the one it
+ * opened from `file`, even if a newer load has started but not yet replaced it.
+ * On false `file` is not on screen (it failed, wants a password, or a newer
+ * document replaced it), so the caller must leave the filename and workbench
+ * file alone.
+ */
+export async function loadDocument(
+  store: EditorStore,
+  file: File,
+  password?: string,
+): Promise<boolean> {
+  let installed: EditorDocument | null = null;
+  const documentPassword = password ?? getPdfAccess(file)?.password;
+  const token = store.beginLoad();
+  store.setLoading(true);
+  store.setProgress({
+    stage: `Reading ${file.name}`,
+    current: 0,
+    total: 0,
+  });
+  try {
+    await yieldToBrowser();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!store.isCurrentLoad(token)) return false;
+    store.setProgress({
+      stage: "Parsing PDF",
+      current: 0,
+      total: 0,
+    });
+    await yieldToBrowser();
+    const doc = await EditorDocument.open(bytes, documentPassword);
+    try {
+      if (!store.isCurrentLoad(token)) {
+        doc.dispose();
+        return false;
+      }
+      const access = rememberPdfAccess(
+        file,
+        readPdfiumAccess(doc.module, doc.docPtr, documentPassword ?? ""),
+      );
+      assertPdfSessionEditable(access);
+    } catch (error) {
+      doc.dispose();
+      throw error;
+    }
+    if (!store.isCurrentLoad(token)) {
+      // A newer load superseded us before we installed our doc - free
+      // it ourselves (setDocument never took ownership).
+      try {
+        doc.dispose();
+      } catch {
+        /* best-effort */
+      }
+      return false;
+    }
+    await store.setDocument(doc);
+    installed = doc;
+
+    const total = doc.pageCount;
+    store.publishPages(
+      Array.from({ length: total }, (_, i) => unreadSnapshot(doc, i)),
+    );
+    store.setLoading(false);
+    store.setProgress(null);
+    // The first page's bitmap is what the user waits for; reading text first would queue it behind every eager page.
+    await firstPagePainted(store);
+    let any = false;
+    for (let i = 0; i < Math.min(EAGER_PAGE_LIMIT, total); i++) {
+      // One page per task: the paint that resolved the wait is still finishing in this one.
+      await yieldToBrowser();
+      if (!store.isCurrentLoad(token)) return store.document === doc;
+      any = readPage(store, doc, i) || any;
+    }
+    if (any && store.isCurrentLoad(token)) publishAllPages(store);
+  } catch (err) {
+    if (store.isCurrentLoad(token)) {
+      // A password-protected PDF isn't a hard error.
+      if (err instanceof PdfiumOpenError && err.code === FPDF_ERR_PASSWORD) {
+        store.setPasswordRequired(file, documentPassword !== undefined);
+      } else {
+        store.setError(err instanceof Error ? err.message : String(err));
+      }
+    }
+  } finally {
+    // Only the winning load owns the loading/progress UI state.
+    if (store.isCurrentLoad(token)) {
+      store.setLoading(false);
+      store.setProgress(null);
+    }
+  }
+  return installed !== null && store.document === installed;
 }
 
 /** Read EVERY not-yet-loaded page in one pass and publish once. */
