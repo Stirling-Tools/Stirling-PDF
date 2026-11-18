@@ -11,6 +11,11 @@
   container-name: pdfeditortoolbar;
 }
 
+/* Empty stand-in at the height of the bar's row of small buttons. */
+.pdf-editor-topbar--pending {
+  height: 2.8125rem;
+}
+
 .pdf-editor-topbar__lead,
 .pdf-editor-topbar__trail {
   display: flex;
