@@ -1,4 +1,7 @@
-/** The Enterprise page: trial, quote, agreement and licence, outside the app's own chrome. */
+/**
+ * The Enterprise page: trial, quote, agreement and licence, outside the app's own chrome. Hosted
+ * builds serve it; self-hosted builds forward this address to the hosted page.
+ */
 export const ENTERPRISE_PATH = "/enterprise";
 
 /** An older address for the page. Sales emails and campaigns still link to it, so it redirects. */

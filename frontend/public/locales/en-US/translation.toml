@@ -9564,10 +9564,6 @@ signInToStart = "Sign in to start your trial"
 stage = "Stage {{current}} of {{total}}"
 stagesLabel = "Progress"
 
-[portal.enterprise.connect]
-ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
-unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
-
 [portal.enterprise.landing]
 lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
 tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"

@@ -104,14 +104,18 @@ const procurement = {
   deal: null as Pick<ProcurementSnapshot, "dealId" | "stage"> | null,
   error: null as Error | null,
   refetch: vi.fn(),
+  enabled: undefined as boolean | undefined,
 };
 vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
-  useProcurementSnapshot: () => ({
-    data: procurement.error ? undefined : procurement.deal,
-    error: procurement.error,
-    isSuccess: !procurement.error,
-    refetch: procurement.refetch,
-  }),
+  useProcurementSnapshot: (enabled?: boolean) => {
+    procurement.enabled = enabled;
+    return {
+      data: procurement.error ? undefined : procurement.deal,
+      error: procurement.error,
+      isSuccess: !procurement.error,
+      refetch: procurement.refetch,
+    };
+  },
 }));
 // Usage is shared by both builds; hostsDeal picks which one's Enterprise entry it gets.
 const enterprise = { hostsDeal: true, open: vi.fn() };
@@ -724,6 +728,7 @@ describe("Usage — link-free wallet renderer", () => {
     expect(enterprise.open).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("procurement-summary")).not.toBeInTheDocument();
     expect(screen.queryByText("Snapshot unavailable")).not.toBeInTheDocument();
+    expect(procurement.enabled).toBe(false);
   });
 
   it("still offers the quote to a buyer who asked but never started a trial", async () => {
