@@ -287,20 +287,22 @@ function TextSelectionMenuInner({
 
   const canEditText =
     !readOnly &&
+    activeFileId != null &&
     selectedTool !== "pdfTextEditor" &&
     toolRegistry.pdfTextEditor != null &&
     toolAvailability.pdfTextEditor?.available !== false;
 
   // Opens the text editor with the selected text selected in it.
   const handleEditText = useCallback(() => {
-    if (!documentId || !selection) return;
+    if (!documentId || !selection || !activeFileId) return;
+    const fileId = activeFileId;
     const first = selection.getFormattedSelection(documentId)[0];
     if (!first) return;
     const open = (text: string) => {
       selection.clear(documentId);
       requestNavigation(() => {
         setTextTarget({
-          fileId: activeFileId,
+          fileId,
           pageIndex: first.pageIndex,
           text,
           rect: {

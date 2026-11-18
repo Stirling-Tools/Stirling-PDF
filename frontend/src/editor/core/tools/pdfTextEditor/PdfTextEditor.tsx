@@ -78,12 +78,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const isMobile = useIsMobile();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
-  const { setActiveFileId, scrollActions } = useViewer();
+  const { activeFileId, setActiveFileId, scrollActions } = useViewer();
 
   const selection = useEditorSelection(store);
-  // A remount over a document still open carries on with its file.
+  // A remount over a document still open carries on with its file, while the
+  // viewer still shows it.
   const [initialSource] = useState(() =>
-    store.getState().hasDocument
+    store.getState().hasDocument && store.source.fileId === activeFileId
       ? store.source
       : { fileId: null, fileName: null },
   );
@@ -336,6 +337,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   // Answers a risk warning raised from the app's unsaved-changes prompt.
   const riskAnswerRef = useRef<((save: boolean) => void) | null>(null);
+  // A warning still open when the editor goes cancels, so the prompt that
+  // waits on it can close.
+  useEffect(
+    () => () => {
+      riskAnswerRef.current?.(false);
+      riskAnswerRef.current = null;
+    },
+    [],
+  );
 
   const saveBeforeLeaving = useCallback(async () => {
     const doc = store.document;

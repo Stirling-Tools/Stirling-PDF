@@ -1992,7 +1992,8 @@ const EmbedPdfViewerContent = ({
             <pageTool.Toolbar />
           ) : (
             selectedTool === "pdfTextEditor" &&
-            !isMobile && (
+            !isMobile &&
+            !previewFile && (
               // Holds the editor bar's place while the editor loads, so the
               // bar shows at once and the pages do not shift when it lands.
               <div

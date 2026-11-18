@@ -55,8 +55,8 @@ export interface ViewerPageTool {
 
 /** Text selected in the viewer that a page tool is asked to open at. */
 export interface ViewerTextTarget {
-  /** Workbench file the text is in; null when the viewer has not settled on one. */
-  fileId: string | null;
+  /** Workbench file the text is in. */
+  fileId: string;
   pageIndex: number;
   text: string;
   /** Where the text sits on the page, in PDF points from the top-left corner. */

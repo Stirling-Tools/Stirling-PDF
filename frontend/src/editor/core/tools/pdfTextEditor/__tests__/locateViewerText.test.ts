@@ -59,6 +59,34 @@ describe("locateViewerText", () => {
     expect(found?.runId).toBe("bottom");
   });
 
+  it("picks the copy within a run nearest the viewer's selection", () => {
+    // One line, x 0..100: the second "2023" sits at the far right.
+    const p = page([run("a", "2023 then more words and 2023", 0, 700)]);
+    const found = locateViewerText(p, "2023", {
+      x: 85,
+      y: HEIGHT - 710,
+      width: 15,
+      height: 10,
+    });
+    expect(found).toEqual({ runId: "a", range: { start: 25, end: 29 } });
+  });
+
+  it("picks the copy on the paragraph line the selection is on", () => {
+    const para = {
+      ...run("a", "2023 opens it and later 2023 closes", 0, 680),
+      bounds: { x: 0, y: 680, width: 100, height: 30 },
+      paragraphLineCount: 2,
+    } as TextRunSnapshot;
+    // Left end of the second line, the lower half of the box.
+    const found = locateViewerText(page([para]), "2023", {
+      x: 0,
+      y: HEIGHT - 690,
+      width: 15,
+      height: 10,
+    });
+    expect(found?.range).toEqual({ start: 24, end: 28 });
+  });
+
   it("keeps the first repeat on a rotated page", () => {
     const p = page(
       [run("top", "the", 0, 700), run("bottom", "the", 0, 100)],
