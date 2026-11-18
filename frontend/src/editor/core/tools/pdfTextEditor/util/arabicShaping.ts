@@ -5,6 +5,7 @@
  * letter in its isolated form. Fonts that map the presentation forms (Noto Sans
  * Arabic, DejaVu Sans) draw the joined forms these code points name.
  */
+import { codeUnitOffsets } from "@editor/tools/pdfTextEditor/util/bidi";
 
 // Isolated, final, initial, medial; right-joining letters have only the first two.
 const FORMS: Record<number, readonly number[]> = {
@@ -96,22 +97,16 @@ export function shapeArabic(text: string): {
   sourceEnd: number[];
 } {
   const units = [...text];
-  const offsets: number[] = [];
-  let offset = 0;
-  for (const unit of units) {
-    offsets.push(offset);
-    offset += unit.length;
-  }
+  const offsets = codeUnitOffsets(units);
   const cps = units.map((unit) => unit.codePointAt(0)!);
-  const neighbour = (from: number, step: 1 | -1): number | undefined => {
+  const neighbourIndex = (from: number, step: 1 | -1): number => {
     for (let i = from + step; i >= 0 && i < units.length; i += step)
-      if (!TRANSPARENT.test(units[i])) return cps[i];
-    return undefined;
-  };
-  const neighbourIndex = (from: number): number => {
-    for (let i = from + 1; i < units.length; i++)
       if (!TRANSPARENT.test(units[i])) return i;
     return -1;
+  };
+  const neighbour = (from: number, step: 1 | -1): number | undefined => {
+    const i = neighbourIndex(from, step);
+    return i < 0 ? undefined : cps[i];
   };
   let out = "";
   const source: number[] = [];
@@ -132,7 +127,7 @@ export function shapeArabic(text: string): {
       continue;
     }
     const joinedBefore = joinsForward(neighbour(i, -1));
-    const next = neighbourIndex(i);
+    const next = neighbourIndex(i, 1);
     const alef = cp === LAM && next >= 0 ? LAM_ALEF[cps[next]] : undefined;
     if (alef) {
       emit(alef[joinedBefore ? 1 : 0], i, next);

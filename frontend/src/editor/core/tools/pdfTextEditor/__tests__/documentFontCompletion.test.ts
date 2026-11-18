@@ -96,10 +96,7 @@ describe("resolveOriginalFonts", () => {
       ),
     ]);
     const m = documentNaming("ABCDEF+LiberationSans");
-    const readName = vi.spyOn(
-      m as unknown as { FPDFFont_GetBaseFontName: (font: number) => number },
-      "FPDFFont_GetBaseFontName",
-    );
+    const readName = vi.spyOn(m, "FPDFFont_GetBaseFontName");
     let checks = 0;
     const openForOneCheck = () => checks++ < 1;
 

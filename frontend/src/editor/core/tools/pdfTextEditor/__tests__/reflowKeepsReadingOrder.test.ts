@@ -80,8 +80,8 @@ test.each([
 );
 
 // Once wrapped, an edit to a line of a shaping script redraws the letters left
-// on that line from code points, which the edit refuses: Telugu typed past the
-// box edge then refused every later deletion on its first line.
+// on that line from code points, which the edit refuses, so wrapping it would
+// leave every later deletion on its first line refused.
 test("typing past the box edge leaves a line that needs shaping unwrapped", async () => {
   const { doc, run } = await lineIn("shaped-line-sample.pdf", 0);
   const typed = run.text + TYPED;

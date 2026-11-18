@@ -3,7 +3,10 @@ import path from "path";
 // Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
 // the fixture generators use.
 import { PDFDocument } from "@cantoo/pdf-lib";
-import { reopenSavedBytes } from "@editor/tests/stubbed/saveHelpers";
+import {
+  downloadBytes,
+  reopenSavedBytes,
+} from "@editor/tests/stubbed/saveHelpers";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -320,13 +323,8 @@ test.describe("PDF text editor - save", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(download);
 
-    // Push the saved bytes back into the dropzone as a new file. setInputFiles
-    // accepts an in-memory payload.
     await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
 
     // The edited text must be present somewhere in page 0's runs.
@@ -409,10 +407,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(download);
     await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
   }
 
@@ -2141,10 +2136,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const buf = Buffer.concat(chunks);
+    const buf = await downloadBytes(download);
     await reopenSavedBytes(page, buf, "round-trip.pdf");
 
     // Scan EVERY run on EVERY page.
@@ -2815,10 +2807,7 @@ test.describe("PDF text editor - multi-page", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(download);
 
     await reopenSavedBytes(page, savedBytes, "round-trip.pdf", 2);
 
@@ -3026,10 +3015,7 @@ test.describe("PDF text editor - bold/italic", () => {
     const downloadPromise = page.waitForEvent("download");
     await downloadBtn.click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round-trip.pdf");
 
     const reopenedRuns = await page.evaluate(() => {
@@ -3366,10 +3352,7 @@ test.describe("PDF text editor - lazy page loading", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const download = await downloadPromise;
-    const stream = await download.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(download);
 
     await reopenSavedBytes(page, savedBytes, "big-round-trip.pdf");
     const reopenedText = await page
@@ -4543,10 +4526,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round.pdf");
     const reopenedRuns = await page.evaluate(() => {
       const store = (
@@ -4857,10 +4837,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round.pdf");
   }
 
@@ -5006,10 +4983,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round.pdf");
     const allText = await page.evaluate(() => {
       const store = (
@@ -5177,10 +5151,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round.pdf");
   }
 
@@ -5596,10 +5567,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("pdf-editor-download").click();
     const dl = await downloadPromise;
-    const stream = await dl.createReadStream();
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) chunks.push(chunk as Buffer);
-    const savedBytes = Buffer.concat(chunks);
+    const savedBytes = await downloadBytes(dl);
     await reopenSavedBytes(page, savedBytes, "round.pdf");
     const xRuns = await page.evaluate(() => {
       const store = (

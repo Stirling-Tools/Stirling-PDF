@@ -322,11 +322,14 @@ export function scanScriptsOf(text: string): Script[] {
   return SCRIPTS.filter((s) => s.chars.test(text)).map((s) => s.script);
 }
 
+function faceHas(face: Face, codePoint: number): boolean {
+  return face.metrics?.get(face.family)?.advances.has(codePoint) ?? false;
+}
+
 function scriptFaceCovering(codePoint: number): Face | undefined {
   return scriptFaces.find(
     (face) =>
-      face.metrics?.get(face.family)?.advances.has(codePoint) &&
-      getExternalFontBytes(face.family) !== null,
+      faceHas(face, codePoint) && getExternalFontBytes(face.family) !== null,
   );
 }
 
@@ -335,8 +338,7 @@ export function scriptFaceFamilyFor(text: string): string | null {
   const codePoints = visibleCodePoints(text);
   if (codePoints.length === 0) return null;
   const face = scriptFaceCovering(codePoints[0]);
-  return face &&
-    codePoints.every((cp) => face.metrics?.get(face.family)?.advances.has(cp))
+  return face && codePoints.every((cp) => faceHas(face, cp))
     ? face.family
     : null;
 }

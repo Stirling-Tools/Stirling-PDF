@@ -182,9 +182,7 @@ export class HistoryStack {
   }
 
   /** Revert every command currently on the undo stack, in reverse order. */
-  undoAll(
-    doc: import("@editor/tools/pdfTextEditor/model/EditorDocument").EditorDocument,
-  ): number {
+  undoAll(doc: EditorDocument): number {
     let count = 0;
     while (this.undoStack.length > 0) {
       this.undo(doc);

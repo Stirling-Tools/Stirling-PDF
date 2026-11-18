@@ -1,17 +1,16 @@
-import { MantineProvider } from "@mantine/core";
 import { act, render, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
+import {
+  pageSnapshot,
+  stubDocument,
+  stubbedPageView,
+  VisibleObserver,
+} from "@editor/tools/pdfTextEditor/components/pageViewTestSupport";
 import { useFontEpoch } from "@editor/tools/pdfTextEditor/hooks/useFontEpoch";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import { resetTextMetricsCache } from "@editor/tools/pdfTextEditor/util/textMetrics";
-import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
-import type {
-  PageSnapshot,
-  TextRunSnapshot,
-} from "@editor/tools/pdfTextEditor/types";
+import type { TextRunSnapshot } from "@editor/tools/pdfTextEditor/types";
 
 vi.mock("@editor/tools/pdfTextEditor/components/TableOverlay", () => ({
   TableOverlay: () => null,
@@ -34,18 +33,6 @@ class FakeFontFaceSet extends EventTarget {
   }
 }
 
-class VisibleObserver {
-  constructor(private readonly callback: IntersectionObserverCallback) {}
-  observe(target: Element): void {
-    this.callback(
-      [{ isIntersecting: true, target } as IntersectionObserverEntry],
-      this as unknown as IntersectionObserver,
-    );
-  }
-  disconnect(): void {}
-  unobserve(): void {}
-}
-
 function textRun(i: number): TextRunSnapshot {
   const y = 760 - i * 14;
   return {
@@ -61,39 +48,8 @@ function textRun(i: number): TextRunSnapshot {
   };
 }
 
-function pageOf(live: Page, runs: TextRunSnapshot[]): PageSnapshot {
-  return {
-    pageIndex: 0,
-    width: live.width,
-    height: live.height,
-    dirty: false,
-    revision: live.revision,
-    runs,
-    images: [],
-    shapes: [],
-    display: live.display.toData(),
-  };
-}
-
 function view(live: Page, runs: TextRunSnapshot[]) {
-  return (
-    <MantineProvider env="test">
-      <PageView
-        document={{ page: () => live } as unknown as EditorDocument}
-        store={{ setPageNearViewport: () => {} } as unknown as EditorStore}
-        page={pageOf(live, runs)}
-        scale={1}
-        widthMode="grow"
-        selectedRunIds={[]}
-        selectedImageIds={[]}
-        selectedShapeIds={[]}
-        onSelectRun={() => {}}
-        onSelectImage={() => {}}
-        onSelectShape={() => {}}
-        onEditRun={() => {}}
-      />
-    </MantineProvider>
-  );
+  return stubbedPageView(stubDocument(live), pageSnapshot(live, runs));
 }
 
 describe("waiting for fonts on a page of many runs", () => {

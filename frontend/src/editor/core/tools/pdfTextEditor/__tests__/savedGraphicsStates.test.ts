@@ -14,6 +14,10 @@ import {
   buildClassicPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import {
+  changedPixels,
+  rasterFirstPage,
+} from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const WIDTH = 612;
 const HEIGHT = 792;
@@ -96,39 +100,7 @@ async function undeclaredStates(bytes: Uint8Array): Promise<string[]> {
 }
 
 async function render(bytes: Uint8Array): Promise<Uint8Array> {
-  const doc = await open(bytes);
-  const m = doc.module;
-  const bitmap = m.FPDFBitmap_Create(WIDTH, HEIGHT, 1);
-  try {
-    m.FPDFBitmap_FillRect(bitmap, 0, 0, WIDTH, HEIGHT, 0xffffffff);
-    m.FPDF_RenderPageBitmap(
-      bitmap,
-      doc.page(0).pagePtr,
-      0,
-      0,
-      WIDTH,
-      HEIGHT,
-      0,
-      0x10,
-    );
-    const memory = (
-      m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }
-    ).memory;
-    return new Uint8Array(
-      memory.buffer,
-      m.FPDFBitmap_GetBuffer(bitmap),
-      m.FPDFBitmap_GetStride(bitmap) * HEIGHT,
-    ).slice();
-  } finally {
-    m.FPDFBitmap_Destroy(bitmap);
-  }
-}
-
-function changedPixels(a: Uint8Array, b: Uint8Array): number {
-  let changed = 0;
-  for (let i = 0; i < a.length; i += 4)
-    if ([0, 1, 2].some((c) => Math.abs(a[i + c] - b[i + c]) > 2)) changed++;
-  return changed;
+  return rasterFirstPage(await open(bytes), WIDTH, HEIGHT);
 }
 
 // Darkest pixel among the rows the top line is drawn on.

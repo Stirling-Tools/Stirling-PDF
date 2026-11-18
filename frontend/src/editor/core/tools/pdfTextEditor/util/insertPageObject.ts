@@ -8,6 +8,13 @@ interface IndexedInsertModule {
   ) => boolean | number;
 }
 
+/** PDFium's indexed insert, or undefined in a build without it. */
+export function indexedInsertOf(
+  m: WrappedPdfiumModule,
+): IndexedInsertModule["FPDFPage_InsertObjectAtIndex"] {
+  return (m as unknown as IndexedInsertModule).FPDFPage_InsertObjectAtIndex;
+}
+
 /**
  * Puts a detached object on the page at `index` in content order, or last
  * when `index` is negative, past the end of the page, or this build has no
@@ -23,14 +30,10 @@ export function insertPageObjectAt(
   objPtr: number,
   index: number,
 ): void {
-  const ext = m as unknown as IndexedInsertModule;
-  if (index < 0 || !ext.FPDFPage_InsertObjectAtIndex) {
+  const insertAt = indexedInsertOf(m);
+  if (index < 0 || !insertAt) {
     m.FPDFPage_InsertObject(pagePtr, objPtr);
     return;
   }
-  ext.FPDFPage_InsertObjectAtIndex(
-    pagePtr,
-    objPtr,
-    Math.min(index, m.FPDFPage_CountObjects(pagePtr)),
-  );
+  insertAt(pagePtr, objPtr, Math.min(index, m.FPDFPage_CountObjects(pagePtr)));
 }

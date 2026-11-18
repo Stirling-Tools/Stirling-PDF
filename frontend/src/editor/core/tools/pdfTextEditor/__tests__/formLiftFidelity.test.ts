@@ -17,6 +17,10 @@ import {
   buildClassicPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import {
+  changedPixels,
+  rasterFirstPage,
+} from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const SIZE = 300;
 const RED = { r: 255, g: 0, b: 0, a: 255 };
@@ -89,40 +93,7 @@ async function open(bytes: Uint8Array): Promise<EditorDocument> {
   return doc;
 }
 
-function raster(doc: EditorDocument): Uint8Array {
-  const m = doc.module;
-  const bitmap = m.FPDFBitmap_Create(SIZE, SIZE, 1);
-  try {
-    m.FPDFBitmap_FillRect(bitmap, 0, 0, SIZE, SIZE, 0xffffffff);
-    m.FPDF_RenderPageBitmap(
-      bitmap,
-      doc.page(0).pagePtr,
-      0,
-      0,
-      SIZE,
-      SIZE,
-      0,
-      0x10,
-    );
-    const memory = (
-      m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }
-    ).memory;
-    return new Uint8Array(
-      memory.buffer,
-      m.FPDFBitmap_GetBuffer(bitmap),
-      m.FPDFBitmap_GetStride(bitmap) * SIZE,
-    ).slice();
-  } finally {
-    m.FPDFBitmap_Destroy(bitmap);
-  }
-}
-
-function changedPixels(a: Uint8Array, b: Uint8Array): number {
-  let changed = 0;
-  for (let i = 0; i < a.length; i += 4)
-    if ([0, 1, 2].some((c) => Math.abs(a[i + c] - b[i + c]) > 2)) changed++;
-  return changed;
-}
+const raster = (doc: EditorDocument) => rasterFirstPage(doc, SIZE, SIZE);
 
 async function saved(doc: EditorDocument): Promise<Uint8Array> {
   return new Uint8Array(await (await exportToBlob(doc)).arrayBuffer());

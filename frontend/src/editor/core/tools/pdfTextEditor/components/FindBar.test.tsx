@@ -200,7 +200,7 @@ describe("Find", () => {
 
     fireEvent.click(screen.getByTestId("pdf-editor-replace-one"));
 
-    const command = dispatch.mock.calls[0][0] as unknown as EditTextCommand;
+    const command = dispatch.mock.calls[0][0] as EditTextCommand;
     expect(command.resultText).toBe("Jane met Mary");
   });
 

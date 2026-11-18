@@ -1,3 +1,4 @@
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import { refuseRedrawOfReadOnlyText } from "@editor/tools/pdfTextEditor/commands/readOnlyText";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
@@ -116,7 +117,7 @@ export class AlignParagraphLinesCommand implements Command {
 
   /** Translate one line's glyph objects + its model bounds by dx. */
   private shiftLine(
-    m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+    m: WrappedPdfiumModule,
     run: TextRun,
     i: number,
     dx: number,

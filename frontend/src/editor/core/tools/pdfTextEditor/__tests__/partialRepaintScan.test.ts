@@ -27,6 +27,7 @@ import {
   buildScan,
   readBundledFaces,
 } from "@editor/tools/pdfTextEditor/__tests__/scanFixtures";
+import { differingPixels } from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@editor/services/apiClient", () => ({ default: { get } }));
@@ -80,19 +81,6 @@ function paste(onto: ImageData, area: ImageData, x: number, y: number) {
       ((y + row) * onto.width + x) * 4,
     );
   }
-}
-
-function differingPixels(a: ImageData, b: ImageData): number {
-  let count = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    if (
-      a.data[i] !== b.data[i] ||
-      a.data[i + 1] !== b.data[i + 1] ||
-      a.data[i + 2] !== b.data[i + 2]
-    )
-      count++;
-  }
-  return count;
 }
 
 describe("redrawing only the edited area of scanned text", () => {

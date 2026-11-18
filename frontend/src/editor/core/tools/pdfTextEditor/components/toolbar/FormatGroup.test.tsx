@@ -32,15 +32,19 @@ function controller(
   } as unknown as Controller;
 }
 
+function formatGroup(fill: typeof BLACK, onChangeFill: (hex: string) => void) {
+  return (
+    <MantineProvider env="test">
+      <FormatGroup controller={controller(fill, onChangeFill)} />
+    </MantineProvider>
+  );
+}
+
 describe("FormatGroup fill colour field", () => {
   it("keeps what the user is typing over when the toolbar catches up with an earlier pick", async () => {
     const user = userEvent.setup();
     const onChangeFill = vi.fn();
-    const ui = (fill: typeof BLACK) => (
-      <MantineProvider env="test">
-        <FormatGroup controller={controller(fill, onChangeFill)} />
-      </MantineProvider>
-    );
+    const ui = (fill: typeof BLACK) => formatGroup(fill, onChangeFill);
     const { rerender } = render(ui(BLACK));
     const field = screen.getByTestId<HTMLInputElement>("pdf-editor-colour");
     act(() => field.focus());
@@ -54,11 +58,7 @@ describe("FormatGroup fill colour field", () => {
   });
 
   it("shows the selection's colour again once the field loses focus", () => {
-    const ui = (fill: typeof BLACK) => (
-      <MantineProvider env="test">
-        <FormatGroup controller={controller(fill, vi.fn())} />
-      </MantineProvider>
-    );
+    const ui = (fill: typeof BLACK) => formatGroup(fill, vi.fn());
     const { rerender } = render(ui(BLACK));
     const field = screen.getByTestId<HTMLInputElement>("pdf-editor-colour");
     act(() => field.focus());

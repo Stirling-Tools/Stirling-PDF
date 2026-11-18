@@ -1,3 +1,4 @@
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type {
   CharcodeResolver,
   CharcodeResolveResult,
@@ -87,7 +88,7 @@ function getOrBuildCmap(
 /** Build + cache a font's cmap. */
 export function primeFontGlyphMap(
   font: number,
-  module: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  module: WrappedPdfiumModule,
 ): void {
   if (!font) return;
   getOrBuildCmap(font, { module, pagePtr: 0, docPtr: 0 });
@@ -128,10 +129,7 @@ function buildCmap(
 }
 
 /** Copy a font's embedded program bytes out of the WASM heap (null = none). */
-function readFontData(
-  font: number,
-  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
-): Uint8Array | null {
+function readFontData(font: number, m: WrappedPdfiumModule): Uint8Array | null {
   const fontMod = m as unknown as FontDataModule;
   if (!fontMod.FPDFFont_GetFontData) return null;
 

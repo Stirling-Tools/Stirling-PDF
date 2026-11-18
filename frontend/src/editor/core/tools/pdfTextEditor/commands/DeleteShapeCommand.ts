@@ -1,4 +1,5 @@
 import { liftFormToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { pageObjectIndex } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
@@ -35,7 +36,11 @@ export class DeleteShapeCommand implements Command {
     if (shape.containerPtr && !liftFormToPage(doc, page, shape.containerPtr))
       return;
     const m = doc.module;
-    const objectIndex = indexOnPage(doc, page.pagePtr, shape.pdfiumObjPtr);
+    const objectIndex = pageObjectIndex(
+      doc.module,
+      page.pagePtr,
+      shape.pdfiumObjPtr,
+    );
     if (!m.FPDFPage_RemoveObject(page.pagePtr, shape.pdfiumObjPtr)) return;
     this.objectIndex = objectIndex;
     this.shapeIndex = page.shapes.indexOf(shape);
@@ -78,16 +83,4 @@ export class DeleteShapeCommand implements Command {
     page.markDirty();
     page.markNeedsGenerate();
   }
-}
-
-function indexOnPage(
-  doc: EditorDocument,
-  pagePtr: number,
-  objPtr: number,
-): number {
-  const total = doc.module.FPDFPage_CountObjects(pagePtr);
-  for (let i = 0; i < total; i++) {
-    if (doc.module.FPDFPage_GetObject(pagePtr, i) === objPtr) return i;
-  }
-  return -1;
 }

@@ -90,7 +90,7 @@ async function openPdf(page: Page, file: PdfFile): Promise<void> {
   await page.waitForTimeout(1500);
 }
 
-async function openSample(page: Page, file: PdfFile = SAMPLE): Promise<void> {
+async function openInEditor(page: Page, file: PdfFile = SAMPLE): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
@@ -220,7 +220,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("a deleted shape inside a form is gone from the saved file, and the form's other use keeps it", async ({
     page,
   }) => {
-    await openSample(page, TWICE_DRAWN_FORM);
+    await openInEditor(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
@@ -236,7 +236,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("an undone delete inside a form keeps the shape in the saved file", async ({
     page,
   }) => {
-    await openSample(page, TWICE_DRAWN_FORM);
+    await openInEditor(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
@@ -252,7 +252,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("undoing a delete after the save that removed it brings the shape back", async ({
     page,
   }) => {
-    await openSample(page, TWICE_DRAWN_FORM);
+    await openInEditor(page, TWICE_DRAWN_FORM);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
     expect(drawnAt(await shapes(page), target.bounds)).toBe(false);
@@ -271,7 +271,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("a shape in a form whose lift would change the drawing is not deleted", async ({
     page,
   }) => {
-    await openSample(page);
+    await openInEditor(page);
     const target = await largestGrouped(page);
     await deleteShape(page, target.id);
     await expect(page.getByRole("alert")).toContainText(
@@ -285,7 +285,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   });
 
   test("a shape inside a form does not move", async ({ page }) => {
-    await openSample(page);
+    await openInEditor(page);
     const { shape, at } = await grabbable(page, true);
     await dragBy(page, at, 45);
     expect(drawnAt(await shapes(page), shape.bounds)).toBe(true);
@@ -294,7 +294,7 @@ test.describe("PDF text editor - vector shapes survive save", () => {
   test("a page-level shape's move and delete are in the saved file", async ({
     page,
   }) => {
-    await openSample(page);
+    await openInEditor(page);
     const { shape: moved, at } = await grabbable(page, false);
     await dragBy(page, at, 45);
     const after = (await shapes(page)).find((s) => s.id === moved.id);

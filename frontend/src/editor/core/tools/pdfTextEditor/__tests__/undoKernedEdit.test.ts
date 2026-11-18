@@ -8,6 +8,7 @@ import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
+import { rasterFirstPage } from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
 // Set by cairo with a TJ kern between most letter pairs.
@@ -74,34 +75,6 @@ function glyphs(doc: EditorDocument): Glyph[] {
   }
 }
 
-function raster(doc: EditorDocument): Uint8Array {
-  const m = doc.module;
-  const bitmap = m.FPDFBitmap_Create(SIZE, SIZE, 1);
-  try {
-    m.FPDFBitmap_FillRect(bitmap, 0, 0, SIZE, SIZE, 0xffffffff);
-    m.FPDF_RenderPageBitmap(
-      bitmap,
-      doc.page(0).pagePtr,
-      0,
-      0,
-      SIZE,
-      SIZE,
-      0,
-      0x10,
-    );
-    const memory = (
-      m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory }
-    ).memory;
-    return new Uint8Array(
-      memory.buffer,
-      m.FPDFBitmap_GetBuffer(bitmap),
-      m.FPDFBitmap_GetStride(bitmap) * SIZE,
-    ).slice();
-  } finally {
-    m.FPDFBitmap_Destroy(bitmap);
-  }
-}
-
 function differingBytes(a: Uint8Array, b: Uint8Array): number {
   let count = 0;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) count++;
@@ -122,7 +95,12 @@ function furthestShiftPt(before: Glyph[], after: Glyph[]): number {
 async function expectAsUntouched(doc: EditorDocument, file: string) {
   const untouched = await open(file);
   expect(furthestShiftPt(glyphs(untouched), glyphs(doc))).toBeLessThan(0.01);
-  expect(differingBytes(raster(untouched), raster(doc))).toBe(0);
+  expect(
+    differingBytes(
+      rasterFirstPage(untouched, SIZE, SIZE),
+      rasterFirstPage(doc, SIZE, SIZE),
+    ),
+  ).toBe(0);
 }
 
 function edit(
@@ -176,14 +154,16 @@ test("redo after an exact undo draws the edit again, and undo puts it back again
   const history = new HistoryStack();
   const run = edit(doc, history, HEADING, ["Quarterly reprt heading"]);
   const edited = glyphs(doc);
-  const editedRaster = raster(doc);
+  const editedRaster = rasterFirstPage(doc, SIZE, SIZE);
 
   history.undo(doc);
   history.redo(doc);
 
   expect(run.text).toBe("Quarterly reprt heading");
   expect(furthestShiftPt(edited, glyphs(doc))).toBeLessThan(0.01);
-  expect(differingBytes(editedRaster, raster(doc))).toBe(0);
+  expect(differingBytes(editedRaster, rasterFirstPage(doc, SIZE, SIZE))).toBe(
+    0,
+  );
 
   history.undo(doc);
   await expectAsUntouched(doc, KERNED_HEADING);

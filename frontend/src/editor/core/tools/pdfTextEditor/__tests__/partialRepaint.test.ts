@@ -16,6 +16,7 @@ import { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import { PdfiumTextReader } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTextReader";
 import { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
+import { differingPixels } from "@editor/tools/pdfTextEditor/__tests__/pageRaster";
 
 const FIXTURES = path.join(import.meta.dirname, "../../../tests/test-fixtures");
 const SCALE = 1.37;
@@ -76,19 +77,6 @@ function paste(onto: ImageData, area: ImageData, x: number, y: number) {
       ((y + row) * onto.width + x) * 4,
     );
   }
-}
-
-function differingPixels(a: ImageData, b: ImageData): number {
-  let count = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    if (
-      a.data[i] !== b.data[i] ||
-      a.data[i + 1] !== b.data[i + 1] ||
-      a.data[i + 2] !== b.data[i + 2]
-    )
-      count++;
-  }
-  return count;
 }
 
 describe("redrawing only the edited area", () => {
