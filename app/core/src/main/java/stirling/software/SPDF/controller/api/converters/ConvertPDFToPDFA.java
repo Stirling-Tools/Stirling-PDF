@@ -651,12 +651,13 @@ public class ConvertPDFToPDFA {
      */
     private void embedPdfxFonts(Path pdfPath) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            Map<String, PDTrueTypeFont> substitutes = new HashMap<>();
             int replaced = 0;
             for (PDPage page : document.getPages()) {
-                replaced += replacePdfxFonts(document, page.getResources(), 0);
+                replaced += replacePdfxFonts(document, page.getResources(), substitutes, 0);
             }
             for (PDResources resources : formFontResources(document)) {
-                replaced += replacePdfxFonts(document, resources, 0);
+                replaced += replacePdfxFonts(document, resources, substitutes, 0);
             }
             if (replaced > 0) {
                 // The document reads lazily from pdfPath; saving in place truncates
@@ -805,7 +806,11 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private int replacePdfxFonts(PDDocument document, PDResources resources, int depth)
+    private int replacePdfxFonts(
+            PDDocument document,
+            PDResources resources,
+            Map<String, PDTrueTypeFont> substitutes,
+            int depth)
             throws IOException {
         if (resources == null || depth > 8) return 0;
         int replaced = 0;
@@ -817,46 +822,44 @@ public class ConvertPDFToPDFA {
             // with a single-byte encoding are safe to substitute.
             if (!(font instanceof PDType1Font) && !(font instanceof PDTrueTypeFont)) continue;
             String fontName = font.getName();
-            if ("Symbol".equals(fontName)) {
+            String substitute =
+                    "Symbol".equals(fontName) ? "DejaVuSans.ttf" : pdfxFontSubstitute(fontName);
+            if (substitute == null) continue;
+            // One font object per family: reusing it keeps a long form from embedding
+            // the full Liberation program once per resource entry.
+            PDTrueTypeFont loaded = substitutes.get(substitute);
+            if (loaded == null) {
                 try (InputStream fontStream =
                         ConvertPDFToPDFA.class.getResourceAsStream(
-                                "/static/fonts/DejaVuSans.ttf")) {
+                                "/static/fonts/" + substitute)) {
                     if (fontStream == null) {
-                        log.warn("Bundled Symbol substitute not found");
+                        log.warn("Bundled PDF/X font substitute not found: {}", substitute);
                         continue;
                     }
-                    resources.put(
-                            key,
-                            PDTrueTypeFont.load(document, fontStream, SymbolEncoding.INSTANCE));
-                    replaced++;
+                    loaded =
+                            PDTrueTypeFont.load(
+                                    document,
+                                    fontStream,
+                                    "DejaVuSans.ttf".equals(substitute)
+                                            ? SymbolEncoding.INSTANCE
+                                            : WinAnsiEncoding.INSTANCE);
+                    substitutes.put(substitute, loaded);
                 } catch (IOException | IllegalArgumentException e) {
-                    log.warn("Could not substitute PDF/X Symbol font", e);
-                }
-                continue;
-            }
-            String substitute = pdfxFontSubstitute(fontName);
-            if (substitute == null) continue;
-            try (InputStream fontStream =
-                    ConvertPDFToPDFA.class.getResourceAsStream("/static/fonts/" + substitute)) {
-                if (fontStream == null) {
-                    log.warn("Bundled PDF/X font substitute not found: {}", substitute);
+                    log.warn(
+                            "Could not substitute PDF/X font {} with {}",
+                            font.getName(),
+                            substitute,
+                            e);
                     continue;
                 }
-                resources.put(
-                        key, PDTrueTypeFont.load(document, fontStream, WinAnsiEncoding.INSTANCE));
-                replaced++;
-            } catch (IOException | IllegalArgumentException e) {
-                log.warn(
-                        "Could not substitute PDF/X font {} with {}",
-                        font.getName(),
-                        substitute,
-                        e);
             }
+            resources.put(key, loaded);
+            replaced++;
         }
         for (COSName key : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(key);
             if (object instanceof PDFormXObject form) {
-                replaced += replacePdfxFonts(document, form.getResources(), depth + 1);
+                replaced += replacePdfxFonts(document, form.getResources(), substitutes, depth + 1);
             }
         }
         return replaced;

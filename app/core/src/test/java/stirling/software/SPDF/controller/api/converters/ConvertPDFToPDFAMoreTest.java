@@ -21,7 +21,9 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
@@ -728,10 +730,22 @@ class ConvertPDFToPDFAMoreTest {
 
             Method replace =
                     ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "replacePdfxFonts", PDDocument.class, PDResources.class, int.class);
+                            "replacePdfxFonts",
+                            PDDocument.class,
+                            PDResources.class,
+                            Map.class,
+                            int.class);
             replace.setAccessible(true);
             try (PDDocument document = new PDDocument()) {
-                assertThat((int) replace.invoke(newController(), document, resources, 0)).isZero();
+                assertThat(
+                                (int)
+                                        replace.invoke(
+                                                newController(),
+                                                document,
+                                                resources,
+                                                new HashMap<>(),
+                                                0))
+                        .isZero();
                 verify(resources, never()).put(any(COSName.class), any(PDFont.class));
             }
         }
