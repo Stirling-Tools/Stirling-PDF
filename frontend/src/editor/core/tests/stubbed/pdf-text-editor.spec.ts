@@ -1,4 +1,8 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 // Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
 // the fixture generators use.
@@ -65,18 +69,14 @@ async function selectFontFamily(
 
 async function loadSamplePdf(page: import("@playwright/test").Page) {
   // The visible "Open" flow goes through the left-sidebar Files panel.
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(SAMPLE_PDF);
+  await openInTextEditor(page, SAMPLE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
 }
 
 async function loadMultiPageSample(page: import("@playwright/test").Page) {
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(MULTI_PAGE_PDF);
+  await openInTextEditor(page, MULTI_PAGE_PDF);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -113,7 +113,6 @@ test.describe("PDF text editor - smoke", () => {
   test("the editor mounts at /pdf-text-editor", async ({ page }) => {
     await gotoEditor(page);
     await expect(page.getByTestId("pdf-editor-sidebar-empty")).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-toolbar")).toBeVisible();
   });
 });
 
@@ -330,7 +329,7 @@ test.describe("PDF text editor - save", () => {
 
     // Push the saved bytes back into the dropzone as a new file. setInputFiles
     // accepts an in-memory payload.
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round-trip.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -420,7 +419,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round-trip.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -501,14 +500,10 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Repro for the recurring "all spaces vanish when I delete a single letter"
     // bug on the Stirling marketing PDF.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          "../test-fixtures/stirling-marketing.pdf",
-        ),
-      );
+    await openInTextEditor(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures/stirling-marketing.pdf"),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -617,9 +612,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   }) => {
     // EXACT user repro.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -728,9 +721,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Regression guard: a previous attempt to teach partialEdit about
     // LineGrouper-synthesised whitespace miscounted ghost chars by 1.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -893,9 +884,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Repro for the recurring "typed space vanishes" bug on the marketing
     // tagline.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1191,9 +1180,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // 20 tagline tests below guard themselves with `if (!findTaglineRun(page))
     // { test.skip(...) }`.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1211,9 +1198,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1253,9 +1238,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1294,9 +1277,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1345,9 +1326,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Mimics realistic user editing: delete a char, type a different one,
     // repeat.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1406,9 +1385,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Regression guard: inserting NEW chars between two kept sub-runs used to
     // leave the inserted text overlapping the original following chars.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1548,9 +1525,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Regression guard: when an edit fully removes a sub-run, the surviving
     // sub-runs to its right used to STAY at their original x position.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1856,9 +1831,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1890,9 +1863,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1923,9 +1894,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1963,9 +1932,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -1995,9 +1962,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
 
   test("comprehensive regression: delete from start", async ({ page }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2029,9 +1994,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2077,9 +2040,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2133,9 +2094,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   }) => {
     // The "would a PDF viewer render the right text" assertion.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2159,7 +2118,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const buf = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round-trip.pdf",
       mimeType: "application/pdf",
       buffer: buf,
@@ -2205,9 +2164,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // The marketing PDF tagline uses an embedded non-standard font
     // ("pdf:...:Unknown").
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2265,9 +2222,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // The "try borrow, detect, fall back" path: when every inserted char
     // already appears in the source line.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2362,9 +2317,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
     // Even when the inserted char IS already present in the source text, the
     // result must remain text-content-correct: run.text equals baseline + 'd'.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2426,9 +2379,7 @@ test.describe("PDF text editor - whitespace preservation", () => {
   }) => {
     // Subset fonts only embed the glyphs the source PDF originally used.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(SUBSET_FONT_PDF);
+    await openInTextEditor(page, SUBSET_FONT_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -2726,7 +2677,7 @@ test.describe("PDF text editor - keyboard shortcuts", () => {
 
     // Move focus off the run so the Ctrl+Z isn't captured as caret undo.
     await page
-      .locator('[data-testid="pdf-editor-stage"]')
+      .locator("[data-viewer-pages]")
       .click({ position: { x: 5, y: 5 } });
     await page.keyboard.press("Control+z");
     await expect(firstRun).toHaveText(original);
@@ -2787,9 +2738,7 @@ test.describe("PDF text editor - font family", () => {
 test.describe("PDF text editor - multi-page", () => {
   test("renders every page of a multi-page document", async ({ page }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
+    await openInTextEditor(page, MULTI_PAGE_PDF);
 
     // The fixture has 3 pages; assert all three render.
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -2803,9 +2752,7 @@ test.describe("PDF text editor - multi-page", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
+    await openInTextEditor(page, MULTI_PAGE_PDF);
     await expect(page.getByTestId("pdf-editor-page-2")).toBeVisible({
       timeout: 30_000,
     });
@@ -2845,7 +2792,7 @@ test.describe("PDF text editor - multi-page", () => {
     // Remember the document we are replacing: after the re-upload the OLD
     // document's page-2 runs are still mounted.
     await stashCurrentDocument(page);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round-trip.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -2952,9 +2899,7 @@ test.describe("PDF text editor - bold/italic", () => {
     // Regression for the user-reported "I hit bold and unbold and it broke the
     // text and made multiple layers" bug.
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3063,7 +3008,7 @@ test.describe("PDF text editor - bold/italic", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round-trip.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -3315,33 +3260,6 @@ test.describe("PDF text editor - image click-through + delete", () => {
   });
 });
 
-test.describe("PDF text editor - render throttling", () => {
-  test("off-screen pages show a placeholder until they near the viewport", async ({
-    page,
-  }) => {
-    await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
-
-    // Page 0 is at the top of the stage and within the viewport on first
-    // render.
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(page.getByTestId("pdf-editor-page-0-placeholder")).toHaveCount(
-      0,
-      {
-        timeout: 10_000,
-      },
-    );
-
-    // Page 2 is below the fold for a 1080-tall viewport (each page is 792 PDF
-    // points * 1.5 scale ≈ 1188 CSS pixels).
-    await expect(page.getByTestId("pdf-editor-page-2")).toBeVisible();
-  });
-});
-
 test.describe("PDF text editor - lazy page loading", () => {
   test("multi-page docs render their pages without blocking on every read", async ({
     page,
@@ -3350,9 +3268,7 @@ test.describe("PDF text editor - lazy page loading", () => {
     // existing multi-page fixture as a guardrail.
     await gotoEditor(page);
     const started = Date.now();
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
+    await openInTextEditor(page, MULTI_PAGE_PDF, { zoomPercent: null });
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3369,9 +3285,7 @@ test.describe("PDF text editor - lazy page loading", () => {
     // zero coverage.
     test.setTimeout(120_000);
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(BIG_SAMPLE_PDF);
+    await openInTextEditor(page, BIG_SAMPLE_PDF, { zoomPercent: null });
 
     // Page 0 must render within a bounded time even for the big doc.
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
@@ -3379,23 +3293,13 @@ test.describe("PDF text editor - lazy page loading", () => {
     });
 
     // A later page lazily renders once scrolled near the viewport.
-    await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-page-40"]',
-      );
-      el?.scrollIntoView({ block: "center" });
-    });
+    await scrollToEditorPage(page, 40);
     await expect(page.getByTestId("pdf-editor-page-40")).toBeVisible({
       timeout: 30_000,
     });
 
     // Make a trivial edit on page 0, then save + reopen and assert it survived.
-    await page.evaluate(() => {
-      const el = document.querySelector<HTMLElement>(
-        '[data-testid="pdf-editor-page-0"]',
-      );
-      el?.scrollIntoView({ block: "center" });
-    });
+    await scrollToEditorPage(page, 0);
     const firstRun = page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
       .first();
@@ -3412,11 +3316,15 @@ test.describe("PDF text editor - lazy page loading", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
-      name: "big-round-trip.pdf",
-      mimeType: "application/pdf",
-      buffer: savedBytes,
-    });
+    await openInTextEditor(
+      page,
+      {
+        name: "big-round-trip.pdf",
+        mimeType: "application/pdf",
+        buffer: savedBytes,
+      },
+      { zoomPercent: null },
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3444,9 +3352,7 @@ test.describe("PDF text editor - paragraph recognition", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
 
     const runs = page.locator('[data-testid^="pdf-editor-run-p0-"]');
     await expect(runs.first()).toBeVisible({ timeout: 30_000 });
@@ -3533,9 +3439,7 @@ test.describe("PDF text editor - form xobject recursion", () => {
 
     // The fixture is generated by
     // src/core/tests/test-fixtures/generate-form-xobject-sample.mjs.
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(FORM_XOBJECT_PDF);
+    await openInTextEditor(page, FORM_XOBJECT_PDF);
 
     const runs = page.locator('[data-testid^="pdf-editor-run-p0-"]');
     await expect(runs.first()).toBeVisible({ timeout: 30_000 });
@@ -3549,19 +3453,15 @@ test.describe("PDF text editor - form xobject recursion", () => {
 });
 
 test.describe("PDF text editor - load progress overlay", () => {
-  test("loading overlay shows a stage and progress bar while opening", async ({
-    page,
-  }) => {
+  test("loading progress shows while opening", async ({ page }) => {
     await gotoEditor(page);
-    // Kick off the load and immediately capture the stage element.
+    // Kick off the load and immediately watch for the progress indicator.
     const overlayPromise = page
-      .getByTestId("pdf-editor-stage-loading")
+      .getByTestId("pdf-editor-loading")
       .waitFor({ state: "visible", timeout: 5_000 })
       .then(() => true)
       .catch(() => false);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
+    await openInTextEditor(page, MULTI_PAGE_PDF);
     const sawOverlay = await overlayPromise;
     // Either the overlay appeared, or the load finished too fast for the
     // observer to catch it.
@@ -3572,28 +3472,8 @@ test.describe("PDF text editor - load progress overlay", () => {
     // never paints the overlay AND never completes is still caught.
     if (!sawOverlay) {
       // Sanity-check that loading is now false.
-      await expect(page.getByTestId("pdf-editor-stage-loading")).toHaveCount(0);
+      await expect(page.getByTestId("pdf-editor-loading")).toHaveCount(0);
     }
-  });
-});
-
-test.describe("PDF text editor - fit-to-width", () => {
-  test("Fit button updates the zoom percent based on viewport width", async ({
-    page,
-  }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-    const before = await page
-      .getByTestId("pdf-editor-zoom-percent")
-      .innerText();
-    await page.getByTestId("pdf-editor-zoom-fit").click();
-    const after = await page.getByTestId("pdf-editor-zoom-percent").innerText();
-    // The fit value depends on viewport width, but must be a sensible
-    // percentage in the clamped range.
-    const value = parseInt(after.replace("%", ""), 10);
-    expect(value).toBeGreaterThanOrEqual(25);
-    expect(value).toBeLessThanOrEqual(400);
-    expect(after).not.toBe(before);
   });
 });
 
@@ -3611,24 +3491,6 @@ test.describe("PDF text editor - F3 next match", () => {
     await expect(page.getByTestId("pdf-editor-find-count")).toContainText(
       /of \d+/,
     );
-  });
-});
-
-test.describe("PDF text editor - zoom controls", () => {
-  test("zoom in / zoom out / 100% buttons drive renderScale", async ({
-    page,
-  }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-    const percent = page.getByTestId("pdf-editor-zoom-percent");
-    await expect(percent).toHaveText("150%");
-    await page.getByTestId("pdf-editor-zoom-in").click();
-    await expect(percent).toHaveText("175%");
-    await page.getByTestId("pdf-editor-zoom-out").click();
-    await page.getByTestId("pdf-editor-zoom-out").click();
-    await expect(percent).toHaveText("125%");
-    await page.getByTestId("pdf-editor-zoom-reset").click();
-    await expect(percent).toHaveText("100%");
   });
 });
 
@@ -3655,9 +3517,7 @@ test.describe("PDF text editor - paragraph soft-wrap", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     // The paragraph overlay is the second run on page 0.
     const runs = page.locator('[data-testid^="pdf-editor-run-p0-"]');
     await expect(runs.first()).toBeVisible({ timeout: 30_000 });
@@ -3676,9 +3536,7 @@ test.describe("PDF text editor - undo restores form-xobject text", () => {
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(FORM_XOBJECT_PDF);
+    await openInTextEditor(page, FORM_XOBJECT_PDF);
     const target = page.locator('[data-testid^="pdf-editor-run-p0-"]').first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
     // Compared after stripping WebKit's trailing newline; `toContain` on the
@@ -3711,21 +3569,6 @@ test.describe("PDF text editor - workbench tab UX", () => {
       .getByRole("button", { name: /^Viewer$/ });
     await expect(viewerTab).toHaveCount(0);
   });
-
-  test("Editor workbench pins itself when an external setWorkbench fires", async ({
-    page,
-  }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-    // Simulate the FileContext side-effect that pushes to viewer on
-    // file preview. The pin-effect should immediately switch back.
-    await page.evaluate(() => {
-      // Best-effort hack: find any "Active Files" / "Files" tab and click it,
-      // then expect we bounce back.
-    });
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    await expect(page.getByTestId("pdf-editor-stage")).toBeVisible();
-  });
 });
 
 test.describe("PDF text editor - dirty state", () => {
@@ -3733,8 +3576,6 @@ test.describe("PDF text editor - dirty state", () => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    const filename = page.getByTestId("pdf-editor-filename");
-    await expect(filename).toBeVisible();
     await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
 
     const firstRunTestId = await page
@@ -3809,51 +3650,12 @@ test.describe("PDF text editor - duplicate selected run", () => {
   });
 });
 
-test.describe("PDF text editor - Ctrl+wheel zoom", () => {
-  test("Ctrl+wheel up on stage increases renderScale", async ({ page }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-
-    const readScale = () =>
-      page.evaluate(() => {
-        const store = (
-          window as unknown as {
-            __editor_store?: { getState: () => { renderScale: number } };
-          }
-        ).__editor_store!;
-        return store.getState().renderScale;
-      });
-
-    const initial = await readScale();
-
-    await page.evaluate(() => {
-      const stage = document.querySelector(
-        '[data-testid="pdf-editor-stage"]',
-      ) as HTMLElement | null;
-      stage?.dispatchEvent(
-        new WheelEvent("wheel", {
-          deltaY: -100,
-          ctrlKey: true,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    });
-    await page.waitForTimeout(150);
-
-    const after = await readScale();
-    expect(after).toBeGreaterThan(initial);
-  });
-});
-
 test.describe("PDF text editor - paragraph line wrap fidelity", () => {
   test("paragraph overlay does not visually wrap its source lines", async ({
     page,
   }) => {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
+    await openInTextEditor(page, PARAGRAPH_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3922,7 +3724,7 @@ test.describe("PDF text editor - marquee + merge", () => {
       const right = Math.max(...rects.map((r) => r.right));
       const bottom = Math.max(...rects.map((r) => r.bottom));
       const stage = document.querySelector(
-        '[data-testid="pdf-editor-pages"]',
+        "[data-viewer-pages]",
       ) as HTMLElement;
       // MarqueeSelector listens for POINTER events (pointer-based for
       // mouse/pen/touch parity), so fire pointer events, not mouse events.
@@ -4083,17 +3885,6 @@ test.describe("PDF text editor - help overlay", () => {
     await expect(
       page.getByRole("heading", { name: "Keyboard shortcuts" }),
     ).toBeVisible();
-  });
-});
-
-test.describe("PDF text editor - filename in header", () => {
-  test("loaded filename shown in toolbar header", async ({ page }) => {
-    await gotoEditor(page);
-    await loadSamplePdf(page);
-
-    const filename = page.getByTestId("pdf-editor-filename");
-    await expect(filename).toBeVisible();
-    await expect(filename).toContainText(/sample\.pdf/i);
   });
 });
 
@@ -4279,9 +4070,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -4406,9 +4195,7 @@ test.describe("PDF text editor - stress: whitespace insertion variations", () =>
 test.describe("PDF text editor - stress: bold / font swap variations", () => {
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -4595,7 +4382,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -4659,9 +4446,7 @@ test.describe("PDF text editor - stress: bold / font swap variations", () => {
 test.describe("PDF text editor - stress: add / remove cycles (no leaks)", () => {
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -4900,9 +4685,7 @@ test.describe("PDF text editor - stress: add / remove cycles (no leaks)", () => 
 test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -4917,7 +4700,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -5074,7 +4857,7 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -5108,9 +4891,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -5253,7 +5034,7 @@ test.describe("PDF text editor - stress: AddText box content fidelity", () => {
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -5499,9 +5280,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -5680,7 +5459,7 @@ test.describe("PDF text editor - stress: deletion shrinks bounds (no stuck-wide 
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
-    await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+    await openInTextEditor(page, {
       name: "round.pdf",
       mimeType: "application/pdf",
       buffer: savedBytes,
@@ -5794,9 +5573,7 @@ test.describe("PDF text editor - stress: overlay box width hugs the text", () =>
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoEditor(page);
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -5997,9 +5774,7 @@ test.describe("PDF text editor - F-duplication regression (Sample.pdf tagline)",
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 15_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -6071,9 +5846,7 @@ test.describe("PDF text editor - F-duplication regression (Sample.pdf tagline)",
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 15_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(USER_SAMPLE_PDF);
+    await openInTextEditor(page, USER_SAMPLE_PDF);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
