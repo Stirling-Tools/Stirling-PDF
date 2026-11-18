@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,11 +27,14 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.SaveOptions;
 
 @MiscApi
@@ -88,8 +92,9 @@ public class FlattenController {
         // JPDFium flattens in place, so there is no extract-and-rebuild round-trip:
         // FULL rasterizes each page at the requested DPI.
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
+        File tempInput = tempFileManager.convertMultipartFileToFile(file);
         try {
-            try (PdfDocument document = PdfDocument.open(file.getBytes())) {
+            try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
                 document.flatten(FlattenMode.FULL, renderDpi);
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
@@ -104,6 +109,7 @@ public class FlattenController {
             if (tempOutputFile != null) {
                 tempOutputFile.close();
             }
+            tempFileManager.deleteTempFile(tempInput);
         }
     }
 

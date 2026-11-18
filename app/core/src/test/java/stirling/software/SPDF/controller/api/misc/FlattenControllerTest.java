@@ -78,6 +78,20 @@ class FlattenControllerTest {
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
                         });
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (java.io.InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(
+                                        in,
+                                        f.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            return f;
+                        });
     }
 
     private MockMultipartFile createPdf() throws IOException {
@@ -226,6 +240,34 @@ class FlattenControllerTest {
         ResponseEntity<Resource> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void flatten_fullFlatten_deletesSpooledUpload() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<File> spooled =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        org.mockito.Mockito.doAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (java.io.InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(
+                                        in,
+                                        f.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            spooled.set(f);
+                            return f;
+                        })
+                .when(tempFileManager)
+                .convertMultipartFileToFile(any());
+
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(createPdf());
+        request.setFlattenOnlyForms(false);
+
+        assertThat(controller.flatten(request).getStatusCode()).isEqualTo(HttpStatus.OK);
+        org.mockito.Mockito.verify(tempFileManager).deleteTempFile(spooled.get());
     }
 
     private MockMultipartFile createPdfWithForm() throws IOException {
