@@ -67,7 +67,7 @@ async function upload(page: Page, buffer: Buffer, opening = true) {
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible();
   await expect(page.getByRole("dialog", { name: /^Open PDF/ })).toBeHidden();
   await expect(
-    page.getByText("Leave a field blank to keep that password."),
+    page.getByLabel("Permissions password", { exact: true }),
   ).toBeVisible();
 }
 
