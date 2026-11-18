@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=stirling.software.common.configuration.SecretFileEnvironmentPostProcessor
