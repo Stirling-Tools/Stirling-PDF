@@ -117,7 +117,7 @@ vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
     };
   },
 }));
-// Usage is shared by both builds; hostsDeal picks which one's Enterprise entry it gets.
+// Usage serves both builds; hostsDeal switches between their Enterprise entries.
 const enterprise = { hostsDeal: true, open: vi.fn() };
 vi.mock("@editor/portal/components/procurement/enterpriseEntry", () => ({
   get HOSTS_ENTERPRISE_DEAL() {

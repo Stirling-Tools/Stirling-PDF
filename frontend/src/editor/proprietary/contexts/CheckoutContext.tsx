@@ -520,7 +520,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             onContactSales={
               currentOptions.onContactSales &&
               (() => {
-                // Enterprise is a separate flow (in-app or a new tab); the checkout has no part in it.
+                // Enterprise is its own flow, so the checkout steps aside.
                 const contactSales = currentOptions.onContactSales;
                 closeCheckout();
                 contactSales?.();

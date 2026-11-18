@@ -18,7 +18,7 @@ const PortalApp = HAS_PORTAL
 
 /**
  * The Enterprise page reads like a website, so it carries none of the app's chrome. Self-hosted
- * builds forward this address to the hosted page instead.
+ * builds forward it to the hosted page.
  */
 const EnterpriseApp = HAS_PORTAL
   ? lazy(async () => {

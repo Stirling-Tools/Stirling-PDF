@@ -52,9 +52,8 @@ const TRIAL_STAGES: DealStage[] = ["trial", "quote", "security"];
  * then where the deal stands, its next action, licence key, trial, documents and a way to talk to
  * us. Building a quote and signing the agreement are long enough to open over it.
  *
- * Served only by the hosted app, where the signed-in account is the Stirling account; self-hosted
- * servers send buyers here. Visitors without an account read the page and fill in the trial setup,
- * and sign in only to start it.
+ * Hosted app only, where the signed-in account is the Stirling account. Visitors without an account
+ * read the page and fill in the trial setup, and sign in only to start it.
  */
 export function Enterprise({
   onSignIn = signIn,

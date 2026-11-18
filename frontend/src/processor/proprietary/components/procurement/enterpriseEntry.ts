@@ -5,12 +5,12 @@ const SAAS_FRONTEND_URL = (
 ).replace(/\/+$/, "");
 
 /**
- * Self-hosted: Enterprise is bought on the hosted Enterprise page and reaches this server only as a
- * licence key, so the server neither runs nor tracks the deal. The SaaS build shadows this file.
+ * Self-hosted: Enterprise is bought on the hosted page and reaches this server only as a licence
+ * key, so the server never runs or tracks the deal. Shadowed in the SaaS build.
  */
 export const HOSTS_ENTERPRISE_DEAL = false;
 
-/** The hosted Enterprise page, keeping whatever query and hash a link to it carries (?source=sales). */
+/** The hosted Enterprise page, carrying over a link's query and hash (?source=sales). */
 export function hostedEnterpriseUrl(search = ""): string {
   return `${SAAS_FRONTEND_URL}/enterprise${search}`;
 }
