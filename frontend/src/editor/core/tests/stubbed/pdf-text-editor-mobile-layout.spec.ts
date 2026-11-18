@@ -23,6 +23,19 @@ test.use({
   hasTouch: true,
 });
 
+async function addFile(
+  page: Page,
+  file: Parameters<Locator["setInputFiles"]>[0],
+): Promise<void> {
+  await expect(page.getByTestId("pdf-editor-root")).toBeAttached({
+    timeout: 30_000,
+  });
+  await page
+    .locator('input[type="file"]:not([data-testid="pdf-editor-image-input"])')
+    .first()
+    .setInputFiles(file);
+}
+
 async function openEditor(
   page: Page,
   fileName?: string,
@@ -32,14 +45,8 @@ async function openEditor(
     localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
   });
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeAttached({
-    timeout: 30_000,
-  });
-  const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Add Files" }).first().click();
-  await (
-    await chooser
-  ).setFiles(
+  await addFile(
+    page,
     fileName
       ? {
           name: fileName,
@@ -298,9 +305,7 @@ test.describe("PDF text editor - phone layout", () => {
       localStorage.setItem("stirling.mobileSwipeHintSeen", "true");
     });
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-    const chooser = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: "Add Files" }).first().click();
-    await (await chooser).setFiles(signedProtected);
+    await addFile(page, signedProtected);
     await page.getByLabel("Password to open", { exact: true }).fill("pw");
     await page.getByRole("button", { name: "Open PDF", exact: true }).click();
     await page.getByRole("tab", { name: "Workspace" }).tap();
