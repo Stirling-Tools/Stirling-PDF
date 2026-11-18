@@ -113,6 +113,9 @@ function EditablePage({
   const imageIds = useOwnIds(selection.imageIds, page.images);
   const shapeIds = useOwnIds(selection.shapeIds, page.shapes);
   const ownsHighlight = page.runs.some((r) => r.id === highlightedRunId);
+  const ownsFormField = (page.annotations ?? []).some(
+    (a) => a.id === selection.formFieldId,
+  );
   const handlers = pageViewHandlers(store);
 
   return (
@@ -126,6 +129,7 @@ function EditablePage({
       selectedRunIds={runIds}
       selectedImageIds={imageIds}
       selectedShapeIds={shapeIds}
+      selectedFormFieldId={ownsFormField ? selection.formFieldId : null}
       highlightedRunId={ownsHighlight ? highlightedRunId : null}
       selectedTextRange={
         runIds.length === 1 && selection.runIds.length === 1
