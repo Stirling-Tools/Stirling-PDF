@@ -105,7 +105,6 @@ public class ConvertPdfToPdfUa {
         outcome.warnings().forEach(warning -> log.info("PDF/UA warning: {}", warning));
 
         // Streamed from a temp file so a large conversion does not hold a second heap copy.
-        String suffix = outcome.declared() ? "_pdfua" + profile.part() : "_tagged";
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try {
             Files.write(tempOut.getPath(), outcome.pdfBytes());
@@ -114,7 +113,7 @@ public class ConvertPdfToPdfUa {
             throw e;
         }
         ResponseEntity<Resource> response =
-                WebResponseUtils.pdfFileToWebResponse(tempOut, stem + suffix + ".pdf");
+                WebResponseUtils.pdfFileToWebResponse(tempOut, stem + ".pdf");
 
         return ResponseEntity.status(response.getStatusCode())
                 .headers(response.getHeaders())

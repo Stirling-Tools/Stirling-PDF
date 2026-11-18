@@ -4,16 +4,23 @@ import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import { RetagInnerCommand } from "@editor/tools/pdfTextEditor/commands/RetagInnerCommand";
 import { RetagTextCommand } from "@editor/tools/pdfTextEditor/commands/RetagTextCommand";
+import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { SetInnerLanguageCommand } from "@editor/tools/pdfTextEditor/commands/SetInnerLanguageCommand";
+import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/SetLinkContentsCommand";
 import {
   SetTextLanguageCommand,
   type LanguageTarget,
 } from "@editor/tools/pdfTextEditor/commands/SetTextLanguageCommand";
+import {
+  TagLinkCommand,
+  taggableLinks,
+} from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import { TagTextCommand } from "@editor/tools/pdfTextEditor/commands/TagTextCommand";
 import {
   rangeTagTypes,
   TagTextRangeCommand,
 } from "@editor/tools/pdfTextEditor/commands/TagTextRangeCommand";
+import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
@@ -26,12 +33,16 @@ import type {
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { matchingRuns } from "@editor/tools/pdfTextEditor/util/pageFurniture";
 import {
+  canBeArtifact,
   innerTags,
   sharedTextTag,
   textTag,
   type InnerTag,
   type TextTag,
+  type TextTagChoice,
 } from "@editor/tools/pdfTextEditor/util/textAccessibility";
 
 /** The tags marking parts of the selected text, and the selection inside it. */
@@ -49,6 +60,21 @@ export interface InnerTagsControl {
   onSetLanguage: (index: number, lang: string | null) => void;
   /** Tags the characters selected inside the run as a Span in `lang`; null when they cannot take one. */
   onLanguageSelection: ((lang: string) => void) | null;
+  /** Sets the description of the links tag `index` holds; empty removes it. */
+  onSetLinkDescription: (index: number, description: string) => void;
+}
+
+/** The selected run's links no element holds that can be tagged, and a way to tag them. */
+export interface UntaggedLinksControl {
+  count: number;
+  onTag: () => void;
+}
+
+/** Matching text on other pages that the selected artifact's kind can be given, and a way to give it. */
+export interface OtherPagesControl {
+  /** How many other pages show such text. */
+  pages: number;
+  onApply: () => void;
 }
 
 /** The language the selected text's blocks are read in, and a way to change it. */
@@ -106,14 +132,59 @@ export function useTextAccessibility(
     const tags = innerTags(doc, only);
     const range = selection.textRange;
     const picksTag = tags.some((t) => sameRange(t, range));
+    const offersNew = range && !picksTag && shared.kind !== "artifact";
     return {
       run: only,
       targets,
       tag: shared,
       inner: tags,
-      newTagTypes: range && !picksTag ? tagTypesFor(doc, only, range) : null,
+      newTagTypes: offersNew ? tagTypesFor(doc, only, range) : null,
     };
   }, [store, state.pages, selection]);
+
+  const otherPages = useMemo((): OtherPagesControl | null => {
+    const doc = store.document;
+    if (!doc || !run || tag?.kind !== "artifact") return null;
+    const pending = pendingMatches(doc, state.pages, run, tag.furniture);
+    if (pending.length === 0) return null;
+    return {
+      pages: new Set(pending.map((target) => target.run.pageIndex)).size,
+      onApply: () => {
+        // A page not yet scrolled to would otherwise keep its furniture untagged.
+        ensureAllPagesRead(store);
+        const command = setTextTagCommand(
+          doc,
+          pendingMatches(doc, store.getState().pages, run, tag.furniture),
+          { artifact: tag.furniture },
+        );
+        if (command) store.dispatch(command);
+      },
+    };
+  }, [store, state.pages, run, tag]);
+
+  const untaggedLinks = useMemo((): UntaggedLinksControl | null => {
+    const doc = store.document;
+    const links = doc && run ? taggableLinks(doc, run.pageIndex, run.id) : [];
+    if (!doc || !run || links.length === 0) return null;
+    return {
+      count: links.length,
+      onTag: () => {
+        const commands = links.map(
+          ({ annotation }) =>
+            new TagLinkCommand({ pageIndex: run.pageIndex, annotation }),
+        );
+        store.dispatch(
+          commands.length === 1 ? commands[0] : new CompositeCommand(commands),
+        );
+        // Selecting the one link's text opens its description.
+        if (links.length === 1) {
+          const { start, end } = links[0].text;
+          store.selection.setTextRange(run.id, { start, end });
+        }
+      },
+    };
+    // state.pages: tagging republishes the pages, not the run.
+  }, [store, run, state.pages]);
 
   const activeInner = useMemo(
     () => inner.findIndex((t) => sameRange(t, selection.textRange)),
@@ -121,12 +192,13 @@ export function useTextAccessibility(
   );
 
   /**
-   * Retags each selected run's block, or gives its untagged text an element of
-   * its own, as one undo step.
+   * Retags each selected run's block, gives its untagged text an element of
+   * its own, or makes it an artifact, as one undo step.
    */
   const setTag = useCallback(
-    (type: StructureType) => {
-      const command = setTextTagCommand(targets, type);
+    (choice: TextTagChoice) => {
+      const doc = store.document;
+      const command = doc ? setTextTagCommand(doc, targets, choice) : null;
       if (command) store.dispatch(command);
     },
     [store, targets],
@@ -199,6 +271,21 @@ export function useTextAccessibility(
     [store, run, inner],
   );
 
+  const setLinkDescription = useCallback(
+    (index: number, description: string) => {
+      const link = inner[index]?.link;
+      if (!run || !link) return;
+      store.dispatch(
+        new SetLinkContentsCommand({
+          pageIndex: run.pageIndex,
+          annotations: link.annotations,
+          contents: description === "" ? null : description,
+        }),
+      );
+    },
+    [store, run, inner],
+  );
+
   const spansSelection = newTagTypes?.includes("Span") ?? false;
   const setSelectionLanguage = useCallback(
     (lang: string) => {
@@ -228,6 +315,7 @@ export function useTextAccessibility(
       onTagSelection: tagSelectedText,
       onSetLanguage: setInnerLanguage,
       onLanguageSelection: spansSelection ? setSelectionLanguage : null,
+      onSetLinkDescription: setLinkDescription,
     }),
     [
       inner,
@@ -239,6 +327,7 @@ export function useTextAccessibility(
       setInnerLanguage,
       spansSelection,
       setSelectionLanguage,
+      setLinkDescription,
     ],
   );
 
@@ -261,7 +350,14 @@ export function useTextAccessibility(
     // state.pages: a language change republishes the pages, not the targets.
   }, [store, languageTargets, state.pages]);
 
-  return { tag, setTag, inner: innerControl, language };
+  return {
+    tag,
+    setTag,
+    inner: innerControl,
+    language,
+    otherPages,
+    untaggedLinks,
+  };
 }
 
 /**
@@ -285,52 +381,111 @@ function textLanguageTargets(
   const runs = state.pages
     .flatMap((page) => page.runs)
     .filter((r) => ids.has(r.id));
-  const targets = runs.flatMap((r) =>
-    r.mcid !== undefined &&
-    !r.inForm &&
-    doc.structure(r.pageIndex).cannotSetLanguage(r.mcid) === null
+  const targets = runs.flatMap((r) => {
+    const structure = doc.structure(r.pageIndex);
+    return r.mcid !== undefined &&
+      !r.inForm &&
+      structure.cannotSetLanguage(r.mcid) === null &&
+      !structure.decorative(r.mcid)
       ? [{ pageIndex: r.pageIndex, mcid: r.mcid }]
-      : [],
-  );
+      : [];
+  });
   return targets.length > 0 && targets.length === ids.size ? targets : null;
 }
 
 /**
- * One undo step setting `type` on every run whose tag can be set; null when
+ * One undo step setting `choice` on every run whose tag can be set; null when
  * none can.
  */
 export function setTextTagCommand(
+  doc: EditorDocument,
   targets: readonly { run: TextRunSnapshot; tag: TextTag }[],
-  type: StructureType,
+  choice: TextTagChoice,
 ): Command | null {
   const commands = targets.flatMap(({ run, tag }) => {
-    const command = runTagCommand(run, tag, type);
+    const command =
+      typeof choice === "string"
+        ? typeCommand(run, tag, choice)
+        : artifactCommand(doc, run, tag, choice.artifact);
     return command ? [command] : [];
   });
   if (commands.length <= 1) return commands[0] ?? null;
   return new CompositeCommand(commands);
 }
 
-function runTagCommand(
+/**
+ * Text in the file's own element, or made an artifact through it, becomes an
+ * artifact of `furniture` through that element; any other is retagged.
+ */
+function artifactCommand(
+  doc: EditorDocument,
+  run: TextRunSnapshot,
+  tag: TextTag,
+  furniture: Furniture | null,
+): Command | null {
+  const { pageIndex, mcid } = run;
+  if (!canBeArtifact(tag)) return null;
+  if (tag.kind === "artifact" && tag.furniture === furniture) return null;
+  const retag = new TagTextCommand({
+    pageIndex,
+    runId: run.id,
+    as: { artifact: furniture },
+  });
+  const throughElement =
+    mcid !== undefined &&
+    !run.artifact &&
+    (tag.kind === "artifact" ||
+      (tag.kind === "tagged" && !doc.structure(pageIndex).isAdded(mcid)));
+  if (!throughElement) return retag;
+  return new SetDecorativeCommand({
+    pageIndex,
+    mcid,
+    decorative: true,
+    furniture,
+  });
+}
+
+function typeCommand(
   run: TextRunSnapshot,
   tag: TextTag,
   type: StructureType,
 ): Command | null {
-  if (tag.kind === "tagged" && run.mcid !== undefined) {
-    return new RetagTextCommand({
-      pageIndex: run.pageIndex,
-      mcid: run.mcid,
-      type,
-    });
+  const { pageIndex, mcid } = run;
+  if (tag.kind === "tagged") {
+    if (tag.cannotRetag !== null || mcid === undefined) return null;
+    return new RetagTextCommand({ pageIndex, mcid, type });
   }
-  if (tag.kind === "untagged" && tag.taggable) {
-    return new TagTextCommand({
-      pageIndex: run.pageIndex,
-      runId: run.id,
-      as: type,
-    });
+  if (tag.kind === "untagged" || tag.kind === "artifact") {
+    if (!tag.taggable) return null;
+    // An artifact by mark has no MCID; one by the session's decorative mark
+    // keeps its element, which unmarking returns to the tree.
+    if (mcid === undefined) {
+      return new TagTextCommand({ pageIndex, runId: run.id, as: type });
+    }
+    return new CompositeCommand([
+      new SetDecorativeCommand({ pageIndex, mcid, decorative: false }),
+      new RetagTextCommand({ pageIndex, mcid, type }),
+    ]);
   }
   return null;
+}
+
+/**
+ * The text on pages other than `run`'s that matches it as page furniture
+ * does, and that marking as `furniture` would change.
+ */
+function pendingMatches(
+  doc: EditorDocument,
+  pages: EditorViewState["pages"],
+  run: TextRunSnapshot,
+  furniture: Furniture | null,
+): { run: TextRunSnapshot; tag: TextTag }[] {
+  return matchingRuns(pages, run.pageIndex, run).flatMap(({ run: match }) => {
+    const tag = textTag(doc, match);
+    return artifactCommand(doc, match, tag, furniture)
+      ? [{ run: match, tag }]
+      : [];
+  });
 }
 
 function sameRange(a: TextRange, b: TextRange | null): boolean {
