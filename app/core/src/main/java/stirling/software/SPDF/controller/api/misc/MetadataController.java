@@ -1,9 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import java.util.Calendar;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -59,6 +60,23 @@ public class MetadataController {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
+    private static final Set<String> STANDARD_METADATA_KEYS =
+            Set.of(
+                    "author",
+                    "creationdate",
+                    "creator",
+                    "keywords",
+                    "moddate",
+                    "modificationdate",
+                    "producer",
+                    "subject",
+                    "title",
+                    "trapped");
+
+    private static boolean isStandardMetadataKey(String key) {
+        return key != null && STANDARD_METADATA_KEYS.contains(key.toLowerCase(Locale.ROOT));
+    }
+
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/update-metadata",
@@ -68,9 +86,10 @@ public class MetadataController {
     @Operation(
             summary = "Update a PDF's metadata",
             description =
-                    "Standard fields left out are cleared, so send the current values of"
-                            + " the others too (see get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss."
-                            + " deleteAll=true removes all metadata.")
+                    "Standard fields left out are cleared unless keepOmitted=true, so"
+                            + " otherwise send the current values of the others too (see"
+                            + " get-info-on-pdf). Dates use yyyy/MM/dd HH:mm:ss. deleteAll=true"
+                            + " removes all metadata.")
     public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
@@ -79,6 +98,7 @@ public class MetadataController {
 
         // Extract metadata information
         boolean deleteAll = Boolean.TRUE.equals(request.getDeleteAll());
+        boolean keepOmitted = !deleteAll && Boolean.TRUE.equals(request.getKeepOmitted());
         String author = request.getAuthor();
         String creationDate = request.getCreationDate();
         String creator = request.getCreator();
@@ -110,6 +130,14 @@ public class MetadataController {
             subject = checkUndefined(subject);
             title = checkUndefined(title);
             trapped = checkUndefined(trapped);
+            if (keepOmitted) {
+                author = author != null ? author : info.getAuthor();
+                creator = creator != null ? creator : info.getCreator();
+                keywords = keywords != null ? keywords : info.getKeywords();
+                producer = producer != null ? producer : info.getProducer();
+                subject = subject != null ? subject : info.getSubject();
+                title = title != null ? title : info.getTitle();
+            }
 
             // If the "deleteAll" flag is set, remove all metadata from the document
             // information
@@ -138,15 +166,7 @@ public class MetadataController {
                 for (Entry<String, String> entry : allRequestParams.entrySet()) {
                     String key = entry.getKey();
                     // Check if the key is a standard metadata key
-                    if (!"Author".equalsIgnoreCase(key)
-                            && !"CreationDate".equalsIgnoreCase(key)
-                            && !"Creator".equalsIgnoreCase(key)
-                            && !"Keywords".equalsIgnoreCase(key)
-                            && !"modificationDate".equalsIgnoreCase(key)
-                            && !"Producer".equalsIgnoreCase(key)
-                            && !"Subject".equalsIgnoreCase(key)
-                            && !"Title".equalsIgnoreCase(key)
-                            && !"Trapped".equalsIgnoreCase(key)
+                    if (!isStandardMetadataKey(key)
                             && !key.contains("customKey")
                             && !key.contains("customValue")) {
                         info.setCustomMetadataValue(key, entry.getValue());
@@ -159,6 +179,10 @@ public class MetadataController {
                                                     .matcher(key)
                                                     .replaceAll(""));
                             String customKey = entry.getValue();
+                            if (isStandardMetadataKey(customKey)) {
+                                log.warn("Skipping custom key '{}': reserved name", customKey);
+                                continue;
+                            }
                             String customValue = allRequestParams.get("customValue" + number);
                             info.setCustomMetadataValue(customKey, customValue);
                         } catch (NumberFormatException e) {
@@ -169,20 +193,21 @@ public class MetadataController {
                     }
                 }
             }
-            // Set creation date using utility method
-            Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
-            info.setCreationDate(creationDateCal);
-
-            // Set modification date using utility method
-            Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
-            info.setModificationDate(modificationDateCal);
+            if (!keepOmitted || creationDate != null) {
+                info.setCreationDate(PdfMetadataService.parseToCalendar(creationDate));
+            }
+            if (!keepOmitted || modificationDate != null) {
+                info.setModificationDate(PdfMetadataService.parseToCalendar(modificationDate));
+            }
             info.setCreator(creator);
             info.setKeywords(keywords);
             info.setAuthor(author);
             info.setProducer(producer);
             info.setSubject(subject);
             info.setTitle(title);
-            info.setTrapped(trapped);
+            if (!keepOmitted || trapped != null) {
+                info.setTrapped(trapped);
+            }
 
             document.setDocumentInformation(info);
             return WebResponseUtils.pdfDocToWebResponse(

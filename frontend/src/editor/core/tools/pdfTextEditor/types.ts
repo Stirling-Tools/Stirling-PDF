@@ -6,6 +6,13 @@ import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { FontFamilyEntry } from "@editor/tools/pdfTextEditor/util/fontFaces";
 
 export const RENDER_MODE_INVISIBLE = 3;
+const RENDER_MODE_CLIP = 7;
+
+/** Which layer text belongs to: 1 invisible, 2 clip only, 0 drawn. Text of different layers is never one line or paragraph. */
+export function textLayer(renderMode: number | undefined): number {
+  if (renderMode === RENDER_MODE_INVISIBLE) return 1;
+  return renderMode === RENDER_MODE_CLIP ? 2 : 0;
+}
 
 export interface RGBA {
   r: number; // 0..255
@@ -69,6 +76,8 @@ export interface TextRunSnapshot {
   documentFontId?: string;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  /** Invisible text with nothing drawn behind it: hidden text, not an OCR layer over a scan. */
+  hiddenText?: boolean;
   /** Outline colour, when the run's render mode strokes its glyphs. */
   stroke?: RGBA;
   /** Outline width in PDF points; 0/absent = hairline or unstroked. */

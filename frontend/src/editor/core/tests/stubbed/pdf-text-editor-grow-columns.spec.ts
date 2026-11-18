@@ -6,6 +6,7 @@ import {
   stashCurrentDocument,
   waitForReopenedPage,
 } from "@editor/tests/stubbed/saveHelpers";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // Grow widens a box up to the page edge. On a page of two columns the text
 // beside a left-column line is an edge too: typing past the end of that line
@@ -59,7 +60,7 @@ const acrossGutter = (runs: RunState[]) =>
 
 async function open(page: Page, file: string): Promise<void> {
   await stashCurrentDocument(page);
-  await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+  await openInTextEditor(page, file);
   await waitForReopenedPage(page, 0, 60_000);
 }
 
@@ -83,8 +84,19 @@ test("typing past a left-column line in Grow wraps it inside its column", async 
   const beside = page.getByTestId(`pdf-editor-run-${neighbour!.id}`);
   await box.click();
   await expect(box).toBeFocused();
-  await page.keyboard.press("Control+Home");
-  await page.keyboard.press("End");
+  // Home and End scroll the page in the viewer, so the caret is placed directly.
+  await box.evaluate((el, at) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let left = at;
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const length = node.textContent?.length ?? 0;
+      if (left <= length) {
+        window.getSelection()!.collapse(node, left);
+        return;
+      }
+      left -= length;
+    }
+  }, target!.text.split("\n")[0].length);
   await page.keyboard.type(TYPED, { delay: 40 });
 
   const textNow = () =>

@@ -1495,7 +1495,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Sharing {
-            private boolean enabled = false;
+            private boolean enabled = true;
             private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
@@ -1934,6 +1934,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
 
                 public boolean accountConnectionsReady() {
                     return enabled

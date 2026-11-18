@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import path from "path";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // The font list names each family once; the Bold and Italic toggles move text
 // between the faces that family really has, and never make one up.
@@ -101,7 +102,7 @@ async function openEditor(page: Page, file: string) {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });

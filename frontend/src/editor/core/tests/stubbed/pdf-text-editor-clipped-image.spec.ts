@@ -4,6 +4,7 @@ import {
   buildClassicPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // A picture cropped the way Word and PowerPoint crop one: a 200pt image drawn
 // through a 100pt window. What the user can grab is the window, never the
@@ -57,7 +58,7 @@ async function openCroppedImage(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "cropped-image.pdf",
     mimeType: "application/pdf",
     buffer: croppedImagePdf(),

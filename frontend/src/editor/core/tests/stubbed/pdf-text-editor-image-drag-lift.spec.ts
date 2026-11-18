@@ -1,5 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // While an image is dragged, the page under its old spot shows what will be
 // there after the drop, never the image itself and never a blank patch.
@@ -152,7 +153,7 @@ async function openFixture(page: Page, fixture: Fixture): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "image-drag.pdf",
     mimeType: "application/pdf",
     buffer: buildPdf(fixture),

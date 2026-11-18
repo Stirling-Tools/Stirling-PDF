@@ -1,5 +1,9 @@
 import { expect } from "@editor/tests/helpers/stub-test-base";
 import type { Download, Page } from "@playwright/test";
+import {
+  openInTextEditor,
+  scrollToEditorPage,
+} from "@editor/tests/helpers/pdf-text-editor";
 
 /** Save helpers for the PDF text editor specs. */
 
@@ -88,7 +92,7 @@ export async function waitForReopenedPage(
 }
 
 /**
- * Open `bytes` through the editor's file input and wait until they, not the
+ * Open `bytes` the way a user reopens a saved copy and wait until they, not the
  * document they replace, have populated `pageIndex`. The replaced document's
  * runs stay mounted while the new file is read, and for a moment afterwards the
  * new document has no pages, so a wait on a visible run resolves too early.
@@ -99,12 +103,14 @@ export async function reopenSavedBytes(
   name: string,
   pageIndex = 0,
   timeout = 30_000,
+  { zoomPercent }: { zoomPercent?: number | null } = {},
 ): Promise<void> {
   await stashCurrentDocument(page);
-  await page.getByTestId("pdf-editor-file-input").setInputFiles({
-    name,
-    mimeType: "application/pdf",
-    buffer: bytes,
-  });
+  await openInTextEditor(
+    page,
+    { name, mimeType: "application/pdf", buffer: bytes },
+    zoomPercent === undefined ? undefined : { zoomPercent },
+  );
+  if (pageIndex > 0) await scrollToEditorPage(page, pageIndex);
   await waitForReopenedPage(page, pageIndex, timeout);
 }

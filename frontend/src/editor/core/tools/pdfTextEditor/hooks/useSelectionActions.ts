@@ -92,7 +92,8 @@ export type FontPickFailure =
   | "closestMatch"
   | "styleUnavailable"
   | "styleSkipped"
-  | "partOfRunUnsupported";
+  | "partOfRunUnsupported"
+  | "documentFontCannotDraw";
 
 interface FamilyChange {
   pageIndex: number;
@@ -106,6 +107,7 @@ interface FamilyChangeOutcome {
   applied: number;
   undrawable: number;
   wouldLoseText: number;
+  notRestored: number;
   unshapeable: number;
   inClosestMatch: number;
 }
@@ -433,6 +435,7 @@ export function useSelectionActions(store: EditorStore) {
         applied: 0,
         undrawable: shapeable.length - drawable.length,
         wouldLoseText: 0,
+        notRestored: 0,
         unshapeable: changes.length - shapeable.length,
         inClosestMatch: 0,
       };
@@ -452,12 +455,18 @@ export function useSelectionActions(store: EditorStore) {
               coverage: open ? command.coverage(open) : "all",
             }));
           const reachable = commands.filter((c) => c.coverage !== "none");
-          const safe = reachable.filter(
-            ({ command }) => !open || !command.wouldLoseText(open),
+          const refusals = reachable.map(({ command }) =>
+            open ? command.refusal(open) : null,
           );
+          const safe = reachable.filter((_, i) => refusals[i] === null);
           outcome.undrawable += commands.length - reachable.length;
           outcome.applied = safe.length;
-          outcome.wouldLoseText = reachable.length - safe.length;
+          outcome.wouldLoseText = refusals.filter(
+            (r) => r === "losesText",
+          ).length;
+          outcome.notRestored = refusals.filter(
+            (r) => r === "notRestored",
+          ).length;
           outcome.inClosestMatch = safe.filter(
             (c) => c.coverage === "some",
           ).length;
@@ -623,11 +632,13 @@ export function useSelectionActions(store: EditorStore) {
         changes.filter((change) => !unchanged.has(change.runId)),
         fit,
       );
-      const { applied, undrawable, wouldLoseText, unshapeable } = outcome;
+      const { applied, undrawable, wouldLoseText, notRestored, unshapeable } =
+        outcome;
       if (unshapeable > 0) return "needsShaping";
-      if (undrawable + wouldLoseText === 0)
+      if (undrawable + wouldLoseText + notRestored === 0)
         return outcome.inClosestMatch > 0 ? "closestMatch" : null;
       if (applied > 0) return "someLeftUnchanged";
+      if (notRestored > 0) return "documentFontCannotDraw";
       return wouldLoseText > 0 ? "missingGlyphs" : "noGlyphs";
     },
     [
@@ -698,7 +709,10 @@ export function useSelectionActions(store: EditorStore) {
       );
       return changeFailure(
         outcome,
-        leftAsIs + outcome.undrawable + outcome.wouldLoseText,
+        leftAsIs +
+          outcome.undrawable +
+          outcome.wouldLoseText +
+          outcome.notRestored,
       );
     },
     [

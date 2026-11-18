@@ -1,11 +1,11 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import {
   downloadBytes,
+  reopenSavedBytes,
   saveAndDownload,
-  stashCurrentDocument,
-  waitForReopenedPage,
 } from "@editor/tests/stubbed/saveHelpers";
 
 // Bold on words selected inside a text box makes those words bold on the page,
@@ -36,7 +36,7 @@ async function openEditor(page: Page, file: string) {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+  await openInTextEditor(page, file);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -217,13 +217,7 @@ test.describe("PDF text editor - Bold on selected words", () => {
 
     const saved = await downloadBytes(await saveAndDownload(page, false));
     expect(saved.toString("latin1")).toContain("/Helvetica-Bold");
-    await stashCurrentDocument(page);
-    await page.getByTestId("pdf-editor-file-input").setInputFiles({
-      name: "saved.pdf",
-      mimeType: "application/pdf",
-      buffer: saved,
-    });
-    await waitForReopenedPage(page, 0, 60_000);
+    await reopenSavedBytes(page, saved, "saved.pdf", 0, 60_000);
     const reopened = (await bodyRun(page))!;
     expect(reopened.text.startsWith(BODY)).toBe(true);
     const reopenedRects = await wordRects(page, reopened.id, WORDS);

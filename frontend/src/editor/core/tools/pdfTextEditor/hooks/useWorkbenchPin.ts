@@ -4,96 +4,26 @@ import {
   useNavigationState,
 } from "@editor/contexts/NavigationContext";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
-import type { CustomWorkbenchViewRegistration } from "@editor/contexts/ToolWorkflowContext";
 
-interface PinOptions {
-  workbenchId: CustomWorkbenchViewRegistration["workbenchId"];
-  workbenchViewId: string;
-  label: string;
-  icon: React.ReactNode;
-  component: CustomWorkbenchViewRegistration["component"];
-  takeOverScreen: boolean;
-}
-
-// Register the custom workbench view and open it when the editor tool is
-// selected. Returns a `pin` that brings the canvas back on demand.
-export function useWorkbenchPin({
-  workbenchId,
-  workbenchViewId,
-  label,
-  icon,
-  component,
-  takeOverScreen,
-}: PinOptions): () => void {
-  const {
-    registerCustomWorkbenchView,
-    unregisterCustomWorkbenchView,
-    setCustomWorkbenchViewData,
-    clearCustomWorkbenchViewData,
-    setLeftPanelView,
-  } = useToolWorkflow();
+// Editing happens on the viewer's pages, so opening the editor tool opens the
+// viewer. Returns a `pin` that brings the viewer back on demand.
+export function useWorkbenchPin(): () => void {
+  const { setLeftPanelView } = useToolWorkflow();
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
 
-  // Stash the per-render values that aren't dependable identities so the effect
-  // can read them on mount without re-running on every parent render.
-  const viewRef = useRef({
-    workbenchId,
-    workbenchViewId,
-    label,
-    icon,
-    component,
-  });
-  viewRef.current = { workbenchId, workbenchViewId, label, icon, component };
-  const register = useCallback(
-    (fullScreen: boolean) => {
-      const v = viewRef.current;
-      registerCustomWorkbenchView({
-        id: v.workbenchViewId,
-        workbenchId: v.workbenchId,
-        label: v.label,
-        icon: v.icon,
-        component: v.component,
-        hideToolPanel: fullScreen,
-        hideTopControls: fullScreen,
-      });
-    },
-    [registerCustomWorkbenchView],
-  );
-  const takeOverRef = useRef(takeOverScreen);
-  takeOverRef.current = takeOverScreen;
   useEffect(() => {
-    const v = viewRef.current;
-    register(takeOverRef.current);
-    setCustomWorkbenchViewData(v.workbenchViewId, { kind: "pdfTextEditor" });
     setLeftPanelView("toolContent");
-    return () => {
-      clearCustomWorkbenchViewData(v.workbenchViewId);
-      unregisterCustomWorkbenchView(v.workbenchViewId);
-    };
-  }, [
-    register,
-    unregisterCustomWorkbenchView,
-    setCustomWorkbenchViewData,
-    clearCustomWorkbenchViewData,
-    setLeftPanelView,
-  ]);
-
-  const registeredTakeOverRef = useRef(takeOverScreen);
-  useEffect(() => {
-    if (registeredTakeOverRef.current === takeOverScreen) return;
-    registeredTakeOverRef.current = takeOverScreen;
-    register(takeOverScreen);
-  }, [register, takeOverScreen]);
+  }, [setLeftPanelView]);
 
   const actionsRef = useRef(navigationActions);
   actionsRef.current = navigationActions;
 
   const pin = useCallback(() => {
-    actionsRef.current.setWorkbench(workbenchId);
-  }, [workbenchId]);
+    actionsRef.current.setWorkbench("viewer");
+  }, []);
 
-  // Open the canvas once, when the tool is picked. Re-pinning on every
+  // Open the viewer once, when the tool is picked. Re-pinning on every
   // workbench change would bounce the user straight back here the moment they
   // switch to Active Files to choose a different file.
   const pinnedRef = useRef(false);
@@ -104,9 +34,9 @@ export function useWorkbenchPin({
     }
     if (pinnedRef.current) return;
     pinnedRef.current = true;
-    if (navigationState.workbench === workbenchId) return;
-    actionsRef.current.setWorkbench(workbenchId);
-  }, [navigationState.selectedTool, navigationState.workbench, workbenchId]);
+    if (navigationState.workbench === "viewer") return;
+    actionsRef.current.setWorkbench("viewer");
+  }, [navigationState.selectedTool, navigationState.workbench]);
 
   return pin;
 }

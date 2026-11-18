@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import {
-  findVisiblePageIndex,
   isFocusInContentEditable,
   isFocusInFormField,
   isModalOpen,
-  pageElements,
+  visiblePageNumber,
 } from "@editor/tools/pdfTextEditor/util/dom";
+import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
@@ -167,19 +167,21 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (e.key !== "PageDown" && e.key !== "PageUp" && !isHome && !isEnd) {
         return;
       }
-      if (store.getState().pageCount === 0) return;
-      const pages = pageElements();
-      if (pages.length === 0) return;
-      const current = findVisiblePageIndex();
+      const { pageCount } = store.getState();
+      if (pageCount === 0) return;
+      // The viewer mounts only the pages near the viewport, so it does the
+      // navigating.
+      const session = currentEditorSession();
+      if (!session) return;
+      const current = visiblePageNumber();
       let target = current;
-      if (e.key === "PageDown")
-        target = Math.min(pages.length - 1, current + 1);
+      if (e.key === "PageDown") target = Math.min(pageCount - 1, current + 1);
       else if (e.key === "PageUp") target = Math.max(0, current - 1);
       else if (isHome) target = 0;
-      else if (isEnd) target = pages.length - 1;
+      else if (isEnd) target = pageCount - 1;
       if (target === current) return;
       e.preventDefault();
-      pages[target]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      session.revealPage(target);
     }
 
     window.addEventListener("keydown", onMetaKey);

@@ -7,7 +7,7 @@ import {
   type DrawnLine,
 } from "@editor/tools/pdfTextEditor/pdfium/drawnLine";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
+import { textLayer } from "@editor/tools/pdfTextEditor/types";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -26,8 +26,7 @@ export type BlockKey = (run: TextRun) => string;
 export const SAME_BLOCK: BlockKey = () => "";
 
 export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
-  (a.renderMode === RENDER_MODE_INVISIBLE) ===
-  (b.renderMode === RENDER_MODE_INVISIBLE);
+  textLayer(a.renderMode) === textLayer(b.renderMode);
 /** The advance of a space in the run's font, in ems, or null when the font cannot say. */
 export type SpaceAdvance = (run: TextRun) => number | null;
 
@@ -511,9 +510,9 @@ function groupBaselineBands(
         ? meanLetterAdvancePt(current.members)
         : spaceEm * prev.fontSize;
     // Spaces the text itself holds at the junction are drawn as part of the gap, not a column break.
+    const trailingSpaces = /\s+$/.exec(prev.text)?.[0].length ?? 0;
     const literalSpaces =
-      (/\s+$/.exec(prev.text)?.[0].length ?? 0) +
-      (/^\s+/.exec(run.text)?.[0].length ?? 0);
+      trailingSpaces + (/^\s+/.exec(run.text)?.[0].length ?? 0);
     const maxGap =
       Math.max(
         ABS_MAX_GAP_PT,
@@ -528,7 +527,9 @@ function groupBaselineBands(
       : maxGap;
     // Reject joining a run that starts far to the LEFT of the previous run's
     // right edge - a right-column run must never absorb the left column.
-    const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
+    // A word's own trailing space may overhang the next: OCR stretches each word, space and all, to its box.
+    const minNegGap =
+      0.25 * Math.max(ref.fontSize, 4) + trailingSpaces * spacePt;
     const em = Math.max(ref.fontSize, 4);
     const close =
       gap <= effMaxGap &&
@@ -593,7 +594,7 @@ export class LineGrouper {
     // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
     const partitions = new Map<string, TextRun[]>();
     for (const run of page.runs) {
-      const key = `${run.containerPtr || 0}:${run.renderMode === RENDER_MODE_INVISIBLE}`;
+      const key = `${run.containerPtr || 0}:${textLayer(run.renderMode)}`;
       const list = partitions.get(key);
       if (list) list.push(run);
       else partitions.set(key, [run]);

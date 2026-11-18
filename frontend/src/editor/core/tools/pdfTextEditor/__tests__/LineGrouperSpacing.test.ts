@@ -430,3 +430,37 @@ describe("LineGrouper text layers", () => {
     ]);
   });
 });
+
+describe("OCR words boxed with their trailing space", () => {
+  it("keeps a word on its line when its stretched space overhangs the next word", () => {
+    const words = lineOf(
+      [
+        { text: "Pack ", width: 31.2, gapAfter: -2.64 },
+        { text: "my ", width: 24.48, gapAfter: -5.04 },
+        { text: "box", width: 18 },
+      ],
+      12,
+    );
+    for (const word of words) word.renderMode = RENDER_MODE_INVISIBLE;
+    expect(joinLine(words).replace(/\s+/g, " ")).toBe("Pack my box");
+  });
+});
+
+describe("text that draws no ink", () => {
+  it("never joins a clip-only line to drawn text beside it", () => {
+    const [drawn, clip] = lineOf(
+      [
+        { text: "Drawn ", width: 40, gapAfter: 4 },
+        { text: "clip", width: 30 },
+      ],
+      12,
+    );
+    clip.renderMode = 7;
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns([drawn, clip]);
+    page.loaded = true;
+    expect(
+      LineGrouper.apply(page).map((g) => g.representative.text.trim()),
+    ).toEqual(["Drawn", "clip"]);
+  });
+});

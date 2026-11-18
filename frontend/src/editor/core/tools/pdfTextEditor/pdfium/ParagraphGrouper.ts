@@ -1,5 +1,6 @@
 import {
   RENDER_MODE_INVISIBLE,
+  textLayer,
   type PageRect,
 } from "@editor/tools/pdfTextEditor/types";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
@@ -68,9 +69,9 @@ export class ParagraphGrouper {
       });
       // Each text layer on its own: a word typed over a scanned line sits between that line and the next, and would end their paragraph.
       const grouped: ParagraphInfo[] = [];
-      for (const invisible of [false, true]) {
+      for (const layerOf of [0, 1, 2]) {
         const layer = sorted.filter(
-          (line) => (line.renderMode === RENDER_MODE_INVISIBLE) === invisible,
+          (line) => textLayer(line.renderMode) === layerOf,
         );
         if (layer.length === 0) continue;
         const from = grouped.length;

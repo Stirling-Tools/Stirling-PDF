@@ -1,5 +1,6 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import { editRecognizedTable } from "@editor/tests/helpers/recognizedTable";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { Page } from "@playwright/test";
 import { mockAppApis } from "@editor/tests/helpers/api-stubs";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -40,7 +41,7 @@ async function reopenExport(
   if (errors) reopened.on("pageerror", (error) => errors.push(error.message));
   await mockAppApis(reopened);
   await reopened.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await reopened.getByTestId("pdf-editor-file-input").setInputFiles(saved);
+  await openInTextEditor(reopened, saved);
   await waitForFirstPage(reopened);
   return reopened;
 }
@@ -94,14 +95,10 @@ test("merged cells retain their borders after a structural edit and export", asy
 }, testInfo) => {
   test.setTimeout(180_000);
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await page
-    .getByTestId("pdf-editor-file-input")
-    .setInputFiles(
-      path.join(
-        import.meta.dirname,
-        "../test-fixtures/merged-table-sample.pdf",
-      ),
-    );
+  await openInTextEditor(
+    page,
+    path.join(import.meta.dirname, "../test-fixtures/merged-table-sample.pdf"),
+  );
   await waitForFirstPage(page);
   await editRecognizedTable(page);
   const before = await page.evaluate(readMergedTable);
@@ -178,7 +175,7 @@ for (const file of [fixture, ...corpus]) {
     page.on("pageerror", onPageError);
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
-    await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+    await openInTextEditor(page, file);
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
