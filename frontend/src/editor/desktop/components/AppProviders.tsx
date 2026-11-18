@@ -52,6 +52,12 @@ const COMMON_TOOL_ENDPOINTS = [
  * Wraps proprietary providers and adds desktop-specific configuration
  * - Shows setup wizard on first launch
  */
+const signInActions = {
+  onEndpointUnavailableClick: () =>
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+};
+const NO_TOOL_ACTIONS = {};
+
 export function AppProviders({ children }: { children: ReactNode }) {
   const localOnly = useLocalProcessingOnly();
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
@@ -356,10 +362,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ProprietaryAppProviders>
       <ToolActionsContext.Provider
-        value={{
-          onEndpointUnavailableClick: () =>
-            window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
-        }}
+        value={connectionMode === "local" ? signInActions : NO_TOOL_ACTIONS}
       >
         <DesktopQueryCacheReset />
         <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>

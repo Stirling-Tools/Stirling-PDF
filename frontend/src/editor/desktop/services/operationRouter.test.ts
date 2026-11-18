@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Verifies operationRouter.getBaseUrl host selection in SaaS mode: cloud-only
 // feature endpoints (payg/team/policies) must hit the SaaS backend, NOT the local
@@ -224,5 +224,69 @@ describe("operationRouter — URL shared by two endpoint keys", () => {
     } finally {
       supportedLocally.mockResolvedValue(true);
     }
+  });
+});
+
+describe("operationRouter — Office Convert needs an account", () => {
+  const dispatchEvent = vi.fn();
+
+  beforeEach(() => {
+    vi.stubGlobal("window", { dispatchEvent });
+    dispatchEvent.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.each([
+    ["/api/v1/convert/file/pdf", undefined],
+    ["/api/v1/convert/pdf/word", undefined],
+    ["/api/v1/convert/pdf/text", "pdf-to-rtf"],
+    ["/api/v1/misc/extract-image-scans", undefined],
+  ])("refuses %s (%s) in local mode and opens sign-in", async (url, key) => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
+    await expect(operationRouter.getBaseUrl(url, key)).rejects.toThrow(
+      /requires an account/,
+    );
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+  });
+
+  test("still runs free conversions locally in local mode", async () => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/convert/pdf/img"),
+    ).resolves.toBe("http://localhost:62994");
+    for (const path of [
+      "/api/v1/convert/pdf/csv",
+      "/api/v1/convert/pdf/text",
+      "/api/v1/convert/pdf/xlsx",
+      "/api/v1/convert/pdf/markdown",
+    ]) {
+      await expect(operationRouter.getBaseUrl(path)).resolves.toBe(
+        "http://localhost:62994",
+      );
+    }
+    expect(dispatchEvent).not.toHaveBeenCalled();
+  });
+
+  test("badges Office Convert tools as needing sign-in only in local mode", async () => {
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("local");
+    await expect(
+      operationRouter.willRouteToSaaS("/api/v1/misc/extract-image-scans"),
+    ).resolves.toBe(true);
+    await expect(
+      operationRouter.willRouteToSaaS("/api/v1/misc/compress-pdf"),
+    ).resolves.toBe(false);
+    vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("saas");
+    await expect(
+      operationRouter.willRouteToSaaS("/api/v1/misc/extract-image-scans"),
+    ).resolves.toBe(false);
+  });
+
+  test("runs Office Convert on the bundled backend once signed in", async () => {
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/convert/file/pdf"),
+    ).resolves.toBe("http://localhost:62994");
   });
 });
