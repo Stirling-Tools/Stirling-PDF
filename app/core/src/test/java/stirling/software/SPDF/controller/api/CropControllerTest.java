@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,6 +37,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.util.ExceptionUtils;
@@ -74,6 +77,17 @@ class CropControllerTest {
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
                             return tf;
+                        });
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            File f = Files.createTempFile("test", ".pdf").toFile();
+                            try (InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(in, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            return f;
                         });
         pdfFactory = new TestPdfFactory();
     }

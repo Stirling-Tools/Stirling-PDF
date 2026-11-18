@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.BitSet;
 
@@ -186,11 +187,10 @@ public class CropController {
 
     private ResponseEntity<Resource> cropWithAutomaticDetection(CropPdfForm request)
             throws IOException {
-        byte[] pdfBytes = request.getFileInput().getBytes();
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
 
         try {
-            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+            try (PdfDocument document = openInput(request)) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     try (PdfPage page = document.page(i)) {
@@ -228,13 +228,12 @@ public class CropController {
     }
 
     private ResponseEntity<Resource> cropWithJpdfium(CropPdfForm request) throws IOException {
-        byte[] pdfBytes = request.getFileInput().getBytes();
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(PDF_EXTENSION);
         Rect crop =
                 new Rect(request.getX(), request.getY(), request.getWidth(), request.getHeight());
 
         try {
-            try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+            try (PdfDocument document = openInput(request)) {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     if (request.isRemoveDataOutsideCrop()) {
@@ -266,6 +265,16 @@ public class CropController {
             tempOutputFile.close();
             throw new IOException("JPDFium crop failed", e);
         }
+    }
+
+    /**
+     * Spools the upload like {@code CustomPDFDocumentFactory.load(MultipartFile)} does for PDFBox:
+     * JPDFium pins whatever backs the document for its lifetime, so a byte array would hold the
+     * whole upload on the heap for the entire request.
+     */
+    private PdfDocument openInput(CropPdfForm request) throws IOException {
+        File tempInput = tempFileManager.convertMultipartFileToFile(request.getFileInput());
+        return PdfDocument.open(tempInput.toPath());
     }
 
     private static String outputFilename(CropPdfForm request) {
