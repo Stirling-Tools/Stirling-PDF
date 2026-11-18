@@ -39,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -268,6 +269,29 @@ class FlattenControllerTest {
 
         assertThat(controller.flatten(request).getStatusCode()).isEqualTo(HttpStatus.OK);
         org.mockito.Mockito.verify(tempFileManager).deleteTempFile(spooled.get());
+    }
+
+    @Test
+    void flatten_fullFlatten_oversizedPageRejectedBeforeRasterizing() throws Exception {
+        Path path = tempDir.resolve("huge.pdf");
+        try (PDDocument doc = new PDDocument()) {
+            // ~100000 x 100000 px at the default 300 dpi; far over any render budget
+            PDPage page = new PDPage(new PDRectangle(50000f, 50000f));
+            doc.addPage(page);
+            doc.save(path.toFile());
+        }
+        FlattenRequest request = new FlattenRequest();
+        request.setFileInput(
+                new MockMultipartFile(
+                        "fileInput",
+                        "huge.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        Files.readAllBytes(path)));
+        request.setFlattenOnlyForms(false);
+
+        assertThatThrownBy(() -> controller.flatten(request))
+                .isInstanceOf(ExceptionUtils.OutOfMemoryDpiException.class)
+                .hasMessageContaining("Page 1 at 300 DPI");
     }
 
     private MockMultipartFile createPdfWithForm() throws IOException {

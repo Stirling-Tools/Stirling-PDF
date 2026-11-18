@@ -95,6 +95,13 @@ public class FlattenController {
         File tempInput = tempFileManager.convertMultipartFileToFile(file);
         try {
             try (PdfDocument document = PdfDocument.open(tempInput.toPath())) {
+                for (int i = 0; i < document.pageCount(); i++) {
+                    try (PdfPage page = document.page(i)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), i + 1, renderDpi);
+                    }
+                }
                 document.flatten(FlattenMode.FULL, renderDpi);
                 document.saveTo(tempOutputFile.getFile().toPath(), SaveOptions.validated());
             } catch (RuntimeException e) {
