@@ -123,14 +123,10 @@ test.describe("E2E PDF Operations", () => {
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
 
-      // Select "Page Numbers" split method from the CardSelector
-      await page
-        .getByText(/Page Numbers/i)
-        .first()
-        .click();
+      await page.getByRole("textbox", { name: /Method/i }).click();
+      await page.getByRole("option", { name: /Page Numbers/i }).click();
 
-      // Wait for the settings step to expand and find the page numbers input
-      const pagesInput = page.getByPlaceholder(/Custom Page Selection/i);
+      const pagesInput = page.getByRole("textbox", { name: /^Pages/i });
       await pagesInput.waitFor({ state: "visible", timeout: 10000 });
       await pagesInput.fill("1");
 

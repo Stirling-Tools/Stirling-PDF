@@ -112,6 +112,18 @@ export const useBookletImpositionTips = (): TooltipContent => {
           ),
         ],
       },
+    ],
+  };
+};
+
+export const useBookletImpositionAdvancedTips = (): TooltipContent => {
+  const { t } = useTranslation();
+
+  return {
+    header: {
+      title: t("bookletImposition.tooltip.advanced.title", "Advanced Options"),
+    },
+    tips: [
       {
         title: t(
           "bookletImposition.tooltip.advanced.title",

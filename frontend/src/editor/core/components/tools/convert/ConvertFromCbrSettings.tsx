@@ -1,6 +1,7 @@
 import { Stack, Text, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertFromCbrSettingsProps {
   parameters: ConvertParameters;
@@ -21,13 +22,16 @@ const ConvertFromCbrSettings = ({
   return (
     <Stack gap="sm" data-testid="cbr-settings">
       <Text size="sm" fw={500}>
-        {t("convert.cbrOptions", "CBR Options")}:
+        {t("convert.cbrOptions", "CBR Options")}
       </Text>
 
       <Checkbox
-        label={t(
-          "convert.optimizeForEbook",
-          "Optimize PDF for ebook readers (uses Ghostscript)",
+        {...infoLabelProps(
+          t("convert.optimizeForEbook", "Optimize PDF for ebook readers"),
+          t(
+            "convert.optimizeForEbookInfo",
+            "Uses Ghostscript to reduce file size and improve rendering on ebook readers.",
+          ),
         )}
         checked={parameters.cbrOptions.optimizeForEbook}
         onChange={(event) =>

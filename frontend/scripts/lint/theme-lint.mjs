@@ -32,6 +32,7 @@ const THEME_FILES = [
   "colors.css",
   "dimensions.css",
   "index.css",
+  "mantineInputs.css",
 ];
 
 // ── colour helpers ─────────────────────────────────────────────────────────

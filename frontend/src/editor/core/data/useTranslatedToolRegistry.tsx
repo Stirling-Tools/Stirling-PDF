@@ -686,7 +686,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(bookletImpositionOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@editor/components/tools/bookletImposition/BookletImpositionSettings"),
+            import("@editor/components/tools/bookletImposition/BookletImpositionAutomationSettings"),
         ),
         description: t(
           "home.bookletImposition.desc",

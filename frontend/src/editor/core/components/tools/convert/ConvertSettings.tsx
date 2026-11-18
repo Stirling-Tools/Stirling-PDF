@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import { useOfficeConversionDefault } from "@editor/hooks/useOfficeConversionDefault";
-import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
-import { Icon } from "@editor/ui/Icon";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 import {
@@ -70,7 +68,6 @@ const ConvertSettings = ({
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
   const endpointName = getEndpointName(
     parameters.fromExtension,
     parameters.toExtension,
@@ -296,73 +293,46 @@ const ConvertSettings = ({
   return (
     <Stack gap="md">
       {/* Format Selection */}
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>
-          {t("convert.convertFrom", "Convert from")}:
-        </Text>
+      <GroupedFormatDropdown
+        label={t("convert.convertFrom", "Convert from")}
+        name="convert-from-dropdown"
+        data-testid="convert-from-dropdown"
+        value={parameters.fromExtension}
+        placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
+        options={enhancedFromOptions}
+        onChange={handleFromExtensionChange}
+        disabled={disabled}
+        minWidth="18rem"
+      />
+
+      {!parameters.fromExtension ? (
         <GroupedFormatDropdown
-          name="convert-from-dropdown"
-          data-testid="convert-from-dropdown"
-          value={parameters.fromExtension}
-          placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
-          options={enhancedFromOptions}
-          onChange={handleFromExtensionChange}
+          label={t("convert.convertTo", "Convert to")}
+          placeholder={t(
+            "convert.selectSourceFormatFirst",
+            "Select a source format first",
+          )}
+          options={[]}
+          onChange={() => {}}
+          disabled
+        />
+      ) : (
+        <GroupedFormatDropdown
+          label={t("convert.convertTo", "Convert to")}
+          name="convert-to-dropdown"
+          data-testid="convert-to-dropdown"
+          value={parameters.toExtension}
+          placeholder={t("convert.targetFormatPlaceholder", "Target format")}
+          options={enhancedToOptions}
+          onChange={handleToExtensionChange}
           disabled={disabled}
           minWidth="18rem"
         />
-      </Stack>
-
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>
-          {t("convert.convertTo", "Convert to")}:
-        </Text>
-        {!parameters.fromExtension ? (
-          <Button
-            variant="tertiary"
-            hover={false}
-            fullWidth
-            disabled
-            style={{
-              padding: "0.5rem 0.75rem",
-              border: `0.0625rem solid ${theme.colors.gray[4]}`,
-              borderRadius: theme.radius.sm,
-              backgroundColor: "var(--select-placeholder-bg)",
-              color: "var(--select-placeholder-text)",
-              cursor: "not-allowed",
-            }}
-          >
-            <Group justify="space-between" style={{ width: "100%" }}>
-              <Text size="sm">
-                {t(
-                  "convert.selectSourceFormatFirst",
-                  "Select a source format first",
-                )}
-              </Text>
-              <Icon
-                name="chevron-down"
-                size={"1rem"}
-                style={{ color: "var(--select-placeholder-text)" }}
-              />
-            </Group>
-          </Button>
-        ) : (
-          <GroupedFormatDropdown
-            name="convert-to-dropdown"
-            data-testid="convert-to-dropdown"
-            value={parameters.toExtension}
-            placeholder={t("convert.targetFormatPlaceholder", "Target format")}
-            options={enhancedToOptions}
-            onChange={handleToExtensionChange}
-            disabled={disabled}
-            minWidth="18rem"
-          />
-        )}
-      </Stack>
+      )}
 
       {/* Format-specific options */}
       {isImageFormat(parameters.toExtension) && (
         <>
-          <Divider />
           <ConvertToImageSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
@@ -377,7 +347,6 @@ const ConvertSettings = ({
       (parameters.isSmartDetection &&
         parameters.smartDetectionType === "images") ? (
         <>
-          <Divider />
           <ConvertFromImageSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
@@ -390,7 +359,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "svg" &&
         parameters.toExtension === "pdf" && (
           <>
-            <Divider />
             <ConvertFromSvgSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -406,7 +374,6 @@ const ConvertSettings = ({
         (parameters.isSmartDetection &&
           parameters.smartDetectionType === "web")) ? (
         <>
-          <Divider />
           <ConvertFromWebSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
@@ -420,7 +387,6 @@ const ConvertSettings = ({
         parameters.fromExtension === "msg") &&
         parameters.toExtension === "pdf" && (
           <>
-            <Divider />
             <ConvertFromEmailSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -433,7 +399,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "cbz" &&
         parameters.toExtension === "pdf" && (
           <>
-            <Divider />
             <ConvertFromCbzSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -446,7 +411,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "cbz" && (
           <>
-            <Divider />
             <ConvertToCbzSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -459,7 +423,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfa" && (
           <>
-            <Divider />
             <ConvertToPdfaSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -473,7 +436,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfua" && (
           <>
-            <Divider />
             <ConvertToPdfUaSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -487,7 +449,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfx" && (
           <>
-            <Divider />
             <ConvertToPdfxSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -501,7 +462,6 @@ const ConvertSettings = ({
       {["epub", "mobi", "azw3", "fb2"].includes(parameters.fromExtension) &&
         parameters.toExtension === "pdf" && (
           <>
-            <Divider />
             <ConvertFromEbookSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -514,7 +474,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "cbr" &&
         parameters.toExtension === "pdf" && (
           <>
-            <Divider />
             <ConvertFromCbrSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -527,7 +486,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "cbr" && (
           <>
-            <Divider />
             <ConvertToCbrSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
@@ -542,7 +500,6 @@ const ConvertSettings = ({
         parameters.emailOptions.downloadHtml
       ) ? (
         <>
-          <Divider />
           <ConvertOfficeEngineSettings
             endpointName={endpointName}
             parameters={parameters}
@@ -556,7 +513,6 @@ const ConvertSettings = ({
       {parameters.fromExtension === "pdf" &&
         ["epub", "azw3"].includes(parameters.toExtension) && (
           <>
-            <Divider />
             <ConvertToEpubSettings
               parameters={parameters}
               onParameterChange={onParameterChange}

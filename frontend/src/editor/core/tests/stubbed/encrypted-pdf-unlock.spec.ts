@@ -148,12 +148,10 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await fillPassword(page, "james");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
     await expect(page.getByRole("dialog")).toBeHidden();
-    await page
-      .getByText(/Page Count/i)
-      .first()
-      .click();
+    await page.getByRole("textbox", { name: /Method/i }).click();
+    await page.getByRole("option", { name: /Page Count/i }).click();
     await page.getByPlaceholder("e.g. 5, 10").fill("1");
-    await page.getByRole("button", { name: "Split", exact: true }).click();
+    await page.getByRole("button", { name: "Split PDF", exact: true }).click();
     await expect.poll(() => restoredNames.length).toBe(10);
     await page
       .locator("label")

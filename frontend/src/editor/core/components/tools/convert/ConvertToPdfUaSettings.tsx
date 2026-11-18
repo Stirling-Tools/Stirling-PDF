@@ -7,6 +7,7 @@ import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParamet
 import { usePdfSignatureDetection } from "@editor/hooks/usePdfSignatureDetection";
 import { StirlingFile } from "@editor/types/fileContext";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
 interface ConvertToPdfUaSettingsProps {
   parameters: ConvertParameters;
@@ -117,7 +118,7 @@ const ConvertToPdfUaSettings = ({
   return (
     <Stack gap="sm" data-testid="pdfua-settings">
       <Text size="sm" fw={500}>
-        {t("convert.pdfUaOptions", "PDF/UA Options")}:
+        {t("convert.pdfUaOptions", "PDF/UA Options")}
       </Text>
 
       {hasDigitalSignatures && (
@@ -131,25 +132,23 @@ const ConvertToPdfUaSettings = ({
         </Alert>
       )}
 
-      <Stack gap="xs">
-        <Text size="xs" fw={500}>
-          {t("convert.pdfUaProfile", "Conformance level")}:
-        </Text>
-        <Select
-          value={parameters.pdfUaOptions.profile}
-          onChange={(value) => update({ profile: value || "ua1" })}
-          data={profileOptions}
-          disabled={disabled}
-          comboboxProps={{ zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
-          data-testid="pdfua-profile-select"
-        />
-      </Stack>
+      <Select
+        label={t("convert.pdfUaProfile", "Conformance level")}
+        value={parameters.pdfUaOptions.profile}
+        onChange={(value) => update({ profile: value || "ua1" })}
+        data={profileOptions}
+        disabled={disabled}
+        comboboxProps={{ zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        data-testid="pdfua-profile-select"
+      />
 
       <TextInput
-        label={t("convert.pdfUaLanguage", "Document language")}
-        description={t(
-          "convert.pdfUaLanguageHelp",
-          "A BCP-47 tag such as en-US. Used only when the document does not already declare its own language.",
+        {...infoLabelProps(
+          t("convert.pdfUaLanguage", "Document language"),
+          t(
+            "convert.pdfUaLanguageHelp",
+            "A BCP-47 tag such as en-US. Used only when the document does not already declare its own language.",
+          ),
         )}
         value={parameters.pdfUaOptions.language}
         onChange={(event) => update({ language: event.currentTarget.value })}
@@ -158,13 +157,15 @@ const ConvertToPdfUaSettings = ({
       />
 
       <Checkbox
-        label={t(
-          "convert.pdfUaOverrideLanguage",
-          "Replace the document's own language",
-        )}
-        description={t(
-          "convert.pdfUaOverrideLanguageHelp",
-          "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible.",
+        {...infoLabelProps(
+          t(
+            "convert.pdfUaOverrideLanguage",
+            "Replace the document's own language",
+          ),
+          t(
+            "convert.pdfUaOverrideLanguageHelp",
+            "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible.",
+          ),
         )}
         checked={parameters.pdfUaOptions.overrideLanguage}
         onChange={(event) =>
@@ -175,10 +176,12 @@ const ConvertToPdfUaSettings = ({
       />
 
       <TextInput
-        label={t("convert.pdfUaTitle", "Document title")}
-        description={t(
-          "convert.pdfUaTitleHelp",
-          "Shown by a reader instead of the filename. Left blank, the first heading is used.",
+        {...infoLabelProps(
+          t("convert.pdfUaTitle", "Document title"),
+          t(
+            "convert.pdfUaTitleHelp",
+            "Shown by a reader instead of the filename. Left blank, the first heading is used.",
+          ),
         )}
         value={parameters.pdfUaOptions.title}
         onChange={(event) => update({ title: event.currentTarget.value })}
@@ -187,10 +190,12 @@ const ConvertToPdfUaSettings = ({
       />
 
       <Checkbox
-        label={t("convert.pdfUaEmbedFonts", "Embed missing fonts")}
-        description={t(
-          "convert.pdfUaEmbedFontsHelp",
-          "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance.",
+        {...infoLabelProps(
+          t("convert.pdfUaEmbedFonts", "Embed missing fonts"),
+          t(
+            "convert.pdfUaEmbedFontsHelp",
+            "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance.",
+          ),
         )}
         checked={parameters.pdfUaOptions.embedFonts}
         onChange={(event) =>

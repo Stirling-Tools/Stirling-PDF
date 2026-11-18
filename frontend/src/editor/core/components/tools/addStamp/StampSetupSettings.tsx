@@ -10,7 +10,6 @@ import {
   Accordion,
   Code,
   Group,
-  Badge,
   Box,
   Paper,
 } from "@mantine/core";
@@ -21,7 +20,7 @@ import {
   isQrContentWithinLimit,
 } from "@editor/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
-import styles from "@editor/components/tools/addStamp/StampPreview.module.css";
+import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { getDefaultFontSizeForAlphabet } from "@editor/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@editor/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@editor/styles/zIndex";
@@ -224,9 +223,12 @@ const StampSetupSettings = ({
   return (
     <Stack gap="md">
       <TextInput
-        label={t(
-          "pageSelectionPrompt",
-          "Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)",
+        {...infoLabelProps(
+          t("AddStampRequest.pagesToStamp", "Pages to Stamp"),
+          t(
+            "AddStampRequest.pagesToStampInfo",
+            "Comma-separated page numbers or ranges, such as 1,3,5-8, or a function such as 2n+1.",
+          ),
         )}
         value={parameters.pageNumbers}
         onChange={(e) =>
@@ -253,7 +255,6 @@ const StampSetupSettings = ({
             { value: "qr", label: t("AddStampRequest.qrCode", "QR Code") },
           ]}
           disabled={disabled}
-          textClassName={styles.modeToggleButtonText}
         />
       </div>
 
@@ -293,10 +294,12 @@ const StampSetupSettings = ({
           />
 
           <Textarea
-            label={t("AddStampRequest.stampText", "Stamp Text")}
-            description={t(
-              "AddStampRequest.stampTextDescription",
-              "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
+            {...infoLabelProps(
+              t("AddStampRequest.stampText", "Stamp Text"),
+              t(
+                "AddStampRequest.stampTextDescription",
+                "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
+              ),
             )}
             value={parameters.stampText}
             className={privateContentClassName}
@@ -317,14 +320,9 @@ const StampSetupSettings = ({
           <Accordion variant="contained" radius="sm">
             <Accordion.Item value="variables">
               <Accordion.Control>
-                <Group gap="xs">
-                  <Text size="sm" fw={500}>
-                    {t("AddStampRequest.dynamicVariables", "Dynamic Variables")}
-                  </Text>
-                  <Badge size="xs" variant="light" color="blue">
-                    {t("AddStampRequest.clickToExpand", "Click to expand")}
-                  </Badge>
-                </Group>
+                <Text size="sm" fw={500}>
+                  {t("AddStampRequest.dynamicVariables", "Dynamic Variables")}
+                </Text>
               </Accordion.Control>
               <Accordion.Panel>
                 <Stack gap="xs">
@@ -678,10 +676,12 @@ const StampSetupSettings = ({
 
       {parameters.stampType === "qr" && (
         <Textarea
-          label={t("AddStampRequest.qrContent", "QR Code Content")}
-          description={t(
-            "AddStampRequest.qrContentDescription",
-            "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+          {...infoLabelProps(
+            t("AddStampRequest.qrContent", "QR Code Content"),
+            t(
+              "AddStampRequest.qrContentDescription",
+              "Text or link to encode. Dynamic variables such as @filename and @page_number are supported.",
+            ),
           )}
           value={parameters.stampText}
           className={privateContentClassName}
@@ -716,7 +716,7 @@ const StampSetupSettings = ({
             id="stamp-image-input"
           />
           <Button
-            size="sm"
+            variant="secondary"
             as="label"
             htmlFor="stamp-image-input"
             disabled={disabled}

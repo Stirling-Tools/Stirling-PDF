@@ -433,6 +433,26 @@ const EditTableOfContents = (props: BaseToolProps) => {
       {
         title: t("editTableOfContents.settings.title", "Bookmarks & outline"),
         isCollapsed: false,
+        tooltip: {
+          tips: [
+            {
+              bullets: [
+                t(
+                  "editTableOfContents.info.line1",
+                  "Each bookmark needs a descriptive title and the page it should open.",
+                ),
+                t(
+                  "editTableOfContents.info.line2",
+                  "Use child bookmarks to build a hierarchy for chapters, sections, or subsections.",
+                ),
+                t(
+                  "editTableOfContents.info.line3",
+                  "Import bookmarks from the selected PDF or from a JSON file to save time.",
+                ),
+              ],
+            },
+          ],
+        },
         content: (
           <EditTableOfContentsSettings
             bookmarks={base.params.parameters.bookmarks}

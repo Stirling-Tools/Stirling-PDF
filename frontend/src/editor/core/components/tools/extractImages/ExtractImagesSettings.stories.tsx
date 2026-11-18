@@ -19,7 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // The component owns no state itself, so each story wraps it in a small
-// stateful shim to keep the dropdown interactive in the canvas.
+// stateful shim to keep the format selector interactive in the canvas.
 const ExtractImagesSettingsDemo = (props: {
   initialParameters: ExtractImagesParameters;
   disabled?: boolean;

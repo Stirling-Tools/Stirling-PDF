@@ -72,7 +72,6 @@ const AddPageNumbers = ({
   const getSteps = () => {
     const steps: MiddleStepConfig[] = [];
 
-    // Step 1: Position Selection & Pages/Starting Number
     steps.push({
       title: t("addPageNumbers.positionAndPages", "Position & Pages"),
       isCollapsed: accordion.getCollapsedState(
@@ -92,9 +91,8 @@ const AddPageNumbers = ({
       ),
     });
 
-    // Step 2: Customize Appearance
     steps.push({
-      title: t("addPageNumbers.customize", "Customize Appearance"),
+      title: t("addPageNumbers.customize", "Appearance"),
       isCollapsed: accordion.getCollapsedState(AddPageNumbersStep.CUSTOMIZE),
       onCollapsedClick: () =>
         accordion.handleStepToggle(AddPageNumbersStep.CUSTOMIZE),

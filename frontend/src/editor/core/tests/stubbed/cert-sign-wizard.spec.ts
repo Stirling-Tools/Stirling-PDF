@@ -78,9 +78,9 @@ test.describe("CertSign tool - certificate source model", () => {
     await expect(page).toHaveURL(/\/cert-sign/);
     // With no server cert or hardware token there is nothing to choose, so the
     // whole "Certificate source" step is hidden and the format picker shows directly.
-    await expect(
-      page.getByRole("button", { name: /pkcs12/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/^pkcs12$/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText(/certificate source/i)).toHaveCount(0);
     await expect(
       page.getByText(/no other certificate sources are available/i),
@@ -101,9 +101,9 @@ test.describe("CertSign tool - certificate source model", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     // No alternative sources: the source step is hidden, and hardware is never offered.
-    await expect(
-      page.getByRole("button", { name: /pkcs12/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/^pkcs12$/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
       page.getByRole("button", { name: /this device/i }),
     ).toHaveCount(0);

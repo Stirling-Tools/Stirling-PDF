@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
+import "@editor/ui/InfoTooltip.css";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { TooltipTip } from "@editor/types/tips";
 import {
@@ -56,15 +57,14 @@ const renderTooltipTitle = (
         sidebarTooltip={true}
         pinOnClick={true}
       >
-        <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
-          <Text fw={400} size="sm">
+        <Flex align="center" gap={6} onClick={(e) => e.stopPropagation()}>
+          <Text fw={500} size="sm">
             {title}
           </Text>
-          <Icon
-            name="info"
-            size="1.25rem"
-            style={{ color: "var(--icon-files-color)" }}
-          />
+          {/* Same glyph and tone as the field-level InfoTooltip, so a step's (i) and a field's (i) read as one affordance. */}
+          <span className="sui-info">
+            <Icon name="info" size={14} strokeWidth={2} />
+          </span>
         </Flex>
       </Tooltip>
     );
@@ -92,11 +92,10 @@ const ToolStep = ({
 }: ToolStepProps) => {
   const parent = useContext(ToolStepContext);
 
-  // Auto-detect if we should show numbers based on sibling count or force option
   const shouldShowNumber = useMemo(() => {
-    if (showNumber !== undefined) return showNumber; // Individual step override
-    if (parent?.forceStepNumbers) return true; // Flow-level force
-    return parent ? parent.visibleStepCount >= 3 : false; // Auto-detect
+    if (showNumber !== undefined) return showNumber;
+    if (parent?.forceStepNumbers) return true;
+    return parent ? parent.visibleStepCount >= 2 : false;
   }, [showNumber, parent]);
 
   if (!isVisible) return null;

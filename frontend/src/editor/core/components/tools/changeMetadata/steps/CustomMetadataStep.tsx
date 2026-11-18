@@ -1,6 +1,7 @@
 import { Stack, TextInput, Group, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
+import { InfoTooltip } from "@editor/ui/InfoTooltip";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
@@ -28,9 +29,17 @@ const CustomMetadataStep = ({
   return (
     <Stack gap="sm">
       <Group justify="space-between" align="center">
-        <Text size="sm" fw={500}>
-          {t("changeMetadata.customFields.title", "Custom Metadata")}
-        </Text>
+        <Group gap={4}>
+          <Text size="sm" fw={500}>
+            {t("changeMetadata.customFields.title", "Custom Metadata")}
+          </Text>
+          <InfoTooltip
+            label={t(
+              "changeMetadata.customFields.description",
+              "Add custom metadata fields to the document",
+            )}
+          />
+        </Group>
         <Button
           variant="secondary"
           size="sm"
@@ -40,15 +49,6 @@ const CustomMetadataStep = ({
           {t("changeMetadata.customFields.add", "Add Field")}
         </Button>
       </Group>
-
-      {parameters.customMetadata.length > 0 && (
-        <Text size="xs" c="dimmed">
-          {t(
-            "changeMetadata.customFields.description",
-            "Add custom metadata fields to the document",
-          )}
-        </Text>
-      )}
 
       {parameters.customMetadata.map((entry) => (
         <Stack key={entry.id} gap="xs">

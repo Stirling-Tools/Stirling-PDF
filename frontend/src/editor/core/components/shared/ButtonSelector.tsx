@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Stack, Text, Tooltip } from "@mantine/core";
 import FitText from "@editor/components/shared/FitText";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
@@ -13,7 +14,7 @@ interface ButtonSelectorProps<T> {
   value: T | undefined;
   onChange: (value: T) => void;
   options: ButtonOption<T>[];
-  label?: string;
+  label?: ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
   textClassName?: string;
@@ -36,8 +37,8 @@ const ButtonSelector = <T extends string | number>({
       <FitText
         text={option.label}
         lines={1}
-        minimumFontScale={0.5}
-        fontSize={10}
+        minimumFontScale={0.6}
+        fontSize={14}
         className={textClassName}
       />
     );
@@ -65,13 +66,13 @@ const ButtonSelector = <T extends string | number>({
 
   return (
     <Stack gap="var(--mantine-spacing-sm)">
-      {/* Label (if it exists) */}
       {label && (
         <Text
           style={{
             fontSize: "var(--mantine-font-size-sm)",
             lineHeight: "var(--mantine-line-height-sm)",
             fontWeight: "var(--font-weight-medium)",
+            color: "var(--c-text-muted)",
           }}
         >
           {label}
