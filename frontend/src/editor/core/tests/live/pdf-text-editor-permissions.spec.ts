@@ -18,10 +18,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openTextEditor(page: Page) {
-  await page
-    .getByRole("link", { name: "PDF Text Editor", exact: true })
-    .first()
-    .click();
+  await page.locator('[data-tour="tool-button-pdfTextEditor"]').first().click();
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
 }
 

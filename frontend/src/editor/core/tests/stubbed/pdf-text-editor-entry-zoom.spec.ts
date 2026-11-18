@@ -18,10 +18,7 @@ test("the text editor opens a workbench file at the viewer's zoom", async ({
   await expect(readout).not.toHaveText(initialZoom ?? "");
   const viewerZoom = await readout.textContent();
 
-  await page
-    .getByRole("link", { name: "PDF Text Editor", exact: true })
-    .first()
-    .click();
+  await page.locator('[data-tour="tool-button-pdfTextEditor"]').first().click();
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });

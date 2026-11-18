@@ -27,7 +27,7 @@ for (const source of ["workbench", "disk"] as const) {
       await page.getByRole("button", { name: "Open PDF", exact: true }).click();
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await page
-        .getByRole("link", { name: "PDF Text Editor", exact: true })
+        .locator('[data-tour="tool-button-pdfTextEditor"]')
         .first()
         .click();
     } else {
