@@ -22,11 +22,13 @@ import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
+import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.Rect;
 import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.jpdfium.transform.PdfPageGeometry;
@@ -189,6 +191,9 @@ public class CropController {
                 BitSet pagesToCrop = pageSelection(request, document.pageCount());
                 for (int i = pagesToCrop.nextSetBit(0); i >= 0; i = pagesToCrop.nextSetBit(i + 1)) {
                     try (PdfPage page = document.page(i)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), i + 1, DEFAULT_RENDER_DPI);
                         BufferedImage image = page.renderImage(DEFAULT_RENDER_DPI);
                         int[] bounds = detectContentBounds(image);
                         Rect crop =
