@@ -194,3 +194,59 @@ test.describe("PDF text editor - viewer tools", () => {
     await expect(ruler(page)).not.toHaveAttribute("aria-pressed", "true");
   });
 });
+
+test("Edit text in the viewer's selection menu opens the editor on that text", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/editor");
+  await page.locator('input[type="file"]').first().setInputFiles(SAMPLE_PDF);
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({
+    timeout: 30_000,
+  });
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("page has no bounding box");
+  const y = box.y + box.height * 0.105;
+  await page.mouse.move(box.x + box.width * 0.15, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
+  await page.mouse.up();
+  await page.getByTestId("text-selection-edit-text").click();
+
+  await expect(editText(page)).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const store = (
+            window as unknown as {
+              __editor_store?: {
+                selection: {
+                  value: {
+                    runIds: string[];
+                    textRange: { start: number; end: number } | null;
+                  };
+                };
+                getState: () => {
+                  pages: Array<{ runs: Array<{ id: string; text: string }> }>;
+                };
+              };
+            }
+          ).__editor_store;
+          const sel = store?.selection.value;
+          if (!store || !sel?.textRange || sel.runIds.length !== 1) return "";
+          const run = store
+            .getState()
+            .pages[0]?.runs.find((r) => r.id === sel.runIds[0]);
+          return run?.text.slice(sel.textRange.start, sel.textRange.end) ?? "";
+        }),
+      { timeout: 60_000 },
+    )
+    // The line dragged across in the viewer.
+    .toContain("Test document");
+  await expect(page.locator("[data-text-selection-menu]")).toHaveCount(0);
+});

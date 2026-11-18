@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -52,19 +53,38 @@ export interface ViewerPageTool {
   onToggleFind?: () => void;
 }
 
+/** Text selected in the viewer that a page tool is asked to open at. */
+export interface ViewerTextTarget {
+  /** Workbench file the text is in; null when the viewer has not settled on one. */
+  fileId: string | null;
+  pageIndex: number;
+  text: string;
+  /** Where the text sits on the page, in PDF points from the top-left corner. */
+  rect?: { x: number; y: number; width: number; height: number };
+}
+
 interface ViewerPageToolSlot {
   tool: ViewerPageTool | null;
   setTool: Dispatch<SetStateAction<ViewerPageTool | null>>;
+  /** Held until the tool that opens takes it. */
+  textTarget: ViewerTextTarget | null;
+  setTextTarget: (target: ViewerTextTarget | null) => void;
 }
 
 const ViewerPageToolContext = createContext<ViewerPageToolSlot>({
   tool: null,
   setTool: () => {},
+  textTarget: null,
+  setTextTarget: () => {},
 });
 
 export function ViewerPageToolProvider({ children }: { children: ReactNode }) {
   const [tool, setTool] = useState<ViewerPageTool | null>(null);
-  const slot = useMemo(() => ({ tool, setTool }), [tool]);
+  const [textTarget, setTextTarget] = useState<ViewerTextTarget | null>(null);
+  const slot = useMemo(
+    () => ({ tool, setTool, textTarget, setTextTarget }),
+    [tool, textTarget],
+  );
   return (
     <ViewerPageToolContext.Provider value={slot}>
       {children}
@@ -90,4 +110,24 @@ export function useRegisterViewerPageTool(tool: ViewerPageTool | null): void {
     // Only withdraw our own registration: a tool that registered since keeps its slot.
     return () => setTool((current) => (current === tool ? null : current));
   }, [tool, setTool]);
+}
+
+/** Asks the next page tool to open at text selected in the viewer. */
+export function useSetViewerTextTarget(): (
+  target: ViewerTextTarget | null,
+) => void {
+  return useContext(ViewerPageToolContext).setTextTarget;
+}
+
+/** The text a page tool was asked to open at, if any, and how to drop it once taken. */
+export function useViewerTextTarget(): {
+  textTarget: ViewerTextTarget | null;
+  clearTextTarget: () => void;
+} {
+  const { textTarget, setTextTarget } = useContext(ViewerPageToolContext);
+  const clearTextTarget = useCallback(
+    () => setTextTarget(null),
+    [setTextTarget],
+  );
+  return { textTarget, clearTextTarget };
 }

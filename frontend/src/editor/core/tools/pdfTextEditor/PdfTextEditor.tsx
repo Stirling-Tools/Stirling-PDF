@@ -34,6 +34,7 @@ import { useEditorTestGlobal } from "@editor/tools/pdfTextEditor/hooks/useEditor
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
+import { useOpenAtViewerText } from "@editor/tools/pdfTextEditor/hooks/useOpenAtViewerText";
 import { SaveRiskModal } from "@editor/tools/pdfTextEditor/components/SaveRiskModal";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/DiscardChangesModal";
@@ -155,6 +156,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEffect(() => {
     if (sourceFileId) setActiveFileId(sourceFileId);
   }, [sourceFileId, setActiveFileId]);
+  useOpenAtViewerText(store, sourceFileId);
 
   // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
   // dropping the glyphs.
