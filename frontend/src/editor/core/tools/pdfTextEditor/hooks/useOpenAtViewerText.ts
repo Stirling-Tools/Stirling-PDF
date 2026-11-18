@@ -9,6 +9,9 @@ import { plainDomRange } from "@editor/tools/pdfTextEditor/util/overlayPainter";
 /** Frames to wait for the run's page to mount before leaving it selected only. */
 const MOUNT_WAIT_FRAMES = 120;
 
+/** Editors mounted now; the editor remounts once as it opens. */
+let mountedEditors = 0;
+
 /**
  * Opens the text the user picked in the viewer for editing, once its page has
  * been read: the run takes focus with that span selected, so typing replaces
@@ -23,13 +26,17 @@ export function useOpenAtViewerText(
   // The wait for the run to mount outlives the effect below, which re-runs as
   // soon as the target is taken, so it stops only on unmount.
   const stopWaitRef = useRef<() => void>(() => {});
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedEditors++;
+    return () => {
+      mountedEditors--;
       stopWaitRef.current();
-      clearTextTarget();
-    },
-    [clearTextTarget],
-  );
+      // A remount takes over the target; only a real close drops it.
+      setTimeout(() => {
+        if (mountedEditors === 0) clearTextTarget();
+      });
+    };
+  }, [clearTextTarget]);
 
   useEffect(() => {
     if (!textTarget) return undefined;
