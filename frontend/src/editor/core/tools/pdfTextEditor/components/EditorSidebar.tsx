@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
@@ -29,6 +29,7 @@ import {
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type {
   EditorViewState,
   LoadProgress,
@@ -55,7 +56,7 @@ interface SidebarProps extends Omit<ScanHintProps, "pages"> {
 
 export type SidebarTab = "selected" | "document";
 
-export function EditorSidebar({
+export const EditorSidebar = memo(function EditorSidebar({
   store,
   state,
   selection,
@@ -76,11 +77,11 @@ export function EditorSidebar({
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
-  const documentLanguage = useDocumentLanguage(store, state);
   const hasSelection =
     selection.runIds.length > 0 ||
     selection.imageIds.length > 0 ||
-    selection.shapeIds.length > 0;
+    selection.shapeIds.length > 0 ||
+    selection.formFieldId !== null;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
@@ -112,22 +113,6 @@ export function EditorSidebar({
     if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
     return readAllPagesInBackground(store);
   }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
-  const setMarkedTagged = useCallback(
-    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
-    [store],
-  );
-  const headings = useHeadingOutline(
-    store,
-    state,
-    reviewingAccessibility && tab === "document",
-  );
-
-  const bulkTagging = useBulkTagging(
-    store,
-    state,
-    reviewingAccessibility && tab === "document",
-  );
-
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
   const selectNextToReview = () => {
@@ -199,36 +184,77 @@ export function EditorSidebar({
             )}
           </Tabs.Panel>
           <Tabs.Panel value="document">
-            <DocumentInspector
-              pages={state.pages}
-              groupingMode={state.groupingMode}
-              widthMode={state.widthMode}
-              showRulers={state.showRulers}
-              onSetGroupingMode={onSetGroupingMode}
-              onSetWidthMode={onSetWidthMode}
-              onSetShowRulers={onSetShowRulers}
-              accessibilityReview={
-                reviewingAccessibility ? controller.accessibilityReview : null
-              }
-              onSelectNextToReview={selectNextToReview}
-              untaggedPages={bulkTagging.untaggedPages}
-              onTagUntaggedContent={bulkTagging.tagAll}
-              markedTagged={
-                editorDocument?.canSetMarkedTagged()
-                  ? editorDocument.markedTagged()
-                  : null
-              }
-              onSetMarkedTagged={setMarkedTagged}
-              hasTags={!!editorDocument?.hasStructureTree()}
-              headingOutline={headings.outline}
-              onSelectHeading={headings.selectHeading}
-              documentLanguage={documentLanguage}
-            />
+            {tab === "document" && (
+              <DocumentTab
+                store={store}
+                state={state}
+                reviewingAccessibility={reviewingAccessibility}
+                accessibilityReview={
+                  reviewingAccessibility ? controller.accessibilityReview : null
+                }
+                onSelectNextToReview={selectNextToReview}
+                onSetGroupingMode={onSetGroupingMode}
+                onSetWidthMode={onSetWidthMode}
+                onSetShowRulers={onSetShowRulers}
+              />
+            )}
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
       {scanFontMatch && <ScanFontMatchModal match={scanFontMatch} />}
     </Tabs>
+  );
+});
+
+function DocumentTab({
+  store,
+  state,
+  reviewingAccessibility,
+  accessibilityReview,
+  onSelectNextToReview,
+  onSetGroupingMode,
+  onSetWidthMode,
+  onSetShowRulers,
+}: Pick<
+  SidebarProps,
+  "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
+> & {
+  reviewingAccessibility: boolean;
+  accessibilityReview: AccessibilityReview | null;
+  onSelectNextToReview: () => void;
+}) {
+  const documentLanguage = useDocumentLanguage(store, state);
+  const headings = useHeadingOutline(store, state, reviewingAccessibility);
+  const bulkTagging = useBulkTagging(store, state, reviewingAccessibility);
+  const setMarkedTagged = useCallback(
+    (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
+    [store],
+  );
+  const editorDocument = store.document;
+  return (
+    <DocumentInspector
+      pages={state.pages}
+      groupingMode={state.groupingMode}
+      widthMode={state.widthMode}
+      showRulers={state.showRulers}
+      onSetGroupingMode={onSetGroupingMode}
+      onSetWidthMode={onSetWidthMode}
+      onSetShowRulers={onSetShowRulers}
+      accessibilityReview={accessibilityReview}
+      onSelectNextToReview={onSelectNextToReview}
+      untaggedPages={bulkTagging.untaggedPages}
+      onTagUntaggedContent={bulkTagging.tagAll}
+      markedTagged={
+        editorDocument?.canSetMarkedTagged()
+          ? editorDocument.markedTagged()
+          : null
+      }
+      onSetMarkedTagged={setMarkedTagged}
+      hasTags={!!editorDocument?.hasStructureTree()}
+      headingOutline={headings.outline}
+      onSelectHeading={headings.selectHeading}
+      documentLanguage={documentLanguage}
+    />
   );
 }
 

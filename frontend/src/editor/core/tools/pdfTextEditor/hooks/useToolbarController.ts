@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
 import { useAccessibilityReview } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityReview";
+import { useFormFieldAccessibility } from "@editor/tools/pdfTextEditor/hooks/useFormFieldAccessibility";
 import { useImageAccessibility } from "@editor/tools/pdfTextEditor/hooks/useImageAccessibility";
 import { useTextAccessibility } from "@editor/tools/pdfTextEditor/hooks/useTextAccessibility";
 import {
@@ -19,6 +20,10 @@ import {
   subscribeScanFaces,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
 import { deriveToolbarState } from "@editor/tools/pdfTextEditor/util/toolbarState";
+import {
+  rangeFontIds,
+  selectedPartOfRun,
+} from "@editor/tools/pdfTextEditor/commands/StyleTextRangeCommand";
 import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
 import {
   loadedExternalFonts,
@@ -58,15 +63,42 @@ type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
 // Everything the contextual `Toolbar` needs, derived from the shared
 // `EditorStore`.
+const CAN_UNDO = 1;
+const CAN_REDO = 2;
+
+// Read from the store, not the deferred state the bars render: a stale enabled redo gets clicked past the end of history.
+function useHistoryFlags(store: EditorStore): {
+  canUndo: boolean;
+  canRedo: boolean;
+} {
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
+  );
+  const read = useCallback(
+    () =>
+      (store.history.canUndo ? CAN_UNDO : 0) |
+      (store.history.canRedo ? CAN_REDO : 0),
+    [store],
+  );
+  const flags = useSyncExternalStore(subscribe, read, read);
+  return {
+    canUndo: (flags & CAN_UNDO) !== 0,
+    canRedo: (flags & CAN_REDO) !== 0,
+  };
+}
+
 export function useToolbarController(
   store: EditorStore,
   state: EditorViewState,
   selection: SelectionState,
 ) {
   const sel = useSelectionActions(store);
+  const history = useHistoryFlags(store);
   const imageA11y = useImageAccessibility(store, state, selection);
   const a11yReview = useAccessibilityReview(store, state);
   const textA11y = useTextAccessibility(store, state, selection);
+  const formFieldA11y = useFormFieldAccessibility(store, state, selection);
 
   const onToggleLock = useCallback(() => {
     const doc = store.document;
@@ -394,7 +426,7 @@ export function useToolbarController(
       const cmds: EditTextCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
-          if (!selIds.has(r.id) || r.locked) continue;
+          if (!selIds.has(r.id) || r.locked || r.textReadOnly) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
           cmds.push(
@@ -426,9 +458,24 @@ export function useToolbarController(
 
   useDocumentFontCompletion(store, state, selection, externalFonts);
 
+  // state.pages is unread but changes whenever a restyle redraws the selected characters.
+  const selectedFontIds = useMemo(() => {
+    const doc = store.document;
+    const part = selectedPartOfRun(doc, selection);
+    return doc && part
+      ? rangeFontIds(doc, part.page, part.run, part.range)
+      : null;
+  }, [store, selection, state.pages]);
+
   const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection, externalFonts),
-    [state.pages, selection, externalFonts],
+    () =>
+      deriveToolbarState(
+        state.pages,
+        selection,
+        externalFonts,
+        selectedFontIds,
+      ),
+    [state.pages, selection, externalFonts, selectedFontIds],
   );
 
   const scanFacesVersion = useSyncExternalStore(
@@ -473,7 +520,15 @@ export function useToolbarController(
       .find((r) => r.id === selection.runIds[0]);
     // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
     // count enabled the item for paragraphs the command then refused.
-    return !!run && (run.paragraphSlotCount ?? 0) >= 2;
+    return !!run && (run.paragraphSlotCount ?? 0) >= 2 && !run.textReadOnly;
+  }, [state.pages, selection]);
+
+  const selectionTextReadOnly = useMemo(() => {
+    const ids = new Set(selection.runIds);
+    const runs = state.pages
+      .flatMap((p) => p.runs)
+      .filter((r) => ids.has(r.id));
+    return runs.length > 0 && runs.every((r) => r.textReadOnly);
   }, [state.pages, selection]);
 
   const onReplaceImage = useCallback(() => {
@@ -529,15 +584,17 @@ export function useToolbarController(
   return {
     state: toolbarState,
     scanFont,
-    canUndo: store.history.canUndo,
-    canRedo: store.history.canRedo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
     onUndo: () => store.undo(),
     onRedo: () => store.redo(),
     onChangeFontSize: sel.changeFontSize,
     onChangeFill: sel.changeFill,
     onChangeOutline: sel.changeOutline,
     onChangeFontFamily: sel.changeFontFamily,
+    onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
+    onChangeFontWeight: sel.changeFontWeight,
     onDelete: sel.deleteSelection,
     onToggleLock,
     onChangeCase,
@@ -561,8 +618,13 @@ export function useToolbarController(
     textOtherPages: textA11y.otherPages,
     textDescription: textA11y.description,
     textUntaggedLinks: textA11y.untaggedLinks,
+    formFieldAccessibility: formFieldA11y.accessibility,
+    onTagFormField: formFieldA11y.tag,
+    onSetFormFieldDescription: formFieldA11y.setDescription,
     selectionAllLocked,
+    selectionTextReadOnly,
     hasRunSelection: selection.runIds.length > 0,
+    selectedRunIds: selection.runIds,
     hasImageSelection: selection.imageIds.length > 0,
     selectionCount:
       selection.runIds.length +

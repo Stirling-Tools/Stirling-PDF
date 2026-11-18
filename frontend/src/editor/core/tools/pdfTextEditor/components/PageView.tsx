@@ -6,18 +6,25 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { PdfiumPageRenderer } from "@editor/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type {
+  PageRect,
   PageSnapshot,
   TextRange,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import { TextRunOverlay } from "@editor/tools/pdfTextEditor/components/TextRunOverlay";
-import { isScanRun } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
+import { canResizeRun } from "@editor/tools/pdfTextEditor/commands/resizeRun";
+import {
+  growEdges,
+  type GrowEdge,
+} from "@editor/tools/pdfTextEditor/util/growEdge";
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -26,6 +33,8 @@ import {
 } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import { AttentionBadge } from "@editor/tools/pdfTextEditor/components/AttentionBadge";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
+import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
+import { visibleImageBounds } from "@editor/tools/pdfTextEditor/util/imageClip";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { ShapeHandle } from "@editor/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@editor/tools/pdfTextEditor/components/AnnotationOutline";
@@ -52,11 +61,15 @@ interface PageViewProps {
   selectedRunIds: string[];
   selectedImageIds: string[];
   selectedShapeIds: string[];
-  /** Run id currently highlighted by the find-bar (yellow). */
-  highlightedRunId?: string | null;
+  /** The find-bar occurrence on show. */
+  findMatch?: FindMatch | null;
+  /** The AnnotationBox id of the selected form field widget. */
+  selectedFormFieldId?: string | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
   onSelectImage: (imageId: string) => void;
   onSelectShape: (shapeId: string, extend: boolean) => void;
+  /** Selects a form field widget by its AnnotationBox id. */
+  onSelectFormField?: (annotationId: string) => void;
   /** Fires when a shape drag completes; dx/dy in raw PDF points. */
   onMoveShape?: (
     pageIndex: number,
@@ -76,8 +89,19 @@ interface PageViewProps {
     dx: number,
     dy: number,
   ) => void;
-  /** Wrap-mode reflow request; maxWidthPt in PDF points. */
-  onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
+  /**
+   * Wrap-mode reflow request; maxWidthPt in PDF points. Returns the run's text
+   * after the wrap, or null when it was refused because its new lines had
+   * nowhere clear to go.
+   */
+  onWrapRun?: (
+    pageIndex: number,
+    runId: string,
+    maxWidthPt: number,
+    keepClearBelow?: boolean,
+  ) => string | null | void;
+  /** The run with the engine's pen positions for its current text, read now. */
+  onMeasureRun?: (pageIndex: number, runId: string) => TextRunSnapshot | null;
   /** Right-edge drag to a new box width; widthPt in PDF points. */
   onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
@@ -120,16 +144,19 @@ export const PageView = memo(function PageView({
   selectedRunIds,
   selectedImageIds,
   selectedShapeIds,
-  highlightedRunId,
+  findMatch,
+  selectedFormFieldId = null,
   onSelectRun,
   onSelectImage,
   onSelectShape,
+  onSelectFormField,
   onMoveShape,
   onEditRun,
   onSelectRunText,
   selectedTextRange,
   onMoveRun,
   onWrapRun,
+  onMeasureRun,
   onResizeRun,
   onPageClick,
   onTransformImage,
@@ -144,6 +171,11 @@ export const PageView = memo(function PageView({
         ? pageAttention(document, page)
         : { images: new Map(), runs: new Map() },
     [document, page],
+  );
+  const runGrowEdges = useMemo(
+    () =>
+      widthMode === "grow" ? growEdges(page.runs) : new Map<string, GrowEdge>(),
+    [page.runs, widthMode],
   );
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -166,8 +198,11 @@ export const PageView = memo(function PageView({
   // Per document: a newly opened file reuses this view for its page of the same index.
   const visibleDocRef = useRef<typeof document | null>(null);
   const firstRenderedDocRef = useRef<typeof document | null>(null);
+  const [gripLayer, setGripLayer] = useState<HTMLDivElement | null>(null);
   const firstPaintedDocRef = useRef<typeof document | null>(null);
   const [paintedRevision, setPaintedRevision] = useState(-1);
+  // Read by the render effect, which must not re-run when it changes.
+  const paintedRevisionRef = useRef(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
   // True when this page is within ~one viewport of the visible area.
@@ -228,44 +263,81 @@ export const PageView = memo(function PageView({
       return;
     }
     let cancelled = false;
+    let settleTimer = 0;
     if (!canvas) return;
-    setRenderError(null);
-    PdfiumPageRenderer.render(
-      document,
-      document.page(page.pageIndex),
+    const live = document.page(page.pageIndex);
+    const revision = page.revision;
+    const markPainted = () => {
+      paintedRevisionRef.current = revision;
+      setPaintedRevision(revision);
+    };
+    const noteFirstRender = () => {
+      if (firstRenderedDocRef.current === document) return;
+      firstRenderedDocRef.current = document;
+      onFirstRendered?.(page.pageIndex);
+    };
+    const noteFirstPaint = () => {
+      if (firstPaintedDocRef.current === document) return;
+      firstPaintedDocRef.current = document;
+      onFirstPainted?.();
+    };
+    const paintFull = () => {
+      PdfiumPageRenderer.render(document, live, deviceScale)
+        .then((image) => {
+          if (cancelled || !canvasRef.current) return;
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) ctx.putImageData(image, 0, 0);
+          setRenderError(null);
+          markPainted();
+          noteFirstRender();
+          noteFirstPaint();
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          const msg =
+            err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+          console.warn(
+            `[pdf-editor] page ${page.pageIndex} render failed`,
+            err,
+          );
+          setRenderError(msg);
+          // Flip the first-rendered flag on error too, or the loading overlay never dismisses.
+          noteFirstRender();
+        });
+    };
+    const area = changedPixels(
+      live,
       deviceScale,
-    )
-      .then((image) => {
-        if (cancelled || !canvasRef.current) return;
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) ctx.putImageData(image, 0, 0);
-        setPaintedRevision(page.revision);
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-        if (firstPaintedDocRef.current !== document) {
-          firstPaintedDocRef.current = document;
-          onFirstPainted?.();
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const msg =
-          err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        console.warn(`[pdf-editor] page ${page.pageIndex} render failed`, err);
-        setRenderError(msg);
-        // Flip the first-rendered flag on error too, so the loading
-        // overlay dismisses instead of leaving the user on a spinner.
-        if (firstRenderedDocRef.current !== document) {
-          firstRenderedDocRef.current = document;
-          onFirstRendered?.(page.pageIndex);
-        }
-      });
+      canvas,
+      paintedRevisionRef.current,
+    );
+    if (area) {
+      // Redrawing the whole page, scan image and all, is most of what a keystroke costs.
+      PdfiumPageRenderer.renderArea(document, live, deviceScale, area)
+        .then((image) => {
+          if (cancelled || !canvasRef.current) return;
+          canvas.getContext("2d")?.putImageData(image, area.x, area.y);
+          setRenderError(null);
+          markPainted();
+          settleTimer = window.setTimeout(
+            paintFull,
+            FULL_REDRAW_AFTER_TYPING_MS,
+          );
+        })
+        .catch(() => {
+          if (cancelled) return;
+          paintedRevisionRef.current = -1;
+          setRetryToken((n) => n + 1);
+        });
+    } else {
+      setRenderError(null);
+      paintFull();
+    }
     return () => {
       cancelled = true;
+      window.clearTimeout(settleTimer);
     };
   }, [
     nearViewport,
@@ -277,6 +349,60 @@ export const PageView = memo(function PageView({
     page.revision,
     retryToken,
   ]);
+
+  // A lifted image: the canvas pixels it covered, put back if the gesture is
+  // cancelled, and the revision a committed gesture must move the page past.
+  const liftRef = useRef<{
+    area: PageRect;
+    covered: ImageData;
+    revision: number;
+  } | null>(null);
+
+  // Paints the page under image `imageId` as it would be without it, so a
+  // drag shows only the moving picture. One area render per gesture.
+  function liftImage(imageId: string): void {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const live = document.page(page.pageIndex);
+    const image = live.findImage(imageId);
+    if (!canvas || !ctx || !image || liftRef.current) return;
+    if (!showsWholePage(canvas, live, deviceScale)) return;
+    const area = PdfiumPageRenderer.pixelsCovering(
+      live,
+      deviceScale,
+      visibleImageBounds(image),
+    );
+    if (!area) return;
+    const without = PdfiumPageRenderer.renderAreaWithout(
+      document,
+      live,
+      deviceScale,
+      area,
+      image.pdfiumObjPtr,
+    );
+    if (!without) return;
+    liftRef.current = {
+      area,
+      covered: ctx.getImageData(area.x, area.y, area.width, area.height),
+      revision: live.revision,
+    };
+    ctx.putImageData(without, area.x, area.y);
+  }
+
+  // Ends a lift. Returns true when the page has changed and will repaint;
+  // otherwise the image is painted back where it was.
+  function settleImage(committed: boolean): boolean {
+    const lift = liftRef.current;
+    liftRef.current = null;
+    if (!lift) return false;
+    const repaints =
+      committed && document.page(page.pageIndex).revision !== lift.revision;
+    if (!repaints)
+      canvasRef.current
+        ?.getContext("2d")
+        ?.putImageData(lift.covered, lift.area.x, lift.area.y);
+    return repaints;
+  }
 
   return (
     <Box
@@ -365,6 +491,14 @@ export const PageView = memo(function PageView({
             pageHeight={page.height}
             transform={transform}
             scale={cssScale}
+            selected={annotation.id === selectedFormFieldId}
+            onSelect={
+              ACCESSIBILITY_EDITING &&
+              annotation.kind === "widget" &&
+              onSelectFormField
+                ? () => onSelectFormField(annotation.id)
+                : undefined
+            }
           />
         ))}
         {/* Before images and runs: anything drawn over a shape wins its clicks. */}
@@ -393,6 +527,12 @@ export const PageView = memo(function PageView({
               onTransformImage?.(page.pageIndex, image.id, next)
             }
             attention={attention.images.get(image.id) ?? null}
+            readPixels={() =>
+              readShownImagePixels(store, page.pageIndex, image.id)
+            }
+            onLift={() => liftImage(image.id)}
+            onSettle={settleImage}
+            pageRevision={paintedRevision}
           />
         ))}
         {/* Grid + empty-cell editors sit below the run overlays so filled
@@ -402,7 +542,11 @@ export const PageView = memo(function PageView({
           transform={transform}
           scale={cssScale}
           store={store}
+          selectedRunIds={selectedRunIds}
         />
+        {/* Every run's move/width grips, after the objects beneath the text and
+            before all runs, so a grip never takes a click aimed at any run. */}
+        <div ref={setGripLayer} style={{ display: "contents" }} />
         {page.runs.map((run) => (
           <TextRunOverlay
             key={run.id}
@@ -412,27 +556,30 @@ export const PageView = memo(function PageView({
             transform={transform}
             scale={cssScale}
             widthMode={widthMode}
+            growEdge={runGrowEdges.get(run.id) ?? null}
             pageRevision={paintedRevision}
+            gripLayer={gripLayer}
             selected={selectedRunIds.includes(run.id)}
-            highlighted={highlightedRunId === run.id}
+            findRange={findMatch?.runId === run.id ? findMatch.range : null}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
             onEdit={(nextText) => onEditRun(page.pageIndex, run.id, nextText)}
-            onTextRangeChange={
-              ACCESSIBILITY_EDITING
-                ? (range) => onSelectRunText?.(run.id, range)
-                : undefined
-            }
+            onTextRangeChange={(range) => onSelectRunText?.(run.id, range)}
             textRange={
               selectedRunIds.length === 1 && selectedRunIds[0] === run.id
                 ? selectedTextRange
                 : null
             }
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
-            onWrap={(maxWidthPt) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            onWrap={(maxWidthPt, keepClearBelow) =>
+              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            }
+            onMeasure={
+              onMeasureRun
+                ? () => onMeasureRun(page.pageIndex, run.id)
+                : undefined
             }
             onResize={
-              onResizeRun && !isScanRun(run)
+              onResizeRun && canResizeRun(run)
                 ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
                 : undefined
             }
@@ -477,4 +624,28 @@ function besideRun(
   const right = Math.max(...corners.map((c) => c.x));
   const top = Math.max(...corners.map((c) => c.y));
   return { left: right * scale + 4, top: (pageHeight - top) * scale };
+}
+
+// Long enough a typing pause to draw the page whole, repairing anything a partial redraw missed.
+const FULL_REDRAW_AFTER_TYPING_MS = 400;
+
+// The canvas pixels to redraw over a bitmap painted at revision `painted`, or null to draw the whole page.
+function changedPixels(
+  page: Page,
+  scale: number,
+  canvas: HTMLCanvasElement,
+  painted: number,
+): PageRect | null {
+  if (!showsWholePage(canvas, page, scale)) return null;
+  const raw = page.repaintAreaSince(painted);
+  return raw && PdfiumPageRenderer.pixelsCovering(page, scale, raw);
+}
+
+function showsWholePage(
+  canvas: HTMLCanvasElement,
+  page: Page,
+  scale: number,
+): boolean {
+  const full = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+  return canvas.width === full.width && canvas.height === full.height;
 }

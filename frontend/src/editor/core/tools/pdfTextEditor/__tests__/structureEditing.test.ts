@@ -751,7 +751,8 @@ describe("PageStructure", () => {
       null,
       null,
       () => null,
-      [],
+      { links: [], widgets: [] },
+      undefined,
       (key) => (key === "figure" ? "old" : undefined),
     );
     expect(s.cannotDescribe(7)).toBeNull();

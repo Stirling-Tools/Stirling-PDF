@@ -51,12 +51,14 @@ export function pageAttention(
 ): PageAttention {
   const images = new Map<string, ImageAttention>();
   const seen = new Set<string>();
-  const structure = doc.structure(page.pageIndex);
+  // Read only for content that may need it: a page with none never opens it.
+  const structure = () => doc.structure(page.pageIndex);
   for (const image of page.images) {
     const attention = imageAttention(doc, image);
     if (!attention) continue;
     images.set(image.id, attention);
-    const block = image.mcid === undefined ? null : structure.block(image.mcid);
+    const block =
+      image.mcid === undefined ? null : structure().block(image.mcid);
     if (block) seen.add(block.key);
   }
   const runs = new Map<string, "needs-description">();
@@ -64,7 +66,7 @@ export function pageAttention(
     const describable = describableTextBlock(doc, run);
     if (!describable || seen.has(describable.key)) continue;
     seen.add(describable.key);
-    if (!structure.alt(run.mcid!)?.trim()) {
+    if (!structure().alt(run.mcid!)?.trim()) {
       runs.set(run.id, "needs-description");
     }
   }

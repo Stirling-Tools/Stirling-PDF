@@ -56,6 +56,7 @@ export function useOpenAtViewerText(
         runIds: [found.runId],
         imageIds: [],
         shapeIds: [],
+        formFieldId: null,
         caret: null,
         textRange: found.range,
       });
