@@ -79,6 +79,18 @@ dnf search -C tesseract-langpack-
 rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```
 
+For Arch Linux (and derivatives):
+
+```bash
+# All languages
+# sudo pacman -S tesseract-data-*
+
+# Find languages:
+pacman -Ss tesseract-data
+```
+
+Note that on Arch Linux (and the AUR package of Stirling-PDF), the tessdata files are installed to `/usr/share/tessdata`, which differs from the Debian/Ubuntu default location `/usr/share/tesseract-ocr/5/tessdata`.
+
 For Windows:
 
 You must ensure tesseract is installed
@@ -97,4 +109,22 @@ You must then edit your ``/configs/settings.yml`` and change the system.tessdata
 system:
  tessdataDir: C:/Program Files/Tesseract-OCR/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
 ```
-  
+
+### Custom tessdata location
+
+If your `.traineddata` files are not in the default location for your distribution (for example on Arch Linux, where the default is `/usr/share/tessdata` instead of `/usr/share/tesseract-ocr/5/tessdata`), you can point Stirling-PDF at the correct directory in either of the following ways:
+
+1. Set the `TESSDATA_PREFIX` environment variable before starting the app:
+
+   ```bash
+   TESSDATA_PREFIX=/usr/share/tessdata ./stirling-pdf
+   ```
+
+2. Or set `system.tessdataDir` in your `/configs/settings.yml`:
+
+   ```yaml
+   system:
+    tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files
+   ```
+
+The configuration priority is: `system.tessdataDir` setting > `TESSDATA_PREFIX` environment variable > default path.
