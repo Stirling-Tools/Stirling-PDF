@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import { formulasPdf } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
 
 // A formula drawn as text needs a description as much as one drawn as an
@@ -8,11 +9,7 @@ test("an undescribed text formula is flagged, reached by Next, and cleared by de
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 15_000,
-  });
-  await page.locator('[data-testid="pdf-editor-file-input"]').setInputFiles({
+  await openInTextEditor(page, {
     name: "formulas.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.from(formulasPdf()),
