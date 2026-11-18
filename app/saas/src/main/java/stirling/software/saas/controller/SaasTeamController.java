@@ -299,7 +299,7 @@ public class SaasTeamController {
                                     })
                             .collect(Collectors.toList());
 
-            log.info("[TEAM-FETCH] Returning {} teams to client", dtos.size());
+            log.debug("[TEAM-FETCH] Returning {} teams to client", dtos.size());
             return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             log.error("[TEAM-FETCH] Error fetching user teams: {}", e.getMessage(), e);

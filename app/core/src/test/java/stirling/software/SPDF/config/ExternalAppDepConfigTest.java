@@ -42,6 +42,19 @@ class ExternalAppDepConfigTest {
     }
 
     @Test
+    void interruptedStartupDoesNotMarkDependenciesChecked() {
+        Thread.currentThread().interrupt();
+        try {
+            config.checkDependencies();
+
+            assertTrue(Thread.currentThread().isInterrupted());
+            assertFalse(config.isDependenciesChecked());
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void commandToGroupMappingIncludesRuntimePaths() throws Exception {
         Map<String, List<String>> mapping = getCommandToGroupMapping();
 

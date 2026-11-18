@@ -1111,8 +1111,7 @@ public class CompressController {
             }
 
             String outputFilename =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_Optimized.pdf");
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".pdf");
 
             // Return the upload byte for byte: re-saving it through PDFBox can grow it, and the
             // frontend reports "could not be compressed further" by the size being unchanged.

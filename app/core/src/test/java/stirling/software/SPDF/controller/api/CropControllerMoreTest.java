@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -10,15 +11,23 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,8 +44,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -70,6 +81,17 @@ class CropControllerMoreTest {
                             lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
                             return tf;
                         });
+        lenient()
+                .when(tempFileManager.convertMultipartFileToFile(any()))
+                .thenAnswer(
+                        inv -> {
+                            File f = Files.createTempFile(tempDir, "crop", ".pdf").toFile();
+                            try (InputStream in =
+                                    inv.<MultipartFile>getArgument(0).getInputStream()) {
+                                Files.copy(in, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            return f;
+                        });
     }
 
     private MockMultipartFile pdfWithBoundaryText() throws IOException {
@@ -78,10 +100,7 @@ class CropControllerMoreTest {
             doc.addPage(page);
             try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
                 content.beginText();
-                content.setFont(
-                        new org.apache.pdfbox.pdmodel.font.PDType1Font(
-                                org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA),
-                        12);
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
                 content.newLineAtOffset(50, 200);
                 content.showText("Inside");
                 content.newLineAtOffset(140, 0);
@@ -92,6 +111,59 @@ class CropControllerMoreTest {
             doc.save(out);
             return new MockMultipartFile(
                     "fileInput", "boundary.pdf", "application/pdf", out.toByteArray());
+        }
+    }
+
+    private MockMultipartFile pdfWithBoundaryImage() throws IOException {
+        BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                image.setRGB(x, y, 0xFF3366);
+            }
+        }
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", png);
+
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDImageXObject imageXObject =
+                    PDImageXObject.createFromByteArray(doc, png.toByteArray(), "boundary");
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                // Crop rect is (100,100)-(400,400): half of the image lies outside.
+                content.drawImage(imageXObject, 300, 300, 200, 200);
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return new MockMultipartFile(
+                    "fileInput", "boundary-image.pdf", "application/pdf", out.toByteArray());
+        }
+    }
+
+    private MockMultipartFile pdfWithSharedBoundaryImage() throws IOException {
+        BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                image.setRGB(x, y, 0xFF6633);
+            }
+        }
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", png);
+
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDImageXObject imageXObject =
+                    PDImageXObject.createFromByteArray(doc, png.toByteArray(), "shared");
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                // Both placements use the same image data and cross the crop edge.
+                content.drawImage(imageXObject, 250, 250, 200, 200);
+                content.drawImage(imageXObject, 50, 50, 200, 200);
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return new MockMultipartFile(
+                    "fileInput", "shared-boundary-image.pdf", "application/pdf", out.toByteArray());
         }
     }
 
@@ -184,15 +256,57 @@ class CropControllerMoreTest {
             assertThat(response.getBody()).isNotNull();
             byte[] body = response.getBody().getInputStream().readAllBytes();
             try (PDDocument out = Loader.loadPDF(body)) {
-                String text = new org.apache.pdfbox.text.PDFTextStripper().getText(out);
+                String text = new PDFTextStripper().getText(out);
                 assertThat(text).contains("Inside");
                 assertThat(text).contains("BoundaryWord");
             }
         }
 
         @Test
-        @DisplayName("JPDFium failure is wrapped and surfaced as IOException")
-        void jpdfiumFailureIsWrapped() {
+        @DisplayName("image crossing the crop edge is preserved without failing")
+        void boundaryImageIsPreserved() throws Exception {
+            MockMultipartFile file = pdfWithBoundaryImage();
+            CropPdfForm request = form(file, true);
+            request.setX(100f);
+            request.setY(100f);
+            request.setWidth(300f);
+            request.setHeight(300f);
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertRect(out.getPage(0).getMediaBox(), 100f, 100f, 300f, 300f);
+                assertThat(out.getPage(0).getResources().getXObjectNames()).isNotEmpty();
+            }
+        }
+
+        @Test
+        @DisplayName("shared image crossing the crop edge is preserved without failing")
+        void sharedBoundaryImageIsPreserved() throws Exception {
+            MockMultipartFile file = pdfWithSharedBoundaryImage();
+            CropPdfForm request = form(file, true);
+            request.setX(100f);
+            request.setY(100f);
+            request.setWidth(300f);
+            request.setHeight(300f);
+
+            ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            byte[] body = response.getBody().getInputStream().readAllBytes();
+            try (PDDocument out = Loader.loadPDF(body)) {
+                assertRect(out.getPage(0).getMediaBox(), 100f, 100f, 300f, 300f);
+                assertThat(out.getPage(0).getResources().getXObjectNames()).isNotEmpty();
+            }
+        }
+
+        @Test
+        @DisplayName("corrupt PDF maps to the corrupt-file error instead of a generic failure")
+        void corruptPdfMapsToCorruptFileError() {
             MockMultipartFile file =
                     new MockMultipartFile(
                             "fileInput",
@@ -202,8 +316,7 @@ class CropControllerMoreTest {
             CropPdfForm request = form(file, true);
 
             assertThatThrownBy(() -> cropController.cropPdf(request))
-                    .isInstanceOf(IOException.class)
-                    .hasMessage("JPDFium crop failed")
+                    .isInstanceOf(ExceptionUtils.PdfCorruptedException.class)
                     .hasCauseInstanceOf(RuntimeException.class);
         }
     }

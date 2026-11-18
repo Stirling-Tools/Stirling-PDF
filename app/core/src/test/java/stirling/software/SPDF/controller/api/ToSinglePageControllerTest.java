@@ -255,10 +255,9 @@ class ToSinglePageControllerTest {
                     response.getHeaders()
                             .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
-            // generateFilename strips the extension and appends _singlePage.pdf
             assertTrue(
-                    disposition.contains("MyReport_singlePage.pdf"),
-                    "disposition should carry the generated single-page filename: " + disposition);
+                    disposition.contains("MyReport.pdf"),
+                    "disposition should carry the input filename: " + disposition);
         }
 
         @Test
@@ -283,8 +282,8 @@ class ToSinglePageControllerTest {
                             .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
             assertTrue(
-                    disposition.contains("_singlePage.pdf"),
-                    "disposition should carry the empty-base single-page name: " + disposition);
+                    disposition.contains("filename=\".pdf\""),
+                    "disposition should carry the empty-base name: " + disposition);
         }
     }
 

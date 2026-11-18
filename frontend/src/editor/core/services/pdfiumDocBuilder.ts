@@ -76,7 +76,8 @@ export class PdfiumFont {
    */
   widthOfTextAtSize(text: string, fontSize: number): number {
     const ctx = this._getCtx();
-    ctx.font = `${fontSize}px "${this._cssFontFamily()}"`;
+    // Unquoted: quoting the list makes one unknown family, measured in a fallback font.
+    ctx.font = `${fontSize}px ${this._cssFontFamily()}`;
     return ctx.measureText(text).width;
   }
 
