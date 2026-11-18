@@ -342,7 +342,16 @@ export function ImageHandle({
         dragOriginRef.current = null;
         setDragPosition(null);
         setDragging(false);
-        const next = cssToPdfBounds(at.x, at.y, width, height);
+        // Rnd fixes its bounds when the drag starts, so a scroll mid-drag
+        // (Safari scrolls the viewer when the pointer leaves it) can drop the
+        // image off the page, where PDFium crops it.
+        // An image larger than the page cannot fit, so it is left where it is.
+        const page = data.node.parentElement;
+        const clamp = (v: number, room: number) =>
+          room >= 0 ? Math.min(Math.max(0, v), room) : v;
+        const x = page ? clamp(at.x, page.clientWidth - width) : at.x;
+        const y = page ? clamp(at.y, page.clientHeight - height) : at.y;
+        const next = cssToPdfBounds(x, y, width, height);
         const moved =
           Math.abs(next.x - b.x) > 0.01 || Math.abs(next.y - b.y) > 0.01;
         finishGesture(moved ? next : null);

@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@editor/tests/stubbed/editorTestTypes";
 import { waitForEditorReady } from "@editor/tests/stubbed/editorReady";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // Every click on a run's text places the caret; the move frame and the width
 // handle sit just outside the box, so they never compete with the text.
@@ -24,9 +25,7 @@ async function open(page: Page, file = SAMPLE): Promise<void> {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+  await openInTextEditor(page, file);
   await waitForEditorReady(page, 60_000);
   await expect(
     page.locator('[data-testid^="pdf-editor-run-p0-"]').first(),

@@ -6,6 +6,7 @@ import {
   stashCurrentDocument,
   waitForReopenedPage,
 } from "@editor/tests/stubbed/saveHelpers";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // Grow widens a box up to the page edge. On a page of two columns the text
 // beside a left-column line is an edge too: typing past the end of that line
@@ -59,7 +60,7 @@ const acrossGutter = (runs: RunState[]) =>
 
 async function open(page: Page, file: string): Promise<void> {
   await stashCurrentDocument(page);
-  await page.getByTestId("pdf-editor-file-input").setInputFiles(file);
+  await openInTextEditor(page, file);
   await waitForReopenedPage(page, 0, 60_000);
 }
 

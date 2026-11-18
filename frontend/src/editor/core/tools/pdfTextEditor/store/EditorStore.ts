@@ -26,6 +26,7 @@ import type {
   PageRepaintArea,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import { unionRect } from "@editor/tools/pdfTextEditor/model/affine";
+import type { FileId } from "@editor/types/file";
 import { AdoptTableCommand } from "@editor/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
@@ -98,8 +99,6 @@ export interface EditorViewState {
   // Set when a load hit a password-protected PDF and the UI should prompt.
   // `retry` is true after a wrong password so the prompt can say so.
   passwordPrompt: { fileName: string; retry: boolean } | null;
-  /** Pixel scale at which previews are rendered. */
-  renderScale: number;
   /** What clicks on the page area do. */
   mode: InteractionMode;
   /** How the reader clusters source text into editable runs. */
@@ -134,7 +133,6 @@ const INITIAL: EditorViewState = {
   progress: null,
   error: null,
   passwordPrompt: null,
-  renderScale: 1.5,
   mode: "select",
   groupingMode: "auto",
   widthMode: "grow",
@@ -149,6 +147,15 @@ const INITIAL: EditorViewState = {
 export class EditorStore {
   readonly history: HistoryStack;
   readonly selection: Selection;
+  /**
+   * The workbench file the document was opened from and the name it saves
+   * under. Kept with the document, which outlives the editor's panel when a
+   * layout change remounts it.
+   */
+  source: { fileId: FileId | null; fileName: string | null } = {
+    fileId: null,
+    fileName: null,
+  };
   private doc: EditorDocument | null;
   private state: EditorViewState;
   private listeners: Set<(s: EditorViewState) => void>;
@@ -228,10 +235,6 @@ export class EditorStore {
 
   get pendingPasswordFile(): File | null {
     return this._pendingPasswordFile;
-  }
-
-  setRenderScale(scale: number): void {
-    this.patch({ renderScale: scale });
   }
 
   setMode(mode: InteractionMode): void {

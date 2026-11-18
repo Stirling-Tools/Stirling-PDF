@@ -22,6 +22,7 @@ import type {
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 interface FindBarProps {
   store: EditorStore;
@@ -111,7 +112,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const el = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-run-${m.runId}"]`,
       );
-      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      revealOnPage(el, m.pageIndex);
     },
     [matches, store],
   );

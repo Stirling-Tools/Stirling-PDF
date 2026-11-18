@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // PDFium's generator cannot emit Type 3 glyph procedures, so an edited run
@@ -12,11 +13,10 @@ test.describe("PDF text editor - Type 3 fonts", () => {
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 30_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(import.meta.dirname, "../test-fixtures/type3-sample.pdf"),
-      );
+    await openInTextEditor(
+      page,
+      path.join(import.meta.dirname, "../test-fixtures/type3-sample.pdf"),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -74,14 +74,13 @@ test.describe("PDF text editor - Type 3 fonts", () => {
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
       timeout: 30_000,
     });
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(
-        path.join(
-          import.meta.dirname,
-          "../../../../../public/samples/Sample.pdf",
-        ),
-      );
+    await openInTextEditor(
+      page,
+      path.join(
+        import.meta.dirname,
+        "../../../../../public/samples/Sample.pdf",
+      ),
+    );
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
