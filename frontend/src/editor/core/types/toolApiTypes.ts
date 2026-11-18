@@ -757,6 +757,14 @@ export interface MergePdfsRequest {
    */
   removeCertSign?: boolean;
   /**
+   * Flag indicating whether to interleave pages from two documents (alternate merge, as in pdfsam). If true, exactly two input files are required and pages are alternated: page 1 of file 1, one page of file 2, page 2 of file 1, and so on. TOC generation and bookmark merging are not applied in this mode.
+   */
+  alternateMerge?: boolean;
+  /**
+   * Only used with alternateMerge: walk the second document from its last page backwards instead of forwards.
+   */
+  reverseSecondDocument?: boolean;
+  /**
    * The type of sorting to be applied on the input files before merging.
    */
   sortType?:
