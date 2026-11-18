@@ -41,6 +41,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShadingType3;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -335,6 +336,33 @@ class ConvertPDFToPDFAMoreTest {
             document.save(output);
             return new MockMultipartFile(
                     "fileInput", "transparent.pdf", "application/pdf", output.toByteArray());
+        }
+    }
+
+    private MockMultipartFile helveticaTextPdf(String text) throws IOException {
+        try (PDDocument document = new PDDocument();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
+                content.beginText();
+                content.setFont(font, 12);
+                content.newLineAtOffset(100, 700);
+                content.showText(text);
+                content.endText();
+                // A long content stream sits outside PDFBox's read buffer, so a save that
+                // truncates the source loses it exactly like a real-world document.
+                for (int i = 0; i < 3000; i++) {
+                    content.beginText();
+                    content.newLineAtOffset(100, 650);
+                    content.showText("padding line " + i);
+                    content.endText();
+                }
+            }
+            document.save(output);
+            return new MockMultipartFile(
+                    "fileInput", "helvetica.pdf", "application/pdf", output.toByteArray());
         }
     }
 
@@ -844,6 +872,34 @@ class ConvertPDFToPDFAMoreTest {
                         () ->
                                 WebResponseUtils.pdfFileToWebResponse(
                                         any(TempFile.class), eq("input.pdf")));
+            }
+        }
+
+        @Test
+        @DisplayName("PDF/X keeps page content when substituting a non-embedded font")
+        void pdfxKeepsContentWhenSubstitutingFont() throws Exception {
+            TempFile input = managedTempFile();
+            TempFile output = managedTempFile();
+            when(tempFileManager.createManagedTempFile(anyString())).thenReturn(input, output);
+
+            PdfToPdfARequest request = new PdfToPdfARequest();
+            request.setFileInput(helveticaTextPdf("SURVIVES SUBSTITUTION"));
+            request.setOutputFormat("pdfx-4");
+
+            ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
+            try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                wr.when(
+                                () ->
+                                        WebResponseUtils.pdfFileToWebResponse(
+                                                any(TempFile.class), anyString()))
+                        .thenReturn(expected);
+
+                assertThat(newController().pdfToPdfA(request)).isSameAs(expected);
+            }
+
+            try (PDDocument converted = Loader.loadPDF(output.getFile())) {
+                assertThat(new PDFTextStripper().getText(converted))
+                        .contains("SURVIVES SUBSTITUTION");
             }
         }
     }

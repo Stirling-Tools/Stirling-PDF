@@ -649,7 +649,15 @@ public class ConvertPDFToPDFA {
                 replaced += replacePdfxFonts(document, page.getResources(), 0);
             }
             if (replaced > 0) {
-                document.save(pdfPath.toFile());
+                // The document reads lazily from pdfPath; saving in place truncates
+                // unread content streams, so the substitution lands via a sibling file.
+                Path output = Files.createTempFile(pdfPath.getParent(), "pdfx-embed-", ".pdf");
+                try {
+                    document.save(output.toFile());
+                    Files.move(output, pdfPath, StandardCopyOption.REPLACE_EXISTING);
+                } finally {
+                    Files.deleteIfExists(output);
+                }
                 log.info("Embedded {} PDF/X standard font resource(s)", replaced);
             }
         }
