@@ -117,11 +117,13 @@ import stirling.software.common.util.XmpUtils;
 import stirling.software.common.util.misc.CmykGhostscriptFallback;
 import stirling.software.common.util.misc.CmykProfileResolver;
 import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.doc.PdfXConverter;
 import stirling.software.jpdfium.doc.PdfXOptions;
 import stirling.software.jpdfium.doc.PdfXStandard;
 import stirling.software.jpdfium.exception.JPDFiumException;
 import stirling.software.jpdfium.model.FlattenMode;
+import stirling.software.jpdfium.model.PageSize;
 import stirling.software.jpdfium.model.SaveOptions;
 import stirling.software.officeconvert.pdfa.PdfALevel;
 import stirling.software.officeconvert.pdfa.PdfToPdfA;
@@ -157,6 +159,7 @@ public class ConvertPDFToPDFA {
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int PDFA_COMPATIBILITY_POLICY = 1;
+    private static final int FLATTEN_DPI = 300;
 
     private static final String ANNOTATION_HIGHLIGHT = "Highlight";
     private static final String ANNOTATION_POPUP = "Popup";
@@ -675,10 +678,9 @@ public class ConvertPDFToPDFA {
     }
 
     /**
-     * Font resources of the AcroForm: its default resources plus every widget appearance
-     * stream. PDF/X validation checks these like page resources, so detection and
-     * substitution must walk them too or a converted form still claims a non-embedded
-     * font.
+     * Font resources of the AcroForm: its default resources plus every widget appearance stream.
+     * PDF/X validation checks these like page resources, so detection and substitution must walk
+     * them too or a converted form still claims a non-embedded font.
      */
     private static List<PDResources> formFontResources(PDDocument doc) throws IOException {
         PDAcroForm acroForm = doc.getDocumentCatalog().getAcroForm();
@@ -706,7 +708,8 @@ public class ConvertPDFToPDFA {
         addAppearanceEntryResources(appearance.getRolloverAppearance(), out);
     }
 
-    private static void addAppearanceEntryResources(PDAppearanceEntry entry, List<PDResources> out) {
+    private static void addAppearanceEntryResources(
+            PDAppearanceEntry entry, List<PDResources> out) {
         if (entry == null) return;
         if (entry.isStream()) {
             out.add(entry.getAppearanceStream().getResources());
@@ -788,7 +791,12 @@ public class ConvertPDFToPDFA {
             int flattened = 0;
             for (int pageIndex : pages) {
                 if (pageIndex >= 0 && pageIndex < document.pageCount()) {
-                    document.flattenPage(pageIndex, FlattenMode.FULL, 300);
+                    try (PdfPage page = document.page(pageIndex)) {
+                        PageSize size = page.size();
+                        ImageMemoryLimit.requirePointSizeFits(
+                                size.width(), size.height(), pageIndex + 1, FLATTEN_DPI);
+                    }
+                    document.flattenPage(pageIndex, FlattenMode.FULL, FLATTEN_DPI);
                     flattened++;
                 }
             }
@@ -830,8 +838,7 @@ public class ConvertPDFToPDFA {
             PDTrueTypeFont loaded = substitutes.get(substitute);
             if (loaded == null) {
                 try (InputStream fontStream =
-                        ConvertPDFToPDFA.class.getResourceAsStream(
-                                "/static/fonts/" + substitute)) {
+                        ConvertPDFToPDFA.class.getResourceAsStream("/static/fonts/" + substitute)) {
                     if (fontStream == null) {
                         log.warn("Bundled PDF/X font substitute not found: {}", substitute);
                         continue;
@@ -1009,6 +1016,10 @@ public class ConvertPDFToPDFA {
                             flattenUnsupportedFontPages(inputTemp.getPath(), pages);
                             unsupportedFonts = findUnembeddedFontNamesInFile(inputTemp.getPath());
                         }
+                    } catch (ExceptionUtils.BaseAppException e) {
+                        // An oversized page is the user's real problem; the font error
+                        // would hide it.
+                        throw e;
                     } catch (IOException | RuntimeException e) {
                         log.warn("Could not rasterize PDF/X pages with unsupported fonts", e);
                     }
@@ -1041,6 +1052,8 @@ public class ConvertPDFToPDFA {
             throw e;
         } catch (JPDFiumException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (ExceptionUtils.BaseAppException e) {
+            throw e;
         } catch (RuntimeException e) {
             log.error("JPDFium PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
