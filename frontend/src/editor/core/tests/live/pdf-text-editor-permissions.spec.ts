@@ -1,4 +1,5 @@
 import { inspectPdfProtection as inspect } from "@editor/tests/helpers/pdf-protection";
+import { showInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import { test, expect } from "@editor/tests/helpers/test-base";
 import { loadLiveAppConfig } from "@editor/tests/helpers/live-api";
 import { skipOnboarding } from "@editor/tests/helpers/login";
@@ -44,7 +45,7 @@ for (const entry of ["workbench", "editor upload"] as const) {
       await openTextEditor(page);
     } else {
       await page.goto("/pdf-text-editor");
-      await page.getByTestId("pdf-editor-file-input").setInputFiles(restricted);
+      await showInTextEditor(page, restricted);
     }
     if (access.honorOwnerPasswords !== false) {
       await expect(
@@ -206,9 +207,7 @@ test("permitted text edits preserve protection and a fresh reader follows the se
     const readerPage = await readerContext.newPage();
     await skipOnboarding(readerPage);
     await readerPage.goto("/pdf-text-editor");
-    await readerPage
-      .getByTestId("pdf-editor-file-input")
-      .setInputFiles(savedPath);
+    await showInTextEditor(readerPage, savedPath);
     if (honorOwnerPasswords) {
       await expect(
         readerPage.getByText(deniedMessage, { exact: true }),

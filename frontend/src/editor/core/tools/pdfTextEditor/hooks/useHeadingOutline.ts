@@ -9,6 +9,7 @@ import {
   type HeadingOutline,
 } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import { locateHeading } from "@editor/tools/pdfTextEditor/util/textAccessibility";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 /**
  * The document's heading outline, null when its structure tree could not be
@@ -46,9 +47,10 @@ export function useHeadingOutline(
       if (range) store.selection.setTextRange(run.id, range);
       // A page read just now has no overlay until React commits it.
       window.requestAnimationFrame(() =>
-        document
-          .querySelector(`[data-testid="pdf-editor-run-${run.id}"]`)
-          ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+        revealOnPage(
+          document.querySelector(`[data-testid="pdf-editor-run-${run.id}"]`),
+          run.pageIndex,
+        ),
       );
     },
     [store],
