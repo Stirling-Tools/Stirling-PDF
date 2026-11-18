@@ -79,6 +79,9 @@ export class FileLifecycleManager {
    */
   cleanupAllFiles = (): void => {
     forgetPdfAccess([...this.filesRef.current.keys()]);
+    for (const fileId of this.filesRef.current.keys()) {
+      thumbnailGenerationService.forgetFile(fileId);
+    }
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {
       try {

@@ -8,6 +8,10 @@ type Behaviour = "throw" | "fail-init" | "crash-on-render" | "ok";
 
 const behaviours = vi.hoisted(() => [] as Behaviour[]);
 const created = vi.hoisted(() => ({ count: 0 }));
+const workers = vi.hoisted(
+  () => [] as { onerror: ((e: { message: string }) => void) | null }[],
+);
+const wasm = vi.hoisted(() => ({ promise: Promise.resolve(null) }));
 
 vi.mock("@editor/workers/pdfRenderWorker?worker", () => ({
   default: class {
@@ -18,6 +22,7 @@ vi.mock("@editor/workers/pdfRenderWorker?worker", () => ({
       this.behaviour = behaviours.shift() ?? "ok";
       if (this.behaviour === "throw") throw new Error("blocked by CSP");
       created.count++;
+      workers.push(this);
     }
     postMessage(message: { id: number; type: string }) {
       queueMicrotask(() => {
@@ -50,7 +55,9 @@ vi.mock("@editor/workers/pdfRenderWorker?worker", () => ({
 }));
 
 vi.mock("@editor/services/wasmPrecompiler", () => ({
-  pdfiumWasmModulePromise: Promise.resolve(null),
+  get pdfiumWasmModulePromise() {
+    return wasm.promise;
+  },
   pdfiumWasmUrl: "pdfium.wasm",
   startEagerWasmCompilation: () => {},
 }));
@@ -81,6 +88,8 @@ const render = (client: Awaited<ReturnType<typeof loadClient>>) =>
 beforeEach(() => {
   behaviours.length = 0;
   created.count = 0;
+  workers.length = 0;
+  wasm.promise = Promise.resolve(null);
   vi.stubGlobal("Worker", class {});
   vi.stubGlobal("OffscreenCanvas", class {});
 });
@@ -119,5 +128,17 @@ describe("pdf render worker client", () => {
     expect(client.canRenderInWorker()).toBe(true);
     await expect(render(client)).resolves.toMatchObject({ pageCount: 1 });
     expect(created.count).toBe(2);
+  });
+
+  it("gives up on a worker that fails before the WASM module is compiled", async () => {
+    let compiled!: (module: null) => void;
+    wasm.promise = new Promise((resolve) => (compiled = resolve));
+    const client = await loadClient();
+    const rendered = render(client);
+    workers[0].onerror?.({ message: "worker died" });
+    compiled(null);
+    await expect(rendered).rejects.toBeInstanceOf(
+      client.RenderWorkerUnavailable,
+    );
   });
 });

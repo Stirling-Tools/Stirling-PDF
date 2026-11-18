@@ -82,6 +82,11 @@ function armIdleShutdown(): void {
 function post(target: Worker, body: RequestBody): Promise<unknown> {
   const id = nextId++;
   return new Promise((resolve, reject) => {
+    // A terminated worker accepts messages and never answers.
+    if (target !== worker) {
+      reject(new Error("PDF render worker stopped"));
+      return;
+    }
     pending.set(id, { resolve, reject });
     if (idleTimer !== null) clearTimeout(idleTimer);
     idleTimer = null;
