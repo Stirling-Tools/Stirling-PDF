@@ -23,6 +23,10 @@ test("an undescribed text formula is flagged, reached by Next, and cleared by de
 
   const badges = page.locator('[data-testid^="pdf-editor-attention-run-"]');
   await expect(badges).toHaveCount(1);
+  await badges.first().hover();
+  await expect(
+    page.getByRole("tooltip", { name: "No description" }),
+  ).toBeVisible();
 
   await page.getByTestId("pdf-editor-tab-document").click();
   const summary = page.getByTestId("pdf-editor-document-accessibility-summary");

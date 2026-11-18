@@ -197,3 +197,69 @@ export function formulasPdf(): Uint8Array {
     1,
   );
 }
+
+/**
+ * Formulas whose text their own element does not mark, over two pages. Page
+ * 0, top to bottom: a paragraph whose text is in a NonStruct (MCID 0), the
+ * way Chrome tags it; a formula described "x squared equals y" whose text is
+ * in a Span (MCID 1); and the start of a formula (MCID 2) that ends on page 1
+ * (MCID 0).
+ */
+export function blockFormulasPdf(): Uint8Array {
+  const page = (num: number, contents: number, structParents: number) => ({
+    num,
+    body:
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contents} 0 R ` +
+      `/StructParents ${structParents} /Resources << /Font << /F1 5 0 R >> >> >>`,
+  });
+  const element = (num: number, s: string, parent: number, rest: string) => ({
+    num,
+    body: `<< /Type /StructElem /S /${s} /P ${parent} 0 R /Pg 3 0 R ${rest} >>`,
+  });
+  return buildClassicPdf(
+    [
+      {
+        num: 1,
+        body: "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>",
+      },
+      { num: 2, body: "<< /Type /Pages /Kids [3 0 R 15 0 R] /Count 2 >>" },
+      page(3, 4, 0),
+      {
+        num: 4,
+        body: streamBody(
+          "",
+          "/NonStruct <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (Where x is) Tj ET EMC\n" +
+            "/Span <</MCID 1>> BDC BT /F1 12 Tf 72 600 Td (x2 = y) Tj ET EMC\n" +
+            "/Formula <</MCID 2>> BDC BT /F1 12 Tf 72 500 Td (a + b) Tj ET EMC\n",
+        ),
+      },
+      {
+        num: 5,
+        body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      },
+      {
+        num: 6,
+        body: "<< /Type /StructTreeRoot /K 7 0 R /ParentTree 20 0 R /ParentTreeNextKey 2 >>",
+      },
+      element(7, "Document", 6, "/K [10 0 R 12 0 R 14 0 R]"),
+      element(10, "P", 7, "/K 11 0 R"),
+      element(11, "NonStruct", 10, "/K 0"),
+      element(12, "Formula", 7, "/K 13 0 R /Alt (x squared equals y)"),
+      element(13, "Span", 12, "/K 1"),
+      element(14, "Formula", 7, "/K [2 << /Type /MCR /Pg 15 0 R /MCID 0 >>]"),
+      page(15, 16, 1),
+      {
+        num: 16,
+        body: streamBody(
+          "",
+          "/Formula <</MCID 0>> BDC BT /F1 12 Tf 72 700 Td (= c) Tj ET EMC\n",
+        ),
+      },
+      {
+        num: 20,
+        body: "<< /Nums [0 [11 0 R 13 0 R 14 0 R] 1 [14 0 R]] >>",
+      },
+    ],
+    1,
+  );
+}

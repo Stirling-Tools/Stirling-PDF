@@ -43,6 +43,8 @@ export function AttentionBadge({
           background: "var(--c-surface)",
           color: "var(--c-warning)",
           boxShadow: "0 0 0 1px var(--c-border)",
+          // The text overlay passes pointer events through; the tooltip needs hover.
+          pointerEvents: "auto",
           ...style,
         }}
       >

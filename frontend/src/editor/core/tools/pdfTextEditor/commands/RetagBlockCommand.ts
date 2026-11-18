@@ -4,7 +4,6 @@ import {
   type Command,
 } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type { StructureElementEdit } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 
 /**
@@ -20,8 +19,8 @@ export class RetagBlockCommand implements Command {
   private readonly mcid: number;
   private readonly to: StructureType | null;
   private previous: StructureType | null | undefined;
-  /** The element's edit before its description was dropped; undefined when it was not. */
-  private described: StructureElementEdit | null | undefined;
+  /** The block's description before it was dropped; undefined when it was not. */
+  private described: string | undefined;
 
   constructor(opts: {
     pageIndex: number;
@@ -48,14 +47,14 @@ export class RetagBlockCommand implements Command {
     if (this.previous === undefined) {
       this.previous = structure.block(this.mcid)!.type;
     }
-    const hadDescription =
-      structure.cannotDescribe(this.mcid) === null &&
-      structure.alt(this.mcid) !== null;
-    const edit = structure.editFor(this.mcid);
+    const description =
+      structure.cannotDescribe(this.mcid) === null
+        ? structure.alt(this.mcid)
+        : null;
     doc.setRetag(this.pageIndex, this.mcid, this.to);
-    if (hadDescription && structure.cannotDescribe(this.mcid) !== null) {
-      this.described = edit;
-      structure.clearAlt(this.mcid);
+    if (description !== null && structure.cannotDescribe(this.mcid) !== null) {
+      this.described = description;
+      doc.setDescription(this.pageIndex, this.mcid, null);
     }
     doc.page(this.pageIndex).bumpRevision();
   }
@@ -64,7 +63,7 @@ export class RetagBlockCommand implements Command {
     if (this.previous === undefined) return;
     doc.setRetag(this.pageIndex, this.mcid, this.previous);
     if (this.described !== undefined) {
-      doc.structure(this.pageIndex).setEdit(this.mcid, this.described);
+      doc.setDescription(this.pageIndex, this.mcid, this.described);
       this.described = undefined;
     }
     doc.page(this.pageIndex).bumpRevision();

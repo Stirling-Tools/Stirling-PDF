@@ -26,10 +26,12 @@ import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/Set
 import { HistoryStack } from "@editor/tools/pdfTextEditor/store/HistoryStack";
 import { exportToBlob } from "@editor/tools/pdfTextEditor/util/exportPdf";
 import {
+  blockFormulasPdf,
   buildClassicPdf,
   singleContentPdf,
   streamBody,
 } from "@editor/tools/pdfTextEditor/__tests__/pdfFixtures";
+import { describableTextBlock } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import {
   sharedTextTag,
   textTag,
@@ -667,6 +669,89 @@ describe("making text an artifact", () => {
     const doc = await openSample();
     const tag = textTag(doc, runWith(doc, "Close the two delayed").snapshot());
     expect(tag).toMatchObject({ kind: "tagged", canBeArtifact: false });
+  });
+});
+
+describe("describing a formula whose text a child element marks", () => {
+  async function openFormulas() {
+    const doc = await EditorDocument.open(blockFormulasPdf());
+    opened.push(doc);
+    PdfiumTextReader.populate(doc, doc.page(0));
+    PdfiumTextReader.populate(doc, doc.page(1));
+    const history = new HistoryStack();
+    const mcidOf = (pageIndex: number, fragment: string) =>
+      doc
+        .page(pageIndex)
+        .runs.find((r) => r.text.includes(fragment))!
+        .snapshot().mcid!;
+    const retagAt = (
+      pageIndex: number,
+      fragment: string,
+      type: StructureType,
+    ) =>
+      history.execute(
+        new RetagBlockCommand({
+          pageIndex,
+          mcid: mcidOf(pageIndex, fragment),
+          type,
+        }),
+        doc,
+      );
+    const savedBlock = async (key: string) => {
+      const saved = await readFileStructure(await savedBytes(doc));
+      return saved!.blocks.find((block) => block.key === key);
+    };
+    return { doc, history, mcidOf, retagAt, savedBlock };
+  }
+
+  test("describes a NonStruct paragraph retagged as a formula, and saves it on the formula", async () => {
+    const { doc, history, mcidOf, retagAt, savedBlock } = await openFormulas();
+    retagAt(0, "Where x is", "Formula");
+    const mcid = mcidOf(0, "Where x is");
+    const run = doc
+      .page(0)
+      .runs.find((r) => r.text.includes("Where x is"))!
+      .snapshot();
+    expect(doc.structure(0).describableType(mcid)).toBe("Formula");
+    expect(describableTextBlock(doc, run)).toEqual({
+      key: "10",
+      type: "Formula",
+    });
+
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid, alt: "x is a number" }),
+      doc,
+    );
+    expect(await savedBlock("10")).toMatchObject({
+      type: "Formula",
+      alt: "x is a number",
+    });
+  });
+
+  test("drops the description of a formula whose text is in a Span when retagged as text", async () => {
+    const { doc, history, mcidOf, retagAt, savedBlock } = await openFormulas();
+    const mcid = mcidOf(0, "x2 = y");
+    expect(doc.structure(0).alt(mcid)).toBe("x squared equals y");
+    retagAt(0, "x2 = y", "P");
+    expect(doc.structure(0).alt(mcid)).toBeNull();
+    expect(await savedBlock("12")).toMatchObject({ type: "P", alt: null });
+
+    history.undo(doc);
+    expect(doc.structure(0).alt(mcid)).toBe("x squared equals y");
+    expect(doc.structureEdits()).toEqual([]);
+  });
+
+  test("drops a description given on one page when the formula is retagged from another", async () => {
+    const { doc, history, mcidOf, retagAt, savedBlock } = await openFormulas();
+    const second = mcidOf(1, "= c");
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 1, mcid: second, alt: "a plus b" }),
+      doc,
+    );
+    expect(doc.structure(0).alt(mcidOf(0, "a + b"))).toBe("a plus b");
+    retagAt(0, "a + b", "P");
+    expect(doc.structure(1).alt(second)).toBeNull();
+    expect(await savedBlock("14")).toMatchObject({ type: "P", alt: null });
   });
 });
 

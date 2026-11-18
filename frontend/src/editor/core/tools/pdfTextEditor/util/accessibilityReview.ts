@@ -1,8 +1,5 @@
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
-import type {
-  DescribableType,
-  StructureElement,
-} from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   PageRect,
   PageSnapshot,
@@ -15,26 +12,26 @@ import {
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 
 /**
- * The figure or formula a run's text makes up, when it can take a
- * description here; null for any other text.
+ * The figure or formula block a run's text belongs to, by block key, when it
+ * can take a description here; null for any other text.
  */
-export function describableTextElement(
+export function describableTextBlock(
   doc: EditorDocument,
   run: TextRunSnapshot,
-): { element: StructureElement; type: DescribableType } | null {
+): { key: string; type: DescribableType } | null {
   if (run.mcid === undefined || run.inForm) return null;
   const structure = doc.structure(run.pageIndex);
   const type = structure.describableType(run.mcid);
-  const element = structure.element(run.mcid);
+  const block = structure.block(run.mcid);
   if (
     !type ||
-    !element ||
+    !block ||
     structure.cannotDescribe(run.mcid) !== null ||
     structure.decorative(run.mcid)
   ) {
     return null;
   }
-  return { element, type };
+  return { key: block.key, type };
 }
 
 /**
@@ -53,21 +50,20 @@ export function pageAttention(
   page: PageSnapshot,
 ): PageAttention {
   const images = new Map<string, ImageAttention>();
-  const seen = new Set<StructureElement>();
+  const seen = new Set<string>();
   const structure = doc.structure(page.pageIndex);
   for (const image of page.images) {
     const attention = imageAttention(doc, image);
     if (!attention) continue;
     images.set(image.id, attention);
-    const owner =
-      image.mcid === undefined ? null : structure.element(image.mcid);
-    if (owner) seen.add(owner);
+    const block = image.mcid === undefined ? null : structure.block(image.mcid);
+    if (block) seen.add(block.key);
   }
   const runs = new Map<string, "needs-description">();
   for (const run of page.runs) {
-    const describable = describableTextElement(doc, run);
-    if (!describable || seen.has(describable.element)) continue;
-    seen.add(describable.element);
+    const describable = describableTextBlock(doc, run);
+    if (!describable || seen.has(describable.key)) continue;
+    seen.add(describable.key);
     if (!structure.alt(run.mcid!)?.trim()) {
       runs.set(run.id, "needs-description");
     }

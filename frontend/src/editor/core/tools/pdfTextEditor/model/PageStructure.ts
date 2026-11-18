@@ -206,6 +206,12 @@ export type RetagBlocker = "untagged" | "not-text" | ReadOnlyReason;
 /** The type the session has retagged a block as, by block key; null when it has not. */
 export type RetagLookup = (key: string) => StructureType | null;
 
+/**
+ * The description of one of the file's blocks as the session has it, by
+ * block key; undefined when the document knows no such block.
+ */
+export type DescriptionLookup = (key: string) => string | null | undefined;
+
 type AddedStructureElement = StructureElement & { type: StructureType };
 
 /**
@@ -295,8 +301,11 @@ export interface LinkEdit {
 /**
  * The structure elements of one page plus the session's unsaved edits to
  * them, and the elements it adds. Edits are keyed by element rather than MCID,
- * so an element that owns several MCIDs has one description however it was
- * addressed.
+ * so an element that owns several MCIDs has one edit however it was
+ * addressed. A description belongs to the block, not to the element owning
+ * the content: the document holds the file's blocks' (DescriptionLookup), as
+ * a block can span pages and own no content itself; the page holds those of
+ * the blocks it adds.
  */
 export class PageStructure {
   readonly elements: readonly StructureElement[];
@@ -341,6 +350,7 @@ export class PageStructure {
    */
   private readonly slotCount: number | null;
   private readonly retaggedAs: RetagLookup;
+  private readonly describedAs: DescriptionLookup;
 
   constructor(
     elements: readonly StructureElement[],
@@ -348,11 +358,13 @@ export class PageStructure {
     slotCount: number | null = null,
     retaggedAs: RetagLookup = () => null,
     links: readonly LinkAnnotation[] = [],
+    describedAs: DescriptionLookup = () => undefined,
   ) {
     this.elements = elements;
     this.readOnly = readOnly;
     this.slotCount = slotCount;
     this.retaggedAs = retaggedAs;
+    this.describedAs = describedAs;
     this.linkAnnotations = new Map(
       links.map((link) => [link.annotation, link]),
     );
@@ -403,28 +415,24 @@ export class PageStructure {
     return this.readOnly;
   }
 
-  /** Why the content `mcid` marks cannot take a description, or null when it can. */
+  /**
+   * Why the block the content `mcid` marks belongs to cannot take a
+   * description, or null when it can.
+   */
   cannotDescribe(mcid: number): DescriptionBlocker | null {
-    const el = this.element(mcid);
-    if (!el) return "untagged";
+    const block = this.block(mcid);
+    if (!block) return "untagged";
     if (this.readOnly) return this.readOnly;
-    return isDescribableType(this.sessionType(el)) ? null : "not-figure";
+    return isDescribableType(block.type) ? null : "not-figure";
   }
 
   /**
-   * The figure or formula type of the element owning `mcid`, as the session
-   * has it; null when it is neither.
+   * The figure or formula type of the block the content `mcid` marks belongs
+   * to, as the session has it; null when it is neither.
    */
   describableType(mcid: number): DescribableType | null {
-    const el = this.element(mcid);
-    const type = el ? this.sessionType(el) : null;
+    const type = this.block(mcid)?.type ?? null;
     return isDescribableType(type) ? type : null;
-  }
-
-  /** The element's type with the session's retag of it as a block applied. */
-  private sessionType(el: StructureElement): StructureType | null {
-    if (el.key !== el.block.key) return el.type;
-    return this.retaggedAs(el.key) ?? el.type;
   }
 
   /**
@@ -468,10 +476,22 @@ export class PageStructure {
     return (edit?.decorative && edit.furniture) || null;
   }
 
-  /** The description as it will be saved: the session's edit, else the file's. */
+  /**
+   * The description of the block the content `mcid` marks belongs to, as it
+   * will be saved: the session's edit, else the file's.
+   */
   alt(mcid: number): string | null {
-    const el = this.element(mcid);
-    if (!el) return null;
+    const key = this.element(mcid)?.block.key;
+    if (key === undefined) return null;
+    const added = this.addedBlockMcid(key);
+    if (added !== null) return this.ownAlt(this.added.get(added)!);
+    const described = this.describedAs(key);
+    if (described !== undefined) return described;
+    const own = this.elements.find((el) => el.key === key);
+    return own ? this.ownAlt(own) : null;
+  }
+
+  private ownAlt(el: StructureElement): string | null {
     const edit = this.edits.get(el);
     return edit ? edit.alt : el.alt;
   }
@@ -482,8 +502,12 @@ export class PageStructure {
     return el ? (this.edits.get(el) ?? null) : null;
   }
 
-  /** Set the description, keeping any decorative mark. Throws as setEdit does. */
+  /**
+   * Set the description of the element added for `mcid`. Throws when none
+   * was added: the document holds the file's blocks' descriptions.
+   */
   setAlt(mcid: number, alt: string | null): void {
+    if (!this.added.has(mcid)) throw new Error(`MCID ${mcid} was not added`);
     const edit = this.editFor(mcid);
     this.setEdit(mcid, {
       mcid,
@@ -491,16 +515,6 @@ export class PageStructure {
       decorative: edit?.decorative ?? false,
       ...(edit?.furniture && { furniture: edit.furniture }),
     });
-  }
-
-  /**
-   * Remove the description, the file's own included, keeping any decorative
-   * mark. Leaves no edit when the file has no description to remove.
-   */
-  clearAlt(mcid: number): void {
-    const fileAlt = this.element(mcid)?.alt ?? null;
-    if (fileAlt === null && !this.decorative(mcid)) this.setEdit(mcid, null);
-    else this.setAlt(mcid, null);
   }
 
   /**
@@ -516,15 +530,14 @@ export class PageStructure {
     if (this.added.has(mcid)) {
       throw new Error(`MCID ${mcid} is an added element`);
     }
-    const alt = this.alt(mcid);
+    // Unmarking leaves no edit: the description is the document's, not the mark's.
     if (!decorative) {
-      const unchanged = alt === this.element(mcid)?.alt;
-      this.setEdit(mcid, unchanged ? null : { mcid, alt, decorative });
+      this.setEdit(mcid, null);
       return;
     }
     this.setEdit(mcid, {
       mcid,
-      alt,
+      alt: this.alt(mcid),
       decorative,
       ...(furniture && { furniture }),
     });
@@ -683,13 +696,16 @@ export class PageStructure {
 
   /** Elements cut from others' text, in the order they were cut. */
   cutElements(): CutElement[] {
-    return [...this.cuts].map(([mcid, { cut }]) => ({
-      mcid,
-      type: this.added.get(mcid)?.type ?? null,
-      alt: this.alt(mcid),
-      lang: this.langs.get(addedKey(mcid)) ?? null,
-      cut,
-    }));
+    return [...this.cuts].map(([mcid, { cut }]) => {
+      const element = this.added.get(mcid);
+      return {
+        mcid,
+        type: element?.type ?? null,
+        alt: element ? this.ownAlt(element) : null,
+        lang: this.langs.get(addedKey(mcid)) ?? null,
+        cut,
+      };
+    });
   }
 
   /** True when the element is a block of text, which a block cut out of it can split. */
@@ -831,7 +847,7 @@ export class PageStructure {
     const element: AddedElement = {
       mcid,
       type: this.added.get(mcid)!.type,
-      alt: this.alt(mcid),
+      alt: this.ownAlt(this.added.get(mcid)!),
       lang: this.langs.get(addedKey(mcid)) ?? null,
     };
     if (this.follows.has(mcid)) element.follows = this.follows.get(mcid)!;

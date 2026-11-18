@@ -34,6 +34,7 @@ export interface FileBlock extends StructureRole {
   pageIndex: number | null;
   /** Its MCIDs on that page, its inline elements' included. */
   mcids: number[];
+  alt: string | null;
 }
 
 /** An element's /Lang, and its nearest ancestor's. */
@@ -187,6 +188,7 @@ function readBlocks(
           type: node.type,
           pageIndex: at?.pageIndex ?? null,
           mcids: at ? [...at.mcids].sort((a, b) => a - b) : [],
+          alt: textEntry(pdf, kidBody, "Alt"),
         });
       }
       visit(kidBody);
@@ -203,10 +205,7 @@ function readElement(
 ): ElementInfo | null {
   const body = pdf.objectBody(num);
   if (!body) return null;
-  const text = (key: string): string | null => {
-    const value = pdf.resolve(body, key);
-    return value === null ? null : decodeTextString(value.trim());
-  };
+  const text = (key: string) => textEntry(pdf, body, key);
   return {
     role: node.role,
     type: node.type,
@@ -217,4 +216,9 @@ function readElement(
     lang: node.lang,
     onlyMarkedContent: ownsOnlyMarkedContent(pdf, body),
   };
+}
+
+function textEntry(pdf: RawPdf, body: string, key: string): string | null {
+  const value = pdf.resolve(body, key);
+  return value === null ? null : decodeTextString(value.trim());
 }

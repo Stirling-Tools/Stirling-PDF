@@ -718,10 +718,18 @@ describe("PageStructure", () => {
   });
 
   test("describes figures and formulas but not elements that hold text", () => {
+    const own = (key: string, type: "Formula" | "P", mcid: number) => ({
+      ...figure,
+      type,
+      alt: null,
+      mcids: [mcid],
+      key,
+      block: { key, role: type, type },
+    });
     const s = new PageStructure([
       figure,
-      { ...figure, type: "Formula", alt: null, mcids: [5] },
-      { ...figure, type: "P", alt: null, mcids: [6] },
+      own("formula", "Formula", 5),
+      own("paragraph", "P", 6),
     ]);
     expect(s.cannotDescribe(3)).toBeNull();
     expect(s.cannotDescribe(5)).toBeNull();
@@ -729,17 +737,26 @@ describe("PageStructure", () => {
     expect(s.cannotDescribe(9)).toBe("untagged");
   });
 
-  test("keeps the description when marked decorative, and the mark when described", () => {
-    const s = new PageStructure([figure]);
-    s.setAlt(3, "new");
-    s.setDecorative(4, true);
-    expect(s.pendingEdits()).toEqual([
-      { mcid: 4, alt: "new", decorative: true },
-    ]);
-    s.setAlt(3, "newer");
-    expect(s.decorative(3)).toBe(true);
-    s.setDecorative(3, false);
-    expect(s.alt(3)).toBe("newer");
+  test("describes the block an inline element's content belongs to", () => {
+    const span = {
+      ...figure,
+      role: "Span",
+      type: "Span" as const,
+      alt: null,
+      mcids: [7],
+      key: "span",
+    };
+    const s = new PageStructure(
+      [span],
+      null,
+      null,
+      () => null,
+      [],
+      (key) => (key === "figure" ? "old" : undefined),
+    );
+    expect(s.cannotDescribe(7)).toBeNull();
+    expect(s.describableType(7)).toBe("Figure");
+    expect(s.alt(7)).toBe("old");
   });
 
   test("refuses decorative for a figure with content besides marked content", () => {
@@ -772,7 +789,36 @@ describe("SetAltTextCommand", () => {
     expect(doc.structureEdits()).toEqual([]);
     history.redo(doc);
     expect(doc.structureEdits()).toEqual([
-      { pageIndex: 0, mcid: FIGURE_MCID, alt: "New", decorative: false },
+      { pageIndex: 0, mcid: FIGURE_MCID, blockAlt: "New", decorative: false },
+    ]);
+  });
+
+  test("keeps the description when marked decorative, and the mark when described", async () => {
+    const doc = await openSample();
+    const history = new HistoryStack();
+    const decorative = (on: boolean) =>
+      history.execute(
+        new SetDecorativeCommand({
+          pageIndex: 0,
+          mcid: FIGURE_MCID,
+          decorative: on,
+        }),
+        doc,
+      );
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: FIGURE_MCID, alt: "New" }),
+      doc,
+    );
+    decorative(true);
+    history.execute(
+      new SetAltTextCommand({ pageIndex: 0, mcid: FIGURE_MCID, alt: "Newer" }),
+      doc,
+    );
+    expect(doc.structure(0).decorative(FIGURE_MCID)).toBe(true);
+    decorative(false);
+    expect(doc.structure(0).alt(FIGURE_MCID)).toBe("Newer");
+    expect(doc.structureEdits()).toEqual([
+      { pageIndex: 0, mcid: FIGURE_MCID, blockAlt: "Newer", decorative: false },
     ]);
   });
 
@@ -1003,9 +1049,10 @@ describe("PageStructure: added figures", () => {
     );
     s.addElement(5, "Figure");
     s.setAlt(5, "Logo");
-    s.setAlt(3, "Chart");
+    expect(() => s.setAlt(3, "Chart")).toThrow();
+    s.setDecorative(3, true);
     expect(s.pendingEdits()).toEqual([
-      { mcid: 3, alt: "Chart", decorative: false },
+      { mcid: 3, alt: null, decorative: true },
     ]);
     expect(s.addedElements()).toEqual([
       { mcid: 5, type: "Figure", alt: "Logo", lang: null },
