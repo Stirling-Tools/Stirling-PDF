@@ -40,7 +40,6 @@ vi.mock("@editor/services/tauriBackendService", () => ({
 vi.mock("@editor/services/endpointAvailabilityService", () => ({
   endpointAvailabilityService: {
     isEndpointSupportedLocally: vi.fn().mockResolvedValue(true),
-    isEndpointSupportedOnSaaS: vi.fn().mockResolvedValue(true),
   },
 }));
 vi.mock("@editor/services/selfHostedServerMonitor", () => ({
@@ -123,9 +122,6 @@ describe("managed local document processing", () => {
     vi.mocked(
       endpointAvailabilityService.isEndpointSupportedLocally,
     ).mockResolvedValue(true);
-    vi.mocked(
-      endpointAvailabilityService.isEndpointSupportedOnSaaS,
-    ).mockClear();
   });
   test.each(["saas", "selfhosted", "local"] as const)(
     "processes supported tools locally in %s mode",
@@ -134,9 +130,6 @@ describe("managed local document processing", () => {
       await expect(
         operationRouter.getBaseUrl("/api/v1/misc/compress-pdf"),
       ).resolves.toBe("http://localhost:62994");
-      expect(
-        endpointAvailabilityService.isEndpointSupportedOnSaaS,
-      ).not.toHaveBeenCalled();
     },
   );
   test("does not fall back to SaaS when a tool is missing locally", async () => {
@@ -146,9 +139,6 @@ describe("managed local document processing", () => {
     await expect(
       operationRouter.getBaseUrl("/api/v1/misc/ocr-pdf"),
     ).rejects.toThrow("stay on this device");
-    expect(
-      endpointAvailabilityService.isEndpointSupportedOnSaaS,
-    ).not.toHaveBeenCalled();
     await expect(
       operationRouter.willRouteToSaaS("/api/v1/misc/ocr-pdf"),
     ).resolves.toBe(false);

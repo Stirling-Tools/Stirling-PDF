@@ -297,26 +297,6 @@ export class OperationRouter {
         );
 
         if (!supportedLocally) {
-          // Local backend doesn't support this - check if SaaS supports it
-          const supportedOnSaaS =
-            await endpointAvailabilityService.isEndpointSupportedOnSaaS(
-              endpointToCheck,
-            );
-          console.debug(
-            `[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`,
-          );
-
-          if (!supportedOnSaaS) {
-            // Neither local nor SaaS support this - throw error
-            console.error(
-              `[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`,
-            );
-            throw new Error(
-              `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`,
-            );
-          }
-
-          // SaaS supports it - route to SaaS backend
           if (!STIRLING_SAAS_BACKEND_API_URL) {
             console.error(
               "[operationRouter] VITE_SAAS_BACKEND_API_URL not configured",
@@ -327,7 +307,7 @@ export class OperationRouter {
             );
           }
           console.debug(
-            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`,
+            `[operationRouter] Routing ${operation} to SaaS backend (not supported locally)`,
           );
           return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
         }
