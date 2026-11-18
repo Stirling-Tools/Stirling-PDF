@@ -902,7 +902,6 @@ public class ConvertPDFToPDFA {
                             .convertForms(true)
                             .convertSpecialColors(true)
                             .convertLosslessImages(true)
-                            .strictImages(true)
                             .requireEmbeddedFonts(strict)
                             .title(baseFileName);
             byte[] cmykProfile = CmykProfileResolver.profile();
