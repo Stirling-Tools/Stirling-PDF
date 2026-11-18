@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+﻿package stirling.software.SPDF.controller.api;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,6 +80,38 @@ public class MergeController {
                 mergedDoc.close();
             }
         }
+    }
+
+    /**
+     * Interleaves pages from two documents (alternate merge, as in pdfsam): page 1 of the first
+     * document, one page of the second document, page 2 of the first document, and so on. When a
+     * document runs out of pages the remaining pages of the other document are appended. Used for
+     * merging scans whose front and back sides live in two separate files.
+     */
+    public static PDDocument mergeDocumentsAlternate(
+            List<PDDocument> documents, boolean reverseSecondDocument) {
+        PDDocument first = documents.get(0);
+        PDDocument second = documents.get(1);
+        int firstCount = first.getNumberOfPages();
+        int secondCount = second.getNumberOfPages();
+        int secondIndex = reverseSecondDocument ? secondCount - 1 : 0;
+        boolean secondHasNext = reverseSecondDocument ? secondIndex >= 0 : secondIndex < secondCount;
+
+        PDDocument mergedDoc = new PDDocument();
+        for (int firstIndex = 0; firstIndex < firstCount; firstIndex++) {
+            mergedDoc.addPage(first.getPage(firstIndex));
+            if (secondHasNext) {
+                mergedDoc.addPage(second.getPage(secondIndex));
+                secondIndex += reverseSecondDocument ? -1 : 1;
+                secondHasNext = reverseSecondDocument ? secondIndex >= 0 : secondIndex < secondCount;
+            }
+        }
+        while (secondHasNext) {
+            mergedDoc.addPage(second.getPage(secondIndex));
+            secondIndex += reverseSecondDocument ? -1 : 1;
+            secondHasNext = reverseSecondDocument ? secondIndex >= 0 : secondIndex < secondCount;
+        }
+        return mergedDoc;
     }
 
     private static MultipartFile[] reorderFilesByProvidedOrder(
@@ -254,6 +286,8 @@ public class MergeController {
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
         boolean generateToc = request.isGenerateToc();
+        boolean alternateMerge = request.isAlternateMerge();
+        boolean reverseSecondDocument = request.isReverseSecondDocument();
 
         MultipartFile[] files = request.getFileInput();
         if (files == null) {
@@ -299,8 +333,28 @@ public class MergeController {
 
             int[] pageCounts;
             try {
-                pageCounts =
-                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
+                if (alternateMerge && inputPaths.size() == 2) {
+                    // Alternate merge bypasses JPDFium's sequential merge and its bookmark/TOC
+                    // support; a generated TOC would not match the interleaved page order.
+                    try (PDDocument first = pdfDocumentFactory.load(inputPaths.get(0).toFile());
+                            PDDocument second = pdfDocumentFactory.load(inputPaths.get(1).toFile());
+                            PDDocument merged =
+                                    mergeDocumentsAlternate(
+                                            List.of(first, second), reverseSecondDocument)) {
+                        merged.save(mt.getFile());
+                    }
+                    pageCounts = new int[2];
+                } else {
+                    if (alternateMerge) {
+                        log.warn(
+                                "alternateMerge requested but {} input files provided; falling back"
+                                        + " to sequential merge (exactly 2 required)",
+                                inputPaths.size());
+                    }
+                    pageCounts =
+                            mergeWithJpdfium(
+                                    inputPaths, files, generateToc, mt.getFile().toPath());
+                }
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -529,3 +583,4 @@ public class MergeController {
         }
     }
 }
+
