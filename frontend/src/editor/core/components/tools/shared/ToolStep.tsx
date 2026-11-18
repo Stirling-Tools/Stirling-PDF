@@ -61,7 +61,7 @@ const renderTooltipTitle = (
           <Text fw={500} size="sm">
             {title}
           </Text>
-          {/* Same glyph and tone as the field-level InfoTooltip, so a step's (i) and a field's (i) read as one affordance. */}
+          {/* Same glyph and tone as the field-level ToolInfoTooltip, so a step's (i) and a field's (i) read as one affordance. */}
           <span className="sui-info">
             <Icon name="info" size={14} strokeWidth={2} />
           </span>

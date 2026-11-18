@@ -18,7 +18,7 @@ function renderField() {
 
 describe("Field hint", () => {
   it("shows the hint when the pointer rests on its icon", async () => {
-    fireEvent.mouseEnter(renderField());
+    fireEvent.pointerEnter(renderField());
     expect(await screen.findByRole("tooltip")).toHaveTextContent(HINT);
   });
 

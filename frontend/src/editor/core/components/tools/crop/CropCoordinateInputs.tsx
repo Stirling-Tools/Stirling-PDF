@@ -2,7 +2,7 @@ import { Stack, Text, Group, NumberInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Rectangle, PDFBounds } from "@editor/utils/cropCoordinates";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 
 interface CropCoordinateInputsProps {
   cropArea: Rectangle;
@@ -28,7 +28,7 @@ const CropCoordinateInputs = ({
           {t("crop.coordinates.title", "Position and Size")}
         </Text>
         {showAutomationInfo && (
-          <InfoTooltip
+          <ToolInfoTooltip
             label={
               <Stack gap={4}>
                 <span>

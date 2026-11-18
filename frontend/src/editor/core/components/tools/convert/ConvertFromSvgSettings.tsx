@@ -1,6 +1,6 @@
 import { Stack, Text, Checkbox, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ConvertParameters } from "@editor/hooks/tools/convert/useConvertParameters";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
@@ -26,7 +26,7 @@ const ConvertFromSvgSettings = ({
         <Text size="sm" fw={500}>
           {t("convert.svgPdfOptions", "SVG to PDF Options")}
         </Text>
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "convert.svgVectorNote",
             "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size.",

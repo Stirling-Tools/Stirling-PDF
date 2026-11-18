@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text } from "@mantine/core";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Uppercase section heading, optionally with an info affordance beside it and a trailing control. */
@@ -81,7 +81,7 @@ export function Field({
         <Text size="xs" c="dimmed" fw={500}>
           {label}
         </Text>
-        {hint && <InfoTooltip label={hint} position="left" />}
+        {hint && <ToolInfoTooltip label={hint} position="left" />}
       </Group>
       {children}
     </Stack>

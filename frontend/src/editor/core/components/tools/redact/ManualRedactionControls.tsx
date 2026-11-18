@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback, useState } from "react";
 import { Stack, Text, Divider, ColorInput, Group } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import {
   useRedaction,
   useRedactionMode,
@@ -153,7 +153,7 @@ export default function ManualRedactionControls({
           <Text size="sm" fw={500}>
             {t("redact.manual.title", "Redaction Tools")}
           </Text>
-          <InfoTooltip
+          <ToolInfoTooltip
             label={t(
               "redact.manual.instructions",
               "Select text or draw areas on the PDF to mark content for redaction.",

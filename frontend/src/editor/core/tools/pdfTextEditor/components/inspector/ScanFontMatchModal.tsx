@@ -3,7 +3,7 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { Section } from "@editor/tools/pdfTextEditor/components/inspector/InspectorPrimitives";
 import type {
   ScanFontChoice,
@@ -133,7 +133,7 @@ function OriginalScanPreview({ scan }: { scan: string }) {
         <Text size="xs" fw={600} c="dimmed" tt="uppercase">
           {t("pdfTextEditor.scanFont.scan", "Original scan")}
         </Text>
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "pdfTextEditor.scanFont.scanNote",
             "Scans often look blurrier or bolder than the font really is. Compare letter shapes rather than thickness.",
@@ -164,7 +164,7 @@ function ScanFontChoices({
         <Text id={labelId} size="xs" fw={600} c="dimmed" tt="uppercase">
           {t("pdfTextEditor.scanFont.choose", "Choose a font")}
         </Text>
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "pdfTextEditor.scanFont.hintOthers",
             "Your pick is also used for scanned text you have not edited yet.",
@@ -372,7 +372,7 @@ function DeviceFontsNote({
     >
       <Group gap={4} wrap="nowrap">
         {allow}
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "pdfTextEditor.scanFont.deviceNote",
             "Your browser asks first. Fonts stay on this device.",

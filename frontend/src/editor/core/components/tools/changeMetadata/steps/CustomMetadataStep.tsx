@@ -1,7 +1,7 @@
 import { Stack, TextInput, Group, Text } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ChangeMetadataParameters } from "@editor/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
@@ -33,7 +33,7 @@ const CustomMetadataStep = ({
           <Text size="sm" fw={500}>
             {t("changeMetadata.customFields.title", "Custom Metadata")}
           </Text>
-          <InfoTooltip
+          <ToolInfoTooltip
             label={t(
               "changeMetadata.customFields.description",
               "Add custom metadata fields to the document",

@@ -9,7 +9,7 @@ import { Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { RotateParameters } from "@editor/hooks/tools/rotate/useRotateParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 
 interface RotateAutomationSettingsProps {
   parameters: RotateParameters;
@@ -33,7 +33,7 @@ const RotateAutomationSettings = ({
         <Text size="sm" fw={500}>
           {t("rotate.selectRotation", "Rotation Angle")}
         </Text>
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "rotate.selectRotationDirection",
             "Pages are rotated clockwise by the selected angle.",

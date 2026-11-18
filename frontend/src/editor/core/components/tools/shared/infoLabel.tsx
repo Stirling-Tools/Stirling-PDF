@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import classes from "@editor/components/tools/shared/infoLabel.module.css";
 
 /**
@@ -21,7 +21,7 @@ export function infoLabelProps(
     label: (
       <span className={classes.infoLabel}>
         {label}
-        <InfoTooltip label={info} />
+        <ToolInfoTooltip label={info} />
       </span>
     ),
   };

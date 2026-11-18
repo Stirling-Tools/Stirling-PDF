@@ -15,7 +15,7 @@ import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 
@@ -209,7 +209,7 @@ export function FormFieldPropertyEditor({
             <Text size="xs" fw={600}>
               {t("formFill.editor.options", "Options")}
             </Text>
-            <InfoTooltip
+            <ToolInfoTooltip
               label={t(
                 "formFill.editor.optionsHelp",
                 "The choices offered in the list. Each one is stored as typed, so keep them short and distinct.",

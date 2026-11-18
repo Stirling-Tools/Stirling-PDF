@@ -4,7 +4,7 @@ import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@editor/styles/zIndex";
 import { Icon } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { ToolRegistry } from "@editor/data/toolsTaxonomy";
 import { ToolId } from "@editor/types/toolId";
 import { ErasedToolParams } from "@editor/hooks/tools/shared/toolOperationTypes";
@@ -91,7 +91,7 @@ export default function ToolConfigurationModal({
               toolName: tool.name,
             })}
           </Title>
-          <InfoTooltip
+          <ToolInfoTooltip
             label={t(
               "automate.config.description",
               "Configure the settings for this tool. These settings will be applied when the automation runs.",

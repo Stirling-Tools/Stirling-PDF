@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import styles from "@editor/components/tools/sign/wallet/SignatureWallet.module.css";
 
 interface SignatureSectionProps {
@@ -26,7 +26,7 @@ export function SignatureSection({
         {icon && <Icon name={icon} size={14} className={styles.sectionIcon} />}
         <h3 className={styles.sectionTitle}>
           {title}
-          {info && <InfoTooltip label={info} />}
+          {info && <ToolInfoTooltip label={info} />}
         </h3>
         {meta && <span className={styles.sectionMeta}>{meta}</span>}
       </div>

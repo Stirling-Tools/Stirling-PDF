@@ -1,6 +1,6 @@
 import { Stack, Text, Group } from "@mantine/core";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import {
@@ -82,7 +82,7 @@ export default function AutoFormDetectionSettings({
           <Text size="sm" fw={500}>
             {t("autoFormDetection.sensitivity.label", "Detection sensitivity")}
           </Text>
-          <InfoTooltip label={sensitivityHint[sensitivity]} />
+          <ToolInfoTooltip label={sensitivityHint[sensitivity]} />
         </Group>
         <SegmentedControl<DetectionSensitivity>
           fullWidth

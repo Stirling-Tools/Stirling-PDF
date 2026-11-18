@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Group, Checkbox } from "@mantine/core";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { BookletImpositionParameters } from "@editor/hooks/tools/bookletImposition/useBookletImpositionParameters";
 import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
@@ -46,7 +46,7 @@ const BookletImpositionSettings = ({
             <Text size="sm" fw={500}>
               {t("bookletImposition.manualDuplex.title", "Manual Duplex Mode")}
             </Text>
-            <InfoTooltip
+            <ToolInfoTooltip
               label={t(
                 "bookletImposition.manualDuplex.instructions",
                 "For printers without automatic duplex. You'll need to run this twice:",

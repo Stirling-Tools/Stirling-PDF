@@ -27,9 +27,6 @@ export const Z_INDEX_DROP_INDICATOR = 1001;
 export const Z_INDEX_DRAG_BADGE = 1001;
 // Modal that appears on top of config modal (e.g., restart confirmation, update modal)
 export const Z_INDEX_OVER_CONFIG_MODAL = 2000;
-// Info (i) tooltips: above every modal that can hold a form field (the highest is
-// the over-config layer at 2000), so a tooltip never opens behind its own dialog.
-export const Z_INDEX_INFO_TOOLTIP = 2100;
 
 // Reaches CSS via --z-index-cookie-consent.
 export const Z_INDEX_COOKIE_CONSENT_BANNER = 1060;

@@ -22,7 +22,7 @@ import {
 } from "@mantine/core";
 import { Icon, type IconName } from "@editor/ui/Icon";
 import { ActionIcon } from "@editor/ui/ActionIcon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import {
   SavedSignature,
   SavedSignatureType,
@@ -75,7 +75,7 @@ function SavedSignaturesHeader({ translate }: { translate: ScopedTranslate }) {
       <Text fw={600} size="md">
         {translate("saved.heading", "Saved signatures")}
       </Text>
-      <InfoTooltip
+      <ToolInfoTooltip
         label={translate(
           "saved.description",
           "Reuse saved signatures at any time.",
@@ -152,7 +152,7 @@ function SignatureGroupHeading({
         <Text fw={600} size="sm">
           {title}
         </Text>
-        <InfoTooltip label={description} />
+        <ToolInfoTooltip label={description} />
       </Group>
     </Group>
   );

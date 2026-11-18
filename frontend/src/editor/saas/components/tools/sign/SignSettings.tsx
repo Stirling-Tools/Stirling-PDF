@@ -42,7 +42,7 @@ import { useIsMobile } from "@editor/hooks/useIsMobile";
 import { buildSignaturePreview } from "@editor/utils/signaturePreview";
 
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 type SignatureDrafts = {
   canvas?: string;
@@ -1297,7 +1297,7 @@ const SignSettings = ({
           <Text fw={600} size="md">
             {translate("step.place", "Place & save")}
           </Text>
-          <InfoTooltip
+          <ToolInfoTooltip
             label={translate(
               "step.placeDesc",
               "Position the signature on your PDF",

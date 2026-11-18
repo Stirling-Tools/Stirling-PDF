@@ -4,7 +4,7 @@ import { Stack, Text, TextInput, Group } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
@@ -44,7 +44,7 @@ export default function WordsToRedactInput({
         <Text size="sm" fw={500}>
           {t("redact.auto.wordsToRedact.title", "Words to Redact")}
         </Text>
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "redact.auto.wordsToRedact.examples",
             "Examples: Confidential, Top-Secret",

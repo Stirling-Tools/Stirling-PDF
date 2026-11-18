@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Group } from "@mantine/core";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
-import { InfoTooltip } from "@editor/ui/InfoTooltip";
+import { ToolInfoTooltip } from "@editor/components/tools/shared/ToolInfoTooltip";
 import { SegmentedControl } from "@editor/ui/SegmentedControl";
 import { ToggleSwitch } from "@editor/ui/ToggleSwitch";
 import { INK_COLORS } from "@editor/components/tools/sign/createSignature/signatureStyles";
@@ -68,7 +68,7 @@ export function UploadCleanupOptions({
           onChange={(removeBackground) => update({ removeBackground })}
           label={t("sign.wallet.upload.removeBackground", "Remove background")}
         />
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "sign.wallet.upload.removeBackgroundHint",
             "White paper becomes transparent",
@@ -81,7 +81,7 @@ export function UploadCleanupOptions({
           onChange={(trim) => update({ trim })}
           label={t("sign.wallet.upload.trim", "Trim to signature")}
         />
-        <InfoTooltip
+        <ToolInfoTooltip
           label={t(
             "sign.wallet.upload.trimHint",
             "Crops the empty space around it",
