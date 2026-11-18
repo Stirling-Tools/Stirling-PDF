@@ -3,6 +3,7 @@ package stirling.software.saas.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -347,7 +348,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, null, true));
             when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
-            when(userService.saveUser(any(User.class)))
+            when(saasTeamService.provisionUser(any(User.class), eq(false)))
                     .thenAnswer(
                             inv -> {
                                 User u = inv.getArgument(0);
@@ -361,7 +362,7 @@ class SupabaseAuthenticationFilterMoreTest {
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            verify(userService, times(1)).saveUser(any(User.class));
+            verify(saasTeamService, times(1)).provisionUser(any(User.class), eq(false));
             // Guests get NO team; a home team + grant is provisioned only on signup/upgrade.
             verify(saasTeamService, never()).ensurePersonalTeam(any());
             // Anonymous mirror row created with null email and anon flag true.
@@ -545,7 +546,7 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(401);
-            verify(userService, never()).saveUser(any());
+            verify(saasTeamService, never()).provisionUser(any(), anyBoolean());
         }
 
         @Test
@@ -560,13 +561,13 @@ class SupabaseAuthenticationFilterMoreTest {
             org.mockito.Mockito.doThrow(new DataIntegrityViolationException("dup"))
                     .when(supabaseUserService)
                     .createSupabaseUser(eq(supabaseId), any(), eq(false));
-            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+            when(saasTeamService.provisionUser(any(User.class), eq(true)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
+            verify(saasTeamService, times(1)).provisionUser(any(User.class), eq(true));
             assertThat(SecurityContextHolder.getContext().getAuthentication())
                     .isInstanceOf(EnhancedJwtAuthenticationToken.class);
         }
@@ -588,12 +589,12 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(401);
-            verify(saasTeamService, never()).saveUserWithPersonalTeam(any());
+            verify(saasTeamService, never()).provisionUser(any(), anyBoolean());
         }
 
         @Test
-        @DisplayName("saveUser race: loser fetches the winning row instead of creating")
-        void saveUserRaceFetchesWinner() throws Exception {
+        @DisplayName("unique conflict on provisioning adopts the account's existing row")
+        void provisionConflictAdoptsExistingRow() throws Exception {
             UUID supabaseId = UUID.randomUUID();
             Jwt jwt = fullJwt(supabaseId, "winner@example.com", false, "email");
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
@@ -604,28 +605,28 @@ class SupabaseAuthenticationFilterMoreTest {
             winner.setSupabaseId(supabaseId);
             when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(winner));
-            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+            when(saasTeamService.provisionUser(any(User.class), eq(true)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // The winner committed user and team together, so the loser just adopts its row.
+            // The existing row was committed with its team, so it is adopted as-is.
             verify(saasTeamService, never()).ensurePersonalTeam(any());
             assertThat(SecurityContextHolder.getContext().getAuthentication())
                     .isInstanceOf(EnhancedJwtAuthenticationToken.class);
         }
 
         @Test
-        @DisplayName("saveUser race with no winning row found yields 401")
-        void saveUserRaceNoWinnerYields401() throws Exception {
+        @DisplayName("unique conflict with no row for the account yields 401")
+        void provisionConflictWithoutRowYields401() throws Exception {
             UUID supabaseId = UUID.randomUUID();
             Jwt jwt = fullJwt(supabaseId, "lost@example.com", false, "email");
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "lost@example.com", false));
             when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
-            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+            when(saasTeamService.provisionUser(any(User.class), eq(true)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
             bearer("tok");
@@ -643,7 +644,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "team@example.com", false));
             when(supabaseUserService.findLinkedUser(supabaseId)).thenReturn(Optional.empty());
-            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+            when(saasTeamService.provisionUser(any(User.class), eq(true)))
                     .thenThrow(new IllegalStateException("team boom"));
 
             bearer("tok");
@@ -684,6 +685,7 @@ class SupabaseAuthenticationFilterMoreTest {
             // requests would mint duplicate teams. Provisioning belongs to signup alone.
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
             verify(saasTeamService, never()).saveUserWithPersonalTeam(any(User.class));
+            verify(saasTeamService, never()).provisionUser(any(), anyBoolean());
             verify(supabaseUserService, never()).getUser(any());
             assertThat(local.getTeam()).isNull();
         }

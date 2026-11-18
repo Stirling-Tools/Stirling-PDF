@@ -7546,7 +7546,6 @@ saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotation text - not page text, so it can't be edited here"
@@ -7574,10 +7573,6 @@ cancel = "Cancel"
 confirm = "Discard and open"
 hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
-
-[pdfTextEditor.drop]
-hint = "Releases on the editor stage replace any open document."
-title = "Drop a PDF to open"
 
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
@@ -7874,7 +7869,6 @@ done = "Done"
 download = "Save and download"
 find = "Find"
 lock = "Lock"
-openPdf = "Open a PDF"
 panelHint = "Editing happens in the Workspace view. Tap text on the page to change it."
 save = "Save"
 style = "Style"
@@ -7882,7 +7876,6 @@ tapToPlace = "Tap the page where the text should go"
 unlock = "Unlock"
 
 [pdfTextEditor.pageView]
-pageNumber = "Page {{page}}"
 renderFailed = "Failed to render page"
 
 [pdfTextEditor.password]
@@ -7950,7 +7943,6 @@ addTable = "Add table"
 addText = "Add text"
 clickPageToAddTable = "Click page to add a table"
 clickPageToAddText = "Click page to add text"
-document = "Document"
 group = "Group"
 groupingAuto = "Auto"
 groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
@@ -7978,13 +7970,6 @@ widthWrap = "Wrap"
 auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
-
-[pdfTextEditor.stage]
-loadingDocument = "Loading document"
-loadingProgress = "Loading progress"
-noDocument = "No document loaded."
-pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
-renderingPreview = "Rendering preview"
 
 [pdfTextEditor.table]
 addColumn = "Add column"
@@ -8069,13 +8054,6 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
-
-[pdfTextEditor.zoom]
-fit = "Fit"
-fitToWidth = "Fit to width"
-in = "Zoom in"
-out = "Zoom out"
-reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -14661,6 +14639,7 @@ coverPageView = "Show Cover Page Separately"
 disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
+editText = "Edit text"
 enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
 engineLoadError = "Failed to initialize PDF viewer engine"
@@ -15029,8 +15008,10 @@ closeAll = "Close All Files"
 closePdf = "Close PDF"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
+editText = "Edit Text"
 exitAnnotations = "Exit annotation mode"
 exitRedaction = "Exit Redaction Mode"
+findReplace = "Find & replace"
 formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
