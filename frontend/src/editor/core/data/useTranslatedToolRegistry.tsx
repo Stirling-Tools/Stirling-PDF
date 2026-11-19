@@ -66,6 +66,9 @@ import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@editor/constants/splitConsta
 import { ToolId } from "@editor/types/toolId";
 import { CONVERT_SUPPORTED_FORMATS } from "@editor/constants/convertSupportedFornats";
 
+const loadPdfTextEditor = () =>
+  import("@editor/tools/pdfTextEditor/PdfTextEditor");
+
 export interface TranslatedToolCatalog {
   allTools: ToolRegistry;
   regularTools: RegularToolRegistry;
@@ -86,9 +89,8 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       pdfTextEditor: {
         icon: <Icon name="square-pen" size="1.5rem" />,
         name: t("home.pdfTextEditor.title", "PDF Text Editor"),
-        component: lazy(
-          () => import("@editor/tools/pdfTextEditor/PdfTextEditor"),
-        ),
+        component: lazy(loadPdfTextEditor),
+        preload: loadPdfTextEditor,
         description: t(
           "home.pdfTextEditor.desc",
           "Review and edit text and images in PDFs with grouped text editing and PDF regeneration",

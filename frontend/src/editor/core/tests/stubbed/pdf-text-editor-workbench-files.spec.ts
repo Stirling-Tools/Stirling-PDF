@@ -2,12 +2,13 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
+import { viewInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 
 // 4.2 "Active file selection does not work while in the editor". Three defects:
 // the editor re-pinned its own workbench view on EVERY navigation change; the
 // Active Files view trims a multi-file selection to its last entry, which the
 // editor followed - swapping the open document and pinning its canvas back over
-// the file list; and the editor offered no way to say which file to edit.
+// the file list; and there was no way to say which file to edit.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -26,6 +27,7 @@ async function openEditorWithTwoFiles(page: Page) {
     timeout: 30_000,
   });
   await uploadFiles(page, [SAMPLE_PDF, PARAGRAPH_PDF]);
+  await viewInTextEditor(page, "sample.pdf");
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -97,44 +99,31 @@ test.describe("PDF text editor - workbench file selection", () => {
     ).toBe(opened);
   });
 
-  test("the editor lists the workbench files and opens the one picked", async ({
+  test("viewing another workbench file opens it in the editor", async ({
     page,
   }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
+    const sourceName = () =>
+      page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __editor_store: { source: { fileName: string | null } };
+            }
+          ).__editor_store.source.fileName,
+      );
 
-    await expect(
-      page.getByTestId("pdf-editor-file-switcher"),
-      "with two workbench files the editor must offer a way to choose one",
-    ).toBeVisible({ timeout: 15_000 });
-
-    // Whichever landed first is open; pick the other one.
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
-    const other =
-      opened === "sample.pdf" ? "paragraph-sample.pdf" : "sample.pdf";
-
-    await page.getByTestId("pdf-editor-file-switcher").click();
-    await page
-      .getByTestId("pdf-editor-file-switch")
-      .filter({ hasText: new RegExp(`^${other}$`) })
-      .first()
-      .click();
-
-    await expect(
-      page.getByTestId("pdf-editor-filename"),
-      "picking a file in the editor must open it",
-    ).toHaveText(other, { timeout: 60_000 });
+    await expect.poll(sourceName, { timeout: 30_000 }).toBe("sample.pdf");
+    await viewInTextEditor(page, "paragraph-sample.pdf");
+    await expect
+      .poll(sourceName, {
+        message: "viewing a file in the sidebar must open it in the editor",
+        timeout: 60_000,
+      })
+      .toBe("paragraph-sample.pdf");
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 60_000,
     });
-    // The picked entry is the one marked current.
-    await page.getByTestId("pdf-editor-file-switcher").click();
-    await expect(
-      page.locator(
-        '[data-testid="pdf-editor-file-switch"][data-current="true"]',
-      ),
-    ).toHaveText(other);
   });
 });
