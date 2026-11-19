@@ -8151,13 +8151,6 @@ title = "Önizleme Farklılıkları"
 text = "Bu çalışma alanı, metin düzenlemeye ve gömülü görselleri yeniden konumlandırmaya odaklanır. Karmaşık sayfa illüstrasyonları, form bileşenleri ve katmanlı grafikler dışa aktarım için korunur ancak burada tam olarak düzenlenemez."
 title = "Metin ve Görsel Odak"
 
-[pdfTextEditor.zoom]
-fit = "Sığdır"
-fitToWidth = "Genişliğe sığdır"
-in = "Yakınlaştır"
-out = "Uzaklaştır"
-reset = "Yakınlaştırmayı %100'e sıfırla"
-
 [PDFToCSV]
 header = "PDF'den CSV'ye"
 title = "PDF'den CSV'ye"
