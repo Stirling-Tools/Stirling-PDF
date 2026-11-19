@@ -17,6 +17,7 @@ import {
   reviewCard,
   reviewItemElement,
   scrollItemToCard,
+  holdCardWhileStepping,
 } from "@editor/tools/pdfTextEditor/util/reviewCardScroll";
 
 export interface ReviewProgress extends AccessibilityProgress {
@@ -97,6 +98,7 @@ export function useAccessibilityProgress(
 
 /** Selects `item` and brings it on screen: level with the review card while it is open, else centred. */
 export function selectReviewItem(store: EditorStore, item: ReviewItem): void {
+  if (reviewCard.open) holdCardWhileStepping();
   if (item.kind === "text") store.selection.selectOne(item.id);
   else store.selection.selectImage(item.id);
   // The page may mount only after the reveal scrolls it near the screen.

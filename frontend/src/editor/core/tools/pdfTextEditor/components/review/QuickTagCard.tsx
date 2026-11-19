@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { Switch, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -33,6 +39,7 @@ import {
 import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
 import {
   reviewCard,
+  subscribeCardHold,
   reviewItemElement,
 } from "@editor/tools/pdfTextEditor/util/reviewCardScroll";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
@@ -435,15 +442,21 @@ function sameFrame(a: ViewerFrame | null, b: ViewerFrame): boolean {
 
 /**
  * The card's top before clamping: level with the selected item, or where it last
- * was while the item is not mounted.
+ * was while a step scrolls or the item is not mounted.
  */
 function useCardTop(
   item: ReviewItem | null,
   frame: ViewerFrame | null,
 ): number | null {
   const itemTop = useItemTop(item);
+  const held = useSyncExternalStore(subscribeCardHold, () => reviewCard.held);
   const lastRef = useRef<number | null>(null);
-  const top = itemTop ?? lastRef.current ?? frame?.viewer.top ?? null;
+  const top =
+    (held ? lastRef.current : null) ??
+    itemTop ??
+    lastRef.current ??
+    frame?.viewer.top ??
+    null;
   lastRef.current = top;
   return top;
 }

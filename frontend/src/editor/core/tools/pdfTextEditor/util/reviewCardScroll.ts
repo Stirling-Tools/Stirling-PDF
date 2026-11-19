@@ -2,13 +2,58 @@ import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSe
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 
 /**
- * The review card while it is open, and its top on screen as last drawn, so
- * stepping scrolls the next item level with it instead of moving the card.
+ * The review card while open: its top as last drawn, which stepping scrolls items
+ * level with, and whether it is held still while that scroll runs.
  */
-export const reviewCard: { open: boolean; top: number | null } = {
-  open: false,
-  top: null,
-};
+export const reviewCard: { open: boolean; top: number | null; held: boolean } =
+  { open: false, top: null, held: false };
+
+const holdListeners = new Set<() => void>();
+
+export function subscribeCardHold(listener: () => void): () => void {
+  holdListeners.add(listener);
+  return () => holdListeners.delete(listener);
+}
+
+function setHeld(held: boolean): void {
+  if (reviewCard.held === held) return;
+  reviewCard.held = held;
+  holdListeners.forEach((listener) => listener());
+}
+
+/** Frames the pages must stay still after a step before the card follows its item again. */
+const SETTLE_FRAMES = 4;
+/** Releases a hold whose scroll never settles, so the card cannot stay frozen. */
+const MAX_HOLD_FRAMES = 150;
+let holdRun = 0;
+let stepScrollPending = false;
+
+/**
+ * Holds the card where it is until the step's scroll settles, so selecting the
+ * next item does not first pull the card to wherever that item sits.
+ */
+export function holdCardWhileStepping(): void {
+  const run = ++holdRun;
+  stepScrollPending = true;
+  setHeld(true);
+  let lastTop: number | null = null;
+  let still = 0;
+  let frames = 0;
+  const watch = () => {
+    if (run !== holdRun) return;
+    const top = viewerScroller()?.scrollTop ?? null;
+    still = !stepScrollPending && top === lastTop ? still + 1 : 0;
+    lastTop = top;
+    if (still >= SETTLE_FRAMES || ++frames >= MAX_HOLD_FRAMES) setHeld(false);
+    else requestAnimationFrame(watch);
+  };
+  requestAnimationFrame(watch);
+}
+
+function viewerScroller(): Element | null {
+  const page = document.querySelector("[data-viewer-pages] [data-page-index]");
+  return page ? scrollParent(page) : null;
+}
 
 /** Room left above an item scrolled to the top of the pages when the card's top is unknown. */
 const ITEM_TOP_GAP_PX = 12;
@@ -37,11 +82,13 @@ export function scrollItemToCard(item: ReviewItem): void {
     const found = reviewItemElement(item);
     if (found) scrollElementToCard(found);
     else if (++frames < MOUNT_WAIT_FRAMES) requestAnimationFrame(retry);
+    else stepScrollPending = false;
   };
   requestAnimationFrame(retry);
 }
 
 function scrollElementToCard(el: Element): void {
+  stepScrollPending = false;
   const scroller = scrollParent(el);
   if (!scroller) return;
   const target =
