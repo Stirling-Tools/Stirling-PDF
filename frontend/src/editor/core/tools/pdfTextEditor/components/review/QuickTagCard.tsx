@@ -11,7 +11,7 @@ import {
   artifactName,
   typeName,
 } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
-import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
+import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type {
   EditorStore,
@@ -52,7 +52,7 @@ interface Props {
   store: EditorStore;
   state: EditorViewState;
   controller: Controller;
-  review: AccessibilityReview;
+  review: ReviewProgress;
 }
 
 /**

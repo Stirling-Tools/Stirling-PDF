@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
-import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
+import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
 import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
@@ -14,7 +14,7 @@ const LIST_LIMIT = 40;
 
 interface Props {
   state: EditorViewState;
-  review: AccessibilityReview;
+  review: ReviewProgress;
 }
 
 /**
@@ -149,7 +149,7 @@ function ItemList({
 }: {
   items: readonly ReviewItem[];
   snippets: ReadonlyMap<string, string>;
-  review: AccessibilityReview;
+  review: ReviewProgress;
 }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -248,10 +248,7 @@ function ScoreRing({ done, total }: { done: number; total: number }) {
 }
 
 /** Where the selection sits among the items still to tag, or how many are left. */
-export function untaggedPosition(
-  t: TFunction,
-  review: AccessibilityReview,
-): string {
+export function untaggedPosition(t: TFunction, review: ReviewProgress): string {
   if (review.todoCount === 0)
     return t("pdfTextEditor.review.noneLeft", "No text or images left to tag");
   if (review.todoPosition === null)
@@ -269,7 +266,7 @@ export function untaggedPosition(
 }
 
 /** N moves to the next untagged item and Shift+N to the previous one, unless the user is typing. */
-function useNextKey(review: AccessibilityReview): void {
+function useNextKey(review: ReviewProgress): void {
   const { next, previous, select } = review;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

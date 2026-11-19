@@ -1,4 +1,11 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import type { FindMatch } from "@editor/tools/pdfTextEditor/store/Selection";
 import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -22,9 +29,10 @@ import {
 import { TableOverlay } from "@editor/tools/pdfTextEditor/components/TableOverlay";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
-  imageAttention,
-  type ImageAttention,
-} from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+  pageAttention,
+  type PageAttention,
+} from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import { AttentionBadge } from "@editor/tools/pdfTextEditor/components/AttentionBadge";
 import { ImageHandle } from "@editor/tools/pdfTextEditor/components/ImageHandle";
 import { readShownImagePixels } from "@editor/tools/pdfTextEditor/util/imagePixels";
 import { visibleImageBounds } from "@editor/tools/pdfTextEditor/util/imageClip";
@@ -159,15 +167,13 @@ export const PageView = memo(function PageView({
 }: PageViewProps) {
   const { t } = useTranslation();
   const reviewing = useReviewing();
-  const imageAttentions = useMemo(() => {
-    const out = new Map<string, ImageAttention>();
-    if (!ACCESSIBILITY_EDITING) return out;
-    for (const image of page.images) {
-      const attention = imageAttention(document, image);
-      if (attention) out.set(image.id, attention);
-    }
-    return out;
-  }, [document, page]);
+  const attention = useMemo(
+    (): PageAttention =>
+      ACCESSIBILITY_EDITING
+        ? pageAttention(document, page)
+        : { images: new Map(), runs: new Map() },
+    [document, page],
+  );
   const runGrowEdges = useMemo(
     () =>
       widthMode === "grow" ? growEdges(page.runs) : new Map<string, GrowEdge>(),
@@ -524,7 +530,7 @@ export const PageView = memo(function PageView({
             onTransformCommit={(next) =>
               onTransformImage?.(page.pageIndex, image.id, next)
             }
-            attention={imageAttentions.get(image.id) ?? null}
+            attention={attention.images.get(image.id) ?? null}
             readPixels={() =>
               readShownImagePixels(store, page.pageIndex, image.id)
             }
@@ -590,6 +596,16 @@ export const PageView = memo(function PageView({
             }
           />
         ))}
+        {page.runs
+          .filter((run) => attention.runs.has(run.id))
+          .map((run) => (
+            <AttentionBadge
+              key={run.id}
+              attention="needs-description"
+              testId={`pdf-editor-attention-run-${run.id}`}
+              style={besideRun(run, transform, page.height, cssScale)}
+            />
+          ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}
@@ -603,6 +619,23 @@ export const PageView = memo(function PageView({
     </Box>
   );
 });
+
+/** Just past the top-right corner of a run's box, in page pixels. */
+function besideRun(
+  run: TextRunSnapshot,
+  transform: DisplayTransform,
+  pageHeight: number,
+  scale: number,
+): CSSProperties {
+  const { x, y, width, height } = run.bounds;
+  const corners = [
+    transform.apply(x, y),
+    transform.apply(x + width, y + height),
+  ];
+  const right = Math.max(...corners.map((c) => c.x));
+  const top = Math.max(...corners.map((c) => c.y));
+  return { left: right * scale + 4, top: (pageHeight - top) * scale };
+}
 
 // Long enough a typing pause to draw the page whole, repairing anything a partial redraw missed.
 const FULL_REDRAW_AFTER_TYPING_MS = 400;

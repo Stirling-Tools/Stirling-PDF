@@ -1,10 +1,11 @@
 import { useCallback, useMemo } from "react";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import { RetagBlockCommand } from "@editor/tools/pdfTextEditor/commands/RetagBlockCommand";
 import { SetAltTextCommand } from "@editor/tools/pdfTextEditor/commands/SetAltTextCommand";
 import { SetDecorativeCommand } from "@editor/tools/pdfTextEditor/commands/SetDecorativeCommand";
 import { TagImageCommand } from "@editor/tools/pdfTextEditor/commands/TagImageCommand";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type {
   EditorStore,
   EditorViewState,
@@ -15,18 +16,13 @@ import type {
 } from "@editor/tools/pdfTextEditor/types";
 import {
   imageAccessibility,
-  nextImageNeedingAttention,
   retaggableTag,
-  reviewImages,
   type ImageAccessibility,
-  type ImageReview,
 } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
-import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 /**
- * The accessibility of the selected image (null unless exactly one image and
- * nothing else is selected), and the review of images needing attention.
- * `review` covers only pages read so far.
+ * The accessibility of the selected image: null unless exactly one image and
+ * nothing else is selected.
  */
 export function useImageAccessibility(
   store: EditorStore,
@@ -62,6 +58,15 @@ export function useImageAccessibility(
     [store, image, accessibility],
   );
 
+  const setType = useCallback(
+    (type: DescribableType) => {
+      if (!image || accessibility?.kind !== "describable") return;
+      if (type === accessibility.type) return;
+      store.dispatch(typeCommand(image, type));
+    },
+    [store, image, accessibility],
+  );
+
   const setDecorative = useCallback(
     (decorative: boolean) => {
       const doc = store.document;
@@ -72,43 +77,11 @@ export function useImageAccessibility(
     [store, image],
   );
 
-  const review = useMemo(
-    (): ImageReview =>
-      store.document
-        ? reviewImages(store.document, state.pages)
-        : { needsDescription: 0, untagged: 0, untaggable: 0 },
-    [store, state.pages],
-  );
-
-  /** False when no image needs attention, leaving the selection alone. */
-  const selectNextImage = useCallback((): boolean => {
-    // An image on a page not yet scrolled to would otherwise be skipped.
-    ensureAllPagesRead(store);
-    const doc = store.document;
-    if (!doc) return false;
-    const next = nextImageNeedingAttention(
-      doc,
-      store.getState().pages,
-      store.selection.value.imageIds[0] ?? null,
-    );
-    if (!next) return false;
-    store.selection.selectImage(next.id);
-    // A page read just now has no overlay until React commits it.
-    window.requestAnimationFrame(() =>
-      revealOnPage(
-        document.querySelector(`[data-testid="pdf-editor-image-${next.id}"]`),
-        next.pageIndex,
-      ),
-    );
-    return true;
-  }, [store]);
-
   return {
     accessibility,
     setDescription,
+    setType,
     setDecorative,
-    review,
-    selectNextImage,
   };
 }
 
@@ -128,9 +101,20 @@ function describeCommand(
   return new TagImageCommand({
     pageIndex: image.pageIndex,
     imageId: image.id,
-    as: "figure",
+    as: "Figure",
     alt,
   });
+}
+
+/** An untagged image is given an element of `type`; a tagged one is retagged. */
+function typeCommand(
+  image: ImageObjectSnapshot,
+  type: DescribableType,
+): Command {
+  const { pageIndex, mcid } = image;
+  if (mcid !== undefined)
+    return new RetagBlockCommand({ pageIndex, mcid, type });
+  return new TagImageCommand({ pageIndex, imageId: image.id, as: type });
 }
 
 /**
@@ -146,7 +130,7 @@ function decorativeCommand(
     return new TagImageCommand({
       pageIndex: image.pageIndex,
       imageId: image.id,
-      as: decorative ? "artifact" : "figure",
+      as: decorative ? "artifact" : "Figure",
     });
   }
   if (image.mcid === undefined) return null;

@@ -19,7 +19,7 @@ import {
   scrollItemToCard,
 } from "@editor/tools/pdfTextEditor/util/reviewCardScroll";
 
-export interface AccessibilityReview extends AccessibilityProgress {
+export interface ReviewProgress extends AccessibilityProgress {
   /** The selected item, when exactly one text block or image is selected. */
   current: ReviewItem | null;
   /** The next item still to do after the selection, or null when none is left. */
@@ -50,7 +50,7 @@ export function useAccessibilityProgress(
   state: EditorViewState,
   selection: SelectionState,
   active: boolean,
-): AccessibilityReview {
+): ReviewProgress {
   const doc = store.document;
   useEffect(() => {
     if (!active || !state.hasDocument) return;

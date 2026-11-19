@@ -33,7 +33,7 @@ import {
   scanTypingDropped,
 } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { ScanFontMatchModal } from "@editor/tools/pdfTextEditor/components/inspector/ScanFontMatchModal";
-import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type {
   EditorViewState,
   LoadProgress,
@@ -133,8 +133,8 @@ export const EditorSidebar = memo(function EditorSidebar({
   }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
   // Following the selection only catches one appearing, so moving from one
   // selected image to the next would leave the new one's description hidden.
-  const selectNextImageToReview = () => {
-    if (controller.onSelectNextImageToReview()) setTab("selected");
+  const selectNextToReview = () => {
+    if (controller.onSelectNextToReview()) setTab("selected");
   };
 
   if (!state.hasDocument) {
@@ -150,8 +150,10 @@ export const EditorSidebar = memo(function EditorSidebar({
       store={store}
       state={state}
       reviewingAccessibility={reviewingAccessibility}
-      imageReview={reviewingAccessibility ? controller.imageReview : null}
-      onSelectNextImageToReview={selectNextImageToReview}
+      accessibilityReview={
+        reviewingAccessibility ? controller.accessibilityReview : null
+      }
+      onSelectNextToReview={selectNextToReview}
       onSetGroupingMode={onSetGroupingMode}
       onSetWidthMode={onSetWidthMode}
       onSetShowRulers={onSetShowRulers}
@@ -238,8 +240,8 @@ function DocumentTab({
   store,
   state,
   reviewingAccessibility,
-  imageReview,
-  onSelectNextImageToReview,
+  accessibilityReview,
+  onSelectNextToReview,
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
@@ -249,8 +251,8 @@ function DocumentTab({
   "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
 > & {
   reviewingAccessibility: boolean;
-  imageReview: ImageReview | null;
-  onSelectNextImageToReview: () => void;
+  accessibilityReview: AccessibilityReview | null;
+  onSelectNextToReview: () => void;
   accessibilityOnly: boolean;
 }) {
   const documentLanguage = useDocumentLanguage(store, state);
@@ -270,8 +272,8 @@ function DocumentTab({
       onSetGroupingMode={onSetGroupingMode}
       onSetWidthMode={onSetWidthMode}
       onSetShowRulers={onSetShowRulers}
-      imageReview={imageReview}
-      onSelectNextImageToReview={onSelectNextImageToReview}
+      accessibilityReview={accessibilityReview}
+      onSelectNextToReview={onSelectNextToReview}
       untaggedPages={bulkTagging.untaggedPages}
       onTagUntaggedContent={bulkTagging.tagAll}
       markedTagged={
