@@ -133,7 +133,7 @@ export const useConfigNavSections = (
               "admin.settings.general.description",
               "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
             ),
-            icon: "settings",
+            icon: "server",
             component: (
               <Suspense fallback={<LoadingFallback />}>
                 <AdminSystemSection />
