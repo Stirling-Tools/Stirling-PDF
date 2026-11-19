@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import i18n from "i18next";
 import { installFailOnConsole } from "@editor/tests/failOnConsole";
+import { installEnUsIntlDefaults } from "@editor/tests/enUsIntlDefaults";
 
 // The shims `src/index.tsx` installs - see core/setupTests.ts.
 import "@editor/utils/engineShims";
@@ -15,6 +16,7 @@ void i18n.init({
 });
 
 installFailOnConsole();
+installEnUsIntlDefaults();
 
 // Mock localStorage for tests
 const localStorageMock = (() => {
