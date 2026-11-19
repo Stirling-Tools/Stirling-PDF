@@ -14,9 +14,10 @@ let mountedEditors = 0;
 
 /**
  * Opens the text the user picked in the viewer for editing, once its page has
- * been read: the run takes focus with that span selected, so typing replaces
- * it. A page without the text leaves the selection alone. A target the editor
- * closes without reaching is dropped, so no later open picks it up.
+ * been read: every run holding part of it is selected, and the first takes
+ * focus with its span selected, so typing replaces that span. A page without
+ * the text leaves the selection alone. A target the editor closes without
+ * reaching is dropped, so no later open picks it up.
  */
 export function useOpenAtViewerText(
   store: EditorStore,
@@ -51,24 +52,27 @@ export function useOpenAtViewerText(
       if (!page?.annotations) return;
       clearTextTarget();
       const found = locateViewerText(page, textTarget.text, textTarget.rect);
-      if (!found) return;
+      if (!found || found.length === 0) return;
+      const first = found[0];
       store.selection.set({
-        runIds: [found.runId],
+        runIds: found.map((span) => span.runId),
         imageIds: [],
         shapeIds: [],
         formFieldId: null,
         caret: null,
-        textRange: found.range,
+        // The model records one exact span; with several runs whole runs are
+        // selected, as a marquee selection does.
+        textRange: found.length === 1 ? first.range : null,
       });
       const chosen = store.selection.value;
-      revealOnPage(runElement(found.runId), page.pageIndex);
+      revealOnPage(runElement(first.runId), page.pageIndex);
       let frame = 0;
       let waited = 0;
       const focusWhenMounted = () => {
         // The user has moved on; their selection stands.
         if (store.selection.value !== chosen) return;
-        const el = runElement(found.runId);
-        if (el) editRange(el, found.range);
+        const el = runElement(first.runId);
+        if (el) editRange(el, first.range);
         else if (waited++ < MOUNT_WAIT_FRAMES) {
           frame = requestAnimationFrame(focusWhenMounted);
         }

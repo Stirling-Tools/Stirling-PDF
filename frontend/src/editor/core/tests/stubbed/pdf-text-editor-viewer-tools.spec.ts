@@ -7,6 +7,10 @@ const SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/sample.pdf",
 );
+const PARAGRAPH_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/paragraph-sample.pdf",
+);
 const SIGNED_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/signed-sample.pdf",
@@ -270,4 +274,66 @@ test("Edit text in the viewer's selection menu opens the editor on that text", a
   await page.keyboard.type("Replaced");
   await expect(focusedRun).toContainText("Replaced");
   await expect(focusedRun).not.toContainText("Test document");
+});
+
+test("Edit text keeps a whole multi-line selection selected", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/editor");
+  await page.locator('input[type="file"]').first().setInputFiles(PARAGRAPH_PDF);
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({
+    timeout: 30_000,
+  });
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("page has no bounding box");
+  // The body paragraph sits between ~23% and ~42% of the page's height.
+  await page.mouse.move(box.x + box.width * 0.1, box.y + box.height * 0.23);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.88, box.y + box.height * 0.42, {
+    steps: 20,
+  });
+  await page.mouse.up();
+  await page.getByTestId("text-selection-edit-text").click();
+
+  await expect(editText(page)).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const store = (
+            window as unknown as {
+              __editor_store?: {
+                selection: {
+                  value: {
+                    runIds: string[];
+                    textRange: { start: number; end: number } | null;
+                  };
+                };
+                getState: () => {
+                  pages: Array<{ runs: Array<{ id: string; text: string }> }>;
+                };
+              };
+            }
+          ).__editor_store;
+          const sel = store?.selection.value;
+          if (!store || !sel || sel.runIds.length === 0) return "";
+          const runs = store.getState().pages[0]?.runs ?? [];
+          const first = runs.find((r) => r.id === sel.runIds[0]);
+          if (sel.runIds.length === 1 && first && sel.textRange) {
+            return first.text.slice(sel.textRange.start, sel.textRange.end);
+          }
+          return runs
+            .filter((r) => sel.runIds.includes(r.id))
+            .map((r) => r.text)
+            .join("\n");
+        }),
+      { timeout: 60_000 },
+    )
+    // The whole paragraph, not just the cluster the selection started in.
+    .toMatch(/Second line[\s\S]+Fourth line/);
 });
