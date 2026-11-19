@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 import { BookletGuideDiagram } from "@editor/components/tools/bookletImposition/BookletGuideDiagram";
 
 /** Booklet printing guidance, with diagrams supplementing the translated steps. */
-export const useBookletImpositionTips = (): TooltipContent => {
+export const useBookletImpositionTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {
@@ -116,7 +116,7 @@ export const useBookletImpositionTips = (): TooltipContent => {
   };
 };
 
-export const useBookletImpositionAdvancedTips = (): TooltipContent => {
+export const useBookletImpositionAdvancedTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

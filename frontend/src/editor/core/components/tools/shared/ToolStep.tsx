@@ -3,7 +3,7 @@ import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/ui/InfoTooltip.css";
 import { Tooltip } from "@editor/components/shared/Tooltip";
-import { TooltipTip } from "@editor/types/tips";
+import type { SidebarTooltipContent } from "@editor/types/tips";
 import {
   createFilesToolStep,
   FilesToolStepProps,
@@ -32,14 +32,7 @@ export interface ToolStepProps {
   _excludeFromCount?: boolean; // Internal prop to exclude from visible count calculation
   _noPadding?: boolean; // Internal prop to exclude from default left padding
   alwaysShowTooltip?: boolean; // Force tooltip to show even when collapsed
-  tooltip?: {
-    content?: React.ReactNode;
-    tips?: TooltipTip[];
-    header?: {
-      title: string;
-      logo?: React.ReactNode;
-    };
-  };
+  tooltip?: SidebarTooltipContent;
 }
 
 const renderTooltipTitle = (

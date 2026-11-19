@@ -250,6 +250,7 @@ text = "Text"
 
 [addImage.step]
 createDesc = "Upload the image you want to add"
+createTitle = "Adding an Image"
 place = "Place image"
 placeDesc = "Click on the PDF to add your image"
 
@@ -466,6 +467,7 @@ text = "Text"
 
 [addText.step]
 createDesc = "Enter the text you want to add"
+createTitle = "Adding Text"
 place = "Place text"
 placeDesc = "Click on the PDF to add your text"
 
@@ -2332,6 +2334,9 @@ notConfigured = "! Not Configured"
 remove = "Remove tool"
 selected = "Selected Tools"
 selectTool = "Select a tool..."
+
+[automate.creation.tooltip.header]
+title = "About Automations"
 
 [automate.creation.unsavedChanges]
 cancel = "Cancel"
@@ -4748,6 +4753,9 @@ replaceExisting = "Replace existing bookmarks"
 replaceExistingHint = "When unchecked, the new outline is appended after the current bookmarks."
 title = "Bookmarks & outline"
 
+[editTableOfContents.tooltip.header]
+title = "About Bookmarks"
+
 [editTableOfContents.workbench]
 changeFile = "Change PDF"
 filePrompt = "Select a PDF from your library or upload a new one to begin."
@@ -6410,6 +6418,9 @@ sort = "Sort"
 
 [merge.sortFiles]
 title = "Sort Files"
+
+[merge.sortFiles.tooltip.header]
+title = "File Order"
 
 [merge.tooltip.header]
 title = "Merge Settings Overview"
@@ -13353,6 +13364,7 @@ text = "Text"
 
 [sign.step]
 createDesc = "Choose how you want to create the signature"
+createTitle = "Creating Your Signature"
 place = "Place & save"
 placeDesc = "Position the signature on your PDF"
 

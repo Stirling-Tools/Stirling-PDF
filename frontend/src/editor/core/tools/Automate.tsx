@@ -241,6 +241,12 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         isVisible: currentStep === AUTOMATION_STEPS.CREATION,
         isCollapsed: false,
         tooltip: {
+          header: {
+            title: t(
+              "automate.creation.tooltip.header.title",
+              "About Automations",
+            ),
+          },
           content: t(
             "automate.creation.intro",
             "Automations run tools sequentially. To get started, add tools in the order you want them to run.",

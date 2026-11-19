@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { TooltipContent } from "@editor/types/tips";
+import { SidebarTooltipContent } from "@editor/types/tips";
 
-export const useSplitMethodTips = (): TooltipContent => {
+export const useSplitMethodTips = (): SidebarTooltipContent => {
   const { t } = useTranslation();
 
   return {

@@ -434,6 +434,12 @@ const EditTableOfContents = (props: BaseToolProps) => {
         title: t("editTableOfContents.settings.title", "Bookmarks & outline"),
         isCollapsed: false,
         tooltip: {
+          header: {
+            title: t(
+              "editTableOfContents.tooltip.header.title",
+              "About Bookmarks",
+            ),
+          },
           tips: [
             {
               bullets: [
