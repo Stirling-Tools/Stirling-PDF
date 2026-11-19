@@ -229,13 +229,18 @@
   min-width: 0;
   max-width: calc(100% + 16px);
   margin-inline: -8px;
-  position: relative;
-  display: flex;
+  /* Edge groups in equal outer columns keep the lanes centred on the row
+     while there is room, and push the lanes aside rather than overlap them
+     when there is not. */
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(
+      max-content,
+      1fr
+    );
   align-items: center;
-  /* Symmetric side padding leaves room for the controls pinned right without
-     knocking the centred tool icons off-centre. The extra 8px each side
-     absorbs the negative margin. */
-  padding: 4px 44px;
+  column-gap: 8px;
+  /* The extra 8px each side absorbs the negative margin. */
+  padding: 4px 14px;
   /* Lets the row's controls fit themselves to its width. */
   container: workbench-tool-row / inline-size;
   border-top: 1px solid var(--c-border-subtle);
@@ -272,14 +277,15 @@
   background: var(--c-hover);
 }
 
-/* Controls pinned to the right edge of the tool row. */
+/* Controls at the tool row's edges. */
+.workbench-bar-row-start,
 .workbench-bar-row-end {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
+  gap: 2px;
+}
+.workbench-bar-row-end {
+  justify-content: flex-end;
 }
 
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */
@@ -418,6 +424,7 @@
   }
 
   .workbench-bar-center {
+    display: flex;
     flex-basis: 100%;
     max-width: 100%;
     margin-inline: 0;

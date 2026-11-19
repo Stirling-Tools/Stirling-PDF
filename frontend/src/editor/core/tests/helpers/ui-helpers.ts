@@ -209,16 +209,20 @@ export async function revealPickerTool(
   );
 }
 
-/** Shows or hides one of the viewer's side panels from the bar's Panels menu. */
+const VIEWER_PANEL_TOGGLES = {
+  "Page thumbnails": "viewer-toggle-sidebar",
+  Bookmarks: "viewer-toggle-bookmarks",
+  Comments: "viewer-toggle-comments",
+  Attachments: "viewer-toggle-attachments",
+  Layers: "viewer-toggle-layers",
+} as const;
+
+/** Shows or hides one of the viewer's side panels from its toggle in the bar. */
 export async function toggleViewerPanel(
   page: Page,
-  name: "Page thumbnails" | "Bookmarks" | "Comments" | "Attachments" | "Layers",
+  name: keyof typeof VIEWER_PANEL_TOGGLES,
 ): Promise<void> {
-  await page.getByTestId("viewer-panels-menu").click();
-  await page.getByRole("menuitem", { name, exact: true }).click();
-  // The menu stays open as settings change; Escape puts it away.
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+  await page.getByTestId(VIEWER_PANEL_TOGGLES[name]).click();
 }
 
 /** Picks a choice from the viewer's Page view menu, then puts the menu away. */

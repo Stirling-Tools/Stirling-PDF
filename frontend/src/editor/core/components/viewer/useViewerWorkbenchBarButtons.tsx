@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Menu, Slider, Popover, Select } from "@mantine/core";
+import { Slider, Popover, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@editor/i18n";
 import { useViewer } from "@editor/contexts/ViewerContext";
@@ -8,13 +8,9 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@editor/hooks/useWorkbenchBarButtons";
-import { Icon, type IconName } from "@editor/ui/Icon";
+import type { IconName } from "@editor/ui/Icon";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
-import {
-  BarButton,
-  BarMenu,
-  toggleMark,
-} from "@editor/components/viewer/ViewerBarControls";
+import { BarButton } from "@editor/components/viewer/ViewerBarControls";
 import { ViewerDocumentMenu } from "@editor/components/viewer/ViewerDocumentMenu";
 import { ViewerPageViewMenu } from "@editor/components/viewer/ViewerPageViewMenu";
 import { AnnotationVisibilityToggle } from "@editor/components/viewer/AnnotationVisibilityToggle";
@@ -105,7 +101,6 @@ export function useViewerWorkbenchBarButtons(
     "workbenchBar.applyRedactionsFirst",
     "Apply redactions first",
   );
-  const panelsLabel = t("workbenchBar.panels", "Panels");
   const pageViewLabel = t("workbenchBar.pageView", "Page view");
   const annotationVisibilityLabel = t(
     "workbenchBar.toggleAnnotations",
@@ -222,17 +217,30 @@ export function useViewerWorkbenchBarButtons(
       label: string,
       active: boolean,
       onToggle: () => void,
-    ) => (
-      <Menu.Item
-        key={id}
-        leftSection={<Icon name={icon} size="1rem" />}
-        rightSection={toggleMark(active)}
-        onClick={onToggle}
-        data-testid={id}
-      >
-        {label}
-      </Menu.Item>
-    );
+      section: "row-start" | "row-end",
+      order: number,
+    ): WorkbenchBarButtonWithAction => ({
+      id,
+      tooltip: label,
+      ariaLabel: label,
+      section,
+      order,
+      active,
+      // Registered as the action too, for reading mode's rail.
+      onClick: onToggle,
+      render: ({ disabled }) => (
+        <BarButton
+          icon={icon}
+          label={label}
+          iconOnly
+          tooltipPosition={tooltipPosition}
+          active={active}
+          disabled={disabled}
+          onClick={onToggle}
+          testId={id}
+        />
+      ),
+    });
 
     const buttons: WorkbenchBarButtonWithAction[] = [
       {
@@ -413,58 +421,57 @@ export function useViewerWorkbenchBarButtons(
           </Popover>
         ),
       },
-      {
-        id: "viewer-panels",
-        tooltip: panelsLabel,
-        ariaLabel: panelsLabel,
-        section: "top" as const,
-        order: 20,
-        render: ({ disabled }) => (
-          <BarMenu
-            icon="panel-left"
-            label={panelsLabel}
-            disabled={disabled}
-            testId="viewer-panels-menu"
-          >
-            {panelToggle(
-              "viewer-toggle-sidebar",
-              "rows-2",
-              thumbnailsLabel,
-              isThumbnailSidebarVisible,
-              viewer.toggleThumbnailSidebar,
-            )}
-            {panelToggle(
-              "viewer-toggle-bookmarks",
-              "bookmark",
-              bookmarksLabel,
-              isBookmarkSidebarVisible,
-              viewer.toggleBookmarkSidebar,
-            )}
-            {panelToggle(
-              "viewer-toggle-comments",
-              "message-square",
-              commentsLabel,
-              isCommentsSidebarVisible,
-              toggleCommentsSidebar,
-            )}
-            {panelToggle(
-              "viewer-toggle-attachments",
-              "paperclip",
-              attachmentsLabel,
-              isAttachmentSidebarVisible,
-              viewer.toggleAttachmentSidebar,
-            )}
-            {hasLayers &&
-              panelToggle(
-                "viewer-toggle-layers",
-                "layers",
-                layersLabel,
-                isLayerSidebarVisible,
-                viewer.toggleLayerSidebar,
-              )}
-          </BarMenu>
-        ),
-      },
+      // The side panels as plain toggles at the row's edges: the document's
+      // own content panels on the left, page thumbnails beside its menu.
+      panelToggle(
+        "viewer-toggle-bookmarks",
+        "bookmark",
+        bookmarksLabel,
+        isBookmarkSidebarVisible,
+        viewer.toggleBookmarkSidebar,
+        "row-start",
+        1,
+      ),
+      panelToggle(
+        "viewer-toggle-comments",
+        "message-square",
+        commentsLabel,
+        isCommentsSidebarVisible,
+        toggleCommentsSidebar,
+        "row-start",
+        2,
+      ),
+      panelToggle(
+        "viewer-toggle-attachments",
+        "paperclip",
+        attachmentsLabel,
+        isAttachmentSidebarVisible,
+        viewer.toggleAttachmentSidebar,
+        "row-start",
+        3,
+      ),
+      ...(hasLayers
+        ? [
+            panelToggle(
+              "viewer-toggle-layers",
+              "layers",
+              layersLabel,
+              isLayerSidebarVisible,
+              viewer.toggleLayerSidebar,
+              "row-start",
+              4,
+            ),
+          ]
+        : []),
+      panelToggle(
+        "viewer-toggle-sidebar",
+        "rows-2",
+        thumbnailsLabel,
+        isThumbnailSidebarVisible,
+        viewer.toggleThumbnailSidebar,
+        "row-end",
+        59,
+      ),
       {
         id: "viewer-page-view",
         tooltip: pageViewLabel,
@@ -607,25 +614,10 @@ export function useViewerWorkbenchBarButtons(
         order: 60,
         render: ({ disabled }) => <ViewerDocumentMenu disabled={disabled} />,
       },
-      // Not drawn in the bar, where the panels menu and the page bar hold
-      // them; registered for reading mode's rail, which acts on them by id.
+      // Not drawn in the bar, where the page bar holds them; registered for
+      // reading mode's rail, which acts on them by id.
       ...(
         [
-          {
-            id: "viewer-toggle-sidebar",
-            active: isThumbnailSidebarVisible,
-            onClick: viewer.toggleThumbnailSidebar,
-          },
-          {
-            id: "viewer-toggle-bookmarks",
-            active: isBookmarkSidebarVisible,
-            onClick: viewer.toggleBookmarkSidebar,
-          },
-          {
-            id: "viewer-toggle-comments",
-            active: isCommentsSidebarVisible,
-            onClick: toggleCommentsSidebar,
-          },
           {
             id: "viewer-rotate-left",
             disabled: pageToolActive,
@@ -655,7 +647,6 @@ export function useViewerWorkbenchBarButtons(
     searchLabel,
     panLabel,
     applyRedactionsLabel,
-    panelsLabel,
     thumbnailsLabel,
     bookmarksLabel,
     attachmentsLabel,

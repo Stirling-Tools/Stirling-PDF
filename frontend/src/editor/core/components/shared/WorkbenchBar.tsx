@@ -202,7 +202,14 @@ export default function WorkbenchBar({
     [buttons],
   );
 
-  // Pinned to the tool row's right edge, clear of the centred lanes.
+  // Pinned to the tool row's edges, clear of the centred lanes.
+  const rowStartButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "row-start" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
   const rowEndButtons = useMemo(
     () =>
       buttons.filter(
@@ -510,7 +517,14 @@ export default function WorkbenchBar({
             : ""
         }`}
       >
+        {!isMobile && (
+          <div className="workbench-bar-row-start">
+            {rowStartButtons.map(renderRowButton)}
+          </div>
+        )}
         <div className="workbench-bar-center-scroll">
+          {/* A phone's row scrolls, so its edge controls scroll with it. */}
+          {isMobile && rowStartButtons.map(renderRowButton)}
           {sectionsWithButtons.map(
             ({ section, buttons: sectionButtons }, idx) => (
               <React.Fragment key={section}>
@@ -519,10 +533,9 @@ export default function WorkbenchBar({
               </React.Fragment>
             ),
           )}
-          {/* A phone's row scrolls, so its end controls scroll with it. */}
           {isMobile && rowEndButtons.map(renderRowButton)}
         </div>
-        {!isMobile && rowEndButtons.length > 0 && (
+        {!isMobile && (
           <div className="workbench-bar-row-end">
             {rowEndButtons.map(renderRowButton)}
           </div>
