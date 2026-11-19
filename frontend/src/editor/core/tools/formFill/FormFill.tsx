@@ -58,6 +58,7 @@ import { dispatchFormApply } from "@editor/tools/formFill/formFillEvents";
 import { useFormAutoMode } from "@editor/tools/formFill/useFormAutoMode";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 import styles from "@editor/tools/formFill/FormFill.module.css";
+import { AutoDetectFieldsCta } from "@editor/tools/formFill/AutoDetectFieldsCta";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
@@ -576,7 +577,12 @@ const FormFill = (_props: BaseToolProps) => {
       )}
 
       {/* ---- Create mode ---- */}
-      {mode === "create" && <FormFieldCreatePanel {...designProps} />}
+      {mode === "create" && (
+        <>
+          <AutoDetectFieldsCta />
+          <FormFieldCreatePanel {...designProps} />
+        </>
+      )}
 
       {/* ---- Modify mode ---- */}
       {mode === "modify" && <FormFieldModifyPanel {...designProps} />}
@@ -759,6 +765,7 @@ const FormFill = (_props: BaseToolProps) => {
                       "No fillable form fields found in this PDF.",
                     )}
                   </span>
+                  <AutoDetectFieldsCta />
                 </div>
               )}
           </div>

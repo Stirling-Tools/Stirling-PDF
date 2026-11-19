@@ -352,7 +352,6 @@ dateDesc = "Current date"
 datetimeDesc = "Date and time combined"
 dateTimeVars = "Date & Time"
 dynamicVariables = "Dynamic Variables"
-dynamicVariablesHowTo = "How to use dynamic variables"
 examples = "Examples"
 filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
@@ -382,9 +381,9 @@ quickPosition = "Select a position on the page to place the stamp."
 rotation = "Rotation"
 selectedImageAlt = "Selected stamp image"
 selectTemplate = "Select a template..."
+size = "Size"
 stampSetup = "Stamp Setup"
 stampText = "Stamp Text"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 stampType = "Stamp Type"
 submit = "Add Stamp"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
@@ -1969,9 +1968,6 @@ title = "Do you want to help make Stirling PDF better?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
-alignCenter = "Align center"
-alignLeft = "Align left"
-alignRight = "Align right"
 annotationStyle = "Annotation style"
 backgroundColor = "Background color"
 borderOff = "Border: Off"
@@ -2041,6 +2037,11 @@ title = "Annotate"
 underline = "Underline"
 undoDelete = "Undo"
 width = "Width"
+
+[annotation.align]
+center = "Center"
+left = "Left"
+right = "Right"
 
 [app]
 description = "A free, private PDF editor you can run on any infrastructure."
@@ -2538,9 +2539,6 @@ tooltip = "Adds borders around each page section to help with cutting and alignm
 [bookletImposition.addGutter]
 label = "Add gutter margin"
 tooltip = "Adds inner margin space for binding"
-
-[bookletImposition.advanced]
-title = "Advanced"
 
 [bookletImposition.doubleSided]
 label = "Double-sided printing"
@@ -5610,6 +5608,11 @@ skippedEdits_other = "{{count}} changes could not be applied:"
 skippedEditsTruncated = "{{count}} more not listed."
 unsavedChanges = "Unsaved changes"
 
+[formFill.autoDetect]
+action = "Auto-detect fields"
+body = "Detect the form fields in this PDF automatically instead of drawing them by hand."
+title = "Find fields with AI"
+
 [formFill.create]
 empty = "No fields drawn yet."
 goToField = "Go to this field"
@@ -5931,7 +5934,7 @@ title = "Automate"
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
-title = "Auto Rename PDF File"
+title = "Auto Rename File"
 
 [home.autoRotate]
 desc = "Detect each page's orientation and rotate it upright automatically."
@@ -6047,7 +6050,7 @@ title = "Form Editor"
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
 tags = "info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
-title = "Get ALL Info on PDF"
+title = "Get all info on PDF"
 
 [home.manageCertificates]
 tags = "certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"

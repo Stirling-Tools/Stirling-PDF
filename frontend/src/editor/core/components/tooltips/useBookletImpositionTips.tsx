@@ -112,18 +112,6 @@ export const useBookletImpositionTips = (): SidebarTooltipContent => {
           ),
         ],
       },
-    ],
-  };
-};
-
-export const useBookletImpositionAdvancedTips = (): SidebarTooltipContent => {
-  const { t } = useTranslation();
-
-  return {
-    header: {
-      title: t("bookletImposition.tooltip.advanced.title", "Advanced Options"),
-    },
-    tips: [
       {
         title: t(
           "bookletImposition.tooltip.advanced.title",

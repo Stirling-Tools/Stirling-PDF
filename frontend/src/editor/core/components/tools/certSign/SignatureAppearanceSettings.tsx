@@ -1,5 +1,5 @@
 import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@editor/hooks/tools/certSign/useCertSignParameters";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
@@ -22,55 +22,23 @@ const SignatureAppearanceSettings = ({
 
   return (
     <Stack gap="md">
-      {/* Signature Visibility */}
-      <Stack gap="sm">
-        <div style={{ display: "flex", gap: "4px" }}>
-          <Button
-            accent={!parameters.showSignature ? "default" : "neutral"}
-            variant={!parameters.showSignature ? "primary" : "secondary"}
-            onClick={() => onParameterChange("showSignature", false)}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              height: "auto",
-              minHeight: "40px",
-              fontSize: "11px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                lineHeight: "1.1",
-                fontSize: "11px",
-              }}
-            >
-              {t("certSign.appearance.invisible", "Invisible")}
-            </div>
-          </Button>
-          <Button
-            accent={parameters.showSignature ? "default" : "neutral"}
-            variant={parameters.showSignature ? "primary" : "secondary"}
-            onClick={() => onParameterChange("showSignature", true)}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              height: "auto",
-              minHeight: "40px",
-              fontSize: "11px",
-            }}
-          >
-            <div
-              style={{
-                textAlign: "center",
-                lineHeight: "1.1",
-                fontSize: "11px",
-              }}
-            >
-              {t("certSign.appearance.visible", "Visible")}
-            </div>
-          </Button>
-        </div>
-      </Stack>
+      <ButtonSelector
+        value={parameters.showSignature ? "visible" : "invisible"}
+        onChange={(next) =>
+          onParameterChange("showSignature", next === "visible")
+        }
+        options={[
+          {
+            value: "invisible",
+            label: t("certSign.appearance.invisible", "Invisible"),
+          },
+          {
+            value: "visible",
+            label: t("certSign.appearance.visible", "Visible"),
+          },
+        ]}
+        disabled={disabled}
+      />
 
       {/* Visible Signature Options */}
       {parameters.showSignature && (
@@ -117,57 +85,16 @@ const SignatureAppearanceSettings = ({
             min={1}
             disabled={disabled}
           />
-          <Stack gap="xs">
-            <Text size="sm" fw={500}>
-              {t("certSign.logoTitle", "Logo")}
-            </Text>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <Button
-                accent={!parameters.showLogo ? "default" : "neutral"}
-                variant={!parameters.showLogo ? "primary" : "secondary"}
-                onClick={() => onParameterChange("showLogo", false)}
-                disabled={disabled}
-                style={{
-                  flex: 1,
-                  height: "auto",
-                  minHeight: "40px",
-                  fontSize: "11px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    lineHeight: "1.1",
-                    fontSize: "11px",
-                  }}
-                >
-                  {t("certSign.noLogo", "No Logo")}
-                </div>
-              </Button>
-              <Button
-                accent={parameters.showLogo ? "default" : "neutral"}
-                variant={parameters.showLogo ? "primary" : "secondary"}
-                onClick={() => onParameterChange("showLogo", true)}
-                disabled={disabled}
-                style={{
-                  flex: 1,
-                  height: "auto",
-                  minHeight: "40px",
-                  fontSize: "11px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    lineHeight: "1.1",
-                    fontSize: "11px",
-                  }}
-                >
-                  {t("certSign.showLogo", "Show Logo")}
-                </div>
-              </Button>
-            </div>
-          </Stack>
+          <ButtonSelector
+            label={t("certSign.logoTitle", "Logo")}
+            value={parameters.showLogo ? "show" : "none"}
+            onChange={(next) => onParameterChange("showLogo", next === "show")}
+            options={[
+              { value: "none", label: t("certSign.noLogo", "No Logo") },
+              { value: "show", label: t("certSign.showLogo", "Show Logo") },
+            ]}
+            disabled={disabled}
+          />
         </Stack>
       )}
     </Stack>

@@ -33,6 +33,7 @@ const THEME_FILES = [
   "dimensions.css",
   "index.css",
   "mantineInputs.css",
+  "mantineDropdowns.css",
 ];
 
 // ── colour helpers ─────────────────────────────────────────────────────────

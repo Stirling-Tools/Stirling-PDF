@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ActionIcon } from "@editor/ui/ActionIcon";
 import { Icon } from "@editor/ui/Icon";
+import { Tooltip } from "@editor/components/shared/Tooltip";
 import "@editor/components/shared/ToolPanelHeader.css";
 
 export interface ToolPanelHeaderProps {
@@ -8,6 +9,8 @@ export interface ToolPanelHeaderProps {
   icon: ReactNode;
   /** Header title. */
   title: ReactNode;
+  /** Shown on hover of the title bar; the same text the tool list shows. */
+  description?: ReactNode;
   /** Close (X) handler. The trailing close button renders only when supplied. */
   onClose?: () => void;
   /** aria-label for the close button. */
@@ -26,15 +29,26 @@ export interface ToolPanelHeaderProps {
 export function ToolPanelHeader({
   icon,
   title,
+  description,
   onClose,
   closeLabel,
 }: ToolPanelHeaderProps) {
+  const bar = (
+    <div className="sui-panelhdr__bar">
+      <span className="sui-panelhdr__icon">{icon}</span>
+      <span className="sui-panelhdr__label">{title}</span>
+    </div>
+  );
+
   return (
     <div className="sui-panelhdr">
-      <div className="sui-panelhdr__bar">
-        <span className="sui-panelhdr__icon">{icon}</span>
-        <span className="sui-panelhdr__label">{title}</span>
-      </div>
+      {description ? (
+        <Tooltip content={description} position="left" arrow delay={500}>
+          {bar}
+        </Tooltip>
+      ) : (
+        bar
+      )}
       {onClose && (
         <ActionIcon
           className="sui-panelhdr__close"

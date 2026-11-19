@@ -1,7 +1,7 @@
 import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { ActionIcon } from "@editor/ui/ActionIcon";
+import ButtonSelector from "@editor/components/shared/ButtonSelector";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
@@ -87,38 +87,32 @@ export function PropertiesPopover({
         />
       </div>
 
-      {/* Text Alignment */}
-      <div>
-        <Text size="xs" fw={500} mb={4}>
-          {t("annotation.textAlignment", "Text Alignment")}
-        </Text>
-        <Group gap="xs">
-          <ActionIcon
-            aria-label={t("annotation.alignLeft", "Align left")}
-            variant={currentAlign === "left" ? "primary" : "secondary"}
-            onClick={() => onUpdate({ textAlign: 0 })}
-            size="md"
-          >
-            <Icon name="text-align-start" size={18} />
-          </ActionIcon>
-          <ActionIcon
-            aria-label={t("annotation.alignCenter", "Align center")}
-            variant={currentAlign === "center" ? "primary" : "secondary"}
-            onClick={() => onUpdate({ textAlign: 1 })}
-            size="md"
-          >
-            <Icon name="text-align-center" size={18} />
-          </ActionIcon>
-          <ActionIcon
-            aria-label={t("annotation.alignRight", "Align right")}
-            variant={currentAlign === "right" ? "primary" : "secondary"}
-            onClick={() => onUpdate({ textAlign: 2 })}
-            size="md"
-          >
-            <Icon name="text-align-end" size={18} />
-          </ActionIcon>
-        </Group>
-      </div>
+      <ButtonSelector
+        label={t("annotation.textAlignment", "Text Alignment")}
+        value={currentAlign}
+        onChange={(align) =>
+          onUpdate({
+            textAlign: align === "center" ? 1 : align === "right" ? 2 : 0,
+          })
+        }
+        options={[
+          {
+            value: "left",
+            label: t("annotation.align.left", "Left"),
+            icon: "text-align-start",
+          },
+          {
+            value: "center",
+            label: t("annotation.align.center", "Center"),
+            icon: "text-align-center",
+          },
+          {
+            value: "right",
+            label: t("annotation.align.right", "Right"),
+            icon: "text-align-end",
+          },
+        ]}
+      />
     </Stack>
   );
 

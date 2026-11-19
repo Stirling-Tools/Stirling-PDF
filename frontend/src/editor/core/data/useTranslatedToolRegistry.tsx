@@ -431,7 +431,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       getPdfInfo: {
         icon: <Icon name="clipboard-check" size="1.5rem" />,
-        name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
+        name: t("home.getPdfInfo.title", "Get all info on PDF"),
         component: lazy(() => import("@editor/tools/GetPdfInfo")),
         description: t(
           "home.getPdfInfo.desc",
@@ -686,7 +686,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: asRegistryConfig(bookletImpositionOperationConfig),
         automationSettings: lazySettings(
           () =>
-            import("@editor/components/tools/bookletImposition/BookletImpositionAutomationSettings"),
+            import("@editor/components/tools/bookletImposition/BookletImpositionSettings"),
         ),
         description: t(
           "home.bookletImposition.desc",
@@ -925,7 +925,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       autoRename: {
         icon: <Icon name="whole-word" size="1.5rem" />,
-        name: t("home.autoRename.title", "Auto Rename PDF File"),
+        name: t("home.autoRename.title", "Auto Rename File"),
         component: lazy(() => import("@editor/tools/AutoRename")),
         maxFiles: -1,
         endpoints: ["auto-rename"],
