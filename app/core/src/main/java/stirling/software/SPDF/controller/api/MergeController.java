@@ -58,7 +58,6 @@ import stirling.software.jpdfium.doc.PdfBookmarkEditor.BookmarkTree;
 public class MergeController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private static final String TOC_FONT_PATH = "static/fonts/NotoSans-Regular.ttf";
     public static final int ENTRIES_PER_TOC_PAGE = 32;
 
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
