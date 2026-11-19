@@ -523,6 +523,19 @@ export class EditorDocument {
       const address = structure.fileMcid(mcid)!;
       this.blockAlts.set(block.key, { pageIndex, mcid: address, alt });
     }
+    this.republishPagesHolding(block.key, pageIndex);
+  }
+
+  /**
+   * Bumps every other read page showing block `key`, so its snapshot, and the
+   * badges drawn from it, follow a change made through `pageIndex`.
+   */
+  private republishPagesHolding(key: string, pageIndex: number): void {
+    for (const [index, structure] of this.structureCache) {
+      if (index !== pageIndex && structure.holdsBlock(key)) {
+        this.pageCache.get(index)?.bumpRevision();
+      }
+    }
   }
 
   /** The language the document is read in, as the session has it; null when unknown. */

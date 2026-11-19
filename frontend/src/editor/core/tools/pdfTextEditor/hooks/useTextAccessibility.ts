@@ -24,7 +24,10 @@ import {
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DescribableType } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
-import { describableTextBlock } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
+import {
+  describableTextBlock,
+  documentBlockId,
+} from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 import type { TextLanguage } from "@editor/tools/pdfTextEditor/model/languageTag";
 import type {
   EditorStore,
@@ -405,14 +408,13 @@ function describedElement(
   const [first, ...rest] = targets.map(({ run }) => run);
   const described = first ? describableTextBlock(doc, first) : null;
   if (!first || !described) return null;
-  const structure = doc.structure(first.pageIndex);
-  const sameBlock = rest.every(
-    (run) =>
-      run.pageIndex === first.pageIndex &&
-      run.mcid !== undefined &&
-      !run.inForm &&
-      structure.block(run.mcid)?.key === described.key,
-  );
+  // A file block may continue on the next page; one description covers it.
+  const block = documentBlockId(doc, first.pageIndex, described.key);
+  const sameBlock = rest.every((run) => {
+    if (run.mcid === undefined || run.inForm) return false;
+    const key = doc.structure(run.pageIndex).block(run.mcid)?.key;
+    return !!key && documentBlockId(doc, run.pageIndex, key) === block;
+  });
   return sameBlock
     ? { pageIndex: first.pageIndex, mcid: first.mcid!, type: described.type }
     : null;

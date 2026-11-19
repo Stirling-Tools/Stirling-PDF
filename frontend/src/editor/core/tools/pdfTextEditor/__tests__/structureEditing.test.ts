@@ -441,6 +441,7 @@ describe("reviewing images that need attention", () => {
         pageIndex,
         images: page.images.map((img) => img.snapshot()),
         runs: [] as TextRunSnapshot[],
+        display: page.display.toData(),
       } as PageSnapshot;
     });
   }
@@ -506,6 +507,7 @@ describe("reviewing images that need attention", () => {
         pageIndex: 0,
         images: page.images.map((img) => img.snapshot()),
         runs: [] as TextRunSnapshot[],
+        display: page.display.toData(),
       },
     ] as PageSnapshot[];
 
@@ -527,6 +529,7 @@ describe("reviewing images that need attention", () => {
         pageIndex: 0,
         images: page.images.map((img) => img.snapshot()),
         runs: [] as TextRunSnapshot[],
+        display: page.display.toData(),
       },
     ] as PageSnapshot[];
     expect(reviewAccessibility(doc, read)).toEqual({
@@ -644,6 +647,7 @@ describe("images drawn by a form XObject", () => {
         pageIndex: 0,
         images: await images(doc),
         runs: [] as TextRunSnapshot[],
+        display: doc.page(0).display.toData(),
       },
     ] as PageSnapshot[];
     expect(reviewAccessibility(doc, read)).toEqual({

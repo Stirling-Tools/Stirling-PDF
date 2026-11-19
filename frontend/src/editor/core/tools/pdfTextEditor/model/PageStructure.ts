@@ -918,6 +918,11 @@ export class PageStructure {
     return null;
   }
 
+  /** Whether any of this page's content belongs to block `key`. */
+  holdsBlock(key: string): boolean {
+    return this.elements.some((el) => el.block.key === key);
+  }
+
   /** The MCID of the element the session added that is block `key`; null for a block the file has. */
   addedBlockMcid(key: string): number | null {
     for (const [mcid, element] of this.added) {
