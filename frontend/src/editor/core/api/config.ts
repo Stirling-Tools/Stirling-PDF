@@ -49,6 +49,7 @@ export async function fetchEndpointsAvailability(): Promise<EndpointAvailability
 export async function fetchEndpointEnabled(endpoint: string): Promise<boolean> {
   const response = await apiClient.get<boolean>(
     `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
+    { suppressErrorToast: true, skipAuthRedirect: true },
   );
   return response.data;
 }

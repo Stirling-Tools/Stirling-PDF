@@ -296,6 +296,13 @@ class GeneralUtilsMoreTest {
         void invalidUrls(String url) {
             assertFalse(GeneralUtils.isValidURL(url));
         }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"http://169.254.169.254/latest/meta-data/", "file:///etc/passwd"})
+        @DisplayName("infrastructure targets and non-http schemes are rejected, not thrown")
+        void disallowedTargets(String url) {
+            assertFalse(GeneralUtils.isValidURL(url));
+        }
     }
 
     @Nested
