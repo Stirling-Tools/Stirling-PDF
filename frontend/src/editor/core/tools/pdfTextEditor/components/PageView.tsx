@@ -544,18 +544,6 @@ export const PageView = memo(function PageView({
           store={store}
           selectedRunIds={selectedRunIds}
         />
-        {/* Before the grips and runs, so a badge that overlaps the next run on
-            its line never takes a click aimed at that run. */}
-        {page.runs
-          .filter((run) => attention.runs.has(run.id))
-          .map((run) => (
-            <AttentionBadge
-              key={run.id}
-              attention="needs-description"
-              testId={`pdf-editor-attention-run-${run.id}`}
-              style={besideRun(run, transform, page.height, cssScale)}
-            />
-          ))}
         {/* Every run's move/width grips, after the objects beneath the text and
             before all runs, so a grip never takes a click aimed at any run. */}
         <div ref={setGripLayer} style={{ display: "contents" }} />
@@ -597,6 +585,16 @@ export const PageView = memo(function PageView({
             }
           />
         ))}
+        {page.runs
+          .filter((run) => attention.runs.has(run.id))
+          .map((run) => (
+            <AttentionBadge
+              key={run.id}
+              attention="needs-description"
+              testId={`pdf-editor-attention-run-${run.id}`}
+              style={besideRun(run, transform, page.height, cssScale)}
+            />
+          ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}
