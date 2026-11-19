@@ -244,6 +244,29 @@ describe("guessHeadings", () => {
     });
   });
 
+  it("never skips a level in reading order, starting at H1", () => {
+    expect(
+      levels(
+        run("Spring issue", 13),
+        run("Annual report", 24),
+        run("Background", 13),
+        run("Results", 16),
+        run("By region", 13),
+        run("Outlook", 16),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Spring issue": "H1",
+      "Annual report": "H1",
+      Background: "H2",
+      Results: "H2",
+      "By region": "H3",
+      Outlook: "H2",
+      [BODY]: "P",
+    });
+  });
+
   it("stops at H6", () => {
     const sizes = [40, 34, 28, 24, 20, 17, 14];
     const runs = sizes.flatMap((size) => [

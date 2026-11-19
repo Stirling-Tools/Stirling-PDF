@@ -23,6 +23,7 @@ import {
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
   HeadingType,
   StructureType,
@@ -370,6 +371,27 @@ function readingChain(
     previous = mcid;
   }
   return follows;
+}
+
+/**
+ * The page's runs in the order auto-tag adds their elements to the structure
+ * tree, which is where each run's first object is drawn. Must stay in step
+ * with how `planTagging` orders its steps: heading levels are checked for
+ * skips in this order.
+ */
+export function runsInTagOrder(doc: EditorDocument, page: Page): TextRun[] {
+  const order = contentOrder(doc.module, page.pagePtr);
+  const located = page.runs.map((run, index) => ({
+    run,
+    index,
+    at: Math.min(
+      ...collectMemberPtrs(run).map((ptr) => order.get(ptr) ?? Infinity),
+    ),
+  }));
+  located.sort((a, b) =>
+    a.at === b.at ? a.index - b.index : a.at < b.at ? -1 : 1,
+  );
+  return located.map(({ run }) => run);
 }
 
 /** Each page-level object's index in the page's content, by pointer. */

@@ -69,13 +69,17 @@ interface Style {
  * The runs on `pages` that read as headings, by page index and then run id,
  * each with its level. Runs `skip` names, such as page furniture, are neither
  * guessed nor counted towards the body text. Pass every page the document
- * has read, since one page alone may not show the body text's style.
+ * has read, since one page alone may not show the body text's style, with
+ * each page's runs in reading order: levels never skip in that order, so the
+ * first heading is H1 and each is at most one deeper than the one before it,
+ * as PDF/UA-1 (ISO 14289-1, 7.4.2) requires.
  */
 export function guessHeadings(
   pages: readonly HeadingPage[],
   skip: ReadonlyMap<number, ReadonlyMap<string, unknown>> = new Map(),
 ): Map<number, Map<string, HeadingType>> {
-  const runs = pages.flatMap(({ pageIndex, runs: all }) => {
+  const inOrder = [...pages].sort((a, b) => a.pageIndex - b.pageIndex);
+  const runs = inOrder.flatMap(({ pageIndex, runs: all }) => {
     const kept = all.filter((run) => !skip.get(pageIndex)?.has(run.id));
     return kept.map((run) => ({
       pageIndex,
@@ -129,21 +133,25 @@ export function guessHeadings(
   // A style set once below the top, such as a cover's subtitle or a lone
   // "Abstract", shares the level above rather than pushing every heading
   // under it a level deeper.
-  const levels = new Map<string, HeadingType>();
+  const ranks = new Map<string, number>();
   let rank = -1;
   for (const [index, { style, blocks }] of headingStyles.entries()) {
     if (index === 0 || blocks > 1) rank++;
-    levels.set(
+    ranks.set(
       styleKey(style),
-      HEADING_TYPES[Math.min(Math.max(rank, 0), HEADING_TYPES.length - 1)],
+      Math.min(Math.max(rank, 0), HEADING_TYPES.length - 1),
     );
   }
 
+  // A heading set above every larger one, such as a kicker over the title,
+  // takes the level after the heading before it instead of skipping levels.
+  let previous = -1;
   for (const { pageIndex, run, style, candidate } of runs) {
-    const level = levels.get(styleKey(style));
-    if (!level || !candidate) continue;
+    const styleRank = ranks.get(styleKey(style));
+    if (styleRank === undefined || !candidate) continue;
+    previous = Math.min(styleRank, previous + 1);
     const onPage = headings.get(pageIndex) ?? new Map<string, HeadingType>();
-    headings.set(pageIndex, onPage.set(run.id, level));
+    headings.set(pageIndex, onPage.set(run.id, HEADING_TYPES[previous]));
   }
   return headings;
 }

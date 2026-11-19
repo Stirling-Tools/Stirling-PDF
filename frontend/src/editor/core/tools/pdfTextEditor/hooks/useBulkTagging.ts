@@ -6,6 +6,7 @@ import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/Set
 import {
   TagPageContentCommand,
   hasUntaggedContent,
+  runsInTagOrder,
 } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { publishAllPages } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
@@ -152,7 +153,7 @@ function headingPages(
   const bold = boldRuns(doc.module);
   return pageIndices.map((pageIndex) => ({
     pageIndex,
-    runs: doc.page(pageIndex).runs.map((run) => ({
+    runs: runsInTagOrder(doc, doc.page(pageIndex)).map((run) => ({
       id: run.id,
       text: run.text,
       fontSize: run.fontSize,

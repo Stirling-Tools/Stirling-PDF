@@ -384,6 +384,55 @@ describe("tagAllPages", () => {
     store.dispose();
   });
 
+  test("never skips a heading level in the order the structure tree reads, which is drawing order", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F2", 11, 660, "Results"),
+                show("F1", 24, 720, "Quarterly report"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    const shown = tagsShown(store.document!, 0);
+    expect(
+      ["Results", "Quarterly report", "Outlook"].map((text) => shown.get(text)),
+    ).toEqual(["H1", "H1", "H2"]);
+    store.dispose();
+  });
+
   test("records nothing when nothing is untagged", async () => {
     const store = await storeFor(pagePdf(COLUMNS));
     await tagAllPages(store);
