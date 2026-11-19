@@ -3,16 +3,15 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.*;
 
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -23,7 +22,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.jspecify.annotations.NonNull;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.SPDF.utils.text.TextEncodingHelper;
+import stirling.software.SPDF.utils.text.TocFontResolver;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -410,6 +409,7 @@ public class MergeController {
         int totalPages = tocFilesToGenerate + 1;
 
         try (PDDocument document = new PDDocument()) {
+            TocFontResolver fonts = new TocFontResolver(document);
             for (int i = 0; i < tocFilesToGenerate; i++) {
                 totalPages +=
                         addTocPage(
@@ -418,6 +418,7 @@ public class MergeController {
                                         i * ENTRIES_PER_TOC_PAGE,
                                         Math.min((i + 1) * ENTRIES_PER_TOC_PAGE, files.length)),
                                 document,
+                                fonts,
                                 totalPages,
                                 i == 0,
                                 i * ENTRIES_PER_TOC_PAGE);
@@ -439,6 +440,7 @@ public class MergeController {
     private static int addTocPage(
             MultipartFileWithPdfPageCount[] files,
             PDDocument document,
+            TocFontResolver fonts,
             int startPage,
             boolean generateTitle,
             int indexOffset)
@@ -447,10 +449,7 @@ public class MergeController {
         float pageWidth = PDRectangle.A4.getWidth();
         float pageHeight = PDRectangle.A4.getHeight();
 
-        PDFont contentFont;
-        try (InputStream fontStream = new ClassPathResource(TOC_FONT_PATH).getInputStream()) {
-            contentFont = PDType0Font.load(document, fontStream);
-        }
+        PDFont contentFont = fonts.primaryFont();
 
         int contentFontSize = 10;
         int totalPages = 0;
@@ -486,27 +485,23 @@ public class MergeController {
                 float dotWidth = contentFont.getStringWidth(dot) / 1000 * contentFontSize;
                 float numberMargin = dotWidth * 2;
 
-                String entryName =
-                        fitTextToWidth(
-                                replaceUnsupportedCharacters(
-                                        contentFont, getTocTitle(multipartFile, indexOffset + i)),
-                                contentFont,
-                                contentFontSize,
-                                target
-                                        - tocContentPadding
-                                        - pageCountWidth
-                                        - spaceWidth
-                                        - numberMargin,
-                                true);
-
                 float end = target - pageCountWidth - spaceWidth - numberMargin;
-                float start =
-                        tocContentPadding
-                                + contentFont.getStringWidth(entryName) / 1000 * contentFontSize;
+
+                String title =
+                        Normalizer.normalize(
+                                getTocTitle(multipartFile, indexOffset + i), Normalizer.Form.NFC);
+                List<TocFontResolver.TextRun> entryRuns =
+                        fonts.fitToWidth(title, contentFontSize, end - tocContentPadding);
+
+                float start = tocContentPadding + TocFontResolver.width(entryRuns, contentFontSize);
                 StringBuilder dots = generateDots(contentFont, contentFontSize, start, end);
 
+                for (TocFontResolver.TextRun run : entryRuns) {
+                    cs.setFont(run.font(), contentFontSize);
+                    cs.showText(run.text());
+                }
                 cs.setFont(contentFont, contentFontSize);
-                cs.showText(entryName + space + dots);
+                cs.showText(space + dots);
 
                 cs.newLineAtOffset(target - tocContentPadding - pageCountWidth, 0);
                 cs.showText(String.valueOf(currentDocumentPageStart));
