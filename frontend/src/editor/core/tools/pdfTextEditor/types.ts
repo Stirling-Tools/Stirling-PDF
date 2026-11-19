@@ -267,6 +267,16 @@ export interface TextRange {
   end: number;
 }
 
+/**
+ * The exact characters selected in one run. A selection spanning several runs
+ * needs one of these per run, because `SelectionState.textRange` can only
+ * describe the one run it belongs to.
+ */
+export interface SelectionSpan {
+  runId: string;
+  range: TextRange;
+}
+
 export interface ToolbarState {
   fontFamily: string | null;
   /** The document fontId every selected run can be restored to, or null. */

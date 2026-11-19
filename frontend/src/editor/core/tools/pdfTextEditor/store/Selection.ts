@@ -1,4 +1,5 @@
 import type {
+  SelectionSpan,
   SelectionState,
   TextRange,
 } from "@editor/tools/pdfTextEditor/types";
@@ -48,6 +49,7 @@ export class FindHighlight {
 
 export class Selection {
   private state: SelectionState;
+  private exact: readonly SelectionSpan[] | null;
   private listeners: Set<(s: SelectionState) => void>;
   /** Yellow highlight for the current find-bar match. */
   readonly highlight: FindHighlight;
@@ -61,6 +63,7 @@ export class Selection {
       caret: null,
       textRange: null,
     };
+    this.exact = null;
     this.listeners = new Set();
     this.highlight = new FindHighlight();
   }
@@ -69,8 +72,21 @@ export class Selection {
     return this.state;
   }
 
-  set(next: SelectionState): void {
+  /** Exact text spans when the selection covers several runs; null otherwise. */
+  get spans(): readonly SelectionSpan[] | null {
+    return this.exact;
+  }
+
+  /**
+   * Replace the selection. `spans` carries the exact characters of a selection
+   * that covers several runs; a later set without them drops them.
+   */
+  set(
+    next: SelectionState,
+    spans: readonly SelectionSpan[] | null = null,
+  ): void {
     this.state = next;
+    this.exact = spans;
     this.notify();
   }
 

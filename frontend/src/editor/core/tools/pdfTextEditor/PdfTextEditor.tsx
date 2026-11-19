@@ -37,6 +37,7 @@ import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fon
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
 import { useOpenAtViewerText } from "@editor/tools/pdfTextEditor/hooks/useOpenAtViewerText";
+import { useSelectionTextHighlight } from "@editor/tools/pdfTextEditor/hooks/useSelectionTextHighlight";
 import { SaveRiskModal } from "@editor/tools/pdfTextEditor/components/SaveRiskModal";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/DiscardChangesModal";
@@ -164,6 +165,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     if (sourceFileId) setActiveFileId(sourceFileId);
   }, [sourceFileId, setActiveFileId]);
   useOpenAtViewerText(store, sourceFileId);
+  useSelectionTextHighlight(store);
 
   // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
   // dropping the glyphs.

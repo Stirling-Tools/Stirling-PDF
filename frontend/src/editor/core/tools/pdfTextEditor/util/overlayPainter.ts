@@ -461,8 +461,20 @@ export function highlightTextRange(
   range: Range,
   name: string = TEXT_RANGE_HIGHLIGHT,
 ): () => void {
-  if (!canHighlightTextRanges()) return () => {};
-  const highlight = new Highlight(range);
+  return highlightTextRanges([range], name);
+}
+
+/**
+ * Paints several ranges as one highlight, so a selection spanning runs reads
+ * as one continuous text selection. Browsers without the Highlight API paint
+ * nothing; the callers' selection outlines still show.
+ */
+export function highlightTextRanges(
+  ranges: readonly Range[],
+  name: string = TEXT_RANGE_HIGHLIGHT,
+): () => void {
+  if (!canHighlightTextRanges() || ranges.length === 0) return () => {};
+  const highlight = new Highlight(...ranges);
   CSS.highlights.set(name, highlight);
   return () => {
     if (CSS.highlights.get(name) === highlight) {

@@ -11,6 +11,10 @@ const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
+const MULTI_RUN_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/multirun-paragraph-sample.pdf",
+);
 const SIGNED_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/signed-sample.pdf",
@@ -336,4 +340,70 @@ test("Edit text keeps a whole multi-line selection selected", async ({
     )
     // The whole paragraph, not just the cluster the selection started in.
     .toMatch(/Second line[\s\S]+Fourth line/);
+});
+
+test("Edit text highlights every cluster of a multi-run selection", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/editor");
+  await page.locator('input[type="file"]').first().setInputFiles(MULTI_RUN_PDF);
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({
+    timeout: 30_000,
+  });
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("page has no bounding box");
+  await page.mouse.move(box.x + box.width * 0.05, box.y + box.height * 0.25);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.44, {
+    steps: 20,
+  });
+  await page.mouse.up();
+  await page.getByTestId("text-selection-edit-text").click();
+
+  await expect(editText(page)).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  });
+  // Four lines whose fonts do not group: one exact span per run.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const store = (
+            window as unknown as {
+              __editor_store?: {
+                selection: { spans: readonly unknown[] | null };
+              };
+            }
+          ).__editor_store;
+          return store?.selection.spans?.length ?? 0;
+        }),
+      { timeout: 60_000 },
+    )
+    .toBe(4);
+  // All four spans paint as one text highlight, not just the first cluster.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const highlights = (
+            CSS as unknown as {
+              highlights?: { get(name: string): { size: number } | undefined };
+            }
+          ).highlights;
+          return highlights?.get("pdf-editor-text-range")?.size ?? 0;
+        }),
+      { timeout: 30_000 },
+    )
+    .toBe(4);
+  // No single run owns the caret: clicking a cluster starts editing it.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.activeElement?.getAttribute("data-testid") ?? "",
+      ),
+    )
+    .not.toContain("pdf-editor-run-");
 });

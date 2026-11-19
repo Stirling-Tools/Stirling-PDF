@@ -54,18 +54,25 @@ export function useOpenAtViewerText(
       const found = locateViewerText(page, textTarget.text, textTarget.rect);
       if (!found || found.length === 0) return;
       const first = found[0];
-      store.selection.set({
-        runIds: found.map((span) => span.runId),
-        imageIds: [],
-        shapeIds: [],
-        formFieldId: null,
-        caret: null,
-        // The model records one exact span; with several runs whole runs are
-        // selected, as a marquee selection does.
-        textRange: found.length === 1 ? first.range : null,
-      });
-      const chosen = store.selection.value;
+      store.selection.set(
+        {
+          runIds: found.map((span) => span.runId),
+          imageIds: [],
+          shapeIds: [],
+          formFieldId: null,
+          caret: null,
+          // The model records one exact span; a multi-run selection keeps its
+          // per-run spans on the Selection for the highlight painter.
+          textRange: found.length === 1 ? first.range : null,
+        },
+        found,
+      );
       revealOnPage(runElement(first.runId), page.pageIndex);
+      // A multi-run selection is not an editing caret: focusing its first run
+      // would select that cluster alone and make the rest read as merely
+      // outlined. Clicking a run starts editing it.
+      if (found.length > 1) return;
+      const chosen = store.selection.value;
       let frame = 0;
       let waited = 0;
       const focusWhenMounted = () => {

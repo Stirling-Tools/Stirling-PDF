@@ -20,4 +20,26 @@ describe("Selection text ranges", () => {
     selection.selectOne("a");
     expect(selection.value.textRange).toBeNull();
   });
+
+  it("keeps exact spans for a multi-run selection until it changes", () => {
+    const selection = new Selection();
+    const spans = [
+      { runId: "a", range: { start: 1, end: 4 } },
+      { runId: "b", range: { start: 0, end: 3 } },
+    ];
+    selection.set(
+      {
+        runIds: ["a", "b"],
+        imageIds: [],
+        shapeIds: [],
+        formFieldId: null,
+        caret: null,
+        textRange: null,
+      },
+      spans,
+    );
+    expect(selection.spans).toEqual(spans);
+    selection.toggle("c");
+    expect(selection.spans).toBeNull();
+  });
 });
