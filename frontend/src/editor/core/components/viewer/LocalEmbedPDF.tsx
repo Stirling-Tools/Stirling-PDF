@@ -24,6 +24,7 @@ import { useSignaturePreviewHistory } from "@editor/hooks/signing/useSignaturePr
 import {
   Viewport,
   ViewportPluginPackage,
+  useViewportElement,
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
@@ -201,6 +202,8 @@ interface LocalEmbedPDFProps {
   shouldSkipBytes?: (stableKey: string) => boolean;
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
+  /** Reports the width the pages' scrollbar takes, 0 while there is none. */
+  onScrollbarWidthChange?: (width: number) => void;
   /** Fires when the swap bridge activates a replacement document. */
   onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
@@ -776,9 +779,34 @@ function ViewerPage({
 interface DocumentViewportProps {
   documentId: string;
   pageOptions: ViewerPageOptions;
+  onScrollbarWidthChange?: (width: number) => void;
 }
 
-function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
+/** Reports the viewport's scrollbar width as it appears, goes or resizes. */
+function ScrollbarWidthReporter({
+  onChange,
+}: {
+  onChange: (width: number) => void;
+}) {
+  const viewportRef = useViewportElement();
+  useEffect(() => {
+    const el = viewportRef?.current;
+    if (!el) return undefined;
+    // A scrollbar coming or going resizes the content box, which this sees.
+    const report = () => onChange(el.offsetWidth - el.clientWidth);
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [viewportRef, onChange]);
+  return null;
+}
+
+function DocumentViewport({
+  documentId,
+  pageOptions,
+  onScrollbarWidthChange,
+}: DocumentViewportProps) {
   return (
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
@@ -790,9 +818,6 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           maxHeight: "100%",
           maxWidth: "100%",
           overflow: "auto",
-          // A matching gutter opposite the scrollbar centres the pages on the
-          // full width, as the page bar floating over them is.
-          scrollbarGutter: "stable both-edges",
           position: "relative",
           flex: 1,
           minHeight: 0,
@@ -800,6 +825,9 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
+        {onScrollbarWidthChange && (
+          <ScrollbarWidthReporter onChange={onScrollbarWidthChange} />
+        )}
         <Scroller
           documentId={documentId}
           renderPage={({ width, height, pageIndex }) => (
@@ -967,6 +995,7 @@ export function LocalEmbedPDF({
   signatureOverlayApiRef,
   shouldSkipBytes,
   onPageLayout,
+  onScrollbarWidthChange,
   onDocumentSwapped,
   onDocumentSwapFailed,
   onDocumentReady,
@@ -1824,6 +1853,7 @@ export function LocalEmbedPDF({
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
+                  onScrollbarWidthChange={onScrollbarWidthChange}
                 />
                 <DocumentComments
                   enabled
