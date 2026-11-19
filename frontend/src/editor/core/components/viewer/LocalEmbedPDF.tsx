@@ -44,6 +44,7 @@ import {
   ViewerGlobalPointerProvider,
   ViewerPagePointerProvider,
 } from "@editor/components/viewer/ViewerPointerProviders";
+import { PDF_RENDER_FILTERS } from "@editor/components/viewer/pdfRenderFilters";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -419,12 +420,6 @@ type SignatureOverlayOptions = Omit<
 >;
 
 type PdfRenderMode = NonNullable<LocalEmbedPDFProps["pdfRenderMode"]>;
-
-const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
-  normal: undefined,
-  dark: "invert(1) hue-rotate(180deg)",
-  sepia: "sepia(0.7) brightness(0.85)",
-};
 
 interface PageLayerProps {
   documentId: string;
