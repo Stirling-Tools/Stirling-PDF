@@ -118,7 +118,7 @@ function looksScanned(
       const run = page.findRun(id);
       if (!run?.pdfiumObjPtr) continue;
       seen++;
-      if (run.renderMode === RENDER_MODE_INVISIBLE) {
+      if (run.renderMode === RENDER_MODE_INVISIBLE && !run.hiddenText) {
         invisible++;
       }
     }

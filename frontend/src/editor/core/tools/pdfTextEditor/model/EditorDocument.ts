@@ -5,6 +5,7 @@ import {
   openRawDocument,
 } from "@editor/services/pdfiumService";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { documentClosed } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 import {
   PageStructure,
   givenMcids,
@@ -35,9 +36,13 @@ import {
   readFileArtifactKinds,
   refreshArtifactTags,
 } from "@editor/tools/pdfTextEditor/model/fileArtifactKinds";
+import {
+  formLiftHazards,
+  type FormNode,
+} from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
-  readFileStructure,
+  fileStructureOf,
   type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
@@ -49,6 +54,8 @@ import {
   precedingTaggedMcid,
   taggedContentInReadingOrder,
 } from "@editor/tools/pdfTextEditor/util/elementPlacement";
+import { fieldAnchor } from "@editor/tools/pdfTextEditor/util/formLabel";
+import type { FieldTooltips } from "@editor/tools/pdfTextEditor/model/PageFormFields";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -71,6 +78,8 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
+  /** Held here rather than per page: a field's widgets can sit on several pages. */
+  private readonly fieldTooltips: FieldTooltips = new Map();
   /**
    * Unsaved retags by block key, each with the content the save addresses it
    * by. Held here rather than per page: an element spanning a page break is
@@ -91,6 +100,8 @@ export class EditorDocument {
   private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  /** See formLiftHazards; null when the file was not kept, so they are unknown. */
+  private readonly formHazards: Map<number, FormNode[]> | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private readonly _embeddedFontFiles: Uint8Array[] = [];
@@ -124,8 +135,10 @@ export class EditorDocument {
     docPtr: number,
     openedBytes: Uint8Array,
     fileStructure: FileStructure | null,
+    formHazards: Map<number, FormNode[]> | null,
   ) {
     this.module = module;
+    this.formHazards = formHazards;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
@@ -147,9 +160,23 @@ export class EditorDocument {
     // PDFium already holds its own heap copy, so retaining these doubles the
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
-    const fileStructure =
-      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
-    return new EditorDocument(module, docPtr, keep, fileStructure);
+    const raw =
+      keep.length > 0 ? await RawPdf.parse(keep).catch(() => null) : null;
+    const fileStructure = raw ? safely(() => fileStructureOf(raw)) : null;
+    const formHazards = raw
+      ? await formLiftHazards(raw).catch(() => null)
+      : null;
+    return new EditorDocument(module, docPtr, keep, fileStructure, formHazards);
+  }
+
+  /**
+   * The forms page `pageIndex` draws, in drawing order, when one of them
+   * would draw differently lifted onto the page (see formLiftHazards);
+   * "none" when none would, and "unknown" when the file was not kept.
+   */
+  formHazardsOn(pageIndex: number): FormNode[] | "none" | "unknown" {
+    if (!this.formHazards) return "unknown";
+    return this.formHazards.get(pageIndex) ?? "none";
   }
 
   /** Page indices whose content stream has been regenerated this session. */
@@ -333,16 +360,29 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    const links = this.fileStructure.links.get(pageIndex) ?? [];
+    const annotations = {
+      links: this.fileStructure.links.get(pageIndex) ?? [],
+      widgets: this.fileStructure.widgets.get(pageIndex) ?? [],
+    };
     const retaggedAs = (key: string) => this.retaggedAs(key);
-    if (!page) return new PageStructure([], null, 0, retaggedAs, links);
+    if (!page) {
+      return new PageStructure(
+        [],
+        null,
+        0,
+        retaggedAs,
+        annotations,
+        this.fieldTooltips,
+      );
+    }
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(
       page.elements,
       null,
       page.slotCount,
       retaggedAs,
-      links,
+      annotations,
+      this.fieldTooltips,
     );
   }
 
@@ -667,22 +707,61 @@ export class EditorDocument {
     ];
   }
 
+  /** Every unsaved change to a link or form field annotation, in the form the save pass takes. */
+  annotationEdits(): AnnotationEdit[] {
+    const namedFields = new Set<number>();
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => [
+      ...this.linkEdits(pageIndex, structure),
+      ...this.formFieldEdits(pageIndex, structure, namedFields),
+    ]);
+  }
+
   /**
-   * Every unsaved change to a link annotation, in the form the save pass
-   * takes. A link whose holder's text is no longer on the page is left
-   * unheld, as the save drops a session element with no text (cutEdits,
+   * A link whose holder's text is no longer on the page is left unheld, as
+   * the save drops a session element with no text (cutEdits,
    * addedElementEdits).
    */
-  annotationEdits(): AnnotationEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) => {
-      const page = this.pageCache.get(pageIndex);
-      const carried = page && carriedMcids(this.module, page.pagePtr);
-      return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
-        const held = mcid !== undefined && (!carried || carried.has(mcid));
-        if (!held && edit.contents === undefined) return [];
-        return [{ pageIndex, ...edit, ...(held && { mcid }) }];
-      });
+  private linkEdits(
+    pageIndex: number,
+    structure: PageStructure,
+  ): AnnotationEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    const carried = page && carriedMcids(this.module, page.pagePtr);
+    return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
+      const held = mcid !== undefined && (!carried || carried.has(mcid));
+      if (!held && edit.contents === undefined) return [];
+      return [{ pageIndex, ...edit, ...(held && { mcid }) }];
     });
+  }
+
+  /**
+   * A new Form reads where fieldAnchor places it on the page as the save
+   * finds it. A field's /TU goes through the first of its widgets only;
+   * `namedFields` collects the fields named so far.
+   */
+  private formFieldEdits(
+    pageIndex: number,
+    structure: PageStructure,
+    namedFields: Set<number>,
+  ): AnnotationEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    return structure.formFields
+      .edits()
+      .flatMap(({ widget, newForm, tooltip }) => {
+        const names = tooltip !== undefined && !namedFields.has(widget.field);
+        if (names) namedFields.add(widget.field);
+        if (!newForm && !names) return [];
+        return [
+          {
+            pageIndex,
+            annotation: widget.annotation,
+            ...(names && { tooltip }),
+            ...(newForm && {
+              newForm: { after: page ? fieldAnchor(page, widget) : null },
+            }),
+          },
+        ];
+      });
   }
 
   /**
@@ -781,6 +860,17 @@ export class EditorDocument {
     return this.ownedFonts.get(id);
   }
 
+  findOwnedFont(matches: (font: FontRef) => boolean): FontRef | undefined {
+    for (const font of this.ownedFonts.values()) if (matches(font)) return font;
+    return undefined;
+  }
+
+  ownedFontAt(pointer: number): FontRef | undefined {
+    for (const font of this.ownedFonts.values())
+      if (font.pointer === pointer) return font;
+    return undefined;
+  }
+
   /** Iterate loaded pages without forcing more page loads. */
   loadedPages(): Page[] {
     return Array.from(this.pageCache.values());
@@ -792,6 +882,7 @@ export class EditorDocument {
       this.module.FPDF_CreateNewDocument(),
       EMPTY,
       null,
+      new Map(),
     );
     return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
   }
@@ -868,6 +959,7 @@ export class EditorDocument {
     forgetArtifactKinds(this.module, this);
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
+    documentClosed();
   }
 }
 
@@ -1014,4 +1106,12 @@ function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
     ordered.push(...chain.reverse());
   }
   return ordered;
+}
+
+function safely<T>(read: () => T): T | null {
+  try {
+    return read();
+  } catch {
+    return null;
+  }
 }

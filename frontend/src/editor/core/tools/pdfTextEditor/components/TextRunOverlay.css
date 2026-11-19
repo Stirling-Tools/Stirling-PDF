@@ -8,6 +8,32 @@
   translate: -2px -2px;
 }
 
+.pdf-editor-run-grips {
+  position: absolute;
+  pointer-events: none;
+  translate: -2px -2px;
+}
+
+.pdf-editor-run-grip {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.pdf-editor-run-width-handle {
+  position: absolute;
+  left: calc(100% + 1px);
+  top: 50%;
+  width: 6px;
+  height: 14px;
+  translate: 0 -50%;
+  box-sizing: border-box;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 3px;
+  background: var(--c-surface);
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
 .pdf-editor-run.is-pristine,
 .pdf-editor-run.is-pristine * {
   color: transparent !important;
@@ -26,4 +52,9 @@
 /* Must stay in sync with TEXT_RANGE_HIGHLIGHT in overlayPainter.ts. */
 ::highlight(pdf-editor-text-range) {
   background-color: color-mix(in srgb, var(--c-primary) 28%, transparent);
+}
+
+/* Must stay in sync with FIND_MATCH_HIGHLIGHT in overlayPainter.ts. */
+::highlight(pdf-editor-find-match) {
+  background-color: color-mix(in srgb, var(--c-highlight) 60%, transparent);
 }
