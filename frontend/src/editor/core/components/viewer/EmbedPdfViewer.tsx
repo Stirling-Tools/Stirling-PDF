@@ -2128,7 +2128,9 @@ const EmbedPdfViewerContent = ({
             // floating card rather than one welded to the viewport edge.
             bottom: "0.5rem",
             left: 0,
-            right: 0,
+            // Clear of the open side panels, so it centres on the pages.
+            right: `${totalRightMargin}rem`,
+            transition: "right 0.3s ease",
             zIndex: 50,
             display: "flex",
             justifyContent: "center",

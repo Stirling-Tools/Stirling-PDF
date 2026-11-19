@@ -790,6 +790,9 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           maxHeight: "100%",
           maxWidth: "100%",
           overflow: "auto",
+          // A matching gutter opposite the scrollbar centres the pages on the
+          // full width, as the page bar floating over them is.
+          scrollbarGutter: "stable both-edges",
           position: "relative",
           flex: 1,
           minHeight: 0,
