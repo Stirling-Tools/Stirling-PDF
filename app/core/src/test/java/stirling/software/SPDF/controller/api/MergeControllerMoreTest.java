@@ -133,7 +133,7 @@ class MergeControllerMoreTest {
         req.setFileInput(files);
         req.setSortType(sortType);
         req.setRemoveCertSign(removeCertSign);
-        req.setGenerateToc(toc);
+        req.setGenerateBookmarks(toc);
         req.setGenerateTocPage(tocPage);
         return req;
     }

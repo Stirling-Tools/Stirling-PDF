@@ -1,8 +1,8 @@
-import {useTranslation} from "react-i18next";
-import {TooltipContent} from "@editor/types/tips";
+import { useTranslation } from "react-i18next";
+import { TooltipContent } from "@editor/types/tips";
 
 export const useMergeTips = (): TooltipContent => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   return {
     header: {
@@ -20,13 +20,10 @@ export const useMergeTips = (): TooltipContent => {
         ),
       },
       {
-        title: t(
-          "merge.generateTableOfContents.tooltip.title",
-          "Generate Table of Contents",
-        ),
+        title: t("merge.generateBookmarks.tooltip.title", "Bookmarks"),
         description: t(
-          "merge.generateTableOfContents.tooltip.description",
-          "Automatically creates a clickable table of contents in the merged PDF based on the original file names and page numbers.",
+          "merge.generateBookmarks.tooltip.description",
+          "Adds a bookmark for every merged file to the PDF's bookmark panel, so you can jump to the start of each file.",
         ),
       },
       {

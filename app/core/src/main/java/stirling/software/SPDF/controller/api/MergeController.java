@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
-import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TocFontResolver;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
@@ -249,7 +248,7 @@ public class MergeController {
         TempFile outputTempFile = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
-        boolean generateToc = request.isGenerateToc();
+        boolean generateBookmarks = request.isGenerateBookmarks();
         boolean generateTocPage = request.isGenerateTocPage();
 
         MultipartFile[] files = request.getFileInput();
@@ -306,7 +305,11 @@ public class MergeController {
             try {
                 pageCounts =
                         mergeWithJpdfium(
-                                inputPaths, files, generateToc, tocOffset, mt.getFile().toPath());
+                                inputPaths,
+                                files,
+                                generateBookmarks,
+                                tocOffset,
+                                mt.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -544,44 +547,6 @@ public class MergeController {
         return dots;
     }
 
-    public static String fitTextToWidth(
-            String text, PDFont font, float fontSize, float maxWidthPt, boolean withEllipsis)
-            throws IOException {
-        if (text == null || text.isEmpty()) {
-            return text;
-        }
-
-        if (getTextWidth(text, font, fontSize) <= maxWidthPt) {
-            return text;
-        }
-
-        String suffix = withEllipsis ? "…" : "";
-        float suffixWidth = getTextWidth(suffix, font, fontSize);
-        float targetWidth = maxWidthPt - suffixWidth;
-
-        if (targetWidth <= 0) {
-            return suffix;
-        }
-
-        int end = text.length();
-        while (end > 0 && getTextWidth(text.substring(0, end), font, fontSize) > targetWidth) {
-            end--;
-        }
-
-        String cut = text.substring(0, end);
-
-        int lastSpace = cut.lastIndexOf(' ');
-        if (lastSpace > end / 2) {
-            cut = cut.substring(0, lastSpace);
-        }
-
-        return cut.trim() + suffix;
-    }
-
-    private static float getTextWidth(String text, PDFont font, float fontSize) throws IOException {
-        return (font.getStringWidth(text) / 1000f) * fontSize;
-    }
-
     private record MultipartFileWithPdfPageCount(MultipartFile file, int pageCount) {}
 
     private boolean isImageFile(MultipartFile file) {
@@ -736,23 +701,5 @@ public class MergeController {
             return "Document " + (index + 1);
         }
         return title;
-    }
-
-    private static String replaceUnsupportedCharacters(PDFont font, String text) {
-        if (text == null || text.isEmpty()) {
-            return "";
-        }
-        StringBuilder result = new StringBuilder();
-        text.codePoints()
-                .forEach(
-                        codePoint -> {
-                            String character = Character.toString(codePoint);
-                            result.append(
-                                    TextEncodingHelper.fontSupportsCharacter(font, character)
-                                            ? character
-                                            : "?");
-                        });
-
-        return result.toString();
     }
 }

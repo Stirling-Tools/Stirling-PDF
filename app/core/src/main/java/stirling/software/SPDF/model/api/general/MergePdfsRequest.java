@@ -38,7 +38,7 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                     "Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
-    private boolean generateToc = false;
+    private boolean generateBookmarks = false;
 
     @Schema(
             description =

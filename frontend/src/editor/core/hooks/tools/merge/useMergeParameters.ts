@@ -6,13 +6,13 @@ import {
 
 export interface MergeParameters extends BaseParameters {
   removeDigitalSignature: boolean;
-  generateTableOfContents: boolean;
+  generateBookmarks: boolean;
   generateTableOfContentsPage: boolean;
 }
 
 export const defaultParameters: MergeParameters = {
   removeDigitalSignature: false,
-  generateTableOfContents: false,
+  generateBookmarks: false,
   generateTableOfContentsPage: false,
 };
 

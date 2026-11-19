@@ -25,7 +25,7 @@ export const mergeToApiParams = (
   // The UI owns file ordering, so the backend is always told to keep it.
   sortType: "orderProvided",
   removeCertSign: parameters.removeDigitalSignature ?? false,
-  generateToc: parameters.generateTableOfContents ?? false,
+  generateBookmarks: parameters.generateBookmarks ?? false,
   generateTocPage: parameters.generateTableOfContentsPage ?? false,
 });
 
@@ -35,8 +35,8 @@ export const mergeFromApiParams = (
 ): Partial<MergeParameters> => ({
   removeDigitalSignature:
     apiParams.removeCertSign ?? defaultParameters.removeDigitalSignature,
-  generateTableOfContents:
-    apiParams.generateToc ?? defaultParameters.generateTableOfContents,
+  generateBookmarks:
+    apiParams.generateBookmarks ?? defaultParameters.generateBookmarks,
   generateTableOfContentsPage:
     apiParams.generateTocPage ?? defaultParameters.generateTableOfContentsPage,
 });
