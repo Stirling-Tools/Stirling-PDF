@@ -179,7 +179,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     await closeViaButton(/Close attachments sidebar/i);
 
     // Thumbnail sidebar
-    await toggleViewerPanel(page, "Page thumbnails");
+    await toggleViewerPanel(page, "Pages");
     await closeViaButton(/Close thumbnails sidebar/i);
   });
 });

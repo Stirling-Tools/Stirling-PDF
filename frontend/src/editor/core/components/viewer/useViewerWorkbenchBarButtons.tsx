@@ -101,12 +101,12 @@ export function useViewerWorkbenchBarButtons(
     "workbenchBar.applyRedactionsFirst",
     "Apply redactions first",
   );
-  const pageViewLabel = t("workbenchBar.pageView", "Page view");
+  const pageViewLabel = t("workbenchBar.pageView", "View");
   const annotationVisibilityLabel = t(
     "workbenchBar.toggleAnnotations",
     "Toggle Annotations Visibility",
   );
-  const thumbnailsLabel = t("workbenchBar.thumbnails", "Page thumbnails");
+  const thumbnailsLabel = t("workbenchBar.thumbnails", "Pages");
   const bookmarksLabel = t("workbenchBar.bookmarks", "Bookmarks");
   const attachmentsLabel = t("workbenchBar.attachments", "Attachments");
   const layersLabel = t("workbenchBar.layers", "Layers");

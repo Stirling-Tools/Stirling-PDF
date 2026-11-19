@@ -64,7 +64,7 @@ export function ViewerPageViewMenu({ disabled }: { disabled?: boolean }) {
   return (
     <BarMenu
       icon="book-open"
-      label={t("workbenchBar.pageView", "Page view")}
+      label={t("workbenchBar.pageView", "View")}
       disabled={disabled}
       testId="viewer-page-view-menu"
     >

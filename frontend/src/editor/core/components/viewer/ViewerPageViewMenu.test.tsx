@@ -55,10 +55,16 @@ vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsMobile: () => false,
 }));
 
+// jsdom lays nothing out, so the menu would read its zero-size button as
+// scrolled away and hide itself once positioning settles.
+const KEEP_MENU_SHOWN = {
+  components: { Menu: { defaultProps: { hideDetached: false } } },
+};
+
 async function openMenu() {
   const user = userEvent.setup();
   render(
-    <MantineProvider>
+    <MantineProvider theme={KEEP_MENU_SHOWN}>
       <ViewerPageViewMenu />
     </MantineProvider>,
   );
@@ -90,7 +96,9 @@ describe("ViewerPageViewMenu", () => {
     const fitWidth = await screen.findByRole("menuitem", {
       name: "viewer.fitWidth",
     });
-    const fitPage = screen.getByRole("menuitem", { name: "viewer.fitPage" });
+    const fitPage = await screen.findByRole("menuitem", {
+      name: "viewer.fitPage",
+    });
     expect(fitWidth).not.toHaveAttribute("data-checked");
 
     // Same percent either way: the level alone has to move the tick.
