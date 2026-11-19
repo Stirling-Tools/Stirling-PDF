@@ -166,6 +166,39 @@ function compare(
   );
 }
 
+/** Stroke width of `style` drawn over the span's text, over the scan's own: above 1 when the style is heavier than that span. */
+export function strokeRatioOn(
+  doc: EditorDocument,
+  page: Page,
+  span: SpanInk,
+  style: ScanStyle,
+): number {
+  const natural = spanOf(
+    doc,
+    page,
+    span.original,
+    style.family,
+    style.fontSize,
+  );
+  const stretch = natural
+    ? clampStretch(span.ink.body.width / natural)
+    : style.stretch;
+  return compare(
+    doc,
+    page,
+    span,
+    {
+      family: style.family,
+      size: style.fontSize,
+      stretch,
+      weight: style.weight,
+      hollow: style.hollow,
+    },
+    style.softness,
+    true,
+  ).weight;
+}
+
 // Render pixels per scanned pixel: an upscaled low-res scan is soft however sharp its steps look, so this floors the softness.
 function scanPixelSpan(
   doc: EditorDocument,

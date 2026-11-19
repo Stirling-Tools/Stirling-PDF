@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Modal, Stack, Text, Group, List } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -15,7 +16,7 @@ interface SaveRiskModalProps {
 }
 
 /** Warns before a save that would damage signatures / XFA. */
-export function SaveRiskModal({
+export const SaveRiskModal = memo(function SaveRiskModal({
   risks,
   onConfirm,
   onCancel,
@@ -70,4 +71,4 @@ export function SaveRiskModal({
       </Stack>
     </Modal>
   );
-}
+});

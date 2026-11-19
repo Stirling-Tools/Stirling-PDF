@@ -30,8 +30,10 @@ import {
 import { useAutoLoadFile } from "@editor/tools/pdfTextEditor/hooks/useAutoLoadFile";
 import { useWorkbenchPin } from "@editor/tools/pdfTextEditor/hooks/useWorkbenchPin";
 import { useUnsavedChangesGuard } from "@editor/tools/pdfTextEditor/hooks/useUnsavedChangesGuard";
+import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
 import { useEditorTestGlobal } from "@editor/tools/pdfTextEditor/hooks/useEditorTestGlobal";
 import { useSelectionActions } from "@editor/tools/pdfTextEditor/hooks/useSelectionActions";
+import { useFontChangeWarning } from "@editor/tools/pdfTextEditor/components/fontPickFailure";
 import { useEditorKeyboardShortcuts } from "@editor/tools/pdfTextEditor/hooks/useEditorKeyboardShortcuts";
 import { useEditorClipboard } from "@editor/tools/pdfTextEditor/hooks/useEditorClipboard";
 import { useOpenAtViewerText } from "@editor/tools/pdfTextEditor/hooks/useOpenAtViewerText";
@@ -51,9 +53,11 @@ import {
   ViewerEditToolbar,
 } from "@editor/tools/pdfTextEditor/components/ViewerEditToolbar";
 import { useRegisterViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
-import { InsertImageCommand } from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
+import {
+  centredImageRect,
+  InsertImageCommand,
+} from "@editor/tools/pdfTextEditor/commands/InsertImageCommand";
 import { InsertTextCommand } from "@editor/tools/pdfTextEditor/commands/InsertTextCommand";
-import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { jpegExifOrientation } from "@editor/utils/jpegOrientation";
 import { MergeRunsCommand } from "@editor/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@editor/tools/pdfTextEditor/commands/UngroupParagraphCommand";
@@ -130,7 +134,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useEditorTestGlobal(store);
   // Dropping the document discards its edits; the file is then reopened fresh.
   const discardEdits = useCallback(() => store.clearDocument(), [store]);
-  useUnsavedChangesGuard(state.dirty);
+  const isDirty = useCallback(() => store.getState().dirty, [store]);
+  useUnsavedChangesGuard(state.dirty, isDirty);
   const pinWorkbench = useWorkbenchPin();
   // Opening a file can leave the workbench on Active Files, so landing a
   // document pins the viewer back.
@@ -169,6 +174,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   useScanPrefit(store, state);
 
   const sel = useSelectionActions(store);
+  const warnAboutFontChange = useFontChangeWarning();
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
@@ -303,7 +309,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           "pdfTextEditor",
           isCurrent,
         );
-        if (!saved) return;
+        // The write-back swaps the source file id, so only the document is compared.
+        if (!saved || store.document !== doc) return;
         store.markSaved(exported);
         if (download) {
           assertFilesNotBlocked([sourceId ?? undefined]);
@@ -460,23 +467,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const visibleIndex = visiblePageNumber();
       const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
       if (!page) return;
-      const w = page.width * INSERTED_IMAGE_RATIO;
-      const h = w * (decoded.height / decoded.width);
-      // Centre in the VISIBLE (display) page, then invert the CropBox/rotation
-      // transform to raw PDF space (commands store raw coords).
-      const ll = DisplayTransform.fromData(page.display).invert(
-        (page.width - w) / 2,
-        (page.height - h) / 2,
+      const rect = centredImageRect(
+        page.display,
+        decoded.width,
+        decoded.height,
+        INSERTED_IMAGE_RATIO,
       );
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
         pixelWidth: decoded.width,
         pixelHeight: decoded.height,
-        x: ll.x,
-        y: ll.y,
-        width: w,
-        height: h,
+        ...rect,
         jpegBytes,
       });
       store.dispatch(cmd);
@@ -641,6 +643,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     onFindNext: handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: handleMergeSelection,
+    onToggleBold: useCallback(
+      () => void warnAboutFontChange(sel.toggleBold),
+      [warnAboutFontChange, sel.toggleBold],
+    ),
+    onToggleItalic: useCallback(
+      () => void warnAboutFontChange(sel.toggleItalic),
+      [warnAboutFontChange, sel.toggleItalic],
+    ),
   });
 
   useEditorClipboard({
@@ -650,14 +660,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     insertPastedText,
   });
 
-  const canGroup = selection.runIds.length >= 2;
-  const canUngroup = (() => {
-    if (selection.runIds.length !== 1) return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphLineCount ?? 0) > 1;
-  })();
   const openImagePicker = useCallback(() => {
     document
       .querySelector<HTMLInputElement>('[data-testid="pdf-editor-image-input"]')
@@ -696,29 +698,58 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     store.clearPasswordPrompt();
   }, [store, cancelAutoLoad]);
 
+  const onSetGroupingMode = useCallback(
+    (mode: GroupingMode) => store.setGroupingMode(mode),
+    [store],
+  );
+  const onSetWidthMode = useCallback(
+    (m: WidthMode) => store.setWidthMode(m),
+    [store],
+  );
+  const onSetShowRulers = useCallback(
+    (show: boolean) => store.setShowRulers(show),
+    [store],
+  );
+  const runOcr = ocr.runOcr;
+  const onRunOcr = useCallback(() => {
+    if (!savingRef.current && !applying) void runOcr();
+  }, [applying, runOcr]);
+  const removePassword = useCallback(() => {
+    if (!sourceFileId) return;
+    setSelectedFiles([sourceFileId]);
+    handleToolSelect("removePassword");
+  }, [sourceFileId, setSelectedFiles, handleToolSelect]);
+  const onOpenFind = useCallback(() => {
+    if (store.toggleFindOpen()) pinWorkbench();
+  }, [store, pinWorkbench]);
+  const onShowHelp = useCallback(() => store.setHelpOpen(true), [store]);
+
+  // Deferred so the typed letter is drawn before the panel, which a burst of typing outdates.
+  const panel = useDeferredPanelView(state, selection);
+  const canUngroup = useMemo(() => {
+    const ids = panel.selection.runIds;
+    if (ids.length !== 1) return false;
+    const run = panel.state.pages
+      .flatMap((p) => p.runs)
+      .find((r) => r.id === ids[0]);
+    return !!run && (run.paragraphLineCount ?? 0) > 1;
+  }, [panel]);
   const sidebarProps = {
     store,
-    state,
-    selection,
-    canGroup,
+    state: panel.state,
+    selection: panel.selection,
+    canGroup: panel.selection.runIds.length >= 2,
     canUngroup,
     onGroup: handleMergeSelection,
     onUngroup: handleUngroupSelection,
-    onSetGroupingMode: (mode: GroupingMode) => store.setGroupingMode(mode),
-    onSetWidthMode: (m: WidthMode) => store.setWidthMode(m),
-    onSetShowRulers: (show: boolean) => store.setShowRulers(show),
-    onRunOcr: () => {
-      if (!savingRef.current && !applying) void ocr.runOcr();
-    },
+    onSetGroupingMode,
+    onSetWidthMode,
+    onSetShowRulers,
+    onRunOcr,
     ocrRunning: ocr.running,
-    ocrAvailable: state.loading && !ocr.running ? null : ocr.available,
+    ocrAvailable: panel.state.loading && !ocr.running ? null : ocr.available,
     ocrBlockedReason: ocr.blockedReason,
-    onRemovePassword: sourceFileId
-      ? () => {
-          setSelectedFiles([sourceFileId]);
-          handleToolSelect("removePassword");
-        }
-      : undefined,
+    onRemovePassword: sourceFileId ? removePassword : undefined,
   };
 
   return (
@@ -783,15 +814,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           compact={isMobile}
           onSave={handleSave}
           onDownload={handleDownload}
-          onOpenFind={() => {
-            if (store.getState().findOpen) {
-              store.setFindOpen(false);
-              return;
-            }
-            pinWorkbench();
-            store.setFindOpen(true);
-          }}
-          onShowHelp={() => store.setHelpOpen(true)}
+          onOpenFind={onOpenFind}
+          onShowHelp={onShowHelp}
         />
       )}
     </Stack>

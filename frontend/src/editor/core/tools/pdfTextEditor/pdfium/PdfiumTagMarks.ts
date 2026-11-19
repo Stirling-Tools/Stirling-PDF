@@ -283,6 +283,17 @@ export function copyTagMarks(
   applyTagMarks(m, docPtr, [to], readTagMarks(m, from));
 }
 
+/** Names of the marked-content sequences `obj` is drawn inside. */
+export function markNamesOf(m: WrappedPdfiumModule, obj: number): string[] {
+  const names: string[] = [];
+  const count = m.FPDFPageObj_CountMarks(obj);
+  for (let i = 0; i < count; i++) {
+    const mark = m.FPDFPageObj_GetMark(obj, i);
+    if (mark) names.push(markName(m, mark));
+  }
+  return names;
+}
+
 function markName(m: WrappedPdfiumModule, mark: number): string {
   const lenPtr = scratchPtr(m, SCRATCH.tagNameLen, 4);
   if (!m.FPDFPageObjMark_GetName(mark, 0, 0, lenPtr)) return "";

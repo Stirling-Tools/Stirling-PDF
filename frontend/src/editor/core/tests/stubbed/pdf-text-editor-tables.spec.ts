@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { editRecognizedTable } from "@editor/tests/helpers/recognizedTable";
 import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
@@ -274,10 +275,7 @@ test.describe("PDF text editor - tables", () => {
     await expect(recognized).toHaveCount(1, { timeout: 15_000 });
     await expect(recognized).toHaveText(/4×3/);
 
-    await page
-      .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
-      .first()
-      .click();
+    await editRecognizedTable(page);
     await page.waitForFunction(
       `(${STORE}.state.pages[0].tables ? ${STORE}.state.pages[0].tables.length : 0) > 0`,
       undefined,
