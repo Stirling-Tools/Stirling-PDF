@@ -29,6 +29,27 @@ export type DiskSyncOutcome =
   /** Disk moved on and we had nothing unsaved, so these are the live bytes. */
   | { status: "updated"; file: File; state: PresentDiskFileState };
 
+const COMPARE_CHUNK_BYTES = 8 * 1024 * 1024;
+
+/** Whether two blobs hold identical bytes, read in chunks so neither is copied
+ *  whole. */
+export async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
+  if (a.size !== b.size) return false;
+  for (let start = 0; start < a.size; start += COMPARE_CHUNK_BYTES) {
+    const end = Math.min(start + COMPARE_CHUNK_BYTES, a.size);
+    const [left, right] = await Promise.all([
+      a.slice(start, end).arrayBuffer(),
+      b.slice(start, end).arrayBuffer(),
+    ]);
+    const x = new Uint8Array(left);
+    const y = new Uint8Array(right);
+    for (let i = 0; i < x.length; i++) {
+      if (x[i] !== y[i]) return false;
+    }
+  }
+  return true;
+}
+
 /** Did disk change since our last read? No baseline means we cannot prove the
  *  copy is current, so re-read once; size settles it when mtime is missing. */
 export function hasDiskChanged(

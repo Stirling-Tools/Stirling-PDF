@@ -16,6 +16,7 @@ import {
   notifyDiskTooLarge,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
+  sameBytes,
 } from "@editor/services/diskFileSync";
 import {
   getDiskFileState,
@@ -267,6 +268,14 @@ async function resyncRecord(
       return null;
     }
     const { file, state } = outcome;
+    // Sync clients, indexers and DMS check-outs rewrite the timestamp without
+    // touching the content. Reopening identical bytes resets the viewer and
+    // drops any work it does not count as unsaved.
+    const current = port.getFile(fileId);
+    if (current && (await sameBytes(current, file))) {
+      port.updateStub(fileId, diskBaseline(state));
+      return null;
+    }
     const reloadedAt = Date.now();
     port.putFile(fileId, file);
     await persistDiskUpdate(fileId, file, state, reloadedAt);
