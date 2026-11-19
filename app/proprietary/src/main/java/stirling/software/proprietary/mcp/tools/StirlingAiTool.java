@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -148,11 +149,43 @@ public class StirlingAiTool implements McpTool {
         try {
             String response = client.post(meta.endpointPath(), body, context.stirlingUserId());
             return McpResponses.text(mapper, response);
+        } catch (ResponseStatusException e) {
+            int status = e.getStatusCode().value();
+            // Full engine detail stays in the server log only; callers get a fixed message.
+            log.warn("MCP AI capability '{}' returned HTTP {}: {}", opId, status, e.getReason());
+            return McpResponses.error(
+                    mapper,
+                    "Engine error ("
+                            + status
+                            + ") for capability '"
+                            + opId
+                            + "': "
+                            + safeMessage(status));
         } catch (IOException e) {
             log.warn("MCP AI capability '{}' engine request failed", opId, e);
             return McpResponses.error(
                     mapper, "Engine request failed for capability '" + opId + "'.");
         }
+    }
+
+    /** Maps an HTTP status to a caller-safe message that never leaks raw engine detail. */
+    private static String safeMessage(int status) {
+        if (status == 401 || status == 403) {
+            return "the AI engine rejected the request (not authorized)";
+        }
+        if (status == 404) {
+            return "the AI engine does not expose this capability";
+        }
+        if (status == 408 || status == 504) {
+            return "the AI engine timed out";
+        }
+        if (status >= 500) {
+            return "the AI engine encountered an internal error";
+        }
+        if (status >= 400) {
+            return "the AI engine rejected the request as invalid";
+        }
+        return "unexpected response from the AI engine";
     }
 
     private List<OperationMeta> aiOps() {

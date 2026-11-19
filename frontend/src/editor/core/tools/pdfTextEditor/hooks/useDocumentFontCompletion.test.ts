@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { useDocumentFontCompletion } from "@editor/tools/pdfTextEditor/hooks/useDocumentFontCompletion";
-import { setClosestFont } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
+import {
+  fontCanBeCompleted,
+  setClosestFont,
+} from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 import { matchableSample } from "@editor/tools/pdfTextEditor/util/matchableSample";
 import { rankFacesForDrawnText } from "@editor/tools/pdfTextEditor/commands/scanTextEdit";
 import { fitInSlices } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
 import {
+  loadBundledScanFaces,
   loadScriptScanFaces,
   scanScriptsOf,
 } from "@editor/tools/pdfTextEditor/util/scanFontLibrary";
@@ -16,7 +20,7 @@ import type {
 } from "@editor/tools/pdfTextEditor/store/EditorStore";
 
 vi.mock("@editor/tools/pdfTextEditor/util/documentFontCompletion", () => ({
-  fontCanBeCompleted: () => true,
+  fontCanBeCompleted: vi.fn(() => true),
   fontCompletionFor: () => null,
   fontCompletionsGeneration: () => 0,
   originalFontLookedUp: () => true,
@@ -98,12 +102,17 @@ function setup(pageCount: number) {
   };
 }
 
-function setupWithFonts(fontIds: string[]) {
-  const doc = {
-    module: {},
+function docWithOnePage(name = "first"): EditorDocument {
+  return {
+    module: { name },
     loadedPages: () => [{ index: 0, runs: [] }],
   } as unknown as EditorDocument;
-  const store = { document: doc } as unknown as EditorStore;
+}
+
+function setupWithFonts(fontIds: string[]) {
+  const doc = docWithOnePage();
+  const holder = { document: doc };
+  const store = holder as unknown as EditorStore;
   const pagesFor = (ids: string[]) =>
     [
       {
@@ -122,6 +131,10 @@ function setupWithFonts(fontIds: string[]) {
     { initialProps: { pages: pagesFor(fontIds) } },
   );
   return {
+    doc,
+    replaceDocument: (next: EditorDocument) => {
+      holder.document = next;
+    },
     showFonts: (ids: string[]) => view.rerender({ pages: pagesFor(ids) }),
   };
 }
@@ -145,6 +158,7 @@ beforeEach(() => {
   vi.mocked(rankFacesForDrawnText).mockReset();
   vi.mocked(setClosestFont).mockReset();
   vi.mocked(loadScriptScanFaces).mockClear();
+  vi.mocked(fontCanBeCompleted).mockClear();
   vi.mocked(fitInSlices).mockReset();
   vi.mocked(fitInSlices).mockImplementation(async (fit) => fit());
   vi.mocked(rankFacesForDrawnText).mockReturnValue([
@@ -228,6 +242,26 @@ describe("useDocumentFontCompletion", () => {
     held.resolve();
     await waitFor(() =>
       expect(setClosestFont).toHaveBeenCalledWith(FONT, "Noto Sans JP"),
+    );
+  });
+
+  test("reads no font of a document that a newer one replaced while the matcher waited", async () => {
+    vi.mocked(matchableSample).mockReturnValue(null);
+    const held = deferred();
+    vi.mocked(loadBundledScanFaces).mockImplementationOnce(() => held.promise);
+    const { doc, replaceDocument, showFonts } = setupWithFonts([FONT]);
+    await waitFor(() => expect(loadBundledScanFaces).toHaveBeenCalled());
+
+    const next = docWithOnePage("second");
+    replaceDocument(next);
+    await act(async () => held.resolve());
+    showFonts(["F2"]);
+    await waitFor(() =>
+      expect(fontCanBeCompleted).toHaveBeenCalledWith(next.module, "F2"),
+    );
+    expect(fontCanBeCompleted).not.toHaveBeenCalledWith(
+      doc.module,
+      expect.anything(),
     );
   });
 });

@@ -140,7 +140,11 @@ export function useDocumentFontCompletion(
           loadBundledScanFaces(),
           loadDeviceScanFacesIfAllowed(),
         ]).catch(() => undefined);
-        for (let fontId = nextFont(); fontId && live(); fontId = nextFont()) {
+        // live() before nextFont(): a font handle outlives its document only as a
+        // dangling pointer, and PDFium reading one crashes the tab.
+        while (live()) {
+          const fontId = nextFont();
+          if (!fontId) break;
           const sample = matchableSample(doc, fontId);
           if (!sample) {
             unsampled.set(fontId, doc.loadedPages().length);

@@ -118,12 +118,13 @@ export async function runToolAndWaitForReview(
 /** The settings page's root. Settings is a route, not a dialog. */
 export const SETTINGS_SURFACE = ".settings-page";
 
-/** Opens Settings through the avatar and returns its root for scoped queries. Defaults to Account. */
+/** Opens Settings through the avatar menu and returns its root for scoped queries. */
 export async function openSettings(
   page: Page,
   section?: string | RegExp,
 ): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
+  await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
   const surface = page.locator(SETTINGS_SURFACE);
   await expect(surface).toBeVisible({ timeout: 5_000 });
   if (section) {

@@ -5,13 +5,17 @@ import {
   openRawDocument,
 } from "@editor/services/pdfiumService";
 import { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { documentClosed } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches";
 import {
   PageStructure,
   givenMcids,
+  isDescribableType,
   isInlineType,
   type AddedElement,
   type CutElement,
+  type DescriptionBlocker,
   type ReadOnlyReason,
+  type RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   effectiveLanguage,
@@ -35,9 +39,13 @@ import {
   readFileArtifactKinds,
   refreshArtifactTags,
 } from "@editor/tools/pdfTextEditor/model/fileArtifactKinds";
+import {
+  formLiftHazards,
+  type FormNode,
+} from "@editor/tools/pdfTextEditor/pdfdoc/formLocalResources";
 import { RawPdf } from "@editor/tools/pdfTextEditor/pdfdoc/raw";
 import {
-  readFileStructure,
+  fileStructureOf,
   type FileStructure,
 } from "@editor/tools/pdfTextEditor/pdfdoc/readFileStructure";
 import {
@@ -49,6 +57,8 @@ import {
   precedingTaggedMcid,
   taggedContentInReadingOrder,
 } from "@editor/tools/pdfTextEditor/util/elementPlacement";
+import { fieldAnchor } from "@editor/tools/pdfTextEditor/util/formLabel";
+import type { FieldTooltips } from "@editor/tools/pdfTextEditor/model/PageFormFields";
 import { DisplayTransform } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@editor/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -71,6 +81,8 @@ export class EditorDocument {
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly structureCache = new Map<number, PageStructure>();
+  /** Held here rather than per page: a field's widgets can sit on several pages. */
+  private readonly fieldTooltips: FieldTooltips = new Map();
   /**
    * Unsaved retags by block key, each with the content the save addresses it
    * by. Held here rather than per page: an element spanning a page break is
@@ -85,12 +97,21 @@ export class EditorDocument {
     string,
     { pageIndex: number; mcid: number; lang: string | null }
   >();
+  /** Unsaved /Alt changes to the file's blocks, by block key, held here as retags are. */
+  private readonly blockAlts = new Map<
+    string,
+    { pageIndex: number; mcid: number; alt: string | null }
+  >();
+  /** The file's blocks' /Alt, by block key. */
+  private readonly fileBlockAlts: ReadonlyMap<string, string | null>;
   /** The catalog /Lang as the file has it; null when it has none. */
   private readonly fileDocumentLang: string | null;
   /** The session's catalog /Lang; undefined when unchanged. */
   private documentLangEdit: string | null | undefined;
   /** The file's own structure tree; null when only PDFium's view is available. */
   private readonly fileStructure: FileStructure | null;
+  /** See formLiftHazards; null when the file was not kept, so they are unknown. */
+  private readonly formHazards: Map<number, FormNode[]> | null;
   private marked: boolean;
   private readonly ownedFonts: Map<string, FontRef>;
   private readonly _embeddedFontFiles: Uint8Array[] = [];
@@ -124,11 +145,16 @@ export class EditorDocument {
     docPtr: number,
     openedBytes: Uint8Array,
     fileStructure: FileStructure | null,
+    formHazards: Map<number, FormNode[]> | null,
   ) {
     this.module = module;
+    this.formHazards = formHazards;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
+    this.fileBlockAlts = new Map(
+      fileStructure?.blocks.map(({ key, alt }) => [key, alt]),
+    );
     this.fileDocumentLang = readCatalogLang(module, docPtr);
     this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
@@ -147,9 +173,23 @@ export class EditorDocument {
     // PDFium already holds its own heap copy, so retaining these doubles the
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
-    const fileStructure =
-      keep.length > 0 ? await readFileStructure(keep).catch(() => null) : null;
-    return new EditorDocument(module, docPtr, keep, fileStructure);
+    const raw =
+      keep.length > 0 ? await RawPdf.parse(keep).catch(() => null) : null;
+    const fileStructure = raw ? safely(() => fileStructureOf(raw)) : null;
+    const formHazards = raw
+      ? await formLiftHazards(raw).catch(() => null)
+      : null;
+    return new EditorDocument(module, docPtr, keep, fileStructure, formHazards);
+  }
+
+  /**
+   * The forms page `pageIndex` draws, in drawing order, when one of them
+   * would draw differently lifted onto the page (see formLiftHazards);
+   * "none" when none would, and "unknown" when the file was not kept.
+   */
+  formHazardsOn(pageIndex: number): FormNode[] | "none" | "unknown" {
+    if (!this.formHazards) return "unknown";
+    return this.formHazards.get(pageIndex) ?? "none";
   }
 
   /** Page indices whose content stream has been regenerated this session. */
@@ -333,16 +373,32 @@ export class EditorDocument {
       );
     }
     const page = this.fileStructure.pages.get(pageIndex);
-    const links = this.fileStructure.links.get(pageIndex) ?? [];
+    const annotations = {
+      links: this.fileStructure.links.get(pageIndex) ?? [],
+      widgets: this.fileStructure.widgets.get(pageIndex) ?? [],
+    };
     const retaggedAs = (key: string) => this.retaggedAs(key);
-    if (!page) return new PageStructure([], null, 0, retaggedAs, links);
+    const describedAs = (key: string) => this.blockDescription(key);
+    if (!page) {
+      return new PageStructure(
+        [],
+        null,
+        0,
+        retaggedAs,
+        annotations,
+        this.fieldTooltips,
+        describedAs,
+      );
+    }
     if (page.slotCount === null) return new PageStructure([], "unreadable");
     return new PageStructure(
       page.elements,
       null,
       page.slotCount,
       retaggedAs,
-      links,
+      annotations,
+      this.fieldTooltips,
+      describedAs,
     );
   }
 
@@ -398,13 +454,30 @@ export class EditorDocument {
   }
 
   /**
-   * Retag the block the text `mcid` marks belongs to as `type`. Null, or the
-   * type it has in the file, drops the change. Throws when cannotRetag
+   * Why the block `mcid` marks cannot be retagged as `type`, or null when it
+   * can: a block of text as any type, and a figure or formula as either,
+   * since only its /S changes and it may hold content other than text.
+   */
+  cannotRetagAs(
+    pageIndex: number,
+    mcid: number,
+    type: StructureType | null,
+  ): RetagBlocker | DescriptionBlocker | null {
+    const structure = this.structure(pageIndex);
+    if (isDescribableType(type) && structure.cannotDescribe(mcid) === null) {
+      return null;
+    }
+    return structure.cannotRetag(mcid);
+  }
+
+  /**
+   * Retag the block the content `mcid` marks belongs to as `type`. Null, or
+   * the type it has in the file, drops the change. Throws when cannotRetagAs
    * refuses it: a retag the save cannot write would fail every later save.
    */
   setRetag(pageIndex: number, mcid: number, type: StructureType | null): void {
     const structure = this.structure(pageIndex);
-    const blocker = structure.cannotRetag(mcid);
+    const blocker = this.cannotRetagAs(pageIndex, mcid, type);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
     const block = structure.element(mcid)!.block;
     // An added element is not in the file yet: its type is just changed.
@@ -419,6 +492,49 @@ export class EditorDocument {
       // The save climbs from the element owning this to the same block.
       const address = structure.fileMcid(mcid)!;
       this.retags.set(block.key, { pageIndex, mcid: address, type });
+    }
+  }
+
+  private blockDescription(key: string): string | null | undefined {
+    const edit = this.blockAlts.get(key);
+    return edit ? edit.alt : this.fileBlockAlts.get(key);
+  }
+
+  /**
+   * Set or, with null, remove the description of the block the content
+   * `mcid` marks belongs to, on every page it spans. Throws when no element
+   * owns `mcid`. Whether the block can take one is the caller's to check
+   * (cannotDescribe): a retag clears the description of a block it has just
+   * made a paragraph.
+   */
+  setDescription(pageIndex: number, mcid: number, alt: string | null): void {
+    const structure = this.structure(pageIndex);
+    const block = structure.block(mcid);
+    if (!block) throw new Error(`No structure element owns MCID ${mcid}`);
+    const added = structure.addedBlockMcid(block.key);
+    if (added !== null) {
+      structure.setAlt(added, alt);
+      return;
+    }
+    if (alt === (this.fileBlockAlts.get(block.key) ?? null)) {
+      this.blockAlts.delete(block.key);
+    } else {
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.blockAlts.set(block.key, { pageIndex, mcid: address, alt });
+    }
+    this.republishPagesHolding(block.key, pageIndex);
+  }
+
+  /**
+   * Bumps every other read page showing block `key`, so its snapshot, and the
+   * badges drawn from it, follow a change made through `pageIndex`.
+   */
+  private republishPagesHolding(key: string, pageIndex: number): void {
+    for (const [index, structure] of this.structureCache) {
+      if (index !== pageIndex && structure.holdsBlock(key)) {
+        this.pageCache.get(index)?.bumpRevision();
+      }
     }
   }
 
@@ -644,6 +760,14 @@ export class EditorDocument {
         decorative: false,
       }),
     );
+    const blockAlts = [...this.blockAlts.values()].map(
+      ({ pageIndex, mcid, alt }) => ({
+        pageIndex,
+        mcid,
+        blockAlt: alt,
+        decorative: false,
+      }),
+    );
     return [
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
@@ -664,25 +788,65 @@ export class EditorDocument {
       ]),
       ...retags,
       ...blockLangs,
+      ...blockAlts,
     ];
   }
 
+  /** Every unsaved change to a link or form field annotation, in the form the save pass takes. */
+  annotationEdits(): AnnotationEdit[] {
+    const namedFields = new Set<number>();
+    return [...this.structureCache].flatMap(([pageIndex, structure]) => [
+      ...this.linkEdits(pageIndex, structure),
+      ...this.formFieldEdits(pageIndex, structure, namedFields),
+    ]);
+  }
+
   /**
-   * Every unsaved change to a link annotation, in the form the save pass
-   * takes. A link whose holder's text is no longer on the page is left
-   * unheld, as the save drops a session element with no text (cutEdits,
+   * A link whose holder's text is no longer on the page is left unheld, as
+   * the save drops a session element with no text (cutEdits,
    * addedElementEdits).
    */
-  annotationEdits(): AnnotationEdit[] {
-    return [...this.structureCache].flatMap(([pageIndex, structure]) => {
-      const page = this.pageCache.get(pageIndex);
-      const carried = page && carriedMcids(this.module, page.pagePtr);
-      return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
-        const held = mcid !== undefined && (!carried || carried.has(mcid));
-        if (!held && edit.contents === undefined) return [];
-        return [{ pageIndex, ...edit, ...(held && { mcid }) }];
-      });
+  private linkEdits(
+    pageIndex: number,
+    structure: PageStructure,
+  ): AnnotationEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    const carried = page && carriedMcids(this.module, page.pagePtr);
+    return structure.linkEdits().flatMap(({ mcid, ...edit }) => {
+      const held = mcid !== undefined && (!carried || carried.has(mcid));
+      if (!held && edit.contents === undefined) return [];
+      return [{ pageIndex, ...edit, ...(held && { mcid }) }];
     });
+  }
+
+  /**
+   * A new Form reads where fieldAnchor places it on the page as the save
+   * finds it. A field's /TU goes through the first of its widgets only;
+   * `namedFields` collects the fields named so far.
+   */
+  private formFieldEdits(
+    pageIndex: number,
+    structure: PageStructure,
+    namedFields: Set<number>,
+  ): AnnotationEdit[] {
+    const page = this.pageCache.get(pageIndex);
+    return structure.formFields
+      .edits()
+      .flatMap(({ widget, newForm, tooltip }) => {
+        const names = tooltip !== undefined && !namedFields.has(widget.field);
+        if (names) namedFields.add(widget.field);
+        if (!newForm && !names) return [];
+        return [
+          {
+            pageIndex,
+            annotation: widget.annotation,
+            ...(names && { tooltip }),
+            ...(newForm && {
+              newForm: { after: page ? fieldAnchor(page, widget) : null },
+            }),
+          },
+        ];
+      });
   }
 
   /**
@@ -781,6 +945,17 @@ export class EditorDocument {
     return this.ownedFonts.get(id);
   }
 
+  findOwnedFont(matches: (font: FontRef) => boolean): FontRef | undefined {
+    for (const font of this.ownedFonts.values()) if (matches(font)) return font;
+    return undefined;
+  }
+
+  ownedFontAt(pointer: number): FontRef | undefined {
+    for (const font of this.ownedFonts.values())
+      if (font.pointer === pointer) return font;
+    return undefined;
+  }
+
   /** Iterate loaded pages without forcing more page loads. */
   loadedPages(): Page[] {
     return Array.from(this.pageCache.values());
@@ -792,6 +967,7 @@ export class EditorDocument {
       this.module.FPDF_CreateNewDocument(),
       EMPTY,
       null,
+      new Map(),
     );
     return { doc: this.scratch, page: this.scratch.blankPageLike(page) };
   }
@@ -868,6 +1044,7 @@ export class EditorDocument {
     forgetArtifactKinds(this.module, this);
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
+    documentClosed();
   }
 }
 
@@ -1014,4 +1191,12 @@ function anchorsFirst(edits: Map<number, StructureEdit>): StructureEdit[] {
     ordered.push(...chain.reverse());
   }
   return ordered;
+}
+
+function safely<T>(read: () => T): T | null {
+  try {
+    return read();
+  } catch {
+    return null;
+  }
 }
