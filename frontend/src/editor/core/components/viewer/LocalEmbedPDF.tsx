@@ -1346,7 +1346,13 @@ export function LocalEmbedPDF({
       }),
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
-        withForms: !enableFormFill,
+        // Widgets are painted by FormFieldOverlay and the button/signature
+        // appearance layers. Letting PDFium draw them too leaves a second copy
+        // of every field on the page - visible as doubled border and value on
+        // dropdowns, whose raster appearance is opaque. `enableFormFill` cannot
+        // key this: it is false until access probing finishes, and the registry
+        // is built once, so it pinned this to `true` and the copy stayed.
+        withForms: false,
         // The overlay owns appearances in every mode, so access changes never rebuild the registry.
         withAnnotations: false,
       }),

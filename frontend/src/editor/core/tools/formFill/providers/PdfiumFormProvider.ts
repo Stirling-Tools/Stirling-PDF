@@ -126,7 +126,11 @@ function toFormField(
     displayOptions,
     required: f.isRequired,
     readOnly: f.isReadOnly,
-    multiSelect: f.type === PDF_FORM_FIELD_TYPE.LISTBOX,
+    // MultiSelect is field flag bit 22. A listbox without it accepts one value;
+    // treating every listbox as multi let the UI select combinations the PDF
+    // will not store.
+    multiSelect:
+      f.type === PDF_FORM_FIELD_TYPE.LISTBOX && (f.flags & (1 << 21)) !== 0,
     multiline: type === "text" && (f.flags & 0x1000) !== 0, // bit 13 = Multiline
     tooltip: f.tooltip ?? null,
     widgets,

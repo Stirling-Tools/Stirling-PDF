@@ -276,11 +276,17 @@ function WidgetInputInner({
     onKeyPressCapture: stopPropagation,
   };
 
+  // A listbox allocates its height across every option, so sizing from the
+  // whole widget would give each row a font as tall as the box.
+  const optionRows =
+    field.type === "listbox" ? Math.max(1, field.options?.length ?? 1) : 1;
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
     : field.multiline
       ? Math.max(6, Math.min(height * 0.6, 14))
-      : Math.max(6, height * 0.65);
+      : field.type === "listbox"
+        ? Math.max(6, (height / optionRows) * 0.7)
+        : Math.max(6, height * 0.65);
 
   const inputBaseStyle: React.CSSProperties = {
     width: "100%",
@@ -409,6 +415,7 @@ function WidgetInputInner({
           ? value.split(",").map((v) => v.trim())
           : []
         : value;
+      const optionCount = Math.max(1, field.options?.length ?? 1);
 
       const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (field.multiSelect) {
@@ -431,6 +438,11 @@ function WidgetInputInner({
             onFocus={handleFocus}
             disabled={field.readOnly}
             multiple={field.multiSelect}
+            // A listbox shows its options in the box; leaving size at 1 would
+            // turn it into a closed dropdown and hide every row.
+            size={
+              field.type === "listbox" ? Math.max(2, optionCount) : undefined
+            }
             style={{
               ...inputBaseStyle,
               minWidth: "100%",
@@ -445,11 +457,14 @@ function WidgetInputInner({
             aria-invalid={!!error}
             {...captureStopProps}
           >
-            {!field.multiSelect && (
+            {field.type === "combobox" && (
               <option value="">
                 {t("formFill.selectOptionPlaceholder", "— select —")}
               </option>
             )}
+            {/* Without a hidden empty option Chromium auto-selects the first
+                row of a listbox that should start with nothing selected. */}
+            {field.type === "listbox" && <option value="" hidden />}
             {(field.options || []).map((opt, idx) => (
               <option key={opt} value={opt}>
                 {(field.displayOptions && field.displayOptions[idx]) || opt}

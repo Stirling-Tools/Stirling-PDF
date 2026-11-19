@@ -148,6 +148,55 @@ describe("PdfiumFormProvider", () => {
     });
   });
 
+  it("only treats a listbox as multi-select when the PDF says so", async () => {
+    allowConsole.warn(/Failed to extract display options/);
+    (documentHasFormFields as Mock).mockResolvedValue(true);
+    (getDocumentBytes as Mock).mockResolvedValue(
+      new TextEncoder().encode("/AcroForm").buffer,
+    );
+    const widget = (x: number) => ({
+      pageIndex: 0,
+      x,
+      y: 100,
+      width: 120,
+      height: 40,
+    });
+    (extractFormFields as Mock).mockResolvedValue([
+      {
+        name: "form.single",
+        type: "LISTBOX",
+        value: "",
+        isChecked: false,
+        isReadOnly: false,
+        isRequired: false,
+        flags: 0,
+        options: [],
+        widgets: [widget(50)],
+      },
+      {
+        name: "form.multi",
+        type: "LISTBOX",
+        value: "",
+        isChecked: false,
+        isReadOnly: false,
+        isRequired: false,
+        flags: 1 << 21, // FORMFLAG_MULTISELECT
+        options: [],
+        widgets: [widget(200)],
+      },
+    ]);
+
+    const provider = new PdfiumFormProvider();
+    const fields = await provider.fetchFields(new Blob([]));
+
+    expect(
+      fields.map((f) => ({ name: f.name, multiSelect: f.multiSelect })),
+    ).toEqual([
+      { name: "form.single", multiSelect: false },
+      { name: "form.multi", multiSelect: true },
+    ]);
+  });
+
   it("returns empty array and does not throw when getDocumentBytes fails", async () => {
     allowConsole.warn(/Failed to extract form fields/);
     (getDocumentBytes as Mock).mockRejectedValue(new Error("Disk error"));
