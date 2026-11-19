@@ -59,7 +59,7 @@ test("removing a password keeps the result after switching tools", async ({
   await expect.poll(() => requested).toBe(true);
   try {
     await page
-      .getByRole("button", { name: "Annotations", exact: true })
+      .getByRole("button", { name: "Annotate", exact: true })
       .click();
     await expect(page).toHaveURL(/\/annotate$/);
   } finally {
@@ -158,7 +158,7 @@ for (const operation of ["compress", "remove-password"] as const) {
     await expect(firstPage).not.toHaveAttribute("data-before-tool", "true");
     await expect(firstPage.locator(".pdf-link-overlay")).toHaveCount(4);
     await page
-      .getByRole("button", { name: "Annotations", exact: true })
+      .getByRole("button", { name: "Annotate", exact: true })
       .click();
     await expect(page).toHaveURL(/\/annotate$/);
     await page.getByRole("button", { name: "Polygon", exact: true }).click();

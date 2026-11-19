@@ -15132,7 +15132,7 @@ partial = "Restored {{restored}} of {{total}} files. The rest are no longer stor
 
 [workbenchBar]
 activeFiles = "Active Files"
-annotations = "Annotations"
+annotate = "Annotate"
 applyRedactionsFirst = "Apply redactions first"
 attachments = "Attachments"
 bookmarks = "Bookmarks"

@@ -116,7 +116,7 @@ export function useViewerWorkbenchBarButtons(
   const attachmentsLabel = t("workbenchBar.attachments", "Attachments");
   const layersLabel = t("workbenchBar.layers", "Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
-  const annotationsLabel = t("workbenchBar.annotations", "Annotations");
+  const annotationsLabel = t("workbenchBar.annotate", "Annotate");
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const editTextLabel = t("workbenchBar.editText", "Edit Text");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
