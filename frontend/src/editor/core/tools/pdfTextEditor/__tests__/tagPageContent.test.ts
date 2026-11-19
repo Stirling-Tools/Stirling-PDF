@@ -330,6 +330,60 @@ describe("tagAllPages", () => {
     store.dispose();
   });
 
+  test("tags text set larger or bolder than the body as headings, levelled by style, even set tight on its paragraph", async () => {
+    const show = (font: string, size: number, y: number, text: string) =>
+      `BT /${font} ${size} Tf 72 ${y} Td (${text}) Tj ET`;
+    const body =
+      "Sales rose in every region over the quarter, led by the north";
+    const store = await storeFor(
+      buildClassicPdf(
+        [
+          { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+          { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+          {
+            num: 3,
+            body:
+              "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+              "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
+          },
+          {
+            num: 4,
+            body: streamBody(
+              "",
+              [
+                show("F1", 24, 720, "Quarterly report"),
+                show("F2", 11, 660, "Results"),
+                show("F1", 11, 646, body),
+                show("F2", 11, 600, "Outlook"),
+                show("F1", 11, 586, body.replace("north", "south")),
+              ].join("\n"),
+            ),
+          },
+          {
+            num: 5,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+          },
+          {
+            num: 6,
+            body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+          },
+        ],
+        1,
+      ),
+    );
+    await tagAllPages(store);
+    expect(tagsShown(store.document!, 0)).toEqual(
+      new Map([
+        ["Quarterly report", "H1"],
+        ["Results", "H2"],
+        [body, "P"],
+        ["Outlook", "H2"],
+        [body.replace("north", "south"), "P"],
+      ]),
+    );
+    store.dispose();
+  });
+
   test("records nothing when nothing is untagged", async () => {
     const store = await storeFor(pagePdf(COLUMNS));
     await tagAllPages(store);
@@ -515,7 +569,10 @@ describe("page furniture", () => {
     const targets = [
       footer,
       ...matchingRuns(pages, 0, footer).map(({ run }) => run),
-    ].map((run) => ({ run, tag: textTag(doc, run) }));
+    ].map((run) => ({
+      run,
+      tag: textTag(doc, run),
+    }));
     expect(targets).toHaveLength(3);
     const history = new HistoryStack();
     history.execute(

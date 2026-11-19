@@ -23,7 +23,10 @@ import {
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type { StructureType } from "@editor/tools/pdfTextEditor/model/structureTypes";
+import type {
+  HeadingType,
+  StructureType,
+} from "@editor/tools/pdfTextEditor/model/structureTypes";
 import {
   ARTIFACT_TAG,
   highestMcid,
@@ -46,6 +49,7 @@ type Step =
   | {
       kind: "text";
       runId: string;
+      type: StructureType;
       mcid: number;
       objects: ObjectRetag[];
       runMarks: readonly TagMark[];
@@ -74,9 +78,10 @@ interface Plan {
 
 /**
  * Tag the untagged content drawn directly by a page, as a starting point the
- * user then corrects: each text block a P and each image a Figure, or an
- * artifact of the kind `furniture` names it as (by run or image id), every
- * other object an artifact, the new elements read in content order. Content already
+ * user then corrects: each text block the heading `headings` names it as (by
+ * run id) or else a P, each image a Figure, or an artifact of the kind
+ * `furniture` names it as (by run or image id), every other object an
+ * artifact, the new elements read in content order. Content already
  * tagged or marked an artifact is left alone. Content marked with an MCID no
  * element owns counts as untagged, losing that mark. Content in a form
  * XObject is left alone: the editor cannot tag inside one. Each link and
@@ -87,6 +92,7 @@ export class TagPageContentCommand implements Command {
   readonly type = "tag-page-content";
   readonly pageIndex: number;
   private readonly furniture: ReadonlyMap<string, Furniture>;
+  private readonly headings: ReadonlyMap<string, HeadingType>;
   /** Chosen on first apply, so a redo reuses its MCIDs. */
   private plan: Plan | null = null;
   /** The annotations the first apply tagged, which a redo tags again. */
@@ -95,9 +101,11 @@ export class TagPageContentCommand implements Command {
   constructor(opts: {
     pageIndex: number;
     furniture?: ReadonlyMap<string, Furniture>;
+    headings?: ReadonlyMap<string, HeadingType>;
   }) {
     this.pageIndex = opts.pageIndex;
     this.furniture = opts.furniture ?? new Map();
+    this.headings = opts.headings ?? new Map();
   }
 
   apply(doc: EditorDocument): void {
@@ -113,7 +121,13 @@ export class TagPageContentCommand implements Command {
         ),
       );
     }
-    this.plan ??= planTagging(doc, page, structure, this.furniture);
+    this.plan ??= planTagging(
+      doc,
+      page,
+      structure,
+      this.furniture,
+      this.headings,
+    );
     const done: Step[] = [];
     try {
       for (const step of this.plan.steps) {
@@ -197,7 +211,13 @@ export function hasUntaggedContent(
 ): boolean {
   const structure = doc.structure(pageIndex);
   if (structure.cannotAddElement() !== null) return false;
-  const { steps } = planTagging(doc, doc.page(pageIndex), structure, new Map());
+  const { steps } = planTagging(
+    doc,
+    doc.page(pageIndex),
+    structure,
+    new Map(),
+    new Map(),
+  );
   return (
     steps.length > 0 ||
     taggableLinks(doc, pageIndex).length > 0 ||
@@ -211,6 +231,7 @@ function planTagging(
   page: Page,
   structure: PageStructure,
   furniture: ReadonlyMap<string, Furniture>,
+  headings: ReadonlyMap<string, HeadingType>,
 ): Plan {
   const m = doc.module;
   const marks = new Map<number, TagMark[]>();
@@ -264,7 +285,14 @@ function planTagging(
             objects,
             runMarks,
           }
-        : { kind: "text", runId: run.id, mcid: nextMcid++, objects, runMarks },
+        : {
+            kind: "text",
+            runId: run.id,
+            type: headings.get(run.id) ?? TEXT_TAG,
+            mcid: nextMcid++,
+            objects,
+            runMarks,
+          },
     });
   }
 
@@ -377,10 +405,10 @@ function applyStep(
     case "text": {
       const run = page.runs.find((r) => r.id === step.runId);
       if (!run) throw new Error(`no run ${step.runId}`);
-      const tag = { name: TEXT_TAG, mcid: step.mcid };
+      const tag = { name: step.type, mcid: step.mcid };
       for (const object of step.objects) retagObject(doc, object, tag);
       run.tagMarks = [tag];
-      structure.addElement(step.mcid, TEXT_TAG, follows.get(step.mcid));
+      structure.addElement(step.mcid, step.type, follows.get(step.mcid));
       return;
     }
     case "furniture": {
@@ -419,7 +447,7 @@ function revertStep(
 ): void {
   switch (step.kind) {
     case "text": {
-      for (const object of step.objects) restoreObject(doc, object, TEXT_TAG);
+      for (const object of step.objects) restoreObject(doc, object, step.type);
       const run = page.runs.find((r) => r.id === step.runId);
       if (run) run.tagMarks = step.runMarks;
       structure.removeElement(step.mcid);

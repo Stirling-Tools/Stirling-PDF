@@ -1,0 +1,260 @@
+import { describe, expect, it } from "vitest";
+import {
+  guessHeadings,
+  type HeadingRun,
+} from "@editor/tools/pdfTextEditor/util/headingGuess";
+
+const BODY =
+  "Body text runs on for a good while so that it carries most of the characters";
+
+const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+const BLUE = { r: 30, g: 80, b: 180, a: 255 };
+
+let nextId = 0;
+/** A run on a line of its own, each one below the last. */
+function run(text: string, fontSize: number, bold = false): HeadingRun {
+  const id = nextId++;
+  return {
+    id: `r${id}`,
+    text,
+    fontSize,
+    bold,
+    fill: BLACK,
+    bounds: { x: 72, y: 10_000 - id * 50, width: 200, height: fontSize },
+  };
+}
+
+/** Each run's guessed level by its text, "P" where it is not a heading. */
+function levels(...runs: HeadingRun[]): Record<string, string> {
+  const guessed = guessHeadings([{ pageIndex: 0, runs }]).get(0);
+  return Object.fromEntries(
+    runs.map((r) => [r.text, guessed?.get(r.id) ?? "P"]),
+  );
+}
+
+describe("guessHeadings", () => {
+  it("ranks larger styles as higher headings", () => {
+    expect(
+      levels(
+        run("Annual report", 24),
+        run("Results", 16),
+        run("By region", 13),
+        run("By product", 13),
+        run("Outlook", 16),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Annual report": "H1",
+      Results: "H2",
+      Outlook: "H2",
+      "By region": "H3",
+      "By product": "H3",
+      [BODY]: "P",
+    });
+  });
+
+  it("counts a bold block at the body size as a heading, below a larger one", () => {
+    expect(
+      levels(
+        run("Results", 14, true),
+        run("Method", 10, true),
+        run("Sample", 10, true),
+        run("Outlook", 14, true),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      Results: "H1",
+      Outlook: "H1",
+      Method: "H2",
+      Sample: "H2",
+      [BODY]: "P",
+    });
+  });
+
+  it("ranks bold above regular at the same size", () => {
+    expect(
+      levels(
+        run("Part one", 18, true),
+        run("Chapter one", 18),
+        run("Chapter two", 18),
+        run("Part two", 18, true),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Part one": "H1",
+      "Part two": "H1",
+      "Chapter one": "H2",
+      "Chapter two": "H2",
+      [BODY]: "P",
+    });
+  });
+
+  it("leaves text barely larger than the body, sentences and drop caps as paragraphs", () => {
+    expect(
+      levels(
+        run("Slightly larger", 10.5),
+        run("A short sentence.", 16),
+        run("T", 30),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Slightly larger": "P",
+      "A short sentence.": "P",
+      T: "P",
+      [BODY]: "P",
+    });
+  });
+
+  it("leaves figures, pull quotes and author lists as paragraphs", () => {
+    expect(
+      levels(
+        run("42%", 30),
+        run("1 in 3", 30),
+        run("\u201cWe measure what matters\u201d", 16),
+        run("A. Mbeki, J. Q. Tran, R. Ferreira", 14),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "42%": "P",
+      "1 in 3": "P",
+      "\u201cWe measure what matters\u201d": "P",
+      "A. Mbeki, J. Q. Tran, R. Ferreira": "P",
+      [BODY]: "P",
+    });
+  });
+
+  it("leaves a row of table header cells as paragraphs", () => {
+    const cells = ["Segment", "Revenue", "Margin"].map((text, i) => ({
+      ...run(text, 10, true),
+      bounds: { x: 72 + i * 110, y: 500, width: 60, height: 10 },
+    }));
+    const guessed = guessHeadings([
+      { pageIndex: 0, runs: [...cells, run(BODY, 10), run(BODY, 10)] },
+    ]);
+    expect(guessed.get(0)).toBeUndefined();
+  });
+
+  it("gives a style set only once below the top the level above it", () => {
+    expect(
+      levels(
+        run("Annual report", 30),
+        run("Building the next century of infrastructure", 20),
+        run("Results", 14),
+        run("Outlook", 14),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Annual report": "H1",
+      "Building the next century of infrastructure": "H1",
+      Results: "H2",
+      Outlook: "H2",
+      [BODY]: "P",
+    });
+  });
+
+  it("leaves a style mostly used for long text, such as a lead paragraph, as paragraphs", () => {
+    const lead =
+      "A lead paragraph set a little larger than the body, long enough to run across many lines of the page and well past any heading";
+    expect(
+      levels(
+        run("In short", 14),
+        run(lead, 14),
+        run(BODY, 10),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "In short": "P",
+      [lead]: "P",
+      [BODY]: "P",
+    });
+  });
+
+  it("levels a style the same on every page", () => {
+    const [title, first, second] = [
+      run("Report", 24),
+      run("Summary", 16),
+      run("Details", 16),
+    ];
+    const guessed = guessHeadings([
+      { pageIndex: 0, runs: [title, first, run(BODY, 10)] },
+      { pageIndex: 1, runs: [second, run(BODY, 10)] },
+    ]);
+    expect(guessed.get(0)?.get(first.id)).toBe("H2");
+    expect(guessed.get(1)?.get(second.id)).toBe("H2");
+  });
+
+  it("neither guesses nor counts the runs it is told to skip", () => {
+    const watermark = run("DRAFT", 60);
+    const guessed = guessHeadings(
+      [{ pageIndex: 0, runs: [watermark, run("Summary", 16), run(BODY, 10)] }],
+      new Map([[0, new Map([[watermark.id, "Watermark"]])]]),
+    );
+    expect(guessed.get(0)?.has(watermark.id)).toBe(false);
+    expect([...(guessed.get(0)?.values() ?? [])]).toEqual(["H1"]);
+  });
+
+  it("counts a colour at the body size as emphasis, below bold", () => {
+    const coloured = (text: string) => ({ ...run(text, 10), fill: BLUE });
+    expect(
+      levels(
+        run("Report", 20),
+        run("Background", 10, true),
+        run("Findings", 10, true),
+        coloured("Method"),
+        coloured("Sample"),
+        run("SCOPE", 10),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      Report: "H1",
+      Background: "H2",
+      Findings: "H2",
+      Method: "H3",
+      Sample: "H3",
+      SCOPE: "P",
+      [BODY]: "P",
+    });
+  });
+
+  it("leaves grey text, form labels and asides in brackets as paragraphs", () => {
+    const grey = { r: 120, g: 120, b: 120, a: 255 };
+    expect(
+      levels(
+        { ...run("Updated March 2026", 10), fill: grey },
+        { ...run("Last reviewed", 10), fill: grey },
+        run("Name:", 14, true),
+        run("[2 marks]", 14, true),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Updated March 2026": "P",
+      "Last reviewed": "P",
+      "Name:": "P",
+      "[2 marks]": "P",
+      [BODY]: "P",
+    });
+  });
+
+  it("stops at H6", () => {
+    const sizes = [40, 34, 28, 24, 20, 17, 14];
+    const runs = sizes.flatMap((size) => [
+      run(`Level ${size}`, size),
+      run(`Also level ${size}`, size),
+    ]);
+    const guessed = guessHeadings([
+      { pageIndex: 0, runs: [...runs, run(BODY, 10), run(BODY, 10)] },
+    ]).get(0)!;
+    expect(
+      runs.filter((_, i) => i % 2 === 0).map((r) => guessed.get(r.id)),
+    ).toEqual(["H1", "H2", "H3", "H4", "H5", "H6", "H6"]);
+  });
+});

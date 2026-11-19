@@ -178,6 +178,25 @@ describe("recogniseFurniture", () => {
     const pages = [0, 1, 2].map((i) => page(i, [run(`p${i}`, text(i), 30)]));
     expect(recogniseFurniture(pages, 3).get(0)?.get("p0")).toBe("Footer");
   });
+
+  it("leaves a table's header row that each page repeats near its top", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(
+        i,
+        ["Ref", "Item", "Qty", "Total"].map((text, x) =>
+          run(`c${i}-${x}`, text, 720, 72 + x * 120),
+        ),
+      ),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves values near an edge whose number changes on every page without counting them", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [run(`v${i}`, `PO-00${[25, 61, 47][i]}`, 40)]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
 });
 
 describe("recogniseFurniture watermarks", () => {
@@ -219,6 +238,37 @@ describe("recogniseFurniture watermarks", () => {
       t2: "Watermark",
       t3: "Watermark",
     });
+  });
+
+  it("reads text set at an angle on a one-page document as a watermark", () => {
+    const pages = [page(0, [run("w", "SAMPLE", 400, 200, { angle: 45 })])];
+    expect(kindsOn(recogniseFurniture(pages, 1), 0)).toEqual({
+      w: "Watermark",
+    });
+  });
+
+  it("reads large text set at an angle on one page of several as a watermark, but not a slanted label", () => {
+    const stamp = {
+      ...run("w", "COPY", 400, 200, { angle: 40 }),
+      bounds: { x: 200, y: 300, width: 220, height: 190 },
+    };
+    const label = {
+      ...run("l", "March", 300, 72, { angle: 45 }),
+      bounds: { x: 72, y: 300, width: 28, height: 28 },
+    };
+    const pages = [page(0, [stamp, label]), page(1, []), page(2, [])];
+    expect(kindsOn(recogniseFurniture(pages, 3), 0)).toEqual({
+      w: "Watermark",
+    });
+  });
+
+  it("leaves a table's number cells spread across the page", () => {
+    const cells = [100, 300, 500, 700].flatMap((y, row) =>
+      [72, 250, 450].map((x, col) =>
+        run(`c${row}-${col}`, String(row * 10 + col + 7), y, x),
+      ),
+    );
+    expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
   });
 
   it("leaves copies of a label that do not spread across the page", () => {

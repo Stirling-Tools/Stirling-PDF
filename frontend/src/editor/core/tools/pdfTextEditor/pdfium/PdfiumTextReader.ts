@@ -1163,6 +1163,48 @@ function readFontFamily(
   return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }
 
+/** PDF font flag ForceBold (ISO 32000-1 table 123). */
+const FORCE_BOLD = 1 << 18;
+const BOLD_WEIGHT = 600;
+const HEAVY_NAME = /bold|black|heavy/i;
+
+/**
+ * Whether a document font draws bold: by its weight, its ForceBold flag, or a
+ * name such as "Helvetica-Bold", since a standard font the file does not
+ * embed carries no weight and its family name drops the style.
+ */
+export function isBoldFont(m: WrappedPdfiumModule, fontPtr: number): boolean {
+  if (!fontPtr) return false;
+  if (m.FPDFFont_GetWeight(fontPtr) >= BOLD_WEIGHT) return true;
+  if (m.FPDFFont_GetFlags(fontPtr) & FORCE_BOLD) return true;
+  const name = readFontNameVia(m, fontPtr, m.FPDFFont_GetBaseFontName);
+  return name !== null && HEAVY_NAME.test(name);
+}
+
+/**
+ * Whether a run draws in a bold face throughout, every text object it was
+ * grouped from included: a paragraph opening on a bold label is not bold.
+ * Each font's weight is read once per returned function.
+ */
+export function boldRuns(m: WrappedPdfiumModule): (run: TextRun) => boolean {
+  const byFont = new Map<number, boolean>();
+  const boldObject = (ptr: number): boolean => {
+    const font = m.FPDFTextObj_GetFont(ptr);
+    if (!byFont.has(font)) byFont.set(font, isBoldFont(m, font));
+    return byFont.get(font)!;
+  };
+  return (run) => {
+    const leaves =
+      run.paragraphLeafPtrs.length > 0
+        ? run.paragraphLeafPtrs
+        : run.mergedFromPtrs.length > 0
+          ? run.mergedFromPtrs
+          : [run.pdfiumObjPtr];
+    const drawn = leaves.filter((ptr) => ptr !== 0);
+    return drawn.length > 0 && drawn.every(boldObject);
+  };
+}
+
 function readTextRun(
   m: WrappedPdfiumModule,
   _doc: EditorDocument,

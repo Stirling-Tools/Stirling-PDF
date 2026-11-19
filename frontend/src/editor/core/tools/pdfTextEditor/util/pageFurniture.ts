@@ -8,6 +8,7 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { Affine, PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
+import { inTableRow } from "@editor/tools/pdfTextEditor/util/tableRow";
 
 /** How far apart two runs can sit, in points, and still be at the same height or in the same place. */
 const SAME_HEIGHT_PT = 4;
@@ -21,6 +22,12 @@ const EDGE_BAND = 0.12;
 const TILED = 3;
 /** How far from square to the page, in radians, a run must be turned to read as set at an angle. */
 const OFF_AXIS = 0.05;
+/**
+ * How much of the page's shorter side, at least, text set at an angle spans
+ * to read as a watermark however few pages show it: a stamp such as "COPY"
+ * across one page, where a chart's slanted axis labels stay small.
+ */
+const STAMP_SHARE = 0.25;
 const DIGITS = /\p{Nd}+/gu;
 const DIGIT = /^\p{Nd}$/u;
 
@@ -89,11 +96,15 @@ export function matchingRuns<R extends FurnitureRun>(
  * page index and then run or image id. Watermarks come first: text or images
  * drawn in the same place on at least half the document's pages that are
  * tiled across the page, set at an angle, or (text) see-through, and that
- * repeat on two pages or tile one. Then text near the top or bottom of a
- * page that at least half the pages, and at least two, show at the same
- * height: near the top a header, near the bottom a footer, and either a page
- * number when one of its numbers counts up with the pages, whatever words
- * surround it. `pageCount` counts the pages not in `pages` too.
+ * repeat on two pages, tile one, or are on the only page; and, on any page,
+ * text set at an angle across a good part of it (see STAMP_SHARE). Then text near the
+ * top or bottom of a page that at least half the pages, and at least two,
+ * show at the same height: near the top a header, near the bottom a footer,
+ * and either a page number when one of its numbers counts up with the pages,
+ * whatever words surround it. A cell of a table row is never a header or
+ * footer, nor is text whose number changes on every page without counting
+ * the pages, such as a value in a table that runs over several pages.
+ * `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
@@ -105,7 +116,7 @@ export function recogniseFurniture(
     const onPage = furniture.get(pageIndex) ?? new Map<string, Furniture>();
     furniture.set(pageIndex, onPage.set(id, kind));
   };
-  for (const { pageIndex, id } of watermarks(pages, half)) {
+  for (const { pageIndex, id } of watermarks(pages, half, pageCount === 1)) {
     mark(pageIndex, id, "Watermark");
   }
 
@@ -115,7 +126,9 @@ export function recogniseFurniture(
       if (furniture.get(page.pageIndex)?.has(run.id)) continue;
       const at = placement(page.display, run.bounds);
       const text = furnitureText(run.text);
-      if (!text || at.share > EDGE_BAND) continue;
+      if (!text || at.share > EDGE_BAND || inTableRow(run, page.runs)) {
+        continue;
+      }
       const key = `${at.edge}:${text}`;
       const sameText = groups.get(key) ?? [];
       groups.set(key, sameText);
@@ -134,6 +147,7 @@ export function recogniseFurniture(
   for (const sameText of groups.values()) {
     for (const { at, runs } of sameText) {
       if (pagesOf(runs) < needed) continue;
+      if (!numbersPages(runs) && changesEveryPage(runs)) continue;
       const kind = furnitureKind(runs, at.edge);
       for (const { pageIndex, id } of runs) mark(pageIndex, id, kind);
     }
@@ -148,12 +162,15 @@ interface Drawn {
   key: string;
   centre: { x: number; y: number };
   tiled: boolean;
+  /** Set at an angle across a good part of the page (see STAMP_SHARE). */
+  stamped: boolean;
 }
 
 /** The text and images `recogniseFurniture` reads as watermarks. */
 function watermarks(
   pages: readonly FurniturePage[],
   half: number,
+  onlyPage: boolean,
 ): { pageIndex: number; id: string }[] {
   const groups = new Map<string, Drawn[][]>();
   for (const drawn of pages.flatMap(watermarkLike)) {
@@ -165,8 +182,10 @@ function watermarks(
   }
   return [...groups.values()].flat().flatMap((group) => {
     const pages = pagesOf(group);
-    const repeats = pages >= 2 || group.some((drawn) => drawn.tiled);
-    return pages >= half && repeats ? group : [];
+    const repeats =
+      onlyPage || pages >= 2 || group.some((drawn) => drawn.tiled);
+    const stamped = group.every((drawn) => drawn.stamped);
+    return (pages >= half && repeats) || stamped ? group : [];
   });
 }
 
@@ -175,7 +194,10 @@ function watermarkLike(page: FurniturePage): Drawn[] {
   const items = [
     ...page.runs.map((run) => ({
       id: run.id,
-      key: furnitureText(run.text) && `text:${furnitureText(run.text)}`,
+      // The exact text, digits and all: a watermark repeats itself word for
+      // word, where reading "7" and "41" as one would tile a table's number
+      // column across the page.
+      key: watermarkText(run.text) && `text:${watermarkText(run.text)}`,
       bounds: run.bounds,
       matrix: run.matrix,
       seeThrough: run.fill.a < 255,
@@ -197,7 +219,10 @@ function watermarkLike(page: FurniturePage): Drawn[] {
   });
   return placed.flatMap((item) => {
     const tiled = tiles(centres.get(item.key)!, page.display);
-    if (!tiled && !item.seeThrough && !offAxis(item.matrix)) return [];
+    const angled = offAxis(item.matrix);
+    if (!tiled && !item.seeThrough && !angled) return [];
+    const { displayWidth, displayHeight } = page.display;
+    const span = Math.max(item.bounds.width, item.bounds.height);
     return [
       {
         pageIndex: page.pageIndex,
@@ -205,9 +230,17 @@ function watermarkLike(page: FurniturePage): Drawn[] {
         key: item.key,
         centre: item.at,
         tiled,
+        stamped:
+          item.key.startsWith("text:") &&
+          angled &&
+          span >= STAMP_SHARE * Math.min(displayWidth, displayHeight),
       },
     ];
   });
+}
+
+function watermarkText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
 }
 
 /** True when copies at `centres` tile the page (see TILED). */
@@ -280,6 +313,13 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
   return runs[0].numbers.some(
     (_, i) =>
       new Set(runs.map((run) => run.numbers[i] - run.pageIndex)).size === 1,
+  );
+}
+
+/** True when one of the runs' numbers, at the same place in each, differs on every page. */
+function changesEveryPage(runs: readonly GroupedRun[]): boolean {
+  return runs[0].numbers.some(
+    (_, i) => new Set(runs.map((run) => run.numbers[i])).size === runs.length,
   );
 }
 
