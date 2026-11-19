@@ -121,12 +121,7 @@ const GroupedFormatDropdown = ({
           }
           rightSectionPointerEvents="none"
           styles={{
-            input: {
-              backgroundColor: "var(--c-surface)",
-              borderColor: "var(--c-border)",
-              color: "var(--c-text)",
-              textAlign: "start",
-            },
+            input: { textAlign: "start" },
             label: {
               color: "var(--c-text-muted)",
               fontWeight: "var(--font-weight-medium)",

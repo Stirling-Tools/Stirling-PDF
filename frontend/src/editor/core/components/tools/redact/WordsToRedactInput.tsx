@@ -60,8 +60,8 @@ export default function WordsToRedactInput({
           p="sm"
           style={{
             borderRadius: "var(--mantine-radius-sm)",
-            border: `1px solid var(--mantine-color-gray-3)`,
-            backgroundColor: "var(--mantine-color-gray-0)",
+            border: "1px solid var(--c-border)",
+            backgroundColor: "var(--c-input-bg)",
           }}
         >
           <Text
