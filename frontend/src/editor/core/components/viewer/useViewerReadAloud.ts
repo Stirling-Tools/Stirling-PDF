@@ -10,6 +10,10 @@ import { useStopReadAloudOnNavigation } from "@editor/components/viewer/useStopR
 import { pdfWorkerManager } from "@editor/services/pdfWorkerManager";
 import { StirlingFile } from "@editor/types/fileContext";
 import { ZINDEX } from "@editor/constants/zIndex";
+import {
+  READ_ALOUD_FALLBACK_LANGUAGE,
+  detectReadAloudLanguageForFile,
+} from "@editor/components/viewer/readAloudLanguage";
 
 interface TextItemWithGeometry {
   str: string;
@@ -77,16 +81,13 @@ function wordIndexAtChar(words: string[], charIndex: number): number {
  * `displayedFile` is the document the viewer is showing, preview included:
  * read-aloud and the selection menu must speak the same file the user sees.
  */
-export function useViewerReadAloud(
-  defaultLanguage?: string,
-  displayedFile?: StirlingFile | File | null,
-) {
+export function useViewerReadAloud(displayedFile?: StirlingFile | File | null) {
   const viewer = useViewer();
 
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);
   const [speechLanguage, setSpeechLanguage] = useState(
-    defaultLanguage || "en-US",
+    READ_ALOUD_FALLBACK_LANGUAGE,
   );
   const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(
     null,
@@ -112,7 +113,13 @@ export function useViewerReadAloud(
   const sessionRef = useRef(0);
   const totalPagesRef = useRef(0);
   const speechRateRef = useRef(1); // Keep track of current rate without recreating dependent functions
-  const speechLanguageRef = useRef(defaultLanguage || "en-US");
+  const speechLanguageRef = useRef(READ_ALOUD_FALLBACK_LANGUAGE);
+  // The language detection chose for the current document, and whether the
+  // user has overridden it. A late detection must not overwrite that choice.
+  const autoDetectedLanguageRef = useRef<string | null>(null);
+  const languagePickedByUserRef = useRef(false);
+  const detectedFileRef = useRef<StirlingFile | File | null>(null);
+  const languageDetectionRef = useRef<Promise<void> | null>(null);
 
   // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
   const cachedPdfDocRef = useRef<Awaited<
@@ -161,6 +168,64 @@ export function useViewerReadAloud(
   useEffect(() => {
     speechLanguageRef.current = speechLanguage;
   }, [speechLanguage]);
+
+  // Pick the document's language as soon as it is shown, so the selector and
+  // the first read both use it. English is the fallback when the sample says
+  // nothing conclusive.
+  useEffect(() => {
+    if (!displayedFile) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (
+      displayedFile.type !== "application/pdf" &&
+      !displayedFile.name.toLowerCase().endsWith(".pdf")
+    ) {
+      languageDetectionRef.current = null;
+      return;
+    }
+    if (detectedFileRef.current === displayedFile) return;
+
+    detectedFileRef.current = displayedFile;
+    languagePickedByUserRef.current = false;
+    autoDetectedLanguageRef.current = null;
+
+    let cancelled = false;
+    let settled = false;
+    languageDetectionRef.current = detectReadAloudLanguageForFile(
+      displayedFile,
+    ).then((language) => {
+      if (cancelled) return;
+      settled = true;
+      if (languagePickedByUserRef.current) return;
+      autoDetectedLanguageRef.current = language;
+      setSpeechLanguage(language);
+      speechLanguageRef.current = language;
+    });
+
+    return () => {
+      cancelled = true;
+      // StrictMode's setup/cleanup/setup cycle cancels the first detection
+      // before it settles; leave the marker clear so the second run detects.
+      if (!settled) detectedFileRef.current = null;
+    };
+  }, [displayedFile]);
+
+  // A detected language without a matching voice would leave the selector
+  // showing a language the browser cannot speak; use the fallback instead.
+  useEffect(() => {
+    const detected = autoDetectedLanguageRef.current;
+    if (!detected || languagePickedByUserRef.current) return;
+    if (supportedLanguageCodes.size === 0) return;
+    const baseLanguage = detected.split("-")[0];
+    if (
+      supportedLanguageCodes.has(detected) ||
+      supportedLanguageCodes.has(baseLanguage)
+    ) {
+      return;
+    }
+    autoDetectedLanguageRef.current = READ_ALOUD_FALLBACK_LANGUAGE;
+    setSpeechLanguage(READ_ALOUD_FALLBACK_LANGUAGE);
+    speechLanguageRef.current = READ_ALOUD_FALLBACK_LANGUAGE;
+  }, [supportedLanguageCodes]);
 
   // Helper to get supported language codes from available voices
   const getSupportedLanguageCodes = useCallback((): Set<string> => {
@@ -667,6 +732,7 @@ export function useViewerReadAloud(
       return;
     }
 
+    await languageDetectionRef.current;
     await startReading(viewer.getScrollState().currentPage || 1);
   }, [isReadingAloud, startReading, stopReadingAloud, viewer]);
 
@@ -751,6 +817,8 @@ export function useViewerReadAloud(
 
   const handleSpeechLanguageChange = useCallback(
     (nextLanguage: string) => {
+      languagePickedByUserRef.current = true;
+      autoDetectedLanguageRef.current = null;
       setSpeechLanguage(nextLanguage);
       speechLanguageRef.current = nextLanguage;
       const voice = findVoiceForLanguage(nextLanguage);

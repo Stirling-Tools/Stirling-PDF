@@ -72,7 +72,7 @@ export function useViewerWorkbenchBarButtons(
     handleReadAloud,
     handleSpeechRateChange,
     handleSpeechLanguageChange,
-  } = useViewerReadAloud(i18n.language || "en-US", displayedFile);
+  } = useViewerReadAloud(displayedFile);
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
