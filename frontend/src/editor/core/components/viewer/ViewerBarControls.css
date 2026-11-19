@@ -1,0 +1,39 @@
+/* Labelled viewer toolbar controls. Active reads as a soft tint rather than a
+   solid fill, so several on at once stay calm. */
+.viewer-bar-button {
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.viewer-bar-button[data-active="true"],
+.viewer-bar-button[data-active="true"]:hover {
+  background: var(--c-primary-subtle);
+  color: var(--c-primary);
+}
+
+/* A menu button stays marked while its menu is open. */
+.viewer-bar-button[aria-expanded="true"]:not([data-active="true"]) {
+  background: var(--c-hover);
+}
+
+/* The ruler's current scale, read at a glance beside its button. */
+.viewer-bar-scale-value {
+  padding: 1px 6px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer-bar-button-wrap {
+  display: inline-flex;
+}
+
+/* A row too narrow for every name shows icons, named by their tooltips, rather
+   than scrolling some controls out of sight. */
+@container workbench-tool-row (max-width: 820px) {
+  .viewer-bar-button__label {
+    display: none;
+  }
+}

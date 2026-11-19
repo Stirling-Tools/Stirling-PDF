@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
-import { Button } from "@editor/ui/Button";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useAllFiles } from "@editor/contexts/FileContext";
@@ -83,11 +82,6 @@ export default function Workbench() {
   const dropHandlers = useWorkbenchFileDrop(acceptsFileDrops);
   const isFileDragOver = useIsWorkbenchFileDragOver() && acceptsFileDrops;
 
-  // The viewer's tool row can be retracted to give the document more height.
-  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
-  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
-  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
-  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
   // A page tool brings its own header, and a small screen has no height to
   // spare for the viewer's as well.
   const isMobile = useIsMobile();
@@ -121,15 +115,6 @@ export default function Workbench() {
     !readerMode &&
     !takeover &&
     !strip.enabled;
-
-  // On the transition, so reading sets the toolbar's start state without locking it.
-  const prevReaderModeRef = useRef(readerMode);
-  useEffect(() => {
-    if (readerMode !== prevReaderModeRef.current) {
-      setViewerToolbarCollapsed(readerMode);
-      prevReaderModeRef.current = readerMode;
-    }
-  }, [readerMode]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -258,24 +243,9 @@ export default function Workbench() {
                 currentView={currentView}
                 setCurrentView={setCurrentView}
                 hasFiles={hasFiles}
-                viewerToolbarCollapsed={viewerToolbarCollapsed}
-                onCollapseViewerToolbar={setViewerToolbarCollapsed}
               />
             </div>
           </div>
-          {/* Reopen tab for the retracted viewer tool row. */}
-          {showReopenTab && (
-            <Button
-              type="button"
-              variant="quiet"
-              className={styles.workbenchBarReopenTab}
-              onClick={() => setViewerToolbarCollapsed(false)}
-              aria-expanded={false}
-              aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
-              title={t("workbenchBar.showToolbar", "Show toolbar")}
-              leftSection={<Icon name="chevron-down" size={"1rem"} />}
-            />
-          )}
         </div>
       )}
       {showFloatingSearch && <WorkbenchFloatingSearch />}

@@ -208,3 +208,15 @@ export async function revealPickerTool(
     page.locator(`[data-tour="tool-button-${toolId}"]`),
   );
 }
+
+/** Shows or hides one of the viewer's side panels from the bar's Panels menu. */
+export async function toggleViewerPanel(
+  page: Page,
+  name: "Page thumbnails" | "Bookmarks" | "Comments" | "Attachments" | "Layers",
+): Promise<void> {
+  await page.getByTestId("viewer-panels-menu").click();
+  await page.getByRole("menuitem", { name, exact: true }).click();
+  // The menu stays open for several toggles; Escape puts it away.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+}

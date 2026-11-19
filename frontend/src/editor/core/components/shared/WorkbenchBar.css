@@ -232,10 +232,12 @@
   position: relative;
   display: flex;
   align-items: center;
-  /* Symmetric side padding leaves room for the retract handle pinned right
-     without knocking the centred tool icons off-centre. The extra 8px each side
+  /* Symmetric side padding leaves room for the controls pinned right without
+     knocking the centred tool icons off-centre. The extra 8px each side
      absorbs the negative margin. */
   padding: 4px 44px;
+  /* Lets the row's controls fit themselves to its width. */
+  container: workbench-tool-row / inline-size;
   border-top: 1px solid var(--c-border-subtle);
 }
 
@@ -249,7 +251,7 @@
   gap: 2px;
 }
 
-/* Retract / reopen handle for the viewer tool row. */
+/* Expand handle for the mobile tool row. */
 .workbench-bar-toolbar-handle {
   display: inline-flex;
   align-items: center;
@@ -270,14 +272,14 @@
   background: var(--c-hover);
 }
 
-/* Pinned to the right edge of the tool row. */
-.workbench-bar-toolbar-handle-retract {
+/* Controls pinned to the right edge of the tool row. */
+.workbench-bar-row-end {
   position: absolute;
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  display: flex;
+  align-items: center;
 }
 
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */

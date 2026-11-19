@@ -29,7 +29,6 @@ import {
   useFileSelection,
   useFileActions,
 } from "@editor/contexts/FileContext";
-import { isStirlingFile } from "@editor/types/fileContext";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
@@ -60,6 +59,7 @@ import "@editor/components/shared/WorkbenchBar.css";
 import { NotificationBell } from "@editor/components/notifications/NotificationBell";
 import { useWorkbenchSave } from "@editor/hooks/useWorkbenchSave";
 import { useSaveButton } from "@editor/components/shared/workbenchBar/useSaveButton";
+import { useCloseViewerDocument } from "@editor/components/viewer/useCloseViewerDocument";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -73,18 +73,12 @@ interface WorkbenchBarProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   hasFiles: boolean;
-  /** Whether the viewer's tool row is currently retracted. */
-  viewerToolbarCollapsed?: boolean;
-  /** Setter for the viewer tool-row retract state (owned by Workbench). */
-  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 export default function WorkbenchBar({
   currentView,
   setCurrentView,
   hasFiles,
-  viewerToolbarCollapsed = false,
-  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -106,7 +100,6 @@ export default function WorkbenchBar({
   const { toolPanelMode, leftPanelView, customWorkbenchViews } =
     useToolWorkflow();
   const isCustomView = !isBaseWorkbench(currentView);
-  const isViewer = currentView === "viewer";
 
   // Which view's label is expanded, held back until the new view has mounted
   const [openView, setOpenView] = useState(currentView);
@@ -167,7 +160,7 @@ export default function WorkbenchBar({
   const { selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const { files: activeFiles } = useAllFiles();
-  const { activeFileId, setActiveFileId } = useViewer();
+  const { activeFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
   const workbenchSave = useWorkbenchSave();
   // Block print/export while any file the export would touch is under active
@@ -209,6 +202,15 @@ export default function WorkbenchBar({
     [buttons],
   );
 
+  // Pinned to the tool row's right edge, clear of the centred lanes.
+  const rowEndButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "row-end" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
+
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
       const sectionButtons = buttons.filter(
@@ -246,44 +248,16 @@ export default function WorkbenchBar({
     viewerContext?.printActions?.print?.();
   }, [viewerContext]);
 
+  const closeViewerDocument = useCloseViewerDocument();
   const handleClose = useCallback(async () => {
     if (viewFileActions?.onClose) {
       viewFileActions.onClose();
     } else if (currentView === "fileEditor" || currentView === "pageEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
-      const file =
-        (activeFileId
-          ? activeFiles.find(
-              (f) => isStirlingFile(f) && f.fileId === activeFileId,
-            )
-          : null) ?? activeFiles[0];
-      const countBeforeRemove = activeFiles.length;
-      if (file && isStirlingFile(file)) {
-        // Pick the next file to show before removing, so the sidebar stays in sync.
-        const remaining = activeFiles.filter(
-          (f) => isStirlingFile(f) && f.fileId !== file.fileId,
-        );
-        const nextFile = remaining.find(isStirlingFile) ?? null;
-        await fileActions.removeFiles([file.fileId], false);
-        if (countBeforeRemove <= 1) {
-          setCurrentView("fileEditor");
-        } else if (nextFile) {
-          setActiveFileId(nextFile.fileId);
-        }
-      } else if (countBeforeRemove <= 1) {
-        setCurrentView("fileEditor");
-      }
+      await closeViewerDocument();
     }
-  }, [
-    currentView,
-    viewFileActions,
-    fileActions,
-    activeFiles,
-    activeFileId,
-    setActiveFileId,
-    setCurrentView,
-  ]);
+  }, [currentView, viewFileActions, fileActions, closeViewerDocument]);
 
   const downloadTooltip = useMemo(() => {
     if (currentView === "viewer") return terminology.download;
@@ -316,10 +290,6 @@ export default function WorkbenchBar({
   const toggleMobileTools = useCallback(
     () => setMobileToolsExpanded((v) => !v),
     [],
-  );
-  const handleRetractToolbar = useCallback(
-    () => onCollapseViewerToolbar?.(true),
-    [onCollapseViewerToolbar],
   );
 
   const renderButton = useCallback(
@@ -520,11 +490,19 @@ export default function WorkbenchBar({
     </div>
   );
 
-  // Tool buttons - second row, only rendered when buttons exist. In the viewer
-  // the row is retractable: a handle on its right edge hides the whole row;
-  // Workbench then shows a tab below the bar to bring it back.
+  const renderRowButton = (btn: WorkbenchBarButtonConfig) => {
+    const content = renderButton(btn);
+    if (!content) return null;
+    return (
+      <div key={btn.id} className="workbench-bar-action-wrapper">
+        {content}
+      </div>
+    );
+  };
+
+  // Tool buttons - second row, only rendered when buttons exist.
   const toolRow =
-    sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) ? (
+    sectionsWithButtons.length > 0 ? (
       <div
         className={`workbench-bar-center${
           isMobile && mobileToolsExpanded
@@ -537,28 +515,22 @@ export default function WorkbenchBar({
             ({ section, buttons: sectionButtons }, idx) => (
               <React.Fragment key={section}>
                 {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
+                {sectionButtons.map(renderRowButton)}
               </React.Fragment>
             ),
           )}
+          {/* A phone's row scrolls, so its end controls scroll with it. */}
+          {isMobile && rowEndButtons.map(renderRowButton)}
         </div>
+        {!isMobile && rowEndButtons.length > 0 && (
+          <div className="workbench-bar-row-end">
+            {rowEndButtons.map(renderRowButton)}
+          </div>
+        )}
         <WorkbenchBarToolbarHandle
           isMobile={isMobile}
           expanded={mobileToolsExpanded}
           onToggleExpanded={toggleMobileTools}
-          onRetract={
-            isViewer && onCollapseViewerToolbar
-              ? handleRetractToolbar
-              : undefined
-          }
         />
       </div>
     ) : null;

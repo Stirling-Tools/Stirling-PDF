@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
 
 const device = vi.hoisted(() => ({ isPhone: false }));
+const pageTool = vi.hoisted(() => ({ open: false }));
 
 // Built once: the toolbar's effects depend on the identity of these values.
 const viewer = vi.hoisted(() => {
@@ -40,6 +41,7 @@ const viewer = vi.hoisted(() => {
         setZoomLevel: vi.fn(),
       },
       spreadActions: { toggleSpreadMode: vi.fn() },
+      rotationActions: { rotateForward: vi.fn(), rotateBackward: vi.fn() },
       zoomRestorePendingRef: { current: false },
       zoomRestoreSettledTick: 0,
       registerImmediateZoomUpdate: (listener: (percent: number) => void) => {
@@ -58,6 +60,9 @@ const viewer = vi.hoisted(() => {
 
 vi.mock("@editor/contexts/ViewerContext", () => ({
   useViewer: () => viewer.value,
+}));
+vi.mock("@editor/contexts/viewer/ViewerPageTool", () => ({
+  useViewerPageTool: () => (pageTool.open ? {} : null),
 }));
 vi.mock("@editor/hooks/useIsMobile", () => ({
   useIsPhone: () => device.isPhone,
@@ -132,5 +137,40 @@ describe("PdfViewerToolbar fit controls", () => {
     expect(viewer.value.zoomActions.requestZoom).toHaveBeenCalledWith(
       ZoomMode.FitWidth,
     );
+  });
+});
+
+describe("PdfViewerToolbar rotate controls", () => {
+  beforeEach(() => {
+    device.isPhone = false;
+    pageTool.open = false;
+    vi.clearAllMocks();
+  });
+
+  it("rotates the view either way", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+
+    await user.click(
+      screen.getByRole("button", { name: "workbenchBar.rotateLeft" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "workbenchBar.rotateRight" }),
+    );
+
+    expect(viewer.value.rotationActions.rotateBackward).toHaveBeenCalledOnce();
+    expect(viewer.value.rotationActions.rotateForward).toHaveBeenCalledOnce();
+  });
+
+  it("holds the view still while a page tool is open", () => {
+    pageTool.open = true;
+    renderToolbar();
+
+    expect(
+      screen.getByRole("button", { name: "workbenchBar.rotateLeft" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "workbenchBar.rotateRight" }),
+    ).toBeDisabled();
   });
 });

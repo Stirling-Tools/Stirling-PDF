@@ -4,6 +4,7 @@ import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -40,6 +41,7 @@ export function PdfViewerToolbar({
     scrollActions,
     zoomActions,
     spreadActions,
+    rotationActions,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
     registerImmediateZoomUpdate,
@@ -48,6 +50,11 @@ export function PdfViewerToolbar({
     pdfRenderMode,
     cyclePdfRenderMode,
   } = useViewer();
+
+  // A page tool edits pages upright, so the view stays unrotated while it is open.
+  const rotateDisabled = useViewerPageTool() != null;
+  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
+  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
@@ -378,6 +385,36 @@ export function PdfViewerToolbar({
         </Tooltip>
       )}
 
+      {!isPhone &&
+        (
+          [
+            [
+              "rotate-ccw",
+              rotateLeftLabel,
+              () => rotationActions.rotateBackward(),
+            ],
+            [
+              "rotate-cw",
+              rotateRightLabel,
+              () => rotationActions.rotateForward(),
+            ],
+          ] as const
+        ).map(([icon, label, rotate]) => (
+          <Tooltip key={icon} content={label} position="top" arrow>
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              className="pdf-viewer-toolbar-wide-only"
+              onClick={() => rotate()}
+              disabled={rotateDisabled}
+              style={{ minWidth: buttonMinWidth }}
+              aria-label={label}
+            >
+              <Icon name={icon} size={18} />
+            </ActionIcon>
+          </Tooltip>
+        ))}
+
       {/* Desktop zoom controls (slider + buttons) */}
       {!isPhone && (
         <Group gap={4} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
@@ -569,6 +606,20 @@ export function PdfViewerToolbar({
                 : pdfRenderMode === "dark"
                   ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
                   : t("viewer.disableColorFilter", "Disable Color Filter")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="rotate-ccw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateBackward()}
+            >
+              {rotateLeftLabel}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Icon name="rotate-cw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateForward()}
+            >
+              {rotateRightLabel}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
