@@ -47,7 +47,7 @@ describe("imageStatus", () => {
       imageStatus({
         kind: "describable",
         description: null,
-        tagged: true,
+        type: "Figure",
         canBeDecorative: true,
       }),
     ).toBe("todo");
@@ -55,7 +55,7 @@ describe("imageStatus", () => {
       imageStatus({
         kind: "describable",
         description: "Revenue by region",
-        tagged: true,
+        type: "Figure",
         canBeDecorative: true,
       }),
     ).toBe("done");

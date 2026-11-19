@@ -136,11 +136,13 @@ const TopBar = memo(function TopBar({
       onShowHelp={() => store.setHelpOpen(true)}
       editing={editing}
       trail={
-        <EditorTrailControls
-          store={store}
-          state={state}
-          selection={selection}
-        />
+        editing ? undefined : (
+          <EditorTrailControls
+            store={store}
+            state={state}
+            selection={selection}
+          />
+        )
       }
     />
   );
