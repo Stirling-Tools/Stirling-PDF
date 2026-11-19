@@ -85,12 +85,10 @@ test.describe("CertSign tool - certificate source model", () => {
     await expect(
       page.getByText(/no other certificate sources are available/i),
     ).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /^server$/i })).toHaveCount(
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
       0,
     );
+    await expect(page.getByRole("radio", { name: /^server$/i })).toHaveCount(0);
   });
 
   test("does NOT offer 'This device' when not running as desktop", async ({
@@ -104,9 +102,9 @@ test.describe("CertSign tool - certificate source model", () => {
     await expect(page.getByText(/^pkcs12$/i).first()).toBeVisible({
       timeout: 10_000,
     });
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -142,13 +140,15 @@ test.describe("CertSign tool - hardware on mac/Linux (no Windows store)", () => 
     await page.waitForLoadState("domcontentloaded");
     await uploadFiles(page, SAMPLE_PDF);
 
-    const deviceBtn = page.getByRole("button", { name: /this device/i });
-    await expect(deviceBtn).toBeVisible({ timeout: 10_000 });
-    await deviceBtn.click();
+    const deviceBtn = page.getByRole("radio", { name: /this device/i });
+    await expect(deviceBtn).toBeEnabled({ timeout: 10_000 });
+    await page
+      .locator(".mantine-SegmentedControl-label", { hasText: /this device/i })
+      .click();
 
     // Only one hardware kind applies -> no Windows-store toggle.
     await expect(
-      page.getByRole("button", { name: /windows certificate store/i }),
+      page.getByRole("radio", { name: /windows certificate store/i }),
     ).toHaveCount(0);
     // The USB-token (PKCS#11) driver picker is shown instead.
     await expect(page.getByText(/PKCS#11 driver/i).first()).toBeVisible({
@@ -182,14 +182,14 @@ test.describe("CertSign tool - server deployment (no hardware)", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
+      page.getByRole("radio", { name: /^upload$/i }).first(),
     ).toBeAttached({ timeout: 10_000 });
     await expect(
-      page.getByRole("button", { name: /^server$/i }).first(),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: /this device/i }),
-    ).toHaveCount(0);
+      page.getByRole("radio", { name: /^server$/i }).first(),
+    ).toBeEnabled({ timeout: 10_000 });
+    await expect(page.getByRole("radio", { name: /this device/i })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -210,14 +210,16 @@ test.describe("CertSign tool - hardware signing (desktop)", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     // The desktop-only source appears.
-    const deviceBtn = page.getByRole("button", { name: /this device/i });
-    await expect(deviceBtn).toBeVisible({ timeout: 10_000 });
-    await deviceBtn.click();
+    const deviceBtn = page.getByRole("radio", { name: /this device/i });
+    await expect(deviceBtn).toBeEnabled({ timeout: 10_000 });
+    await page
+      .locator(".mantine-SegmentedControl-label", { hasText: /this device/i })
+      .click();
 
     // The Windows store / USB token kind toggle renders.
     await expect(
-      page.getByRole("button", { name: /windows certificate store/i }),
-    ).toBeVisible({ timeout: 10_000 });
+      page.getByRole("radio", { name: /windows certificate store/i }),
+    ).toBeEnabled({ timeout: 10_000 });
 
     // The single enumerated cert is auto-selected into the picker input.
     await expect(

@@ -13815,6 +13815,9 @@ label = "Horizontal Divisions"
 description = "Number of rows to split each page into"
 label = "Vertical Divisions"
 
+[split.settings]
+selectMethodFirst = "Please select a split method first"
+
 [split.steps]
 chooseMethod = "Choose Method"
 settings = "Settings"
@@ -13889,9 +13892,6 @@ placeholder = "e.g. 10MB, 500KB"
 [split.value.pageCount]
 label = "Pages per File"
 placeholder = "e.g. 5, 10"
-
-[split.settings]
-selectMethodFirst = "Please select a split method first"
 
 [split-by-sections]
 merge = "Merge Into One PDF"
