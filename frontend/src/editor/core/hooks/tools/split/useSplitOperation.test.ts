@@ -1,8 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   buildSplitFormData,
   getSplitEndpoint,
   splitFromApiParams,
+  splitResponseToFiles,
   splitToApiParams,
 } from "@editor/hooks/tools/split/useSplitOperation";
 import {
@@ -208,5 +209,38 @@ describe("buildSplitFormData", () => {
 
     expect(formData.get("fileInput")).toBe(file);
     expect(formData.get("pageNumbers")).toBe("3");
+  });
+});
+
+describe("splitResponseToFiles", () => {
+  test("keeps a merged PDF as a PDF instead of result.zip", async () => {
+    const extractZipFiles = vi.fn();
+    const merged = new File(["%PDF-1.7"], "Invoice.PDF", {
+      type: "application/pdf",
+    });
+
+    const files = await splitResponseToFiles(merged, [merged], extractZipFiles);
+
+    expect(extractZipFiles).not.toHaveBeenCalled();
+    expect(files).toHaveLength(1);
+    expect(files[0].name).toBe("Invoice_split.pdf");
+    expect(files[0].type).toBe("application/pdf");
+  });
+
+  test("extracts a ZIP response", async () => {
+    const extracted = [
+      new File(["%PDF-1.7"], "page_1.pdf", { type: "application/pdf" }),
+    ];
+    const extractZipFiles = vi.fn().mockResolvedValue(extracted);
+    const archive = new File(
+      [new Uint8Array([0x50, 0x4b, 0x03, 0x04])],
+      "split.zip",
+      { type: "application/zip" },
+    );
+
+    const files = await splitResponseToFiles(archive, [], extractZipFiles);
+
+    expect(extractZipFiles).toHaveBeenCalledWith(archive);
+    expect(files).toBe(extracted);
   });
 });
