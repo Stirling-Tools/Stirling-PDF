@@ -76,26 +76,26 @@ jobs:
             STIRLING_FLAVOR=saas
           platforms: linux/amd64
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: ./docker/frontend/Dockerfile
-          push: true
-          cache-from: type=gha,scope=stirling-saas-frontend
-          cache-to: type=gha,mode=max,scope=stirling-saas-frontend
-          tags: |
-            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
-            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-latest
-          build-args: |
-            VERSION_TAG=v2-alpha
-            STIRLING_FLAVOR=saas
-            VITE_BUILD_MODE=development
-            VITE_INCLUDE_PORTAL=true
-            VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
-            VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
-            VITE_ACCESSIBILITY_EDITING=true
-          platforms: linux/amd64
+      # - name: Build and push frontend image
+      #   uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      #   with:
+      #     context: .
+      #     file: ./docker/frontend/Dockerfile
+      #     push: true
+      #     cache-from: type=gha,scope=stirling-saas-frontend
+      #     cache-to: type=gha,mode=max,scope=stirling-saas-frontend
+      #     tags: |
+      #       ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-${{ steps.commit-hash.outputs.app_short }}
+      #       ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:saas-frontend-latest
+      #     build-args: |
+      #       VERSION_TAG=v2-alpha
+      #       STIRLING_FLAVOR=saas
+      #       VITE_BUILD_MODE=development
+      #       VITE_INCLUDE_PORTAL=true
+      #       VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
+      #       VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
+      #       VITE_ACCESSIBILITY_EDITING=true
+      #     platforms: linux/amd64
 
       - name: Build and push AI engine image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -200,7 +200,7 @@ jobs:
 
             saas-frontend:
               container_name: stirling-saas-dev-frontend
-              image: ${IMAGE_BASE}:saas-frontend-${IMAGE_TAG}
+              image: ${IMAGE_BASE}:saas-frontend-latest
               ports:
                 - "${FRONTEND_PORT}:80"
               environment:

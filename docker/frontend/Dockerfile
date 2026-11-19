@@ -22,14 +22,14 @@ ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 ARG VITE_ACCESSIBILITY_EDITING=""
 
-# Build vite from editor/, output lands in dist/.
+# Build vite from frontend/, output lands in dist/.
 RUN set -eu; \
     export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-16}"; \
     export STIRLING_FLAVOR="${STIRLING_FLAVOR}"; \
     if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
     if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
     if [ -n "${VITE_ACCESSIBILITY_EDITING}" ]; then export VITE_ACCESSIBILITY_EDITING="${VITE_ACCESSIBILITY_EDITING}"; fi; \
-    npx vite build editor --mode "${VITE_BUILD_MODE}"
+    npx vite build --mode "${VITE_BUILD_MODE}"
 
 # Stage 2: nginx
 FROM nginx:alpine@sha256:b0f7830b6bfaa1258f45d94c240ab668ced1b3651c8a222aefe6683447c7bf55
