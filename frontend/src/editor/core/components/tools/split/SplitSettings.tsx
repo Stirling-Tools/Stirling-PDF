@@ -1,6 +1,12 @@
-import { Stack, TextInput, Checkbox, Anchor, Select } from "@mantine/core";
+import {
+  Stack,
+  TextInput,
+  Checkbox,
+  Anchor,
+  Text,
+  Select,
+} from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
-import { infoLabelProps } from "@editor/components/tools/shared/infoLabel";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@editor/constants/splitConstants";
 import { SplitParameters } from "@editor/hooks/tools/split/useSplitParameters";
@@ -24,14 +30,8 @@ const SplitSettings = ({
 
   const renderByPagesForm = () => (
     <TextInput
-      {...infoLabelProps(
-        t("split.splitPages", "Pages"),
-        t(
-          "split.tooltip.byPages.text",
-          "Split your PDF at specific page numbers. Using 'n' splits after page n. Using 'n-m' splits before page n and after page m.",
-        ),
-      )}
-      placeholder={t("split.splitPagesPlaceholder", "e.g. 3,7 or 3-8")}
+      label={t("split.splitPages", "Pages")}
+      placeholder={t("pageSelectionPrompt", "e.g. 1,3,5-10")}
       value={parameters.pages}
       onChange={(e) => onParameterChange("pages", e.target.value)}
       disabled={disabled}
@@ -67,17 +67,15 @@ const SplitSettings = ({
         disabled={disabled}
       />
       <Select
-        {...infoLabelProps(
-          t("split-by-sections.splitMode.label", "Split Mode"),
-          t(
-            "split-by-sections.splitMode.description",
-            "Choose how to split the pages",
-          ),
-        )}
+        label={t("split-by-sections.splitMode.label", "Split Mode")}
         value={parameters.splitMode || "SPLIT_ALL"}
         onChange={(value) =>
           onParameterChange("splitMode", value || "SPLIT_ALL")
         }
+        description={t(
+          "split-by-sections.splitMode.description",
+          "Choose how to split the pages",
+        )}
         data={[
           {
             value: "SPLIT_ALL",
@@ -131,7 +129,7 @@ const SplitSettings = ({
         />
       )}
       <Checkbox
-        label={t("split-by-sections.merge", "Merge Into One PDF")}
+        label={t("split-by-sections.merge", "Merge sections into one PDF")}
         checked={parameters.merge}
         onChange={(e) => onParameterChange("merge", e.currentTarget.checked)}
         disabled={disabled}
@@ -213,7 +211,7 @@ const SplitSettings = ({
         size="sm"
         style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
       >
-        <Icon name="download" size={16} />
+        <Icon name="download" size="2rem" />
         {t(
           "autoSplitPDF.dividerDownload2",
           "Download 'Auto Splitter Divider (with instructions).pdf'",
@@ -221,12 +219,9 @@ const SplitSettings = ({
       </Anchor>
 
       <Checkbox
-        {...infoLabelProps(
-          t("autoSplitPDF.duplexMode", "Duplex mode"),
-          t(
-            "split.tooltip.byPageDivider.bullet5",
-            "Enable Duplex Mode if scanning both sides of divider sheets",
-          ),
+        label={t(
+          "autoSplitPDF.duplexMode",
+          "Duplex Mode (Front and back scanning)",
         )}
         checked={parameters.duplexMode}
         onChange={(e) =>
@@ -240,12 +235,10 @@ const SplitSettings = ({
   const renderByPosterForm = () => (
     <Stack gap="sm">
       <Select
-        {...infoLabelProps(
-          t("split.poster.pageSize.label", "Target Page Size"),
-          t(
-            "split.poster.pageSize.description",
-            "Size of output pages for printing",
-          ),
+        label={t("split.poster.pageSize.label", "Target Page Size")}
+        description={t(
+          "split.poster.pageSize.description",
+          "Size of output pages for printing",
         )}
         value={parameters.pageSize || "A4"}
         onChange={(value) => onParameterChange("pageSize", value || "A4")}
@@ -291,12 +284,10 @@ const SplitSettings = ({
         }}
       />
       <TextInput
-        {...infoLabelProps(
-          t("split.poster.xFactor.label", "Horizontal Divisions"),
-          t(
-            "split.poster.xFactor.description",
-            "Number of columns to split each page into",
-          ),
+        label={t("split.poster.xFactor.label", "Horizontal Divisions")}
+        description={t(
+          "split.poster.xFactor.description",
+          "Number of columns to split each page into",
         )}
         type="number"
         min="1"
@@ -307,12 +298,10 @@ const SplitSettings = ({
         disabled={disabled}
       />
       <TextInput
-        {...infoLabelProps(
-          t("split.poster.yFactor.label", "Vertical Divisions"),
-          t(
-            "split.poster.yFactor.description",
-            "Number of rows to split each page into",
-          ),
+        label={t("split.poster.yFactor.label", "Vertical Divisions")}
+        description={t(
+          "split.poster.yFactor.description",
+          "Number of rows to split each page into",
         )}
         type="number"
         min="1"
@@ -333,10 +322,23 @@ const SplitSettings = ({
     </Stack>
   );
 
-  if (!parameters.method) return null;
+  // Don't render anything if no method is selected
+  if (!parameters.method) {
+    return (
+      <Stack gap="sm">
+        <Text c="dimmed" ta="center">
+          {t(
+            "split.settings.selectMethodFirst",
+            "Please select a split method first",
+          )}
+        </Text>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="md">
+      {/* Method-Specific Form */}
       {parameters.method === SPLIT_METHODS.BY_PAGES && renderByPagesForm()}
       {parameters.method === SPLIT_METHODS.BY_SECTIONS &&
         renderBySectionsForm()}

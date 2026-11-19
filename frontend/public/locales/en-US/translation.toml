@@ -13734,12 +13734,10 @@ small = "Small"
 x-large = "X-Large"
 
 [split]
-methodLabel = "Method"
 resultsTitle = "Split Results"
 selectMethod = "Select a split method"
-splitPages = "Pages"
-splitPagesPlaceholder = "e.g. 3,7 or 3-8"
-submit = "Split PDF"
+splitPages = "Enter pages to split on:"
+submit = "Split"
 tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Split PDF"
 
@@ -13784,6 +13782,10 @@ splitBy = "Split by"
 splitInto = "Split into"
 
 [split.methodSelection.tooltip]
+bullet1 = "Click on a method card to select it"
+bullet2 = "Hover over each card to see a quick description"
+bullet3 = "The settings step will appear after you select a method"
+bullet4 = "You can change methods at any time before processing"
 title = "Choose Your Split Method"
 
 [split.methodSelection.tooltip.header]
@@ -13814,6 +13816,7 @@ description = "Number of rows to split each page into"
 label = "Vertical Divisions"
 
 [split.steps]
+chooseMethod = "Choose Method"
 settings = "Settings"
 
 [split.tooltip.byChapters]
@@ -13886,6 +13889,9 @@ placeholder = "e.g. 10MB, 500KB"
 [split.value.pageCount]
 label = "Pages per File"
 placeholder = "e.g. 5, 10"
+
+[split.settings]
+selectMethodFirst = "Please select a split method first"
 
 [split-by-sections]
 merge = "Merge Into One PDF"
