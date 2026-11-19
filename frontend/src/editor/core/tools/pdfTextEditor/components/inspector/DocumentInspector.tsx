@@ -52,6 +52,8 @@ interface Props {
   onSelectHeading: (index: number) => void;
   /** Null when the language cannot be edited here. */
   documentLanguage: DocumentLanguageControl | null;
+  /** Only what screen readers need from the document: no fonts or view settings. */
+  accessibilityOnly?: boolean;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
@@ -67,6 +69,7 @@ export function DocumentInspector({
   headingOutline,
   onSelectHeading,
   documentLanguage,
+  accessibilityOnly = false,
   ...settings
 }: Props) {
   const { t } = useTranslation();
@@ -99,7 +102,7 @@ export function DocumentInspector({
       {imageReview && (
         <AccessibilitySection
           review={imageReview}
-          onNext={onSelectNextImageToReview}
+          onNext={accessibilityOnly ? undefined : onSelectNextImageToReview}
           untaggedPages={untaggedPages}
           onTagUntagged={onTagUntaggedContent}
           markedTagged={markedTagged}
@@ -113,8 +116,12 @@ export function DocumentInspector({
           onSelect={onSelectHeading}
         />
       )}
-      <FontsSection pages={pages} />
-      <DocumentSettings {...settings} />
+      {!accessibilityOnly && (
+        <>
+          <FontsSection pages={pages} />
+          <DocumentSettings {...settings} />
+        </>
+      )}
     </Stack>
   );
 }
@@ -132,7 +139,7 @@ function DocumentLanguageField({
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.language.documentLabel", "Language");
   return (
-    <Stack gap={4} mt="sm">
+    <Stack gap={4} mt="sm" data-fix-target="documentLanguage">
       <Field label={label} hint={documentLanguageHint(t, control)}>
         <LanguagePicker
           own={control.language}
@@ -188,7 +195,8 @@ function AccessibilitySection({
   hasTags,
 }: {
   review: ImageReview;
-  onNext: () => void;
+  /** Absent hides Next, for the review, whose card steps through what is left. */
+  onNext?: () => void;
   untaggedPages: number;
   onTagUntagged: () => void;
   markedTagged: boolean | null;
@@ -237,7 +245,7 @@ function AccessibilitySection({
           untaggedPages={untaggedPages}
           hasTags={hasTags}
         />
-        {pending > 0 && (
+        {pending > 0 && onNext && (
           <Button
             size="sm"
             variant="secondary"
@@ -307,7 +315,7 @@ function MarkedTaggedCheckbox({
   const { t } = useTranslation();
   if (marked === null) return null;
   return (
-    <Stack gap={4}>
+    <Stack gap={4} data-fix-target="markedTagged">
       <Checkbox
         checked={marked}
         onChange={(event) => onChange(event.currentTarget.checked)}

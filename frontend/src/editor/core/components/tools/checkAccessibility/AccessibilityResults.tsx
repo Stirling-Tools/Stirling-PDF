@@ -15,6 +15,14 @@ import { resultLabel } from "@editor/utils/accessibilityReportContent";
 import type { FileId } from "@editor/types/file";
 import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
+import {
+  AccessibilityFixContext,
+  FixInDocumentButton,
+  type AccessibilityFixFn,
+} from "@editor/components/tools/checkAccessibility/AccessibilityFix";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
@@ -32,6 +40,8 @@ export function AccessibilityResults({
 }: AccessibilityResultsProps) {
   const { t } = useTranslation();
   const { results, isLoading, status } = operation;
+  const { setActiveFileId } = useViewer();
+  const { actions: navigationActions } = useNavigationActions();
 
   const options = useMemo(
     () =>
@@ -91,6 +101,19 @@ export function AccessibilityResults({
     ) : null;
   }
 
+  const fixInDocument: AccessibilityFixFn = (target, page) => {
+    reviewMode.set({
+      reviewing: true,
+      startAt: {
+        fileId: selected.fileId,
+        pageIndex: (page ?? 1) - 1,
+        target,
+      },
+    });
+    setActiveFileId(selected.fileId);
+    navigationActions.setWorkbench("viewer");
+  };
+
   return (
     <div className="a11y-results" data-testid="a11y-results">
       {(results.length > 1 || isLoading) && (
@@ -116,22 +139,29 @@ export function AccessibilityResults({
       )}
 
       {selected.report ? (
-        <AccessibilityReportView
-          key={selected.fileId}
-          report={selected.report}
-          manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
-          onToggleManual={(index) => toggleManual(selected.fileId, index)}
-          onSetAllManual={(done) =>
-            setManualTicks((current) => ({
-              ...current,
-              [selected.fileId]: new Set(
-                done
-                  ? selected.report?.humanChecks.map((_, index) => index)
-                  : [],
-              ),
-            }))
-          }
-        />
+        <AccessibilityFixContext.Provider value={fixInDocument}>
+          <FixInDocumentButton
+            passing={
+              assessAccessibilityReport(selected.report).result === "pass"
+            }
+          />
+          <AccessibilityReportView
+            key={selected.fileId}
+            report={selected.report}
+            manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+            onToggleManual={(index) => toggleManual(selected.fileId, index)}
+            onSetAllManual={(done) =>
+              setManualTicks((current) => ({
+                ...current,
+                [selected.fileId]: new Set(
+                  done
+                    ? selected.report?.humanChecks.map((_, index) => index)
+                    : [],
+                ),
+              }))
+            }
+          />
+        </AccessibilityFixContext.Provider>
       ) : (
         <Banner
           tone="danger"

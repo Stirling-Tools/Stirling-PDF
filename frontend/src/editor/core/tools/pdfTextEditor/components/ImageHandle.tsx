@@ -90,6 +90,8 @@ interface ImageHandleProps {
   transform: DisplayTransform;
   scale: number;
   selected: boolean;
+  /** Selectable but neither draggable nor resizable. */
+  fixed?: boolean;
   onSelect: () => void;
   onTransformCommit: (next: PageRect) => void;
   /** Why the image needs the user's attention, if it does. */
@@ -117,6 +119,7 @@ export function ImageHandle({
   transform,
   scale,
   selected,
+  fixed = false,
   onSelect,
   onTransformCommit,
   attention = null,
@@ -295,9 +298,9 @@ export function ImageHandle({
     <Rnd
       size={{ width, height }}
       position={dragPosition ?? { x: left, y: top }}
-      disableDragging={locked}
+      disableDragging={locked || fixed}
       enableResizing={
-        !locked && (selected || hovered)
+        !locked && !fixed && (selected || hovered)
           ? {
               bottomRight: true,
               bottomLeft: true,
@@ -379,7 +382,7 @@ export function ImageHandle({
             : "none",
         backgroundColor:
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
-        cursor: locked ? "default" : "move",
+        cursor: locked ? "default" : fixed ? "pointer" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
         pointerEvents: "auto",
       }}

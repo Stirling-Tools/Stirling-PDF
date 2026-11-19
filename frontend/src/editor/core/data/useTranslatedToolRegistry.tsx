@@ -449,11 +449,11 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       checkAccessibility: {
         icon: <Icon name="universal-access" size="1.5rem" />,
-        name: t("home.checkAccessibility.title", "Check PDF accessibility"),
+        name: t("home.checkAccessibility.title", "PDF accessibility"),
         component: lazy(() => import("@editor/tools/CheckAccessibility")),
         description: t(
           "home.checkAccessibility.desc",
-          "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
+          "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,

@@ -93,7 +93,9 @@ export const useCheckAccessibilityOperation =
               const { data } = await apiClient.post<AccessibilityReport>(
                 "/api/v1/security/accessibility-report",
                 formData,
-                { signal: abort.signal },
+                // A failure shows as that file's error in the report, and a
+                // superseded run's abort is no failure at all.
+                { signal: abort.signal, suppressErrorToast: true },
               );
               // A report the validator could not produce describes the failure, not the file,
               // so scoring it would grade a document nothing has checked.

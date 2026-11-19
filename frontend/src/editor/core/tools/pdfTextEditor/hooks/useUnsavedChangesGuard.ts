@@ -11,10 +11,14 @@ import {
 // this hook let the editor drop every edit silently. NavigationContext is the
 // app's own in-app guard - it is what PageEditor uses - and it drives
 // NavigationWarningModal.
-/** `isDirty` must read the live state: navigation calls it while the `dirty` flag may still be pending. */
+/**
+ * `isDirty` must read the live state: navigation calls it while the `dirty` flag may still be pending.
+ * `survivesToolSwitch` skips the in-app guard, for a review that keeps the editor across tools.
+ */
 export function useUnsavedChangesGuard(
   dirty: boolean,
   isDirty: () => boolean,
+  survivesToolSwitch: boolean,
 ): void {
   const { actions } = useNavigationActions();
   const {
@@ -42,15 +46,22 @@ export function useUnsavedChangesGuard(
 
   useEffect(() => {
     // Only covers the pending flag: once it has landed, a discard clears it while the store stays dirty.
-    registerUnsavedChangesChecker(() => isDirty() && !flagCaughtUpRef.current);
+    registerUnsavedChangesChecker(
+      () => !survivesToolSwitch && isDirty() && !flagCaughtUpRef.current,
+    );
     return () => unregisterUnsavedChangesChecker();
-  }, [isDirty, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker]);
+  }, [
+    isDirty,
+    survivesToolSwitch,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+  ]);
 
   useEffect(() => {
     // The flag re-renders most of the app; urgent, it holds the first typed letter off screen.
-    startTransition(() => setHasUnsavedChanges(dirty));
+    startTransition(() => setHasUnsavedChanges(dirty && !survivesToolSwitch));
     // Clear on unmount so a stale flag cannot block navigation after the
     // editor is gone.
     return () => setHasUnsavedChanges(false);
-  }, [dirty, setHasUnsavedChanges]);
+  }, [dirty, survivesToolSwitch, setHasUnsavedChanges]);
 }

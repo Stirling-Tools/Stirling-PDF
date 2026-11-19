@@ -3283,12 +3283,12 @@ usage_limit_reached = "You've reached your usage limit. Check your plan options 
 
 [checkAccessibility]
 aboutRow = "About {{label}}"
-checking = "Checking..."
 clauseRef = "{{profile}} §{{clauses}}"
 download = "Download accessibility report"
 fileFailed = "failed"
+noFiles = "Select a PDF to check it."
 pickFile = "Show results for"
-submit = "Check accessibility"
+retry = "Check again"
 
 [checkAccessibility.category]
 altText = "Alternative text"
@@ -3335,6 +3335,20 @@ title = "The file has a title in its metadata."
 [checkAccessibility.figures]
 summary_one = "{{count}} image needs a description (page {{pages}})"
 summary_other = "{{count}} images need a description (pages {{pages}})"
+
+[checkAccessibility.fix]
+documentLanguage = "Set the document language"
+heading = "Fix the headings"
+headingOnPage = "Fix the heading on page {{page}}"
+image = "Describe the images"
+imageOnPage = "Describe the image on page {{page}}"
+inDocument = "Fix tags in the document"
+link = "Tag the links"
+linkOnPage = "Tag the link on page {{page}}"
+markedTagged = "Mark the document as tagged"
+untagged = "Tag the content"
+untaggedOnPage = "Tag content on page {{page}}"
+viewInDocument = "View tags in the document"
 
 [checkAccessibility.issue]
 appliesTo = "Applies to"
@@ -3488,7 +3502,6 @@ checking = "Checking {{current}} of {{total}}..."
 complete = "Check complete"
 
 [checkAccessibility.steps]
-results = "Results"
 standard = "Standard"
 
 [checkAccessibility.tooltip.header]
@@ -5983,9 +5996,9 @@ tags = "permissions,restrictions,rights,access control,allow,deny,printing,copyi
 title = "Change Permissions"
 
 [home.checkAccessibility]
-desc = "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
+desc = "Check a PDF against PDF/UA, then tag and describe what screen readers miss"
 tags = "accessibility,a11y,PDF/UA,screen reader,WCAG,Section 508,veraPDF,tagged PDF,alt text,accessibility checker,accessibility report,compliance,UA"
-title = "Check PDF accessibility"
+title = "PDF accessibility"
 
 [home.classify]
 desc = "Identify what kind of document this is and tag it."
@@ -7972,6 +7985,52 @@ renderFailed = "Failed to render page"
 incorrect = "Incorrect password - try again."
 label = "Password"
 
+[pdfTextEditor.review]
+allDone = "All text and images are tagged"
+close = "Close accessibility settings"
+counting = "still counting"
+doneTitle = "Done ({{count}})"
+image = "Image"
+left = "{{count}} left to tag"
+next = "Next untagged (N)"
+noneLeft = "No text or images left to tag"
+page = "p. {{page}}"
+previous = "Previous untagged (Shift+N)"
+showAll = "Show all {{count}}"
+text = "Text"
+todoTitle = "To do ({{count}})"
+toggle = "Review accessibility"
+toggleTooltip = "Show every tag on the page and tag what is missing, one item after another"
+untaggedCount = "{{count}} untagged"
+untaggedPosition = "{{index}} of {{count}} untagged"
+
+[pdfTextEditor.review.badge]
+described = "Described"
+noDescription = "Needs a description"
+untagged = "Needs a tag"
+
+[pdfTextEditor.review.card]
+autoAdvance = "Go to the next item after tagging"
+decorative = "It's decorative"
+done = "Tagged"
+imagePlaceholder = "For example: Bar chart of revenue by region, Europe highest"
+imageQuestion = "What does this image show?"
+pickHint = "Click a block or an image on the page, or press the arrow to go to the next one still to tag. Shift-click to tag several at once."
+saveDescription = "Save description"
+selectedCount_one = "{{count}} block selected"
+selectedCount_other = "{{count}} blocks selected"
+showAllTags = "Show tags on every block"
+skipQuestion = "Or skip it for screen readers"
+textQuestion = "What is this text?"
+todo = "Needs attention"
+
+[pdfTextEditor.review.closePrompt]
+body = "Your tags are not in your workspace yet. Closing accessibility settings without saving loses them."
+discard = "Discard"
+keep = "Keep tagging"
+save = "Save and close"
+title = "Save your tags?"
+
 [pdfTextEditor.rulers]
 guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
 hint = "Drag from a ruler to add an alignment guide"
@@ -8152,6 +8211,11 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
+
+[pdfTextEditor.trail]
+properties = "Properties"
+save = "Save"
+saveTooltip = "Save to your workspace ({{shortcut}})"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -15155,6 +15219,7 @@ readAloud = "Read Aloud"
 readAloudLanguage = "Language"
 readAloudSpeed = "Speed"
 redact = "Redact"
+reviewAccessibility = "Review accessibility"
 rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"

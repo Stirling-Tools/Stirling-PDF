@@ -18,6 +18,10 @@ import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useD
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
+  reviewMode,
+  useReviewMode,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
+import {
   ScanHint,
   type ScanHintProps,
 } from "@editor/tools/pdfTextEditor/components/ScanHint";
@@ -40,7 +44,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
-interface SidebarProps extends Omit<ScanHintProps, "pages"> {
+export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
   state: EditorViewState;
   selection: SelectionState;
@@ -52,6 +56,11 @@ interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
   initialTab?: SidebarTab;
+  /**
+   * Shows the tab a fix asks for (reviewMode.inspectorTab) and clears the request.
+   * Only the visible inspector may, or a hidden one would take it first.
+   */
+  answersFixRequests?: boolean;
 }
 
 export type SidebarTab = "selected" | "document";
@@ -73,6 +82,7 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrBlockedReason,
   onRemovePassword,
   initialTab = "selected",
+  answersFixRequests = false,
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
@@ -90,6 +100,14 @@ export const EditorSidebar = memo(function EditorSidebar({
   useEffect(() => {
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
+
+  // After the effect above, so a fix asking for Document wins over a selection made on mount.
+  const { inspectorTab, reviewing } = useReviewMode();
+  useEffect(() => {
+    if (!answersFixRequests || !inspectorTab) return;
+    setTab(inspectorTab);
+    reviewMode.set({ inspectorTab: null });
+  }, [answersFixRequests, inspectorTab]);
 
   const fontNote = useSelectedFontNote(
     state,
@@ -124,6 +142,29 @@ export const EditorSidebar = memo(function EditorSidebar({
       <Box p="md" style={{ flex: 1, overflow: "auto" }}>
         <EmptySidebar progress={state.progress} loading={state.loading} />
       </Box>
+    );
+  }
+
+  const documentTab = (
+    <DocumentTab
+      store={store}
+      state={state}
+      reviewingAccessibility={reviewingAccessibility}
+      imageReview={reviewingAccessibility ? controller.imageReview : null}
+      onSelectNextImageToReview={selectNextImageToReview}
+      onSetGroupingMode={onSetGroupingMode}
+      onSetWidthMode={onSetWidthMode}
+      onSetShowRulers={onSetShowRulers}
+      accessibilityOnly={reviewing}
+    />
+  );
+
+  // The review card handles the selection, so Properties keeps to the document.
+  if (reviewing) {
+    return (
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        {documentTab}
+      </LanguagesInUse.Provider>
     );
   }
 
@@ -184,20 +225,7 @@ export const EditorSidebar = memo(function EditorSidebar({
             )}
           </Tabs.Panel>
           <Tabs.Panel value="document">
-            {tab === "document" && (
-              <DocumentTab
-                store={store}
-                state={state}
-                reviewingAccessibility={reviewingAccessibility}
-                imageReview={
-                  reviewingAccessibility ? controller.imageReview : null
-                }
-                onSelectNextImageToReview={selectNextImageToReview}
-                onSetGroupingMode={onSetGroupingMode}
-                onSetWidthMode={onSetWidthMode}
-                onSetShowRulers={onSetShowRulers}
-              />
-            )}
+            {tab === "document" && documentTab}
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
@@ -215,6 +243,7 @@ function DocumentTab({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
+  accessibilityOnly,
 }: Pick<
   SidebarProps,
   "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
@@ -222,6 +251,7 @@ function DocumentTab({
   reviewingAccessibility: boolean;
   imageReview: ImageReview | null;
   onSelectNextImageToReview: () => void;
+  accessibilityOnly: boolean;
 }) {
   const documentLanguage = useDocumentLanguage(store, state);
   const headings = useHeadingOutline(store, state, reviewingAccessibility);
@@ -254,6 +284,7 @@ function DocumentTab({
       headingOutline={headings.outline}
       onSelectHeading={headings.selectHeading}
       documentLanguage={documentLanguage}
+      accessibilityOnly={accessibilityOnly}
     />
   );
 }

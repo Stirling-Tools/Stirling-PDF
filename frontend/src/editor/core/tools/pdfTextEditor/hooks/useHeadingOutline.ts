@@ -29,32 +29,32 @@ export function useHeadingOutline(
       : null;
   }, [store, state.pages, shown]);
 
-  /** Selects the run showing heading `index`, reading its page first. */
-  const selectHeading = useCallback(
-    (index: number) => {
-      const doc = store.document;
-      const headings = doc?.headings();
-      const pageIndex = headings?.[index]?.pageIndex;
-      if (!doc || !headings || pageIndex == null) return;
-      ensurePageRead(store, pageIndex);
-      const { run, range } = headingOutline(
-        headings,
-        store.getState().pages,
-        (h) => locateHeading(doc, h),
-      ).entries[index];
-      if (!run) return;
-      store.selection.selectOne(run.id);
-      if (range) store.selection.setTextRange(run.id, range);
-      // A page read just now has no overlay until React commits it.
-      window.requestAnimationFrame(() =>
-        revealOnPage(
-          document.querySelector(`[data-testid="pdf-editor-run-${run.id}"]`),
-          run.pageIndex,
-        ),
-      );
-    },
+  const select = useCallback(
+    (index: number) => selectHeading(store, index),
     [store],
   );
 
-  return { outline, selectHeading };
+  return { outline, selectHeading: select };
+}
+
+/** Selects the run showing heading `index` in the document's headings, reading its page first. */
+export function selectHeading(store: EditorStore, index: number): void {
+  const doc = store.document;
+  const headings = doc?.headings();
+  const pageIndex = headings?.[index]?.pageIndex;
+  if (!doc || !headings || pageIndex == null) return;
+  ensurePageRead(store, pageIndex);
+  const { run, range } = headingOutline(headings, store.getState().pages, (h) =>
+    locateHeading(doc, h),
+  ).entries[index];
+  if (!run) return;
+  store.selection.selectOne(run.id);
+  if (range) store.selection.setTextRange(run.id, range);
+  // A page read just now has no overlay until React commits it.
+  window.requestAnimationFrame(() =>
+    revealOnPage(
+      document.querySelector(`[data-testid="pdf-editor-run-${run.id}"]`),
+      run.pageIndex,
+    ),
+  );
 }

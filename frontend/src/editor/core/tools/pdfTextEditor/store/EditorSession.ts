@@ -1,4 +1,18 @@
 import { useSyncExternalStore } from "react";
+import type { SidebarProps } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
+
+/** What the inspector needs from the editor beyond its store, state and selection. */
+export type InspectorActions = Omit<
+  SidebarProps,
+  | "store"
+  | "state"
+  | "selection"
+  | "onSetGroupingMode"
+  | "onSetWidthMode"
+  | "onSetShowRulers"
+  | "initialTab"
+  | "answersFixRequests"
+>;
 
 export interface EditorSession {
   fileName: string | null;
@@ -7,6 +21,7 @@ export interface EditorSession {
   pickImage: () => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
+  inspector: InspectorActions;
 }
 
 let current: EditorSession | null = null;

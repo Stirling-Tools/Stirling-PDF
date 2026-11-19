@@ -34,6 +34,12 @@ import { useViewerReadAloud } from "@editor/components/viewer/useViewerReadAloud
 import { RulerScaleSettingsButton } from "@editor/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@editor/utils/measurementTypes";
 import type { StirlingFile } from "@editor/types/fileContext";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  reviewMode,
+  useReviewMode,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
+import { useEditOrReview } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -123,6 +129,12 @@ export function useViewerWorkbenchBarButtons(
   );
   const formFillLabel = t("workbenchBar.formFill", "Form Editor");
   const editTextLabel = t("workbenchBar.editText", "Edit Text");
+  const reviewLabel = t(
+    "workbenchBar.reviewAccessibility",
+    "Review accessibility",
+  );
+  const { reviewing } = useReviewMode();
+  const { startReview, startEditing } = useEditOrReview();
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
@@ -604,13 +616,40 @@ export function useViewerWorkbenchBarButtons(
             onToggle={() =>
               isTextEditActive
                 ? handleBackToTools()
-                : handleToolSelect("pdfTextEditor")
+                : reviewing
+                  ? startEditing()
+                  : handleToolSelect("pdfTextEditor")
             }
             onIntent={() => void toolRegistry.pdfTextEditor?.preload?.()}
             testId="viewer-edit-text"
           />
         ),
       },
+      ...(ACCESSIBILITY_EDITING
+        ? [
+            {
+              id: "viewer-review-accessibility",
+              tooltip: reviewLabel,
+              ariaLabel: reviewLabel,
+              section: "top" as const,
+              order: 64,
+              render: ({ disabled }: { disabled?: boolean }) => (
+                <ToolModeToggle
+                  label={reviewLabel}
+                  icon="universal-access"
+                  active={reviewing}
+                  disabled={disabled}
+                  tooltipPosition={tooltipPosition}
+                  onToggle={() =>
+                    reviewing ? reviewMode.requestClose() : startReview()
+                  }
+                  onIntent={() => void toolRegistry.pdfTextEditor?.preload?.()}
+                  testId="viewer-review-accessibility"
+                />
+              ),
+            },
+          ]
+        : []),
     ];
 
     return buttons;
@@ -648,6 +687,10 @@ export function useViewerWorkbenchBarButtons(
     formFillLabel,
     isFormFillActive,
     editTextLabel,
+    reviewLabel,
+    reviewing,
+    startReview,
+    startEditing,
     isTextEditActive,
     toolRegistry,
     pageTool,
