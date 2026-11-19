@@ -9,13 +9,15 @@ import {
   WorkbenchBarButtonWithAction,
 } from "@editor/hooks/useWorkbenchBarButtons";
 import { Icon, type IconName } from "@editor/ui/Icon";
-import { useIsMobile } from "@editor/hooks/useIsMobile";
+import { useIsPhone } from "@editor/hooks/useIsMobile";
 import {
   BarButton,
   BarMenu,
   toggleMark,
 } from "@editor/components/viewer/ViewerBarControls";
 import { ViewerDocumentMenu } from "@editor/components/viewer/ViewerDocumentMenu";
+import { ViewerPageViewMenu } from "@editor/components/viewer/ViewerPageViewMenu";
+import { AnnotationVisibilityToggle } from "@editor/components/viewer/AnnotationVisibilityToggle";
 import { SearchInterface } from "@editor/components/viewer/SearchInterface";
 import ViewerAnnotationControls from "@editor/components/viewer/ViewerAnnotationControls";
 import { useSidebarContext } from "@editor/contexts/SidebarContext";
@@ -58,7 +60,7 @@ export function useViewerWorkbenchBarButtons(
     registerImmediatePanUpdate,
   } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(false);
-  const isMobile = useIsMobile();
+  const isPhone = useIsPhone();
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useWorkbenchBarTooltipSide(
     sidebarRefs,
@@ -104,6 +106,11 @@ export function useViewerWorkbenchBarButtons(
     "Apply redactions first",
   );
   const panelsLabel = t("workbenchBar.panels", "Panels");
+  const pageViewLabel = t("workbenchBar.pageView", "Page view");
+  const annotationVisibilityLabel = t(
+    "workbenchBar.toggleAnnotations",
+    "Toggle Annotations Visibility",
+  );
   const thumbnailsLabel = t("workbenchBar.thumbnails", "Page thumbnails");
   const bookmarksLabel = t("workbenchBar.bookmarks", "Bookmarks");
   const attachmentsLabel = t("workbenchBar.attachments", "Attachments");
@@ -202,10 +209,13 @@ export function useViewerWorkbenchBarButtons(
   const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     const panRedactionBlocked =
       !isPanning && pendingCount > 0 && redactionActiveType !== null;
-    // Search, pan, measure and read aloud sit by print and download as icons;
-    // the side panels share one menu; the modes that work on the pages are
-    // named. A phone's top row has no room, so its controls stay in the tool row.
-    const actionSection = isMobile ? ("top" as const) : ("bar" as const);
+    // Search, pan, measure and read aloud work through the document in view,
+    // so they sit in the page bar below it. The side panels and how the pages
+    // are shown get a menu each, and the modes that work on the pages are
+    // named. A phone's page bar has no room, so there they join the tool row.
+    const pageSection = isPhone ? ("top" as const) : ("page-bar" as const);
+    const pageTooltip = isPhone ? tooltipPosition : ("top" as const);
+    const pageButtonSize = isPhone ? undefined : ("sm" as const);
     const panelToggle = (
       id: string,
       icon: IconName,
@@ -218,7 +228,6 @@ export function useViewerWorkbenchBarButtons(
         leftSection={<Icon name={icon} size="1rem" />}
         rightSection={toggleMark(active)}
         onClick={onToggle}
-        closeMenuOnClick={false}
         data-testid={id}
       >
         {label}
@@ -230,11 +239,11 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-search",
         tooltip: searchLabel,
         ariaLabel: searchLabel,
-        section: actionSection,
+        section: pageSection,
         order: 10,
         render: ({ disabled }) => (
           <Popover
-            position="bottom-end"
+            position={isPhone ? "bottom-end" : "top"}
             withArrow
             shadow="md"
             offset={8}
@@ -246,7 +255,8 @@ export function useViewerWorkbenchBarButtons(
                 icon="file-search"
                 label={searchLabel}
                 iconOnly
-                tooltipPosition={tooltipPosition}
+                size={pageButtonSize}
+                tooltipPosition={pageTooltip}
                 disabled={disabled}
                 onClick={() =>
                   pageTool?.onToggleFind
@@ -270,7 +280,7 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-pan-mode",
         tooltip: panRedactionBlocked ? applyRedactionsLabel : panLabel,
         ariaLabel: panRedactionBlocked ? applyRedactionsLabel : panLabel,
-        section: actionSection,
+        section: pageSection,
         order: 12,
         active: isPanning,
         render: ({ disabled }) => (
@@ -278,7 +288,8 @@ export function useViewerWorkbenchBarButtons(
             icon="hand"
             label={panRedactionBlocked ? applyRedactionsLabel : panLabel}
             iconOnly
-            tooltipPosition={tooltipPosition}
+            size={pageButtonSize}
+            tooltipPosition={pageTooltip}
             active={isPanning}
             disabled={disabled || panRedactionBlocked}
             onClick={() =>
@@ -294,7 +305,7 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-ruler",
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
-        section: actionSection,
+        section: pageSection,
         order: 14,
         active: Boolean(isRulerActive),
         render: ({ disabled }) => (
@@ -302,7 +313,8 @@ export function useViewerWorkbenchBarButtons(
             icon="ruler"
             label={rulerLabel}
             iconOnly
-            tooltipPosition={tooltipPosition}
+            size={pageButtonSize}
+            tooltipPosition={pageTooltip}
             active={Boolean(isRulerActive)}
             disabled={disabled}
             onClick={() =>
@@ -321,12 +333,12 @@ export function useViewerWorkbenchBarButtons(
         id: "viewer-read-aloud",
         tooltip: readAloudLabel,
         ariaLabel: readAloudLabel,
-        section: actionSection,
+        section: pageSection,
         order: 16,
         active: isReadingAloud,
         render: ({ disabled }) => (
           <Popover
-            position="bottom-end"
+            position={isPhone ? "bottom-end" : "top"}
             withArrow
             shadow="md"
             offset={8}
@@ -339,7 +351,8 @@ export function useViewerWorkbenchBarButtons(
                 icon={isReadingAloud ? "square" : "volume-2"}
                 label={readAloudLabel}
                 iconOnly
-                tooltipPosition={tooltipPosition}
+                size={pageButtonSize}
+                tooltipPosition={pageTooltip}
                 active={isReadingAloud}
                 disabled={
                   disabled ||
@@ -452,6 +465,27 @@ export function useViewerWorkbenchBarButtons(
           </BarMenu>
         ),
       },
+      {
+        id: "viewer-page-view",
+        tooltip: pageViewLabel,
+        ariaLabel: pageViewLabel,
+        section: "top" as const,
+        order: 21,
+        render: ({ disabled }) => <ViewerPageViewMenu disabled={disabled} />,
+      },
+      {
+        id: "viewer-annotation-visibility",
+        tooltip: annotationVisibilityLabel,
+        ariaLabel: annotationVisibilityLabel,
+        section: pageSection,
+        order: 18,
+        render: ({ disabled }) => (
+          <AnnotationVisibilityToggle
+            disabled={disabled}
+            size={pageButtonSize}
+          />
+        ),
+      },
       // Scale settings belong to the ruler, so they only show while it is on.
       ...(isRulerActive
         ? [
@@ -539,7 +573,11 @@ export function useViewerWorkbenchBarButtons(
         section: "middle" as const,
         order: 52,
         render: ({ disabled }) => (
-          <ViewerAnnotationControls currentView="viewer" disabled={disabled} />
+          <ViewerAnnotationControls
+            currentView="viewer"
+            disabled={disabled}
+            tooltipPosition={tooltipPosition}
+          />
         ),
       },
       {
@@ -550,7 +588,7 @@ export function useViewerWorkbenchBarButtons(
         order: 53,
         render: ({ disabled }) => (
           <BarButton
-            icon="type"
+            icon="form-input"
             label={formFillLabel}
             tooltipPosition={tooltipPosition}
             active={isFormFillActive}
@@ -625,7 +663,9 @@ export function useViewerWorkbenchBarButtons(
     commentsLabel,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
-    isMobile,
+    isPhone,
+    pageViewLabel,
+    annotationVisibilityLabel,
     preloadTextEditor,
     tooltipPosition,
     annotationsLabel,

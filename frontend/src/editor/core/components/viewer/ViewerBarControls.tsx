@@ -17,6 +17,8 @@ interface BarButtonProps {
   trailing?: ReactNode;
   /** Icon alone, named by its tooltip. */
   iconOnly?: boolean;
+  /** An icon-only button's size, to sit with the controls around it. */
+  size?: "sm" | "lg";
   tooltipPosition?: TooltipProps["position"];
   /** Holds the tooltip back, as while the button's own menu is open over it. */
   tooltipDisabled?: boolean;
@@ -41,6 +43,7 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
       hint,
       trailing,
       iconOnly,
+      size,
       tooltipPosition = "bottom",
       tooltipDisabled,
       testId,
@@ -53,15 +56,16 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
     const button = compact ? (
       <ActionIcon
         ref={ref}
+        size={size}
         variant={active ? "primary" : "tertiary"}
-        className="workbench-bar-action-icon"
+        className={size ? undefined : "workbench-bar-action-icon"}
         disabled={disabled}
         aria-label={label}
         aria-pressed={active}
         data-testid={testId}
         {...rest}
       >
-        <Icon name={icon} size="1rem" />
+        <Icon name={icon} size={size ? 18 : "1rem"} />
       </ActionIcon>
     ) : (
       <Button
@@ -100,7 +104,10 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
   },
 );
 
-/** A labelled toolbar control that opens a menu of related actions. */
+/**
+ * A labelled toolbar control that opens a menu of related settings. It stays
+ * open as they change, so several can be set and each seen taking effect.
+ */
 export function BarMenu({
   icon,
   label,
@@ -120,6 +127,7 @@ export function BarMenu({
       shadow="md"
       position="bottom-start"
       withinPortal
+      closeOnItemClick={false}
       opened={opened}
       onChange={setOpened}
     >

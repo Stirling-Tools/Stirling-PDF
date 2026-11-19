@@ -37,3 +37,24 @@
     display: none;
   }
 }
+
+/* A page colour choice, previewed in the Page view menu. */
+.viewer-page-colour-swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--c-border);
+}
+
+.viewer-page-colour-swatch--normal {
+  background: #ffffff;
+}
+
+.viewer-page-colour-swatch--dark {
+  background: #1c1c20;
+}
+
+.viewer-page-colour-swatch--sepia {
+  background: #e8d7b5;
+}

@@ -216,7 +216,29 @@ export async function toggleViewerPanel(
 ): Promise<void> {
   await page.getByTestId("viewer-panels-menu").click();
   await page.getByRole("menuitem", { name, exact: true }).click();
-  // The menu stays open for several toggles; Escape puts it away.
+  // The menu stays open as settings change; Escape puts it away.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+}
+
+/** Picks a choice from the viewer's Page view menu, then puts the menu away. */
+export async function choosePageView(page: Page, name: string): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  await page.getByRole("menuitem", { name, exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem", { name, exact: true })).toBeHidden();
+}
+
+/** Whether a Page view choice is ticked, read by opening the menu. */
+export async function expectPageViewChecked(
+  page: Page,
+  name: string,
+  checked = true,
+): Promise<void> {
+  await page.getByTestId("viewer-page-view-menu").click();
+  const item = page.getByRole("menuitem", { name, exact: true });
+  if (checked) await expect(item).toHaveAttribute("data-checked", "true");
+  else await expect(item).not.toHaveAttribute("data-checked");
+  await page.keyboard.press("Escape");
+  await expect(item).toBeHidden();
 }
