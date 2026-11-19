@@ -516,9 +516,7 @@ class MergeControllerMoreTest {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setStartPage(1);
             stripper.setEndPage(1);
-            assertThat(stripper.getText(result)).contains("Отчёт");
-            assertThat(stripper.getText(result)).contains("報告");
-            assertThat(stripper.getText(result)).contains("تقرير");
+            assertThat(stripper.getText(result)).contains("Отчёт", "報告", "تقرير");
         }
     }
 }

@@ -2,10 +2,12 @@ package stirling.software.SPDF.utils.text;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Bidi;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -13,7 +15,6 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.core.io.ClassPathResource;
 
 public class TocFontResolver {
-
     private static final String FONT_DEFAULT = "static/fonts/NotoSans-Regular.ttf";
     private static final String FONT_CJK = "static/fonts/NotoSansSC-Regular.ttf";
     private static final String FONT_KOREAN = "static/fonts/NotoSansKR-Regular.ttf";
@@ -21,6 +22,9 @@ public class TocFontResolver {
     private static final String FONT_HEBREW = "static/fonts/NotoSansHebrew-Regular.ttf";
     private static final String FONT_ARABIC = "static/fonts/NotoSansArabic-Regular.ttf";
     private static final String ELLIPSIS = "…";
+    private static final String BRACKETS = "()[]{}<>«»";
+    private static final String MIRRORED_BRACKETS = ")(][}{><»«";
+    private static final Pattern GRAPHEME = Pattern.compile("\\X");
 
     public record TextRun(PDFont font, String text) {}
 
@@ -40,6 +44,7 @@ public class TocFontResolver {
         if (text == null || text.isEmpty()) {
             return runs;
         }
+        text = toVisualOrder(text);
         StringBuilder buffer = new StringBuilder();
         PDFont current = null;
         for (int i = 0; i < text.length(); ) {
@@ -89,6 +94,39 @@ public class TocFontResolver {
         return width;
     }
 
+    static String toVisualOrder(String text) {
+        Bidi bidi = new Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+        if (bidi.isLeftToRight()) {
+            return text;
+        }
+        int runCount = bidi.getRunCount();
+        byte[] levels = new byte[runCount];
+        Integer[] runs = new Integer[runCount];
+        for (int i = 0; i < runCount; i++) {
+            levels[i] = (byte) bidi.getRunLevel(i);
+            runs[i] = i;
+        }
+        Bidi.reorderVisually(levels, 0, runs, 0, runCount);
+
+        StringBuilder visual = new StringBuilder();
+        for (int run : runs) {
+            String part = text.substring(bidi.getRunStart(run), bidi.getRunLimit(run));
+            visual.append(bidi.getRunLevel(run) % 2 == 1 ? reverse(part) : part);
+        }
+        return visual.toString();
+    }
+
+    private static String reverse(String text) {
+        List<String> graphemes = new ArrayList<>();
+        GRAPHEME.matcher(text).results().forEach(match -> graphemes.addFirst(match.group()));
+        StringBuilder reversed = new StringBuilder();
+        for (String grapheme : graphemes) {
+            int bracket = grapheme.length() == 1 ? BRACKETS.indexOf(grapheme) : -1;
+            reversed.append(bracket >= 0 ? MIRRORED_BRACKETS.charAt(bracket) : grapheme);
+        }
+        return reversed.toString();
+    }
+
     private PDFont fontFor(int codePoint, PDFont current) throws IOException {
         String character = Character.toString(codePoint);
         Character.UnicodeScript script = Character.UnicodeScript.of(codePoint);
@@ -120,13 +158,15 @@ public class TocFontResolver {
     }
 
     private static String pathFor(int codePoint, Character.UnicodeScript script) {
+        if (isCjkPunctuation(codePoint)) {
+            return FONT_CJK;
+        }
         return switch (script) {
             case HAN, HIRAGANA, KATAKANA -> FONT_CJK;
             case HANGUL -> FONT_KOREAN;
             case THAI -> FONT_THAI;
             case HEBREW -> FONT_HEBREW;
             case ARABIC -> FONT_ARABIC;
-            case COMMON -> isCjkPunctuation(codePoint) ? FONT_CJK : FONT_DEFAULT;
             default -> FONT_DEFAULT;
         };
     }
