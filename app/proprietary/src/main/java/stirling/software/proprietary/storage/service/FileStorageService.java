@@ -946,26 +946,26 @@ public class FileStorageService {
         if (principal instanceof User user) {
             return user;
         }
-        // Token sign-ins (Supabase on SaaS) carry a Jwt; its subject is the stable account id.
+        // Token sign-ins (Supabase on SaaS) carry a Jwt; only its subject identifies the account,
+        // since the name is an email another local account may share.
         if (principal instanceof Jwt jwt) {
-            Optional<User> bySubject = findBySupabaseId(jwt.getSubject());
-            if (bySubject.isPresent()) {
-                return bySubject.get();
-            }
+            return findBySupabaseId(jwt.getSubject()).orElse(null);
         }
         String name = authentication.getName();
         if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
             return null;
         }
-        // A name match linked to another Supabase id belongs to someone else (a reused email).
-        Optional<User> byName =
-                userRepository
-                        .findByUsernameIgnoreCase(name)
-                        .filter(u -> !(principal instanceof Jwt) || u.getSupabaseId() == null);
+        Optional<User> byName = userRepository.findByUsernameIgnoreCase(name);
         if (byName.isPresent()) {
             return byName.get();
         }
         return findBySupabaseId(name).orElse(null);
+    }
+
+    /** Whether the caller owns the file, resolved the same way share-link access is. */
+    public boolean isOwnedByCaller(StoredFile file, Authentication authentication) {
+        User caller = extractAuthenticatedUser(authentication);
+        return caller != null && file.getOwner() != null && isOwner(file, caller);
     }
 
     private Optional<User> findBySupabaseId(String id) {

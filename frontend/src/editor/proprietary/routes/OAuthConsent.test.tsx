@@ -54,6 +54,8 @@ vi.mock("@editor/ui/Button", () => ({
   ),
 }));
 
+vi.mock("@editor/ui/Icon", () => ({ Icon: () => null }));
+
 vi.mock("react-router-dom", async () => {
   const actual =
     await vi.importActual<typeof import("react-router-dom")>(
@@ -66,7 +68,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-const OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
+let OAuthConsent: typeof import("@editor/routes/OAuthConsent").default;
 
 const assign = vi.fn();
 
@@ -82,7 +84,9 @@ function renderPage(strict = false) {
 }
 
 describe("OAuthConsent (built-in MCP authorization server)", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules();
+    OAuthConsent = (await import("@editor/routes/OAuthConsent")).default;
     session = { access_token: "token-abc" };
     getMock.mockReset();
     postMock.mockReset();
@@ -116,7 +120,54 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     expect(screen.getByText(/Stay connected without asking/)).toBeTruthy();
     expect(getMock).toHaveBeenCalledWith(
       "/api/v1/mcp/oauth/authorizations/auth-123",
+      { suppressErrorToast: true },
     );
+  });
+
+  it.each([
+    [
+      "an unverified app",
+      { name: "Claude", verified: false, redirectHost: "claude.ai" },
+      /Unverified app name\. Access goes to claude\.ai/,
+    ],
+    [
+      "a verified app that redirects elsewhere",
+      {
+        name: "Example Tools",
+        domain: "example.org",
+        verified: true,
+        redirectHost: "collector.attacker.net",
+      },
+      /Access goes to collector\.attacker\.net, not example\.org/,
+    ],
+  ])("warns about %s in an alert", async (_case, client, warning) => {
+    getMock.mockResolvedValueOnce({
+      data: { authorization_id: "auth-123", scope: "mcp.tools.read", client },
+    });
+
+    renderPage();
+
+    expect((await screen.findByRole("alert")).textContent).toMatch(warning);
+  });
+
+  it("shows no warning for a verified app that redirects to its own domain", async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        authorization_id: "auth-123",
+        scope: "mcp.tools.read",
+        client: {
+          name: "ChatGPT",
+          domain: "chatgpt.com",
+          verified: true,
+          redirectHost: "chatgpt.com",
+        },
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/ChatGPT wants to access/)).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("posts the decision and follows the returned redirect", async () => {
@@ -144,6 +195,7 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     expect(postMock).toHaveBeenCalledWith(
       "/api/v1/mcp/oauth/authorizations/auth-123/consent",
       { action: "approve" },
+      { suppressErrorToast: true },
     );
   });
 
@@ -159,6 +211,22 @@ describe("OAuthConsent (built-in MCP authorization server)", () => {
     );
     expect(getMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/wants to access/)).toBeNull();
+  });
+
+  it("loads the authorization once when the page remounts", async () => {
+    getMock.mockResolvedValue({
+      data: {
+        authorization_id: "auth-123",
+        scope: "mcp.tools.read",
+        client: { name: "ChatGPT" },
+      },
+    });
+
+    renderPage().unmount();
+    renderPage();
+
+    expect(await screen.findByText(/ChatGPT wants to access/)).toBeTruthy();
+    expect(getMock).toHaveBeenCalledTimes(1);
   });
 
   it("shows an error instead of a nameless consent screen", async () => {

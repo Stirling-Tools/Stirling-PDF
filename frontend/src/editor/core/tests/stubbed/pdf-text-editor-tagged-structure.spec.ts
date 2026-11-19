@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // Editing text in a tagged PDF must keep it in the structure tree. The editor
@@ -120,9 +121,7 @@ async function saveAndReopen(page: import("@playwright/test").Page) {
     };
     w.__prev_document = w.__editor_store?.document;
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(saved);
+  await openInTextEditor(page, saved);
   await page.waitForFunction(
     () => {
       const w = window as unknown as {
@@ -146,9 +145,7 @@ async function openFixture(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 15_000,
   });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(FIXTURE);
+  await openInTextEditor(page, FIXTURE);
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 30_000,
   });
@@ -224,7 +221,7 @@ test.describe("PDF text editor - tagged documents", () => {
       "pdf-editor-image-",
       "",
     );
-    const badge = page.getByTestId(`pdf-editor-image-attention-${imageId}`);
+    const badge = page.getByTestId(`pdf-editor-attention-image-${imageId}`);
     const summary = page.getByTestId(
       "pdf-editor-document-accessibility-summary",
     );
@@ -276,7 +273,7 @@ test.describe("PDF text editor - tagged documents", () => {
       .setInputFiles(PNG);
     await expect(images).toHaveCount(2);
     const untagged = page.locator(
-      '[data-testid^="pdf-editor-image-attention-"][data-attention="untagged"]',
+      '[data-testid^="pdf-editor-attention-image-"][data-attention="untagged"]',
     );
     await expect(untagged).toHaveCount(1);
 

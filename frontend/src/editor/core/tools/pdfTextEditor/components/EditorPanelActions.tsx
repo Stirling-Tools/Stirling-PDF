@@ -2,16 +2,10 @@ import { Box, Group, Tooltip } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
-import { EditorFileSwitcher } from "@editor/tools/pdfTextEditor/components/EditorFileSwitcher";
-import type { FileId } from "@editor/types/file";
 import { modShortcut } from "@editor/utils/hotkeys";
 
 interface Props {
   compact: boolean;
-  openedFileName: string | null;
-  dirty: boolean;
-  currentFileId: FileId | null;
-  onPickFile: (file: File) => void;
   onSave: () => void;
   onDownload: () => void;
   onOpenFind: () => void;
@@ -20,10 +14,6 @@ interface Props {
 
 export function EditorPanelActions({
   compact,
-  openedFileName,
-  dirty,
-  currentFileId,
-  onPickFile,
   onSave,
   onDownload,
   onOpenFind,
@@ -43,16 +33,6 @@ export function EditorPanelActions({
       }}
       data-testid="pdf-editor-panel-actions"
     >
-      {compact && openedFileName && (
-        <Group gap={6} wrap="nowrap" mb={8}>
-          <EditorFileSwitcher
-            currentFileId={currentFileId}
-            currentFileName={openedFileName}
-            dirty={dirty}
-            onPick={onPickFile}
-          />
-        </Group>
-      )}
       <Group gap="xs" wrap="nowrap">
         <Tooltip
           label={t("pdfTextEditor.saveTooltip", {

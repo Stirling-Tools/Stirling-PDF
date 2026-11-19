@@ -49,6 +49,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.security.model.User;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -437,6 +438,61 @@ class McpPipelineTest {
     }
 
     @Test
+    void anExplicitNullTriggerTurnsAnEditorAutomationIntoOnDemand() throws Exception {
+        stubSaveEcho();
+        Policy onExport =
+                new Policy(
+                        "p1",
+                        "Tidy exports",
+                        "admin",
+                        true,
+                        List.of(),
+                        List.of(step("/api/v1/misc/repair")),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        new stirling.software.proprietary.policy.model.EditorConfig(
+                                true, "export"));
+        when(policies.listPolicies()).thenReturn(List.of(onExport));
+
+        automations.save(
+                "alice",
+                new McpAutomations.Draft("p1", null, null, null, mapper.nullNode(), null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertFalse(saved.getValue().editor().allowed());
+        assertTrue(saved.getValue().inputs().isEmpty());
+    }
+
+    @Test
+    void omittingTheTriggerKeepsAnEditorAutomationsSetting() throws Exception {
+        stubSaveEcho();
+        Policy onExport =
+                new Policy(
+                        "p1",
+                        "Tidy exports",
+                        "admin",
+                        true,
+                        List.of(),
+                        List.of(step("/api/v1/misc/repair")),
+                        OutputSpec.inline(),
+                        List.of(),
+                        1L,
+                        new stirling.software.proprietary.policy.model.EditorConfig(
+                                true, "export"));
+        when(policies.listPolicies()).thenReturn(List.of(onExport));
+
+        automations.save(
+                "alice", new McpAutomations.Draft("p1", "Renamed", null, null, null, null, null));
+
+        ArgumentCaptor<Policy> saved = ArgumentCaptor.forClass(Policy.class);
+        verify(policies).savePolicy(saved.capture());
+        assertTrue(saved.getValue().editor().allowed());
+        assertEquals("export", saved.getValue().editor().runOn());
+    }
+
+    @Test
     void aTestRunOfASavedAutomationUsesItsStoredPasswordNotTheMaskedOne() throws Exception {
         PipelineStep stored =
                 new PipelineStep(
@@ -492,6 +548,20 @@ class McpPipelineTest {
         assertTrue(saved.getValue().editor().allowed());
         assertEquals("export", saved.getValue().editor().runOn());
         assertTrue(saved.getValue().outputIds().isEmpty());
+    }
+
+    @Test
+    void theTriggerSchemaAcceptsNullSoAScheduleCanBeRemoved() {
+        JsonNode type =
+                new StirlingSaveAutomationTool(mapper, automations)
+                        .inputSchema()
+                        .path("properties")
+                        .path("trigger")
+                        .path("type");
+
+        assertTrue(type.isArray(), type.toString());
+        assertEquals(
+                List.of("object", "null"), List.of(type.get(0).asText(), type.get(1).asText()));
     }
 
     @Test

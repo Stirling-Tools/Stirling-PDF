@@ -95,7 +95,7 @@ public class StirlingSaveAutomationTool implements McpTool {
                         + " stirling_list_automations, or 'editor' to run on every PDF uploaded"
                         + " to or exported from the Stirling PDF editor ('' removes it).");
         ObjectNode trigger = props.putObject("trigger");
-        trigger.put("type", "object");
+        trigger.putArray("type").add("object").add("null");
         trigger.put(
                 "description",
                 "When it runs by itself; omit to keep the current trigger (null removes it, so it"

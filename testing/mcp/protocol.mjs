@@ -78,22 +78,18 @@ async function modernRejections() {
   await expectError("unknown resource is invalid params on 2026-07-28", await rpc("resources/read", { uri: "ui://stirling-pdf/missing.html" }), INVALID_PARAMS, 200);
 }
 
-async function mrtrRaw() {
+async function passwordInParameters() {
   const caps = { elicitation: { form: {} } };
-  const args = { name: "stirling_security", arguments: { operation: "add-password", file: cfg.pdfBase64, fileName: "mrtr.pdf", parameters: {} } };
-  const first = await rpc("tools/call", args, { caps });
-  const request = first.result?.inputRequests?.stirling_passwords;
-  r.check("password op asks for input_required", first.result?.resultType === "input_required" && request?.method === "elicitation/create", JSON.stringify(first.result).slice(0, 160));
-  r.check("form asks for the password field", request?.params?.requestedSchema?.properties?.password?.type === "string");
-  const retry = await rpc("tools/call", { ...args, inputResponses: { stirling_passwords: { action: "accept", content: { password: `raw-${Date.now()}` } } } }, { caps });
-  r.check("retry with the answer completes", retry.result?.resultType === "complete" && !retry.result?.isError, firstText(retry.result).slice(0, 120));
+  const args = { name: "stirling_security", arguments: { operation: "add-password", file: cfg.pdfBase64, fileName: "mrtr.pdf", parameters: { password: `raw-${Date.now()}` } } };
+  const res = await rpc("tools/call", args, { caps });
+  r.check("password in parameters completes without a form", res.result?.resultType === "complete" && !res.result?.isError && res.result?.inputRequests === undefined, JSON.stringify(res.result).slice(0, 160));
 }
 
 async function legacy() {
   const init = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "conformance", version: "1" } }, { modern: false });
   r.check("legacy initialize echoes 2025-06-18", init.result?.protocolVersion === "2025-06-18", init.result?.protocolVersion);
   const fallback = await rpc("initialize", { protocolVersion: "1999-01-01", capabilities: {}, clientInfo: { name: "conformance", version: "1" } }, { modern: false });
-  r.check("legacy initialize falls back for unknown versions", fallback.result?.protocolVersion === "2025-06-18", fallback.result?.protocolVersion);
+  r.check("legacy initialize falls back to the preferred version", fallback.result?.protocolVersion === "2025-11-25", fallback.result?.protocolVersion);
   const list = await rpc("tools/list", {}, { modern: false });
   r.check("legacy tools/list has no modern decoration", Array.isArray(list.result?.tools) && list.result?.resultType === undefined);
   const missing = await rpc("resources/read", { uri: "ui://stirling-pdf/missing.html" }, { modern: false });
@@ -119,7 +115,7 @@ try {
   await unauthenticated();
   await modernHappyPath();
   await modernRejections();
-  await mrtrRaw();
+  await passwordInParameters();
   await legacy();
   r.finish();
 } catch (e) {

@@ -54,6 +54,10 @@ export interface CheckoutOptions {
   currentLimit?: number | null;
   /** Present only for a self-hosted server above its actual allowance. */
   capacityNotice?: { users: number; limit: number };
+  /** Where a buyer above the self-serve maximum is sent. */
+  onContactSales?: () => void;
+  /** Runs when the checkout is dismissed, so a caller can move on from it once the buyer has paid. */
+  onClose?: (paid: boolean) => void;
 }
 
 interface CheckoutContextValue {
@@ -101,6 +105,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   const [plans, setPlans] = useState<PlanTier[]>([]);
   const [plansLoaded, setPlansLoaded] = useState(false);
   const openingCheckout = useRef(false);
+  const paid = useRef(false);
 
   // Lazy fetch plans only when needed
   const fetchPlansIfNeeded = useCallback(
@@ -428,6 +433,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Store options for callbacks
+        paid.current = false;
         setCurrentOptions(options);
         setMinimumSeats(calculatedMinSeats);
         setSelectedPlanGroup(planGroup);
@@ -447,6 +453,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   );
 
   const closeCheckout = useCallback(() => {
+    currentOptions.onClose?.(paid.current);
     setIsOpen(false);
     setSelectedPlanGroup(null);
     setCurrentOptions({});
@@ -455,11 +462,12 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     // Refetch plans and license after modal closes to update subscription display
     refetchPlans();
     refetchLicense();
-  }, [refetchPlans, refetchLicense]);
+  }, [currentOptions, refetchPlans, refetchLicense]);
 
   const handlePaymentSuccess = useCallback(
     (sessionId: string) => {
       console.log("Payment successful, session:", sessionId);
+      paid.current = true;
       currentOptions.onSuccess?.(sessionId);
       // Don't close modal - let user view license key and close manually
     },
@@ -509,6 +517,15 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}
             capacityNotice={currentOptions.capacityNotice}
+            onContactSales={
+              currentOptions.onContactSales &&
+              (() => {
+                // Enterprise opens its own flow; leaving the checkout on top would hide it.
+                const contactSales = currentOptions.onContactSales;
+                closeCheckout();
+                contactSales?.();
+              })
+            }
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}

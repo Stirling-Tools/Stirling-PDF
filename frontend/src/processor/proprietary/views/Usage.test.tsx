@@ -23,6 +23,7 @@ import {
 import type { ProcurementSnapshot } from "@editor/portal/api/procurement";
 import type { LegacyBillingState } from "@editor/types/legacyBilling";
 import { formatPeriodDate } from "@editor/billing";
+import { isTeamWelcome } from "@editor/billing/teamWelcome";
 
 const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
 vi.mock("@editor/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
@@ -40,10 +41,13 @@ vi.mock("@editor/hooks/useLegacySubscriptions", () => ({
   useLegacySubscriptions: () => legacyBilling,
 }));
 
+let locationState: unknown;
+
 // Usage renders Mantine-backed @editor/ui components (e.g. the "Manage Payment"
 // Button in the subscribed header), which need a MantineProvider in the tree.
 function Location() {
   const location = useLocation();
+  locationState = location.state;
   return (
     <output data-testid="location">
       {location.pathname}
@@ -97,30 +101,24 @@ vi.mock("@editor/portal/hooks/useBundleFlowState", () => ({
   useBundleFlowState: () => bundleFlow,
 }));
 const procurement = {
-  isLinked: true,
-  loading: false,
-  loadError: null as string | null,
-  error: null,
-  open: false,
-  started: false,
-  stage: null as ProcurementSnapshot["stage"],
-  retry: vi.fn(),
-  onExploreEnterprise: vi.fn(),
-  onStartTrial: vi.fn(),
-  setOpen: vi.fn(),
+  deal: null as Pick<ProcurementSnapshot, "dealId" | "stage"> | null,
+  error: null as Error | null,
+  refetch: vi.fn(),
 };
 vi.mock("@editor/portal/components/procurement/useProcurement", () => ({
-  useProcurement: () => procurement,
+  useProcurementSnapshot: () => ({
+    data: procurement.error ? undefined : procurement.deal,
+    error: procurement.error,
+    isSuccess: !procurement.error,
+    refetch: procurement.refetch,
+  }),
 }));
-vi.mock("@editor/portal/components/procurement/ProcurementBanner", () => ({
-  ControlledDealStatusHero: ({ readOnly }: { readOnly: boolean }) => (
+vi.mock("@editor/portal/components/procurement/DealStatusHero", () => ({
+  DealStatusHero: ({ onOpen }: { onOpen?: () => void }) => (
     <div data-testid="procurement-summary">
-      {readOnly ? "Read-only deal" : "Enterprise deal"}
+      {onOpen ? "Enterprise deal" : "Read-only deal"}
     </div>
   ),
-}));
-vi.mock("@editor/portal/components/procurement/ProcurementFlow", () => ({
-  ProcurementFlow: () => <div data-testid="procurement-flow" />,
 }));
 vi.mock("@editor/portal/api/fleetStats", () => ({
   fetchFleetStats: () => Promise.resolve(null),
@@ -217,13 +215,9 @@ describe("Usage — link-free wallet renderer", () => {
     bundleFlow.refresh.mockReset();
     fetchWallet.mockReset();
     refreshWalletCache.mockReset();
-    procurement.loading = false;
-    procurement.loadError = null;
-    procurement.started = false;
-    procurement.stage = null;
-    procurement.onExploreEnterprise.mockReset();
-    procurement.onStartTrial.mockReset();
-    procurement.setOpen.mockReset();
+    procurement.deal = null;
+    procurement.error = null;
+    procurement.refetch.mockReset();
   });
 
   it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
@@ -304,6 +298,78 @@ describe("Usage — link-free wallet renderer", () => {
       expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
     );
     expect(checkout.openCheckout).not.toHaveBeenCalled();
+  });
+
+  it("opens Team for a hosted buyer arriving from the Team link", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+    expect(checkout.openCheckout).toHaveBeenCalledWith(
+      "server",
+      expect.objectContaining({
+        combinedChoose: true,
+        onContactSales: expect.any(Function),
+        onClose: expect.any(Function),
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+  });
+
+  it.each([
+    ["an active Team", true, "leader"],
+    ["a member", false, "member"],
+  ] as const)(
+    "leaves a hosted account with %s on billing",
+    async (_label, held, role) => {
+      checkoutEnabled = true;
+      fetchWallet.mockResolvedValue({
+        ...walletOf("free"),
+        role,
+        team: { held, licensedUsers: 100 },
+      });
+      renderUsage(<Usage />, "/settings/billing?upgrade=team");
+      await waitFor(() =>
+        expect(screen.getByTestId("location")).not.toHaveTextContent(
+          "upgrade=",
+        ),
+      );
+      expect(checkout.openCheckout).not.toHaveBeenCalled();
+    },
+  );
+
+  it("sends a Team-link buyer to the editor once they close a paid checkout", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+    const options = checkout.openCheckout.mock.calls[0][1];
+
+    act(() => options.onClose(true));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent("/editor"),
+    );
+    expect(isTeamWelcome(locationState)).toBe(true);
+  });
+
+  it("keeps a Team-link buyer on billing when they close without paying", async () => {
+    checkoutEnabled = true;
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage />, "/settings/billing?upgrade=team");
+    await waitFor(() => expect(checkout.openCheckout).toHaveBeenCalledTimes(1));
+
+    act(() => checkout.openCheckout.mock.calls[0][1].onClose(false));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).not.toHaveTextContent("upgrade="),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/settings/billing",
+    );
+    expect(isTeamWelcome(locationState)).toBe(false);
   });
 
   it("loads the wallet on mount and reports it via onWalletLoaded (no link gate)", async () => {
@@ -627,81 +693,61 @@ describe("Usage — link-free wallet renderer", () => {
     expect(document.getElementById("ub-plan")).toBeNull();
   });
 
-  it("starts procurement from the billing CTA without leaving Usage", async () => {
+  it("opens the Enterprise page from the billing CTA", async () => {
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
     renderUsage(<Usage />);
     fireEvent.click(
       await screen.findByRole("button", { name: "Get an enterprise quote" }),
     );
-    expect(procurement.onExploreEnterprise).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/settings/billing",
-    );
+    expect(screen.getByTestId("location")).toHaveTextContent("/enterprise");
   });
 
-  it.each([
-    [null, "onExploreEnterprise"],
-    ["exploring", "onStartTrial"],
-    ["trial", "setOpen"],
-    ["quote", "setOpen"],
-    ["security", "setOpen"],
-    ["procurement", "setOpen"],
-    ["active", "setOpen"],
-  ] as const)("resumes %s once from a sales link", async (stage, action) => {
-    procurement.stage = stage;
-    procurement.started = stage !== null;
+  it("still offers the quote to a buyer who asked but never started a trial", async () => {
+    procurement.deal = { dealId: 1, stage: "exploring" };
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/settings/billing?procurement=start&source=sales");
-    await waitFor(() => expect(procurement[action]).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.getByTestId("location")).toHaveTextContent(
-        "/settings/billing?source=sales",
-      ),
-    );
-    if (stage) expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
+    renderUsage(<Usage />);
+    expect(
+      await screen.findByRole("button", { name: "Get an enterprise quote" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("procurement-summary")).not.toBeInTheDocument();
   });
 
-  it("keeps a failed snapshot's start request pending instead of creating another deal", async () => {
-    procurement.loadError = "Snapshot unavailable";
+  it("does not offer a new deal while the existing one cannot be loaded", async () => {
+    procurement.error = new Error("Snapshot unavailable");
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/settings/billing?procurement=start");
+    renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     expect(screen.getByText("Snapshot unavailable")).toBeInTheDocument();
-    expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "procurement=start",
-    );
     expect(
       screen.queryByRole("button", { name: "Get an enterprise quote" }),
     ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(procurement.refetch).toHaveBeenCalledTimes(1);
   });
 
   it("anchors an existing deal before Plan", async () => {
-    procurement.started = true;
-    procurement.stage = "trial";
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
     renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     const section = screen.getByRole("region", { name: "Procurement" });
     expect(section.nextElementSibling?.id).toBe("ub-plan");
+    expect(screen.getByText("Enterprise deal")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Get an enterprise quote" }),
     ).not.toBeInTheDocument();
   });
 
-  it("shows members the deal without starting or mounting its mutation dialogs", async () => {
-    procurement.started = true;
-    procurement.stage = "trial";
+  it("shows members the deal with no way into it", async () => {
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockResolvedValue(walletOf("free"));
-    renderUsage(<Usage />, "/settings/billing?procurement=start");
+    renderUsage(<Usage />);
     await screen.findByText("The full PDF Editor.");
     expect(screen.getByText("Read-only deal")).toBeInTheDocument();
-    expect(screen.queryByTestId("procurement-flow")).not.toBeInTheDocument();
-    expect(procurement.setOpen).not.toHaveBeenCalled();
   });
 
   it("keeps the deal visible if the wallet fails", async () => {
-    procurement.started = true;
+    procurement.deal = { dealId: 1, stage: "trial" };
     fetchWallet.mockRejectedValue(new Error("Wallet unavailable"));
     renderUsage(<Usage />);
     await screen.findByText("Wallet unavailable");
@@ -835,8 +881,7 @@ describe("Usage — refresh cost", () => {
     refreshWalletCache.mockReset().mockResolvedValue(undefined);
     fetchLocalUsage.mockReset().mockResolvedValue(null);
     bundleFlow.status = "none";
-    procurement.loading = false;
-    procurement.loadError = null;
+    procurement.deal = null;
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 

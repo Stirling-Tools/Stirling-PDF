@@ -1,3 +1,7 @@
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import { readUtf16 } from "@editor/services/pdfiumService";
 import type {
   ParagraphLineSlot,
@@ -15,11 +19,23 @@ import {
 import { getActiveCharcodeStrategy } from "@editor/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@editor/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import { getExternalFontBytes } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
-  applyTagMarks,
-  type TagMark,
-} from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
-import { nearestStandardFont } from "@editor/tools/pdfTextEditor/util/fontFamily";
+  advanceWidth,
+  parseFontMetrics,
+  type FontMetrics,
+} from "@editor/tools/pdfTextEditor/util/fontMetrics";
+import { applyTagMarks } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import {
+  taggedSpans,
+  uniformTags,
+  type TaggedSpan,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
+import {
+  encodesInBase14,
+  nearestStandardFont,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
   scratchPtr,
@@ -85,6 +101,10 @@ export function resetDroppedBase14Chars(): void {
 /** Test-only alias for {@link resetDroppedBase14Chars}. */
 export function _clearDroppedBase14CharsForTests(): void {
   resetDroppedBase14Chars();
+}
+
+export function recordUndrawableChars(chars: string): void {
+  recordDroppedChars(chars, "");
 }
 
 /** Record every VISIBLE char present in `original` but missing from `kept`. */
@@ -161,12 +181,9 @@ export function sanitizeForBase14(text: string): string {
     const cp = ch.codePointAt(0) ?? 0;
     if (cp === 0x09 || cp === 0x0a || cp === 0x0d) {
       out += ch;
-    } else if (cp < 0x20 || cp === 0x7f || (cp >= 0x80 && cp <= 0x9f)) {
-      // C0/DEL/C1 controls are un-encodable in WinAnsi - drop them.
-      continue;
     } else if (cp === 0x00a0) {
       out += " ";
-    } else if (cp <= 0xff) {
+    } else if (encodesInBase14(cp)) {
       out += ch;
     }
     // else: unrepresentable in base-14 - drop it (no tofu).
@@ -265,9 +282,10 @@ interface CreatedTextOptions {
   strokeWidth?: number;
   /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
-  // Required so every emit decides: a re-emit of existing text passes the
-  // run's tags, new content passes none.
-  tagMarks: readonly TagMark[];
+  // Required so every emit decides: a re-emit of existing text passes that
+  // text's tags, new content passes none. Each stretch with tags of its own
+  // is drawn as objects of its own.
+  tags: TextTags;
   // Extra advance per glyph in PDF points - the source run's rendered
   // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
@@ -309,14 +327,37 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   return `${italic}${bold}${sizePx}px ${stack}`;
 }
 
+function embeddedMetricsFor(family: string): FontMetrics | null {
+  const bytes = getExternalFontBytes(family);
+  return bytes ? parseFontMetrics(bytes) : null;
+}
+
+const BASE14_SPACE: Array<[RegExp, number]> = [
+  [/^times/i, 250],
+  [/^courier/i, 600],
+  [/^helvetica/i, 278],
+];
+
+export function base14SpaceAdvance(family: string): number | null {
+  return BASE14_SPACE.find(([re]) => re.test(family))?.[1] ?? null;
+}
+
 /** Measure the natural advance width of `s` in PDF points. */
 function measureAdvancePt(
   text: string,
   fontFamily: string,
   fontSizePt: number,
 ): number {
+  const metrics = embeddedMetricsFor(fontFamily);
+  const embedded = metrics ? advanceWidth(metrics, text) : null;
+  if (embedded !== null) return (embedded * fontSizePt) / 1000;
   const ctx = measureCtx();
-  if (!ctx) return text.length * fontSizePt * 0.5;
+  if (!ctx) {
+    const space = base14SpaceAdvance(fontFamily) ?? 500;
+    let sum = 0;
+    for (const ch of text) sum += /\s/.test(ch) ? space : 500;
+    return (sum * fontSizePt) / 1000;
+  }
   ctx.font = cssFontSpecFor(fontFamily, fontSizePt);
   return ctx.measureText(text).width;
 }
@@ -435,7 +476,7 @@ function buildOnPageAdvMap(
   try {
     const count = mod.FPDFText_CountChars(tp);
     for (let i = 0; i < count; i++) {
-      const u = mod.FPDFText_GetUnicode(tp, i);
+      const u = drawnCodePoint(mod.FPDFText_GetUnicode(tp, i));
       if (!u) continue;
       const obj = mod.FPDFText_GetTextObject(tp, i);
       if (!obj) continue;
@@ -664,6 +705,9 @@ export function rotateObjectAbout(
 }
 
 export function emitTextLine(opts: CreatedTextOptions): number[] {
+  const spans = taggedSpans(opts.tags, opts.text.length);
+  if (spans.length > 1) return emitTaggedSpans(opts, spans);
+  const tagMarks = spans[0]?.tags ?? [];
   const m = opts.doc.module;
   const size = Math.max(4, opts.fontSize);
   const family = opts.fallbackFamily ?? "Helvetica";
@@ -681,14 +725,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // Every successful emit funnels through here, so this is the one place to
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
-    applyTagMarks(m, opts.doc.docPtr, ptrs, opts.tagMarks);
+    applyTagMarks(m, opts.doc.docPtr, ptrs, tagMarks);
     return ptrs;
   };
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
   const emitWord = (text: string, x: number): number => {
-    // base-14 can only render Latin-1; drop the rest so PDFium never emits
-    // U+00FF tofu.
+    // base-14 can only render WinAnsi; drop the rest, not U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number => {
       const ptr = m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
@@ -716,7 +759,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         );
         if (dp) return dp;
       }
-      // Some chars are outside base-14's Latin-1 range.
+      // Some chars are outside base-14's WinAnsi range.
       if ([...text].length > [...base14Text].length) {
         const fp = emitFallbackTextObject(
           opts.doc,
@@ -1005,6 +1048,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         text: chunk.text,
         x: cursor,
         rotation: undefined,
+        tags: uniformTags(tagMarks),
         outTexts: opts.outTexts ? chunkTexts : undefined,
       });
       if (wordPtrs.length === 0) continue;
@@ -1027,6 +1071,56 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
+}
+
+/**
+ * Draw each span of `opts.text` with its own tags, one after another along
+ * the line.
+ */
+function emitTaggedSpans(
+  opts: CreatedTextOptions,
+  spans: readonly TaggedSpan[],
+): number[] {
+  const m = opts.doc.module;
+  const size = Math.max(4, opts.fontSize);
+  const family = opts.fallbackFamily ?? "Helvetica";
+  const spacing = opts.charSpacingPt ?? 0;
+  const ptrs: number[] = [];
+  let cursor = opts.x;
+  for (const { start, end, tags } of spans) {
+    const text = opts.text.slice(start, end);
+    const texts: string[] = [];
+    const own = emitTextLine({
+      ...opts,
+      text,
+      x: cursor,
+      rotation: undefined,
+      tags: uniformTags(tags),
+      outTexts: opts.outTexts ? texts : undefined,
+    });
+    opts.outTexts?.push(...texts);
+    ptrs.push(...own);
+    // Advanced as the per-word loop in emitTextLine advances, so splitting a
+    // line by tags does not move its words.
+    const ink = text.trimEnd();
+    const gap = text.slice(ink.length);
+    const right = Math.max(
+      cursor,
+      ...own.map((ptr) => measureObjRightEdgePt(m, ptr)),
+    );
+    const metric = measureAdvancePt(ink, family, size);
+    cursor += right - cursor >= metric * 0.35 ? right - cursor : metric;
+    cursor += gap
+      ? measureAdvancePt(gap, family, size) + spacing * (gap.length + 1)
+      : spacing;
+  }
+  const rot = opts.rotation;
+  if (rot) {
+    for (const ptr of ptrs) {
+      rotateObjectAbout(m, ptr, opts.x, opts.y, rot.cos, rot.sin);
+    }
+  }
+  return ptrs;
 }
 
 interface TextObjReadModule {
@@ -1074,7 +1168,7 @@ export function readObjTexts(
         }
         const buf = scratchPtr(m, SCRATCH.editRunText, len);
         mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-        out[i] = readUtf16(m, buf, len);
+        out[i] = drawnText(readUtf16(m, buf, len));
       } catch {
         out[i] = null;
       }
@@ -1109,7 +1203,7 @@ function readBackTextObj(
     if (len <= 2) return "";
     const buf = scratchPtr(m, SCRATCH.editObjText, len);
     mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-    return readUtf16(m, buf, len);
+    return drawnText(readUtf16(m, buf, len));
   } catch {
     return null;
   } finally {
@@ -1183,9 +1277,19 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
+  const box = measureObjBoundsPt(m, ptrs);
+  return box && { left: box.left, right: box.right };
+}
+
+export function measureObjBoundsPt(
+  m: WrappedPdfiumModule,
+  ptrs: number[],
+): { left: number; bottom: number; right: number; top: number } | null {
   const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
   let left = Infinity;
+  let bottom = Infinity;
   let right = -Infinity;
+  let top = -Infinity;
   for (const ptr of ptrs) {
     if (!ptr) continue;
     try {
@@ -1198,10 +1302,12 @@ export function measureObjSpanPt(
     const lo = m.pdfium.getValue(buf, "float");
     const hi = m.pdfium.getValue(buf + 8, "float");
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
-    if (lo < left) left = lo;
-    if (hi > right) right = hi;
+    left = Math.min(left, lo);
+    right = Math.max(right, hi);
+    bottom = Math.min(bottom, m.pdfium.getValue(buf + 4, "float"));
+    top = Math.max(top, m.pdfium.getValue(buf + 12, "float"));
   }
-  return right > left ? { left, right } : null;
+  return right > left ? { left, bottom, right, top } : null;
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
@@ -1299,7 +1405,7 @@ export function emitRunLines(opts: {
   doc: EditorDocument;
   page: Page;
   run: TextRun;
-  lines: string[];
+  lines: ReadonlyArray<{ text: string; tags: TextTags }>;
   origins: LineOrigin[];
   originalFontPtr: number;
   fallbackFamily: string;
@@ -1308,7 +1414,7 @@ export function emitRunLines(opts: {
   const rot = rotationFromMatrix(opts.run.matrix);
   const out: EmittedLine[] = [];
   for (let i = 0; i < opts.lines.length; i++) {
-    const text = opts.lines[i];
+    const { text, tags } = opts.lines[i];
     const origin = opts.origins[i];
     if (!origin) continue;
     if (text.length === 0) {
@@ -1332,7 +1438,7 @@ export function emitRunLines(opts: {
       fallbackFamily: opts.fallbackFamily,
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
-      tagMarks: opts.run.tagMarks,
+      tags,
     });
     out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
   }

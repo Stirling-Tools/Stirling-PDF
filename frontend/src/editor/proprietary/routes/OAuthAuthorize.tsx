@@ -62,6 +62,7 @@ export default function OAuthAuthorize() {
       .post<{ authorization_id?: string }>(
         "/api/v1/mcp/oauth/authorizations",
         body,
+        { suppressErrorToast: true },
       )
       .then((response) => {
         const id = response.data?.authorization_id;

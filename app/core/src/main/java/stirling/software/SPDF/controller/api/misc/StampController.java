@@ -254,7 +254,7 @@ public class StampController {
             // Return the stamped PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_stamped.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), ".pdf"),
                     tempFileManager);
         }
     }

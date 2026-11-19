@@ -35,6 +35,25 @@ type ShareLinkStatus =
   | "notfound"
   | "error";
 
+const LOGIN_REDIRECT_MARKER = "shareLinkLoginRedirect:";
+
+function readSessionFlag(key: string): boolean {
+  try {
+    return sessionStorage.getItem(key) !== null;
+  } catch {
+    return false;
+  }
+}
+
+function writeSessionFlag(key: string, on: boolean): void {
+  try {
+    if (on) sessionStorage.setItem(key, "1");
+    else sessionStorage.removeItem(key);
+  } catch {
+    return;
+  }
+}
+
 export default function ShareLinkPage() {
   const { token } = useParams<{ token: string }>();
   const { actions } = useFileActions();
@@ -105,6 +124,27 @@ export default function ShareLinkPage() {
     });
   }, [location.search, navigate, normalizedToken]);
 
+  const clearActionParam = useCallback(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("action")) return;
+    params.delete("action");
+    const search = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : "",
+        hash: location.hash,
+      },
+      { replace: true, state: location.state },
+    );
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+  ]);
+
   const handleDownload = useCallback(async () => {
     if (!normalizedToken || !canDownload) return;
     setIsWorking(true);
@@ -118,10 +158,12 @@ export default function ShareLinkPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      clearActionParam();
     } catch (error: unknown) {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -142,7 +184,7 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [canDownload, normalizedToken, t]);
+  }, [canDownload, clearActionParam, normalizedToken, t]);
 
   const handleOpen = useCallback(async () => {
     if (!normalizedToken || !canOpen) return;
@@ -162,6 +204,7 @@ export default function ShareLinkPage() {
       const statusCode = isAxiosError(error)
         ? error.response?.status
         : undefined;
+      if (statusCode !== 401) clearActionParam();
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -179,12 +222,29 @@ export default function ShareLinkPage() {
     } finally {
       setIsWorking(false);
     }
-  }, [actions, canOpen, metadata, navActions, navigate, normalizedToken, t]);
+  }, [
+    actions,
+    canOpen,
+    clearActionParam,
+    metadata,
+    navActions,
+    navigate,
+    normalizedToken,
+    t,
+  ]);
 
-  // Signed out: go straight to the normal sign-in page; it returns here afterwards.
+  // Signed out: go straight to the normal sign-in page; it returns here afterwards. Only once
+  // per link and tab: a session the backend keeps rejecting would otherwise loop through /login.
   useEffect(() => {
-    if (status === "login") handleLogin();
-  }, [handleLogin, status]);
+    if (!normalizedToken) return;
+    const marker = `${LOGIN_REDIRECT_MARKER}${normalizedToken}`;
+    if (status === "ready") {
+      writeSessionFlag(marker, false);
+    } else if (status === "login" && !readSessionFlag(marker)) {
+      writeSessionFlag(marker, true);
+      handleLogin();
+    }
+  }, [handleLogin, normalizedToken, status]);
 
   useEffect(() => {
     if (status !== "ready" || autoActionDone) return;
@@ -207,8 +267,6 @@ export default function ShareLinkPage() {
 
   const title =
     metadata?.fileName || t("storageShare.titleDefault", "Shared file");
-  const ownerLabel =
-    metadata?.owner || t("storageShare.ownerUnknown", "Unknown");
 
   return (
     <div style={{ minHeight: "100%", padding: "2.5rem 1.5rem" }}>
@@ -251,10 +309,12 @@ export default function ShareLinkPage() {
               <Text size="lg" fw={600} className={privateContentClassName}>
                 {title}
               </Text>
-              <Text size="sm" c="dimmed">
-                {t("storageShare.ownerLabel", "Owner")}:{" "}
-                <PrivateContent>{ownerLabel}</PrivateContent>
-              </Text>
+              {metadata?.owner && (
+                <Text size="sm" c="dimmed">
+                  {t("storageShare.ownerLabel", "Owner")}:{" "}
+                  <PrivateContent>{metadata.owner}</PrivateContent>
+                </Text>
+              )}
               {metadata?.createdAt && (
                 <Text size="sm" c="dimmed">
                   {t("storageShare.createdAt", "Created")}{" "}

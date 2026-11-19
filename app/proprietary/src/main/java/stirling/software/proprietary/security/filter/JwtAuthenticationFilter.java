@@ -2,7 +2,7 @@ package stirling.software.proprietary.security.filter;
 
 import static stirling.software.common.util.RequestUriUtils.isApiRequest;
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
-import static stirling.software.common.util.RequestUriUtils.isShareLinkDownload;
+import static stirling.software.common.util.RequestUriUtils.isShareLinkRead;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // This allows public endpoints to work even with expired tokens in the request
             if (isPublicAuthEndpoint(requestURI, contextPath)) {
                 // Private share links still need the signed-in user; a bad token stays anonymous.
-                if (jwtToken != null && isShareLinkDownload(requestURI, contextPath)) {
+                if (jwtToken != null && isShareLinkRead(requestURI, contextPath)) {
                     tryAuthenticate(request, jwtToken);
                 }
                 filterChain.doFilter(request, response);

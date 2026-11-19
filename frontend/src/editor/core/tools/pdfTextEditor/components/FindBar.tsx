@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@editor/ui/Icon";
 import "@editor/tools/pdfTextEditor/components/FindBar.css";
 import { EditTextCommand } from "@editor/tools/pdfTextEditor/commands/EditTextCommand";
-import { CompositeCommand } from "@editor/tools/pdfTextEditor/commands/CompositeCommand";
 import {
   findMatches,
   replaceMatches,
@@ -14,13 +13,16 @@ import type {
   MatchOptions,
   TextMatch,
 } from "@editor/tools/pdfTextEditor/util/textMatching";
-import { ensureAllPagesRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
+import type { ScanFitTarget } from "@editor/tools/pdfTextEditor/commands/scanFitSlices";
+import { useDispatchAfterScanFit } from "@editor/tools/pdfTextEditor/hooks/useDispatchAfterScanFit";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type {
   PageSnapshot,
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 interface FindBarProps {
   store: EditorStore;
@@ -58,17 +60,17 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
   const [ignoreAccents, setIgnoreAccents] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [replaceCount, setReplaceCount] = useState<number | null>(null);
+  const { busy: replacing, dispatch: dispatchAfterScanFit } =
+    useDispatchAfterScanFit(store);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
   // Opening Find is a document-wide request, so pull in every page that lazy
-  // loading has not read yet. Yield first: the read is synchronous, and on a
-  // long document it would otherwise block before the bar has painted.
+  // loading has not read yet.
   useEffect(() => {
-    const id = setTimeout(() => ensureAllPagesRead(store), 0);
-    return () => clearTimeout(id);
+    return readAllPagesInBackground(store);
   }, [store]);
 
   const options: MatchOptions = useMemo(
@@ -99,7 +101,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const el = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-run-${m.runId}"]`,
       );
-      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      revealOnPage(el, m.pageIndex);
     },
     [matches, store],
   );
@@ -151,7 +153,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
    * The replacement is spliced literally, so "$&" stays "$&".
    */
   const doReplaceOne = useCallback(() => {
-    if (!query) return;
+    if (!query || replacing) return;
     const m = matches[activeIndex];
     if (!m) return;
     // A locked run is still findable, but must not be rewritten.
@@ -166,35 +168,54 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       }),
     );
     setReplaceCount(1);
-  }, [query, replace, matches, activeIndex, store]);
+  }, [query, replacing, replace, matches, activeIndex, store]);
 
   /**
    * Replace EVERY match. Each affected run gets one EditTextCommand,
    * batched into a single CompositeCommand so "Undo undoes the whole
    * Replace all".
    */
-  const doReplaceAll = useCallback(() => {
-    if (!query || matches.length === 0) return;
-    let n = 0;
-    const cmds: EditTextCommand[] = [];
+  const doReplaceAll = useCallback(async () => {
+    const doc = store.document;
+    if (!doc || replacing || !query || matches.length === 0) return;
+    const targets: ScanFitTarget[] = [];
     for (const m of matches) {
       // Skip locked runs: the lock is a user instruction, not a hint.
       if (m.run.locked) continue;
-      const updated = replaceMatches(m.run.text, m.ranges, replace);
-      if (updated === m.run.text) continue;
-      cmds.push(
-        new EditTextCommand({
-          pageIndex: m.pageIndex,
-          runId: m.runId,
-          nextText: updated,
-        }),
-      );
-      n += 1;
+      if (replaceMatches(m.run.text, m.ranges, replace) === m.run.text)
+        continue;
+      const page = doc.loadedPages().find((p) => p.index === m.pageIndex);
+      const run = page?.findRun(m.runId);
+      if (page && run) targets.push({ page, run });
     }
-    if (cmds.length === 1) store.dispatch(cmds[0]);
-    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
-    setReplaceCount(n);
-  }, [query, replace, matches, store]);
+    await dispatchAfterScanFit(targets, () => {
+      const cmds: EditTextCommand[] = [];
+      for (const { page, run: target } of targets) {
+        const run = page.findRun(target.id);
+        if (!run || run.locked) continue;
+        const ranges = findMatches(run.text, query, options);
+        const updated = replaceMatches(run.text, ranges, replace);
+        if (updated === run.text) continue;
+        cmds.push(
+          new EditTextCommand({
+            pageIndex: page.index,
+            runId: run.id,
+            nextText: updated,
+          }),
+        );
+      }
+      setReplaceCount(cmds.length);
+      return cmds;
+    });
+  }, [
+    query,
+    replace,
+    options,
+    matches,
+    store,
+    replacing,
+    dispatchAfterScanFit,
+  ]);
 
   const countLabel =
     matches.length === 0
@@ -351,7 +372,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              if (e.shiftKey) doReplaceAll();
+              if (e.shiftKey) void doReplaceAll();
               else doReplaceOne();
             } else if (e.key === "Escape") {
               e.preventDefault();
@@ -366,7 +387,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             variant="tertiary"
             accent="neutral"
             onClick={doReplaceOne}
-            disabled={matches.length === 0 || !query}
+            disabled={replacing || matches.length === 0 || !query}
             data-testid="pdf-editor-replace-one"
           >
             {t("pdfTextEditor.find.replace", "Replace")}
@@ -375,8 +396,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             size="sm"
             variant="tertiary"
             accent="neutral"
-            onClick={doReplaceAll}
-            disabled={matches.length === 0 || !query}
+            onClick={() => void doReplaceAll()}
+            loading={replacing}
+            disabled={replacing || matches.length === 0 || !query}
             data-testid="pdf-editor-replace-all"
           >
             {t("pdfTextEditor.find.replaceAll", "Replace all")}

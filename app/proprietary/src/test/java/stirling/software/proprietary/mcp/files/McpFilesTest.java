@@ -78,6 +78,15 @@ class McpFilesTest {
     }
 
     @Test
+    void theInlineUploadBudgetLeavesRoomForBase64AndTheEnvelope() {
+        props.getMcp().setMaxRequestBytes(10L * 1024 * 1024);
+        assertEquals(7815168L, files.maxInlineUploadBytes());
+
+        props.getMcp().setMaxRequestBytes(64L * 1024);
+        assertEquals(0L, files.maxInlineUploadBytes());
+    }
+
+    @Test
     void inlineLimitRejectsStoredFileBeforeOpeningIt() throws Exception {
         file.setSizeBytes(1000);
         when(storage.getAccessibleFile(owner, 7L)).thenReturn(file);

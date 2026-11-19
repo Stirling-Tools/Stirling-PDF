@@ -879,7 +879,10 @@ public class McpAutomations {
             }
             return new EditorConfig(true, type);
         }
-        return existing == null ? EditorConfig.disabled() : existing.editor();
+        if (existing == null || (trigger != null && trigger.isNull())) {
+            return EditorConfig.disabled();
+        }
+        return existing.editor();
     }
 
     private List<PipelineInput> inputs(Draft draft, Policy existing) throws AutomationException {

@@ -1,6 +1,7 @@
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { innermostMcid } from "@editor/tools/pdfTextEditor/pdfium/PdfiumTagMarks";
+import { RENDER_MODE_INVISIBLE } from "@editor/tools/pdfTextEditor/types";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -18,6 +19,10 @@ export type BlockKey = (run: TextRun) => string;
 
 export const SAME_BLOCK: BlockKey = () => "";
 
+export const sameTextLayer = (a: TextRun, b: TextRun): boolean =>
+  (a.renderMode === RENDER_MODE_INVISIBLE) ===
+  (b.renderMode === RENDER_MODE_INVISIBLE);
+
 const BASELINE_TOLERANCE = 0.4;
 // Two runs on the same baseline join the same line only when the horizontal gap
 // between them is below this absolute cap.
@@ -30,8 +35,22 @@ const MAX_SPACE_UNIT_RATIO = 1;
 const MULTI_SPACE_UNITS = 1.7;
 
 function junctionGapRatio(prev: TextRun, cur: TextRun): number {
-  const fontSize = Math.max(prev.fontSize, 4);
-  return (cur.bounds.x - (prev.bounds.x + prev.bounds.width)) / fontSize;
+  return gapRatio(
+    cur.bounds.x - (prev.bounds.x + prev.bounds.width),
+    prev.fontSize,
+  );
+}
+
+function gapRatio(gapPt: number, fontSize: number): number {
+  return gapPt / Math.max(fontSize, 4);
+}
+
+/**
+ * Whether a line read puts a space between two objects on a line `gapPt`
+ * apart, the gap between their bounds, the first drawn at `fontSize` points.
+ */
+export function readsWordGap(gapPt: number, fontSize: number): boolean {
+  return gapRatio(gapPt, fontSize) > WORD_GAP_MIN_RATIO;
 }
 
 function lineSpaceUnitRatio(members: TextRun[]): number {
@@ -132,7 +151,7 @@ function groupPartitionIntoLines(
     const sameBlock =
       isBulletLead(run) || block === null || blockKey(run) === block;
 
-    if (sameLine && close && sameBlock) {
+    if (sameLine && close && sameBlock && sameTextLayer(prev, run)) {
       current.members.push(run);
     } else {
       current = { representative: run, members: [run] };
@@ -144,10 +163,10 @@ function groupPartitionIntoLines(
 export class LineGrouper {
   /** Group a page's runs and store the result back onto the page. */
   static apply(page: Page, blockKey: BlockKey = SAME_BLOCK): LineGroupInfo[] {
-    // Partition by form-xobject container BEFORE grouping.
-    const partitions = new Map<number, TextRun[]>();
+    // Partition by form-xobject container and text layer BEFORE grouping: OCR words over printed ones would interleave in x.
+    const partitions = new Map<string, TextRun[]>();
     for (const run of page.runs) {
-      const key = run.containerPtr || 0;
+      const key = `${run.containerPtr || 0}:${run.renderMode === RENDER_MODE_INVISIBLE}`;
       const list = partitions.get(key);
       if (list) list.push(run);
       else partitions.set(key, [run]);

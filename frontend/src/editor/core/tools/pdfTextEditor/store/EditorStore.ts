@@ -20,6 +20,7 @@ import {
   resetPerCharBranchPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
+import type { FileId } from "@editor/types/file";
 import { AdoptTableCommand } from "@editor/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
@@ -34,6 +35,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@editor/tools/pdfTextEditor/util/embeddedFace";
+import { resetFontCompletions } from "@editor/tools/pdfTextEditor/util/documentFontCompletion";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -48,6 +50,7 @@ function resetCharcodeCaches(): void {
   resetCharCoverageCache();
   // FontFaces are keyed by font pointer, which PDFium reuses across documents.
   resetEmbeddedFaces();
+  resetFontCompletions();
 }
 
 export type InteractionMode = "select" | "addText" | "addTable";
@@ -81,8 +84,6 @@ export interface EditorViewState {
   // Set when a load hit a password-protected PDF and the UI should prompt.
   // `retry` is true after a wrong password so the prompt can say so.
   passwordPrompt: { fileName: string; retry: boolean } | null;
-  /** Pixel scale at which previews are rendered. */
-  renderScale: number;
   /** What clicks on the page area do. */
   mode: InteractionMode;
   /** How the reader clusters source text into editable runs. */
@@ -117,7 +118,6 @@ const INITIAL: EditorViewState = {
   progress: null,
   error: null,
   passwordPrompt: null,
-  renderScale: 1.5,
   mode: "select",
   groupingMode: "auto",
   widthMode: "grow",
@@ -132,6 +132,15 @@ const INITIAL: EditorViewState = {
 export class EditorStore {
   readonly history: HistoryStack;
   readonly selection: Selection;
+  /**
+   * The workbench file the document was opened from and the name it saves
+   * under. Kept with the document, which outlives the editor's panel when a
+   * layout change remounts it.
+   */
+  source: { fileId: FileId | null; fileName: string | null } = {
+    fileId: null,
+    fileName: null,
+  };
   private doc: EditorDocument | null;
   private state: EditorViewState;
   private listeners: Set<(s: EditorViewState) => void>;
@@ -147,6 +156,8 @@ export class EditorStore {
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
   private _pendingPasswordFile: File | null = null;
+  private nearViewportPages = new Set<number>();
+  private nearViewportListeners = new Set<() => void>();
 
   constructor() {
     this.history = new HistoryStack();
@@ -211,10 +222,6 @@ export class EditorStore {
     return this._pendingPasswordFile;
   }
 
-  setRenderScale(scale: number): void {
-    this.patch({ renderScale: scale });
-  }
-
   setMode(mode: InteractionMode): void {
     this.patch({ mode });
   }
@@ -230,6 +237,22 @@ export class EditorStore {
   setFindOpen(findOpen: boolean): void {
     if (this.state.findOpen === findOpen) return;
     this.patch({ findOpen });
+  }
+
+  setPageNearViewport(pageIndex: number, near: boolean): void {
+    if (this.nearViewportPages.has(pageIndex) === near) return;
+    if (near) this.nearViewportPages.add(pageIndex);
+    else this.nearViewportPages.delete(pageIndex);
+    for (const listener of [...this.nearViewportListeners]) listener();
+  }
+
+  isPageNearViewport(pageIndex: number): boolean {
+    return this.nearViewportPages.has(pageIndex);
+  }
+
+  subscribeNearViewport(listener: () => void): () => void {
+    this.nearViewportListeners.add(listener);
+    return () => this.nearViewportListeners.delete(listener);
   }
 
   setHelpOpen(helpOpen: boolean): void {
@@ -300,6 +323,9 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.doc = doc;
+    doc.onArtifactKinds(() => {
+      if (this.doc === doc) this.resnapshot();
+    });
     this.history.clear();
     this.savedTop = null;
     this.bakedDirty = false;
@@ -405,6 +431,14 @@ export class EditorStore {
     this.resnapshot();
   }
 
+  /** Record a command the caller already applied as one undo step, re-snapshot, and notify. */
+  recordApplied(cmd: Command): void {
+    if (!this.doc) return;
+    this.history.record(cmd);
+    this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
+  }
+
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
     if (!this.doc) return;
@@ -499,8 +533,10 @@ export class EditorStore {
     });
   }
 
+  // Ignored while loading: a long operation is mid-way through the document,
+  // and an undo would revert under it.
   undo(): void {
-    if (!this.doc) return;
+    if (!this.doc || this.state.loading) return;
     try {
       this.history.undo(this.doc);
     } catch (err) {
@@ -512,7 +548,7 @@ export class EditorStore {
   }
 
   redo(): void {
-    if (!this.doc) return;
+    if (!this.doc || this.state.loading) return;
     try {
       this.history.redo(this.doc);
     } catch (err) {
@@ -607,6 +643,8 @@ export class EditorStore {
   // once `PdfiumTextReader` finishes for a page.
   publishPages(pages: PageSnapshot[]): void {
     this.patch({ pages });
+    // A page whose artifact kinds were read after its snapshot was taken.
+    this.resnapshot();
   }
 
   /** Document-level dirty bit. */

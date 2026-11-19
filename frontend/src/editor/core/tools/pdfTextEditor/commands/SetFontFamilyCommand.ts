@@ -12,7 +12,17 @@ import {
   planLineOrigins,
   removeMemberPtrs,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { readRunTags } from "@editor/tools/pdfTextEditor/commands/runTags";
+import {
+  sliceTags,
+  splitLines,
+  type TextTags,
+} from "@editor/tools/pdfTextEditor/model/TextTags";
 import { deviceFontEmitCount } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  base14FontId,
+  deviceFontId,
+} from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   setScanOverride,
   type ScanOverride,
@@ -62,6 +72,7 @@ export class SetFontFamilyCommand implements Command {
       this.prevMemberPtrs = collectMemberPtrs(run).slice();
     }
 
+    const tags = readRunTags(doc, page, run);
     // Detach every original object so the page stops painting them.
     removeMemberPtrs(
       m,
@@ -80,22 +91,37 @@ export class SetFontFamilyCommand implements Command {
     // separators a \n split can't see. Baseline stepping for the fallback case
     // comes from planLineOrigins so it cannot drift from EditTextCommand's.
     const slots = run.paragraphLineSlots;
-    const splitTexts = slots.length > 0 ? null : run.text.split(/\r?\n/);
-    const emitLines: Array<{ text: string; x: number; y: number }> = splitTexts
+    const splitLinesOfText =
+      slots.length > 0 ? null : splitLines(run.text, tags);
+    const emitLines: Array<{
+      text: string;
+      tags: TextTags;
+      x: number;
+      y: number;
+    }> = splitLinesOfText
       ? (() => {
-          const origins = planLineOrigins(run, splitTexts.length, lineHeight);
-          return splitTexts.map((text, i) => ({ text, ...origins[i] }));
+          const origins = planLineOrigins(
+            run,
+            splitLinesOfText.length,
+            lineHeight,
+          );
+          return splitLinesOfText.map((line, i) => ({
+            ...line,
+            ...origins[i],
+          }));
         })()
-      : slots.map((s) => ({
-          text: run.text
-            .slice(
-              Math.max(0, s.startChar),
-              Math.min(run.text.length, s.endChar),
-            )
-            .replace(/[\r\n]+$/, ""),
-          x: s.matrixE,
-          y: s.baselineY,
-        }));
+      : slots.map((s) => {
+          const start = Math.max(0, s.startChar);
+          const text = run.text
+            .slice(start, Math.min(run.text.length, s.endChar))
+            .replace(/[\r\n]+$/, "");
+          return {
+            text,
+            tags: sliceTags(tags, start, start + text.length),
+            x: s.matrixE,
+            y: s.baselineY,
+          };
+        });
     const lineAnchors: number[] = [];
     const memberFs: number[] = [];
     const leaf: number[] = [];
@@ -107,7 +133,7 @@ export class SetFontFamilyCommand implements Command {
       doc,
       page,
       run,
-      lines: emitLines.map((l) => l.text),
+      lines: emitLines.map(({ text, tags }) => ({ text, tags })),
       origins: emitLines.map((l) => ({ x: l.x, y: l.y })),
       originalFontPtr: 0, // base-14: never reuse the source font
       fallbackFamily: this.nextFamily,
@@ -139,7 +165,9 @@ export class SetFontFamilyCommand implements Command {
     // keeps `base14:`, so nothing keying off that prefix changes meaning.
     const embedded =
       deviceFontEmitCount(doc, this.nextFamily) > deviceEmitsBefore;
-    run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
+    run.fontId = embedded
+      ? deviceFontId(this.nextFamily)
+      : base14FontId(this.nextFamily);
     run.fontSubset = false;
     // Reset ALL model bookkeeping to the freshly-emitted objects so later
     // commands act on the live objects, not the removed originals.

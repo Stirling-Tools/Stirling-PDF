@@ -7,6 +7,7 @@ import {
   ConfigNavSection,
 } from "@editor-core/components/shared/config/configNavSections";
 import { LoadingFallback } from "@editor/components/shared/LoadingFallback";
+import { useAppConfig } from "@editor/contexts/AppConfigContext";
 
 // Lazy, and rendered inside one Suspense below: these five pages are the bulk of
 // the settings tree, and pulling them all eagerly starved the i18n fetch on a
@@ -44,6 +45,8 @@ import AdminAuditSection from "@editor/components/shared/config/configSections/A
 import AdminUsageSection from "@editor/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@editor/components/shared/config/configSections/ApiKeys";
 import McpSection from "@editor/components/shared/config/configSections/mcp/McpSection";
+import ConnectedAccountsSection from "@editor/components/shared/config/configSections/ConnectedAccountsSection";
+import { accountConnectionsOffered } from "@editor/hooks/useConnectedAccounts";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -60,6 +63,7 @@ export const useConfigNavSections = (
   showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
 
   // Core ships Preferences and About; About is the small print and stays last.
   const coreSections = useCoreConfigNavSections(
@@ -91,6 +95,8 @@ export const useConfigNavSections = (
         icon: "key",
         component: <ApiKeys />,
       });
+    }
+    if (loginEnabled && config?.mcpEnabled) {
       preferences.items.push({
         key: "mcp",
         label: t("config.mcp.navLabel", "MCP Server"),
@@ -100,6 +106,18 @@ export const useConfigNavSections = (
         ),
         icon: "bot",
         component: <McpSection />,
+      });
+    }
+    if (loginEnabled && accountConnectionsOffered(config)) {
+      preferences.items.push({
+        key: "connectedAccounts",
+        label: t("settings.connectedAccounts.title", "Connected accounts"),
+        description: t(
+          "settings.connectedAccounts.description",
+          "Your own OneDrive, SharePoint and Google Drive, for your pipelines.",
+        ),
+        icon: "cloud",
+        component: <ConnectedAccountsSection />,
       });
     }
   }

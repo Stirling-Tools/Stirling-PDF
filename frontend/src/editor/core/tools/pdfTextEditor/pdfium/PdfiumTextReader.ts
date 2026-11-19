@@ -1,8 +1,12 @@
+import {
+  drawnCodePoint,
+  drawnText,
+} from "@editor/tools/pdfTextEditor/pdfium/lineEndHyphen";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@editor/tools/pdfTextEditor/model/ImageObject";
 import { ShapeObject } from "@editor/tools/pdfTextEditor/model/ShapeObject";
-import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
+import { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
@@ -59,6 +63,7 @@ export class PdfiumTextReader {
     mode: GroupingMode = "auto",
   ): void {
     if (page.loaded) return;
+    doc.claimArtifactMarks(page.index);
     const m = doc.module;
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
@@ -100,23 +105,49 @@ export class PdfiumTextReader {
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
-      // LineGrouper always runs (merges per-glyph/per-word source objects into
-      // one line).
-      const blockKey = structureBlockKey(doc, page.index);
-      LineGrouper.apply(page, blockKey);
-      if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
-      // Grouping is done.
-      // One walk feeds both: each was reading the same characters with its
-      // own WASM round-trips, doubling the cost of every page read.
-      const geometry = collectCharGeometry(m, page, textPagePtr);
-      if (geometry) {
-        inferRunCharSpacing(page, geometry);
-        captureCharPositions(geometry);
-      }
+      groupAndMeasure(doc, page, mode, textPagePtr);
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
     page.loaded = true;
+  }
+
+  /**
+   * Read page-level text objects as `populate` reads a page's, grouping them
+   * only with each other. A run is named by the id given its first object
+   * in reading order. Each object's own marks become its tags, so none may
+   * be inside a form XObject.
+   */
+  static readRuns(
+    doc: EditorDocument,
+    page: Page,
+    objects: ReadonlyArray<{ ptr: number; id: string }>,
+    mode: GroupingMode,
+  ): TextRun[] {
+    const m = doc.module;
+    // Grouping replaces a page's runs, so it works on a scratch page.
+    const scratch = new Page({
+      index: page.index,
+      pagePtr: page.pagePtr,
+      width: page.width,
+      height: page.height,
+      display: page.display,
+    });
+    const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
+    try {
+      scratch.setRuns(
+        objects.flatMap(({ ptr, id }) => {
+          const run = readTextRun(m, doc, page, ptr, id, IDENTITY, textPagePtr);
+          if (!run) return [];
+          run.tagMarks = readTagMarks(m, ptr);
+          return [run];
+        }),
+      );
+      groupAndMeasure(doc, scratch, mode, textPagePtr);
+    } finally {
+      m.FPDFText_ClosePage(textPagePtr);
+    }
+    return scratch.runs;
   }
 
   // Returns the runs whose captured positions actually moved, so the caller
@@ -135,6 +166,30 @@ export class PdfiumTextReader {
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
+  }
+}
+
+/**
+ * Group the page's one-object runs into lines, and in auto mode paragraphs,
+ * then place their glyphs.
+ */
+function groupAndMeasure(
+  doc: EditorDocument,
+  page: Page,
+  mode: GroupingMode,
+  textPagePtr: number,
+): void {
+  // LineGrouper always runs (merges per-glyph/per-word source objects into
+  // one line).
+  const blockKey = structureBlockKey(doc, page.index);
+  LineGrouper.apply(page, blockKey);
+  if (mode === "auto") ParagraphGrouper.apply(page, blockKey);
+  // One walk feeds both: each was reading the same characters with its
+  // own WASM round-trips, doubling the cost of every page read.
+  const geometry = collectCharGeometry(doc.module, page, textPagePtr);
+  if (geometry) {
+    inferRunCharSpacing(page, geometry);
+    captureCharPositions(geometry);
   }
 }
 
@@ -193,7 +248,7 @@ function collectCharGeometry(
   const yPtr = scratchPtr(m, SCRATCH.readerCharY, 8);
   const out: CharGeometry[] = [];
   for (let i = 0; i < charCount; i += 1) {
-    const cp = m.FPDFText_GetUnicode(textPagePtr, i);
+    const cp = drawnCodePoint(m.FPDFText_GetUnicode(textPagePtr, i));
     const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
     const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
     const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
@@ -293,10 +348,7 @@ function samePositions(prev: number[] | null, next: number[]): boolean {
 // Record where the engine put every glyph, indexed by code unit of `text`.
 // Both units of a surrogate pair share a value; synthesised spaces stay NaN.
 function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
-  const glyphs = new Map<
-    TextRun,
-    Array<{ cp: number; x: number; end: number }>
-  >();
+  const glyphs = new Map<TextRun, PlacedGlyph[]>();
   for (const g of geometry) {
     if (!g.run || !g.cp || !g.ok) continue;
     if (!Number.isFinite(g.originX) || g.right < g.originX) continue;
@@ -307,7 +359,7 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     }
     // The loose box's right edge is the pen position after the glyph, which
     // is what makes consecutive word boxes tile without drift.
-    list.push({ cp: g.cp, x: g.originX, end: g.right });
+    list.push({ cp: g.cp, x: g.originX, end: g.right, bottom: g.bottom });
   }
 
   const changed = new Set<TextRun>();
@@ -318,7 +370,18 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
     if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
       continue;
     }
-    const aligned = alignToText(run.text, list);
+    // Text typed into a paragraph, and an edited scan's redrawn words, are new
+    // objects at the end of the page content, so the engine lists them after
+    // lines that read later. Content order stays first choice: reading order
+    // can misjudge lines set close together.
+    const aligned = run.scanEdit?.created.length
+      ? alignToText(run.text, inReadingOrder(list, run.fontSize))
+      : run.text.includes("\n")
+        ? betterAlignment(
+            alignToText(run.text, list),
+            alignToText(run.text, inReadingOrder(list, run.fontSize)),
+          )
+        : alignToText(run.text, list);
     if (!aligned) continue;
     // Same positions under a still-current key is a no-op capture; skipping it
     // keeps untouched runs' snapshots stable across the periodic tick.
@@ -337,12 +400,42 @@ function captureCharPositions(geometry: CharGeometry[]): Set<TextRun> {
   return changed;
 }
 
+export interface PlacedGlyph {
+  cp: number;
+  x: number;
+  end: number;
+  bottom: number;
+}
+
+// Top line first, then left to right; glyph boxes within half a font size share a line.
+export function inReadingOrder(
+  glyphs: PlacedGlyph[],
+  fontSize: number,
+): PlacedGlyph[] {
+  const tolerance = Math.max(1, fontSize * 0.5);
+  const byHeight = [...glyphs].sort((a, b) => b.bottom - a.bottom);
+  const lines: PlacedGlyph[][] = [];
+  for (const glyph of byHeight) {
+    const line = lines[lines.length - 1];
+    if (line && line[0].bottom - glyph.bottom <= tolerance) line.push(glyph);
+    else lines.push([glyph]);
+  }
+  return lines.flatMap((line) => line.sort((a, b) => a.x - b.x));
+}
+
+type Alignment = { starts: number[]; ends: number[]; placed: number };
+
+function betterAlignment(
+  a: Alignment | null,
+  b: Alignment | null,
+): Alignment | null {
+  if (!a || !b) return a ?? b;
+  return b.placed > a.placed ? b : a;
+}
+
 // Line up the engine's glyph list with the run's text - they are not
 // index-for-index, and anything unplaceable is left unknown, not guessed.
-function alignToText(
-  text: string,
-  glyphs: Array<{ cp: number; x: number; end: number }>,
-): { starts: number[]; ends: number[] } | null {
+function alignToText(text: string, glyphs: PlacedGlyph[]): Alignment | null {
   const starts = new Array<number>(text.length).fill(Number.NaN);
   const ends = new Array<number>(text.length).fill(Number.NaN);
   let g = 0;
@@ -377,7 +470,7 @@ function alignToText(
   // A capture that placed almost nothing is not worth trusting.
   const visible = [...text].filter((c) => !/\s/.test(c)).length;
   return placed >= Math.max(1, Math.floor(visible * 0.6))
-    ? { starts, ends }
+    ? { starts, ends, placed }
     : null;
 }
 
@@ -425,7 +518,7 @@ function walkObjects(
         doc,
         page,
         objPtr,
-        indexId,
+        `p${page.index}-t${indexId}`,
         transform,
         textPagePtr,
       );
@@ -831,7 +924,7 @@ function readTextObjString(
   if (len <= 2) return "";
   const buf = scratchPtr(m, SCRATCH.readerReadTextA, len);
   m.FPDFTextObj_GetText(objPtr, textPagePtr, buf, len);
-  return readUtf16(m, buf, len);
+  return drawnText(readUtf16(m, buf, len));
 }
 
 /** 6-letter "ABCDEF+" subset tag PDFium prefixes onto subset font names. */
@@ -876,7 +969,7 @@ function readTextRun(
   _doc: EditorDocument,
   page: Page,
   objPtr: number,
-  index: number | string,
+  id: string,
   transform: Affine,
   textPagePtr: number,
 ): TextRun | null {
@@ -916,7 +1009,7 @@ function readTextRun(
     // Make the same face available to the overlay as a CSS FontFace.
     if (fontPtr) registerEmbeddedFace(m, fontPtr);
     // Treat the PDFium font handle pointer as a unique id within the doc.
-    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
+    const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${id}`;
 
     // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants, 3
     // invisible (OCR text layers over scans), 4-7 clipping variants.
@@ -938,7 +1031,7 @@ function readTextRun(
     const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
 
     return new TextRun({
-      id: `p${page.index}-t${index}`,
+      id,
       pageIndex: page.index,
       pdfiumObjPtr: objPtr,
       bounds,

@@ -86,7 +86,7 @@ public class StirlingFilesTool implements McpTool {
         User user = files.user(context);
         if (!files.usesStoredFiles(user)) {
             // Not an error: the sidebar view still offers an upload.
-            ObjectNode result = McpResponses.fileList(mapper, "library", List.of());
+            ObjectNode result = library(List.of());
             result.set(
                     "content",
                     McpResponses.text(
@@ -98,6 +98,13 @@ public class StirlingFilesTool implements McpTool {
             return result;
         }
         String query = McpToolSupport.textArg(arguments, "query");
-        return McpResponses.fileList(mapper, "library", files.recent(user, query, LIMIT));
+        return library(files.recent(user, query, LIMIT));
+    }
+
+    private ObjectNode library(List<McpFiles.Listed> listed) {
+        ObjectNode result = McpResponses.fileList(mapper, "library", listed);
+        ((ObjectNode) result.get("structuredContent"))
+                .put("maxInlineBytes", files.maxInlineUploadBytes());
+        return result;
     }
 }
