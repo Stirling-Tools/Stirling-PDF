@@ -56,7 +56,15 @@ export type PdfAccessResponse =
   | { access: PdfAccess; background: boolean }
   | { details: Partial<PdfProbeDetails> }
   | { done: true }
-  | { error: string; code?: number };
+  | { error: string; code?: number; detail?: string };
+
+type ProbeStage = "load" | "read" | "inspect";
+
+function describeFailure(stage: ProbeStage, error: unknown): string {
+  const reason =
+    error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return `${stage}: ${reason}`;
+}
 
 let pdfium: Promise<WrappedPdfiumModule> | undefined;
 
@@ -126,6 +134,7 @@ self.onmessage = async ({
     });
     return;
   }
+  let stage: ProbeStage = "load";
   try {
     pdfium ??= loadPdfium(data);
     const module = await pdfium.catch((error: unknown) => {
@@ -136,7 +145,9 @@ self.onmessage = async ({
     const pointer = module.pdfium.wasmExports.malloc(Math.max(length, 1));
     if (!pointer) throw new Error("Unable to allocate memory for this PDF");
     try {
+      stage = "read";
       await copyIntoHeap(module, data.file, pointer);
+      stage = "inspect";
       const document = module.FPDF_LoadMemDocument(
         pointer,
         length,
@@ -180,9 +191,10 @@ self.onmessage = async ({
       heap(module).fill(0, pointer, pointer + length);
       module.pdfium.wasmExports.free(pointer);
     }
-  } catch {
+  } catch (error) {
     self.postMessage({
       error: "Unable to inspect PDF security locally",
+      detail: describeFailure(stage, error),
     } satisfies PdfAccessResponse);
   }
 };
