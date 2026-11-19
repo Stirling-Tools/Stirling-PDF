@@ -37,9 +37,9 @@ function isFitMode(level: ZoomLevel): boolean {
  * Connects the PDF zoom plugin to the shared ViewerContext.
  *
  * A fit mode requested through the context's zoom API is the user's choice and
- * stays put: the plugin re-fits it on resize, spread and rotation itself. Only
- * the fit width this bridge lands on while auto-zooming is re-evaluated by the
- * auto heuristic on resize and spread changes.
+ * stays put: the plugin re-fits it on resize, spread and rotation itself. The
+ * auto heuristic's own landing is re-evaluated on spread changes, and on resize
+ * when it landed on fit width.
  */
 export function ZoomAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
@@ -96,6 +96,11 @@ function ZoomAPIBridgeInner({
   );
   const lastSpreadMode = useRef(spreadMode ?? SpreadMode.None);
   const lastAppliedZoom = useRef<number | null>(null);
+  // A zoom the auto heuristic chose, including a numeric height-based one.
+  // Fit modes requested by the user refit themselves on spread changes; an
+  // auto-chosen number has to be recomputed by this bridge instead.
+  const autoZoomOwned = useRef(false);
+  const applyingAutoZoom = useRef(false);
   const zoomRef = useRef(zoom);
   const [autoZoomTick, setAutoZoomTick] = useState(0);
 
@@ -168,6 +173,7 @@ function ZoomAPIBridgeInner({
       hasSetInitialZoom.current = false;
       lastAutoZoomedRootIdRef.current = null;
       lastAppliedZoom.current = null;
+      autoZoomOwned.current = false;
       explicitFitRef.current = false;
       return;
     }
@@ -176,6 +182,7 @@ function ZoomAPIBridgeInner({
     if (activeFileRootId !== lastAutoZoomedRootIdRef.current) {
       lastAutoZoomedRootIdRef.current = activeFileRootId;
       explicitFitRef.current = false;
+      autoZoomOwned.current = false;
       scheduleAutoZoom();
     }
   }, [activeFileRootId, explicitFitRef, scheduleAutoZoom]);
@@ -185,12 +192,29 @@ function ZoomAPIBridgeInner({
     if (currentSpreadMode !== lastSpreadMode.current) {
       lastSpreadMode.current = currentSpreadMode;
 
-      if (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic) {
+      if (explicitFitRef.current) {
+        // The plugin refits explicit fit modes on its own spread event.
+        return;
+      }
+
+      if (
+        autoZoomOwned.current ||
+        zoomLevel === ZoomMode.FitWidth ||
+        zoomLevel === ZoomMode.Automatic
+      ) {
+        // Re-fit for the new pages-per-spread first: the auto heuristic needs
+        // the fresh fit width before it can decide between fit and numeric.
         requestFitWidth();
         rescheduleAutoZoom();
       }
     }
-  }, [spreadMode, zoomLevel, rescheduleAutoZoom, requestFitWidth]);
+  }, [
+    spreadMode,
+    zoomLevel,
+    rescheduleAutoZoom,
+    requestFitWidth,
+    explicitFitRef,
+  ]);
 
   const isManagedZoom =
     checkSpreadReady() &&
@@ -231,11 +255,18 @@ function ZoomAPIBridgeInner({
     const applyTrackedZoom = (
       level: number | ZoomMode,
       effectiveZoom: number,
+      ownedByAuto = false,
     ) => {
+      autoZoomOwned.current = ownedByAuto;
+      // The plugin emits synchronously, so the zoom listener sees this as the
+      // bridge's own landing rather than a manual zoom that ends auto mode.
+      applyingAutoZoom.current = true;
       try {
         zoom.requestZoom(level, { vx: 0.5, vy: 0 });
       } catch (error) {
         console.warn("[ZoomAPIBridge] Failed to request zoom:", error);
+      } finally {
+        applyingAutoZoom.current = false;
       }
       lastAppliedZoom.current = effectiveZoom;
       triggerImmediateZoomUpdate(Math.round(effectiveZoom * 100));
@@ -292,16 +323,16 @@ function ZoomAPIBridgeInner({
       });
 
       if (decision.type === "fallback") {
-        applyTrackedZoom(decision.zoom, decision.zoom);
+        applyTrackedZoom(decision.zoom, decision.zoom, true);
         return;
       }
 
       if (decision.type === "fitWidth") {
-        applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom, true);
         return;
       }
 
-      applyTrackedZoom(decision.zoom, decision.zoom);
+      applyTrackedZoom(decision.zoom, decision.zoom, true);
     };
 
     applyAutoZoom();
@@ -345,6 +376,9 @@ function ZoomAPIBridgeInner({
         // level, not the context API, is what ends an explicit fit.
         if (typeof event?.level === "number") {
           explicitFitRef.current = false;
+          if (!applyingAutoZoom.current) {
+            autoZoomOwned.current = false;
+          }
         }
         if (typeof event?.newZoom !== "number") {
           return;
@@ -371,6 +405,7 @@ function ZoomAPIBridgeInner({
         // Set from the requested mode, not just the fit ones: Automatic hands
         // the fit back to the auto heuristic, so it has to clear the flag.
         explicitFitRef.current = isFitMode(level);
+        autoZoomOwned.current = level === ZoomMode.Automatic;
         zoomRef.current?.requestZoom(level, center);
       },
     }),

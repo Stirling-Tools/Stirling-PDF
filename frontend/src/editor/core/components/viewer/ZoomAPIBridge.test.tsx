@@ -213,6 +213,21 @@ describe("ZoomAPIBridge fit modes", () => {
     expect(zoomLevel()).toBe(ZoomMode.FitWidth);
   });
 
+  it("re-evaluates an auto-chosen numeric zoom when the spread changes", () => {
+    render(<ZoomAPIBridge />);
+    // Portrait in a 768px window lands below fit width, so the bridge owns a
+    // numeric zoom rather than the plugin's fit-width level.
+    expect(typeof zoomLevel()).toBe("number");
+
+    act(() => fixture.spread.setMode(SpreadMode.Odd));
+
+    expect(zoomLevel()).toBe(ZoomMode.FitWidth);
+
+    act(() => fixture.spread.setMode(SpreadMode.None));
+
+    expect(typeof zoomLevel()).toBe("number");
+  });
+
   it("re-evaluates a fit width it chose itself when the window resizes", () => {
     // A landscape page fits its whole height at fit width in a 768px window.
     fixture.page.aspectRatio = 0.5;
