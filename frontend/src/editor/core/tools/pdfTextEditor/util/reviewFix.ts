@@ -7,6 +7,7 @@ import {
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { selectHeadingAt } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
+import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
@@ -103,10 +104,28 @@ function selectFlaggedHeading(store: EditorStore, pageIndex: number): boolean {
 }
 
 /**
- * Selects the run under the first link from `pageIndex` that is untagged or, on a
- * page with none, tagged without a description. Untagged text is tagged first, as
- * Tag link cuts from an element, so its tag choice is focused.
+ * The run a link fix selects on a page, which must already be read, and the control
+ * it focuses: an untagged link's text first, or, on a page with none, a tagged link
+ * without a description. Untagged text is tagged first, as Tag link cuts from an
+ * element, so its tag choice is focused. Null when the page has no link to fix.
  */
+export function linkFixOnPage(
+  doc: EditorDocument,
+  pageIndex: number,
+): { runId: string; target: AccessibilityFixTarget } | null {
+  const taggable = taggableLinks(doc, pageIndex)[0]?.text.runId;
+  if (taggable) return { runId: taggable, target: "link" };
+  const structure = doc.structure(pageIndex);
+  const untagged = structure
+    .links()
+    .filter(({ annotation }) => !structure.linkHeld(annotation));
+  const untaggedText = linkTexts(doc, pageIndex, untagged).values().next()
+    .value?.runId;
+  if (untaggedText) return { runId: untaggedText, target: "untagged" };
+  const undescribed = undescribedLinks(doc, pageIndex)[0]?.text.runId;
+  return undescribed ? { runId: undescribed, target: "link" } : null;
+}
+
 function selectLinkToFix(
   store: EditorStore,
   pageIndex: number,
@@ -116,22 +135,14 @@ function selectLinkToFix(
   const pageCount = store.getState().pages.length;
   for (let index = pageIndex; index < pageCount; index++) {
     ensurePageRead(store, index);
-    const taggable = taggableLinks(doc, index)[0]?.text.runId;
-    const structure = doc.structure(index);
-    const untagged = structure
-      .links()
-      .filter(({ annotation }) => !structure.linkHeld(annotation));
-    const runId =
-      taggable ??
-      linkTexts(doc, index, untagged).values().next().value?.runId ??
-      undescribedLinks(doc, index)[0]?.text.runId;
-    if (!runId) continue;
+    const fix = linkFixOnPage(doc, index);
+    if (!fix) continue;
     const page = store.getState().pages[index];
-    const item = page && reviewItems(doc, [page]).find((i) => i.id === runId);
+    const item =
+      page && reviewItems(doc, [page]).find((i) => i.id === fix.runId);
     if (item) selectReviewItem(store, item);
-    else store.selection.selectOne(runId);
-    if (taggable || untagged.length === 0) return "link";
-    return "untagged";
+    else store.selection.selectOne(fix.runId);
+    return fix.target;
   }
   return null;
 }
