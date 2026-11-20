@@ -7832,7 +7832,11 @@ decorativeLabel = "Decorative image"
 description = "Image description"
 descriptionInfo = "Screen readers read this out in place of the image."
 encrypted = "Tags can't be edited in an encrypted file"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
 formFieldDescription = "Field description"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "Accessibility"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tags in this text"
@@ -7844,7 +7848,7 @@ missingDescriptions = "Missing descriptions"
 mixedContent = "Figure includes other content"
 mixedTags = "Mixed"
 needsDescriptionBadge = "No description"
-nextImage = "Next image"
+nextToReview = "Next to review"
 notFigure = "Tagged as part of the text"
 removeTag = "Remove tag"
 saveFailed = "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again."
@@ -9673,10 +9677,6 @@ signInToStart = "Sign in to start your trial"
 stage = "Stage {{current}} of {{total}}"
 stagesLabel = "Progress"
 
-[portal.enterprise.connect]
-ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
-unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
-
 [portal.enterprise.landing]
 lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
 tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
@@ -11295,11 +11295,6 @@ downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
 trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
-
-[portal.procurement.link]
-cta = "Link account"
-description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
-title = "Link your account to begin"
 
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
