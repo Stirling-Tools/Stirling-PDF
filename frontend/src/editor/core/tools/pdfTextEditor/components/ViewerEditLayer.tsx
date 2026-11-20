@@ -8,6 +8,7 @@ import {
   useFindMatch,
 } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { PageView } from "@editor/tools/pdfTextEditor/components/PageView";
+import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { pageViewHandlers } from "@editor/tools/pdfTextEditor/util/pageViewHandlers";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
@@ -53,6 +54,10 @@ export function ViewerEditLayer({
     Math.abs(displayWidth / displayHeight - page.width / page.height) <=
       ASPECT_TOLERANCE * (page.width / page.height);
   const covered = !!document && fits && paintedFor === document;
+  // An unread page's placeholder has no rotation yet; read it so a turned page can fit.
+  useEffect(() => {
+    if (document && page && !fits) ensurePageRead(store, pageIndex);
+  }, [document, page, fits, store, pageIndex]);
   useEffect(() => onCovered(covered), [covered, onCovered]);
   useEffect(() => () => onCovered(false), [onCovered]);
 

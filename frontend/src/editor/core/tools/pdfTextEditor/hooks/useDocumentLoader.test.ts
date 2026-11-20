@@ -81,4 +81,67 @@ describe("opening a document", () => {
       store.dispose();
     }
   });
+
+  test("leaves a later operation's loading flag alone while reading text", async () => {
+    const store = new EditorStore();
+    try {
+      const load = useDocumentLoader(store);
+      const loading = load(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        {
+          timeout: 15_000,
+        },
+      );
+      // Bulk tagging claims the flag while the loader still has text to read.
+      store.setLoading(true);
+      store.markFirstPageRendered();
+      await loading;
+
+      expect(store.getState().pages[0].runs.length).toBeGreaterThan(0);
+      expect(store.getState().loading).toBe(true);
+    } finally {
+      store.dispose();
+    }
+  });
+
+  test("publishes pages it read when a newer load fails before replacing it", async () => {
+    const store = new EditorStore();
+    const load = useDocumentLoader(store);
+    const realPopulate = PdfiumTextReader.populate.bind(PdfiumTextReader);
+    let newer: Promise<boolean> | null = null;
+    const spy = vi
+      .spyOn(PdfiumTextReader, "populate")
+      .mockImplementation((...args) => {
+        newer ??= load(new File([new Uint8Array([1, 2, 3])], "broken.pdf"));
+        return realPopulate(...args);
+      });
+    try {
+      const first = load(
+        new File([await readFile(SAMPLE)], "multi.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      await vi.waitFor(
+        () => expect(store.getState().pages.length).toBeGreaterThan(0),
+        {
+          timeout: 15_000,
+        },
+      );
+      const doc = store.document;
+      store.markFirstPageRendered();
+
+      expect(await first).toBe(true);
+      expect(await newer).toBe(false);
+      expect(store.document).toBe(doc);
+      expect(store.getState().pages[0].runs.length).toBeGreaterThan(0);
+    } finally {
+      spy.mockRestore();
+      store.dispose();
+    }
+  });
 });

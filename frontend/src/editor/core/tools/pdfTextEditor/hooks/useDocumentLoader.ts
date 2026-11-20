@@ -97,6 +97,7 @@ export async function loadDocument(
   password?: string,
 ): Promise<boolean> {
   let installed: EditorDocument | null = null;
+  let ownsLoading = true;
   const documentPassword = password ?? getPdfAccess(file)?.password;
   const token = store.beginLoad();
   store.setLoading(true);
@@ -149,13 +150,19 @@ export async function loadDocument(
     );
     store.setLoading(false);
     store.setProgress(null);
+    // From here another operation (bulk tagging) may own the loading flag.
+    ownsLoading = false;
     // The first page's bitmap is what the user waits for; reading text first would queue it behind every eager page.
     await firstPagePainted(store);
     let any = false;
     for (let i = 0; i < Math.min(EAGER_PAGE_LIMIT, total); i++) {
       // One page per task: the paint that resolved the wait is still finishing in this one.
       await yieldToBrowser();
-      if (!store.isCurrentLoad(token)) return store.document === doc;
+      if (!store.isCurrentLoad(token)) {
+        // A failed newer load leaves this document installed; its read pages still need publishing.
+        if (any && store.document === doc) publishAllPages(store);
+        return store.document === doc;
+      }
       any = readPage(store, doc, i) || any;
     }
     if (any && store.isCurrentLoad(token)) publishAllPages(store);
@@ -170,7 +177,7 @@ export async function loadDocument(
     }
   } finally {
     // Only the winning load owns the loading/progress UI state.
-    if (store.isCurrentLoad(token)) {
+    if (ownsLoading && store.isCurrentLoad(token)) {
       store.setLoading(false);
       store.setProgress(null);
     }
