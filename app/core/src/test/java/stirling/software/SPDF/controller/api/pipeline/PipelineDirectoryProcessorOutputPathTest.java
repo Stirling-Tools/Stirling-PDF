@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -57,10 +58,17 @@ class PipelineDirectoryProcessorOutputPathTest {
     void keepsTheFinishedFolderForTheStandardPlaceholders() {
         assertEquals(finished.normalize(), outputFor("{outputFolder}"));
         assertEquals(finished.resolve("sub").normalize(), outputFor("{outputFolder}/sub"));
-        assertEquals(
-                Path.of(finished + "/" + jobDir.toString().replace("watchedFolders", ""))
-                        .normalize(),
-                outputFor("{outputFolder}/{folderName}"));
+        assertEquals(nestedJobFolder(), outputFor("{outputFolder}/{folderName}"));
+    }
+
+    // A Windows drive colon mid-path is invalid, so the processor falls back to the root
+    private Path nestedJobFolder() {
+        String nested = finished + "/" + jobDir.toString().replace("watchedFolders", "");
+        try {
+            return Path.of(nested).normalize();
+        } catch (InvalidPathException e) {
+            return finished.normalize();
+        }
     }
 
     @Test

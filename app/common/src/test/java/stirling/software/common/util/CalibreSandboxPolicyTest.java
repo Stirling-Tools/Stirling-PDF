@@ -35,7 +35,9 @@ import stirling.software.common.util.CalibreSandboxPolicy.Probe;
 
 class CalibreSandboxPolicyTest {
 
-    private static final Path LAUNCHER = Path.of("/configs/scripts/python/calibre_sandbox.py");
+    // toAbsolutePath so Windows gets the drive letter confine() adds
+    private static final Path LAUNCHER =
+            Path.of("/configs/scripts/python/calibre_sandbox.py").toAbsolutePath();
     private static final String LEAKED_SECRET = "13d99fb9-25db-44bc-beb5-1c504957b9df";
 
     @TempDir Path workDir;
