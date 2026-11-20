@@ -15,6 +15,10 @@ const MULTI_RUN_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/multirun-paragraph-sample.pdf",
 );
+const TABLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/table-sample.pdf",
+);
 const SIGNED_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/signed-sample.pdf",
@@ -406,4 +410,76 @@ test("Edit text highlights every cluster of a multi-run selection", async ({
       ),
     )
     .not.toContain("pdf-editor-run-");
+});
+
+test("Edit text keeps a table row whose runs are grouped by column", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/editor");
+  await page.locator('input[type="file"]').first().setInputFiles(TABLE_PDF);
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  await expect(firstPage.locator(".pdf-selection-layer")).toBeAttached({
+    timeout: 30_000,
+  });
+
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("page has no bounding box");
+  // The EMEA row of table-sample.pdf: 64.8..74.1 of a 240pt page.
+  await page.mouse.move(box.x + box.width * 0.08, box.y + box.height * 0.29);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.92, box.y + box.height * 0.305, {
+    steps: 20,
+  });
+  await page.mouse.up();
+  await page.getByTestId("text-selection-edit-text").click();
+
+  await expect(editText(page)).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  });
+  // The editor lists the table column by column, so a contiguous text match
+  // cannot find the row; the selection's line boxes pick the three cells.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const store = (
+            window as unknown as {
+              __editor_store?: {
+                selection: {
+                  value: { runIds: string[] };
+                  spans: readonly { runId: string }[] | null;
+                };
+                getState: () => {
+                  pages: Array<{ runs: Array<{ id: string; text: string }> }>;
+                };
+              };
+            }
+          ).__editor_store;
+          const spans = store?.selection.spans;
+          if (!store || !spans) return "";
+          const runs = store.getState().pages[0]?.runs ?? [];
+          return spans
+            .map((span) =>
+              runs.find((run) => run.id === span.runId)?.text.trim(),
+            )
+            .join("|");
+        }),
+      { timeout: 60_000 },
+    )
+    .toBe("EMEA|812,400|905,120");
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const highlights = (
+            CSS as unknown as {
+              highlights?: { get(name: string): { size: number } | undefined };
+            }
+          ).highlights;
+          return highlights?.get("pdf-editor-text-range")?.size ?? 0;
+        }),
+      { timeout: 30_000 },
+    )
+    .toBe(3);
 });

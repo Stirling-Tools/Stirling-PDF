@@ -311,6 +311,12 @@ function TextSelectionMenuInner({
             width: first.rect.size.width,
             height: first.rect.size.height,
           },
+          segments: first.segmentRects.map((rect) => ({
+            x: rect.origin.x,
+            y: rect.origin.y,
+            width: rect.size.width,
+            height: rect.size.height,
+          })),
         });
         handleToolSelect("pdfTextEditor");
       });

@@ -61,6 +61,12 @@ export interface ViewerTextTarget {
   text: string;
   /** Where the text sits on the page, in PDF points from the top-left corner. */
   rect?: { x: number; y: number; width: number; height: number };
+  /**
+   * The selection's own line boxes, in the same space as `rect`. The editor
+   * uses them to find every run the selection covers when its run order does
+   * not follow the page's reading order, such as a table grouped by column.
+   */
+  segments?: Array<{ x: number; y: number; width: number; height: number }>;
 }
 
 interface ViewerPageToolSlot {

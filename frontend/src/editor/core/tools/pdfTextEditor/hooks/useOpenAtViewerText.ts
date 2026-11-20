@@ -51,7 +51,12 @@ export function useOpenAtViewerText(
       // A page's annotations are filled in when it is read.
       if (!page?.annotations) return;
       clearTextTarget();
-      const found = locateViewerText(page, textTarget.text, textTarget.rect);
+      const found = locateViewerText(
+        page,
+        textTarget.text,
+        textTarget.rect,
+        textTarget.segments,
+      );
       if (!found || found.length === 0) return;
       const first = found[0];
       store.selection.set(

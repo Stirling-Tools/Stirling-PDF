@@ -144,6 +144,46 @@ describe("locateViewerText", () => {
     expect(found?.[0].runId).toBe("top");
   });
 
+  it("uses the selection's line boxes when runs are grouped by column", () => {
+    // A table read column by column: every region, then every 2025 value,
+    // then every 2026 value. The viewer selects the EMEA row left to right.
+    const p = page([
+      run("region-region", "Region", 0, 190),
+      run("region-emea", "EMEA", 0, 170),
+      run("region-apac", "APAC", 0, 150),
+      run("value-2025", "2025", 100, 190),
+      run("value-emea", "812400", 100, 170),
+      run("value-apac", "398220", 100, 150),
+      run("value-2026", "2026", 200, 190),
+      run("value-emea-2", "905120", 200, 170),
+      run("value-apac-2", "441000", 200, 150),
+    ]);
+    const found = locateViewerText(p, "EMEA 812400 905120", undefined, [
+      { x: 0, y: HEIGHT - 180, width: 300, height: 10 },
+    ]);
+    expect(found).toEqual([
+      { runId: "region-emea", range: { start: 0, end: 4 } },
+      { runId: "value-emea", range: { start: 0, end: 6 } },
+      { runId: "value-emea-2", range: { start: 0, end: 6 } },
+    ]);
+  });
+
+  it("selects covered runs whole when their text still does not match", () => {
+    const p = page([
+      run("a", "EMEA", 0, 170),
+      run("b", "812400", 100, 170),
+      run("c", "905120", 200, 170),
+    ]);
+    const found = locateViewerText(p, "EMEA 812400 905-120", undefined, [
+      { x: 0, y: HEIGHT - 180, width: 300, height: 10 },
+    ]);
+    expect(found).toEqual([
+      { runId: "a", range: { start: 0, end: 4 } },
+      { runId: "b", range: { start: 0, end: 6 } },
+      { runId: "c", range: { start: 0, end: 6 } },
+    ]);
+  });
+
   it("finds nothing for blank or absent text", () => {
     const p = page([run("a", "Hello")]);
     expect(locateViewerText(p, "  \n ")).toBeNull();

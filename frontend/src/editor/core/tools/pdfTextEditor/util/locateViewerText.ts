@@ -23,14 +23,17 @@ export interface ViewerTextSpan {
  * with the span of it that run holds. The viewer and the editor split a
  * page's text into different pieces, so whitespace is compared collapsed and
  * the match covers the whole selection, not just its first line. Where the
- * text repeats, the copy nearest the viewer's selection wins. A selection no
- * run holds in full falls back to the longest start of its first line that
- * one run contains, so something is still selected.
+ * text repeats, the copy nearest the viewer's selection wins. If the runs are
+ * not in reading order (a table grouped by column, say), the selection's own
+ * line boxes pick every run it covers instead. A selection no run holds in full
+ * falls back to the longest start of its first line that one run contains, so
+ * something is still selected.
  */
 export function locateViewerText(
   page: PageSnapshot,
   text: string,
   near?: ViewerRect,
+  segments?: readonly ViewerRect[],
 ): ViewerTextSpan[] | null {
   const target = normalize(text);
   if (!target.text) return null;
@@ -45,6 +48,8 @@ export function locateViewerText(
   if (whole) return [whole];
   const across = acrossRuns(runs, target.text, point);
   if (across) return across;
+  const covered = runsCoveredBy(runs, page, segments, target.text, point);
+  if (covered) return covered;
   return firstLinePrefix(runs, text, point);
 }
 
@@ -135,6 +140,82 @@ function acrossRuns(
     at = combined.indexOf(target, at + 1);
   }
   return best?.spans ?? null;
+}
+
+interface PdfBox {
+  left: number;
+  right: number;
+  bottom: number;
+  top: number;
+}
+
+/**
+ * The runs the viewer's selection line boxes actually cover, selected whole.
+ * Used when the document's run order is not reading order, which breaks the
+ * contiguous text match above: a table grouped by column lists every Region
+ * before any value, while the viewer selects the row left to right. The
+ * covered runs are put back into reading order, so the text match gets a
+ * second chance with precise spans before whole runs are selected.
+ */
+function runsCoveredBy(
+  runs: NormalizedRun[],
+  page: PageSnapshot,
+  segments: readonly ViewerRect[] | undefined,
+  target: string,
+  point: Point | null,
+): ViewerTextSpan[] | null {
+  if (!segments || segments.length === 0 || page.display.rotate !== 0) {
+    return null;
+  }
+  const boxes = segments.map((segment) => segmentBox(page, segment));
+  const covered = runs.filter((run) =>
+    boxes.some((box) => overlaps(box, run.run.bounds)),
+  );
+  if (covered.length === 0) return null;
+  covered.sort(readingOrder);
+  const matched = acrossRuns(covered, target, point);
+  if (matched) return matched;
+  return covered.map((run) => ({
+    runId: run.run.id,
+    range: { start: 0, end: run.run.text.length },
+  }));
+}
+
+function segmentBox(page: PageSnapshot, segment: ViewerRect): PdfBox {
+  const transform = DisplayTransform.fromData(page.display);
+  const bottomLeft = transform.invert(
+    segment.x,
+    page.display.displayHeight - segment.y,
+  );
+  const topRight = transform.invert(
+    segment.x + segment.width,
+    page.display.displayHeight - (segment.y + segment.height),
+  );
+  return {
+    left: Math.min(bottomLeft.x, topRight.x),
+    right: Math.max(bottomLeft.x, topRight.x),
+    bottom: Math.min(bottomLeft.y, topRight.y),
+    top: Math.max(bottomLeft.y, topRight.y),
+  };
+}
+
+function overlaps(box: PdfBox, bounds: Run["bounds"]): boolean {
+  return (
+    Math.min(box.right, bounds.x + bounds.width) >
+      Math.max(box.left, bounds.x) &&
+    Math.min(box.top, bounds.y + bounds.height) > Math.max(box.bottom, bounds.y)
+  );
+}
+
+/** Top-to-bottom, then left-to-right; PDF y grows upwards. */
+function readingOrder(a: NormalizedRun, b: NormalizedRun): number {
+  const dy = b.run.bounds.y - a.run.bounds.y;
+  const band = Math.max(
+    1,
+    0.5 * Math.min(a.run.bounds.height, b.run.bounds.height),
+  );
+  if (Math.abs(dy) > band) return dy;
+  return a.run.bounds.x - b.run.bounds.x;
 }
 
 /**
