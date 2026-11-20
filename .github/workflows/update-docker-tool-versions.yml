@@ -38,9 +38,6 @@ jobs:
           - name: QPDF
             key: qpdf
             variable: QPDF_VERSION
-          - name: ImageMagick
-            key: imagemagick
-            variable: IM_VERSION
           - name: Task
             key: task
             variable: TASK_VERSION
@@ -75,10 +72,6 @@ jobs:
             qpdf)
               latest=$(gh api repos/qpdf/qpdf/releases/latest \
                 --jq '.tag_name' | sed 's/^v//')
-              ;;
-            imagemagick)
-              latest=$(gh api repos/ImageMagick/ImageMagick/releases/latest \
-                --jq '.tag_name')
               ;;
             task)
               latest=$(gh api repos/go-task/task/releases/latest \

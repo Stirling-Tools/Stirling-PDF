@@ -413,7 +413,7 @@ class CbzToPdfParams(ApiModel):
 
 class LineArtEdgeLevel(IntEnum):
     """
-    Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+    Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
     """
 
     integer_1 = 1
@@ -449,11 +449,11 @@ class CompressPdfParams(ApiModel):
     )
     grayscale: bool = Field(False, description="Whether to convert the PDF to grayscale. Default is false.")
     line_art: bool = Field(
-        False, description="Whether to convert images to high-contrast line art using ImageMagick. Default is false."
+        False, description="Whether to convert images to high-contrast black and white line art. Default is false."
     )
     line_art_edge_level: LineArtEdgeLevel = Field(
         LineArtEdgeLevel.integer_1,
-        description="Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.",
+        description="Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.",
     )
     line_art_threshold: float = Field(55, description="Threshold to use for line art conversion (0-100).")
     linearize: bool = Field(False, description="Whether to linearize the PDF for faster web viewing. Default is false.")

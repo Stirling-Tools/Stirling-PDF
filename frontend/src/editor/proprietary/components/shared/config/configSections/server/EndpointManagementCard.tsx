@@ -101,7 +101,7 @@ const commonGroups = [
   "Javascript",
   "qpdf",
   "Ghostscript",
-  "ImageMagick",
+  "LineArt",
   "tesseract",
   "OCRmyPDF",
   "FFmpeg",

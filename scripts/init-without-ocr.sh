@@ -85,7 +85,6 @@ print_versions() {
   log "--- Binary Versions ---"
   command_exists java && java -version 2>&1 | head -n 1 | log
   command_exists qpdf && qpdf --version | head -n 1 | log
-  command_exists magick && magick --version | head -n 1 | log
   # Use python to get versions of pip-installed tools to be sure
   command_exists ocrmypdf && ocrmypdf --version 2>&1 | head -n 1 | printf "ocrmypdf %s\n" "$(cat)" | log
   command_exists tesseract && tesseract --version | head -n 1 | log

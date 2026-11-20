@@ -137,7 +137,7 @@ class ProcessExecutorGapTest {
         @DisplayName("contains all expected process types")
         void containsExpectedValues() {
             ProcessExecutor.Processes[] values = ProcessExecutor.Processes.values();
-            assertEquals(8, values.length);
+            assertEquals(7, values.length);
             assertEquals(
                     ProcessExecutor.Processes.FFMPEG, ProcessExecutor.Processes.valueOf("FFMPEG"));
         }

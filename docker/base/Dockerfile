@@ -1,5 +1,5 @@
 # Stirling-PDF Base Image
-# Pre-built tools: Ghostscript, QPDF, ImageMagick, Python venv with OCR packages
+# Pre-built tools: Ghostscript, QPDF, Python venv with OCR packages
 # This image is reused by Dockerfile and Dockerfile.fat to avoid rebuilding tools on every app release
 
 ARG TARGETPLATFORM
@@ -28,49 +28,23 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     cd ..
 
 
-# Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
+# Stage 3: Build QPDF
 FROM ubuntu:noble@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.4.2
-ARG IM_VERSION=7.1.2-33
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
-      libpng-dev libtiff-dev libwebp-dev libxml2-dev libfreetype6-dev liblcms2-dev libzip-dev liblqr-1-0-dev \
-      libltdl-dev libtool && rm -rf /var/lib/apt/lists/* && \
+      && rm -rf /var/lib/apt/lists/* && \
     cd /tmp/pdf-tools-build && \
-    rm -rf qpdf-* ImageMagick-* && \
-    # Build QPDF
+    rm -rf qpdf-* && \
     (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
     cmake --build build --parallel "$(nproc)" && \
-    cmake --install build --strip && \
-    cd .. && \
-    # Build ImageMagick 7
-    (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
-    cd "ImageMagick-${IM_VERSION}" && \
-    ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
-    make -j"$(nproc)" && \
-    make install-strip && \
-    # Enable PDF/PS/EPS in policy
-    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /usr/local/etc/ImageMagick-7/policy.xml && \
-    sed -i 's/rights="none" pattern="PS"/rights="read|write" pattern="PS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
-    sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
-    cd .. && \
-    ldconfig /usr/local/lib
-
-# Stage ImageMagick outputs into a single directory so runtime can import them with one COPY
-# (reduces 4 separate COPY layers to 1 independent --link layer).
-RUN mkdir -p /magick-export/usr/bin \
-             /magick-export/usr/local/lib \
-             /magick-export/usr/local/etc && \
-    cp /usr/local/bin/magick /magick-export/usr/bin/ && \
-    cp -a /usr/local/lib/libMagick*.so* /magick-export/usr/local/lib/ && \
-    cp -a /usr/local/lib/ImageMagick-7* /magick-export/usr/local/lib/ && \
-    cp -a /usr/local/etc/ImageMagick-7  /magick-export/usr/local/etc/
+    cmake --install build --strip
 
 
 # Stage 4: Build Python venv
@@ -233,9 +207,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /var/lib/dpkg/info/*.templates \
            /var/log/dpkg.log /var/log/apt/* \
            /usr/local/share/ghostscript/*/doc \
-           /usr/local/share/ghostscript/*/examples \
-           /usr/share/ImageMagick-*/doc \
-           /usr/share/ImageMagick-*/www; \
+           /usr/local/share/ghostscript/*/examples; \
     \
     # Tesseract training configs (not needed for OCR, but keep configs/ for hocr/txt output)
     rm -rf /usr/share/tesseract-ocr/*/tessdata/tessconfigs; \
@@ -276,14 +248,17 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # External tool layers, all use --link for independent layer caching and parallel pulls.
 COPY --link --from=pdf-tools-build /usr/local/bin/qpdf    /usr/bin/qpdf
-# ImageMagick: 4 layers collapsed to 1 via the magick-export staging dir in pdf-tools-build
-COPY --link --from=pdf-tools-build /magick-export/        /
 COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/bin/gs
 COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
 # Python venv pre-built (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 
+# Removing a package can silently drop a shared library another tool links; fail the build instead.
 RUN ldconfig /usr/local/lib && \
+    for bin in /usr/local/bin/gs /usr/bin/qpdf /usr/bin/tesseract /usr/bin/unpaper \
+               /usr/bin/pngquant /usr/bin/pdftoppm; do \
+      if ldd "$bin" | grep 'not found'; then echo "missing library for $bin" >&2; exit 1; fi; \
+    done && \
     PYTHONDONTWRITEBYTECODE=1 \
       /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" && \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -325,7 +300,7 @@ RUN set -eux; \
 
 # Metadata labels - base image
 LABEL org.opencontainers.image.title="Stirling-PDF Base" \
-      org.opencontainers.image.description="Pre-built base image with Ghostscript, QPDF, ImageMagick, OCRmyPDF and dependencies" \
+      org.opencontainers.image.description="Pre-built base image with Ghostscript, QPDF, OCRmyPDF and dependencies" \
       org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Stirling-Tools" \

@@ -807,11 +807,11 @@ export interface OptimizePdfRequest {
    */
   grayscale?: boolean;
   /**
-   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
+   * Whether to convert images to high-contrast black and white line art. Default is false.
    */
   lineArt?: boolean;
   /**
-   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+   * Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
    */
   lineArtEdgeLevel?: 1 | 2 | 3;
   /**

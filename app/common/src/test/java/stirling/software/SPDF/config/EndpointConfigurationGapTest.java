@@ -40,7 +40,7 @@ class EndpointConfigurationGapTest {
     private EndpointConfiguration build(
             boolean runningProOrHigher, PdfaLevelAServiceInterface pdfaLevelAService) {
         return new EndpointConfiguration(
-                applicationProperties, runningProOrHigher, pdfaLevelAService);
+                applicationProperties, runningProOrHigher, pdfaLevelAService, null);
     }
 
     /** Default config: not pro, no removals, url-to-pdf disabled (default System flag is false). */

@@ -79,11 +79,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getQpdfSessionLimit();
-                                case IMAGEMAGICK ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getImageMagickSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -123,11 +118,6 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getQpdfTimeoutMinutes();
-                                case IMAGEMAGICK ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getImageMagickTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -405,7 +395,6 @@ public class ProcessExecutor {
     public enum Processes {
         PYTHON_OPENCV,
         INSTALL_APP,
-        IMAGEMAGICK,
         TESSERACT,
         QPDF,
         GHOSTSCRIPT,

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
@@ -70,6 +71,11 @@ public class EndpointConfiguration {
                     "OpenCV",
                     List.of("extract-image-scans"));
 
+    private static final String LINE_ART = "LineArt";
+
+    // Line art used to run on ImageMagick; keep honouring configs that disable it by that name.
+    private static final String RETIRED_LINE_ART_GROUP = "ImageMagick";
+
     private static final Map<String, Set<String>> RETIRED_ALTERNATIVES =
             Map.of(
                     "file-to-pdf", Set.of("LibreOffice", "Unoconvert"),
@@ -85,15 +91,18 @@ public class EndpointConfiguration {
     private final boolean runningProOrHigher;
     @Autowired @Lazy private LicenseServiceInterface licenseService;
     private final boolean pdfUaAvailable;
+    private final boolean lineArtAvailable;
 
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
+            @Autowired(required = false) LineArtConversionService lineArtService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
         // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
         this.pdfUaAvailable = pdfaLevelAService != null;
+        this.lineArtAvailable = lineArtService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -590,9 +599,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
 
-        /* ImageMagick */
-        addEndpointToGroup("ImageMagick", "compress-pdf");
-
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
         addEndpointToGroup("tesseract", "auto-rotate-pdf");
@@ -634,12 +640,21 @@ public class EndpointConfiguration {
                     String name = group.trim();
                     if (RETIRED_DEPENDENCY_GROUPS.containsKey(name)) {
                         retired.add(name);
+                    } else if (RETIRED_LINE_ART_GROUP.equals(name)) {
+                        log.info(
+                                "groupsToRemove entry '{}' is retired; disabling line art instead",
+                                name);
+                        disableGroup(LINE_ART);
                     } else {
                         disableGroup(name);
                     }
                 }
                 disableRetiredDependencyEndpoints(retired);
             }
+        }
+
+        if (!lineArtAvailable) {
+            disableGroup(LINE_ART, DisableReason.DEPENDENCY);
         }
 
         if (!pdfUaAvailable) {
@@ -699,7 +714,7 @@ public class EndpointConfiguration {
                 || "Python".equals(group)
                 || "Java".equals(group)
                 || "Javascript".equals(group)
-                || "ImageMagick".equals(group)
+                || LINE_ART.equals(group)
                 || "rar".equals(group)
                 || "FFmpeg".equals(group)
                 || "veraPDF".equals(group);

@@ -16,7 +16,7 @@ class EndpointConfigurationTest {
     @Test
     void conversionsStayEnabledWithoutExternalConverters() {
         ApplicationProperties properties = new ApplicationProperties();
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
         List<String> standardConverters =
                 List.of("LibreOffice", "Unoconvert", "Weasyprint", "Pdftohtml", "Calibre");
         List<String> conversions =
@@ -48,7 +48,7 @@ class EndpointConfigurationTest {
     void retiredGroupsInConfigStillDisableTheirConversions() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getEndpoints().setGroupsToRemove(List.of(" LibreOffice", "Calibre"));
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
 
         for (String endpoint :
                 List.of(
@@ -74,7 +74,7 @@ class EndpointConfigurationTest {
         properties
                 .getEndpoints()
                 .setGroupsToRemove(List.of("LibreOffice", "Unoconvert", "Pdftohtml"));
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
 
         assertFalse(endpoints.isEndpointEnabled("file-to-pdf"));
         assertFalse(endpoints.isEndpointEnabled("pdf-to-html"));
@@ -85,10 +85,32 @@ class EndpointConfigurationTest {
     void currentGroupsInConfigAreUnaffected() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getEndpoints().setGroupsToRemove(List.of("veraPDF"));
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null);
+        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
 
         assertFalse(endpoints.isEndpointEnabled("verify-pdf"));
         assertTrue(endpoints.isEndpointEnabled("file-to-pdf"));
+    }
+
+    @Test
+    void lineArtNeedsTheLineArtService() {
+        ApplicationProperties properties = new ApplicationProperties();
+
+        assertFalse(
+                new EndpointConfiguration(properties, false, null, null).isGroupEnabled("LineArt"));
+        assertTrue(
+                new EndpointConfiguration(properties, false, null, (in, out, t, e) -> {})
+                        .isGroupEnabled("LineArt"));
+    }
+
+    @Test
+    void retiredImageMagickGroupStillDisablesLineArt() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getEndpoints().setGroupsToRemove(List.of("ImageMagick"));
+        EndpointConfiguration endpoints =
+                new EndpointConfiguration(properties, false, null, (in, out, t, e) -> {});
+
+        assertFalse(endpoints.isGroupEnabled("LineArt"));
+        assertTrue(endpoints.isEndpointEnabled("compress-pdf"));
     }
 
     @Test
