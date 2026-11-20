@@ -1357,9 +1357,6 @@ export function TextRunOverlay({
       data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked && !run.textReadOnly}
-      // Editable boxes are tab stops either way; axe only counts them as
-      // keyboard access to the scrolling stage with an explicit tabIndex.
-      tabIndex={run.locked || run.textReadOnly ? undefined : 0}
       suppressContentEditableWarning
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}

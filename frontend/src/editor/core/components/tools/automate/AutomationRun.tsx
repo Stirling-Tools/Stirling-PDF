@@ -155,12 +155,6 @@ export default function AutomationRun({
     return (completedSteps / executionSteps.length) * 100;
   };
 
-  const progressLabel = t(
-    "automate.run.progress",
-    "Progress: {{current}}/{{total}}",
-    { current: currentStepIndex + 1, total: executionSteps.length },
-  );
-
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
       case EXECUTION_STATUS.COMPLETED:
@@ -203,13 +197,12 @@ export default function AutomationRun({
         {isExecuting && (
           <div>
             <Text size="sm" mb="xs">
-              {progressLabel}
+              {t("automate.run.progress", "Progress: {{current}}/{{total}}", {
+                current: currentStepIndex + 1,
+                total: executionSteps.length,
+              })}
             </Text>
-            <Progress
-              value={getProgress()}
-              size="lg"
-              aria-label={progressLabel}
-            />
+            <Progress value={getProgress()} size="lg" />
           </div>
         )}
 

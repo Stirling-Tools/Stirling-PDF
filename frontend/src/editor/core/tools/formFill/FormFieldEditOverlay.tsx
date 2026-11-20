@@ -742,6 +742,7 @@ export function FormFieldEditOverlay({
                 color: "#fff",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
+                opacity: isSelected || isDeleted ? 1 : 0.75,
                 // The chip floats above its field, over blank page; it must never eat a
                 // press meant for the drawing surface underneath.
                 pointerEvents: "none",

@@ -7,10 +7,6 @@ import Workbench from "@editor/components/layout/Workbench";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
 import {
-  ToolPanelPreviewProvider,
-  type ToolPanelPreview,
-} from "@editor/contexts/ToolPanelPreviewContext";
-import {
   loadFixture,
   type FixtureName,
 } from "@editor/components/tools/toolPanelStory/fixtures";
@@ -32,17 +28,6 @@ export interface ToolPanelStoryProps {
   toolId: ToolId;
   /** Loaded and selected in this order before the tool opens. */
   files?: readonly FixtureName[];
-  /** Merged over the tool's default parameters, for settings that need input to appear. */
-  parameters?: Readonly<Record<string, unknown>>;
-  /**
-   * File-typed parameters (a certificate, a stamp image), loaded from fixtures;
-   * a list loads into a File[] parameter.
-   */
-  parameterFiles?: Readonly<
-    Record<string, FixtureName | readonly FixtureName[]>
-  >;
-  /** Opens steps the tool would keep collapsed until a file or choice exists. */
-  expandAllSteps?: boolean;
   /**
    * Holds the workbench at this view while the tool is open, as when the user
    * switches to it; a tool that switches away on mount is switched back.
@@ -59,8 +44,8 @@ export interface ToolPanelStoryProps {
  * The editor's real tool panel for one tool, inside the editor's own provider
  * stack (PlatformProviders, then AppProviders): the same RightSidebar, header and
  * createToolFlow steps the editor draws. Only the inputs are staged: fixture files
- * go in through FileContext, the tool opens through the workflow, and
- * ToolPanelPreview opens what would otherwise wait on input.
+ * go in through FileContext and the tool opens through the workflow. Everything
+ * after that is reached the way a user reaches it, from the story's play.
  */
 export function ToolPanelStory(props: ToolPanelStoryProps) {
   if (!useEmptyWorkbench()) return null;
@@ -161,36 +146,22 @@ function PanelFrame({ showWorkbench }: { showWorkbench?: boolean }) {
 function StagedTool({
   toolId,
   files = ["sample.pdf"],
-  parameters,
-  parameterFiles,
-  expandAllSteps = true,
   children,
 }: ToolPanelStoryProps & { children: ReactNode }) {
   const { addFiles } = useFileHandler();
   const { handleToolSelectForced } = useToolWorkflowActions();
-  const [preview, setPreview] = useState<ToolPanelPreview | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [documents, fileParameters] = await Promise.all([
-        Promise.all(files.map(loadFixture)),
-        loadParameterFiles(parameterFiles),
-      ]);
+      const documents = await Promise.all(files.map(loadFixture));
       if (cancelled) return;
       if (documents.length > 0)
         await settlePdfAccess(await addFiles(documents));
       if (cancelled) return;
-      // In place before the tool mounts: parameter hooks read it only for their
-      // initial state.
-      setPreview({
-        expandAllSteps,
-        parameters:
-          parameters || parameterFiles
-            ? { ...parameters, ...fileParameters }
-            : undefined,
-      });
       handleToolSelectForced(toolId);
+      setReady(true);
     })();
     return () => {
       cancelled = true;
@@ -199,12 +170,7 @@ function StagedTool({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!preview) return null;
-  return (
-    <ToolPanelPreviewProvider value={preview}>
-      {children}
-    </ToolPanelPreviewProvider>
-  );
+  return ready ? children : null;
 }
 
 /**
@@ -218,22 +184,4 @@ async function settlePdfAccess(files: readonly File[]): Promise<void> {
       .filter((file) => file.type === "application/pdf")
       .map((file) => ensureLocalPdfAccess(file).catch(() => undefined)),
   );
-}
-
-async function loadParameterFiles(
-  parameterFiles: ToolPanelStoryProps["parameterFiles"],
-): Promise<Record<string, File | File[]>> {
-  if (!parameterFiles) return {};
-  const entries = await Promise.all(
-    Object.entries(parameterFiles).map(
-      async ([key, names]) =>
-        [
-          key,
-          typeof names === "string"
-            ? await loadFixture(names)
-            : await Promise.all(names.map(loadFixture)),
-        ] as const,
-    ),
-  );
-  return Object.fromEntries(entries);
 }

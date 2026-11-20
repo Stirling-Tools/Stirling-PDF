@@ -371,19 +371,9 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
     const { provides: annotationApi } = useAnnotationCapability();
     const documentReady = useDocumentReady();
 
-    // The toolId rides in the defaults so embedpdf writes it onto the annotation
-    // at creation; LocalEmbedPDF patching it in afterwards is a second history
-    // step, which makes one placement take two Undos.
     const buildAnnotationDefaults = useCallback(
-      (
-        toolId: AnnotationToolId,
-        options?: AnnotationToolOptions,
-      ): AnnotationDefaults | null => {
-        const defaults = TOOL_DEFAULT_BUILDERS[toolId]?.(options);
-        return defaults
-          ? { ...defaults, customData: { ...defaults.customData, toolId } }
-          : null;
-      },
+      (toolId: AnnotationToolId, options?: AnnotationToolOptions) =>
+        TOOL_DEFAULT_BUILDERS[toolId]?.(options) ?? null,
       [],
     );
 

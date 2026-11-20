@@ -643,7 +643,6 @@ const FormFill = (_props: BaseToolProps) => {
                     </span>
                   </div>
                   <Progress
-                    aria-label={t("formFill.filled", "filled")}
                     value={
                       fillableCount > 0
                         ? (filledCount / fillableCount) * 100

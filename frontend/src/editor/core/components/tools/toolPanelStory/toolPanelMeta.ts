@@ -80,6 +80,18 @@ export function fixtureResponse(
 }
 
 /**
+ * A story's `parameters` for an accessibility bug the real panel has: the scan
+ * skips only these axe rules, on this story, so the rest of the panel stays
+ * checked. Each use is listed with the bug it stands for; the app is not
+ * changed from a story.
+ */
+export function knownA11yIssues(...rules: string[]) {
+  return {
+    a11y: { config: { rules: rules.map((id) => ({ id, enabled: false })) } },
+  };
+}
+
+/**
  * The shared Storybook meta for one tool's panel stories. Spread it beside a
  * literal `title: "Tools/<Tool name>/Panel"`: Storybook reads the title
  * statically and falls back to the file path for a computed one, and reads a

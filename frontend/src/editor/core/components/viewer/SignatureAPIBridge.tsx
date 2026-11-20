@@ -264,8 +264,6 @@ export const SignatureAPIBridge = forwardRef<
         annotationApi.setToolDefaults("stamp", {
           imageSrc,
           subject,
-          // Set at creation: LocalEmbedPDF patching it in later adds an Undo step.
-          customData: { toolId: "stamp" },
           ...(size
             ? { imageSize: { width: size.width, height: size.height } }
             : {}),
@@ -446,7 +444,6 @@ export const SignatureAPIBridge = forwardRef<
         const activeTool = annotationApi.getActiveTool();
         if (activeTool && activeTool.id === "signatureInk") {
           annotationApi.setToolDefaults("signatureInk", {
-            customData: { toolId: "signatureInk" },
             color: "#000000",
             thickness: 2,
             lineWidth: 2,
@@ -469,7 +466,6 @@ export const SignatureAPIBridge = forwardRef<
 
         // Always update ink tool defaults - use multiple property names for compatibility
         annotationApi.setToolDefaults("ink", {
-          customData: { toolId: "ink" },
           color: color,
           thickness: size,
           lineWidth: size,

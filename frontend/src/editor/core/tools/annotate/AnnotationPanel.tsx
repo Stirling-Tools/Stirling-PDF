@@ -1237,13 +1237,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           canRedo={historyAvailability.canRedo}
           showPlaceButton={false}
           additionalControls={
-            // Mantine's focus placeholder is a plain focusable div inside role="menu",
-            // which only menuitems may be; opening on the first item is the ARIA menu pattern.
-            <Menu
-              position="bottom-end"
-              withArrow
-              withInitialFocusPlaceholder={false}
-            >
+            <Menu position="bottom-end" withArrow>
               <Menu.Target>
                 <Tooltip label={t("annotation.moreActions", "More actions")}>
                   <ActionIcon
@@ -1259,8 +1253,6 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               <Menu.Dropdown>
                 <Menu.Item
                   color="red"
-                  // A red item's label is shade 6, under 4.5:1 on its own hover tint.
-                  c="var(--mantine-color-red-text)"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
                   leftSection={<Icon name="trash" size={18} />}
                   onClick={() => setIsClearDocumentModalOpen(true)}

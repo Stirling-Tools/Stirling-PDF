@@ -4,6 +4,10 @@ import {
   type EncryptedFixtureName,
 } from "@editor/components/tools/toolPanelStory/fixtures";
 import { PAGE_POINTER_LAYER_CLASS } from "@editor/components/viewer/ViewerPointerProviders";
+import {
+  loadFixture,
+  type FixtureName,
+} from "@editor/components/tools/toolPanelStory/fixtures";
 
 export interface PlayContext {
   canvasElement: HTMLElement;
@@ -124,6 +128,44 @@ async function findRunButton(context: PlayContext): Promise<HTMLElement> {
     expect(button).not.toBeNull();
     return button!;
   }, STAGE_TIMEOUT);
+}
+
+/**
+ * Opens a collapsed step by clicking its header, as a user does. A step the
+ * tool keeps closed until it has input stays closed; give it the input first.
+ */
+export async function openStep(
+  context: PlayContext,
+  title: string,
+): Promise<PanelQueries> {
+  const panel = within(await waitForToolPanel(context));
+  const header = await panel.findByText(title, { exact: true }, STAGE_TIMEOUT);
+  await userEvent.click(header);
+  return within(await waitForToolPanel(context));
+}
+
+/**
+ * Puts fixture files into one of the panel's own file inputs, the way a file
+ * picked in the dialog arrives, so the tool reads them through its real
+ * handler. `nth` picks among several inputs in panel order.
+ */
+export async function uploadToPanel(
+  context: PlayContext,
+  fixtures: FixtureName | readonly FixtureName[],
+  nth = 0,
+): Promise<PanelQueries> {
+  const panelElement = await waitForToolPanel(context);
+  const input = await waitFor(() => {
+    const found =
+      panelElement.querySelectorAll<HTMLInputElement>('input[type="file"]')[
+        nth
+      ];
+    expect(found).toBeDefined();
+    return found!;
+  }, STAGE_TIMEOUT);
+  const names = typeof fixtures === "string" ? [fixtures] : fixtures;
+  await userEvent.upload(input, await Promise.all(names.map(loadFixture)));
+  return within(await waitForToolPanel(context));
 }
 
 /** Clicks the tool's run button once it is enabled. */
