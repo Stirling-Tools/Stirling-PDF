@@ -49,37 +49,7 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
 
-    private static final Map<String, List<String>> RETIRED_DEPENDENCY_GROUPS =
-            Map.of(
-                    "LibreOffice",
-                    List.of(
-                            "file-to-pdf",
-                            "pdf-to-word",
-                            "pdf-to-presentation",
-                            "pdf-to-rtf",
-                            "pdf-to-html",
-                            "pdf-to-xml",
-                            "pdf-to-pdfa"),
-                    "Unoconvert",
-                    List.of("file-to-pdf"),
-                    "Weasyprint",
-                    List.of("html-to-pdf", "url-to-pdf", "markdown-to-pdf", "eml-to-pdf"),
-                    "Pdftohtml",
-                    List.of("pdf-to-html", "pdf-to-markdown"),
-                    "Calibre",
-                    List.of("pdf-to-epub", "ebook-to-pdf"),
-                    "OpenCV",
-                    List.of("extract-image-scans"));
-
     private static final String LINE_ART = "LineArt";
-
-    // Line art used to run on ImageMagick; keep honouring configs that disable it by that name.
-    private static final String RETIRED_LINE_ART_GROUP = "ImageMagick";
-
-    private static final Map<String, Set<String>> RETIRED_ALTERNATIVES =
-            Map.of(
-                    "file-to-pdf", Set.of("LibreOffice", "Unoconvert"),
-                    "pdf-to-html", Set.of("LibreOffice", "Pdftohtml"));
 
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -635,21 +605,9 @@ public class EndpointConfiguration {
             }
 
             if (groupsToRemove != null) {
-                Set<String> retired = new HashSet<>();
                 for (String group : groupsToRemove) {
-                    String name = group.trim();
-                    if (RETIRED_DEPENDENCY_GROUPS.containsKey(name)) {
-                        retired.add(name);
-                    } else if (RETIRED_LINE_ART_GROUP.equals(name)) {
-                        log.info(
-                                "groupsToRemove entry '{}' is retired; disabling line art instead",
-                                name);
-                        disableGroup(LINE_ART);
-                    } else {
-                        disableGroup(name);
-                    }
+                    disableGroup(group.trim());
                 }
-                disableRetiredDependencyEndpoints(retired);
             }
         }
 
@@ -668,26 +626,6 @@ public class EndpointConfiguration {
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
-        }
-    }
-
-    private void disableRetiredDependencyEndpoints(Set<String> retired) {
-        for (String group : retired) {
-            List<String> disabled =
-                    RETIRED_DEPENDENCY_GROUPS.get(group).stream()
-                            .filter(
-                                    endpoint ->
-                                            retired.containsAll(
-                                                    RETIRED_ALTERNATIVES.getOrDefault(
-                                                            endpoint, Set.of(group))))
-                            .toList();
-            log.info(
-                    "groupsToRemove entry '{}' names a dependency Stirling PDF no longer uses;"
-                            + " disabling the endpoints it covered with no remaining"
-                            + " alternative: {}",
-                    group,
-                    disabled.isEmpty() ? "none" : String.join(", ", disabled));
-            disabled.forEach(this::disableEndpoint);
         }
     }
 

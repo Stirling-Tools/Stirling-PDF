@@ -45,40 +45,42 @@ class EndpointConfigurationTest {
     }
 
     @Test
-    void retiredGroupsInConfigStillDisableTheirConversions() {
-        ApplicationProperties properties = new ApplicationProperties();
-        properties.getEndpoints().setGroupsToRemove(List.of(" LibreOffice", "Calibre"));
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
-
-        for (String endpoint :
-                List.of(
-                        "pdf-to-word",
-                        "pdf-to-presentation",
-                        "pdf-to-rtf",
-                        "pdf-to-xml",
-                        "pdf-to-pdfa",
-                        "pdf-to-epub",
-                        "ebook-to-pdf")) {
-            assertFalse(endpoints.isEndpointEnabled(endpoint), endpoint);
-        }
-        assertTrue(endpoints.isEndpointEnabled("file-to-pdf"));
-        assertTrue(endpoints.isEndpointEnabled("pdf-to-html"));
-        assertTrue(endpoints.isEndpointEnabled("html-to-pdf"));
-        assertTrue(endpoints.isEndpointEnabled("pdf-to-markdown"));
-        assertTrue(endpoints.isEndpointEnabled("merge-pdfs"));
-    }
-
-    @Test
-    void retiredAlternativesDisableOnlyOnceAllAreRemoved() {
+    void groupsNamingRetiredToolsLeaveTheirFeaturesEnabled() {
         ApplicationProperties properties = new ApplicationProperties();
         properties
                 .getEndpoints()
-                .setGroupsToRemove(List.of("LibreOffice", "Unoconvert", "Pdftohtml"));
-        EndpointConfiguration endpoints = new EndpointConfiguration(properties, false, null, null);
+                .setGroupsToRemove(
+                        List.of(
+                                "LibreOffice",
+                                "Unoconvert",
+                                "Weasyprint",
+                                "Pdftohtml",
+                                "Calibre",
+                                "OpenCV",
+                                "ImageMagick"));
+        EndpointConfiguration endpoints =
+                new EndpointConfiguration(properties, false, null, (in, out, t, e) -> {});
 
-        assertFalse(endpoints.isEndpointEnabled("file-to-pdf"));
-        assertFalse(endpoints.isEndpointEnabled("pdf-to-html"));
-        assertFalse(endpoints.isEndpointEnabled("pdf-to-markdown"));
+        for (String endpoint :
+                List.of(
+                        "file-to-pdf",
+                        "pdf-to-word",
+                        "pdf-to-presentation",
+                        "pdf-to-rtf",
+                        "pdf-to-html",
+                        "pdf-to-xml",
+                        "pdf-to-pdfa",
+                        "pdf-to-markdown",
+                        "html-to-pdf",
+                        "markdown-to-pdf",
+                        "eml-to-pdf",
+                        "pdf-to-epub",
+                        "ebook-to-pdf",
+                        "extract-image-scans",
+                        "compress-pdf")) {
+            assertTrue(endpoints.isEndpointEnabled(endpoint), endpoint);
+        }
+        assertTrue(endpoints.isGroupEnabled("LineArt"));
     }
 
     @Test
@@ -103,9 +105,9 @@ class EndpointConfigurationTest {
     }
 
     @Test
-    void retiredImageMagickGroupStillDisablesLineArt() {
+    void lineArtCanStillBeDisabledByItsOwnGroup() {
         ApplicationProperties properties = new ApplicationProperties();
-        properties.getEndpoints().setGroupsToRemove(List.of("ImageMagick"));
+        properties.getEndpoints().setGroupsToRemove(List.of("LineArt"));
         EndpointConfiguration endpoints =
                 new EndpointConfiguration(properties, false, null, (in, out, t, e) -> {});
 
