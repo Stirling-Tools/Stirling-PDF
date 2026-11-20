@@ -80,6 +80,24 @@ export function fixtureResponse(
 }
 
 /**
+ * A server that answers a POST to `endpoint` with a ZIP of fixture files, for
+ * a tool that unzips its response into several results (Split, Remove Blanks).
+ */
+export function zipResponse(
+  endpoint: string,
+  fixtures: readonly FixtureName[],
+) {
+  return http.post(`*${endpoint}`, async () => {
+    const { default: JSZip } = await import("jszip");
+    const zip = new JSZip();
+    for (const name of fixtures) zip.file(name, await loadFixture(name));
+    return new HttpResponse(await zip.generateAsync({ type: "blob" }), {
+      headers: { "Content-Type": "application/zip" },
+    });
+  });
+}
+
+/**
  * A story's `parameters` for an accessibility bug the real panel has: the scan
  * skips only these axe rules, on this story, so the rest of the panel stays
  * checked. Each use is listed with the bug it stands for; the app is not
@@ -89,6 +107,28 @@ export function knownA11yIssues(...rules: string[]) {
   return {
     a11y: { config: { rules: rules.map((id) => ({ id, enabled: false })) } },
   };
+}
+
+/**
+ * A story that draws the editor's viewer beside the panel, for panel states
+ * only the viewer reaches. The viewer fails these axe rules itself: page images
+ * have no alt, the zoom slider and page-number input have no name, workbench-bar
+ * popover targets put aria-expanded on a plain div, and the page scroller takes
+ * no focus. Some fail only once pages paint, so all are skipped to keep the scan
+ * stable. `panelRules` adds the panel's own known issues for the story.
+ */
+export function onViewer(...panelRules: string[]) {
+  return {
+    args: { showWorkbench: true, workbench: "viewer" },
+    parameters: knownA11yIssues(
+      "aria-allowed-attr",
+      "aria-input-field-name",
+      "image-alt",
+      "label",
+      "scrollable-region-focusable",
+      ...panelRules,
+    ),
+  } as const;
 }
 
 /**

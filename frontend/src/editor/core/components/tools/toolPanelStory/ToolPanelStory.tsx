@@ -4,6 +4,8 @@ import { PlatformProviders } from "@editor/components/PlatformProviders";
 import { AppProviders } from "@editor/components/AppProviders";
 import RightSidebar from "@editor/components/tools/RightSidebar";
 import Workbench from "@editor/components/layout/Workbench";
+import FileManager from "@editor/components/FileManager";
+import { FilesPageProvider } from "@editor/contexts/FilesPageContext";
 import { useFileHandler } from "@editor/hooks/useFileHandler";
 import { useToolWorkflowActions } from "@editor/contexts/ToolWorkflowContext";
 import {
@@ -38,6 +40,12 @@ export interface ToolPanelStoryProps {
    * the viewer reaches: fields it reads, placement it arms, marks drawn on a page.
    */
   showWorkbench?: boolean;
+  /**
+   * Mounts the editor's Files modal, for a panel whose own file picker opens
+   * it (Overlay PDFs' "Choose PDF(s)..."). Off by default: the modal reads the
+   * file library from IndexedDB on mount.
+   */
+  filesModal?: boolean;
 }
 
 /**
@@ -53,7 +61,14 @@ export function ToolPanelStory(props: ToolPanelStoryProps) {
     <PlatformProviders>
       <AppProviders>
         <StagedTool {...props}>
-          <PanelFrame showWorkbench={props.showWorkbench} />
+          {props.filesModal ? (
+            <FilesPageProvider>
+              <PanelFrame showWorkbench={props.showWorkbench} />
+              <FileManager />
+            </FilesPageProvider>
+          ) : (
+            <PanelFrame showWorkbench={props.showWorkbench} />
+          )}
           {props.workbench && <HeldWorkbench workbench={props.workbench} />}
         </StagedTool>
       </AppProviders>

@@ -11,6 +11,14 @@ qpdf --encrypt annotation-test annotation-test 256 -- annotations_out_of_order.p
 qpdf --encrypt annotation-test annotation-test 256 -- link-annotations-sample.pdf encrypted-links.pdf
 ```
 
+## Restricted encrypted fixture
+
+`encrypted-restricted.pdf` is `sample.pdf` opened by `open-pass` with a different permissions (owner) password, `owner-pass`, and printing, modifying and copying restricted. Opening it does not grant the owner's rights, so the permissions password has to be verified separately. Regenerate it with qpdf:
+
+```sh
+qpdf --encrypt open-pass owner-pass 256 --print=none --modify=none --extract=n -- sample.pdf encrypted-restricted.pdf
+```
+
 ## Signature probe fixtures
 
 `signature-*.pdf` exercise the local signature probe (`utils/pdfiumSignatures.ts`). They were signed by Stirling-PDF's `cert-sign` endpoint with `certs/valid-test.p12` (password `testpass`, signer `Test Signer`):

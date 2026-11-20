@@ -1,15 +1,20 @@
 import type { StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { toolPanelMeta } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  knownA11yIssues,
+  onViewer,
+  toolPanelMeta,
+} from "@editor/components/tools/toolPanelStory/toolPanelMeta";
+import {
+  bodyOf,
   clickPage,
   dragOnPage,
   findPageElement,
   openMenu,
   openTooltip,
+  type PlayContext,
   STAGE_TIMEOUT,
   waitForPanelText,
-  type PlayContext,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import { loadFixture } from "@editor/components/tools/toolPanelStory/fixtures";
 
@@ -48,18 +53,22 @@ export const AddImageStampUploaded: Story = {
 };
 
 export const MoreActionsMenu: Story = {
+  // The open menu holds a focusable div that is not a menuitem.
+  parameters: knownA11yIssues("aria-required-children"),
   play: async (context) => {
     await openMenu(context, "More actions");
   },
 };
 
 export const ClearAllAnnotationsDialog: Story = {
+  // The open menu holds a focusable div that is not a menuitem.
+  parameters: knownA11yIssues("aria-required-children"),
   play: async (context) => {
     const menu = await openMenu(context, "More actions");
     await userEvent.click(
       within(menu).getByRole("menuitem", { name: "Clear all annotations" }),
     );
-    await within(context.canvasElement.ownerDocument.body).findByRole(
+    await bodyOf(context).findByRole(
       "dialog",
       { name: "Clear all annotations?" },
       STAGE_TIMEOUT,
@@ -155,8 +164,6 @@ export const AddImageTooltip: Story = {
   play: openTooltip({ info: "Add Image" }),
 };
 
-const withViewer = { showWorkbench: true, workbench: "viewer" } as const;
-
 async function pickTool(context: PlayContext, tool: string) {
   const panel = await waitForPanelText(context, "Shapes");
   const button = panel.getByRole("button", { name: tool });
@@ -166,7 +173,7 @@ async function pickTool(context: PlayContext, tool: string) {
 }
 
 export const MultiClickShapeHint: Story = {
-  args: withViewer,
+  ...onViewer(),
   play: async (context) => {
     await pickTool(context, "Polyline");
     await clickPage(context, { x: 0.5, y: 0.5 });
@@ -179,7 +186,7 @@ export const MultiClickShapeHint: Story = {
 };
 
 export const SaveChangesEnabled: Story = {
-  args: withViewer,
+  ...onViewer(),
   play: async (context) => {
     const panel = await pickTool(context, "Square");
     await dragOnPage(context, { x: 0.3, y: 0.3 }, { x: 0.6, y: 0.5 });
@@ -189,7 +196,7 @@ export const SaveChangesEnabled: Story = {
 };
 
 export const AnnotationsHidden: Story = {
-  args: withViewer,
+  ...onViewer(),
   play: async (context) => {
     const panel = await waitForPanelText(context, "Shapes");
     const toggle = await within(context.canvasElement).findByRole(

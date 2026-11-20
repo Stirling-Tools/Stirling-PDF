@@ -1,14 +1,20 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
-import { expect, waitFor } from "storybook/test";
+import { delay, http, HttpResponse } from "msw";
+import { expect, userEvent, waitFor } from "storybook/test";
 import {
+  endpointUnavailable,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  choose,
   openTooltip,
+  type PlayContext,
   runTool,
   STAGE_TIMEOUT,
+  startTool,
+  uploadToPanel,
+  waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import type { SignatureValidationBackendResult } from "@editor/types/validateSignature";
 
@@ -19,6 +25,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const ENDPOINT = "*/api/v1/security/validate-signature";
 
 const SIGNATURE: SignatureValidationBackendResult = {
   valid: true,
@@ -45,30 +53,144 @@ const SIGNATURE: SignatureValidationBackendResult = {
   selfSigned: false,
 };
 
+const validatesAs = (signatures: SignatureValidationBackendResult[]) =>
+  toolPanelServer(http.post(ENDPOINT, () => HttpResponse.json(signatures)));
+
+const validSignature = validatesAs([SIGNATURE]);
+
+async function uploadTrustedCertificate(context: PlayContext) {
+  const panel = await uploadToPanel(context, "valid-test-cert.pem");
+  await panel.findByText(/^Size: \d+ KB$/, undefined, STAGE_TIMEOUT);
+  return panel;
+}
+
+async function validate(context: PlayContext) {
+  const panel = await runTool(context);
+  await waitFor(
+    () =>
+      expect(
+        panel.getByRole("button", { name: "Download PDF Report" }),
+      ).toBeEnabled(),
+    STAGE_TIMEOUT,
+  );
+  return panel;
+}
+
+async function pickDownloadType(context: PlayContext, type: string) {
+  await validate(context);
+  return choose(context, type);
+}
+
 export const Panel: Story = {};
 
-export const TrustedCertificateUploaded: Story = {
-  args: { parameterFiles: { certFile: "valid-test-cert.pem" } },
+export const NoFiles: Story = {
+  args: { files: [] },
 };
 
-export const Results: Story = {
+export const NoFilesTooltip: Story = {
+  args: { files: [] },
+  play: openTooltip({ runButton: true }),
+};
+
+export const EndpointUnavailableTooltip: Story = {
+  parameters: toolPanelServer(...endpointUnavailable("validate-signature")),
+  play: openTooltip({ runButton: true }),
+};
+
+export const TrustedCertificateUploaded: Story = {
+  play: uploadTrustedCertificate,
+};
+
+export const TrustedCertificateCleared: Story = {
+  play: async (context) => {
+    const panel = await uploadTrustedCertificate(context);
+    await userEvent.click(panel.getByRole("button", { name: "Clear" }));
+    await waitFor(() => expect(panel.queryByText(/^Size:/)).toBeNull());
+  },
+};
+
+export const Validating: Story = {
   parameters: toolPanelServer(
-    http.post("*/api/v1/security/validate-signature", () =>
-      HttpResponse.json([SIGNATURE]),
-    ),
+    http.post(ENDPOINT, async () => {
+      await delay("infinite");
+      return HttpResponse.json([]);
+    }),
   ),
   play: async (context) => {
-    const panel = await runTool(context);
-    await waitFor(
-      () =>
-        expect(
-          panel.getByRole("button", { name: "Download PDF Report" }),
-        ).toBeEnabled(),
+    const panel = await startTool(context);
+    await panel.findByText(
+      "Validating signatures...",
+      undefined,
       STAGE_TIMEOUT,
     );
   },
 };
 
-export const TrustedCertificateTooltip: Story = {
-  play: openTooltip({ info: /Upload a trusted X\.509 certificate/ }),
+export const Results: Story = {
+  parameters: validSignature,
+  play: async (context) => {
+    const panel = await validate(context);
+    await expect(panel.getByText("1 fully valid")).toBeVisible();
+  },
+};
+
+export const CsvDownload: Story = {
+  parameters: validSignature,
+  play: async (context) => {
+    const panel = await pickDownloadType(context, "CSV");
+    await expect(
+      panel.getByRole("button", { name: "Download CSV" }),
+    ).toBeEnabled();
+  },
+};
+
+export const JsonDownload: Story = {
+  parameters: validSignature,
+  play: async (context) => {
+    const panel = await pickDownloadType(context, "JSON");
+    await expect(
+      panel.getByRole("button", { name: "Download JSON" }),
+    ).toBeEnabled();
+  },
+};
+
+export const MixedResults: Story = {
+  parameters: validatesAs([
+    SIGNATURE,
+    { ...SIGNATURE, signerName: "Unverified Signer", trustValid: false },
+    { ...SIGNATURE, signerName: "Tampered Signer", valid: false },
+  ]),
+  play: async (context) => {
+    const panel = await validate(context);
+    await expect(panel.getByText("1 needs review")).toBeVisible();
+    await expect(panel.getByText("1 invalid")).toBeVisible();
+  },
+};
+
+export const NoSignatures: Story = {
+  parameters: validatesAs([]),
+  play: async (context) => {
+    await runTool(context);
+    await waitForPanelText(
+      context,
+      "No digital signatures found in this document",
+    );
+  },
+};
+
+export const ValidationFailed: Story = {
+  parameters: toolPanelServer(
+    http.post(ENDPOINT, () =>
+      HttpResponse.json({ message: "Not a PDF" }, { status: 500 }),
+    ),
+  ),
+  play: async (context) => {
+    const panel = await runTool(context);
+    const messages = await panel.findAllByText(
+      "Unable to validate the selected files.",
+      undefined,
+      STAGE_TIMEOUT,
+    );
+    for (const message of messages) await expect(message).toBeVisible();
+  },
 };

@@ -1,11 +1,12 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { toolPanelMeta } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
-  STAGE_TIMEOUT,
-  waitForToolPanel,
+  bodyOf,
+  panelOf,
   type PanelQueries,
   type PlayContext,
+  STAGE_TIMEOUT,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 
 const meta = {
@@ -25,9 +26,9 @@ const FILE_B = /^compare_sample_b\.pdf/;
 
 /** Opens a slot's file picker on its Workbench tab, which lists the staged fixtures. */
 async function openWorkbenchPicker(context: PlayContext, slot: string) {
-  const panel = within(await waitForToolPanel(context));
+  const panel = await panelOf(context);
   await userEvent.click(await panel.findByText(slot));
-  const body = within(context.canvasElement.ownerDocument.body);
+  const body = bodyOf(context);
   const workbenchTab = await body.findByRole(
     "button",
     { name: "Workbench" },
@@ -78,7 +79,7 @@ export const BothFilesSelected: Story = {
   play: async (context) => {
     await pickFile(context, ORIGINAL_SLOT, FILE_A);
     await pickFile(context, EDITED_SLOT, FILE_B);
-    const panel = within(await waitForToolPanel(context));
+    const panel = await panelOf(context);
     await panel.findByRole("button", { name: "Swap" }, STAGE_TIMEOUT);
   },
 };

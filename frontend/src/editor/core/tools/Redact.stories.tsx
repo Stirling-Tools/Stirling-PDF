@@ -1,11 +1,24 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { expect, waitFor, within } from "storybook/test";
-import { toolPanelMeta } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
+  fixtureResponse,
+  knownA11yIssues,
+  onViewer,
+  toolPanelMeta,
+  toolPanelServer,
+} from "@editor/components/tools/toolPanelStory/toolPanelMeta";
+import {
+  choose,
   dragOnPage,
+  findEnabled,
+  findPageElement,
+  openStep,
   openTooltip,
+  panelOf,
+  type PlayContext,
+  runToResults,
   STAGE_TIMEOUT,
-  waitForToolPanel,
+  toggle,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 
 const meta = {
@@ -16,30 +29,104 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const manualMode = { parameters: { mode: "manual" } } as const;
-
 const noFiles = { files: [] } as const;
+
+async function addWords(context: PlayContext, ...words: string[]) {
+  const panel = await panelOf(context);
+  const input = await panel.findByPlaceholderText(
+    "Enter a word",
+    undefined,
+    STAGE_TIMEOUT,
+  );
+  await waitFor(() => expect(input).toBeEnabled(), STAGE_TIMEOUT);
+  for (const word of words) {
+    await userEvent.type(input, word);
+    await userEvent.click(panel.getByRole("button", { name: /Add$/ }));
+    await panel.findByTitle(word);
+  }
+  return panel;
+}
+
+async function openAdvanced(context: PlayContext) {
+  const panel = await openStep(context, "Advanced");
+  await panel.findByRole("checkbox", { name: "Use Regex" }, STAGE_TIMEOUT);
+  return panel;
+}
+
+async function chooseManual(context: PlayContext) {
+  const panel = await choose(context, "Manual");
+  await panel.findByText("Manual Redaction Controls", undefined, STAGE_TIMEOUT);
+  return panel;
+}
+
+async function findManualColour(context: PlayContext) {
+  const panel = await chooseManual(context);
+  const colour = await findEnabled(context, "textbox", "Redaction Color");
+  await findPageElement(context, '[data-page-index="0"] img');
+  return { panel, colour };
+}
 
 export const Panel: Story = {};
 
-export const WordsToRedactAdded: Story = {
-  args: { parameters: { wordsToRedact: ["Confidential", "Top-Secret"] } },
+export const WordsAdded: Story = {
+  play: async (context) => {
+    const panel = await addWords(context, "Confidential", "Top-Secret");
+    await expect(
+      panel.queryByText("Examples: Confidential, Top-Secret"),
+    ).toBeNull();
+    const run = panel.getByRole("button", { name: /^Redact/ });
+    await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
+  },
+};
+
+export const WordRemoved: Story = {
+  play: async (context) => {
+    const panel = await addWords(context, "Confidential", "Top-Secret");
+    await userEvent.click(panel.getAllByRole("button", { name: "Remove" })[0]);
+    await waitFor(() => expect(panel.queryByTitle("Confidential")).toBeNull());
+    await expect(panel.getByTitle("Top-Secret")).toBeVisible();
+  },
+};
+
+export const AdvancedSettings: Story = {
+  play: async (context) => {
+    await openAdvanced(context);
+  },
+};
+
+export const AdvancedSettingsChanged: Story = {
+  play: async (context) => {
+    const panel = await openAdvanced(context);
+    const colour = panel.getByRole("textbox", { name: "Box Color" });
+    await userEvent.clear(colour);
+    await userEvent.type(colour, "#c0392b");
+    const padding = panel.getByRole("textbox", {
+      name: "Custom Extra Padding",
+    });
+    await userEvent.tripleClick(padding);
+    await userEvent.keyboard("3");
+    for (const name of [
+      "Use Regex",
+      "Whole Word Search",
+      "Case Sensitive Matching",
+      "Convert PDF to PDF-Image",
+    ])
+      await toggle(context, "checkbox", name);
+    await waitFor(() => expect(padding).toHaveValue("3"));
+  },
 };
 
 export const ManualMode: Story = {
-  args: manualMode,
+  ...onViewer(),
+  play: async (context) => {
+    await findManualColour(context);
+  },
 };
 
 export const ManualModeWithMarks: Story = {
-  args: { ...manualMode, showWorkbench: true, workbench: "viewer" },
+  ...onViewer(),
   play: async (context) => {
-    const panel = within(await waitForToolPanel(context));
-    const colour = await panel.findByLabelText(
-      "Redaction Color",
-      undefined,
-      STAGE_TIMEOUT,
-    );
-    await waitFor(() => expect(colour).toBeEnabled(), STAGE_TIMEOUT);
+    const { panel } = await findManualColour(context);
     await dragOnPage(
       context,
       { x: 0.2, y: 0.2 },
@@ -51,6 +138,9 @@ export const ManualModeWithMarks: Story = {
       { name: /^Apply Redactions \(1\)/ },
       STAGE_TIMEOUT,
     );
+    await expect(
+      panel.getByRole("button", { name: "Save Changes" }),
+    ).toBeEnabled();
   },
 };
 
@@ -67,39 +157,41 @@ export const RedactionSettingsTooltip: Story = {
 };
 
 export const AdvancedTooltip: Story = {
-  play: openTooltip({ step: "Advanced" }),
-};
-
-export const WordsToRedactTooltip: Story = {
-  play: openTooltip({ info: "Examples: Confidential, Top-Secret" }),
-};
-
-export const ConvertToImageTooltip: Story = {
-  play: openTooltip({ info: /^Converts the PDF to an image-based PDF/ }),
+  // The tooltip's body scrolls but cannot take keyboard focus.
+  parameters: knownA11yIssues("scrollable-region-focusable"),
+  play: openTooltip({ step: "Advanced" }, { after: openAdvanced }),
 };
 
 export const ManualRedactionControlsTooltip: Story = {
-  args: manualMode,
-  play: openTooltip({ step: "Manual Redaction Controls" }),
-};
-
-export const RedactionToolsTooltip: Story = {
-  args: manualMode,
-  play: openTooltip({ info: /^Select text or draw areas on the PDF/ }),
+  ...onViewer(),
+  play: openTooltip(
+    { step: "Manual Redaction Controls" },
+    { after: findManualColour },
+  ),
 };
 
 export const AutomaticUnavailableTooltip: Story = {
   args: noFiles,
   play: openTooltip({
     element: async (context) => {
-      const panel = within(await waitForToolPanel(context));
+      const panel = await panelOf(context);
       const automatic = await panel.findByRole(
         "radio",
         { name: "Automatic" },
         STAGE_TIMEOUT,
       );
       await waitFor(() => expect(automatic).toBeDisabled());
-      return within(automatic.parentElement!).getByText("Automatic");
+      return within(automatic.parentElement).getByText("Automatic");
     },
   }),
+};
+
+export const Results: Story = {
+  parameters: toolPanelServer(
+    fixtureResponse("/api/v1/security/auto-redact", "sample.pdf"),
+  ),
+  play: async (context) => {
+    await addWords(context, "Confidential");
+    await runToResults(context);
+  },
 };

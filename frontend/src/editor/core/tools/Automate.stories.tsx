@@ -3,16 +3,18 @@ import { delay, http, HttpResponse } from "msw";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   fixtureResponse,
+  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  bodyOf,
   openMenu,
   openTooltip,
-  STAGE_TIMEOUT,
-  waitForToolPanel,
+  panelOf,
   type PanelQueries,
   type PlayContext,
+  STAGE_TIMEOUT,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 
 const meta = {
@@ -23,76 +25,50 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const CREATE_NEW = "Create New Automation";
 const SUGGESTED = "Secure PDF Ingestion";
 const SAVED = {
   name: "Clean up scans",
   description: "Repairs each file, then strips its annotations.",
   tools: ["Repair", "Remove Annotations"],
 };
+const REPAIR_ENDPOINT = "/api/v1/misc/repair";
 
 async function openCreation(context: PlayContext) {
-  const panel = within(await waitForToolPanel(context));
+  const panel = await panelOf(context);
   await userEvent.click(
-    await panel.findByRole("button", { name: "Create New Automation" }),
+    await panel.findByRole("button", { name: CREATE_NEW }, STAGE_TIMEOUT),
   );
   await panel.findByRole("textbox", { name: /Automation Name/ }, STAGE_TIMEOUT);
   return panel;
 }
 
-export const Panel: Story = {};
+async function openEntryMenu(context: PlayContext, entry: string) {
+  const panel = await panelOf(context);
+  await userEvent.hover(
+    await panel.findByRole("button", { name: entry }, STAGE_TIMEOUT),
+  );
+  const menu = await openMenu(context, `Open menu for ${entry}`);
+  await waitFor(
+    () => expect(within(menu).getAllByRole("menuitem")[0]).toBeVisible(),
+    STAGE_TIMEOUT,
+  );
+  return menu;
+}
 
-export const SuggestedAutomationTooltip: Story = {
-  play: openTooltip({ info: SUGGESTED }),
-};
+async function pickMenuItem(menu: HTMLElement, name: string) {
+  await userEvent.click(within(menu).getByRole("menuitem", { name }));
+  await waitFor(() => expect(menu).not.toBeInTheDocument(), STAGE_TIMEOUT);
+}
 
-export const CreateAutomation: Story = {
-  play: async (context) => {
-    await openCreation(context);
-  },
-};
-
-export const CreateAutomationTooltip: Story = {
-  play: openTooltip({ step: "Create Automation" }, { after: openCreation }),
-};
-
-export const IconOptionTooltip: Story = {
-  play: openTooltip({
-    element: async (context) => {
-      const panel = await openCreation(context);
-      await userEvent.click(panel.getByRole("button", { name: "Icon" }));
-      const picker = await within(
-        context.canvasElement.ownerDocument.body,
-      ).findByRole("dialog", {}, STAGE_TIMEOUT);
-      return picker.querySelector<HTMLElement>(".mantine-SimpleGrid-root > *")!;
-    },
-  }),
-};
-
-export const ToolSelected: Story = {
-  play: async (context) => {
-    const panel = await openCreation(context);
-    const [firstTool] = panel.getAllByPlaceholderText("Select a tool...");
-    await userEvent.type(firstTool, "Compress");
-    await userEvent.click(
-      await panel.findByRole("button", { name: /^Compress/ }, STAGE_TIMEOUT),
-    );
-    await panel.findByRole("button", { name: "Configure tool" }, STAGE_TIMEOUT);
-  },
-};
-
-export const RunAutomation: Story = {
-  play: async (context) => {
-    const panel = within(await waitForToolPanel(context));
-    await userEvent.click(
-      await panel.findByRole("button", { name: SUGGESTED }),
-    );
-    await panel.findByRole("button", { name: /Run Automation/ }, STAGE_TIMEOUT);
-  },
-};
+async function searchTools(panel: PanelQueries, query: string, slot = 0) {
+  const input = panel.getAllByPlaceholderText("Select a tool...")[slot];
+  await userEvent.click(input);
+  if (query) await userEvent.type(input, query);
+}
 
 async function chooseTool(panel: PanelQueries, toolName: string) {
-  const [emptySlot] = panel.getAllByPlaceholderText("Select a tool...");
-  await userEvent.type(emptySlot, toolName);
+  await searchTools(panel, toolName);
   await userEvent.click(
     await panel.findByRole(
       "button",
@@ -102,38 +78,242 @@ async function chooseTool(panel: PanelQueries, toolName: string) {
   );
 }
 
-async function saveAutomation(context: PlayContext) {
+async function fillAutomation(context: PlayContext) {
   const panel = await openCreation(context);
   await userEvent.type(
     panel.getByRole("textbox", { name: /Automation Name/ }),
     SAVED.name,
   );
   await userEvent.type(
-    panel.getByRole("textbox", { name: "Description" }),
+    panel.getByRole("textbox", { name: /^Description/ }),
     SAVED.description,
   );
   for (const tool of SAVED.tools) await chooseTool(panel, tool);
   const save = panel.getByRole("button", { name: "Save Automation" });
   await waitFor(() => expect(save).toBeEnabled(), STAGE_TIMEOUT);
-  await userEvent.click(save);
-  return {
-    panel,
-    entry: await panel.findByRole(
-      "button",
-      { name: SAVED.name },
-      STAGE_TIMEOUT,
-    ),
-  };
+  return panel;
+}
+
+async function saveAutomation(context: PlayContext) {
+  const panel = await fillAutomation(context);
+  await userEvent.click(panel.getByRole("button", { name: "Save Automation" }));
+  await panel.findByRole("button", { name: SAVED.name }, STAGE_TIMEOUT);
+  return panel;
 }
 
 async function saveThenEdit(context: PlayContext) {
-  const { panel, entry } = await saveAutomation(context);
-  await userEvent.hover(entry);
-  const menu = await openMenu(context, `Open menu for ${SAVED.name}`);
-  await userEvent.click(within(menu).getByRole("menuitem", { name: "Edit" }));
+  const panel = await saveAutomation(context);
+  const menu = await openEntryMenu(context, SAVED.name);
+  await pickMenuItem(menu, "Edit");
   await panel.findByText("Edit Automation", { exact: true }, STAGE_TIMEOUT);
   return panel;
 }
+
+async function openRun(context: PlayContext, entry: string) {
+  const panel = await panelOf(context);
+  await userEvent.click(
+    await panel.findByRole("button", { name: entry }, STAGE_TIMEOUT),
+  );
+  await panel.findByRole("button", { name: "Run Automation" }, STAGE_TIMEOUT);
+  return panel;
+}
+
+async function runSavedAutomation(context: PlayContext) {
+  await saveAutomation(context);
+  const panel = await openRun(context, SAVED.name);
+  const run = panel.getByRole("button", { name: "Run Automation" });
+  await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
+  await userEvent.click(run);
+  return panel;
+}
+
+async function runAutomationToResults(context: PlayContext) {
+  const panel = await runSavedAutomation(context);
+  await panel.findByRole("button", { name: "Undo" }, STAGE_TIMEOUT);
+}
+
+export const Panel: Story = {};
+
+export const SuggestedAutomationTooltip: Story = {
+  play: openTooltip({ text: SUGGESTED }),
+};
+
+export const CreateNewMenu: Story = {
+  // The open menu holds a focusable div that is not a menuitem.
+  parameters: knownA11yIssues("aria-required-children"),
+  play: async (context) => {
+    const menu = await openEntryMenu(context, CREATE_NEW);
+    await expect(
+      within(menu).getByRole("menuitem", { name: "Import" }),
+    ).toBeVisible();
+  },
+};
+
+export const ImportAutomation: Story = {
+  play: async (context) => {
+    const menu = await openEntryMenu(context, CREATE_NEW);
+    await pickMenuItem(menu, "Import");
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: "Import automation" },
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const SuggestedAutomationMenu: Story = {
+  // The open menu holds a focusable div that is not a menuitem.
+  parameters: knownA11yIssues("aria-required-children"),
+  play: async (context) => {
+    const menu = await openEntryMenu(context, SUGGESTED);
+    await expect(
+      within(menu).getByRole("menuitem", { name: "Copy to Saved" }),
+    ).toBeVisible();
+  },
+};
+
+export const CopiedToSaved: Story = {
+  play: async (context) => {
+    const menu = await openEntryMenu(context, SUGGESTED);
+    await pickMenuItem(menu, "Copy to Saved");
+    const panel = await panelOf(context);
+    await waitFor(
+      () =>
+        expect(panel.getAllByRole("button", { name: SUGGESTED })).toHaveLength(
+          2,
+        ),
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const CreateAutomation: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await expect(panel.getByText("Selected Tools (2)")).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "Save Automation" }),
+    ).toBeDisabled();
+    await expect(
+      panel.getByRole("button", { name: "Export for Folder Scanning" }),
+    ).toBeDisabled();
+  },
+};
+
+async function openIconPicker(context: PlayContext) {
+  const panel = await openCreation(context);
+  await userEvent.click(panel.getByRole("button", { name: "Icon" }));
+  return bodyOf(context).findByRole("dialog", {}, STAGE_TIMEOUT);
+}
+
+export const IconPicker: Story = {
+  play: async (context) => {
+    await openIconPicker(context);
+  },
+};
+
+export const IconOptionTooltip: Story = {
+  play: openTooltip({
+    element: async (context) => {
+      const picker = await openIconPicker(context);
+      // The icon options are plain divs with no role or name.
+      const option = picker.querySelector(".mantine-SimpleGrid-root > *");
+      if (!(option instanceof HTMLElement))
+        throw new Error("The icon picker shows no options");
+      return option;
+    },
+  }),
+};
+
+export const ToolPicker: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await searchTools(panel, "");
+    await panel.findByRole("button", { name: /^Repair/ }, STAGE_TIMEOUT);
+  },
+};
+
+export const ToolSearchNoResults: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await searchTools(panel, "zzzz");
+    await panel.findByText("No tools found", undefined, STAGE_TIMEOUT);
+  },
+};
+
+export const ToolNotConfigured: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await chooseTool(panel, "Compress");
+    await panel.findByText("! Not Configured", undefined, STAGE_TIMEOUT);
+    await expect(
+      panel.getByRole("button", { name: "Configure tool" }),
+    ).toBeVisible();
+  },
+};
+
+export const ConfigureTool: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await chooseTool(panel, "Compress");
+    await userEvent.click(
+      await panel.findByRole(
+        "button",
+        { name: "Configure tool" },
+        STAGE_TIMEOUT,
+      ),
+    );
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: /Configure Compress/ },
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const ThirdToolAdded: Story = {
+  play: async (context) => {
+    const panel = await openCreation(context);
+    await userEvent.click(panel.getByRole("button", { name: "Add Tool" }));
+    await panel.findByText("Selected Tools (3)", undefined, STAGE_TIMEOUT);
+    await expect(
+      panel.getByRole("button", { name: "Remove tool" }),
+    ).toBeVisible();
+  },
+};
+
+export const ReadyToSave: Story = {
+  play: async (context) => {
+    const panel = await fillAutomation(context);
+    await expect(panel.getByRole("button", { name: "Export" })).toBeEnabled();
+  },
+};
+
+export const SavedAutomation: Story = {
+  play: async (context) => {
+    await saveAutomation(context);
+  },
+};
+
+export const SavedAutomationTooltip: Story = {
+  play: openTooltip({ text: SAVED.name }, { after: saveAutomation }),
+};
+
+export const SavedAutomationMenu: Story = {
+  // The open menu holds a focusable div that is not a menuitem.
+  parameters: knownA11yIssues("aria-required-children"),
+  play: async (context) => {
+    await saveAutomation(context);
+    const menu = within(await openEntryMenu(context, SAVED.name));
+    for (const item of [
+      "Edit",
+      "Export",
+      "Export for Folder Scanning",
+      "Delete",
+    ])
+      await expect(menu.getByRole("menuitem", { name: item })).toBeVisible();
+  },
+};
 
 export const EditAutomation: Story = {
   play: async (context) => {
@@ -142,42 +322,39 @@ export const EditAutomation: Story = {
       panel.getByRole("textbox", { name: /Automation Name/ }),
     ).toHaveValue(SAVED.name);
     await expect(
-      panel.getByRole("textbox", { name: "Description" }),
+      panel.getByRole("textbox", { name: /^Description/ }),
     ).toHaveValue(SAVED.description);
-    for (const tool of SAVED.tools)
-      await expect(
-        panel.getByRole("button", { name: new RegExp(`^${tool}`) }),
-      ).toBeVisible();
     await expect(panel.queryByText("! Not Configured")).toBeNull();
   },
 };
 
-export const EditAutomationTooltip: Story = {
-  play: openTooltip({ step: "Edit Automation" }, { after: saveThenEdit }),
+export const RunAutomation: Story = {
+  play: async (context) => {
+    await openRun(context, SUGGESTED);
+  },
 };
 
-const REPAIR_ENDPOINT = "/api/v1/misc/repair";
-
-async function runSavedAutomation(context: PlayContext) {
-  const { panel, entry } = await saveAutomation(context);
-  await userEvent.click(entry);
-  const run = await panel.findByRole(
-    "button",
-    { name: "Run Automation" },
-    STAGE_TIMEOUT,
-  );
-  await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
-  await userEvent.click(run);
-  return panel;
-}
+export const RunWithoutFiles: Story = {
+  args: { files: [] },
+  play: async (context) => {
+    const panel = await openRun(context, SUGGESTED);
+    await expect(
+      panel.getByRole("button", { name: "Run Automation" }),
+    ).toBeDisabled();
+  },
+};
 
 export const RunInProgress: Story = {
-  parameters: toolPanelServer(
-    http.post(`*${REPAIR_ENDPOINT}`, async () => {
-      await delay("infinite");
-      return new HttpResponse(null);
-    }),
-  ),
+  // AutomationRun's Progress bar has no accessible name.
+  parameters: {
+    ...knownA11yIssues("aria-progressbar-name"),
+    ...toolPanelServer(
+      http.post(`*${REPAIR_ENDPOINT}`, async () => {
+        await delay("infinite");
+        return new HttpResponse(null);
+      }),
+    ),
+  },
   play: async (context) => {
     const panel = await runSavedAutomation(context);
     await panel.findByText("Progress: 1/2", undefined, STAGE_TIMEOUT);
@@ -189,22 +366,28 @@ export const RunInProgress: Story = {
   },
 };
 
+export const StepFailed: Story = {
+  parameters: toolPanelServer(
+    http.post(`*${REPAIR_ENDPOINT}`, () =>
+      HttpResponse.json({ error: "Repair failed" }, { status: 500 }),
+    ),
+  ),
+  play: async (context) => {
+    const panel = await runSavedAutomation(context);
+    await panel.findByText("✕", undefined, STAGE_TIMEOUT);
+  },
+};
+
 const repairsToSample = toolPanelServer(
   fixtureResponse(REPAIR_ENDPOINT, "sample.pdf"),
 );
 
-async function runToResults(context: PlayContext) {
-  const panel = await runSavedAutomation(context);
-  await panel.findByText("Review", { exact: true }, STAGE_TIMEOUT);
-  await panel.findByRole("button", { name: "Finish" }, STAGE_TIMEOUT);
-}
-
 export const AutomationResults: Story = {
   parameters: repairsToSample,
-  play: runToResults,
+  play: runAutomationToResults,
 };
 
 export const UndoOperationTooltip: Story = {
   parameters: repairsToSample,
-  play: openTooltip({ info: "Undo" }, { after: runToResults }),
+  play: openTooltip({ info: "Undo" }, { after: runAutomationToResults }),
 };

@@ -145,13 +145,14 @@ export async function openStep(
 }
 
 /**
- * Puts fixture files into one of the panel's own file inputs, the way a file
- * picked in the dialog arrives, so the tool reads them through its real
- * handler. `nth` picks among several inputs in panel order.
+ * Puts files into one of the panel's own file inputs, the way a file picked in
+ * the dialog arrives, so the tool reads them through its real handler. Takes
+ * fixture names, or Files a story builds itself. `nth` picks among several
+ * inputs in panel order.
  */
 export async function uploadToPanel(
   context: PlayContext,
-  fixtures: FixtureName | readonly FixtureName[],
+  files: FixtureName | File | readonly (FixtureName | File)[],
   nth = 0,
 ): Promise<PanelQueries> {
   const panelElement = await waitForToolPanel(context);
@@ -161,19 +162,160 @@ export async function uploadToPanel(
         nth
       ];
     expect(found).toBeDefined();
-    return found!;
+    return found;
   }, STAGE_TIMEOUT);
-  const names = typeof fixtures === "string" ? [fixtures] : fixtures;
-  await userEvent.upload(input, await Promise.all(names.map(loadFixture)));
+  const list =
+    typeof files === "string" || files instanceof File ? [files] : files;
+  await userEvent.upload(
+    input,
+    await Promise.all(
+      list.map((file: FixtureName | File) =>
+        file instanceof File ? file : loadFixture(file),
+      ),
+    ),
+  );
   return within(await waitForToolPanel(context));
 }
 
 /** Clicks the tool's run button once it is enabled. */
 export async function runTool(context: PlayContext): Promise<PanelQueries> {
+  await startTool(context);
+  return within(await waitForToolPanel(context));
+}
+
+/**
+ * Runs the tool and resolves once the review step shows its result: Undo, or
+ * the download button a tool without Undo shows.
+ */
+export async function runToResults(
+  context: PlayContext,
+): Promise<PanelQueries> {
+  const panel = await runTool(context);
+  await waitFor(
+    () =>
+      expect(
+        panel.queryByRole("button", { name: "Undo" }) ??
+          panel.queryByTestId("download-result-button"),
+      ).toBeVisible(),
+    STAGE_TIMEOUT,
+  );
+  return panel;
+}
+
+/**
+ * Clicks the run button once it is enabled and resolves without waiting for
+ * the panel to settle, for a story that shows the run in flight: a settled
+ * panel has no "Loading" text, which a running one does.
+ */
+export async function startTool(context: PlayContext): Promise<PanelQueries> {
   const run = await findRunButton(context);
   await waitFor(() => expect(run).toBeEnabled(), STAGE_TIMEOUT);
   await userEvent.click(run);
+  return within(run.closest<HTMLElement>(PANEL)!);
+}
+
+/** Queries over the whole document, for menus, listboxes and dialogs the panel portals out. */
+export function bodyOf(context: PlayContext): PanelQueries {
+  return within(context.canvasElement.ownerDocument.body);
+}
+
+/** Queries over the panel once it has settled. */
+export async function panelOf(context: PlayContext): Promise<PanelQueries> {
   return within(await waitForToolPanel(context));
+}
+
+/** The panel control with `role` and accessible `name`, once it is enabled. */
+export async function findEnabled(
+  context: PlayContext,
+  role: "button" | "textbox" | "checkbox" | "switch",
+  name: string | RegExp,
+): Promise<HTMLElement> {
+  const panel = await panelOf(context);
+  const control = await panel.findByRole(role, { name }, STAGE_TIMEOUT);
+  await waitFor(() => expect(control).toBeEnabled(), STAGE_TIMEOUT);
+  return control;
+}
+
+/** Clicks a panel checkbox or switch and resolves once it has taken the new state. */
+export async function toggle(
+  context: PlayContext,
+  role: "checkbox" | "switch",
+  name: string | RegExp,
+): Promise<PanelQueries> {
+  const control = await findEnabled(context, role, name);
+  if (!(control instanceof HTMLInputElement))
+    throw new Error(`${role} "${String(name)}" is not an input`);
+  const wasChecked = control.checked;
+  await userEvent.click(control);
+  await waitFor(() => expect(control.checked).toBe(!wasChecked));
+  return panelOf(context);
+}
+
+/** Replaces the text in the panel's textbox named `name` and resolves with it. */
+export async function typeInto(
+  context: PlayContext,
+  name: string | RegExp,
+  text: string,
+): Promise<HTMLElement> {
+  const input = await findEnabled(context, "textbox", name);
+  await userEvent.clear(input);
+  await userEvent.type(input, text);
+  return input;
+}
+
+/**
+ * Opens the panel's ColorInput named `name` and resolves with its picker,
+ * which Mantine portals out of the panel and fades in.
+ */
+export async function openColorPicker(
+  context: PlayContext,
+  name: string | RegExp,
+): Promise<HTMLElement> {
+  await userEvent.click(await findEnabled(context, "textbox", name));
+  return waitFor(() => {
+    const picker = context.canvasElement.ownerDocument.querySelector(
+      ".mantine-ColorInput-dropdown",
+    );
+    if (!(picker instanceof HTMLElement))
+      throw new Error("The colour picker has not opened");
+    expect(picker).toBeVisible();
+    return picker;
+  }, STAGE_TIMEOUT);
+}
+
+/**
+ * Opens the panel's Select named `name` once it is enabled and resolves with
+ * its listbox, which Mantine portals out of the panel. Found through the
+ * input's aria-controls: a viewer page can draw listboxes of its own.
+ */
+export async function openSelect(
+  context: PlayContext,
+  name: string | RegExp,
+): Promise<PanelQueries> {
+  const select = await findEnabled(context, "textbox", name);
+  await userEvent.click(select);
+  const listbox = await waitFor(() => {
+    const id = select.getAttribute("aria-controls");
+    const found = id ? select.ownerDocument.getElementById(id) : null;
+    expect(found).not.toBeNull();
+    return found!;
+  }, STAGE_TIMEOUT);
+  return within(listbox);
+}
+
+/** Picks `option` in the panel's Select named `name` and resolves once the field shows it. */
+export async function selectOption(
+  context: PlayContext,
+  name: string | RegExp,
+  option: string,
+): Promise<PanelQueries> {
+  const listbox = await openSelect(context, name);
+  await userEvent.click(listbox.getByRole("option", { name: option }));
+  const panel = within(await waitForToolPanel(context));
+  await waitFor(() =>
+    expect(panel.getByRole("textbox", { name })).toHaveValue(option),
+  );
+  return panel;
 }
 
 /** Opens a panel menu from its trigger button and resolves with the open menu. */
@@ -313,6 +455,16 @@ export async function placeOnPage(
   return panel;
 }
 
+/** Places as placeOnPage does, then undoes it, for the panel's Redo state. */
+export async function placeAndUndo(
+  context: PlayContext,
+  arm: (context: PlayContext) => Promise<PanelQueries>,
+): Promise<PanelQueries> {
+  const panel = await placeOnPage(context, arm);
+  await undoInPanel(panel);
+  return panel;
+}
+
 /** Clicks the panel's Undo once it is enabled and resolves once Redo is. */
 export async function undoInPanel(panel: PanelQueries): Promise<void> {
   const undo = panel.getByRole("button", { name: "Undo" });
@@ -351,14 +503,16 @@ export async function unlockEncryptedPdf(
 
 /**
  * A step title can share its text with the tool header or the run button; only
- * the step's title carries the (i) its tooltip opens from.
+ * the step's title is followed by the info icon its tooltip opens from.
  */
 function findStepTitle(panel: PanelQueries, title: string) {
   return waitFor(() => {
     const stepTitle = panel
       .getAllByText(title, { exact: true })
-      .find((element: HTMLElement) =>
-        element.parentElement?.querySelector(".sui-info"),
+      .find(
+        (element: HTMLElement) =>
+          element.nextElementSibling instanceof SVGElement &&
+          !element.closest("button"),
       );
     expect(stepTitle).toBeDefined();
     return stepTitle!;

@@ -1,6 +1,6 @@
 import type { StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
-import { expect, waitFor, within } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 import {
   endpointUnavailable,
   fixtureResponse,
@@ -8,12 +8,14 @@ import {
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  choose,
   openTooltip,
+  panelOf,
   type PlayContext,
   runTool,
   STAGE_TIMEOUT,
+  untilPanelShows,
   waitForPanelText,
-  waitForToolPanel,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 import type { DetectionSummary } from "@editor/services/formDetection/progress";
 
@@ -26,14 +28,13 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+type Play = NonNullable<Story["play"]>;
 
 function detectionResponse(summary: DetectionSummary) {
   return fixtureResponse(DETECT_ENDPOINT, "form-fields-sample.pdf", {
     "X-Stirling-Detected-Fields": JSON.stringify(summary),
   });
 }
-
-type Play = NonNullable<Story["play"]>;
 
 function detectsUntil(text: string): Play {
   return async (context) => {
@@ -42,11 +43,43 @@ function detectsUntil(text: string): Play {
   };
 }
 
-export const Panel: Story = {};
+function withSensitivity(option: string, hint: string): Play {
+  return async (context) => {
+    await choose(context, option);
+    await waitForPanelText(context, hint);
+  };
+}
+
+export const Panel: Story = {
+  play: untilPanelShows("Recommended for most forms."),
+};
+
+export const NoFiles: Story = {
+  args: { files: [] },
+};
+
+export const NoFilesTooltip: Story = {
+  args: { files: [] },
+  play: openTooltip({ runButton: true }),
+};
+
+export const StrictSensitivity: Story = {
+  play: withSensitivity(
+    "Strict",
+    "Only very confident matches - fewer fields, fewer mistakes.",
+  ),
+};
+
+export const ThoroughSensitivity: Story = {
+  play: withSensitivity(
+    "Thorough",
+    "Finds more fields, but may add some where none belong.",
+  ),
+};
 
 export const Detecting: Story = {
   parameters: toolPanelServer(
-    http.post(DETECT_ENDPOINT, async () => {
+    http.post(`*${DETECT_ENDPOINT}`, async () => {
       await delay("infinite");
       return new HttpResponse(null);
     }),
@@ -57,12 +90,23 @@ export const Detecting: Story = {
 export const DetectionResults: Story = {
   parameters: toolPanelServer(
     detectionResponse({
-      total: 7,
-      byType: { text: 4, checkbox: 2, signature: 1 },
+      total: 9,
+      byType: { text: 4, checkbox: 2, radio: 2, signature: 1 },
       pagesWithFields: 2,
     }),
   ),
-  play: detectsUntil("7 fillable fields added"),
+  play: detectsUntil("Across 2 pages."),
+};
+
+export const DetectionResultsOnePage: Story = {
+  parameters: toolPanelServer(
+    detectionResponse({
+      total: 3,
+      byType: { text: 3 },
+      pagesWithFields: 1,
+    }),
+  ),
+  play: detectsUntil("3 fillable fields added"),
 };
 
 export const NoFieldsDetected: Story = {
@@ -72,8 +116,28 @@ export const NoFieldsDetected: Story = {
   play: detectsUntil("No form fields found"),
 };
 
+export const ResultsWithoutSummary: Story = {
+  parameters: toolPanelServer(
+    fixtureResponse(DETECT_ENDPOINT, "form-fields-sample.pdf"),
+  ),
+  play: async (context) => {
+    const panel = await runTool(context);
+    await panel.findByRole("button", { name: "Undo" }, STAGE_TIMEOUT);
+    await expect(panel.queryByText("Detection results")).toBeNull();
+  },
+};
+
+export const DetectionFailed: Story = {
+  parameters: toolPanelServer(
+    http.post(`*${DETECT_ENDPOINT}`, () =>
+      HttpResponse.json(null, { status: 500 }),
+    ),
+  ),
+  play: detectsUntil("Request failed with status code 500"),
+};
+
 async function waitUntilUnavailable(context: PlayContext): Promise<void> {
-  const panel = within(await waitForToolPanel(context));
+  const panel = await panelOf(context);
   await waitFor(
     () =>
       expect(
@@ -86,20 +150,6 @@ async function waitUntilUnavailable(context: PlayContext): Promise<void> {
 export const Unavailable: Story = {
   play: waitUntilUnavailable,
   parameters: toolPanelServer(...endpointUnavailable("form-detection")),
-};
-
-export const BalancedSensitivityTooltip: Story = {
-  play: openTooltip({ info: "Recommended for most forms." }),
-};
-
-export const StrictSensitivityTooltip: Story = {
-  args: { parameters: { sensitivity: "low" } },
-  play: openTooltip({ info: /Only very confident matches/ }),
-};
-
-export const ThoroughSensitivityTooltip: Story = {
-  args: { parameters: { sensitivity: "high" } },
-  play: openTooltip({ info: /Finds more fields/ }),
 };
 
 export const UnavailableTooltip: Story = {

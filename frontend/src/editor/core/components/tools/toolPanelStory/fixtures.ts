@@ -5,6 +5,8 @@ import comparePdfB from "@editor/tests/test-fixtures/compare_sample_b.pdf?url";
 import formFieldsPdf from "@editor/tests/test-fixtures/form-fields-sample.pdf?url";
 import signedPdf from "@editor/tests/test-fixtures/signed-sample.pdf?url";
 import encryptedPdf from "@editor/tests/test-fixtures/encrypted.pdf?url";
+import encryptedRestrictedPdf from "@editor/tests/test-fixtures/encrypted-restricted.pdf?url";
+import corruptedPdf from "@editor/tests/test-fixtures/corrupted.pdf?url";
 import scannedPdf from "@editor/tests/test-fixtures/scanned-no-ocr.pdf?url";
 import scannedEncryptedPdf from "@editor/tests/test-fixtures/scanned-no-ocr-encrypted.pdf?url";
 import samplePng from "@editor/tests/test-fixtures/sample.png?url";
@@ -33,6 +35,11 @@ export const FIXTURES = {
   "form-fields-sample.pdf": { url: formFieldsPdf, type: "application/pdf" },
   "signed-sample.pdf": { url: signedPdf, type: "application/pdf" },
   "encrypted.pdf": { url: encryptedPdf, type: "application/pdf" },
+  "encrypted-restricted.pdf": {
+    url: encryptedRestrictedPdf,
+    type: "application/pdf",
+  },
+  "corrupted.pdf": { url: corruptedPdf, type: "application/pdf" },
   "scanned-no-ocr.pdf": { url: scannedPdf, type: "application/pdf" },
   "scanned-no-ocr-encrypted.pdf": {
     url: scannedEncryptedPdf,
@@ -61,8 +68,17 @@ export type FixtureName = keyof typeof FIXTURES;
 /** The password to open each encrypted fixture. */
 export const FIXTURE_PASSWORDS = {
   "encrypted.pdf": "testpass123",
+  "encrypted-restricted.pdf": "open-pass",
   "scanned-no-ocr-encrypted.pdf": "scan-password",
 } as const satisfies Partial<Record<FixtureName, string>>;
+
+/**
+ * Permissions (owner) passwords that differ from the opening password, so
+ * opening the fixture does not grant the owner's rights.
+ */
+export const FIXTURE_OWNER_PASSWORDS = {
+  "encrypted-restricted.pdf": "owner-pass",
+} as const satisfies Partial<Record<EncryptedFixtureName, string>>;
 
 export type EncryptedFixtureName = keyof typeof FIXTURE_PASSWORDS;
 

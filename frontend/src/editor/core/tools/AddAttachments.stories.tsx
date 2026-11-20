@@ -1,18 +1,24 @@
 import type { StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
-import { expect, userEvent, within } from "storybook/test";
+import { delay, http, HttpResponse } from "msw";
+import { expect, userEvent, waitFor } from "storybook/test";
 import type { AttachmentInfo } from "@editor/services/attachmentService";
 import {
+  fixtureResponse,
+  knownA11yIssues,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   openTooltip,
-  STAGE_TIMEOUT,
-  waitForToolPanel,
+  panelOf,
+  type PanelQueries,
   type PlayContext,
+  STAGE_TIMEOUT,
+  toggle,
+  uploadToPanel,
+  waitForPanelText,
+  waitForToolPanel,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
-import { loadFixture } from "@editor/components/tools/toolPanelStory/fixtures";
 
 const meta = {
   title: "Tools/Manage Attachments/Panel",
@@ -22,15 +28,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const LIST_ENDPOINT = "*/api/v1/misc/list-attachments";
+
 const INVOICE: AttachmentInfo = {
   filename: "invoice-2024-03.pdf",
   size: 184_320,
   contentType: "application/pdf",
 };
 
+const LINE_ITEMS: AttachmentInfo = {
+  filename: "line-items.csv",
+  size: 4_096,
+  contentType: "text/csv",
+};
+
 const SEVERAL_ATTACHMENTS: AttachmentInfo[] = [
   INVOICE,
-  { filename: "line-items.csv", size: 4_096, contentType: "text/csv" },
+  LINE_ITEMS,
   { filename: "signature.png", size: 52_480, contentType: "image/png" },
   {
     filename: "terms-and-conditions.docx",
@@ -40,88 +54,177 @@ const SEVERAL_ATTACHMENTS: AttachmentInfo[] = [
   },
 ];
 
+const RENAMED = "line-items-final.csv";
+
+function listing(attachments: AttachmentInfo[]) {
+  return http.post(LIST_ENDPOINT, () => HttpResponse.json(attachments));
+}
+
 function attachmentsInDocument(attachments: AttachmentInfo[]) {
-  return toolPanelServer(
-    http.post("/api/v1/misc/list-attachments", () =>
-      HttpResponse.json(attachments),
-    ),
+  return toolPanelServer(listing(attachments));
+}
+
+async function findListed(context: PlayContext): Promise<PanelQueries> {
+  const panel = await panelOf(context);
+  await panel.findByText(INVOICE.filename, undefined, STAGE_TIMEOUT);
+  return panel;
+}
+
+const findEmptyList = (context: PlayContext) =>
+  waitForPanelText(
+    context,
+    "No attachments inside this PDF yet. Drop files below or click to browse.",
+  );
+
+async function startRename(panel: PanelQueries, index = 0) {
+  await userEvent.click(
+    panel.getAllByRole("button", { name: "Rename attachment" })[index],
   );
 }
 
-async function findPanel(context: PlayContext) {
-  const panel = within(await waitForToolPanel(context));
-  await panel.findByText(INVOICE.filename, undefined, STAGE_TIMEOUT);
+async function stagePendingChanges(context: PlayContext) {
+  const panel = await findListed(context);
+  await uploadToPanel(context, "sample.png");
+  await panel.findByText("STAGED", undefined, STAGE_TIMEOUT);
+  await userEvent.click(
+    panel.getAllByRole("button", { name: "Remove attachment" })[0],
+  );
+  await startRename(panel);
+  const nameInput = panel.getByDisplayValue(LINE_ITEMS.filename);
+  await userEvent.clear(nameInput);
+  await userEvent.type(nameInput, `${RENAMED}{Enter}`);
+  await panel.findByRole(
+    "button",
+    { name: /Save Changes \(3\)/ },
+    STAGE_TIMEOUT,
+  );
   return panel;
 }
 
 export const Panel: Story = {
   parameters: attachmentsInDocument([]),
+  play: async (context) => {
+    await findEmptyList(context);
+  },
+};
+
+export const LoadingAttachments: Story = {
+  parameters: toolPanelServer(
+    http.post(LIST_ENDPOINT, async () => {
+      await delay("infinite");
+      return HttpResponse.json([]);
+    }),
+  ),
+  play: async (context) => {
+    const panel = await waitForToolPanel(context);
+    await waitFor(
+      () =>
+        expect(panel.querySelector(".mantine-Skeleton-root")).not.toBeNull(),
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const ListingFailed: Story = {
+  parameters: toolPanelServer(
+    http.post(LIST_ENDPOINT, () =>
+      HttpResponse.json({ error: "unreadable" }, { status: 500 }),
+    ),
+  ),
+  play: async (context) => {
+    await findEmptyList(context);
+  },
 };
 
 export const WithAttachments: Story = {
   parameters: attachmentsInDocument(SEVERAL_ATTACHMENTS),
   play: async (context) => {
-    await findPanel(context);
+    const panel = await findListed(context);
+    await expect(
+      panel.getByPlaceholderText("Filter attachments..."),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole("button", { name: "Extract all" }),
+    ).toBeVisible();
   },
 };
 
 export const FilteredAttachments: Story = {
   parameters: attachmentsInDocument(SEVERAL_ATTACHMENTS),
   play: async (context) => {
-    const panel = await findPanel(context);
+    const panel = await findListed(context);
     await userEvent.type(
       panel.getByPlaceholderText("Filter attachments..."),
       "invoice",
     );
     await panel.findByRole("button", { name: "Cancel" });
+    await waitFor(() =>
+      expect(panel.queryByText(LINE_ITEMS.filename)).not.toBeInTheDocument(),
+    );
   },
 };
 
 export const PendingChanges: Story = {
   parameters: attachmentsInDocument(SEVERAL_ATTACHMENTS.slice(0, 2)),
   play: async (context) => {
-    const panel = await findPanel(context);
-    const input =
-      context.canvasElement.ownerDocument.querySelector<HTMLInputElement>(
-        "#attachments-input",
-      );
-    await userEvent.upload(input!, await loadFixture("sample.png"));
+    const panel = await stagePendingChanges(context);
+    for (const badge of ["DELETED", "RENAMED"])
+      await expect(panel.getByText(badge)).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Discard" })).toBeVisible();
+  },
+};
+
+export const SavedChanges: Story = {
+  parameters: toolPanelServer(
+    listing(SEVERAL_ATTACHMENTS.slice(0, 2)),
+    fixtureResponse("/api/v1/misc/batch-process-attachments", "sample.pdf"),
+  ),
+  play: async (context) => {
+    const panel = await stagePendingChanges(context);
     await userEvent.click(
-      panel.getAllByRole("button", { name: "Remove attachment" })[0],
+      panel.getByRole("button", { name: /Save Changes \(3\)/ }),
     );
-    await userEvent.click(
-      panel.getAllByRole("button", { name: "Rename attachment" })[0],
+    await waitFor(
+      () =>
+        expect(
+          panel.queryByRole("button", { name: /Save Changes/ }),
+        ).not.toBeInTheDocument(),
+      STAGE_TIMEOUT,
     );
-    const nameInput = panel.getByRole("textbox", {
-      name: "Rename attachment",
-    });
-    await userEvent.clear(nameInput);
-    await userEvent.type(nameInput, "line-items-final.csv{Enter}");
-    await panel.findByRole("button", { name: /Save Changes \(3\)/ });
   },
 };
 
 export const RenamingAttachment: Story = {
+  // The inline rename field has no label (AttachmentRow's TextInput).
+  parameters: {
+    ...attachmentsInDocument([INVOICE]),
+    ...knownA11yIssues("label"),
+  },
+  play: async (context) => {
+    const panel = await findListed(context);
+    await startRename(panel);
+    await expect(panel.getByDisplayValue(INVOICE.filename)).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Save" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Cancel" })).toBeVisible();
+  },
+};
+
+export const ConvertToPdfA3b: Story = {
   parameters: attachmentsInDocument([INVOICE]),
   play: async (context) => {
-    const panel = await findPanel(context);
-    await userEvent.click(
-      panel.getByRole("button", { name: "Rename attachment" }),
-    );
-    await expect(
-      panel.getByRole("textbox", { name: "Rename attachment" }),
-    ).toHaveValue(INVOICE.filename);
+    await findListed(context);
+    await toggle(context, "checkbox", /Convert to PDF\/A-3b/);
   },
+};
+
+export const NoFiles: Story = {
+  args: { files: [] },
+  parameters: attachmentsInDocument([]),
 };
 
 export const SelectAttachmentsTooltip: Story = {
   parameters: attachmentsInDocument([]),
-  play: openTooltip({ step: "Select Attachments" }),
-};
-
-export const ConvertToPdfA3bTooltip: Story = {
-  parameters: attachmentsInDocument([]),
-  play: openTooltip({ info: /^PDF\/A-3b is an archival format/ }),
+  play: openTooltip({ step: "Select Attachments" }, { after: findEmptyList }),
 };
 
 export const AttachmentNameTooltip: Story = {
@@ -129,28 +232,49 @@ export const AttachmentNameTooltip: Story = {
   play: openTooltip({ text: INVOICE.filename }),
 };
 
+export const RenamedAttachmentNameTooltip: Story = {
+  parameters: attachmentsInDocument([INVOICE]),
+  play: openTooltip(
+    { text: RENAMED },
+    {
+      after: async (context) => {
+        const panel = await findListed(context);
+        await startRename(panel);
+        const nameInput = panel.getByDisplayValue(INVOICE.filename);
+        await userEvent.clear(nameInput);
+        await userEvent.type(nameInput, `${RENAMED}{Enter}`);
+        await panel.findByText("RENAMED");
+      },
+    },
+  ),
+};
+
 export const DownloadAttachmentTooltip: Story = {
   parameters: attachmentsInDocument([INVOICE]),
-  play: openTooltip({ info: "Download attachment" }),
+  play: openTooltip({ info: "Download attachment" }, { after: findListed }),
 };
 
 export const RenameAttachmentTooltip: Story = {
   parameters: attachmentsInDocument([INVOICE]),
-  play: openTooltip({ info: "Rename attachment" }),
+  play: openTooltip({ info: "Rename attachment" }, { after: findListed }),
 };
 
 export const RemoveAttachmentTooltip: Story = {
   parameters: attachmentsInDocument([INVOICE]),
-  play: openTooltip({ info: "Remove attachment" }),
+  play: openTooltip({ info: "Remove attachment" }, { after: findListed }),
 };
 
 export const UndoDeleteTooltip: Story = {
   parameters: attachmentsInDocument([INVOICE]),
-  play: async (context) => {
-    const panel = await findPanel(context);
-    await userEvent.click(
-      panel.getByRole("button", { name: "Remove attachment" }),
-    );
-    await openTooltip({ info: "Undo delete" })(context);
-  },
+  play: openTooltip(
+    { info: "Undo delete" },
+    {
+      after: async (context) => {
+        const panel = await findListed(context);
+        await userEvent.click(
+          panel.getByRole("button", { name: "Remove attachment" }),
+        );
+      },
+    },
+  ),
 };

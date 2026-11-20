@@ -1,17 +1,26 @@
 import type { StoryObj } from "@storybook/react-vite";
+import { expect, userEvent } from "storybook/test";
 import {
   appConfig,
+  knownA11yIssues,
+  onViewer,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
   armPlacement,
+  bodyOf,
+  findEnabled,
+  openSelect,
   openTooltip,
+  panelOf,
   type PanelQueries,
+  placeAndUndo,
   placeOnPage,
   type PlayContext,
-  undoInPanel,
+  STAGE_TIMEOUT,
   untilPanelShows,
+  waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
 
 const meta = {
@@ -22,17 +31,71 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+async function typeText(context: PlayContext): Promise<void> {
+  await userEvent.type(
+    await findEnabled(context, "textbox", "Text content"),
+    "Approved by J. Doe",
+  );
+}
+
+async function enterText(context: PlayContext): Promise<PanelQueries> {
+  await typeText(context);
+  return waitForPanelText(context, "Placement paused");
+}
+
+async function armTextPlacement(context: PlayContext): Promise<PanelQueries> {
+  await typeText(context);
+  return armPlacement(context);
+}
+
+function placeText(context: PlayContext): Promise<PanelQueries> {
+  return placeOnPage(context, armTextPlacement);
+}
+
 export const Panel: Story = {};
 
-const textEntered = { parameters: { signerName: "Approved by J. Doe" } };
-const textOnViewer = {
-  ...textEntered,
-  showWorkbench: true,
-  workbench: "viewer",
-} as const;
+export const NoFiles: Story = {
+  args: { files: [] },
+};
 
 export const TextEntered: Story = {
-  args: textEntered,
+  play: enterText,
+};
+
+export const FontMenu: Story = {
+  play: async (context) => {
+    const options = await openSelect(context, "Font");
+    await expect(options.getAllByRole("option")).toHaveLength(5);
+  },
+};
+
+export const FontSizeMenu: Story = {
+  // The font size Combobox's listbox has no accessible name.
+  parameters: knownA11yIssues("aria-input-field-name"),
+  play: async (context) => {
+    await userEvent.click(await findEnabled(context, "textbox", "Font size"));
+    const panel = await panelOf(context);
+    await expect(
+      await panel.findByRole("option", { name: "200px" }, STAGE_TIMEOUT),
+    ).toBeInTheDocument();
+  },
+};
+
+export const TextColorPicker: Story = {
+  play: async (context) => {
+    const colour = await findEnabled(context, "textbox", "Text color");
+    // The swatch that opens the picker is a plain div with no role or name.
+    const swatch = colour
+      .closest(".mantine-TextInput-root")
+      ?.querySelector<HTMLElement>(".mantine-TextInput-section > div");
+    await expect(swatch).toBeTruthy();
+    await userEvent.click(swatch!);
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: "Choose color" },
+      STAGE_TIMEOUT,
+    );
+  },
 };
 
 export const MobileUpload: Story = {
@@ -40,38 +103,37 @@ export const MobileUpload: Story = {
   play: untilPanelShows("Mobile upload"),
 };
 
-export const ConfigureTextTooltip: Story = {
-  play: openTooltip({ step: "Configure Text" }),
+export const PlacementActive: Story = {
+  ...onViewer(),
+  play: async (context) => {
+    await armTextPlacement(context);
+    await waitForPanelText(context, "How to add text");
+  },
 };
 
-export const PlaceTextTooltip: Story = {
-  play: openTooltip({ info: "Click on the PDF to add your text" }),
+export const TextPlaced: Story = {
+  ...onViewer(),
+  play: placeText,
 };
 
 export const ResumePlacementTooltip: Story = {
-  args: textEntered,
-  play: openTooltip({ info: "Resume placement" }),
+  play: openTooltip({ info: "Resume placement" }, { after: enterText }),
 };
 
-function placeText(context: PlayContext): Promise<PanelQueries> {
-  return placeOnPage(context, armPlacement);
-}
-
-async function placeAndUndo(context: PlayContext): Promise<void> {
-  await undoInPanel(await placeText(context));
-}
-
 export const PausePlacementTooltip: Story = {
-  args: textOnViewer,
-  play: openTooltip({ info: "Pause placement" }, { after: armPlacement }),
+  ...onViewer(),
+  play: openTooltip({ info: "Pause placement" }, { after: armTextPlacement }),
 };
 
 export const UndoTooltip: Story = {
-  args: textOnViewer,
+  ...onViewer(),
   play: openTooltip({ info: "Undo" }, { after: placeText }),
 };
 
 export const RedoTooltip: Story = {
-  args: textOnViewer,
-  play: openTooltip({ info: "Redo" }, { after: placeAndUndo }),
+  ...onViewer(),
+  play: openTooltip(
+    { info: "Redo" },
+    { after: (context) => placeAndUndo(context, armTextPlacement) },
+  ),
 };

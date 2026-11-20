@@ -1,17 +1,22 @@
 import type { StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
-import { expect, userEvent, waitFor } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   appConfig,
+  onViewer,
   toolPanelMeta,
   toolPanelServer,
 } from "@editor/components/tools/toolPanelStory/toolPanelMeta";
 import {
+  bodyOf,
+  findEnabled,
+  openMenu,
   openTooltip,
+  panelOf,
+  placeAndUndo,
   placeOnPage,
   type PlayContext,
   STAGE_TIMEOUT,
-  undoInPanel,
   untilPanelShows,
   waitForPanelText,
 } from "@editor/components/tools/toolPanelStory/toolPanelStoryPlay";
@@ -22,6 +27,12 @@ import type { SignRequestSummary } from "@editor/types/signingSession";
 const meta = {
   title: "Tools/Sign/Panel",
   ...toolPanelMeta("sign"),
+  // A default signature arms itself when the panel opens, so one a story sets
+  // must not reach the next.
+  beforeEach: () => {
+    forgetDefaultSignature();
+    return forgetDefaultSignature;
+  },
 };
 export default meta;
 
@@ -29,34 +40,25 @@ type Story = StoryObj<typeof meta>;
 
 const SIGNATURE_IMAGE = FIXTURES["sample.png"].url;
 
+const saved = (
+  id: string,
+  label: string,
+  scope: SavedSignature["scope"],
+  type: "canvas" | "image" = "image",
+): SavedSignature => ({
+  id,
+  type,
+  dataUrl: SIGNATURE_IMAGE,
+  label,
+  scope,
+  createdAt: 1700000000000,
+  updatedAt: 1700000000000,
+});
+
 const SAVED_SIGNATURES: SavedSignature[] = [
-  {
-    id: "personal-1",
-    type: "canvas",
-    dataUrl: SIGNATURE_IMAGE,
-    label: "My signature",
-    scope: "personal",
-    createdAt: 1700000000000,
-    updatedAt: 1700000000000,
-  },
-  {
-    id: "personal-2",
-    type: "image",
-    dataUrl: SIGNATURE_IMAGE,
-    label: "Initials",
-    scope: "personal",
-    createdAt: 1700000000000,
-    updatedAt: 1700000000000,
-  },
-  {
-    id: "shared-1",
-    type: "image",
-    dataUrl: SIGNATURE_IMAGE,
-    label: "Company stamp",
-    scope: "shared",
-    createdAt: 1700000000000,
-    updatedAt: 1700000000000,
-  },
+  saved("personal-1", "My signature", "personal", "canvas"),
+  saved("personal-2", "Initials", "personal"),
+  saved("shared-1", "Company stamp", "shared"),
 ];
 
 const PENDING_REQUEST: SignRequestSummary = {
@@ -68,67 +70,81 @@ const PENDING_REQUEST: SignRequestSummary = {
   myStatus: "PENDING",
 };
 
+/** Must match the storage key in useDefaultSignature. */
+const DEFAULT_SIGNATURE_KEY = "stirling:sign:default-signature-id";
+
+function forgetDefaultSignature() {
+  try {
+    window.localStorage.removeItem(DEFAULT_SIGNATURE_KEY);
+  } catch {
+    return;
+  }
+}
+
 function signaturesResponse(signatures: SavedSignature[]) {
-  return http.get("/api/v1/proprietary/signatures", () =>
+  return http.get("*/api/v1/proprietary/signatures", () =>
     HttpResponse.json(signatures),
   );
 }
 
+const noSavedSignatures = toolPanelServer(signaturesResponse([]));
 const savedSignatures = toolPanelServer(signaturesResponse(SAVED_SIGNATURES));
-
-export const Panel: Story = {
-  parameters: toolPanelServer(signaturesResponse([])),
-  play: untilPanelShows("Add your signature"),
-};
-
-export const SavedSignatures: Story = {
-  parameters: savedSignatures,
-  play: untilPanelShows("Company stamp"),
-};
-
-export const PhoneSignature: Story = {
-  parameters: toolPanelServer(
-    signaturesResponse([]),
-    appConfig({ enableMobileSignature: true }),
-  ),
-  play: untilPanelShows("Phone"),
-};
-
-export const RequestSignatures: Story = {
-  parameters: toolPanelServer(
-    signaturesResponse([]),
-    appConfig({ storageGroupSigningEnabled: true }),
-    http.get("/api/v1/security/cert-sign/sign-requests", () =>
-      HttpResponse.json([PENDING_REQUEST]),
-    ),
-    http.get("/api/v1/security/cert-sign/sessions", () =>
-      HttpResponse.json([]),
-    ),
-  ),
-  play: untilPanelShows("Open shared signing"),
-};
-
-export const SharedSignaturesTooltip: Story = {
-  parameters: savedSignatures,
-  play: openTooltip({ info: "Everyone can use these" }),
-};
-
+const savedSignaturesAsAdmin = toolPanelServer(
+  signaturesResponse(SAVED_SIGNATURES),
+  appConfig({ isAdmin: true }),
+);
+const viewer = onViewer();
 const savedSignaturesOnViewer = {
-  args: { showWorkbench: true, workbench: "viewer" },
-  parameters: savedSignatures,
+  ...viewer,
+  parameters: { ...savedSignatures, ...viewer.parameters },
 } as const;
+const phoneSignatures = toolPanelServer(
+  signaturesResponse([]),
+  appConfig({ enableMobileSignature: true }),
+);
+
+async function startNewSignature(context: PlayContext, method: string) {
+  await waitForPanelText(context, "Add your signature");
+  await userEvent.click(await findEnabled(context, "button", method));
+  return within(
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: /New signature/ },
+      STAGE_TIMEOUT,
+    ),
+  );
+}
+
+async function createUnsavedSignature(context: PlayContext) {
+  const dialog = await startNewSignature(context, "Type");
+  await userEvent.type(dialog.getByLabelText("Your name"), "Jane Signer");
+  await userEvent.click(
+    dialog.getByRole("checkbox", { name: /Save to my signatures/ }),
+  );
+  const use = dialog.getByRole("button", { name: "Use signature" });
+  await waitFor(() => expect(use).toBeEnabled(), STAGE_TIMEOUT);
+  await userEvent.click(use);
+  return waitForPanelText(context, "Unsaved");
+}
+
+async function openSignatureMenu(context: PlayContext, label: string) {
+  await waitForPanelText(context, label);
+  return within(await openMenu(context, `Options for ${label}`));
+}
+
+async function chooseFromSignatureMenu(
+  context: PlayContext,
+  label: string,
+  action: string,
+) {
+  const menu = await openSignatureMenu(context, label);
+  await userEvent.click(menu.getByRole("menuitem", { name: action }));
+}
 
 async function armSignature(context: PlayContext) {
-  const panel = await waitForPanelText(context, "My signature");
-  const tile = panel.getByRole("button", { name: "My signature" });
-  await waitFor(() => expect(tile).toBeEnabled(), STAGE_TIMEOUT);
-  await userEvent.click(tile);
-  await panel.findByText(
-    "Click the page to place My signature.",
-    undefined,
-    STAGE_TIMEOUT,
-  );
-  return panel;
+  await waitForPanelText(context, "My signature");
+  await userEvent.click(await findEnabled(context, "button", "My signature"));
+  return waitForPanelText(context, "Click the page to place My signature.");
 }
 
 async function placeSignature(context: PlayContext) {
@@ -137,31 +153,232 @@ async function placeSignature(context: PlayContext) {
   return panel;
 }
 
-async function clickUndo(context: PlayContext) {
-  const panel = await placeSignature(context);
-  await undoInPanel(panel);
-  return panel;
+async function placeAndUndoSignature(context: PlayContext) {
+  return placeAndUndo(context, armSignature);
 }
 
-async function undoPlacement(context: PlayContext) {
-  const panel = await clickUndo(context);
-  await panel.findByText("On this document (0)", undefined, STAGE_TIMEOUT);
-  return panel;
-}
+export const Panel: Story = {
+  parameters: noSavedSignatures,
+  play: untilPanelShows("Add your signature"),
+};
+
+export const NoFiles: Story = {
+  args: { files: [] },
+  parameters: noSavedSignatures,
+};
+
+export const PhoneSignature: Story = {
+  parameters: phoneSignatures,
+  play: async (context) => {
+    const panel = await waitForPanelText(context, "Add your signature");
+    await panel.findByRole("button", { name: "Phone" }, STAGE_TIMEOUT);
+  },
+};
+
+export const DrawNewSignature: Story = {
+  parameters: noSavedSignatures,
+  play: async (context) => {
+    await startNewSignature(context, "Draw");
+  },
+};
+
+export const TypeNewSignature: Story = {
+  parameters: noSavedSignatures,
+  play: async (context) => {
+    await startNewSignature(context, "Type");
+  },
+};
+
+export const UploadNewSignature: Story = {
+  parameters: noSavedSignatures,
+  play: async (context) => {
+    await startNewSignature(context, "Upload");
+  },
+};
+
+export const PhoneNewSignature: Story = {
+  parameters: phoneSignatures,
+  play: async (context) => {
+    await startNewSignature(context, "Phone");
+  },
+};
+
+export const UnsavedSignature: Story = {
+  parameters: noSavedSignatures,
+  play: createUnsavedSignature,
+};
+
+export const UnsavedSignatureMenu: Story = {
+  parameters: noSavedSignatures,
+  play: async (context) => {
+    await createUnsavedSignature(context);
+    const menu = await openSignatureMenu(context, "Typed signature");
+    await menu.findByRole("menuitem", { name: "Save to my signatures" });
+  },
+};
+
+export const DraftExistsWarning: Story = {
+  parameters: noSavedSignatures,
+  play: async (context) => {
+    await createUnsavedSignature(context);
+    await userEvent.click(
+      await findEnabled(context, "button", "New signature"),
+    );
+    await bodyOf(context).findByText(
+      "Save or discard your unsaved signature first",
+      undefined,
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const LibraryFull: Story = {
+  parameters: toolPanelServer(
+    signaturesResponse(
+      Array.from({ length: 20 }, (_, index) =>
+        saved(`personal-${index + 1}`, `Signature ${index + 1}`, "personal"),
+      ),
+    ),
+  ),
+  play: untilPanelShows("20 of 20"),
+};
+
+export const SavedSignatures: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    const panel = await waitForPanelText(context, "Company stamp");
+    await panel.findByText("Pick a signature to place it");
+    await panel.findByText("On this document (0)");
+  },
+};
+
+export const NewSignature: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    await waitForPanelText(context, "Company stamp");
+    await userEvent.click(
+      await findEnabled(context, "button", "New signature"),
+    );
+    await bodyOf(context).findByRole(
+      "dialog",
+      { name: /New signature/ },
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const SignatureMenu: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    const menu = await openSignatureMenu(context, "My signature");
+    await menu.findByRole("menuitem", { name: "Rename" });
+  },
+};
+
+export const SharedSignatureMenu: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    const menu = await openSignatureMenu(context, "Company stamp");
+    await expect(menu.queryByRole("menuitem", { name: "Delete" })).toBeNull();
+  },
+};
+
+export const AdminSignatureMenu: Story = {
+  parameters: savedSignaturesAsAdmin,
+  play: async (context) => {
+    const menu = await openSignatureMenu(context, "My signature");
+    await menu.findByRole(
+      "menuitem",
+      { name: "Share with everyone" },
+      STAGE_TIMEOUT,
+    );
+  },
+};
+
+export const AdminSharedSignatureMenu: Story = {
+  parameters: savedSignaturesAsAdmin,
+  play: async (context) => {
+    const menu = await openSignatureMenu(context, "Company stamp");
+    await menu.findByRole("menuitem", { name: "Delete" }, STAGE_TIMEOUT);
+  },
+};
+
+export const RenameSignature: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    await chooseFromSignatureMenu(context, "My signature", "Rename");
+    await bodyOf(context).findByRole("dialog", {}, STAGE_TIMEOUT);
+  },
+};
+
+export const DeleteSignature: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    await chooseFromSignatureMenu(context, "My signature", "Delete");
+    await bodyOf(context).findByRole("dialog", {}, STAGE_TIMEOUT);
+  },
+};
+
+export const DefaultSignature: Story = {
+  parameters: savedSignatures,
+  play: async (context) => {
+    await chooseFromSignatureMenu(context, "Initials", "Make default");
+    const panel = await panelOf(context);
+    await panel.findByTitle("Default", undefined, STAGE_TIMEOUT);
+  },
+};
+
+export const DefaultSignatureArmed: Story = {
+  ...savedSignaturesOnViewer,
+  beforeEach: () => {
+    window.localStorage.setItem(DEFAULT_SIGNATURE_KEY, "personal-2");
+  },
+  play: untilPanelShows("Click the page to place Initials."),
+};
 
 export const PlacingSignature: Story = {
   ...savedSignaturesOnViewer,
   play: armSignature,
 };
 
+export const PlacingSignatureMenu: Story = {
+  ...savedSignaturesOnViewer,
+  play: async (context) => {
+    await armSignature(context);
+    const menu = await openSignatureMenu(context, "My signature");
+    await menu.findByRole("menuitem", { name: "Stop placing" });
+  },
+};
+
+export const PlacementStopped: Story = {
+  ...savedSignaturesOnViewer,
+  play: async (context) => {
+    await armSignature(context);
+    await userEvent.click(await findEnabled(context, "button", "Stop"));
+    await waitForPanelText(context, "Pick a signature to place it");
+  },
+};
+
 export const SignaturePlaced: Story = {
   ...savedSignaturesOnViewer,
-  play: placeSignature,
+  play: async (context) => {
+    await placeSignature(context);
+    await findEnabled(context, "button", "Apply 1 signature");
+  },
 };
 
 export const PlacementUndone: Story = {
   ...savedSignaturesOnViewer,
-  play: undoPlacement,
+  play: placeAndUndoSignature,
+};
+
+export const PlacedSignatureRemoved: Story = {
+  ...savedSignaturesOnViewer,
+  play: async (context) => {
+    await placeSignature(context);
+    await userEvent.click(await findEnabled(context, "button", /^Remove /));
+    await waitForPanelText(context, "On this document (0)");
+  },
 };
 
 export const UndoTooltip: Story = {
@@ -171,5 +388,28 @@ export const UndoTooltip: Story = {
 
 export const RedoTooltip: Story = {
   ...savedSignaturesOnViewer,
-  play: openTooltip({ info: "Redo" }, { after: clickUndo }),
+  play: openTooltip({ info: "Redo" }, { after: placeAndUndoSignature }),
+};
+
+export const RequestSignatures: Story = {
+  parameters: toolPanelServer(
+    signaturesResponse([]),
+    appConfig({ storageGroupSigningEnabled: true }),
+    http.get("*/api/v1/security/cert-sign/sign-requests", () =>
+      HttpResponse.json([PENDING_REQUEST]),
+    ),
+    http.get("*/api/v1/security/cert-sign/sessions", () =>
+      HttpResponse.json([]),
+    ),
+  ),
+  play: async (context) => {
+    const panel = await waitForPanelText(context, "Open shared signing");
+    await waitFor(
+      () =>
+        expect(
+          panel.getByRole("button", { name: /Open shared signing/ }),
+        ).toHaveTextContent("1"),
+      STAGE_TIMEOUT,
+    );
+  },
 };
