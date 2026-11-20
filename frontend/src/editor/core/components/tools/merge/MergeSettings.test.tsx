@@ -91,7 +91,7 @@ describe("MergeSettings", () => {
     // Click the third checkbox (generateTableOfContentsPage - should toggle from false to true)
     fireEvent.click(checkboxes[2]);
     expect(mockOnParameterChange).toHaveBeenCalledWith(
-      "generateBookmarks",
+      "generateTableOfContentsPage",
       true,
     );
   });
