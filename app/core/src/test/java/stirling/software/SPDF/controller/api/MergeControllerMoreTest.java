@@ -519,4 +519,17 @@ class MergeControllerMoreTest {
             assertThat(stripper.getText(result)).contains("Отчёт", "報告", "تقرير");
         }
     }
+
+    @Test
+    @DisplayName("a contents page works when an image is part of the merge")
+    void tocPageWithImageInput() throws Exception {
+        MockMultipartFile[] files = {png("scan.png"), pdf("doc.pdf", 2)};
+        MergePdfsRequest req = request(files, "orderProvided", false, false, true);
+
+        ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
+
+        try (PDDocument result = readResponse(response)) {
+            assertThat(result.getNumberOfPages()).isEqualTo(1 + 1 + 2);
+        }
+    }
 }
