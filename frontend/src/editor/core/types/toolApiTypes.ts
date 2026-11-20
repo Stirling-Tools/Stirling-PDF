@@ -993,7 +993,7 @@ export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
-  outputFormat: "doc" | "docx" | "odt";
+  outputFormat: "docx" | "odt";
 }
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;

@@ -121,10 +121,7 @@ public class ConvertPDFToOffice {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         return convert(
-                inputFile,
-                outputFormat,
-                Set.of("doc", "docx", "odt"),
-                MediaType.APPLICATION_OCTET_STREAM);
+                inputFile, outputFormat, Set.of("docx", "odt"), MediaType.APPLICATION_OCTET_STREAM);
     }
 
     @AutoJobPostMapping(

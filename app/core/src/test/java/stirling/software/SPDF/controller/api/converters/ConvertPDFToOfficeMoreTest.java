@@ -320,14 +320,18 @@ class ConvertPDFToOfficeMoreTest {
         }
 
         @Test
-        @DisplayName("word endpoint rejects xml")
-        void wordEndpointRejectsXml() throws Exception {
-            PdfToWordRequest request = new PdfToWordRequest();
-            request.setFileInput(pdfFile());
-            request.setOutputFormat("xml");
+        @DisplayName("word endpoint rejects xml and Word 97-2003 .doc")
+        void wordEndpointRejectsXmlAndDoc() throws Exception {
+            for (String format : new String[] {"xml", "doc"}) {
+                PdfToWordRequest request = new PdfToWordRequest();
+                request.setFileInput(pdfFile());
+                request.setOutputFormat(format);
 
-            assertEquals(
-                    HttpStatus.BAD_REQUEST, controller.processPdfToWord(request).getStatusCode());
+                assertEquals(
+                        HttpStatus.BAD_REQUEST,
+                        controller.processPdfToWord(request).getStatusCode(),
+                        format);
+            }
         }
     }
 

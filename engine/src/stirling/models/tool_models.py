@@ -1164,7 +1164,6 @@ class OutputFormat4(StrEnum):
     The output Word document format
     """
 
-    doc = "doc"
     docx = "docx"
     odt = "odt"
 

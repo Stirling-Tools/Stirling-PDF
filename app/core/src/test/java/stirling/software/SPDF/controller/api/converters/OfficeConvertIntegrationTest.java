@@ -105,7 +105,7 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"txt", "md", "html", "doc"})
+    @ValueSource(strings = {"txt", "md", "html"})
     void writesTextFormatsWithContent(String format) throws Exception {
         Path output = dir.resolve("output." + format);
         try (PDDocument pdf = document()) {
@@ -674,7 +674,6 @@ class OfficeConvertIntegrationTest {
     @ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({
         "word,docx",
-        "word,doc",
         "word,odt",
         "presentation,ppt",
         "presentation,pptx",
