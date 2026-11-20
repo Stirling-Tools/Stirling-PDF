@@ -184,6 +184,21 @@ describe("a real disk change", () => {
     expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(true);
   });
 
+  test("reloads over an open copy that can no longer be read", async () => {
+    const h = harness(stub(), DISK_BYTES);
+    const dead = pdf(DISK_BYTES);
+    vi.spyOn(dead, "slice").mockImplementation(() => {
+      throw new Error("backing store lost");
+    });
+    h.filesRef.current.set("open" as FileId, dead);
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await h.run();
+
+    expect(h.filesRef.current.get("open" as FileId)).not.toBe(dead);
+    expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(true);
+  });
+
   test("still raises a conflict when the size is unchanged", async () => {
     unsaved.value = true;
     disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");

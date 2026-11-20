@@ -53,6 +53,22 @@ export async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
   return true;
 }
 
+// WebKit can lose a stored blob's backing store, so reading the held copy may
+// reject. Unreadable means unproven: the change is treated as real, and the
+// reload then replaces the dead copy.
+async function matchesLastRead(
+  lastReadCopy: () => Promise<Blob | null>,
+  file: File,
+): Promise<boolean> {
+  try {
+    const held = await lastReadCopy();
+    return held != null && (await sameBytes(held, file));
+  } catch (error) {
+    console.warn("[diskFileSync] Could not read the last disk copy:", error);
+    return false;
+  }
+}
+
 /** Did disk change since our last read? No baseline means we cannot prove the
  *  copy is current, so re-read once; size settles it when mtime is missing. */
 export function hasDiskChanged(
@@ -210,11 +226,8 @@ export async function syncLinkedFileFromDisk(
     type: stub.type || "application/pdf",
     lastModified: state.modifiedMs || Date.now(),
   });
-  if (mayBeTouch) {
-    const held = await lastReadCopy();
-    if (held && (await sameBytes(held, file))) {
-      return { status: "touched", state };
-    }
+  if (mayBeTouch && (await matchesLastRead(lastReadCopy, file))) {
+    return { status: "touched", state };
   }
   if (keepOurs) return { status: "conflict" };
   return { status: "updated", file, state };
