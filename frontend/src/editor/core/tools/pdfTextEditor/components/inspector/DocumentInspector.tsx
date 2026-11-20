@@ -151,7 +151,7 @@ function DocumentLanguageField({
       {control.language === null && (
         <Text
           size="xs"
-          c="yellow.8"
+          c="var(--c-warning-text)"
           data-testid="pdf-editor-document-language-missing"
         >
           {t(
@@ -579,7 +579,11 @@ function FontRow({ font }: { font: PageFont }) {
       </Group>
       {known &&
         (hasGap ? (
-          <Text size="xs" c="yellow.8" data-testid="pdf-editor-font-missing">
+          <Text
+            size="xs"
+            c="var(--c-warning-text)"
+            data-testid="pdf-editor-font-missing"
+          >
             {t("pdfTextEditor.fonts.missing", "Missing: {{glyphs}}", {
               glyphs: formatMissing(missing),
             })}

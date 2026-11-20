@@ -143,6 +143,7 @@ export const AttachmentRow = memo(function AttachmentRow({
         <Group gap={6} style={{ flex: 1, minWidth: 0 }}>
           <TextInput
             value={editingName}
+            aria-label={t("attachments.rename", "Rename attachment")}
             className={privateContentClassName}
             onChange={(e) => setEditingName(e.currentTarget.value)}
             onKeyDown={(e) => {

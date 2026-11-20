@@ -1,4 +1,5 @@
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
+import { useToolPanelPreview } from "@editor/contexts/ToolPanelPreviewContext";
 
 export interface BaseParametersHook<T> {
   parameters: T;
@@ -18,7 +19,12 @@ export interface BaseParametersConfig<T> {
 export function useBaseParameters<T>(
   config: BaseParametersConfig<T>,
 ): BaseParametersHook<T> {
-  const [parameters, setParameters] = useState<T>(config.defaultParameters);
+  const { parameters: previewParameters } = useToolPanelPreview();
+  const [parameters, setParameters] = useState<T>(() =>
+    previewParameters
+      ? { ...config.defaultParameters, ...(previewParameters as Partial<T>) }
+      : config.defaultParameters,
+  );
 
   const updateParameter = useCallback(
     <K extends keyof T>(parameter: K, value: T[K]) => {

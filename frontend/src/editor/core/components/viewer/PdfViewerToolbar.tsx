@@ -221,6 +221,7 @@ export function PdfViewerToolbar({
 
       {/* Page Input */}
       <NumberInput
+        aria-label={t("pageNum", "Page Number")}
         value={pageInput}
         onChange={(value) => {
           const page = Number(value);
@@ -397,6 +398,7 @@ export function PdfViewerToolbar({
             max={500}
             step={5}
             onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
+            thumbLabel={t("viewer.zoom", "Zoom")}
             size="xs"
             styles={{
               root: { minWidth: "6rem", width: "6rem", flexShrink: 0 },

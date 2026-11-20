@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo } from "react";
+import { useToolPanelPreview } from "@editor/contexts/ToolPanelPreviewContext";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
 import { Icon } from "@editor/ui/Icon";
 import { Tooltip } from "@editor/components/shared/Tooltip";
@@ -80,7 +81,7 @@ const renderTooltipTitle = (
 const ToolStep = ({
   title,
   isVisible = true,
-  isCollapsed = false,
+  isCollapsed: requestedCollapsed = false,
   onCollapsedClick,
   children,
   helpText,
@@ -91,6 +92,8 @@ const ToolStep = ({
   tooltip,
 }: ToolStepProps) => {
   const parent = useContext(ToolStepContext);
+  const { expandAllSteps } = useToolPanelPreview();
+  const isCollapsed = requestedCollapsed && !expandAllSteps;
 
   // Auto-detect if we should show numbers based on sibling count or force option
   const shouldShowNumber = useMemo(() => {

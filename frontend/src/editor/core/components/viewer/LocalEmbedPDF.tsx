@@ -468,6 +468,9 @@ function PageTiles({
 }: PageLayerProps & { renderMode: PdfRenderMode; hidden?: boolean }) {
   return (
     <div
+      // A raster of the page, drawn as untitled tile images; the text layer
+      // carries what the page says.
+      aria-hidden="true"
       style={{
         position: "absolute",
         inset: 0,
@@ -775,14 +778,23 @@ function ViewerPage({
 
 interface DocumentViewportProps {
   documentId: string;
+  fileName: string;
   pageOptions: ViewerPageOptions;
 }
 
-function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
+function DocumentViewport({
+  documentId,
+  fileName,
+  pageOptions,
+}: DocumentViewportProps) {
   return (
     <ViewerGlobalPointerProvider documentId={documentId}>
       <Viewport
         documentId={documentId}
+        // A scrolling region a keyboard user can only scroll once it takes focus.
+        tabIndex={0}
+        role="region"
+        aria-label={fileName}
         style={{
           backgroundColor: "var(--c-bg)",
           height: "100%",
@@ -1616,8 +1628,9 @@ export function LocalEmbedPDF({
           },
         ]);
 
-        // If the annotation doesn't have customData.toolId, patch it from the active tool.
-        // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
+        // Fallback for a tool whose defaults carry no customData.toolId. The patch
+        // is its own history step, so one placement then takes two Undos: the
+        // annotation and signature bridges set toolId in the defaults instead.
         const annotationId = event.annotation.id;
         const existingCustomData = (
           event.annotation as unknown as {
@@ -1820,6 +1833,7 @@ export function LocalEmbedPDF({
                 />
                 <DocumentViewport
                   documentId={documentId}
+                  fileName={exportFileName}
                   pageOptions={pageOptions}
                 />
                 <DocumentComments

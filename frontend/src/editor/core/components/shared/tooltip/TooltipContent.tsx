@@ -16,6 +16,9 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
   return (
     <div
       className={`${styles["tooltip-body"]}`}
+      // Scrolls once the tips outgrow the viewport; a keyboard user can only
+      // scroll a region that takes focus.
+      tabIndex={0}
       style={{
         color: "var(--c-text)",
         padding: `16px ${16 + extraRightPadding}px 16px 16px`,

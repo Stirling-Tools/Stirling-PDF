@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import LanguagePicker from "@editor/components/tools/ocr/LanguagePicker";
 
 const meta = {
-  title: "Tools/OCR/LanguagePicker",
+  title: "Tools/OCR & Cleanup scans/Parts/LanguagePicker",
   component: LanguagePicker,
   args: {
     value: [],

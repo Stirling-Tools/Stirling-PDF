@@ -43,6 +43,8 @@ html[data-app-theme="light"] {
   --c-danger: var(--p-red-600);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-600);
+  /* Warning used as TEXT: --c-warning sits under 4.5:1 on light surfaces. */
+  --c-warning-text: var(--p-amber-700);
   /* Solid fills that carry a white label. Deeper than the --c-<tone> values
      above, which are picked for surfaces, borders and icons where the 3:1
      non-text floor applies. Scheme-independent: a filled badge reads white on
@@ -184,6 +186,7 @@ html[data-app-theme="midnight"] {
   --c-danger: var(--p-red-500);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
+  --c-warning-text: var(--c-warning);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
   --c-file-header-resting: var(--p-navy-950);
@@ -382,6 +385,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-danger: var(--p-red-400);
   --c-text-on-danger: var(--p-white);
   --c-warning: var(--p-amber-500);
+  --c-warning-text: var(--c-warning);
 
   /* Themed decorative dark overrides (see :root for light + rationale). */
   --c-file-header-resting: var(--p-navy-950);

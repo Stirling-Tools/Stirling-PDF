@@ -253,6 +253,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     {multiSelect && (
                       <Checkbox
                         checked={selectedValues.includes(item.value)}
+                        aria-label={item.name}
                         onChange={() => {}} // Handled by parent onClick
                         size="sm"
                         disabled={item.disabled}
