@@ -537,9 +537,13 @@ public class McpAutomations {
             return new Started(List.of(runId), null);
         } catch (ResponseStatusException e) {
             throw new AutomationException(triggerRefusal(e));
-        } catch (IllegalStateException | UncheckedIOException e) {
+        } catch (IllegalStateException e) {
             throw new AutomationException(
                     "The automation could not start: " + sanitize(e.getMessage()));
+        } catch (UncheckedIOException e) {
+            log.warn("MCP automation {} could not read its input files", sanitize(automationId), e);
+            throw new AutomationException(
+                    "The automation could not start: its input files could not be read.");
         }
     }
 
@@ -994,7 +998,7 @@ public class McpAutomations {
     private <T> T asUser(String username, Supplier<T> work) throws AutomationException {
         UserRepository repository = users.getIfAvailable();
         if (username == null || repository == null) {
-            return work.get();
+            throw new AutomationException("Your Stirling PDF account could not be loaded.");
         }
         // Not loadUserByUsername: that is form login's check and rejects password-less (SaaS)
         // users.

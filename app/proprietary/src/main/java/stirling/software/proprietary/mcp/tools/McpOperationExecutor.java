@@ -330,7 +330,8 @@ public class McpOperationExecutor {
             }
             return null;
         } catch (IOException e) {
-            return "could not carry its result on: " + e.getMessage() + ".";
+            log.warn("MCP pipeline step {} could not read its output", meta.id(), e);
+            return "could not carry its result on to the next step.";
         }
     }
 

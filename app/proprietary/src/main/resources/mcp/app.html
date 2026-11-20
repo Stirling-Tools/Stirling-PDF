@@ -158,7 +158,14 @@
     if (openai && openai.sendFollowUpMessage) return openai.sendFollowUpMessage({ prompt: text });
     return Promise.reject(new Error("unsupported"));
   }
+  // The assistant wrote the purpose, so it goes out quoted and short rather than as the user's own words.
+  function purposeNote(purpose) {
+    if (!purpose) return "";
+    var p = String(purpose).replace(/\s+/g, " ").trim().slice(0, 200);
+    return p ? ' You asked for it to: "' + p + '".' : "";
+  }
   function openLink(url) {
+    if (!/^https?:\/\//i.test(String(url))) return Promise.reject(new Error("unsupported link"));
     var fallback = function () { window.open(url, "_blank", "noopener"); };
     if (bridgeReady) {
       return request("ui/open-link", { url: url }).then(function (r) { if (r && r.isError) fallback(); }, fallback);
@@ -395,7 +402,7 @@
         }
         status.textContent = "Uploaded " + file.name + " (" + size(sc.size) + ").";
         var text = 'I’ve uploaded "' + file.name + '" to Stirling PDF (fileId: ' + sc.fileId + ").";
-        if (purpose) text += " " + purpose;
+        text += purposeNote(purpose);
         return sendMessage(text, file.name).catch(function () {
           status.textContent = "Uploaded. Tell the assistant to continue with fileId " + sc.fileId + ".";
         });
@@ -488,7 +495,7 @@
     use.addEventListener("click", function () {
       use.disabled = true;
       var text = 'Use my Stirling PDF file "' + f.name + '" (fileId: ' + f.fileId + ").";
-      if (purpose) text += " " + purpose;
+      text += purposeNote(purpose);
       sendMessage(text, f.name).catch(function () {
         use.disabled = false;
         name.textContent = "Tell the assistant to use fileId " + f.fileId + ".";

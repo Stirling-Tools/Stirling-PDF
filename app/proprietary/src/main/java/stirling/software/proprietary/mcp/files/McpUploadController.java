@@ -57,10 +57,10 @@ public class McpUploadController {
             return html(HttpStatus.OK, uploadedPage(done.get()));
         }
         // Only looks, so opening the page does not use the link up.
-        if (links.isOpen(token)) {
-            return html(HttpStatus.OK, formPage());
-        }
-        return html(HttpStatus.NOT_FOUND, expiredPage());
+        return links.openOwner(token)
+                .filter(owner -> enabledUser(owner).isPresent())
+                .map(owner -> html(HttpStatus.OK, formPage(owner)))
+                .orElseGet(() -> html(HttpStatus.NOT_FOUND, expiredPage()));
     }
 
     @PostMapping(value = "/{token}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -70,7 +70,7 @@ public class McpUploadController {
             @RequestHeader(value = "Accept", required = false) String accept) {
         boolean browser = accept != null && accept.contains(MediaType.TEXT_HTML_VALUE);
         Optional<String> owner = links.claim(token);
-        User user = owner.flatMap(name -> userService.findByUsernameIgnoreCase(name)).orElse(null);
+        User user = owner.flatMap(this::enabledUser).orElse(null);
         if (user == null) {
             return browser
                     ? html(HttpStatus.NOT_FOUND, expiredPage())
@@ -79,7 +79,7 @@ public class McpUploadController {
         if (file.isEmpty()) {
             links.reopen(token, owner.get());
             return browser
-                    ? html(HttpStatus.BAD_REQUEST, formPage())
+                    ? html(HttpStatus.BAD_REQUEST, formPage(owner.get()))
                     : json(HttpStatus.BAD_REQUEST, Map.of("error", "The file is empty."));
         }
         String name =
@@ -110,9 +110,13 @@ public class McpUploadController {
             links.reopen(token, owner.get());
             log.warn("MCP upload link: could not store the file: {}", e.getMessage());
             return browser
-                    ? html(HttpStatus.INTERNAL_SERVER_ERROR, formPage())
+                    ? html(HttpStatus.INTERNAL_SERVER_ERROR, formPage(owner.get()))
                     : json(HttpStatus.INTERNAL_SERVER_ERROR, Map.of("error", e.getMessage()));
         }
+    }
+
+    private Optional<User> enabledUser(String username) {
+        return userService.findByUsernameIgnoreCase(username).filter(User::isEnabled);
     }
 
     private static ResponseEntity<String> html(HttpStatus status, String body) {
@@ -124,10 +128,14 @@ public class McpUploadController {
         return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(body);
     }
 
-    private static String formPage() {
+    // Naming the account stops a link someone else made from passing as the reader's own.
+    private static String formPage(String username) {
         return page(
                 "Upload a file to Stirling PDF",
-                "<form method=\"post\" enctype=\"multipart/form-data\">"
+                "<p>The file goes into the Stirling PDF account <b>"
+                        + HtmlUtils.htmlEscape(username)
+                        + "</b>. Only upload here if that is your account.</p>"
+                        + "<form method=\"post\" enctype=\"multipart/form-data\">"
                         + "<input type=\"file\" name=\"file\" id=\"file\" required>"
                         + "<button type=\"submit\">Upload</button></form>"
                         + "<p class=\"note\">This link works once and expires 15 minutes after"

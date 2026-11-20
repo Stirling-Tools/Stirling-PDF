@@ -7,9 +7,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -47,12 +49,14 @@ public class McpJobs {
     private static final String OWNER = "owner";
     private static final String OPERATION = "operation";
     private static final String RESULT = "result";
+    private static final int BUSY_RETRY_SECONDS = 10;
 
     private final JobStore jobStore;
     private final ObjectProvider<ClusterBackplane> backplane;
     private final ObjectMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private final Map<String, Integer> inFlight = new ConcurrentHashMap<>();
 
     public McpJobs(
             JobStore jobStore,
@@ -70,8 +74,68 @@ public class McpJobs {
         executor.shutdown();
     }
 
-    /** Runs {@code work}; past the wait limit it returns a pending result with a job id instead. */
+    /**
+     * Runs {@code work}; past the wait limit it returns a pending result with a job id instead.
+     * Refuses with a rate-limited error while the owner already has {@code
+     * mcp.maxConcurrentCallsPerUser} calls running on this node: a pending job keeps running after
+     * the client is answered, so without this cap one user could pile up work until the heap runs
+     * out.
+     */
     public ObjectNode run(String operation, String owner, Supplier<ObjectNode> work) {
+        String key = owner(owner);
+        int limit = applicationProperties.getMcp().getMaxConcurrentCallsPerUser();
+        if (limit > 0 && !acquire(key, limit)) {
+            ObjectNode busy =
+                    McpResponses.error(
+                            mapper,
+                            "You already have "
+                                    + limit
+                                    + " Stirling PDF operations running. Wait for one to finish"
+                                    + " (poll it with stirling_job_status), then retry.",
+                            McpResponses.Failure.RATE_LIMITED);
+            McpResponses.errorDetail(busy).put("retryAfterSeconds", BUSY_RETRY_SECONDS);
+            return busy;
+        }
+        Supplier<ObjectNode> counted =
+                limit > 0
+                        ? () -> {
+                            try {
+                                return work.get();
+                            } finally {
+                                release(key);
+                            }
+                        }
+                        : work;
+        try {
+            return start(operation, owner, counted);
+        } catch (RejectedExecutionException e) {
+            if (limit > 0) {
+                release(key);
+            }
+            throw e;
+        }
+    }
+
+    private boolean acquire(String key, int limit) {
+        boolean[] acquired = {false};
+        inFlight.compute(
+                key,
+                (k, running) -> {
+                    int count = running == null ? 0 : running;
+                    if (count >= limit) {
+                        return running;
+                    }
+                    acquired[0] = true;
+                    return count + 1;
+                });
+        return acquired[0];
+    }
+
+    private void release(String key) {
+        inFlight.computeIfPresent(key, (k, running) -> running <= 1 ? null : running - 1);
+    }
+
+    private ObjectNode start(String operation, String owner, Supplier<ObjectNode> work) {
         int waitSeconds = applicationProperties.getMcp().getSyncWaitSeconds();
         if (waitSeconds <= 0) {
             return work.get();

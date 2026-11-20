@@ -479,13 +479,14 @@ mcp:
   maxInputFileBytes: 524288000 # Max total size (bytes) of the stored files one tool call reads as input (default 500 MB). 0 = unlimited
   maxInputFiles: 50 # Max number of stored files one tool call may name as input. 0 = unlimited
   allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
-  blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  blockedOperations: ['url-to-pdf'] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed. url-to-pdf is listed because the pages it renders can pull sub-resources from internal hosts, and a prompt hidden in a document could steer the model to it
   storeResults: true # Keep results as the user's hidden temporary files (needs storage.enabled and security.enableLogin; falls back to the shared temp store otherwise). 'false' = always the shared temp store
   resultTtlMinutes: 60 # How long stored results are kept and downloadable
   downloadLinks: private # Result download links: 'private' (user signs in to Stirling), 'public' (anyone with the link until it expires) or 'off'. Needs storage.sharing.enabled and system.frontendUrl
   inlineResults: auto # Also return results as base64 up to maxInlineResponseBytes: 'auto' (only when results are not stored files), 'always' or 'never'. Large inline results break Claude and ChatGPT
   syncWaitSeconds: 100 # Seconds to wait for an operation before returning a job id the client polls with stirling_job_status, so long jobs (OCR on big files) beat the chat app's tool timeout. 0 = always wait
   rateLimitPerMinute: 60 # Tool calls each user may make per minute, shared across nodes in a cluster. 0 = unlimited
+  maxConcurrentCallsPerUser: 4 # Operations one user may have running at once on each node, including jobs still running after the chat app got a job id. 0 = unlimited
   automationsEnabled: true # Let chat apps run several operations in one call and use the team's saved pipelines. Saving a new one still needs an admin (or team leader)
   maxPipelineSteps: 10 # Most operations one pipeline call may chain
   maxPipelineCarryBytes: 524288000 # Max total size (bytes) of step results one pipeline call holds in memory between steps (default 500 MB). 0 = unlimited

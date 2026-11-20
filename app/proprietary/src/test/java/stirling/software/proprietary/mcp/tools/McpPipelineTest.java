@@ -47,6 +47,7 @@ import stirling.software.proprietary.policy.controller.PolicyController;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 
 import tools.jackson.databind.JsonNode;
@@ -64,6 +65,7 @@ class McpPipelineTest {
     private final McpFiles files = mock(McpFiles.class);
     private final McpToolCatalog catalog = mock(McpToolCatalog.class);
     private final PolicyController policies = mock(PolicyController.class);
+    private final UserRepository userRepository = mock(UserRepository.class);
     private final ApplicationProperties props = new ApplicationProperties();
     private final McpOperationExecutor executor =
             new McpOperationExecutor(mapper, api, files, mock(McpFileUrlFetcher.class), null, null);
@@ -73,7 +75,7 @@ class McpPipelineTest {
                     props,
                     provider(catalog),
                     provider(policies),
-                    provider(null),
+                    provider(userRepository),
                     provider(null),
                     provider(null),
                     provider(null),
@@ -85,6 +87,8 @@ class McpPipelineTest {
     @BeforeEach
     void setUp() throws Exception {
         when(files.user(any())).thenReturn(alice);
+        alice.setUsername("alice");
+        when(userRepository.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(alice));
         when(files.save(
                         eq(alice),
                         any(Resource.class),
