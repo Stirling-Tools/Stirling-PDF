@@ -202,8 +202,9 @@ system:
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
+  stirlingOfficeConversion: false # Unused since Office Convert replaced it; kept so a rollback keeps your value
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
-  maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 or less = unlimited)
+  maxPdfaConversionPages: 20000 # Most pages a PDF/A or PDF/X conversion accepts; larger documents are refused (0 = unlimited)
   maxImageMegapixels: 0 # Largest image one page render may create, in megapixels. 0 = automatic (a quarter of the Java heap, at most 1 GB)
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
@@ -247,10 +248,15 @@ system:
       watchedFoldersDirs: [] # List of watched folder directories. Defaults to watchedFoldersDir or /pipeline/watchedFolders.
       finishedFoldersDir: "" # Defaults to /pipeline/finishedFolders
     operations:
+      weasyprint: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
+      unoconvert: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
+      calibre: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
       ocrmypdf: "" # Defaults to /usr/bin/ocrmypdf
+      soffice: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
   fileUploadLimit: "" # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: "" # Defaults to java.io.tmpdir/stirling-pdf
+    libreofficeDir: "" # Unused since Office Convert replaced it; kept so a rollback keeps your value
     systemTempDir: "" # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
@@ -359,18 +365,29 @@ AutomaticallyGenerated:
   appVersion: 0.35.0
 
 processExecutor:
+  autoUnoServer: true # Unused since Office Convert replaced it; kept so a rollback keeps your value
+  unoServerEndpoints: [] # Unused since Office Convert replaced it; kept so a rollback keeps your value
   sessionLimit: # Process executor instances limits
-    officeConvertSessionLimit: 0 # Office, HTML, ebook, PDF/A and compress conversions at once; 0 sizes it from memory and CPUs
+    libreOfficeSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    pdfToHtmlSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
+    weasyPrintSessionLimit: 16 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     installAppSessionLimit: 1
+    calibreSessionLimit: 1 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    imageMagickSessionLimit: 4 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
     officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
+    libreOfficetimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    pdfToHtmltimeoutMinutes: 20 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     pythonOpenCvtimeoutMinutes: 30
+    weasyPrinttimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     installApptimeoutMinutes: 60
+    calibretimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
+    imageMagickTimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     tesseractTimeoutMinutes: 30
     qpdfTimeoutMinutes: 30
     ghostscriptTimeoutMinutes: 30
