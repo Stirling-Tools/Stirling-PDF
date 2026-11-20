@@ -43,7 +43,7 @@ import stirling.software.common.util.WebResponseUtils;
 /**
  * Extra branch coverage for {@link ConvertImgPDFController#convertToImage} not exercised by the
  * existing tests: the null-result logging branch, the octet-stream media-type fallback, and the
- * webp path that produces no output files. The ImageMagick/ProcessExecutor boundary is mocked so no
+ * webp path that produces no output files. The cwebp/ProcessExecutor boundary is mocked so no
  * external binary ever runs.
  */
 @ExtendWith(MockitoExtension.class)
@@ -139,18 +139,18 @@ class ConvertImgPDFControllerExtraTest {
     }
 
     @Nested
-    @DisplayName("webp via ImageMagick")
-    class WebpViaImageMagick {
+    @DisplayName("webp via cwebp")
+    class WebpViaCwebp {
 
         @Test
-        @DisplayName("throws when ImageMagick yields no webp files")
+        @DisplayName("throws when cwebp yields no webp file")
         void noWebpFilesProducedThrows() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             ConvertToImageRequest request = baseRequest(pdfBytes, "webp");
 
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
-            Mockito.when(endpointConfiguration.isGroupEnabled("ImageMagick")).thenReturn(true);
+            Mockito.when(endpointConfiguration.isGroupEnabled("cwebp")).thenReturn(true);
 
             ProcessExecutorResult procResult = Mockito.mock(ProcessExecutorResult.class);
             Mockito.when(procResult.getRc()).thenReturn(0);
@@ -183,12 +183,12 @@ class ConvertImgPDFControllerExtraTest {
                         .thenReturn(pageOrder);
                 gu.when(() -> GeneralUtils.generateFilename(any(), any(String.class)))
                         .thenReturn("out");
-                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.IMAGEMAGICK))
+                pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CWEBP))
                         .thenReturn(executor);
 
                 assertThatThrownBy(() -> controller.convertToImage(request))
                         .isInstanceOf(IOException.class)
-                        .hasMessageContaining("No WebP files were created");
+                        .hasMessageContaining("WebP conversion failed");
             }
         }
     }

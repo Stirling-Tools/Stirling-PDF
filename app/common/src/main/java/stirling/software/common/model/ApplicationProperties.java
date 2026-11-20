@@ -2006,6 +2006,7 @@ public class ApplicationProperties {
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int ffmpegSessionLimit;
+            private int cwebpSessionLimit;
             private int officeConvertSessionLimit;
 
             public int getQpdfSessionLimit() {
@@ -2035,6 +2036,10 @@ public class ApplicationProperties {
             public int getFfmpegSessionLimit() {
                 return ffmpegSessionLimit > 0 ? ffmpegSessionLimit : 2;
             }
+
+            public int getCwebpSessionLimit() {
+                return cwebpSessionLimit > 0 ? cwebpSessionLimit : 4;
+            }
         }
 
         @Data
@@ -2052,6 +2057,7 @@ public class ApplicationProperties {
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
             private long ffmpegTimeoutMinutes;
+            private long cwebpTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -2083,6 +2089,10 @@ public class ApplicationProperties {
 
             public long getFfmpegTimeoutMinutes() {
                 return ffmpegTimeoutMinutes > 0 ? ffmpegTimeoutMinutes : 30;
+            }
+
+            public long getCwebpTimeoutMinutes() {
+                return cwebpTimeoutMinutes > 0 ? cwebpTimeoutMinutes : 30;
             }
         }
     }

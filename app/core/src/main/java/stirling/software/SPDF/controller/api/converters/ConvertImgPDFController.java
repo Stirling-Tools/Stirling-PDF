@@ -7,12 +7,17 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -117,8 +122,8 @@ public class ConvertImgPDFController {
                         ? pageNumbers.split(",")
                         : new String[] {"all"};
         boolean webp = "webp".equalsIgnoreCase(imageFormat);
-        if (webp && !endpointConfiguration.isGroupEnabled("ImageMagick")) {
-            throw ExceptionUtils.createImageMagickRequiredForWebpException();
+        if (webp && !endpointConfiguration.isGroupEnabled("cwebp")) {
+            throw ExceptionUtils.createWebpEncoderRequiredException();
         }
         // Load the input PDF
         byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
@@ -161,6 +166,29 @@ public class ConvertImgPDFController {
         }
     }
 
+    private static List<String> webpResize(Path png) throws IOException {
+        try (ImageInputStream in = ImageIO.createImageInputStream(png.toFile())) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            if (!readers.hasNext()) {
+                return List.of();
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(in);
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                if (width <= WEBP_MAX_DIMENSION && height <= WEBP_MAX_DIMENSION) {
+                    return List.of();
+                }
+                return width >= height
+                        ? List.of("-resize", String.valueOf(WEBP_MAX_DIMENSION), "0")
+                        : List.of("-resize", "0", String.valueOf(WEBP_MAX_DIMENSION));
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
     private ResponseEntity<byte[]> webpResponse(
             byte[] rendered, boolean singleImage, String filename)
             throws IOException, InterruptedException {
@@ -190,29 +218,17 @@ public class ConvertImgPDFController {
                 }
             }
 
-            List<String> command = new ArrayList<>();
-            command.add("magick");
-            command.add("mogrify");
-            command.add("-format");
-            command.add("webp");
-            command.add("-quality");
-            command.add("100");
-            command.add("-resize");
-            command.add(WEBP_MAX_DIMENSION + "x" + WEBP_MAX_DIMENSION + ">");
-            pngs.forEach(png -> command.add(png.toString()));
-            ProcessExecutorResult conversion =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.IMAGEMAGICK)
-                            .runCommandWithOutputHandling(command);
-            if (conversion.getRc() != 0) {
-                throw new IOException("WebP conversion failed: " + conversion.getMessages());
-            }
-
             List<Path> webps = new ArrayList<>();
             for (Path png : pngs) {
                 Path webp = workDir.resolve(png.getFileName().toString().replace(".png", ".webp"));
-                if (!Files.isRegularFile(webp)) {
-                    throw new IOException(
-                            "No WebP files were created. " + conversion.getMessages());
+                List<String> command = new ArrayList<>(List.of("cwebp", "-quiet", "-q", "100"));
+                command.addAll(webpResize(png));
+                command.addAll(List.of(png.toString(), "-o", webp.toString()));
+                ProcessExecutorResult conversion =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.CWEBP)
+                                .runCommandWithOutputHandling(command);
+                if (conversion.getRc() != 0 || !Files.isRegularFile(webp)) {
+                    throw new IOException("WebP conversion failed: " + conversion.getMessages());
                 }
                 webps.add(webp);
             }

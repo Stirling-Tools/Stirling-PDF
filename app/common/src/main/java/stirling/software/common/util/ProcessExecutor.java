@@ -94,6 +94,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getFfmpegSessionLimit();
+                                case CWEBP ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getCwebpSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -133,6 +138,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getFfmpegTimeoutMinutes();
+                                case CWEBP ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getCwebpTimeoutMinutes();
                             };
                     return new ProcessExecutor(
                             processType, semaphoreLimit, liveUpdates, timeoutMinutes);
@@ -399,7 +409,8 @@ public class ProcessExecutor {
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
-        FFMPEG
+        FFMPEG,
+        CWEBP
     }
 
     @Setter

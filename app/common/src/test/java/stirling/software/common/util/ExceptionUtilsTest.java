@@ -162,9 +162,9 @@ class ExceptionUtilsTest {
         }
 
         @Test
-        void testCreateImageMagickRequiredForWebpException() {
-            IOException ex = ExceptionUtils.createImageMagickRequiredForWebpException();
-            assertTrue(ex.getMessage().contains("ImageMagick"));
+        void testCreateWebpEncoderRequiredException() {
+            IOException ex = ExceptionUtils.createWebpEncoderRequiredException();
+            assertTrue(ex.getMessage().contains("cwebp"));
             assertTrue(ex.getMessage().contains("WebP conversion"));
         }
     }

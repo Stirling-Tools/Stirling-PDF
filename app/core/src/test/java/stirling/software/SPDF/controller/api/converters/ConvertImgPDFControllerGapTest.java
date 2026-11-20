@@ -729,8 +729,8 @@ class ConvertImgPDFControllerGapTest {
         }
 
         @Test
-        @DisplayName("webp requested without ImageMagick throws the tool-required IOException")
-        void webpWithoutImageMagickThrows() throws Exception {
+        @DisplayName("webp requested without cwebp throws the tool-required IOException")
+        void webpWithoutCwebpThrows() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(1);
             MockMultipartFile file = imagePdf(pdfBytes);
 
@@ -746,7 +746,7 @@ class ConvertImgPDFControllerGapTest {
             Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
                     .thenReturn(tinyDocument(1));
 
-            Mockito.when(endpointConfiguration.isGroupEnabled("ImageMagick")).thenReturn(false);
+            Mockito.when(endpointConfiguration.isGroupEnabled("cwebp")).thenReturn(false);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class)) {
 

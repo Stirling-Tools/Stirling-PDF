@@ -48,7 +48,7 @@ class ExceptionUtilsCodedFactoriesTest {
                         IOException.class),
                 coded(
                         "E062",
-                        ExceptionUtils::createImageMagickRequiredForWebpException,
+                        ExceptionUtils::createWebpEncoderRequiredException,
                         IOException.class),
                 coded(
                         "E064",
