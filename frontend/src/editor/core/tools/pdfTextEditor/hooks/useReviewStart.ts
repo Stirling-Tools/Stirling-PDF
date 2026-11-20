@@ -7,6 +7,7 @@ import {
   type ReviewModeState,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { goToFix } from "@editor/tools/pdfTextEditor/util/reviewFix";
+import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 interface Options {
   store: EditorStore;
@@ -31,6 +32,8 @@ export function useReviewStart({
     store,
     (s) => s.hasDocument && !s.loading && s.pages.length > 0,
   );
+  // goToFix falls back to the session's page reveal, registered after first commit.
+  const session = useEditorSession();
   useEffect(() => {
     if (!startAt) return;
     if (startAt.fileId !== sourceFileId) {
@@ -38,10 +41,10 @@ export function useReviewStart({
       return;
     }
     const doc = store.document;
-    if (!ready || !doc) return;
+    if (!ready || !doc || !session) return;
     reviewMode.set({ startAt: null });
     goToFix(store, startAt.pageIndex, startAt.target);
-  }, [startAt, sourceFileId, ready, store, setActiveFileId]);
+  }, [startAt, sourceFileId, ready, session, store, setActiveFileId]);
 
   // A file that can't open leaves nothing to fix, and a request left pending
   // would pull the viewer back to it on the next file switch. Only this file's

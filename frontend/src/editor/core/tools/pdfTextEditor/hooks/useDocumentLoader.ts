@@ -240,15 +240,19 @@ export function publishAllPages(store: EditorStore): void {
   store.publishPages(next);
 }
 
-function snapshotCurrent(
+/**
+ * Only the never-published case: a page mid-edit has a revision ahead of its
+ * snapshot too, and republishing it there would move the caret.
+ */
+function readButUnpublished(
   published: PageSnapshot | undefined,
   page: Page,
 ): boolean {
   return (
-    !published ||
-    (published.revision === page.revision &&
-      published.runs.length === page.runs.length &&
-      published.images.length === page.images.length)
+    !!published &&
+    published.runs.length === 0 &&
+    published.images.length === 0 &&
+    (page.runs.length > 0 || page.images.length > 0)
   );
 }
 
@@ -262,7 +266,7 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   if (!doc) return;
   const page = doc.page(pageIndex);
   if (page.loaded) {
-    if (snapshotCurrent(store.getState().pages[pageIndex], page)) return;
+    if (!readButUnpublished(store.getState().pages[pageIndex], page)) return;
   } else {
     try {
       // Lazy reads must surface failures like the eager path, not throw out of the observer.

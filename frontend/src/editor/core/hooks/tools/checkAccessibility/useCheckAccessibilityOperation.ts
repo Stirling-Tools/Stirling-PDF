@@ -109,7 +109,11 @@ export const useCheckAccessibilityOperation =
               });
             } catch (error) {
               // suppressErrorToast also skips the login redirect a 401 needs.
-              if (axios.isAxiosError(error) && error.response?.status === 401) {
+              if (
+                isCurrent() &&
+                axios.isAxiosError(error) &&
+                error.response?.status === 401
+              ) {
                 if (error.config) error.config.suppressErrorToast = false;
                 await handleHttpError(error);
               }
