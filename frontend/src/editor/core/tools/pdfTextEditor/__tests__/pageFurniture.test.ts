@@ -76,6 +76,11 @@ function run(
   };
 }
 
+/** A table cell `width` points wide, its box starting at (x, y). */
+function cell(id: string, text: string, y: number, x: number, width = 100) {
+  return { ...run(id, text, y, x), bounds: { x, y, width, height: 10 } };
+}
+
 function image(id: string, x: number, y: number) {
   return {
     id,
@@ -288,6 +293,67 @@ describe("recogniseFurniture", () => {
     );
     expect(recogniseFurniture(pages, 3).size).toBe(0);
   });
+
+  it("leaves a two-column table's header row that each page repeats near its top", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        cell(`h${i}-0`, "Name", 740, 72),
+        cell(`h${i}-1`, "Value", 740, 320),
+        cell(`d${i}-0`, ["Alpha", "Beta", "Gamma"][i], 725, 72),
+        cell(`d${i}-1`, ["High", "Low", "Medium"][i], 725, 320),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a table's header row when the rows under it leave cells empty", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Ref", "Item", "Qty", "Total"].map((text, c) =>
+          cell(`h${i}-${c}`, text, 740, columns[c]),
+        ),
+        cell(`d${i}-0`, ["A-25", "A-61", "A-47"][i], 725, columns[0]),
+        cell(`d${i}-3`, ["12.50", "3.50", "8.50"][i], 725, columns[3]),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a table's heading rows that each page repeats word for word", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Region", "Sales", "Costs", "Margin"].map((text, c) =>
+          cell(`h${i}-${c}`, text, 740, columns[c]),
+        ),
+        ...["", "(£k)", "(£k)", "(%)"].flatMap((text, c) =>
+          text ? [cell(`u${i}-${c}`, text, 725, columns[c])] : [],
+        ),
+        ...[["North", "South", "East"][i], "41", "17", "58"].map((text, c) =>
+          cell(`d${i}-${c}`, text, 710, columns[c]),
+        ),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
+  it("leaves a footer set as a table in two rows, keeping its page number", () => {
+    const columns = [72, 200, 330, 460];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Acme Ltd", "1 High Street", "London EC1A", "United Kingdom"].map(
+          (text, c) => cell(`a${i}-${c}`, text, 44, columns[c]),
+        ),
+        ...["T 020 7946", "info@acme", "www.acme", `Page ${i + 1}`].map(
+          (text, c) => cell(`b${i}-${c}`, text, 30, columns[c]),
+        ),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      "b1-3": "PageNum",
+    });
+  });
 });
 
 describe("recogniseFurniture watermarks", () => {
@@ -360,6 +426,32 @@ describe("recogniseFurniture watermarks", () => {
       ),
     );
     expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
+  });
+
+  it("leaves a table's repeated answers that spread across the page", () => {
+    const rows = Array.from({ length: 31 }, (_, k) => 100 + k * 20);
+    const cells = rows.flatMap((y, k) => [
+      cell(`f${k}`, `Feature ${k}`, y, 72),
+      cell(`a${k}`, k % 2 ? "Yes" : "No", y, 200, 80),
+      cell(`b${k}`, k % 3 ? "No" : "Yes", y, 520, 80),
+    ]);
+    expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
+  });
+
+  it("leaves a table's column headings set at an angle on every page", () => {
+    const columns = [72, 172, 272, 372];
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        ...["Speed", "Range", "Weight", "Price"].map((text, c) => ({
+          ...run(`h${i}-${c}`, text, 700, columns[c], { angle: 45 }),
+          bounds: { x: columns[c], y: 700, width: 60, height: 60 },
+        })),
+        ...["Fast", "Long", "Light", ["£9", "£7", "£5"][i]].map((text, c) =>
+          cell(`d${i}-${c}`, text, 680, columns[c], 60),
+        ),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
   });
 
   it("leaves an image set at an angle, and see-through text, on a one-page document", () => {

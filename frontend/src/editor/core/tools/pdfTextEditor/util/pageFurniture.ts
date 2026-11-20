@@ -8,7 +8,7 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { Affine, PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
-import { tableRowCells } from "@editor/tools/pdfTextEditor/util/tableRow";
+import { tableCells } from "@editor/tools/pdfTextEditor/util/tableRow";
 
 /** How far apart two runs can sit, in points, and still be at the same height or in the same place. */
 const SAME_HEIGHT_PT = 4;
@@ -101,11 +101,11 @@ export function matchingRuns<R extends FurnitureRun>(
  * bottom of a page that at least half the pages, and at least two, show at
  * the same height: near the top a header, near the bottom a footer, and
  * either a page number when one of its numbers counts up with the pages,
- * whatever words surround it. Unless it numbers the pages, a cell of a table
- * (a line of four or more blocks with another such line near it) is never a
- * header or footer, nor is text whose number changes on every page without
- * rising with them, such as a value in a table that runs over several pages.
- * `pageCount` counts the pages not in `pages` too.
+ * whatever words surround it. Table text is kept wherever a table runs
+ * over a page break: a cell of a table (see tableCells) is never a header or
+ * footer unless it numbers the pages, nor a watermark unless see-through, and
+ * neither is text whose number changes on every page without rising with
+ * them. `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
@@ -117,13 +117,15 @@ export function recogniseFurniture(
     const onPage = furniture.get(pageIndex) ?? new Map<string, Furniture>();
     furniture.set(pageIndex, onPage.set(id, kind));
   };
-  for (const { pageIndex, id } of watermarks(pages, half)) {
+  const cells = new Map(
+    pages.map((page) => [page.pageIndex, tableCells(page.runs, page.display)]),
+  );
+  for (const { pageIndex, id } of watermarks(pages, half, cells)) {
     mark(pageIndex, id, "Watermark");
   }
 
   const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
   for (const page of pages) {
-    const rowCells = tableRowCells(page.runs, page.display, { stacked: true });
     for (const run of page.runs) {
       if (furniture.get(page.pageIndex)?.has(run.id)) continue;
       const at = placement(page.display, run.bounds);
@@ -136,7 +138,7 @@ export function recogniseFurniture(
         pageIndex: page.pageIndex,
         id: run.id,
         numbers: numbers(run.text),
-        inRow: rowCells.has(run),
+        inTable: cells.get(page.pageIndex)!.has(run),
       };
       const group = sameText.find((g) => sameHeight(g.at, at));
       if (group) group.runs.push(grouped);
@@ -171,9 +173,13 @@ interface Drawn {
 function watermarks(
   pages: readonly FurniturePage[],
   half: number,
+  cells: ReadonlyMap<number, ReadonlySet<FurnitureRun>>,
 ): { pageIndex: number; id: string }[] {
   const groups = new Map<string, Drawn[][]>();
-  for (const drawn of pages.flatMap(watermarkLike)) {
+  const candidates = pages.flatMap((page) =>
+    watermarkLike(page, cells.get(page.pageIndex)!),
+  );
+  for (const drawn of candidates) {
     const sameKey = groups.get(drawn.key) ?? [];
     groups.set(drawn.key, sameKey);
     const group = sameKey.find((g) => samePlace(g[0].centre, drawn.centre));
@@ -188,19 +194,28 @@ function watermarks(
   });
 }
 
-/** What the page draws that looks like a watermark: tiled, set at an angle, or see-through. */
-function watermarkLike(page: FurniturePage): Drawn[] {
+/**
+ * What the page draws that looks like a watermark: tiled, set at an angle, or
+ * see-through. A table's opaque cells are left out: a column of "Yes" can
+ * tile a page, and column headings set at an angle repeat on every page.
+ */
+function watermarkLike(
+  page: FurniturePage,
+  cells: ReadonlySet<FurnitureRun>,
+): Drawn[] {
   const items = [
-    ...page.runs.map((run) => ({
-      id: run.id,
-      // The exact text, digits and all: a watermark repeats itself word for
-      // word, where reading "7" and "41" as one would tile a table's number
-      // column across the page.
-      key: watermarkText(run.text) && `text:${watermarkText(run.text)}`,
-      bounds: run.bounds,
-      matrix: run.matrix,
-      seeThrough: run.fill.a < 255,
-    })),
+    ...page.runs
+      .filter((run) => run.fill.a < 255 || !cells.has(run))
+      .map((run) => ({
+        id: run.id,
+        // The exact text, digits and all: a watermark repeats itself word for
+        // word, where reading "7" and "41" as one would tile a table's number
+        // column across the page.
+        key: watermarkText(run.text) && `text:${watermarkText(run.text)}`,
+        bounds: run.bounds,
+        matrix: run.matrix,
+        seeThrough: run.fill.a < 255,
+      })),
     ...(page.images ?? []).map((image) => ({
       id: image.id,
       key: `image:${Math.round(image.bounds.width)}x${Math.round(image.bounds.height)}`,
@@ -294,8 +309,8 @@ interface GroupedRun {
   pageIndex: number;
   id: string;
   numbers: number[];
-  /** A cell of a table row on its page. */
-  inRow: boolean;
+  /** A cell of a table on its page (see tableCells). */
+  inTable: boolean;
 }
 
 function furnitureKind(
@@ -321,12 +336,12 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
 
 /**
  * True when the runs read as a table's content rather than as furniture: a
- * table row's cells, or text with a number that differs on every page without
+ * table's cells, or text with a number that differs on every page without
  * rising with them. A number that rises is page numbering that skips, such as
  * two page numbers to a sheet.
  */
 function readsAsContent(runs: readonly GroupedRun[]): boolean {
-  if (runs.some((run) => run.inRow)) return true;
+  if (runs.some((run) => run.inTable)) return true;
   const inPageOrder = [...runs].sort((a, b) => a.pageIndex - b.pageIndex);
   return runs[0].numbers.some((_, i) => {
     const values = inPageOrder.map((run) => run.numbers[i]);
