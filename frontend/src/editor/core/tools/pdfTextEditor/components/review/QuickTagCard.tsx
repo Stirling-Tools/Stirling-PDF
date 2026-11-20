@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { Alert, Switch, Text, Textarea } from "@mantine/core";
+import { Switch, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -137,19 +137,6 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
       onPointerDown={(e) => e.stopPropagation()}
     >
       <ReviewChecklist state={state} review={review} />
-
-      {/* The editor runs hidden in a review, so its error alert never shows. */}
-      {state.error && (
-        <Alert
-          color="red"
-          p="xs"
-          withCloseButton
-          onClose={() => store.setError(null)}
-          data-testid="pdf-editor-review-error"
-        >
-          <Text size="xs">{state.error}</Text>
-        </Alert>
-      )}
 
       {item ? (
         <header className="review-card__head">

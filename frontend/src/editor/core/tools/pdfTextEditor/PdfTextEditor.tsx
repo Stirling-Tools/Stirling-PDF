@@ -50,6 +50,7 @@ import { DiscardChangesModal } from "@editor/tools/pdfTextEditor/components/Disc
 import { HelpOverlay } from "@editor/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@editor/tools/pdfTextEditor/components/PasswordPromptModal";
 import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/components/PermissionsPasswordButton";
+import { ReviewErrorPortal } from "@editor/tools/pdfTextEditor/components/review/ReviewErrorPortal";
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { useReviewStart } from "@editor/tools/pdfTextEditor/hooks/useReviewStart";
@@ -698,6 +699,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleCancelPassword = useCallback(() => {
+    // A fix waiting on the cancelled file would switch back to it later.
+    reviewMode.set({ startAt: null });
     const file = store.pendingPasswordFile;
     if (file) cancelAutoLoad(file);
     store.clearPasswordPrompt();
@@ -812,15 +815,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       data-testid="pdf-editor-root"
     >
       {state.error && (
-        <Alert color="red" m="sm" data-testid="pdf-editor-error">
-          <Stack gap="xs">
-            <Text size="sm">{state.error}</Text>
-            <PermissionsPasswordButton
-              file={sourceFileId ? selectors.getFile(sourceFileId) : null}
-              onVerified={(file) => void load(file)}
-            />
-          </Stack>
-        </Alert>
+        <ReviewErrorPortal active={reviewing}>
+          <Alert color="red" m="sm" data-testid="pdf-editor-error">
+            <Stack gap="xs">
+              <Text size="sm">{state.error}</Text>
+              <PermissionsPasswordButton
+                file={sourceFileId ? selectors.getFile(sourceFileId) : null}
+                onVerified={(file) => void load(file)}
+              />
+            </Stack>
+          </Alert>
+        </ReviewErrorPortal>
       )}
       <EditorFileInputs onPickImage={handleInsertImage} />
       <HelpOverlay

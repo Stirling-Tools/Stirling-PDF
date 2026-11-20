@@ -13,6 +13,7 @@ const FIXTURE = path.join(
 
 interface EditorWindow {
   __editor_store: {
+    setError: (error: string | null) => void;
     document: {
       documentLanguage: () => string | null;
       structure: (pageIndex: number) => {
@@ -120,5 +121,24 @@ test.describe("PDF accessibility review", () => {
       language: "en-IE",
       alt: "Revenue by region, third quarter",
     });
+  });
+
+  test("shows the editor's error while the editor runs hidden", async ({
+    page,
+  }) => {
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.evaluate(() =>
+      (window as unknown as EditorWindow).__editor_store.setError(
+        "This file could not be opened",
+      ),
+    );
+    await expect(page.getByTestId("pdf-editor-error")).toBeVisible();
+    await expect(page.getByTestId("pdf-editor-error")).toContainText(
+      "This file could not be opened",
+    );
   });
 });

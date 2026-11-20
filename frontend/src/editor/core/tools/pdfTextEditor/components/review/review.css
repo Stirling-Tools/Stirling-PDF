@@ -291,3 +291,12 @@ html[data-review-card] [data-viewer-pages] *::-webkit-scrollbar {
     box-shadow: 0 0 0 3px transparent;
   }
 }
+
+.review-error {
+  position: fixed;
+  z-index: 260;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, calc(100vw - 32px));
+}
