@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -126,6 +127,27 @@ class McpUploadLinksTest {
         String done = controller.page(link.uploadId()).getBody();
         assertTrue(done.contains("&lt;b&gt;x&lt;/b&gt;.pdf"), done);
         assertEquals(404, controller.page("A".repeat(43)).getStatusCode().value());
+    }
+
+    @Test
+    void theUploadPageNamesTheAccountTheFileGoesInto() {
+        alice.setUsername("alice<script>");
+        when(users.findByUsernameIgnoreCase("alice<script>")).thenReturn(Optional.of(alice));
+        McpUploadLinks.Link link = links.create("alice<script>");
+
+        String page = controller.page(link.uploadId()).getBody();
+
+        assertTrue(page.contains("account <b>alice&lt;script&gt;</b>"), page);
+    }
+
+    @Test
+    void aDisabledAccountsLinkStopsWorking() throws Exception {
+        McpUploadLinks.Link link = links.create("alice");
+        alice.setEnabled(false);
+
+        assertEquals(404, controller.page(link.uploadId()).getStatusCode().value());
+        assertEquals(404, controller.upload(link.uploadId(), pdf(), null).getStatusCode().value());
+        verify(files, never()).save(any(), any(), anyString(), any(), anyLong(), anyBoolean());
     }
 
     @Test

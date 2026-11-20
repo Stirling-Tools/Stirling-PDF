@@ -2,6 +2,7 @@ package stirling.software.proprietary.mcp.files;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -37,6 +38,8 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpFiles {
+
+    static final int MAX_NAME_BYTES = 180;
 
     private static final String PUBLIC_LINK_PATH = "/api/v1/storage/share-links/";
     private static final String PRIVATE_LINK_PATH = "/share/";
@@ -121,6 +124,7 @@ public class McpFiles {
     public Saved save(
             User user, Resource body, String name, String contentType, long size, boolean result)
             throws McpFileException {
+        name = fitName(name);
         boolean stored = usesStoredFiles(user);
         try {
             byte[] inline = null;
@@ -248,6 +252,11 @@ public class McpFiles {
                 mcp.getMaxInputFiles() > 0 ? mcp.getMaxInputFiles() : Integer.MAX_VALUE);
     }
 
+    /** {@code mcp.maxPipelineCarryBytes}; 0 or less means no limit. */
+    public long maxPipelineCarryBytes() {
+        return applicationProperties.getMcp().getMaxPipelineCarryBytes();
+    }
+
     /** Loads a tool input, refused before any content is read if it would overspend the budget. */
     public Loaded load(User user, String fileIdOrUri, InputBudget budget) throws McpFileException {
         budget.requireRoomFor(1);
@@ -335,6 +344,24 @@ public class McpFiles {
         } catch (IOException e) {
             throw new McpFileException("Could not read fileId '" + fileId + "'.");
         }
+    }
+
+    /**
+     * Shortens a name to {@link #MAX_NAME_BYTES} UTF-8 bytes, keeping a short extension: local
+     * storage prefixes it with a UUID, and most filesystems refuse names over 255 bytes.
+     */
+    static String fitName(String name) {
+        if (name == null || name.getBytes(StandardCharsets.UTF_8).length <= MAX_NAME_BYTES) {
+            return name;
+        }
+        int dot = name.lastIndexOf('.');
+        String ext = dot > 0 && name.length() - dot <= 10 ? name.substring(dot) : "";
+        String stem = name.substring(0, name.length() - ext.length());
+        while (!stem.isEmpty()
+                && (stem + ext).getBytes(StandardCharsets.UTF_8).length > MAX_NAME_BYTES) {
+            stem = stem.substring(0, stem.offsetByCodePoints(stem.length(), -1));
+        }
+        return stem + ext;
     }
 
     private void rememberTempName(String fileId, String name) {

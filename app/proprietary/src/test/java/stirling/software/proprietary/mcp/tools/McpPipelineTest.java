@@ -47,6 +47,7 @@ import stirling.software.proprietary.policy.controller.PolicyController;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 
 import tools.jackson.databind.JsonNode;
@@ -64,6 +65,7 @@ class McpPipelineTest {
     private final McpFiles files = mock(McpFiles.class);
     private final McpToolCatalog catalog = mock(McpToolCatalog.class);
     private final PolicyController policies = mock(PolicyController.class);
+    private final UserRepository userRepository = mock(UserRepository.class);
     private final ApplicationProperties props = new ApplicationProperties();
     private final McpOperationExecutor executor =
             new McpOperationExecutor(mapper, api, files, mock(McpFileUrlFetcher.class), null, null);
@@ -73,7 +75,7 @@ class McpPipelineTest {
                     props,
                     provider(catalog),
                     provider(policies),
-                    provider(null),
+                    provider(userRepository),
                     provider(null),
                     provider(null),
                     provider(null),
@@ -85,6 +87,8 @@ class McpPipelineTest {
     @BeforeEach
     void setUp() throws Exception {
         when(files.user(any())).thenReturn(alice);
+        alice.setUsername("alice");
+        when(userRepository.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(alice));
         when(files.save(
                         eq(alice),
                         any(Resource.class),
@@ -691,6 +695,40 @@ class McpPipelineTest {
                 .post(eq("/api/v1/misc/compress-pdf"), any(MultiValueMap.class));
         assertEquals(2, result.path("structuredContent").path("files").size());
         assertTrue(text(result).contains("It made 2 files"), text(result));
+    }
+
+    @Test
+    void aStepResultOverTheCarryLimitStopsThePipeline() throws Exception {
+        when(files.maxPipelineCarryBytes()).thenReturn(4L);
+        when(api.post(eq("/api/v1/misc/repair"), any())).thenReturn(pdf("REPAIRED"));
+
+        ObjectNode result = run(steps("repair", "compress-pdf"));
+
+        assertTrue(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("Step 1 of 2 (repair)"), text(result));
+        assertTrue(text(result).contains("mcp.maxPipelineCarryBytes"), text(result));
+        verify(api, never()).post(eq("/api/v1/misc/compress-pdf"), any());
+    }
+
+    @Test
+    void splitPartsCountTowardTheCarryLimit() throws Exception {
+        when(catalog.findByOperationId("split-pages"))
+                .thenReturn(
+                        Optional.of(
+                                op(
+                                        "split-pages",
+                                        OperationCategory.PAGES,
+                                        "/api/v1/general/split-pages")));
+        when(api.post(eq("/api/v1/general/split-pages"), any()))
+                .thenReturn(zip("a.pdf", "PART-A".repeat(40), "b.pdf", "PART-B".repeat(40)));
+        // The ZIP itself fits, its unpacked parts do not.
+        when(files.maxPipelineCarryBytes()).thenReturn(400L);
+
+        ObjectNode result = run(steps("split-pages", "compress-pdf"));
+
+        assertTrue(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("mcp.maxPipelineCarryBytes"), text(result));
+        verify(api, never()).post(eq("/api/v1/misc/compress-pdf"), any());
     }
 
     @Test

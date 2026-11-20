@@ -542,9 +542,11 @@ public class ApplicationProperties {
 
         /**
          * Tool deny-list (operation ids). Any operation listed here is removed from MCP even if it
-         * would otherwise be allowed. Applied after {@link #allowedOperations}.
+         * would otherwise be allowed. Applied after {@link #allowedOperations}. Blocks url-to-pdf
+         * by default: the pages it renders can pull sub-resources from internal hosts, and a prompt
+         * hidden in a document could steer the model to it.
          */
-        private List<String> blockedOperations = new ArrayList<>();
+        private List<String> blockedOperations = new ArrayList<>(List.of("url-to-pdf"));
 
         /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
         private long maxRequestBytes = 10L * 1024 * 1024;
@@ -579,11 +581,20 @@ public class ApplicationProperties {
         /** Tool calls each user may make per minute (0 = unlimited). */
         private int rateLimitPerMinute = 60;
 
+        /**
+         * Operations one user may have running at once on a node, counting jobs still running after
+         * the client got a job id (0 = unlimited).
+         */
+        private int maxConcurrentCallsPerUser = 4;
+
         /** Let chat apps run multi-step pipelines and use the team's saved automations. */
         private boolean automationsEnabled = true;
 
         /** Most steps one pipeline call may chain. */
         private int maxPipelineSteps = 10;
+
+        /** Most bytes of step results one pipeline call holds between steps; 0 means no limit. */
+        private long maxPipelineCarryBytes = 500L * 1024 * 1024;
 
         /** Serve the in-chat widget (MCP Apps) and the file picker tool. */
         private boolean widgetEnabled = true;

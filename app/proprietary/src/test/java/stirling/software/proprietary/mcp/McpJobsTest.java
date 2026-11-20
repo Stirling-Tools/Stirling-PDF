@@ -1,6 +1,7 @@
 package stirling.software.proprietary.mcp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -72,6 +73,74 @@ class McpJobsTest {
         assertTrue(finished.await(5, TimeUnit.SECONDS), "work did not finish");
         ObjectNode done = waitForCompletion(jobId);
         assertEquals("ocr done", done.get("content").get(0).get("text").asText());
+    }
+
+    @Test
+    void aUserPastTheConcurrencyCapIsToldToWaitWhileOthersCarryOn() throws Exception {
+        props.getMcp().setSyncWaitSeconds(1);
+        props.getMcp().setMaxConcurrentCallsPerUser(2);
+        CountDownLatch release = new CountDownLatch(1);
+        for (int i = 0; i < 2; i++) {
+            ObjectNode pending =
+                    jobs.run(
+                            "ocr-pdf",
+                            "alice",
+                            () -> {
+                                await(release);
+                                return McpResponses.text(mapper, "done");
+                            });
+            assertEquals("pending", pending.get("structuredContent").get("kind").asText());
+        }
+
+        ObjectNode refused =
+                jobs.run("rotate-pdf", "alice", () -> McpResponses.text(mapper, "ran"));
+        assertTrue(refused.get("isError").asBoolean());
+        assertEquals(
+                "rate_limited",
+                McpResponses.errorDetail(refused).get("code").asText(),
+                refused.toString());
+        assertEquals(
+                "ran",
+                jobs.run("rotate-pdf", "bob", () -> McpResponses.text(mapper, "ran"))
+                        .get("content")
+                        .get(0)
+                        .get("text")
+                        .asText());
+
+        release.countDown();
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(10))
+                .until(
+                        () ->
+                                jobs.run(
+                                        "rotate-pdf",
+                                        "alice",
+                                        () -> McpResponses.text(mapper, "ran")),
+                        result -> !result.path("isError").asBoolean());
+    }
+
+    @Test
+    void aFailedCallFreesItsSlot() {
+        props.getMcp().setSyncWaitSeconds(0);
+        props.getMcp().setMaxConcurrentCallsPerUser(1);
+        for (int i = 0; i < 3; i++) {
+            assertThrows(
+                    IllegalStateException.class,
+                    () ->
+                            jobs.run(
+                                    "rotate-pdf",
+                                    "alice",
+                                    () -> {
+                                        throw new IllegalStateException("boom");
+                                    }));
+        }
+        assertEquals(
+                "ran",
+                jobs.run("rotate-pdf", "alice", () -> McpResponses.text(mapper, "ran"))
+                        .get("content")
+                        .get(0)
+                        .get("text")
+                        .asText());
     }
 
     @Test

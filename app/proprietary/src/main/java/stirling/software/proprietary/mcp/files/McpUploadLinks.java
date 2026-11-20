@@ -63,7 +63,14 @@ public class McpUploadLinks {
 
     /** True while the link still accepts a file. */
     public boolean isOpen(String token) {
-        return entry(token).filter(e -> "open".equals(e.path("state").asText())).isPresent();
+        return openOwner(token).isPresent();
+    }
+
+    /** The user an open link uploads for; empty once it is used or expired. */
+    public Optional<String> openOwner(String token) {
+        return entry(token)
+                .filter(e -> "open".equals(e.path("state").asText()))
+                .map(e -> e.path("user").asText());
     }
 
     /** Claims an unused link for one upload and returns its owner; empty if used or expired. */

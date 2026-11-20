@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -325,5 +326,16 @@ class McpFilesTest {
         assertNull(saved.downloadUrl());
         assertNull(saved.openUrl());
         verify(storage).storeTemporaryFile(eq(owner), any(), any());
+    }
+
+    @Test
+    void longNamesAreShortenedToFitTheFilesystemAndKeepTheirExtension() {
+        String fitted = McpFiles.fitName("a".repeat(5000) + ".pdf");
+        assertEquals(McpFiles.MAX_NAME_BYTES, fitted.getBytes(StandardCharsets.UTF_8).length);
+        assertTrue(fitted.endsWith(".pdf"));
+        String wide = McpFiles.fitName("\u00e9".repeat(400) + ".pdf");
+        assertTrue(wide.getBytes(StandardCharsets.UTF_8).length <= McpFiles.MAX_NAME_BYTES);
+        assertTrue(wide.endsWith(".pdf"));
+        assertEquals("short.pdf", McpFiles.fitName("short.pdf"));
     }
 }

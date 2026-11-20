@@ -60,9 +60,11 @@ async function op(operation, input, parameters = {}) {
 
 async function download(fileId) {
   const res = await call("stirling_download", { fileId });
-  const blob = res.content?.find((c) => c.type === "resource")?.resource?.blob;
-  if (res.isError || !blob) throw new Error(`download of ${fileId} failed: ${firstText(res).slice(0, 200)}`);
-  return Buffer.from(blob, "base64");
+  const resource = res.content?.find((c) => c.type === "resource")?.resource;
+  if (res.isError || (!resource?.blob && typeof resource?.text !== "string")) {
+    throw new Error(`download of ${fileId} failed: ${firstText(res).slice(0, 200)}`);
+  }
+  return resource.blob ? Buffer.from(resource.blob, "base64") : Buffer.from(resource.text, "utf8");
 }
 
 /** The result file of an operation, checked to be a file card first. */
