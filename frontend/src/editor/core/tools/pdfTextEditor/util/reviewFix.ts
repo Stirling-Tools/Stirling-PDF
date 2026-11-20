@@ -2,7 +2,7 @@ import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import { linkTexts } from "@editor/tools/pdfTextEditor/commands/linkText";
 import { taggableLinks } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { selectHeading } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
+import { selectHeadingAt } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -97,7 +97,7 @@ function selectFlaggedHeading(store: EditorStore, pageIndex: number): boolean {
       entry.pageIndex >= pageIndex,
   );
   if (index < 0) return false;
-  selectHeading(store, index);
+  selectHeadingAt(store, index);
   return true;
 }
 
@@ -139,12 +139,9 @@ function selectUntaggedLink(
 function focusFixControl(target: AccessibilityFixTarget): void {
   let frames = 0;
   const attempt = () => {
-    // The editor behind another tool keeps a hidden inspector holding the same controls.
-    const el = [
-      ...document.querySelectorAll<HTMLElement>(
-        `[data-fix-target~="${target}"]`,
-      ),
-    ].find((candidate) => candidate.getClientRects().length > 0);
+    const el = document.querySelector<HTMLElement>(
+      `[data-fix-target~="${target}"]`,
+    );
     if (!el) {
       if (++frames < SHOW_WAIT_FRAMES) window.requestAnimationFrame(attempt);
       return;

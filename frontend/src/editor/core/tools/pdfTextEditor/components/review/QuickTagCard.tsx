@@ -36,7 +36,10 @@ import {
   nextTodo,
   reviewItems,
 } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
-import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  isFocusInContentEditable,
+  isModalOpen,
+} from "@editor/tools/pdfTextEditor/util/dom";
 import {
   reviewCard,
   subscribeCardHold,
@@ -107,8 +110,11 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
   const asksText = (item?.kind === "text" || multiText) && tag !== null;
   const typed = tag ? canTypeText(tag) : false;
   const artifactable = tag ? canBeArtifact(tag) : false;
-  const textChoices = QUICK_TYPES;
-  useTagKeys(asksText ? { typed, artifactable, textChoices, applyText } : null);
+  useTagKeys(
+    asksText
+      ? { typed, artifactable, textChoices: QUICK_TYPES, applyText }
+      : null,
+  );
 
   if (!frame || top === null) return null;
   const { viewer, pagesRight } = frame;
@@ -170,7 +176,7 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
             className="review-card__chips"
             data-fix-target="untagged heading"
           >
-            {textChoices.map((type, i) => (
+            {QUICK_TYPES.map((type, i) => (
               <button
                 key={type}
                 type="button"
@@ -353,6 +359,7 @@ function useTagKeys(
       const target = e.target instanceof Element ? e.target : null;
       if (
         isFocusInContentEditable() ||
+        isModalOpen() ||
         target?.closest("input, textarea, select, [role='combobox']")
       )
         return;

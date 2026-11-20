@@ -1,22 +1,25 @@
 import { Suspense, lazy } from "react";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
-import { useEndReviewInEditorTool } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
+import {
+  useEndReviewOutsideAccessibilityTool,
+  useReviewAvailable,
+} from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 
 const PdfTextEditor = lazy(
   () => import("@editor/tools/pdfTextEditor/PdfTextEditor"),
 );
 
 /**
- * Keeps the editor running hidden while a review runs under another tool. Never
- * mounted with the editor tool: both would register as the viewer's page tool.
+ * Runs the editor hidden while a review is open in the accessibility tool; its page
+ * layer, bar and card are what the review shows.
  */
 export function ReviewHost() {
   const { reviewing } = useReviewMode();
   const { selectedTool } = useNavigationState();
-  useEndReviewInEditorTool();
-  if (!ACCESSIBILITY_EDITING || !reviewing || selectedTool === "pdfTextEditor")
+  const available = useReviewAvailable();
+  useEndReviewOutsideAccessibilityTool();
+  if (!available || !reviewing || selectedTool !== "checkAccessibility")
     return null;
   return (
     <div hidden data-testid="pdf-editor-review-host">

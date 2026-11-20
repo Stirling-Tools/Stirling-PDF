@@ -29,16 +29,16 @@ export function useHeadingOutline(
       : null;
   }, [store, state.pages, shown]);
 
-  const select = useCallback(
-    (index: number) => selectHeading(store, index),
+  const selectHeading = useCallback(
+    (index: number) => selectHeadingAt(store, index),
     [store],
   );
 
-  return { outline, selectHeading: select };
+  return { outline, selectHeading };
 }
 
 /** Selects the run showing heading `index` in the document's headings, reading its page first. */
-export function selectHeading(store: EditorStore, index: number): void {
+export function selectHeadingAt(store: EditorStore, index: number): void {
   const doc = store.document;
   const headings = doc?.headings();
   const pageIndex = headings?.[index]?.pageIndex;

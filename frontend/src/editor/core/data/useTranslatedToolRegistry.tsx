@@ -2,6 +2,7 @@ import { lazy, useMemo } from "react";
 import { Icon } from "@editor/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@editor/constants/links";
+import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import { reorganizePagesOperationConfig } from "@editor/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
@@ -451,10 +452,16 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         icon: <Icon name="universal-access" size="1.5rem" />,
         name: t("home.checkAccessibility.title", "PDF accessibility"),
         component: lazy(() => import("@editor/tools/CheckAccessibility")),
-        description: t(
-          "home.checkAccessibility.desc",
-          "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
-        ),
+        // Tagging comes with the review, which only the accessibility-editing build has.
+        description: ACCESSIBILITY_EDITING
+          ? t(
+              "home.checkAccessibility.descWithReview",
+              "Check a PDF against PDF/UA, then tag and describe what screen readers miss",
+            )
+          : t(
+              "home.checkAccessibility.desc",
+              "Score a PDF against PDF/UA and see what blocks screen readers, without changing it",
+            ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.VERIFICATION,
         maxFiles: -1,

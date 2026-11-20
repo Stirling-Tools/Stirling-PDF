@@ -23,6 +23,7 @@ import {
 import { useViewer } from "@editor/contexts/ViewerContext";
 import { useNavigationActions } from "@editor/contexts/NavigationContext";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
+import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
@@ -42,6 +43,7 @@ export function AccessibilityResults({
   const { results, isLoading, status } = operation;
   const { setActiveFileId } = useViewer();
   const { actions: navigationActions } = useNavigationActions();
+  const reviewAvailable = useReviewAvailable();
 
   const options = useMemo(
     () =>
@@ -139,7 +141,9 @@ export function AccessibilityResults({
       )}
 
       {selected.report ? (
-        <AccessibilityFixContext.Provider value={fixInDocument}>
+        <AccessibilityFixContext.Provider
+          value={reviewAvailable ? fixInDocument : null}
+        >
           <FixInDocumentButton
             passing={
               assessAccessibilityReport(selected.report).result === "pass"

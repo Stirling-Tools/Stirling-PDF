@@ -50,7 +50,10 @@ import { PermissionsPasswordButton } from "@editor/tools/pdfTextEditor/component
 import { EditorPanelActions } from "@editor/tools/pdfTextEditor/components/EditorPanelActions";
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { useReviewStart } from "@editor/tools/pdfTextEditor/hooks/useReviewStart";
-import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
+import {
+  reviewMode,
+  useReviewMode,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { REVIEW_COLUMN_REM } from "@editor/tools/pdfTextEditor/components/review/QuickTagCard";
 import { MobileEditorSheets } from "@editor/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@editor/tools/pdfTextEditor/components/EditorFileInputs";
@@ -137,7 +140,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const { addFiles, consumeFiles, selectors } = useFileContext();
   const { setSelectedFiles } = useFileSelection();
   const { handleToolSelect } = useToolWorkflowActions();
-  const { selectedTool } = useNavigationState();
+  const { selectedTool, workbench } = useNavigationState();
   // Saving replaces the workbench file, so for a moment the selection points at
   // a file the editor has not adopted yet. Auto-load must sit that out.
   const [applying, setApplying] = useState(false);
@@ -146,7 +149,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   // Dropping the document discards its edits; the file is then reopened fresh.
   const discardEdits = useCallback(() => store.clearDocument(), [store]);
   const isDirty = useCallback(() => store.getState().dirty, [store]);
-  useUnsavedChangesGuard(state.dirty, isDirty, reviewing);
+  useUnsavedChangesGuard(state.dirty, isDirty);
   const pinWorkbench = useWorkbenchPin();
   // Opening a file can leave the workbench on Active Files, so landing a
   // document pins the viewer back.
@@ -408,7 +411,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           isMobile && state.hasDocument ? ViewerEditActionBar : undefined,
         onDiscard: discardEdits,
         onSave: saveBeforeLeaving,
-        onToggleFind: toggleFind,
+        onToggleFind: reviewing ? undefined : toggleFind,
         rightInsetRem: reviewing && !isMobile ? REVIEW_COLUMN_REM : undefined,
         hidesFormNotice: reviewing,
       }),
@@ -637,6 +640,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   useEditorKeyboardShortcuts({
     store,
+    enabled: workbench === "viewer",
     onUndo: useCallback(() => store.undo(), [store]),
     onRedo: useCallback(() => store.redo(), [store]),
     onSave: handleSave,
@@ -655,7 +659,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       () => store.setHelpOpen(!store.getState().helpOpen),
       [store],
     ),
-    onOpenFind: useCallback(() => store.setFindOpen(true), [store]),
+    onOpenFind: useCallback(() => {
+      if (!reviewing) store.setFindOpen(true);
+    }, [store, reviewing]),
     onFindNext: handleFindNext,
     onEscape: handleEscape,
     onMergeSelection: reviewing ? noop : handleMergeSelection,
@@ -743,6 +749,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       ocrAvailable,
       ocrBlockedReason: ocr.blockedReason,
       onRemovePassword: sourceFileId ? removePassword : undefined,
+      onSetGroupingMode,
+      onSetWidthMode,
+      onSetShowRulers,
     }),
     [
       panel.selection.runIds.length,
@@ -755,8 +764,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       ocr.blockedReason,
       sourceFileId,
       removePassword,
+      onSetGroupingMode,
+      onSetWidthMode,
+      onSetShowRulers,
     ],
   );
+  // Read through a getter: the actions change with the selection, the session must not.
+  const inspectorRef = useRef(inspector);
+  inspectorRef.current = inspector;
 
   useEffect(() => {
     setEditorSession({
@@ -766,7 +781,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
       revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
-      inspector,
+      get inspector() {
+        return inspectorRef.current;
+      },
     });
     return () => setEditorSession(null);
   }, [
@@ -775,7 +792,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     handleSave,
     handleDownload,
     openImagePicker,
-    inspector,
   ]);
 
   const sidebarProps = {
@@ -783,9 +799,6 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     state: panel.state,
     selection: panel.selection,
     ...inspector,
-    onSetGroupingMode,
-    onSetWidthMode,
-    onSetShowRulers,
   };
 
   return (
@@ -825,7 +838,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       <DiscardChangesModal
         incomingFileName={pendingSwitch?.name ?? null}
         onConfirm={confirmSwitch}
-        onCancel={cancelSwitch}
+        onCancel={() => {
+          // A fix waiting on the declined file would switch to it again later.
+          reviewMode.set({ startAt: null });
+          cancelSwitch();
+        }}
       />
       {isMobile ? (
         <>
@@ -843,10 +860,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        <EditorSidebar
-          {...sidebarProps}
-          answersFixRequests={selectedTool === "pdfTextEditor"}
-        />
+        // Under a review the panel is hidden and Properties holds the inspector.
+        selectedTool === "pdfTextEditor" && <EditorSidebar {...sidebarProps} />
       )}
       {state.hasDocument && (
         <EditorPanelActions

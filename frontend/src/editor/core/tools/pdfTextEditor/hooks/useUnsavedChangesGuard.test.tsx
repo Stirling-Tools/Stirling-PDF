@@ -24,7 +24,7 @@ function Editor() {
     liveDirty = next;
     set(next);
   };
-  useUnsavedChangesGuard(dirty, readDirty, false);
+  useUnsavedChangesGuard(dirty, readDirty);
   return null;
 }
 

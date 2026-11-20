@@ -583,8 +583,16 @@ export const PageView = memo(function PageView({
                 ? undefined
                 : (dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)
             }
-            onWrap={(maxWidthPt, keepClearBelow) =>
-              onWrapRun?.(page.pageIndex, run.id, maxWidthPt, keepClearBelow)
+            onWrap={
+              reviewing
+                ? undefined
+                : (maxWidthPt, keepClearBelow) =>
+                    onWrapRun?.(
+                      page.pageIndex,
+                      run.id,
+                      maxWidthPt,
+                      keepClearBelow,
+                    )
             }
             onMeasure={
               onMeasureRun

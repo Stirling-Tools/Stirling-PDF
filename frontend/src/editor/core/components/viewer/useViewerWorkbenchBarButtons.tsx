@@ -34,12 +34,14 @@ import { useViewerReadAloud } from "@editor/components/viewer/useViewerReadAloud
 import { RulerScaleSettingsButton } from "@editor/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@editor/utils/measurementTypes";
 import type { StirlingFile } from "@editor/types/fileContext";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
   reviewMode,
   useReviewMode,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
-import { useEditOrReview } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
+import {
+  useEditOrReview,
+  useReviewAvailable,
+} from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -135,6 +137,7 @@ export function useViewerWorkbenchBarButtons(
   );
   const { reviewing } = useReviewMode();
   const { startReview, startEditing } = useEditOrReview();
+  const reviewAvailable = useReviewAvailable();
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
   const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
@@ -625,7 +628,7 @@ export function useViewerWorkbenchBarButtons(
           />
         ),
       },
-      ...(ACCESSIBILITY_EDITING
+      ...(reviewAvailable
         ? [
             {
               id: "viewer-review-accessibility",
@@ -691,6 +694,7 @@ export function useViewerWorkbenchBarButtons(
     reviewing,
     startReview,
     startEditing,
+    reviewAvailable,
     isTextEditActive,
     toolRegistry,
     pageTool,

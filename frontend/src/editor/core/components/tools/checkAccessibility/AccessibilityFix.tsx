@@ -10,15 +10,13 @@ import {
   type AccessibilityFixTarget,
 } from "@editor/utils/accessibilityFixes";
 
-/**
- * Opens the checked file in the review at `target`, from a 1-based page (or the
- * first). Null where the report cannot hand its file over.
- */
+/** Opens the checked file in the review at `target`, from a 1-based page (or the first). */
 export type AccessibilityFixFn = (
   target: AccessibilityFixTarget,
   page?: number,
 ) => void;
 
+/** Null where the report cannot hand its file over to a review. */
 export const AccessibilityFixContext = createContext<AccessibilityFixFn | null>(
   null,
 );

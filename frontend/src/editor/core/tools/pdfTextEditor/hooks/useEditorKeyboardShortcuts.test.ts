@@ -12,6 +12,7 @@ function setup() {
   } as unknown as EditorStore;
   const cbs = {
     store,
+    enabled: true,
     onUndo: vi.fn(),
     onRedo: vi.fn(),
     onSave: vi.fn(),

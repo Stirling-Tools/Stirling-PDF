@@ -34,7 +34,7 @@ export function useReviewStart({
   useEffect(() => {
     if (!startAt) return;
     if (startAt.fileId !== sourceFileId) {
-      setActiveFileId(startAt.fileId as FileId);
+      setActiveFileId(startAt.fileId);
       return;
     }
     const doc = store.document;

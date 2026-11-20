@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { FileId } from "@editor/types/file";
 import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import type { SidebarTab } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { currentEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -12,7 +13,7 @@ export interface ReviewModeState {
   showAllTags: boolean;
   /** Where the editor should open the review, once that file is open: `target` on or after the page. */
   startAt: {
-    fileId: string;
+    fileId: FileId;
     pageIndex: number;
     target: AccessibilityFixTarget;
   } | null;

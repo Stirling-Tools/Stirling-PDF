@@ -4,14 +4,7 @@ import type { SidebarProps } from "@editor/tools/pdfTextEditor/components/Editor
 /** What the inspector needs from the editor beyond its store, state and selection. */
 export type InspectorActions = Omit<
   SidebarProps,
-  | "store"
-  | "state"
-  | "selection"
-  | "onSetGroupingMode"
-  | "onSetWidthMode"
-  | "onSetShowRulers"
-  | "initialTab"
-  | "answersFixRequests"
+  "store" | "state" | "selection" | "initialTab"
 >;
 
 export interface EditorSession {

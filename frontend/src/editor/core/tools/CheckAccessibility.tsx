@@ -17,7 +17,7 @@ import {
 } from "@editor/hooks/tools/checkAccessibility/useCheckAccessibilityOperation";
 import { AccessibilityResults } from "@editor/components/tools/checkAccessibility/AccessibilityResults";
 import type { FileId } from "@editor/types/file";
-import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 
@@ -38,15 +38,15 @@ const CheckAccessibility = (props: BaseToolProps) => {
   const operation = base.operation as CheckAccessibilityOperationHook;
   const hasReports = operation.results.length > 0;
   const [selectedFileId, setSelectedFileId] = useState<FileId | null>(null);
+  const hasFiles = base.selectedFiles.length > 0;
   useCheckWhenIdle(
-    base.selectedFiles.length > 0,
+    hasFiles,
     base.endpointEnabled,
     operation,
     base.handleExecute,
   );
-  useReviewInViewer(base.selectedFiles.length > 0);
+  useReviewInViewer(hasFiles);
 
-  const hasFiles = base.selectedFiles.length > 0;
   return (
     <Stack gap="sm" p="sm" data-testid="check-accessibility">
       <Select
@@ -113,11 +113,12 @@ function useCheckWhenIdle(
  */
 function useReviewInViewer(hasFiles: boolean): void {
   const { workbench } = useNavigationState();
+  const available = useReviewAvailable();
   useEffect(() => {
-    if (!ACCESSIBILITY_EDITING || !hasFiles || workbench !== "viewer") return;
+    if (!available || !hasFiles || workbench !== "viewer") return;
     if (!reviewMode.get().reviewing)
       reviewMode.set({ reviewing: true, startAt: null });
-  }, [hasFiles, workbench]);
+  }, [available, hasFiles, workbench]);
 }
 
 const CheckAccessibilityTool = CheckAccessibility as ToolComponent;

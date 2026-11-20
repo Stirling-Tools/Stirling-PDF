@@ -26,6 +26,7 @@ const SETTLE_FRAMES = 4;
 /** Releases a hold whose scroll never settles, so the card cannot stay frozen. */
 const MAX_HOLD_FRAMES = 150;
 let holdRun = 0;
+let stepRun = 0;
 let stepScrollPending = false;
 
 /**
@@ -71,6 +72,8 @@ const MOUNT_WAIT_FRAMES = 90;
  * moves. An item on an unmounted page is brought near first.
  */
 export function scrollItemToCard(item: ReviewItem): void {
+  // A newer step abandons this one's wait for an unmounted page.
+  const step = ++stepRun;
   const el = reviewItemElement(item);
   if (el) {
     scrollElementToCard(el);
@@ -79,6 +82,7 @@ export function scrollItemToCard(item: ReviewItem): void {
   currentEditorSession()?.revealPage(item.pageIndex);
   let frames = 0;
   const retry = () => {
+    if (step !== stepRun) return;
     const found = reviewItemElement(item);
     if (found) scrollElementToCard(found);
     else if (++frames < MOUNT_WAIT_FRAMES) requestAnimationFrame(retry);

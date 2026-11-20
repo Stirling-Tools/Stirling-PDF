@@ -6,7 +6,10 @@ import { Icon } from "@editor/ui/Icon";
 import type { ReviewProgress } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
 import type { EditorViewState } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { ReviewItem } from "@editor/tools/pdfTextEditor/util/accessibilityProgress";
-import { isFocusInContentEditable } from "@editor/tools/pdfTextEditor/util/dom";
+import {
+  isFocusInContentEditable,
+  isModalOpen,
+} from "@editor/tools/pdfTextEditor/util/dom";
 import "@editor/tools/pdfTextEditor/components/review/review.css";
 
 /** Items listed before the rest collapse behind a count, so a long document stays scannable. */
@@ -275,6 +278,7 @@ function useNextKey(review: ReviewProgress): void {
       const target = e.target instanceof Element ? e.target : null;
       if (
         isFocusInContentEditable() ||
+        isModalOpen() ||
         target?.closest("input, textarea, select, [role='combobox']")
       )
         return;

@@ -396,10 +396,7 @@ interface TextRunOverlayProps {
    * as the box, painted beneath every run. Without it the box has no grips.
    */
   gripLayer?: HTMLElement | null;
-  /**
-   * Focusable, so its characters can still be selected for tagging, but
-   * typing, pasting and dropping are refused.
-   */
+  /** Selectable but not editable, so keys reach the review card rather than the text. */
   readOnly?: boolean;
 }
 
@@ -553,9 +550,6 @@ export function TextRunOverlay({
   // Subscribed, so toggling the preference re-renders every overlay.
   const spellcheck = useSpellcheckPreference();
   const ref = useRef<HTMLDivElement | null>(null);
-  // Read by the native beforeinput listener, which is bound once.
-  const readOnlyRef = useRef(readOnly);
-  readOnlyRef.current = readOnly;
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   // Only while focused: blurring clears the browser's selection, and the
@@ -747,10 +741,6 @@ export function TextRunOverlay({
     const el = ref.current;
     if (!el) return;
     const onBeforeInput = (event: Event) => {
-      if (readOnlyRef.current) {
-        event.preventDefault();
-        return;
-      }
       const inputType = (event as InputEvent).inputType ?? "";
       if (inputType.startsWith("format")) event.preventDefault();
       // The browser keeps its OWN undo stack for a contenteditable, reachable
@@ -1369,7 +1359,7 @@ export function TextRunOverlay({
       data-testid={`pdf-editor-run-${run.id}`}
       data-run-id={run.id}
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
-      contentEditable={!run.locked && !run.textReadOnly}
+      contentEditable={!run.locked && !run.textReadOnly && !readOnly}
       suppressContentEditableWarning
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}
@@ -1398,7 +1388,6 @@ export function TextRunOverlay({
       onPaste={(e) => {
         // Paste as PLAIN TEXT.
         e.preventDefault();
-        if (readOnly) return;
         const sel = window.getSelection();
         if (sel) normalizeContainerCaret(e.currentTarget, sel);
         const text = e.clipboardData?.getData("text/plain");
@@ -1513,14 +1502,11 @@ export function TextRunOverlay({
       }}
       onCompositionEnd={(e) => {
         composingRef.current = false;
-        // Composition cannot be cancelled, so a read-only box drops it here.
-        if (readOnly) return;
         // Commit the composed string once, like onInput's non-IME path.
         const el = e.currentTarget;
         commitTypedText(el, readOverlayText(el));
       }}
       onInput={(e) => {
-        if (readOnly) return;
         setTouched(true);
         setEditTick((n) => n + 1);
         editedAtRevisionRef.current = pageRevision ?? -1;

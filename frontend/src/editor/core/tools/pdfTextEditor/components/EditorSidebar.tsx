@@ -55,11 +55,6 @@ export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
   initialTab?: SidebarTab;
-  /**
-   * Shows the tab a fix asks for (reviewMode.inspectorTab) and clears the request.
-   * Only the visible inspector may, or a hidden one would take it first.
-   */
-  answersFixRequests?: boolean;
 }
 
 export type SidebarTab = "selected" | "document";
@@ -81,7 +76,6 @@ export const EditorSidebar = memo(function EditorSidebar({
   ocrBlockedReason,
   onRemovePassword,
   initialTab = "selected",
-  answersFixRequests = false,
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
@@ -103,10 +97,10 @@ export const EditorSidebar = memo(function EditorSidebar({
   // After the effect above, so a fix asking for Document wins over a selection made on mount.
   const { inspectorTab, reviewing } = useReviewMode();
   useEffect(() => {
-    if (!answersFixRequests || !inspectorTab) return;
+    if (!inspectorTab) return;
     setTab(inspectorTab);
     reviewMode.set({ inspectorTab: null });
-  }, [answersFixRequests, inspectorTab]);
+  }, [inspectorTab]);
 
   const fontNote = useSelectedFontNote(
     state,

@@ -5,7 +5,7 @@ import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import { modShortcut } from "@editor/utils/hotkeys";
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
-import { ReviewToggle } from "@editor/tools/pdfTextEditor/components/review/ReviewToggle";
+import { CloseReviewButton } from "@editor/tools/pdfTextEditor/components/review/CloseReviewButton";
 import { NO_SHRINK } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
@@ -69,10 +69,6 @@ export function EditorTrailControls({ store, state, selection }: Props) {
                 state={state}
                 selection={selection}
                 {...session.inspector}
-                onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
-                onSetWidthMode={(mode) => store.setWidthMode(mode)}
-                onSetShowRulers={(show) => store.setShowRulers(show)}
-                answersFixRequests
               />
             </ScrollArea.Autosize>
           )}
@@ -96,7 +92,7 @@ export function EditorTrailControls({ store, state, selection }: Props) {
           {t("pdfTextEditor.trail.save", "Save")}
         </Button>
       </Tooltip>
-      <ReviewToggle />
+      <CloseReviewButton />
     </>
   );
 }
