@@ -140,5 +140,6 @@ describe("pdf render worker client", () => {
     await expect(rendered).rejects.toBeInstanceOf(
       client.RenderWorkerUnavailable,
     );
+    expect(client.canRenderInWorker()).toBe(false);
   });
 });

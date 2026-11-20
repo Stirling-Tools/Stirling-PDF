@@ -125,11 +125,14 @@ function startWorker(): { target: Worker; ready: Promise<void> } {
     throw new RenderWorkerUnavailable(error);
   }
   target.onmessage = onResponse;
+  let starting = true;
   // A crash (including a WASM out-of-memory) takes this worker, not the tab;
-  // the next request starts a fresh one.
+  // the next request starts a fresh one. A worker that dies while starting
+  // will not start later either.
   target.onerror = (event) => {
-    if (worker === target)
-      shutdown(new Error(event.message || "PDF render worker failed"));
+    if (worker !== target) return;
+    if (starting) unavailable = true;
+    shutdown(new Error(event.message || "PDF render worker failed"));
   };
   worker = target;
   startEagerWasmCompilation();
@@ -151,10 +154,14 @@ function startWorker(): { target: Worker; ready: Promise<void> } {
           wasmModule: null,
         });
       }
+      starting = false;
     })
     .catch((error: unknown) => {
-      unavailable = true;
-      if (worker === target) shutdown(error);
+      // A worker already replaced must not disable its replacement.
+      if (worker === target) {
+        unavailable = true;
+        shutdown(error);
+      }
       throw new RenderWorkerUnavailable(error);
     });
   return { target, ready };

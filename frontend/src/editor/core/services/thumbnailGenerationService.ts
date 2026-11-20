@@ -59,6 +59,8 @@ export class ThumbnailGenerationService {
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
+  /** Bumped by forgetFile so a worker render still running for the file stops. */
+  private forgetGenerations = new Map<FileId, number>();
 
   constructor(private maxWorkers: number = 10) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
@@ -198,9 +200,12 @@ export class ThumbnailGenerationService {
     }) => void,
   ): Promise<ThumbnailResult[]> {
     const password = getPdfAccess(fileId)?.password ?? "";
+    const generation = this.forgetGenerations.get(fileId);
     const allResults: ThumbnailResult[] = [];
     const batchSize = 3;
     for (let i = 0; i < pageNumbers.length; i += batchSize) {
+      // A batch posted after forgetFile would reopen the document it released.
+      if (this.forgetGenerations.get(fileId) !== generation) break;
       const batch = pageNumbers.slice(i, i + batchSize);
       const rendered = await renderPagesInWorker(
         fileId,
@@ -388,6 +393,10 @@ export class ThumbnailGenerationService {
   /** Drops everything held for a file that has left the workbench: its page
    *  thumbnails and any open copy of its document. */
   forgetFile(fileId: FileId): void {
+    this.forgetGenerations.set(
+      fileId,
+      (this.forgetGenerations.get(fileId) ?? 0) + 1,
+    );
     for (const [pageId, entry] of this.thumbnailCache) {
       if (entry.fileId !== fileId) continue;
       this.thumbnailCache.delete(pageId);

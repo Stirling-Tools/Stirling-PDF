@@ -60,3 +60,29 @@ describe("page thumbnails when the render worker cannot start", () => {
     expect(mainThread).not.toHaveBeenCalled();
   });
 });
+
+describe("page thumbnails for a file forgotten mid-render", () => {
+  it("post no further batches, which would reopen the released document", async () => {
+    const service = new ThumbnailGenerationService();
+    renderPagesInWorker.mockReset();
+    renderPagesInWorker.mockImplementation(
+      async (
+        _key: string,
+        _source: Blob,
+        _password: string,
+        pages: number[],
+      ) => {
+        service.forgetFile("f" as FileId);
+        return pages.map((pageNumber) => ({ pageNumber, thumbnail: "data:x" }));
+      },
+    );
+
+    await service.generateThumbnails(
+      "f" as FileId,
+      new ArrayBuffer(8),
+      [1, 2, 3, 4, 5, 6, 7],
+    );
+
+    expect(renderPagesInWorker).toHaveBeenCalledTimes(1);
+  });
+});
