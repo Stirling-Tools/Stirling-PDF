@@ -5601,7 +5601,7 @@ title = "Flatten"
 
 [home.formFill]
 desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
+title = "Form Editor"
 
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
@@ -13670,7 +13670,7 @@ downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
 exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
-formFill = "Fill Form"
+formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
 multiTool = "Multi-Tool"
