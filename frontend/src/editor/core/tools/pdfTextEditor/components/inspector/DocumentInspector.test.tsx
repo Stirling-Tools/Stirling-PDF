@@ -7,7 +7,6 @@ import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/acces
 
 function renderInspector(
   accessibilityReview: AccessibilityReview | null,
-  onNext = vi.fn(),
   documentLanguage: DocumentLanguageControl | null = null,
   {
     untaggedPages = 0,
@@ -15,12 +14,14 @@ function renderInspector(
     markedTagged = false,
     onSetMarkedTagged = vi.fn(),
     hasTags = false,
+    reviewing = true,
   }: {
     untaggedPages?: number;
     onTagUntagged?: () => void;
     markedTagged?: boolean | null;
     onSetMarkedTagged?: (marked: boolean) => void;
     hasTags?: boolean;
+    reviewing?: boolean;
   } = {},
 ) {
   render(
@@ -34,7 +35,6 @@ function renderInspector(
         onSetWidthMode={vi.fn()}
         onSetShowRulers={vi.fn()}
         accessibilityReview={accessibilityReview}
-        onSelectNextToReview={onNext}
         untaggedPages={untaggedPages}
         onTagUntaggedContent={onTagUntagged}
         markedTagged={markedTagged}
@@ -43,53 +43,53 @@ function renderInspector(
         headingOutline={null}
         onSelectHeading={vi.fn()}
         documentLanguage={documentLanguage}
+        reviewing={reviewing}
       />
     </MantineProvider>,
   );
-  return onNext;
 }
 
 const KEY = "pdfTextEditor.inspector.accessibility";
 const SUMMARY = "pdf-editor-document-accessibility-summary";
-const NEXT = "pdf-editor-document-accessibility-next";
 const TAG_UNTAGGED = "pdf-editor-document-accessibility-tag-untagged";
 const MARKED = "pdf-editor-document-accessibility-marked";
 const MARKED_WARNING = "pdf-editor-document-accessibility-marked-warning";
 const NOTHING_TO_REVIEW = { needsDescription: 0, untagged: 0, untaggable: 0 };
 
 describe("DocumentInspector accessibility review", () => {
-  it("counts images missing descriptions and untagged ones, and moves to the next", () => {
-    const onNext = renderInspector({
-      needsDescription: 2,
-      untagged: 1,
-      untaggable: 0,
-    });
+  it("counts images missing descriptions and untagged ones", () => {
+    renderInspector({ needsDescription: 2, untagged: 1, untaggable: 0 });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
       `${KEY}.missingDescriptions2${KEY}.untaggedImages1`,
     );
-    fireEvent.click(screen.getByTestId(NEXT));
-    expect(onNext).toHaveBeenCalledOnce();
   });
 
-  it("offers the next image while any is untagged", () => {
-    renderInspector({ needsDescription: 0, untagged: 1, untaggable: 0 });
-    expect(screen.getByTestId(NEXT)).toBeVisible();
+  it("shows no accessibility outside the review", () => {
+    renderInspector(
+      { needsDescription: 2, untagged: 1, untaggable: 0 },
+      { language: null, onSet: vi.fn(), editable: true },
+      { reviewing: false },
+    );
+    expect(
+      screen.queryByTestId("pdf-editor-document-accessibility"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("pdf-editor-document-language-picker"),
+    ).not.toBeInTheDocument();
   });
 
-  it("counts images that can't be tagged apart, without offering them", () => {
+  it("counts images that can't be tagged apart", () => {
     renderInspector({ needsDescription: 0, untagged: 0, untaggable: 2 });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
       `${KEY}.missingDescriptions0${KEY}.untaggedImages0${KEY}.untaggableImages2`,
     );
-    expect(screen.queryByTestId(NEXT)).not.toBeInTheDocument();
   });
 
-  it("offers no next image once every image is dealt with", () => {
+  it("counts nothing once every image is dealt with", () => {
     renderInspector({ needsDescription: 0, untagged: 0, untaggable: 0 });
     expect(screen.getByTestId(SUMMARY)).toHaveTextContent(
       `${KEY}.missingDescriptions0${KEY}.untaggedImages0`,
     );
-    expect(screen.queryByTestId(NEXT)).not.toBeInTheDocument();
   });
 
   it("leaves the review out when there is nothing to review", () => {
@@ -101,7 +101,7 @@ describe("DocumentInspector accessibility review", () => {
 
   it("counts pages with untagged content and tags them", () => {
     const onTagUntagged = vi.fn();
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
+    renderInspector(NOTHING_TO_REVIEW, null, {
       untaggedPages: 3,
       onTagUntagged,
     });
@@ -119,7 +119,7 @@ describe("DocumentInspector accessibility review", () => {
 
   it("ticks the fully-tagged box to mark the document", () => {
     const onSetMarkedTagged = vi.fn();
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { onSetMarkedTagged });
+    renderInspector(NOTHING_TO_REVIEW, null, { onSetMarkedTagged });
     const box = screen.getByTestId(MARKED);
     expect(box).not.toBeChecked();
     fireEvent.click(box);
@@ -127,12 +127,12 @@ describe("DocumentInspector accessibility review", () => {
   });
 
   it("leaves the box out when the file's flag can't be changed", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: null });
+    renderInspector(NOTHING_TO_REVIEW, null, { markedTagged: null });
     expect(screen.queryByTestId(MARKED)).not.toBeInTheDocument();
   });
 
   it("warns when marked tagged while content is untagged", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, {
+    renderInspector(NOTHING_TO_REVIEW, null, {
       markedTagged: true,
       untaggedPages: 2,
     });
@@ -142,14 +142,14 @@ describe("DocumentInspector accessibility review", () => {
   });
 
   it("warns when tags exist but the document isn't marked tagged", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { hasTags: true });
+    renderInspector(NOTHING_TO_REVIEW, null, { hasTags: true });
     expect(screen.getByTestId(MARKED_WARNING)).toHaveTextContent(
       `${KEY}.unmarkedWithTags`,
     );
   });
 
   it("shows no warning when the flag matches the tags", () => {
-    renderInspector(NOTHING_TO_REVIEW, vi.fn(), null, { markedTagged: true });
+    renderInspector(NOTHING_TO_REVIEW, null, { markedTagged: true });
     expect(screen.queryByTestId(MARKED_WARNING)).not.toBeInTheDocument();
   });
 });
@@ -174,7 +174,7 @@ describe("DocumentInspector language", () => {
 
   it("flags a document with no language and sets one", () => {
     const control = language(null);
-    renderInspector(null, vi.fn(), control);
+    renderInspector(null, control);
     expect(screen.getByTestId(MISSING)).toBeVisible();
     expect(picker()).toHaveValue("");
     expect(picker()).toHaveAttribute(
@@ -192,13 +192,13 @@ describe("DocumentInspector language", () => {
   });
 
   it("shows the document's language without flagging it", () => {
-    renderInspector(null, vi.fn(), language("fr"));
+    renderInspector(null, language("fr"));
     expect(picker().value).toMatch(/(^|\()fr\)?$/);
     expect(screen.queryByTestId(MISSING)).not.toBeInTheDocument();
   });
 
   it("disables the picker where the language can't be saved", () => {
-    renderInspector(null, vi.fn(), language("fr", false));
+    renderInspector(null, language("fr", false));
     expect(picker()).toBeDisabled();
   });
 

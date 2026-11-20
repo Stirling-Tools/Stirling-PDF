@@ -167,12 +167,13 @@ export const PageView = memo(function PageView({
 }: PageViewProps) {
   const { t } = useTranslation();
   const reviewing = useReviewing();
+  // Accessibility belongs to the review: editing shows no attention badges.
   const attention = useMemo(
     (): PageAttention =>
-      ACCESSIBILITY_EDITING
+      ACCESSIBILITY_EDITING && reviewing
         ? pageAttention(document, page)
         : { images: new Map(), runs: new Map() },
-    [document, page],
+    [document, page, reviewing],
   );
   const runGrowEdges = useMemo(
     () =>
@@ -496,6 +497,7 @@ export const PageView = memo(function PageView({
             selected={annotation.id === selectedFormFieldId}
             onSelect={
               ACCESSIBILITY_EDITING &&
+              reviewing &&
               annotation.kind === "widget" &&
               onSelectFormField
                 ? () => onSelectFormField(annotation.id)

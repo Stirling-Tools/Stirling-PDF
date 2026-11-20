@@ -25,7 +25,6 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
-import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
 import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
@@ -39,7 +38,6 @@ interface Props {
   onSetShowRulers: (show: boolean) => void;
   /** Images and text needing attention; null when there is nothing to review. */
   accessibilityReview: AccessibilityReview | null;
-  onSelectNextToReview: () => void;
   /** Read pages with content left untagged. */
   untaggedPages: number;
   onTagUntaggedContent: () => void;
@@ -53,15 +51,14 @@ interface Props {
   onSelectHeading: (index: number) => void;
   /** Null when the language cannot be edited here. */
   documentLanguage: DocumentLanguageControl | null;
-  /** Only what screen readers need from the document: no fonts or view settings. */
-  accessibilityOnly?: boolean;
+  /** The accessibility review's view: language, tagging and headings in place of fonts and view settings. */
+  reviewing?: boolean;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
 export function DocumentInspector({
   pages,
   accessibilityReview,
-  onSelectNextToReview,
   untaggedPages,
   onTagUntaggedContent,
   markedTagged,
@@ -70,7 +67,7 @@ export function DocumentInspector({
   headingOutline,
   onSelectHeading,
   documentLanguage,
-  accessibilityOnly = false,
+  reviewing = false,
   ...settings
 }: Props) {
   const { t } = useTranslation();
@@ -96,28 +93,33 @@ export function DocumentInspector({
             value={images}
           />
         </Stack>
-        {documentLanguage && (
-          <DocumentLanguageField control={documentLanguage} />
-        )}
       </Section>
-      {accessibilityReview && (
-        <AccessibilitySection
-          review={accessibilityReview}
-          onNext={accessibilityOnly ? undefined : onSelectNextToReview}
-          untaggedPages={untaggedPages}
-          onTagUntagged={onTagUntaggedContent}
-          markedTagged={markedTagged}
-          onSetMarkedTagged={onSetMarkedTagged}
-          hasTags={hasTags}
-        />
+      {reviewing && (
+        <>
+          {documentLanguage && (
+            <Section>
+              <DocumentLanguageField control={documentLanguage} />
+            </Section>
+          )}
+          {accessibilityReview && (
+            <AccessibilitySection
+              review={accessibilityReview}
+              untaggedPages={untaggedPages}
+              onTagUntagged={onTagUntaggedContent}
+              markedTagged={markedTagged}
+              onSetMarkedTagged={onSetMarkedTagged}
+              hasTags={hasTags}
+            />
+          )}
+          {headingOutline && (
+            <HeadingOutlineSection
+              outline={headingOutline}
+              onSelect={onSelectHeading}
+            />
+          )}
+        </>
       )}
-      {headingOutline && (
-        <HeadingOutlineSection
-          outline={headingOutline}
-          onSelect={onSelectHeading}
-        />
-      )}
-      {!accessibilityOnly && (
+      {!reviewing && (
         <>
           <FontsSection pages={pages} />
           <DocumentSettings {...settings} />
@@ -188,7 +190,6 @@ function documentLanguageHint(
 
 function AccessibilitySection({
   review,
-  onNext,
   untaggedPages,
   onTagUntagged,
   markedTagged,
@@ -196,8 +197,6 @@ function AccessibilitySection({
   hasTags,
 }: {
   review: AccessibilityReview;
-  /** Absent hides Next, for the review, whose card steps through what is left. */
-  onNext?: () => void;
   untaggedPages: number;
   onTagUntagged: () => void;
   markedTagged: boolean | null;
@@ -205,7 +204,6 @@ function AccessibilitySection({
   hasTags: boolean;
 }) {
   const { t } = useTranslation();
-  const pending = review.needsDescription + review.untagged;
   return (
     <Section testId="pdf-editor-document-accessibility">
       <SectionLabel info={<DocumentAccessibilityInfo />}>
@@ -246,12 +244,6 @@ function AccessibilitySection({
           untaggedPages={untaggedPages}
           hasTags={hasTags}
         />
-        {pending > 0 && onNext && (
-          <NextToReviewButton
-            onClick={onNext}
-            testId="pdf-editor-document-accessibility-next"
-          />
-        )}
       </Stack>
     </Section>
   );

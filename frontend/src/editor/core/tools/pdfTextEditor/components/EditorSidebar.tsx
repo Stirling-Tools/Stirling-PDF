@@ -14,7 +14,6 @@ import {
   useSelectedFontNote,
   type ScanNote,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
-import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
 import {
@@ -121,21 +120,6 @@ export const EditorSidebar = memo(function EditorSidebar({
     () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
     [editorDocument],
   );
-  const imageSelected = controller.imageAccessibility !== null;
-  const artifactTextSelected = controller.textTag?.kind === "artifact";
-  // Counts and Next cover only pages already read, which is just the first few
-  // until the rest scroll into view; so do an artifact's matches on other pages.
-  useEffect(() => {
-    const reviewing =
-      reviewingAccessibility && (tab === "document" || imageSelected);
-    if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
-    return readAllPagesInBackground(store);
-  }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
-  // Following the selection only catches one appearing, so moving from one
-  // selected image to the next would leave the new one's description hidden.
-  const selectNextToReview = () => {
-    if (controller.onSelectNextToReview()) setTab("selected");
-  };
 
   if (!state.hasDocument) {
     return (
@@ -153,11 +137,10 @@ export const EditorSidebar = memo(function EditorSidebar({
       accessibilityReview={
         reviewingAccessibility ? controller.accessibilityReview : null
       }
-      onSelectNextToReview={selectNextToReview}
       onSetGroupingMode={onSetGroupingMode}
       onSetWidthMode={onSetWidthMode}
       onSetShowRulers={onSetShowRulers}
-      accessibilityOnly={reviewing}
+      reviewing={reviewing}
     />
   );
 
@@ -241,23 +224,22 @@ function DocumentTab({
   state,
   reviewingAccessibility,
   accessibilityReview,
-  onSelectNextToReview,
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
-  accessibilityOnly,
+  reviewing,
 }: Pick<
   SidebarProps,
   "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
 > & {
   reviewingAccessibility: boolean;
   accessibilityReview: AccessibilityReview | null;
-  onSelectNextToReview: () => void;
-  accessibilityOnly: boolean;
+  reviewing: boolean;
 }) {
   const documentLanguage = useDocumentLanguage(store, state);
-  const headings = useHeadingOutline(store, state, reviewingAccessibility);
-  const bulkTagging = useBulkTagging(store, state, reviewingAccessibility);
+  const shown = reviewing && reviewingAccessibility;
+  const headings = useHeadingOutline(store, state, shown);
+  const bulkTagging = useBulkTagging(store, state, shown);
   const setMarkedTagged = useCallback(
     (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
     [store],
@@ -273,7 +255,6 @@ function DocumentTab({
       onSetWidthMode={onSetWidthMode}
       onSetShowRulers={onSetShowRulers}
       accessibilityReview={accessibilityReview}
-      onSelectNextToReview={onSelectNextToReview}
       untaggedPages={bulkTagging.untaggedPages}
       onTagUntaggedContent={bulkTagging.tagAll}
       markedTagged={
@@ -286,7 +267,7 @@ function DocumentTab({
       headingOutline={headings.outline}
       onSelectHeading={headings.selectHeading}
       documentLanguage={documentLanguage}
-      accessibilityOnly={accessibilityOnly}
+      reviewing={reviewing}
     />
   );
 }
