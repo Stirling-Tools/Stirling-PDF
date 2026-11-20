@@ -32,14 +32,6 @@ class PDFWithPageNumsTest {
     }
 
     @Test
-    void manualRedactionDoesNotBlackOutPagesByDefault() {
-        assertEquals(
-                null,
-                new stirling.software.SPDF.model.api.security.ManualRedactPdfRequest()
-                        .getPageNumbers());
-    }
-
-    @Test
     void testGetPageNumbersList_AllPages() {
         pdfWithPageNums.setPageNumbers("all");
         when(mockDocument.getNumberOfPages()).thenReturn(10);

@@ -249,7 +249,6 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ),
     ToolEndpoint.ADD_WATERMARK: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.AUTO_REDACT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.REDACT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REDACT_EXECUTE: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_CERT_SIGN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_PASSWORD: ToolIOSpec(

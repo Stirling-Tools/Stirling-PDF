@@ -54,11 +54,11 @@ describe("objectToFormData", () => {
   test("throws on a non-primitive field value rather than dropping it", () => {
     // A redact request whose structured field was left un-encoded: the array
     // items are objects, which cannot be sent as form fields.
-    const request: ToolApiParams["/api/v1/security/redact"] = {
-      redactions: [{ x: 1, y: 2 }],
+    const request: ToolApiParams["/api/v1/security/redact-execute"] = {
+      imageBoxes: [{ pageIndex: 0, x1: 1, y1: 2, x2: 3, y2: 4 }],
     };
 
-    expect(() => objectToFormData(request)).toThrow(/field "redactions"/);
+    expect(() => objectToFormData(request)).toThrow(/field "imageBoxes"/);
   });
 
   test("appends a single file under its field name", () => {

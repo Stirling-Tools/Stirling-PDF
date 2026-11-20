@@ -376,17 +376,17 @@ class PdfEditAgent:
             f"User request: {request.user_message}"
         )
 
-    # Hidden from the AI planner only; still live for the manual UI, direct API and pipelines.
-    # AUTO_REDACT and REDACT pre-date the unified operation model and take a less expressive
-    # schema, so AI redaction is channelled through REDACT_EXECUTE. Add an endpoint here when a
+    # Hidden from the AI planner only; still live for direct API and pipeline callers.
+    # AUTO_REDACT pre-dates the unified operation model and takes a less expressive schema,
+    # so AI redaction is channelled through REDACT_EXECUTE. Add an endpoint here when a
     # legacy one has a preferred replacement the AI should use exclusively.
-    _AGENT_HIDDEN_ENDPOINTS: frozenset[ToolEndpoint] = frozenset({ToolEndpoint.AUTO_REDACT, ToolEndpoint.REDACT})
+    _AGENT_HIDDEN_ENDPOINTS: frozenset[ToolEndpoint] = frozenset({ToolEndpoint.AUTO_REDACT})
 
     def _classify_operations(self, request: PdfEditRequest) -> tuple[list[ToolEndpoint], list[ToolEndpoint]]:
         """Split the universe of operations into (supported, unavailable) from the agent's
         point of view. Endpoints in `_AGENT_HIDDEN_ENDPOINTS` are filtered out regardless
         of enabled state — they exist on the server but only callers outside the AI
-        pipeline (the manual redact UI, direct API consumers) can invoke them.
+        pipeline (direct API consumers and pipelines) can invoke them.
         """
         enabled_set = set(request.enabled_endpoints)
         supported = [op for op in request.enabled_endpoints if op not in self._AGENT_HIDDEN_ENDPOINTS]

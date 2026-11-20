@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
-import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
-import stirling.software.common.model.api.security.RedactionArea;
-import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -37,90 +33,6 @@ class ManualRedactionService {
     private static final float REDACTION_WIDTH_REDUCTION_FACTOR = 0.9f;
 
     private final TempFileManager tempFileManager;
-
-    // -----------------------------------------------------------------------
-    // Area and page redaction
-    // -----------------------------------------------------------------------
-
-    void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
-            throws IOException {
-
-        if (redactionAreas == null || redactionAreas.isEmpty()) {
-            return;
-        }
-
-        Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
-
-        for (RedactionArea redactionArea : redactionAreas) {
-            if (redactionArea.getPage() == null
-                    || redactionArea.getPage() <= 0
-                    || redactionArea.getHeight() == null
-                    || redactionArea.getHeight() <= 0.0D
-                    || redactionArea.getWidth() == null
-                    || redactionArea.getWidth() <= 0.0D) {
-                continue;
-            }
-
-            redactionsByPage
-                    .computeIfAbsent(redactionArea.getPage(), k -> new ArrayList<>())
-                    .add(redactionArea);
-        }
-
-        for (Map.Entry<Integer, List<RedactionArea>> entry : redactionsByPage.entrySet()) {
-            Integer pageNumber = entry.getKey();
-            List<RedactionArea> areasForPage = entry.getValue();
-
-            if (pageNumber > allPages.getCount()) {
-                continue;
-            }
-
-            PDPage page = allPages.get(pageNumber - 1);
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-
-                contentStream.saveGraphicsState();
-                for (RedactionArea redactionArea : areasForPage) {
-                    Color redactColor = decodeOrDefault(redactionArea.getColor());
-
-                    contentStream.setNonStrokingColor(redactColor);
-
-                    float x = redactionArea.getX().floatValue();
-                    float y = redactionArea.getY().floatValue();
-                    float width = redactionArea.getWidth().floatValue();
-                    float height = redactionArea.getHeight().floatValue();
-
-                    float pdfY = page.getBBox().getHeight() - y - height;
-
-                    contentStream.addRect(x, pdfY, width, height);
-                    contentStream.fill();
-                }
-                contentStream.restoreGraphicsState();
-            }
-        }
-    }
-
-    void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
-            throws IOException {
-
-        Color redactColor = decodeOrDefault(request.getPageRedactionColor());
-        List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
-
-        for (Integer pageNumber : pageNumbers) {
-            PDPage page = allPages.get(pageNumber);
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-                contentStream.setNonStrokingColor(redactColor);
-
-                PDRectangle box = page.getBBox();
-                contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
-                contentStream.fill();
-            }
-        }
-    }
 
     // -----------------------------------------------------------------------
     // Overlay drawing
@@ -389,16 +301,5 @@ class ManualRedactionService {
         } catch (NumberFormatException e) {
             return Color.BLACK;
         }
-    }
-
-    private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
-        String pageNumbersInput = request.getPageNumbers();
-        GeneralUtils.requireValidPageSelection(pageNumbersInput, pagesCount);
-        String[] parsedPageNumbers =
-                pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
-        List<Integer> pageNumbers =
-                GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
-        Collections.sort(pageNumbers);
-        return pageNumbers;
     }
 }
