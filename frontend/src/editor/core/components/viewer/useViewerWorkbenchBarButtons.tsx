@@ -595,7 +595,7 @@ export function useViewerWorkbenchBarButtons(
         order: 53,
         render: ({ disabled }) => (
           <BarButton
-            icon="form-input"
+            icon="clipboard-pen-line"
             label={formFillLabel}
             tooltipPosition={tooltipPosition}
             active={isFormFillActive}
