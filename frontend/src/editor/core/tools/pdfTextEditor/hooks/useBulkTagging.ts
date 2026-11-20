@@ -6,9 +6,10 @@ import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/Set
 import {
   TagPageContentCommand,
   hasUntaggedContent,
-  runsInTagOrder,
+  textRunsToTag,
 } from "@editor/tools/pdfTextEditor/commands/TagPageContentCommand";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
+import type { HeadingType } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import { publishAllPages } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import {
   PdfiumTextReader,
@@ -110,7 +111,11 @@ export async function tagAllPages(store: EditorStore): Promise<void> {
       return { pageIndex, display, runs, images };
     });
     const furniture = recogniseFurniture(read, doc.pageCount);
-    const headings = guessHeadings(headingPages(doc, pageIndices), furniture);
+    // A file that has tags already gets paragraphs only: guessed levels could
+    // not follow the headings it has, nor where its tree puts new elements.
+    const headings = hasTaggedContent(doc, pageIndices)
+      ? new Map<number, Map<string, HeadingType>>()
+      : guessHeadings(headingPages(doc, pageIndices), furniture);
     for (const [done, pageIndex] of pageIndices.entries()) {
       const current = pageIndices.length + done;
       if (!(await slices(() => store.setProgress({ stage, current, total })))) {
@@ -151,17 +156,33 @@ function headingPages(
   pageIndices: readonly number[],
 ): HeadingPage[] {
   const bold = boldRuns(doc.module);
-  return pageIndices.map((pageIndex) => ({
-    pageIndex,
-    runs: runsInTagOrder(doc, doc.page(pageIndex)).map((run) => ({
-      id: run.id,
-      text: run.text,
-      fontSize: run.fontSize,
-      bold: bold(run),
-      fill: run.fill,
-      bounds: run.bounds,
-    })),
-  }));
+  return pageIndices.map((pageIndex) => {
+    const page = doc.page(pageIndex);
+    return {
+      pageIndex,
+      runs: page.runs.map((run) => ({
+        id: run.id,
+        text: run.text,
+        fontSize: run.fontSize,
+        bold: bold(run),
+        fill: run.fill,
+        bounds: run.bounds,
+      })),
+      tagged: textRunsToTag(doc, pageIndex),
+      display: page.display,
+    };
+  });
+}
+
+/** True when any page has tagged content, the file's own or added since it opened. */
+function hasTaggedContent(
+  doc: EditorDocument,
+  pageIndices: readonly number[],
+): boolean {
+  return pageIndices.some((pageIndex) => {
+    const structure = doc.structure(pageIndex);
+    return structure.tagged || structure.addedElements().length > 0;
+  });
 }
 
 /**

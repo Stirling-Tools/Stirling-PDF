@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import {
   guessHeadings,
+  type HeadingPage,
   type HeadingRun,
 } from "@editor/tools/pdfTextEditor/util/headingGuess";
 
@@ -8,6 +10,22 @@ const BODY =
   "Body text runs on for a good while so that it carries most of the characters";
 
 const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+/** A Letter page turned a quarter for display. */
+const LETTER_TURNED: DisplayTransformData = {
+  a: 0,
+  b: 1,
+  c: -1,
+  d: 0,
+  e: 792,
+  f: 0,
+  cropLeft: 0,
+  cropBottom: 0,
+  cropWidth: 612,
+  cropHeight: 792,
+  rotate: 90,
+  displayWidth: 792,
+  displayHeight: 612,
+};
 const BLUE = { r: 30, g: 80, b: 180, a: 255 };
 
 let nextId = 0;
@@ -24,9 +42,14 @@ function run(text: string, fontSize: number, bold = false): HeadingRun {
   };
 }
 
+/** A page every run of which auto-tag will tag, in the order given. */
+function onPage(pageIndex: number, runs: HeadingRun[]): HeadingPage {
+  return { pageIndex, runs, tagged: runs.map((r) => r.id), display: null };
+}
+
 /** Each run's guessed level by its text, "P" where it is not a heading. */
 function levels(...runs: HeadingRun[]): Record<string, string> {
-  const guessed = guessHeadings([{ pageIndex: 0, runs }]).get(0);
+  const guessed = guessHeadings([onPage(0, runs)]).get(0);
   return Object.fromEntries(
     runs.map((r) => [r.text, guessed?.get(r.id) ?? "P"]),
   );
@@ -134,7 +157,7 @@ describe("guessHeadings", () => {
       bounds: { x: 72 + i * 110, y: 500, width: 60, height: 10 },
     }));
     const guessed = guessHeadings([
-      { pageIndex: 0, runs: [...cells, run(BODY, 10), run(BODY, 10)] },
+      onPage(0, [...cells, run(BODY, 10), run(BODY, 10)]),
     ]);
     expect(guessed.get(0)).toBeUndefined();
   });
@@ -183,8 +206,8 @@ describe("guessHeadings", () => {
       run("Details", 16),
     ];
     const guessed = guessHeadings([
-      { pageIndex: 0, runs: [title, first, run(BODY, 10)] },
-      { pageIndex: 1, runs: [second, run(BODY, 10)] },
+      onPage(0, [title, first, run(BODY, 10)]),
+      onPage(1, [second, run(BODY, 10)]),
     ]);
     expect(guessed.get(0)?.get(first.id)).toBe("H2");
     expect(guessed.get(1)?.get(second.id)).toBe("H2");
@@ -193,7 +216,7 @@ describe("guessHeadings", () => {
   it("neither guesses nor counts the runs it is told to skip", () => {
     const watermark = run("DRAFT", 60);
     const guessed = guessHeadings(
-      [{ pageIndex: 0, runs: [watermark, run("Summary", 16), run(BODY, 10)] }],
+      [onPage(0, [watermark, run("Summary", 16), run(BODY, 10)])],
       new Map([[0, new Map([[watermark.id, "Watermark"]])]]),
     );
     expect(guessed.get(0)?.has(watermark.id)).toBe(false);
@@ -267,6 +290,40 @@ describe("guessHeadings", () => {
     });
   });
 
+  it("levels only the runs auto-tag will tag, in the order it tags them", () => {
+    const title = run("Annual report", 24);
+    const [results, outlook] = [
+      run("Results", 14, true),
+      run("Outlook", 14, true),
+    ];
+    const body = [run(BODY, 10), run(BODY, 10)];
+    const guessed = guessHeadings([
+      {
+        ...onPage(0, [title, results, outlook, ...body]),
+        tagged: [outlook.id, results.id, ...body.map((r) => r.id)],
+      },
+    ]).get(0)!;
+    expect(guessed.has(title.id)).toBe(false);
+    expect([guessed.get(outlook.id), guessed.get(results.id)]).toEqual([
+      "H1",
+      "H1",
+    ]);
+  });
+
+  it("reads a turned page's table rows along its displayed lines", () => {
+    const cells = ["Segment", "Revenue", "Margin"].map((text, i) => ({
+      ...run(text, 10, true),
+      bounds: { x: 300, y: 100 + i * 150, width: 10, height: 60 },
+    }));
+    const guessed = guessHeadings([
+      {
+        ...onPage(0, [...cells, run(BODY, 10), run(BODY, 10)]),
+        display: LETTER_TURNED,
+      },
+    ]);
+    expect(guessed.get(0)).toBeUndefined();
+  });
+
   it("stops at H6", () => {
     const sizes = [40, 34, 28, 24, 20, 17, 14];
     const runs = sizes.flatMap((size) => [
@@ -274,7 +331,7 @@ describe("guessHeadings", () => {
       run(`Also level ${size}`, size),
     ]);
     const guessed = guessHeadings([
-      { pageIndex: 0, runs: [...runs, run(BODY, 10), run(BODY, 10)] },
+      onPage(0, [...runs, run(BODY, 10), run(BODY, 10)]),
     ]).get(0)!;
     expect(
       runs.filter((_, i) => i % 2 === 0).map((r) => guessed.get(r.id)),

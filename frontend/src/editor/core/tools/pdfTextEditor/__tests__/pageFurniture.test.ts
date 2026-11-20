@@ -23,6 +23,19 @@ const LETTER: DisplayTransformData = {
   displayHeight: 792,
 };
 
+/** A Letter page turned a quarter for display. */
+const LETTER_TURNED: DisplayTransformData = {
+  ...LETTER,
+  a: 0,
+  b: 1,
+  c: -1,
+  d: 0,
+  e: 792,
+  rotate: 90,
+  displayWidth: 792,
+  displayHeight: 612,
+};
+
 /** `n` written in Arabic-Indic digits. */
 function arabicIndic(n: number): string {
   return String(n).replace(/\d/g, (digit) =>
@@ -179,6 +192,58 @@ describe("recogniseFurniture", () => {
     expect(recogniseFurniture(pages, 3).get(0)?.get("p0")).toBe("Footer");
   });
 
+  it("reads two page numbers to a sheet as a footer", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`l${i}`, `${2 * i + 1}`, 30, 72),
+        run(`r${i}`, `${2 * i + 2}`, 30, 400),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      l1: "Footer",
+      r1: "Footer",
+    });
+  });
+
+  it("reads page numbers that skip an unnumbered page as a footer", () => {
+    const pages = [1, 2, null, 3, 4].map((n, i) =>
+      page(i, n === null ? [] : [run(`p${i}`, `Page ${n}`, 30)]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 5), 3)).toEqual({ p3: "Footer" });
+  });
+
+  it("keeps the page number in a header set as a table, and leaves its other cells", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`d${i}`, "Doc QP-01", 760, 72),
+        run(`v${i}`, "Rev 2", 760, 200),
+        run(`y${i}`, "2024", 760, 320),
+        run(`n${i}`, `Page ${i + 1} of 3`, 760, 440),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      n1: "PageNum",
+    });
+  });
+
+  it("reads a turned page's footer along its displayed lines, beside text on its unturned line", () => {
+    const turnedRun = (id: string, text: string, x: number) => ({
+      ...run(id, text, 0),
+      bounds: { x, y: 72, width: 10, height: 120 },
+    });
+    const pages = [0, 1, 2].map((i) => ({
+      pageIndex: i,
+      display: LETTER_TURNED,
+      runs: [
+        turnedRun(`f${i}`, "Confidential", 30),
+        ...[200, 300, 400].map((x) => turnedRun(`b${i}-${x}`, `Body ${x}`, x)),
+      ],
+    }));
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      f1: "Footer",
+    });
+  });
+
   it("leaves a table's header row that each page repeats near its top", () => {
     const pages = [0, 1, 2].map((i) =>
       page(
@@ -269,6 +334,14 @@ describe("recogniseFurniture watermarks", () => {
       ),
     );
     expect(recogniseFurniture([page(0, cells)], 1).size).toBe(0);
+  });
+
+  it("leaves an image set at an angle, and see-through text, on a one-page document", () => {
+    const photo = { ...image("img", 100, 300), matrix: turned(8, 100, 300) };
+    const faded = [400, 380, 360].map((y) =>
+      run(`t${y}`, `Line at ${y}`, y, 72, { alpha: 230 }),
+    );
+    expect(recogniseFurniture([page(0, faded, [photo])], 1).size).toBe(0);
   });
 
   it("leaves copies of a label that do not spread across the page", () => {

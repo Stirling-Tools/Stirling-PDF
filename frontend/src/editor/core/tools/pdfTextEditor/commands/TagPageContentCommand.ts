@@ -23,7 +23,6 @@ import {
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { PageStructure } from "@editor/tools/pdfTextEditor/model/PageStructure";
-import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
 import type {
   HeadingType,
   StructureType,
@@ -205,6 +204,27 @@ export class TagPageContentCommand implements Command {
   }
 }
 
+/**
+ * The runs TagPageContentCommand would tag as text on the page, which must
+ * already be read, by id in the order their elements join the structure
+ * tree. Furniture is left out of the plan here, so its runs are listed too.
+ */
+export function textRunsToTag(
+  doc: EditorDocument,
+  pageIndex: number,
+): string[] {
+  const structure = doc.structure(pageIndex);
+  if (structure.cannotAddElement() !== null) return [];
+  const { steps } = planTagging(
+    doc,
+    doc.page(pageIndex),
+    structure,
+    new Map(),
+    new Map(),
+  );
+  return steps.flatMap((step) => (step.kind === "text" ? [step.runId] : []));
+}
+
 /** True when TagPageContentCommand would change anything on the page, which must already be read. */
 export function hasUntaggedContent(
   doc: EditorDocument,
@@ -371,27 +391,6 @@ function readingChain(
     previous = mcid;
   }
   return follows;
-}
-
-/**
- * The page's runs in the order auto-tag adds their elements to the structure
- * tree, which is where each run's first object is drawn. Must stay in step
- * with how `planTagging` orders its steps: heading levels are checked for
- * skips in this order.
- */
-export function runsInTagOrder(doc: EditorDocument, page: Page): TextRun[] {
-  const order = contentOrder(doc.module, page.pagePtr);
-  const located = page.runs.map((run, index) => ({
-    run,
-    index,
-    at: Math.min(
-      ...collectMemberPtrs(run).map((ptr) => order.get(ptr) ?? Infinity),
-    ),
-  }));
-  located.sort((a, b) =>
-    a.at === b.at ? a.index - b.index : a.at < b.at ? -1 : 1,
-  );
-  return located.map(({ run }) => run);
 }
 
 /** Each page-level object's index in the page's content, by pointer. */

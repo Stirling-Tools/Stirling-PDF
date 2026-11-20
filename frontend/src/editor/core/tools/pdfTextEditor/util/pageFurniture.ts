@@ -8,7 +8,7 @@
 import type { Furniture } from "@editor/tools/pdfTextEditor/model/artifactKind";
 import type { DisplayTransformData } from "@editor/tools/pdfTextEditor/model/DisplayTransform";
 import type { Affine, PageRect, RGBA } from "@editor/tools/pdfTextEditor/types";
-import { inTableRow } from "@editor/tools/pdfTextEditor/util/tableRow";
+import { tableRowCells } from "@editor/tools/pdfTextEditor/util/tableRow";
 
 /** How far apart two runs can sit, in points, and still be at the same height or in the same place. */
 const SAME_HEIGHT_PT = 4;
@@ -96,15 +96,15 @@ export function matchingRuns<R extends FurnitureRun>(
  * page index and then run or image id. Watermarks come first: text or images
  * drawn in the same place on at least half the document's pages that are
  * tiled across the page, set at an angle, or (text) see-through, and that
- * repeat on two pages, tile one, or are on the only page; and, on any page,
- * text set at an angle across a good part of it (see STAMP_SHARE). Then text near the
- * top or bottom of a page that at least half the pages, and at least two,
- * show at the same height: near the top a header, near the bottom a footer,
- * and either a page number when one of its numbers counts up with the pages,
- * whatever words surround it. A cell of a table row is never a header or
- * footer, nor is text whose number changes on every page without counting
- * the pages, such as a value in a table that runs over several pages.
- * `pageCount` counts the pages not in `pages` too.
+ * repeat on two pages or tile one; and, on any page, text set at an angle
+ * across a good part of it (see STAMP_SHARE). Then text near the top or
+ * bottom of a page that at least half the pages, and at least two, show at
+ * the same height: near the top a header, near the bottom a footer, and
+ * either a page number when one of its numbers counts up with the pages,
+ * whatever words surround it. Unless it numbers the pages, a cell of a table
+ * row is never a header or footer, nor is text whose number changes on every
+ * page without rising with them, such as a value in a table that runs over
+ * several pages. `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
@@ -116,19 +116,18 @@ export function recogniseFurniture(
     const onPage = furniture.get(pageIndex) ?? new Map<string, Furniture>();
     furniture.set(pageIndex, onPage.set(id, kind));
   };
-  for (const { pageIndex, id } of watermarks(pages, half, pageCount === 1)) {
+  for (const { pageIndex, id } of watermarks(pages, half)) {
     mark(pageIndex, id, "Watermark");
   }
 
   const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
   for (const page of pages) {
+    const rowCells = tableRowCells(page.runs, page.display);
     for (const run of page.runs) {
       if (furniture.get(page.pageIndex)?.has(run.id)) continue;
       const at = placement(page.display, run.bounds);
       const text = furnitureText(run.text);
-      if (!text || at.share > EDGE_BAND || inTableRow(run, page.runs)) {
-        continue;
-      }
+      if (!text || at.share > EDGE_BAND) continue;
       const key = `${at.edge}:${text}`;
       const sameText = groups.get(key) ?? [];
       groups.set(key, sameText);
@@ -136,6 +135,7 @@ export function recogniseFurniture(
         pageIndex: page.pageIndex,
         id: run.id,
         numbers: numbers(run.text),
+        inRow: rowCells.has(run),
       };
       const group = sameText.find((g) => sameHeight(g.at, at));
       if (group) group.runs.push(grouped);
@@ -147,7 +147,7 @@ export function recogniseFurniture(
   for (const sameText of groups.values()) {
     for (const { at, runs } of sameText) {
       if (pagesOf(runs) < needed) continue;
-      if (!numbersPages(runs) && changesEveryPage(runs)) continue;
+      if (!numbersPages(runs) && readsAsContent(runs)) continue;
       const kind = furnitureKind(runs, at.edge);
       for (const { pageIndex, id } of runs) mark(pageIndex, id, kind);
     }
@@ -170,7 +170,6 @@ interface Drawn {
 function watermarks(
   pages: readonly FurniturePage[],
   half: number,
-  onlyPage: boolean,
 ): { pageIndex: number; id: string }[] {
   const groups = new Map<string, Drawn[][]>();
   for (const drawn of pages.flatMap(watermarkLike)) {
@@ -182,8 +181,7 @@ function watermarks(
   }
   return [...groups.values()].flat().flatMap((group) => {
     const pages = pagesOf(group);
-    const repeats =
-      onlyPage || pages >= 2 || group.some((drawn) => drawn.tiled);
+    const repeats = pages >= 2 || group.some((drawn) => drawn.tiled);
     const stamped = group.every((drawn) => drawn.stamped);
     return (pages >= half && repeats) || stamped ? group : [];
   });
@@ -214,7 +212,9 @@ function watermarkLike(page: FurniturePage): Drawn[] {
   const centres = new Map<string, { x: number; y: number }[]>();
   const placed = items.map((item) => {
     const at = centre(page.display, item.bounds);
-    centres.set(item.key, [...(centres.get(item.key) ?? []), at]);
+    const same = centres.get(item.key) ?? [];
+    centres.set(item.key, same);
+    same.push(at);
     return { ...item, at };
   });
   return placed.flatMap((item) => {
@@ -293,6 +293,8 @@ interface GroupedRun {
   pageIndex: number;
   id: string;
   numbers: number[];
+  /** A cell of a table row on its page. */
+  inRow: boolean;
 }
 
 function furnitureKind(
@@ -316,11 +318,23 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
   );
 }
 
-/** True when one of the runs' numbers, at the same place in each, differs on every page. */
-function changesEveryPage(runs: readonly GroupedRun[]): boolean {
-  return runs[0].numbers.some(
-    (_, i) => new Set(runs.map((run) => run.numbers[i])).size === runs.length,
-  );
+/**
+ * True when the runs read as a table's content rather than as furniture: a
+ * table row's cells, or text with a number that differs on every page without
+ * rising with them. A number that rises is page numbering that skips, such as
+ * two page numbers to a sheet.
+ */
+function readsAsContent(runs: readonly GroupedRun[]): boolean {
+  if (runs.some((run) => run.inRow)) return true;
+  const inPageOrder = [...runs].sort((a, b) => a.pageIndex - b.pageIndex);
+  return runs[0].numbers.some((_, i) => {
+    const values = inPageOrder.map((run) => run.numbers[i]);
+    const differ = new Set(values).size === values.length;
+    const rise = values.every(
+      (value, at) => at === 0 || value > values[at - 1],
+    );
+    return differ && !rise;
+  });
 }
 
 /** The text's numbers, written in the digits of any script. */

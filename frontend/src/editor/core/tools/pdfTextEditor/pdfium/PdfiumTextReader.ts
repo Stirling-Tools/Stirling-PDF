@@ -1,4 +1,5 @@
 import { claimFormNodes } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
+import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   readPageGlyphs,
   type PageGlyphs,
@@ -1166,14 +1167,15 @@ function readFontFamily(
 /** PDF font flag ForceBold (ISO 32000-1 table 123). */
 const FORCE_BOLD = 1 << 18;
 const BOLD_WEIGHT = 600;
-const HEAVY_NAME = /bold|black|heavy/i;
+/** A weight in a style suffix ("Arial-BoldMT", "Lato-Black"), not a family that starts with one ("Blackadder"). */
+const HEAVY_NAME = /[-, _](?:semi|demi|extra|ultra)?(?:bold|black|heavy)/i;
 
 /**
  * Whether a document font draws bold: by its weight, its ForceBold flag, or a
  * name such as "Helvetica-Bold", since a standard font the file does not
  * embed carries no weight and its family name drops the style.
  */
-export function isBoldFont(m: WrappedPdfiumModule, fontPtr: number): boolean {
+function isBoldFont(m: WrappedPdfiumModule, fontPtr: number): boolean {
   if (!fontPtr) return false;
   if (m.FPDFFont_GetWeight(fontPtr) >= BOLD_WEIGHT) return true;
   if (m.FPDFFont_GetFlags(fontPtr) & FORCE_BOLD) return true;
@@ -1194,13 +1196,7 @@ export function boldRuns(m: WrappedPdfiumModule): (run: TextRun) => boolean {
     return byFont.get(font)!;
   };
   return (run) => {
-    const leaves =
-      run.paragraphLeafPtrs.length > 0
-        ? run.paragraphLeafPtrs
-        : run.mergedFromPtrs.length > 0
-          ? run.mergedFromPtrs
-          : [run.pdfiumObjPtr];
-    const drawn = leaves.filter((ptr) => ptr !== 0);
+    const drawn = collectMemberPtrs(run).filter((ptr) => ptr !== 0);
     return drawn.length > 0 && drawn.every(boldObject);
   };
 }
