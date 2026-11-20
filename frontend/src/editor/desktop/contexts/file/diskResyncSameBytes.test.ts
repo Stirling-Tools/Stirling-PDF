@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { FileContextState, StirlingFileStub } from "@editor/types/fileContext";
+import type {
+  FileContextState,
+  StirlingFileStub,
+} from "@editor/types/fileContext";
 import type { FileId } from "@editor/types/file";
 
 const disk = vi.hoisted(() => ({
@@ -25,7 +28,9 @@ vi.mock("@editor/services/desktopFileLink", () => ({
 vi.mock("@editor/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: vi.fn(async (id: string) => stored.files.get(id) ?? null),
-    getStirlingFileStub: vi.fn(async (id: string) => stored.stubs.get(id) ?? null),
+    getStirlingFileStub: vi.fn(
+      async (id: string) => stored.stubs.get(id) ?? null,
+    ),
     updateFileMetadata: vi.fn(async () => true),
     deleteStirlingFile: vi.fn(async () => undefined),
   },
@@ -104,7 +109,13 @@ function harness(record: StirlingFileStub, openBytes: Uint8Array<ArrayBuffer>) {
     openFile,
     filesRef,
     updates,
-    run: () => reconcileOpenFilesAt([PATH], stateRef, filesRef, lifecycleManager as never),
+    run: () =>
+      reconcileOpenFilesAt(
+        [PATH],
+        stateRef,
+        filesRef,
+        lifecycleManager as never,
+      ),
   };
 }
 
@@ -124,7 +135,9 @@ describe("a disk change that only moves the timestamp", () => {
     await h.run();
 
     expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-    expect(h.updates).toEqual([{ diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 }]);
+    expect(h.updates).toEqual([
+      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
+    ]);
   });
 
   test("raises no conflict while an editor holds unsaved work", async () => {
@@ -134,7 +147,9 @@ describe("a disk change that only moves the timestamp", () => {
     await h.run();
 
     expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(h.updates).toEqual([{ diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 }]);
+    expect(h.updates).toEqual([
+      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
+    ]);
   });
 
   test("raises no conflict on a tool output whose source still matches disk", async () => {
@@ -236,8 +251,12 @@ describe("opening a stored file whose timestamp moved", () => {
 describe("sameBytes", () => {
   test("compares content, not identity", async () => {
     const a = new Blob([new Uint8Array([1, 2, 3])]);
-    expect(await sameBytes(a, new Blob([new Uint8Array([1, 2, 3])]))).toBe(true);
-    expect(await sameBytes(a, new Blob([new Uint8Array([1, 2, 4])]))).toBe(false);
+    expect(await sameBytes(a, new Blob([new Uint8Array([1, 2, 3])]))).toBe(
+      true,
+    );
+    expect(await sameBytes(a, new Blob([new Uint8Array([1, 2, 4])]))).toBe(
+      false,
+    );
     expect(await sameBytes(a, new Blob([new Uint8Array([1, 2])]))).toBe(false);
   });
 });
