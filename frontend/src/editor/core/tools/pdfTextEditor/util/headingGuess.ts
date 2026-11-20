@@ -176,13 +176,15 @@ export function guessHeadings(
   let rank = -1;
   for (const [index, { style, blocks }] of headingStyles.entries()) {
     if (index === 0 || blocks > 1) rank++;
-    ranks.set(styleKey(style), Math.min(rank, HEADING_TYPES.length - 1));
+    ranks.set(styleKey(style), rank);
   }
 
   // The ranks of the headings still open above the next one: each heading
   // closes those ranked as or less important than itself, so the stack grows
   // by at most one a heading and a level is never skipped, where capping a
   // heading at one below the last would push siblings of one style apart.
+  // Ranks stay distinct past H6 so deep styles still nest; only the level
+  // written is capped.
   // Only runs auto-tag will write count: one it leaves alone adds no element.
   const byId = new Map(
     runs.map((entry) => [`${entry.pageIndex}:${entry.run.id}`, entry]),
@@ -195,7 +197,8 @@ export function guessHeadings(
       if (styleRank === undefined) continue;
       while (open.length > 0 && open[open.length - 1] >= styleRank) open.pop();
       const onPage = headings.get(pageIndex) ?? new Map<string, HeadingType>();
-      headings.set(pageIndex, onPage.set(id, HEADING_TYPES[open.length]));
+      const level = Math.min(open.length, HEADING_TYPES.length - 1);
+      headings.set(pageIndex, onPage.set(id, HEADING_TYPES[level]));
       open.push(styleRank);
     }
   }

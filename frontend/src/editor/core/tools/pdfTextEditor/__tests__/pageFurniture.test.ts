@@ -287,6 +287,16 @@ describe("recogniseFurniture", () => {
     expect(recogniseFurniture(pages, 3).size).toBe(0);
   });
 
+  it("leaves a value near an edge that each page shows twice and changes from page to page", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`l${i}`, `PO-00${[25, 61, 47][i]}`, 40, 72),
+        run(`r${i}`, `PO-00${[25, 61, 47][i]}`, 40, 400),
+      ]),
+    );
+    expect(recogniseFurniture(pages, 3).size).toBe(0);
+  });
+
   it("leaves values near an edge whose number changes on every page without counting them", () => {
     const pages = [0, 1, 2].map((i) =>
       page(i, [run(`v${i}`, `PO-00${[25, 61, 47][i]}`, 40)]),
@@ -364,6 +374,20 @@ describe("recogniseFurniture watermarks", () => {
         run(`w${i}-${x}-${y}`, "DRAFT", y, x, { alpha: 128 }),
       ),
     );
+
+  it("reads a header in two parts as a header beside a row of watermark tiles", () => {
+    const pages = [0, 1].map((i) =>
+      page(i, [
+        run(`h${i}`, "Acme Corp", 760, 72),
+        run(`q${i}`, "Q3 report", 760, 400),
+        ...tiles(i),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 2), 0)).toMatchObject({
+      h0: "Header",
+      q0: "Header",
+    });
+  });
 
   it("reads tiled see-through text as a watermark, even at the page's edges", () => {
     const pages = [0, 1].map((i) =>

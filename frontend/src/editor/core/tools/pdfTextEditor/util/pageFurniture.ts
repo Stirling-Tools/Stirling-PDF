@@ -123,6 +123,14 @@ export function recogniseFurniture(
   for (const { pageIndex, id } of watermarks(pages, half, cells)) {
     mark(pageIndex, id, "Watermark");
   }
+  // Read again without the watermarks, whose tiles can line up with a header
+  // in parts and pass for a table's rows.
+  for (const page of pages) {
+    const marked = furniture.get(page.pageIndex);
+    if (!marked) continue;
+    const kept = page.runs.filter((run) => !marked.has(run.id));
+    cells.set(page.pageIndex, tableCells(kept, page.display));
+  }
 
   const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
   for (const page of pages) {
@@ -336,18 +344,29 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
 
 /**
  * True when the runs read as a table's content rather than as furniture: a
- * table's cells, or text with a number that differs on every page without
- * rising with them. A number that rises is page numbering that skips, such as
- * two page numbers to a sheet.
+ * table's cells, or text with a number that differs from page to page,
+ * however often one page shows it, without rising with them. A number that
+ * rises is page numbering that skips, such as two page numbers to a sheet.
  */
 function readsAsContent(runs: readonly GroupedRun[]): boolean {
   if (runs.some((run) => run.inTable)) return true;
-  const inPageOrder = [...runs].sort((a, b) => a.pageIndex - b.pageIndex);
+  const pageIndices = [...new Set(runs.map((run) => run.pageIndex))].sort(
+    (a, b) => a - b,
+  );
   return runs[0].numbers.some((_, i) => {
-    const values = inPageOrder.map((run) => run.numbers[i]);
-    const differ = new Set(values).size === values.length;
-    const rise = values.every(
-      (value, at) => at === 0 || value > values[at - 1],
+    const byPage = pageIndices.map(
+      (pageIndex) =>
+        new Set(
+          runs
+            .filter((run) => run.pageIndex === pageIndex)
+            .map((run) => run.numbers[i]),
+        ),
+    );
+    const shown = byPage.flatMap((values) => [...values]);
+    const differ = new Set(shown).size === shown.length;
+    const rise = byPage.every(
+      (values, at) =>
+        at === 0 || Math.min(...values) > Math.max(...byPage[at - 1]),
     );
     return differ && !rise;
   });

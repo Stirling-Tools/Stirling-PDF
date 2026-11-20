@@ -290,6 +290,22 @@ describe("guessHeadings", () => {
     });
   });
 
+  it("nests headings of the sixth and seventh largest styles a level apart", () => {
+    const sizes = [40, 34, 28, 24, 20, 17, 14];
+    const [top, sixth, seventh, ...rest] = [40, 17, 14, 34, 28, 24, 20].map(
+      (size) => run(`Heading at ${size}`, size),
+    );
+    const repeats = sizes.map((size) => run(`Again at ${size}`, size));
+    const body = Array.from({ length: 12 }, () => run(BODY, 10));
+    expect(
+      levels(top, sixth, seventh, ...rest, ...repeats, ...body),
+    ).toMatchObject({
+      "Heading at 40": "H1",
+      "Heading at 17": "H2",
+      "Heading at 14": "H3",
+    });
+  });
+
   it("gives sections of one style one level when a larger style first appears after them", () => {
     expect(
       levels(
