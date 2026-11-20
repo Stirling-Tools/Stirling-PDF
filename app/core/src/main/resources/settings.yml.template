@@ -488,6 +488,7 @@ mcp:
   rateLimitPerMinute: 60 # Tool calls each user may make per minute, shared across nodes in a cluster. 0 = unlimited
   automationsEnabled: true # Let chat apps run several operations in one call and use the team's saved pipelines. Saving a new one still needs an admin (or team leader)
   maxPipelineSteps: 10 # Most operations one pipeline call may chain
+  maxPipelineCarryBytes: 524288000 # Max total size (bytes) of step results one pipeline call holds in memory between steps (default 500 MB). 0 = unlimited
   widgetEnabled: true # Serve the in-chat widget (MCP Apps: result card and file picker) to Claude and ChatGPT
   fileUrlAllowedHosts: ['oaiusercontent.com', 'openai.com', 'chatgpt.com', 'oaisdmntpr*.blob.core.windows.net'] # Hosts chat apps may pass file download URLs from (ChatGPT attachments live on regional Azure blob hosts). HTTPS only; suffix match, * within one label, or '*' alone for any public host. Empty = disabled
   maxFileUrlBytes: 104857600 # Max size (bytes) of a file fetched from a chat app download URL (default 100 MB)

@@ -185,6 +185,8 @@ public class McpOperationExecutor {
                 return withPipelineReports(result, reports);
             }
             List<McpInputFiles.Input> next = new ArrayList<>();
+            long carryLimit = carryLimit();
+            long carried = 0;
             for (List<McpInputFiles.Input> batch : batches) {
                 String on = batches.size() > 1 ? "on " + batch.get(0).name() + ": " : "";
                 Call call = call(meta, batch, parameters.get(i), user, budget);
@@ -193,7 +195,8 @@ public class McpOperationExecutor {
                 }
                 List<McpInputFiles.Input> produced = new ArrayList<>();
                 try {
-                    String problem = filesFrom(meta, call.response(), produced);
+                    String problem =
+                            filesFrom(meta, call.response(), produced, carryLimit - carried);
                     if (problem != null) {
                         return McpResponses.error(mapper, where + on + problem);
                     }
@@ -203,6 +206,7 @@ public class McpOperationExecutor {
                     releaseBody(call.response());
                 }
                 next.addAll(produced);
+                carried += totalBytes(produced);
                 if (next.size() > McpZipParts.MAX_PARTS) {
                     return McpResponses.error(
                             mapper,
@@ -268,9 +272,28 @@ public class McpOperationExecutor {
         return steps.size() == 1 ? "1 step" : steps.size() + " steps";
     }
 
+    private long carryLimit() {
+        long limit = files.maxPipelineCarryBytes();
+        return limit > 0 ? limit : Long.MAX_VALUE;
+    }
+
+    private static long totalBytes(List<McpInputFiles.Input> inputs) {
+        return inputs.stream().mapToLong(input -> input.bytes().length).sum();
+    }
+
+    private static String carryRefusal(long room) {
+        return "its results would pass mcp.maxPipelineCarryBytes ("
+                + Math.max(0, room)
+                + " bytes left), the most a pipeline holds between steps. Run it on fewer or"
+                + " smaller files.";
+    }
+
     /** A step's files for the next step: a ZIP becomes its files; a report can't be passed on. */
     private String filesFrom(
-            OperationMeta meta, ResponseEntity<Resource> response, List<McpInputFiles.Input> out) {
+            OperationMeta meta,
+            ResponseEntity<Resource> response,
+            List<McpInputFiles.Input> out,
+            long room) {
         Resource body = response.getBody();
         MediaType type = response.getHeaders().getContentType();
         String refused = redirectReason(response);
@@ -286,14 +309,22 @@ public class McpOperationExecutor {
         }
         String name = body.getFilename() == null ? meta.id() + ".pdf" : body.getFilename();
         try (InputStream in = body.getInputStream()) {
-            byte[] bytes = in.readAllBytes();
+            // Reads one byte past the room so an oversized result is refused without buffering it.
+            byte[] bytes = in.readNBytes((int) Math.min(Integer.MAX_VALUE - 8L, room) + 1);
+            if (bytes.length > room) {
+                return carryRefusal(room);
+            }
             boolean zip =
                     "zip"
                             .equals(
                                     McpZipParts.outputKind(
                                             type == null ? null : type.toString(), name));
             if (zip) {
-                out.addAll(McpZipParts.read(bytes));
+                List<McpInputFiles.Input> parts = McpZipParts.read(bytes);
+                if (totalBytes(parts) > room) {
+                    return carryRefusal(room);
+                }
+                out.addAll(parts);
             } else {
                 out.add(new McpInputFiles.Input(bytes, name, null));
             }

@@ -694,6 +694,40 @@ class McpPipelineTest {
     }
 
     @Test
+    void aStepResultOverTheCarryLimitStopsThePipeline() throws Exception {
+        when(files.maxPipelineCarryBytes()).thenReturn(4L);
+        when(api.post(eq("/api/v1/misc/repair"), any())).thenReturn(pdf("REPAIRED"));
+
+        ObjectNode result = run(steps("repair", "compress-pdf"));
+
+        assertTrue(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("Step 1 of 2 (repair)"), text(result));
+        assertTrue(text(result).contains("mcp.maxPipelineCarryBytes"), text(result));
+        verify(api, never()).post(eq("/api/v1/misc/compress-pdf"), any());
+    }
+
+    @Test
+    void splitPartsCountTowardTheCarryLimit() throws Exception {
+        when(catalog.findByOperationId("split-pages"))
+                .thenReturn(
+                        Optional.of(
+                                op(
+                                        "split-pages",
+                                        OperationCategory.PAGES,
+                                        "/api/v1/general/split-pages")));
+        when(api.post(eq("/api/v1/general/split-pages"), any()))
+                .thenReturn(zip("a.pdf", "PART-A".repeat(40), "b.pdf", "PART-B".repeat(40)));
+        // The ZIP itself fits, its unpacked parts do not.
+        when(files.maxPipelineCarryBytes()).thenReturn(400L);
+
+        ObjectNode result = run(steps("split-pages", "compress-pdf"));
+
+        assertTrue(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("mcp.maxPipelineCarryBytes"), text(result));
+        verify(api, never()).post(eq("/api/v1/misc/compress-pdf"), any());
+    }
+
+    @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void anEpubIsCarriedToTheNextStepAsOneDocument() throws Exception {
         for (OperationMeta operation :

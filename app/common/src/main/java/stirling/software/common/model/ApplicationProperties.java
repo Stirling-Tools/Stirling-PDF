@@ -585,6 +585,9 @@ public class ApplicationProperties {
         /** Most steps one pipeline call may chain. */
         private int maxPipelineSteps = 10;
 
+        /** Most bytes of step results one pipeline call holds between steps; 0 means no limit. */
+        private long maxPipelineCarryBytes = 500L * 1024 * 1024;
+
         /** Serve the in-chat widget (MCP Apps) and the file picker tool. */
         private boolean widgetEnabled = true;
 

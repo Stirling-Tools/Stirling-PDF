@@ -248,6 +248,11 @@ public class McpFiles {
                 mcp.getMaxInputFiles() > 0 ? mcp.getMaxInputFiles() : Integer.MAX_VALUE);
     }
 
+    /** {@code mcp.maxPipelineCarryBytes}; 0 or less means no limit. */
+    public long maxPipelineCarryBytes() {
+        return applicationProperties.getMcp().getMaxPipelineCarryBytes();
+    }
+
     /** Loads a tool input, refused before any content is read if it would overspend the budget. */
     public Loaded load(User user, String fileIdOrUri, InputBudget budget) throws McpFileException {
         budget.requireRoomFor(1);
