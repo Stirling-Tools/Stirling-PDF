@@ -129,7 +129,6 @@ test.describe("PDF accessibility review", () => {
   test("shows a failed open's error while the editor runs hidden", async ({
     page,
   }) => {
-    await page.goto("/editor");
     await page.getByTestId("file-input").setInputFiles(RESTRICTED);
     await page
       .getByRole("link", { name: "PDF Text Editor", exact: true })
