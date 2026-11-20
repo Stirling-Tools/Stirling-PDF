@@ -36,13 +36,43 @@ describe("OperationButton", () => {
     const signIn = vi.fn();
     const run = renderButton(signIn);
 
-    expect(screen.getByText("tool.signInRequired")).toBeInTheDocument();
+    expect(screen.queryByText("tool.signInRequired")).toBeNull();
     const button = screen.getByTestId("run");
     expect(button).toBeEnabled();
     expect(button).toHaveTextContent("tool.signInToUse");
     fireEvent.click(button);
     expect(signIn).toHaveBeenCalledOnce();
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it("becomes the run button once the tool is available", () => {
+    const signIn = vi.fn();
+    const run = vi.fn();
+    const ui = (disabledReason?: "endpointUnavailable") => (
+      <MantineProvider>
+        <ToolActionsContext.Provider
+          value={{ onEndpointUnavailableClick: signIn }}
+        >
+          <OperationButton
+            onClick={run}
+            disabledReason={disabledReason}
+            submitText="Convert"
+            data-testid="run"
+          />
+        </ToolActionsContext.Provider>
+      </MantineProvider>
+    );
+    const { rerender } = render(ui("endpointUnavailable"));
+    expect(screen.getByTestId("run")).toHaveTextContent("tool.signInToUse");
+
+    rerender(ui());
+
+    expect(screen.queryByTestId("sign-in-required")).toBeNull();
+    const button = screen.getByTestId("run");
+    expect(button).toHaveTextContent("Convert");
+    fireEvent.click(button);
+    expect(run).toHaveBeenCalledOnce();
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it("stays disabled when no sign-in can unlock the tool", () => {
