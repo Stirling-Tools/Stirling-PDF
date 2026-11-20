@@ -10,6 +10,7 @@ import {
 import {
   listLocalFonts,
   loadLocalFontBytes,
+  registerFontBytes,
   resetLocalFontsCache,
 } from "@editor/tools/pdfTextEditor/util/localFonts";
 import type { LocalFont } from "@editor/tools/pdfTextEditor/util/localFonts";
@@ -137,6 +138,16 @@ describe("fallbackFamilyFor", () => {
     // in Calibri's real bytes rather than Helvetica.
     expect(fallbackFamilyFor("pdf:4242:Calibri")).toBe("Calibri");
     expect(fallbackFontIdFor("Calibri")).toBe("device:Calibri");
+  });
+
+  it("completes an OCR subset from the bundled full face", () => {
+    // OCRmyPDF embeds only the glyphs it recognized. The bundled Noto Sans is
+    // the same family at full coverage, so an edit must stay in-family rather
+    // than silently becoming Helvetica.
+    registerFontBytes("Noto Sans", new Uint8Array([0, 1, 2, 3]));
+
+    expect(fallbackFamilyFor("pdf:4242:Noto Sans")).toBe("Noto Sans");
+    expect(fallbackFontIdFor("Noto Sans")).toBe("device:Noto Sans");
   });
 
   it("does not forget the face on the NEXT edit", async () => {

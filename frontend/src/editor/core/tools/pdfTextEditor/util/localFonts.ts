@@ -275,6 +275,16 @@ export function getLocalFontBytes(family: string): Uint8Array | null {
   return bytesByFamily.get(normaliseName(family)) ?? null;
 }
 
+/**
+ * Make bundled bytes available under a family name, so the emit path can reuse
+ * them exactly as it would a face read from the device.
+ */
+export function registerFontBytes(family: string, bytes: Uint8Array): void {
+  const key = normaliseName(family);
+  if (!key || bytes.length === 0) return;
+  bytesByFamily.set(key, bytes);
+}
+
 // The font file bytes behind a family name, cached for the session. Null when
 // unsupported, denied, unmatched, or unreadable - never throws.
 export async function loadLocalFontBytes(

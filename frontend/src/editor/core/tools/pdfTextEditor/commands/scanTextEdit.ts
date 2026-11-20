@@ -23,7 +23,10 @@ import {
   measureObjSpanPt,
   removeAndDestroyObject,
   removeMemberPtrs,
+  sanitizeForBase14,
 } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
+import { getLocalFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
+import { familyOf } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   COURIER,
   FACES,
@@ -107,6 +110,8 @@ interface SpanInk {
 export interface ScanEditState {
   lines: ScanLine[];
   fontPtr: number;
+  /** Family of the OCR run's subset, so an edit can complete it in-family. */
+  family: string;
   /** Covers and visible text currently on the page. */
   created: number[];
   /** Visible text only, a subset of `created`. */
@@ -206,6 +211,7 @@ export function captureScanEdit(
   return {
     lines,
     fontPtr,
+    family: familyOf(run.fontId),
     created: [],
     textPtrs: [],
     lifted: new Set(),
@@ -589,6 +595,30 @@ function lift(m: WrappedPdfiumModule, page: Page, word: ScanWord): void {
   );
 }
 
+/** Full face for the OCR run's family, when bundled or device bytes exist. */
+function fullFaceFamily(state: ScanEditState): string | null {
+  return getLocalFontBytes(state.family) ? state.family : null;
+}
+
+/** True when base-14 cannot encode every character of `text`. */
+function needsFullFace(text: string): boolean {
+  return sanitizeForBase14(text) !== text;
+}
+
+/**
+ * Face to draw `text` in. Latin stays in the face matched to the scan; a
+ * character that face cannot author is drawn in the OCR run's full face, so a
+ * subset never turns into a dropped glyph when the document has the bytes.
+ */
+function drawFamilyFor(
+  state: ScanEditState,
+  style: ScanStyle,
+  text: string,
+): string {
+  const full = fullFaceFamily(state);
+  return full && needsFullFace(text) ? full : style.family;
+}
+
 // Invisible OCR text for a word, so search and copy still find it.
 function emitInvisible(
   doc: EditorDocument,
@@ -599,6 +629,9 @@ function emitInvisible(
   baseline: number,
   tagMarks: readonly TagMark[],
 ): number[] {
+  const full = fullFaceFamily(state);
+  // The subset only encodes the glyphs OCR recognized. When the full face is
+  // available, emit in it rather than SetText'ing new characters into .notdef.
   const ptrs = emitTextLine({
     doc,
     page,
@@ -607,8 +640,8 @@ function emitInvisible(
     y: baseline,
     fontSize: word.fontSize,
     fill: BLACK,
-    originalFontPtr: state.fontPtr,
-    fallbackFamily: "Helvetica",
+    originalFontPtr: full ? 0 : state.fontPtr,
+    fallbackFamily: full ?? "Helvetica",
     renderMode: INVISIBLE,
     tagMarks,
   });
@@ -706,7 +739,11 @@ export function renderScanEdit(
       inkOf(w)?.ink.body.width ?? scanWord(w).right - scanWord(w).x,
     textWidth: (t, anchor) => {
       const st = styleOf(anchor);
-      return spanOf(doc, page, t, st.family, st.fontSize) * st.stretch;
+      const family = drawFamilyFor(state, st, t);
+      return (
+        spanOf(doc, page, t, family, st.fontSize) *
+        (family === st.family ? st.stretch : 1)
+      );
     },
     redraw: restyle,
   });
@@ -770,16 +807,18 @@ export function renderScanEdit(
     if (ink?.dropTrail) s = s.replace(/[\]|)]$/, "");
     if (!s) return;
     const st = styleOf(anchor);
+    const family = drawFamilyFor(state, st, s);
+    const usingFullFace = family !== st.family;
     const ptrs = placeText(doc, page, {
       text: s,
       x,
       baseline,
-      family: st.family,
+      family,
       size: st.fontSize,
-      stretch: st.stretch,
+      stretch: usingFullFace ? 1 : st.stretch,
       inkLeft: atAnchor && ink ? ink.ink.body.x + o.dx : x,
       fill: st.ink,
-      weight: st.weight,
+      weight: usingFullFace ? 0 : st.weight,
     });
     const soft =
       st.softness > 0
@@ -797,7 +836,7 @@ export function renderScanEdit(
         fontSize: st.fontSize,
         fill: BLACK,
         originalFontPtr: 0,
-        fallbackFamily: st.family,
+        fallbackFamily: family,
         renderMode: INVISIBLE,
         tagMarks: run.tagMarks,
       });

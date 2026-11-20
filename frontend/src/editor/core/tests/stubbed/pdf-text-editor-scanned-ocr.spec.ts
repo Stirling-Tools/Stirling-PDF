@@ -31,6 +31,8 @@ interface Box {
 interface RunState {
   id: string;
   text: string;
+  fontId: string;
+  fontSubset: boolean;
   renderMode: number;
 }
 
@@ -91,6 +93,60 @@ async function diff(
     },
     { a, b, box, lighter },
   );
+}
+
+// Byte length of every font program referenced by page 0's text objects. The
+// OCR subset is a few KB; the bundled full Noto Sans is ~600KB.
+async function fontProgramSizes(page: Page): Promise<number[]> {
+  return page.evaluate(() => {
+    const w = window as unknown as {
+      __editor_store: {
+        document: {
+          module: {
+            FPDFText_LoadPage: (p: number) => number;
+            FPDFText_ClosePage: (p: number) => void;
+            FPDFText_CountChars: (p: number) => number;
+            FPDFText_GetTextObject: (p: number, i: number) => number;
+            FPDFTextObj_GetFont: (o: number) => number;
+            FPDFFont_GetFontData?: (
+              f: number,
+              b: number,
+              l: number,
+              out: number,
+            ) => boolean;
+            pdfium: {
+              wasmExports: {
+                malloc: (n: number) => number;
+                free: (p: number) => void;
+              };
+              setValue: (p: number, v: number, t: string) => void;
+              getValue: (p: number, t: string) => number;
+            };
+          };
+          page(i: number): { pagePtr: number };
+        };
+      };
+    };
+    const doc = w.__editor_store.document;
+    const m = doc.module;
+    const tp = m.FPDFText_LoadPage(doc.page(0).pagePtr);
+    const fontPtrs = new Set<number>();
+    for (let i = 0; i < m.FPDFText_CountChars(tp); i++) {
+      const obj = m.FPDFText_GetTextObject(tp, i);
+      if (obj) fontPtrs.add(m.FPDFTextObj_GetFont(obj));
+    }
+    m.FPDFText_ClosePage(tp);
+    const sizes: number[] = [];
+    const out = m.pdfium.wasmExports.malloc(4);
+    for (const font of fontPtrs) {
+      if (!font || !m.FPDFFont_GetFontData) continue;
+      m.pdfium.setValue(out, 0, "i32");
+      if (m.FPDFFont_GetFontData(font, 0, 0, out))
+        sizes.push(m.pdfium.getValue(out, "i32"));
+    }
+    m.pdfium.wasmExports.free(out);
+    return sizes;
+  });
 }
 
 // Rightmost inked pixel inside `box` of a snap, or -1. Paper sits near 236.
@@ -159,6 +215,8 @@ async function runs(page: Page): Promise<RunState[]> {
     return (s.state.pages[0]?.runs ?? []).map((r) => ({
       id: r.id,
       text: r.text,
+      fontId: r.fontId,
+      fontSubset: r.fontSubset,
       renderMode: r.renderMode ?? 0,
     }));
   });
@@ -661,6 +719,35 @@ test("dragging a scanned block moves its text off the scan", async ({
   ).toBeGreaterThan(await inkRight(page, "loaded", before));
 });
 
+// Moving OCR words re-emits their invisible text. The OCR PDF's face is a
+// subset, so the re-emit must complete it from the bundled full Noto Sans.
+test("moving OCR text embeds the full Noto Sans face", async ({ page }) => {
+  test.setTimeout(120_000);
+  const fontLoaded = page
+    .waitForResponse((r) => /NotoSans-Regular\.ttf/.test(r.url()), {
+      timeout: 20_000,
+    })
+    .catch(() => null);
+  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
+    timeout: 30_000,
+  });
+  await open(page, "scanned-ocr-hocr.pdf");
+  await fontLoaded;
+  const run = (await runs(page)).find((r) => r.text.includes("Jane Example"))!;
+  const box = (await page
+    .getByTestId(`pdf-editor-run-${run.id}`)
+    .boundingBox())!;
+  const loadedSig = await bitmapSig(page);
+  await page.mouse.move(box.x + box.width / 2, box.y + 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 120, box.y + 2, { steps: 8 });
+  await page.mouse.up();
+  await settle(page, loadedSig);
+
+  expect(Math.max(...(await fontProgramSizes(page)))).toBeGreaterThan(100_000);
+});
+
 // A scan nobody OCR'd has no text to edit; say so and offer the fix.
 test("a scan without OCR runs OCR in one click and reloads editable text", async ({
   page,
@@ -700,6 +787,17 @@ test("a scan without OCR runs OCR in one click and reloads editable text", async
   await expect(page.getByTestId("pdf-editor-scan-hint")).toBeHidden();
   await expect(page).toHaveURL(/\/pdf-text-editor/);
   expect(requests).toBe(1);
+  // The OCR subset is completed from the bundled full face before the user can
+  // edit, so every later character has a glyph to draw.
+  await expect
+    .poll(async () => (await runs(page)).every((r) => !r.fontSubset), {
+      timeout: 30_000,
+    })
+    .toBe(true);
+  expect((await runs(page)).every((r) => /Noto Sans$/.test(r.fontId))).toBe(
+    true,
+  );
+  expect(Math.max(...(await fontProgramSizes(page)))).toBeGreaterThan(100_000);
   const run = (await runs(page)).find((r) => r.text.includes("Jane Example"))!;
   expect(run).toBeDefined();
   await replaceRunText(

@@ -59,6 +59,7 @@ import {
   type SaveRisks,
 } from "@editor/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@editor/tools/pdfTextEditor/util/fallbackFont";
+import { completeOcrFonts } from "@editor/tools/pdfTextEditor/util/completeOcrFonts";
 import { visiblePageNumber } from "@editor/tools/pdfTextEditor/util/dom";
 import type {
   GroupingMode,
@@ -231,7 +232,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const loading = load(stored);
       const token = store.currentLoadToken;
       await loading;
-      if (mountedRef.current && store.isCurrentLoad(token)) pinWorkbench();
+      if (!mountedRef.current || !store.isCurrentLoad(token)) return;
+      // Complete the OCR layer's subset before handing the document over, so
+      // the first edit already has every glyph the bundled/device face covers.
+      await preloadFallbackFontBytes();
+      if (store.isCurrentLoad(token) && store.document) {
+        if (completeOcrFonts(store.document) > 0) store.resnapshot();
+      }
+      pinWorkbench();
     },
     [applyToWorkbench, load, pinWorkbench, store],
   );

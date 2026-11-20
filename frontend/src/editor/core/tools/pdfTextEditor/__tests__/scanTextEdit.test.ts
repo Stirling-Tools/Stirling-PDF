@@ -60,6 +60,7 @@ function fixture() {
       },
     ],
     fontPtr: 0,
+    family: "Helvetica",
     created: [],
     textPtrs: [],
     lifted: new Set(),

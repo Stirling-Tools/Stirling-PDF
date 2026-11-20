@@ -4,6 +4,7 @@ import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
 import { writeUtf16 } from "@editor/services/pdfiumService";
+import { registerFontBytes } from "@editor/tools/pdfTextEditor/util/localFonts";
 import { BASE_PATH } from "@editor/constants/app";
 import {
   SCRATCH,
@@ -55,6 +56,10 @@ export function preloadFallbackFontBytes(): Promise<Uint8Array | null> {
         return null;
       }
       cachedBytes = new Uint8Array(await res.arrayBuffer());
+      // OCR text layers embed a subset of Noto Sans. Registering the full face
+      // under the same family lets an edit that outgrows the subset complete
+      // in-family instead of switching the word to Helvetica.
+      registerFontBytes("Noto Sans", cachedBytes);
       return cachedBytes;
     } catch {
       bytesPromise = null;
