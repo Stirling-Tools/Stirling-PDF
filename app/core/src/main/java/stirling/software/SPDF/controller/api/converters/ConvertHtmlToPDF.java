@@ -64,7 +64,7 @@ public class ConvertHtmlToPDF {
 
         byte[] pdfBytes =
                 officeToPdfService.convertHtml(
-                        fileInput.getBytes(), originalFilename.endsWith(".zip"));
+                        fileInput.getBytes(), originalFilename.endsWith(".zip"), request.getZoom());
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

@@ -389,6 +389,24 @@ class OfficeConvertIntegrationTest {
     }
 
     @Test
+    void htmlZoomEnlargesTheContent() throws Exception {
+        byte[] html =
+                ("<html><body>" + ("<p>" + TEXT + "</p>").repeat(80) + "</body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        int normal = pageCount(toPdf.convertHtml(html, false, 1f));
+        int zoomed = pageCount(toPdf.convertHtml(html, false, 2f));
+
+        assertThat(zoomed).isGreaterThan(normal);
+    }
+
+    private static int pageCount(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return document.getNumberOfPages();
+        }
+    }
+
+    @Test
     void htmlPackageWithoutAPageIsRefused() throws Exception {
         byte[] upload = zip(Map.of("images/photo.png", inlinePng()));
 

@@ -33,10 +33,18 @@ public class OfficeToPdfService {
 
     /** Packages may use their own assets; local files and network resources remain inaccessible. */
     public byte[] convertHtml(byte[] html, boolean packaged) throws IOException {
+        return convertHtml(html, packaged, 1f);
+    }
+
+    public byte[] convertHtml(byte[] html, boolean packaged, float zoom) throws IOException {
         try (TempFile in = new TempFile(tempFileManager, packaged ? ".zip" : ".html");
                 TempFile out = new TempFile(tempFileManager, ".pdf")) {
             Files.write(in.getPath(), html);
-            convert(in.getPath(), out.getPath(), options().allowPackages(packaged), "the document");
+            convert(
+                    in.getPath(),
+                    out.getPath(),
+                    options().allowPackages(packaged).zoom(zoom),
+                    "the document");
             return Files.readAllBytes(out.getPath());
         }
     }
