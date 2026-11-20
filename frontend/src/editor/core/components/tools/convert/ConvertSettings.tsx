@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@editor/hooks/useEndpointConfig";
 import {
   isImageFormat,
-  isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
   getEndpointName,
 } from "@editor/utils/convertUtils";
@@ -18,7 +17,6 @@ import { useLocalProcessingOnly } from "@editor/hooks/useLocalProcessingOnly";
 import GroupedFormatDropdown from "@editor/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@editor/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@editor/components/tools/convert/ConvertFromImageSettings";
-import ConvertFromWebSettings from "@editor/components/tools/convert/ConvertFromWebSettings";
 import ConvertFromEmailSettings from "@editor/components/tools/convert/ConvertFromEmailSettings";
 import ConvertFromCbzSettings from "@editor/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@editor/components/tools/convert/ConvertToCbzSettings";
@@ -413,20 +411,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
-      {(isWebFormat(parameters.fromExtension) &&
-        parameters.toExtension === "pdf") ||
-      (parameters.isSmartDetection &&
-        parameters.smartDetectionType === "web") ? (
-        <>
-          <Divider />
-          <ConvertFromWebSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      ) : null}
 
       {/* Email to PDF options (EML and MSG formats) */}
       {(parameters.fromExtension === "eml" ||

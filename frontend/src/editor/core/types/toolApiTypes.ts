@@ -547,7 +547,7 @@ export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
   /**
-   * Scale applied to the page content, from 0.1 to 8. Default is '1'.
+   * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
 }
