@@ -80,8 +80,10 @@ interface Style {
  * Levels never skip in page order and then `tagged` order, so the first
  * heading is H1 and each is at most one deeper than the one before it, as
  * PDF/UA-1 (ISO 14289-1, 7.4.2) requires of a structure tree that holds no
- * other headings and adds pages' elements in page order. Two heading styles
- * of one size and emphasis take levels in the order they first appear.
+ * other headings and adds pages' elements in page order. A heading's level is
+ * how many larger-ranked headings are still open above it, so headings of one
+ * style under the same parent share a level. Two heading styles of one size
+ * and emphasis rank in the order they first appear.
  */
 export function guessHeadings(
   pages: readonly HeadingPage[],
@@ -98,8 +100,7 @@ export function guessHeadings(
     const rowCells = tableRowCells(
       kept.map(({ run, key }) => ({ bounds: run.bounds, key, run })),
       display,
-      (cell) => cell.key,
-      HEADING_ROW_CELLS,
+      { keyOf: (cell) => cell.key, cells: HEADING_ROW_CELLS },
     );
     const inRow = new Set([...rowCells].map((cell) => cell.run));
     return kept.map(({ run, style, key }) => ({
@@ -178,21 +179,24 @@ export function guessHeadings(
     ranks.set(styleKey(style), Math.min(rank, HEADING_TYPES.length - 1));
   }
 
-  // A heading set above every larger one, such as a kicker over the title,
-  // takes the level after the heading before it instead of skipping levels.
+  // The ranks of the headings still open above the next one: each heading
+  // closes those ranked as or less important than itself, so the stack grows
+  // by at most one a heading and a level is never skipped, where capping a
+  // heading at one below the last would push siblings of one style apart.
   // Only runs auto-tag will write count: one it leaves alone adds no element.
   const byId = new Map(
     runs.map((entry) => [`${entry.pageIndex}:${entry.run.id}`, entry]),
   );
-  let previous = -1;
+  const open: number[] = [];
   for (const { pageIndex, tagged } of inOrder) {
     for (const id of tagged) {
       const entry = byId.get(`${pageIndex}:${id}`);
       const styleRank = entry?.candidate ? ranks.get(entry.key) : undefined;
       if (styleRank === undefined) continue;
-      previous = Math.min(styleRank, previous + 1);
+      while (open.length > 0 && open[open.length - 1] >= styleRank) open.pop();
       const onPage = headings.get(pageIndex) ?? new Map<string, HeadingType>();
-      headings.set(pageIndex, onPage.set(id, HEADING_TYPES[previous]));
+      headings.set(pageIndex, onPage.set(id, HEADING_TYPES[open.length]));
+      open.push(styleRank);
     }
   }
   return headings;

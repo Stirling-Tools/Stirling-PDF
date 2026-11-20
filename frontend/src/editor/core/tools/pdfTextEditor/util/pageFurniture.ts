@@ -102,9 +102,10 @@ export function matchingRuns<R extends FurnitureRun>(
  * the same height: near the top a header, near the bottom a footer, and
  * either a page number when one of its numbers counts up with the pages,
  * whatever words surround it. Unless it numbers the pages, a cell of a table
- * row is never a header or footer, nor is text whose number changes on every
- * page without rising with them, such as a value in a table that runs over
- * several pages. `pageCount` counts the pages not in `pages` too.
+ * (a line of four or more blocks with another such line near it) is never a
+ * header or footer, nor is text whose number changes on every page without
+ * rising with them, such as a value in a table that runs over several pages.
+ * `pageCount` counts the pages not in `pages` too.
  */
 export function recogniseFurniture(
   pages: readonly FurniturePage[],
@@ -122,7 +123,7 @@ export function recogniseFurniture(
 
   const groups = new Map<string, { at: Placement; runs: GroupedRun[] }[]>();
   for (const page of pages) {
-    const rowCells = tableRowCells(page.runs, page.display);
+    const rowCells = tableRowCells(page.runs, page.display, { stacked: true });
     for (const run of page.runs) {
       if (furniture.get(page.pageIndex)?.has(run.id)) continue;
       const at = placement(page.display, run.bounds);

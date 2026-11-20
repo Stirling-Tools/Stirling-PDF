@@ -212,6 +212,23 @@ describe("recogniseFurniture", () => {
     expect(kindsOn(recogniseFurniture(pages, 5), 3)).toEqual({ p3: "Footer" });
   });
 
+  it("reads a footer set in four parts as furniture, its page number included", () => {
+    const pages = [0, 1, 2].map((i) =>
+      page(i, [
+        run(`a${i}`, "Acme Ltd", 30, 72),
+        run(`c${i}`, "Confidential", 30, 200),
+        run(`w${i}`, "www.acme.example", 30, 320),
+        run(`n${i}`, `Page ${i + 1}`, 30, 440),
+      ]),
+    );
+    expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
+      a1: "Footer",
+      c1: "Footer",
+      w1: "Footer",
+      n1: "PageNum",
+    });
+  });
+
   it("keeps the page number in a header set as a table, and leaves its other cells", () => {
     const pages = [0, 1, 2].map((i) =>
       page(i, [
@@ -219,6 +236,10 @@ describe("recogniseFurniture", () => {
         run(`v${i}`, "Rev 2", 760, 200),
         run(`y${i}`, "2024", 760, 320),
         run(`n${i}`, `Page ${i + 1} of 3`, 760, 440),
+        run(`o${i}`, "Owner", 745, 72),
+        run(`q${i}`, "Quality", 745, 200),
+        run(`s${i}`, "Approved", 745, 320),
+        run(`j${i}`, "J. Okafor", 745, 440),
       ]),
     );
     expect(kindsOn(recogniseFurniture(pages, 3), 1)).toEqual({
@@ -246,12 +267,17 @@ describe("recogniseFurniture", () => {
 
   it("leaves a table's header row that each page repeats near its top", () => {
     const pages = [0, 1, 2].map((i) =>
-      page(
-        i,
-        ["Ref", "Item", "Qty", "Total"].map((text, x) =>
+      page(i, [
+        ...["Ref", "Item", "Qty", "Total"].map((text, x) =>
           run(`c${i}-${x}`, text, 720, 72 + x * 120),
         ),
-      ),
+        ...[
+          `A-${[25, 61, 47][i]}`,
+          "Widget",
+          `${[7, 2, 5][i]}`,
+          `${[12, 3, 8][i]}.50`,
+        ].map((text, x) => run(`r${i}-${x}`, text, 705, 72 + x * 120)),
+      ]),
     );
     expect(recogniseFurniture(pages, 3).size).toBe(0);
   });

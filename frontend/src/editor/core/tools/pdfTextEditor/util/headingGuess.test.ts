@@ -290,6 +290,50 @@ describe("guessHeadings", () => {
     });
   });
 
+  it("gives sections of one style one level when a larger style first appears after them", () => {
+    expect(
+      levels(
+        run("Introduction", 16),
+        run("Background", 16),
+        run("Method", 16),
+        run("Appendix A", 24),
+        run("Appendix B", 24),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      Introduction: "H1",
+      Background: "H1",
+      Method: "H1",
+      "Appendix A": "H1",
+      "Appendix B": "H1",
+      [BODY]: "P",
+    });
+  });
+
+  it("keeps sections of one style level under a title when larger parts follow them", () => {
+    expect(
+      levels(
+        run("Annual Report", 28),
+        run("Overview", 14),
+        run("Results", 14),
+        run("Outlook", 14),
+        run("Part Two", 20),
+        run("Part Three", 20),
+        run(BODY, 10),
+        run(BODY, 10),
+      ),
+    ).toEqual({
+      "Annual Report": "H1",
+      Overview: "H2",
+      Results: "H2",
+      Outlook: "H2",
+      "Part Two": "H2",
+      "Part Three": "H2",
+      [BODY]: "P",
+    });
+  });
+
   it("levels only the runs auto-tag will tag, in the order it tags them", () => {
     const title = run("Annual report", 24);
     const [results, outlook] = [
