@@ -488,7 +488,7 @@ ignore = [
     'cookieBanner.services.scarf',
     'fileSelected',
     'fileSelectorPicker.sort.nameLabel',
-    'fileSidebar.googleDrive',
+    'filesPage.origin.oneDrive',
     'footer.discord',
     'footer.issues',
     'formFill.editor.actionUrl',
