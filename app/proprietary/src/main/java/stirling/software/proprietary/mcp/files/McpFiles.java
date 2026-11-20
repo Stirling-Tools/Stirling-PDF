@@ -48,6 +48,8 @@ public class McpFiles {
     /** How chat hosts name a stored file (mentions, pickers); tools take it as a fileId. */
     public static final String FILE_URI_PREFIX = "stirling://files/";
 
+    public static final String RESOURCE_URI_PREFIX = "stirling://file/";
+
     private final FileStorageService storage;
     private final FileStorage tempStore;
     private final UserService userService;
@@ -170,7 +172,6 @@ public class McpFiles {
         }
     }
 
-    /** The user's live files, newest first, whose name contains {@code query} (any case). */
     /**
      * Largest file the widget may send inline: base64 grows it by a third, and the JSON-RPC
      * envelope must still fit under mcp.maxRequestBytes.
@@ -181,6 +182,7 @@ public class McpFiles {
                 0, (applicationProperties.getMcp().getMaxRequestBytes() - envelope) / 4 * 3);
     }
 
+    /** The user's live files, newest first, whose name contains {@code query} (any case). */
     public List<Listed> recent(User user, String query, int limit) {
         if (!usesStoredFiles(user)) {
             return List.of();
@@ -225,15 +227,21 @@ public class McpFiles {
         }
     }
 
-    /** A fileId, or the id inside a {@code stirling://files/<id>} URI. */
+    /**
+     * A fileId, or the id inside a {@code stirling://files/<id>} URI or the {@code
+     * stirling://file/<id>} resource link a result carries.
+     */
     public static String idOf(String fileIdOrUri) {
         if (fileIdOrUri == null) {
             return null;
         }
         String trimmed = fileIdOrUri.trim();
-        return trimmed.startsWith(FILE_URI_PREFIX)
-                ? trimmed.substring(FILE_URI_PREFIX.length())
-                : trimmed;
+        for (String prefix : List.of(FILE_URI_PREFIX, RESOURCE_URI_PREFIX)) {
+            if (trimmed.startsWith(prefix)) {
+                return trimmed.substring(prefix.length());
+            }
+        }
+        return trimmed;
     }
 
     /** Loads one tool input with a budget of its own; see {@link #inputBudget()}. */
@@ -339,7 +347,7 @@ public class McpFiles {
             try (InputStream in = tempStore.retrieveInputStream(fileId)) {
                 return new Loaded(limit.read(in), tempName(fileId));
             }
-        } catch (SecurityException e) {
+        } catch (SecurityException | IllegalArgumentException e) {
             throw new McpFileException(unknown);
         } catch (IOException e) {
             throw new McpFileException("Could not read fileId '" + fileId + "'.");

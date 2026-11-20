@@ -93,7 +93,7 @@ public class StirlingDownloadTool implements McpTool {
                     MediaTypeFactory.getMediaType(file.name())
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
                             .toString();
-            String uri = "stirling://file/" + fileId;
+            String uri = McpFiles.RESOURCE_URI_PREFIX + fileId;
             boolean text = "text".equals(McpZipParts.outputKind(mimeType, file.name()));
             return McpResponses.result(
                     mapper,

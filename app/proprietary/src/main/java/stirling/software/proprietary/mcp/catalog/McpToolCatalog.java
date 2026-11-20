@@ -92,8 +92,17 @@ public class McpToolCatalog {
         return adjuster == null ? meta : adjuster.adjust(meta);
     }
 
+    /**
+     * Never offered to chat apps, whatever the allow and block lists say: url-to-pdf fetches any
+     * URL the model names, and a prompt hidden in a document can choose that URL.
+     */
+    static final Set<String> NEVER_EXPOSED = Set.of("url-to-pdf");
+
     /** Admin tool filter: non-empty allow list is a whitelist; block list always removes. */
     private boolean isOperationAllowed(String id) {
+        if (NEVER_EXPOSED.contains(id)) {
+            return false;
+        }
         ApplicationProperties.Mcp mcp = applicationProperties.getMcp();
         List<String> allowed = mcp.getAllowedOperations();
         List<String> blocked = mcp.getBlockedOperations();
@@ -290,6 +299,22 @@ public class McpToolCatalog {
         }
         // Skip nested paths elsewhere.
         return tail.contains("/") ? null : tail;
+    }
+
+    /**
+     * The id of the operation behind an endpoint path when chat apps may not run it, e.g. a saved
+     * automation's url-to-pdf step; empty for allowed operations and paths MCP doesn't know.
+     */
+    public Optional<String> refusedOperationAt(String path) {
+        if (path == null) {
+            return Optional.empty();
+        }
+        for (OperationMeta meta : pdfOps.values()) {
+            if (path.equals(meta.endpointPath()) && !isOperationAllowed(meta.id())) {
+                return Optional.of(meta.id());
+            }
+        }
+        return Optional.empty();
     }
 
     /** The enabled, allowed operation behind an endpoint path, e.g. a stored pipeline step. */

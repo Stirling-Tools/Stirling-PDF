@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -513,6 +514,11 @@ public class McpAutomations {
     public Started trigger(String username, String automationId, List<MultipartFile> files)
             throws AutomationException {
         PolicyController controller = requireController();
+        Policy policy = asUser(username, () -> findPolicyForRun(automationId));
+        if (policy != null) {
+            refuseBlockedSteps(
+                    policy.steps(), "Automation '" + policy.name() + "' can't run from chat");
+        }
         try {
             if (files.isEmpty()) {
                 SweepOutcome sweep =
@@ -591,12 +597,12 @@ public class McpAutomations {
 
     private static final int MAX_LISTED_RUNS = 20;
 
-    /** Waits for these runs to finish, up to {@code max}; unknown runs come back null. */
     /** How long a chat call waits for a run before handing back its run id. */
     public Duration syncWait() {
         return Duration.ofSeconds(Math.max(0, applicationProperties.getMcp().getSyncWaitSeconds()));
     }
 
+    /** Waits for these runs to finish, up to {@code max}; unknown runs come back null. */
     public List<PolicyRunView> await(List<String> runIds, Duration max) {
         long deadline = System.nanoTime() + max.toNanos();
         while (true) {
@@ -734,6 +740,11 @@ public class McpAutomations {
                 steps.add(new PipelineStep(step.meta().endpointPath(), parameters));
             }
         }
+        refuseBlockedSteps(
+                steps,
+                existing == null
+                        ? "This automation can't be saved from chat"
+                        : "Automation '" + existing.name() + "' can't be changed from chat");
         if (steps.isEmpty()) {
             throw new AutomationException("An automation needs at least one step.");
         }
@@ -972,6 +983,28 @@ public class McpAutomations {
             return "step '" + readableStep(step.operation()) + "' only runs inside Stirling PDF";
         }
         return null;
+    }
+
+    /**
+     * Refuses steps chat apps may not run, e.g. url-to-pdf, so a chat can neither start such an
+     * automation nor rewire its triggers. Fails closed when the catalog is missing.
+     */
+    private void refuseBlockedSteps(List<PipelineStep> steps, String refusal)
+            throws AutomationException {
+        McpToolCatalog tools = catalog.getIfAvailable();
+        if (tools == null) {
+            throw new AutomationException(refusal + ": its steps could not be checked.");
+        }
+        for (PipelineStep step : steps) {
+            Optional<String> refused = tools.refusedOperationAt(step.operation());
+            if (refused.isPresent()) {
+                throw new AutomationException(
+                        refusal
+                                + ": it uses "
+                                + refused.get()
+                                + ", which this server doesn't let chat apps run.");
+            }
+        }
     }
 
     /** The MCP operation behind an endpoint path, if chat apps may use it. */

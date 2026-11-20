@@ -542,11 +542,10 @@ public class ApplicationProperties {
 
         /**
          * Tool deny-list (operation ids). Any operation listed here is removed from MCP even if it
-         * would otherwise be allowed. Applied after {@link #allowedOperations}. Blocks url-to-pdf
-         * by default: the pages it renders can pull sub-resources from internal hosts, and a prompt
-         * hidden in a document could steer the model to it.
+         * would otherwise be allowed. Applied after {@link #allowedOperations}. url-to-pdf is never
+         * offered over MCP, whatever either list says.
          */
-        private List<String> blockedOperations = new ArrayList<>(List.of("url-to-pdf"));
+        private List<String> blockedOperations = new ArrayList<>();
 
         /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
         private long maxRequestBytes = 10L * 1024 * 1024;

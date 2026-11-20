@@ -107,6 +107,37 @@ class McpToolCatalogTest {
     }
 
     @Test
+    void urlToPdfStaysHiddenEvenWhenAnAdminAllowsIt() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setAllowedOperations(List.of("url-to-pdf", "compress-pdf"));
+        props.getMcp().setBlockedOperations(List.of());
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "url-to-pdf", miscOp("url-to-pdf"));
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertTrue(catalog.findByOperationId("url-to-pdf").isEmpty());
+        assertTrue(catalog.findByEndpointPath("/api/v1/misc/url-to-pdf").isEmpty());
+        assertEquals(List.of("compress-pdf"), idsOf(catalog));
+    }
+
+    @Test
+    void refusedOperationAtNamesBlockedStepsOnly() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setBlockedOperations(List.of("ocr-pdf"));
+        McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
+        seed(catalog, "pdfOps", "url-to-pdf", miscOp("url-to-pdf"));
+        seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
+        seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
+
+        assertEquals(
+                "url-to-pdf", catalog.refusedOperationAt("/api/v1/misc/url-to-pdf").orElseThrow());
+        assertEquals("ocr-pdf", catalog.refusedOperationAt("/api/v1/misc/ocr-pdf").orElseThrow());
+        assertTrue(catalog.refusedOperationAt("/api/v1/misc/compress-pdf").isEmpty());
+        assertTrue(catalog.refusedOperationAt("/api/v1/not/an/operation").isEmpty());
+        assertTrue(catalog.refusedOperationAt(null).isEmpty());
+    }
+
+    @Test
     void emptyAllowAndBlockLists_exposeAllEnabledOps() throws Exception {
         McpToolCatalog catalog = catalogWithEndpointsEnabled(new ApplicationProperties());
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));

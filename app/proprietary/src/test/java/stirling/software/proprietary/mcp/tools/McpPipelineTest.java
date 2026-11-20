@@ -497,6 +497,58 @@ class McpPipelineTest {
     }
 
     @Test
+    void aChatCannotStartOrRewireAnAutomationWithABlockedStep() {
+        Policy fetcher = policy("p1", "Snapshot site", step("/api/v1/convert/url/pdf"));
+        when(policies.accessiblePolicyForRun("p1")).thenReturn(Optional.of(fetcher));
+        when(policies.listPolicies()).thenReturn(List.of(fetcher));
+        when(catalog.refusedOperationAt("/api/v1/convert/url/pdf"))
+                .thenReturn(Optional.of("url-to-pdf"));
+
+        McpAutomations.AutomationException run =
+                assertThrows(
+                        McpAutomations.AutomationException.class,
+                        () -> automations.trigger("alice", "p1", List.of()));
+        ObjectNode trigger = mapper.createObjectNode().put("type", "schedule");
+        trigger.putObject("options").putObject("schedule").put("type", "daily").put("at", "09:00");
+        McpAutomations.AutomationException save =
+                assertThrows(
+                        McpAutomations.AutomationException.class,
+                        () ->
+                                automations.save(
+                                        "alice",
+                                        new McpAutomations.Draft(
+                                                "p1", null, null, "inbox", trigger, null, true)));
+
+        assertTrue(run.getMessage().contains("url-to-pdf"), run.getMessage());
+        assertTrue(save.getMessage().contains("url-to-pdf"), save.getMessage());
+        verify(policies, never()).trigger(any());
+        verify(policies, never()).savePolicy(any());
+    }
+
+    @Test
+    void aSplitIntoTooManyPartsSaysSoInsteadOfAGenericFailure() throws Exception {
+        when(catalog.findByOperationId("split-pages"))
+                .thenReturn(
+                        Optional.of(
+                                op(
+                                        "split-pages",
+                                        OperationCategory.PAGES,
+                                        "/api/v1/general/split-pages")));
+        String[] parts = new String[2 * (McpZipParts.MAX_PARTS + 1)];
+        for (int i = 0; i < McpZipParts.MAX_PARTS + 1; i++) {
+            parts[2 * i] = "p" + i + ".pdf";
+            parts[2 * i + 1] = "PART";
+        }
+        when(api.post(eq("/api/v1/general/split-pages"), any())).thenReturn(zip(parts));
+
+        ObjectNode result = run(steps("split-pages", "compress-pdf"));
+
+        assertTrue(result.path("isError").asBoolean(false), result.toString());
+        assertTrue(text(result).contains("more than 20 files"), text(result));
+        verify(api, never()).post(eq("/api/v1/misc/compress-pdf"), any());
+    }
+
+    @Test
     void aTestRunOfASavedAutomationUsesItsStoredPasswordNotTheMaskedOne() throws Exception {
         PipelineStep stored =
                 new PipelineStep(

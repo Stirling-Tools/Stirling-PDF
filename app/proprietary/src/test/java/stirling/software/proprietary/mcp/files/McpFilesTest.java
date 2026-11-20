@@ -96,6 +96,26 @@ class McpFilesTest {
     }
 
     @Test
+    void aMalformedTempFileIdIsUnknownRatherThanAnInternalError() throws Exception {
+        props.getStorage().setEnabled(false);
+        when(tempStore.fileExists("not-a-uuid"))
+                .thenThrow(new IllegalArgumentException("Invalid file ID"));
+
+        McpFiles.McpFileException e =
+                assertThrows(
+                        McpFiles.McpFileException.class, () -> files.load(owner, "not-a-uuid", 10));
+
+        assertTrue(e.getMessage().startsWith("Unknown or expired fileId"), e.getMessage());
+    }
+
+    @Test
+    void bothLinkFormsResolveToTheFileId() {
+        assertEquals("7", McpFiles.idOf("stirling://files/7"));
+        assertEquals("7", McpFiles.idOf(" stirling://file/7 "));
+        assertEquals("7", McpFiles.idOf("7"));
+    }
+
+    @Test
     void inlineLimitRejectsTempFileBeforeOpeningIt() throws Exception {
         props.getStorage().setEnabled(false);
         when(tempStore.fileExists("large")).thenReturn(true);

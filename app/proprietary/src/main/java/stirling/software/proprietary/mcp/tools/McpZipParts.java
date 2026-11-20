@@ -59,6 +59,13 @@ final class McpZipParts {
         return new Unpacked(parts, total, truncated);
     }
 
+    /** A ZIP past {@link #MAX_PARTS} files or the byte cap; the message is shown to the user. */
+    static final class PartsLimit extends IOException {
+        PartsLimit(String message) {
+            super(message);
+        }
+    }
+
     /** A ZIP's files in memory, for the next pipeline step; same limits as {@link #unpack}. */
     static List<McpInputFiles.Input> read(byte[] zip) throws IOException {
         List<McpInputFiles.Input> files = new ArrayList<>();
@@ -70,14 +77,17 @@ final class McpZipParts {
                     continue;
                 }
                 if (files.size() >= MAX_PARTS) {
-                    throw new IOException("it makes more than " + MAX_PARTS + " files");
+                    throw new PartsLimit(
+                            "it makes more than "
+                                    + MAX_PARTS
+                                    + " files, the most a pipeline passes on");
                 }
                 byte[] bytes =
                         in.readNBytes(
                                 (int) Math.min(Integer.MAX_VALUE - 8, MAX_TOTAL_BYTES - read + 1));
                 read += bytes.length;
                 if (read > MAX_TOTAL_BYTES) {
-                    throw new IOException("its files are too large to carry on");
+                    throw new PartsLimit("its files are too large to pass on to the next step");
                 }
                 files.add(new McpInputFiles.Input(bytes, baseName(entry.getName()), null));
             }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -100,10 +101,31 @@ class McpUploadGateFilterTest {
     }
 
     @Test
+    void everyMethodOnAnUnknownLinkIsRejectedWithoutReadingTheBody() throws Exception {
+        for (String method : List.of("PUT", "PATCH", "DELETE", "GET")) {
+            MockHttpServletRequest request =
+                    new MockHttpServletRequest(method, McpUploadLinks.PATH + "A".repeat(43));
+            request.setContentType("multipart/form-data; boundary=x");
+            request.setContent(new byte[1024]);
+            MockHttpServletResponse response = new MockHttpServletResponse();
+
+            assertFalse(passes(request, response), method);
+            assertEquals(404, response.getStatus(), method);
+            assertEquals(1024, request.getInputStream().available(), method);
+        }
+    }
+
+    @Test
+    void anOpenLinksPageStillLoads() throws Exception {
+        String token = links.create("alice").uploadId();
+        assertTrue(
+                passes(
+                        new MockHttpServletRequest("GET", McpUploadLinks.PATH + token),
+                        new MockHttpServletResponse()));
+    }
+
+    @Test
     void otherRequestsAreLeftAlone() throws Exception {
-        MockHttpServletRequest page =
-                new MockHttpServletRequest("GET", McpUploadLinks.PATH + "A".repeat(43));
-        assertTrue(passes(page, new MockHttpServletResponse()));
         assertTrue(
                 passes(
                         new MockHttpServletRequest("POST", "/api/v1/general/merge-pdfs"),

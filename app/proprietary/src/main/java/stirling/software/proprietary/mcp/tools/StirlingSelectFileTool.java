@@ -61,7 +61,7 @@ public class StirlingSelectFileTool implements McpTool {
 
     @Override
     public McpToolAnnotations annotations() {
-        return McpToolAnnotations.READ_ONLY;
+        return McpToolAnnotations.PRODUCES_FILE;
     }
 
     @Override

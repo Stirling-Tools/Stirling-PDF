@@ -329,6 +329,8 @@ public class McpOperationExecutor {
                 out.add(new McpInputFiles.Input(bytes, name, null));
             }
             return null;
+        } catch (McpZipParts.PartsLimit e) {
+            return e.getMessage() + ".";
         } catch (IOException e) {
             log.warn("MCP pipeline step {} could not read its output", meta.id(), e);
             return "could not carry its result on to the next step.";

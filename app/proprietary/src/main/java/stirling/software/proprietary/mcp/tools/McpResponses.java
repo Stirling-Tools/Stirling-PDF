@@ -4,6 +4,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 
+import stirling.software.proprietary.mcp.files.McpFiles;
 import stirling.software.proprietary.mcp.files.McpFiles.Listed;
 import stirling.software.proprietary.mcp.files.McpFiles.Saved;
 import stirling.software.proprietary.mcp.files.McpPreview;
@@ -176,7 +177,7 @@ public final class McpResponses {
                                 textBlock(mapper, text.toString()),
                                 resourceBlock(
                                         mapper,
-                                        "stirling://file/" + file.fileId(),
+                                        McpFiles.RESOURCE_URI_PREFIX + file.fileId(),
                                         file.contentType(),
                                         Base64.getEncoder().encodeToString(file.inline())));
         ObjectNode card = result.putObject("structuredContent");

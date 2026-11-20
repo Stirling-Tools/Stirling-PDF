@@ -41,8 +41,7 @@ public class McpUploadGateFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"POST".equalsIgnoreCase(request.getMethod())
-                || !path(request).startsWith(McpUploadLinks.PATH);
+        return !path(request).startsWith(McpUploadLinks.PATH);
     }
 
     @Override

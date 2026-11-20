@@ -19,7 +19,6 @@ final class McpFileParameters {
 
     private McpFileParameters() {}
 
-    /** The main upload's part name; most endpoints use fileInput, a few a plain @RequestParam. */
     /** False for endpoints that build a file from parameters alone, e.g. url-to-pdf. */
     static boolean takesFile(OperationMeta meta) {
         if (meta.handlerMethod() == null) {
@@ -57,6 +56,7 @@ final class McpFileParameters {
         return false;
     }
 
+    /** The main upload's part name; most endpoints use fileInput, a few a plain @RequestParam. */
     static String inputPart(OperationMeta meta) {
         if (meta.handlerMethod() == null) {
             return DEFAULT_PART;
