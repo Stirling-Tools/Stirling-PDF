@@ -4403,6 +4403,7 @@ pdfUaTitle = "Document title"
 pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
 selectSourceFormatFirst = "Choose a source format first"
 settings = "Settings"
+signInToUse = "Sign in to use"
 single = "Single"
 sourceFormatPlaceholder = "Source format"
 stirlingOfficeConvert = "Use Stirling Office Convert (beta)"
@@ -9677,10 +9678,6 @@ signInToStart = "Sign in to start your trial"
 stage = "Stage {{current}} of {{total}}"
 stagesLabel = "Progress"
 
-[portal.enterprise.connect]
-ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
-unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
-
 [portal.enterprise.landing]
 lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
 tickAgreement = "One agreement covering the MSA, order form, EULA and DPA"
@@ -11299,11 +11296,6 @@ downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
 trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
-
-[portal.procurement.link]
-cta = "Link account"
-description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
-title = "Link your account to begin"
 
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
@@ -14276,7 +14268,6 @@ toggleDetails = "Toggle details"
 
 [tool]
 endpointUnavailable = "This tool is unavailable on your server."
-endpointUnavailableClickable = "Not available in this mode. Click to sign in."
 filesLoading = "Files are still loading, please wait."
 filesLoadingProgress = "{{loaded}} / {{total}} files loading..."
 invalidParams = "Fill in the required settings."
@@ -14284,6 +14275,8 @@ noFiles = "Add a file to get started."
 scopeFiles = "files"
 scopeThisFile = "this file"
 selectFilesHint = "Select files in Active Files to run this tool"
+signInRequired = "This needs a Stirling account. Sign in to continue."
+signInToUse = "Sign in to use"
 singleFileScope = "Only applying to: {{fileName}}"
 viewerMode = "Switch to the file editor to add multiple files."
 
