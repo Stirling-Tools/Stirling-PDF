@@ -3,10 +3,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DocumentInspector } from "@editor/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import type { DocumentLanguageControl } from "@editor/tools/pdfTextEditor/hooks/useDocumentLanguage";
-import type { ImageReview } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
+import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
 
 function renderInspector(
-  imageReview: ImageReview | null,
+  accessibilityReview: AccessibilityReview | null,
   onNext = vi.fn(),
   documentLanguage: DocumentLanguageControl | null = null,
   {
@@ -33,8 +33,8 @@ function renderInspector(
         onSetGroupingMode={vi.fn()}
         onSetWidthMode={vi.fn()}
         onSetShowRulers={vi.fn()}
-        imageReview={imageReview}
-        onSelectNextImageToReview={onNext}
+        accessibilityReview={accessibilityReview}
+        onSelectNextToReview={onNext}
         untaggedPages={untaggedPages}
         onTagUntaggedContent={onTagUntagged}
         markedTagged={markedTagged}

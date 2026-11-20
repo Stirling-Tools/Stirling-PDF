@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Rnd, type RndDragEvent } from "react-rnd";
-import { Tooltip } from "@mantine/core";
-import { useTranslation } from "react-i18next";
-import { Icon } from "@editor/ui/Icon";
+import { AttentionBadge } from "@editor/tools/pdfTextEditor/components/AttentionBadge";
 import type { ImageAttention } from "@editor/tools/pdfTextEditor/util/imageAccessibility";
 import type {
   ImageObjectSnapshot,
@@ -125,7 +123,6 @@ export function ImageHandle({
   onSettle,
   pageRevision = -1,
 }: ImageHandleProps) {
-  const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
   // Shift during a corner drag keeps the proportions, as in Acrobat. Read
@@ -410,37 +407,11 @@ export function ImageHandle({
         </div>
       )}
       {attention && (
-        <Tooltip
-          label={
-            attention === "needs-description"
-              ? t(
-                  "pdfTextEditor.inspector.accessibility.needsDescriptionBadge",
-                  "No description",
-                )
-              : t(
-                  "pdfTextEditor.inspector.accessibility.untaggedBadge",
-                  "Not tagged",
-                )
-          }
-        >
-          <span
-            data-testid={`pdf-editor-attention-image-${image.id}`}
-            data-attention={attention}
-            style={{
-              position: "absolute",
-              top: 4,
-              right: 4,
-              display: "flex",
-              padding: 2,
-              borderRadius: "50%",
-              background: "var(--c-surface)",
-              color: "var(--c-warning)",
-              boxShadow: "0 0 0 1px var(--c-border)",
-            }}
-          >
-            <Icon name="circle-alert" size={14} />
-          </span>
-        </Tooltip>
+        <AttentionBadge
+          attention={attention}
+          testId={`pdf-editor-attention-image-${image.id}`}
+          style={{ top: 4, right: 4 }}
+        />
       )}
     </Rnd>
   );

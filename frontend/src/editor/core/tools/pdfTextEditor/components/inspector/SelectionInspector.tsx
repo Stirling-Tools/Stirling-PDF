@@ -89,16 +89,20 @@ export function SelectionInspector({
             inner={controller.innerTextTags}
             language={controller.textLanguage}
             otherPages={controller.textOtherPages}
+            description={controller.textDescription}
             untaggedLinks={controller.textUntaggedLinks}
+            review={controller.accessibilityReview}
+            onNext={controller.onSelectNextToReview}
           />
         )}
       {ACCESSIBILITY_EDITING && controller.imageAccessibility && (
         <ImageAccessibilitySection
           accessibility={controller.imageAccessibility}
           onSetDescription={controller.onSetImageDescription}
+          onSetType={controller.onSetImageType}
           onSetDecorative={controller.onSetImageDecorative}
-          review={controller.imageReview}
-          onNext={controller.onSelectNextImageToReview}
+          review={controller.accessibilityReview}
+          onNext={controller.onSelectNextToReview}
         />
       )}
       {ACCESSIBILITY_EDITING && controller.formFieldAccessibility && (
