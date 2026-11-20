@@ -26,7 +26,7 @@ function withProviders(Story: () => ReactElement) {
 }
 
 const meta = {
-  title: "Tools/ToolRenderer",
+  title: "Tools/Shared/ToolRenderer",
   component: ToolRenderer,
   decorators: [withProviders],
 } satisfies Meta<typeof ToolRenderer>;

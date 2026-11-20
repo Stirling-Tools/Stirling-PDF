@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SelectSignatureModal } from "@editor/components/tools/certSign/modals/SelectSignatureModal";
 
 const meta = {
-  title: "Tools/CertSign/Modals/SelectSignatureModal",
+  title: "Tools/Sign with Certificate/Parts/Modals/SelectSignatureModal",
   component: SelectSignatureModal,
   parameters: { layout: "fullscreen" },
   args: {

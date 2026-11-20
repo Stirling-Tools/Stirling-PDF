@@ -243,6 +243,14 @@ const preview: Preview = {
   },
   parameters: {
     layout: "padded",
+    options: {
+      // Alphabetical, so each tool's Panel sits above its Parts; parts no one
+      // tool owns go last within Tools. Stories keep their order in the file.
+      storySort: {
+        method: "alphabetical",
+        order: ["*", "Tools", ["*", "Shared"]],
+      },
+    },
     controls: {
       matchers: { color: /(background|color)$/i, date: /Date$/i },
     },
@@ -263,8 +271,10 @@ const preview: Preview = {
         // document — their stamp text, their watermark, in the colour and
         // opacity they chose. WCAG contrast governs the interface, not the
         // content authored through it, and the controls that set those values
-        // are checked normally.
-        exclude: ["[data-user-content-preview]"],
+        // are checked normally. A placed annotation's appearance is that same
+        // content drawn on the page: embedpdf renders it as an <img> it gives
+        // no alt, inside its annotation wrapper.
+        exclude: ["[data-user-content-preview]", "[data-no-interaction] img"],
       },
     },
   },

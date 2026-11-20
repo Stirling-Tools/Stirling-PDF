@@ -53,7 +53,7 @@ export function useConversionCloudStatus(): ConversionStatus {
     }
     return { availability, cloudStatus, localOnly };
   }, [endpointStatus, localProcessingOnly]);
-  const [status, setStatus] = useState<ConversionStatus>({
+  const [status, setLatestStatus] = useState<ConversionStatus>({
     availability: Object.fromEntries(
       Object.entries(EXTENSION_TO_ENDPOINT).flatMap(([from, targets]) =>
         Object.keys(targets).map((to) => [`${from}-${to}`, false]),
@@ -65,7 +65,12 @@ export function useConversionCloudStatus(): ConversionStatus {
 
   useEffect(() => {
     if (localProcessingOnly) return;
+    let latestCheck = 0;
     const checkConversions = async () => {
+      const check = ++latestCheck;
+      const setStatus = (next: ConversionStatus) => {
+        if (check === latestCheck) setLatestStatus(next);
+      };
       const mode = await connectionModeService.getCurrentMode();
 
       // Self-hosted offline path: server is down but local backend is available.
@@ -138,6 +143,14 @@ export function useConversionCloudStatus(): ConversionStatus {
           if (endpointName) pairs.push([fromExt, toExt, endpointName]);
         }
       }
+
+      setStatus({
+        availability: Object.fromEntries(
+          pairs.map(([fromExt, toExt]) => [`${fromExt}-${toExt}`, true]),
+        ),
+        cloudStatus: {},
+        localOnly: {},
+      });
 
       const results = await Promise.all(
         pairs.map(async ([fromExt, toExt, endpointName]) => {
@@ -212,9 +225,15 @@ export function useConversionCloudStatus(): ConversionStatus {
       void checkConversions();
     });
 
+    const unsubMode = connectionModeService.subscribeToModeChanges(() => {
+      void checkConversions();
+    });
+
     return () => {
+      latestCheck = -1;
       unsubLocal();
       unsubServer();
+      unsubMode();
     };
   }, [localProcessingOnly]);
 
