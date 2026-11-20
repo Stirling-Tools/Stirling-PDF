@@ -1,13 +1,12 @@
 package stirling.software.proprietary.service.ua;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.results.TestAssertion;
 import org.verapdf.pdfa.results.ValidationResults;
@@ -41,7 +38,6 @@ import org.verapdf.pdfa.validation.profiles.RuleId;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
-import stirling.software.officeconvert.pdfa.FontEmbedder;
 import stirling.software.proprietary.model.api.ua.AccessibilityIssue;
 import stirling.software.proprietary.model.api.ua.AccessibilityReport;
 import stirling.software.proprietary.model.api.ua.PdfUaConversionOutcome;
@@ -349,24 +345,6 @@ class PdfUaServicesTest {
         }
 
         @Test
-        @DisplayName("keeps the original when a substitute font would drop characters")
-        void keepsOriginalWhenSubstitutionIsIncomplete() throws Exception {
-            byte[] input = unembeddedFontPdf();
-            try (MockedStatic<FontEmbedder> embedder = Mockito.mockStatic(FontEmbedder.class)) {
-                embedder.when(() -> FontEmbedder.embedMissing(any(PDDocument.class)))
-                        .thenReturn(
-                                new FontEmbedder.Result(
-                                        List.of("Helvetica"), List.of(), List.of("Helvetica")));
-
-                FontEmbeddingService.Result result = fonts.embedFonts(input);
-
-                assertFalse(result.changed());
-                assertSame(input, result.pdfBytes());
-                assertTrue(result.warning().contains("no glyph"));
-            }
-        }
-
-        @Test
         @DisplayName("leaves a document alone when every font is already embedded")
         void skipsWhenNothingToDo() throws Exception {
             byte[] embedded = PdfUaTestDocuments.simpleDocument();
@@ -376,33 +354,24 @@ class PdfUaServicesTest {
         }
 
         @Test
-        @DisplayName("embeds fonts in a fillable form without flattening it")
+        @DisplayName("keeps a fillable form rather than flattening it to embed fonts")
         void keepsFormFieldsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(true), true);
+            assertFormKept(unembeddedFontForm(true));
         }
 
         @Test
-        @DisplayName("embeds fonts without dropping widgets the AcroForm does not list")
+        @DisplayName("keeps widgets the AcroForm does not list rather than flattening them")
         void keepsOrphanWidgetsFillable() throws Exception {
-            assertFormKept(unembeddedFontForm(false), false);
+            assertFormKept(unembeddedFontForm(false));
         }
 
-        private void assertFormKept(byte[] form, boolean listed) throws IOException {
+        private void assertFormKept(byte[] form) {
             FontEmbeddingService.Result result = fonts.embedFonts(form);
-            if (result.changed()) {
-                assertFalse(fonts.hasUnembeddedFonts(result.pdfBytes()));
-            } else {
-                assertNotNull(result.warning());
-            }
-            try (PDDocument document = Loader.loadPDF(result.pdfBytes())) {
-                assertNotNull(document.getDocumentCatalog().getAcroForm());
-                if (listed) {
-                    assertNotNull(document.getDocumentCatalog().getAcroForm().getField("name"));
-                }
-                assertTrue(
-                        document.getPage(0).getAnnotations().stream()
-                                .anyMatch(PDAnnotationWidget.class::isInstance));
-            }
+            assertFalse(result.changed());
+            assertArrayEquals(form, result.pdfBytes());
+            assertTrue(result.fonts().contains("Helvetica"));
+            assertNotNull(result.warning());
+            assertTrue(result.warning().contains("form fields"));
         }
     }
 

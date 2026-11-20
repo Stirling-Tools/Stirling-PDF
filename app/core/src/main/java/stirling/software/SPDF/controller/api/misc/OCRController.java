@@ -129,13 +129,16 @@ public class OCRController {
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();
         String ocrType = request.getOcrType();
+        String ocrRenderType = request.getOcrRenderType();
         Boolean removeImagesAfter = request.isRemoveImagesAfter();
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
-        String ocrRenderType = pdfRenderer(request.getOcrRenderType());
+        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
+            throw ExceptionUtils.createOcrInvalidRenderTypeException();
+        }
 
         // Get available Tesseract languages
         List<String> availableLanguages = getAvailableTesseractLanguages();
@@ -365,16 +368,6 @@ public class OCRController {
             throw priorTextFoundException();
         }
         return result;
-    }
-
-    private static String pdfRenderer(String requested) {
-        if ("hocr".equals(requested)) {
-            return "hocr";
-        }
-        if ("sandwich".equals(requested)) {
-            return "sandwich";
-        }
-        throw ExceptionUtils.createOcrInvalidRenderTypeException();
     }
 
     private static int exitCodeOf(IOException e) {

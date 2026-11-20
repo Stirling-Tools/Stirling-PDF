@@ -333,7 +333,7 @@ capture_file_list() {
         -not -path '/config/*' \
         -not -path '/configs/*' \
         -not -path '/logs/*' \
-                -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
+        -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
@@ -361,7 +361,7 @@ capture_file_list() {
             -not -path '/config/*' \
         -not -path '/configs/*' \
             -not -path '/logs/*' \
-                        -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
+            -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
