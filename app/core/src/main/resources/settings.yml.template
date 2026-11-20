@@ -360,6 +360,7 @@ AutomaticallyGenerated:
 
 processExecutor:
   sessionLimit: # Process executor instances limits
+    officeConvertSessionLimit: 0 # Office, HTML, ebook, PDF/A and compress conversions at once; 0 sizes it from memory and CPUs
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
