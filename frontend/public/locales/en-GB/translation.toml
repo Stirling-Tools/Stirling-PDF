@@ -5444,7 +5444,7 @@ title = "You're using Stirling PDF as a guest!"
 [home.addAttachments]
 desc = "Add or remove embedded files (attachments) to/from a PDF"
 tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-title = "Add Attachments"
+title = "Manage Attachments"
 
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"
