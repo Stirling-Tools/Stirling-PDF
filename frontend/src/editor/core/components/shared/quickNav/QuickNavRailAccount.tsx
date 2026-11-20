@@ -3,7 +3,6 @@ import { Tooltip } from "@editor/components/shared/Tooltip";
 import { Avatar } from "@editor/ui/Avatar";
 import type { QuickNavIdentity } from "@editor/contexts/QuickNavHostContext";
 import "@editor/components/shared/quickNav/QuickNavRailAccount.css";
-import { PrivateContent } from "@editor/components/shared/PrivateContent";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
 
 export interface QuickNavRailAccountProps {
@@ -24,15 +23,12 @@ export function QuickNavRailAccount({
   const displayName =
     identity?.displayName ?? t("auth.displayName.user", "User");
   const profilePictureUrl = identity?.profilePictureUrl ?? null;
-  const label = `${displayName} (${t("quickNav.accountSettings", "Account settings")})`;
+  const label = t("settings.title", "Settings");
+  const ariaLabel = `${label}, ${displayName}`;
 
   return (
     <div className="quick-nav-rail-account" data-active={active || undefined}>
-      <Tooltip
-        content={<PrivateContent>{label}</PrivateContent>}
-        position="right"
-        arrow
-      >
+      <Tooltip content={label} position="right" arrow>
         {/* A span, not the Avatar: Tooltip binds by cloning its child. */}
         <span
           className="quick-nav-rail-avatar-target"
@@ -44,7 +40,7 @@ export function QuickNavRailAccount({
             name={displayName}
             size="sm"
             onClick={onOpen}
-            ariaLabel={label}
+            ariaLabel={ariaLabel}
             ariaCurrent={active ? "page" : undefined}
             className={`quick-nav-rail-avatar ${privateContentClassName}`}
           />

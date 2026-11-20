@@ -743,7 +743,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         component: lazy(() => import("@editor/tools/CreatePortfolio")),
         description: t(
           "home.createPortfolio.desc",
-          "Bundle multiple files into an Adobe PDF Portfolio",
+          "Bundle multiple files into a PDF Portfolio",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,

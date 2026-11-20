@@ -5671,7 +5671,7 @@ readOnlyHelp = "Shows a value but stops anyone editing it."
 removeOption = "Remove option"
 required = "Required"
 requiredHelp = "The form cannot be submitted until this field is filled in."
-signatureNote = "Placeholder only. You don't sign here; it marks where a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature when the document is signed."
+signatureNote = "Placeholder only. You don't sign here. It marks where the signature goes when the document is signed later in a signing app or service."
 tooltip = "Tooltip"
 tooltipHelp = "The hint shown when someone hovers the field in a PDF reader."
 type = "Type"
@@ -6003,7 +6003,7 @@ tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to P
 title = "Convert"
 
 [home.createPortfolio]
-desc = "Bundle multiple files into an Adobe PDF Portfolio"
+desc = "Bundle multiple files into a PDF Portfolio"
 tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
 title = "Create Portfolio"
 
@@ -11984,7 +11984,6 @@ config = "Config"
 files = "Files"
 
 [quickNav]
-accountSettings = "Account settings"
 docs = "Documentation"
 editor = "Editor"
 home = "Stirling"
