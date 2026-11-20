@@ -199,6 +199,21 @@ describe("a real disk change", () => {
     expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(true);
   });
 
+  test("keeps the open bytes when an edit lands mid-comparison", async () => {
+    disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");
+    const h = harness(stub(), DISK_BYTES);
+    const realSlice = h.openFile.slice.bind(h.openFile);
+    vi.spyOn(h.openFile, "slice").mockImplementation((...args) => {
+      unsaved.value = true;
+      return realSlice(...args);
+    });
+
+    await h.run();
+
+    expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
+    expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(false);
+  });
+
   test("still raises a conflict when the size is unchanged", async () => {
     unsaved.value = true;
     disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");
