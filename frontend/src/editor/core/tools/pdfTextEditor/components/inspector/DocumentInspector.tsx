@@ -25,7 +25,6 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 import type { AccessibilityReview } from "@editor/tools/pdfTextEditor/util/accessibilityReview";
-import { NextToReviewButton } from "@editor/tools/pdfTextEditor/components/inspector/NextToReviewButton";
 import type { HeadingOutline } from "@editor/tools/pdfTextEditor/util/headingOutline";
 import { HeadingOutlineSection } from "@editor/tools/pdfTextEditor/components/inspector/HeadingOutlineSection";
 
@@ -39,7 +38,6 @@ interface Props {
   onSetShowRulers: (show: boolean) => void;
   /** Images and text needing attention; null when there is nothing to review. */
   accessibilityReview: AccessibilityReview | null;
-  onSelectNextToReview: () => void;
   /** Read pages with content left untagged. */
   untaggedPages: number;
   onTagUntaggedContent: () => void;
@@ -53,13 +51,14 @@ interface Props {
   onSelectHeading: (index: number) => void;
   /** Null when the language cannot be edited here. */
   documentLanguage: DocumentLanguageControl | null;
+  /** The accessibility review's view: language, tagging and headings in place of fonts and view settings. */
+  reviewing?: boolean;
 }
 
 /** Facts about the open document. Nothing here acts on a selection. */
 export function DocumentInspector({
   pages,
   accessibilityReview,
-  onSelectNextToReview,
   untaggedPages,
   onTagUntaggedContent,
   markedTagged,
@@ -68,6 +67,7 @@ export function DocumentInspector({
   headingOutline,
   onSelectHeading,
   documentLanguage,
+  reviewing = false,
   ...settings
 }: Props) {
   const { t } = useTranslation();
@@ -93,29 +93,38 @@ export function DocumentInspector({
             value={images}
           />
         </Stack>
-        {documentLanguage && (
-          <DocumentLanguageField control={documentLanguage} />
-        )}
       </Section>
-      {accessibilityReview && (
-        <AccessibilitySection
-          review={accessibilityReview}
-          onNext={onSelectNextToReview}
-          untaggedPages={untaggedPages}
-          onTagUntagged={onTagUntaggedContent}
-          markedTagged={markedTagged}
-          onSetMarkedTagged={onSetMarkedTagged}
-          hasTags={hasTags}
-        />
+      {reviewing && (
+        <>
+          {documentLanguage && (
+            <Section>
+              <DocumentLanguageField control={documentLanguage} />
+            </Section>
+          )}
+          {accessibilityReview && (
+            <AccessibilitySection
+              review={accessibilityReview}
+              untaggedPages={untaggedPages}
+              onTagUntagged={onTagUntaggedContent}
+              markedTagged={markedTagged}
+              onSetMarkedTagged={onSetMarkedTagged}
+              hasTags={hasTags}
+            />
+          )}
+          {headingOutline && (
+            <HeadingOutlineSection
+              outline={headingOutline}
+              onSelect={onSelectHeading}
+            />
+          )}
+        </>
       )}
-      {headingOutline && (
-        <HeadingOutlineSection
-          outline={headingOutline}
-          onSelect={onSelectHeading}
-        />
+      {!reviewing && (
+        <>
+          <FontsSection pages={pages} />
+          <DocumentSettings {...settings} />
+        </>
       )}
-      <FontsSection pages={pages} />
-      <DocumentSettings {...settings} />
     </Stack>
   );
 }
@@ -133,7 +142,7 @@ function DocumentLanguageField({
   const { t } = useTranslation();
   const label = t("pdfTextEditor.inspector.language.documentLabel", "Language");
   return (
-    <Stack gap={4} mt="sm">
+    <Stack gap={4} mt="sm" data-fix-target="documentLanguage">
       <Field label={label} hint={documentLanguageHint(t, control)}>
         <LanguagePicker
           own={control.language}
@@ -181,7 +190,6 @@ function documentLanguageHint(
 
 function AccessibilitySection({
   review,
-  onNext,
   untaggedPages,
   onTagUntagged,
   markedTagged,
@@ -189,7 +197,6 @@ function AccessibilitySection({
   hasTags,
 }: {
   review: AccessibilityReview;
-  onNext: () => void;
   untaggedPages: number;
   onTagUntagged: () => void;
   markedTagged: boolean | null;
@@ -197,7 +204,6 @@ function AccessibilitySection({
   hasTags: boolean;
 }) {
   const { t } = useTranslation();
-  const pending = review.needsDescription + review.untagged;
   return (
     <Section testId="pdf-editor-document-accessibility">
       <SectionLabel info={<DocumentAccessibilityInfo />}>
@@ -238,12 +244,6 @@ function AccessibilitySection({
           untaggedPages={untaggedPages}
           hasTags={hasTags}
         />
-        {pending > 0 && (
-          <NextToReviewButton
-            onClick={onNext}
-            testId="pdf-editor-document-accessibility-next"
-          />
-        )}
       </Stack>
     </Section>
   );
@@ -300,7 +300,7 @@ function MarkedTaggedCheckbox({
   const { t } = useTranslation();
   if (marked === null) return null;
   return (
-    <Stack gap={4}>
+    <Stack gap={4} data-fix-target="markedTagged">
       <Checkbox
         checked={marked}
         onChange={(event) => onChange(event.currentTarget.checked)}

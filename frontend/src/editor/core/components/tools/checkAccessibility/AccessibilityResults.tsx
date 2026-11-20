@@ -13,8 +13,19 @@ import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibi
 import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
 import { resultLabel } from "@editor/utils/accessibilityReportContent";
 import type { FileId } from "@editor/types/file";
+import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
+import {
+  AccessibilityFixContext,
+  FixInDocumentButton,
+  TagEverythingButton,
+  type AccessibilityFixFn,
+} from "@editor/components/tools/checkAccessibility/AccessibilityFix";
+import { useViewer } from "@editor/contexts/ViewerContext";
+import { useNavigationActions } from "@editor/contexts/NavigationContext";
+import { reviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
+import { useReviewAvailable } from "@editor/tools/pdfTextEditor/hooks/useEditOrReview";
 
 const NO_TICKS: ReadonlySet<number> = new Set();
 
@@ -32,6 +43,9 @@ export function AccessibilityResults({
 }: AccessibilityResultsProps) {
   const { t } = useTranslation();
   const { results, isLoading, status } = operation;
+  const { setActiveFileId } = useViewer();
+  const { actions: navigationActions } = useNavigationActions();
+  const reviewAvailable = useReviewAvailable();
 
   const options = useMemo(
     () =>
@@ -91,6 +105,35 @@ export function AccessibilityResults({
     ) : null;
   }
 
+  const openInReview = (
+    target: AccessibilityFixTarget,
+    page?: number,
+    autoTag = false,
+  ) => {
+    reviewMode.set({
+      reviewing: true,
+      startAt: {
+        fileId: selected.fileId,
+        pageIndex: (page ?? 1) - 1,
+        target,
+        autoTag,
+      },
+    });
+    setActiveFileId(selected.fileId);
+    navigationActions.setWorkbench("viewer");
+  };
+  const fixInDocument: AccessibilityFixFn = (target, page) =>
+    openInReview(target, page);
+  const passing =
+    !!selected.report &&
+    assessAccessibilityReport(selected.report).result === "pass";
+  // A file the check could not read can still be tagged: the review reads it itself.
+  const tagEverything = reviewAvailable && !passing && (
+    <TagEverythingButton
+      onTag={() => openInReview("untagged", undefined, true)}
+    />
+  );
+
   return (
     <div className="a11y-results" data-testid="a11y-results">
       {(results.length > 1 || isLoading) && (
@@ -116,22 +159,28 @@ export function AccessibilityResults({
       )}
 
       {selected.report ? (
-        <AccessibilityReportView
-          key={selected.fileId}
-          report={selected.report}
-          manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
-          onToggleManual={(index) => toggleManual(selected.fileId, index)}
-          onSetAllManual={(done) =>
-            setManualTicks((current) => ({
-              ...current,
-              [selected.fileId]: new Set(
-                done
-                  ? selected.report?.humanChecks.map((_, index) => index)
-                  : [],
-              ),
-            }))
-          }
-        />
+        <AccessibilityFixContext.Provider
+          value={reviewAvailable ? fixInDocument : null}
+        >
+          <FixInDocumentButton passing={passing} />
+          {tagEverything}
+          <AccessibilityReportView
+            key={selected.fileId}
+            report={selected.report}
+            manualTicked={manualTicks[selected.fileId] ?? NO_TICKS}
+            onToggleManual={(index) => toggleManual(selected.fileId, index)}
+            onSetAllManual={(done) =>
+              setManualTicks((current) => ({
+                ...current,
+                [selected.fileId]: new Set(
+                  done
+                    ? selected.report?.humanChecks.map((_, index) => index)
+                    : [],
+                ),
+              }))
+            }
+          />
+        </AccessibilityFixContext.Provider>
       ) : (
         <Banner
           tone="danger"
@@ -142,6 +191,7 @@ export function AccessibilityResults({
           description={selected.error}
         />
       )}
+      {!selected.report && tagEverything}
 
       {!isLoading && selected.report && (
         <ToolPanelFooter>

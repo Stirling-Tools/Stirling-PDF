@@ -14,9 +14,12 @@ import {
   useSelectedFontNote,
   type ScanNote,
 } from "@editor/tools/pdfTextEditor/hooks/useSelectedFontNote";
-import { readAllPagesInBackground } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { SetMarkedTaggedCommand } from "@editor/tools/pdfTextEditor/commands/SetMarkedTaggedCommand";
 import { ACCESSIBILITY_EDITING } from "@editor/constants/featureFlags";
+import {
+  reviewMode,
+  useReviewMode,
+} from "@editor/tools/pdfTextEditor/store/reviewMode";
 import {
   ScanHint,
   type ScanHintProps,
@@ -40,7 +43,7 @@ import type {
   WidthMode,
 } from "@editor/tools/pdfTextEditor/types";
 
-interface SidebarProps extends Omit<ScanHintProps, "pages"> {
+export interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
   state: EditorViewState;
   selection: SelectionState;
@@ -91,6 +94,14 @@ export const EditorSidebar = memo(function EditorSidebar({
     if (hasSelection) setTab("selected");
   }, [hasSelection]);
 
+  // After the effect above, so a fix asking for Document wins over a selection made on mount.
+  const { inspectorTab, reviewing } = useReviewMode();
+  useEffect(() => {
+    if (!inspectorTab) return;
+    setTab(inspectorTab);
+    reviewMode.set({ inspectorTab: null });
+  }, [inspectorTab]);
+
   const fontNote = useSelectedFontNote(
     state,
     selection,
@@ -103,27 +114,36 @@ export const EditorSidebar = memo(function EditorSidebar({
     () => ACCESSIBILITY_EDITING && !!editorDocument?.treatAsTagged(),
     [editorDocument],
   );
-  const imageSelected = controller.imageAccessibility !== null;
-  const artifactTextSelected = controller.textTag?.kind === "artifact";
-  // Counts and Next cover only pages already read, which is just the first few
-  // until the rest scroll into view; so do an artifact's matches on other pages.
-  useEffect(() => {
-    const reviewing =
-      reviewingAccessibility && (tab === "document" || imageSelected);
-    if (!reviewing && !(ACCESSIBILITY_EDITING && artifactTextSelected)) return;
-    return readAllPagesInBackground(store);
-  }, [reviewingAccessibility, tab, imageSelected, artifactTextSelected, store]);
-  // Following the selection only catches one appearing, so moving from one
-  // selected image to the next would leave the new one's description hidden.
-  const selectNextToReview = () => {
-    if (controller.onSelectNextToReview()) setTab("selected");
-  };
 
   if (!state.hasDocument) {
     return (
       <Box p="md" style={{ flex: 1, overflow: "auto" }}>
         <EmptySidebar progress={state.progress} loading={state.loading} />
       </Box>
+    );
+  }
+
+  const documentTab = (
+    <DocumentTab
+      store={store}
+      state={state}
+      reviewingAccessibility={reviewingAccessibility}
+      accessibilityReview={
+        reviewingAccessibility ? controller.accessibilityReview : null
+      }
+      onSetGroupingMode={onSetGroupingMode}
+      onSetWidthMode={onSetWidthMode}
+      onSetShowRulers={onSetShowRulers}
+      reviewing={reviewing}
+    />
+  );
+
+  // The review card handles the selection, so Properties keeps to the document.
+  if (reviewing) {
+    return (
+      <LanguagesInUse.Provider value={state.languagesInUse}>
+        {documentTab}
+      </LanguagesInUse.Provider>
     );
   }
 
@@ -184,20 +204,7 @@ export const EditorSidebar = memo(function EditorSidebar({
             )}
           </Tabs.Panel>
           <Tabs.Panel value="document">
-            {tab === "document" && (
-              <DocumentTab
-                store={store}
-                state={state}
-                reviewingAccessibility={reviewingAccessibility}
-                accessibilityReview={
-                  reviewingAccessibility ? controller.accessibilityReview : null
-                }
-                onSelectNextToReview={selectNextToReview}
-                onSetGroupingMode={onSetGroupingMode}
-                onSetWidthMode={onSetWidthMode}
-                onSetShowRulers={onSetShowRulers}
-              />
-            )}
+            {tab === "document" && documentTab}
           </Tabs.Panel>
         </Box>
       </LanguagesInUse.Provider>
@@ -211,21 +218,22 @@ function DocumentTab({
   state,
   reviewingAccessibility,
   accessibilityReview,
-  onSelectNextToReview,
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
+  reviewing,
 }: Pick<
   SidebarProps,
   "store" | "state" | "onSetGroupingMode" | "onSetWidthMode" | "onSetShowRulers"
 > & {
   reviewingAccessibility: boolean;
   accessibilityReview: AccessibilityReview | null;
-  onSelectNextToReview: () => void;
+  reviewing: boolean;
 }) {
   const documentLanguage = useDocumentLanguage(store, state);
-  const headings = useHeadingOutline(store, state, reviewingAccessibility);
-  const bulkTagging = useBulkTagging(store, state, reviewingAccessibility);
+  const shown = reviewing && reviewingAccessibility;
+  const headings = useHeadingOutline(store, state, shown);
+  const bulkTagging = useBulkTagging(store, state, shown);
   const setMarkedTagged = useCallback(
     (marked: boolean) => store.dispatch(new SetMarkedTaggedCommand(marked)),
     [store],
@@ -241,7 +249,6 @@ function DocumentTab({
       onSetWidthMode={onSetWidthMode}
       onSetShowRulers={onSetShowRulers}
       accessibilityReview={accessibilityReview}
-      onSelectNextToReview={onSelectNextToReview}
       untaggedPages={bulkTagging.untaggedPages}
       onTagUntaggedContent={bulkTagging.tagAll}
       markedTagged={
@@ -254,6 +261,7 @@ function DocumentTab({
       headingOutline={headings.outline}
       onSelectHeading={headings.selectHeading}
       documentLanguage={documentLanguage}
+      reviewing={reviewing}
     />
   );
 }

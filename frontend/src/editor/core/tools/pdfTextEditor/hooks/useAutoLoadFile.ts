@@ -3,6 +3,7 @@ import { useAllFiles, useFileSelection } from "@editor/contexts/FileContext";
 import type { FileId } from "@editor/types/file";
 import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 
 type Loader = (file: File) => unknown;
 // The workbench fileId is what lets save write the edit back to the
@@ -63,6 +64,7 @@ export function useAutoLoadFile(
   const { selectedFiles } = useFileSelection();
   const { files: allFiles } = useAllFiles();
   const { activeFileId, setActiveFileId } = useViewer();
+  const { reviewing } = useReviewMode();
 
   const activeFile = useMemo(
     () =>
@@ -101,7 +103,7 @@ export function useAutoLoadFile(
 
   useEffect(() => {
     if (!target || hold) return;
-    if (navigationState.selectedTool !== "pdfTextEditor") return;
+    if (navigationState.selectedTool !== "pdfTextEditor" && !reviewing) return;
     const key = fileKey(target);
     if (cancelledKeyRef.current === key) return;
     cancelledKeyRef.current = null;
@@ -137,6 +139,7 @@ export function useAutoLoadFile(
     target,
     hold,
     navigationState.selectedTool,
+    reviewing,
     editor.loading,
     editor.passwordPrompt,
     editor.hasDocument,

@@ -1920,7 +1920,8 @@ const EmbedPdfViewerContent = ({
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
     (isLayerSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0) +
+    (pageTool?.rightInsetRem ?? 0);
 
   return (
     <Box
@@ -2088,6 +2089,7 @@ const EmbedPdfViewerContent = ({
             <FormSaveBar
               file={currentFile ?? null}
               isFormFillToolActive={isFormFillToolActive}
+              hidden={!!pageTool?.hidesFormNotice}
               onApply={handleFormApply}
               policyEnforcing={policyEnforcing}
             />
