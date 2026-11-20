@@ -1,4 +1,4 @@
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, useState, type ReactNode } from "react";
 import { Menu } from "@mantine/core";
 import { Button } from "@editor/ui/Button";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -53,6 +53,18 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
   ) {
     const isMobile = useIsMobile();
     const compact = isMobile || iconOnly;
+    // A narrow row hides the words in CSS; only then does the tooltip name it.
+    const labelRef = useRef<HTMLSpanElement>(null);
+    const [labelHidden, setLabelHidden] = useState(false);
+    useEffect(() => {
+      const el = labelRef.current;
+      if (compact || !el) return undefined;
+      const check = () => setLabelHidden(el.offsetWidth === 0);
+      check();
+      const observer = new ResizeObserver(check);
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, [compact]);
     const button = compact ? (
       <ActionIcon
         ref={ref}
@@ -83,15 +95,17 @@ export const BarButton = forwardRef<HTMLButtonElement, BarButtonProps>(
         data-testid={testId}
         {...rest}
       >
-        <span className="viewer-bar-button__label">{label}</span>
+        <span ref={labelRef} className="viewer-bar-button__label">
+          {label}
+        </span>
       </Button>
     );
-    // Also on a labelled button: a narrow row drops the words (see the CSS).
     const tip = hint ?? label;
+    const tipShown = compact || labelHidden || hint != null;
     return (
       <Tooltip
         content={tip}
-        disabled={tooltipDisabled}
+        disabled={tooltipDisabled || !tipShown}
         position={tooltipPosition}
         offset={12}
         arrow
