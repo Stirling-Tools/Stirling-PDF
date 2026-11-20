@@ -26,6 +26,9 @@ export type DiskSyncOutcome =
   /** Disk moved on, but we hold unsaved in-app edits, so we keep ours. */
   | { status: "conflict" }
   | { status: "too-large"; size: number }
+  /** Only the metadata moved: disk still holds the bytes we last read, so the
+   *  baseline wants re-stamping and nothing else. */
+  | { status: "touched"; state: PresentDiskFileState }
   /** Disk moved on and we had nothing unsaved, so these are the live bytes. */
   | { status: "updated"; file: File; state: PresentDiskFileState };
 
@@ -141,10 +144,14 @@ export function __resetSelfWrites(): void {
 
 /** @param hasUnsavedWork in-app edits not yet committed to a version. The stub's
  *  own isDirty only says a tool produced one, so an open page editor, annotation
- *  or redaction session is invisible to it and disk would silently win. */
+ *  or redaction session is invisible to it and disk would silently win.
+ *  @param lastReadCopy the bytes disk held at the last baseline, when still at
+ *  hand. With it, a change that only moved the timestamp is told apart from a
+ *  real edit; without it every change is treated as real. */
 export async function syncLinkedFileFromDisk(
   stub: StirlingFileStub,
   hasUnsavedWork = false,
+  lastReadCopy?: () => Promise<Blob | null>,
 ): Promise<DiskSyncOutcome> {
   if (!desktopFileLinkingSupported || !stub.localFilePath) {
     return { status: "not-linked" };
@@ -171,9 +178,16 @@ export async function syncLinkedFileFromDisk(
   // child's write, so "changed" here means the child was saved - and reloading
   // would overwrite that version for good.
   if (stub.isLeaf === false) return { status: "superseded" };
-  if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
+  const keepOurs = stub.isDirty || hasUnsavedWork;
+  // Sync clients, indexers and DMS check-outs rewrite the timestamp without
+  // touching the content, so a same-size change is only real once the bytes
+  // say so.
+  const mayBeTouch = lastReadCopy != null && state.size === stub.diskSyncedSize;
+  if (keepOurs && !mayBeTouch) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
-    return { status: "too-large", size: state.size };
+    return keepOurs
+      ? { status: "conflict" }
+      : { status: "too-large", size: state.size };
   }
 
   const bytes = await readFileFromDisk(stub.localFilePath);
@@ -196,6 +210,13 @@ export async function syncLinkedFileFromDisk(
     type: stub.type || "application/pdf",
     lastModified: state.modifiedMs || Date.now(),
   });
+  if (mayBeTouch) {
+    const held = await lastReadCopy();
+    if (held && (await sameBytes(held, file))) {
+      return { status: "touched", state };
+    }
+  }
+  if (keepOurs) return { status: "conflict" };
   return { status: "updated", file, state };
 }
 

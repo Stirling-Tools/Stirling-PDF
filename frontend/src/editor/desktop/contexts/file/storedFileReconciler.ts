@@ -16,8 +16,8 @@ import {
   notifyDiskTooLarge,
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
-  sameBytes,
 } from "@editor/services/diskFileSync";
+import { fileStorage } from "@editor/services/fileStorage";
 import {
   getDiskFileState,
   type PresentDiskFileState,
@@ -34,6 +34,35 @@ export type { OpenDecision, ReconcilePort };
 
 // Desktop side of the reconcile seam: here a stored record is a cache of a file
 // on disk, so every read re-checks disk and the workbench is told what changed.
+
+const MAX_VERSION_HOPS = 50;
+
+/** The bytes disk held at this record's baseline: those of the newest version
+ *  on the same path that no in-app edit has changed. A tool output is dirty, so
+ *  the walk skips it to the version it was derived from. */
+function lastReadCopy(
+  stub: StirlingFileStub,
+  port: ReconcilePort,
+): () => Promise<Blob | null> {
+  return async () => {
+    let version: StirlingFileStub | null | undefined = stub;
+    for (let hop = 0; version && hop < MAX_VERSION_HOPS; hop++) {
+      if (version.localFilePath !== stub.localFilePath) return null;
+      if (!version.isDirty) {
+        return (
+          port.getFile(version.id) ??
+          (await fileStorage.getStirlingFile(version.id))
+        );
+      }
+      const parentId: FileId | undefined = version.parentFileId;
+      version = parentId
+        ? (port.getStub(parentId) ??
+          (await fileStorage.getStirlingFileStub(parentId)))
+        : null;
+    }
+    return null;
+  };
+}
 
 /** Take the disk version of a conflicted file, discarding the unsaved in-app
  *  edits shadowing it. Only reachable from the conflict modal's action. */
@@ -134,7 +163,21 @@ export async function reconcileBeforeOpen(
   port: ReconcilePort,
 ): Promise<OpenDecision> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
+  const outcome = await syncLinkedFileFromDisk(
+    stub,
+    hasUnsavedWork(),
+    lastReadCopy(stub, port),
+  );
+
+  if (outcome.status === "touched") {
+    const baseline = diskBaseline(outcome.state);
+    void fileStorage
+      .updateFileMetadata(fileId, baseline)
+      .catch((error) =>
+        console.error(`[Reconcile] Failed to re-baseline ${fileId}:`, error),
+      );
+    return { updates: { ...baseline, diskUnavailableReason: undefined } };
+  }
 
   if (outcome.status === "missing") {
     // Only an unedited v1 passthrough holds nothing the disk file did not;
@@ -215,7 +258,11 @@ async function resyncRecord(
   port: ReconcilePort,
 ): Promise<StirlingFileStub | null> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
+  const outcome = await syncLinkedFileFromDisk(
+    stub,
+    hasUnsavedWork(),
+    lastReadCopy(stub, port),
+  );
 
   if (outcome.status === "missing") {
     // Never delete what is on screen: cutting the link leaves the document
@@ -236,6 +283,11 @@ async function resyncRecord(
   // Nothing to reconcile: the change on disk is the child that superseded this
   // version, and its bytes are not ours to replace.
   if (outcome.status === "superseded") return null;
+
+  if (outcome.status === "touched") {
+    port.updateStub(fileId, diskBaseline(outcome.state));
+    return null;
+  }
 
   if (outcome.status === "too-large") {
     notifyDiskTooLarge(stub.name, () => void useDiskVersion(stub, port));
@@ -268,14 +320,6 @@ async function resyncRecord(
       return null;
     }
     const { file, state } = outcome;
-    // Sync clients, indexers and DMS check-outs rewrite the timestamp without
-    // touching the content. Reopening identical bytes resets the viewer and
-    // drops any work it does not count as unsaved.
-    const current = port.getFile(fileId);
-    if (current && (await sameBytes(current, file))) {
-      port.updateStub(fileId, diskBaseline(state));
-      return null;
-    }
     const reloadedAt = Date.now();
     port.putFile(fileId, file);
     await persistDiskUpdate(fileId, file, state, reloadedAt);
