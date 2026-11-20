@@ -283,7 +283,6 @@ AutomaticallyGenerated:
 
 processExecutor:
   sessionLimit: # Process executor instances limits
-    officeConvertSessionLimit: 0
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
