@@ -4495,6 +4495,69 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[createPdf]
+blank = "Blank page"
+blankDesc = "Start writing on an empty page"
+button = "Create PDF"
+convertFailed = "This file couldn't be converted to PDF."
+convertFailedTitle = "Couldn't convert {{name}}"
+converting = "Converting…"
+creating = "Creating…"
+failed = "Couldn't create the PDF"
+orientation = "Orientation"
+pageSize = "Page size"
+source = "From another file"
+sourceDesc = "Convert Word, Excel, images and more"
+sourceFilter = "Documents and images"
+template = "From a template"
+templateDesc = "Letters, invoices, forms, résumés and more"
+
+[createPdf.orientations]
+landscape = "Landscape"
+portrait = "Portrait"
+
+[createPdf.pageSizes]
+A4 = "A4"
+A5 = "A5"
+LEGAL = "Legal"
+LETTER = "Letter"
+
+[createPdf.templates]
+all = "All templates"
+categoriesLabel = "Categories"
+noMatch = "No templates match your search."
+search = "Search templates"
+subtitle = "Pick a layout, then change any text in the editor."
+title = "Start from a template"
+
+[createPdf.templates.categories]
+business = "Business"
+design = "Design"
+documents = "Documents"
+forms = "Forms"
+paper = "Paper"
+planning = "Planning"
+
+[createPdf.templates.names]
+agreement = "Agreement"
+blank = "Blank page"
+calendar = "Month calendar"
+certificate = "Certificate"
+checklist = "Checklist"
+dots = "Dot grid"
+flyer = "Flyer"
+form = "Form"
+invoice = "Invoice"
+letter = "Letter"
+lined = "Lined paper"
+meetingNotes = "Meeting notes"
+memo = "Memo"
+newsletter = "Newsletter"
+report = "Report"
+resume = "Résumé"
+table = "Sign-in sheet"
+weekly = "Weekly planner"
+
 [createPortfolio]
 coverTitle = "Cover page title"
 coverTitlePlaceholder = "PDF Portfolio"

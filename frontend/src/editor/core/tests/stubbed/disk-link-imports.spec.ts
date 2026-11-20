@@ -133,6 +133,7 @@ test("the Files page upload uses the native picker", async ({ page }) => {
 
 test("the sidebar add button uses the native picker", async ({ page }) => {
   await page.getByTestId("pdf-library-add-files").click();
+  await page.getByTestId("pdf-library-add-from-computer").click();
   await expectLinked(page);
 });
 

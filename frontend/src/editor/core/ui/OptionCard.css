@@ -48,7 +48,7 @@
 
 /* Pin whatever ends the card (the CTA or a note) to the foot, so footers line up across cards
    without flex-growing the clamped blurb above. */
-.sui-option-card > :last-child {
+.sui-option-card > .sui-option-card__foot {
   margin-top: auto;
 }
 

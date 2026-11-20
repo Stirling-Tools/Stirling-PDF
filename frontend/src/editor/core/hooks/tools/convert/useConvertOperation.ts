@@ -278,6 +278,7 @@ const rethrowWithServerReason = async (error: unknown): Promise<never> => {
 export const convertProcessor = async (
   rawParameters: ConvertParameters,
   selectedFiles: File[],
+  requestOptions: { suppressErrorToast?: boolean } = {},
 ): Promise<CustomProcessorResult> => {
   const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
@@ -293,6 +294,7 @@ export const convertProcessor = async (
   }
   // PDF to text and to RTF share a URL, so desktop routing needs the key itself.
   let requestConfig = {
+    ...requestOptions,
     responseType: "blob" as const,
     endpointName: getEndpointName(parameters.fromExtension, actualToExtension),
   };

@@ -170,6 +170,7 @@ import Layers from "lucide-static/icons/layers.svg?react";
 import LayersMinus from "lucide-static/icons/layers-minus.svg?react";
 import LayoutDashboard from "lucide-static/icons/layout-dashboard.svg?react";
 import LayoutGrid from "lucide-static/icons/layout-grid.svg?react";
+import LayoutTemplate from "lucide-static/icons/layout-template.svg?react";
 import Leaf from "lucide-static/icons/leaf.svg?react";
 import Library from "lucide-static/icons/library.svg?react";
 import Lightbulb from "lucide-static/icons/lightbulb.svg?react";
@@ -604,6 +605,7 @@ export const ICONS = {
   "layers-minus": { Component: LayersMinus, kind: "lucide" },
   "layout-dashboard": { Component: LayoutDashboard, kind: "lucide" },
   "layout-grid": { Component: LayoutGrid, kind: "lucide" },
+  "layout-template": { Component: LayoutTemplate, kind: "lucide" },
   leaf: { Component: Leaf, kind: "lucide" },
   library: { Component: Library, kind: "lucide" },
   lightbulb: { Component: Lightbulb, kind: "lucide" },
