@@ -3,13 +3,12 @@ import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import type { RGBA } from "@editor/tools/pdfTextEditor/types";
 import { FontRef } from "@editor/tools/pdfTextEditor/model/FontRef";
 import { parseTrueTypeCmap } from "@editor/tools/pdfTextEditor/charcode/CmapResolver";
-import { visibleCodePoints } from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
+import {
+  drawnTooNarrow,
+  visibleCodePoints,
+} from "@editor/tools/pdfTextEditor/util/deviceFontEmbed";
 import { writeUtf16 } from "@editor/services/pdfiumService";
 import { BASE_PATH } from "@editor/constants/app";
-import {
-  SCRATCH,
-  scratchPtr,
-} from "@editor/tools/pdfTextEditor/util/wasmScratch";
 
 /** Client-side Unicode fallback font. */
 // BASE_PATH-prefixed: a bare "/fonts/..." 404s on subpath deployments
@@ -33,6 +32,11 @@ function fallbackFontCovers(text: string): boolean {
   const coverage = fallbackCoverage;
   if (!coverage) return true;
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
+}
+
+/** True when the fallback font has loaded and has a glyph for every visible character of `text`. */
+export function fallbackFontDraws(text: string): boolean {
+  return isFallbackFontReady() && fallbackFontCovers(text);
 }
 
 interface ExtendedPdfiumRuntime {
@@ -136,13 +140,6 @@ export function loadFallbackFontInto(doc: EditorDocument): number {
   }
 }
 
-/** Right edge (PDF points) of an object's visible bbox, or 0 if unmeasurable. */
-function measureRightEdge(m: EditorDocument["module"], ptr: number): number {
-  const buf = scratchPtr(m, SCRATCH.fallbackL, 16);
-  if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) return 0;
-  return m.pdfium.getValue(buf + 8, "float");
-}
-
 interface CreateTextObjModule {
   FPDFPageObj_CreateTextObj?: (
     doc: number,
@@ -180,9 +177,7 @@ export function emitFallbackTextObject(
   m.FPDFPageObj_SetFillColor(fp, fill.r, fill.g, fill.b, fill.a);
   m.FPDFPageObj_Transform(fp, 1, 0, 0, 1, x, y);
   m.FPDFPage_InsertObject(page.pagePtr, fp);
-  const right = measureRightEdge(m, fp);
-  const visible = text.replace(/\s+/g, "").length;
-  if (visible > 0 && right - x < visible * size * 0.05) {
+  if (drawnTooNarrow(m, fp, text, size, x)) {
     try {
       m.FPDFPage_RemoveObject(page.pagePtr, fp);
     } catch {

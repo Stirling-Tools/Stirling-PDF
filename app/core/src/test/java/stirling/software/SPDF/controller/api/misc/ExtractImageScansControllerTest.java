@@ -6,59 +6,42 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ImageMemoryLimit;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.officeconvert.photosplit.PhotoSplitter;
 
 /** Unit tests for {@link ExtractImageScansController}; the in-process splitter is mocked. */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class ExtractImageScansControllerTest {
-
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
     private ExtractImageScansController controller;
 
@@ -71,7 +54,6 @@ class ExtractImageScansControllerTest {
         properties.getSystem().getTempFileManagement().setPrefix("scan-test-");
         controller =
                 new ExtractImageScansController(
-                        pdfDocumentFactory,
                         new TempFileManager(new TempFileRegistry(), properties));
     }
 
@@ -86,122 +68,44 @@ class ExtractImageScansControllerTest {
         return request;
     }
 
-    private static MockMultipartFile pngFile(String name) throws IOException {
+    private static byte[] png() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB), "png", out);
-        return new MockMultipartFile(
-                "fileInput", name, MediaType.IMAGE_PNG_VALUE, out.toByteArray());
+        return out.toByteArray();
     }
 
-    private static MockMultipartFile pdfFile() {
-        return new MockMultipartFile(
-                "fileInput", "scan.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1});
+    private static MockMultipartFile pngFile(String name) throws IOException {
+        return new MockMultipartFile("fileInput", name, MediaType.IMAGE_PNG_VALUE, png());
     }
 
-    private static PDDocument singlePageDocument() {
-        PDDocument doc = new PDDocument();
-        doc.addPage(new PDPage(new PDRectangle(72f, 72f)));
-        return doc;
-    }
-
-    private static List<PhotoSplitter.Photo> photos(int count) {
-        List<PhotoSplitter.Photo> photos = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            photos.add(
-                    new PhotoSplitter.Photo(
-                            new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB), List.of(), 0));
-        }
-        return photos;
-    }
-
-    private static MockedStatic<PhotoSplitter> splitterReturning(int count) {
-        List<PhotoSplitter.Photo> found = photos(count);
+    private static MockedStatic<PhotoSplitter> splitterWriting(int count) {
         MockedStatic<PhotoSplitter> splitter = Mockito.mockStatic(PhotoSplitter.class);
         splitter.when(
                         () ->
                                 PhotoSplitter.split(
-                                        any(BufferedImage.class), any(PhotoSplitter.Options.class)))
-                .thenReturn(found);
+                                        any(Path.class),
+                                        any(Path.class),
+                                        anyString(),
+                                        any(PhotoSplitter.Options.class)))
+                .thenAnswer(
+                        call -> {
+                            Path dir = call.getArgument(1);
+                            List<Path> written = new ArrayList<>();
+                            for (int i = 1; i <= count; i++) {
+                                Path photo = dir.resolve("photo_" + i + ".png");
+                                Files.write(photo, png());
+                                written.add(photo);
+                            }
+                            return written;
+                        });
         return splitter;
     }
 
     @Test
-    @DisplayName("rejects an image ImageIO cannot read")
-    void rejectsUnreadableImage() {
-        MockMultipartFile garbage =
-                new MockMultipartFile(
-                        "fileInput", "scan.png", MediaType.IMAGE_PNG_VALUE, new byte[] {1, 2, 3});
-
-        IllegalArgumentException e =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> controller.extractImageScans(requestFor(garbage)));
-        assertEquals("Unsupported image format: png", e.getMessage());
-    }
-
-    @Test
-    @DisplayName("refuses an image too large to decode before decoding it")
-    void refusesOversizedImageBeforeDecoding() throws Exception {
-        ByteArrayOutputStream png = new ByteArrayOutputStream();
-        png.write(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'});
-        ByteArrayOutputStream header = new ByteArrayOutputStream();
-        java.io.DataOutputStream ihdr = new java.io.DataOutputStream(header);
-        ihdr.writeBytes("IHDR");
-        ihdr.writeInt(50_000);
-        ihdr.writeInt(50_000);
-        ihdr.write(new byte[] {8, 2, 0, 0, 0});
-        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
-        crc.update(header.toByteArray());
-        java.io.DataOutputStream out = new java.io.DataOutputStream(png);
-        out.writeInt(13);
-        out.write(header.toByteArray());
-        out.writeInt((int) crc.getValue());
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "huge.png", MediaType.IMAGE_PNG_VALUE, png.toByteArray());
-
-        try (MockedStatic<PhotoSplitter> splitter = splitterReturning(1)) {
-            IllegalArgumentException e =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> controller.extractImageScans(requestFor(file)));
-            assertTrue(e.getMessage().contains("pixels; the limit is"));
-            splitter.verifyNoInteractions();
-        }
-    }
-
-    @Test
-    @DisplayName("reads a binary PPM scan")
-    void readsBinaryPpm() throws Exception {
-        int width = 120;
-        int height = 90;
-        ByteArrayOutputStream ppm = new ByteArrayOutputStream();
-        ppm.write(("P6 " + width + " " + height + " 255\n").getBytes(StandardCharsets.US_ASCII));
-        for (int i = 0; i < width * height; i++) {
-            ppm.write(new byte[] {(byte) 0xf5, (byte) 0xea, 0x0a});
-        }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "scan.ppm", "image/x-portable-pixmap", ppm.toByteArray());
-
-        try (MockedStatic<PhotoSplitter> splitter = splitterReturning(1)) {
-            ResponseEntity<Resource> response = controller.extractImageScans(requestFor(file));
-
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            ArgumentCaptor<BufferedImage> scan = ArgumentCaptor.forClass(BufferedImage.class);
-            splitter.verify(
-                    () -> PhotoSplitter.split(scan.capture(), any(PhotoSplitter.Options.class)));
-            assertEquals(width, scan.getValue().getWidth());
-            assertEquals(height, scan.getValue().getHeight());
-            assertEquals(0xfff5ea0a, scan.getValue().getRGB(0, 0));
-        }
-    }
-
-    @Test
-    @DisplayName("throws when no photos are found in an image")
-    void noPhotosInImage() throws Exception {
+    @DisplayName("throws when no photos are found")
+    void noPhotos() throws Exception {
         MockMultipartFile png = pngFile("scan.png");
-        try (MockedStatic<PhotoSplitter> ignored = splitterReturning(0)) {
+        try (MockedStatic<PhotoSplitter> ignored = splitterWriting(0)) {
             assertThrows(
                     IllegalArgumentException.class,
                     () -> controller.extractImageScans(requestFor(png)));
@@ -209,27 +113,10 @@ class ExtractImageScansControllerTest {
     }
 
     @Test
-    @DisplayName("renders a PDF once and throws when its pages hold no photos")
-    void noPhotosInPdf() throws Exception {
-        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(singlePageDocument());
-
-        try (MockedStatic<PhotoSplitter> splitter = splitterReturning(0)) {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.extractImageScans(requestFor(pdfFile())));
-            splitter.verify(
-                    () ->
-                            PhotoSplitter.split(
-                                    any(BufferedImage.class), any(PhotoSplitter.Options.class)));
-        }
-        verify(pdfDocumentFactory, times(1)).load(any(MultipartFile.class));
-    }
-
-    @Test
     @DisplayName("returns a single PNG when exactly one photo is found")
     void returnsSinglePng() throws Exception {
         MockMultipartFile png = pngFile("scan.png");
-        try (MockedStatic<PhotoSplitter> ignored = splitterReturning(1)) {
+        try (MockedStatic<PhotoSplitter> ignored = splitterWriting(1)) {
             ResponseEntity<Resource> response = controller.extractImageScans(requestFor(png));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -244,24 +131,26 @@ class ExtractImageScansControllerTest {
     @DisplayName("returns a zip with one PNG per photo when several are found")
     void returnsZipForMultiplePhotos() throws Exception {
         MockMultipartFile png = pngFile("scan.png");
-        try (MockedStatic<PhotoSplitter> ignored = splitterReturning(3)) {
+        try (MockedStatic<PhotoSplitter> ignored = splitterWriting(3)) {
             ResponseEntity<Resource> response = controller.extractImageScans(requestFor(png));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            int entries = 0;
+            List<String> names = new ArrayList<>();
             try (var in = response.getBody().getInputStream();
                     var zip = new ZipInputStream(in)) {
-                while (zip.getNextEntry() != null) {
+                for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
                     assertNotNull(ImageIO.read(new ByteArrayInputStream(zip.readAllBytes())));
-                    entries++;
+                    names.add(entry.getName());
                 }
             }
-            assertEquals(3, entries);
+            assertEquals(
+                    List.of("scan_processed_1.png", "scan_processed_2.png", "scan_processed_3.png"),
+                    names);
         }
     }
 
     @Test
-    @DisplayName("passes the request parameters to the splitter")
+    @DisplayName("passes the request parameters and server limits to the splitter")
     void passesOptions() throws Exception {
         ExtractImageScansRequest request = requestFor(pngFile("scan.png"));
         request.setAngleThreshold(7);
@@ -272,12 +161,15 @@ class ExtractImageScansControllerTest {
         ArgumentCaptor<PhotoSplitter.Options> options =
                 ArgumentCaptor.forClass(PhotoSplitter.Options.class);
 
-        try (MockedStatic<PhotoSplitter> splitter = Mockito.mockStatic(PhotoSplitter.class)) {
-            splitter.when(() -> PhotoSplitter.split(any(BufferedImage.class), options.capture()))
-                    .thenReturn(Collections.emptyList());
-
-            assertThrows(
-                    IllegalArgumentException.class, () -> controller.extractImageScans(request));
+        try (MockedStatic<PhotoSplitter> splitter = splitterWriting(1)) {
+            controller.extractImageScans(request);
+            splitter.verify(
+                    () ->
+                            PhotoSplitter.split(
+                                    any(Path.class),
+                                    any(Path.class),
+                                    anyString(),
+                                    options.capture()));
         }
 
         PhotoSplitter.Options used = options.getValue();
@@ -286,21 +178,50 @@ class ExtractImageScansControllerTest {
         assertEquals(9000, used.minArea());
         assertEquals(600, used.minContourArea());
         assertEquals(2, used.borderSize());
+        assertEquals(ImageMemoryLimit.maxPixels(), used.maxPixels());
+    }
+
+    @Test
+    @DisplayName("refuses an image over the server's pixel limit")
+    void refusesOversizedImage() throws Exception {
+        long limit = ImageMemoryLimit.maxPixels();
+        int side = (int) Math.ceil(Math.sqrt(limit)) + 1;
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        png.write(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'});
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
+        java.io.DataOutputStream ihdr = new java.io.DataOutputStream(header);
+        ihdr.writeBytes("IHDR");
+        ihdr.writeInt(side);
+        ihdr.writeInt(side);
+        ihdr.write(new byte[] {8, 2, 0, 0, 0});
+        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        crc.update(header.toByteArray());
+        java.io.DataOutputStream out = new java.io.DataOutputStream(png);
+        out.writeInt(13);
+        out.write(header.toByteArray());
+        out.writeInt((int) crc.getValue());
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "huge.png", MediaType.IMAGE_PNG_VALUE, png.toByteArray());
+
+        IOException e =
+                assertThrows(
+                        IOException.class, () -> controller.extractImageScans(requestFor(file)));
+        assertTrue(e.getMessage().contains("the limit is " + limit), e.getMessage());
     }
 
     @Test
     @DisplayName("leaves no controller temp files behind after a no-photos failure")
     void cleansUpAfterFailure() throws Exception {
         MockMultipartFile png = pngFile("scan.png");
-        try (MockedStatic<PhotoSplitter> ignored = splitterReturning(0)) {
+        try (MockedStatic<PhotoSplitter> ignored = splitterWriting(0)) {
             assertThrows(
                     IllegalArgumentException.class,
                     () -> controller.extractImageScans(requestFor(png)));
         }
         try (var stream = Files.walk(baseTmpDir)) {
             assertFalse(
-                    stream.filter(Files::isRegularFile)
-                            .map(p -> p.getFileName().toString())
+                    stream.map(p -> p.getFileName().toString())
                             .anyMatch(n -> n.startsWith("scan-test-")),
                     "controller temp files should be cleaned up");
         }

@@ -22,6 +22,7 @@ import type {
   TextRunSnapshot,
 } from "@editor/tools/pdfTextEditor/types";
 import { privateContentClassName } from "@editor/components/shared/privateContentClassName";
+import { revealOnPage } from "@editor/tools/pdfTextEditor/util/dom";
 
 interface FindBarProps {
   store: EditorStore;
@@ -34,7 +35,9 @@ interface Match {
   runId: string;
   /** Run snapshot (cached so navigation can scroll to it). */
   run: TextRunSnapshot;
-  /** Every occurrence inside this run, as offsets into `run.text`. */
+  /** This occurrence, as offsets into `run.text`. */
+  range: TextMatch;
+  /** Every occurrence inside this run, so Replace all edits each run once. */
   ranges: TextMatch[];
 }
 
@@ -83,8 +86,14 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     for (const page of pages) {
       for (const run of page.runs) {
         const ranges = findMatches(run.text, query, options);
-        if (ranges.length > 0) {
-          out.push({ pageIndex: page.pageIndex, runId: run.id, run, ranges });
+        for (const range of ranges) {
+          out.push({
+            pageIndex: page.pageIndex,
+            runId: run.id,
+            run,
+            range,
+            ranges,
+          });
         }
       }
     }
@@ -96,11 +105,14 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const m = matches[idx];
       if (!m) return;
       store.selection.selectOne(m.runId);
-      store.selection.highlight.set(m.runId);
+      store.selection.highlight.set({
+        runId: m.runId,
+        range: { start: m.range.start, end: m.range.end },
+      });
       const el = document.querySelector<HTMLElement>(
         `[data-testid="pdf-editor-run-${m.runId}"]`,
       );
-      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      revealOnPage(el, m.pageIndex);
     },
     [matches, store],
   );
@@ -143,21 +155,27 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     }
   }, [searchKey, matches, focusMatch, activeIndex]);
 
+  // Edits move the letters under a match, so the highlight follows the match rather than its old offsets.
+  useEffect(() => {
+    const m = matches[activeIndex];
+    store.selection.highlight.set(
+      m
+        ? { runId: m.runId, range: { start: m.range.start, end: m.range.end } }
+        : null,
+    );
+  }, [matches, activeIndex, store]);
+
   /**
-   * Replace the CURRENT match with the replace text. Dispatches one
-   * EditTextCommand. Every occurrence inside that run is swapped in a
-   * single pass so a run like "Foo foo FOO" becomes "bar bar bar" -
-   * matches the user's mental model of "replace happens to the
-   * highlighted run" without surprising them with partial mutations.
-   * The replacement is spliced literally, so "$&" stays "$&".
+   * Replace the CURRENT occurrence, the one highlighted. The replacement is
+   * spliced literally, so "$&" stays "$&".
    */
   const doReplaceOne = useCallback(() => {
     if (!query || replacing) return;
     const m = matches[activeIndex];
     if (!m) return;
     // A locked run is still findable, but must not be rewritten.
-    if (m.run.locked) return;
-    const updated = replaceMatches(m.run.text, m.ranges, replace);
+    if (m.run.locked || m.run.textReadOnly) return;
+    const updated = replaceMatches(m.run.text, [m.range], replace);
     if (updated === m.run.text) return;
     store.dispatch(
       new EditTextCommand({
@@ -178,9 +196,11 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     const doc = store.document;
     if (!doc || replacing || !query || matches.length === 0) return;
     const targets: ScanFitTarget[] = [];
+    const seen = new Set<string>();
     for (const m of matches) {
       // Skip locked runs: the lock is a user instruction, not a hint.
-      if (m.run.locked) continue;
+      if (m.run.locked || m.run.textReadOnly || seen.has(m.runId)) continue;
+      seen.add(m.runId);
       if (replaceMatches(m.run.text, m.ranges, replace) === m.run.text)
         continue;
       const page = doc.loadedPages().find((p) => p.index === m.pageIndex);
@@ -191,7 +211,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       const cmds: EditTextCommand[] = [];
       for (const { page, run: target } of targets) {
         const run = page.findRun(target.id);
-        if (!run || run.locked) continue;
+        if (!run || run.locked || run.textReadOnly) continue;
         const ranges = findMatches(run.text, query, options);
         const updated = replaceMatches(run.text, ranges, replace);
         if (updated === run.text) continue;

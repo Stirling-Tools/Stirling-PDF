@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -102,6 +103,7 @@ class ConvertHtmlToPDFTest {
                 new MockMultipartFile("fileInput", "test.html", "text/html", htmlContent);
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         request.setFileInput(file);
+        request.setZoom(1.5f);
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
@@ -111,7 +113,7 @@ class ConvertHtmlToPDFTest {
                 MockedStatic<WebResponseUtils> wrMock =
                         Mockito.mockStatic(WebResponseUtils.class)) {
 
-            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean()))
+            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean(), anyFloat()))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("test.html", ".pdf"))
@@ -126,7 +128,7 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            verify(officeToPdfService).convertHtml(any(byte[].class), eq(false));
+            verify(officeToPdfService).convertHtml(any(byte[].class), eq(false), eq(1.5f));
         }
     }
 
@@ -149,7 +151,7 @@ class ConvertHtmlToPDFTest {
                 MockedStatic<WebResponseUtils> wrMock =
                         Mockito.mockStatic(WebResponseUtils.class)) {
 
-            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean()))
+            when(officeToPdfService.convertHtml(any(byte[].class), anyBoolean(), anyFloat()))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("archive.zip", ".pdf"))
@@ -164,7 +166,7 @@ class ConvertHtmlToPDFTest {
             ResponseEntity<Resource> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            verify(officeToPdfService).convertHtml(any(byte[].class), eq(true));
+            verify(officeToPdfService).convertHtml(any(byte[].class), eq(true), eq(1f));
         }
     }
 

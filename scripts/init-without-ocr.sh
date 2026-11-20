@@ -85,7 +85,6 @@ print_versions() {
   log "--- Binary Versions ---"
   command_exists java && java -version 2>&1 | head -n 1 | log
   command_exists qpdf && qpdf --version | head -n 1 | log
-  command_exists magick && magick --version | head -n 1 | log
   # Use python to get versions of pip-installed tools to be sure
   command_exists ocrmypdf && ocrmypdf --version 2>&1 | head -n 1 | printf "ocrmypdf %s\n" "$(cat)" | log
   command_exists tesseract && tesseract --version | head -n 1 | log
@@ -515,7 +514,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     JAVA_BASE_OPTS="${STRIPPED_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -XX:-UseBASE64Intrinsics -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)

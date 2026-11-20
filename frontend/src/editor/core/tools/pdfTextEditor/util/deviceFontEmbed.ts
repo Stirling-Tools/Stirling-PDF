@@ -11,8 +11,10 @@ import {
   loadExternalFontBytes,
 } from "@editor/tools/pdfTextEditor/util/externalFonts";
 import {
+  encodesInBase14,
   isBoldFamily,
   isItalicFamily,
+  nearestStandardFont,
 } from "@editor/tools/pdfTextEditor/util/fontFamily";
 import {
   SCRATCH,
@@ -58,8 +60,8 @@ interface DeviceFontModule {
   ) => boolean;
 }
 
-/** Parsed cmap per family, so coverage is computed once per session. */
-const coverageByFamily = new Map<string, Set<number> | null>();
+/** Parsed cmap per font file: two faces can share a family name, and a document keeps the one it embedded. */
+let coverageByBytes = new WeakMap<Uint8Array, Set<number> | null>();
 /** Families PDFium already refused for a document; never retried. */
 let refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
 /** Successful device-font emits per document, keyed by owned-font id. */
@@ -76,7 +78,7 @@ function refusedFor(doc: EditorDocument): Set<string> {
 
 /** Test hook: drop the per-session coverage and per-document memos. */
 export function resetDeviceFontEmbedCache(): void {
-  coverageByFamily.clear();
+  coverageByBytes = new WeakMap<Uint8Array, Set<number> | null>();
   refusedByDoc = new WeakMap<EditorDocument, Set<string>>();
   emitCountByDoc = new WeakMap<EditorDocument, Map<string, number>>();
 }
@@ -92,11 +94,10 @@ export function fontCoverage(bytes: Uint8Array): Set<number> | null {
   }
 }
 
-function coverageOf(family: string, bytes: Uint8Array): Set<number> | null {
-  const key = deviceFontIdFor(family);
-  if (!coverageByFamily.has(key))
-    coverageByFamily.set(key, fontCoverage(bytes));
-  return coverageByFamily.get(key) ?? null;
+function coverageOf(bytes: Uint8Array): Set<number> | null {
+  if (!coverageByBytes.has(bytes))
+    coverageByBytes.set(bytes, fontCoverage(bytes));
+  return coverageByBytes.get(bytes) ?? null;
 }
 
 export function visibleCodePoints(text: string): number[] {
@@ -110,27 +111,34 @@ export function visibleCodePoints(text: string): number[] {
 }
 
 // Whether the face covers every visible code point; fails open to the width self-check.
-function deviceFontCovers(
-  family: string,
-  bytes: Uint8Array,
-  text: string,
-): boolean {
-  const coverage = coverageOf(family, bytes);
+function deviceFontCovers(bytes: Uint8Array, text: string): boolean {
+  const coverage = coverageOf(bytes);
   if (!coverage) return true;
   return visibleCodePoints(text).every((cp) => coverage.has(cp));
 }
 
 export function deviceFontCoverage(family: string): Set<number> | null {
   const bytes = getExternalFontBytes(family);
-  return bytes ? coverageOf(family, bytes) : null;
+  return bytes ? coverageOf(bytes) : null;
 }
 
-export function deviceFontDrawsAnyOf(family: string, text: string): boolean {
-  const bytes = getExternalFontBytes(family);
-  const coverage = bytes ? coverageOf(family, bytes) : null;
-  const codePoints = visibleCodePoints(text);
-  if (!coverage || codePoints.length === 0) return true;
-  return codePoints.some((cp) => coverage.has(cp));
+/**
+ * Whether `draws` has any letter of `text`, or any visible character of text
+ * with no letters. Letters decide because digits and punctuation are in every
+ * face: a line of another script would count as drawn by a face with none of
+ * its words.
+ */
+export function drawsSomeOf(
+  draws: ((codePoint: number) => boolean) | null,
+  text: string,
+): boolean {
+  if (!draws) return true;
+  const visible = visibleCodePoints(text);
+  const letters = visible.filter((cp) =>
+    /\p{L}/u.test(String.fromCodePoint(cp)),
+  );
+  const judged = letters.length > 0 ? letters : visible;
+  return judged.length === 0 || judged.some(draws);
 }
 
 // Read the family's font file so a later synchronous emit can embed it. The UI
@@ -174,12 +182,56 @@ function recordEmit(doc: EditorDocument, family: string): void {
 
 // Embed `family` into `doc` once and return its font handle, or 0. Freed with
 // the document, along with its backing WASM buffer.
+/** The family a device font this document loaded was read from, or null for any other font. */
+export function deviceFamilyOf(
+  doc: EditorDocument,
+  fontPtr: number,
+): string | null {
+  const font = fontPtr ? doc.ownedFontAt(fontPtr) : undefined;
+  return font?.id.startsWith(DEVICE_FONT_ID_PREFIX)
+    ? font.descriptor.family
+    : null;
+}
+
+// The bytes of each family a document embedded, by family name. A family keeps the face it was first embedded in for the
+// document's life: a server switch can offer a different face under the same name, and a redo must draw what was drawn.
+const embeddedBytes = new WeakMap<EditorDocument, Map<string, Uint8Array>>();
+
+function faceBytes(doc: EditorDocument, family: string): Uint8Array | null {
+  return (
+    embeddedBytes.get(doc)?.get(family) ?? getExternalFontBytes(family) ?? null
+  );
+}
+
+/**
+ * The code points an emit in `family` draws in that family's own face: the
+ * face `doc` holds under the name, else the loaded one. A standard font, like a
+ * family with no bytes loaded, draws what WinAnsi encodes. Null when the
+ * face's tables cannot be read, so nothing is known.
+ */
+export function familyCoverage(
+  doc: EditorDocument | null,
+  family: string,
+): ((codePoint: number) => boolean) | null {
+  if (nearestStandardFont(family) === family) return encodesInBase14;
+  const bytes = doc ? faceBytes(doc, family) : getExternalFontBytes(family);
+  if (!bytes || bytes.length === 0) return encodesInBase14;
+  const coverage = coverageOf(bytes);
+  return coverage ? (codePoint) => coverage.has(codePoint) : null;
+}
+
 export function loadDeviceFontInto(
   doc: EditorDocument,
   family: string,
 ): number {
   const id = deviceFontIdFor(family);
-  const existing = doc.ownedFont(id);
+  const existing =
+    doc.ownedFont(id) ??
+    doc.findOwnedFont(
+      (font) =>
+        font.id.startsWith(DEVICE_FONT_ID_PREFIX) &&
+        font.descriptor.family === family,
+    );
   if (existing) return existing.pointer;
   const refused = refusedFor(doc);
   // A refusal is permanent for this document; retrying would re-malloc the
@@ -212,6 +264,9 @@ export function loadDeviceFontInto(
       return 0;
     }
     doc.recordEmbeddedFontFile(bytes);
+    let kept = embeddedBytes.get(doc);
+    if (!kept) embeddedBytes.set(doc, (kept = new Map()));
+    kept.set(family, bytes);
     doc.registerOwnedFont(
       new FontRef({
         id,
@@ -251,19 +306,51 @@ export function loadDeviceFontInto(
   }
 }
 
-/** Right edge (PDF points) of an object's visible bbox, or 0 if unmeasurable. */
-function measureRightEdge(m: EditorDocument["module"], ptr: number): number {
+/** Horizontal extent (PDF points) of an object's visible bbox, or null if unmeasurable. */
+function measureInkSpan(
+  m: EditorDocument["module"],
+  ptr: number,
+): { left: number; right: number } | null {
   const mod = m as unknown as DeviceFontModule;
-  if (typeof mod.FPDFPageObj_GetBounds !== "function") return 0;
+  if (typeof mod.FPDFPageObj_GetBounds !== "function") return null;
   const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
   try {
     if (!mod.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
-      return 0;
+      return null;
     }
-    return m.pdfium.getValue(buf + 8, "float");
+    return {
+      left: m.pdfium.getValue(buf, "float"),
+      right: m.pdfium.getValue(buf + 8, "float"),
+    };
   } catch {
-    return 0;
+    return null;
   }
+}
+
+const COMBINING_MARK = /\p{M}/u;
+
+/**
+ * Whether an object just drawn at `x` came out too narrow to hold `text`, the
+ * sign of a face whose glyphs draw nothing. Combining marks advance the pen by
+ * nothing, so they are judged by having ink rather than by width.
+ */
+export function drawnTooNarrow(
+  m: EditorDocument["module"],
+  ptr: number,
+  text: string,
+  size: number,
+  x: number,
+): boolean {
+  const visible = visibleCodePoints(text);
+  if (visible.length === 0) return false;
+  const ink = measureInkSpan(m, ptr);
+  if (!ink) return true;
+  const advancing = visible.filter(
+    (cp) => !COMBINING_MARK.test(String.fromCodePoint(cp)),
+  ).length;
+  return advancing > 0
+    ? ink.right - x < advancing * size * 0.05
+    : ink.right <= ink.left;
 }
 
 // Emit one text object in `family`'s embedded face. Returns 0 when the font is
@@ -279,9 +366,9 @@ export function emitDeviceFontTextObject(
   y: number,
 ): number {
   if (text.length === 0) return 0;
-  const bytes = getExternalFontBytes(family);
+  const bytes = faceBytes(doc, family);
   if (!bytes || bytes.length === 0) return 0;
-  if (!deviceFontCovers(family, bytes, text)) return 0;
+  if (!deviceFontCovers(bytes, text)) return 0;
   const fontPtr = loadDeviceFontInto(doc, family);
   if (!fontPtr) return 0;
   const m = doc.module;
@@ -298,9 +385,7 @@ export function emitDeviceFontTextObject(
   m.FPDFPageObj_SetFillColor(fp, fill.r, fill.g, fill.b, fill.a);
   m.FPDFPageObj_Transform(fp, 1, 0, 0, 1, x, y);
   m.FPDFPage_InsertObject(page.pagePtr, fp);
-  const right = measureRightEdge(m, fp);
-  const visible = text.replace(/\s+/g, "").length;
-  if (visible > 0 && right - x < visible * size * 0.05) {
+  if (drawnTooNarrow(m, fp, text, size, x)) {
     try {
       m.FPDFPage_RemoveObject(page.pagePtr, fp);
     } catch {

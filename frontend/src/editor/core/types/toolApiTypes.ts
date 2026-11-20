@@ -547,7 +547,7 @@ export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
   /**
-   * Scale applied to the page content, from 0.1 to 8. Default is '1'.
+   * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
 }
@@ -807,11 +807,11 @@ export interface OptimizePdfRequest {
    */
   grayscale?: boolean;
   /**
-   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
+   * Whether to convert images to high-contrast black and white line art. Default is false.
    */
   lineArt?: boolean;
   /**
-   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+   * Edge detection strength to use for line art conversion (1-3): the radius of the edge filter applied before thresholding.
    */
   lineArtEdgeLevel?: 1 | 2 | 3;
   /**
@@ -993,7 +993,7 @@ export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
-  outputFormat: "doc" | "docx" | "odt";
+  outputFormat: "docx" | "odt";
 }
 export interface Pkcs11CertificatesRequest {
   libraryPath?: string;

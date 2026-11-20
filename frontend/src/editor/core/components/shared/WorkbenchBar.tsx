@@ -33,7 +33,6 @@ import { isStirlingFile } from "@editor/types/fileContext";
 import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
-import { useNavigationState } from "@editor/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@editor/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@editor/types/workbench";
 import SuperSearch from "@editor/components/shared/superSearch/SuperSearch";
@@ -106,7 +105,6 @@ export default function WorkbenchBar({
     useWorkbenchBar();
   const { toolPanelMode, leftPanelView, customWorkbenchViews } =
     useToolWorkflow();
-  const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
   const isViewer = currentView === "viewer";
 
@@ -372,18 +370,12 @@ export default function WorkbenchBar({
   );
 
   // View options
-  // Tools that own a custom workbench ship their own canvas.
-  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
-    ...(ownsCustomWorkbenchAsDefault
-      ? []
-      : [
-          {
-            value: "viewer" as WorkbenchType,
-            label: t("workbenchBar.viewer", "Viewer"),
-            icon: <Icon name="file" size={20} />,
-          },
-        ]),
+    {
+      value: "viewer",
+      label: t("workbenchBar.viewer", "Viewer"),
+      icon: <Icon name="file" size={20} />,
+    },
     {
       value: "pageEditor",
       label: t("workbenchBar.pageEditor", "Page Editor"),

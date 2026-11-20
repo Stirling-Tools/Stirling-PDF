@@ -62,7 +62,6 @@ public class ExternalAppDepConfig {
         tmp.put("rar", List.of("rar")); // Required for real CBR output
         // ffmpeg disabled due to raised CVEs
         // tmp.put("ffmpeg", List.of("FFmpeg"));
-        tmp.put("magick", List.of("ImageMagick"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
 

@@ -129,13 +129,14 @@ public class OCRController {
         Boolean clean = request.isClean();
         Boolean cleanFinal = request.isCleanFinal();
         String ocrType = request.getOcrType();
+        String ocrRenderType = request.getOcrRenderType();
         Boolean removeImagesAfter = request.isRemoveImagesAfter();
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
-        String ocrRenderType = pdfRenderer(request.getOcrRenderType());
+        String renderer = allowedRenderer(ocrRenderType);
 
         // Get available Tesseract languages
         List<String> availableLanguages = getAvailableTesseractLanguages();
@@ -167,7 +168,7 @@ public class OCRController {
                         clean,
                         cleanFinal,
                         ocrType,
-                        ocrRenderType,
+                        renderer,
                         removeImagesAfter,
                         tempInputFile.getPath(),
                         tempOutputFile.getPath(),
@@ -240,6 +241,14 @@ public class OCRController {
                 tempZipFile.close();
             }
         }
+    }
+
+    private static String allowedRenderer(String requested) {
+        return switch (requested == null ? "" : requested) {
+            case "hocr" -> "hocr";
+            case "sandwich" -> "sandwich";
+            default -> throw ExceptionUtils.createOcrInvalidRenderTypeException();
+        };
     }
 
     private void processWithOcrMyPdf(
@@ -365,16 +374,6 @@ public class OCRController {
             throw priorTextFoundException();
         }
         return result;
-    }
-
-    private static String pdfRenderer(String requested) {
-        if ("hocr".equals(requested)) {
-            return "hocr";
-        }
-        if ("sandwich".equals(requested)) {
-            return "sandwich";
-        }
-        throw ExceptionUtils.createOcrInvalidRenderTypeException();
     }
 
     private static int exitCodeOf(IOException e) {

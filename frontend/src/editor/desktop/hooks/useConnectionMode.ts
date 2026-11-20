@@ -10,9 +10,12 @@ export function useConnectionMode(): ConnectionMode | null {
 
   useEffect(() => {
     let current = true;
-    void connectionModeService.getCurrentMode().then((saved) => {
-      if (current) setMode(saved);
-    });
+    void connectionModeService.getCurrentMode().then(
+      (saved) => {
+        if (current) setMode(saved);
+      },
+      () => undefined,
+    );
     const unsubscribe = connectionModeService.subscribeToModeChanges(
       (config) => {
         // A change can land before the saved mode resolves; that read is stale.

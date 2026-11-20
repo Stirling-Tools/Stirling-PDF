@@ -1,23 +1,13 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,12 +28,11 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
-import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ImageMemoryLimit;
-import stirling.software.common.util.LimitedPDFRenderer;
+import stirling.software.common.util.TempDirectory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -59,9 +48,6 @@ public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
 
-    private static final String JAI_IMAGEIO_PACKAGE = "com.github.jaiimageio.";
-
-    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
@@ -97,139 +83,60 @@ public class ExtractImageScansController {
                         .minArea(request.getMinArea())
                         .minContourArea(request.getMinContourArea())
                         .borderSize(request.getBorderSize());
-        List<byte[]> processedImageBytes = new ArrayList<>();
+        int renderDpi = SCAN_RENDER_DPI;
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
+        }
+        options = options.dpi(renderDpi).maxPixels(ImageMemoryLimit.maxPixels());
+
         TempFile finalOutput = null;
         boolean finalOutputOwnershipTransferred = false;
-        try {
-            if ("pdf".equalsIgnoreCase(extension)) {
-                try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
-                    PDFRenderer pdfRenderer = new LimitedPDFRenderer(document);
-                    pdfRenderer.setSubsamplingAllowed(true);
-                    // maxDPI is a safety ceiling for user-supplied values, not a target
-                    int renderDpi = SCAN_RENDER_DPI;
-                    ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
-                    if (properties != null && properties.getSystem() != null) {
-                        renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
-                    }
-                    final int dpi = renderDpi;
-                    for (int i = 0; i < document.getNumberOfPages(); i++) {
-                        final int pageIndex = i;
-                        BufferedImage page =
-                                ExceptionUtils.handleOomRendering(
-                                        pageIndex + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
-                        addPhotos(page, options, processedImageBytes);
-                    }
-                }
-            } else {
-                BufferedImage image = readImage(inputFile);
-                if (image == null) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.unsupportedImageFormat",
-                            "Unsupported image format: {0}",
-                            extension);
-                }
-                addPhotos(image, options, processedImageBytes);
-            }
+        try (TempFile input = tempFileManager.createManagedTempFile("." + extension);
+                TempDirectory photosDir = new TempDirectory(tempFileManager)) {
+            inputFile.transferTo(input.getPath());
+            List<Path> photos =
+                    PhotoSplitter.split(input.getPath(), photosDir.getPath(), "photo", options);
 
-            // Create zip file if multiple images
-            if (processedImageBytes.size() > 1) {
+            if (photos.isEmpty()) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.noContent", "No {0} detected", "images");
+            }
+            if (photos.size() > 1) {
                 String outputZipFilename =
                         GeneralUtils.generateFilename(fileName, "_processed.zip");
                 finalOutput = tempFileManager.createManagedTempFile(".zip");
-
                 try (ZipOutputStream zipOut =
                         new ZipOutputStream(Files.newOutputStream(finalOutput.getPath()))) {
-                    // Add processed images to the zip
-                    for (int i = 0; i < processedImageBytes.size(); i++) {
-                        ZipEntry entry =
+                    for (int i = 0; i < photos.size(); i++) {
+                        zipOut.putNextEntry(
                                 new ZipEntry(
                                         GeneralUtils.generateFilename(
-                                                fileName, "_processed_" + (i + 1) + ".png"));
-                        zipOut.putNextEntry(entry);
-                        zipOut.write(processedImageBytes.get(i));
+                                                fileName, "_processed_" + (i + 1) + ".png")));
+                        Files.copy(photos.get(i), zipOut);
                         zipOut.closeEntry();
                     }
                 }
-
                 ResponseEntity<Resource> response =
                         WebResponseUtils.zipFileToWebResponse(finalOutput, outputZipFilename);
                 finalOutputOwnershipTransferred = true;
                 return response;
             }
-            if (processedImageBytes.isEmpty()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.noContent", "No {0} detected", "images");
-            } else {
-
-                // Return the processed image as a response
-                byte[] imageBytes = processedImageBytes.getFirst();
-                finalOutput = tempFileManager.createManagedTempFile(".png");
-                try (OutputStream out = Files.newOutputStream(finalOutput.getPath())) {
-                    out.write(imageBytes);
-                }
-
-                ResponseEntity<Resource> response =
-                        WebResponseUtils.fileToWebResponse(
-                                finalOutput,
-                                GeneralUtils.generateFilename(fileName, ".png"),
-                                MediaType.IMAGE_PNG);
-                finalOutputOwnershipTransferred = true;
-                return response;
-            }
+            finalOutput = tempFileManager.createManagedTempFile(".png");
+            Files.copy(
+                    photos.getFirst(), finalOutput.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            ResponseEntity<Resource> response =
+                    WebResponseUtils.fileToWebResponse(
+                            finalOutput,
+                            GeneralUtils.generateFilename(fileName, ".png"),
+                            MediaType.IMAGE_PNG);
+            finalOutputOwnershipTransferred = true;
+            return response;
         } finally {
             if (finalOutput != null && !finalOutputOwnershipTransferred) {
                 finalOutput.close();
             }
-        }
-    }
-
-    private static BufferedImage readImage(MultipartFile file) throws IOException {
-        try (InputStream raw = file.getInputStream();
-                ImageInputStream in = ImageIO.createImageInputStream(raw)) {
-            if (in == null) {
-                return null;
-            }
-            List<ImageReader> readers = new ArrayList<>();
-            ImageIO.getImageReaders(in).forEachRemaining(readers::add);
-            if (readers.isEmpty()) {
-                return null;
-            }
-            readers.sort(
-                    Comparator.comparing(
-                            reader -> reader.getClass().getName().startsWith(JAI_IMAGEIO_PACKAGE)));
-            ImageReader reader = readers.getFirst();
-            try {
-                reader.setInput(in, true, true);
-                requireDecodable(reader.getWidth(0), reader.getHeight(0));
-                return reader.read(0);
-            } finally {
-                readers.forEach(ImageReader::dispose);
-            }
-        }
-    }
-
-    private static void requireDecodable(long width, long height) {
-        long pixels = width * height;
-        long limit = ImageMemoryLimit.maxPixels();
-        if (pixels > limit) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.imageTooLarge",
-                    "The image has {0} pixels; the limit is {1}.",
-                    pixels,
-                    limit);
-        }
-    }
-
-    private static void addPhotos(
-            BufferedImage scan, PhotoSplitter.Options options, List<byte[]> out)
-            throws IOException {
-        for (PhotoSplitter.Photo photo : PhotoSplitter.split(scan, options)) {
-            ByteArrayOutputStream png = new ByteArrayOutputStream();
-            ImageIO.write(photo.image(), "png", png);
-            out.add(png.toByteArray());
         }
     }
 }

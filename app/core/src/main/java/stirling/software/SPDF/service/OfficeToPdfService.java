@@ -19,6 +19,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.officeconvert.topdf.io.PoiXml;
 
@@ -33,10 +34,18 @@ public class OfficeToPdfService {
 
     /** Packages may use their own assets; local files and network resources remain inaccessible. */
     public byte[] convertHtml(byte[] html, boolean packaged) throws IOException {
+        return convertHtml(html, packaged, 1f);
+    }
+
+    public byte[] convertHtml(byte[] html, boolean packaged, float zoom) throws IOException {
         try (TempFile in = new TempFile(tempFileManager, packaged ? ".zip" : ".html");
                 TempFile out = new TempFile(tempFileManager, ".pdf")) {
             Files.write(in.getPath(), html);
-            convert(in.getPath(), out.getPath(), options().allowPackages(packaged), "the document");
+            convert(
+                    in.getPath(),
+                    out.getPath(),
+                    options().allowPackages(packaged).zoom(zoom),
+                    "the document");
             return Files.readAllBytes(out.getPath());
         }
     }
@@ -45,6 +54,28 @@ public class OfficeToPdfService {
     @PostConstruct
     void raiseXmlLimits() {
         PoiXml.raiseProcessLimits();
+    }
+
+    /**
+     * Office Convert's single queue serves every conversion module, so one setting caps them all.
+     */
+    @PostConstruct
+    void applySessionLimit() {
+        int limit =
+                Math.max(
+                        0,
+                        applicationProperties
+                                .getProcessExecutor()
+                                .getSessionLimit()
+                                .getOfficeConvertSessionLimit());
+        Admission.Limits defaults = Admission.Limits.defaults();
+        Admission.configure(
+                new Admission.Limits(
+                        defaults.memoryBudgetPercent(),
+                        limit,
+                        defaults.maxWait(),
+                        defaults.refuseOversize(),
+                        defaults.readmitStopped()));
     }
 
     /** Loads the converter and scans fonts off the request path, so a first conversion is fast. */
