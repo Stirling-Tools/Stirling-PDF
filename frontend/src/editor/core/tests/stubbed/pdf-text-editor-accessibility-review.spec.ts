@@ -95,10 +95,13 @@ test.describe("PDF accessibility review", () => {
     const picker = page
       .getByTestId("pdf-editor-document-language-picker")
       .getByRole("textbox");
-    await picker.click();
-    await picker.fill("en-IE");
-    await page.getByRole("option", { name: /\(en-IE\)$/ }).click();
-    await expect(picker).toHaveValue(/\(en-IE\)$/);
+    // Under load the option can re-render out from under the click; pick again.
+    await expect(async () => {
+      await picker.click();
+      await picker.fill("en-IE");
+      await page.getByRole("option", { name: /\(en-IE\)$/ }).click();
+      await expect(picker).toHaveValue(/\(en-IE\)$/, { timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
 
     // Leaving the review for the editor keeps the unsaved tags.
     await page.keyboard.press("Escape");

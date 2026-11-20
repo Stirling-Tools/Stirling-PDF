@@ -44,6 +44,9 @@ export function CloseReviewPrompt() {
     <Modal
       opened={mustAsk}
       onClose={() => reviewMode.set({ closeRequested: false })}
+      closeOnClickOutside={!saving}
+      closeOnEscape={!saving}
+      withCloseButton={!saving}
       title={t("pdfTextEditor.review.closePrompt.title", "Save your tags?")}
       size="md"
       data-testid="pdf-editor-review-close-prompt"
@@ -59,6 +62,7 @@ export function CloseReviewPrompt() {
           <Button
             variant="tertiary"
             accent="neutral"
+            disabled={saving}
             onClick={() => reviewMode.set({ closeRequested: false })}
           >
             {t("pdfTextEditor.review.closePrompt.keep", "Keep tagging")}
@@ -66,6 +70,7 @@ export function CloseReviewPrompt() {
           <Button
             variant="secondary"
             accent="danger"
+            disabled={saving}
             onClick={() => {
               pageTool?.onDiscard?.();
               reviewMode.close();

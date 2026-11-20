@@ -96,9 +96,7 @@ function selectFlaggedHeading(store: EditorStore, pageIndex: number): boolean {
       entry.pageIndex !== null &&
       entry.pageIndex >= pageIndex,
   );
-  if (index < 0) return false;
-  selectHeadingAt(store, index);
-  return true;
+  return index >= 0 && selectHeadingAt(store, index);
 }
 
 /**

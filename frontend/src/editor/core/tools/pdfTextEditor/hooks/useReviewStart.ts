@@ -42,4 +42,17 @@ export function useReviewStart({
     reviewMode.set({ startAt: null });
     goToFix(store, startAt.pageIndex, startAt.target);
   }, [startAt, sourceFileId, ready, store, setActiveFileId]);
+
+  // A file that can't open leaves nothing to fix, and a request left pending
+  // would pull the viewer back to it on the next file switch. Only this file's
+  // load counts: an error still showing from the last file is not its failure.
+  const waiting = !!startAt && startAt.fileId === sourceFileId;
+  useEffect(() => {
+    if (!waiting) return;
+    let loadStarted = store.getState().loading;
+    return store.subscribe((s) => {
+      if (s.loading) loadStarted = true;
+      else if (loadStarted && s.error) reviewMode.set({ startAt: null });
+    });
+  }, [waiting, store]);
 }

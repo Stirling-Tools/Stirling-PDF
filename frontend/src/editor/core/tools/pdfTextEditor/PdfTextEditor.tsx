@@ -23,6 +23,9 @@ import { useEditorStore } from "@editor/tools/pdfTextEditor/hooks/useEditorStore
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useEditorOcr } from "@editor/tools/pdfTextEditor/hooks/useEditorOcr";
 import {
+  clearEditorInspector,
+  clearEditorSession,
+  setEditorInspector,
   setEditorSession,
   type InspectorActions,
 } from "@editor/tools/pdfTextEditor/store/EditorSession";
@@ -769,23 +772,23 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       onSetShowRulers,
     ],
   );
-  // Read through a getter: the actions change with the selection, the session must not.
-  const inspectorRef = useRef(inspector);
-  inspectorRef.current = inspector;
+  useEffect(() => {
+    setEditorInspector(inspector);
+    return () => clearEditorInspector(inspector);
+  }, [inspector]);
 
   useEffect(() => {
-    setEditorSession({
+    const session = {
       fileName: openedFileName,
       save: handleSave,
       download: handleDownload,
       pickImage: openImagePicker,
       // The viewer mounts only the pages near the viewport.
-      revealPage: (pageIndex) => scrollActions.scrollToPage(pageIndex + 1),
-      get inspector() {
-        return inspectorRef.current;
-      },
-    });
-    return () => setEditorSession(null);
+      revealPage: (pageIndex: number) =>
+        scrollActions.scrollToPage(pageIndex + 1),
+    };
+    setEditorSession(session);
+    return () => clearEditorSession(session);
   }, [
     scrollActions,
     openedFileName,

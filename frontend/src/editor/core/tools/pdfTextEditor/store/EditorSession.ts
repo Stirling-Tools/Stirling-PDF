@@ -14,7 +14,6 @@ export interface EditorSession {
   pickImage: () => void;
   /** Brings a page on screen, mounted or not. */
   revealPage: (pageIndex: number) => void;
-  inspector: InspectorActions;
 }
 
 let current: EditorSession | null = null;
@@ -24,8 +23,19 @@ function emit(): void {
   for (const listener of Array.from(listeners)) listener();
 }
 
-export function setEditorSession(session: EditorSession | null): void {
+export function setEditorSession(session: EditorSession): void {
   current = session;
+  emit();
+}
+
+/**
+ * Clears `session` if it is still the current one. An editor unmounting after
+ * another has mounted (leaving the text editor for a review) must not clear the
+ * newcomer's session.
+ */
+export function clearEditorSession(session: EditorSession): void {
+  if (current !== session) return;
+  current = null;
   emit();
 }
 
@@ -45,4 +55,40 @@ export function currentEditorSession(): EditorSession | null {
 
 export function useEditorSession(): EditorSession | null {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/**
+ * Kept apart from the session: the actions change with the selection and OCR
+ * state, and Properties must re-render on each change while the session holds.
+ */
+let inspector: InspectorActions | null = null;
+const inspectorListeners = new Set<() => void>();
+
+function emitInspector(): void {
+  for (const listener of Array.from(inspectorListeners)) listener();
+}
+
+export function setEditorInspector(next: InspectorActions): void {
+  inspector = next;
+  emitInspector();
+}
+
+/** Clears `actions` if still current; see clearEditorSession. */
+export function clearEditorInspector(actions: InspectorActions): void {
+  if (inspector !== actions) return;
+  inspector = null;
+  emitInspector();
+}
+
+function subscribeInspector(listener: () => void): () => void {
+  inspectorListeners.add(listener);
+  return () => inspectorListeners.delete(listener);
+}
+
+function getInspector(): InspectorActions | null {
+  return inspector;
+}
+
+export function useEditorInspector(): InspectorActions | null {
+  return useSyncExternalStore(subscribeInspector, getInspector, getInspector);
 }

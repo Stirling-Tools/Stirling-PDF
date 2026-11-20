@@ -37,17 +37,20 @@ export function useHeadingOutline(
   return { outline, selectHeading };
 }
 
-/** Selects the run showing heading `index` in the document's headings, reading its page first. */
-export function selectHeadingAt(store: EditorStore, index: number): void {
+/**
+ * Selects the run showing heading `index` in the document's headings, reading its
+ * page first. False when no run shows it (an image-only heading): nothing is selected.
+ */
+export function selectHeadingAt(store: EditorStore, index: number): boolean {
   const doc = store.document;
   const headings = doc?.headings();
   const pageIndex = headings?.[index]?.pageIndex;
-  if (!doc || !headings || pageIndex == null) return;
+  if (!doc || !headings || pageIndex == null) return false;
   ensurePageRead(store, pageIndex);
   const { run, range } = headingOutline(headings, store.getState().pages, (h) =>
     locateHeading(doc, h),
   ).entries[index];
-  if (!run) return;
+  if (!run) return false;
   store.selection.selectOne(run.id);
   if (range) store.selection.setTextRange(run.id, range);
   // A page read just now has no overlay until React commits it.
@@ -57,4 +60,5 @@ export function selectHeadingAt(store: EditorStore, index: number): void {
       run.pageIndex,
     ),
   );
+  return true;
 }

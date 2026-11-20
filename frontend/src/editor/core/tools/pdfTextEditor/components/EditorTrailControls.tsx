@@ -7,7 +7,10 @@ import { modShortcut } from "@editor/utils/hotkeys";
 import { EditorSidebar } from "@editor/tools/pdfTextEditor/components/EditorSidebar";
 import { CloseReviewButton } from "@editor/tools/pdfTextEditor/components/review/CloseReviewButton";
 import { NO_SHRINK } from "@editor/tools/pdfTextEditor/components/toolbar/toolbarShared";
-import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
+import {
+  useEditorInspector,
+  useEditorSession,
+} from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import type {
   EditorStore,
@@ -22,18 +25,45 @@ interface Props {
 }
 
 /**
+ * Closes on a press outside the popover. Mantine's own check treats a press in
+ * the language picker's portaled list as outside, so any portal is ignored.
+ */
+function useCloseOutsidePortals(
+  open: boolean,
+  setOpen: (open: boolean) => void,
+) {
+  useEffect(() => {
+    if (!open) return;
+    const onPress = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-portal], [data-properties-toggle]")) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onPress);
+    document.addEventListener("touchstart", onPress);
+    return () => {
+      document.removeEventListener("mousedown", onPress);
+      document.removeEventListener("touchstart", onPress);
+    };
+  }, [open, setOpen]);
+}
+
+/**
  * The review's end of the editor bar: Properties (the inspector the editor's
  * hidden panel holds), Save and the toggle that closes the review.
  */
 export function EditorTrailControls({ store, state, selection }: Props) {
   const { t } = useTranslation();
   const session = useEditorSession();
+  const inspector = useEditorInspector();
   const ready = !!session && state.hasDocument;
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const { inspectorTab } = useReviewMode();
   useEffect(() => {
     if (inspectorTab) setInspectorOpen(true);
   }, [inspectorTab]);
+  useCloseOutsidePortals(inspectorOpen, setInspectorOpen);
 
   return (
     <>
@@ -45,6 +75,7 @@ export function EditorTrailControls({ store, state, selection }: Props) {
         disabled={!ready}
         opened={inspectorOpen}
         onChange={setInspectorOpen}
+        closeOnClickOutside={false}
       >
         <Popover.Target>
           <Button
@@ -53,6 +84,7 @@ export function EditorTrailControls({ store, state, selection }: Props) {
             accent="neutral"
             disabled={!ready}
             onClick={() => setInspectorOpen((open) => !open)}
+            data-properties-toggle
             leftSection={<Icon name="sliders-horizontal" size={18} />}
             rightSection={<Icon name="chevron-down" size={14} />}
             data-testid="pdf-editor-properties"
@@ -62,13 +94,13 @@ export function EditorTrailControls({ store, state, selection }: Props) {
           </Button>
         </Popover.Target>
         <Popover.Dropdown p={0}>
-          {session && (
+          {inspector && (
             <ScrollArea.Autosize mah="70vh" type="auto">
               <EditorSidebar
                 store={store}
                 state={state}
                 selection={selection}
-                {...session.inspector}
+                {...inspector}
               />
             </ScrollArea.Autosize>
           )}

@@ -7,6 +7,7 @@ import {
 } from "@editor/services/pdfiumService";
 import type { EditorStore } from "@editor/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@editor/tools/pdfTextEditor/types";
+import type { Page } from "@editor/tools/pdfTextEditor/model/Page";
 import {
   getPdfAccess,
   rememberPdfAccess,
@@ -239,18 +240,37 @@ export function publishAllPages(store: EditorStore): void {
   store.publishPages(next);
 }
 
-/** Ensure a page's runs/images are loaded. */
+function snapshotCurrent(
+  published: PageSnapshot | undefined,
+  page: Page,
+): boolean {
+  return (
+    !published ||
+    (published.revision === page.revision &&
+      published.runs.length === page.runs.length &&
+      published.images.length === page.images.length)
+  );
+}
+
+/**
+ * Ensure a page's runs/images are loaded and published. A page the background
+ * reader has loaded but not yet published is published here, so a lookup in
+ * the store's snapshot right after this sees it.
+ */
 export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   const doc = store.document;
   if (!doc) return;
   const page = doc.page(pageIndex);
-  if (page.loaded) return;
-  try {
-    // Lazy reads must surface failures like the eager path, not throw out of the observer.
-    PdfiumTextReader.populate(doc, page, store.groupingMode);
-  } catch (err) {
-    store.setError(err instanceof Error ? err.message : String(err));
-    return;
+  if (page.loaded) {
+    if (snapshotCurrent(store.getState().pages[pageIndex], page)) return;
+  } else {
+    try {
+      // Lazy reads must surface failures like the eager path, not throw out of the observer.
+      PdfiumTextReader.populate(doc, page, store.groupingMode);
+    } catch (err) {
+      store.setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
   }
   const state = store.getState();
   const next = state.pages.map((p) =>

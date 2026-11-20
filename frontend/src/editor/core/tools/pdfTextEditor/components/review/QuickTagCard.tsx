@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { Switch, Textarea } from "@mantine/core";
+import { Alert, Switch, Text, Textarea } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
@@ -138,6 +138,19 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
     >
       <ReviewChecklist state={state} review={review} />
 
+      {/* The editor runs hidden in a review, so its error alert never shows. */}
+      {state.error && (
+        <Alert
+          color="red"
+          p="xs"
+          withCloseButton
+          onClose={() => store.setError(null)}
+          data-testid="pdf-editor-review-error"
+        >
+          <Text size="xs">{state.error}</Text>
+        </Alert>
+      )}
+
       {item ? (
         <header className="review-card__head">
           <span
@@ -233,7 +246,8 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
 
       {item?.kind === "image" && controller.imageAccessibility && (
         <ImageQuestion
-          key={item.id}
+          // A changed description (Undo) restarts the draft from it.
+          key={`${item.id}:${imageDescription(controller.imageAccessibility)}`}
           accessibility={controller.imageAccessibility}
           onDescribe={(text) => {
             controller.onSetImageDescription(text);
@@ -276,6 +290,14 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
   );
 }
 
+function imageDescription(
+  accessibility: NonNullable<Controller["imageAccessibility"]>,
+): string {
+  return accessibility.kind === "describable"
+    ? (accessibility.description ?? "")
+    : "";
+}
+
 function ImageQuestion({
   accessibility,
   onDescribe,
@@ -286,11 +308,7 @@ function ImageQuestion({
   onDecorative: () => void;
 }) {
   const { t } = useTranslation();
-  const existing =
-    accessibility.kind === "describable"
-      ? (accessibility.description ?? "")
-      : "";
-  const [text, setText] = useState(existing);
+  const [text, setText] = useState(() => imageDescription(accessibility));
   const describable = accessibility.kind === "describable";
   return (
     <>

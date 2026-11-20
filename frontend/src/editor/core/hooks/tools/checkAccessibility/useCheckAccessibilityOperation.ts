@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
 import apiClient from "@editor/services/apiClient";
+import { handleHttpError } from "@editor/services/httpErrorHandler";
 import { ToolOperationHook } from "@editor/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@editor/types/fileContext";
 import { extractErrorMessage } from "@editor/utils/toolErrorHandler";
@@ -106,6 +108,11 @@ export const useCheckAccessibilityOperation =
                 error: data.validationError ?? null,
               });
             } catch (error) {
+              // suppressErrorToast also skips the login redirect a 401 needs.
+              if (axios.isAxiosError(error) && error.response?.status === 401) {
+                if (error.config) error.config.suppressErrorToast = false;
+                await handleHttpError(error);
+              }
               collected.push({
                 fileId: file.fileId,
                 fileName: file.name,
