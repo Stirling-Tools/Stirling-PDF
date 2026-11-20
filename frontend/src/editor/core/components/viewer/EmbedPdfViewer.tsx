@@ -31,7 +31,10 @@ import { usePdfAccess } from "@editor/hooks/usePdfAccess";
 import { canPrintPdf, pdfEditingLocked } from "@editor/services/pdfPermissions";
 import { PdfPreviewUnlockGate } from "@editor/components/viewer/PdfPreviewUnlockGate";
 import { PdfViewerToolbar } from "@editor/components/viewer/PdfViewerToolbar";
-import { ThumbnailSidebar } from "@editor/components/viewer/ThumbnailSidebar";
+import {
+  ThumbnailSidebar,
+  THUMBNAIL_SIDEBAR_WIDTH_REM,
+} from "@editor/components/viewer/ThumbnailSidebar";
 import { BookmarkSidebar } from "@editor/components/viewer/BookmarkSidebar";
 import { AttachmentSidebar } from "@editor/components/viewer/AttachmentSidebar";
 import { LayerSidebar } from "@editor/components/viewer/LayerSidebar";
@@ -1913,14 +1916,18 @@ const EmbedPdfViewerContent = ({
     isCurrentFileEncrypted,
   ]);
 
-  const sidebarWidthRem = 15;
-  const commentsSidebarWidthRem = 15;
+  // One content panel at most, against the edge, with the thumbnails strip
+  // to its left.
+  const contentPanelWidthRem =
+    isBookmarkSidebarVisible ||
+    isAttachmentSidebarVisible ||
+    isLayerSidebarVisible ||
+    isCommentsSidebarVisible
+      ? 15
+      : 0;
   const totalRightMargin =
-    (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
-    (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-    (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
-    (isLayerSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+    contentPanelWidthRem +
+    (isThumbnailSidebarVisible ? THUMBNAIL_SIDEBAR_WIDTH_REM : 0);
 
   return (
     <Box
@@ -2070,7 +2077,6 @@ const EmbedPdfViewerContent = ({
               }
               fileId={currentFileId}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
-              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
@@ -2150,29 +2156,22 @@ const EmbedPdfViewerContent = ({
         visible={isThumbnailSidebarVisible}
         onToggle={toggleThumbnailSidebar}
         activeFileId={activeFileId}
+        rightOffsetRem={contentPanelWidthRem}
       />
       <BookmarkSidebar
         visible={isBookmarkSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
       {!portfolioPinned && (
         <AttachmentSidebar
           visible={isAttachmentSidebarVisible}
-          thumbnailVisible={isThumbnailSidebarVisible}
-          bookmarkVisible={isBookmarkSidebarVisible}
           documentCacheKey={bookmarkCacheKey}
           preloadCacheKeys={allBookmarkCacheKeys}
         />
       )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
-        rightOffset={
-          (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
-          (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-          (isAttachmentSidebarVisible ? sidebarWidthRem : 0)
-        }
         file={effectiveFile?.file ?? null}
         documentCacheKey={bookmarkCacheKey}
         onApplyLayers={handleLayerApply}

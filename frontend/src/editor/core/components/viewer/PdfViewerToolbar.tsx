@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
-import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useTranslation } from "react-i18next";
-import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@editor/contexts/ViewerContext";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import { useViewerPageTool } from "@editor/contexts/viewer/ViewerPageTool";
 import { useIsPhone } from "@editor/hooks/useIsMobile";
 import { Tooltip } from "@editor/components/shared/Tooltip";
 import { ActionIcon } from "@editor/ui/ActionIcon";
@@ -36,33 +36,33 @@ export function PdfViewerToolbar({
   const {
     getScrollState,
     getZoomState,
-    getSpreadState,
     scrollActions,
     zoomActions,
-    spreadActions,
+    rotationActions,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
-    registerImmediateSpreadUpdate,
-    pdfRenderMode,
-    cyclePdfRenderMode,
   } = useViewer();
+  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
+  // Viewer controls registered for this bar rather than the top one.
+  const pageBarButtons = buttons.filter(
+    (button) => button.section === "page-bar" && (button.visible ?? true),
+  );
+
+  // A page tool edits pages upright, so the view stays unrotated while it is open.
+  const rotateDisabled = useViewerPageTool() != null;
+  const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
+  const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
-  const spreadState = getSpreadState();
   const [pageInput, setPageInput] = useState(
     scrollState.currentPage || currentPage,
   );
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
   );
-
-  const [zoomLevel, setZoomLevel] = useState(() => zoomState.level);
-  const [spreadMode, setSpreadMode] = useState(spreadState.spreadMode);
-  const isDualPageActive = spreadMode !== SpreadMode.None;
-  const isCoverPageActive = spreadMode === SpreadMode.Even;
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
@@ -83,11 +83,9 @@ export function PdfViewerToolbar({
     const unregister = registerImmediateZoomUpdate((percent) => {
       if (zoomRestorePendingRef.current) return;
       setDisplayZoomPercent(percent);
-      setZoomLevel(getZoomState().level);
     });
     if (!zoomRestorePendingRef.current) {
       setDisplayZoomPercent(zoomState.zoomPercent || 100);
-      setZoomLevel(zoomState.level);
     }
     return () => {
       unregister?.();
@@ -96,23 +94,9 @@ export function PdfViewerToolbar({
     registerImmediateZoomUpdate,
     getZoomState,
     zoomState.zoomPercent,
-    zoomState.level,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
   ]);
-
-  const isFitWidthActive = zoomLevel === ZoomMode.FitWidth;
-  const isFitPageActive = zoomLevel === ZoomMode.FitPage;
-
-  useEffect(() => {
-    const unregister = registerImmediateSpreadUpdate((mode) => {
-      setSpreadMode(mode);
-    });
-    setSpreadMode(spreadState.spreadMode);
-    return () => {
-      unregister?.();
-    };
-  }, [registerImmediateSpreadUpdate, spreadState.spreadMode]);
 
   const handleZoomOut = () => {
     zoomActions.zoomOut();
@@ -122,30 +106,12 @@ export function PdfViewerToolbar({
     zoomActions.zoomIn();
   };
 
-  const handleFitWidth = () => {
-    zoomActions.requestZoom(ZoomMode.FitWidth);
-  };
-
-  const handleFitPage = () => {
-    zoomActions.requestZoom(ZoomMode.FitPage);
-  };
-
   const handlePageNavigation = (page: number) => {
     scrollActions.scrollToPage(page);
     if (onPageChange) {
       onPageChange(page);
     }
     setPageInput(page);
-  };
-
-  const handleDualPageToggle = () => {
-    spreadActions.toggleSpreadMode();
-  };
-
-  const handleCoverPageToggle = () => {
-    spreadActions.setSpreadMode(
-      isCoverPageActive ? SpreadMode.Odd : SpreadMode.Even,
-    );
   };
 
   const handleFirstPage = () => {
@@ -290,92 +256,52 @@ export function PdfViewerToolbar({
         <div className="pdf-viewer-toolbar__divider pdf-viewer-toolbar-wide-only" />
       )}
 
-      {/* Dual Page Toggle */}
-      {!isPhone && (
-        <Tooltip
-          content={
-            isDualPageActive
-              ? t("viewer.singlePageView", "Single Page View")
-              : t("viewer.dualPageView", "Dual Page View")
-          }
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={isDualPageActive ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={handleDualPageToggle}
-            disabled={scrollState.totalPages <= 1}
-            style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")
-            }
-          >
-            {isDualPageActive ? (
-              <Icon name="file-text" size={18} />
-            ) : (
-              <Icon name="columns-2" size={18} />
-            )}
-          </ActionIcon>
-        </Tooltip>
-      )}
+      {!isPhone &&
+        (
+          [
+            [
+              "rotate-ccw",
+              rotateLeftLabel,
+              () => rotationActions.rotateBackward(),
+            ],
+            [
+              "rotate-cw",
+              rotateRightLabel,
+              () => rotationActions.rotateForward(),
+            ],
+          ] as const
+        ).map(([icon, label, rotate]) => (
+          <Tooltip key={icon} content={label} position="top" arrow>
+            <ActionIcon
+              variant="tertiary"
+              size={buttonSize}
+              className="pdf-viewer-toolbar-wide-only"
+              onClick={() => rotate()}
+              disabled={rotateDisabled}
+              style={{ minWidth: buttonMinWidth }}
+              aria-label={label}
+            >
+              <Icon name={icon} size={18} />
+            </ActionIcon>
+          </Tooltip>
+        ))}
 
-      {!isPhone && isDualPageActive && (
-        <Tooltip
-          content={t("viewer.coverPageView", "Show Cover Page Separately")}
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={isCoverPageActive ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={handleCoverPageToggle}
-            disabled={scrollState.totalPages <= 1}
-            style={{ minWidth: buttonMinWidth }}
-            aria-pressed={isCoverPageActive}
-            aria-label={t("viewer.coverPageView", "Show Cover Page Separately")}
-          >
-            <Icon name="book" size={18} />
-          </ActionIcon>
-        </Tooltip>
-      )}
-
-      {/* PDF Render Mode Toggle */}
-      {!isPhone && (
-        <Tooltip
-          content={
-            pdfRenderMode === "normal"
-              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-              : pdfRenderMode === "dark"
-                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                : t("viewer.disableColorFilter", "Disable Color Filter")
-          }
-          position="top"
-          arrow
-        >
-          <ActionIcon
-            variant={pdfRenderMode !== "normal" ? "primary" : "tertiary"}
-            size={buttonSize}
-            className="pdf-viewer-toolbar-wide-only"
-            onClick={cyclePdfRenderMode}
-            style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")
-            }
-          >
-            {pdfRenderMode === "normal" && <Icon name="moon" size={18} />}
-            {pdfRenderMode === "dark" && <Icon name="sunset" size={18} />}
-            {pdfRenderMode === "sepia" && <Icon name="sun" size={18} />}
-          </ActionIcon>
-        </Tooltip>
+      {pageBarButtons.length > 0 && (
+        <>
+          <div className="pdf-viewer-toolbar__divider" />
+          {pageBarButtons.map((button) => (
+            <span key={button.id} className="pdf-viewer-toolbar__tool">
+              {button.render?.({
+                id: button.id,
+                disabled: Boolean(button.disabled || allButtonsDisabled),
+                allButtonsDisabled,
+                action: actions[button.id],
+                triggerAction: () => actions[button.id]?.(),
+                active: Boolean(button.active),
+              })}
+            </span>
+          ))}
+        </>
       )}
 
       {/* Desktop zoom controls (slider + buttons) */}
@@ -423,36 +349,6 @@ export function PdfViewerToolbar({
           >
             {displayZoomPercent}%
           </span>
-          <Tooltip
-            content={t("viewer.fitWidth", "Fit to width")}
-            position="top"
-            arrow
-          >
-            <ActionIcon
-              variant={isFitWidthActive ? "primary" : "tertiary"}
-              size={buttonSize}
-              onClick={handleFitWidth}
-              aria-label={t("viewer.fitWidth", "Fit to width")}
-              aria-pressed={isFitWidthActive}
-            >
-              <Icon name="arrow-left-right" size={18} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip
-            content={t("viewer.fitPage", "Fit to page")}
-            position="top"
-            arrow
-          >
-            <ActionIcon
-              variant={isFitPageActive ? "primary" : "tertiary"}
-              size={buttonSize}
-              onClick={handleFitPage}
-              aria-label={t("viewer.fitPage", "Fit to page")}
-              aria-pressed={isFitPageActive}
-            >
-              <Icon name="scan" size={18} />
-            </ActionIcon>
-          </Tooltip>
         </Group>
       )}
 
@@ -506,69 +402,21 @@ export function PdfViewerToolbar({
             >
               {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
             </Menu.Item>
-            <Menu.Item
-              leftSection={<Icon name="arrow-left-right" size={18} />}
-              rightSection={isFitWidthActive && <Icon name="check" size={16} />}
-              aria-current={isFitWidthActive || undefined}
-              onClick={handleFitWidth}
-            >
-              {t("viewer.fitWidth", "Fit to width")}
-            </Menu.Item>
-            <Menu.Item
-              leftSection={<Icon name="scan" size={18} />}
-              rightSection={isFitPageActive && <Icon name="check" size={16} />}
-              aria-current={isFitPageActive || undefined}
-              onClick={handleFitPage}
-            >
-              {t("viewer.fitPage", "Fit to page")}
-            </Menu.Item>
-
             <Menu.Divider />
-            <Menu.Label>{t("viewer.view", "View")}</Menu.Label>
+            <Menu.Label>{t("viewer.rotate", "Rotate")}</Menu.Label>
             <Menu.Item
-              leftSection={
-                isDualPageActive ? (
-                  <Icon name="file-text" size={18} />
-                ) : (
-                  <Icon name="columns-2" size={18} />
-                )
-              }
-              disabled={scrollState.totalPages <= 1}
-              onClick={handleDualPageToggle}
+              leftSection={<Icon name="rotate-ccw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateBackward()}
             >
-              {isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")}
+              {rotateLeftLabel}
             </Menu.Item>
-            {isDualPageActive && (
-              <Menu.Item
-                leftSection={<Icon name="book" size={18} />}
-                rightSection={
-                  isCoverPageActive && <Icon name="check" size={16} />
-                }
-                disabled={scrollState.totalPages <= 1}
-                onClick={handleCoverPageToggle}
-              >
-                {t("viewer.coverPageView", "Show Cover Page Separately")}
-              </Menu.Item>
-            )}
             <Menu.Item
-              leftSection={
-                pdfRenderMode === "normal" ? (
-                  <Icon name="moon" size={18} />
-                ) : pdfRenderMode === "dark" ? (
-                  <Icon name="sunset" size={18} />
-                ) : (
-                  <Icon name="sun" size={18} />
-                )
-              }
-              onClick={cyclePdfRenderMode}
+              leftSection={<Icon name="rotate-cw" size={18} />}
+              disabled={rotateDisabled}
+              onClick={() => rotationActions.rotateForward()}
             >
-              {pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")}
+              {rotateRightLabel}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

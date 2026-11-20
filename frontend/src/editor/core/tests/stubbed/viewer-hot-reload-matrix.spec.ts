@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import {
+  choosePageView,
+  expectPageViewChecked,
+} from "@editor/tests/helpers/ui-helpers";
 
 interface SteadyZoomSamplerState {
   stop: boolean;
@@ -215,16 +219,12 @@ test("dual page view survives a save and a tool output", async ({
   test.setTimeout(300_000);
   await loadFixture(page, MULTIPAGE_PDF, 3);
 
-  await page.getByRole("button", { name: "Dual Page View" }).first().click();
-  await expect(
-    page.getByRole("button", { name: "Single Page View" }).first(),
-  ).toBeVisible({ timeout: 10_000 });
+  await choosePageView(page, "Dual Page View");
+  await expectPageViewChecked(page, "Dual Page View");
 
   await highlightAllText(page);
   await saveChanges(page);
-  await expect(
-    page.getByRole("button", { name: "Single Page View" }).first(),
-  ).toBeVisible({ timeout: 15_000 });
+  await expectPageViewChecked(page, "Dual Page View");
 
   await mockCompress(page, MULTIPAGE_PDF);
   await openCompressPanel(page);
@@ -241,9 +241,7 @@ test("dual page view survives a save and a tool output", async ({
     .toBe(3);
   // Either page in a dual spread can be reported as current; its geometry is
   // the reading position, not the page counter's tie-break between neighbours.
-  await expect(
-    page.getByRole("button", { name: "Single Page View" }).first(),
-  ).toBeVisible({ timeout: 15_000 });
+  await expectPageViewChecked(page, "Dual Page View");
   await expect
     .poll(async () => Math.abs((await pageTopOf(page, 0)) - topBefore), {
       timeout: 15_000,
@@ -260,10 +258,7 @@ for (const dualRotated of [false, true]) {
     await mockCompress(page, FORM_PDF);
     await openCompressPanel(page);
     if (dualRotated) {
-      await page
-        .getByRole("button", { name: "Dual Page View" })
-        .first()
-        .click();
+      await choosePageView(page, "Dual Page View");
       await page.getByRole("button", { name: "Rotate Left" }).first().click();
       await expect
         .poll(async () => {
@@ -288,9 +283,7 @@ for (const dualRotated of [false, true]) {
     await expect(zoom).toHaveText(zoomBefore ?? "");
     await expect(page.locator('[data-page-index="1"]')).toBeInViewport();
     if (dualRotated) {
-      await expect(
-        page.getByRole("button", { name: "Single Page View" }).first(),
-      ).toBeVisible();
+      await expectPageViewChecked(page, "Dual Page View");
       await expect
         .poll(async () => {
           const box = await page.locator('[data-page-index="1"]').boundingBox();

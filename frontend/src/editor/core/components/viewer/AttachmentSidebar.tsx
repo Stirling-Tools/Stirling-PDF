@@ -25,8 +25,6 @@ import { privateContentClassName } from "@editor/components/shared/privateConten
 
 interface AttachmentSidebarProps {
   visible: boolean;
-  thumbnailVisible: boolean;
-  bookmarkVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
   /** Set for an Adobe PDF Portfolio: renders the richer collection experience
@@ -143,8 +141,6 @@ const createEntry = (
 
 export const AttachmentSidebar = ({
   visible,
-  thumbnailVisible,
-  bookmarkVisible,
   documentCacheKey,
   preloadCacheKeys = [],
   portfolio = null,
@@ -751,7 +747,6 @@ export const AttachmentSidebar = ({
           : t("viewer.attachments.title", "Attachments")
       }
       icon={isPortfolio ? <Icon name="library" /> : <Icon name="paperclip" />}
-      rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
       visible={visible}
       onClose={toggleAttachmentSidebar}
       closeLabel={t(

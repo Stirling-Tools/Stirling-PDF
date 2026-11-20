@@ -351,7 +351,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: <Icon name="form-input" size="1.5rem" />,
+        icon: <Icon name="clipboard-pen-line" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@editor/tools/formFill/FormFill")),
         description: t(

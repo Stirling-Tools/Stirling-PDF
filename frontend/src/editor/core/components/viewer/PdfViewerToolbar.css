@@ -55,3 +55,8 @@
   flex-shrink: 0;
   margin: 0 0.25rem;
 }
+
+/* A viewer control registered into this bar. */
+.pdf-viewer-toolbar__tool {
+  display: inline-flex;
+}

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { toggleViewerPanel } from "@editor/tests/helpers/ui-helpers";
 
 interface SwapSamplerState {
   swapMs: number;
@@ -341,8 +342,7 @@ test("a reload keeps other open viewer surfaces", async ({ page }) => {
   test.setTimeout(180_000);
   await loadViewer(page);
 
-  const comments = page.getByRole("button", { name: "Comments" }).first();
-  await comments.click();
+  await toggleViewerPanel(page, "Comments");
   await expect(page.locator(".comments-sidebar").first()).toBeVisible({
     timeout: 5_000,
   });

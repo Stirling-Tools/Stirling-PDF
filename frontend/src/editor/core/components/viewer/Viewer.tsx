@@ -34,8 +34,6 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     activeFileId,
     isAttachmentSidebarVisible,
     toggleAttachmentSidebar,
-    isThumbnailSidebarVisible,
-    isBookmarkSidebarVisible,
   } = useViewer();
 
   // Determine the active file — previewFile takes priority, then look up by stable ID
@@ -92,8 +90,6 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
       {viewer}
       <AttachmentSidebar
         visible={isAttachmentSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
-        bookmarkVisible={isBookmarkSidebarVisible}
         portfolio={portfolio}
       />
     </div>
