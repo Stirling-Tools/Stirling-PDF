@@ -273,7 +273,10 @@ function tiles(
   { displayWidth, displayHeight }: DisplayTransformData,
 ): boolean {
   if (centres.length < TILED) return false;
-  const span = (values: number[]) => Math.max(...values) - Math.min(...values);
+  const span = (values: number[]) => {
+    const { least, most } = extent(values);
+    return most - least;
+  };
   return (
     span(centres.map((c) => c.x)) >= displayWidth / 2 &&
     span(centres.map((c) => c.y)) >= displayHeight / 2
@@ -350,26 +353,42 @@ function numbersPages(runs: readonly GroupedRun[]): boolean {
  */
 function readsAsContent(runs: readonly GroupedRun[]): boolean {
   if (runs.some((run) => run.inTable)) return true;
-  const pageIndices = [...new Set(runs.map((run) => run.pageIndex))].sort(
-    (a, b) => a - b,
-  );
+  const onEachPage = new Map<number, GroupedRun[]>();
+  for (const run of runs) {
+    const onPage = onEachPage.get(run.pageIndex) ?? [];
+    onEachPage.set(run.pageIndex, onPage);
+    onPage.push(run);
+  }
+  const inPageOrder = [...onEachPage.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, onPage]) => onPage);
   return runs[0].numbers.some((_, i) => {
-    const byPage = pageIndices.map(
-      (pageIndex) =>
-        new Set(
-          runs
-            .filter((run) => run.pageIndex === pageIndex)
-            .map((run) => run.numbers[i]),
-        ),
+    const byPage = inPageOrder.map((onPage) =>
+      extent(new Set(onPage.map((run) => run.numbers[i]))),
     );
-    const shown = byPage.flatMap((values) => [...values]);
-    const differ = new Set(shown).size === shown.length;
+    const shown = byPage.reduce((count, values) => count + values.count, 0);
+    const differ = new Set(runs.map((run) => run.numbers[i])).size === shown;
     const rise = byPage.every(
-      (values, at) =>
-        at === 0 || Math.min(...values) > Math.max(...byPage[at - 1]),
+      (values, at) => at === 0 || values.least > byPage[at - 1].most,
     );
     return differ && !rise;
   });
+}
+
+// Folded rather than spread: Math.min(...values) overflows the stack on a few
+// hundred thousand values, which one crafted page can hold.
+function extent(values: Iterable<number>): {
+  least: number;
+  most: number;
+  count: number;
+} {
+  let [least, most, count] = [Infinity, -Infinity, 0];
+  for (const value of values) {
+    least = Math.min(least, value);
+    most = Math.max(most, value);
+    count++;
+  }
+  return { least, most, count };
 }
 
 /** The text's numbers, written in the digits of any script. */
