@@ -16,7 +16,11 @@ export interface ReviewModeState {
     fileId: FileId;
     pageIndex: number;
     target: AccessibilityFixTarget;
+    /** Tag every page automatically (tagAllPages) before going to `target`. */
+    autoTag?: boolean;
   } | null;
+  /** How far an automatic tagging of every page has got; null when none runs. */
+  autoTagProgress: { current: number; total: number } | null;
   /** A tab of the inspector to show, opening the Properties dropdown when the panel is hidden; cleared once shown. */
   inspectorTab: SidebarTab | null;
   /** The user asked to close; the editor answers once it has dealt with unsaved tags. */
@@ -30,6 +34,7 @@ let state: ReviewModeState = {
   startAt: null,
   inspectorTab: null,
   closeRequested: false,
+  autoTagProgress: null,
 };
 const listeners = new Set<() => void>();
 

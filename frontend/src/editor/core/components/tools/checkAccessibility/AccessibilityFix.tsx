@@ -1,9 +1,11 @@
 import { createContext, useContext } from "react";
+import { Tooltip } from "@mantine/core";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@editor/ui/Button";
 import { Icon } from "@editor/ui/Icon";
 import type { AccessibilityIssue } from "@editor/types/checkAccessibility";
+import { useReviewMode } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import {
   PAGE_SCOPED_TARGETS,
   fixTargetFor,
@@ -44,6 +46,52 @@ export function FixInDocumentButton({ passing }: { passing: boolean }) {
           )
         : t("checkAccessibility.fix.inDocument", "Fix tags in the document")}
     </Button>
+  );
+}
+
+/**
+ * Tags every page of the file automatically in the review, as one undo step.
+ * Shows how far it has got while it runs.
+ */
+export function TagEverythingButton({ onTag }: { onTag: () => void }) {
+  const { t } = useTranslation();
+  const { autoTagProgress } = useReviewMode();
+  const percent = autoTagProgress
+    ? Math.round(
+        (autoTagProgress.current / Math.max(1, autoTagProgress.total)) * 100,
+      )
+    : null;
+  return (
+    <Tooltip
+      multiline
+      w={280}
+      position="bottom"
+      openDelay={400}
+      label={t(
+        "pdfTextEditor.inspector.accessibility.tagUntaggedHint",
+        "Automatically adds accessibility tags throughout the document. The result is rough: check headings, lists and reading order afterwards.",
+      )}
+    >
+      <Button
+        fullWidth
+        variant="secondary"
+        leftSection={<Icon name="sparkles" size={16} />}
+        loading={percent !== null}
+        disabled={percent !== null}
+        onClick={onTag}
+        data-testid="a11y-tag-everything"
+      >
+        {percent === null
+          ? t(
+              "checkAccessibility.fix.tagEverything",
+              "Tag everything automatically",
+            )
+          : t("checkAccessibility.fix.tagging", {
+              defaultValue: "Tagging… {{percent}}%",
+              percent,
+            })}
+      </Button>
+    </Tooltip>
   );
 }
 

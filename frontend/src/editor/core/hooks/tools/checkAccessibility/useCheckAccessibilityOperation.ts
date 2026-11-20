@@ -121,7 +121,12 @@ export const useCheckAccessibilityOperation =
                 fileId: file.fileId,
                 fileName: file.name,
                 report: null,
-                error: extractErrorMessage(error),
+                error: unreachable(error)
+                  ? t(
+                      "checkAccessibility.error.unreachable",
+                      "The server didn't answer. Check it's running, then check again.",
+                    )
+                  : extractErrorMessage(error),
               });
             }
             if (!isCurrent()) return;
@@ -190,3 +195,12 @@ export const useCheckAccessibilityOperation =
       ],
     );
   };
+
+/** No response at all: the server is down or the connection dropped, not a cancelled run. */
+function unreachable(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    !error.response &&
+    error.code !== axios.AxiosError.ERR_CANCELED
+  );
+}

@@ -7,6 +7,7 @@ import {
   type ReviewModeState,
 } from "@editor/tools/pdfTextEditor/store/reviewMode";
 import { goToFix } from "@editor/tools/pdfTextEditor/util/reviewFix";
+import { tagAllPages } from "@editor/tools/pdfTextEditor/hooks/useBulkTagging";
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 
 interface Options {
@@ -43,7 +44,13 @@ export function useReviewStart({
     const doc = store.document;
     if (!ready || !doc || !session) return;
     reviewMode.set({ startAt: null });
-    goToFix(store, startAt.pageIndex, startAt.target);
+    if (startAt.autoTag) {
+      void autoTag(store).then(() =>
+        goToFix(store, startAt.pageIndex, startAt.target),
+      );
+    } else {
+      goToFix(store, startAt.pageIndex, startAt.target);
+    }
   }, [startAt, sourceFileId, ready, session, store, setActiveFileId]);
 
   // A file that can't open leaves nothing to fix, and a request left pending
@@ -58,4 +65,25 @@ export function useReviewStart({
       else if (loadStarted && s.error) reviewMode.set({ startAt: null });
     });
   }, [waiting, store]);
+}
+
+/**
+ * Tags every page, mirroring its progress into reviewMode: the editor's own
+ * progress shows in its sidebar, which a review keeps hidden.
+ */
+async function autoTag(store: EditorStore): Promise<void> {
+  reviewMode.set({ autoTagProgress: { current: 0, total: 1 } });
+  const stop = store.subscribe(({ progress }) => {
+    if (progress) {
+      reviewMode.set({
+        autoTagProgress: { current: progress.current, total: progress.total },
+      });
+    }
+  });
+  try {
+    await tagAllPages(store);
+  } finally {
+    stop();
+    reviewMode.set({ autoTagProgress: null });
+  }
 }

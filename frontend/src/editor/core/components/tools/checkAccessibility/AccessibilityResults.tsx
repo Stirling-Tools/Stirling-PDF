@@ -13,11 +13,13 @@ import { createAccessibilityReportPdf } from "@editor/hooks/tools/checkAccessibi
 import { assessAccessibilityReport } from "@editor/utils/accessibilityAssessment";
 import { resultLabel } from "@editor/utils/accessibilityReportContent";
 import type { FileId } from "@editor/types/file";
+import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import type { AccessibilityReportEntry } from "@editor/types/checkAccessibility";
 import "@editor/components/tools/checkAccessibility/CheckAccessibility.css";
 import {
   AccessibilityFixContext,
   FixInDocumentButton,
+  TagEverythingButton,
   type AccessibilityFixFn,
 } from "@editor/components/tools/checkAccessibility/AccessibilityFix";
 import { useViewer } from "@editor/contexts/ViewerContext";
@@ -103,18 +105,34 @@ export function AccessibilityResults({
     ) : null;
   }
 
-  const fixInDocument: AccessibilityFixFn = (target, page) => {
+  const openInReview = (
+    target: AccessibilityFixTarget,
+    page?: number,
+    autoTag = false,
+  ) => {
     reviewMode.set({
       reviewing: true,
       startAt: {
         fileId: selected.fileId,
         pageIndex: (page ?? 1) - 1,
         target,
+        autoTag,
       },
     });
     setActiveFileId(selected.fileId);
     navigationActions.setWorkbench("viewer");
   };
+  const fixInDocument: AccessibilityFixFn = (target, page) =>
+    openInReview(target, page);
+  const passing =
+    !!selected.report &&
+    assessAccessibilityReport(selected.report).result === "pass";
+  // A file the check could not read can still be tagged: the review reads it itself.
+  const tagEverything = reviewAvailable && !passing && (
+    <TagEverythingButton
+      onTag={() => openInReview("untagged", undefined, true)}
+    />
+  );
 
   return (
     <div className="a11y-results" data-testid="a11y-results">
@@ -144,11 +162,8 @@ export function AccessibilityResults({
         <AccessibilityFixContext.Provider
           value={reviewAvailable ? fixInDocument : null}
         >
-          <FixInDocumentButton
-            passing={
-              assessAccessibilityReport(selected.report).result === "pass"
-            }
-          />
+          <FixInDocumentButton passing={passing} />
+          {tagEverything}
           <AccessibilityReportView
             key={selected.fileId}
             report={selected.report}
@@ -176,6 +191,7 @@ export function AccessibilityResults({
           description={selected.error}
         />
       )}
+      {!selected.report && tagEverything}
 
       {!isLoading && selected.report && (
         <ToolPanelFooter>
