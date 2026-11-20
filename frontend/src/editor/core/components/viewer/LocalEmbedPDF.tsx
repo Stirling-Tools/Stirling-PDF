@@ -797,7 +797,11 @@ function ScrollbarWidthReporter({
     report();
     const observer = new ResizeObserver(report);
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Without a viewport there is no scrollbar to clear.
+      onChange(0);
+    };
   }, [viewportRef, onChange]);
   return null;
 }

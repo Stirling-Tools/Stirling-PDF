@@ -2131,9 +2131,12 @@ const EmbedPdfViewerContent = ({
             // floating card rather than one welded to the viewport edge.
             bottom: "0.5rem",
             left: 0,
-            // Clear of the open side panels and the pages' scrollbar, so it
-            // centres on the pages.
-            right: `calc(${totalRightMargin}rem + ${scrollbarWidth}px)`,
+            // Centres on the pages: clear of the side panels (always on the
+            // right) and the scrollbar (on the inline end, so left in RTL). As
+            // the toolbar's size container, a narrow dock drops controls
+            // rather than overlapping a panel.
+            right: `${totalRightMargin}rem`,
+            paddingInlineEnd: `${scrollbarWidth}px`,
             transition: "right 0.3s ease",
             zIndex: 50,
             display: "flex",
