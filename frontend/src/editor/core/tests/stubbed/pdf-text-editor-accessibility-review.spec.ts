@@ -10,10 +10,13 @@ const FIXTURE = path.join(
   import.meta.dirname,
   "../test-fixtures/tagged-sample.pdf",
 );
+const RESTRICTED = path.join(
+  import.meta.dirname,
+  "../test-fixtures/owner-only-restricted.pdf",
+);
 
 interface EditorWindow {
   __editor_store: {
-    setError: (error: string | null) => void;
     document: {
       documentLanguage: () => string | null;
       structure: (pageIndex: number) => {
@@ -123,22 +126,26 @@ test.describe("PDF accessibility review", () => {
     });
   });
 
-  test("shows the editor's error while the editor runs hidden", async ({
+  test("shows a failed open's error while the editor runs hidden", async ({
     page,
   }) => {
-    await openFixture(page);
-    await page.getByTestId("viewer-review-accessibility").click();
-    await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
-      timeout: 15_000,
+    await page.goto("/editor");
+    await page.getByTestId("file-input").setInputFiles(RESTRICTED);
+    await page
+      .getByRole("link", { name: "PDF Text Editor", exact: true })
+      .first()
+      .click({ timeout: 60_000 });
+    await expect(page.getByTestId("pdf-editor-error")).toBeVisible({
+      timeout: 30_000,
     });
-    await page.evaluate(() =>
-      (window as unknown as EditorWindow).__editor_store.setError(
-        "This file could not be opened",
-      ),
-    );
-    await expect(page.getByTestId("pdf-editor-error")).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-error")).toContainText(
-      "This file could not be opened",
-    );
+
+    await page.getByTestId("viewer-review-accessibility").click();
+    await expect(page.getByTestId("pdf-editor-review-host")).toBeAttached();
+    // The outgoing editor's own alert can linger a moment; this is the review's.
+    const alert = page.locator(".review-error").getByTestId("pdf-editor-error");
+    await expect(alert).toBeVisible({ timeout: 30_000 });
+    await expect(
+      alert.getByRole("button", { name: "Enter permissions password" }),
+    ).toBeVisible();
   });
 });
