@@ -17,6 +17,7 @@ import { SetLinkContentsCommand } from "@editor/tools/pdfTextEditor/commands/Set
 import {
   TagLinkCommand,
   taggableLinks,
+  undescribedLinks,
 } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import {
   TagPageContentCommand,
@@ -441,6 +442,45 @@ describe("describing links", () => {
     const pdf = await saved(doc);
     expect(contents(pdf)).toBe("New");
     expect(holder(pdf)).toBe(10);
+  });
+
+  test("lists a held link with no description, and gives it its text", async () => {
+    const doc = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1"),
+        parentTree: " 1 10 0 R",
+      }),
+    );
+    const run = doc.page(0).runs.find((r) => r.text.includes("stirlingpdf"))!;
+    const [link] = undescribedLinks(doc, 0, run.id);
+    expect(link).toMatchObject({
+      annotation: LINK,
+      contents: "stirlingpdf.com",
+    });
+    expect(undescribedLinks(doc, 0, "another run")).toEqual([]);
+    new HistoryStack().execute(
+      new SetLinkContentsCommand({
+        pageIndex: 0,
+        annotations: [LINK],
+        contents: link.contents,
+      }),
+      doc,
+    );
+    expect(undescribedLinks(doc, 0)).toEqual([]);
+    expect(contents(await saved(doc))).toBe("stirlingpdf.com");
+  });
+
+  test("lists no undescribed link where the link is untagged or described", async () => {
+    expect(undescribedLinks(await open(taggedPdf()), 0)).toEqual([]);
+    const described = await open(
+      taggedPdf({
+        linkElement: true,
+        link: linkAnnotation(" /StructParent 1 /Contents (Old)"),
+        parentTree: " 1 10 0 R",
+      }),
+    );
+    expect(undescribedLinks(described, 0)).toEqual([]);
   });
 
   test("lists a run's untagged links, and no other run's", async () => {

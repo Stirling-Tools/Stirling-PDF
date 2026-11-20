@@ -618,6 +618,7 @@ export function useToolbarController(
     textOtherPages: textA11y.otherPages,
     textDescription: textA11y.description,
     textUntaggedLinks: textA11y.untaggedLinks,
+    textUndescribedLinks: textA11y.undescribedLinks,
     formFieldAccessibility: formFieldA11y.accessibility,
     onTagFormField: formFieldA11y.tag,
     onSetFormFieldDescription: formFieldA11y.setDescription,

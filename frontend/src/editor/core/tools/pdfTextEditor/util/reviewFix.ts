@@ -1,6 +1,9 @@
 import type { AccessibilityFixTarget } from "@editor/utils/accessibilityFixes";
 import { linkTexts } from "@editor/tools/pdfTextEditor/commands/linkText";
-import { taggableLinks } from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
+import {
+  taggableLinks,
+  undescribedLinks,
+} from "@editor/tools/pdfTextEditor/commands/TagLinkCommand";
 import { ensurePageRead } from "@editor/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { selectHeadingAt } from "@editor/tools/pdfTextEditor/hooks/useHeadingOutline";
 import { selectReviewItem } from "@editor/tools/pdfTextEditor/hooks/useAccessibilityProgress";
@@ -57,7 +60,7 @@ function select(
     case "heading":
       return selectFlaggedHeading(store, pageIndex) ? target : null;
     case "link":
-      return selectUntaggedLink(store, pageIndex);
+      return selectLinkToFix(store, pageIndex);
     case "documentLanguage":
     case "markedTagged":
       reviewMode.set({ inspectorTab: "document" });
@@ -100,10 +103,11 @@ function selectFlaggedHeading(store: EditorStore, pageIndex: number): boolean {
 }
 
 /**
- * Selects the run under the first untagged link from `pageIndex`. Untagged text is
- * tagged first, as Tag link cuts from an element, so its tag choice is focused.
+ * Selects the run under the first link from `pageIndex` that is untagged or, on a
+ * page with none, tagged without a description. Untagged text is tagged first, as
+ * Tag link cuts from an element, so its tag choice is focused.
  */
-function selectUntaggedLink(
+function selectLinkToFix(
   store: EditorStore,
   pageIndex: number,
 ): AccessibilityFixTarget | null {
@@ -118,14 +122,16 @@ function selectUntaggedLink(
       .links()
       .filter(({ annotation }) => !structure.linkHeld(annotation));
     const runId =
-      taggable ?? linkTexts(doc, index, untagged).values().next().value?.runId;
+      taggable ??
+      linkTexts(doc, index, untagged).values().next().value?.runId ??
+      undescribedLinks(doc, index)[0]?.text.runId;
     if (!runId) continue;
     const page = store.getState().pages[index];
     const item = page && reviewItems(doc, [page]).find((i) => i.id === runId);
     if (item) selectReviewItem(store, item);
     else store.selection.selectOne(runId);
-    if (!taggable) return "untagged";
-    return "link";
+    if (taggable || untagged.length === 0) return "link";
+    return "untagged";
   }
   return null;
 }

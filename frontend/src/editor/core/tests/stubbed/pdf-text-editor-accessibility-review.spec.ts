@@ -21,6 +21,9 @@ interface EditorWindow {
       documentLanguage: () => string | null;
       structure: (pageIndex: number) => {
         alt: (mcid: number) => string | null;
+        links: () => { annotation: number; holder: string | null }[];
+        linkContents: (annotation: number) => string | null;
+        setLinkContents: (annotation: number, contents: string | null) => void;
       };
     };
     state: {
@@ -146,5 +149,47 @@ test.describe("PDF accessibility review", () => {
     await expect(
       alert.getByRole("button", { name: "Enter permissions password" }),
     ).toBeVisible();
+  });
+
+  test("gives a tagged link with no description its text", async ({ page }) => {
+    await openFixture(page);
+    await page.getByTestId("viewer-review-accessibility").click();
+    await expect(page.getByTestId("pdf-editor-quick-tag")).toBeVisible({
+      timeout: 15_000,
+    });
+    // The fixture's held link is described; clear it as a file without one would be.
+    const annotation = await page.evaluate(() => {
+      const structure = (
+        window as unknown as EditorWindow
+      ).__editor_store.document.structure(1);
+      const held = structure.links().find((link) => link.holder !== null)!;
+      structure.setLinkContents(held.annotation, null);
+      return held.annotation;
+    });
+
+    await page.getByTestId("pdf-editor-page-1").scrollIntoViewIfNeeded();
+    const appendixRun = () =>
+      page.evaluate(
+        () =>
+          (
+            window as unknown as EditorWindow
+          ).__editor_store.state.pages[1]?.runs.find((run) =>
+            run.text.includes("appendix"),
+          )?.id ?? null,
+      );
+    await expect.poll(appendixRun).not.toBeNull();
+    const runId = await appendixRun();
+    await page.getByTestId(`pdf-editor-run-${runId}`).click();
+    const describe = page.getByTestId("pdf-editor-quick-tag-describe-links");
+    await describe.click();
+    await expect(describe).toBeHidden();
+    const described = await page.evaluate(
+      (link) =>
+        (window as unknown as EditorWindow).__editor_store.document
+          .structure(1)
+          .linkContents(link),
+      annotation,
+    );
+    expect(described).toMatch(/appendix/i);
   });
 });

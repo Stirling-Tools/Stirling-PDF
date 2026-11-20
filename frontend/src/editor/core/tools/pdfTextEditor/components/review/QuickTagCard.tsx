@@ -205,6 +205,23 @@ export function QuickTagCard({ store, state, controller, review }: Props) {
               })}
             </Button>
           )}
+          {controller.textUndescribedLinks && (
+            <Button
+              size="sm"
+              variant="secondary"
+              accent="neutral"
+              leftSection={<Icon name="link" size={16} />}
+              onClick={controller.textUndescribedLinks.onDescribe}
+              data-fix-target="link"
+              data-testid="pdf-editor-quick-tag-describe-links"
+            >
+              {t(
+                "pdfTextEditor.inspector.accessibility.describeLinks",
+                "Describe link",
+                { count: controller.textUndescribedLinks.count },
+              )}
+            </Button>
+          )}
           <p className="review-card__label">
             {t(
               "pdfTextEditor.review.card.skipQuestion",
