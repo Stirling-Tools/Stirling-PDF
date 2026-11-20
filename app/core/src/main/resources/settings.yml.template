@@ -379,6 +379,7 @@ processExecutor:
     imageMagickSessionLimit: 4 # Unused since Office Convert replaced it; kept so a rollback keeps your value
     ghostscriptSessionLimit: 8
     ocrMyPdfSessionLimit: 2
+    officeConvertSessionLimit: 0 # Conversions run at once; 0 sizes it from CPUs and memory
   timeoutMinutes: # Process executor timeout in minutes
     officeConvertTimeoutMinutes: 30 # Office, HTML, ebook and PDF/A conversions
     libreOfficetimeoutMinutes: 30 # Unused since Office Convert replaced it; kept so a rollback keeps your value

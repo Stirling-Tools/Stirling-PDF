@@ -19,6 +19,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 import stirling.software.officeconvert.topdf.io.PoiXml;
 
@@ -53,6 +54,28 @@ public class OfficeToPdfService {
     @PostConstruct
     void raiseXmlLimits() {
         PoiXml.raiseProcessLimits();
+    }
+
+    /**
+     * Office Convert's single queue serves every conversion module, so one setting caps them all.
+     */
+    @PostConstruct
+    void applySessionLimit() {
+        int limit =
+                Math.max(
+                        0,
+                        applicationProperties
+                                .getProcessExecutor()
+                                .getSessionLimit()
+                                .getOfficeConvertSessionLimit());
+        Admission.Limits defaults = Admission.Limits.defaults();
+        Admission.configure(
+                new Admission.Limits(
+                        defaults.memoryBudgetPercent(),
+                        limit,
+                        defaults.maxWait(),
+                        defaults.refuseOversize(),
+                        defaults.readmitStopped()));
     }
 
     /** Loads the converter and scans fonts off the request path, so a first conversion is fast. */

@@ -2006,6 +2006,7 @@ public class ApplicationProperties {
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int ffmpegSessionLimit;
+            private int officeConvertSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;

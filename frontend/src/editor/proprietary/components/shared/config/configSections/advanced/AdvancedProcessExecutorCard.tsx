@@ -28,6 +28,40 @@ export function AdvancedProcessExecutorCard({
                   label={
                     <SettingsFieldLabel
                       info={t(
+                        "admin.settings.advanced.processExecutor.officeConvertSessionLimit",
+                        "Maximum concurrent conversions; 0 picks a limit from CPUs and memory",
+                      )}
+                    >
+                      {t(
+                        "admin.settings.advanced.processExecutor.sessionLimit.label",
+                        "Session Limit",
+                      )}
+                    </SettingsFieldLabel>
+                  }
+                  value={
+                    settings.processExecutor?.sessionLimit
+                      ?.officeConvertSessionLimit ?? 0
+                  }
+                  onChange={(value) =>
+                    setSettings({
+                      ...settings,
+                      processExecutor: {
+                        ...settings.processExecutor,
+                        sessionLimit: {
+                          ...settings.processExecutor?.sessionLimit,
+                          officeConvertSessionLimit: Number(value),
+                        },
+                      },
+                    })
+                  }
+                  min={0}
+                  max={100}
+                  disabled={!loginEnabled}
+                />
+                <NumberInput
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
                         "admin.settings.advanced.processExecutor.timeout.description",
                         "Maximum execution time",
                       )}
