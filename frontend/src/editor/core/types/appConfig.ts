@@ -76,7 +76,12 @@ export interface AppConfig {
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
   googleDriveAccountConnections?: boolean;
+  microsoftEnabled?: boolean;
+  microsoftClientId?: string;
+  microsoftTenant?: string;
+  microsoftGraphUrl?: string;
   microsoftAccountConnections?: boolean;
+  microsoftAllowEditorSaves?: boolean;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];

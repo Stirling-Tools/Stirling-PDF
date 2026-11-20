@@ -18,6 +18,10 @@ export function isFocusInFormField(): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
+export function isModalOpen(): boolean {
+  return document.querySelector('[aria-modal="true"]') !== null;
+}
+
 // The page index of the page nearest the viewport centre.
 export function visiblePageNumber(): number {
   const pages = pageElements();

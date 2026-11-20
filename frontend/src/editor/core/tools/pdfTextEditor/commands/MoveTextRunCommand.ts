@@ -1,3 +1,5 @@
+import type { TextRun } from "@editor/tools/pdfTextEditor/model/TextRun";
+import { liftRunToPage } from "@editor/tools/pdfTextEditor/commands/liftFromForm";
 import type { Command } from "@editor/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@editor/tools/pdfTextEditor/model/EditorDocument";
 import { collectMemberPtrs } from "@editor/tools/pdfTextEditor/commands/editTextHelpers";
@@ -11,9 +13,9 @@ import {
 export class MoveTextRunCommand implements Command {
   readonly type = "move-text-run";
   private readonly pageIndex: number;
-  private readonly runId: string;
+  readonly runId: string;
   private readonly dx: number;
-  private readonly dy: number;
+  readonly dy: number;
   private appliedPtrs: number[];
   /** Set when the run was scanned text, moved by redrawing it. */
   private scanPrev: ScanOverride | null = null;
@@ -35,6 +37,7 @@ export class MoveTextRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    liftRunToPage(doc, page, run);
     // Scanned words are pixels: cover them where they were, draw them anew.
     const scanPrev = setScanOverride(doc, page, run, (o) => ({
       ...o,
@@ -96,11 +99,7 @@ export class MoveTextRunCommand implements Command {
   }
 
   /** Shift the run's matrix/bounds + per-line + sub-run model by (dx, dy). */
-  private shiftModel(
-    run: import("@editor/tools/pdfTextEditor/model/TextRun").TextRun,
-    dx: number,
-    dy: number,
-  ): void {
+  private shiftModel(run: TextRun, dx: number, dy: number): void {
     run.matrix = { ...run.matrix, e: run.matrix.e + dx, f: run.matrix.f + dy };
     run.bounds = { ...run.bounds, x: run.bounds.x + dx, y: run.bounds.y + dy };
     if (run.paragraphMemberFs.length > 0) {

@@ -1,7 +1,13 @@
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { useEditorStoreView } from "@editor/tools/pdfTextEditor/hooks/useEditorStore";
 import { useEditorSelection } from "@editor/tools/pdfTextEditor/hooks/useEditorSelection";
 import { useToolbarController } from "@editor/tools/pdfTextEditor/hooks/useToolbarController";
+import { useDeferredPanelView } from "@editor/tools/pdfTextEditor/hooks/useDeferredPanelView";
+import type {
+  EditorStore,
+  EditorViewState,
+} from "@editor/tools/pdfTextEditor/store/EditorStore";
+import type { SelectionState } from "@editor/tools/pdfTextEditor/types";
 import { EditorTopBar } from "@editor/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@editor/tools/pdfTextEditor/components/MobileEditorTopBar";
 import { MobileActionBar } from "@editor/tools/pdfTextEditor/components/MobileActionBar";
@@ -17,7 +23,8 @@ const CONTROLS =
 export function ViewerEditToolbar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
-  const controller = useToolbarController(store, state, selection);
+  // Deferred so the typed letter is drawn before the bars, which a burst of typing outdates.
+  const bars = useDeferredPanelView(state, selection);
   const isMobile = useIsMobile();
 
   // A plain press on the bare viewer around the pages clears the selection,
@@ -37,34 +44,12 @@ export function ViewerEditToolbar() {
 
   return (
     <>
-      {isMobile ? (
-        <MobileEditorTopBar
-          controller={controller}
-          hasDocument={state.hasDocument}
-          dirty={state.dirty}
-        />
-      ) : (
-        <EditorTopBar
-          controller={controller}
-          hasDocument={state.hasDocument}
-          dirty={state.dirty}
-          addTextArmed={state.mode === "addText"}
-          addTableArmed={state.mode === "addTable"}
-          onToggleAddTable={() =>
-            store.setMode(
-              store.getState().mode === "addTable" ? "select" : "addTable",
-            )
-          }
-          onToggleAddText={() =>
-            store.setMode(
-              store.getState().mode === "addText" ? "select" : "addText",
-            )
-          }
-          findOpen={state.findOpen}
-          onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
-          onShowHelp={() => store.setHelpOpen(true)}
-        />
-      )}
+      <TopBar
+        store={store}
+        state={bars.state}
+        selection={bars.selection}
+        mobile={isMobile}
+      />
       {state.findOpen && state.hasDocument && (
         <FindBar
           store={store}
@@ -77,12 +62,60 @@ export function ViewerEditToolbar() {
   );
 }
 
+interface BarProps {
+  store: EditorStore;
+  state: EditorViewState;
+  selection: SelectionState;
+}
+
+const TopBar = memo(function TopBar({
+  store,
+  state,
+  selection,
+  mobile,
+}: BarProps & { mobile: boolean }) {
+  const controller = useToolbarController(store, state, selection);
+  if (mobile)
+    return (
+      <MobileEditorTopBar
+        controller={controller}
+        hasDocument={state.hasDocument}
+        dirty={state.dirty}
+      />
+    );
+  return (
+    <EditorTopBar
+      controller={controller}
+      hasDocument={state.hasDocument}
+      dirty={state.dirty}
+      addTextArmed={state.mode === "addText"}
+      addTableArmed={state.mode === "addTable"}
+      onToggleAddTable={() => store.toggleMode("addTable")}
+      onToggleAddText={() => store.toggleMode("addText")}
+      findOpen={state.findOpen}
+      onToggleFind={() => store.toggleFindOpen()}
+      onShowHelp={() => store.setHelpOpen(true)}
+    />
+  );
+});
+
 /** The editing actions a small screen shows below the pages. */
 export function ViewerEditActionBar() {
   const { store, state } = useEditorStoreView();
   const selection = useEditorSelection(store);
-  const controller = useToolbarController(store, state, selection);
+  const bars = useDeferredPanelView(state, selection);
   if (!state.hasDocument) return null;
+  return (
+    <ActionBar store={store} state={bars.state} selection={bars.selection} />
+  );
+}
+
+const ActionBar = memo(function ActionBar({
+  store,
+  state,
+  selection,
+}: BarProps) {
+  const controller = useToolbarController(store, state, selection);
   return (
     <MobileActionBar
       store={store}
@@ -92,4 +125,4 @@ export function ViewerEditActionBar() {
       findOpen={state.findOpen}
     />
   );
-}
+});

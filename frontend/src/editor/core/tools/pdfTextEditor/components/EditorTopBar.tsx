@@ -1,4 +1,10 @@
-import { useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Icon } from "@editor/ui/Icon";
 import { Group, Menu, Popover, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -13,9 +19,74 @@ import {
 import { useEditorSession } from "@editor/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@editor/tools/pdfTextEditor/hooks/useElementWidth";
 import { modShortcut } from "@editor/utils/hotkeys";
+import { offsetClearing } from "@editor/tools/pdfTextEditor/util/clearingOffset";
 import "@editor/tools/pdfTextEditor/components/EditorTopBar.css";
 
 const COMPACT_BELOW_PX = 900;
+const FORMAT_MENU_GAP = 8;
+
+function FormatMenu({ controller }: { controller: Controller }) {
+  const { t } = useTranslation();
+  const [offset, setOffset] = useState(FORMAT_MENU_GAP);
+  const targetRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { selectedRunIds } = controller;
+
+  // The dropdown hangs over the top of the page, where the line being formatted often sits.
+  const clearSelectedText = useCallback(() => {
+    requestAnimationFrame(() => {
+      const anchor = targetRef.current?.getBoundingClientRect();
+      const dropdown = dropdownRef.current?.getBoundingClientRect();
+      if (!anchor || !dropdown) return;
+      const selected = selectedRunIds.flatMap((id) => {
+        const el = document.querySelector(`[data-run-id="${CSS.escape(id)}"]`);
+        return el ? [el.getBoundingClientRect()] : [];
+      });
+      setOffset(
+        offsetClearing(
+          anchor.bottom,
+          {
+            left: anchor.left,
+            right: anchor.left + dropdown.width,
+            height: dropdown.height,
+          },
+          selected,
+          FORMAT_MENU_GAP,
+          window.innerHeight,
+        ),
+      );
+    });
+  }, [selectedRunIds]);
+
+  return (
+    <Popover
+      position="bottom-start"
+      withinPortal
+      shadow="md"
+      offset={offset}
+      onOpen={clearSelectedText}
+      onClose={() => setOffset(FORMAT_MENU_GAP)}
+    >
+      <Popover.Target>
+        <Button
+          ref={targetRef}
+          size="sm"
+          variant="tertiary"
+          accent="neutral"
+          aria-label={t("pdfTextEditor.toolbar.formatting", "Text formatting")}
+          data-testid="pdf-editor-format-menu"
+          style={NO_SHRINK}
+          leftSection={<Icon name="case-sensitive" size={20} />}
+        />
+      </Popover.Target>
+      <Popover.Dropdown ref={dropdownRef}>
+        <Group gap="xs" wrap="wrap" maw={320}>
+          <FormatGroup controller={controller} inPopover />
+        </Group>
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
 
 interface EditorTopBarProps {
   controller: Controller;
@@ -48,6 +119,44 @@ export function EditorTopBar({
   const barRef = useRef<HTMLDivElement | null>(null);
   const barWidth = useElementWidth(barRef);
   const compact = barWidth !== null && barWidth < COMPACT_BELOW_PX;
+  const bandRef = useRef<HTMLDivElement | null>(null);
+  // The bar width the formatting controls need inline; 0 until they are seen not to fit.
+  const [formatNeeds, setFormatNeeds] = useState(0);
+  const foldFormat = compact || (barWidth !== null && barWidth < formatNeeds);
+  const formatShape = [
+    controller.hasRunSelection,
+    controller.hasImageSelection,
+    controller.state.weights.length > 0,
+  ].join();
+  // Other controls may fit again; measuring them inline happens before paint.
+  useLayoutEffect(() => setFormatNeeds(0), [formatShape]);
+  // The controls can grow after they mount (the device-fonts button, a loader), which re-renders only them.
+  const [formatGroup, setFormatGroup] = useState<HTMLDivElement | null>(null);
+  const [formatWidth, setFormatWidth] = useState(0);
+  useEffect(() => {
+    if (!formatGroup || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) =>
+      setFormatWidth(entry.contentRect.width),
+    );
+    observer.observe(formatGroup);
+    return () => observer.disconnect();
+  }, [formatGroup]);
+  useLayoutEffect(() => {
+    const band = bandRef.current;
+    if (!band || barWidth === null || foldFormat || !hasSelection) return;
+    // The colour field widens while its picker is open; folding then would
+    // remount the controls and close the picker under the pointer.
+    if (formatGroup?.querySelector('[aria-expanded="true"]')) return;
+    const overflow = band.scrollWidth - band.clientWidth;
+    if (overflow > 0) setFormatNeeds(Math.ceil(barWidth + overflow));
+  }, [
+    barWidth,
+    foldFormat,
+    hasSelection,
+    formatGroup,
+    formatWidth,
+    formatShape,
+  ]);
 
   const addTextLabel = addTextArmed
     ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page to add text")
@@ -84,7 +193,7 @@ export function EditorTopBar({
 
       {/* Shown from the first frame, idle until the document is read, so the
           bar does not pop in after the load. */}
-      <div className="pdf-editor-topbar__band">
+      <div className="pdf-editor-topbar__band" ref={bandRef}>
         <Tooltip
           label={t("pdfTextEditor.toolbar.undoTooltip", {
             defaultValue: "Undo ({{shortcut}})",
@@ -267,30 +376,12 @@ export function EditorTopBar({
                   is invisible rather than visibly clipped. */}
             <ObjectGroup controller={controller} />
             <ToolbarSeparator />
-            {compact ? (
-              <Popover position="bottom-start" withinPortal shadow="md">
-                <Popover.Target>
-                  <Button
-                    size="sm"
-                    variant="tertiary"
-                    accent="neutral"
-                    aria-label={t(
-                      "pdfTextEditor.toolbar.formatting",
-                      "Text formatting",
-                    )}
-                    data-testid="pdf-editor-format-menu"
-                    style={NO_SHRINK}
-                    leftSection={<Icon name="case-sensitive" size={20} />}
-                  />
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Group gap="xs" wrap="wrap" maw={320}>
-                    <FormatGroup controller={controller} />
-                  </Group>
-                </Popover.Dropdown>
-              </Popover>
+            {foldFormat ? (
+              <FormatMenu controller={controller} />
             ) : (
-              <FormatGroup controller={controller} />
+              <div className="pdf-editor-topbar__format" ref={setFormatGroup}>
+                <FormatGroup controller={controller} />
+              </div>
             )}
           </>
         )}
