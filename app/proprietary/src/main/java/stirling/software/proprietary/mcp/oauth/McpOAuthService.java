@@ -63,7 +63,11 @@ public class McpOAuthService {
     // A retried or racing refresh inside this window is refused but not treated as theft.
     static final Duration REFRESH_REUSE_GRACE = Duration.ofSeconds(60);
     // Registered clients nobody ever connected are dropped after this.
-    private static final Duration UNUSED_CLIENT_TTL = Duration.ofDays(7);
+    // A client registers moments before its first authorization, so a day is ample.
+    private static final Duration UNUSED_CLIENT_TTL = Duration.ofDays(1);
+    private static final int PURGE_PAGE = 500;
+    // Registrations are capped per hour, so this many pages always clears an hour's intake.
+    private static final int PURGE_MAX_PAGES = 50;
 
     private static final SecureRandom RANDOM = new SecureRandom();
     // RFC 7636 4.1 and 4.2.
@@ -449,7 +453,7 @@ public class McpOAuthService {
     private boolean accountStillOwns(McpOAuthGrant grant) {
         UserRepository repository = users.getIfAvailable();
         if (repository == null) {
-            return true;
+            return false;
         }
         Optional<User> user = repository.findByUsernameIgnoreCase(grant.getUsername());
         return user.isPresent()
@@ -687,9 +691,23 @@ public class McpOAuthService {
         return issueTokens(
                 stored.getUsername(),
                 stored.getClientId(),
-                stored.getScope(),
+                narrowedScope(stored.getScope(), grant.get().getScope()),
                 stored.getResource(),
                 grant.get().getId());
+    }
+
+    /**
+     * The scopes a refresh may carry: those the token held and the user's grant still allows, so
+     * reconnecting with fewer scopes also narrows sessions issued before.
+     */
+    static String narrowedScope(String held, String granted) {
+        if (held == null || held.isBlank() || granted == null || granted.isBlank()) {
+            return "";
+        }
+        List<String> allowed = Arrays.asList(granted.trim().split("\\s+"));
+        return Arrays.stream(held.trim().split("\\s+"))
+                .filter(allowed::contains)
+                .collect(java.util.stream.Collectors.joining(" "));
     }
 
     private static boolean withinReuseGrace(Instant consumedAt) {
@@ -765,11 +783,17 @@ public class McpOAuthService {
         int codes = authorizations.deleteExpired(now);
         int tokens = refreshTokens.deleteExpired(now);
         // Entity deletes, so each client's redirect URI rows go with it.
-        List<McpOAuthClient> stale =
-                clients.findUnusedRegistrations(
-                        now.minus(UNUSED_CLIENT_TTL), PageRequest.of(0, 500));
-        clients.deleteAll(stale);
-        int unused = stale.size();
+        int unused = 0;
+        for (int page = 0; page < PURGE_MAX_PAGES; page++) {
+            List<McpOAuthClient> stale =
+                    clients.findUnusedRegistrations(
+                            now.minus(UNUSED_CLIENT_TTL), PageRequest.of(0, PURGE_PAGE));
+            clients.deleteAll(stale);
+            unused += stale.size();
+            if (stale.size() < PURGE_PAGE) {
+                break;
+            }
+        }
         if (codes > 0 || tokens > 0 || unused > 0) {
             log.debug(
                     "MCP OAuth purge removed {} authorization(s), {} refresh token(s) and {}"

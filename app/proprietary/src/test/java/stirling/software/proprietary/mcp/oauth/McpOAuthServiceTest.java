@@ -359,7 +359,13 @@ class McpOAuthServiceTest {
                         .build();
         when(refreshTokens.findById(stored.getTokenHash())).thenReturn(Optional.of(stored));
         when(grants.findByUsernameAndClientId(USER, CIMD_ID))
-                .thenReturn(Optional.of(McpOAuthGrant.builder().id(1L).username(USER).build()));
+                .thenReturn(
+                        Optional.of(
+                                McpOAuthGrant.builder()
+                                        .id(1L)
+                                        .username(USER)
+                                        .scope(scope)
+                                        .build()));
 
         Map<String, Object> token = service.refresh("old-refresh", CIMD_ID);
 
@@ -946,5 +952,16 @@ class McpOAuthServiceTest {
         assertThrows(
                 McpOAuthException.class,
                 () -> service.register("x", List.of("http://user@127.0.0.1:1234/cb")));
+    }
+
+    @Test
+    void narrowedScopeKeepsOnlyWhatTheGrantStillAllows() {
+        assertEquals(
+                "mcp.tools.read offline_access",
+                McpOAuthService.narrowedScope(
+                        "mcp.tools.read mcp.tools.write offline_access",
+                        "mcp.tools.read offline_access"));
+        assertEquals("", McpOAuthService.narrowedScope("mcp.tools.write", "mcp.tools.read"));
+        assertEquals("", McpOAuthService.narrowedScope("mcp.tools.read", null));
     }
 }

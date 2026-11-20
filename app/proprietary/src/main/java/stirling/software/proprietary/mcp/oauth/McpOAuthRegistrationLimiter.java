@@ -1,6 +1,8 @@
 package stirling.software.proprietary.mcp.oauth;
 
+import java.net.InetAddress;
 import java.time.Duration;
+import java.util.HexFormat;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.context.annotation.Conditional;
@@ -42,11 +44,34 @@ public class McpOAuthRegistrationLimiter {
         if (perHour <= 0) {
             return true;
         }
-        String key = remoteAddress == null ? "unknown" : remoteAddress;
+        String key = sourceKey(remoteAddress);
         // Forwarded addresses can be spoofed, so a server-wide cap backs the per-IP one.
         Bucket global = global(perHour * GLOBAL_FACTOR);
         Bucket bucket = buckets.get(key, k -> hourly(perHour));
         return bucket.tryConsume(1) && global.tryConsume(1);
+    }
+
+    /**
+     * The address an IPv4 caller registers from, or the /64 prefix of an IPv6 one: a single
+     * subscriber is usually handed a whole /64, so counting each address would let one host spread
+     * a flood across 2^64 buckets.
+     */
+    static String sourceKey(String remoteAddress) {
+        if (remoteAddress == null || remoteAddress.isBlank()) {
+            return "unknown";
+        }
+        if (remoteAddress.indexOf(':') < 0) {
+            return remoteAddress;
+        }
+        try {
+            byte[] bytes = InetAddress.ofLiteral(remoteAddress).getAddress();
+            if (bytes.length != 16) {
+                return InetAddress.ofLiteral(remoteAddress).getHostAddress();
+            }
+            return HexFormat.of().formatHex(bytes, 0, 8) + "::/64";
+        } catch (IllegalArgumentException e) {
+            return remoteAddress;
+        }
     }
 
     // Kept outside the per-IP cache so a flood of addresses cannot evict it.

@@ -58,6 +58,7 @@ import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
 import stirling.software.proprietary.mcp.tools.StirlingMiscTool;
 import stirling.software.proprietary.mcp.tools.StirlingPagesTool;
 import stirling.software.proprietary.mcp.tools.StirlingSecurityTool;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.KeyPersistenceServiceInterface;
@@ -395,6 +396,16 @@ class McpBuiltinOAuthIntegrationTest {
         @Bean
         McpRefreshTokenRepository mcpRefreshTokenRepository() {
             return mock(McpRefreshTokenRepository.class);
+        }
+
+        @Bean
+        UserRepository userRepository() {
+            UserRepository repository = mock(UserRepository.class);
+            User account = mock(User.class);
+            when(account.isEnabled()).thenReturn(true);
+            when(repository.findByUsernameIgnoreCase(anyString())).thenReturn(Optional.empty());
+            when(repository.findByUsernameIgnoreCase("test-user")).thenReturn(Optional.of(account));
+            return repository;
         }
 
         /** Only 'test-user' is a provisioned, enabled account. */

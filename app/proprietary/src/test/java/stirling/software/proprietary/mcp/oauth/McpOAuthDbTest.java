@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.mcp.oauth.repository.McpOAuthClientReposito
 import stirling.software.proprietary.mcp.oauth.repository.McpOAuthGrantRepository;
 import stirling.software.proprietary.mcp.oauth.repository.McpRefreshTokenRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
 
 /** The OAuth entities and queries against a real (H2) schema, driven through the service. */
 @DataJpaTest
@@ -87,7 +89,7 @@ class McpOAuthDbTest {
                         refreshTokens,
                         minter,
                         fetcher,
-                        noUsers());
+                        enabledUsers());
     }
 
     @Test
@@ -164,6 +166,55 @@ class McpOAuthDbTest {
         assertThat(clients.findAll())
                 .extracting(McpOAuthClient::getClientId)
                 .containsExactlyInAnyOrder("used", "fresh");
+    }
+
+    @Test
+    void purgeClearsMoreThanOnePageOfAbandonedRegistrations() {
+        Instant old = Instant.now().minusSeconds(2L * 86400);
+        for (int i = 0; i < 1200; i++) {
+            clients.save(client("flood-" + i, old, null));
+        }
+        clients.save(client("fresh", Instant.now(), null));
+
+        service.purgeExpired();
+
+        assertThat(clients.findAll())
+                .extracting(McpOAuthClient::getClientId)
+                .containsExactly("fresh");
+    }
+
+    @Test
+    void reconnectingWithFewerScopesNarrowsTheRefreshTokensAlreadyIssued() {
+        McpAuthorizationRequest full =
+                service.createAuthorization(
+                        CIMD_ID,
+                        USER,
+                        REDIRECT,
+                        "state",
+                        "mcp.tools.read mcp.tools.write offline_access",
+                        "https://pdf.example.com/mcp",
+                        s256(VERIFIER),
+                        "S256");
+        service.approve(full);
+        String held =
+                service.exchangeCode(full.getCode(), CIMD_ID, REDIRECT, VERIFIER)
+                        .get("refresh_token")
+                        .toString();
+
+        McpAuthorizationRequest readOnly =
+                service.createAuthorization(
+                        CIMD_ID,
+                        USER,
+                        REDIRECT,
+                        "state",
+                        "mcp.tools.read",
+                        "https://pdf.example.com/mcp",
+                        s256(VERIFIER),
+                        "S256");
+        service.approve(readOnly);
+
+        String scope = service.refresh(held, CIMD_ID).get("scope").toString();
+        assertThat(scope.split(" ")).contains("mcp.tools.read").doesNotContain("mcp.tools.write");
     }
 
     @Test
@@ -290,7 +341,12 @@ class McpOAuthDbTest {
     static class TestApp {}
 
     @SuppressWarnings("unchecked")
-    private static ObjectProvider<UserRepository> noUsers() {
-        return mock(ObjectProvider.class);
+    private static ObjectProvider<UserRepository> enabledUsers() {
+        UserRepository repository = mock(UserRepository.class);
+        when(repository.findByUsernameIgnoreCase(anyString()))
+                .thenAnswer(call -> Optional.of(new User()));
+        ObjectProvider<UserRepository> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(repository);
+        return provider;
     }
 }

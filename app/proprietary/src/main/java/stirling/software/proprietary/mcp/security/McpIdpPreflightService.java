@@ -1,9 +1,12 @@
 package stirling.software.proprietary.mcp.security;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,6 +32,8 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Service
 public class McpIdpPreflightService {
+
+    private static final int MAX_BODY_BYTES = 256 * 1024;
 
     /** One checked requirement. {@code status} is pass, fail or warn. */
     public record Check(String id, String status, String title, String detail) {
@@ -259,7 +264,17 @@ public class McpIdpPreflightService {
         boolean cimd =
                 metadata.has("client_id_metadata_document_supported")
                         && metadata.get("client_id_metadata_document_supported").asBoolean();
-        if (registration != null) {
+        if (registration != null && !sameHost(issuer, registration)) {
+            checks.add(
+                    Check.fail(
+                            "registration",
+                            "The registration endpoint is not on the issuer's host",
+                            "Not probed: the IdP's metadata points registration at "
+                                    + hostOf(registration)
+                                    + ", not "
+                                    + hostOf(issuer)
+                                    + "."));
+        } else if (registration != null) {
             checks.add(probeRegistration(registration));
         } else if (cimd) {
             checks.add(
@@ -339,8 +354,9 @@ public class McpIdpPreflightService {
                                                     + "\"response_types\":[\"code\"],"
                                                     + "\"token_endpoint_auth_method\":\"none\"}"))
                             .build();
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            String body = boundedBody(response);
             if (response.statusCode() == 200 || response.statusCode() == 201) {
                 return Check.pass(
                         "registration",
@@ -352,7 +368,7 @@ public class McpIdpPreflightService {
                     "registration",
                     "IdP refused an anonymous registration (HTTP " + response.statusCode() + ")",
                     "Clients register with no credentials, so this must succeed. "
-                            + firstLine(response.body())
+                            + firstLine(body)
                             + " Keycloak's 'Trusted Hosts' anonymous policy blocks this by"
                             + " default.");
         } catch (InterruptedException e) {
@@ -388,10 +404,11 @@ public class McpIdpPreflightService {
                             .header("Accept", "application/json")
                             .GET()
                             .build();
-            HttpResponse<String> response =
-                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            String body = boundedBody(response);
             if (response.statusCode() == 200) {
-                return MAPPER.readTree(response.body());
+                return MAPPER.readTree(body);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -416,6 +433,27 @@ public class McpIdpPreflightService {
         return value == null || value.isNull() || value.asString().isBlank()
                 ? null
                 : value.asString();
+    }
+
+    // An IdP document is a few KB; reading no more keeps a hostile endpoint from filling the heap.
+    private static String boundedBody(HttpResponse<InputStream> response) throws IOException {
+        try (InputStream in = response.body()) {
+            return new String(in.readNBytes(MAX_BODY_BYTES), StandardCharsets.UTF_8);
+        }
+    }
+
+    static boolean sameHost(String issuer, String endpoint) {
+        String a = hostOf(issuer);
+        String b = hostOf(endpoint);
+        return a != null && a.equalsIgnoreCase(b);
+    }
+
+    private static String hostOf(String url) {
+        try {
+            return URI.create(url.trim()).getHost();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static String firstLine(String body) {
