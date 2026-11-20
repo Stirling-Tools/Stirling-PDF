@@ -60,7 +60,7 @@ export function createPreferencesNavSection(
           "settings.preferences.description",
           "How the editor looks and behaves for you, and your account.",
         ),
-        icon: "sliders-horizontal",
+        icon: "settings",
         component: <PreferencesSection {...props} />,
       },
     ],

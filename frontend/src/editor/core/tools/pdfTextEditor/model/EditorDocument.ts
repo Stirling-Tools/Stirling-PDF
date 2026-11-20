@@ -9,10 +9,13 @@ import { documentClosed } from "@editor/tools/pdfTextEditor/pdfium/pointerCaches
 import {
   PageStructure,
   givenMcids,
+  isDescribableType,
   isInlineType,
   type AddedElement,
   type CutElement,
+  type DescriptionBlocker,
   type ReadOnlyReason,
+  type RetagBlocker,
 } from "@editor/tools/pdfTextEditor/model/PageStructure";
 import {
   effectiveLanguage,
@@ -94,6 +97,13 @@ export class EditorDocument {
     string,
     { pageIndex: number; mcid: number; lang: string | null }
   >();
+  /** Unsaved /Alt changes to the file's blocks, by block key, held here as retags are. */
+  private readonly blockAlts = new Map<
+    string,
+    { pageIndex: number; mcid: number; alt: string | null }
+  >();
+  /** The file's blocks' /Alt, by block key. */
+  private readonly fileBlockAlts: ReadonlyMap<string, string | null>;
   /** The catalog /Lang as the file has it; null when it has none. */
   private readonly fileDocumentLang: string | null;
   /** The session's catalog /Lang; undefined when unchanged. */
@@ -142,6 +152,9 @@ export class EditorDocument {
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
     this.fileStructure = fileStructure;
+    this.fileBlockAlts = new Map(
+      fileStructure?.blocks.map(({ key, alt }) => [key, alt]),
+    );
     this.fileDocumentLang = readCatalogLang(module, docPtr);
     this.marked = fileStructure?.marked ?? false;
     this.pageCache = new Map();
@@ -365,6 +378,7 @@ export class EditorDocument {
       widgets: this.fileStructure.widgets.get(pageIndex) ?? [],
     };
     const retaggedAs = (key: string) => this.retaggedAs(key);
+    const describedAs = (key: string) => this.blockDescription(key);
     if (!page) {
       return new PageStructure(
         [],
@@ -373,6 +387,7 @@ export class EditorDocument {
         retaggedAs,
         annotations,
         this.fieldTooltips,
+        describedAs,
       );
     }
     if (page.slotCount === null) return new PageStructure([], "unreadable");
@@ -383,6 +398,7 @@ export class EditorDocument {
       retaggedAs,
       annotations,
       this.fieldTooltips,
+      describedAs,
     );
   }
 
@@ -438,13 +454,30 @@ export class EditorDocument {
   }
 
   /**
-   * Retag the block the text `mcid` marks belongs to as `type`. Null, or the
-   * type it has in the file, drops the change. Throws when cannotRetag
+   * Why the block `mcid` marks cannot be retagged as `type`, or null when it
+   * can: a block of text as any type, and a figure or formula as either,
+   * since only its /S changes and it may hold content other than text.
+   */
+  cannotRetagAs(
+    pageIndex: number,
+    mcid: number,
+    type: StructureType | null,
+  ): RetagBlocker | DescriptionBlocker | null {
+    const structure = this.structure(pageIndex);
+    if (isDescribableType(type) && structure.cannotDescribe(mcid) === null) {
+      return null;
+    }
+    return structure.cannotRetag(mcid);
+  }
+
+  /**
+   * Retag the block the content `mcid` marks belongs to as `type`. Null, or
+   * the type it has in the file, drops the change. Throws when cannotRetagAs
    * refuses it: a retag the save cannot write would fail every later save.
    */
   setRetag(pageIndex: number, mcid: number, type: StructureType | null): void {
     const structure = this.structure(pageIndex);
-    const blocker = structure.cannotRetag(mcid);
+    const blocker = this.cannotRetagAs(pageIndex, mcid, type);
     if (blocker) throw new Error(`MCID ${mcid} cannot be retagged: ${blocker}`);
     const block = structure.element(mcid)!.block;
     // An added element is not in the file yet: its type is just changed.
@@ -459,6 +492,49 @@ export class EditorDocument {
       // The save climbs from the element owning this to the same block.
       const address = structure.fileMcid(mcid)!;
       this.retags.set(block.key, { pageIndex, mcid: address, type });
+    }
+  }
+
+  private blockDescription(key: string): string | null | undefined {
+    const edit = this.blockAlts.get(key);
+    return edit ? edit.alt : this.fileBlockAlts.get(key);
+  }
+
+  /**
+   * Set or, with null, remove the description of the block the content
+   * `mcid` marks belongs to, on every page it spans. Throws when no element
+   * owns `mcid`. Whether the block can take one is the caller's to check
+   * (cannotDescribe): a retag clears the description of a block it has just
+   * made a paragraph.
+   */
+  setDescription(pageIndex: number, mcid: number, alt: string | null): void {
+    const structure = this.structure(pageIndex);
+    const block = structure.block(mcid);
+    if (!block) throw new Error(`No structure element owns MCID ${mcid}`);
+    const added = structure.addedBlockMcid(block.key);
+    if (added !== null) {
+      structure.setAlt(added, alt);
+      return;
+    }
+    if (alt === (this.fileBlockAlts.get(block.key) ?? null)) {
+      this.blockAlts.delete(block.key);
+    } else {
+      // The save climbs from the element owning this to the same block.
+      const address = structure.fileMcid(mcid)!;
+      this.blockAlts.set(block.key, { pageIndex, mcid: address, alt });
+    }
+    this.republishPagesHolding(block.key, pageIndex);
+  }
+
+  /**
+   * Bumps every other read page showing block `key`, so its snapshot, and the
+   * badges drawn from it, follow a change made through `pageIndex`.
+   */
+  private republishPagesHolding(key: string, pageIndex: number): void {
+    for (const [index, structure] of this.structureCache) {
+      if (index !== pageIndex && structure.holdsBlock(key)) {
+        this.pageCache.get(index)?.bumpRevision();
+      }
     }
   }
 
@@ -684,6 +760,14 @@ export class EditorDocument {
         decorative: false,
       }),
     );
+    const blockAlts = [...this.blockAlts.values()].map(
+      ({ pageIndex, mcid, alt }) => ({
+        pageIndex,
+        mcid,
+        blockAlt: alt,
+        decorative: false,
+      }),
+    );
     return [
       ...[...this.structureCache].flatMap(([pageIndex, structure]) => [
         ...structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
@@ -704,6 +788,7 @@ export class EditorDocument {
       ]),
       ...retags,
       ...blockLangs,
+      ...blockAlts,
     ];
   }
 
