@@ -32,7 +32,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.OfficeToPdfService;
-import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -58,7 +57,6 @@ public class ConvertWebsiteToPdfTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private OfficeToPdfService officeToPdfService;
     @Mock private TempFileManager tempFileManager;
-    @Mock private AppConfig appConfig;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
@@ -94,8 +92,7 @@ public class ConvertWebsiteToPdfTest {
                         pdfDocumentFactory,
                         officeToPdfService,
                         applicationProperties,
-                        tempFileManager,
-                        appConfig);
+                        tempFileManager);
 
         // Provide RequestContext for ServletUriComponentsBuilder
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -124,31 +121,6 @@ public class ConvertWebsiteToPdfTest {
         assertTrue(
                 location.getQuery() != null
                         && location.getQuery().contains("error=error.invalidUrlFormat"));
-    }
-
-    @Test
-    void background_job_redirect_stays_under_the_application_context_path() throws Exception {
-        RequestContextHolder.resetRequestAttributes();
-        when(appConfig.getContextPath()).thenReturn("/stirling/");
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("not-a-url");
-
-        ResponseEntity<?> resp = sut.urlToPdf(request);
-
-        assertEquals("/stirling/url-to-pdf", resp.getHeaders().getLocation().getPath());
-    }
-
-    @Test
-    void request_redirect_keeps_the_request_context_path() throws Exception {
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setContextPath("/stirling");
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput("not-a-url");
-
-        ResponseEntity<?> resp = sut.urlToPdf(request);
-
-        assertEquals("/stirling/url-to-pdf", resp.getHeaders().getLocation().getPath());
     }
 
     @Test

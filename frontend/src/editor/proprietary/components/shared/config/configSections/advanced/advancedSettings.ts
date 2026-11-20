@@ -59,6 +59,7 @@ export interface AdvancedSettingsData {
       installAppSessionLimit?: number;
       ghostscriptSessionLimit?: number;
       ocrMyPdfSessionLimit?: number;
+      officeConvertSessionLimit?: number;
     };
     timeoutMinutes?: {
       officeConvertTimeoutMinutes?: number;

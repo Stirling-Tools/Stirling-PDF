@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.common.service.LineArtConversionService;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
@@ -48,32 +49,7 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
 
-    private static final Map<String, List<String>> RETIRED_DEPENDENCY_GROUPS =
-            Map.of(
-                    "LibreOffice",
-                    List.of(
-                            "file-to-pdf",
-                            "pdf-to-word",
-                            "pdf-to-presentation",
-                            "pdf-to-rtf",
-                            "pdf-to-html",
-                            "pdf-to-xml",
-                            "pdf-to-pdfa"),
-                    "Unoconvert",
-                    List.of("file-to-pdf"),
-                    "Weasyprint",
-                    List.of("html-to-pdf", "url-to-pdf", "markdown-to-pdf", "eml-to-pdf"),
-                    "Pdftohtml",
-                    List.of("pdf-to-html", "pdf-to-markdown"),
-                    "Calibre",
-                    List.of("pdf-to-epub", "ebook-to-pdf"),
-                    "OpenCV",
-                    List.of("extract-image-scans"));
-
-    private static final Map<String, Set<String>> RETIRED_ALTERNATIVES =
-            Map.of(
-                    "file-to-pdf", Set.of("LibreOffice", "Unoconvert"),
-                    "pdf-to-html", Set.of("LibreOffice", "Pdftohtml"));
+    private static final String LINE_ART = "LineArt";
 
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -85,15 +61,18 @@ public class EndpointConfiguration {
     private final boolean runningProOrHigher;
     @Autowired @Lazy private LicenseServiceInterface licenseService;
     private final boolean pdfUaAvailable;
+    private final boolean lineArtAvailable;
 
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
+            @Autowired(required = false) LineArtConversionService lineArtService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
         // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
         this.pdfUaAvailable = pdfaLevelAService != null;
+        this.lineArtAvailable = lineArtService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -586,13 +565,9 @@ public class EndpointConfiguration {
 
         /* Ghostscript */
         addEndpointToGroup("Ghostscript", "repair");
-        addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
-
-        /* ImageMagick */
-        addEndpointToGroup("ImageMagick", "compress-pdf");
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
@@ -605,7 +580,6 @@ public class EndpointConfiguration {
         addEndpointAlternative("repair", "qpdf");
         addEndpointAlternative("repair", "Ghostscript");
         addEndpointAlternative("compress-pdf", "qpdf");
-        addEndpointAlternative("compress-pdf", "Ghostscript");
         addEndpointAlternative("compress-pdf", "Java");
         addEndpointAlternative("crop", "Ghostscript");
         addEndpointAlternative("crop", "Java");
@@ -631,17 +605,14 @@ public class EndpointConfiguration {
             }
 
             if (groupsToRemove != null) {
-                Set<String> retired = new HashSet<>();
                 for (String group : groupsToRemove) {
-                    String name = group.trim();
-                    if (RETIRED_DEPENDENCY_GROUPS.containsKey(name)) {
-                        retired.add(name);
-                    } else {
-                        disableGroup(name);
-                    }
+                    disableGroup(group.trim());
                 }
-                disableRetiredDependencyEndpoints(retired);
             }
+        }
+
+        if (!lineArtAvailable) {
+            disableGroup(LINE_ART, DisableReason.DEPENDENCY);
         }
 
         if (!pdfUaAvailable) {
@@ -655,26 +626,6 @@ public class EndpointConfiguration {
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
-        }
-    }
-
-    private void disableRetiredDependencyEndpoints(Set<String> retired) {
-        for (String group : retired) {
-            List<String> disabled =
-                    RETIRED_DEPENDENCY_GROUPS.get(group).stream()
-                            .filter(
-                                    endpoint ->
-                                            retired.containsAll(
-                                                    RETIRED_ALTERNATIVES.getOrDefault(
-                                                            endpoint, Set.of(group))))
-                            .toList();
-            log.info(
-                    "groupsToRemove entry '{}' names a dependency Stirling PDF no longer uses;"
-                            + " disabling the endpoints it covered with no remaining"
-                            + " alternative: {}",
-                    group,
-                    disabled.isEmpty() ? "none" : String.join(", ", disabled));
-            disabled.forEach(this::disableEndpoint);
         }
     }
 
@@ -701,7 +652,7 @@ public class EndpointConfiguration {
                 || "Python".equals(group)
                 || "Java".equals(group)
                 || "Javascript".equals(group)
-                || "ImageMagick".equals(group)
+                || LINE_ART.equals(group)
                 || "rar".equals(group)
                 || "FFmpeg".equals(group)
                 || "veraPDF".equals(group);

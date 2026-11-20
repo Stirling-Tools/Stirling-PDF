@@ -56,7 +56,8 @@ function collectSelectedRuns(
         fontIds.add(run.fontId);
         if (run.fontSubset) subsetFontIds.add(run.fontId);
         text += run.text;
-        if (run.renderMode === RENDER_MODE_INVISIBLE) scanned++;
+        if (run.renderMode === RENDER_MODE_INVISIBLE && !run.hiddenText)
+          scanned++;
       }
   return { fontIds, subsetFontIds, text, scanned };
 }

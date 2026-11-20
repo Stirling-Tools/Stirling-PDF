@@ -19,6 +19,7 @@ import org.mockito.MockedStatic;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.officeconvert.memory.Admission;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
 
 class OfficeToPdfServiceTest {
@@ -26,6 +27,20 @@ class OfficeToPdfServiceTest {
             new OfficeToPdfService(new ApplicationProperties(), null);
     private final Path input = Path.of("document.docx");
     private final Path output = Path.of("document.pdf");
+
+    @ParameterizedTest
+    @CsvSource({"3, 3", "0, 0", "-2, 0"})
+    void sessionLimitCapsOfficeConvertsQueue(int setting, int applied) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getProcessExecutor().getSessionLimit().setOfficeConvertSessionLimit(setting);
+        ArgumentCaptor<Admission.Limits> limits = ArgumentCaptor.forClass(Admission.Limits.class);
+        try (MockedStatic<Admission> admission = mockStatic(Admission.class)) {
+            new OfficeToPdfService(properties, null).applySessionLimit();
+            admission.verify(() -> Admission.configure(limits.capture()));
+        }
+        assertThat(limits.getValue().maxConcurrent()).isEqualTo(applied);
+        assertThat(limits.getValue().maxWait()).isEqualTo(Admission.Limits.defaults().maxWait());
+    }
 
     @Test
     void truncatedOutputNamesTheReason() throws Exception {

@@ -1918,6 +1918,7 @@ public class ApplicationProperties {
                 private String tenant = "common";
                 @ToString.Exclude private String clientSecret = "";
                 private boolean allowAccountConnections = true;
+                private boolean allowEditorSaves = true;
 
                 public boolean accountConnectionsReady() {
                     return enabled
@@ -2000,12 +2001,12 @@ public class ApplicationProperties {
         public static class SessionLimit {
             private int pythonOpenCvSessionLimit;
             private int installAppSessionLimit;
-            private int imageMagickSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
             private int ffmpegSessionLimit;
+            private int officeConvertSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -2021,10 +2022,6 @@ public class ApplicationProperties {
 
             public int getInstallAppSessionLimit() {
                 return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
-            }
-
-            public int getImageMagickSessionLimit() {
-                return imageMagickSessionLimit > 0 ? imageMagickSessionLimit : 4;
             }
 
             public int getGhostscriptSessionLimit() {
@@ -2050,8 +2047,6 @@ public class ApplicationProperties {
             @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
 
-            private long imageMagickTimeoutMinutes;
-
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
@@ -2076,10 +2071,6 @@ public class ApplicationProperties {
 
             public long getInstallAppTimeoutMinutes() {
                 return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
-            }
-
-            public long getImageMagickTimeoutMinutes() {
-                return imageMagickTimeoutMinutes > 0 ? imageMagickTimeoutMinutes : 30;
             }
 
             public long getGhostscriptTimeoutMinutes() {

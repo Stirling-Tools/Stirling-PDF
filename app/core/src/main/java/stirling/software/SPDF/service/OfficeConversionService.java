@@ -41,11 +41,9 @@ import stirling.software.officeconvert.legacy.PdfToPpt;
 @RequiredArgsConstructor
 public class OfficeConversionService {
 
-    /** Output formats by extension; a .doc is RTF, which Word opens as a document. */
     private static final Map<String, OfficeConvert.Format> FORMATS =
             Map.ofEntries(
                     Map.entry("docx", OfficeConvert.Format.DOCX),
-                    Map.entry("doc", OfficeConvert.Format.RTF),
                     Map.entry("odt", OfficeConvert.Format.ODT),
                     Map.entry("rtf", OfficeConvert.Format.RTF),
                     Map.entry("txt", OfficeConvert.Format.TXT),

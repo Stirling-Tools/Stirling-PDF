@@ -2,6 +2,7 @@ import { test, expect } from "@editor/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { uploadFiles } from "@editor/tests/helpers/ui-helpers";
+import { fileRows } from "@editor/tests/helpers/pdf-text-editor";
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,
@@ -12,12 +13,27 @@ const PARAGRAPH_PDF = path.join(
   "../test-fixtures/paragraph-sample.pdf",
 );
 
+/** The name on the file-list row the viewer, and so the editor, has open. */
+function openFile(page: Page) {
+  return page.locator(".file-sidebar-file-item.viewed .file-sidebar-file-name");
+}
+
+/** Shows `name` in the viewer from its file-list row; the editor follows. */
+async function viewFile(page: Page, name: string): Promise<void> {
+  const row = fileRows(page, name).first();
+  await row.hover();
+  await row.locator(".file-sidebar-eye-btn").click();
+}
+
 async function openEditorWithTwoFiles(page: Page): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
   await uploadFiles(page, [SAMPLE_PDF, PARAGRAPH_PDF]);
+  // Two files land on the file list; viewing one starts editing it.
+  await viewFile(page, "sample.pdf");
+  await expect(openFile(page)).toHaveText("sample.pdf", { timeout: 60_000 });
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -46,12 +62,7 @@ async function makeAnEdit(page: Page): Promise<void> {
 
 async function pickOtherFile(page: Page, opened: string): Promise<string> {
   const other = opened === "sample.pdf" ? "paragraph-sample.pdf" : "sample.pdf";
-  await page.getByTestId("pdf-editor-file-switcher").click();
-  await page
-    .getByTestId("pdf-editor-file-switch")
-    .filter({ hasText: new RegExp(`^${other}$`) })
-    .first()
-    .click();
+  await viewFile(page, other);
   return other;
 }
 
@@ -59,22 +70,16 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
   test("switching files with unsaved edits asks first", async ({ page }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
+    const opened = (await openFile(page).innerText()).trim();
     await makeAnEdit(page);
 
-    const other = await pickOtherFile(page, opened);
+    await pickOtherFile(page, opened);
 
     await expect(
-      page.getByTestId("pdf-editor-discard-confirm"),
+      page.getByTestId("unsaved-discard"),
       "switching files must not discard edits without asking",
     ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page
-        .getByTestId("pdf-editor-discard-modal")
-        .locator(".mantine-Modal-body"),
-    ).toContainText(other);
+    await expect(openFile(page)).toHaveText(opened);
   });
 
   test("cancelling keeps the document, its edits and its history", async ({
@@ -82,16 +87,15 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
   }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
+    const opened = (await openFile(page).innerText()).trim();
     await makeAnEdit(page);
 
     await pickOtherFile(page, opened);
-    await page.getByTestId("pdf-editor-discard-cancel").click();
+    await page.getByRole("button", { name: "Keep Working" }).click();
 
-    await expect(page.getByTestId("pdf-editor-discard-confirm")).toBeHidden();
-    await expect(page.getByTestId("pdf-editor-filename")).toContainText(opened);
+    await expect(page.getByTestId("unsaved-discard")).toBeHidden();
+    await expect(page.getByTestId("pdf-editor-discard-modal")).toBeHidden();
+    await expect(openFile(page)).toContainText(opened);
     await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
     const stillThere = await page.evaluate(() =>
       (
@@ -113,17 +117,18 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
   test("confirming opens the other file", async ({ page }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
+    const opened = (await openFile(page).innerText()).trim();
     await makeAnEdit(page);
 
     const other = await pickOtherFile(page, opened);
-    await page.getByTestId("pdf-editor-discard-confirm").click();
+    await page.getByTestId("unsaved-discard").click();
 
-    await expect(page.getByTestId("pdf-editor-filename")).toHaveText(other, {
+    await expect(openFile(page)).toHaveText(other, {
       timeout: 60_000,
     });
+    // The app's prompt settled it: the editor must not ask a second time.
+    await expect(page.getByTestId("pdf-editor-discard-modal")).toBeHidden();
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 60_000,
     });
@@ -132,33 +137,14 @@ test.describe("PDF text editor - unsaved-changes guard", () => {
   test("a clean document switches with no prompt at all", async ({ page }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
+    const opened = (await openFile(page).innerText()).trim();
 
     const other = await pickOtherFile(page, opened);
 
-    await expect(page.getByTestId("pdf-editor-filename")).toHaveText(other, {
+    await expect(openFile(page)).toHaveText(other, {
       timeout: 60_000,
     });
-    await expect(page.getByTestId("pdf-editor-discard-confirm")).toBeHidden();
-  });
-
-  test("opening a file from disk over unsaved edits asks too", async ({
-    page,
-  }) => {
-    test.setTimeout(180_000);
-    await openEditorWithTwoFiles(page);
-    await makeAnEdit(page);
-
-    await page
-      .locator('[data-testid="pdf-editor-file-input"]')
-      .setInputFiles(PARAGRAPH_PDF);
-
-    await expect(
-      page.getByTestId("pdf-editor-discard-confirm"),
-      "a dropped file must not discard edits without asking",
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("unsaved-discard")).toBeHidden();
   });
 
   test("closing the tool asks before the tool view slides away", async ({

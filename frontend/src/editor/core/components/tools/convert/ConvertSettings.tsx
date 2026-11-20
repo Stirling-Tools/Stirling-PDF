@@ -414,6 +414,7 @@ const ConvertSettings = ({
           </>
         )}
 
+      {/* Web to PDF options */}
       {(isWebFormat(parameters.fromExtension) &&
         parameters.toExtension === "pdf") ||
       (parameters.isSmartDetection &&

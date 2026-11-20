@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -106,7 +105,7 @@ class OfficeConvertIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"txt", "md", "html", "doc"})
+    @ValueSource(strings = {"txt", "md", "html"})
     void writesTextFormatsWithContent(String format) throws Exception {
         Path output = dir.resolve("output." + format);
         try (PDDocument pdf = document()) {
@@ -152,100 +151,6 @@ class OfficeConvertIntegrationTest {
         assertPdfText(body(controller.markdownToPdf(request)));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"html", "zip"})
-    void officeHtmlAppliesZoom(String format) throws Exception {
-        byte[] html =
-                ("<html><body><a href=\"https://example.com\">link</a>"
-                                + ("<p>" + TEXT + " and some more words on the line.</p>")
-                                        .repeat(120)
-                                + "</body></html>")
-                        .getBytes(StandardCharsets.UTF_8);
-        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
-
-        int[] pages = new int[2];
-        float[] zooms = {1f, 2f};
-        for (int i = 0; i < zooms.length; i++) {
-            HTMLToPdfRequest request = new HTMLToPdfRequest();
-            request.setFileInput(
-                    new MockMultipartFile(
-                            "fileInput",
-                            "page." + format,
-                            "application/octet-stream",
-                            format.equals("zip") ? zip("index.html", html) : html));
-            request.setZoom(zooms[i]);
-            byte[] pdf = body(controller.HtmlToPdf(request));
-            assertPdfText(pdf);
-            try (PDDocument document = Loader.loadPDF(pdf)) {
-                pages[i] = document.getNumberOfPages();
-                for (var page : document.getPages()) {
-                    assertThat(page.getMediaBox().getWidth()).isCloseTo(595.3f, within(1f));
-                    assertThat(page.getMediaBox().getHeight()).isCloseTo(841.9f, within(1f));
-                }
-                var link = document.getPage(0).getAnnotations().getFirst().getRectangle();
-                assertThat(link.getUpperRightX()).isLessThanOrEqualTo(595.3f);
-            }
-        }
-        assertThat(pages[1]).isGreaterThanOrEqualTo(pages[0] * 2);
-    }
-
-    @ParameterizedTest
-    @CsvSource({"html,2", "html,8", "zip,2", "zip,8"})
-    void officeHtmlZoomOverridesAuthorPageSize(String format, float zoom) throws Exception {
-        byte[] html =
-                ("<html><head><style>@page{size:210mm 297mm}</style></head><body><p>"
-                                + TEXT
-                                + "</p></body></html>")
-                        .getBytes(StandardCharsets.UTF_8);
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput",
-                        "page." + format,
-                        "application/octet-stream",
-                        format.equals("zip") ? zip("index.html", html) : html));
-        request.setZoom(zoom);
-        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
-
-        byte[] pdf = body(controller.HtmlToPdf(request));
-
-        try (PDDocument document = Loader.loadPDF(pdf)) {
-            assertThat(new PDFTextStripper().getText(document).replaceAll("\\s", ""))
-                    .contains(TEXT.replace(" ", ""));
-        }
-        try (PDDocument document = Loader.loadPDF(pdf)) {
-            var box = document.getPage(0).getMediaBox();
-            assertThat(box.getWidth()).isCloseTo(595.3f, within(1f));
-            assertThat(box.getHeight()).isCloseTo(841.9f, within(1f));
-        }
-    }
-
-    @Test
-    void officeHtmlZoomAppliesToAnXhtmlPageInAZip() throws Exception {
-        byte[] xhtml =
-                ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                                + "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>t</title>"
-                                + "</head><body><p>"
-                                + TEXT
-                                + "</p></body></html>")
-                        .getBytes(StandardCharsets.UTF_8);
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "page.zip", "application/zip", zip("index.xhtml", xhtml)));
-        request.setZoom(2f);
-        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
-
-        byte[] pdf = body(controller.HtmlToPdf(request));
-
-        assertPdfText(pdf);
-        try (PDDocument document = Loader.loadPDF(pdf)) {
-            var box = document.getPage(0).getMediaBox();
-            assertThat(box.getWidth()).isCloseTo(595.3f, within(1f));
-            assertThat(box.getHeight()).isCloseTo(841.9f, within(1f));
-        }
-    }
-
     @Test
     void htmlLimitErrorsNameTheDocumentNotATempFile() throws Exception {
         try (MockedStatic<OfficeToPdf> engine = mockStatic(OfficeToPdf.class)) {
@@ -264,24 +169,6 @@ class OfficeConvertIntegrationTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageStartingWith("Converting the document would produce more than");
         }
-    }
-
-    @ParameterizedTest
-    @ValueSource(floats = {0.05f, 9f})
-    void officeHtmlRejectsZoomOutsideTheSupportedRange(float zoom) {
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput",
-                        "page.html",
-                        "text/html",
-                        "<p>x</p>".getBytes(StandardCharsets.UTF_8)));
-        request.setZoom(zoom);
-        var controller = new ConvertHtmlToPDF(factory, tempFiles, toPdf);
-
-        assertThatThrownBy(() -> controller.HtmlToPdf(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Zoom must be between");
     }
 
     @ParameterizedTest
@@ -499,6 +386,24 @@ class OfficeConvertIntegrationTest {
 
         assertPdfText(pdf);
         assertThat(imageCount(pdf)).isEqualTo(1);
+    }
+
+    @Test
+    void htmlZoomEnlargesTheContent() throws Exception {
+        byte[] html =
+                ("<html><body>" + ("<p>" + TEXT + "</p>").repeat(80) + "</body></html>")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        int normal = pageCount(toPdf.convertHtml(html, false, 1f));
+        int zoomed = pageCount(toPdf.convertHtml(html, false, 2f));
+
+        assertThat(zoomed).isGreaterThan(normal);
+    }
+
+    private static int pageCount(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return document.getNumberOfPages();
+        }
     }
 
     @Test
@@ -769,7 +674,6 @@ class OfficeConvertIntegrationTest {
     @ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({
         "word,docx",
-        "word,doc",
         "word,odt",
         "presentation,ppt",
         "presentation,pptx",

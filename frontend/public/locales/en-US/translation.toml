@@ -653,6 +653,7 @@ installApp = "Install App"
 label = "Process Executor Limits"
 ocrMyPdf = "OCRmyPDF"
 officeConvert = "Office conversion"
+officeConvertSessionLimit = "Maximum concurrent conversions; 0 picks a limit from CPUs and memory"
 pythonOpenCv = "Python"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
@@ -1008,6 +1009,7 @@ mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disa
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Keep (Original Dimensions)"
 pageFormatLetter = "Letter (8.5×11in)"
+setupSteps = "How to set up {{name}}"
 title = "Connections"
 unlinkedServices = "Unlinked Services"
 
@@ -4055,14 +4057,14 @@ label = "Apply Grayscale for Compression"
 label = "Linearize PDF for fast web viewing"
 
 [compress.lineArt]
-description = "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction."
+description = "Reduces images to high-contrast black and white for maximum size reduction."
 detailLevel = "Detail level"
 edgeEmphasis = "Edge emphasis"
 edgeHigh = "Strong"
 edgeLow = "Gentle"
 edgeMedium = "Balanced"
 label = "Convert images to line art"
-unavailable = "ImageMagick is not installed or enabled on this server"
+unavailable = "Line art conversion is not available on this server"
 
 [compress.method]
 filesize = "File Size"
@@ -4093,7 +4095,7 @@ title = "Grayscale"
 title = "Compress Settings Overview"
 
 [compress.tooltip.lineArt]
-text = "Convert pages to high-contrast black and white using ImageMagick. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
+text = "Convert images to high-contrast black and white. Use detail level to control how much content becomes black, and edge emphasis to control how aggressively edges are detected."
 title = "Line Art"
 
 [compress.tooltip.qualityAdjustment]
@@ -4289,7 +4291,7 @@ connectAnother = "Connect another"
 connectFailed = "The account couldn't be connected. Check that the server's app registration is set up, then try again."
 disconnect = "Disconnect"
 google = "Google Drive"
-intro = "Connect your own accounts once. Your pipelines can then read from and save to them as you."
+intro = "Connect your own accounts once. The editor can then open files from them without signing in again, and your pipelines can read from and save to them as you."
 microsoft = "Microsoft (OneDrive & SharePoint)"
 needsReconnect = "Stirling can no longer reach this account, so pipelines using it are paused."
 none = "Your administrator hasn't turned on connected accounts."
@@ -4299,7 +4301,7 @@ reconnect = "Sign in again"
 work = "Work account"
 
 [connectedAccounts.disconnectConfirm]
-body = "Sources and pipelines that use this account will stop until you connect it again."
+body = "Sources and pipelines that use this account will stop. After you connect it again, update their account settings to use the new connection."
 confirm = "Disconnect"
 title = "Disconnect {{account}}?"
 
@@ -5059,10 +5061,12 @@ downloadFailed = "Download failed"
 dropHint = "Open files to get started"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
-googleDrive = "Google Drive"
+googleDrive = "Open from Google Drive"
 library = "PDF Library"
 myFiles = "File library"
 noFiles = "No files yet"
+oneDrive = "Open from OneDrive"
+oneDriveFailed = "Couldn't open OneDrive"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
@@ -5403,6 +5407,7 @@ diskFileHint = "Stored on your computer"
 diskHint = "A file in the mounted folder on your disk"
 local = "Local"
 localHint = "Not backed up"
+oneDrive = "OneDrive"
 shared = "Shared"
 sharedHint = "Shared with you via link"
 
@@ -6805,6 +6810,32 @@ quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between R
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
+[oneDriveSave]
+chooseFolder = "Choose a OneDrive folder to upload to"
+conflict = "This file has changed in OneDrive since this version was opened or saved. Save your version as a copy instead."
+failedTitle = "Couldn't save to OneDrive"
+fromOneDrive = "From OneDrive"
+linkNotStored = "This browser couldn't remember the link to the OneDrive file. After a reload, save it as a copy instead."
+missing = "This file was moved or deleted in OneDrive. Save your version as a copy instead."
+open = "Open in OneDrive"
+personalUnsupported = "Uploading to OneDrive needs a work or school Microsoft account."
+reconnect = "Reconnect"
+replaces = "Replaces {{name}}"
+saveCopyToOneDrive = "Save a copy in OneDrive"
+saved = "Saved to OneDrive"
+saving = "Saving to OneDrive..."
+signInToSave = "Sign in to your server to save to OneDrive."
+updateOriginal = "Update in OneDrive"
+uploadToOneDrive = "Upload to OneDrive..."
+
+[oneDriveSave.status]
+saved = "Saved to OneDrive"
+unsaved = "Changes not saved to OneDrive yet"
+
+[oneDriveSave.toolbar]
+replace = "Update {{name}} in OneDrive"
+saveAll = "Update all in OneDrive"
+
 [overlay-pdfs]
 desc = "Overlay one PDF on top of another"
 submit = "Submit"
@@ -7546,7 +7577,6 @@ saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
-workbenchLabel = "Editor"
 
 [pdfTextEditor.annotations]
 freetext = "Annotation text - not page text, so it can't be edited here"
@@ -7561,6 +7591,7 @@ mergeRuns_one = "Merge {{count}} run into a paragraph"
 mergeRuns_other = "Merge {{count}} runs into a paragraph"
 setColour = "Set colour on {{run}}"
 setOutline = "Set outline on {{run}}"
+tagFormField = "Tag form field"
 tagLink = "Tag link"
 tagPageContent = "Auto-tag page"
 typeInto = "Type into {{run}}"
@@ -7575,14 +7606,15 @@ confirm = "Discard and open"
 hint = "Cancel, then Save PDF to keep them in your workspace first."
 title = "Discard unsaved changes?"
 
-[pdfTextEditor.drop]
-hint = "Releases on the editor stage replace any open document."
-title = "Drop a PDF to open"
-
 [pdfTextEditor.error]
 decodeImage = "Could not decode the selected image."
+duplicateDropsLetters = "Can't duplicate this text: no available font draws all of its letters."
+formLiftChangesDrawing = "Can't edit this: it is drawn as part of a group whose clipping or graphics settings the editor can't keep when it is changed."
 insertImage = "Could not insert the selected image."
+needsShaping = "The editor can't yet draw this script's joined letters and vowel signs correctly, so this change was not made."
+replaceClippedImage = "Can't replace this image: it is cropped, and the replacement would show the parts the crop hides."
 scanOffInk = "Can't edit this text: its recognised words don't line up with the scan. Run OCR again."
+unsafeRtlEdit = "Can't make this edit: the editor can't redraw this line's right-to-left text without changing it."
 
 [pdfTextEditor.externalEdit]
 pngFileType = "PNG image"
@@ -7604,23 +7636,42 @@ wholeWord = "Whole word"
 
 [pdfTextEditor.fontPicker]
 builtInGroup = "Built-in fonts"
+closestMatch = "This font is missing some of the selected letters, so they are drawn in the closest matching font."
 deviceFontsNone = "No extra device fonts were found."
 deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
 deviceGroup = "Device fonts"
+documentFontCannotDraw = "The editor can't draw this text in the document's own font, so it was left in its current font."
 documentGroup = "Document font"
 embeddingForbidden = "This font's licence does not allow embedding it in a PDF. The text was left unchanged."
 embedFailed = "This font could not be embedded in the PDF. The text was left unchanged."
 includedGroup = "Included fonts"
 label = "Font family"
 matchedGroup = "Matched font"
+missingGlyphs = "This font is missing some of the selected characters, and they could not be kept in their current font. The text was left unchanged."
 mixed = "Mixed"
+needsShaping = "The editor can't yet redraw this script's joined letters and vowel signs correctly, so that text was left in its current font."
 noGlyphs = "This font has no characters for the selected text. The text was left unchanged."
 noMatch = "No matching font"
+partOfRunUnsupported = "This text can only be restyled as a whole. Select the box instead of some of its words."
 placeholder = "Font family"
 scannedText = "Scanned text"
 serverFontFailed = "That server font could not be downloaded. The text was left unchanged."
 serverGroup = "Server fonts"
+someLeftUnchanged = "This font does not have the characters for some of the selected text. That text was left unchanged."
+styleSkipped = "Some of the selected text has no version of its font in that style, so it was left unchanged."
+styleUnavailable = "The selected text has no version of its font in that style, so it was left unchanged."
 useDeviceFonts = "Use device fonts"
+weight = "Font weight"
+weightBlack = "Black"
+weightBold = "Bold"
+weightExtraBold = "Extra bold"
+weightExtraLight = "Extra light"
+weightLight = "Light"
+weightMedium = "Medium"
+weightNumber = "Weight {{weight}}"
+weightRegular = "Regular"
+weightSemibold = "Semibold"
+weightThin = "Thin"
 
 [pdfTextEditor.fonts]
 allPresent = "All letters & numbers present"
@@ -7665,6 +7716,7 @@ helpDesc = "This help"
 saveDesc = "Save to your workspace"
 
 [pdfTextEditor.help.editing]
+boldItalicDesc = "Bold / Italic, for the selected words or the whole box"
 deleteDesc = "Remove selected"
 duplicateDesc = "Duplicate selected"
 groupDesc = "Group selected runs into one paragraph"
@@ -7693,6 +7745,7 @@ fontCompletedOriginal = "Embedded font · characters it lacks are drawn in {{nam
 fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
 fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to {{fallback}}."
 fontUnknownCoverage = "{{name}} · a character it lacks falls back to {{fallback}}."
+formField = "Form field"
 geometry = "Position & size"
 height = "Height"
 heightHint = "A text box's height follows its type size and line count."
@@ -7714,6 +7767,8 @@ ocrUnavailable = "OCR is unavailable on this server."
 oneImage = "Image"
 oneShape = "Shape"
 oneText = "Text"
+outlinedTextHint_one = "This page's text is drawn as shapes, so there is no text to edit. Run OCR first to make it editable."
+outlinedTextHint_other = "{{count}} pages have their text drawn as shapes, so there is no text to edit. Run OCR first to make it editable."
 pages = "Pages"
 runOcr = "Run OCR"
 scanHint_one = "This page is a scanned image with no text to edit. Run OCR first to make its text editable."
@@ -7725,6 +7780,7 @@ scannedTextOffInk = "Scanned text · its recognised words sit off the scanned wo
 tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"
+unreadPagesHint = "{{count}} pages have no text to edit: some are scanned images and some draw their text as shapes. Run OCR first to make them editable."
 width = "Width"
 widthHint = "Text re-wraps to fit the width."
 x = "X"
@@ -7737,9 +7793,11 @@ applyToOtherPages_other = "Apply to {{count}} other pages"
 artifactGroup = "Skipped by screen readers"
 artifactText = "Decorative"
 cannotChange = "This image's accessibility can't be changed."
+cannotDescribeFormField = "This form field's description can't be changed."
 cannotDescribeLink = "This link's description can't be changed."
 cannotRetag = "This text's tag can't be changed."
 cannotSetDecorative = "This can't be marked or unmarked as decorative."
+cannotTagFormField = "This form field can't be tagged."
 cannotTagLink = "This link can't be tagged."
 cannotTagPage = "This page's content can't be tagged."
 contentGroup = "Content"
@@ -7749,6 +7807,11 @@ decorativeLabel = "Decorative image"
 description = "Image description"
 descriptionInfo = "Screen readers read this out in place of the image."
 encrypted = "Tags can't be edited in an encrypted file"
+figureDescription = "Figure description"
+figureDescriptionInfo = "Screen readers read this out in place of the figure."
+formFieldDescription = "Field description"
+formulaDescription = "Formula description"
+formulaDescriptionInfo = "Screen readers read this out in place of the formula. Say it as you would aloud, such as \"x squared plus one\"."
 heading = "Accessibility"
 innerTagLabel = "Tag {{number}}"
 innerTags = "Tags in this text"
@@ -7760,11 +7823,12 @@ missingDescriptions = "Missing descriptions"
 mixedContent = "Figure includes other content"
 mixedTags = "Mixed"
 needsDescriptionBadge = "No description"
-nextImage = "Next image"
+nextToReview = "Next to review"
 notFigure = "Tagged as part of the text"
 removeTag = "Remove tag"
 saveFailed = "Your accessibility changes couldn't be saved, so the file wasn't saved. Undo them and try again."
 selectedText = "Selected text"
+tagFormField = "Tag form field"
 tagging = "Tagging pages"
 tagLabel = "Tag"
 tagLinks_one = "Tag link"
@@ -7874,7 +7938,6 @@ done = "Done"
 download = "Save and download"
 find = "Find"
 lock = "Lock"
-openPdf = "Open a PDF"
 panelHint = "Editing happens in the Workspace view. Tap text on the page to change it."
 save = "Save"
 style = "Style"
@@ -7882,7 +7945,6 @@ tapToPlace = "Tap the page where the text should go"
 unlock = "Unlock"
 
 [pdfTextEditor.pageView]
-pageNumber = "Page {{page}}"
 renderFailed = "Failed to render page"
 
 [pdfTextEditor.password]
@@ -7898,6 +7960,8 @@ vertical = "Vertical ruler"
 
 [pdfTextEditor.run]
 lockedTitle = "Locked - use the Unlock button to edit"
+readOnlyOrderTitle = "This line's text can't be edited: it mixes right-to-left and left-to-right text in an order the editor can't redraw safely"
+resizeHandle = "Drag to change the width; the text rewraps"
 
 [pdfTextEditor.saveRisk]
 cancel = "Cancel"
@@ -7950,7 +8014,6 @@ addTable = "Add table"
 addText = "Add text"
 clickPageToAddTable = "Click page to add a table"
 clickPageToAddText = "Click page to add text"
-document = "Document"
 group = "Group"
 groupingAuto = "Auto"
 groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
@@ -7971,7 +8034,7 @@ ungroup = "Ungroup"
 ungroupTooltip = "Split this paragraph into one run per line"
 ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
 widthGrow = "Grow"
-widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthGrowHint = "Grow widens a box as you type until it reaches the page edge, then flows onto new lines; Wrap keeps its width and flows onto new lines."
 widthWrap = "Wrap"
 
 [pdfTextEditor.spellcheck]
@@ -7979,23 +8042,17 @@ auto = "Automatic"
 enable = "Check spelling as you type"
 language = "Dictionary language"
 
-[pdfTextEditor.stage]
-loadingDocument = "Loading document"
-loadingProgress = "Loading progress"
-noDocument = "No document loaded."
-pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
-renderingPreview = "Rendering preview"
-
 [pdfTextEditor.table]
 addColumn = "Add column"
 addRow = "Add row"
+cellNoGlyphs = "This text has characters the table's fonts can't draw. Change or remove them to fill the cell."
 column = "Col"
 deleteColumn = "Delete column"
 deleteRow = "Delete row"
 done = "Done"
 doneHint = "Stop editing this as a table"
-edit = "Edit"
 editHint = "Edit as a table - type in cells, add or remove rows and columns"
+editTable = "Edit table"
 move = "Move"
 moveTable = "Drag to move the whole table"
 recognizedHint = "Recognized table - click to select all its text"
@@ -8016,6 +8073,9 @@ alignMiddle = "Align middle"
 alignRight = "Align right"
 alignTop = "Align top"
 arrange = "Arrange"
+bold = "Bold"
+boldOnly = "This font has only a bold version"
+boldUnavailable = "No bold version of this font"
 bringForward = "Bring forward"
 bringToFront = "Bring to front"
 caseLower = "lowercase"
@@ -8036,10 +8096,12 @@ fontColour = "Font colour"
 fontSize = "Font size"
 formatting = "Text formatting"
 italic = "Italic"
+italicOnly = "This font has only an italic version"
 italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
 lock = "Lock selection"
 lockTooltip = "Lock selection - prevents accidental edits"
 more = "More actions"
+noBoldItalic = "No bold italic version of this font"
 order = "Order"
 outlineColour = "Outline colour"
 outlineWidth = "Outline width (0 = none)"
@@ -8069,13 +8131,6 @@ title = "Preview Variance"
 [pdfTextEditor.tooltip.textFocus]
 text = "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here."
 title = "Text and Image Focus"
-
-[pdfTextEditor.zoom]
-fit = "Fit"
-fitToWidth = "Fit to width"
-in = "Zoom in"
-out = "Zoom out"
-reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"
@@ -9596,10 +9651,6 @@ signIn = "Sign in"
 signInToStart = "Sign in to start your trial"
 stage = "Stage {{current}} of {{total}}"
 stagesLabel = "Progress"
-
-[portal.enterprise.connect]
-ownerOnly = "Only this server’s owner can connect it. Ask them to open this page."
-unavailable = "Connecting to a Stirling account is turned off on this server. Book a call and we’ll set up your trial with you."
 
 [portal.enterprise.landing]
 lede = "Try it free for 14 days, then build your quote and sign your agreement here. No card required."
@@ -11220,11 +11271,6 @@ hint = "Paste this key into a self-hosted instance to activate it, or keep it fo
 label = "Your licence key"
 trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
-[portal.procurement.link]
-cta = "Link account"
-description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
-title = "Link your account to begin"
-
 [portal.procurement.live]
 description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
 title = "You're live on Stirling Enterprise"
@@ -11735,6 +11781,7 @@ description = "Covers opening files from Google Drive in the editor and connecti
 label = "Enable Google Drive"
 
 [provider.googledrive.errors]
+connectFailed = "Couldn't connect your Google account. Try again from Settings > Connected accounts."
 notConfigured = "Google Drive is not configured"
 pickerFailed = "Failed to open Google Drive picker"
 
@@ -11750,6 +11797,10 @@ scope = "Files & pipelines"
 description = "One sign-in for the editor and their pipelines. Turn off to allow only organisation connections."
 label = "Let people connect their own account"
 
+[provider.microsoft.allowEditorSaves]
+description = "Turn off to keep edits in Stirling: files opened from OneDrive then download instead, and the server refuses saves to OneDrive."
+label = "Let the editor save back to OneDrive"
+
 [provider.microsoft.clientId]
 description = "From one Microsoft Entra app registration."
 label = "Application (client) ID"
@@ -11759,12 +11810,23 @@ description = "Needed for connected accounts. Stays on the server."
 label = "Client secret"
 
 [provider.microsoft.enabled]
-description = "Let people use OneDrive and SharePoint in pipelines"
+description = "Let people open files from OneDrive and SharePoint, and use them in pipelines"
 label = "Enable OneDrive & SharePoint"
+
+[provider.microsoft.pickerRedirectUri]
+description = "Add this as a Single-page application redirect URI on the same app registration, for signing in from the editor."
+label = "Single-page application redirect URI"
 
 [provider.microsoft.redirectUri]
 description = "Add this as a Web redirect URI on the Entra app registration."
 label = "Redirect URI"
+
+[provider.microsoft.setupSteps]
+connect = "Save, restart, then connect an account under Connected accounts."
+permissions = "Add the Microsoft Graph delegated permissions Files.ReadWrite.All and Files.Read.All, and the SharePoint delegated permissions MyFiles.Read and AllSites.Read so work and school accounts can open the file picker."
+redirects = "Add the two redirect URIs below to it: one as Web, one as Single-page application."
+register = "Register an app in the Microsoft Entra admin center. Allow personal Microsoft accounts if people use personal OneDrive."
+secret = "Create a client secret, then paste its value and the app's client ID below."
 
 [provider.microsoft.tenant]
 description = "common for work, school and personal accounts; organizations for work and school only; or a tenant ID to admit one organisation"
@@ -11871,6 +11933,19 @@ label = "Scopes"
 description = "Field to use as username (email, name, given_name, family_name, preferred_username)"
 label = "Use as Username"
 
+[provider.onedrive]
+pickerLoading = "Connecting to OneDrive..."
+pickerTitle = "Choose files from OneDrive"
+
+[provider.onedrive.errors]
+connectFailed = "Couldn't connect your Microsoft account. Try again from Settings > Connected accounts."
+notConfigured = "OneDrive is not configured"
+pickerFailed = "Failed to open OneDrive"
+popupBlocked = "Your browser blocked the Microsoft sign-in window. Allow pop-ups for this site and try again."
+reconnect = "Your Microsoft account needs to sign in again. Reconnect it in Settings > Connected accounts."
+serverError = "OneDrive or the Stirling server had a problem. Try again, or ask your administrator if it keeps happening."
+unreachable = "Couldn't reach OneDrive. Check your connection and try again."
+
 [provider.saml2]
 name = "SAML2"
 scope = "SSO (SAML)"
@@ -11969,6 +12044,13 @@ notifications = "Notifications"
 processor = "Processor"
 reader = "Reader"
 signInToUse = "Sign in to use this"
+
+[quickNav.accountMenu]
+localMode = "Local mode"
+server = "Server settings"
+settings = "Settings"
+signedOut = "Not signed in"
+signIn = "Sign in"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -12780,7 +12862,7 @@ storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 
 [settings.connectedAccounts]
-description = "Your own OneDrive, SharePoint and Google Drive, for your pipelines."
+description = "Your own OneDrive, SharePoint and Google Drive, for opening files and for your pipelines."
 title = "Connected accounts"
 
 [settings.connectedInstances]
@@ -14661,6 +14743,7 @@ coverPageView = "Show Cover Page Separately"
 disableColorFilter = "Disable Color Filter"
 documentUpdated = "Document updated"
 dualPageView = "Dual Page View"
+editText = "Edit text"
 enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
 engineLoadError = "Failed to initialize PDF viewer engine"
@@ -15029,8 +15112,10 @@ closeAll = "Close All Files"
 closePdf = "Close PDF"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
+editText = "Edit Text"
 exitAnnotations = "Exit annotation mode"
 exitRedaction = "Exit Redaction Mode"
+findReplace = "Find & replace"
 formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"

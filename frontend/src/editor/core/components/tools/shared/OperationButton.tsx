@@ -1,4 +1,4 @@
-import { Box, Stack, Text } from "@mantine/core";
+import { Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -100,26 +100,29 @@ const OperationButton = ({
 
   if (disabledReason === "endpointUnavailable" && onEndpointUnavailableClick) {
     return (
-      <Stack gap={6} mx="md" mt={mt} data-testid="sign-in-required">
-        <Text size="xs" style={{ color: "var(--c-text-muted)" }}>
-          {t(
-            "tool.signInRequired",
-            "This needs a Stirling account. Sign in to continue.",
-          )}
-        </Text>
-        <Button
-          type="button"
-          fullWidth
-          variant="primary"
-          leftSection={<Icon name="log-in" size="1rem" />}
-          onClick={onEndpointUnavailableClick}
-          data-testid={dataTestId}
-          data-tour={dataTour}
-          style={{ minHeight: "2.5rem", height: "auto" }}
-        >
-          {t("tool.signInToUse", "Sign in to use")}
-        </Button>
-      </Stack>
+      <Tooltip
+        content={t(
+          "tool.signInRequired",
+          "This needs a Stirling account. Sign in to continue.",
+        )}
+        position="top"
+        arrow
+      >
+        <Box mx="md" mt={mt} data-testid="sign-in-required">
+          <Button
+            type="button"
+            fullWidth
+            variant="primary"
+            leftSection={<Icon name="log-in" size="1rem" />}
+            onClick={onEndpointUnavailableClick}
+            data-testid={dataTestId}
+            data-tour={dataTour}
+            style={{ minHeight: "2.5rem", height: "auto" }}
+          >
+            {t("tool.signInToUse", "Sign in to use")}
+          </Button>
+        </Box>
+      </Tooltip>
     );
   }
 
