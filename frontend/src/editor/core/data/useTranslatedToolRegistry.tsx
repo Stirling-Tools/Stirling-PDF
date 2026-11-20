@@ -450,9 +450,13 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       checkAccessibility: {
         icon: <Icon name="universal-access" size="1.5rem" />,
-        name: t("home.checkAccessibility.title", "PDF accessibility"),
-        component: lazy(() => import("@editor/tools/CheckAccessibility")),
-        // Tagging comes with the review, which only the accessibility-editing build has.
+        // The accessibility-editing build replaces the report with the tool that also fixes tags.
+        name: ACCESSIBILITY_EDITING
+          ? t("home.checkAccessibility.titleWithReview", "PDF accessibility")
+          : t("home.checkAccessibility.title", "Check PDF accessibility"),
+        component: ACCESSIBILITY_EDITING
+          ? lazy(() => import("@editor/tools/PdfAccessibility"))
+          : lazy(() => import("@editor/tools/CheckAccessibility")),
         description: ACCESSIBILITY_EDITING
           ? t(
               "home.checkAccessibility.descWithReview",

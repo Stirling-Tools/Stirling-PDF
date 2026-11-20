@@ -237,7 +237,7 @@
     },
     "checkAccessibility": {
       "image": "/og_images/home.png",
-      "title": "PDF accessibility - Stirling PDF",
+      "title": "Check PDF accessibility - Stirling PDF",
       "description": "Score a PDF against PDF/UA and see what blocks screen readers, without changing it"
     },
     "validateSignature": {
