@@ -41,6 +41,10 @@ import {
   findSettingsContentMatch,
 } from "@editor/data/settingsContentSearch";
 import {
+  buildToolMatchSnippet,
+  findToolContentMatch,
+} from "@editor/data/toolContentSearch";
+import {
   PROCESSOR_SEARCH_INDEX,
   isPortalEntityScopeAccessible,
   type ProcessorSearchEntry,
@@ -275,6 +279,7 @@ export function rankToolResults(
   trimmed: string,
   openTool: (id: ToolId) => void,
   limit = GROUP_RESULT_CEILING,
+  t?: TFunction,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
   // Coming-soon placeholders are listed in the catalogue but can't open —
@@ -282,14 +287,19 @@ export function rankToolResults(
   const entries = (
     Object.entries(registry) as [ToolId, ToolRegistry[ToolId] | undefined][]
   ).filter(([id, tool]) => tool && !isComingSoonTool(id, tool));
-  return rankByFuzzy(entries, trimmed, [
+  const fuzzyMatches = rankByFuzzy(entries, trimmed, [
     ([id]) => idToWords(id),
     ([, v]) => v?.name ?? "",
     ([, v]) => v?.description ?? "",
     ([, v]) => v?.synonyms?.join(" ") ?? "",
-  ])
-    .slice(0, limit)
-    .map(({ item: [id, tool], score }) => ({
+  ]);
+
+  const matchedToolIds = new Set<ToolId>(
+    fuzzyMatches.map(({ item: [id] }) => id),
+  );
+
+  const directResults: SuperSearchResult[] = fuzzyMatches.map(
+    ({ item: [id, tool], score }) => ({
       key: `tool:${id}`,
       group: "tools",
       title: tool?.name ?? id,
@@ -297,7 +307,37 @@ export function rankToolResults(
       icon: tool?.icon,
       score,
       onSelect: () => openTool(id),
-    }));
+    }),
+  );
+
+  // Content matches: search inner tool controls, options, and parameters
+  // from translated UI copy (e.g. CMYK, saddle stitch, duplex, color options).
+  // Ranked below label/keyword fuzzy matches so primary tool names stay ahead.
+  const contentMatches: SuperSearchResult[] =
+    t && trimmed.length >= 2
+      ? entries
+          .filter(([id]) => !matchedToolIds.has(id))
+          .flatMap(([id, tool]) => {
+            const match = findToolContentMatch(id, trimmed, t);
+            if (!match) return [];
+            const snippet = buildToolMatchSnippet(match, trimmed);
+            return [
+              {
+                key: `tool-content:${id}`,
+                group: "tools",
+                title: tool?.name ?? id,
+                subtitle: snippet,
+                icon: tool?.icon,
+                score: FUZZY_MIN_SCORE - 10,
+                onSelect: () => openTool(id),
+              },
+            ];
+          })
+      : [];
+
+  return [...directResults, ...contentMatches]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }
 
 export function rankSettingsResults(
@@ -595,7 +635,13 @@ export function useSuperSearch(
           ? rankFileResults(stubs, trimmed, openFile)
           : [],
         tools: scopeEnabled("tools")
-          ? rankToolResults(toolRegistry, trimmed, openTool)
+          ? rankToolResults(
+              toolRegistry,
+              trimmed,
+              openTool,
+              GROUP_RESULT_CEILING,
+              t,
+            )
           : [],
         settings: scopeEnabled("settings")
           ? rankSettingsResults(trimmed, t, gates, openSettings)
