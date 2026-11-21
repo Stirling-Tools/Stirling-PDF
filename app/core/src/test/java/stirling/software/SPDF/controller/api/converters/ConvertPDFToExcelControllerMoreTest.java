@@ -33,6 +33,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -127,11 +128,11 @@ class ConvertPDFToExcelControllerMoreTest {
     }
 
     @Nested
-    @DisplayName("no-content branches")
+    @DisplayName("no-tables branches")
     class NoContent {
 
         @Test
-        @DisplayName("single blank page yields no content")
+        @DisplayName("single blank page refuses instead of returning an empty file")
         void blankPageNoContent() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("data.pdf"));
@@ -139,13 +140,12 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThatThrownBy(() -> controller.pdfToExcel(request, null))
+                    .isInstanceOf(NothingToExtractException.class);
         }
 
         @Test
-        @DisplayName("multi-page blank document iterates all pages then yields no content")
+        @DisplayName("multi-page blank document iterates all pages then refuses")
         void multiBlankPagesNoContent() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("multi.pdf"));
@@ -153,9 +153,8 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(3));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThatThrownBy(() -> controller.pdfToExcel(request, null))
+                    .isInstanceOf(NothingToExtractException.class);
         }
     }
 
@@ -164,8 +163,7 @@ class ConvertPDFToExcelControllerMoreTest {
     class WorkbookWriting {
 
         @Test
-        @DisplayName(
-                "a bordered table page produces an xlsx response or, if undetected, no content")
+        @DisplayName("a bordered table page produces an xlsx response or, if undetected, refuses")
         void borderedTableProducesXlsx() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("table.pdf"));
@@ -173,19 +171,20 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(borderedTableDoc());
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
-
             // Lattice detection depends on the Tabula build; accept either outcome but assert the
             // success path produced a real, non-empty xlsx body.
-            if (response.getStatusCode() == HttpStatus.OK) {
-                assertThat(response.getHeaders().getContentType().toString())
-                        .contains("spreadsheetml.sheet");
-                assertThat(response.getHeaders().getContentDisposition().getFilename())
-                        .isEqualTo("table.xlsx");
-                assertThat(response.getBody()).isNotNull();
-            } else {
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            ResponseEntity<Resource> response;
+            try {
+                response = controller.pdfToExcel(request, null);
+            } catch (NothingToExtractException e) {
+                return;
             }
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getHeaders().getContentType().toString())
+                    .contains("spreadsheetml.sheet");
+            assertThat(response.getHeaders().getContentDisposition().getFilename())
+                    .isEqualTo("table.xlsx");
+            assertThat(response.getBody()).isNotNull();
         }
     }
 

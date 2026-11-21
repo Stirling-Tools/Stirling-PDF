@@ -33,6 +33,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -310,6 +311,17 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ProblemDetail> resp = handler.handlePdfUnrepairable(ex, request);
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, resp.getStatusCode());
         assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleNothingToExtract_returns_422_directly_and_through_a_job() {
+        NothingToExtractException ex = ExceptionUtils.createNoTablesFoundException();
+        ResponseEntity<ProblemDetail> direct = handler.handleNothingToExtract(ex, request);
+        ResponseEntity<ProblemDetail> wrapped =
+                handler.handleRuntimeException(new RuntimeException("wrapped", ex), request);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, direct.getStatusCode());
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, wrapped.getStatusCode());
+        assertEquals("E088", direct.getBody().getProperties().get("errorCode"));
     }
 
     @Test

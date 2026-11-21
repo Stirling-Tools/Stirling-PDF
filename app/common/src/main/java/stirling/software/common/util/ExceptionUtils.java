@@ -652,6 +652,24 @@ public class ExceptionUtils {
                 getMessage(ErrorCode.PDF_UNREPAIRABLE), ErrorCode.PDF_UNREPAIRABLE.getCode());
     }
 
+    /** Table extraction found no table, so no empty spreadsheet or CSV is returned. */
+    public static NothingToExtractException createNoTablesFoundException() {
+        return new NothingToExtractException(
+                getMessage(ErrorCode.NO_TABLES_FOUND), ErrorCode.NO_TABLES_FOUND.getCode());
+    }
+
+    /** Table extraction found no table because the pages are images with no text layer. */
+    public static NothingToExtractException createNoTextLayerException() {
+        return new NothingToExtractException(
+                getMessage(ErrorCode.NO_TEXT_LAYER), ErrorCode.NO_TEXT_LAYER.getCode());
+    }
+
+    /** Image extraction found no image, so no empty archive is returned. */
+    public static NothingToExtractException createNoImagesFoundException() {
+        return new NothingToExtractException(
+                getMessage(ErrorCode.NO_IMAGES_FOUND), ErrorCode.NO_IMAGES_FOUND.getCode());
+    }
+
     /**
      * The redaction engine's own check failed on some pages, so its output is withheld.
      *
@@ -1326,7 +1344,21 @@ public class ExceptionUtils {
         DECODED_STREAM_TOO_LARGE(
                 "E087",
                 "error.decodedStreamTooLarge",
-                "Part of this document decompresses to more than this server''s limit of {0} MB.");
+                "Part of this document decompresses to more than this server''s limit of {0} MB."),
+
+        // Extraction ran but the document holds nothing of the requested kind.
+        NO_TABLES_FOUND(
+                "E088",
+                "error.noTablesFound",
+                "No tables were found in the selected pages, so no file was returned."),
+        NO_IMAGES_FOUND(
+                "E089",
+                "error.noImagesFound",
+                "No images were found in this document, so no file was returned."),
+        NO_TEXT_LAYER(
+                "E090",
+                "error.noTextLayer",
+                "The selected pages are scanned images with no text to read tables from. Run OCR on the PDF first, then try again.");
 
         private final String code;
         private final String messageKey;
@@ -1392,6 +1424,13 @@ public class ExceptionUtils {
     /** Exception thrown when every repair strategy has declined a damaged document. */
     public static class PdfUnrepairableException extends BaseAppException {
         public PdfUnrepairableException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /** Exception thrown when an extraction finds nothing to put in its output file. */
+    public static class NothingToExtractException extends BaseAppException {
+        public NothingToExtractException(String message, String errorCode) {
             super(message, null, errorCode);
         }
     }

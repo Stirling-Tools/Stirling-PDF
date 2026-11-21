@@ -127,13 +127,13 @@ public enum FailureKind {
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
-    /** Opened fine and holds nothing to work on: no pages, no images, no bytes. */
+    /** Opened fine and holds nothing to work on: no pages, no images, no tables, no bytes. */
     INPUT_EMPTY(
             FailureStage.INPUT,
             FailureSeverity.ERROR,
             FailureRemedy.PERMANENT,
             FailureScope.FILE,
-            errorCodes("E005", "E012", "E016", "E020", "E032"),
+            errorCodes("E005", "E012", "E016", "E020", "E032", "E088", "E089", "E090"),
             fallback("This document has no content in it, so there was nothing to work on."),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),

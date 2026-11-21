@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -20,14 +21,12 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -60,7 +59,7 @@ class ConvertPDFToExcelControllerTest {
     }
 
     @Test
-    void pdfToExcel_noTablesReturnsNoContent() throws Exception {
+    void pdfToExcel_noTablesRefuses() throws Exception {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
                         "fileInput", "data.pdf", "application/pdf", "pdf-content".getBytes());
@@ -85,14 +84,8 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
-
-            // tabula may or may not find tables in an empty page
-            assertNotNull(response);
-            // Either NO_CONTENT (no tables) or OK (empty tables found)
-            assertTrue(
-                    response.getStatusCode() == HttpStatus.NO_CONTENT
-                            || response.getStatusCode() == HttpStatus.OK);
+            assertThrows(
+                    NothingToExtractException.class, () -> controller.pdfToExcel(request, null));
         }
     }
 

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -15,13 +16,12 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils.NothingToExtractException;
 import stirling.software.common.util.GeneralUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +33,7 @@ class ExtractCSVControllerTest {
     @InjectMocks private ExtractCSVController controller;
 
     @Test
-    void pdfToCsv_noTablesReturnsNoContent() throws Exception {
+    void pdfToCsv_noTablesRefuses() throws Exception {
         MockMultipartFile pdfFile =
                 new MockMultipartFile(
                         "fileInput", "data.pdf", "application/pdf", "content".getBytes());
@@ -57,13 +57,7 @@ class ExtractCSVControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<?> response = controller.pdfToCsv(request);
-
-            assertNotNull(response);
-            // Empty page may produce NO_CONTENT or OK with content
-            org.junit.jupiter.api.Assertions.assertTrue(
-                    response.getStatusCode() == HttpStatus.NO_CONTENT
-                            || response.getStatusCode() == HttpStatus.OK);
+            assertThrows(NothingToExtractException.class, () -> controller.pdfToCsv(request));
         }
     }
 

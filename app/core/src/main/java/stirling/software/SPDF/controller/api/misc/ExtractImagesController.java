@@ -114,15 +114,20 @@ public class ExtractImagesController {
             zipStream.setLevel(Deflater.BEST_COMPRESSION);
 
             int totalPages = pdfDoc.getNumberOfPages();
+            int written = 0;
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 PDPage currentPage = pdfDoc.getPage(pageIndex);
-                extractAndAddImagesToZip(
-                        currentPage,
-                        imageFormat,
-                        baseFilename,
-                        pageIndex + 1,
-                        fingerprints,
-                        zipStream);
+                written +=
+                        extractAndAddImagesToZip(
+                                currentPage,
+                                imageFormat,
+                                baseFilename,
+                                pageIndex + 1,
+                                fingerprints,
+                                zipStream);
+            }
+            if (written == 0) {
+                throw ExceptionUtils.createNoImagesFoundException();
             }
         } catch (Exception e) {
             zipFile.close();
@@ -133,7 +138,7 @@ public class ExtractImagesController {
                 zipFile, baseFilename + "_extracted-images.zip");
     }
 
-    private void extractAndAddImagesToZip(
+    private int extractAndAddImagesToZip(
             PDPage page,
             String imageFormat,
             String baseFilename,
@@ -142,7 +147,7 @@ public class ExtractImagesController {
             ZipOutputStream zipOutput)
             throws IOException {
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
-            return;
+            return 0;
         }
 
         int imageCount = 1;
@@ -188,6 +193,7 @@ public class ExtractImagesController {
                 throw ExceptionUtils.handlePdfException(e, "during image extraction");
             }
         }
+        return imageCount - 1;
     }
 
     /**
