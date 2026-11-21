@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -15,7 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,6 +35,12 @@ public class PDFToFile {
 
     private static final Pattern PATTERN =
             Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
+
+    // The converters name their output files after this and pdftohtml writes it into the generated
+    // HTML, so the upload's name is never used: it could be read as an option, exceed the filename
+    // length limit, or inject markup.
+    private static final String CONVERTER_OUTPUT_NAME = "document";
+
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
@@ -101,7 +105,7 @@ public class PDFToFile {
                                         "-noframes",
                                         "-c",
                                         tempInputFile.getAbsolutePath(),
-                                        pdfBaseName));
+                                        CONVERTER_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -198,7 +202,10 @@ public class PDFToFile {
                 List<String> command =
                         new ArrayList<>(
                                 Arrays.asList(
-                                        "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+                                        "pdftohtml",
+                                        "-c",
+                                        tempInputFile.toAbsolutePath().toString(),
+                                        CONVERTER_OUTPUT_NAME));
 
                 ProcessExecutorResult returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
@@ -210,17 +217,10 @@ public class PDFToFile {
                 try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                         ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
                     for (File outputFile : outputFiles) {
-                        ZipEntry entry = new ZipEntry(outputFile.getName());
-                        zipOutputStream.putNextEntry(entry);
-                        try (FileInputStream fis = new FileInputStream(outputFile)) {
-                            IOUtils.copy(fis, zipOutputStream);
-                        } catch (IOException e) {
-                            log.error("Exception writing zip entry", e);
-                        }
+                        zipOutputStream.putNextEntry(new ZipEntry(outputFile.getName()));
+                        Files.copy(outputFile.toPath(), zipOutputStream);
                         zipOutputStream.closeEntry();
                     }
-                } catch (IOException e) {
-                    log.error("Exception writing zip", e);
                 }
             }
         } catch (Exception e) {
@@ -270,7 +270,9 @@ public class PDFToFile {
                 Path tempOutputDir = outputDirTemp.getPath();
                 Path unoOutputFile =
                         tempOutputDir.resolve(
-                                pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
+                                CONVERTER_OUTPUT_NAME
+                                        + "."
+                                        + resolvePrimaryExtension(outputFormat));
 
                 // Save the uploaded file to a temporary location
                 inputFile.transferTo(tempInputFile);
@@ -300,7 +302,7 @@ public class PDFToFile {
 
                 if (returnCode == null) {
                     // Run the LibreOffice command as a fallback
-                    libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+                    libreOfficeProfile = tempFileManager.createTempDirectory();
                     List<String> command = new ArrayList<>();
                     command.add(runtimePathConfig.getSOfficePath());
                     command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
@@ -342,18 +344,10 @@ public class PDFToFile {
                     try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                             ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
                         for (File outputFile : outputFiles) {
-                            ZipEntry entry = new ZipEntry(outputFile.getName());
-                            zipOutputStream.putNextEntry(entry);
-                            try (FileInputStream fis = new FileInputStream(outputFile)) {
-                                IOUtils.copy(fis, zipOutputStream);
-                            } catch (IOException e) {
-                                log.error("Exception writing zip entry", e);
-                            }
-
+                            zipOutputStream.putNextEntry(new ZipEntry(outputFile.getName()));
+                            Files.copy(outputFile.toPath(), zipOutputStream);
                             zipOutputStream.closeEntry();
                         }
-                    } catch (IOException e) {
-                        log.error("Exception writing zip", e);
                     }
                 }
             }
@@ -362,7 +356,7 @@ public class PDFToFile {
             throw e;
         } finally {
             if (libreOfficeProfile != null) {
-                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
+                tempFileManager.deleteTempDirectory(libreOfficeProfile);
             }
         }
         return WebResponseUtils.fileToWebResponse(

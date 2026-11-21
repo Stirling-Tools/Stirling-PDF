@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,8 +94,20 @@ class ConvertOfficeControllerTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         controller = newController();
+        lenient()
+                .when(tempFileManager.createTempDirectory())
+                .thenAnswer(inv -> Files.createTempDirectory(tempDir, "work-"));
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            org.apache.commons.io.FileUtils.deleteDirectory(
+                                    inv.<Path>getArgument(0).toFile());
+                            return null;
+                        })
+                .when(tempFileManager)
+                .deleteTempDirectory(any(Path.class));
         lenient().when(runtimePathConfig.getSOfficePath()).thenReturn("soffice");
         lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("unoconvert");
         lenient().when(officeConversionService.libreOfficeAvailable()).thenReturn(true);
@@ -297,9 +310,7 @@ class ConvertOfficeControllerTest {
         }
 
         private Set<Path> officeWorkDirs() throws IOException {
-            try (var dirs =
-                    Files.newDirectoryStream(
-                            Path.of(System.getProperty("java.io.tmpdir")), "office2pdf_*")) {
+            try (var dirs = Files.newDirectoryStream(tempDir, "work-*")) {
                 Set<Path> found = new HashSet<>();
                 dirs.forEach(found::add);
                 return found;
@@ -326,7 +337,8 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
                                     Path out =
-                                            Path.of(command.getLast()).resolveSibling("report.pdf");
+                                            Path.of(command.getLast())
+                                                    .resolveSibling("document.pdf");
                                     Files.writeString(out, "%PDF soffice");
                                     return result;
                                 });
@@ -408,6 +420,47 @@ class ConvertOfficeControllerTest {
         }
 
         @Test
+        @DisplayName("converter files are named internally, never after the upload")
+        void workFilesIgnoreUploadName() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(true);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            String uploadName = "-" + "x".repeat(250) + ".docx";
+            MockMultipartFile upload =
+                    new MockMultipartFile(
+                            "fileInput",
+                            uploadName,
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "real-docx".getBytes());
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                ProcessExecutorResult result = mockExecutor(pe, 0);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
+                when(executor.runCommandWithOutputHandling(cmd.capture()))
+                        .thenAnswer(
+                                inv -> {
+                                    Files.writeString(
+                                            Path.of(inv.<List<String>>getArgument(0).getLast()),
+                                            "%PDF-1.4 produced");
+                                    return result;
+                                });
+
+                File pdf = controller.convertToPdf(upload);
+
+                List<String> command = cmd.getValue();
+                assertThat(Path.of(command.get(command.size() - 2)).getFileName())
+                        .hasToString("document.docx");
+                assertThat(Path.of(command.getLast()).getFileName()).hasToString("document.pdf");
+                assertThat(command).noneMatch(arg -> arg.contains("xxxxxxxx"));
+                assertThat(pdf.getName()).isEqualTo("document.pdf");
+
+                deleteWorkdir(pdf);
+            }
+        }
+
+        @Test
         @DisplayName("falls back to soffice when unoconvert is unavailable")
         void sofficeFallbackWhenUnoUnavailable() throws Exception {
             when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
@@ -426,7 +479,7 @@ class ConvertOfficeControllerTest {
                                     // soffice writes <basename>.pdf into the --outdir (workDir)
                                     List<String> command = inv.getArgument(0);
                                     Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
+                                    Path out = inputPath.getParent().resolve("document.pdf");
                                     Files.writeString(out, "%PDF soffice");
                                     return result;
                                 });
@@ -459,6 +512,54 @@ class ConvertOfficeControllerTest {
                         .isInstanceOf(IllegalStateException.class)
                         .hasMessageContaining("exit 3");
             }
+        }
+
+        @Test
+        @DisplayName("failed conversion removes the work directory")
+        void failedConversionRemovesWorkDir() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
+            when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            List<Path> workDirs = new ArrayList<>();
+            List<Path> profileDirs = new ArrayList<>();
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                mockExecutor(pe, 1);
+                ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+                // ProcessExecutor reports a non-zero exit by throwing, not by returning the rc.
+                when(executor.runCommandWithOutputHandling(any(List.class)))
+                        .thenAnswer(
+                                inv -> {
+                                    List<String> command = inv.getArgument(0);
+                                    Path workDir = Path.of(command.getLast()).getParent();
+                                    workDirs.add(workDir);
+                                    Files.write(workDir.resolve("partial.tmp"), new byte[] {1});
+                                    String profileArg = "-env:UserInstallation=";
+                                    command.stream()
+                                            .filter(arg -> arg.startsWith(profileArg))
+                                            .map(
+                                                    arg ->
+                                                            Path.of(
+                                                                    java.net.URI.create(
+                                                                            arg.substring(
+                                                                                    profileArg
+                                                                                            .length()))))
+                                            .forEach(profileDirs::add);
+                                    throw new IOException("soffice exited with code 1");
+                                });
+
+                assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
+                        .isInstanceOf(IOException.class);
+            }
+
+            assertThat(workDirs).hasSize(1);
+            Mockito.verify(tempFileManager).deleteTempDirectory(workDirs.getFirst());
+            assertThat(workDirs.getFirst()).doesNotExist();
+            assertThat(profileDirs).hasSize(1);
+            Mockito.verify(tempFileManager).deleteTempDirectory(profileDirs.getFirst());
+            assertThat(profileDirs.getFirst()).doesNotExist();
         }
 
         @Test
@@ -498,7 +599,7 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
                                     Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
+                                    Path out = inputPath.getParent().resolve("document.pdf");
                                     Files.write(out, new byte[0]);
                                     return result;
                                 });
@@ -585,7 +686,7 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
                                     Path inputPath = Path.of(command.getLast());
-                                    Path out = inputPath.getParent().resolve("report.pdf");
+                                    Path out = inputPath.getParent().resolve("document.pdf");
                                     Files.writeString(out, "%PDF produced");
                                     return result;
                                 });
@@ -674,7 +775,8 @@ class ConvertOfficeControllerTest {
                     .thenAnswer(
                             inv -> {
                                 List<String> command = inv.getArgument(0);
-                                Path out = Path.of(command.getLast()).resolveSibling("report.pdf");
+                                Path out =
+                                        Path.of(command.getLast()).resolveSibling("document.pdf");
                                 Files.writeString(out, "%PDF soffice");
                                 return result;
                             });
@@ -715,8 +817,10 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     Path out =
                                             Path.of(((List<String>) inv.getArgument(0)).getLast())
-                                                    .resolveSibling("book.pdf");
-                                    assertThat(Files.readAllBytes(out.resolveSibling("book.xlsx")))
+                                                    .resolveSibling("document.pdf");
+                                    assertThat(
+                                                    Files.readAllBytes(
+                                                            out.resolveSibling("document.xlsx")))
                                             .isEqualTo(OLE2);
                                     Files.writeString(out, "%PDF soffice");
                                     return result;

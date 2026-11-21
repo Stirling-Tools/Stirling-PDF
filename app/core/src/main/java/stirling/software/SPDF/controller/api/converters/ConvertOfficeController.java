@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
@@ -64,6 +63,8 @@ public class ConvertOfficeController {
     private final OfficeConversionService officeConversionService;
     private final OfficeToPdfService officeToPdfService;
 
+    private static final String WORK_FILE_NAME = "document";
+
     private boolean isUnoconvertAvailable() {
         return endpointConfiguration.isGroupEnabled("Unoconvert")
                 || endpointConfiguration.isGroupEnabled("Python");
@@ -89,23 +90,17 @@ public class ConvertOfficeController {
         }
         String extensionLower = extension.toLowerCase(Locale.ROOT);
 
-        String baseName = FilenameUtils.getBaseName(originalFilename);
-        if (baseName == null || baseName.isBlank()) {
-            baseName = "input";
-        }
-
         // The caller deletes it on success: the returned PDF lives in it.
-        Path workDir = Files.createTempDirectory("office2pdf_");
+        Path workDir = tempFileManager.createTempDirectory();
         boolean converted = false;
         try {
             File pdf =
-                    convertInWorkDir(
-                            inputFile, useStirlingOfficeConvert, extensionLower, baseName, workDir);
+                    convertInWorkDir(inputFile, useStirlingOfficeConvert, extensionLower, workDir);
             converted = true;
             return pdf;
         } finally {
             if (!converted) {
-                FileUtils.deleteQuietly(workDir.toFile());
+                tempFileManager.deleteTempDirectory(workDir);
             }
         }
     }
@@ -114,11 +109,10 @@ public class ConvertOfficeController {
             MultipartFile inputFile,
             Boolean useStirlingOfficeConvert,
             String extensionLower,
-            String baseName,
             Path workDir)
             throws IOException, InterruptedException {
-        Path inputPath = workDir.resolve(baseName + "." + extensionLower);
-        Path outputPath = workDir.resolve(baseName + ".pdf");
+        Path inputPath = workDir.resolve(WORK_FILE_NAME + "." + extensionLower);
+        Path outputPath = workDir.resolve(WORK_FILE_NAME + ".pdf");
 
         // OLE2 compound binaries are never ZIP archives, so the OOXML/ODF sanitizer cannot read
         // them; their preprocessing copies the bytes as-is whatever the filename extension says.
@@ -183,7 +177,7 @@ public class ConvertOfficeController {
 
             // Fallback to soffice if unoconvert was unavailable or failed
             if (result == null) {
-                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+                libreOfficeProfile = tempFileManager.createTempDirectory();
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getSOfficePath());
                 command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
@@ -250,7 +244,7 @@ public class ConvertOfficeController {
                 log.warn("Failed to delete temp input file: {}", inputPath, e);
             }
             if (libreOfficeProfile != null) {
-                FileUtils.deleteQuietly(libreOfficeProfile.toFile());
+                tempFileManager.deleteTempDirectory(libreOfficeProfile);
             }
         }
     }
@@ -350,7 +344,7 @@ public class ConvertOfficeController {
             throw e;
         } finally {
             if (file != null && file.getParent() != null) {
-                FileUtils.deleteDirectory(file.getParentFile());
+                tempFileManager.deleteTempDirectory(file.getParentFile().toPath());
             }
         }
     }

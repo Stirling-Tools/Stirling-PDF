@@ -14,9 +14,7 @@ import java.util.*;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -367,25 +365,6 @@ public class ConvertPDFToPDFA {
         return message.toString();
     }
 
-    private static void deleteQuietly(Path directory) {
-        if (directory == null) {
-            return;
-        }
-        try (Stream<Path> stream = Files.walk(directory)) {
-            stream.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            path -> {
-                                try {
-                                    Files.deleteIfExists(path);
-                                } catch (IOException e) {
-                                    log.warn("Failed to delete temporary file: {}", path, e);
-                                }
-                            });
-        } catch (IOException e) {
-            log.warn("Failed to clean temporary directory: {}", directory, e);
-        }
-    }
-
     private static List<String> buildGhostscriptCommand(
             Path inputPdf,
             Path outputPdf,
@@ -667,11 +646,11 @@ public class ConvertPDFToPDFA {
                         ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
                         : originalFileName;
 
-        Path workingDir = Files.createTempDirectory("pdfx_conversion_");
+        Path workingDir = tempFileManager.createTempDirectory();
         Path inputPath = workingDir.resolve("input.pdf");
-        inputFile.transferTo(inputPath);
 
         try {
+            inputFile.transferTo(inputPath);
             // PDF/X conversion uses Ghostscript (no fallback currently)
             if (!isGhostscriptAvailable()) {
                 throw ExceptionUtils.createGhostscriptRequiredException("PDF/X conversion");
@@ -702,7 +681,7 @@ public class ConvertPDFToPDFA {
             log.error("PDF/X conversion failed", e);
             throw ExceptionUtils.createPdfaConversionFailedException(e);
         } finally {
-            deleteQuietly(workingDir);
+            tempFileManager.deleteTempDirectory(workingDir);
         }
     }
 
@@ -1576,48 +1555,52 @@ public class ConvertPDFToPDFA {
 
     private Path runLibreOfficeConversion(Path tempInputFile, int pdfaPart) throws Exception {
         // Create temp output directory
-        Path tempOutputDir = Files.createTempDirectory("output_");
-
-        // Determine PDF/A filter based on requested format
-        String pdfFilter =
-                pdfaPart == 2
-                        ? "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"2\"}}"
-                        : "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"1\"}}";
-
-        Path libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+        Path tempOutputDir = tempFileManager.createTempDirectory();
         try {
-            // Prepare LibreOffice command
-            List<String> command =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    runtimePathConfig.getSOfficePath(),
-                                    "-env:UserInstallation=" + libreOfficeProfile.toUri(),
-                                    "--headless",
-                                    "--nologo",
-                                    "--convert-to",
-                                    pdfFilter,
-                                    "--outdir",
-                                    tempOutputDir.toString(),
-                                    tempInputFile.toString()));
+            // Determine PDF/A filter based on requested format
+            String pdfFilter =
+                    pdfaPart == 2
+                            ? "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"2\"}}"
+                            : "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"1\"}}";
 
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                            .runCommandWithOutputHandling(command);
+            Path libreOfficeProfile = tempFileManager.createTempDirectory();
+            try {
+                // Prepare LibreOffice command
+                List<String> command =
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        runtimePathConfig.getSOfficePath(),
+                                        "-env:UserInstallation=" + libreOfficeProfile.toUri(),
+                                        "--headless",
+                                        "--nologo",
+                                        "--convert-to",
+                                        pdfFilter,
+                                        "--outdir",
+                                        tempOutputDir.toString(),
+                                        tempInputFile.toString()));
 
-            if (returnCode.getRc() != 0) {
-                log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
+                ProcessExecutorResult returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                .runCommandWithOutputHandling(command);
+
+                if (returnCode.getRc() != 0) {
+                    log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
+                    throw ExceptionUtils.createPdfaConversionFailedException();
+                }
+            } finally {
+                tempFileManager.deleteTempDirectory(libreOfficeProfile);
+            }
+
+            // Get the output file
+            File[] outputFiles = tempOutputDir.toFile().listFiles();
+            if (outputFiles == null || outputFiles.length != 1) {
                 throw ExceptionUtils.createPdfaConversionFailedException();
             }
-        } finally {
-            FileUtils.deleteQuietly(libreOfficeProfile.toFile());
+            return outputFiles[0].toPath();
+        } catch (Exception e) {
+            tempFileManager.deleteTempDirectory(tempOutputDir);
+            throw e;
         }
-
-        // Get the output file
-        File[] outputFiles = tempOutputDir.toFile().listFiles();
-        if (outputFiles == null || outputFiles.length != 1) {
-            throw ExceptionUtils.createPdfaConversionFailedException();
-        }
-        return outputFiles[0].toPath();
     }
 
     private Path normalizePdfWithQpdf(Path inputPdf) {
@@ -1740,7 +1723,7 @@ public class ConvertPDFToPDFA {
 
         } finally {
             if (loPdfPath != null && loPdfPath.getParent() != null) {
-                FileUtils.deleteDirectory(loPdfPath.getParent().toFile());
+                tempFileManager.deleteTempDirectory(loPdfPath.getParent());
             }
             if (preProcessedFile != null && !preProcessedFile.equals(tempInputFile.toFile())) {
                 Files.deleteIfExists(preProcessedFile.toPath());
@@ -1855,11 +1838,11 @@ public class ConvertPDFToPDFA {
                         ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
                         : originalFileName;
 
-        Path workingDir = Files.createTempDirectory("pdfa_conversion_");
+        Path workingDir = tempFileManager.createTempDirectory();
         Path inputPath = workingDir.resolve("input.pdf");
-        inputFile.transferTo(inputPath);
 
         try {
+            inputFile.transferTo(inputPath);
             byte[] converted;
 
             if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
@@ -1953,7 +1936,7 @@ public class ConvertPDFToPDFA {
             }
             return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
         } finally {
-            deleteQuietly(workingDir);
+            tempFileManager.deleteTempDirectory(workingDir);
         }
     }
 
@@ -2662,7 +2645,7 @@ public class ConvertPDFToPDFA {
             throws IOException {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
-        Path workingDir = Files.createTempDirectory("pdfa_conversion_");
+        Path workingDir = tempFileManager.createTempDirectory();
         Path inputPath = workingDir.resolve("input.pdf");
 
         try {
@@ -2693,7 +2676,7 @@ public class ConvertPDFToPDFA {
             return converted;
 
         } finally {
-            deleteQuietly(workingDir);
+            tempFileManager.deleteTempDirectory(workingDir);
         }
     }
 
