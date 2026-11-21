@@ -65,6 +65,7 @@ import {
   readFileFromDisk,
 } from "@editor/services/desktopFileLink";
 import { alert } from "@editor/components/toast";
+import { fileStorage } from "@editor/services/fileStorage";
 import { requestDiskConflictChoice } from "@editor/services/diskConflictPrompt";
 
 const PATH = "/Users/x/Documents/report.pdf";
@@ -115,9 +116,9 @@ function harness(record: StirlingFileStub, openBytes: Uint8Array<ArrayBuffer>) {
     openFile,
     filesRef,
     updates,
-    run: () =>
+    run: (paths: string[] = [PATH]) =>
       reconcileOpenFilesAt(
-        [PATH],
+        paths,
         stateRef,
         filesRef,
         lifecycleManager as never,
@@ -279,5 +280,89 @@ describe("files the check leaves alone", () => {
 
     expect(toastTitles()).toEqual(["File changed on disk"]);
     expect(readFileFromDisk).not.toHaveBeenCalled();
+  });
+});
+
+describe("review follow-ups", () => {
+  test("a check with no paths leaves later checks working", async () => {
+    const h = harness(stub(), DISK_BYTES);
+
+    await h.run([]);
+    await h.run();
+
+    expect(h.updates).toEqual([
+      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
+    ]);
+  });
+
+  test("a check that fails does not stop the next one", async () => {
+    const h = harness(stub(), DISK_BYTES);
+    vi.mocked(getDiskFileState).mockRejectedValueOnce(new Error("io"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(h.run()).resolves.toBeUndefined();
+    await h.run();
+
+    expect(h.updates).toEqual([
+      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
+    ]);
+  });
+
+  test("a reload whose store fails still updates the open record", async () => {
+    disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
+    vi.mocked(fileStorage.updateFileMetadata).mockRejectedValueOnce(
+      new Error("quota"),
+    );
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const h = harness(stub(), DISK_BYTES);
+
+    await h.run();
+
+    expect(reloads(h.updates)).toBe(1);
+    expect(h.updates.at(-1)).toMatchObject({
+      diskSyncedSize: disk.bytes.length,
+    });
+  });
+
+  test("a version restored by undo whose bytes match disk raises no conflict", async () => {
+    unsaved.value = true;
+    const h = harness(
+      stub({ isDirty: true, parentFileId: "gone" as FileId }),
+      DISK_BYTES,
+    );
+
+    await h.run();
+
+    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
+    expect(h.updates).toEqual([
+      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
+    ]);
+  });
+
+  test("a file that grows too large again after a reload is reported again", async () => {
+    let size = BIG;
+    vi.mocked(getDiskFileState).mockImplementation(async () => ({
+      availability: "present" as const,
+      size,
+      modifiedMs: disk.modifiedMs,
+    }));
+    const h = harness(
+      stub({ id: "regrow" as FileId, diskSyncedSize: BIG }),
+      DISK_BYTES,
+    );
+
+    await h.run();
+    size = DISK_BYTES.length;
+    disk.modifiedMs = 3;
+    await h.run();
+    size = BIG;
+    disk.modifiedMs = 4;
+    await h.run();
+    await vi.waitFor(() => expect(alert).toHaveBeenCalledTimes(2));
+
+    expect(toastTitles()).toEqual([
+      "File changed on disk",
+      "File changed on disk",
+    ]);
   });
 });

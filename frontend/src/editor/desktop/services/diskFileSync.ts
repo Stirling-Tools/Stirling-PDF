@@ -53,27 +53,29 @@ export async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
   return true;
 }
 
-async function fetchLastRead(
-  lastReadCopy: () => Promise<Blob | null>,
-): Promise<Blob | null> {
+async function fetchHeldCopies(
+  heldCopies: () => Promise<Blob[]>,
+): Promise<Blob[]> {
   try {
-    return await lastReadCopy();
+    return await heldCopies();
   } catch (error) {
-    console.warn("[diskFileSync] Could not find the last disk copy:", error);
-    return null;
+    console.warn("[diskFileSync] Could not find the held copies:", error);
+    return [];
   }
 }
 
 // WebKit can lose a stored blob's backing store, so reading the held copy may
 // reject. Unreadable means unproven: the change is treated as real, and the
 // reload then replaces the dead copy.
-async function matchesLastRead(held: Blob, file: File): Promise<boolean> {
-  try {
-    return await sameBytes(held, file);
-  } catch (error) {
-    console.warn("[diskFileSync] Could not read the last disk copy:", error);
-    return false;
+async function matchesAnyHeld(held: Blob[], file: File): Promise<boolean> {
+  for (const copy of held) {
+    try {
+      if (await sameBytes(copy, file)) return true;
+    } catch (error) {
+      console.warn("[diskFileSync] Could not read a held copy:", error);
+    }
   }
+  return false;
 }
 
 /** Did disk change since our last read? No baseline means we cannot prove the
@@ -168,13 +170,13 @@ export function __resetSelfWrites(): void {
 /** @param hasUnsavedWork in-app edits not yet committed to a version. The stub's
  *  own isDirty only says a tool produced one, so an open page editor, annotation
  *  or redaction session is invisible to it and disk would silently win.
- *  @param lastReadCopy the bytes disk held at the last baseline, when still at
- *  hand. With it, a change that only moved the timestamp is told apart from a
- *  real edit; without it every change is treated as real. */
+ *  @param heldCopies copies of what disk may still hold, when at hand. With
+ *  them, a change that only moved the timestamp is told apart from a real
+ *  edit; without them every change is treated as real. */
 export async function syncLinkedFileFromDisk(
   stub: StirlingFileStub,
   hasUnsavedWork = false,
-  lastReadCopy?: () => Promise<Blob | null>,
+  heldCopies?: () => Promise<Blob[]>,
 ): Promise<DiskSyncOutcome> {
   if (!desktopFileLinkingSupported || !stub.localFilePath) {
     return { status: "not-linked" };
@@ -204,10 +206,14 @@ export async function syncLinkedFileFromDisk(
   const keepOurs = stub.isDirty || hasUnsavedWork;
   // Sync clients, indexers and DMS check-outs rewrite the timestamp without
   // touching the content, so a change is only real once the bytes say so.
-  // Sized against the copy held rather than the baseline: a check queued
+  // Sized against the copies held rather than the baseline: a check queued
   // behind a reload sees the stub before that reload's baseline lands.
-  const held = lastReadCopy ? await fetchLastRead(lastReadCopy) : null;
-  const mayBeTouch = held != null && held.size === state.size;
+  const held = heldCopies
+    ? (await fetchHeldCopies(heldCopies)).filter(
+        (copy) => copy.size === state.size,
+      )
+    : [];
+  const mayBeTouch = held.length > 0;
   if (keepOurs && !mayBeTouch) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return keepOurs
@@ -235,7 +241,7 @@ export async function syncLinkedFileFromDisk(
     type: stub.type || "application/pdf",
     lastModified: state.modifiedMs || Date.now(),
   });
-  if (held && mayBeTouch && (await matchesLastRead(held, file))) {
+  if (mayBeTouch && (await matchesAnyHeld(held, file))) {
     return { status: "touched", state };
   }
   if (keepOurs) return { status: "conflict" };

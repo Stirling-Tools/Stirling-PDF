@@ -37,31 +37,43 @@ export type { OpenDecision, ReconcilePort };
 
 const MAX_VERSION_HOPS = 50;
 
-/** The bytes disk held at this record's baseline: those of the newest version
- *  on the same path that no in-app edit has changed. A tool output is dirty, so
- *  the walk skips it to the version it was derived from. */
-function lastReadCopy(
+/** Copies disk may still hold: the bytes on screen, and those of the newest
+ *  version on the same path that no in-app edit has changed. A tool output is
+ *  dirty, so the walk skips it to the version it was derived from; an undo
+ *  marks a restored version dirty even when its bytes are what disk holds. */
+function heldCopies(
   stub: StirlingFileStub,
   port: ReconcilePort,
-): () => Promise<Blob | null> {
+): () => Promise<Blob[]> {
   return async () => {
-    let version: StirlingFileStub | null | undefined = stub;
-    for (let hop = 0; version && hop < MAX_VERSION_HOPS; hop++) {
-      if (version.localFilePath !== stub.localFilePath) return null;
-      if (!version.isDirty) {
-        return (
-          port.getFile(version.id) ??
-          (await fileStorage.getStirlingFile(version.id))
-        );
-      }
-      const parentId: FileId | undefined = version.parentFileId;
-      version = parentId
-        ? (port.getStub(parentId) ??
-          (await fileStorage.getStirlingFileStub(parentId)))
-        : null;
-    }
-    return null;
+    const open = port.getFile(stub.id);
+    const clean = await lastCleanCopy(stub, port);
+    return [open, clean].filter(
+      (copy, i, all): copy is Blob => copy != null && all.indexOf(copy) === i,
+    );
   };
+}
+
+async function lastCleanCopy(
+  stub: StirlingFileStub,
+  port: ReconcilePort,
+): Promise<Blob | null> {
+  let version: StirlingFileStub | null | undefined = stub;
+  for (let hop = 0; version && hop < MAX_VERSION_HOPS; hop++) {
+    if (version.localFilePath !== stub.localFilePath) return null;
+    if (!version.isDirty) {
+      return (
+        port.getFile(version.id) ??
+        (await fileStorage.getStirlingFile(version.id))
+      );
+    }
+    const parentId: FileId | undefined = version.parentFileId;
+    version = parentId
+      ? (port.getStub(parentId) ??
+        (await fileStorage.getStirlingFileStub(parentId)))
+      : null;
+  }
+  return null;
 }
 
 /** Open files already told they are too large to re-read unasked. */
@@ -170,7 +182,7 @@ export async function reconcileBeforeOpen(
   const outcome = await syncLinkedFileFromDisk(
     stub,
     hasUnsavedWork(),
-    lastReadCopy(stub, port),
+    heldCopies(stub, port),
   );
 
   if (outcome.status === "touched") {
@@ -265,8 +277,9 @@ async function resyncRecord(
   const outcome = await syncLinkedFileFromDisk(
     stub,
     hasUnsavedWork(),
-    lastReadCopy(stub, port),
+    heldCopies(stub, port),
   );
+  if (outcome.status !== "too-large") tooLargeNotified.delete(fileId);
 
   if (outcome.status === "missing") {
     // Never delete what is on screen: cutting the link leaves the document
@@ -329,7 +342,14 @@ async function resyncRecord(
     const { file, state } = outcome;
     const reloadedAt = Date.now();
     port.putFile(fileId, file);
-    await persistDiskUpdate(fileId, file, state, reloadedAt);
+    // The new bytes are already on screen, so a failed store must not leave
+    // the stub and page data describing the old ones: the next check would
+    // find disk matching what is held and never finish the reload.
+    try {
+      await persistDiskUpdate(fileId, file, state, reloadedAt);
+    } catch (error) {
+      console.error(`[Reconcile] Failed to store reload of ${fileId}:`, error);
+    }
     port.updateStub(fileId, pickedUpFields(file, state, reloadedAt));
     port.reprocessFile(fileId);
     notifyDiskReloaded(stub.name);
@@ -353,6 +373,9 @@ export function reconcileOpenFiles(
 ): Promise<void> {
   for (const location of locations) queuedPaths.add(location);
   queuedPort = port;
+  // An empty drain settles synchronously, clearing `draining` before it is
+  // assigned and leaving every later call parked on a finished promise.
+  if (queuedPaths.size === 0) return draining ?? Promise.resolve();
   draining ??= drainReconciles();
   return draining;
 }
@@ -362,7 +385,11 @@ async function drainReconciles(): Promise<void> {
     while (queuedPaths.size > 0 && queuedPort) {
       const paths = [...queuedPaths];
       queuedPaths.clear();
-      await reconcilePaths(paths, queuedPort);
+      try {
+        await reconcilePaths(paths, queuedPort);
+      } catch (error) {
+        console.error("[Reconcile] Disk re-check failed:", error);
+      }
     }
   } finally {
     draining = undefined;
