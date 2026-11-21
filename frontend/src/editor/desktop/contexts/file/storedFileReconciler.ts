@@ -64,12 +64,16 @@ function lastReadCopy(
   };
 }
 
+/** Open files already told they are too large to re-read unasked. */
+const tooLargeNotified = new Set<FileId>();
+
 /** Take the disk version of a conflicted file, discarding the unsaved in-app
  *  edits shadowing it. Only reachable from the conflict modal's action. */
 async function useDiskVersion(
   stub: StirlingFileStub,
   port: ReconcilePort,
 ): Promise<void> {
+  tooLargeNotified.delete(stub.id);
   const loaded = await loadDiskVersion(stub);
   if (!loaded) return;
   const { file, state } = loaded;
@@ -290,6 +294,9 @@ async function resyncRecord(
   }
 
   if (outcome.status === "too-large") {
+    // The baseline stays un-stamped, so every later event lands here again.
+    if (tooLargeNotified.has(fileId)) return null;
+    tooLargeNotified.add(fileId);
     notifyDiskTooLarge(stub.name, () => void useDiskVersion(stub, port));
     return null;
   }
@@ -405,6 +412,7 @@ export function noteFileSaved(
   // A save just made disk and app agree, so re-baseline against the file we
   // wrote. Without this the next open reads it back as an external change.
   if (updates.isDirty !== false || !updates.localFilePath) return;
+  tooLargeNotified.delete(fileId);
   void refreshDiskBaselineAfterSave(fileId, updates.localFilePath)
     .then((baseline) => {
       if (baseline) applyUpdates(baseline);
@@ -418,4 +426,5 @@ export function forgetFile(fileId: FileId): void {
   // A queued conflict for a file that is gone would name it in a blocking modal
   // whose Use-disk button then no-ops against the workbench's own guard.
   cancelDiskConflict(fileId);
+  tooLargeNotified.delete(fileId);
 }
