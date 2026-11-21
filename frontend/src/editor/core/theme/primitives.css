@@ -102,6 +102,27 @@
   --p-brand-red: #af3434;
   --p-brand-red-600: #9a2e2e;
 
+  /* UI accent (oxblood), the app's default: light fills take brand-red -600 /
+     -700, these steps are the dark fill and hover plus the light tint. */
+  --p-accent-200: #e3b7b4;
+  --p-accent-400: #c26a6a;
+  --p-accent-500: #a84545;
+
+  /* Category hues: one muted mid tone per tool family, chroma-matched and
+     shared by both themes; each clears the 3:1 mark floor. */
+  --p-cat-removal: #a9564f;
+  --p-cat-security: #99652f;
+  --p-cat-formatting: #7d5b92;
+  --p-cat-extraction: #2f7d75;
+  --p-cat-signing: #55763f;
+  --p-cat-general: #4a6fa5;
+  --p-cat-verification: #5f62a8;
+  --p-cat-automation: #a8577c;
+
+  /* Warm onboarding tints (paper family). */
+  --p-tint-blush: #f6efec;
+  --p-tint-clay: #f2e7e2;
+
   /* Highlight flash (compare / show-JS / signature-report animations). */
   --p-flash-yellow: #ffeb3b;
 
