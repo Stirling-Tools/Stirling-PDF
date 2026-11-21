@@ -3,7 +3,6 @@ package stirling.software.proprietary.pdf;
 import java.util.ArrayList;
 import java.util.List;
 
-import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.doc.FormField;
 import stirling.software.jpdfium.doc.FormFieldType;
@@ -25,9 +24,9 @@ final class FormValues {
      * Pseudo text lines for {@code /V}-only AcroForm values, placed at their widget rectangles;
      * values already in the content stream are skipped.
      */
-    static List<Line> lines(PdfDocument doc, int pageIndex, List<Line> existing) {
+    static List<Line> lines(PdfPage page, int pageIndex, List<Line> existing) {
         List<FormField> fields;
-        try (PdfPage page = doc.page(pageIndex)) {
+        try {
             fields = PdfFormReader.readPage(page.rawDocHandle(), page.rawHandle(), pageIndex);
         } catch (RuntimeException e) {
             // A malformed AcroForm must not sink the whole conversion; body text still stands.

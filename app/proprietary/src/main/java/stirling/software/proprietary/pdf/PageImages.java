@@ -1,12 +1,10 @@
 package stirling.software.proprietary.pdf;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import stirling.software.common.pdf.MarkdownBlocks;
-import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfPage;
 import stirling.software.jpdfium.doc.ExtractedImage;
 import stirling.software.jpdfium.doc.PdfImageExtractor;
@@ -20,14 +18,11 @@ final class PageImages {
 
     private PageImages() {}
 
-    static void emit(PdfDocument doc, int pageIndex, int pageNumber, List<Element> sink)
-            throws IOException {
-        try (PdfPage page = doc.page(pageIndex)) {
-            List<ExtractedImage> images =
-                    PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
-            for (ExtractedImage img : images) {
-                sink.add(new Element(describe(img), pageNumber, pageNumber));
-            }
+    static void emit(PdfPage page, int pageIndex, int pageNumber, List<Element> sink) {
+        List<ExtractedImage> images =
+                PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
+        for (ExtractedImage img : images) {
+            sink.add(new Element(describe(img), pageNumber, pageNumber));
         }
     }
 

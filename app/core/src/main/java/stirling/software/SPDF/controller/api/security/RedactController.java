@@ -2,6 +2,9 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -205,82 +208,73 @@ public class RedactController {
         Color redactColor = ManualRedactionService.decodeOrDefault(request.getRedactColor());
         int boxColorInt = redactColor.getRGB();
 
-        try (PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
-            if (document == null) {
-                log.error("Failed to load PDF document");
-                throw ExceptionUtils.createPdfCorruptedException(
-                        "during redaction", new IOException("Failed to load PDF document"));
+        try (TempFile tempInput = tempFileManager.createManagedTempFile(".pdf")) {
+            try (InputStream in = request.getFileInput().getInputStream()) {
+                Files.copy(in, tempInput.getPath(), StandardCopyOption.REPLACE_EXISTING);
             }
 
-            try (TempFile tempInput = tempFileManager.createManagedTempFile(".pdf")) {
-                try {
-                    request.getFileInput().transferTo(tempInput.getFile());
-                } catch (Exception e) {
-                    document.save(tempInput.getFile());
+            RedactOptions options =
+                    RedactOptions.builder()
+                            .addWords(terms)
+                            .useRegex(useRegex)
+                            .wholeWord(wholeWordSearchBool)
+                            .caseSensitive(caseSensitive)
+                            .boxColor(boxColorInt)
+                            .padding(request.getCustomPadding())
+                            .removeContent(true)
+                            .convertToImage(Boolean.TRUE.equals(request.getConvertPDFToImage()))
+                            .normalizeFonts(false)
+                            .fixToUnicode(false)
+                            .glyphAware(true)
+                            .ligatureAware(true)
+                            .bidiAware(true)
+                            .graphemeSafe(true)
+                            .sanitizeStructure(false) // WIP/Experimental API
+                            .redactMetadata(true)
+                            .build();
+
+            TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
+                    if (checkDoc.pageCount() <= 0) {
+                        throw new IOException("Invalid or empty PDF document");
+                    }
                 }
 
-                RedactOptions options =
-                        RedactOptions.builder()
-                                .addWords(terms)
-                                .useRegex(useRegex)
-                                .wholeWord(wholeWordSearchBool)
-                                .caseSensitive(caseSensitive)
-                                .boxColor(boxColorInt)
-                                .padding(request.getCustomPadding())
-                                .removeContent(true)
-                                .convertToImage(Boolean.TRUE.equals(request.getConvertPDFToImage()))
-                                .normalizeFonts(false)
-                                .fixToUnicode(false)
-                                .glyphAware(true)
-                                .ligatureAware(true)
-                                .bidiAware(true)
-                                .graphemeSafe(true)
-                                .sanitizeStructure(false) // WIP/Experimental API
-                                .redactMetadata(true)
-                                .build();
-
-                TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
+                log.debug(
+                        "Calling JPDFium PdfRedactor.redact in RedactController (terms={})", terms);
+                RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
+                log.debug(
+                        "JPDFium auto-redact complete (matches={})",
+                        result != null ? result.totalMatches() : -1);
+                if (result == null) {
+                    throw new IOException("JPDFium auto-redact returned null result");
+                }
                 try {
-                    try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
-                        if (checkDoc.pageCount() <= 0) {
-                            throw new IOException("Invalid or empty PDF document");
-                        }
+                    TextRedactionService.requireVerified(result.pageResults());
+                    result.save(tempOutput.getFile().toPath());
+                    log.info(
+                            "JPDFium auto-redact: {} matches processed into {}",
+                            result.totalMatches(),
+                            filename);
+                    return withMatchCount(
+                            WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
+                            result.totalMatches());
+                } finally {
+                    if (result.document() != null) {
+                        result.document().close();
                     }
-
-                    log.debug(
-                            "Calling JPDFium PdfRedactor.redact in RedactController (terms={})",
-                            terms);
-                    RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
-                    log.debug(
-                            "JPDFium auto-redact complete (matches={})",
-                            result != null ? result.totalMatches() : -1);
-                    if (result == null) {
-                        throw new IOException("JPDFium auto-redact returned null result");
-                    }
-                    try {
-                        TextRedactionService.requireVerified(result.pageResults());
-                        result.save(tempOutput.getFile().toPath());
-                        log.info(
-                                "JPDFium auto-redact: {} matches processed into {}",
-                                result.totalMatches(),
-                                filename);
-                        return withMatchCount(
-                                WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
-                                result.totalMatches());
-                    } finally {
-                        if (result.document() != null) {
-                            result.document().close();
-                        }
-                    }
-                } catch (ToolFailedException e) {
-                    tempOutput.close();
-                    throw e;
-                } catch (Exception e) {
-                    tempOutput.close();
-                    TextRedactionService.rejectUnverifiable(e);
-                    log.warn(
-                            "JPDFium native redaction fell back to manual redaction service: {}",
-                            e.getMessage());
+                }
+            } catch (ToolFailedException e) {
+                tempOutput.close();
+                throw e;
+            } catch (Exception e) {
+                tempOutput.close();
+                TextRedactionService.rejectUnverifiable(e);
+                log.warn(
+                        "JPDFium native redaction fell back to manual redaction service: {}",
+                        e.getMessage());
+                try (PDDocument document = pdfDocumentFactory.load(tempInput.getFile())) {
                     Map<Integer, List<PDFText>> foundTexts =
                             textRedactionService.findTextToRedact(
                                     document,
