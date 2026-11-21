@@ -559,11 +559,13 @@ function FormFillLayers({
   enabled,
   editing,
   file,
+  renderFilter,
   ...page
 }: FormFieldLayersProps & {
   enabled: boolean;
   editing: boolean;
   file?: File | Blob;
+  renderFilter?: string;
 }) {
   if (!enabled) return null;
   return (
@@ -575,6 +577,7 @@ function FormFillLayers({
           pdfSource={file}
           pageWidth={page.width}
           pageHeight={page.height}
+          renderFilter={renderFilter}
         />
       )}
       {/* FormFieldOverlay for interactive form filling */}
@@ -584,6 +587,7 @@ function FormFillLayers({
         pageWidth={page.width}
         pageHeight={page.height}
         fileId={page.fileId}
+        renderFilter={renderFilter}
       />
       <FormFieldEditingOverlays active={editing} {...page} />
     </>
@@ -682,6 +686,7 @@ function PageLayers({
         width={width}
         height={height}
         fileId={fileId}
+        renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
       />
       {/* SignatureFieldOverlay: bitmaps of digital-signature appearances */}
       {file && (
@@ -692,6 +697,7 @@ function PageLayers({
           pageWidth={width}
           pageHeight={height}
           appearanceInBitmap={formsInBitmap}
+          renderFilter={PDF_RENDER_FILTERS[pdfRenderMode]}
         />
       )}
       <AnnotationEditingLayers

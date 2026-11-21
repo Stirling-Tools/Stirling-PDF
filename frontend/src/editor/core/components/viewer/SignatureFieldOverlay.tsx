@@ -35,6 +35,8 @@ interface SignatureFieldOverlayProps {
   pageHeight: number;
   /** The page bitmap already draws the appearance, so painting it again would double it. */
   appearanceInBitmap?: boolean;
+  /** CSS filter matching the page render mode (dark, sepia). */
+  renderFilter?: string;
 }
 
 interface ResolvedSignatureField extends SignatureFieldAppearance {
@@ -124,6 +126,7 @@ function SignatureFieldOverlayInner({
   pageWidth,
   pageHeight,
   appearanceInBitmap = false,
+  renderFilter,
 }: SignatureFieldOverlayProps) {
   const { t } = useTranslation();
   const staleNames = useStaleBakedFieldNames();
@@ -182,6 +185,7 @@ function SignatureFieldOverlayInner({
         height: "100%",
         pointerEvents: "none",
         zIndex: 6,
+        filter: renderFilter,
       }}
       data-signature-overlay-page={pageIndex}
     >

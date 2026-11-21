@@ -8,7 +8,7 @@ import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentRea
 import { useActiveDocumentId } from "@editor/components/viewer/useActiveDocumentId";
 
 // Matches the thumbnail plugin's default width; LocalEmbedPDF registers it without config.
-const THUMB_WIDTH = 120;
+const THUMB_WIDTH = 150;
 
 type ThumbTask = ReturnType<RenderCapability["renderPageRect"]>;
 
