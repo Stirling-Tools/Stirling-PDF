@@ -30,14 +30,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.util.ProcessExecutor;
 
 /**
  * Covers the process-probing paths of ExternalAppDepConfig by intercepting ProcessBuilder
@@ -56,11 +53,7 @@ class ExternalAppDepConfigMoreTest {
 
     @BeforeEach
     void setUp() {
-        when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/custom/weasyprint");
-        when(runtimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
-        when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
-        when(runtimePathConfig.getSOfficePath()).thenReturn("/custom/soffice");
         lenient()
                 .when(endpointConfiguration.getEndpointsForGroup(anyString()))
                 .thenReturn(Set.of());
@@ -242,54 +235,6 @@ class ExternalAppDepConfigMoreTest {
         }
     }
 
-    @Nested
-    @DisplayName("disableCalibreUnlessConfined")
-    class DisableCalibreUnlessConfined {
-
-        private void sandboxUsable(boolean usable) throws Exception {
-            try (MockedStatic<ProcessExecutor> executor =
-                    Mockito.mockStatic(ProcessExecutor.class)) {
-                executor.when(() -> ProcessExecutor.isCalibreSandboxUsable(any()))
-                        .thenReturn(usable);
-                invoke("disableCalibreUnlessConfined", new Class<?>[] {});
-            }
-        }
-
-        @Test
-        @DisplayName("disables Calibre when its sandbox cannot be applied")
-        void disablesWhenUnconfined() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-
-            sandboxUsable(false);
-
-            verify(endpointConfiguration)
-                    .disableGroup("Calibre", EndpointConfiguration.DisableReason.DEPENDENCY);
-        }
-
-        @Test
-        @DisplayName("keeps Calibre when its sandbox is active")
-        void keepsWhenConfined() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
-
-            sandboxUsable(true);
-
-            verify(endpointConfiguration, never()).disableGroup(anyString(), any());
-        }
-
-        @Test
-        @DisplayName("does not probe when Calibre is already disabled")
-        void skipsProbeWhenAlreadyDisabled() throws Exception {
-            when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(false);
-            try (MockedStatic<ProcessExecutor> executor =
-                    Mockito.mockStatic(ProcessExecutor.class)) {
-                invoke("disableCalibreUnlessConfined", new Class<?>[] {});
-
-                executor.verifyNoInteractions();
-            }
-            verify(endpointConfiguration, never()).disableGroup(anyString(), any());
-        }
-    }
-
     /**
      * checkDependencyAndDisableGroup is tested directly (single-threaded). The public
      * checkDependencies() fans probes out over virtual threads where Mockito's thread-confined
@@ -346,21 +291,6 @@ class ExternalAppDepConfigMoreTest {
 
             verify(endpointConfiguration, never())
                     .disableGroup(anyString(), eq(EndpointConfiguration.DisableReason.DEPENDENCY));
-        }
-
-        @Test
-        @DisplayName("weasyprint below the required version disables the weasyprint group")
-        void weasyprintBelowMinimumDisabled() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(0, "WeasyPrint 50.0", ""))) {
-                invoke(
-                        "checkDependencyAndDisableGroup",
-                        new Class<?>[] {String.class},
-                        "/custom/weasyprint");
-            }
-
-            verify(endpointConfiguration)
-                    .disableGroup("Weasyprint", EndpointConfiguration.DisableReason.DEPENDENCY);
         }
     }
 }

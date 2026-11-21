@@ -647,18 +647,16 @@ description = "པར་རིས་བཟོ་བཅོས་བྱེད་�
 label = "ཆེས་མཐོའི་DPI"
 
 [admin.settings.advanced.processExecutor]
-calibre = "ཚད་གཞི།"
 description = "བྱ་རིམ་ལག་བསྟར་བྱེད་མཁན་རེ་རེའི་དུས་ཚོད་ཚད་གཞི་དང་དུས་ཚོད་བཀོད་སྒྲིག་སྒྲིག་བཀོད་བྱེད།"
 ghostscript = "འདྲེ་གདོན་འདྲེ།"
 installApp = "མཉེན་ཆས་སྒྲིག་འཇུག་བྱེད་པ།"
 label = "ལས་སྣོན་ལས་སྣོན་ཚད་གཞི།"
-libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF ནས་ HTML བར།"
+officeConvert = "Office བརྗེ་སྒྱུར"
+officeConvertSessionLimit = "མཉམ་དུ་བརྗེ་སྒྱུར་བྱེད་པའི་གྲངས་མང་ཤོས; 0 ཡིན་ན CPUs དང་ memory ལ་བརྟེན་ནས་ཚད་ཞིག་གདམ།"
 pythonOpenCv = "ཕའི་ཐོན་ OpenCV །"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
-weasyPrint = "ཝེ་སི་པར་སྐྲུན་ཁང་།"
 
 [admin.settings.advanced.processExecutor.sessionLimit]
 description = "ཆེས་མང་བའི་དུས་མཉམ་གྱི་དཔེ་མཚོན།"
@@ -667,10 +665,6 @@ label = "ཚོགས་འདུའི་ཚད་གཞི།"
 [admin.settings.advanced.processExecutor.timeout]
 description = "ཆེས་མང་བའི་ལག་བསྟར་དུས་ཚོད།"
 label = "དུས་ཚོད་ཕྱིར་ཐོན་(སྐར་མ་)།"
-
-[admin.settings.advanced.stirlingOfficeConversion]
-description = "Stirling Office Convert ནི beta ཚོད་ལྟའི་གནས་སྐབས་སུ་ཡོད། དེས LibreOffice ལས་སྒྱུར་སྤོར་ལེགས་པ། མགྱོགས་པ། དྲན་གསོག་ཉུང་བ་སྤྱོད་པ་མཁོ་འདོན་བྱེད།"
-label = "Stirling Office སྒྱུར་སྤོར་གསར་པ་སྤྱོད།"
 
 [admin.settings.advanced.tempFileManagement]
 description = "གནས་སྐབས་ཀྱི་ཡིག་ཆ་གསོག་འཇོག་དང་གཙང་སྦྲ་བྱེད་པའི་སྤྱོད་ཚུལ་བཀོད་སྒྲིག་བྱེད་པ།"
@@ -688,11 +682,6 @@ label = "གཙང་བཟོའི་བར་མཚམས་(སྐར་མ)
 [admin.settings.advanced.tempFileManagement.cleanupSystemTemp]
 description = "རྒྱ་ཆེ་བའི་མ་ལག་གི་དྲོད་ཚད་སྣོད་ཐོ་གཙང་མ་བཟོ་དགོས་མིན་(དོགས་ཟོན་དང་བཅས་བེད་སྤྱོད་གཏོང་དགོས།)"
 label = "གཙང་བཟོའི་མ་ལག་གི་དུས་བབ།"
-
-[admin.settings.advanced.tempFileManagement.libreofficeDir]
-description = "LibreOffice tempt ཡིག་ཆའི་དཀར་ཆག (སྔོན་སྒྲིག་ཆེད་དུ་སྟོང་པར་བཞག་པ་: bateTMmpDir/librefofce)"
-label = "LibreOffice གནས་སྐབས་སྣོད་ཐོ།"
-placeholder = "སོར་བཞག: baseTmpDir/libreoffice"
 
 [admin.settings.advanced.tempFileManagement.maxAgeHours]
 description = "དྲོད་ཚད་ཡིག་ཆ་གཙང་མ་མ་བཟོས་གོང་ཆུ་ཚོད་ཁ་ཤས་ནང་ཆེས་མཐོ་བའི་ལོ་ཚད།"
@@ -1300,17 +1289,6 @@ label = "སྔོན་སྒྲིག་ཐོན་སྐྱེད་པ།"
 [admin.settings.general.customPaths]
 description = "མདོང་ལམ་ལས་སྣོན་དང་ཕྱིའི་ལག་ཆའི་ཆེད་དུ་རང་སྒྲིག་ཡིག་ཆའི་མ་ལག་གི་འགྲོ་ལམ་སྒྲིག་བཀོད་བྱེད་པ།"
 label = "ལམ་འགྲོ་ལམ་ལུགས།"
-
-[admin.settings.general.customPaths.operations]
-label = "ཕྱིའི་ལག་ཆའི་ལམ།"
-
-[admin.settings.general.customPaths.operations.unoconvert]
-description = "ཡིག་ཆ་སྒྱུར་བཀོད་ཀྱི་ཆེད་དུ་LibreOffice ནས་Oconcorvert (སྔོན་སྒྲིག་ཆེད་དུ་སྟོང་པར་བཞག་པ་: /opt/venv/bin/octurntert)"
-label = "མེད་ཐབས་མེད་པ་ལག་བསྟར་བྱེད་ཐུབ།"
-
-[admin.settings.general.customPaths.operations.weasyprint]
-description = "HTMLནས་PDFབསྒྱུར་བའི་ཆེད་དུ་WasyPrintནས་ལག་བསྟར་བྱེད་ཐུབ།"
-label = "WasyPrint ལག་བསྟར་བྱེད་ཐུབ་པ།"
 
 [admin.settings.general.customPaths.pipeline]
 label = "མདོང་ལམ་ངོས་འཛིན།"
@@ -4403,10 +4381,9 @@ pdfUaTitle = "ཡིག་ཆའི་ཁ་བྱང"
 pdfUaTitleHelp = "ཀློག་ཆས་ཀྱིས་ཡིག་ཆའི་མིང་གི་ཚབ་ཏུ་སྟོན། སྟོང་པར་བཞག་ན་ཁ་བྱང་དང་པོ་སྤྱོད།"
 selectSourceFormatFirst = "སྔོན་ལ་ཁུངས་ཀྱི་རྣམ་གཞག་འདེམས"
 settings = "སྒྲིག་སྟངས།"
+signInToUse = "ལག་ལེན་བྱེད་པར་ནང་འཛུལ།"
 single = "ཁེར་ཧྲེང"
 sourceFormatPlaceholder = "འབྱུང་ཁུངས་རྣམ་གྲངས།"
-stirlingOfficeConvert = "Stirling Office Convert (beta) སྤྱོད།"
-stirlingOfficeConvertDescription = "དྲན་གསོག་ཉུང་བས་སྒྱུར་སྤོར་ལེགས་པ་དང་མགྱོགས་པ། ཚད་ལྡན་སྒྱུར་ཆས་སྤྱོད་པར་ཁ་རྒྱགပါ།"
 strictMode = "ནན་མོའི་རྣམ་པ"
 strictModeDesc = "སྒྱུར་བ་འཐུས་ཚང་མིན་ན་ནོར་འཁྲུལ་སྟོན (VeraPDF verification སྤྱོད)"
 svgPdfOptions = "SVG to PDF གདམ་ག"
@@ -4419,8 +4396,6 @@ webOptions = "དྲ་རྒྱ་ནས་PDFགདམ་ག།"
 zoomLevel = "ཟོམ་རིམ་པ།"
 
 [convert.ebookOptions]
-embedAllFonts = "ཡིག་གཟུགས་ཚང་མ་བཙུགས།"
-embedAllFontsDesc = "གློག་དེབ་ཀྱི་ཡིག་གཟུགས་ཚང་མ་ཐོན་པའི་PDFནང་དུ་བཙུགས་ཡོད།"
 includePageNumbers = "ཤོག་ངོས་ཨང་རྟགས་བཀོད་པ།"
 includePageNumbersDesc = "ཐོན་པའི་PDFལ་ཤོག་ངོས་ཨང་གྲངས་ཁ་སྣོན་བྱེད།"
 includeTableOfContents = "ནང་དོན་གྱི་རེའུ་མིག་ཚུད་པ།"
@@ -7830,7 +7805,11 @@ decorativeLabel = "མཛེས་བཟོའི་པར་རིས"
 description = "པར་རིས་འགྲེལ་བཤད"
 descriptionInfo = "བརྙན་ཡོལ་ཀློག་ཆས་ཀྱིས་འདི་པར་རིས་ཀྱི་ཚབ་ཏུ་ཀློག"
 encrypted = "གསང་སྡོམ་བྱས་པའི་ཡིག་ཆའི་ནང་མཚོན་རྟགས་རྩོམ་སྒྲིག་མི་ཐུབ"
+figureDescription = "དཔེ་རིས་ཀྱི་འགྲེལ་བཤད"
+figureDescriptionInfo = "Screen reader ཡིས་དཔེ་རིས་ཀྱི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ།"
 formFieldDescription = "ཡིག་སྒམ་འགྲེལ་བཤད"
+formulaDescription = "Formula འགྲེལ་བཤད"
+formulaDescriptionInfo = "Screen reader ཡིས་ formula གི་ཚབ་ཏུ་འདི་སྐད་ཀྱིས་ཀློག་དོ། ཁྲོད་སྐད་དུ་ལྟར་བཤད་དགོས་པས། དཔེར་ན \"x squared plus one\" ལྟ་བུ།"
 heading = "འཛུལ་སྤྱོད་སྟབས་བདེ"
 innerTagLabel = "མཚོན་རྟགས་ {{number}}"
 innerTags = "ཡི་གེ་འདིའི་ནང་གི་མཚོན་རྟགས"
@@ -7842,7 +7821,7 @@ missingDescriptions = "འགྲེལ་བཤད་ཆད་པ"
 mixedContent = "པར་རིས་ནང་ནང་དོན་གཞན་འདུས་ཡོད"
 mixedTags = "མཉམ་སྦྲེལ"
 needsDescriptionBadge = "འགྲེལ་བཤད་མེད"
-nextImage = "པར་རིས་རྗེས་མ"
+nextToReview = "རྗེས་མ་བསྐྱར་ཞིབ"
 notFigure = "ཡི་གེའི་ཆ་ཤས་སུ་མཚོན་རྟགས་བཏགས་ཡོད"
 removeTag = "མཚོན་རྟགས་སུབ"
 saveFailed = "ཁྱེད་ཀྱི་འཛུལ་སྤྱོད་སྟབས་བདེའི་བཟོ་བཅོས་ཉར་ཚགས་མ་ཐུབ་པས། ཡིག་ཆ་ཉར་ཚགས་མ་བྱས། དེ་དག་ཕྱིར་བཤོལ་ནས་ཡང་བསྐྱར་ཚོད་ལྟ་བྱོས།"
@@ -9661,10 +9640,6 @@ signInToStart = "ཚོད་ལེན་འགོ་འཛུགས་བྱེ
 stage = "རིམ་པ {{current}}/{{total}}"
 stagesLabel = "རྒྱུན་སྒྲིག"
 
-[portal.enterprise.connect]
-ownerOnly = "སར་བར་འདིའི་བདག་པོ་ཁོ་ནས་འབྲེལ་ཐུབ། ཁོང་ལ་ཤོག་ངོས་འདི་ཁ་ཕྱེ་རོགས།"
-unavailable = "སར་བར་འདིར Stirling རྩིས་ཐོ་ལ་འབྲེལ་བྱེད་མི་ཆོག གླེང་མོལ་བཀོལ་ནས་ང་ཚོས་ཁྱེད་ཀྱི་ཚོད་ལེན་གོ་སྒྲིག་བྱས་རྒྱུ་ཡོད།"
-
 [portal.enterprise.landing]
 lede = "མར་འདེབས་མེད་པར་ 14 ཉིན་སོང་མ་སྒྲིག་ཚོད་ལེན་བྱེད། དེའི་རྗེས་ཁྱེད་ཀྱི་ཐོག་འདེབས་བཟོ་ནས་གན་འཛིན་འཇུག"
 tickAgreement = "MSA, order form, EULA, DPA ཡོངས་ཁྱབ་གཅིག་པའི་གན་འཛིན་གཅིག"
@@ -11283,11 +11258,6 @@ downloadOffline = "དྲ་མེད་ཆོག་མཆན་ཕབ་ལེ�
 hint = "ལྡེ་མིག་འདི་རང་སྐྱོང་དཔེ་མཚོན་ནང་སྦྱར་ནས་ནུས་སློང་བྱེད་ཆོག ཡང་ན་ཁྱེད་ཀྱི་ཟིན་ཐོའི་ཆེད་ཉར་ཆོག དེ་བདེ་འཇགས་སུ་ཉར་རོགས།"
 label = "ཁྱེད་ཀྱི་ཆོག་མཆན་ལྡེ་མིག"
 trialFileHint = "འདི་ནི་ཁྱེད་ཀྱི་ཚོད་སྤྱོད་ཆོག་མཆན་ཡིག་ཆ་ཡིན། གྲོས་མཐུན་གཏན་འཁེལ་བྱས་རྗེས། ཕྱིར་ལོག་ནས་ཡང་བསྐྱར་ཕབ་ལེན་བྱོས — དྲ་ཐོག་ཆོག་མཆན་ལྡེ་མིག་དང་མི་འདྲ་བར། .lic ཡིག་ཆ་རང་འགུལ་གྱིས་གསར་སྒྱུར་མི་བྱེད།"
-
-[portal.procurement.link]
-cta = "རྩིས་ཐོ་འབྲེལ་མཐུད"
-description = "ཉོ་སྒྲུབ་ནི་ཁྱེད་ཀྱི་འབྲེལ་མཐུད་བྱས་པའི Stirling རྩིས་ཐོ་ཐོག་འགྲོ་སྐྱོང་བྱེད། འདིས་ང་ཚོས་ཚོད་སྤྱོད་སྤྲོད་པ། གོང་འབོལ་རིན་གོང་རྩིས་པ། དང་རྩིས་བསྡུ་འགོ་འཛུགས་པའི་ཐབས་ཡིན། འགོ་འཛུགས་ཆེད་རྩིས་ཐོ་ཞིག་འབྲེལ་མཐུད་བྱོས།"
-title = "འགོ་འཛུགས་ཆེད་ཁྱེད་ཀྱི་རྩིས་ཐོ་འབྲེལ་མཐུད་བྱོས"
 
 [portal.procurement.live]
 description = "ཁྱེད་ཀྱི་མངགས་ཉོ་འགུལ་སྤྱོད་ནང་ཡོད་ཅིང་ཆོག་མཆན་སྤྲད་ཟིན། ཁྱེད་ཀྱི་ཚོགས་པ་སྤྲོད་སྒྲིག་བྱས་ཟིན་ཞིང་རྩིས་བསྡུ་འགོ་ཚུགས་ཟིན།"
@@ -14260,7 +14230,6 @@ toggleDetails = "ཞིབ་ཕྲ་བརྗེ"
 
 [tool]
 endpointUnavailable = "ལག་ཆ་འདི་ཁྱེད་ཀྱི་ཞབས་ཞུ་ནས་མི་འཐོབ།"
-endpointUnavailableClickable = "ཐབས་ལམ་འདིར་མི་འཐོབ། མནན་ནས་ནང་འཇུག་བྱོས།"
 filesLoading = "ཡིག་ཆ་ད་དུང་འཇུག་བཞིན་ཡོད། སྒུག་རོགས།"
 filesLoadingProgress = "{{loaded}} / {{total}} ཡིག་ཆ་འཇུག་བཞིན..."
 invalidParams = "དགོས་མཁོའི་སྒྲིག་འགོད་ལེན་བསྐྱེད།"
@@ -14268,6 +14237,8 @@ noFiles = "འགོ་འཛུགས་བྱ་ཆེད་ཡིག་ཆ་
 scopeFiles = "ཡིག་ཆ་ཚོ"
 scopeThisFile = "ཡིག་ཆ་འདི་"
 selectFilesHint = "ལག་ཆ་འདི་སྒྲུབ་བར Active Files ནས་ཡིག་ཆ་སེལ།"
+signInRequired = "འདི་ལ་ Stirling རྩིས་ཐོ་དགོས། མུ་མཐུད་བྱེད་པར་ནང་འཛུལ།"
+signInToUse = "ལག་ལེན་བྱེད་པར་ནང་འཛུལ།"
 singleFileScope = "འཇུག་སྤྱོད་: {{fileName}} ཁོ་ན"
 viewerMode = "ཡིག་ཆ་མང་པོ་སྣོན་པར་ཡིག་ཆ editor ལ་བརྗེ།"
 
