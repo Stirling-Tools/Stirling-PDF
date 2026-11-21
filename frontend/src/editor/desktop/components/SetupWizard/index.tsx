@@ -20,6 +20,8 @@ import {
 import { tauriBackendService } from "@editor/services/tauriBackendService";
 import { STIRLING_SAAS_URL } from "@editor/constants/connection";
 import { listen } from "@tauri-apps/api/event";
+// Native HTTP rather than the webview's fetch, which fails on Linux WebKitGTK (#7385)
+import { fetch } from "@tauri-apps/plugin-http";
 import "@editor/auth/ui/auth.css";
 import { DisabledButtonWithTooltip } from "@editor/components/shared/DisabledButtonWithTooltip";
 
