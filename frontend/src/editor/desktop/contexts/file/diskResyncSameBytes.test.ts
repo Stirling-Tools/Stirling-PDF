@@ -59,10 +59,11 @@ import { reconcileOpenFilesAt } from "@editor/contexts/file/fileActions";
 import { reconcileBeforeOpen } from "@editor/contexts/file/storedFileReconciler";
 import { sameBytes } from "@editor/services/diskFileSync";
 import { requestDiskConflictChoice } from "@editor/services/diskConflictPrompt";
+import { alert } from "@editor/components/toast";
+import { readFileFromDisk } from "@editor/services/desktopFileLink";
 
 const PATH = "/Users/x/Documents/report.pdf";
 const DISK_BYTES = new TextEncoder().encode("%PDF-1.7 disk copy");
-const TOOL_BYTES = new TextEncoder().encode("%PDF-1.7 compressed copy");
 
 function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
   return {
@@ -119,6 +120,18 @@ function harness(record: StirlingFileStub, openBytes: Uint8Array<ArrayBuffer>) {
   };
 }
 
+function openPort() {
+  return {
+    getStub: () => undefined,
+    listStubs: () => [],
+    getFile: () => undefined,
+    putFile: vi.fn(),
+    updateStub: vi.fn(),
+    dropFile: vi.fn(),
+    reprocessFile: vi.fn(),
+  };
+}
+
 beforeEach(() => {
   disk.bytes = DISK_BYTES.slice();
   disk.modifiedMs = 2;
@@ -126,140 +139,127 @@ beforeEach(() => {
   stored.files.clear();
   stored.stubs.clear();
   vi.mocked(requestDiskConflictChoice).mockClear();
+  vi.mocked(alert).mockClear();
+  vi.mocked(readFileFromDisk).mockClear();
 });
 
-describe("a disk change that only moves the timestamp", () => {
-  test("keeps the open bytes and re-stamps the baseline", async () => {
+describe("an open file whose disk original changes", () => {
+  test("a timestamp-only change leaves it alone without reading disk", async () => {
     const h = harness(stub(), DISK_BYTES);
 
     await h.run();
 
+    expect(readFileFromDisk).not.toHaveBeenCalled();
     expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
+    expect(h.updates).toEqual([]);
   });
 
-  test("raises no conflict while an editor holds unsaved work", async () => {
-    unsaved.value = true;
-    const h = harness(stub(), DISK_BYTES);
-
-    await h.run();
-
-    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
-  });
-
-  test("raises no conflict on a tool output whose source still matches disk", async () => {
-    const source = stub({ isLeaf: false });
-    stored.stubs.set("open", source);
-    stored.files.set("open", pdf(DISK_BYTES));
-    const output = stub({
-      id: "output" as FileId,
-      parentFileId: "open" as FileId,
-      versionNumber: 2,
-      size: TOOL_BYTES.length,
-      isDirty: true,
-    });
-    const h = harness(output, TOOL_BYTES);
-
-    await h.run();
-
-    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(h.filesRef.current.get("output" as FileId)).toBe(h.openFile);
-    expect(output.diskSyncedModifiedMs).toBe(2);
-  });
-});
-
-describe("a real disk change", () => {
-  test("replaces the open bytes when nothing is unsaved", async () => {
+  test("an edit made elsewhere is not swapped in", async () => {
     disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
     const h = harness(stub(), DISK_BYTES);
 
     await h.run();
 
-    expect(h.filesRef.current.get("open" as FileId)).not.toBe(h.openFile);
-    expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(true);
-  });
-
-  test("reloads over an open copy that can no longer be read", async () => {
-    const h = harness(stub(), DISK_BYTES);
-    const dead = pdf(DISK_BYTES);
-    vi.spyOn(dead, "slice").mockImplementation(() => {
-      throw new Error("backing store lost");
-    });
-    h.filesRef.current.set("open" as FileId, dead);
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    await h.run();
-
-    expect(h.filesRef.current.get("open" as FileId)).not.toBe(dead);
-    expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(true);
-  });
-
-  test("keeps the open bytes when an edit lands mid-comparison", async () => {
-    disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");
-    const h = harness(stub(), DISK_BYTES);
-    const realSlice = h.openFile.slice.bind(h.openFile);
-    vi.spyOn(h.openFile, "slice").mockImplementation((...args) => {
-      unsaved.value = true;
-      return realSlice(...args);
-    });
-
-    await h.run();
-
     expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-    expect(h.updates.some((u) => u.diskReloadedAt !== undefined)).toBe(false);
+    expect(h.updates).toEqual([]);
+    expect(alert).not.toHaveBeenCalled();
   });
 
-  test("still raises a conflict when the size is unchanged", async () => {
+  test("an edit made elsewhere raises no conflict over unsaved work", async () => {
     unsaved.value = true;
     disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");
-    const h = harness(stub(), DISK_BYTES);
+    const h = harness(stub({ isDirty: true }), DISK_BYTES);
 
     await h.run();
 
-    expect(requestDiskConflictChoice).toHaveBeenCalledTimes(1);
+    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
     expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
   });
 
-  test("raises a conflict on a tool output with no clean source left", async () => {
-    const h = harness(
-      stub({
-        id: "output" as FileId,
-        parentFileId: "gone" as FileId,
-        isDirty: true,
-      }),
-      TOOL_BYTES,
-    );
+  test("the edit is picked up the next time the file is opened", async () => {
+    disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
+    stored.files.set("open", pdf(DISK_BYTES));
 
-    await h.run();
+    const decision = await reconcileBeforeOpen(stub(), openPort());
 
-    expect(requestDiskConflictChoice).toHaveBeenCalledTimes(1);
+    expect(decision.contentReplaced).toBe(true);
+    expect(decision.file?.size).toBe(disk.bytes.length);
   });
 });
 
 describe("opening a stored file whose timestamp moved", () => {
   test("serves the stored copy and says nothing was reloaded", async () => {
     stored.files.set("open", pdf(DISK_BYTES));
-    const port = {
-      getStub: () => undefined,
-      listStubs: () => [],
-      getFile: () => undefined,
-      putFile: vi.fn(),
-      updateStub: vi.fn(),
-      dropFile: vi.fn(),
-      reprocessFile: vi.fn(),
-    };
 
-    const decision = await reconcileBeforeOpen(stub(), port);
+    const decision = await reconcileBeforeOpen(stub(), openPort());
 
     expect(decision.file).toBeUndefined();
     expect(decision.contentReplaced).toBeUndefined();
     expect(decision.afterPublish).toBeUndefined();
     expect(decision.updates).toMatchObject({ diskSyncedModifiedMs: 2 });
+  });
+});
+
+describe("opening a stored file after a timestamp-only change", () => {
+  test("raises no conflict over unsaved work elsewhere", async () => {
+    unsaved.value = true;
+    stored.files.set("open", pdf(DISK_BYTES));
+
+    const decision = await reconcileBeforeOpen(stub(), openPort());
+
+    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
+    expect(decision.updates).toMatchObject({ diskSyncedModifiedMs: 2 });
+  });
+
+  test("raises no conflict on a tool output whose source still matches disk", async () => {
+    stored.stubs.set("open", stub({ isLeaf: false }));
+    stored.files.set("open", pdf(DISK_BYTES));
+    stored.files.set(
+      "output",
+      pdf(new TextEncoder().encode("%PDF-1.7 compressed copy")),
+    );
+
+    const decision = await reconcileBeforeOpen(
+      stub({
+        id: "output" as FileId,
+        parentFileId: "open" as FileId,
+        versionNumber: 2,
+        isDirty: true,
+      }),
+      openPort(),
+    );
+    decision.afterPublish?.();
+
+    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
+    expect(decision.updates).toMatchObject({ diskSyncedModifiedMs: 2 });
+  });
+
+  test("raises no conflict on a version restored by undo that disk still holds", async () => {
+    stored.files.set("restored", pdf(DISK_BYTES));
+
+    const decision = await reconcileBeforeOpen(
+      stub({
+        id: "restored" as FileId,
+        isDirty: true,
+        parentFileId: "gone" as FileId,
+      }),
+      openPort(),
+    );
+    decision.afterPublish?.();
+
+    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
+    expect(decision.updates).toMatchObject({ diskSyncedModifiedMs: 2 });
+  });
+
+  test("still raises a conflict when disk really changed under unsaved work", async () => {
+    unsaved.value = true;
+    disk.bytes = new TextEncoder().encode("%PDF-1.7 disk cop!");
+    stored.files.set("open", pdf(DISK_BYTES));
+
+    const decision = await reconcileBeforeOpen(stub(), openPort());
+    decision.afterPublish?.();
+
+    expect(requestDiskConflictChoice).toHaveBeenCalledTimes(1);
   });
 });
 

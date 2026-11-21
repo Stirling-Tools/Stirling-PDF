@@ -66,6 +66,7 @@ import {
 } from "@editor/services/desktopFileLink";
 import { alert } from "@editor/components/toast";
 import { fileStorage } from "@editor/services/fileStorage";
+import { reconcileBeforeOpen } from "@editor/contexts/file/storedFileReconciler";
 import { requestDiskConflictChoice } from "@editor/services/diskConflictPrompt";
 
 const PATH = "/Users/x/Documents/report.pdf";
@@ -128,9 +129,9 @@ function harness(record: StirlingFileStub, openBytes: Uint8Array<ArrayBuffer>) {
 
 const toastTitles = () =>
   vi.mocked(alert).mock.calls.map((c) => (c[0] as { title: string }).title);
-const reloads = (updates: Partial<StirlingFileStub>[]) =>
-  updates.filter((u) => u.diskReloadedAt !== undefined).length;
-const BIG = 600 * 1024 * 1024;
+const GONE = { availability: "gone" as const };
+const detached = (updates: Partial<StirlingFileStub>[]) =>
+  updates.filter((u) => "localFilePath" in u && u.localFilePath === undefined);
 
 beforeEach(() => {
   disk.bytes = DISK_BYTES.slice();
@@ -149,150 +150,79 @@ beforeEach(() => {
   }));
 });
 
-describe("repeated and overlapping checks", () => {
-  test("a second touch after the re-stamp reads nothing", async () => {
+describe("an open file whose original goes away", () => {
+  test("is detached, kept on screen and reported once", async () => {
+    vi.mocked(getDiskFileState).mockResolvedValue(GONE);
     const h = harness(stub(), DISK_BYTES);
 
     await h.run();
-    await h.run();
 
-    expect(readFileFromDisk).toHaveBeenCalledTimes(1);
+    expect(detached(h.updates)).toHaveLength(1);
+    expect(h.updates[0]).toMatchObject({ orphanedFilePath: PATH });
     expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
+    await vi.waitFor(() =>
+      expect(toastTitles()).toEqual(["File deleted on disk"]),
+    );
   });
 
-  test("the watcher and the focus check racing on a touch keep the file", async () => {
+  test("is not detached when the file is back a moment later", async () => {
+    vi.mocked(getDiskFileState)
+      .mockResolvedValueOnce(GONE)
+      .mockImplementation(async () => ({
+        availability: "present" as const,
+        size: disk.bytes.length,
+        modifiedMs: disk.modifiedMs,
+      }));
     const h = harness(stub(), DISK_BYTES);
 
-    await Promise.all([h.run(), h.run(), h.run()]);
+    await h.run();
 
-    expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(reloads(h.updates)).toBe(0);
+    expect(h.updates).toEqual([]);
   });
 
-  test("the watcher and the focus check racing on a real edit reload once", async () => {
-    disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
+  test("the watcher and the focus check racing on it report it once", async () => {
+    vi.mocked(getDiskFileState).mockResolvedValue(GONE);
     const h = harness(stub(), DISK_BYTES);
 
     await Promise.all([h.run(), h.run()]);
 
-    expect(reloads(h.updates)).toBe(1);
-    expect(readFileFromDisk).toHaveBeenCalledTimes(1);
+    expect(detached(h.updates)).toHaveLength(1);
   });
-  test("a check that still sees the stub from before a reload does not reload again", async () => {
-    disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
-    const record = stub();
-    const beforeReload = { ...record };
-    const h = harness(record, DISK_BYTES);
 
-    await h.run();
-    Object.assign(record, beforeReload);
-    await h.run();
-
-    expect(reloads(h.updates)).toBe(1);
-  });
-});
-
-describe("writes in progress", () => {
-  test("our own save is not checked while it is being written", async () => {
+  test("is not mistaken for a loss while our own save writes it", async () => {
+    vi.mocked(getDiskFileState).mockResolvedValue(GONE);
     beginSelfWrite(PATH);
     const h = harness(stub(), DISK_BYTES);
 
     await h.run();
 
-    expect(readFileFromDisk).not.toHaveBeenCalled();
     expect(h.updates).toEqual([]);
   });
 
-  test("a file saved by us and then touched raises no conflict", async () => {
-    const saved = new TextEncoder().encode("%PDF-1.7 saved by us, longer");
-    disk.bytes = saved.slice();
-    disk.modifiedMs = 6;
-    unsaved.value = true;
-    const h = harness(
-      stub({
-        size: saved.length,
-        diskSyncedSize: saved.length,
-        diskSyncedModifiedMs: 5,
-      }),
-      saved,
-    );
-
-    await h.run();
-
-    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-  });
-
-  test("a half-written file is left for the next event", async () => {
-    const h = harness(stub(), DISK_BYTES);
-    vi.mocked(readFileFromDisk).mockImplementationOnce(
-      async () => disk.bytes.slice(0, 5).buffer,
-    );
-
-    await h.run();
-    expect(h.updates).toEqual([]);
-
-    await h.run();
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
-    expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-  });
-});
-
-describe("files the check leaves alone", () => {
-  test("a superseded version is never replaced", async () => {
-    disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
-    const h = harness(stub({ isLeaf: false }), DISK_BYTES);
-
-    await h.run();
-
-    expect(h.filesRef.current.get("open" as FileId)).toBe(h.openFile);
-    expect(reloads(h.updates)).toBe(0);
-  });
-
-  test("a filesystem with no modified time is checked by size alone", async () => {
-    disk.modifiedMs = 0;
+  test("on a volume that went offline is marked, then cleared on return", async () => {
+    vi.mocked(getDiskFileState).mockResolvedValueOnce({
+      availability: "unavailable",
+      reason: "offline",
+    });
     const h = harness(stub(), DISK_BYTES);
 
     await h.run();
-
-    expect(readFileFromDisk).not.toHaveBeenCalled();
-  });
-
-  test("a file too large to re-read is reported once", async () => {
-    vi.mocked(getDiskFileState).mockImplementation(async () => ({
-      availability: "present" as const,
-      size: BIG,
-      modifiedMs: disk.modifiedMs,
-    }));
-    const h = harness(
-      stub({ id: "big" as FileId, diskSyncedSize: BIG }),
-      DISK_BYTES,
-    );
+    expect(h.updates).toEqual([{ diskUnavailableReason: "offline" }]);
 
     await h.run();
-    disk.modifiedMs = 3;
-    await h.run();
-    await h.run();
-    await vi.waitFor(() => expect(alert).toHaveBeenCalled());
-
-    expect(toastTitles()).toEqual(["File changed on disk"]);
-    expect(readFileFromDisk).not.toHaveBeenCalled();
+    expect(h.updates.at(-1)).toEqual({ diskUnavailableReason: undefined });
   });
 });
 
-describe("review follow-ups", () => {
+describe("the re-check queue", () => {
   test("a check with no paths leaves later checks working", async () => {
     const h = harness(stub(), DISK_BYTES);
-
     await h.run([]);
+
+    vi.mocked(getDiskFileState).mockResolvedValue(GONE);
     await h.run();
 
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
+    expect(detached(h.updates)).toHaveLength(1);
   });
 
   test("a check that fails does not stop the next one", async () => {
@@ -301,68 +231,41 @@ describe("review follow-ups", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await expect(h.run()).resolves.toBeUndefined();
+    vi.mocked(getDiskFileState).mockResolvedValue(GONE);
     await h.run();
 
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
+    expect(detached(h.updates)).toHaveLength(1);
   });
+});
 
-  test("a reload whose store fails still updates the open record", async () => {
+describe("taking the disk version from a conflict raised at open", () => {
+  test("still updates the record when storing the new bytes fails", async () => {
     disk.bytes = new TextEncoder().encode("%PDF-1.7 edited elsewhere");
+    const port = {
+      getStub: () => undefined,
+      listStubs: () => [],
+      getFile: () => undefined,
+      putFile: vi.fn(),
+      updateStub: vi.fn(),
+      dropFile: vi.fn(),
+      reprocessFile: vi.fn(),
+    };
+    const decision = await reconcileBeforeOpen(stub({ isDirty: true }), port);
+    decision.afterPublish?.();
+    const { onUseDisk } = vi.mocked(requestDiskConflictChoice).mock.calls[0][0];
     vi.mocked(fileStorage.updateFileMetadata).mockRejectedValueOnce(
       new Error("quota"),
     );
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const h = harness(stub(), DISK_BYTES);
 
-    await h.run();
+    onUseDisk();
 
-    expect(reloads(h.updates)).toBe(1);
-    expect(h.updates.at(-1)).toMatchObject({
-      diskSyncedSize: disk.bytes.length,
-    });
-  });
-
-  test("a version restored by undo whose bytes match disk raises no conflict", async () => {
-    unsaved.value = true;
-    const h = harness(
-      stub({ isDirty: true, parentFileId: "gone" as FileId }),
-      DISK_BYTES,
+    await vi.waitFor(() =>
+      expect(port.updateStub).toHaveBeenCalledWith(
+        "open",
+        expect.objectContaining({ diskSyncedSize: disk.bytes.length }),
+      ),
     );
-
-    await h.run();
-
-    expect(requestDiskConflictChoice).not.toHaveBeenCalled();
-    expect(h.updates).toEqual([
-      { diskSyncedSize: DISK_BYTES.length, diskSyncedModifiedMs: 2 },
-    ]);
-  });
-
-  test("a file that grows too large again after a reload is reported again", async () => {
-    let size = BIG;
-    vi.mocked(getDiskFileState).mockImplementation(async () => ({
-      availability: "present" as const,
-      size,
-      modifiedMs: disk.modifiedMs,
-    }));
-    const h = harness(
-      stub({ id: "regrow" as FileId, diskSyncedSize: BIG }),
-      DISK_BYTES,
-    );
-
-    await h.run();
-    size = DISK_BYTES.length;
-    disk.modifiedMs = 3;
-    await h.run();
-    size = BIG;
-    disk.modifiedMs = 4;
-    await h.run();
-    await vi.waitFor(() => expect(alert).toHaveBeenCalledTimes(2));
-
-    expect(toastTitles()).toEqual([
-      "File changed on disk",
-      "File changed on disk",
-    ]);
+    expect(port.reprocessFile).toHaveBeenCalledWith("open");
   });
 });
