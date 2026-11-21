@@ -391,10 +391,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test("unsupported tools show the protected file with details in a tooltip", async ({
     page,
   }) => {
-    await page.route("**/api/v1/ui-data/ocr-pdf", (route) =>
-      route.fulfill({ json: { languages: ["eng"] } }),
-    );
-    await page.goto("/ocr");
+    await page.goto("/extract-images");
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
     await fillPassword(page, "testpass123");
