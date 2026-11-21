@@ -34,6 +34,8 @@ const CORE_TOAST_ALIAS = {
 // Projects do NOT inherit the root test options, so every project silently ran
 // at vitest's 5s default and printed all app stdout. Spread these into each one.
 const TEST_DEFAULTS = {
+  // A shared source file can resolve to different layer imports in each project.
+  fsModuleCache: false,
   testTimeout: 10000,
   hookTimeout: 10000,
   // Threads spawn faster for local speed; CI keeps forks so a cross-file global
