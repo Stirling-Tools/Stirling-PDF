@@ -105,8 +105,8 @@ it("runs the signature check in the background after the blocking answer for a s
   await scope.onmessage!({ data: request });
   expect(
     scope.postMessage.mock.calls.map(([message]) => Object.keys(message)),
-  ).toEqual([["access", "background"], ["details"], ["done"]]);
-  expect(scope.postMessage.mock.calls[1][0]).toEqual({
+  ).toEqual([["ready"], ["access", "background"], ["details"], ["done"]]);
+  expect(scope.postMessage.mock.calls[2][0]).toEqual({
     details: { signatures: [{ signerName: "Test Signer" }] },
   });
   expect(readSignatures).toHaveBeenCalledWith(ready, 1, {
@@ -120,6 +120,7 @@ it("skips background checks when the request does not ask for them", async () =>
   readAccess.mockReturnValueOnce({ encrypted: false, signed: true } as never);
   await scope.onmessage!({ data: { ...request, runBackgroundChecks: false } });
   expect(scope.postMessage.mock.calls.map(([message]) => message)).toEqual([
+    { ready: true },
     { access: { encrypted: false, signed: true }, background: false },
   ]);
   expect(readSignatures).not.toHaveBeenCalled();
@@ -131,6 +132,7 @@ it("still finishes when a background check fails", async () => {
   readSignatures.mockRejectedValueOnce(new Error("Malformed signature"));
   await scope.onmessage!({ data: request });
   expect(scope.postMessage.mock.calls.map(([message]) => message)).toEqual([
+    { ready: true },
     { access: { encrypted: false, signed: true }, background: true },
     { done: true },
   ]);

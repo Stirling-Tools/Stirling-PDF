@@ -23,6 +23,7 @@ import {
 } from "@editor/services/pdfPermissions";
 import { isDamagedPdfError } from "@editor/utils/pdfDamage";
 import { looksEncryptedFromTrailer } from "@editor/utils/pdfEncryptionProbe";
+import { combineAbortSignals } from "@editor/utils/combineAbortSignals";
 
 const SUPPORTED_ENDPOINTS = new Set([
   "/api/v1/security/add-password",
@@ -141,7 +142,7 @@ async function accessForSignedCheck(
   if (known) return known;
   if (endpoint && PASSWORD_ENDPOINTS.has(endpoint))
     return inspectForPasswordTool(file, "", signal);
-  return ensureAccessUnlessDamaged(file, signal);
+  return ensureAccessUnlessDamaged(file, signal, undefined, true);
 }
 
 /** Only a wrong password or unparseable bytes leave the file unread; any other failure refuses the run. */
@@ -183,19 +184,34 @@ export function supportsSessionUnlock(endpoint: string | undefined): boolean {
 }
 
 /**
- * PDFium rejects some damaged files the server can still recover, so unparseable
- * bytes with no encryption hint are passed through unchanged. Access is not
- * recorded for them: nothing has proved them unencrypted.
+ * Damaged bytes (the server may recover them) and a slow local check (the engine is
+ * still downloading) must not block a tool, so files with no encryption hint pass
+ * through unchanged. Access is not recorded for them: nothing has proved them unencrypted.
  */
+const passedThrough = new WeakSet<Blob>();
+
 async function ensureAccessUnlessDamaged(
   file: File,
   signal?: AbortSignal,
+  onPassThrough?: (file: File) => void,
+  signedCheck = false,
 ): Promise<PdfAccess | undefined> {
+  // Preflight's verdict is consumed once, so processing does not wait out a second inspection.
+  // A signed check never reuses it: the timed-out read could not see signatures.
+  if (!signedCheck && passedThrough.delete(file)) return undefined;
   try {
     return await ensureLocalPdfAccess(file, signal);
   } catch (error) {
-    if (isDamagedPdfError(error) && !(await looksEncryptedFromTrailer(file)))
+    const timedOut =
+      error instanceof DOMException && error.name === "TimeoutError";
+    // A timed-out file may be signed, so the signed-edit policy cannot let it through.
+    if (
+      ((timedOut && !signedCheck) || isDamagedPdfError(error)) &&
+      !(await looksEncryptedFromTrailer(file))
+    ) {
+      onPassThrough?.(file);
       return undefined;
+    }
     throw error;
   }
 }
@@ -210,19 +226,75 @@ export async function preflightPdfOperation(
   isKnownEncrypted: (file: StirlingFile) => boolean = () => false,
   editsInBrowser = false,
 ): Promise<boolean> {
+  // Inspections still pending when preflight exits early stop holding worker slots.
+  const done = new AbortController();
+  const combined = combineAbortSignals([
+    done.signal,
+    ...(signal ? [signal] : []),
+  ]);
+  // Pass-through verdicts only reach processing when this preflight lets it proceed.
+  const passes = new Set<File>();
+  try {
+    const proceed = await runPreflight(
+      files,
+      endpoint,
+      combinesFiles,
+      requestOwner,
+      combined.signal,
+      isKnownEncrypted,
+      editsInBrowser,
+      (file) => passes.add(file),
+    );
+    if (proceed) for (const file of passes) passedThrough.add(file);
+    return proceed;
+  } finally {
+    done.abort();
+    combined.dispose();
+  }
+}
+
+async function runPreflight(
+  files: readonly StirlingFile[],
+  endpoint: string | undefined,
+  combinesFiles: boolean,
+  requestOwner: (file: StirlingFile) => Promise<boolean>,
+  signal: AbortSignal,
+  isKnownEncrypted: (file: StirlingFile) => boolean,
+  editsInBrowser: boolean,
+  onPassThrough: (file: File) => void,
+): Promise<boolean> {
   const protectedFiles: StirlingFile[] = [];
   const changesProtection =
     endpoint !== undefined && PASSWORD_ENDPOINTS.has(endpoint);
+  const signedCheck = signedCheckApplies(endpoint, editsInBrowser);
+  // Inspect the whole selection at once; the access service bounds concurrent workers.
+  const inspections = new Map(
+    changesProtection
+      ? []
+      : files.filter(isPdf).map((file) => {
+          const inspection = ensureAccessUnlessDamaged(
+            file,
+            signal,
+            onPassThrough,
+            signedCheck,
+          );
+          inspection.catch(() => {});
+          return [file, inspection] as const;
+        }),
+  );
   for (const file of files) {
     if (signal?.aborted) throw new axios.CanceledError("Operation cancelled");
     if (!isPdf(file)) continue;
     // Password endpoints validate the requested change themselves; unknown roles need no preflight upload.
     const access = changesProtection
       ? getPdfAccess(file)
-      : await ensureAccessUnlessDamaged(file, signal);
-    if (signedCheckApplies(endpoint, editsInBrowser))
+      : await inspections.get(file);
+    // A finished inspection that left access unknown means damaged bytes; reading again cannot help.
+    if (signedCheck)
       assertSignedPdfEditable(
-        access ?? (await accessForSignedCheck(file, endpoint, signal)),
+        changesProtection
+          ? (access ?? (await accessForSignedCheck(file, endpoint, signal)))
+          : access,
         endpoint,
         editsInBrowser,
       );
@@ -307,7 +379,12 @@ export async function prepareUnlockedFile(
     return file;
   const access =
     getPdfAccess(file) ??
-    (await ensureAccessUnlessDamaged(file, inspectionSignal));
+    (await ensureAccessUnlessDamaged(
+      file,
+      inspectionSignal,
+      undefined,
+      signedCheckApplies(endpoint, false),
+    ));
   assertSignedPdfEditable(access, endpoint);
   if (!access?.encrypted) return file;
   if (!supportsSessionUnlock(endpoint))
