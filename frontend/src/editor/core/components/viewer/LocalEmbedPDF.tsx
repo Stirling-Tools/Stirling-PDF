@@ -137,6 +137,7 @@ import { RedactionAPIBridge } from "@editor/components/viewer/RedactionAPIBridge
 import { DocumentPermissionsAPIBridge } from "@editor/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@editor/components/viewer/DocumentReadyWrapper";
 import { InitialDocumentLoadBridge } from "@editor/components/viewer/InitialDocumentLoadBridge";
+import { LastViewedPageBridge } from "@editor/components/viewer/LastViewedPageBridge";
 import ToolLoadingFallback from "@editor/components/tools/ToolLoadingFallback";
 import { useFontFallbackConfig } from "@editor/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@editor/services/wasmPrecompiler";
@@ -217,6 +218,8 @@ interface LocalEmbedPDFProps {
   restorePending?: boolean;
   restoreRequest?: DocumentRestoreRequest | null;
   onRestoreEvent?: (event: DocumentRestoreEvent) => void;
+  /** Original id of the file whose page is remembered; null remembers nothing. */
+  lastViewedPageFileId?: string | null;
 }
 
 interface ViewerPageContainerProps {
@@ -974,6 +977,7 @@ export function LocalEmbedPDF({
   restorePending = false,
   restoreRequest = null,
   onRestoreEvent,
+  lastViewedPageFileId = null,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -1735,6 +1739,10 @@ export function LocalEmbedPDF({
             request={restoreRequest}
             restorePending={restorePending}
             onEvent={onRestoreEvent}
+          />
+          <LastViewedPageBridge
+            originalFileId={lastViewedPageFileId}
+            restorePending={restorePending}
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />

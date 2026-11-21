@@ -232,23 +232,23 @@ export function WorkbenchSessionPersistence() {
     if (authLoading) return;
     restoreStarted.current = true;
 
-    const nothingToDo =
-      !WORKBENCH_SESSION_RESTORE ||
-      !store ||
-      !saved ||
-      saved.fileIds.length === 0;
-    if (nothingToDo) {
+    if (!WORKBENCH_SESSION_RESTORE || !store || !saved) {
       restoreSettled.current = true;
       return;
     }
 
     void (async () => {
-      // A tab can outlive a sign-out (the logout clears it, but a 401 bounce or an expiry does
-      // not), and the next person to sign in here must not open the last person's documents.
+      // The record can outlive a sign-out (the logout clears it, but a 401 bounce or an expiry
+      // does not), and the next person to sign in here must not open the last person's documents
+      // or learn what they read. Checked even with no files open, since the pages outlive them.
       const currentOwner =
         userId == null ? null : await fingerprintOwner(userId);
       if ((saved.userId ?? null) !== currentOwner) {
         clearWorkbenchSession();
+        restoreSettled.current = true;
+        return;
+      }
+      if (saved.fileIds.length === 0) {
         restoreSettled.current = true;
         return;
       }

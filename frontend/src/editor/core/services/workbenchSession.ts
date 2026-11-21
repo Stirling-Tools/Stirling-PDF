@@ -1,5 +1,6 @@
-// The tab's last editor session (open files, selection, view), so a processor switch or reload
-// does not cost the user their workbench. sessionStorage on purpose: per-tab, tabs never clobber.
+// The tab's last editor session (open files, selection, view, and the page each file was read at),
+// so a processor switch or reload does not cost the user their workbench. sessionStorage on purpose:
+// per-tab, tabs never clobber.
 
 import type { StirlingFileStub } from "@editor/types/fileContext";
 import { stripBasePath } from "@editor/constants/app";
@@ -21,11 +22,27 @@ export interface WorkbenchSession {
   /** Fingerprint of who the workbench belonged to, so the next person in this tab does not
    *  inherit it. Never the account id itself - see {@link fingerprintOwner}. */
   userId?: string | null;
+  /** Page each file was last read at, kept after it closes so reopening it from My Files resumes
+   *  there. Page 1 is never stored. Writers that omit it keep the recorded pages. */
+  pages?: Record<string, number>;
 }
+
+/** Bounds the record, since pages outlive the files they belong to. */
+const MAX_VIEWED_PAGES = 200;
 
 /** A file's stable identity across versions - what the session records. */
 export function originalIdOf(stub: StirlingFileStub): string {
   return stub.originalFileId || stub.id;
+}
+
+function readPages(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, number] =>
+        Number.isInteger(entry[1]) && entry[1] > 1,
+    ),
+  );
 }
 
 export function readWorkbenchSession(): WorkbenchSession | null {
@@ -49,6 +66,7 @@ export function readWorkbenchSession(): WorkbenchSession | null {
           ? parsed.activeFileId
           : undefined,
       userId: typeof parsed.userId === "string" ? parsed.userId : null,
+      pages: readPages(parsed.pages),
     };
   } catch {
     return null;
@@ -78,16 +96,38 @@ export function writeWorkbenchSession(session: WorkbenchSession): void {
     // read as no user, and dropping the owner would either hand the workbench to whoever signs
     // in next or lose it for the person it belongs to. Keeping the owner leaves the restore's
     // ownership check to decide, which it does with a settled identity.
-    const owner = session.userId ?? readWorkbenchSession()?.userId ?? null;
+    const recorded = readWorkbenchSession();
+    const owner = session.userId ?? recorded?.userId ?? null;
+    const pages = session.pages ?? recorded?.pages;
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ ...session, userId: owner, v: SESSION_VERSION }),
+      JSON.stringify({ ...session, pages, userId: owner, v: SESSION_VERSION }),
     );
   } catch {
     // Storage refused (quota, privacy mode). setItem is atomic, so the PREVIOUS record would
     // survive and restore an older workbench - drop it, so the failure is "no restore" instead.
     clearWorkbenchSession();
   }
+}
+
+/** 1-based page the file was last read at, or null when it was left on page 1. */
+export function readViewedPage(originalId: string): number | null {
+  return readWorkbenchSession()?.pages?.[originalId] ?? null;
+}
+
+export function writeViewedPage(originalId: string, page: number): void {
+  const session = readWorkbenchSession() ?? {
+    fileIds: [],
+    selectedFileIds: [],
+  };
+  // Re-inserted so key order is reading order, and the oldest are evicted first.
+  const pages = { ...session.pages };
+  delete pages[originalId];
+  if (page > 1) pages[originalId] = page;
+  writeWorkbenchSession({
+    ...session,
+    pages: Object.fromEntries(Object.entries(pages).slice(-MAX_VIEWED_PAGES)),
+  });
 }
 
 /**
