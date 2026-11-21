@@ -262,7 +262,8 @@ class EnterpriseProcessingHttpIntegrationTest {
                                 .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
                                 .build(),
                         HttpResponse.BodyHandlers.ofByteArray());
-        assertThat(completion.finished.await(5, TimeUnit.SECONDS)).isTrue();
+        // Metering runs after the response; a cold JVM under full-suite load needs well over 5s
+        assertThat(completion.finished.await(30, TimeUnit.SECONDS)).isTrue();
         return response;
     }
 

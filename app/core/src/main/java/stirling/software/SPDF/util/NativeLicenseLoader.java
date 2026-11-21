@@ -3,6 +3,7 @@ package stirling.software.SPDF.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -88,7 +89,7 @@ public final class NativeLicenseLoader {
 
     private static List<Dependency> parseNotice(URL noticeUrl) throws IOException {
         List<String> lines;
-        try (InputStream in = noticeUrl.openStream()) {
+        try (InputStream in = openUncached(noticeUrl)) {
             lines = new String(in.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
         }
         List<Dependency> dependencies = new ArrayList<>();
@@ -195,6 +196,13 @@ public final class NativeLicenseLoader {
         dependencies.add(dependency);
     }
 
+    // Cached jar: connections keep the JarFile open forever, locking the jar on Windows
+    private static InputStream openUncached(URL url) throws IOException {
+        URLConnection connection = url.openConnection();
+        connection.setUseCaches(false);
+        return connection.getInputStream();
+    }
+
     private static List<String> referencedFiles(String licenseValue) {
         List<String> files = new ArrayList<>();
         Matcher see = SEE_FILE.matcher(licenseValue);
@@ -231,7 +239,7 @@ public final class NativeLicenseLoader {
                     noticeUrl);
             return null;
         }
-        try (InputStream in = new URL(noticeUrl, licenseFile).openStream()) {
+        try (InputStream in = openUncached(new URL(noticeUrl, licenseFile))) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8).strip();
         } catch (IOException e) {
             log.warn("Unable to read native license text {} beside {}", licenseFile, noticeUrl, e);
