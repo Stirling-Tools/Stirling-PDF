@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -202,6 +203,45 @@ class SanitizeControllerTest {
 
             ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
             assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should not add an empty /AA dictionary to the catalog (#7441)")
+        void testDoesNotAddEmptyAAToCatalog() throws Exception {
+            try (PDDocument input = Loader.loadPDF(simplePdfBytes)) {
+                assertFalse(
+                        input.getDocumentCatalog().getCOSObject().containsKey(COSName.AA),
+                        "test setup: input PDF must start without /AA");
+            }
+
+            MockMultipartFile pdfFile =
+                    new MockMultipartFile(
+                            "fileInput",
+                            "test.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            simplePdfBytes);
+
+            SanitizePdfRequest request = new SanitizePdfRequest();
+            request.setFileInput(pdfFile);
+            request.setRemoveJavaScript(true);
+            request.setRemoveEmbeddedFiles(true);
+            request.setRemoveXMPMetadata(false);
+            request.setRemoveMetadata(false);
+            request.setRemoveLinks(false);
+            request.setRemoveFonts(false);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean()))
+                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+
+            ResponseEntity<Resource> response = sanitizeController.sanitizePDF(request);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+
+            byte[] sanitizedBytes = drainBody(response);
+            try (PDDocument sanitized = Loader.loadPDF(sanitizedBytes)) {
+                assertFalse(
+                        sanitized.getDocumentCatalog().getCOSObject().containsKey(COSName.AA),
+                        "sanitized catalog should not contain /AA");
+            }
         }
     }
 
