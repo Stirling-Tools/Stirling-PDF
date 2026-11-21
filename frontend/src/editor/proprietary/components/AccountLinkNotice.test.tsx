@@ -43,7 +43,8 @@ vi.mock("@processor/hooks/useConnectHandoff", () => ({
 vi.mock("@processor/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: () => ({
     t: (key: string, fallback?: string, values?: Record<string, string>) =>
       (fallback ?? key).replace(
