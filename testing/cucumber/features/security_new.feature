@@ -89,46 +89,6 @@ Feature: Security API Validation
         Then the response status code should be 200
         And the response file should have size greater than 0
 
-    @redact @positive
-    Scenario: Redact specific pages fully
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 5 pages
-        And the request data includes
-            | parameter          | value   |
-            | pageNumbers        | 2,4     |
-            | pageRedactionColor | #000000 |
-        When I send the API request to the endpoint "/api/v1/security/redact"
-        And this operation is run 5 times in parallel
-        Then the response status code should be 200
-        And the response content type should be "application/pdf"
-        And the response file should have size greater than 0
-        And the response file should have extension ".pdf"
-
-    @redact @positive
-    Scenario: Redact single page with custom color
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages
-        And the request data includes
-            | parameter          | value   |
-            | pageNumbers        | 1       |
-            | pageRedactionColor | #ff0000 |
-        When I send the API request to the endpoint "/api/v1/security/redact"
-        Then the response status code should be 200
-        And the response content type should be "application/pdf"
-        And the response file should have size greater than 0
-
-    @redact @positive
-    Scenario: Redact all pages
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 4 pages
-        And the request data includes
-            | parameter   | value |
-            | pageNumbers | all   |
-        When I send the API request to the endpoint "/api/v1/security/redact"
-        Then the response status code should be 200
-        And the response content type should be "application/pdf"
-        And the response file should have size greater than 0
-
     @verify @positive
     Scenario: Verify PDF-A compliance
         Given I use an example file at "exampleFiles/pdfa1.pdf" as parameter "fileInput"

@@ -18,7 +18,7 @@ const JSON_BODY = JSON.stringify(
     inputs: [{ sourceId: "src-in", trigger: { type: "schedule" } }],
     steps: [
       { operation: "/api/v1/misc/ocr-pdf", parameters: { language: "eng" } },
-      { operation: "/api/v1/security/redact", parameters: { terms: 2 } },
+      { operation: "/api/v1/security/auto-redact", parameters: { terms: 2 } },
     ],
     outputIds: ["src-out"],
   },

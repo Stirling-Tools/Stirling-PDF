@@ -8,7 +8,6 @@
 /api/v1/security/sanitize-pdf
 /api/v1/security/remove-password
 /api/v1/security/remove-cert-sign
-/api/v1/security/redact
 /api/v1/security/get-info-on-pdf
 /api/v1/security/cert-sign
 /api/v1/security/auto-redact

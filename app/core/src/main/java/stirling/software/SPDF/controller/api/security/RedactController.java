@@ -10,14 +10,12 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.PDFText;
-import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.ImageBox;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyle;
@@ -36,13 +33,11 @@ import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
-import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
-import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -75,10 +70,6 @@ public class RedactController {
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
                 List.class,
-                "redactions",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
-        binder.registerCustomEditor(
-                List.class,
                 "ranges",
                 new JsonListPropertyEditor<>(new TypeReference<List<TextRange>>() {}));
         binder.registerCustomEditor(
@@ -87,54 +78,6 @@ public class RedactController {
                 new JsonListPropertyEditor<>(new TypeReference<List<ImageBox>>() {}));
         binder.registerCustomEditor(
                 RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
-    }
-
-    @AutoJobPostMapping(
-            value = "/redact",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
-    @StandardPdfResponse
-    @ToolIO(produces = ToolFormat.PDF)
-    @Operation(
-            operationId = "redactPdfManual",
-            summary = "Remove content under selected areas or wipe whole pages",
-            description =
-                    "Removes covered page content from selected areas and wipes selected whole"
-                            + " pages. An affected page may be rasterized if native region removal"
-                            + " cannot safely clear it. convertPDFToImage=true rasterizes every"
-                            + " output page.")
-    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
-            throws IOException {
-
-        MultipartFile file = request.getFileInput();
-
-        try (PDDocument document = pdfDocumentFactory.load(file)) {
-            PDPageTree allPages = document.getDocumentCatalog().getPages();
-
-            manualRedactionService.redactPages(request, document, allPages);
-            manualRedactionService.redactAreas(request.getRedactions(), document, allPages);
-
-            if (Boolean.TRUE.equals(request.getConvertPDFToImage())) {
-                try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            convertedPdf,
-                            removeFileExtension(
-                                            Objects.requireNonNull(
-                                                    Filenames.toSimpleFileName(
-                                                            file.getOriginalFilename())))
-                                    + ".pdf",
-                            tempFileManager);
-                }
-            }
-
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    removeFileExtension(
-                                    Objects.requireNonNull(
-                                            Filenames.toSimpleFileName(file.getOriginalFilename())))
-                            + ".pdf",
-                    tempFileManager);
-        }
     }
 
     @AutoJobPostMapping(

@@ -219,21 +219,20 @@ class PolicyExecutorTest {
 
     @Test
     void structuredListParameterIsJsonEncodedAsSingleField() throws IOException {
-        String redact = "/api/v1/security/redact";
+        String redact = "/api/v1/security/redact-execute";
         when(toolMetadataService.isMultiInput(redact)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(redact)).thenReturn(false);
         stubEndpoint(redact, pdf("edited", "edited.pdf"));
 
         // LinkedHashMap so the serialized key order is deterministic for the assertion below.
-        Map<String, Object> redaction = new LinkedHashMap<>();
-        redaction.put("page", 1);
-        redaction.put("x", 10);
-        redaction.put("y", 20);
-        redaction.put("width", 100);
-        redaction.put("height", 50);
+        Map<String, Object> imageBox = new LinkedHashMap<>();
+        imageBox.put("pageIndex", 1);
+        imageBox.put("x1", 10);
+        imageBox.put("y1", 20);
+        imageBox.put("x2", 100);
+        imageBox.put("y2", 50);
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("redactions", List.of(redaction));
-        params.put("convertPDFToImage", false);
+        params.put("imageBoxes", List.of(imageBox));
 
         executor.execute(
                 definition(new PipelineStep(redact, params)),
@@ -246,11 +245,11 @@ class PolicyExecutorTest {
         verify(internalApiClient).post(eq(redact), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
 
-        List<Object> redactions = body.get("redactions");
-        assertNotNull(redactions);
-        assertEquals(1, redactions.size());
+        List<Object> imageBoxes = body.get("imageBoxes");
+        assertNotNull(imageBoxes);
+        assertEquals(1, imageBoxes.size());
         assertEquals(
-                "[{\"page\":1,\"x\":10,\"y\":20,\"width\":100,\"height\":50}]", redactions.get(0));
+                "[{\"pageIndex\":1,\"x1\":10,\"y1\":20,\"x2\":100,\"y2\":50}]", imageBoxes.get(0));
     }
 
     @Test

@@ -42,10 +42,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
-import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.TempFile;
@@ -62,8 +60,7 @@ import stirling.software.jpdfium.redact.RedactResult;
  * auto-redact fallback path loads twice), and {@code tempFileManager} hands back real temp files.
  * This complements {@code RedactControllerTest}, which exercises the controller against a mocked
  * {@link PDDocument}; here the actual redaction pipeline runs so the no-match, found-and-replace,
- * manual-area, page, convert-to-image, validation, and delegation branches are all covered for
- * real.
+ * convert-to-image, validation, and delegation branches are all covered for real.
  */
 @DisplayName("RedactController end-to-end coverage")
 class RedactControllerMoreTest {
@@ -484,136 +481,6 @@ class RedactControllerMoreTest {
             assertThatThrownBy(() -> controller.redactPdf(request))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Failed to perform PDF redaction");
-        }
-    }
-
-    // ── manual redaction (/redact) ───────────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("manual redaction")
-    class ManualRedaction {
-
-        private ManualRedactPdfRequest manualRequest(byte[] bytes) {
-            ManualRedactPdfRequest request = new ManualRedactPdfRequest();
-            request.setFileInput(pdfFile(bytes));
-            return request;
-        }
-
-        private RedactionArea area(int page, double x, double y, double w, double h, String color) {
-            RedactionArea a = new RedactionArea();
-            a.setPage(page);
-            a.setX(x);
-            a.setY(y);
-            a.setWidth(w);
-            a.setHeight(h);
-            a.setColor(color);
-            return a;
-        }
-
-        @Test
-        @DisplayName("a valid area produces a 200 response and a non-empty PDF body")
-        void validAreaRedacts() throws IOException {
-            byte[] bytes = singlePageTextPdf("box redact this");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            List<RedactionArea> areas = new ArrayList<>();
-            areas.add(area(1, 80, 80, 120, 20, "000000"));
-            request.setRedactions(areas);
-            request.setConvertPDFToImage(false);
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(drainBody(response).length).isGreaterThan(0);
-        }
-
-        @Test
-        @DisplayName("null redactions list is handled gracefully and still returns the PDF")
-        void nullRedactions() throws IOException {
-            byte[] bytes = singlePageTextPdf("untouched content");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            request.setRedactions(null);
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-        }
-
-        @Test
-        @DisplayName("an empty redactions list returns a valid response")
-        void emptyRedactions() throws IOException {
-            byte[] bytes = singlePageTextPdf("still here");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            request.setRedactions(new ArrayList<>());
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-        }
-
-        @Test
-        @DisplayName("a coloured area on a specific page is applied without error")
-        void colouredArea() throws IOException {
-            byte[] bytes = multiPageTextPdf("page one", "page two");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            List<RedactionArea> areas = new ArrayList<>();
-            areas.add(area(2, 60, 60, 100, 30, "FF0000"));
-            request.setRedactions(areas);
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(drainBody(response).length).isGreaterThan(0);
-        }
-
-        @Test
-        @DisplayName("whole-page redaction via pageNumbers covers the page and returns 200")
-        void pageRedaction() throws IOException {
-            byte[] bytes = multiPageTextPdf("first page text", "second page text");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            request.setPageNumbers("1");
-            request.setRedactions(new ArrayList<>());
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-        }
-
-        @Test
-        @DisplayName("manual redaction with convert-to-image returns a valid PDF")
-        void manualConvertToImage() throws IOException {
-            byte[] bytes = singlePageTextPdf("image mode area");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            List<RedactionArea> areas = new ArrayList<>();
-            areas.add(area(1, 80, 80, 100, 20, "000000"));
-            request.setRedactions(areas);
-            request.setConvertPDFToImage(true);
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(drainBody(response).length).isGreaterThan(0);
-        }
-
-        @Test
-        @DisplayName("an area with non-positive dimensions is skipped, still returning 200")
-        void invalidDimensionsSkipped() throws IOException {
-            byte[] bytes = singlePageTextPdf("content body");
-            factoryReturns(bytes);
-
-            ManualRedactPdfRequest request = manualRequest(bytes);
-            List<RedactionArea> areas = new ArrayList<>();
-            areas.add(area(1, 10, 10, 0, 0, "000000")); // zero width/height -> skipped
-            request.setRedactions(areas);
-
-            ResponseEntity<Resource> response = controller.redactPDF(request);
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
         }
     }
 

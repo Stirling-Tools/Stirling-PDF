@@ -56,9 +56,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.PDFText;
-import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
-import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -122,30 +120,6 @@ class RedactControllerTest {
             doc.save(baos);
             return baos.toByteArray();
         }
-    }
-
-    private static List<RedactionArea> createValidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(50.0);
-        area1.setColor("000000");
-        areas.add(area1);
-
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(300.0);
-        area2.setY(200.0);
-        area2.setWidth(150.0);
-        area2.setHeight(30.0);
-        area2.setColor("FF0000");
-        areas.add(area2);
-
-        return areas;
     }
 
     @BeforeEach
@@ -230,20 +204,6 @@ class RedactControllerTest {
                         redactExecuteService);
 
         setupRealDocument();
-    }
-
-    private static List<RedactionArea> createInvalidRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea invalidArea = new RedactionArea();
-        invalidArea.setPage(null); // Invalid - null page
-        invalidArea.setX(100.0);
-        invalidArea.setY(100.0);
-        invalidArea.setWidth(200.0);
-        invalidArea.setHeight(50.0);
-        areas.add(invalidArea);
-
-        return areas;
     }
 
     @AfterEach
@@ -510,121 +470,6 @@ class RedactControllerTest {
     }
 
     @Nested
-    @DisplayName("Manual Redaction Areas")
-    class ManualRedactionTests {
-
-        @Test
-        @DisplayName("Should redact using manual areas")
-        void redactUsingManualAreas() throws Exception {
-            List<RedactionArea> redactionAreas = createValidRedactionAreas();
-            testManualRedaction(redactionAreas, false);
-        }
-
-        @Test
-        @DisplayName("Should handle null redaction areas")
-        void handleNullRedactionAreas() throws Exception {
-            testManualRedaction(null, false);
-        }
-
-        @Test
-        @DisplayName("Should handle empty redaction areas")
-        void handleEmptyRedactionAreas() throws Exception {
-            testManualRedaction(new ArrayList<>(), false);
-        }
-
-        @Test
-        @DisplayName("Should handle invalid redaction area coordinates")
-        void handleInvalidRedactionAreaCoordinates() throws Exception {
-            List<RedactionArea> invalidAreas = createInvalidRedactionAreas();
-            testManualRedaction(invalidAreas, false);
-        }
-
-        @Test
-        @DisplayName("Should handle multiple redaction areas")
-        void handleMultipleRedactionAreas() throws Exception {
-            List<RedactionArea> multipleAreas = createMultipleRedactionAreas();
-            testManualRedaction(multipleAreas, false);
-        }
-
-        @Test
-        @DisplayName("Should handle overlapping redaction areas")
-        void handleOverlappingRedactionAreas() throws Exception {
-            List<RedactionArea> overlappingAreas = createOverlappingRedactionAreas();
-            testManualRedaction(overlappingAreas, false);
-        }
-
-        @Test
-        @DisplayName("Should handle redaction areas with different colors")
-        void handleRedactionAreasWithDifferentColors() throws Exception {
-            List<RedactionArea> areas = new ArrayList<>();
-
-            String[] colors = {"FF0000", "00FF00", "0000FF", "FFFF00", "FF00FF", "00FFFF"};
-            for (int i = 0; i < colors.length; i++) {
-                RedactionArea area = new RedactionArea();
-                area.setPage(1);
-                area.setX(50.0 + (i * 60));
-                area.setY(50.0);
-                area.setWidth(50.0);
-                area.setHeight(30.0);
-                area.setColor(colors[i]);
-                areas.add(area);
-            }
-
-            testManualRedaction(areas, false);
-        }
-
-        @Test
-        @DisplayName("Should handle redaction areas on multiple pages")
-        void handleRedactionAreasOnMultiplePages() throws Exception {
-            when(mockPages.getCount()).thenReturn(3);
-            when(mockDocument.getNumberOfPages()).thenReturn(3);
-
-            List<PDPage> pageList = new ArrayList<>();
-            for (int i = 0; i < 3; i++) {
-                PDPage page = mock(PDPage.class);
-                PDRectangle pageRect = new PDRectangle(0, 0, 612, 792);
-                when(page.getCropBox()).thenReturn(pageRect);
-                when(page.getMediaBox()).thenReturn(pageRect);
-                when(page.getBBox()).thenReturn(pageRect);
-                when(page.hasContents()).thenReturn(true);
-
-                InputStream mockInputStream =
-                        new ByteArrayInputStream(
-                                ("BT /F1 12 Tf 100 200 Td (page " + i + " content) Tj ET")
-                                        .getBytes());
-                when(page.getContents()).thenReturn(mockInputStream);
-
-                pageList.add(page);
-            }
-
-            when(mockPages.iterator()).thenReturn(pageList.iterator());
-            for (int i = 0; i < 3; i++) {
-                when(mockPages.get(i)).thenReturn(pageList.get(i));
-            }
-
-            List<RedactionArea> areas = new ArrayList<>();
-            for (int i = 0; i < 3; i++) {
-                RedactionArea area = new RedactionArea();
-                area.setPage(i + 1); // Pages are 1-indexed
-                area.setX(100.0);
-                area.setY(100.0);
-                area.setWidth(200.0);
-                area.setHeight(50.0);
-                area.setColor("000000");
-                areas.add(area);
-            }
-
-            testManualRedaction(areas, false);
-
-            reset(mockPages);
-            when(mockPages.getCount()).thenReturn(1);
-            when(mockPages.get(0)).thenReturn(mockPage);
-            when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
-            when(mockDocument.getNumberOfPages()).thenReturn(1);
-        }
-    }
-
-    @Nested
     @DisplayName("Image Conversion Options")
     class ImageConversionTests {
 
@@ -639,54 +484,6 @@ class RedactControllerTest {
         void handlePdfToImageConversionEnabled() throws Exception {
             testAutoRedaction("sensitive", false, false, "#000000", 1.0f, true, true);
         }
-
-        @Test
-        @DisplayName("Should handle manual redaction with image conversion")
-        void handleManualRedactionWithImageConversion() throws Exception {
-            List<RedactionArea> areas = createValidRedactionAreas();
-            testManualRedaction(areas, true);
-        }
-    }
-
-    private static List<RedactionArea> createMultipleRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        for (int i = 0; i < 5; i++) {
-            RedactionArea area = new RedactionArea();
-            area.setPage(1);
-            area.setX(50.0 + (i * 60));
-            area.setY(50.0 + (i * 40));
-            area.setWidth(50.0);
-            area.setHeight(30.0);
-            area.setColor(String.format("%06X", i * 0x333333));
-            areas.add(area);
-        }
-
-        return areas;
-    }
-
-    private static List<RedactionArea> createOverlappingRedactionAreas() {
-        List<RedactionArea> areas = new ArrayList<>();
-
-        RedactionArea area1 = new RedactionArea();
-        area1.setPage(1);
-        area1.setX(100.0);
-        area1.setY(100.0);
-        area1.setWidth(200.0);
-        area1.setHeight(100.0);
-        area1.setColor("FF0000");
-        areas.add(area1);
-
-        RedactionArea area2 = new RedactionArea();
-        area2.setPage(1);
-        area2.setX(150.0); // Overlaps with area1
-        area2.setY(150.0); // Overlaps with area1
-        area2.setWidth(200.0);
-        area2.setHeight(100.0);
-        area2.setColor("00FF00");
-        areas.add(area2);
-
-        return areas;
     }
 
     // Helper for token creation
@@ -703,12 +500,6 @@ class RedactControllerTest {
 
     private RedactPdfRequest createRedactPdfRequest() {
         RedactPdfRequest request = new RedactPdfRequest();
-        request.setFileInput(mockPdfFile);
-        return request;
-    }
-
-    private ManualRedactPdfRequest createManualRedactPdfRequest() {
-        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
         request.setFileInput(mockPdfFile);
         return request;
     }
@@ -771,24 +562,6 @@ class RedactControllerTest {
             } else {
                 assertNotNull(e.getMessage());
             }
-        }
-    }
-
-    private void testManualRedaction(List<RedactionArea> redactionAreas, boolean convertToImage) {
-        ManualRedactPdfRequest request = createManualRedactPdfRequest();
-        request.setRedactions(redactionAreas);
-        request.setConvertPDFToImage(convertToImage);
-
-        try {
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
-
-            if (response != null) {
-                assertNotNull(response);
-                assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(File.class));
-            }
-        } catch (Exception e) {
-            log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
         }
     }
 
@@ -986,27 +759,6 @@ class RedactControllerTest {
         @DisplayName("Should handle extremely large padding")
         void handleExtremelyLargePadding() throws Exception {
             testAutoRedaction("test", false, false, "#000000", 100.0f, false, true);
-        }
-
-        @Test
-        @DisplayName("Should handle null manual redaction areas gracefully")
-        void handleNullManualRedactionAreas() throws Exception {
-            ManualRedactPdfRequest request = createManualRedactPdfRequest();
-            request.setRedactions(null);
-
-            ResponseEntity<Resource> response = redactController.redactPDF(request);
-
-            assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
-        }
-
-        @Test
-        @DisplayName("Should reject page numbers past the end of the document")
-        void rejectOutOfBoundsPageNumbers() {
-            ManualRedactPdfRequest request = createManualRedactPdfRequest();
-            request.setPageNumbers("100-200");
-
-            assertThrows(IllegalArgumentException.class, () -> redactController.redactPDF(request));
         }
     }
 
