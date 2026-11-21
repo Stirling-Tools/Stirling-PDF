@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -191,8 +192,8 @@ public class AnalysisController {
             for (PDPage page : document.getPages()) {
                 PDResources resources = page.getResources();
                 if (resources != null) {
-                    for (COSName font : resources.getFontNames()) {
-                        fontNames.add(font.getName());
+                    for (COSName resourceKey : resources.getFontNames()) {
+                        fontNames.add(fontName(resources, resourceKey));
                     }
                 }
             }
@@ -201,6 +202,23 @@ public class AnalysisController {
             fontInfo.put("fonts", fontNames);
             return ResponseEntity.ok(fontInfo);
         }
+    }
+
+    // Read from the font dictionary: going through PDFont would load every font program.
+    private static String fontName(PDResources resources, COSName resourceKey) {
+        COSDictionary fonts = resources.getCOSObject().getCOSDictionary(COSName.FONT);
+        COSDictionary font = fonts.getCOSDictionary(resourceKey);
+        if (font != null) {
+            String name = font.getNameAsString(COSName.BASE_FONT);
+            if (name == null) {
+                // Type 3 fonts have no BaseFont.
+                name = font.getNameAsString(COSName.NAME);
+            }
+            if (name != null) {
+                return name;
+            }
+        }
+        return resourceKey.getName();
     }
 
     @AutoJobPostMapping(
