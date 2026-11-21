@@ -78,7 +78,7 @@ const AddPageNumbersAppearanceSettings = ({
         position="left"
         content={t(
           "addPageNumbers.zeroPadTooltip",
-          "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
+          "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable. Available for numeric page numbers only.",
         )}
       >
         <NumberInput
@@ -88,7 +88,9 @@ const AddPageNumbersAppearanceSettings = ({
             onParameterChange("zeroPad", typeof v === "number" ? v : 0)
           }
           min={0}
-          disabled={disabled}
+          disabled={
+            disabled || (parameters.numberFormat ?? "numeric") !== "numeric"
+          }
         />
       </Tooltip>
 
@@ -124,8 +126,69 @@ const AddPageNumbersAppearanceSettings = ({
       <Tooltip
         position="left"
         content={t(
+          "addPageNumbers.numberFormatTooltip",
+          "Choose Arabic numerals, Roman numerals, or alphabetic letters. The format applies to {n} and {total}.",
+        )}
+      >
+        <Select
+          label={t("addPageNumbers.numberFormat", "Number Format")}
+          value={parameters.numberFormat ?? "numeric"}
+          onChange={(v) =>
+            onParameterChange(
+              "numberFormat",
+              (v as AddPageNumbersParameters["numberFormat"]) || "numeric",
+            )
+          }
+          data={[
+            {
+              value: "numeric",
+              label: t(
+                "addPageNumbers.numberFormatNumeric",
+                "Numeric (1, 2, 3)",
+              ),
+            },
+            {
+              value: "roman-lowercase",
+              label: t(
+                "addPageNumbers.numberFormatRomanLowercase",
+                "Roman lowercase (i, ii, iii)",
+              ),
+            },
+            {
+              value: "roman-uppercase",
+              label: t(
+                "addPageNumbers.numberFormatRomanUppercase",
+                "Roman uppercase (I, II, III)",
+              ),
+            },
+            {
+              value: "alpha-lowercase",
+              label: t(
+                "addPageNumbers.numberFormatAlphabeticLowercase",
+                "Alphabetic lowercase (a, b, c)",
+              ),
+            },
+            {
+              value: "alpha-uppercase",
+              label: t(
+                "addPageNumbers.numberFormatAlphabeticUppercase",
+                "Alphabetic uppercase (A, B, C)",
+              ),
+            },
+          ]}
+          disabled={disabled}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
+        />
+      </Tooltip>
+
+      <Tooltip
+        position="left"
+        content={t(
           "customTextTooltip",
-          'Optional custom format for page numbers. Use {n} as placeholder for the number. Example: "Page {n}" will show "Page 1", "Page 2", etc.',
+          'Optional custom format for page numbers. Use {n} for the page number and {total} for the total pages; both follow the selected number format. Example: "Page {n} of {total}".',
         )}
       >
         <TextInput
