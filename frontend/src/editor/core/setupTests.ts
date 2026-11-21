@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import i18n from "i18next";
 import { installFailOnConsole } from "@editor/tests/failOnConsole";
+import { installEnUsIntlDefaults } from "@editor/tests/enUsIntlDefaults";
 
 // jsdom is missing the same APIs WebKit is, so tests must agree with the
 // browser. Same module `src/index.tsx` installs.
@@ -16,6 +17,7 @@ void i18n.init({
 });
 
 installFailOnConsole();
+installEnUsIntlDefaults();
 
 // Mock localStorage for tests
 class LocalStorageMock implements Storage {
