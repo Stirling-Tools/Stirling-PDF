@@ -18,7 +18,6 @@ import {
   notifyOpenFileDeleted,
   saveOrphanAsCopy,
 } from "@editor/services/diskFileSync";
-import { fileStorage } from "@editor/services/fileStorage";
 import {
   getDiskFileState,
   type PresentDiskFileState,
@@ -37,52 +36,8 @@ export type { OpenDecision, ReconcilePort };
 // on disk. Opening a record re-checks its content against disk; while a file is
 // open, only the loss of its original is tracked.
 
-const MAX_VERSION_HOPS = 50;
-const GONE_RECHECK_MS = 500;
-
-/** Copies disk may still hold: the record's own bytes, and those of the newest
- *  version on the same path that no in-app edit has changed. A tool output is
- *  dirty, so the walk skips it to the version it was derived from; an undo
- *  marks a restored version dirty even when its bytes are what disk holds. */
-function heldCopies(
-  stub: StirlingFileStub,
-  port: ReconcilePort,
-): () => Promise<Blob[]> {
-  return async () => {
-    const own =
-      port.getFile(stub.id) ?? (await fileStorage.getStirlingFile(stub.id));
-    const clean = await lastCleanCopy(stub, port);
-    return [own, clean].filter(
-      (copy, i, all): copy is Blob => copy != null && all.indexOf(copy) === i,
-    );
-  };
-}
-
-async function lastCleanCopy(
-  stub: StirlingFileStub,
-  port: ReconcilePort,
-): Promise<Blob | null> {
-  let version: StirlingFileStub | null | undefined = stub;
-  for (let hop = 0; version && hop < MAX_VERSION_HOPS; hop++) {
-    if (version.localFilePath !== stub.localFilePath) return null;
-    if (!version.isDirty) {
-      return (
-        port.getFile(version.id) ??
-        (await fileStorage.getStirlingFile(version.id))
-      );
-    }
-    const parentId: FileId | undefined = version.parentFileId;
-    version = parentId
-      ? (port.getStub(parentId) ??
-        (await fileStorage.getStirlingFileStub(parentId)))
-      : null;
-  }
-  return null;
-}
-
-/** Take the disk version, discarding any unsaved in-app edits shadowing it.
- *  Only reachable from an action the user chose: the conflict modal, or the
- *  too-large notice raised at open. */
+/** Take the disk version of a conflicted file, discarding the unsaved in-app
+ *  edits shadowing it. Only reachable from the conflict modal's action. */
 async function useDiskVersion(
   stub: StirlingFileStub,
   port: ReconcilePort,
@@ -92,16 +47,7 @@ async function useDiskVersion(
   const { file, state } = loaded;
   const reloadedAt = Date.now();
   port.putFile(stub.id, file);
-  // The new bytes are already on screen, so a failed store must not leave the
-  // stub and page data describing the old ones.
-  try {
-    await persistDiskUpdate(stub.id, file, state, reloadedAt);
-  } catch (error) {
-    console.error(
-      `[Reconcile] Failed to store disk version of ${stub.id}:`,
-      error,
-    );
-  }
+  await persistDiskUpdate(stub.id, file, state, reloadedAt);
   // Must follow putFile: the workbench drops updates for a file it cannot find.
   port.updateStub(stub.id, pickedUpFields(file, state, reloadedAt));
   // pickedUpFields cleared the cached page data; without this the editors lay
@@ -189,21 +135,7 @@ export async function reconcileBeforeOpen(
   port: ReconcilePort,
 ): Promise<OpenDecision> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(
-    stub,
-    hasUnsavedWork(),
-    heldCopies(stub, port),
-  );
-
-  if (outcome.status === "touched") {
-    const baseline = diskBaseline(outcome.state);
-    void fileStorage
-      .updateFileMetadata(fileId, baseline)
-      .catch((error) =>
-        console.error(`[Reconcile] Failed to re-baseline ${fileId}:`, error),
-      );
-    return { updates: { ...baseline, diskUnavailableReason: undefined } };
-  }
+  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
 
   if (outcome.status === "missing") {
     // Only an unedited v1 passthrough holds nothing the disk file did not;
@@ -277,6 +209,15 @@ export async function reconcileBeforeOpen(
   return { updates };
 }
 
+// Editors and sync clients that delete the original before moving the new file
+// in leave the path empty for a moment, and a detach is not undone.
+const GONE_RECHECK_MS = 500;
+
+// The watcher and the focus re-check fire together when the user changes a
+// file elsewhere and switches back. A record already being checked is left to
+// that pass, so one loss is not detached and reported twice.
+const checking = new Set<FileId>();
+
 /** Re-check one open record's disk original. Returns it when the original is
  *  gone, so the caller can report a whole batch's losses in one toast.
  *
@@ -292,19 +233,29 @@ async function resyncRecord(
   const fileId = stub.id;
   const path = stub.localFilePath;
   // Our own save can leave the path briefly empty or locked.
-  if (!path || isSelfWrite(path)) return null;
-  let state = await getDiskFileState(path);
+  if (!path || isSelfWrite(path) || checking.has(fileId)) return null;
+  checking.add(fileId);
+  try {
+    return await checkOriginal(stub, path, port);
+  } finally {
+    checking.delete(fileId);
+  }
+}
 
+async function checkOriginal(
+  stub: StirlingFileStub,
+  path: string,
+  port: ReconcilePort,
+): Promise<StirlingFileStub | null> {
+  const fileId = stub.id;
+  let state = await getDiskFileState(path);
   if (state.availability === "gone") {
-    // Editors and sync clients that delete the original before moving the new
-    // file in leave the path empty for a moment; detaching is not undone.
     await new Promise((resolve) => setTimeout(resolve, GONE_RECHECK_MS));
     state = await getDiskFileState(path);
   }
 
   if (state.availability === "gone") {
-    // A pass queued behind the one that detached it started from a snapshot
-    // taken before that detach rendered.
+    // A pass that listed the stubs before an earlier detach rendered.
     if (port.getStub(fileId)?.localFilePath !== path) return null;
     // Never delete what is on screen: cutting the link leaves the document
     // intact and makes the next save ask for somewhere to put it.
@@ -323,45 +274,7 @@ async function resyncRecord(
   return null;
 }
 
-// The watcher and the focus re-check fire together when the user changes a
-// file elsewhere and switches back; one pass at a time, so the same loss is
-// not detached and reported by two passes at once.
-const queuedPaths = new Set<string>();
-let queuedPort: ReconcilePort | undefined;
-let draining: Promise<void> | undefined;
-
-/** Re-check the open records linked to these paths. Calls made while a check
- *  is running are merged into one more pass that starts after it. */
-export function reconcileOpenFiles(
-  locations: string[],
-  port: ReconcilePort,
-): Promise<void> {
-  for (const location of locations) queuedPaths.add(location);
-  queuedPort = port;
-  // An empty drain settles synchronously, clearing `draining` before it is
-  // assigned and leaving every later call parked on a finished promise.
-  if (queuedPaths.size === 0) return draining ?? Promise.resolve();
-  draining ??= drainReconciles();
-  return draining;
-}
-
-async function drainReconciles(): Promise<void> {
-  try {
-    while (queuedPaths.size > 0 && queuedPort) {
-      const paths = [...queuedPaths];
-      queuedPaths.clear();
-      try {
-        await reconcilePaths(paths, queuedPort);
-      } catch (error) {
-        console.error("[Reconcile] Disk re-check failed:", error);
-      }
-    }
-  } finally {
-    draining = undefined;
-  }
-}
-
-async function reconcilePaths(
+export async function reconcileOpenFiles(
   locations: string[],
   port: ReconcilePort,
 ): Promise<void> {

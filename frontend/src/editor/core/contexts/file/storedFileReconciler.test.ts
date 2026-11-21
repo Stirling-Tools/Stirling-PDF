@@ -21,7 +21,6 @@ describe("reconciling a record with no source", () => {
       reconcileBeforeOpen(stub, {
         getStub: () => undefined,
         listStubs: () => [],
-        getFile: () => undefined,
         putFile: () => {},
         updateStub: () => {},
         dropFile: () => {},

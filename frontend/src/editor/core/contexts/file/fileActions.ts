@@ -947,7 +947,6 @@ function reconcilePort(
   return {
     getStub: (fileId) => stateRef.current.files.byId[fileId],
     listStubs: () => Object.values(stateRef.current.files.byId),
-    getFile: (fileId) => filesRef.current.get(fileId),
     putFile: (fileId, file) =>
       filesRef.current.set(fileId, createStirlingFile(file, fileId)),
     updateStub: (fileId, updates) =>

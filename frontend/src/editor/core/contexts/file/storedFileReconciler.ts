@@ -10,8 +10,6 @@ import { FileId, StirlingFileStub } from "@editor/types/fileContext";
 export interface ReconcilePort {
   getStub(fileId: FileId): StirlingFileStub | undefined;
   listStubs(): StirlingFileStub[];
-  /** The bytes currently published for a record, if any. */
-  getFile(fileId: FileId): File | undefined;
   /** Publish bytes for a record already in state. */
   putFile(fileId: FileId, file: File): void;
   updateStub(fileId: FileId, updates: Partial<StirlingFileStub>): void;
