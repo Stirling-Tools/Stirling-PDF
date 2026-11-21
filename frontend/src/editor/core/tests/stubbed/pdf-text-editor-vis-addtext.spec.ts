@@ -1,4 +1,5 @@
 import { test, expect } from "@editor/tests/helpers/stub-test-base";
+import { openInTextEditor } from "@editor/tests/helpers/pdf-text-editor";
 import path from "path";
 
 // ADD-TEXT, judged on the PAGE BITMAP rather than on the store.
@@ -36,14 +37,12 @@ type Ink = {
   meanB: number;
 };
 
-async function openEditor(page: import("@playwright/test").Page, file: string) {
-  await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
-    timeout: 30_000,
-  });
-  await page
-    .locator('[data-testid="pdf-editor-file-input"]')
-    .setInputFiles(file);
+async function openEditor(
+  page: import("@playwright/test").Page,
+  file: string,
+  zoomPercent?: number | null,
+) {
+  await openInTextEditor(page, file, { zoomPercent });
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 60_000,
   });
@@ -644,7 +643,8 @@ test.describe("PDF text editor - add text, checked in the bitmap", () => {
     // Fails if the click handler always targets page 0, or converts client
     // coords with the wrong page's transform once the stage has scrolled.
     test.setTimeout(120_000);
-    await openEditor(page, MANY_PAGES_PDF);
+    // At the viewer's own fit, so page one stays near enough to keep its bitmap.
+    await openEditor(page, MANY_PAGES_PDF, null);
 
     const zeroRect: Rect = { x: 0, y: 0, w: 600, h: 800 };
     const pageZeroBefore = await inkIn(page, 0, zeroRect);

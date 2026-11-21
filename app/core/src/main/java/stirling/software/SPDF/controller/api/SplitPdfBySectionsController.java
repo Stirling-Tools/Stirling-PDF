@@ -90,7 +90,7 @@ public class SplitPdfBySectionsController {
                         "the divisions would produce more than " + MAX_OUTPUT_PAGES + " pages");
             }
             boolean merge = Boolean.TRUE.equals(request.getMerge());
-            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
+            String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
             if (merge) {
                 try (PDDocument mergedDoc =
@@ -174,7 +174,8 @@ public class SplitPdfBySectionsController {
                         log.error("Error creating ZIP file with split PDF sections", e);
                         throw e;
                     }
-                    return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
+                    return WebResponseUtils.zipFileToWebResponse(
+                            zipTempFile, filename + "_split.zip");
                 } catch (Exception ex) {
                     zipTempFile.close();
                     throw ex;
