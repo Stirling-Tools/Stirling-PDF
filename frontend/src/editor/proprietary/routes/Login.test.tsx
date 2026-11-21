@@ -420,13 +420,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText(/Authentik/);
+        const button = screen.queryByRole("button", { name: /Authentik/ });
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText(/Authentik/);
+    const oauthButton = screen.getByRole("button", { name: /Authentik/ });
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -436,6 +436,7 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should use actual provider ID for OAuth login (custom provider)", async () => {
@@ -466,13 +467,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
     await waitFor(
       () => {
-        const button = screen.queryByText(/Mycompany/);
+        const button = screen.queryByRole("button", { name: /Mycompany/ });
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText(/Mycompany/);
+    const oauthButton = screen.getByRole("button", { name: /Mycompany/ });
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -483,6 +484,10 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+
+    // The async handler clears isSubmitting after the OAuth mock resolves. Wait
+    // for that final render so Mantine's transition cannot update after teardown.
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should use oidc provider ID when explicitly configured", async () => {
@@ -513,13 +518,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText(/OIDC/);
+        const button = screen.queryByRole("button", { name: /OIDC/ });
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText(/OIDC/);
+    const oauthButton = screen.getByRole("button", { name: /OIDC/ });
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -529,6 +534,7 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should show error on failed login", async () => {
@@ -856,16 +862,21 @@ describe("Login", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText(/Authentik/)).toBeTruthy();
+        expect(screen.getByRole("button", { name: /Authentik/ })).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    await user.click(screen.getByText(/Authentik/));
+    await user.click(screen.getByRole("button", { name: /Authentik/ }));
 
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();
     });
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /Authentik/ }),
+      ).not.toBeDisabled(),
+    );
 
     // Must be stashed before the cross-origin SSO redirect wipes location.state.
     expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
